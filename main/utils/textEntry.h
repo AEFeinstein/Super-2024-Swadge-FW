@@ -84,9 +84,7 @@
  */
 
 // TODO:
-// Remove hardcoded numbers
 // Add in menu to be able to play with the text entry without recompiling
-// Finish doxygen header
 
 #pragma once
 
@@ -106,13 +104,12 @@
 #define ENTER_Y  2
 
 // Graphics
-#define CORNER_MARGIN    16  // Margin to clear the roiunded corners
-#define SHADOWBOX_MARGIN 4   // Margine around shadowboxes
-#define RETURN_WIDTH     16  // Width of return symbol
-#define KEY_SPACING      5   // Space between keys
-
-#define H_START          36  // Distance from the top of the screen to start drawing
-#define ENTER_BOX_H      56  // Height of box to enter text into
+#define CORNER_MARGIN       20 // Margin to clear the roiunded corners
+#define SHADOWBOX_MARGIN    4  // Margine around shadowboxes
+#define RETURN_WIDTH        16 // Width of return symbol
+#define KEY_SPACING         5  // Space between keys
+#define MULTILINE_MAX_LINES 5  // Number of lines Multiline boxes can have
+#define MAX_WIDTH_CHAR      32 // @ symbol, due to size in fonts tested.
 
 // Timers
 #define BLINK_RATE 500000 // Time in Us before blinker toggles
@@ -182,7 +179,7 @@ bool textEntryInput(uint8_t down, uint8_t button);
 
 /**
  * @brief A new font to load into the text entry screen
- * 
+ *
  * @param newFont pointer to a font file
  */
 void textEntrySetFont(font_t* newFont);

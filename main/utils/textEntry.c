@@ -9,7 +9,7 @@
  *
  * @param elapsedUs How many ms have elapsed since last time function was called
  */
-static void _drawStr(int64_t elapsedUs);
+static void _drawStr(int16_t endH, int64_t elapsedUs);
 
 /**
  * @brief Draws the cursor at the end of the line
@@ -17,13 +17,13 @@ static void _drawStr(int64_t elapsedUs);
  * @param eUs used to calculate if cursor should toggle on or off.
  * @param end The end of the line, used to calculate position.
  */
-static void _drawCursor(int64_t eUs, int16_t pos);
+static void _drawCursor(int64_t eUs, int16_t pos, int16_t h);
 
 /**
  * @brief Draws the keyboard
  *
  */
-static void _drawKeyboard(void);
+static int16_t _drawKeyboard(void);
 
 /**
  * @brief Draws the custom caps lock character
@@ -148,7 +148,7 @@ void textEntryInit(font_t* useFont, int max_len, char* buffer)
     texLen     = max_len;
     texString  = buffer;
     activeFont = useFont;
-    wideChar   = activeFont->char[32].width;
+    wideChar   = activeFont->chars[MAX_WIDTH_CHAR].width;
 
     // Initialize necessary variables
     multi        = false;
@@ -191,12 +191,12 @@ bool textEntryDraw(int64_t elapsedUs)
         default:
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     }
-    // Draw the currently typed string
-    _drawStr(elapsedUs);
     // Draw an indicator for the current key modifier
     _drawTypeMode();
     // Draw the keyboard
-    _drawKeyboard();
+    int16_t keyboardH = _drawKeyboard();
+    // Draw the currently typed string
+    _drawStr(keyboardH, elapsedUs);
     return true;
 }
 
@@ -379,6 +379,7 @@ bool textEntryInput(uint8_t down, uint8_t button)
 void textEntrySetFont(font_t* newFont)
 {
     activeFont = newFont;
+    wideChar   = activeFont->chars[MAX_WIDTH_CHAR].width;
 }
 
 void textEntrySetBGWSG(wsg_t* BG)
@@ -435,14 +436,14 @@ void textEntrySetMultiline(bool multiline)
 
 // Drawing code
 
-static void _drawStr(int64_t eUs)
+static void _drawStr(int16_t endH, int64_t eUs)
 {
     if (multi)
     {
         int16_t startX = CORNER_MARGIN;
-        int16_t startY = H_START;
-        int16_t endX   = TFT_WIDTH - MARGINCORNER_MARGIN;
-        int16_t endY   = H_START + ENTER_BOX_H;
+        int16_t startY = CORNER_MARGIN;
+        int16_t endX   = TFT_WIDTH - CORNER_MARGIN;
+        int16_t endY   = endH - CORNER_MARGIN;
         if (useShadowboxes)
         {
             fillDisplayArea(startX - SHADOWBOX_MARGIN, startY - SHADOWBOX_MARGIN, endX + SHADOWBOX_MARGIN,
@@ -452,19 +453,20 @@ static void _drawStr(int64_t eUs)
     }
     else
     {
+        int16_t hStart = endH - ((activeFont->height + SHADOWBOX_MARGIN) * 2);
         if (useShadowboxes)
         {
-            fillDisplayArea(CORNER_MARGIN - SHADOWBOX_MARGIN, H_START - SHADOWBOX_MARGIN,
-                            TFT_WIDTH - CORNER_MARGIN + SHADOWBOX_MARGIN, H_START + activeFont->height + SHADOWBOX_MARGIN,
-                            shadowboxColor);
+            fillDisplayArea(CORNER_MARGIN - SHADOWBOX_MARGIN, hStart - SHADOWBOX_MARGIN,
+                            TFT_WIDTH - CORNER_MARGIN + SHADOWBOX_MARGIN,
+                            hStart + activeFont->height + SHADOWBOX_MARGIN, shadowboxColor);
         }
         int16_t textLen = textWidth(activeFont, texString) + activeFont->chars[0].width;
-        int16_t endPos  = drawText(activeFont, textColor, texString, (TFT_WIDTH - textLen) / 2, H_START);
-        _drawCursor(eUs, endPos);
+        int16_t endPos  = drawText(activeFont, textColor, texString, (TFT_WIDTH - textLen) / 2, hStart);
+        _drawCursor(eUs, endPos, hStart);
     }
 }
 
-static void _drawCursor(int64_t eUs, int16_t end)
+static void _drawCursor(int64_t eUs, int16_t end, int16_t h)
 {
     cursorTimer += eUs;
     if (BLINK_RATE < cursorTimer)
@@ -474,13 +476,13 @@ static void _drawCursor(int64_t eUs, int16_t end)
     }
     if (cursorToggle)
     {
-        drawLineFast(end + 1, H_START - 2, end + 1, H_START + activeFont->height + 3, emphasisColor);
+        drawLineFast(end + 1, h - 2, end + 1, h + activeFont->height + 3, emphasisColor);
     }
 }
 
-static void _drawKeyboard()
+static int16_t _drawKeyboard()
 {
-    int width              = wideChar + 2;
+    int16_t width              = wideChar + 2;
     int16_t StartX         = TFT_WIDTH / 2 - (lengthPerLine[0] * (width + KEY_SPACING)) / 2;
     int16_t keyboardHeight = KB_LINES * (activeFont->height + KEY_SPACING);
     int16_t StartY         = TFT_HEIGHT - (keyboardHeight + activeFont->height + (3 * SHADOWBOX_MARGIN));
@@ -549,6 +551,7 @@ static void _drawKeyboard()
         }
         s++;
     }
+    return StartY;
 }
 
 static void _drawCaps(int16_t x, int16_t y, uint8_t color)
