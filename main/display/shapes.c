@@ -1322,7 +1322,7 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
                 y0 += sy;
                 dy -= xy;
                 err += dx += xx;
-            }                       /* y step */
+            } /* y step */
         } while (dy < 0 && dx > 0); /* gradient negates -> algorithm fails */
     }
     drawLineScaled(x0, y0, x2, y2, col, 0, xOrigin, yOrigin, xScale, yScale); /* draw remaining part to end */
@@ -1399,7 +1399,7 @@ static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, 
                 x2 = x + x1;
                 y0 = y2;
                 y2 = y + y1; /* swap points */
-            }                /* now horizontal cut at P4 comes first */
+            } /* now horizontal cut at P4 comes first */
         t = (x0 - x1) / t;
         r = (1 - t) * ((1 - t) * y0 + 2.0 * t * y1) + t * t * y2; /* By(t=P4) */
         t = (x0 * x2 - x1 * x1) * t / (x0 - x1);                  /* gradient dP4/dx=0 */
@@ -1553,7 +1553,7 @@ void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
                 x0 += sx;
                 dx += xy;
                 err += dy += yy;
-            }                           /* x step */
+            } /* x step */
         } while (dy <= xy && dx >= xy); /* gradient negates -> algorithm fails */
     }
     drawLine(x0, y0, x2, y2, col, 0); /* draw remaining needle to end */
@@ -1587,7 +1587,7 @@ void drawQuadRationalBezier(int x0, int y0, int x1, int y1, int x2, int y2, floa
                 x2 = xx + x1;
                 y0 = y2;
                 y2 = yy + y1; /* swap points */
-            }                 /* now horizontal cut at P4 comes first */
+            } /* now horizontal cut at P4 comes first */
         if (x0 == x2 || w == 1.0)
         {
             t = (x0 - x1) / (double)x;

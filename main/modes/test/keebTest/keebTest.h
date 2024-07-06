@@ -1,12 +1,12 @@
 /**
  * @file keebTest.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
- * @brief A mode designed to test keyboard variations in rapid succession 
+ * @brief A mode designed to test keyboard variations in rapid succession
  * @version 1.0
  * @date 2024-07-06
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 
@@ -17,6 +17,7 @@
 #include "swadge2024.h"
 #include "menu.h"
 #include "textEntry.h"
+#include "esp_random.h"
 
 //==============================================================================
 // Defines
@@ -51,11 +52,11 @@ typedef struct
     char typedText[MAX_TEXT_LEN];
 
     // Menu
-    menu_t *menu;
+    menu_t* menu;
     menuManiaRenderer_t* renderer;
 
     // Menu vars
-    font_t* selFnt;
+    int8_t fontSel;
     bgMode_t bckgrnd;
     uint8_t bgColor;
     uint8_t textColor;

@@ -15,40 +15,75 @@
 // Function Prototypes
 //==============================================================================
 
+/**
+ * @brief Entrance into the mode
+ *
+ */
 static void keebEnterMode(void);
+
+/**
+ * @brief Mode cleanup
+ *
+ */
 static void keebExitMode(void);
+
+/**
+ * @brief Main Loop
+ *
+ * @param elapsedUs Amount of time since last called
+ */
 static void keebMainLoop(int64_t elapsedUs);
+
+/**
+ * @brief Callback function for the menu. When input is put into a menu object, this is called.
+ *
+ * @param label      The string key
+ * @param selected   If the A button was pressed
+ * @param settingVal If scrolled to, indicates the value
+ */
 static void kbMenuCb(const char* label, bool selected, uint32_t settingVal);
+
+/**
+ * @brief Draws the result of the text stream
+ *
+ */
+static void drawResult(void);
+
+/**
+ * @brief Draws the number of characters in the string
+ *
+ */
+static void drawCount(void);
+
+/**
+ * @brief Draws random lines. Used to prove the background is transparent
+ *
+ */
+static void drawIncidentalBG(void);
+
+/**
+ * @brief Resets the settings for the text entry
+ *
+ */
+static void reset(void);
+
+/**
+ * @brief Set the Warning object
+ *
+ * @param duration Milliseconds to keep the warning up
+ * @param text     A string to display
+ */
 static void setWarning(int64_t duration, char* text);
+
+/**
+ * @brief Draws the warning text box
+ *
+ */
 static void drawWarning(void);
 
 //==============================================================================
 // Menu Strings
 //==============================================================================
-
-// TODO:
-// Add menu to configure text entry
-// Add a weird pattern to demonstrate transparancy
-// Add a character count for measurement purposes
-// Option to keep string instead of overwriting it
-
-/*   Menu
- * - Start typing
- * - Change font
- * - Change BG
- *   - Transparent
- *   - WSG
- *   - Color (provide options)
- * - Change Text color (provide options)
- * - Change Emphasis color (provide options)
- * - Change shadow box color and enabled (provide options for color)
- * - Set Enter visual
- * - Set Caps visual
- * - Set multiline or not
- * - Show character count
- * - Should string be reset each run?
- * - Reset to defaults
- */
 
 const char keebTestName[] = "Keyboard Test"; // Doubles as mode name
 
@@ -123,7 +158,7 @@ static void keebEnterMode(void)
     kbTest = (keebTest_t*)calloc(1, sizeof(keebTest_t));
 
     // Get resources
-    loadWsg("kid0.wsg", &kbTest->bg, false);
+    loadWsg("example.wsg", &kbTest->bg, false);
     loadFont("ibm_vga8.font", &kbTest->fnt[0], false);
     loadFont("radiostars.font", &kbTest->fnt[1], false);
     loadFont("rodin_eb.font", &kbTest->fnt[2], false);
@@ -139,18 +174,18 @@ static void keebEnterMode(void)
     kbTest->menu = startSubMenu(kbTest->menu, teMenuSolid);
     addSingleItemToMenu(kbTest->menu, teMenuSolidActive);
     addSettingsOptionsItemToMenu(kbTest->menu, colorSettingLabel1, colorSettingsOptions, colorSettingsValues,
-                                 ARRAY_SIZE(colorSettingsValues), getScreensaverTimeSettingBounds(), 0);
+                                 ARRAY_SIZE(colorSettingsValues), getScreensaverTimeSettingBounds(), c000);
     kbTest->menu = endSubMenu(kbTest->menu);
     addSingleItemToMenu(kbTest->menu, teMenuSprite);
     kbTest->menu = endSubMenu(kbTest->menu);
     addSettingsOptionsItemToMenu(kbTest->menu, colorSettingLabel2, colorSettingsOptions, colorSettingsValues,
-                                 ARRAY_SIZE(colorSettingsValues), getScreensaverTimeSettingBounds(), 7);
+                                 ARRAY_SIZE(colorSettingsValues), getScreensaverTimeSettingBounds(), c555);
     addSettingsOptionsItemToMenu(kbTest->menu, colorSettingLabel3, colorSettingsOptions, colorSettingsValues,
-                                 ARRAY_SIZE(colorSettingsValues), getScreensaverTimeSettingBounds(), 7);
+                                 ARRAY_SIZE(colorSettingsValues), getScreensaverTimeSettingBounds(), c555);
     kbTest->menu = startSubMenu(kbTest->menu, teMenuShadow);
     addSingleItemToMenu(kbTest->menu, teMenuShadowActive);
     addSettingsOptionsItemToMenu(kbTest->menu, colorSettingLabel4, colorSettingsOptions, colorSettingsValues,
-                                 ARRAY_SIZE(colorSettingsValues), getScreensaverTimeSettingBounds(), 8);
+                                 ARRAY_SIZE(colorSettingsValues), getScreensaverTimeSettingBounds(), c111);
     kbTest->menu = endSubMenu(kbTest->menu);
     addSingleItemToMenu(kbTest->menu, teMenuEnter);
     addSingleItemToMenu(kbTest->menu, teMenuCaps);
@@ -165,6 +200,8 @@ static void keebEnterMode(void)
     // Set MENU as the starting state
     kbTest->currState = MENU;
     textEntryInit(&kbTest->fnt[0], MAX_TEXT_LEN, kbTest->typedText);
+
+    reset();
 }
 
 static void keebExitMode(void)
@@ -201,19 +238,30 @@ static void keebMainLoop(int64_t elapsedUs)
             drawMenuMania(kbTest->menu, kbTest->renderer, elapsedUs);
             break;
         case TYPING:
-            bool done = false;
+            drawIncidentalBG();
             while (checkButtonQueueWrapper(&evt))
             {
-                done = !textEntryInput(evt.down, evt.button);
-            }
-            if (done)
-            {
-                kbTest->currState = DISPLAYING;
+                if (!textEntryInput(evt.down, evt.button))
+                {
+                    kbTest->currState = DISPLAYING;
+                }
             }
             textEntryDraw(elapsedUs);
+            if (kbTest->count)
+            {
+                drawCount();
+            }
             break;
         case DISPLAYING:
-            // TODO: Text display screen
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    kbTest->currState = MENU;
+                    textEntrySoftReset();
+                }
+            }
+            drawResult();
             break;
         case WARNING:
             kbTest->warningTimer -= elapsedUs;
@@ -238,7 +286,7 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == teMenuStart)
         {
             // initalize all stuff
-            textEntrySetFont(&kbTest->fnt[0]);
+            textEntrySetFont(&kbTest->fnt[kbTest->fontSel]);
             switch (kbTest->bckgrnd)
             {
                 case COLOR_BG:
@@ -257,34 +305,38 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
             textEntrySetNewEnterStyle(kbTest->enter);
             textEntrySetNewCapsStyle(kbTest->caps);
             textEntrySetMultiline(kbTest->multi);
+            if (kbTest->reset)
+            {
+                strcpy(kbTest->typedText, "");
+            }
             // Switch state
             kbTest->currState = TYPING;
         }
         else if (label == teMenuTransparent)
         {
             kbTest->bckgrnd = CLEAR_BG;
-            setWarning(1000, "Set BG to transparent");
+            setWarning(500, "Set BG to transparent");
         }
         else if (label == teMenuSprite)
         {
             kbTest->bckgrnd = WSG_BG;
-            setWarning(1000, "Set BG to sample WSG");
+            setWarning(500, "Set BG to sample WSG");
         }
         else if (label == teMenuSolidActive)
         {
             kbTest->bckgrnd = COLOR_BG;
-            setWarning(1000, "Set Solid BG active");
+            setWarning(500, "Set Solid BG active");
         }
         else if (label == teMenuShadowActive)
         {
             kbTest->shadow = !kbTest->shadow;
             if (kbTest->shadow)
             {
-                setWarning(1000, "Shadwonboxes enabled");
+                setWarning(500, "Shadwonboxes enabled");
             }
             else
             {
-                setWarning(1000, "Shadwonboxes disabled");
+                setWarning(500, "Shadwonboxes disabled");
             }
         }
         else if (label == teMenuEnter)
@@ -296,7 +348,7 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
             }
             else
             {
-                setWarning(1000, "Using \"ok\" for enter");
+                setWarning(500, "Using \"ok\" for enter");
             }
         }
         else if (label == teMenuCaps)
@@ -304,11 +356,11 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
             kbTest->caps = !kbTest->caps;
             if (kbTest->caps)
             {
-                setWarning(1000, "Using new caps symbol");
+                setWarning(500, "Using new caps symbol");
             }
             else
             {
-                setWarning(1000, "Using old caps symbol");
+                setWarning(500, "Using old caps symbol");
             }
         }
         else if (label == teMenuMulti)
@@ -316,11 +368,11 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
             kbTest->multi = !kbTest->multi;
             if (kbTest->multi)
             {
-                setWarning(1000, "Using Multi-line text entry");
+                setWarning(500, "Using Multi-line text entry");
             }
             else
             {
-                setWarning(1000, "Using single line text entry");
+                setWarning(500, "Using single line text entry");
             }
         }
         else if (label == teMenuCount)
@@ -328,11 +380,11 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
             kbTest->count = !kbTest->count;
             if (kbTest->count)
             {
-                setWarning(1000, "Character count enabled");
+                setWarning(500, "Character count enabled");
             }
             else
             {
-                setWarning(1000, "Character count disabled");
+                setWarning(500, "Character count disabled");
             }
         }
         else if (label == teMenuReset)
@@ -340,22 +392,22 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
             kbTest->reset = !kbTest->reset;
             if (kbTest->reset)
             {
-                setWarning(1000, "Reset str each cycle");
+                setWarning(500, "Reset str each cycle");
             }
             else
             {
-                setWarning(1000, "str persists");
+                setWarning(500, "str persists");
             }
         }
         else if (label == teMenuResetHard)
         {
-            textEntryInit(&kbTest->fnt[0], MAX_TEXT_LEN, kbTest->typedText);
-            setWarning(1000, "Text Entry fully reset!");
+            reset();
+            setWarning(500, "Text Entry fully reset!");
         }
     }
     if (label == teMenuFont)
     {
-        kbTest->selFnt = &kbTest->fnt[settingVal];
+        kbTest->fontSel = settingVal;
     }
     if (label == colorSettingLabel1)
     {
@@ -373,6 +425,51 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         kbTest->shadowColor = settingVal;
     }
+}
+
+static void reset()
+{
+    kbTest->fontSel     = 0;
+    kbTest->bckgrnd     = COLOR_BG;
+    kbTest->bgColor     = c000;
+    kbTest->textColor   = c555;
+    kbTest->empColor    = c555;
+    kbTest->shadow      = true;
+    kbTest->shadowColor = c111;
+    kbTest->enter       = false;
+    kbTest->caps        = false;
+    kbTest->multi       = false;
+    strcpy(kbTest->typedText, "");
+    textEntryInit(&kbTest->fnt[0], MAX_TEXT_LEN, kbTest->typedText);
+}
+
+static void drawIncidentalBG()
+{
+    // Draw random line
+    int16_t a     = esp_random() % 280;
+    int16_t b     = esp_random() % 240;
+    int16_t c     = esp_random() % 280;
+    int16_t d     = esp_random() % 240;
+    uint8_t color = esp_random() % 216;
+    drawLineFast(a, b, c, d, color);
+}
+
+static void drawResult()
+{
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    int16_t x1 = 20;
+    int16_t y1 = 20;
+    int16_t x2 = 260;
+    int16_t y2 = 220;
+    drawTextWordWrap(&kbTest->fnt[0], c555, kbTest->typedText, &x1, &y1, x2, y2);
+}
+
+static void drawCount()
+{
+    fillDisplayArea(20, 0, TFT_WIDTH, 13, c000);
+    static char buff[32];
+    snprintf(buff, 31, "Count %" PRIi16, (int16_t)strlen(kbTest->typedText));
+    drawText(&kbTest->fnt[0], c555, buff, 20, 0);
 }
 
 static void setWarning(int64_t duration, char* text)

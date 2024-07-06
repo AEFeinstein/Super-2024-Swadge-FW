@@ -190,6 +190,7 @@ bool textEntryDraw(int64_t elapsedUs)
         case CLEAR_BG:
             // Do nothing! Rely on BG being drawing each cycle by something else, or the keyboard will start
             // ghosting
+            break;
         default:
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     }
@@ -417,7 +418,7 @@ void textEntrySetEmphasisColor(uint8_t color)
 
 void textEntrySetShadowboxColor(bool active, uint8_t color)
 {
-    useShadowboxes = true;
+    useShadowboxes = active;
     shadowboxColor = color;
 }
 
@@ -434,6 +435,11 @@ void textEntrySetNewCapsStyle(bool newStyle)
 void textEntrySetMultiline(bool multiline)
 {
     multi = multiline;
+}
+
+void textEntrySoftReset()
+{
+    keyMod = NO_SHIFT;
 }
 
 // Drawing code

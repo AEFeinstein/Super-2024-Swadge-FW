@@ -244,3 +244,9 @@ void textEntrySetNewCapsStyle(bool newStyle);
  * @note cursor does not draw in multiline due to drawTextWordWrap not exposing the end position of the text.
  */
 void textEntrySetMultiline(bool multiline);
+
+/**
+ * @brief Allow the text box to continue without a full reset
+ *
+ */
+void textEntrySoftReset(void);
