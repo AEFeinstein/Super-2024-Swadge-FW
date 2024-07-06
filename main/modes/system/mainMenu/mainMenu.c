@@ -18,6 +18,7 @@
 #include "mode_pinball.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "keebTest.h"
 
 #include "settingsManager.h"
 
@@ -345,6 +346,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&touchTestMode);
         }
+        else if (label == keebTestMode.modeName)
+        {
+            switchToSwadgeMode(&keebTestMode);
+        }
         else if (label == tunernomeMode.modeName)
         {
             switchToSwadgeMode(&tunernomeMode);
@@ -425,6 +430,7 @@ void addSecretsMenu(void)
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
     // addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, keebTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
