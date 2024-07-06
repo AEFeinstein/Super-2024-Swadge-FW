@@ -386,6 +386,8 @@ static void synthEnterMode(void)
         sd->installed                    = installMidiUsb();
         sd->midiPlayer.streamingCallback = usbMidiCallback;
         sd->midiPlayer.mode              = MIDI_STREAMING;
+        sd->startupSeqComplete = true;
+        sd->startupNote = 60;
         midiPause(&sd->midiPlayer, false);
     }
 
@@ -716,16 +718,20 @@ static void synthMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down && !sd->startupDrums)
+        if (evt.down && !sd->startupSeqComplete)
         {
-            midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
-            sd->startupDrums = true;
-            sd->startupNote  = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
-        }
-        else if (evt.down && sd->startupDrums && !sd->startupSeqComplete)
-        {
-            midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
-            sd->startupSeqComplete = true;
+            if (!sd->startupDrums)
+            {
+                midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
+                sd->startupDrums = true;
+                sd->startupNote  = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
+            }
+            else
+            {
+                midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
+                sd->startupSeqComplete = true;
+
+            }
         }
         else if (evt.down && sd->startupSeqComplete)
         {
