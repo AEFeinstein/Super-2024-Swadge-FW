@@ -158,7 +158,7 @@ static void keebEnterMode(void)
     kbTest = (keebTest_t*)calloc(1, sizeof(keebTest_t));
 
     // Get resources
-    loadWsg("example.wsg", &kbTest->bg, false);
+    loadWsg("exampleBG.wsg", &kbTest->bg, false);
     loadFont("ibm_vga8.font", &kbTest->fnt[0], false);
     loadFont("radiostars.font", &kbTest->fnt[1], false);
     loadFont("rodin_eb.font", &kbTest->fnt[2], false);
