@@ -243,7 +243,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
     }
 
     // Draw the text
-    drawText(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y);
+    drawText(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y + 2);
 
     // Draw the left arrow, if applicable
     if (leftArrow)
