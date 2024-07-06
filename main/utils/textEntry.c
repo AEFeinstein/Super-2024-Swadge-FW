@@ -15,6 +15,7 @@ static char selChar;
 // Graphical
 static bool prettyGraphics;
 static uint8_t textColor;
+static uint8_t empahsisColor;
 static uint8_t textBoxColor;
 static uint64_t cursorTimer;
 static bool cursorToggle;
@@ -59,10 +60,11 @@ void textEntryStart(font_t* usefont, int max_len, char* buffer)
     cursorToggle   = true;
     activeFont     = usefont;
     textColor      = WHITE;
+    empahsisColor  = WHITE;
     prettyGraphics = false;
 }
 
-void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG, uint8_t tbColor, uint8_t txtColor)
+void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG)
 {
     texLen         = max_len;
     texString      = buffer;
@@ -73,10 +75,8 @@ void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG,
     cursorTimer    = 0;
     cursorToggle   = true;
     activeFont     = usefont;
-    textColor      = txtColor;
     prettyGraphics = true;
     bgImage        = BG;
-    textBoxColor   = tbColor;
 }
 
 bool textEntryDraw()
@@ -286,6 +286,31 @@ bool textEntryInput(uint8_t down, uint8_t button)
     return true;
 }
 
+// Setters
+
+void textEntrySetTextColor(uint8_t col)
+{
+    textColor = col;
+    if (empahsisColor == 0){
+        empahsisColor = col;
+    }
+}
+
+void textEntrySetEmphasisColor(uint8_t col)
+{
+    empahsisColor = col;
+}
+
+void textEntrySetShadowboxColor(uint8_t col)
+{
+    textBoxColor = col;
+}
+
+void textEntrySetBG(wsg_t* BG)
+{
+    bgImage = BG;
+}
+
 // Drawing code
 
 static void _drawStrPretty(int64_t eUs)
@@ -319,7 +344,7 @@ static void _drawCursor(int64_t eUs, int16_t end)
     }
     if (cursorToggle)
     {
-        drawLineFast(end + 1, STR_H_START - 2, end + 1, STR_H_START + activeFont->height + 1, textColor);
+        drawLineFast(end + 1, STR_H_START - 2, end + 1, STR_H_START + activeFont->height + 1, empahsisColor);
     }
 }
 
@@ -352,7 +377,14 @@ static void _drawKeyboard(bool pretty)
             switch (c)
             {
                 case KEY_CAPSLOCK:
-                    _drawCaps(posx, posy, textColor);
+                    if (keyMod == CAPS_LOCK)
+                    {
+                        _drawCaps(posx, posy, empahsisColor);
+                    }
+                    else
+                    {
+                        _drawCaps(posx, posy, textColor);
+                    }
                     break;
                 case KEY_SHIFT:
                     _drawShift(posx, posy, textColor);

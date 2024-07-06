@@ -51,7 +51,6 @@ void keebEnterMode(void)
     loadWsg("menu_bg.wsg", &kbTest->bg, false);
     loadFont("ibm_vga8.font", &kbTest->fnt, false);
     kbTest->displayText = true;
-    static char testText[MAX_TEXT_LEN] = "Large test string";
     strcpy(kbTest->typedText, "Press any key");
 }
 
@@ -77,7 +76,10 @@ void keebMainLoop(int64_t elapsedUs)
         {
             if (evt.down){
                 kbTest->displayText = false;
-                textEntryStartPretty(&kbTest->fnt, MAX_TEXT_LEN + 1, kbTest->typedText, &kbTest->bg, c111, c545);
+                textEntryStartPretty(&kbTest->fnt, MAX_TEXT_LEN + 1, kbTest->typedText, &kbTest->bg);
+                textEntrySetTextColor(c555);
+                textEntrySetEmphasisColor(c500);
+                textEntrySetShadowboxColor(c111);
             }
         }
     } else {

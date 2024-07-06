@@ -2,9 +2,7 @@
 
 // TODO:
 // Make a return symbol
-// Add emphasis colors
 // Un-hard code values
-// Add setters for some properties
 
 //==============================================================================
 // Includes
@@ -78,10 +76,8 @@ void textEntryStart(font_t* usefont, int max_len, char* buffer);
  * @param max_len  The length of buffer
  * @param buffer   A char* to store the entered text in
  * @param BG       Background image to use
- * @param tbColor  Color used as a contrast to the text color
- * @param txtColor Color used for the text
  */
-void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG, uint8_t tbColor, uint8_t txtColor);
+void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG);
 
 /**
  * @brief Provided for backwards comaptibility. Will not blink cursor.
@@ -108,6 +104,12 @@ bool textEntryDrawBlink(int64_t elapsedUs);
  *         false if the enter key was pressed and text entry is done
  */
 bool textEntryInput(uint8_t down, uint8_t button);
+
+// Setters
+void textEntrySetTextColor(uint8_t col);
+void textEntrySetEmphasisColor(uint8_t col);
+void textEntrySetShadowboxColor(uint8_t col);
+void textEntrySetBG(wsg_t* BG);
 
 // Internal draw functions
 
