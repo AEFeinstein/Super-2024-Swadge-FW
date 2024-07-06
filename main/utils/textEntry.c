@@ -1,6 +1,103 @@
 #include "textEntry.h"
 
 /*============================================================================
+ * Internal draw function declarations
+ *==========================================================================*/
+
+/**
+ * @brief Updated text entry with more options
+ *
+ * @param elaspedUs How many ms have elasped since last time function was called
+ */
+static void _drawStrPretty(int64_t elaspedUs);
+
+/**
+ * @brief Old, non-pretty keyboard routine. Provided for compatibility
+ *
+ * @param elaspedUs How many ms have elasped since last time function was called
+ */
+static void _drawStrSimple(int64_t elaspedUs);
+
+/**
+ * @brief Draws the curso at the end of the line
+ *
+ * @param eUs used to calculate if cursor should toggle on or off.
+ * @param end The end of the line, used to calculate position.
+ */
+static void _drawCursor(int64_t eUs, int16_t pos);
+
+/**
+ * @brief Draws the keyboard
+ *
+ * @param pretty If the shadwobox should be drawn
+ */
+static void _drawKeyboard(bool pretty);
+
+/**
+ * @brief Draws the custom capslock character
+ *
+ * @param x     Starting x position
+ * @param y     Starting y coordinate
+ * @param color Color of the text
+ */
+static void _drawCaps(int16_t x, int16_t y, uint8_t color);
+
+/**
+ * @brief Draws the custom shift key character
+ *
+ * @param x     Starting x position
+ * @param y     Starting y coordinate
+ * @param color Color of the text
+ */
+static void _drawShift(int16_t x, int16_t y, uint8_t color);
+
+/**
+ * @brief Draws the custom backspace character
+ *
+ * @param x     Starting x position
+ * @param y     Starting y coordinate
+ * @param color Color of the text
+ */
+static void _drawBackspace(int16_t x, int16_t y, uint8_t color);
+
+/**
+ * @brief Draws the custom spacebar character
+ *
+ * @param x     Starting x position
+ * @param y     Starting y coordinate
+ * @param color Color of the text
+ */
+static void _drawSpacebar(int16_t x, int16_t y, uint8_t color);
+
+/**
+ * @brief Draws the custom tab character
+ *
+ * @param x     Starting x position
+ * @param y     Starting y coordinate
+ * @param color Color of the text
+ */
+static void _drawTab(int16_t x, int16_t y, uint8_t color);
+
+/**
+ * @brief Draws the custom enter kry character
+ *
+ * @param x     Starting x position
+ * @param y     Starting y coordinate
+ * @param color Color of the text
+ *
+ * @return int  Width of the symbol for selectiion box drawing
+ */
+static int _drawEnter(int16_t x, int16_t y, uint8_t color);
+
+/**
+ * @brief Draws some text indicationg the typing mode
+ *
+ * @param color Color to use for the text
+ * @param pretty Whether to use the shadowbox
+ */
+static void _drawTypeMode(uint8_t color, bool pretty);
+
+/*============================================================================
  * Variables
  *==========================================================================*/
 
