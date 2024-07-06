@@ -57,6 +57,16 @@
 #endif
 // clang-format on
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+    #pragma GCC diagnostic ignored "-Wjump-misses-init"
+    #pragma GCC diagnostic ignored "-Wundef"
+#endif
+
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
 // CNFGOGL May be defined in the makefile
@@ -67,6 +77,10 @@
     #define PULSEAUDIO
 #endif
 #include "CNFA.h"
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
 
 // Useful if you're trying to find the code for a key/button
 // #define DEBUG_INPUTS
@@ -86,7 +100,7 @@
     #define CORNER_COLOR BG_COLOR
 #else
     // Swap RGBA to ARGB
-    #define CORNER_COLOR (((BG_COLOR >> 8) & 0xFFFFFF) | ((BG_COLOR << 24) * 0xFF))
+    #define CORNER_COLOR (((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24))
 #endif
 
 //==============================================================================
@@ -109,6 +123,7 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 
 static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col);
 static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr);
+void handleArgs(int argc, char** argv);
 
 //==============================================================================
 // Functions
@@ -585,6 +600,13 @@ void HandleMotion(int x, int y, int mask)
     doExtMouseMoveCb(x, y, mask);
 }
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#endif
+
 /**
  * @brief Free memory on exit
  */
@@ -611,6 +633,10 @@ int HandleDestroy()
 
     return 0;
 }
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
 
 /**
  * @brief Callback for sound events, both input and output
@@ -736,12 +762,12 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
                 if (array[i] >= (void*)dli.dli_fbase)
                 {
                     sign   = '+';
-                    offset = array[i] - dli.dli_fbase;
+                    offset = ((char*)array[i]) - ((char*)dli.dli_fbase);
                 }
                 else
                 {
                     sign   = '-';
-                    offset = dli.dli_fbase - array[i];
+                    offset = ((char*)dli.dli_fbase) - ((char*)array[i]);
                 }
 
                 // Concatenate each address
@@ -758,17 +784,29 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
             {
                 // Print this to the terminal and file
                 snprintf(msg, sizeof(msg) - 1, "\nCRASH BACKTRACE\n");
-                write(dumpFileDescriptor, msg, strlen(msg));
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
                 printf("%s", msg);
 
                 snprintf(msg, sizeof(msg) - 1, "===============\n");
-                write(dumpFileDescriptor, msg, strlen(msg));
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
                 printf("%s", msg);
 
                 /* Read the output a line at a time - output it. */
                 while (fgets(path, sizeof(path), fp) != NULL)
                 {
-                    write(dumpFileDescriptor, path, strlen(path));
+                    if (0 >= write(dumpFileDescriptor, path, strlen(path)))
+                    {
+                        // Write failed, jump out early
+                        return;
+                    }
                     printf("%s", path);
                 }
 
