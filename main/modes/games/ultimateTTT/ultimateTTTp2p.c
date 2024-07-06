@@ -8,63 +8,92 @@
 // Variables
 //==============================================================================
 
-static const char conStartedStr[] = "Connection Started";
-static const char conRxStartAck[] = "RX Start Ack Received";
-static const char conRxStartMsg[] = "RX Start Msg Received";
-static const char conLostStr[]    = "Connection Lost";
+static const char* conStartedStrs[] = {
+    "Connection Started.",
+    "Hold two Swadges",
+    "close together.",
+};
+static const char* conRxStartAck[] = {
+    "RX Start Ack Received",
+};
+static const char* conRxStartMsg[] = {
+    "RX Start Msg Received",
+};
 
 //==============================================================================
 // Functions
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Handle input when showing the connection UI
  *
+ * @param ttt The entire game state
+ * @param evt The button event
  */
 void tttHandleConnectingInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
 {
     if (evt->down && PB_B == evt->button)
     {
-        p2pDeinit(&ttt->p2p);
-        ttt->ui = TUI_MENU;
+        // Cancel the connection and return to the main menu
+        p2pDeinit(&ttt->game.p2p);
+        tttShowUi(TUI_MENU);
     }
 }
 
 /**
- * @brief TODO
+ * @brief Draw the marker selection UI
  *
- * @param ttt
+ * @param ttt The entire game state
+ * @param elapsedUs The time elapsed since this was last called
  */
-void tttDrawConnecting(ultimateTTT_t* ttt)
+void tttDrawConnecting(ultimateTTT_t* ttt, int64_t elapsedUs)
 {
-    clearPxTft();
-    drawText(&ttt->font_rodin, c555, ttt->conStr, 40, 40);
+    // Draw the background
+    drawMenuMania(ttt->bgMenu, ttt->menuRenderer, elapsedUs);
+
+    // Spacing between lines
+    int16_t ySpacing = 8;
+
+    // Center text vertically under the title
+    int16_t tHeight = (ttt->numConStrs * ttt->font_rodin.height) + ((ttt->numConStrs - 1) * ySpacing);
+    int16_t yOff    = MANIA_TITLE_HEIGHT + (MANIA_BODY_HEIGHT - tHeight) / 2;
+
+    // Draw the connection strings, centered
+    for (int16_t tIdx = 0; tIdx < ttt->numConStrs; tIdx++)
+    {
+        int16_t tWidth = textWidth(&ttt->font_rodin, ttt->conStrs[tIdx]);
+        drawText(&ttt->font_rodin, c000, ttt->conStrs[tIdx], (TFT_WIDTH - tWidth) / 2, yOff);
+        yOff += (ttt->font_rodin.height + ySpacing);
+    }
 }
 
 /**
- * @brief TODO
+ * @brief Handle connection events and update the UI
  *
- * @param ttt
- * @param evt
+ * @param ttt The entire game state
+ * @param evt The connection event
  */
 void tttHandleCon(ultimateTTT_t* ttt, connectionEvt_t evt)
 {
-    // TODO handle connection states and disconnection
+    // Pick a new string for each connection state
     switch (evt)
     {
         case CON_STARTED:
         {
-            ttt->conStr = conStartedStr;
+            ttt->conStrs    = conStartedStrs;
+            ttt->numConStrs = ARRAY_SIZE(conStartedStrs);
             break;
         }
         case RX_GAME_START_ACK:
         {
-            ttt->conStr = conRxStartAck;
+            ttt->conStrs    = conRxStartAck;
+            ttt->numConStrs = ARRAY_SIZE(conRxStartAck);
             break;
         }
         case RX_GAME_START_MSG:
         {
-            ttt->conStr = conRxStartMsg;
+            ttt->conStrs    = conRxStartMsg;
+            ttt->numConStrs = ARRAY_SIZE(conRxStartMsg);
             break;
         }
         case CON_ESTABLISHED:
@@ -74,18 +103,20 @@ void tttHandleCon(ultimateTTT_t* ttt, connectionEvt_t evt)
         }
         case CON_LOST:
         {
-            ttt->conStr = conLostStr;
+            // Disconnected, show that UI
+            ttt->lastResult = TTR_DISCONNECT;
+            tttShowUi(TUI_RESULT);
             break;
         }
     }
 }
 
 /**
- * @brief TODO
+ * @brief Handle a received P2P message
  *
- * @param ttt
- * @param payload
- * @param len
+ * @param ttt The entire game state
+ * @param payload The message received
+ * @param len THe length of the message received
  */
 void tttHandleMsgRx(ultimateTTT_t* ttt, const uint8_t* payload, uint8_t len)
 {
@@ -98,39 +129,12 @@ void tttHandleMsgRx(ultimateTTT_t* ttt, const uint8_t* payload, uint8_t len)
     // Handle incoming messages
     switch (payload[0])
     {
-        case MSG_SELECT_PIECE:
+        case MSG_SELECT_MARKER:
         {
-            if (len == sizeof(tttMsgSelectPiece_t))
+            // Validate length
+            if (len == sizeof(tttMsgSelectMarker_t))
             {
-                const tttMsgSelectPiece_t* rxSel = (const tttMsgSelectPiece_t*)payload;
-
-                // If this is the second player
-                if (GOING_SECOND == p2pGetPlayOrder(&ttt->p2p))
-                {
-                    // Save p1's piece
-                    ttt->p1Piece = rxSel->piece;
-
-                    // Send p2's piece to p1
-                    ttt->p2Piece = TTT_PIECE_O;
-
-                    // Send sprite selection to other swadge
-                    tttMsgSelectPiece_t txSel = {
-                        .type  = MSG_SELECT_PIECE,
-                        .piece = ttt->p2Piece,
-                    };
-                    p2pSendMsg(&ttt->p2p, (const uint8_t*)&txSel, sizeof(txSel), tttMsgTxCbFn);
-
-                    // Wait for p1 to make the first move
-                    ttt->state = TGS_WAITING;
-                }
-                else // Going first
-                {
-                    // Received p2's piece
-                    ttt->p2Piece = rxSel->piece;
-
-                    // Make the first move
-                    ttt->state = TGS_PLACING_PIECE;
-                }
+                tttReceiveMarker(ttt, (const tttMsgSelectMarker_t*)payload);
             }
             break;
         }
@@ -143,12 +147,12 @@ void tttHandleMsgRx(ultimateTTT_t* ttt, const uint8_t* payload, uint8_t len)
             }
             break;
         }
-        case MSG_PLACE_PIECE:
+        case MSG_PLACE_MARKER:
         {
             // Length check
-            if (len == sizeof(tttMsgPlacePiece_t))
+            if (len == sizeof(tttMsgPlaceMarker_t))
             {
-                tttReceivePlacedPiece(ttt, (const tttMsgPlacePiece_t*)payload);
+                tttReceivePlacedMarker(ttt, (const tttMsgPlaceMarker_t*)payload);
             }
             break;
         }
@@ -156,14 +160,30 @@ void tttHandleMsgRx(ultimateTTT_t* ttt, const uint8_t* payload, uint8_t len)
 }
 
 /**
- * @brief TODO
+ * @brief Callback after a P2P message is sent
  *
- * @param ttt
- * @param status
- * @param data
- * @param len
+ * @param ttt The entire game state
+ * @param status The status of the transmission
+ * @param data The data that was transmitted
+ * @param len The length of the data that was transmitted
  */
 void tttHandleMsgTx(ultimateTTT_t* ttt, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
-    // TODO
+    // Check transmission status
+    switch (status)
+    {
+        case MSG_ACKED:
+        {
+            // Cool, move along
+            break;
+        }
+        default:
+        case MSG_FAILED:
+        {
+            // Message failure means disconnection
+            ttt->lastResult = TTR_DISCONNECT;
+            tttShowUi(TUI_RESULT);
+            break;
+        }
+    }
 }

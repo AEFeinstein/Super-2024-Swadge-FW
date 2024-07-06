@@ -277,6 +277,8 @@ static int TUNER_FLAT_THRES_X;
 static int TUNER_SHARP_THRES_X;
 static int TUNER_THRES_Y;
 
+// TODO: We can't use the mic and the speaker anymore, so I don't really know what to do with this anyway.
+/*
 static musicalNote_t metronome_primary_notes[] = {{
     .note   = F_SHARP_5,
     .timeMs = METRONOME_CLICK_MS,
@@ -300,6 +302,7 @@ static songTrack_t metronome_secondary_tracks[]  = {{
 }};
 song_t metronome_secondary
     = {.numTracks = ARRAY_SIZE(metronome_secondary_tracks), .shouldLoop = false, .tracks = metronome_secondary_tracks};
+*/
 
 /*============================================================================
  * Functions
@@ -958,12 +961,12 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 // Add one to the beat counter
                 tunernome->beatCtr = (tunernome->beatCtr + 1) % tunernome->beatLength;
 
-                const song_t* song;
+                // const song_t* song;
                 led_t leds[CONFIG_NUM_LEDS] = {{0}};
 
                 if (0 == tunernome->beatCtr)
                 {
-                    song = &metronome_primary;
+                    // song = &metronome_primary;
                     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
                     {
                         leds[i].r = 0x40;
@@ -973,7 +976,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 }
                 else
                 {
-                    song = &metronome_secondary;
+                    // song = &metronome_secondary;
                     for (int i = 0; i < 4; i++)
                     {
                         leds[fourLedFlashIdxs[i]].r = 0x40;
@@ -982,10 +985,10 @@ void tunernomeMainLoop(int64_t elapsedUs)
                     }
                 }
 
-                if (!tunernome->isSilent)
+                /*if (!tunernome->isSilent)
                 {
                     soundPlaySfx(song, BZR_STEREO);
-                }
+                }*/
                 setLeds(leds, CONFIG_NUM_LEDS);
                 tunernome->isBlinking         = true;
                 tunernome->blinkStartUs       = esp_timer_get_time();

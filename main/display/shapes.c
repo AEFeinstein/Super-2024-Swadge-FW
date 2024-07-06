@@ -1031,10 +1031,10 @@ void drawCircleScaled(int xm, int ym, int r, paletteColor_t col, int xOrigin, in
  * @param xm The X coordinate of the center of the circle
  * @param ym The Y coordinate of the center of the circle
  * @param r The radius of the circle
- * @param q1 True to draw the top left quadrant
- * @param q2 True to draw the top right quadrant
- * @param q3 True to draw the bottom right quadrant
- * @param q4 True to draw the bottom left quadrant
+ * @param q1 True to draw the top right quadrant
+ * @param q2 True to draw the top left quadrant
+ * @param q3 True to draw the bottom left quadrant
+ * @param q4 True to draw the bottom right quadrant
  * @param col The color to draw
  */
 void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool q4, paletteColor_t col)

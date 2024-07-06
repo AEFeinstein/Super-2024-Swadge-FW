@@ -35,8 +35,6 @@
 
 #include "hdw-mic.h"
 #include "hdw-mic_emu.h"
-#include "hdw-bzr.h"
-#include "hdw-bzr_emu.h"
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
 
@@ -61,7 +59,7 @@
 
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
-#define CNFGOGL
+// CNFGOGL May be defined in the makefile
 #include "CNFG.h"
 
 #define CNFA_IMPLEMENTATION
@@ -83,6 +81,13 @@
 
 #define BG_COLOR  0x191919FF // This color isn't part of the palette
 #define DIV_COLOR 0x808080FF
+
+#if defined(CNFGOGL)
+    #define CORNER_COLOR BG_COLOR
+#else
+    // Swap RGBA to ARGB
+    #define CORNER_COLOR (((BG_COLOR >> 8) & 0xFFFFFF) | ((BG_COLOR << 24) * 0xFF))
+#endif
 
 //==============================================================================
 // Variables
@@ -270,7 +275,8 @@ void taskYIELD(void)
     if (!isRunning)
     {
         deinitSystem();
-        CNFGTearDown();
+        // This is registered with atexit()
+        // CNFGTearDown();
 
 #ifdef ENABLE_GCOV
         __gcov_dump();
@@ -346,7 +352,7 @@ void taskYIELD(void)
     if ((0 != bitmapWidth) && (0 != bitmapHeight) && (NULL != bitmapDisplay))
     {
 #if defined(CONFIG_GC9307_240x280)
-        plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, BG_COLOR);
+        plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, CORNER_COLOR);
 #endif
         // Update the display, centered
         CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);

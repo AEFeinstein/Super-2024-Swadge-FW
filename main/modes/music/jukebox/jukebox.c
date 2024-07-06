@@ -35,6 +35,7 @@
 #include "mode_pinball.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "midiPlayer.h"
 
 /*==============================================================================
  * Defines
@@ -58,7 +59,8 @@ typedef struct
 {
     const char* filename;
     const char* name;
-    song_t song;
+    midiFile_t song;
+    bool shouldLoop;
 } jukeboxSong_t;
 
 typedef struct
@@ -151,51 +153,49 @@ static const char str_play[]       = ": Play";
 
 // Arrays
 
-jukeboxSong_t music_jukebox[] = {
-    {
-        .filename = "Fauxrio_Kart.sng",
-        .name     = "Fauxrio Kart",
-    },
-    {
-        .filename = "hotrod.sng",
-        .name     = "Hot Rod",
-    },
-    {
-        .filename = "Fairy_Fountain.sng",
-        .name     = "The Lake",
-    },
-    {
-        .filename = "yalikejazz.sng",
-        .name     = "Ya like jazz?",
-    },
-    {
-        .filename = "banana.sng",
-        .name     = "Banana",
-    },
-};
+jukeboxSong_t music_jukebox[] = {{
+                                     .filename = "Fauxrio_Kart.mid",
+                                     .name     = "Fauxrio Kart",
+                                 },
+                                 {
+                                     .filename = "hotrod.mid",
+                                     .name     = "Hot Rod",
+                                 },
+                                 {
+                                     .filename = "Fairy_Fountain.mid",
+                                     .name     = "The Lake",
+                                 },
+                                 {
+                                     .filename = "yalikejazz.mid",
+                                     .name     = "Ya like jazz?",
+                                 },
+                                 {
+                                     .filename = "banana.mid",
+                                     .name     = "Banana",
+                                 }};
 
 jukeboxSong_t music_credits[] = {
     {
-        .filename = "credits.sng",
+        .filename = "credits.mid",
         .name     = creditsName,
     },
 };
 
 jukeboxSong_t music_unused[] = {
     {
-        .filename = "gmcc.sng",
+        .filename = "gmcc.mid",
         .name     = "Pong BGM",
     },
     {
-        .filename = "ode.sng",
+        .filename = "ode.mid",
         .name     = "Ode to Joy",
     },
     {
-        .filename = "stereo.sng",
+        .filename = "stereo.mid",
         .name     = "Stereo",
     },
     {
-        .filename = "Follinesque.sng",
+        .filename = "Follinesque.mid",
         .name     = "Follinesque",
     },
 };
@@ -222,33 +222,33 @@ const jukeboxCategory_t musicCategories[] = {
 
 jukeboxSong_t sfx_mainMenu[] = {
     {
-        .filename = "item.sng",
+        .filename = "item.mid",
         .name     = "Item",
     },
     {
-        .filename = "jingle.sng",
+        .filename = "jingle.mid",
         .name     = "Jingle",
     },
 };
 
 jukeboxSong_t sfx_factoryTest[] = {
     {
-        .filename = "stereo_test.sng",
+        .filename = "stereo_test.mid",
         .name     = "Stereo Check",
     },
 };
 
 jukeboxSong_t sfx_unused[] = {
     {
-        .filename = "block1.sng",
+        .filename = "block1.mid",
         .name     = "Pong Block 1",
     },
     {
-        .filename = "block1.sng",
+        .filename = "block1.mid",
         .name     = "Pong Block 2",
     },
     {
-        .filename = "gamecube.sng",
+        .filename = "gamecube.mid",
         .name     = "GameCube",
     },
 };
@@ -371,11 +371,21 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             {
                 if (jukebox->inMusicSubmode)
                 {
+                    if (soundGetPlayerBgm() != NULL)
+                    {
+                        soundGetPlayerBgm()->loop
+                            = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
+                    }
                     soundPlayBgmCb(&musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }
                 else
                 {
+                    if (soundGetPlayerSfx() != NULL)
+                    {
+                        soundGetPlayerSfx()->loop
+                            = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
+                    }
                     soundPlaySfxCb(&sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }
@@ -664,7 +674,7 @@ void jukeboxBzrDoneCb(void)
         category = sfxCategories;
     }
 
-    if (!category[jukebox->categoryIdx].songs[jukebox->songIdx].song.shouldLoop)
+    if (!category[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop)
     {
         jukebox->isPlaying = false;
     }
@@ -676,16 +686,9 @@ void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCa
     {
         for (int songIdx = 0; songIdx < categoryArray[categoryIdx].numSongs; songIdx++)
         {
-            loadSong(categoryArray[categoryIdx].songs[songIdx].filename,
-                     &categoryArray[categoryIdx].songs[songIdx].song, true);
-            categoryArray[categoryIdx].songs[songIdx].song.shouldLoop = shouldLoop;
-
-            if (categoryArray[categoryIdx].songs[songIdx].song.numTracks == 0)
-            {
-                ESP_LOGE(JK_TAG, "Category %d \"%s\" song %d \"%s\" numTracks is 0\n", categoryIdx,
-                         categoryArray[categoryIdx].categoryName, songIdx,
-                         categoryArray[categoryIdx].songs[songIdx].filename);
-            }
+            loadMidiFile(categoryArray[categoryIdx].songs[songIdx].filename,
+                         &categoryArray[categoryIdx].songs[songIdx].song, true);
+            categoryArray[categoryIdx].songs[songIdx].shouldLoop = shouldLoop;
         }
     }
 }
@@ -699,7 +702,7 @@ void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCa
             // Avoid freeing songs we never loaded
             if (categoryArray[categoryIdx].songs[songIdx].song.tracks != NULL)
             {
-                freeSong(&categoryArray[categoryIdx].songs[songIdx].song);
+                unloadMidiFile(&categoryArray[categoryIdx].songs[songIdx].song);
             }
         }
     }

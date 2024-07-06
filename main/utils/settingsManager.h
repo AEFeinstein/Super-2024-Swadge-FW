@@ -143,6 +143,9 @@ bool setColorchordModeSetting(colorchordMode_t);
 bool getTestModePassedSetting(void);
 bool setTestModePassedSetting(bool status);
 
+bool getTutorialCompletedSetting(void);
+bool setTutorialCompletedSetting(bool status);
+
 bool getGamepadAccelSetting(void);
 const settingParam_t* getGamepadAccelSettingBounds(void);
 bool setGamepadAccelSetting(bool status);
