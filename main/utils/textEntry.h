@@ -83,8 +83,7 @@
  * \endcode
  */
 
-// TODO:
-// Add in menu to be able to play with the text entry without recompiling
+
 
 #pragma once
 
@@ -108,7 +107,6 @@
 #define SHADOWBOX_MARGIN    4  // Margine around shadowboxes
 #define RETURN_WIDTH        16 // Width of return symbol
 #define KEY_SPACING         5  // Space between keys
-#define MULTILINE_MAX_LINES 5  // Number of lines Multiline boxes can have
 #define MAX_WIDTH_CHAR      32 // @ symbol, due to size in fonts tested.
 
 // Timers
@@ -145,7 +143,7 @@ typedef enum
 } bgMode_t;
 
 //==============================================================================
-// Functions
+// Function declarations
 //==============================================================================
 
 /**

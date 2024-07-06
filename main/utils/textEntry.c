@@ -7,6 +7,7 @@
 /**
  * @brief Updated text entry with more options
  *
+ * @param endH Where the keyboard ends
  * @param elapsedUs How many ms have elapsed since last time function was called
  */
 static void _drawStr(int16_t endH, int64_t elapsedUs);
@@ -16,12 +17,14 @@ static void _drawStr(int16_t endH, int64_t elapsedUs);
  *
  * @param eUs used to calculate if cursor should toggle on or off.
  * @param end The end of the line, used to calculate position.
+ * @param h Height value to start at
  */
 static void _drawCursor(int64_t eUs, int16_t pos, int16_t h);
 
 /**
  * @brief Draws the keyboard
  *
+ * @return int16_t top of keyboard
  */
 static int16_t _drawKeyboard(void);
 
@@ -77,7 +80,6 @@ static void _drawTab(int16_t x, int16_t y, uint8_t color);
  * @param x     Starting x position
  * @param y     Starting y coordinate
  * @param color Color of the text
- *
  * @return int  Width of the symbol for selection box drawing
  */
 static int _drawEnter(int16_t x, int16_t y, uint8_t color);
