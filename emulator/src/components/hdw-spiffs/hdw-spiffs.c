@@ -99,7 +99,7 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 
     // Read the file into an array
     output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
-    if (*outsize != fread(output, *outsize, 1, f))
+    if (1 != fread(output, *outsize, 1, f))
     {
         ESP_LOGE("SPIFFS", "%s fread error!!!!", fname);
         exit(1);
