@@ -26,7 +26,7 @@ esp_err_t tinyusb_driver_install(const tinyusb_config_t* config)
 
 bool tud_ready(void)
 {
-    //ESP_LOGI("TinyUSB", "tud_ready() returning %s", using_midi ? "true" : "false");
+    // ESP_LOGI("TinyUSB", "tud_ready() returning %s", using_midi ? "true" : "false");
     return using_midi;
 }
 

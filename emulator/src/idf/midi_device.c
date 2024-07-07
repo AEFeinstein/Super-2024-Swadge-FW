@@ -3,38 +3,59 @@
 // CFG_TUD_MIDI > 1
 //--------------------------------------------------------------------+
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+    #pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
 #define PLATFORM_MIDI_IMPLEMENTATION
 #include "platform_midi.h"
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
+
+#include "midi_device.h"
+#include "midi_device_emu.h"
 
 #include "tinyusb.h"
 #include <stdbool.h>
 #include <stdint.h>
 
-static uint8_t runningStatus = 0;
-static bool midiInit = false;
+static uint8_t runningStatus                   = 0;
+static struct platform_midi_driver* midiDriver = NULL;
 
 // Check if midi interface is mounted
 bool tud_midi_n_mounted(uint8_t itf)
 {
-    return midiInit;
+    return NULL != midiDriver;
 }
 
 // Get the number of bytes available for reading
 uint32_t tud_midi_n_available(uint8_t itf, uint8_t cable_num)
 {
-    return PLATFORM_MIDI_AVAIL();
+    return midiDriver ? platform_midi_avail(midiDriver) : 0;
 }
 
 // Read byte stream              (legacy)
 uint32_t tud_midi_n_stream_read(uint8_t itf, uint8_t cable_num, void* buffer, uint32_t bufsize)
 {
-    return PLATFORM_MIDI_READ((unsigned char*)buffer, bufsize);
+    return midiDriver ? platform_midi_read(midiDriver, (unsigned char*)buffer, bufsize) : 0;
 }
 
 // Write byte Stream             (legacy)
 uint32_t tud_midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t const* buffer, uint32_t bufsize)
 {
-    // NYI
+    int written = midiDriver ? platform_midi_write(midiDriver, buffer, bufsize) : 0;
+
+    if (written > 0)
+    {
+        return (uint32_t)written;
+    }
+
     return 0;
 }
 
@@ -42,7 +63,7 @@ uint32_t tud_midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t const* 
 bool tud_midi_n_packet_read(uint8_t itf, uint8_t packet[4])
 {
     uint8_t real_packet[12];
-    int read = PLATFORM_MIDI_READ(real_packet, sizeof(real_packet));
+    int read = midiDriver ? platform_midi_read(midiDriver, real_packet, sizeof(real_packet)) : 0;
     if (read > 0)
     {
         printf("Packet: ");
@@ -105,8 +126,7 @@ bool tud_midi_n_packet_read(uint8_t itf, uint8_t packet[4])
 // Write event packet            (4 bytes)
 bool tud_midi_n_packet_write(uint8_t itf, uint8_t const packet[4])
 {
-    // NYI
-    return false;
+    return tud_midi_n_stream_write(itf, 0, packet, 4);
 }
 
 //--------------------------------------------------------------------+
@@ -114,7 +134,7 @@ bool tud_midi_n_packet_write(uint8_t itf, uint8_t const packet[4])
 //--------------------------------------------------------------------+
 bool tud_midi_mounted(void)
 {
-    return midiInit != 0;
+    return tud_midi_n_mounted(0);
 }
 
 uint32_t tud_midi_available(void)
@@ -160,18 +180,14 @@ void setMidiClientName(const char* name)
 }
 void midid_init(void)
 {
-#ifdef PLATFORM_MIDI_SUPPORTED
     printf("Initializing MIDI!\n");
-    midiInit = PLATFORM_MIDI_INIT(clientName ? "Platform MIDI" : clientName);
-#else
-    printf("MIDI not yet supported on this platform\n");
-#endif
+    midiDriver = platform_midi_init(clientName ? "Swadge Emulator MIDI" : clientName);
 }
 
 void midid_reset(uint8_t rhport)
 {
-    PLATFORM_MIDI_DEINIT();
-    midiInit = false;
+    platform_midi_deinit(midiDriver);
+    midiDriver = NULL;
 }
 
 uint16_t midid_open(uint8_t rhport, tusb_desc_interface_t const* itf_desc, uint16_t max_len)
