@@ -84,7 +84,9 @@ CFLAGS_WARNINGS_EXTRA = \
 GIT_HASH  = \"$(shell git rev-parse --short=7 HEAD)\"
 
 # Defines for all files
-DEFINES_LIST = #CONFIG_GC9307_240x280=y
+DEFINES_LIST = \
+	_GNU_SOURCE \
+	#CONFIG_GC9307_240x280=y
 DEFINES = $(patsubst %, -D%, $(DEFINES_LIST))
 
 ################################################################################
