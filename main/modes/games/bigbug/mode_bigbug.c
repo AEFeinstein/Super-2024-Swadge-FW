@@ -136,25 +136,32 @@ bb_t* bigbug = NULL;
 
 static void bb_EnterMode(void)
 {
+    printf("a\n");
     bigbug = calloc(1, sizeof(bb_t));
+    printf("b\n");
 
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
-
+    printf("c\n");
     bb_initializeTileMap(&(bigbug->tilemap));
+    printf("d\n");
     bb_initializeEntityManager(&(bigbug->entityManager),
                             &(bigbug->gameData),
                             &(bigbug->soundManager));
-
+    printf("e\n");
     // Load graphics
     loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, true);
+    printf("f\n");
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
+    printf("g\n");
 
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
+    printf("h\n");
 
     bb_Reset();
+    printf("i\n");
 }
  
 static void bb_ExitMode(void)
