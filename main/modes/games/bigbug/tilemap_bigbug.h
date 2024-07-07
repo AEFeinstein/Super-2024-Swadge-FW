@@ -27,7 +27,8 @@ struct bb_tilemap_t
 
     wsg_t mg1Wsg[32];     ///< The 1st variants of midground tiles
 
-    wsg_t surfaceWsg;     ///< A graphic at the surface of the city dump
+    wsg_t surface1Wsg;     ///< A graphic at the surface of the city dump
+    wsg_t surface2Wsg;     ///< A graphic at the surface of the city dump
     wsg_t bgWsg;          ///< The paralax background for depth
 
     int8_t fgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of foreground tiles. The number is the dirt's health. 0 is air.

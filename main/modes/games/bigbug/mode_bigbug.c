@@ -199,8 +199,13 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     //accelIntegrate(); only needed if using accelerometer for something
     //SETUP_FOR_TURBO(); only needed if drawing individual pixels
-
-    fillDisplayArea(x, y, x + w, y + h, c455);
+    if(bigbug->camera.pos.y<100){
+        fillDisplayArea(x, y, x + w, y + h, c455);
+    }
+    else{
+        fillDisplayArea(x, y, x + w, y + h, c000);
+    }
+    
 }
  
 static void bb_EspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
@@ -334,8 +339,8 @@ static void bb_GameLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         // Print the current event
-        printf("state: %04X, button: %d, down: %s\n",
-        evt.state, evt.button, evt.down ? "down" : "up");
+        // printf("state: %04X, button: %d, down: %s\n",
+        // evt.state, evt.button, evt.down ? "down" : "up");
         
         // Save the button state
         bigbug->gameData.btnState = evt.state;
@@ -536,10 +541,10 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 /////////////////////
 
                 //crumble test
-                uint32_t* val = calloc(2,sizeof(uint32_t));
-                val[0] = 5;
-                val[1] = 3;
-                push(bigbug->gameData.unsupported, (void*)val);
+                // uint32_t* val = calloc(2,sizeof(uint32_t));
+                // val[0] = 5;
+                // val[1] = 3;
+                // push(bigbug->gameData.unsupported, (void*)val);
 
                 //Update the dirt by decrementing it.
                 bigbug->tilemap.fgTiles[best_i][best_j] -= 1;

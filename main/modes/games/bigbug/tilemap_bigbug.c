@@ -102,22 +102,22 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     loadWsg("s1g13.wsg", &tilemap->s1Wsg[14], true);
     loadWsg("s1g9.wsg",  &tilemap->s1Wsg[15], true);
     //soft corners
-    loadWsg("s1g016.wsg", &tilemap->s1Wsg[16], true);
-    loadWsg("s1g017.wsg", &tilemap->s1Wsg[17], true);
-    loadWsg("s1g018.wsg", &tilemap->s1Wsg[18], true);
-    loadWsg("s1g019.wsg", &tilemap->s1Wsg[19], true);
-    loadWsg("s1g020.wsg", &tilemap->s1Wsg[20], true);
-    loadWsg("s1g021.wsg", &tilemap->s1Wsg[21], true);
-    loadWsg("s1g022.wsg", &tilemap->s1Wsg[22], true);
-    loadWsg("s1g023.wsg", &tilemap->s1Wsg[23], true);
-    loadWsg("s1g024.wsg", &tilemap->s1Wsg[24], true);
-    loadWsg("s1g025.wsg", &tilemap->s1Wsg[25], true);
-    loadWsg("s1g026.wsg", &tilemap->s1Wsg[26], true);
-    loadWsg("s1g027.wsg", &tilemap->s1Wsg[27], true);
-    loadWsg("s1g028.wsg", &tilemap->s1Wsg[28], true);
-    loadWsg("s1g029.wsg", &tilemap->s1Wsg[29], true);
-    loadWsg("s1g030.wsg", &tilemap->s1Wsg[30], true);
-    loadWsg("s1g031.wsg", &tilemap->s1Wsg[31], true);
+    loadWsg("s1g16.wsg", &tilemap->s1Wsg[16], true);
+    loadWsg("s1g17.wsg", &tilemap->s1Wsg[17], true);
+    loadWsg("s1g18.wsg", &tilemap->s1Wsg[18], true);
+    loadWsg("s1g19.wsg", &tilemap->s1Wsg[19], true);
+    loadWsg("s1g20.wsg", &tilemap->s1Wsg[20], true);
+    loadWsg("s1g21.wsg", &tilemap->s1Wsg[21], true);
+    loadWsg("s1g22.wsg", &tilemap->s1Wsg[22], true);
+    loadWsg("s1g23.wsg", &tilemap->s1Wsg[23], true);
+    loadWsg("s1g24.wsg", &tilemap->s1Wsg[24], true);
+    loadWsg("s1g25.wsg", &tilemap->s1Wsg[25], true);
+    loadWsg("s1g26.wsg", &tilemap->s1Wsg[26], true);
+    loadWsg("s1g27.wsg", &tilemap->s1Wsg[27], true);
+    loadWsg("s1g28.wsg", &tilemap->s1Wsg[28], true);
+    loadWsg("s1g29.wsg", &tilemap->s1Wsg[29], true);
+    loadWsg("s1g30.wsg", &tilemap->s1Wsg[30], true);
+    loadWsg("s1g31.wsg", &tilemap->s1Wsg[31], true);
 
     //medium
     loadWsg("m1g3.wsg",  &tilemap->m1Wsg[0],  true);
@@ -137,22 +137,22 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     loadWsg("m1g13.wsg", &tilemap->m1Wsg[14], true);
     loadWsg("m1g9.wsg",  &tilemap->m1Wsg[15], true);
     //medium corners
-    loadWsg("m1g016.wsg", &tilemap->m1Wsg[16], true);
-    loadWsg("m1g017.wsg", &tilemap->m1Wsg[17], true);
-    loadWsg("m1g018.wsg", &tilemap->m1Wsg[18], true);
-    loadWsg("m1g019.wsg", &tilemap->m1Wsg[19], true);
-    loadWsg("m1g020.wsg", &tilemap->m1Wsg[20], true);
-    loadWsg("m1g021.wsg", &tilemap->m1Wsg[21], true);
-    loadWsg("m1g022.wsg", &tilemap->m1Wsg[22], true);
-    loadWsg("m1g023.wsg", &tilemap->m1Wsg[23], true);
-    loadWsg("m1g024.wsg", &tilemap->m1Wsg[24], true);
-    loadWsg("m1g025.wsg", &tilemap->m1Wsg[25], true);
-    loadWsg("m1g026.wsg", &tilemap->m1Wsg[26], true);
-    loadWsg("m1g027.wsg", &tilemap->m1Wsg[27], true);
-    loadWsg("m1g028.wsg", &tilemap->m1Wsg[28], true);
-    loadWsg("m1g029.wsg", &tilemap->m1Wsg[29], true);
-    loadWsg("m1g030.wsg", &tilemap->m1Wsg[30], true);
-    loadWsg("m1g031.wsg", &tilemap->m1Wsg[31], true);
+    loadWsg("m1g16.wsg", &tilemap->m1Wsg[16], true);
+    loadWsg("m1g17.wsg", &tilemap->m1Wsg[17], true);
+    loadWsg("m1g18.wsg", &tilemap->m1Wsg[18], true);
+    loadWsg("m1g19.wsg", &tilemap->m1Wsg[19], true);
+    loadWsg("m1g20.wsg", &tilemap->m1Wsg[20], true);
+    loadWsg("m1g21.wsg", &tilemap->m1Wsg[21], true);
+    loadWsg("m1g22.wsg", &tilemap->m1Wsg[22], true);
+    loadWsg("m1g23.wsg", &tilemap->m1Wsg[23], true);
+    loadWsg("m1g24.wsg", &tilemap->m1Wsg[24], true);
+    loadWsg("m1g25.wsg", &tilemap->m1Wsg[25], true);
+    loadWsg("m1g26.wsg", &tilemap->m1Wsg[26], true);
+    loadWsg("m1g27.wsg", &tilemap->m1Wsg[27], true);
+    loadWsg("m1g28.wsg", &tilemap->m1Wsg[28], true);
+    loadWsg("m1g29.wsg", &tilemap->m1Wsg[29], true);
+    loadWsg("m1g30.wsg", &tilemap->m1Wsg[30], true);
+    loadWsg("m1g31.wsg", &tilemap->m1Wsg[31], true);
 
     //hard
     loadWsg("h1g3.wsg",  &tilemap->h1Wsg[0],  true);
@@ -172,22 +172,22 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     loadWsg("h1g13.wsg", &tilemap->h1Wsg[14], true);
     loadWsg("h1g9.wsg",  &tilemap->h1Wsg[15], true);
     //hard corners
-    loadWsg("h1g016.wsg", &tilemap->h1Wsg[16], true);
-    loadWsg("h1g017.wsg", &tilemap->h1Wsg[17], true);
-    loadWsg("h1g018.wsg", &tilemap->h1Wsg[18], true);
-    loadWsg("h1g019.wsg", &tilemap->h1Wsg[19], true);
-    loadWsg("h1g020.wsg", &tilemap->h1Wsg[20], true);
-    loadWsg("h1g021.wsg", &tilemap->h1Wsg[21], true);
-    loadWsg("h1g022.wsg", &tilemap->h1Wsg[22], true);
-    loadWsg("h1g023.wsg", &tilemap->h1Wsg[23], true);
-    loadWsg("h1g024.wsg", &tilemap->h1Wsg[24], true);
-    loadWsg("h1g025.wsg", &tilemap->h1Wsg[25], true);
-    loadWsg("h1g026.wsg", &tilemap->h1Wsg[26], true);
-    loadWsg("h1g027.wsg", &tilemap->h1Wsg[27], true);
-    loadWsg("h1g028.wsg", &tilemap->h1Wsg[28], true);
-    loadWsg("h1g029.wsg", &tilemap->h1Wsg[29], true);
-    loadWsg("h1g030.wsg", &tilemap->h1Wsg[30], true);
-    loadWsg("h1g031.wsg", &tilemap->h1Wsg[31], true);
+    loadWsg("h1g16.wsg", &tilemap->h1Wsg[16], true);
+    loadWsg("h1g17.wsg", &tilemap->h1Wsg[17], true);
+    loadWsg("h1g18.wsg", &tilemap->h1Wsg[18], true);
+    loadWsg("h1g19.wsg", &tilemap->h1Wsg[19], true);
+    loadWsg("h1g20.wsg", &tilemap->h1Wsg[20], true);
+    loadWsg("h1g21.wsg", &tilemap->h1Wsg[21], true);
+    loadWsg("h1g22.wsg", &tilemap->h1Wsg[22], true);
+    loadWsg("h1g23.wsg", &tilemap->h1Wsg[23], true);
+    loadWsg("h1g24.wsg", &tilemap->h1Wsg[24], true);
+    loadWsg("h1g25.wsg", &tilemap->h1Wsg[25], true);
+    loadWsg("h1g26.wsg", &tilemap->h1Wsg[26], true);
+    loadWsg("h1g27.wsg", &tilemap->h1Wsg[27], true);
+    loadWsg("h1g28.wsg", &tilemap->h1Wsg[28], true);
+    loadWsg("h1g29.wsg", &tilemap->h1Wsg[29], true);
+    loadWsg("h1g30.wsg", &tilemap->h1Wsg[30], true);
+    loadWsg("h1g31.wsg", &tilemap->h1Wsg[31], true);
 
     //Midground
     loadWsg("mg3.wsg",  &tilemap->mg1Wsg[0],  true);
@@ -224,31 +224,32 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     loadWsg("mg030.wsg", &tilemap->mg1Wsg[30], true);
     loadWsg("mg031.wsg", &tilemap->mg1Wsg[31], true);
 
-    loadWsg("dumpSurface_small.wsg", &tilemap->surfaceWsg, true);
+    loadWsg("baked_Landfill2.wsg", &tilemap->surface1Wsg, true);
+    loadWsg("baked_Landfill3.wsg", &tilemap->surface2Wsg, true);
     loadWsg("trash_background.wsg",  &tilemap->bgWsg, true);
 }
 
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
 {
-    int32_t offsetX = (camera->pos.x/2) % 256;
-    int32_t offsetY = (camera->pos.y/2) % 256;
+    int32_t offsetX1 = (camera->pos.x/3) % 256;
+    int32_t offsetX2 = (camera->pos.x/2) % 256;
 
-    offsetX = (offsetX < 0) ? offsetX + 256 : offsetX;
-    offsetY = (offsetX < 0) ? offsetY + 256 : offsetY;
+    offsetX1 = (offsetX1 < 0) ? offsetX1 + 256 : offsetX1;
+    offsetX2 = (offsetX2 < 0) ? offsetX2 + 256 : offsetX2;
 
     //draws background
     for ( int32_t x = -1; x <= TFT_WIDTH / 256 + 1; x++){
         //needs more optimizaiton? FIX ME!!!
-        drawWsgSimple(&tilemap->surfaceWsg,
-                    x * 256 - offsetX,
-                    -128-camera->pos.y/2);
-        for ( int32_t y = -1; y <= TFT_HEIGHT / 256 + 1; y++){
-            if(camera->pos.y/2 + y * 256 - offsetY > -1){
-                drawWsgSimple(&tilemap->bgWsg,
-                    x * 256 - offsetX,
-                    y * 256 - offsetY);
-            }
-        }
+        drawWsgSimple(&tilemap->surface2Wsg,
+                    x * 256 - offsetX1,
+                    -64-camera->pos.y/3);
+    }
+
+    for ( int32_t x = -1; x <= TFT_WIDTH / 256 + 1; x++){
+        //needs more optimizaiton? FIX ME!!!
+        drawWsgSimple(&tilemap->surface1Wsg,
+                    x * 256 - offsetX2,
+                    -camera->pos.y/2);
     }
 
 
