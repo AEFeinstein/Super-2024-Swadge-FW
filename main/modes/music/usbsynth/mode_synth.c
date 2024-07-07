@@ -386,8 +386,8 @@ static void synthEnterMode(void)
         sd->installed                    = installMidiUsb();
         sd->midiPlayer.streamingCallback = usbMidiCallback;
         sd->midiPlayer.mode              = MIDI_STREAMING;
-        sd->startupSeqComplete = true;
-        sd->startupNote = 60;
+        sd->startupSeqComplete           = true;
+        sd->startupNote                  = 60;
         midiPause(&sd->midiPlayer, false);
     }
 
@@ -730,7 +730,6 @@ static void synthMainLoop(int64_t elapsedUs)
             {
                 midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
                 sd->startupSeqComplete = true;
-
             }
         }
         else if (evt.down && sd->startupSeqComplete)
