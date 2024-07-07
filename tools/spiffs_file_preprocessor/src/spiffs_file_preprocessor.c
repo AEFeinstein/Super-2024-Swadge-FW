@@ -11,7 +11,6 @@
     #endif
 #include <execinfo.h>
 #include <signal.h>
-#include <link.h>
 #include <dlfcn.h>
 #include <stddef.h>
 #include <time.h>
