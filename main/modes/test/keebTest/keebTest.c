@@ -122,7 +122,7 @@ static const char* const fontSettingsOptions[] = {
     "vga_ibm8",
     "radiostars",
     "rodin",
-    "rightous",
+    "righteous",
 };
 
 //==============================================================================
@@ -195,7 +195,7 @@ static void keebEnterMode(void)
     addSingleItemToMenu(kbTest->menu, teMenuResetHard);
 
     // Init renderer
-    kbTest->renderer = initMenuManiaRenderer(&kbTest->fnt[3], &kbTest->fnt[2]);
+    kbTest->renderer = initMenuManiaRenderer(&kbTest->fnt[3], NULL, &kbTest->fnt[2]);
 
     // Set MENU as the starting state
     kbTest->currState = MENU;
@@ -285,7 +285,7 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         if (label == teMenuStart)
         {
-            // initalize all stuff
+            // initialize all stuff
             textEntrySetFont(&kbTest->fnt[kbTest->fontSel]);
             switch (kbTest->bckgrnd)
             {
@@ -332,11 +332,11 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
             kbTest->shadow = !kbTest->shadow;
             if (kbTest->shadow)
             {
-                setWarning(500, "Shadwonboxes enabled");
+                setWarning(500, "Shadowboxes enabled");
             }
             else
             {
-                setWarning(500, "Shadwonboxes disabled");
+                setWarning(500, "Shadowboxes disabled");
             }
         }
         else if (label == teMenuEnter)
