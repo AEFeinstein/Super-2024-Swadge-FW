@@ -271,242 +271,390 @@ void pa_updatePlayer(paEntity_t* self)
 
 void updateTestObject(paEntity_t* self)
 {
-    uint8_t tx = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
-    uint8_t ty = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+    switch(self->state){
+        case PA_EN_ST_NORMAL:
+        case PA_EN_ST_AGGRESSIVE: {
+            uint8_t tx = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+            uint8_t ty = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
 
-    uint8_t t1, t2, t3 = 0;
-    uint8_t distT1, distT2, distT3;
+            uint8_t t1, t2, t3 = 0;
+            uint8_t distT1, distT2, distT3;
 
-    self->targetTileX = PA_TO_TILECOORDS(self->entityManager->playerEntity->x >> SUBPIXEL_RESOLUTION);
-    self->targetTileY = PA_TO_TILECOORDS(self->entityManager->playerEntity->y >> SUBPIXEL_RESOLUTION);
+            self->targetTileX = PA_TO_TILECOORDS(self->entityManager->playerEntity->x >> SUBPIXEL_RESOLUTION);
+            self->targetTileY = PA_TO_TILECOORDS(self->entityManager->playerEntity->y >> SUBPIXEL_RESOLUTION);
 
-    int16_t hcof = (((self->x >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
-    int16_t vcof = (((self->y >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
+            int16_t hcof = (((self->x >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
+            int16_t vcof = (((self->y >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
 
-    switch(self->facingDirection){
-        case PA_DIRECTION_LEFT:
-            if(hcof) {
-                break;
-            }
-            
-            t1 = pa_getTile(self->tilemap, tx-1, ty);
-            t2 = pa_getTile(self->tilemap, tx, ty-1);
-            t3 = pa_getTile(self->tilemap, tx, ty+1);
+            bool doAgression = true ? esp_random() % 2 : false;
 
-            distT1 = PA_GET_TAXICAB_DISTANCE(tx-1, ty, self->targetTileX, self->targetTileY);
-            distT2 = PA_GET_TAXICAB_DISTANCE(tx, ty-1, self->targetTileX, self->targetTileY);
-            distT3 = PA_GET_TAXICAB_DISTANCE(tx, ty+1, self->targetTileX, self->targetTileY);
+            switch(self->facingDirection){
+                case PA_DIRECTION_LEFT:
+                    if(hcof) {
+                        break;
+                    }
+                    
+                    t1 = pa_getTile(self->tilemap, tx-1, ty);
+                    t2 = pa_getTile(self->tilemap, tx, ty-1);
+                    t3 = pa_getTile(self->tilemap, tx, ty+1);
 
-            if(!t2 && distT2 < distT1 && (t3 || distT2 < distT3)) {
-                self->yspeed = -16;
-                self->xspeed = 0;
-                break;
-            } 
-            if(!t3 && distT3 < distT1) {
-                self->yspeed = 16;
-                self->xspeed = 0;
-                break;
-            }
+                    distT1 = PA_GET_TAXICAB_DISTANCE(tx-1, ty, self->targetTileX, self->targetTileY);
+                    distT2 = PA_GET_TAXICAB_DISTANCE(tx, ty-1, self->targetTileX, self->targetTileY);
+                    distT3 = PA_GET_TAXICAB_DISTANCE(tx, ty+1, self->targetTileX, self->targetTileY);
 
-            if (t1) {
-                if(!t2 && (t3 || distT2 < distT3)){
-                    self->yspeed = -16;
-                    self->xspeed = 0;
+                    if((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3)) { 
+                        self->xspeed = 0;
+
+                        if(doAgression && t2 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->yspeed = -8;
+                        } else {
+                            self->yspeed = -16;
+                        }
+                        break;
+                    } 
+                    if((!t3 || doAgression) && distT3 < distT1) {
+                        self->xspeed = 0;
+
+                        if(doAgression && t3 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->yspeed = 8;
+                        } else {
+                            self->yspeed = 16;
+                        }
+                        break;
+                    }
+
+                    if (t1) {
+                        if(!t2 && (t3 || distT2 < distT3)){
+                            self->yspeed = -16;
+                            self->xspeed = 0;
+                            break;
+                        }
+
+                        if(!t3){
+                            self->yspeed = 16;
+                            self->xspeed = 0;
+                            break;
+                        }
+
+
+                        if(doAgression && t1 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->xspeed = -8;
+                        } else {
+                            self->xspeed = 16;
+                        }
+
+                        break;
+                    }
+                    
                     break;
-                }
+                case PA_DIRECTION_RIGHT:
+                    if(hcof) {
+                        break;
+                    }
+                    
+                    t1 = pa_getTile(self->tilemap, tx+1, ty);
+                    t2 = pa_getTile(self->tilemap, tx, ty-1);
+                    t3 = pa_getTile(self->tilemap, tx, ty+1);
 
-                if(!t3){
-                    self->yspeed = 16;
-                    self->xspeed = 0;
+                    distT1 = PA_GET_TAXICAB_DISTANCE(tx+1, ty, self->targetTileX, self->targetTileY);
+                    distT2 = PA_GET_TAXICAB_DISTANCE(tx, ty-1, self->targetTileX, self->targetTileY);
+                    distT3 = PA_GET_TAXICAB_DISTANCE(tx, ty+1, self->targetTileX, self->targetTileY);
+
+                    if((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3)){
+                        self->xspeed = 0;
+
+                        if(doAgression && t2 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->yspeed = -8;
+                        } else {
+                            self->yspeed = -16;
+                        }
+                        break;
+                    } 
+                    if ((!t3 || doAgression) && distT3 < distT1){
+                        self->xspeed = 0;
+
+                        if(doAgression && t3 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->yspeed = 8;
+                        } else {
+                            self->yspeed = 16;
+                        }
+                        break;
+                    } 
+                    if (t1){
+                        if(!t2 && (t3 || distT2 < distT3)) {
+                            self->yspeed = -16;
+                            self->xspeed = 0;
+                            break;
+                        }
+
+                        if(!t3){
+                            self->yspeed = 16;
+                            self->xspeed = 0;
+                            break;
+                        }
+
+                        if(doAgression && t1 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE );
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->xspeed = 8;
+                        } else {
+                            self->xspeed = -16;
+                        }
+                        break;
+                    }
+                    
                     break;
-                }
+                case PA_DIRECTION_UP:
+                    if(vcof) {
+                        break;
+                    }
+                    
+                    t1 = pa_getTile(self->tilemap, tx, ty-1);
+                    t2 = pa_getTile(self->tilemap, tx-1, ty);
+                    t3 = pa_getTile(self->tilemap, tx+1, ty);
 
-                self->xspeed = 16;
-                break;
-            }
-            
-            break;
-        case PA_DIRECTION_RIGHT:
-            if(hcof) {
-                break;
-            }
-            
-            t1 = pa_getTile(self->tilemap, tx+1, ty);
-            t2 = pa_getTile(self->tilemap, tx, ty-1);
-            t3 = pa_getTile(self->tilemap, tx, ty+1);
+                    distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty-1, self->targetTileX, self->targetTileY);
+                    distT2 = PA_GET_TAXICAB_DISTANCE(tx-1, ty, self->targetTileX, self->targetTileY);
+                    distT3 = PA_GET_TAXICAB_DISTANCE(tx+1, ty, self->targetTileX, self->targetTileY);
 
-            distT1 = PA_GET_TAXICAB_DISTANCE(tx+1, ty, self->targetTileX, self->targetTileY);
-            distT2 = PA_GET_TAXICAB_DISTANCE(tx, ty-1, self->targetTileX, self->targetTileY);
-            distT3 = PA_GET_TAXICAB_DISTANCE(tx, ty+1, self->targetTileX, self->targetTileY);
+                    if((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3)){
+                        self->yspeed = 0;
 
-            if(!t2 && distT2 < distT1 && (t3 || distT2 < distT3)){
-                self->yspeed = -16;
-                self->xspeed = 0;
-                break;
-            } 
-            if (!t3 && distT3 < distT1){
-                self->yspeed = 16;
-                self->xspeed = 0;
-                break;
-            } 
-            if (t1){
-                if(!t2 && (t3 || distT2 < distT3)) {
-                    self->yspeed = -16;
-                    self->xspeed = 0;
+                        if(doAgression && t2 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->xspeed = -8;
+                        } else {
+                            self->xspeed = -16;
+                        }
+                        break;
+                    } 
+                    if((!t3 || doAgression) && distT3 < distT1){
+                        self->yspeed = 0;
+
+                        if(doAgression && t3 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->xspeed = 8;
+                        } else {
+                            self->xspeed = 16;
+                        }
+
+                        break;
+                    } 
+                    if (t1){
+                        if(!t2 && (t3 || distT2 < distT3)){
+                            self->xspeed = -16;
+                            self->yspeed = 0;
+                            break;
+                        }
+
+                        if(!t3){
+                            self->xspeed = 16;
+                            self->yspeed = 0;
+                            break;
+                        }
+
+                        if(doAgression && t1 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->yspeed = -8;
+                        } else {
+                            self->yspeed = 16;
+                        }
+                        break;
+                    }
+
                     break;
-                }
-
-                if(!t3){
-                    self->yspeed = 16;
-                    self->xspeed = 0;
+                case PA_DIRECTION_NONE:
+                    if(esp_random() % 2){
+                        self->xspeed = (esp_random() % 2) ? -16: 16;
+                    } else {
+                        self->yspeed = (esp_random() % 2) ? -16: 16;
+                    }
+                default:
                     break;
-                }
+                case PA_DIRECTION_DOWN:
+                    if(vcof) {
+                        break;
+                    }
+                    
+                    t1 = pa_getTile(self->tilemap, tx, ty+1);
+                    t2 = pa_getTile(self->tilemap, tx-1, ty);
+                    t3 = pa_getTile(self->tilemap, tx+1, ty);
+                    
+                    distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty+1, self->targetTileX, self->targetTileY);
+                    distT2 = PA_GET_TAXICAB_DISTANCE(tx-1, ty, self->targetTileX, self->targetTileY);
+                    distT3 = PA_GET_TAXICAB_DISTANCE(tx+1, ty, self->targetTileX, self->targetTileY);
 
-                self->xspeed = -16;
-                break;
-            }
-            
-            break;
-        case PA_DIRECTION_UP:
-            if(vcof) {
-                break;
-            }
-            
-            t1 = pa_getTile(self->tilemap, tx, ty-1);
-            t2 = pa_getTile(self->tilemap, tx-1, ty);
-            t3 = pa_getTile(self->tilemap, tx+1, ty);
+                    if((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3)){
+                        self->yspeed = 0;
 
-            distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty-1, self->targetTileX, self->targetTileY);
-            distT2 = PA_GET_TAXICAB_DISTANCE(tx-1, ty, self->targetTileX, self->targetTileY);
-            distT3 = PA_GET_TAXICAB_DISTANCE(tx+1, ty, self->targetTileX, self->targetTileY);
+                        if(doAgression && t2 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->xspeed = -8;
+                        } else {
+                            self->xspeed = -16;
+                        }
 
-            if(!t2 && distT2 < distT1 && (t3 || distT2 < distT3)){
-                self->xspeed = -16;
-                self->yspeed = 0;
-                break;
-            } 
-            if(!t3 && distT3 < distT1){
-                self->xspeed = 16;
-                self->yspeed = 0;
-                break;
-            } 
-            if (t1){
-                if(!t2 && (t3 || distT2 < distT3)){
-                    self->xspeed = -16;
-                    self->yspeed = 0;
+                        break;
+                    } 
+                    if((!t3 || doAgression) && distT3 < distT1){
+                        self->yspeed = 0;
+
+                        if(doAgression && t3 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->xspeed = 8;
+                        } else {
+                            self->xspeed = 16;
+                        }
+
+                        break;
+                    } 
+                    if (t1){
+                        if(!t2 && (t3 || distT2 < distT3)){
+                            self->xspeed = -16;
+                            self->yspeed = 0;
+                            break;
+                        }
+
+                        if(!t3){
+                            self->xspeed = 16;
+                            self->yspeed = 0;
+                            break;
+                        }
+
+                        if(doAgression && t1 == PA_TILE_BLOCK){
+                            pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
+                            self->state = PA_EN_ST_BREAK_BLOCK;
+                            self->animationTimer = 16;
+                            self->yspeed = 8;
+                        } else {
+                            self->yspeed = -16;
+                        }
+                        break;
+                    }
+
                     break;
-                }
-
-                if(!t3){
-                    self->xspeed = 16;
-                    self->yspeed = 0;
-                    break;
-                }
-
-                self->yspeed = 16;
-                break;
             }
 
-            break;
-        case PA_DIRECTION_NONE:
-            if(esp_random() % 2){
-                self->xspeed = (esp_random() % 2) ? -16: 16;
-            } else {
-                self->yspeed = (esp_random() % 2) ? -16: 16;
-            }
-        default:
-            break;
-        case PA_DIRECTION_DOWN:
-            if(vcof) {
-                break;
-            }
-            
-            t1 = pa_getTile(self->tilemap, tx, ty+1);
-            t2 = pa_getTile(self->tilemap, tx-1, ty);
-            t3 = pa_getTile(self->tilemap, tx+1, ty);
-            
-            distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty+1, self->targetTileX, self->targetTileY);
-            distT2 = PA_GET_TAXICAB_DISTANCE(tx-1, ty, self->targetTileX, self->targetTileY);
-            distT3 = PA_GET_TAXICAB_DISTANCE(tx+1, ty, self->targetTileX, self->targetTileY);
-
-            if(!t2 && distT2 < distT1 && (t3 || distT2 < distT3)){
-                self->xspeed = -16;
-                self->yspeed = 0;
-                break;
-            } 
-            if (!t3 && distT3 < distT1){
-                self->xspeed = 16;
-                self->yspeed = 0;
-                break;
-            } 
-            if (t1){
-                if(!t2 && (t3 || distT2 < distT3)){
-                    self->xspeed = -16;
-                    self->yspeed = 0;
-                    break;
-                }
-
-                if(!t3){
-                    self->xspeed = 16;
-                    self->yspeed = 0;
-                    break;
-                }
-
-                self->yspeed = -16;
-                break;
-            }
-
-            break;
-    }
-
-    if (abs(self->xspeed) > abs(self->yspeed))
-    {
-        if ((self->xspeed < 0)
-            || (self->xspeed > 0))
-        {
-            // Running
-            self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
-
-            if (self->gameData->frameCount % 5 == 0)
+            if (self->xspeed != 0)
             {
-                self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2);
-                self->facingDirection = !self->spriteFlipHorizontal;
+                if ((self->xspeed < 0)
+                    || (self->xspeed > 0))
+                {
+                    // Running
+                    self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
+
+                    if (self->gameData->frameCount % 5 == 0)
+                    {
+                        self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2);
+                        self->facingDirection = !self->spriteFlipHorizontal;
+                    }
+                }
+                else
+                {
+                    //self->spriteIndex = SP_PLAYER_SLIDE;
+                }
             }
-        }
-        else
-        {
-            //self->spriteIndex = SP_PLAYER_SLIDE;
-        }
-    }
-    else if (self->yspeed > 0){
-        if (self->yspeed > 0){
-            if (self->gameData->frameCount % 5 == 0)
+            else if (self->yspeed > 0){
+                if (self->yspeed > 0){
+                    if (self->gameData->frameCount % 5 == 0)
+                    {
+                        self->spriteIndex = PA_SP_ENEMY_SOUTH;
+                        self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                        self->facingDirection = PA_DIRECTION_DOWN;
+                    }
+                }
+            }
+            else if (self->yspeed < 0){
+                if (self->yspeed < 0){
+                    if (self->gameData->frameCount % 5 == 0)
+                    {
+                        self->spriteIndex = PA_SP_ENEMY_NORTH;
+                        self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                        self->facingDirection = PA_DIRECTION_UP;
+                    }
+                }
+            }
+            else
             {
-                self->spriteIndex = PA_SP_ENEMY_SOUTH;
-                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                self->facingDirection = PA_DIRECTION_DOWN;
+                self->facingDirection = PA_DIRECTION_NONE;
             }
-        }
-    }
-     else if (self->yspeed < 0){
-        if (self->yspeed < 0){
-            if (self->gameData->frameCount % 5 == 0)
-            {
-                self->spriteIndex = PA_SP_ENEMY_NORTH;
-                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                self->facingDirection = PA_DIRECTION_UP;
+
+            despawnWhenOffscreen(self);
+            if(self->state != PA_EN_ST_BREAK_BLOCK){
+                //Need to skip this if enemy has just changed to breaking block state
+                //or else enemy will be stopped
+                pa_moveEntityWithTileCollisions(self);
             }
+            pa_detectEntityCollisions(self);
+            
+            break;
         }
-    }
-    else
-    {
-        self->facingDirection = PA_DIRECTION_NONE;
+        case PA_EN_ST_BREAK_BLOCK:{
+
+            /*//Need to force a speed value because
+            //tile collision will stop the enemy before we get here
+            switch(self->facingDirection){
+                case PA_DIRECTION_LEFT:
+                    self->xspeed = -8;
+                    break;
+                case PA_DIRECTION_RIGHT:
+                    self->xspeed = 8;
+                    break;
+                case PA_DIRECTION_UP:
+                    self->yspeed = -8;
+                    break;
+                case PA_DIRECTION_DOWN:
+                    self->yspeed = 8;
+                    break;
+                default:
+                    break;
+            }*/
+
+            self->x += self->xspeed;
+            self->y += self->yspeed;
+
+            self->animationTimer--;
+            if(self->animationTimer <= 0){
+                self->state = PA_EN_ST_AGGRESSIVE;
+                self->xspeed *= 2;
+                self->yspeed *= 2;
+            }
+
+            break;
+        }
+        default:{
+            break;
+        }
     }
 
-    despawnWhenOffscreen(self);
-    pa_moveEntityWithTileCollisions(self);
-    applyGravity(self);
-    pa_detectEntityCollisions(self);
+    
+    
 }
 
 void updateHitBlock(paEntity_t* self)

@@ -67,6 +67,15 @@ typedef enum
     PA_DIRECTION_DOWN
 } paCardinalDirection_t;
 
+typedef enum
+{
+    PA_EN_ST_SPAWNING,
+    PA_EN_ST_STUN,
+    PA_EN_ST_NORMAL,
+    PA_EN_ST_AGGRESSIVE,
+    PA_EN_ST_BREAK_BLOCK,
+} paEnemyState_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -125,6 +134,7 @@ struct paEntity_t
 
     uint8_t targetTileX;
     uint8_t targetTileY;
+    uint16_t state;
 
     // paEntity_t *entities;
     paEntityManager_t* entityManager;

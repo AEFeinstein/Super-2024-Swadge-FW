@@ -427,7 +427,7 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->x       = x << SUBPIXEL_RESOLUTION;
     entity->y       = y << SUBPIXEL_RESOLUTION;
 
-    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->xspeed               = 0;
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
@@ -440,6 +440,7 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->type                 = PA_ENTITY_TEST;
     entity->spriteIndex          = PA_SP_ENEMY_SOUTH;
     entity->facingDirection      = PA_DIRECTION_NONE;
+    entity->state                = PA_EN_ST_NORMAL;
     entity->updateFunction       = &updateTestObject;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
