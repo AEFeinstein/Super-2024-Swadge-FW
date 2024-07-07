@@ -302,7 +302,7 @@ all: $(EXECUTABLE) assets
 
 assets:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/
-	./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets/ -o ./spiffs_image/
+	lldb -s cmds.lldb ./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets/ -o ./spiffs_image/
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
