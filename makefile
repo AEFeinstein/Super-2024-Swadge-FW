@@ -300,7 +300,7 @@ all: $(EXECUTABLE) assets
 
 assets:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/
-	./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets/ -o ./spiffs_image/
+	gdb -batch -ex "run" -ex "bt" --args ./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets/ -o ./spiffs_image/ | grep -v ^"No stack."$
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
