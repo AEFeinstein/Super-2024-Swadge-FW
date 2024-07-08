@@ -103,8 +103,7 @@ else
 # Required for OpenGL and some other libraries
 CFLAGS += \
 	-I/opt/X11/include \
-	-I/opt/homebrew/include \
-	-fsanitize=address
+	-I/opt/homebrew/include
 endif
 
 ifeq ($(HOST_OS),Linux)

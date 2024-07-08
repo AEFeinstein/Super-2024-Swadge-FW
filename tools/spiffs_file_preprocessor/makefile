@@ -44,8 +44,7 @@ CFLAGS_WARNINGS = \
 	-Wno-sign-compare \
 	-Wno-error=unused-but-set-variable \
 	-Wno-old-style-declaration \
-	-Wno-missing-field-initializers \
-	-fsanitize=address
+	-Wno-missing-field-initializers
 
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \
@@ -123,9 +122,7 @@ LIB_DIRS =
 
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
-	-fsanitize=address \
 	-static-libstdc++ \
-	-static-libasan \
 	-ggdb
 
 ################################################################################
