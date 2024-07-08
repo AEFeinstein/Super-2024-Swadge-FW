@@ -38,9 +38,12 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
         return;
     }
 
+    errno = 0;
     if (sz > fread(byteString, sz, 1, fp))
     {
-        fprintf(stderr, "ERR: raw_processor.c: Failed to read file %s\n", inFile);
+        const char* errdesc = (errno == 0) ? "Read too small" : strerror(errno);
+        fprintf(stderr, "ERR: raw_processor.c: Failed to read file %s: %s\n", inFile), errdesc ? errdesc : "Unknown";
+
         free(byteString);
         fclose(fp);
         return;
