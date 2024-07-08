@@ -331,16 +331,16 @@ static void t48EnterMode(void)
                     strcpy(buff, "JW");
                     break;
                 case 1:
-                    strcpy(buff, "BB");
+                    strcpy(buff, "Pan");
                     break;
                 case 2:
-                    strcpy(buff, "gel");
+                    strcpy(buff, "Pix");
                     break;
                 case 3:
-                    strcpy(buff, "DAC");
+                    strcpy(buff, "Poe");
                     break;
                 case 4:
-                    strcpy(buff, "JDS");
+                    strcpy(buff, "DRG");
                     break;
             }
             strcpy(t48->hsInitials[i], buff);
@@ -363,8 +363,8 @@ static void t48ExitMode(void)
     }
 
     soundStop(true);
-    // freeSong(&t48->bgm);
-    // freeSong(&t48->click);
+    unloadMidiFile(&t48->bgm);
+    unloadMidiFile(&t48->click);
 
     free(t48);
 }
@@ -482,11 +482,11 @@ static void t48MainLoop(int64_t elapsedUs)
             // Input
             while (checkButtonQueueWrapper(&evt))
             {
-                if (evt.down && evt.button & PB_A)
+                if (evt.down && evt.button & PB_B)
                 {
                     t48->ds = GAMESTART;
                 }
-                else if (evt.down && evt.button & PB_B)
+                else if (evt.down && evt.button & PB_A)
                 {
                     t48->ds = GAME;
                 }
@@ -1013,7 +1013,8 @@ static void t48DrawGameOverScreen(int64_t score)
         {
             color = c444;
         }
-        snprintf(initBuff, sizeof(initBuff) - 1, "%d: %d - %s", i + 1, t48->highScore[i], t48->hsInitials[i]);
+        snprintf(initBuff, sizeof(initBuff) - 1, "%d: %d - ", i + 1, (int)t48->highScore[i]);
+        strcat(initBuff, t48->hsInitials[i]);
         drawText(&t48->font, color, initBuff, 16, TFT_HEIGHT - (98 - (16 * i)));
     }
     // Display AB text

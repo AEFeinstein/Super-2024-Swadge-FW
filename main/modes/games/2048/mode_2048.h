@@ -20,7 +20,6 @@
   - Deadzone
   - Tilt and return to neutral to slide
   - Allow for tilt recalibration with B
-- RGB mode for text
 - Refactor files into multiple files
 */
 
