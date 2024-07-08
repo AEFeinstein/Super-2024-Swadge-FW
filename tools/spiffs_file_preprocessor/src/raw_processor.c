@@ -31,7 +31,20 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
     long sz = ftell(fp);
     fseek(fp, 0L, SEEK_SET);
     uint8_t* byteString = malloc(sz + 1);
-    fread(byteString, sz, 1, fp);
+    if (!byteString)
+    {
+        fprintf(stderr, "ERR: raw_processor.c: Failed to allocate memory processing file %s\n", inFile);
+        fclose(fp);
+        return;
+    }
+
+    if (sz > fread(byteString, sz, 1, fp))
+    {
+        fprintf(stderr, "ERR: raw_processor.c: Failed to read file %s\n", inFile);
+        free(byteString);
+        fclose(fp);
+        return;
+    }
     byteString[sz] = 0;
     fclose(fp);
 
