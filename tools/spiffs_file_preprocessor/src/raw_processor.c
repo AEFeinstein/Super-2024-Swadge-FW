@@ -49,7 +49,7 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
     }
 
     errno = 0;
-    int readlen = fread(byteString, sz, 1, fp);
+    int readlen = fread(byteString, 1, sz, fp);
     if (readlen < sz)
     {
         errdesc = (errno == 0) ? "Read too small" : strerror(errno);
