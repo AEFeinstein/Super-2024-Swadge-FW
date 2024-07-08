@@ -607,8 +607,9 @@ static int16_t _drawKeyboard()
                 default:
                 {
                     // Just draw the char
-                    char sts[2] = {0};
+                    char sts[2];
                     sts[0] = c;
+                    sts[1] = '\0';
                     drawText(activeFont, textColor, sts, posX, posY);
                 }
             }
