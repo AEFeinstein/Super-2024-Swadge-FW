@@ -4,5 +4,7 @@ pr h -p true -n true -s true SIGIOT
 pr h -p true -n true -s true SIGHUP
 run
 bt all
+frame select 5
+frame variable
 kill
 exit
