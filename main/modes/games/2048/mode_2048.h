@@ -4,9 +4,9 @@
  * @brief A game of 2048 for 2024-2025 Swadge hardware
  * @version 1.1.2
  * @date 2024-06-28
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 
@@ -20,11 +20,8 @@
   - Deadzone
   - Tilt and return to neutral to slide
   - Allow for tilt recalibration with B
-- High score screen
-  - Text entry!
-  - Displays top five scores
-- Ask if a player is sure before returning to main menu
-- Start returns to menu, not just starts another game
+- RGB mode for text
+- Refactor files into multiple files
 */
 
 //==============================================================================
@@ -35,6 +32,7 @@
 #include <esp_random.h>
 
 #include "swadge2024.h"
+#include "textEntry.h"
 
 //==============================================================================
 // Defines
@@ -43,28 +41,37 @@
 // Swadge
 #define T48_US_PER_FRAME 16667
 
+// Game
+#define GRID_SIZE  4
+#define BOARD_SIZE 16
+
 // Graphics
 #define T48_CELL_SIZE   50
 #define T48_LINE_WEIGHT 4
 #define SIDE_MARGIN     30
 #define TOP_MARGIN      20
-#define GRID_SIZE       4
-#define BOARD_SIZE      16
 #define TILE_COUNT      16
+
+// High score
+#define HS_COUNT  5
+#define HS_KEYLEN 14
 
 //==============================================================================
 // Enums
 //==============================================================================
 
-typedef enum{
-    GAME,       // Game running
-    WIN,        // Display a win
-    GAMEOVER,   // Display final score and prompt a restart
-    GAMESTART,  // Splash screen after load
-    CONFIRM,    // Confirm player wants top abandon game
+typedef enum
+{
+    GAME,      // Game running
+    WIN,       // Display a win
+    GAMEOVER,  // Display final score and prompt a restart
+    GAMESTART, // Splash screen after load
+    CONFIRM,   // Confirm player wants top abandon game
+    WRITE,     // Allows player to write their initials for high score
 } DisplayState_t;
 
-typedef enum{
+typedef enum
+{
     UP,
     DOWN,
     LEFT,
@@ -76,20 +83,23 @@ typedef enum{
 // Structs
 //==============================================================================
 
-typedef struct{
+typedef struct
+{
     uint8_t r;
     uint8_t g;
     uint8_t b;
 } Color_t;
 
-typedef struct {
+typedef struct
+{
     wsg_t image;
     int16_t pos[2];
     uint8_t spd;
     int8_t dir;
 } FallingBlock_t;
 
-typedef struct{
+typedef struct
+{
     // Assets
     font_t font;
     font_t titleFont;
@@ -98,22 +108,26 @@ typedef struct{
     midiFile_t click;
 
     // Game state
-    int32_t boardArr[4][4];
+    int32_t boardArr[BOARD_SIZE][BOARD_SIZE];
     int32_t score;
-    int32_t highScore;
-    
+    int32_t highScore[HS_COUNT];
+    bool newHS;
+
     // Display
     char scoreStr[16];
     bool alreadyWon;
+    char playerInitials[4];
+    char hsInitials[HS_COUNT][4];
+    bool textEntryDone;
     DisplayState_t ds;
 
-    //Audio
+    // Audio
     bool bgmIsPlaying;
-    
+
     // Start screen
     FallingBlock_t fb[TILE_COUNT];
     bool startScrInitialized;
-    int16_t timer; 
+    int16_t timer;
 } t48_t;
 
 //==============================================================================
