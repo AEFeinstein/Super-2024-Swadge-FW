@@ -98,14 +98,14 @@ CFLAGS += \
 	-static-libstdc++ \
 	-fstrict-volatile-bitfields \
 	-fno-tree-switch-conversion \
-	-fsanitize=address \
-	-fsanitize=bounds-strict \
 	-fno-omit-frame-pointer
 else
 # Required for OpenGL and some other libraries
 CFLAGS += \
 	-I/opt/X11/include \
-	-I/opt/homebrew/include
+	-I/opt/homebrew/include \
+	-fsanitize=address \
+	-fsanitize=bounds-strict
 endif
 
 ifeq ($(HOST_OS),Linux)

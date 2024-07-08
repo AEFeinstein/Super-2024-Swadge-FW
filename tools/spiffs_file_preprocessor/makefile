@@ -44,7 +44,9 @@ CFLAGS_WARNINGS = \
 	-Wno-sign-compare \
 	-Wno-error=unused-but-set-variable \
 	-Wno-old-style-declaration \
-	-Wno-missing-field-initializers
+	-Wno-missing-field-initializers \
+	-fsanitize=address \
+	-fsanitize=bounds-strict
 
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \
