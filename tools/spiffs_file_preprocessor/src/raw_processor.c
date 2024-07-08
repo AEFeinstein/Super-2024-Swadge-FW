@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "fileUtils.h"
 #include "heatshrink_util.h"
 
@@ -42,7 +43,7 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
     if (sz > fread(byteString, sz, 1, fp))
     {
         const char* errdesc = (errno == 0) ? "Read too small" : strerror(errno);
-        fprintf(stderr, "ERR: raw_processor.c: Failed to read file %s: %s\n", inFile), errdesc ? errdesc : "Unknown";
+        fprintf(stderr, "ERR: raw_processor.c: Failed to read file %s: %s\n", inFile, errdesc ? errdesc : "Unknown");
 
         free(byteString);
         fclose(fp);
