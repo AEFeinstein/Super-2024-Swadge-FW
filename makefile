@@ -278,7 +278,7 @@ LIBRARY_FLAGS += \
 	-fsanitize=bounds-strict \
 	-fno-omit-frame-pointer \
 	-static-libasan
-DEBUGGER = gdb -batch -ex "run" -ex "bt" --args
+DEBUGGER = gdb -return-child-result -batch -ex "thread apply all bt" -ex "run" --args
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
