@@ -267,7 +267,6 @@ LIBRARY_FLAGS += \
     -framework Foundation \
 	-framework CoreFoundation \
 	-framework CoreMIDI
-#DEBUGGER = lldb -s cmds.lldb --
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -276,7 +275,6 @@ LIBRARY_FLAGS += \
 	-fsanitize=bounds-strict \
 	-fno-omit-frame-pointer \
 	-static-libasan
-#DEBUGGER = gdb -return-child-result -batch -ex "thread apply all bt" -ex "run" --args
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
@@ -301,7 +299,7 @@ all: $(EXECUTABLE) assets
 
 assets:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/
-	$(DEBUGGER) ./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets -o ./spiffs_image/
+	./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets -o ./spiffs_image/
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
