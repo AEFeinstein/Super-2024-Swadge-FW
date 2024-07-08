@@ -611,6 +611,7 @@ static int16_t _drawKeyboard()
                     sts[0] = c;
                     sts[1] = '\0';
                     drawText(activeFont, textColor, sts, posX, posY);
+                    break;
                 }
             }
             if (col == selX && row == selY)
