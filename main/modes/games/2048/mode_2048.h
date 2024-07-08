@@ -20,6 +20,11 @@
   - Deadzone
   - Tilt and return to neutral to slide
   - Allow for tilt recalibration with B
+- High score screen
+  - Text entry!
+  - Displays top five scores
+- Ask if a player is sure before returning to main menu
+- Start returns to menu, not just starts another game
 */
 
 //==============================================================================
@@ -56,6 +61,7 @@ typedef enum{
     WIN,        // Display a win
     GAMEOVER,   // Display final score and prompt a restart
     GAMESTART,  // Splash screen after load
+    CONFIRM,    // Confirm player wants top abandon game
 } DisplayState_t;
 
 typedef enum{

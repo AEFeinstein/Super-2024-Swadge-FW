@@ -140,6 +140,8 @@ static void t48DrawGameOverScreen(int64_t score);
  */
 static void t48DrawWinScreen(void);
 
+static void t48DrawConfirm(void);
+
 // LEDs
 
 /**
@@ -198,6 +200,9 @@ const char youWin[]       = "You got 2048!";
 const char continueAB[]   = "Press A or B to continue";
 const char highScore[]    = "You got a high score!";
 const char highScoreKey[] = "t48HighScore";
+const char paused[] = "Paused!";
+const char pausedA[] = "Press A to continue playing";
+const char pausedB[] = "Press B to abandon game";
 
 swadgeMode_t t48Mode = {
     .modeName                 = modeName,
@@ -341,7 +346,7 @@ static void t48MainLoop(int64_t elapsedUs)
                 else if (evt.down && evt.button & PB_START)
                 {
                     soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48StartGame();
+                    t48->ds = CONFIRM;
                 }
             }
             // Check game is done or "done"
@@ -384,6 +389,20 @@ static void t48MainLoop(int64_t elapsedUs)
             }
             // Draw
             t48DrawWinScreen();
+            break;
+        case CONFIRM:
+            // Input
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if(evt.down && evt.button & PB_A)
+                {
+                    t48->ds = GAMESTART;
+                } else if (evt.down && evt.button & PB_B)
+                {
+                    t48->ds = GAME;
+                }
+            }
+            t48DrawConfirm();
             break;
         default:
             break;
@@ -868,6 +887,16 @@ static void t48DrawWinScreen(void)
     drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) / 2, TFT_HEIGHT - 64);
     // LEDs!
     t48RandLEDs();
+}
+
+static void t48DrawConfirm()
+{
+    fillDisplayArea(64, 75, TFT_WIDTH-64, 100, c100);
+    drawText(&t48->titleFont, c555, paused, (TFT_WIDTH - textWidth(&t48->titleFont, paused)) / 2, 80);
+    fillDisplayArea(32, 110, TFT_WIDTH-32, 130, c100);
+    drawText(&t48->font, c555, pausedA, (TFT_WIDTH - textWidth(&t48->font, pausedA)) / 2, 115);
+    fillDisplayArea(32, 135, TFT_WIDTH-32, 155, c100);
+    drawText(&t48->font, c555, pausedB, (TFT_WIDTH - textWidth(&t48->font, pausedB)) / 2, 140);
 }
 
 // LEDs
