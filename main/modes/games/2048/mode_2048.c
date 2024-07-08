@@ -129,7 +129,7 @@ static void t48Draw(void);
 /**
  * @brief Shows the title upon booting into the mode
  *
- * @param color Color of tyhe title text
+ * @param color Color of the title text
  */
 static void t48StartScreen(uint8_t color);
 
@@ -196,6 +196,13 @@ static Color_t t48RandColor(void);
  */
 static void t48RandLEDs(void);
 
+/**
+ * @brief Returns values in hue sequence
+ * 
+ * @return paletteColor_t Color to use
+ */
+static paletteColor_t t48Rainbow(void);
+
 // Audio
 /**
  * @brief Restart audio when song ends
@@ -258,6 +265,7 @@ static void t48EnterMode(void)
     // Load fonts
     loadFont("ibm_vga8.font", &t48->font, false);
     loadFont("sonic.font", &t48->titleFont, false);
+    makeOutlineFont(&t48->titleFont, &t48->titleFontOutline, false);
 
     // Load images
     loadWsg("Tile-Blue-Diamond.wsg", &t48->tiles[0], true);
@@ -345,6 +353,7 @@ static void t48EnterMode(void)
 
 static void t48ExitMode(void)
 {
+    freeFont(&t48->titleFontOutline);
     freeFont(&t48->titleFont);
     freeFont(&t48->font);
 
@@ -383,7 +392,7 @@ static void t48MainLoop(int64_t elapsedUs)
                 }
             }
             // Draw
-            t48StartScreen(c550); // TODO: Make a rainbow effect
+            t48StartScreen(t48Rainbow());
             break;
         case GAME:
             // Input
@@ -970,6 +979,8 @@ static void t48StartScreen(uint8_t color)
     // Title
     drawText(&t48->titleFont, color, modeName, (TFT_WIDTH - textWidth(&t48->titleFont, modeName)) / 2,
              TFT_HEIGHT / 2 - 12);
+    drawText(&t48->titleFontOutline, c555, modeName, (TFT_WIDTH - textWidth(&t48->titleFont, modeName)) / 2,
+             TFT_HEIGHT / 2 - 12);
     // Draw current High Score
     static char textBuffer[20];
     snprintf(textBuffer, sizeof(textBuffer) - 1, "High score: %" PRIu32, t48->highScore[0]);
@@ -995,7 +1006,7 @@ static void t48DrawGameOverScreen(int64_t score)
         {
             int16_t x = 16;
             int16_t y = 80;
-            drawTextWordWrap(&t48->titleFont, c505, highScore, &x, &y, TFT_WIDTH - 16, y + 120);
+            drawTextWordWrap(&t48->titleFont, t48Rainbow(), highScore, &x, &y, TFT_WIDTH - 16, y + 120);
             color = c500;
         }
         else
@@ -1261,6 +1272,16 @@ static void t48RandLEDs()
         t48LightLEDs(esp_random() % 5, t48RandColor());
     }
 }
+
+static paletteColor_t t48Rainbow()
+{
+    uint8_t hue = t48->hue++; 
+    uint8_t sat = 255;
+    uint8_t val = 255;
+    return paletteHsvToHex(hue, sat, val);
+}
+
+// Audio
 
 static void t48BgmCb()
 {

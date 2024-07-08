@@ -103,6 +103,7 @@ typedef struct
     // Assets
     font_t font;
     font_t titleFont;
+    font_t titleFontOutline;
     wsg_t tiles[TILE_COUNT];
     midiFile_t bgm;
     midiFile_t click;
@@ -120,6 +121,7 @@ typedef struct
     char hsInitials[HS_COUNT][4];
     bool textEntryDone;
     DisplayState_t ds;
+    uint8_t hue;
 
     // Audio
     bool bgmIsPlaying;
