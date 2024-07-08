@@ -27,7 +27,16 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
     }
 
     // Read input file
+    const char* errdesc = NULL;
+    errno = 0;
     FILE* fp = fopen(inFile, "rb");
+    if (!fp)
+    {
+        errdesc = strerror(errno);
+        fprintf(stderr, "ERR: raw_processor.c: Failed to open file %s: %d - %s\n", inFile, errno, errdesc);
+        return;
+    }
+
     fseek(fp, 0L, SEEK_END);
     long sz = ftell(fp);
     fseek(fp, 0L, SEEK_SET);
@@ -40,10 +49,11 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
     }
 
     errno = 0;
-    if (sz > fread(byteString, sz, 1, fp))
+    int readlen = fread(byteString, sz, 1, fp);
+    if (readlen < sz)
     {
-        const char* errdesc = (errno == 0) ? "Read too small" : strerror(errno);
-        fprintf(stderr, "ERR: raw_processor.c: Failed to read file %s: %s\n", inFile, errdesc ? errdesc : "Unknown");
+        errdesc = (errno == 0) ? "Read too small" : strerror(errno);
+        fprintf(stderr, "ERR: raw_processor.c: Failed to read file %s: %d - %s\n", inFile, readlen, errdesc ? errdesc : "Unknown");
 
         free(byteString);
         fclose(fp);
