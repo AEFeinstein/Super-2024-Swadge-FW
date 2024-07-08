@@ -268,7 +268,7 @@ LIBRARY_FLAGS += \
     -framework Foundation \
 	-framework CoreFoundation \
 	-framework CoreMIDI
-DEBUGGER = lldb -s cmds.lldb --
+#DEBUGGER = lldb -s cmds.lldb --
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -277,7 +277,7 @@ LIBRARY_FLAGS += \
 	-fsanitize=bounds-strict \
 	-fno-omit-frame-pointer \
 	-static-libasan
-DEBUGGER = gdb -return-child-result -batch -ex "thread apply all bt" -ex "run" --args
+#DEBUGGER = gdb -return-child-result -batch -ex "thread apply all bt" -ex "run" --args
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
