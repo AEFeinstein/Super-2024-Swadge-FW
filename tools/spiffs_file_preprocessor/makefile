@@ -45,8 +45,7 @@ CFLAGS_WARNINGS = \
 	-Wno-error=unused-but-set-variable \
 	-Wno-old-style-declaration \
 	-Wno-missing-field-initializers \
-	-fsanitize=address \
-	-fsanitize=bounds-strict
+	-fsanitize=address
 
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \

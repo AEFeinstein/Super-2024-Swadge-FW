@@ -104,8 +104,7 @@ else
 CFLAGS += \
 	-I/opt/X11/include \
 	-I/opt/homebrew/include \
-	-fsanitize=address \
-	-fsanitize=bounds-strict
+	-fsanitize=address
 endif
 
 ifeq ($(HOST_OS),Linux)
