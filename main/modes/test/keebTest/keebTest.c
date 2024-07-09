@@ -238,14 +238,17 @@ static void keebMainLoop(int64_t elapsedUs)
             drawMenuMania(kbTest->menu, kbTest->renderer, elapsedUs);
             break;
         case TYPING:
-            drawIncidentalBG();
+            bool drawlines = true;
             while (checkButtonQueueWrapper(&evt))
             {
                 if (!textEntryInput(evt.down, evt.button))
                 {
                     kbTest->currState = DISPLAYING;
+                    drawlines         = false;
                 }
             }
+            if (drawlines)
+                drawIncidentalBG();
             textEntryDraw(elapsedUs);
             if (kbTest->count)
             {
