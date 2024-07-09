@@ -21,6 +21,11 @@
  *                                                           background
  * - textEntrySetNewEnterStyle(bool newStyle): Sets the style to old (false) or new (true)
  * - textEntrySetNewCapsStyle(bool newStyle): Sets the style to old (false) or new (true)
+ * - textEntrySetPrompt(char *prompt): Sets a string to be displayed over the text box as a prompt to the user
+ * - textEntrySetCapMode(): Set the starting mode to Capslock
+ * - textEntrySetNoShiftMode(): Set the current mode to lowercase text
+ * - textEntrySetShiftMode(): Set the current mode to shift
+ * - textEntrySetNounMode(): Set current mode to porper noun, which capitalizes the first letter after a space.
  *
  * The text entry is re-drawn from scratch every cycle. The above commands can be run between cycles if desired, though
  * it is strongly discouraged to keep the text entry easy for the end user to navigate and utilize.
@@ -46,6 +51,7 @@
  * int strLen = 32;
  * char createdString[strlen];
  * wsg bg_test;
+ * const char promptStr[] "Enter your name:";
  *
  * // Text Entry initialization
  * textEntryInit(&fnt, strLen, kbTest->typedText);
@@ -57,15 +63,17 @@
  * textEntrySetEmphasisColor(c500);
  * textEntrySetShadowboxColor(c111);
  *
- * // WSG background, pink shadowboxes, and a new font
+ * // WSG background, pink shadowboxes, a new font and a prompt string
  * textEntrySetBgWsg(&bg_test);
  * textEntrySetShadowboxColor(true, c433);
  * textEntrySetFont(&fnt2);
+ * textEntrySetPrompt(promptStr);
  *
- * // Transparent BG with caps lock and enter variations
+ * // Transparent BG with caps lock and enter variations, and with the starting mode set to "Proper noun"
  * textEntrySetBGTransparent();
  * textEntrySetNewCapsStyle(true);
  * textEntrySetNewEnterStyle(true);
+ * textEntrySetNounMode();
  *
  * main loop(int64_t elapsedUs)
  * {
@@ -119,6 +127,7 @@ typedef enum
     NO_SHIFT,
     SHIFT,
     CAPS_LOCK,
+    PROPER_NOUN,
     SPECIAL_DONE
 } keyModifier_t;
 
@@ -253,11 +262,31 @@ void textEntrySoftReset(void);
 
 /**
  * @brief Sets the prompt text to be displayed. Use an empty string ("") to disable.
- * 
+ *
  * @param prompt Text string to use
  */
-void textEntrySetPrompt(char *prompt);
+void textEntrySetPrompt(char* prompt);
 
-// TODO: Start with Caps active
+/**
+ * @brief Sets the starting mode to capslock
+ *
+ */
+void textEntrySetCapMode(void);
 
-// TODO: Automatically capitalize text (Proper name mode)
+/**
+ * @brief Sets the starting mode to lowercase text
+ *
+ */
+void textEntrySetNoShiftMode(void);
+
+/**
+ * @brief Sets the starting mode to Shift, does one capital letter
+ *
+ */
+void textEntrySetShiftMode(void);
+
+/**
+ * @brief Sets the starting mode to Porper Nouns (Auto capitalizes first letter after a space)
+ *
+ */
+void textEntrySetNounMode(void);

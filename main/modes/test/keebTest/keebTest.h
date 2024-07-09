@@ -69,6 +69,7 @@ typedef struct
     bool count;
     bool reset;
     char prompt[16];
+    uint8_t typingMode;
 
     // Warnings
     char warningText[32];

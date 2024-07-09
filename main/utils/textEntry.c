@@ -165,11 +165,11 @@ void textEntryInit(font_t* useFont, int max_len, char* buffer)
     multi        = false;
     selX         = 1;
     selY         = 1;
-    keyMod       = NO_SHIFT;
+    keyMod       = SHIFT;
     texString[0] = 0;
     cursorTimer  = 0;
     cursorToggle = true;
-    strcpy(promptString, "Text Prompt");
+    strcpy(promptString, "");
 
     // Initialize default colors and BG mode
     backgroundMode = COLOR_BG;
@@ -242,7 +242,11 @@ bool textEntryInput(uint8_t down, uint8_t button)
                 }
                 case KEY_SHIFT:
                 {
-                    if (SHIFT == keyMod)
+                    if (keyMod == SHIFT)
+                    {
+                        keyMod = PROPER_NOUN;
+                    }
+                    else if (keyMod == PROPER_NOUN)
                     {
                         keyMod = NO_SHIFT;
                     }
@@ -334,7 +338,7 @@ bool textEntryInput(uint8_t down, uint8_t button)
         }
         case PB_SELECT:
         {
-            // Rotate the keyMod from NO_SHIFT -> SHIFT -> CAPS LOCK, and back
+            // Rotate the keyMod from NO_SHIFT -> SHIFT -> PROPER_NOUN -> CAPS LOCK, and back
             if (NO_SHIFT == keyMod)
             {
                 keyMod = SHIFT;
@@ -342,6 +346,10 @@ bool textEntryInput(uint8_t down, uint8_t button)
             else if (SHIFT == keyMod)
             {
                 keyMod = CAPS_LOCK;
+            }
+            else if (CAPS_LOCK == keyMod)
+            {
+                keyMod = PROPER_NOUN;
             }
             else
             {
@@ -450,9 +458,29 @@ void textEntrySoftReset()
     keyMod = NO_SHIFT;
 }
 
-void textEntrySetPrompt(char *prompt)
+void textEntrySetPrompt(char* prompt)
 {
     strcpy(promptString, prompt);
+}
+
+void textEntrySetCapMode()
+{
+    keyMod = CAPS_LOCK;
+}
+
+void textEntrySetNoShiftMode()
+{
+    keyMod = NO_SHIFT;
+}
+
+void textEntrySetShiftMode()
+{
+    keyMod = SHIFT;
+}
+
+void textEntrySetNounMode()
+{
+    keyMod = PROPER_NOUN;
 }
 
 // Drawing code
@@ -517,7 +545,17 @@ static int16_t _drawKeyboard()
     int col = 0;
     int row = 0;
     char c;
-    const char* s = (keyMod == NO_SHIFT) ? keyboard_lower : keyboard_upper;
+    int stringLen = strlen(texString);
+    bool noun     = (texString[stringLen - 1] == KEY_SPACE || stringLen == 0) ? false : true;
+    const char* s;
+    if (keyMod == NO_SHIFT || noun)
+    {
+        s = keyboard_lower;
+    }
+    else
+    {
+        s = keyboard_upper;
+    }
     while ((c = *s))
     {
         // EOL character hit, move to the next row
@@ -546,7 +584,14 @@ static int16_t _drawKeyboard()
                     }
                     break;
                 case KEY_SHIFT:
-                    _drawShift(posX, posY, textColor);
+                    if (keyMod == PROPER_NOUN)
+                    {
+                        _drawShift(posX, posY, emphasisColor);
+                    }
+                    else
+                    {
+                        _drawShift(posX, posY, textColor);
+                    }
                     break;
                 case KEY_BACKSPACE:
                     _drawBackspace(posX, posY, textColor);
@@ -677,6 +722,8 @@ static void _drawTypeMode()
             useLine = true;
             text    = "Typing: Caps";
             break;
+        case PROPER_NOUN:
+            text = "Typing: Proper Noun";
         default:
             break;
     }
