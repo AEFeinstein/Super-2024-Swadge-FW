@@ -100,6 +100,7 @@ static const char teMenuEnter[]        = "Enter Style";
 static const char teMenuCaps[]         = "Caps Style";
 static const char teMenuMulti[]        = "Multiline";
 static const char teMenuCount[]        = "Char Count";
+static const char teMenuPrompt[]       = "Sample Prompt";
 static const char teMenuReset[]        = "Reset String";
 static const char teMenuResetHard[]    = "Reset TextEntry";
 
@@ -191,6 +192,7 @@ static void keebEnterMode(void)
     addSingleItemToMenu(kbTest->menu, teMenuCaps);
     addSingleItemToMenu(kbTest->menu, teMenuMulti);
     addSingleItemToMenu(kbTest->menu, teMenuCount);
+    addSingleItemToMenu(kbTest->menu, teMenuPrompt);
     addSingleItemToMenu(kbTest->menu, teMenuReset);
     addSingleItemToMenu(kbTest->menu, teMenuResetHard);
 
@@ -228,6 +230,7 @@ static void keebExitMode(void)
 static void keebMainLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt = {0};
+    bool drawlines = true;
     switch (kbTest->currState)
     {
         case MENU:
@@ -238,7 +241,6 @@ static void keebMainLoop(int64_t elapsedUs)
             drawMenuMania(kbTest->menu, kbTest->renderer, elapsedUs);
             break;
         case TYPING:
-            bool drawlines = true;
             while (checkButtonQueueWrapper(&evt))
             {
                 if (!textEntryInput(evt.down, evt.button))
@@ -308,6 +310,7 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
             textEntrySetNewEnterStyle(kbTest->enter);
             textEntrySetNewCapsStyle(kbTest->caps);
             textEntrySetMultiline(kbTest->multi);
+            textEntrySetPrompt(kbTest->prompt);
             if (kbTest->reset)
             {
                 strcpy(kbTest->typedText, "");
@@ -390,6 +393,19 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
                 setWarning(500, "Character count disabled");
             }
         }
+        else if (label == teMenuPrompt)
+        {
+            if (strlen(kbTest->prompt) > 1)
+            {
+                strcpy(kbTest->prompt, "");
+                setWarning(500, "Disabled text prompt");
+            }
+            else
+            {
+                strcpy(kbTest->prompt, "Text Prompt!");
+                setWarning(500, "Enabled sample text prompt");
+            }
+        }
         else if (label == teMenuReset)
         {
             kbTest->reset = !kbTest->reset;
@@ -443,6 +459,7 @@ static void reset()
     kbTest->caps        = false;
     kbTest->multi       = false;
     strcpy(kbTest->typedText, "");
+    strcpy(kbTest->prompt, "");
     textEntryInit(&kbTest->fnt[0], MAX_TEXT_LEN, kbTest->typedText);
 }
 

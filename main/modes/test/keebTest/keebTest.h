@@ -68,6 +68,7 @@ typedef struct
     bool multi;
     bool count;
     bool reset;
+    char prompt[16];
 
     // Warnings
     char warningText[32];

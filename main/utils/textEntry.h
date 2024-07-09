@@ -250,3 +250,14 @@ void textEntrySetMultiline(bool multiline);
  *
  */
 void textEntrySoftReset(void);
+
+/**
+ * @brief Sets the prompt text to be displayed. Use an empty string ("") to disable.
+ * 
+ * @param prompt Text string to use
+ */
+void textEntrySetPrompt(char *prompt);
+
+// TODO: Start with Caps active
+
+// TODO: Automatically capitalize text (Proper name mode)
