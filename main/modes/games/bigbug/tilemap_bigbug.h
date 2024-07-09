@@ -21,6 +21,10 @@
 //==============================================================================
 struct bb_tilemap_t
 {
+    wsg_t mid_s_Wsg[120];///< The soft midground tiles.
+    wsg_t mid_m_Wsg[120];///< The medium midground tiles.
+    wsg_t mid_h_Wsg[120];///< The hard midground tiles.
+
     wsg_t s1Wsg[32];      ///< The 1st variants of   soft foreground tiles
     wsg_t m1Wsg[32];      ///< The 1st variants of medium foreground tiles
     wsg_t h1Wsg[32];      ///< The 1st variants of   hard foreground tiles
@@ -43,6 +47,7 @@ void bb_loadWsgs(bb_tilemap_t* tilemap);
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera);
 void bb_DrawForegroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, uint32_t i, uint32_t j);
 void bb_DrawMidgroundCornerTile( bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, uint32_t i, uint32_t j);
-wsg_t (*bb_GetWsgArrForForegroundCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[32];
+wsg_t (*bb_GetMidgroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[120];
+wsg_t (*bb_GetForegroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[32];
 
 #endif
