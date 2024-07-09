@@ -9,7 +9,7 @@
  *
  * @param endH Where the keyboard ends
  * @param elapsedUs How many ms have elapsed since last time function was called
- * @return int16_t Top of textbox for nex element
+ * @return int16_t Top of textbox for next element
  */
 static int16_t _drawStr(int16_t endH, int64_t elapsedUs);
 
