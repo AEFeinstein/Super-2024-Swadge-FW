@@ -17,7 +17,7 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
 
     // Change the file extension
     char* dotPtr = strrchr(outFilePath, '.');
-    strncpy(&dotPtr[1], outExt, sizeof(outFilePath) - (dotPtr - outFilePath));
+    strncpy(&dotPtr[1], outExt, sizeof(outFilePath) - (dotPtr - outFilePath) - 1);
 
     if (doesFileExist(outFilePath))
     {

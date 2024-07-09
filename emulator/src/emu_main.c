@@ -11,7 +11,6 @@
         #define _GNU_SOURCE
     #endif
     #include <dlfcn.h>
-    #include <link.h>
 #endif
 #include <time.h>
 

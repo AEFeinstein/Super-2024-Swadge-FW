@@ -81,7 +81,6 @@ INC = $(patsubst %, -I%, $(INC_DIRS) )
 CFLAGS = \
 	-c \
 	-g \
-	-static-libstdc++ \
 	-fdiagnostics-color=always \
 	-ffunction-sections \
 	-fdata-sections \
@@ -96,8 +95,10 @@ ifneq ($(HOST_OS),Darwin)
 # Incompatible flags for clang on MacOS
 CFLAGS += \
 	-static-libgcc \
+	-static-libstdc++ \
 	-fstrict-volatile-bitfields \
-	-fno-tree-switch-conversion
+	-fno-tree-switch-conversion \
+	-fno-omit-frame-pointer
 else
 # Required for OpenGL and some other libraries
 CFLAGS += \
@@ -129,15 +130,13 @@ CFLAGS_WARNINGS = \
 	-Wno-unused-parameter \
 	-Wno-sign-compare \
 	-Wno-enum-conversion \
-	-Wno-error=unused-but-set-variable \
-	-Wno-old-style-declaration
+	-Wno-error=unused-but-set-variable
 
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \
 	-Wundef \
 	-Wformat=2 \
 	-Winvalid-pch \
-	-Wlogical-op \
 	-Wmissing-format-attribute \
 	-Wmissing-include-dirs \
 	-Wpointer-arith \
@@ -145,7 +144,6 @@ CFLAGS_WARNINGS_EXTRA = \
 	-Wuninitialized \
 	-Wshadow \
 	-Wredundant-decls \
-	-Wjump-misses-init \
 	-Wswitch \
 	-Wcast-align \
 	-Wformat-nonliteral \
@@ -162,6 +160,16 @@ CFLAGS_WARNINGS_EXTRA = \
 #	-Wconversion \
 #	-Wsign-conversion \
 #	-Wdouble-promotion
+
+ifneq ($(HOST_OS),Darwin)
+# Incompatible warnings for clang on MacOS
+CFLAGS_WARNINGS += \
+	-Wno-old-style-declaration
+
+CFLAGS_WARNINGS_EXTRA += \
+	-Wlogical-op \
+	-Wjump-misses-init
+endif
 
 ################################################################################
 # Defines
@@ -248,13 +256,13 @@ endif
 
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
-	-static-libstdc++ \
 	-ggdb
 
 # Incompatible flags for clang on MacOS
 ifneq ($(HOST_OS),Darwin)
 LIBRARY_FLAGS += \
-	-static-libgcc
+	-static-libgcc \
+	-static-libstdc++
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -387,7 +395,7 @@ CPPCHECK_DIRS= \
 CPPCHECK_IGNORE= \
 	$(shell $(FIND) emulator/src-lib -type f) \
 	$(shell $(FIND) main/asset_loaders -type f -iname "*heatshrink*")
-	
+
 CPPCHECK_IGNORE_FLAGS = $(patsubst %,-i%, $(CPPCHECK_IGNORE))
 
 cppcheck:
