@@ -86,6 +86,7 @@
  *     {
  *         // Text entry is done, createdString contains the text and can be used elsewhere
  *     }
+ *     // Draw backgrounds for transparent mode here.
  *     textEntryDraw(elapsedUs);
  * }
  * \endcode
