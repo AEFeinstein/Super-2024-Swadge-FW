@@ -206,7 +206,7 @@ bool textEntryDraw(int64_t elapsedUs)
     }
     // Draw an indicator for the current key modifier
     _drawTypeMode();
-    // Draw the rest of the fucking owl
+    // Draw the rest of the owl
     _drawPrompt(_drawStr(_drawKeyboard(), elapsedUs));
     return true;
 }
