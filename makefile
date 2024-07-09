@@ -266,7 +266,8 @@ LIBRARY_FLAGS += \
 	-framework AudioToolbox
     -framework Foundation \
 	-framework CoreFoundation \
-	-framework CoreMIDI
+	-framework CoreMIDI \
+	-framework AudioToolbox
 endif
 
 ifeq ($(HOST_OS),Linux)
