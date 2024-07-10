@@ -546,9 +546,8 @@ static int16_t _drawKeyboard()
     int row = 0;
     char c;
     int stringLen = strlen(texString);
-    bool noun     = (texString[stringLen - 1] == KEY_SPACE || stringLen == 0) ? false : true;
     const char* s;
-    if (keyMod == NO_SHIFT || noun)
+    if (keyMod == NO_SHIFT || (keyMod == PROPER_NOUN && !(texString[stringLen - 1] == KEY_SPACE || stringLen == 0)))
     {
         s = keyboard_lower;
     }
