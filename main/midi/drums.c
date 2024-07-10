@@ -182,9 +182,9 @@ static inline int8_t finishAt(uint32_t finishTime, uint32_t idx, bool* done)
 
 // noiseVol=48, sineVol=256, len=8192, freq=G1
 
-#define TOM(idx, len, noiseVol, sineVol, freq, done)                                             \
-    adrLerp(idx, (len) / 2, (len) / 2, noiseVol, 0) * swSynthSampleWave(NOISE, idx & 0xFF) / 256 \
-        + adrLerp(idx, 128, ((len)-128), sineVol, 0) * sampleWaveAt(idx, SHAPE_SINE, freq) / 256 \
+#define TOM(idx, len, noiseVol, sineVol, freq, done)                                               \
+    adrLerp(idx, (len) / 2, (len) / 2, noiseVol, 0) * swSynthSampleWave(NOISE, idx & 0xFF) / 256   \
+        + adrLerp(idx, 128, ((len) - 128), sineVol, 0) * sampleWaveAt(idx, SHAPE_SINE, freq) / 256 \
         + finishAt(len, idx, done)
 
 int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data)

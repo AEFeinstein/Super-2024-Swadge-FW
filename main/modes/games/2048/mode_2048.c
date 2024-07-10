@@ -354,7 +354,6 @@ static void t48EnterMode(void)
         }
     }
     t48->ds = GAMESTART;
-    t48StartGame(); // First run only adds one block... so just run it twice!
 }
 
 static void t48ExitMode(void)
@@ -569,7 +568,7 @@ static bool t48MergeSlice(uint32_t slice[], bool updated)
             slice[i] *= 2;
             t48->score += slice[i];
             // Move if merged
-            for (uint8_t j = i + 1; j < GRID_SIZE; j++)
+            for (uint8_t j = i + 1; j < GRID_SIZE-1; j++)
             {
                 slice[j] = slice[j + 1];
             }
