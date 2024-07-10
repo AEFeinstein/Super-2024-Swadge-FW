@@ -515,11 +515,11 @@ static void t48MainLoop(int64_t elapsedUs)
 
 static int t48SetRandCell()
 {
-    int8_t cell = -1;
-    while (t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] != 0)
+    int8_t cell;
+    do
     {
         cell = esp_random() % BOARD_SIZE;
-    }
+    } while (t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] != 0);
     int8_t rand = esp_random() % 10;
     if (rand == 0)
     {
