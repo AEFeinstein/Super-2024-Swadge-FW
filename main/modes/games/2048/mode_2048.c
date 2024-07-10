@@ -2,7 +2,7 @@
  * @file mode_2048.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 1.1.2
+ * @version 1.1.3
  * @date 2024-06-28
  *
  * @copyright Copyright (c) 2024
@@ -44,6 +44,12 @@ static void t48MainLoop(int64_t elapsedUs);
  */
 static int t48SetRandCell(void);
 
+/**
+ * @brief Updates the LEDs based on a direction and adds a new tile if valid
+ *
+ * @param wasUpdated If the board has changed to a new config
+ * @param dir Direction used to update board
+ */
 static void t48BoardUpdate(bool wasUpdated, Direction_t dir);
 
 /**
@@ -51,8 +57,8 @@ static void t48BoardUpdate(bool wasUpdated, Direction_t dir);
  *
  * @param slice Slice to merge
  * @param updated If board was already updated
- * @return true If a merge occured
- * @return false if no merge occured
+ * @return true If a merge occurred
+ * @return false if no merge occurred
  */
 static bool t48MergeSlice(uint32_t* slice, bool updated);
 
@@ -89,7 +95,7 @@ static void t48SlideLeft(void);
 static void t48StartGame(void);
 
 /**
- * @brief Checks if the player has reached 2048 for tyhee first time
+ * @brief Checks if the player has reached 2048 for the first time
  *
  * @return true     If this is the first time 2048 has been hit
  * @return false    Otherwise
@@ -141,7 +147,7 @@ static void t48StartScreen(uint8_t color);
 static void t48DrawGameOverScreen(int64_t score);
 
 /**
- * @brief Draw the win screen. It doesn't do anythiung else.
+ * @brief Draw the win screen. It doesn't do anything else.
  *
  */
 static void t48DrawWinScreen(void);
@@ -882,7 +888,7 @@ static void t48Draw()
     // Blank
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
-    // Draw vertrical grid line
+    // Draw vertical grid line
     for (uint8_t i = 0; i < 5; i++)
     {
         int16_t left = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
@@ -918,7 +924,7 @@ static void t48Draw()
             {
                 continue;
             }
-            // Grab the offest based on cell
+            // Grab the offset based on cell
             uint16_t y_cell_offset = col * (T48_CELL_SIZE + T48_LINE_WEIGHT);
             uint16_t x_cell_offset = row * (T48_CELL_SIZE + T48_LINE_WEIGHT);
             // Convert int to char
@@ -1144,16 +1150,16 @@ static void t48LightLEDs(Direction_t dir, Color_t color)
 
 static Color_t t48GetLEDColors()
 {
-    uint32_t maxval = 0;
+    uint32_t maxVal = 0;
     for (uint8_t i = 0; i < BOARD_SIZE; i++)
     {
-        if (maxval < t48->boardArr[i / GRID_SIZE][i % GRID_SIZE])
+        if (maxVal < t48->boardArr[i / GRID_SIZE][i % GRID_SIZE])
         {
-            maxval = t48->boardArr[i / GRID_SIZE][i % GRID_SIZE];
+            maxVal = t48->boardArr[i / GRID_SIZE][i % GRID_SIZE];
         }
     }
     Color_t col = {0};
-    switch (maxval)
+    switch (maxVal)
     {
         case 2:
             // Green
