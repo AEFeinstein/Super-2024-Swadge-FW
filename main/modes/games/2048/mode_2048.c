@@ -11,6 +11,103 @@
 #include "mode_2048.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+// Swadge
+#define T48_US_PER_FRAME 16667
+
+// Game
+#define T48_GRID_SIZE  4
+#define T48_BOARD_SIZE 16
+
+// Graphics
+#define T48_CELL_SIZE   50
+#define T48_LINE_WEIGHT 4
+#define T48_SIDE_MARGIN 30
+#define T48_TOP_MARGIN  20
+#define T48_TILE_COUNT  16
+
+// High score
+#define T48_HS_COUNT  5
+#define T48_HS_KEYLEN 14
+
+// LEDs
+#define T48_LED_TIMER 32
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    GAME,      // Game running
+    WIN,       // Display a win
+    GAMEOVER,  // Display final score and prompt a restart
+    GAMESTART, // Splash screen after load
+    CONFIRM,   // Confirm player wants top abandon game
+    WRITE,     // Allows player to write their initials for high score
+} t48DisplayState_t;
+
+typedef enum
+{
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    ALL
+} t48Direction_t;
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+typedef struct
+{
+    wsg_t image;
+    int16_t pos[2];
+    uint8_t spd;
+    int8_t dir;
+} t48FallingBlock_t;
+
+typedef struct
+{
+    // Assets
+    font_t font;
+    font_t titleFont;
+    font_t titleFontOutline;
+    wsg_t tiles[T48_TILE_COUNT];
+    midiFile_t bgm;
+    midiFile_t click;
+
+    // Game state
+    int32_t boardArr[T48_BOARD_SIZE][T48_BOARD_SIZE];
+    int32_t score;
+    int32_t highScore[T48_HS_COUNT];
+    bool newHS;
+
+    // Display
+    char scoreStr[16];
+    bool alreadyWon;
+    char playerInitials[4];
+    char hsInitials[T48_HS_COUNT][4];
+    bool textEntryDone;
+    t48DisplayState_t ds;
+    uint8_t hue;
+
+    // LEDs
+    led_t leds[CONFIG_NUM_LEDS];
+
+    // Audio
+    bool bgmIsPlaying;
+
+    // Start screen
+    t48FallingBlock_t fb[T48_TILE_COUNT];
+    bool startScrInitialized;
+    int16_t timer;
+} t48_t;
+
+//==============================================================================
 // Function Prototypes
 //==============================================================================
 
@@ -40,9 +137,9 @@ static void t48MainLoop(int64_t elapsedUs);
 /**
  * @brief Sets an empty cell to 2 or 4 on 50/50 basis
  *
- * @return int Cell used
+ * @return int8_t Cell used
  */
-static int t48SetRandCell(void);
+static int8_t t48SetRandCell(void);
 
 /**
  * @brief Updates the LEDs based on a direction and adds a new tile if valid
@@ -50,7 +147,7 @@ static int t48SetRandCell(void);
  * @param wasUpdated If the board has changed to a new config
  * @param dir Direction used to update board
  */
-static void t48BoardUpdate(bool wasUpdated, Direction_t dir);
+static void t48BoardUpdate(bool wasUpdated, t48Direction_t dir);
 
 /**
  * @brief Merge a single row or column. Cells merged from CELL_SIZE-1 -> 0.
@@ -121,10 +218,10 @@ static void t48SortHighScores(void);
 /**
  * @brief Get the Color for a specific value
  *
- * @param val       Value that requires a color for its square
- * @return uint8_t  Color of the value's square
+ * @param val Value that requires a color for its square
+ * @return uint8_t Color of the value's square
  */
-static uint8_t getColor(uint32_t val);
+static uint8_t getTileSprIndex(uint32_t val);
 
 /**
  * @brief Draws the grid, score, and tiles
@@ -137,7 +234,7 @@ static void t48Draw(void);
  *
  * @param color Color of the title text
  */
-static void t48StartScreen(uint8_t color);
+static void t48StartScreen(paletteColor_t color);
 
 /**
  * @brief Draws the final score and prompts the player to play again
@@ -172,7 +269,7 @@ static void t48DimLEDs(void);
  * @param idx   Index of the LED
  * @param color Color to set LED
  */
-static void t48SetRGB(uint8_t idx, Color_t color);
+static void t48SetRGB(uint8_t idx, led_t color);
 
 /**
  * @brief Illuminate appropriate LEDs based on an indicated direction
@@ -180,21 +277,21 @@ static void t48SetRGB(uint8_t idx, Color_t color);
  * @param dir   Direction to illuminate LEDs
  * @param color Color to set the LEDs to
  */
-static void t48LightLEDs(Direction_t dir, Color_t color);
+static void t48LightLEDs(t48Direction_t dir, led_t color);
 
 /**
  * @brief Based on the highest block value, set the LED color
  *
- * @return Color_t Color object send to the LEDs
+ * @return led_t Color object send to the LEDs
  */
-static Color_t t48GetLEDColors(void);
+static led_t t48GetLEDColors(void);
 
 /**
  * @brief Get a random bright color for the LEDs
  *
- * @return Color_t Color to send to LEDs
+ * @return led_t Color to send to LEDs
  */
-static Color_t t48RandColor(void);
+static led_t t48RandColor(void);
 
 /**
  * @brief Run an random LED program
@@ -230,9 +327,9 @@ const char paused[]     = "Paused!";
 const char pausedA[]    = "Press A to continue playing";
 const char pausedB[]    = "Press B to abandon game";
 
-const char highScoreKey[HS_COUNT][HS_KEYLEN]
+const char highScoreKey[T48_HS_COUNT][T48_HS_KEYLEN]
     = {"t48HighScore0", "t48HighScore1", "t48HighScore2", "t48HighScore3", "t48HighScore4"};
-const char highScoreInitialsKey[HS_COUNT][HS_KEYLEN] = {
+const char highScoreInitialsKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
     "t48HSInitial0", "t48HSInitial1", "t48HSInitial2", "t48HSInitial3", "t48HSInitial4",
 };
 
@@ -254,7 +351,6 @@ swadgeMode_t t48Mode = {
 };
 
 t48_t* t48;
-static led_t leds[CONFIG_NUM_LEDS] = {0};
 
 //==============================================================================
 // Functions
@@ -303,7 +399,7 @@ static void t48EnterMode(void)
     textEntrySetNewEnterStyle(true);
 
     // Init Game
-    for (int8_t i = 0; i < HS_COUNT; i++)
+    for (int8_t i = 0; i < T48_HS_COUNT; i++)
     {
         if (!readNvs32(highScoreKey[i], &t48->highScore[i]))
         {
@@ -362,7 +458,7 @@ static void t48ExitMode(void)
     freeFont(&t48->titleFont);
     freeFont(&t48->font);
 
-    for (uint8_t i = 0; i < TILE_COUNT; i++)
+    for (uint8_t i = 0; i < T48_TILE_COUNT; i++)
     {
         freeWsg(&t48->tiles[i]);
     }
@@ -438,7 +534,7 @@ static void t48MainLoop(int64_t elapsedUs)
             }
             if (t48CheckOver())
             {
-                for (int8_t i = 0; i < HS_COUNT; i++)
+                for (int8_t i = 0; i < T48_HS_COUNT; i++)
                 {
                     if (t48->highScore[i] <= t48->score)
                     {
@@ -518,44 +614,43 @@ static void t48MainLoop(int64_t elapsedUs)
 
 // Game functions
 
-static int t48SetRandCell()
+static int8_t t48SetRandCell()
 {
     int8_t cell;
     do
     {
-        cell = esp_random() % BOARD_SIZE;
-    } while (t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] != 0);
+        cell = esp_random() % T48_BOARD_SIZE;
+    } while (t48->boardArr[cell / T48_GRID_SIZE][cell % T48_GRID_SIZE] != 0);
     int8_t rand = esp_random() % 10;
     if (rand == 0)
     {
-        t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] = 4; // 10%
+        t48->boardArr[cell / T48_GRID_SIZE][cell % T48_GRID_SIZE] = 4; // 10%
     }
     else
     {
-        t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] = 2; // 90%
+        t48->boardArr[cell / T48_GRID_SIZE][cell % T48_GRID_SIZE] = 2; // 90%
     }
-
     return cell;
 }
 
-static void t48BoardUpdate(bool wasUpdated, Direction_t dir)
+static void t48BoardUpdate(bool wasUpdated, t48Direction_t dir)
 {
     if (wasUpdated)
     {
         t48SetRandCell();
-        Color_t col = t48GetLEDColors();
+        led_t col = t48GetLEDColors();
         t48LightLEDs(dir, col);
     }
     else
     {
-        Color_t col = {.r = 200, .g = 200, .b = 200};
+        led_t col = {.r = 200, .g = 200, .b = 200};
         t48LightLEDs(ALL, col);
     }
 }
 
 static bool t48MergeSlice(uint32_t slice[], bool updated)
 {
-    for (uint8_t i = 0; i < GRID_SIZE - 1; i++)
+    for (uint8_t i = 0; i < T48_GRID_SIZE - 1; i++)
     {
         // Merge
         if (slice[i] == slice[i + 1])
@@ -568,12 +663,12 @@ static bool t48MergeSlice(uint32_t slice[], bool updated)
             slice[i] *= 2;
             t48->score += slice[i];
             // Move if merged
-            for (uint8_t j = i + 1; j < GRID_SIZE-1; j++)
+            for (uint8_t j = i + 1; j < T48_GRID_SIZE - 1; j++)
             {
                 slice[j] = slice[j + 1];
             }
             // Add a 0 to end if merged
-            slice[GRID_SIZE - 1] = 0;
+            slice[T48_GRID_SIZE - 1] = 0;
         }
     }
     return updated;
@@ -582,19 +677,19 @@ static bool t48MergeSlice(uint32_t slice[], bool updated)
 static void t48SlideDown()
 {
     bool updated = false;
-    for (uint8_t col = 0; col < GRID_SIZE; col++)
+    for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
         // Create a slice to merge
-        uint32_t slice[GRID_SIZE] = {0};
+        uint32_t slice[T48_GRID_SIZE] = {0};
         // Load only cells with value into slice in the order:
         // Bottom -> Top
-        for (int8_t row = GRID_SIZE - 1, i = 0; row >= 0; row--)
+        for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
         {
             // Only copy over values > 0, automatically moving all non-zeroes
             if (t48->boardArr[row][col] != 0)
             {
                 slice[i++] = t48->boardArr[row][col];
-                if (row != (GRID_SIZE - i))
+                if (row != (T48_GRID_SIZE - i))
                 {
                     // If these go out of sync, board has updated
                     updated = true;
@@ -604,7 +699,7 @@ static void t48SlideDown()
         // Merge. If merge happens, update
         updated = t48MergeSlice(slice, updated);
         // Copy modified slice back into board array
-        for (int8_t row = GRID_SIZE - 1, i = 0; row >= 0; row--)
+        for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
         {
             t48->boardArr[row][col] = slice[i++];
         }
@@ -616,13 +711,13 @@ static void t48SlideDown()
 static void t48SlideUp()
 {
     bool updated = false;
-    for (uint8_t col = 0; col < GRID_SIZE; col++)
+    for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
         // Create a slice to merge
-        uint32_t slice[GRID_SIZE] = {0};
+        uint32_t slice[T48_GRID_SIZE] = {0};
         // Load only cells with value into slice in the order:
         // Top -> Bottom
-        for (int8_t row = 0, i = 0; row <= GRID_SIZE - 1; row++)
+        for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
         {
             // Only copy over values > 0, automatically moving all non-zeroes
             if (t48->boardArr[row][col] != 0)
@@ -638,7 +733,7 @@ static void t48SlideUp()
         // Merge. If merge happens, update
         updated = t48MergeSlice(slice, updated);
         // Copy modified slice back into board array
-        for (int8_t row = 0, i = 0; row <= GRID_SIZE - 1; row++)
+        for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
         {
             t48->boardArr[row][col] = slice[i++];
         }
@@ -650,19 +745,19 @@ static void t48SlideUp()
 static void t48SlideRight()
 {
     bool updated = false;
-    for (uint8_t row = 0; row < GRID_SIZE; row++)
+    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
         // Create a slice to merge
-        uint32_t slice[GRID_SIZE] = {0};
+        uint32_t slice[T48_GRID_SIZE] = {0};
         // Load only cells with value into slice in the order:
         // Right -> Left
-        for (int8_t col = GRID_SIZE - 1, i = 0; col >= 0; col--)
+        for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
         {
             // Only copy over values > 0, automatically moving all non-zeroes
             if (t48->boardArr[row][col] != 0)
             {
                 slice[i++] = t48->boardArr[row][col];
-                if (col != (GRID_SIZE - i))
+                if (col != (T48_GRID_SIZE - i))
                 {
                     // If these go out of sync, board has updated
                     updated = true;
@@ -672,7 +767,7 @@ static void t48SlideRight()
         // Merge. If merge happens, update
         updated = t48MergeSlice(slice, updated);
         // Copy modified slice back into board array
-        for (int8_t col = GRID_SIZE - 1, i = 0; col >= 0; col--)
+        for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
         {
             t48->boardArr[row][col] = slice[i++];
         }
@@ -684,13 +779,13 @@ static void t48SlideRight()
 static void t48SlideLeft()
 {
     bool updated = false;
-    for (uint8_t row = 0; row < GRID_SIZE; row++)
+    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
         // Create a slice to merge
-        uint32_t slice[GRID_SIZE] = {0};
+        uint32_t slice[T48_GRID_SIZE] = {0};
         // Load only cells with value into slice in the order:
         // Left -> Right
-        for (int8_t col = 0, i = 0; col <= GRID_SIZE - 1; col++)
+        for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
             // Only copy over values > 0, automatically moving all non-zeroes
             if (t48->boardArr[row][col] != 0)
@@ -706,7 +801,7 @@ static void t48SlideLeft()
         // Merge. If merge happens, update
         updated = t48MergeSlice(slice, updated);
         // Copy modified slice back into board array
-        for (int8_t col = 0, i = 0; col <= GRID_SIZE - 1; col++)
+        for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
             t48->boardArr[row][col] = slice[i++];
         }
@@ -720,9 +815,9 @@ static void t48SlideLeft()
 static void t48StartGame()
 {
     // clear the board
-    for (uint8_t i = 0; i < BOARD_SIZE; i++)
+    for (uint8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] = 0;
+        t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] = 0;
     }
     t48->alreadyWon = false;
     t48->score      = 0;
@@ -737,9 +832,9 @@ static bool t48CheckWin()
     {
         return false;
     }
-    for (uint8_t i = 0; i < BOARD_SIZE; i++)
+    for (uint8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        if (t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] == 2048)
+        if (t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] == 2048)
         {
             t48->alreadyWon = true;
             return true;
@@ -751,17 +846,17 @@ static bool t48CheckWin()
 static bool t48CheckOver()
 {
     // Check if any cells are open
-    for (uint8_t i = 0; i < BOARD_SIZE; i++)
+    for (uint8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        if (t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] == 0)
+        if (t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] == 0)
         {
             return false;
         }
     }
     // Check if any two consecutive block match vertically
-    for (uint8_t row = 0; row < GRID_SIZE; row++)
+    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
-        for (uint8_t col = 0; col < GRID_SIZE - 1; col++)
+        for (uint8_t col = 0; col < T48_GRID_SIZE - 1; col++)
         { // -1 to account for comparison
             if (t48->boardArr[col][row] == t48->boardArr[col + 1][row])
             {
@@ -770,9 +865,9 @@ static bool t48CheckOver()
         }
     }
     // Check if any two consecutive block match horizontally
-    for (uint8_t row = 0; row < GRID_SIZE - 1; row++)
+    for (uint8_t row = 0; row < T48_GRID_SIZE - 1; row++)
     { // -1 to account for comparison
-        for (uint8_t col = 0; col < GRID_SIZE - 1; col++)
+        for (uint8_t col = 0; col < T48_GRID_SIZE - 1; col++)
         {
             if (t48->boardArr[col][row] == t48->boardArr[col][row + 1])
             {
@@ -787,17 +882,17 @@ static bool t48CheckOver()
 static void t48SortHighScores()
 {
     // 5th place needs to compare to the score
-    if (t48->highScore[HS_COUNT - 1] < t48->score)
+    if (t48->highScore[T48_HS_COUNT - 1] < t48->score)
     {
-        t48->highScore[HS_COUNT - 1] = t48->score;
-        strcpy(t48->hsInitials[HS_COUNT - 1], t48->playerInitials);
+        t48->highScore[T48_HS_COUNT - 1] = t48->score;
+        strcpy(t48->hsInitials[T48_HS_COUNT - 1], t48->playerInitials);
     }
     else
     {
-        // Scores *should* be sorted already. save cycles.
+        // Scores *should* be sorted already. Save cycles.
         return;
     }
-    for (int8_t i = HS_COUNT - 2; i >= 0; i--)
+    for (int8_t i = T48_HS_COUNT - 2; i >= 0; i--)
     {
         if (t48->highScore[i] < t48->highScore[i + 1])
         {
@@ -812,7 +907,7 @@ static void t48SortHighScores()
         }
     }
     // Save out the new scores
-    for (int8_t i = 0; i < HS_COUNT; i++)
+    for (int8_t i = 0; i < T48_HS_COUNT; i++)
     {
         writeNvs32(highScoreKey[i], t48->highScore[i]);
         writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], 4);
@@ -821,64 +916,46 @@ static void t48SortHighScores()
 
 // Visuals
 
-static uint8_t getColor(uint32_t val)
+static uint8_t getTileSprIndex(uint32_t val)
 {
     switch (val)
     {
         case 2:
             return 5;
-            break;
         case 4:
             return 8;
-            break;
         case 8:
             return 2;
-            break;
         case 16:
             return 12;
-            break;
         case 32:
             return 0;
-            break;
         case 64:
             return 15;
-            break;
         case 128:
             return 1;
-            break;
         case 256:
             return 7;
-            break;
         case 512:
             return 10;
-            break;
         case 1024:
             return 9;
-            break;
         case 2048:
             return 14;
-            break;
         case 4096:
             return 11;
-            break;
         case 8192:
             return 6;
-            break;
         case 16384:
             return 13;
-            break;
         case 32768:
             return 4;
-            break;
         case 65535:
             return 3;
-            break;
         case 131072:
             return 0; // Probably never seen
-            break;
         default:
             return 0;
-            break;
     }
 }
 
@@ -891,30 +968,31 @@ static void t48Draw()
     for (uint8_t i = 0; i < 5; i++)
     {
         int16_t left = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
-        fillDisplayArea(SIDE_MARGIN + left, TOP_MARGIN, SIDE_MARGIN + left + T48_LINE_WEIGHT, TFT_HEIGHT, c111);
+        fillDisplayArea(T48_SIDE_MARGIN + left, T48_TOP_MARGIN, T48_SIDE_MARGIN + left + T48_LINE_WEIGHT, TFT_HEIGHT,
+                        c111);
     }
 
     // Draw horizontal grid lines
     for (uint8_t i = 0; i < 5; i++)
     {
         int16_t top = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
-        fillDisplayArea(SIDE_MARGIN, top + TOP_MARGIN, TFT_WIDTH - SIDE_MARGIN, top + TOP_MARGIN + T48_LINE_WEIGHT,
-                        c111);
+        fillDisplayArea(T48_SIDE_MARGIN, top + T48_TOP_MARGIN, TFT_WIDTH - T48_SIDE_MARGIN,
+                        top + T48_TOP_MARGIN + T48_LINE_WEIGHT, c111);
     }
 
     // Score
     static char textBuffer[32];
     snprintf(textBuffer, sizeof(textBuffer) - 1, "Score: %" PRIu32, t48->score);
     strcpy(t48->scoreStr, textBuffer);
-    drawText(&t48->font, c555, t48->scoreStr, SIDE_MARGIN, 4);
+    drawText(&t48->font, c555, t48->scoreStr, T48_SIDE_MARGIN, 4);
 
     // Cells
-    int16_t side_offset = SIDE_MARGIN + T48_LINE_WEIGHT;
-    int16_t top_offset  = TOP_MARGIN + T48_LINE_WEIGHT;
+    int16_t side_offset = T48_SIDE_MARGIN + T48_LINE_WEIGHT;
+    int16_t top_offset  = T48_TOP_MARGIN + T48_LINE_WEIGHT;
     static char buffer[16];
-    for (uint8_t col = 0; col < GRID_SIZE; col++)
+    for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
-        for (uint8_t row = 0; row < GRID_SIZE; row++)
+        for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
         {
             // Grab the current value of the cell
             uint32_t val = t48->boardArr[col][row];
@@ -931,7 +1009,7 @@ static void t48Draw()
             // Get the center of the text
             uint16_t text_center = (textWidth(&t48->font, buffer)) / 2;
             // Get associated color
-            drawWsgSimple(&t48->tiles[getColor(val)], side_offset + x_cell_offset, top_offset + y_cell_offset);
+            drawWsgSimple(&t48->tiles[getTileSprIndex(val)], side_offset + x_cell_offset, top_offset + y_cell_offset);
             // Draw the text
             drawText(&t48->font, c555, buffer, side_offset + x_cell_offset - text_center + T48_CELL_SIZE / 2,
                      top_offset + y_cell_offset - 4 + T48_CELL_SIZE / 2);
@@ -939,7 +1017,7 @@ static void t48Draw()
     }
 }
 
-static void t48StartScreen(uint8_t color)
+static void t48StartScreen(paletteColor_t color)
 {
     // Blank
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
@@ -947,7 +1025,7 @@ static void t48StartScreen(uint8_t color)
     if (!t48->startScrInitialized)
     {
         // Set random x and y coordinates for all blocks
-        for (uint8_t i = 0; i < TILE_COUNT; i++)
+        for (uint8_t i = 0; i < T48_TILE_COUNT; i++)
         {
             t48->fb[i].image  = t48->tiles[i];
             t48->fb[i].pos[0] = (esp_random() % (TFT_WIDTH + (2 * T48_CELL_SIZE))) - T48_CELL_SIZE;
@@ -957,7 +1035,7 @@ static void t48StartScreen(uint8_t color)
         }
         t48->startScrInitialized = true;
     }
-    for (uint8_t i = 0; i < TILE_COUNT; i++)
+    for (uint8_t i = 0; i < T48_TILE_COUNT; i++)
     {
         // Move block
         t48->fb[i].pos[1] += t48->fb[i].spd;
@@ -1003,10 +1081,10 @@ static void t48DrawGameOverScreen(int64_t score)
     static char textBuffer[32];
     snprintf(textBuffer, sizeof(textBuffer) - 1, "Final score: %" PRIu64, score);
     drawText(&t48->titleFont, c550, textBuffer, 16, 48);
-    for (int8_t i = 0; i < HS_COUNT; i++)
+    for (int8_t i = 0; i < T48_HS_COUNT; i++)
     {
         static char initBuff[20];
-        static uint8_t color;
+        static paletteColor_t color;
         if (score == t48->highScore[i])
         {
             int16_t x = 16;
@@ -1057,56 +1135,57 @@ static void t48DimLEDs()
     for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {
         // Red
-        if (leds[i].r < 6)
+        if (t48->leds[i].r < 6)
         {
-            leds[i].r = 0;
+            t48->leds[i].r = 0;
         }
-        else if (leds[i].r == 0)
+        else if (t48->leds[i].r == 0)
         {
             // Do nothing
         }
         else
         {
-            leds[i].r -= 6;
+            t48->leds[i].r -= 6;
         }
         // Green
-        if (leds[i].g < 6)
+        if (t48->leds[i].g < 6)
         {
-            leds[i].g = 0;
+            t48->leds[i].g = 0;
         }
-        else if (leds[i].g == 0)
+        else if (t48->leds[i].g == 0)
         {
             // Do nothing
         }
         else
         {
-            leds[i].g -= 6;
+            t48->leds[i].g -= 6;
         }
         // Blue
-        if (leds[i].b < 6)
+        if (t48->leds[i].b < 6)
         {
-            leds[i].b = 0;
+            t48->leds[i].b = 0;
         }
-        else if (leds[i].b == 0)
+        else if (t48->leds[i].b == 0)
         {
             // Do nothing
         }
         else
         {
-            leds[i].b -= 6;
+            t48->leds[i].b -= 6;
         }
     }
-    setLeds(leds, CONFIG_NUM_LEDS);
+    setLeds(t48->leds, CONFIG_NUM_LEDS);
 }
 
-static void t48SetRGB(uint8_t idx, Color_t color)
+static void t48SetRGB(uint8_t idx, led_t color)
 {
-    leds[idx].r = color.r;
-    leds[idx].g = color.g;
-    leds[idx].b = color.b;
+    // FIXME: See if I can make this one line
+    t48->leds[idx].r = color.r;
+    t48->leds[idx].g = color.g;
+    t48->leds[idx].b = color.b;
 }
 
-static void t48LightLEDs(Direction_t dir, Color_t color)
+static void t48LightLEDs(t48Direction_t dir, led_t color)
 {
     switch (dir)
     {
@@ -1147,111 +1226,95 @@ static void t48LightLEDs(Direction_t dir, Color_t color)
     }
 }
 
-static Color_t t48GetLEDColors()
+static led_t t48GetLEDColors()
 {
     uint32_t maxVal = 0;
-    for (uint8_t i = 0; i < BOARD_SIZE; i++)
+    for (uint8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        if (maxVal < t48->boardArr[i / GRID_SIZE][i % GRID_SIZE])
+        if (maxVal < t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE])
         {
-            maxVal = t48->boardArr[i / GRID_SIZE][i % GRID_SIZE];
+            maxVal = t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE];
         }
     }
-    Color_t col = {0};
+    led_t col = {0};
     switch (maxVal)
     {
         case 2:
             // Green
             col.g = 128;
             return col;
-            break;
         case 4:
             // Pink
             col.r = 200;
-            col.g = 100;
-            col.b = 100;
+            col.g = 150;
+            col.b = 150;
             return col;
-            break;
         case 8:
             // Cyan
             col.g = 255;
             col.b = 255;
             return col;
-            break;
         case 16:
             // Red
             col.r = 255;
             return col;
-            break;
         case 32:
             // Blue
             col.b = 255;
             return col;
-            break;
         case 64:
             // Yellow
             col.r = 128;
             col.g = 128;
             return col;
-            break;
         case 128:
             // Blue
             col.b = 255;
             return col;
-            break;
         case 256:
             // Orange
             col.r = 255;
             col.g = 165;
             return col;
-            break;
         case 512:
             // Dark Pink
             col.r = 255;
             col.g = 64;
             col.b = 64;
             return col;
-            break;
         case 1024:
             // Pink
             col.r = 255;
             col.g = 128;
             col.b = 128;
             return col;
-            break;
         case 2048:
             // Yellow
             col.r = 255;
             col.g = 255;
             return col;
-            break;
         case 4096:
             // Purple
             col.r = 200;
             col.b = 200;
             return col;
-            break;
         case 8192:
             // Mauve
             col.r = 255;
             col.b = 64;
             return col;
-            break;
         case 16384:
             // Red
             col.r = 255;
             return col;
-            break;
         case 32768:
             // Green
             col.g = 255;
             return col;
-            break;
         case 65535:
             // Dark Blue
             col.b = 255;
             return col;
-            break;
         default:
             col.r = 255;
             col.g = 128;
@@ -1260,12 +1323,12 @@ static Color_t t48GetLEDColors()
     }
 }
 
-static Color_t t48RandColor()
+static led_t t48RandColor()
 {
-    Color_t col = {0};
-    col.r       = 128 + (esp_random() % 127);
-    col.g       = 128 + (esp_random() % 127);
-    col.b       = 128 + (esp_random() % 127);
+    led_t col = {0};
+    col.r     = 128 + (esp_random() % 127);
+    col.g     = 128 + (esp_random() % 127);
+    col.b     = 128 + (esp_random() % 127);
     return col;
 }
 
@@ -1274,7 +1337,7 @@ static void t48RandLEDs()
     t48->timer -= 1;
     if (t48->timer <= 0)
     {
-        t48->timer = 32;
+        t48->timer = T48_LED_TIMER;
         t48LightLEDs(esp_random() % 5, t48RandColor());
     }
 }
