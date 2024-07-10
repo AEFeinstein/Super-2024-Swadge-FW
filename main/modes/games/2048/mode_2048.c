@@ -198,7 +198,7 @@ static void t48RandLEDs(void);
 
 /**
  * @brief Returns values in hue sequence
- * 
+ *
  * @return paletteColor_t Color to use
  */
 static paletteColor_t t48Rainbow(void);
@@ -347,7 +347,7 @@ static void t48EnterMode(void)
             writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], len);
         }
     }
-    t48->ds = GAMEOVER;
+    t48->ds = GAMESTART;
     t48StartGame(); // First run only adds one block... so just run it twice!
 }
 
@@ -1276,7 +1276,7 @@ static void t48RandLEDs()
 
 static paletteColor_t t48Rainbow()
 {
-    uint8_t hue = t48->hue++; 
+    uint8_t hue = t48->hue++;
     uint8_t sat = 255;
     uint8_t val = 255;
     return paletteHsvToHex(hue, sat, val);
