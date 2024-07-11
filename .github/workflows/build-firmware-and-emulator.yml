@@ -125,14 +125,23 @@ jobs:
         delete-merged: true
 
     ## Firmware
+    - name: Restore IDF Cache
+      id: cache-esp-idf
+      uses: actions/cache@v3
+      with:
+        path: |
+          ${{ env.HOME }}/.espressif
+          ${{ runner.temp }}/esp-idf
+        key: esp-idf-cache-${{ matrix.os }}
+
     - name: Set up the IDF
-      if: matrix.firmware && matrix.family == 'windows'
+      if: steps.cache-esp-idf.outputs.cache-hit != 'true' && matrix.firmware && matrix.family == 'windows'
       run: |
         git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
         ${{ runner.temp }}/esp-idf/install.ps1
 
     - name: Set up the IDF
-      if: matrix.firmware && matrix.family != 'windows'
+      if: steps.cache-esp-idf.outputs.cache-hit != 'true' && matrix.firmware && matrix.family != 'windows'
       run: |
         git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
         ${{ runner.temp }}/esp-idf/install.sh
