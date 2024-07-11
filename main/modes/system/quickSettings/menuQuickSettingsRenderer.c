@@ -28,13 +28,13 @@
 
 #define TEXT_MARGIN 10
 
-#define PANEL_BG_COLOR            c200
-#define PANEL_BORDER_COLOR        c532
-#define PANEL_ICON_BG_COLOR_SEL   c411
-#define PANEL_ICON_BG_COLOR_UNSEL c311
-#define PANEL_ICON_BG_COLOR_OFF   c222
-#define PANEL_BOX_COLOR_SEL       c532
-#define PANEL_BOX_COLOR_UNSEL     c200
+#define PANEL_BG_COLOR            c115
+#define PANEL_BORDER_COLOR        c000
+#define PANEL_ICON_BG_COLOR_SEL   c243
+#define PANEL_ICON_BG_COLOR_UNSEL c114
+#define PANEL_ICON_BG_COLOR_OFF   c444
+#define PANEL_BOX_COLOR_SEL       c555
+#define PANEL_BOX_COLOR_UNSEL     c531
 #define PANEL_TEXT_COLOR          c542
 
 #define ICON_W      16

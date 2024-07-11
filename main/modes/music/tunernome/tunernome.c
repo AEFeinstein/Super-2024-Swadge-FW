@@ -55,7 +55,7 @@
 #define MAX_BPM              400
 #define MAX_BEATS            16 // I mean, realistically, who's going to have more than 16 beats in a measure?
 #define METRONOME_FLASH_MS   35
-#define METRONOME_CLICK_MS   35
+// #define METRONOME_CLICK_MS   35
 #define BPM_CHANGE_FIRST_MS  500
 #define BPM_CHANGE_FAST_MS   2000
 #define BPM_CHANGE_REPEAT_MS 50
@@ -277,6 +277,8 @@ static int TUNER_FLAT_THRES_X;
 static int TUNER_SHARP_THRES_X;
 static int TUNER_THRES_Y;
 
+// TODO: We can't use the mic and the speaker anymore, so I don't really know what to do with this anyway.
+/*
 static musicalNote_t metronome_primary_notes[] = {{
     .note   = F_SHARP_5,
     .timeMs = METRONOME_CLICK_MS,
@@ -300,6 +302,7 @@ static songTrack_t metronome_secondary_tracks[]  = {{
 }};
 song_t metronome_secondary
     = {.numTracks = ARRAY_SIZE(metronome_secondary_tracks), .shouldLoop = false, .tracks = metronome_secondary_tracks};
+*/
 
 /*============================================================================
  * Functions
@@ -936,7 +939,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
                     // Blink LED Tick color
                     shouldBlink = true;
                 } // if(tAccumulatedUs >= tunernome->usPerBeat)
-            }     // if(tunernome->isClockwise)
+            } // if(tunernome->isClockwise)
             else
             {
                 // Subtract from tAccumulatedUs
@@ -951,19 +954,19 @@ void tunernomeMainLoop(int64_t elapsedUs)
                     // Blink LED Tock color
                     shouldBlink = true;
                 } // if(tunernome->tAccumulatedUs <= 0)
-            }     // if(!tunernome->isClockwise)
+            } // if(!tunernome->isClockwise)
 
             if (shouldBlink)
             {
                 // Add one to the beat counter
                 tunernome->beatCtr = (tunernome->beatCtr + 1) % tunernome->beatLength;
 
-                const song_t* song;
+                // const song_t* song;
                 led_t leds[CONFIG_NUM_LEDS] = {{0}};
 
                 if (0 == tunernome->beatCtr)
                 {
-                    song = &metronome_primary;
+                    // song = &metronome_primary;
                     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
                     {
                         leds[i].r = 0x40;
@@ -973,7 +976,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 }
                 else
                 {
-                    song = &metronome_secondary;
+                    // song = &metronome_secondary;
                     for (int i = 0; i < 4; i++)
                     {
                         leds[fourLedFlashIdxs[i]].r = 0x40;
@@ -982,10 +985,10 @@ void tunernomeMainLoop(int64_t elapsedUs)
                     }
                 }
 
-                if (!tunernome->isSilent)
+                /*if (!tunernome->isSilent)
                 {
                     soundPlaySfx(song, BZR_STEREO);
-                }
+                }*/
                 setLeds(leds, CONFIG_NUM_LEDS);
                 tunernome->isBlinking         = true;
                 tunernome->blinkStartUs       = esp_timer_get_time();
@@ -1053,7 +1056,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
             drawLine(METRONOME_CENTER_X, METRONOME_CENTER_Y, x, y, c555, 0);
             break;
         } // case TN_METRONOME:
-    }     // switch(tunernome->mode)
+    } // switch(tunernome->mode)
 }
 
 /**
@@ -1115,7 +1118,7 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         break;
                     }
                 } // switch(button)
-            }     // if(down)
+            } // if(down)
             break;
         } // case TN_TUNER:
         case TN_METRONOME:
@@ -1171,7 +1174,7 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         break;
                     }
                 } // switch(button)
-            }     // if(down)
+            } // if(down)
             else
             {
                 // Stop button repetition and reset related variables
@@ -1363,7 +1366,7 @@ void tunernomeSampleHandler(uint16_t* samples, uint32_t sampleCnt)
 
                     break;
                 } // default:
-            }     // switch(tunernome->curTunerMode)
+            } // switch(tunernome->curTunerMode)
 
             if (LISTENING != tunernome->curTunerMode)
             {

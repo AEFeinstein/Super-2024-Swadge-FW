@@ -1,6 +1,6 @@
 /*! \file touchTextEntry.h
  *
- * \section textEntry_design Design Philosophy
+ * \section touchTextEntry_design Design Philosophy
  *
  * The text entry utility provides a minimal interface for editing a single line of text of unlimited length.
  * The entered text is kept in an internal buffer that automatically grows if needed. The string is returned via
@@ -11,7 +11,7 @@
  * right arrows move the cursor within the text. The right arrow will also create one space if used at the end
  * of the text. The pause button confirms the text entry and calls the callback.
  *
- * \section textEntry_usage Usage
+ * \section touchTextEntry_usage Usage
  *
  * The text entry was made as generic as possible to enable using it in various modes. The only thing it draws
  * to the screen is the text and, optionally, a box around the text area's bounds. When the text entry is being
@@ -26,7 +26,7 @@
  * - Symbols, which includes everything not covered by the other categories
  *
  *
- * \section textEntry_example Example
+ * \section touchTextEntry_example Example
  *
  * \code{.c}
  *

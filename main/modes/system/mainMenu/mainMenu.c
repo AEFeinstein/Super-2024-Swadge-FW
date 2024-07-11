@@ -11,14 +11,17 @@
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
+#include "introMode.h"
 #include "jukebox.h"
 #include "mainMenu.h"
 #include "modeTimer.h"
 #include "mode_credits.h"
 #include "mode_pinball.h"
+#include "mode_synth.h"
 #include "ultimateTTT.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "keebTest.h"
 
 #include "settingsManager.h"
 
@@ -33,8 +36,8 @@ typedef struct
     menuManiaRenderer_t* renderer;
     font_t font_righteous;
     font_t font_rodin;
-    song_t jingle;
-    song_t fanfare;
+    midiFile_t jingle;
+    midiFile_t fanfare;
     int32_t lastBgmVol;
     int32_t lastSfxVol;
     int32_t cheatCodeIdx;
@@ -60,6 +63,7 @@ void addSecretsMenu(void);
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
+const char mainMenuTitle[]                      = "Swadge";
 static const char mainMenuShowSecretsMenuName[] = "ShowOnMenu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";
@@ -137,11 +141,11 @@ static void mainMenuEnterMode(void)
     loadFont("righteous_150.font", &mainMenu->font_righteous, false);
 
     // Load a song for when the volume changes
-    loadSong("jingle.sng", &mainMenu->jingle, false);
-    loadSong("item.sng", &mainMenu->fanfare, false);
+    loadMidiFile("jingle.mid", &mainMenu->jingle, false);
+    loadMidiFile("item.mid", &mainMenu->fanfare, false);
 
     // Allocate the menu
-    mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
+    mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
@@ -151,6 +155,7 @@ static void mainMenuEnterMode(void)
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
@@ -161,6 +166,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
+    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
 
     // Start a submenu for settings
@@ -213,8 +219,8 @@ static void mainMenuExitMode(void)
     freeFont(&mainMenu->font_righteous);
 
     // Free the song
-    freeSong(&mainMenu->jingle);
-    freeSong(&mainMenu->fanfare);
+    unloadMidiFile(&mainMenu->jingle);
+    unloadMidiFile(&mainMenu->fanfare);
 
     // Free mode memory
     free(mainMenu);
@@ -314,6 +320,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&colorchordMode);
         }
+        else if (label == synthMode.modeName)
+        {
+            switchToSwadgeMode(&synthMode);
+        }
         else if (label == danceMode.modeName)
         {
             switchToSwadgeMode(&danceMode);
@@ -325,6 +335,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == gamepadMode.modeName)
         {
             switchToSwadgeMode(&gamepadMode);
+        }
+        else if (label == introMode.modeName)
+        {
+            switchToSwadgeMode(&introMode);
         }
         else if (label == jukeboxMode.modeName)
         {
@@ -353,6 +367,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == touchTestMode.modeName)
         {
             switchToSwadgeMode(&touchTestMode);
+        }
+        else if (label == keebTestMode.modeName)
+        {
+            switchToSwadgeMode(&keebTestMode);
         }
         else if (label == tunernomeMode.modeName)
         {
@@ -434,6 +452,7 @@ void addSecretsMenu(void)
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
     // addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, keebTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);

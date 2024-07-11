@@ -72,6 +72,14 @@ typedef struct
     vec_t p2; ///< The other end point of the line segment
 } line_t;
 
+typedef struct
+{
+    vec_t base;  ///< The base of the arrow
+    vec_t tip;   ///< The tip of the arrow
+    vec_t wing1; ///< The base of one of the arrowhead wings
+    vec_t wing2; ///< The base of one of the other arrowhead wing
+} arrow_t;
+
 bool circleCircleIntersection(circle_t circle1, circle_t circle2, vec_t* collisionVec);
 bool circlePointIntersection(circle_t circle, vec_t point, vec_t* collisionVec);
 bool circleRectIntersection(circle_t circle, rectangle_t rect, vec_t* collisionVec);
@@ -79,5 +87,7 @@ bool circleLineIntersection(circle_t circle, line_t line, vec_t* collisionVec);
 bool rectRectIntersection(rectangle_t rect1, rectangle_t rect2, vec_t* collisionVec);
 bool rectLineIntersection(rectangle_t rect, line_t line, vec_t* collisionVec);
 bool lineLineIntersection(line_t line1, line_t line2);
+
+arrow_t initArrow(vec_t base, vec_t tip, int32_t wingLen);
 
 #endif

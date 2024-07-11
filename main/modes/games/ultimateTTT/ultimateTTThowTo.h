@@ -10,5 +10,5 @@
 // Function Declarations
 //==============================================================================
 
-void tttDrawHowTo(ultimateTTT_t* ttt);
+void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs);
 void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt);

@@ -11,7 +11,7 @@
 // Function Declarations
 //==============================================================================
 
-void tttDrawConnecting(ultimateTTT_t* ttt);
+void tttDrawConnecting(ultimateTTT_t* ttt, int64_t elapsedUs);
 void tttHandleConnectingInput(ultimateTTT_t* ttt, buttonEvt_t* evt);
 
 void tttHandleCon(ultimateTTT_t* ttt, connectionEvt_t evt);

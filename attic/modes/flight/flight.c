@@ -791,7 +791,7 @@ static void flightUpdate(void* arg __attribute__((unused)), int64_t elapsedUs)
         case FLIGHT_HIGH_SCORE_ENTRY:
         {
             int place = flightTimeHighScorePlace(flight->wintime, flight->beans >= MAX_BEANS);
-            textEntryDraw();
+            textEntryDrawBlink(elapsedUs);
 
             char placeStr[32] = {0};
             snprintf(placeStr, sizeof(placeStr), "%d%s %s", place + 1, EnglishNumberSuffix[place],
