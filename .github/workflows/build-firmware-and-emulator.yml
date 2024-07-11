@@ -64,7 +64,7 @@ jobs:
       if: matrix.family == 'windows'
       uses: msys2/setup-msys2@v2
       with:
-        msystem: MINGW64
+        msystem: UCRT64
         install: >-
           base-devel
           gcc
