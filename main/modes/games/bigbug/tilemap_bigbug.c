@@ -401,7 +401,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     // 10 0xx1 xxxx
                     // 14 0xx0 xxxx 
                     // 18 1xx1 xx0x
-                    lookup.x -= 16;
+                    lookup.x -= 8;
                     lookup.y += 8;
                     red = 5 - j/5;
                     //if within bounds of the headlamp texture...
