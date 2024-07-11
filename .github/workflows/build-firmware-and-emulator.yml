@@ -22,7 +22,7 @@ jobs:
             runner: windows-latest
             family: windows
             emulator: true
-            firmware: true
+            firmware: false
             emu_binary: swadge_emulator.exe
             # TODO: What variable can we use to not hardcode this???
             idf_install: C:\Users\runneradmin\.espressif
@@ -44,7 +44,7 @@ jobs:
             runner: ubuntu-latest
             family: linux
             emulator: true
-            firmware: false
+            firmware: true
             emu_binary: swadge_emulator
             idf_install: ~/.espressif
 
