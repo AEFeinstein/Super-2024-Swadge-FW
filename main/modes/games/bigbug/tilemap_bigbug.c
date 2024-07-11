@@ -57,6 +57,8 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
 
 void bb_loadWsgs(bb_tilemap_t* tilemap)
 {
+    loadWsg("headlampLookup.wsg", &tilemap->headlampWsg, true);//122 x 107 pixels
+
     loadWsg("baked_Landfill2.wsg", &tilemap->surface1Wsg, true);
     loadWsg("baked_Landfill3.wsg", &tilemap->surface2Wsg, true);
     loadWsg("trash_background.wsg",  &tilemap->bgWsg, true);
@@ -211,7 +213,7 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
 
 }
 
-void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
+void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikPos)
 {
     int32_t offsetX1 = (camera->pos.x/3) % 256;
     int32_t offsetX2 = (camera->pos.x/2) % 256;
@@ -263,8 +265,6 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
     }
 
     
-
-    
     if(iEnd >= 0 && iStart < TILE_FIELD_WIDTH && jEnd >= 0 && jStart < TILE_FIELD_HEIGHT){
         if(0 > iStart){
             iStart = 0;
@@ -290,7 +290,10 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
                     .x = i  * TILE_SIZE - camera->pos.x,
                     .y = j  * TILE_SIZE - camera->pos.y
                 };
-
+                
+                
+                
+                
                 // Draw midground  tiles
                 if(tilemap->mgTiles[i][j] == true)
                 {
@@ -311,27 +314,43 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
                     // 0 11xx 1xxx
                     // 4 10xx xxxx
                     // 8 01xx xxxx
-                    // 12 00xx xxxx 
+                    // 12 00xx xxxx
                     // 16 11xx 0xxx
+                    vec_t lookup = {tilePos.x + 8 - garbotnikPos->x + tilemap->headlampWsg.w,
+                                    tilePos.y - garbotnikPos->y + tilemap->headlampWsg.h};
+                    lookup = divVec2d(lookup, 2);
+                    int32_t red = 5 - j/5;
+                    //if within bounds of the headlamp texture...
+                    if(lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106){
+                        uint32_t rgbCol = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                        red += ((rgbCol >> 16) & 255)/51; // red channel
+                    }
+                    if(red < 0){
+                        red = 0;
+                    }
+                    if(red > 5){
+                        red = 5;
+                    }
+                    // printf("red: %d\n", red);
                     switch(sprite_idx & 0b1100){
                         case 0b1100://0 16
                             switch(corner_info & 0b1000){
                                 case 0b1000://0
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+0], tilePos.x, tilePos.y);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+0], tilePos.x, tilePos.y);
                                     break;
                                 default: //0b0000 16
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+16], tilePos.x, tilePos.y);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+16], tilePos.x, tilePos.y);
                                     break;
                             }
                             break;
                         case 0b1000://4
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+4], tilePos.x, tilePos.y);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+4], tilePos.x, tilePos.y);
                             break;
                         case 0b0100://8
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+8], tilePos.x, tilePos.y);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+8], tilePos.x, tilePos.y);
                             break;
                         default: //0b0000:12
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+12], tilePos.x, tilePos.y);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+12], tilePos.x, tilePos.y);
                             break;
                     }
 
@@ -341,25 +360,38 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
                     // 9 x10x xxxx
                     // 13 x00x xxxx 
                     // 17 x11x x0xx
+                    lookup.x += 8;
+                    red = 5 - j/5;
+                    //if within bounds of the headlamp texture...
+                    if(lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106){
+                        uint32_t rgbCol = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                        red += ((rgbCol >> 16) & 255)/51; // red channel
+                    }
+                    if(red < 0){
+                        red = 0;
+                    }
+                    if(red > 5){
+                        red = 5;
+                    }
                     switch(sprite_idx & 0b110){
                         case 0b110://1 17
                             switch(corner_info & 0b0100){
                                 case 0b0100://1
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+1], tilePos.x + HALF_TILE, tilePos.y);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+1], tilePos.x + HALF_TILE, tilePos.y);
                                     break;
                                 default: //0b0000 17
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+17], tilePos.x + HALF_TILE, tilePos.y);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+17], tilePos.x + HALF_TILE, tilePos.y);
                                     break;
                             }
                             break;
                         case 0b010://5
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+5], tilePos.x + HALF_TILE, tilePos.y);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+5], tilePos.x + HALF_TILE, tilePos.y);
                             break;
                         case 0b100://9
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+9], tilePos.x + HALF_TILE, tilePos.y);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+9], tilePos.x + HALF_TILE, tilePos.y);
                             break;
                         default: //0b0000:13
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+13], tilePos.x + HALF_TILE, tilePos.y);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+13], tilePos.x + HALF_TILE, tilePos.y);
                             break;
                     }
 
@@ -369,25 +401,39 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
                     // 10 0xx1 xxxx
                     // 14 0xx0 xxxx 
                     // 18 1xx1 xx0x
+                    lookup.x -= 16;
+                    lookup.y += 8;
+                    red = 5 - j/5;
+                    //if within bounds of the headlamp texture...
+                    if(lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106){
+                        uint32_t rgbCol = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                        red += ((rgbCol >> 16) & 255)/51; // red channel
+                    }
+                    if(red < 0){
+                        red = 0;
+                    }
+                    if(red > 5){
+                        red = 5;
+                    }
                     switch(sprite_idx & 0b1001){
                         case 0b1001://2 18
                             switch(corner_info & 0b0010){
                                 case 0b0010://2
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+2], tilePos.x, tilePos.y + HALF_TILE);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+2], tilePos.x, tilePos.y + HALF_TILE);
                                     break;
                                 default: //0b0000 18
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+18], tilePos.x, tilePos.y + HALF_TILE);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+18], tilePos.x, tilePos.y + HALF_TILE);
                                     break;
                             }
                             break;
                         case 0b1000://6
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+6], tilePos.x, tilePos.y + HALF_TILE);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+6], tilePos.x, tilePos.y + HALF_TILE);
                             break;
                         case 0b0001://10
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+10], tilePos.x, tilePos.y + HALF_TILE);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+10], tilePos.x, tilePos.y + HALF_TILE);
                             break;
                         default: //0b0000:14
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+14], tilePos.x, tilePos.y + HALF_TILE);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+14], tilePos.x, tilePos.y + HALF_TILE);
                             break;
                     }
 
@@ -397,25 +443,38 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
                     // 11 xx01 xxxx
                     // 15 xx00 xxxx 
                     // 19 xx11 xxx0
+                    lookup.x += 8;
+                    red = 5 - j/5;
+                    //if within bounds of the headlamp texture...
+                    if(lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106){
+                        uint32_t rgbCol = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                        red += ((rgbCol >> 16) & 255)/51; // red channel
+                    }
+                    if(red < 0){
+                        red = 0;
+                    }
+                    if(red > 5){
+                        red = 5;
+                    }
                     switch(sprite_idx & 0b0011){
                         case 0b11://3 19
                             switch(corner_info & 0b1){
                                 case 0b1://3
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+3], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+3], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
                                     break;
                                 default: //0b0000 19
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+19], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+19], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
                                     break;
                             }
                             break;
                         case 0b10://7
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+7], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+7], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
                             break;
                         case 0b01://11
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+11], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+11], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
                             break;
                         default: //0b0000:15
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*5+15], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*red+15], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
                             break;
                     }
                 }

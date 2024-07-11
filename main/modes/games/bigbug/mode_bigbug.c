@@ -319,7 +319,11 @@ static void bb_ControlGarbotnik(int64_t elapsedUs)
  */
 static void bb_DrawScene(void)
 {
-    bb_drawTileMap(&bigbug->tilemap, &bigbug->camera);
+    vec_t garbotnikDrawPos = {
+        .x = (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 19,
+        .y = (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 21
+    };
+    bb_drawTileMap(&bigbug->tilemap, &bigbug->camera, &garbotnikDrawPos);
 
     // printf("garbotnikPos.y: %d\n", bigbug->garbotnikPos.y);
     // printf("garbotnik.radius: %d\n", bigbug->garbotnik.radius);
@@ -329,8 +333,7 @@ static void bb_DrawScene(void)
     bb_drawEntities(&bigbug->entityManager, &bigbug->camera);
 
     // Draw garbotnik
-    drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 19,
-                  (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 21);
+    drawWsgSimple(&bigbug->garbotnikWsg, garbotnikDrawPos.x, garbotnikDrawPos.y);
 }
 
 /**
@@ -548,10 +551,10 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 /////////////////////
 
                 //crumble test
-                // uint32_t* val = calloc(2,sizeof(uint32_t));
-                // val[0] = 5;
-                // val[1] = 3;
-                // push(bigbug->gameData.unsupported, (void*)val);
+                uint32_t* val = calloc(2,sizeof(uint32_t));
+                val[0] = 5;
+                val[1] = 3;
+                push(bigbug->gameData.unsupported, (void*)val);
 
                 //Update the dirt by decrementing it.
                 bigbug->tilemap.fgTiles[best_i][best_j] -= 1;
@@ -582,7 +585,7 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                     uint32_t check_x = best_i + bigbug->gameData.neighbors[neighborIdx][0];
                     uint32_t check_y = best_j + bigbug->gameData.neighbors[neighborIdx][1];
                     //Check if neighbor is in bounds of map (also not on left, right, or bottom, perimiter) and if it is dirt.
-                    if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y >= 0 && check_y < TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
+                    if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y < TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
                     {
                         uint32_t* val = calloc(3, sizeof(uint32_t));
                         val[0] = check_x;
