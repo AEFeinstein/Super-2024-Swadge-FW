@@ -79,21 +79,13 @@ void createRandomBalls(pinball_t* p, int32_t numBalls)
 void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 {
     int fixedBumpersPlaced = 0;
-    vecFl_t fixedBumpers[] = {
-        {
-            .x = 140,
-            .y = 120,
-        },
-        {
-            .x = 100,
-            .y = 80,
-        },
-        {
-            .x = 180,
-            .y = 80,
-        },
+    circleFl_t bumpers[3]  = {
+        {.pos = {.x = 182, .y = 110}, .radius = 19},
+        {.pos = {.x = 97, .y = 110}, .radius = 19},
+        {.pos = {.x = 140, .y = 58}, .radius = 19},
     };
-    numBumpers += ARRAY_SIZE(fixedBumpers);
+
+    numBumpers += ARRAY_SIZE(bumpers);
 
     // Don't overflow
     if (numBumpers > MAX_NUM_BUMPERS)
@@ -108,9 +100,9 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
         pbCircle_t bumper = {0};
 #define BUMPER_RAD 10
         bumper.c.radius = (BUMPER_RAD);
-        if (fixedBumpersPlaced < ARRAY_SIZE(fixedBumpers))
+        if (fixedBumpersPlaced < ARRAY_SIZE(bumpers))
         {
-            bumper.c.pos = fixedBumpers[fixedBumpersPlaced];
+            bumper.c = bumpers[fixedBumpersPlaced];
             fixedBumpersPlaced++;
         }
         else
@@ -158,56 +150,47 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 void createRandomWalls(pinball_t* p, int32_t numWalls)
 {
     // Always Create a boundary
-    lineFl_t corners[] = {
-        {
-            .p1 = {.x = (0), .y = (0)},
-            .p2 = {.x = (TFT_WIDTH - 1), .y = (0)},
-        },
-        {
-            .p1 = {.x = (TFT_WIDTH - 1), .y = (0)},
-            .p2 = {.x = (TFT_WIDTH - 1), .y = (TFT_HEIGHT - 1)},
-        },
-        {
-            .p1 = {.x = (TFT_WIDTH - 1), .y = (TFT_HEIGHT - 1)},
-            .p2 = {.x = (0), .y = (TFT_HEIGHT - 1)},
-        },
-        {
-            .p1 = {.x = (0), .y = (TFT_HEIGHT - 1)},
-            .p2 = {.x = (0), .y = (0)},
-        },
-        // {
-        //     .p1 = {.x = 0, .y = 90},
-        //     .p2 = {.x = 50, .y = 110},
-        // },
-        // {
-        //     .p1 = {.x = 140, .y = 70},
-        //     .p2 = {.x = 210, .y = 80},
-        // },
-
-        {
-            .p1 = {.x = 0, .y = 120},
-            .p2 = {.x = 94, .y = 188},
-        },
-        {
-            .p1 = {.x = 279, .y = 120},
-            .p2 = {.x = 186, .y = 188},
-        },
+    lineFl_t walls[24] = {
+        {.p1 = {.x = 95, .y = 190}, .p2 = {.x = 0, .y = 116}},
+        {.p1 = {.x = 184, .y = 190}, .p2 = {.x = 279, .y = 116}},
+        {.p1 = {.x = 0, .y = 0}, .p2 = {.x = 279, .y = 0}},
+        {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 0, .y = 0}},
+        {.p1 = {.x = 279, .y = 0}, .p2 = {.x = 279, .y = 239}},
+        {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 279, .y = 239}},
+        {.p1 = {.x = 0, .y = 116}, .p2 = {.x = 3, .y = 97}},
+        {.p1 = {.x = 3, .y = 97}, .p2 = {.x = 9, .y = 79}},
+        {.p1 = {.x = 9, .y = 79}, .p2 = {.x = 20, .y = 58}},
+        {.p1 = {.x = 20, .y = 58}, .p2 = {.x = 37, .y = 37}},
+        {.p1 = {.x = 37, .y = 37}, .p2 = {.x = 62, .y = 18}},
+        {.p1 = {.x = 62, .y = 18}, .p2 = {.x = 78, .y = 11}},
+        {.p1 = {.x = 78, .y = 11}, .p2 = {.x = 96, .y = 5}},
+        {.p1 = {.x = 96, .y = 5}, .p2 = {.x = 116, .y = 1}},
+        {.p1 = {.x = 116, .y = 1}, .p2 = {.x = 140, .y = 0}},
+        {.p1 = {.x = 140, .y = 0}, .p2 = {.x = 163, .y = 1}},
+        {.p1 = {.x = 163, .y = 1}, .p2 = {.x = 183, .y = 5}},
+        {.p1 = {.x = 183, .y = 5}, .p2 = {.x = 201, .y = 11}},
+        {.p1 = {.x = 201, .y = 11}, .p2 = {.x = 217, .y = 18}},
+        {.p1 = {.x = 217, .y = 18}, .p2 = {.x = 242, .y = 37}},
+        {.p1 = {.x = 242, .y = 37}, .p2 = {.x = 259, .y = 58}},
+        {.p1 = {.x = 259, .y = 58}, .p2 = {.x = 270, .y = 79}},
+        {.p1 = {.x = 270, .y = 79}, .p2 = {.x = 276, .y = 97}},
+        {.p1 = {.x = 276, .y = 97}, .p2 = {.x = 279, .y = 116}},
     };
 
     // Don't overflow
-    if (numWalls > MAX_NUM_WALLS - ARRAY_SIZE(corners))
+    if (numWalls > MAX_NUM_WALLS - ARRAY_SIZE(walls))
     {
-        numWalls = MAX_NUM_WALLS - ARRAY_SIZE(corners);
+        numWalls = MAX_NUM_WALLS - ARRAY_SIZE(walls);
     }
     p->numWalls = 0;
 
-    for (int32_t i = 0; i < ARRAY_SIZE(corners); i++)
+    for (int32_t i = 0; i < ARRAY_SIZE(walls); i++)
     {
         pbLine_t* pbl = &p->walls[p->numWalls++];
-        pbl->l.p1.x   = corners[i].p1.x;
-        pbl->l.p1.y   = corners[i].p1.y;
-        pbl->l.p2.x   = corners[i].p2.x;
-        pbl->l.p2.y   = corners[i].p2.y;
+        pbl->l.p1.x   = walls[i].p1.x;
+        pbl->l.p1.y   = walls[i].p1.y;
+        pbl->l.p2.x   = walls[i].p2.x;
+        pbl->l.p2.y   = walls[i].p2.y;
         vecFl_t delta = {
             .x = pbl->l.p2.x - pbl->l.p1.x,
             .y = pbl->l.p2.y - pbl->l.p1.y,
