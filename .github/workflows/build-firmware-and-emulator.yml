@@ -172,8 +172,12 @@ jobs:
           version.txt
           tools/pyFlashGui/pyFlashGui.py
 
+  Post-Slack-Message:
+    runs-on: windows-latest
+    needs: Build-Firmware-And-Emulator
+    steps:
     - name: Post to a Slack channel
-      if: matrix.os == 'windows' && ((github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main'))
+      if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
       id: slack
       uses: slackapi/slack-github-action@v1.26.0
       with:
