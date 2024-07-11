@@ -243,7 +243,7 @@ ifeq ($(HOST_OS),Linux)
     LIBS = m X11 asound pulse rt GL GLX pthread Xext Xinerama
 endif
 ifeq ($(HOST_OS),Darwin)
-    LIBS = m X11 GL pulse pthread Xext Xinerama
+    LIBS = m X11 GL pthread Xext Xinerama
 endif
 
 # These are directories to look for library files in
