@@ -90,7 +90,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_SELECT,
         },
-        .title = "Pause Button",
+        .title = "Menu Button",
         .detail = "The Menu button is special! A short press opens up the Quick Settings menu.",
     },
     {
