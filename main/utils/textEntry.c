@@ -606,9 +606,11 @@ static int16_t _drawKeyboard()
                     width = _drawEnter(posX, posY, textColor);
                     break;
                 default:
+                {
                     // Just draw the char
                     char sts[] = {c, 0};
                     drawText(activeFont, textColor, sts, posX, posY);
+                }
             }
             if (col == selX && row == selY)
             {
