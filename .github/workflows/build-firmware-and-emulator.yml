@@ -119,6 +119,7 @@ jobs:
     ## Firmware
     - name: Restore IDF Cache
       id: cache-esp-idf
+      if: matrix.firmware
       uses: actions/cache@v3
       with:
         path: |
