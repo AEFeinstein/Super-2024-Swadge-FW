@@ -229,7 +229,7 @@ static uint8_t getTileSprIndex(uint32_t val);
  */
 static void t48Draw(void);
 
-static void t48DrawTileOnGrid(wsg_t *tile, int8_t row, int8_t col, int16_t xOff, int16_t yOff);
+static void t48DrawTileOnGrid(wsg_t* tile, int8_t row, int8_t col, int16_t xOff, int16_t yOff);
 
 /**
  * @brief Shows the title upon booting into the mode
@@ -678,139 +678,113 @@ static bool t48MergeSlice(uint32_t slice[], bool updated)
     return updated;
 }
 
+// NOTE: All these seem to be backwards.
+// All other systems use row, column, but these seem to require column, row which is mirrors the movements along the
+// top left to bottom right diagonal. 
+// I have left the odd behavior here as it's simple to remap keys to different functions rather than debug 
+
 static void t48SlideDown()
 {
     bool updated = false;
-    for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
+    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
-        // Create a slice to merge
         uint32_t slice[T48_GRID_SIZE] = {0};
-        // Load only cells with value into slice in the order:
-        // Bottom -> Top
-        for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
+        for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
         {
-            // Only copy over values > 0, automatically moving all non-zeroes
             if (t48->boardArr[row][col] != 0)
             {
                 slice[i++] = t48->boardArr[row][col];
                 if (row != (T48_GRID_SIZE - i))
                 {
-                    // If these go out of sync, board has updated
                     updated = true;
                 }
             }
         }
-        // Merge. If merge happens, update
         updated = t48MergeSlice(slice, updated);
-        // Copy modified slice back into board array
-        for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
+        for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
         {
             t48->boardArr[row][col] = slice[i++];
         }
     }
-    // If a board updated, add a new cell
     t48BoardUpdate(updated, DOWN);
 }
 
 static void t48SlideUp()
 {
     bool updated = false;
-    for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
+    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
-        // Create a slice to merge
         uint32_t slice[T48_GRID_SIZE] = {0};
-        // Load only cells with value into slice in the order:
-        // Top -> Bottom
-        for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
+        for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
-            // Only copy over values > 0, automatically moving all non-zeroes
             if (t48->boardArr[row][col] != 0)
             {
-                if (row != i)
+                if (col != i)
                 {
-                    // If these go out of sync, board has updated
                     updated = true;
                 }
                 slice[i++] = t48->boardArr[row][col];
             }
         }
-        // Merge. If merge happens, update
         updated = t48MergeSlice(slice, updated);
-        // Copy modified slice back into board array
-        for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
+        for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
             t48->boardArr[row][col] = slice[i++];
         }
     }
-    // If a board updated, add a new cell
     t48BoardUpdate(updated, UP);
 }
 
 static void t48SlideRight()
 {
     bool updated = false;
-    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
+    for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
-        // Create a slice to merge
         uint32_t slice[T48_GRID_SIZE] = {0};
-        // Load only cells with value into slice in the order:
-        // Right -> Left
-        for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
+        for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
         {
-            // Only copy over values > 0, automatically moving all non-zeroes
             if (t48->boardArr[row][col] != 0)
             {
                 slice[i++] = t48->boardArr[row][col];
                 if (col != (T48_GRID_SIZE - i))
                 {
-                    // If these go out of sync, board has updated
                     updated = true;
                 }
             }
         }
-        // Merge. If merge happens, update
         updated = t48MergeSlice(slice, updated);
-        // Copy modified slice back into board array
-        for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
+        for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
         {
             t48->boardArr[row][col] = slice[i++];
         }
     }
-    // If a board updated, add a new cell
     t48BoardUpdate(updated, RIGHT);
 }
 
 static void t48SlideLeft()
 {
     bool updated = false;
-    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
+
+    for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
-        // Create a slice to merge
         uint32_t slice[T48_GRID_SIZE] = {0};
-        // Load only cells with value into slice in the order:
-        // Left -> Right
-        for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
+        for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
         {
-            // Only copy over values > 0, automatically moving all non-zeroes
             if (t48->boardArr[row][col] != 0)
             {
-                if (col != i)
+                if (row != i)
                 {
-                    // If these go out of sync, board has updated
                     updated = true;
                 }
                 slice[i++] = t48->boardArr[row][col];
             }
         }
-        // Merge. If merge happens, update
         updated = t48MergeSlice(slice, updated);
-        // Copy modified slice back into board array
-        for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
+        for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
         {
             t48->boardArr[row][col] = slice[i++];
         }
     }
-    // If a board updated, add a new cell
     t48BoardUpdate(updated, LEFT);
 }
 
@@ -990,12 +964,12 @@ static void t48Draw()
     {
         for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
         {
-            t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0);
+            t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, -16, 0);
         }
     }
 }
 
-static void t48DrawTileOnGrid(wsg_t *tile, int8_t row, int8_t col, int16_t xOff, int16_t yOff)
+static void t48DrawTileOnGrid(wsg_t* tile, int8_t row, int8_t col, int16_t xOff, int16_t yOff)
 {
     uint32_t val = t48->boardArr[row][col];
     // Bail if 0
