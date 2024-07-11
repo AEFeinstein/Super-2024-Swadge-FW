@@ -263,6 +263,9 @@ ifneq ($(HOST_OS),Darwin)
 LIBRARY_FLAGS += \
 	-static-libgcc \
 	-static-libstdc++
+else
+LIBRARY_FLAGS += \
+	-framework AudioToolbox
 endif
 
 ifeq ($(HOST_OS),Linux)
