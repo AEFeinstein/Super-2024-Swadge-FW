@@ -155,7 +155,7 @@ jobs:
     - name: Compile the firmware
       if: matrix.firmware && matrix.family != 'windows'
       run: |
-        ${{ runner.temp }}/esp-idf/export.sh
+        . ${{ runner.temp }}/esp-idf/export.sh
         idf.py build dfu
 
     - name: Add firmware, bootloader, partition table, version, and flasher files to firmware artifact
