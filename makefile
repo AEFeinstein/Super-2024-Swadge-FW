@@ -109,9 +109,7 @@ endif
 ifeq ($(HOST_OS),Linux)
 CFLAGS += \
 	-fsanitize=address \
-	-fsanitize=bounds-strict \
-	-fno-omit-frame-pointer
-
+	-fsanitize=bounds-strict
 ENABLE_GCOV=false
 
 ifeq ($(ENABLE_GCOV),true)
