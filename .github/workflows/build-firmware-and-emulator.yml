@@ -61,6 +61,7 @@ jobs:
 
     #### Platform-specific Dependencies
     - name: Install msys64 packages
+      if: matrix.family == 'windows'
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
