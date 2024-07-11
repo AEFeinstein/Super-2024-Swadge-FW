@@ -11,7 +11,6 @@
         #define _GNU_SOURCE
     #endif
     #include <dlfcn.h>
-    #include <link.h>
 #endif
 #include <time.h>
 
@@ -73,7 +72,7 @@
 #include "CNFG.h"
 
 #define CNFA_IMPLEMENTATION
-#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
     #define PULSEAUDIO
 #endif
 #include "CNFA.h"
