@@ -81,7 +81,7 @@ typedef struct
     midiFile_t click;
 
     // Game state
-    int32_t boardArr[T48_BOARD_SIZE][T48_BOARD_SIZE];
+    int32_t boardArr[T48_GRID_SIZE][T48_GRID_SIZE]; // Row, Col
     int32_t score;
     int32_t highScore[T48_HS_COUNT];
     bool newHS;
@@ -228,6 +228,8 @@ static uint8_t getTileSprIndex(uint32_t val);
  *
  */
 static void t48Draw(void);
+
+static void t48DrawTileOnGrid(wsg_t *tile, int8_t row, int8_t col, int16_t xOff, int16_t yOff);
 
 /**
  * @brief Shows the title upon booting into the mode
@@ -386,6 +388,7 @@ static void t48EnterMode(void)
     loadWsg("Tile-Red-Square.wsg", &t48->tiles[13], true);
     loadWsg("Tile-Yellow-Diamond.wsg", &t48->tiles[14], true);
     loadWsg("Tile-Yellow-Octo.wsg", &t48->tiles[15], true);
+    // TODO: Add new sprites
 
     // Load sounds
     loadMidiFile("Follinesque.mid", &t48->bgm, true);
@@ -458,6 +461,7 @@ static void t48ExitMode(void)
     freeFont(&t48->titleFont);
     freeFont(&t48->font);
 
+    // TODO: Free new sprites
     for (uint8_t i = 0; i < T48_TILE_COUNT; i++)
     {
         freeWsg(&t48->tiles[i]);
@@ -858,7 +862,7 @@ static bool t48CheckOver()
     {
         for (uint8_t col = 0; col < T48_GRID_SIZE - 1; col++)
         { // -1 to account for comparison
-            if (t48->boardArr[col][row] == t48->boardArr[col + 1][row])
+            if (t48->boardArr[row][col] == t48->boardArr[row + 1][col])
             {
                 return false;
             }
@@ -869,7 +873,7 @@ static bool t48CheckOver()
     { // -1 to account for comparison
         for (uint8_t col = 0; col < T48_GRID_SIZE - 1; col++)
         {
-            if (t48->boardArr[col][row] == t48->boardArr[col][row + 1])
+            if (t48->boardArr[row][col] == t48->boardArr[row][col + 1])
             {
                 return false;
             }
@@ -964,17 +968,12 @@ static void t48Draw()
     // Blank
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
-    // Draw vertical grid line
-    for (uint8_t i = 0; i < 5; i++)
+    // Draw grid lines
+    for (uint8_t i = 0; i < T48_GRID_SIZE + 1; i++)
     {
         int16_t left = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
         fillDisplayArea(T48_SIDE_MARGIN + left, T48_TOP_MARGIN, T48_SIDE_MARGIN + left + T48_LINE_WEIGHT, TFT_HEIGHT,
                         c111);
-    }
-
-    // Draw horizontal grid lines
-    for (uint8_t i = 0; i < 5; i++)
-    {
         int16_t top = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
         fillDisplayArea(T48_SIDE_MARGIN, top + T48_TOP_MARGIN, TFT_WIDTH - T48_SIDE_MARGIN,
                         top + T48_TOP_MARGIN + T48_LINE_WEIGHT, c111);
@@ -987,34 +986,31 @@ static void t48Draw()
     drawText(&t48->font, c555, t48->scoreStr, T48_SIDE_MARGIN, 4);
 
     // Cells
-    int16_t side_offset = T48_SIDE_MARGIN + T48_LINE_WEIGHT;
-    int16_t top_offset  = T48_TOP_MARGIN + T48_LINE_WEIGHT;
-    static char buffer[16];
-    for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
+    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
-        for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
+        for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
         {
-            // Grab the current value of the cell
-            uint32_t val = t48->boardArr[col][row];
-            // Bail if 0
-            if (val == 0)
-            {
-                continue;
-            }
-            // Grab the offset based on cell
-            uint16_t y_cell_offset = col * (T48_CELL_SIZE + T48_LINE_WEIGHT);
-            uint16_t x_cell_offset = row * (T48_CELL_SIZE + T48_LINE_WEIGHT);
-            // Convert int to char
-            snprintf(buffer, sizeof(buffer) - 1, "%" PRIu32, val);
-            // Get the center of the text
-            uint16_t text_center = (textWidth(&t48->font, buffer)) / 2;
-            // Get associated color
-            drawWsgSimple(&t48->tiles[getTileSprIndex(val)], side_offset + x_cell_offset, top_offset + y_cell_offset);
-            // Draw the text
-            drawText(&t48->font, c555, buffer, side_offset + x_cell_offset - text_center + T48_CELL_SIZE / 2,
-                     top_offset + y_cell_offset - 4 + T48_CELL_SIZE / 2);
+            t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0);
         }
     }
+}
+
+static void t48DrawTileOnGrid(wsg_t *tile, int8_t row, int8_t col, int16_t xOff, int16_t yOff)
+{
+    uint32_t val = t48->boardArr[row][col];
+    // Bail if 0
+    if (val == 0)
+        return;
+    // Sprite
+    uint16_t x_cell_offset = row * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_SIDE_MARGIN + T48_LINE_WEIGHT + xOff;
+    uint16_t y_cell_offset = col * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_TOP_MARGIN + T48_LINE_WEIGHT + yOff;
+    drawWsgSimple(tile, x_cell_offset, y_cell_offset);
+    // Text
+    static char buffer[16];
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRIu32, val);
+    uint16_t text_center = (textWidth(&t48->font, buffer)) / 2;
+    drawText(&t48->font, c555, buffer, x_cell_offset - text_center + T48_CELL_SIZE / 2,
+             y_cell_offset - 4 + T48_CELL_SIZE / 2);
 }
 
 static void t48StartScreen(paletteColor_t color)
