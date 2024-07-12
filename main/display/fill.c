@@ -460,7 +460,7 @@ static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, palet
                 }
             }
         }
-        lastRowLength = rowLength; // record the new row length
+        lastRowLength = rowLength;              // record the new row length
     } while (lastRowLength != 0 && ++y < yMax); // if we get to a full row or to the bottom, we're done
 }
 
