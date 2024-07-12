@@ -1,248 +1,121 @@
-import re
-import svg_plain
-import json
+from svgelements import SVG
+from svgelements import Group
+from svgelements import Path
+from svgelements import Point
+from svgelements import Circle
+from math import sqrt, pow
 
-warningsPrinted = []
+def extractCircles(gs: list) -> list[str]:
+    """Recursively extract all circles from this list of SVG things
 
+    Args:
+        gs (list): A list that contains Group and Circle
 
-def printWarning(warnStr: str):
-    if warnStr not in warningsPrinted:
-        warningsPrinted.append(warnStr)
-        print('WARNING: ' + warnStr)
-
-
-class PinPoint:
-    def __init__(self, x: float = 0, y: float = 0, p=None) -> None:
-        if p is not None:
-            self.x = p.x
-            self.y = p.y
+    Returns:
+        list[str]: A list of C strings for the circles
+    """
+    lines = []
+    for g in gs:
+        if isinstance(g, Circle):
+            lines.append('  {.pos = {.x = %d, .y = %d}, .radius = %d},' % (
+                g.cx, g.cy, (g.rx + g.ry) / 2))
+        elif isinstance(g, Group):
+            lines.extend(extractCircles(g))
         else:
-            self.x = x
-            self.y = y
+            print('Found ' + type(g) + ' when extracting Circles')
+    return lines
 
 
-class PinLine:
-    def __init__(self, start: PinPoint, end: PinPoint) -> None:
-        self.start: PinPoint = start
-        self.end: PinPoint = end
+def extractPaths(gs: list) -> list[str]:
+    """Recursively extract all paths from this list of SVG things
 
-    def __str__(self) -> str:
-        return "[(%f, %f), (%f, %f)]" % (self.start.x, self.start.y, self.end.x, self.end.y)
+    Args:
+        gs (list): A list that contains Group and Path
 
+    Returns:
+        list[str]: A list of C strings for the path segments
+    """
+    lines = []
+    for g in gs:
+        if isinstance(g, Path):
+            lastPoint: Point = None
+            point: Point
+            for point in g.as_points():
+                if lastPoint is not None and lastPoint != point:
+                    lines.append('  {.p1 = {.x = %d, .y = %d}, .p2 = {.x = %d, .y = %d}},' % (
+                        lastPoint.x, lastPoint.y, point.x, point.y))
+                lastPoint = point
+        elif isinstance(g, Group):
+            lines.extend(extractPaths(g))
+        else:
+            print('Found ' + str(type(g)) + ' when extracting Paths')
+    return lines
 
-class PinCircle:
-    def __init__(self, cx: int, cy: int, r: int) -> None:
-        self.cx = cx
-        self.cy = cy
-        self.r = r
+def extractFlippers(gs: list) -> list[str]:
+    """Recursively extract all flippers (groups of circles and paths) from this list of SVG things
 
+    Args:
+        gs (list): A list that contains stuff
 
-class PinballTable:
-    def __init__(self) -> None:
-        self.walls: list[PinLine] = []
-        self.bumpers: list[PinCircle] = []
-        # self.flippers = []
+    Returns:
+        list[str]: A list of C strings for the path segments
+    """
+    lines = []
+    flipperParts: list[Circle] = []
+    for g in gs:
+        if isinstance(g, Circle):
+            flipperParts.append(g)
+        elif isinstance(g, Path):
+            pass
+        elif isinstance(g, Group):
+            lines.extend(extractFlippers(g))
+        else:
+            print('Found ' + str(type(g)) + ' when extracting Flippers')
 
-    def toCStr(self) -> str:
-        cstr = ''
+    if 2 == len(flipperParts):
+        if flipperParts[0].rx > flipperParts[1].rx:
+            pivot = flipperParts[0]
+            tip = flipperParts[1]
+        else:
+            pivot = flipperParts[1]
+            tip = flipperParts[0]
 
-        cstr += 'lineFl_t walls[%d] = {\n' % len(self.walls)
-        for wall in self.walls:
-            cstr += '  {.p1 = {.x = %d, .y = %d}, .p2 = {.x = %d, .y = %d}},\n' % (
-                wall.start.x, wall.start.y, wall.end.x, wall.end.y)
-        cstr += '};\n\n'
+        if pivot.cx < tip.cx:
+            facingRight = True
+        else:
+            facingRight = False
 
-        cstr += 'circleFl_t bumpers[%d] = {\n' % len(self.bumpers)
-        for bumper in self.bumpers:
-            cstr += '  {.pos = {.x = %d, .y = %d}, .radius = %d},\n' % (
-                bumper.cx, bumper.cy, bumper.r)
-        cstr += '};\n\n'
+        flipperLen = sqrt(pow(pivot.cx - tip.cx, 2) + pow(pivot.cy - tip.cy, 2))
 
-        return cstr
+        lines.append('  pivot (%d, %d), pr %d, tr %d, len %d, facingRight %s' % (pivot.cx, pivot.cy, pivot.rx, tip.rx, flipperLen, facingRight))
 
-    def parseSvgGroup(self, gList: list[svg_plain.g], parentIds: str):
-        # TODO apply group transforms
-
-        for gData in gList:
-            id = parentIds + ':' + str.lower(gData.get_id())
-
-            ellipse: svg_plain.ellipseType
-            for ellipse in gData.get_ellipse():
-                if 'bumpers' in id:
-                    cx = float(ellipse.get_cx())
-                    cy = float(ellipse.get_cy())
-                    cr = float(ellipse.get_rx() +
-                               float(ellipse.get_ry()) / 2)
-                    self.bumpers.append(PinCircle(cx, cy, cr))
-
-            circle: svg_plain.circleType
-            for circle in gData.get_circle():
-                if 'bumpers' in id:
-                    cx = float(circle.get_cx())
-                    cy = float(circle.get_cy())
-                    cr = float(circle.get_r())
-                    self.bumpers.append(PinCircle(cx, cy, cr))
-
-            path: svg_plain.path
-            for path in gData.get_path():
-                if 'walls' in id:
-                    self.walls.extend(svgPathParser().parsePath(path.get_d()))
-
-            rect: svg_plain.rectType
-            for rect in gData.get_rect():
-                printWarning('Rect not handled')
-                pass
-
-            text: svg_plain.textType
-            for text in gData.get_text():
-                printWarning('Text not handled')
-                pass
-
-            # Recurse
-            self.parseSvgGroup(gData.get_g(), id)
-
-
-class svgPathParser:
-    def __init__(self) -> None:
-        self.currentPoint: PinPoint = None
-        self.lines = []
-        self.lineStarted = False
-        self.startSubpaths = []
-
-    def __str__(self) -> str:
-        return ', '.join([str(x) for x in self.lines])
-
-    def parseLineToCommand(self, parts: list[str], isMoveTo: bool, isAbsolute: bool) -> list[str]:
-        moved: bool = False
-        # Consume coordinates from list
-        while 0 < len(parts) and 1 < len(parts[0]):
-            # Pop the point from the list
-            newPoint = PinPoint(x=float(parts.pop(0)), y=float(parts.pop(0)))
-
-            # Find the new point, relative or absolute
-            if isMoveTo:
-                if not moved:
-                    # Treat first move as absolute, always
-                    moved = True
-                    # Append it to the subpath stack
-                    self.startSubpaths.append(newPoint)
-                elif not isAbsolute:
-                    newPoint.x += self.currentPoint.x
-                    newPoint.y += self.currentPoint.y
-            elif not isAbsolute:
-                newPoint.x += self.currentPoint.x
-                newPoint.y += self.currentPoint.y
-
-            # Add a line segment if there are two points
-            if self.currentPoint is not None:
-                self.lines.append(PinLine(self.currentPoint, newPoint))
-
-            # Set the current point to the new point
-            self.currentPoint = newPoint
-
-        # Return what's left
-        return parts
-
-    def parse1DLineToToCommand(self, parts: list[str], isAbsolute: bool, isHorizontal: bool) -> list[str]:
-        # Consume floats from list
-        while 0 < len(parts) and 1 < len(parts[0]):
-            # Pop the point from the list
-            newNum = float(parts.pop(0))
-
-            # Find the new point, relative or absolute
-            newPoint = PinPoint(p=self.currentPoint)
-            if isHorizontal:
-                if isAbsolute:
-                    newPoint.x = newNum
-                else:
-                    newPoint.x += newNum
-            else:
-                if isAbsolute:
-                    newPoint.y = newNum
-                else:
-                    newPoint.y += newNum
-
-            # Add a line segment if there are two points
-            if self.currentPoint is not None:
-                self.lines.append(PinLine(self.currentPoint, newPoint))
-
-            # Set the current point to the new point
-            self.currentPoint = newPoint
-
-        # Return what's left
-        return parts
-
-    def parseClosePathCommand(self, parts: list[str]) -> list[str]:
-        self.lines.append(PinLine(self.currentPoint, self.startSubpaths.pop()))
-        self.currentPoint = None
-        return parts
-
-    def parseUnsupportedCommand(self, parts: list[str], name: str) -> list[str]:
-
-        printWarning(name + ' not supported')
-
-        # Consume coordinates from list
-        while 0 < len(parts) and 1 < len(parts[0]):
-            # Pop the point from the list
-            PinPoint(x=float(parts.pop(0)), y=float(parts.pop(0)))
-
-        return parts
-
-    def parsePath(self, pathData: str) -> list[PinLine]:
-        # https://www.w3.org/TR/SVG/paths.html#DProperty
-        parts = re.split(r'[ ,]+', pathData)
-        while 0 < len(parts):
-            match parts[0]:
-                # Line commands
-                case 'M' | 'm':
-                    # Move To is basically the same as Line To, but resets the point first
-                    parts = self.parseLineToCommand(
-                        parts[1:], True, parts[0].isupper())
-                case 'L' | 'l':
-                    parts = self.parseLineToCommand(
-                        parts[1:], False, parts[0].isupper())
-                case 'H' | 'h':
-                    parts = self.parse1DLineToToCommand(
-                        parts[1:], parts[0].isupper(), True)
-                case 'V' | 'v':
-                    parts = self.parse1DLineToToCommand(
-                        parts[1:], parts[0].isupper(), False)
-                # Cubic Bezier commands
-                case 'C' | 'c':
-                    parts = self.parseUnsupportedCommand(
-                        parts[1:], 'Curve')
-                case 'S' | 's':
-                    parts = self.parseUnsupportedCommand(
-                        parts[1:], 'Smooth Curve')
-                # Quadratic Bezier commands
-                case 'Q' | 'q':
-                    parts = self.parseUnsupportedCommand(
-                        parts[1:], 'Quadratic Curve')
-                case 'T' | 't':
-                    parts = self.parseUnsupportedCommand(
-                        parts[1:], 'Smooth Quadratic Curve')
-                # Elliptical Arc commands
-                case 'A' | 'a':
-                    parts = self.parseUnsupportedCommand(
-                        parts[1:], 'Elliptic Arc')
-                # Close command
-                case 'Z' | 'z':
-                    parts = self.parseClosePathCommand(parts[1:])
-                # Unknown
-                case _: pass
-
-        return self.lines
-
+    return lines
 
 def main():
-    with open('pinball.svg', 'r') as svgFile:
-        data: svg_plain.svg = svg_plain.parse(svgFile, True, True)
-        pinballTable: PinballTable = PinballTable()
-        pinballTable.parseSvgGroup(data.get_g(), '')
-        print(pinballTable.toCStr())
+    # Load the SVG
+    g: Group = SVG().parse('pinball.svg')
+
+    # Start a string
+    cstr = ''
+
+    # Extract walls
+    cstr += 'lineFl_t walls[] = {\n'
+    cstr += '\n'.join(extractPaths(g.objects['Walls']))
+    cstr += '\n};\n\n'
+
+    # Extract bumpers
+    cstr += 'circleFl_t bumpers[] = {\n'
+    cstr += '\n'.join(extractCircles(g.objects['Bumpers']))
+    cstr += '\n};\n\n'
+
+    # Extract flippers
+    cstr += 'flippers[] = {\n'
+    cstr += '\n'.join(extractFlippers(g.objects['Flippers']))
+    cstr += '\n};'
+
+    # Print the result
+    print(cstr)
 
 
-# Using the special variable
-# __name__
 if __name__ == "__main__":
     main()
