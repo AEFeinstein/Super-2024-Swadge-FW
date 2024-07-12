@@ -27,6 +27,8 @@
 #define T48_SIDE_MARGIN 30
 #define T48_TOP_MARGIN  20
 #define T48_TILE_COUNT  16
+#define T48_MAX_MERGES  8
+#define T48_MAX_SEQ     16
 
 // High score
 #define T48_HS_COUNT  5
@@ -72,6 +74,18 @@ typedef struct
 
 typedef struct
 {
+    wsg_t image;
+    int8_t gridX;
+    int8_t gridY;
+    int8_t gridEnd;
+    int8_t speed;
+    uint8_t sequence;
+    bool horizontal;
+    int32_t value;
+} t48SlidingTile_t;
+
+typedef struct
+{
     // Assets
     font_t font;
     font_t titleFont;
@@ -94,6 +108,7 @@ typedef struct
     bool textEntryDone;
     t48DisplayState_t ds;
     uint8_t hue;
+    t48SlidingTile_t slidingTiles[8]; // Max amount of sliding tiles
 
     // LEDs
     led_t leds[CONFIG_NUM_LEDS];
@@ -229,7 +244,14 @@ static uint8_t getTileSprIndex(uint32_t val);
  */
 static void t48Draw(void);
 
-static void t48DrawTileOnGrid(wsg_t* tile, int8_t row, int8_t col, int16_t xOff, int16_t yOff);
+static void t48DrawTileOnGrid(wsg_t* img, int8_t row, int8_t col, int16_t xOff, int16_t yOff, int32_t val);
+
+static void t48ClearTilesAnim(void);
+
+static void t48SetSlidingTile(int8_t idx, int8_t startRow, int8_t startCol, int8_t endRow, int8_t endCol,
+                              int32_t value);
+
+static void t48DrawSlidingTile(void);
 
 /**
  * @brief Shows the title upon booting into the mode
@@ -494,6 +516,10 @@ static void t48MainLoop(int64_t elapsedUs)
                     soundPlaySfx(&t48->click, MIDI_SFX);
                     t48StartGame();
                     t48->ds = GAME;
+                    for (int i = 0; i < T48_BOARD_SIZE; i++)
+                    {
+                        t48->boardArr[i/T48_GRID_SIZE][i%T48_GRID_SIZE] = 2;
+                    }
                 }
             }
             // Draw
@@ -680,12 +706,15 @@ static bool t48MergeSlice(uint32_t slice[], bool updated)
 
 // NOTE: All these seem to be backwards.
 // All other systems use row, column, but these seem to require column, row which is mirrors the movements along the
-// top left to bottom right diagonal. 
-// I have left the odd behavior here as it's simple to remap keys to different functions rather than debug 
+// top left to bottom right diagonal.
+// I have left the odd behavior here as it's simple to remap keys to different functions rather than compensate in the
+// visual code.
 
 static void t48SlideDown()
 {
+    t48ClearTilesAnim();
     bool updated = false;
+    int8_t idx   = 0;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
         uint32_t slice[T48_GRID_SIZE] = {0};
@@ -693,8 +722,9 @@ static void t48SlideDown()
         {
             if (t48->boardArr[row][col] != 0)
             {
+                t48SetSlidingTile(idx++, row, col, row, T48_GRID_SIZE - 1 - i, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
-                if (row != (T48_GRID_SIZE - i))
+                if (col != (T48_GRID_SIZE - i))
                 {
                     updated = true;
                 }
@@ -711,7 +741,9 @@ static void t48SlideDown()
 
 static void t48SlideUp()
 {
+    t48ClearTilesAnim();
     bool updated = false;
+    int8_t idx   = 0;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
         uint32_t slice[T48_GRID_SIZE] = {0};
@@ -723,6 +755,7 @@ static void t48SlideUp()
                 {
                     updated = true;
                 }
+                t48SetSlidingTile(idx++, row, col, row, i, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
             }
         }
@@ -737,7 +770,9 @@ static void t48SlideUp()
 
 static void t48SlideRight()
 {
+    t48ClearTilesAnim();
     bool updated = false;
+    int8_t idx   = 0;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
         uint32_t slice[T48_GRID_SIZE] = {0};
@@ -745,8 +780,9 @@ static void t48SlideRight()
         {
             if (t48->boardArr[row][col] != 0)
             {
+                t48SetSlidingTile(idx++, row, col, T48_GRID_SIZE - 1 - i, col, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
-                if (col != (T48_GRID_SIZE - i))
+                if (row != (T48_GRID_SIZE - i))
                 {
                     updated = true;
                 }
@@ -763,8 +799,9 @@ static void t48SlideRight()
 
 static void t48SlideLeft()
 {
+    t48ClearTilesAnim();
     bool updated = false;
-
+    int8_t idx   = 0;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
         uint32_t slice[T48_GRID_SIZE] = {0};
@@ -772,10 +809,11 @@ static void t48SlideLeft()
         {
             if (t48->boardArr[row][col] != 0)
             {
-                if (row != i)
+                if (col != i)
                 {
                     updated = true;
                 }
+                t48SetSlidingTile(idx++, row, col, i, col, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
             }
         }
@@ -797,6 +835,7 @@ static void t48StartGame()
     {
         t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] = 0;
     }
+    t48ClearTilesAnim();
     t48->alreadyWon = false;
     t48->score      = 0;
     // Get random places to start
@@ -959,32 +998,85 @@ static void t48Draw()
     strcpy(t48->scoreStr, textBuffer);
     drawText(&t48->font, c555, t48->scoreStr, T48_SIDE_MARGIN, 4);
 
-    // Cells
+    // Sliding tiles
+    t48DrawSlidingTile();
+
+    // Static tiles
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
         for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
         {
-            t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, -16, 0);
+            t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
+                              t48->boardArr[row][col]);
         }
     }
+    // Sliding tiles
+    t48DrawSlidingTile();
 }
 
-static void t48DrawTileOnGrid(wsg_t* tile, int8_t row, int8_t col, int16_t xOff, int16_t yOff)
+static void t48DrawTileOnGrid(wsg_t* img, int8_t row, int8_t col, int16_t xOff, int16_t yOff, int32_t val)
 {
-    uint32_t val = t48->boardArr[row][col];
     // Bail if 0
     if (val == 0)
         return;
     // Sprite
     uint16_t x_cell_offset = row * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_SIDE_MARGIN + T48_LINE_WEIGHT + xOff;
     uint16_t y_cell_offset = col * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_TOP_MARGIN + T48_LINE_WEIGHT + yOff;
-    drawWsgSimple(tile, x_cell_offset, y_cell_offset);
+    drawWsgSimple(img, x_cell_offset, y_cell_offset);
     // Text
     static char buffer[16];
     snprintf(buffer, sizeof(buffer) - 1, "%" PRIu32, val);
     uint16_t text_center = (textWidth(&t48->font, buffer)) / 2;
     drawText(&t48->font, c555, buffer, x_cell_offset - text_center + T48_CELL_SIZE / 2,
              y_cell_offset - 4 + T48_CELL_SIZE / 2);
+}
+
+static void t48ClearTilesAnim()
+{
+    for (int8_t i = 0; i < T48_MAX_MERGES; i++)
+    {
+        t48->slidingTiles[i].speed    = 0;
+        t48->slidingTiles[i].value    = 0;
+        t48->slidingTiles[i].sequence = 0;
+    }
+}
+
+static void t48SetSlidingTile(int8_t idx, int8_t startRow, int8_t startCol, int8_t endRow, int8_t endCol, int32_t value)
+{
+    t48->slidingTiles[idx].image = t48->tiles[getTileSprIndex(value)];
+    t48->slidingTiles[idx].value = value;
+    t48->slidingTiles[idx].gridX = startRow;
+    t48->slidingTiles[idx].gridY = startCol;
+    t48->slidingTiles[idx].speed
+        = (endRow - startRow + endCol - startCol) * (T48_CELL_SIZE + T48_LINE_WEIGHT) / T48_MAX_SEQ;
+    t48->slidingTiles[idx].horizontal = (endRow != startRow);
+}
+
+static void t48DrawSlidingTile()
+{
+    for (int8_t i = 0; i < T48_MAX_MERGES; i++)
+    {
+        if (t48->slidingTiles[i].value != 0)
+        {
+            int16_t xVal = 0;
+            int16_t yVal = 0;
+            t48->slidingTiles[i].sequence += 1;
+            if (t48->slidingTiles[i].sequence > T48_MAX_SEQ)
+            {
+                t48->slidingTiles[i].value = 0;
+            }
+            if (t48->slidingTiles[i].horizontal)
+            {
+                xVal = t48->slidingTiles[i].sequence * t48->slidingTiles[i].speed;
+            }
+            else
+            {
+                yVal = t48->slidingTiles[i].sequence * t48->slidingTiles[i].speed;
+            }
+            t48DrawTileOnGrid(&t48->slidingTiles[i].image, t48->slidingTiles[i].gridX, t48->slidingTiles[i].gridY, xVal,
+                              yVal, t48->slidingTiles[i].value);
+        }
+    }
 }
 
 static void t48StartScreen(paletteColor_t color)
