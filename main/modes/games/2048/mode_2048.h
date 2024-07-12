@@ -15,12 +15,25 @@
 //==============================================================================
 
 /*
+- Animations
+    - Slide
+    - Sparkles for merges
+    - Zoom in for new
+- Fix bugs in 1.1
+*/
+
+//==============================================================================
+//  Version 1.3 goals:
+//==============================================================================
+
+/*
 - Tilt controls
   - Control selection
   - Deadzone
   - Tilt and return to neutral to slide
   - Allow for tilt recalibration with B
 - Refactor files into multiple files
+- New, custom sounds
 */
 
 //==============================================================================

@@ -60,6 +60,14 @@ typedef enum
     ALL
 } t48Direction_t;
 
+typedef enum
+{
+    STATIC,
+    MOVED,
+    MERGED,
+    NEW
+} t48CellStateEnum_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -74,15 +82,28 @@ typedef struct
 
 typedef struct
 {
+    int8_t x;
+    int8_t y;
+} t48CellCoors_t;
+
+typedef struct
+{
     wsg_t image;
-    int8_t gridX;
-    int8_t gridY;
+    t48CellCoors_t grid;
     int8_t gridEnd;
     int8_t speed;
     uint8_t sequence;
     bool horizontal;
     int32_t value;
 } t48SlidingTile_t;
+
+typedef struct
+{
+    t48CellCoors_t incoming;
+    t48CellCoors_t end;
+    t48CellStateEnum_t state;
+    int32_t value;
+} t48CellState_t;
 
 typedef struct
 {
@@ -109,6 +130,8 @@ typedef struct
     t48DisplayState_t ds;
     uint8_t hue;
     t48SlidingTile_t slidingTiles[8]; // Max amount of sliding tiles
+    t48CellState_t cellState[T48_BOARD_SIZE];
+    int8_t globalAnim;
 
     // LEDs
     led_t leds[CONFIG_NUM_LEDS];
@@ -246,12 +269,20 @@ static void t48Draw(void);
 
 static void t48DrawTileOnGrid(wsg_t* img, int8_t row, int8_t col, int16_t xOff, int16_t yOff, int32_t val);
 
-static void t48ClearTilesAnim(void);
+static void t48ResetCellState(void);
 
-static void t48SetSlidingTile(int8_t idx, int8_t startRow, int8_t startCol, int8_t endRow, int8_t endCol,
-                              int32_t value);
+static void t48SetCellState(int8_t idx, t48CellStateEnum_t st, int8_t startX, int8_t startY, int8_t endX, int8_t endY,
+                            int32_t value);
 
-static void t48DrawSlidingTile(void);
+static void t48ConvertCellState(void);
+
+static void t48DrawCellState(void);
+
+static void t48ResetSlideAnim(void);
+
+static void t48SetSlidingTile(int8_t idx, t48CellCoors_t start, t48CellCoors_t end, int32_t value);
+
+static void t48DrawSlidingTiles(void);
 
 /**
  * @brief Shows the title upon booting into the mode
@@ -518,7 +549,7 @@ static void t48MainLoop(int64_t elapsedUs)
                     t48->ds = GAME;
                     for (int i = 0; i < T48_BOARD_SIZE; i++)
                     {
-                        t48->boardArr[i/T48_GRID_SIZE][i%T48_GRID_SIZE] = 2;
+                        t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] = 2;
                     }
                 }
             }
@@ -660,6 +691,7 @@ static int8_t t48SetRandCell()
     {
         t48->boardArr[cell / T48_GRID_SIZE][cell % T48_GRID_SIZE] = 2; // 90%
     }
+    t48->cellState[cell].state = STATIC;
     return cell;
 }
 
@@ -670,6 +702,7 @@ static void t48BoardUpdate(bool wasUpdated, t48Direction_t dir)
         t48SetRandCell();
         led_t col = t48GetLEDColors();
         t48LightLEDs(dir, col);
+        t48ConvertCellState();
     }
     else
     {
@@ -678,6 +711,7 @@ static void t48BoardUpdate(bool wasUpdated, t48Direction_t dir)
     }
 }
 
+// TODO: Change merged cells to Affect animations
 static bool t48MergeSlice(uint32_t slice[], bool updated)
 {
     for (uint8_t i = 0; i < T48_GRID_SIZE - 1; i++)
@@ -712,7 +746,7 @@ static bool t48MergeSlice(uint32_t slice[], bool updated)
 
 static void t48SlideDown()
 {
-    t48ClearTilesAnim();
+    t48ResetCellState();
     bool updated = false;
     int8_t idx   = 0;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
@@ -722,7 +756,7 @@ static void t48SlideDown()
         {
             if (t48->boardArr[row][col] != 0)
             {
-                t48SetSlidingTile(idx++, row, col, row, T48_GRID_SIZE - 1 - i, t48->boardArr[row][col]);
+                t48SetCellState(idx++, MOVED, row, col, row, T48_GRID_SIZE - 1 - i, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
                 if (col != (T48_GRID_SIZE - i))
                 {
@@ -741,7 +775,7 @@ static void t48SlideDown()
 
 static void t48SlideUp()
 {
-    t48ClearTilesAnim();
+    t48ResetCellState();
     bool updated = false;
     int8_t idx   = 0;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
@@ -755,7 +789,7 @@ static void t48SlideUp()
                 {
                     updated = true;
                 }
-                t48SetSlidingTile(idx++, row, col, row, i, t48->boardArr[row][col]);
+                t48SetCellState(idx++, MOVED, row, col, row, i, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
             }
         }
@@ -770,7 +804,7 @@ static void t48SlideUp()
 
 static void t48SlideRight()
 {
-    t48ClearTilesAnim();
+    t48ResetCellState();
     bool updated = false;
     int8_t idx   = 0;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
@@ -780,7 +814,7 @@ static void t48SlideRight()
         {
             if (t48->boardArr[row][col] != 0)
             {
-                t48SetSlidingTile(idx++, row, col, T48_GRID_SIZE - 1 - i, col, t48->boardArr[row][col]);
+                t48SetCellState(idx++, MOVED, row, col, T48_GRID_SIZE - 1 - i, col, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
                 if (row != (T48_GRID_SIZE - i))
                 {
@@ -799,7 +833,7 @@ static void t48SlideRight()
 
 static void t48SlideLeft()
 {
-    t48ClearTilesAnim();
+    t48ResetCellState();
     bool updated = false;
     int8_t idx   = 0;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
@@ -813,7 +847,7 @@ static void t48SlideLeft()
                 {
                     updated = true;
                 }
-                t48SetSlidingTile(idx++, row, col, i, col, t48->boardArr[row][col]);
+                t48SetCellState(idx++, MOVED, row, col, i, col, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
             }
         }
@@ -835,7 +869,7 @@ static void t48StartGame()
     {
         t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] = 0;
     }
-    t48ClearTilesAnim();
+    t48ResetCellState();
     t48->alreadyWon = false;
     t48->score      = 0;
     // Get random places to start
@@ -998,20 +1032,8 @@ static void t48Draw()
     strcpy(t48->scoreStr, textBuffer);
     drawText(&t48->font, c555, t48->scoreStr, T48_SIDE_MARGIN, 4);
 
-    // Sliding tiles
-    t48DrawSlidingTile();
-
-    // Static tiles
-    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
-    {
-        for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
-        {
-            t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
-                              t48->boardArr[row][col]);
-        }
-    }
-    // Sliding tiles
-    t48DrawSlidingTile();
+    // Draw Tiles
+    t48DrawCellState();
 }
 
 static void t48DrawTileOnGrid(wsg_t* img, int8_t row, int8_t col, int16_t xOff, int16_t yOff, int32_t val)
@@ -1031,7 +1053,87 @@ static void t48DrawTileOnGrid(wsg_t* img, int8_t row, int8_t col, int16_t xOff, 
              y_cell_offset - 4 + T48_CELL_SIZE / 2);
 }
 
-static void t48ClearTilesAnim()
+static void t48ResetCellState()
+{
+    for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
+    {
+        t48->cellState[i].incoming.x = 0;
+        t48->cellState[i].incoming.y = 0;
+        t48->cellState[i].end.x      = 0;
+        t48->cellState[i].end.y      = 0;
+        t48->cellState[i].state      = STATIC;
+        t48->cellState[i].value      = 0;
+    }
+    t48ResetSlideAnim();
+}
+
+static void t48SetCellState(int8_t idx, t48CellStateEnum_t st, int8_t startX, int8_t startY, int8_t endX, int8_t endY,
+                            int32_t value)
+{
+    t48->cellState[idx].incoming.x = startX;
+    t48->cellState[idx].incoming.y = startY;
+    t48->cellState[idx].end.x      = endX;
+    t48->cellState[idx].end.y      = endY;
+    t48->cellState[idx].state      = st;
+    t48->cellState[idx].value      = value;
+}
+
+static void t48ConvertCellState()
+{
+    int8_t idx      = 0;
+    t48->globalAnim = 0;
+    for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
+    {
+        switch (t48->cellState[i].state)
+        {
+            case MOVED:
+                t48SetSlidingTile(idx++, t48->cellState[i].incoming, t48->cellState[i].end, t48->cellState[i].value);
+                break;
+            case MERGED:
+                break;
+            case NEW:
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+static void t48DrawCellState()
+{
+    if (t48->globalAnim <= T48_MAX_SEQ)
+    {
+        t48->globalAnim++;
+    }
+    else
+    {
+        t48ResetCellState();
+    }
+    for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
+    {
+        switch (t48->cellState[i].state)
+        {
+            case STATIC:
+                if (t48->globalAnim > T48_MAX_SEQ)
+                {
+                    int8_t row = i / T48_GRID_SIZE;
+                    int8_t col = i % T48_GRID_SIZE;
+                    t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
+                                      t48->boardArr[row][col]); // FIXME: Convert to CellState vars
+                }
+                break;
+            case MERGED:
+                break;
+            case NEW:
+                break;
+            default:
+                break;
+        }
+    }
+    t48DrawSlidingTiles();
+}
+
+static void t48ResetSlideAnim()
 {
     for (int8_t i = 0; i < T48_MAX_MERGES; i++)
     {
@@ -1041,40 +1143,34 @@ static void t48ClearTilesAnim()
     }
 }
 
-static void t48SetSlidingTile(int8_t idx, int8_t startRow, int8_t startCol, int8_t endRow, int8_t endCol, int32_t value)
+static void t48SetSlidingTile(int8_t idx, t48CellCoors_t start, t48CellCoors_t end, int32_t value)
 {
-    t48->slidingTiles[idx].image = t48->tiles[getTileSprIndex(value)];
-    t48->slidingTiles[idx].value = value;
-    t48->slidingTiles[idx].gridX = startRow;
-    t48->slidingTiles[idx].gridY = startCol;
+    t48->slidingTiles[idx].value  = value;
+    t48->slidingTiles[idx].grid.x = start.x;
+    t48->slidingTiles[idx].grid.y = start.y;
     t48->slidingTiles[idx].speed
-        = (endRow - startRow + endCol - startCol) * (T48_CELL_SIZE + T48_LINE_WEIGHT) / T48_MAX_SEQ;
-    t48->slidingTiles[idx].horizontal = (endRow != startRow);
+        = (end.x - start.x + end.y - start.y) * (T48_CELL_SIZE + T48_LINE_WEIGHT) / T48_MAX_SEQ;
+    t48->slidingTiles[idx].horizontal = (end.x != start.x);
 }
 
-static void t48DrawSlidingTile()
+static void t48DrawSlidingTiles()
 {
-    for (int8_t i = 0; i < T48_MAX_MERGES; i++)
+    for (int8_t idx = 0; idx < T48_MAX_MERGES; idx++)
     {
-        if (t48->slidingTiles[i].value != 0)
+        if (t48->slidingTiles[idx].value != 0)
         {
             int16_t xVal = 0;
             int16_t yVal = 0;
-            t48->slidingTiles[i].sequence += 1;
-            if (t48->slidingTiles[i].sequence > T48_MAX_SEQ)
+            if (t48->slidingTiles[idx].horizontal)
             {
-                t48->slidingTiles[i].value = 0;
-            }
-            if (t48->slidingTiles[i].horizontal)
-            {
-                xVal = t48->slidingTiles[i].sequence * t48->slidingTiles[i].speed;
+                xVal = t48->globalAnim * t48->slidingTiles[idx].speed;
             }
             else
             {
-                yVal = t48->slidingTiles[i].sequence * t48->slidingTiles[i].speed;
+                yVal = t48->globalAnim * t48->slidingTiles[idx].speed;
             }
-            t48DrawTileOnGrid(&t48->slidingTiles[i].image, t48->slidingTiles[i].gridX, t48->slidingTiles[i].gridY, xVal,
-                              yVal, t48->slidingTiles[i].value);
+            t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->slidingTiles[idx].value)], t48->slidingTiles[idx].grid.x,
+                              t48->slidingTiles[idx].grid.y, xVal, yVal, t48->slidingTiles[idx].value);
         }
     }
 }
