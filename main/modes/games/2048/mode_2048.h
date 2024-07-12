@@ -20,6 +20,7 @@
     - Sparkles for merges
     - Zoom in for new
 - Fix bugs in 1.1
+- Refactor files into multiple files
 */
 
 //==============================================================================
@@ -32,7 +33,6 @@
   - Deadzone
   - Tilt and return to neutral to slide
   - Allow for tilt recalibration with B
-- Refactor files into multiple files
 - New, custom sounds
 */
 

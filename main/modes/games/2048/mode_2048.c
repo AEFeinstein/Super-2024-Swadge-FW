@@ -108,6 +108,12 @@ typedef struct
 
 typedef struct
 {
+    uint32_t sliceVal;
+    t48CellCoors_t cell;
+} Slice_t;
+
+typedef struct
+{
     // Assets
     font_t font;
     font_t titleFont;
@@ -196,7 +202,7 @@ static void t48BoardUpdate(bool wasUpdated, t48Direction_t dir);
  * @return true If a merge occurred
  * @return false if no merge occurred
  */
-static bool t48MergeSlice(uint32_t* slice, bool updated);
+static void t48MergeSlice(Slice_t *slice, bool *updated);
 
 /**
  * @brief Slide blocks down if possible
@@ -546,10 +552,10 @@ static void t48MainLoop(int64_t elapsedUs)
                     soundPlaySfx(&t48->click, MIDI_SFX);
                     t48StartGame();
                     t48->ds = GAME;
-                    for (int i = 0; i < T48_BOARD_SIZE; i++)
+                    /* for (int i = 0; i < T48_BOARD_SIZE; i++)
                     {
                         t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] = 2;
-                    }
+                    } */
                 }
             }
             // Draw
@@ -711,30 +717,49 @@ static void t48BoardUpdate(bool wasUpdated, t48Direction_t dir)
 }
 
 // TODO: Change merged cells to Affect animations
-static bool t48MergeSlice(uint32_t slice[], bool updated)
+// Need to relate slice to CellState
+// If slice[i] == slice[i+1], check if any cellState's .end == slice[i+1]'s coords
+// If above, cellState to merge is provided slice[i] as end coordinates to move the blocks properly
+// else
+// slice[i] is provided slice[i+1] as end coordinates in new move object
+// Non-merges that combine also need to move down the stack
+// Case [2,2,2,2]->[0,4,0,4]->[0,0,4,4]
+
+// FIXME: Above implementation just brute force checks all of the potential cellStates. Might be able to prune out?
+// May not matter, these are small numbers. Still, want to be efficient if possible
+// 4 slices * 16 cellStates * 3 checks per cell (worst case, <-[2,2,4,8] merges involving one check, then does an
+// additional one for 4 and 8)
+
+static void t48MergeSlice(Slice_t slice[], bool* updated)
 {
     for (uint8_t i = 0; i < T48_GRID_SIZE - 1; i++)
     {
-        // Merge
-        if (slice[i] == slice[i + 1])
+        if (slice[i].sliceVal == 0)
         {
-            if (slice[i] == 0)
+            continue;
+        }
+        if (slice[i].sliceVal == slice[i + 1].sliceVal)
+        {
+            for (int8_t j = 0; j < T48_BOARD_SIZE; j++)
             {
-                continue;
+                /* if (slice[i + 1].cell.x == t48->cellState[j].end.x && slice[i + 1].cell.y == t48->cellState[j].end.y)
+                {
+                    t48->cellState[j].end.x = slice[i].cell.x;
+                    t48->cellState[j].end.y = slice[i].cell.y;
+                } */
             }
-            updated = true;
-            slice[i] *= 2;
-            t48->score += slice[i];
+            *updated = true;
+            slice[i].sliceVal *= 2;
+            t48->score += slice[i].sliceVal;
             // Move if merged
             for (uint8_t j = i + 1; j < T48_GRID_SIZE - 1; j++)
             {
-                slice[j] = slice[j + 1];
+                slice[j].sliceVal = slice[j + 1].sliceVal;
             }
             // Add a 0 to end if merged
-            slice[T48_GRID_SIZE - 1] = 0;
+            slice[T48_GRID_SIZE - 1].sliceVal = 0;
         }
     }
-    return updated;
 }
 
 // NOTE: All these seem to be backwards.
@@ -750,23 +775,25 @@ static void t48SlideDown()
     int8_t idx   = 0;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
-        uint32_t slice[T48_GRID_SIZE] = {0};
+        Slice_t slice[T48_GRID_SIZE] = {0};
         for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
         {
             if (t48->boardArr[row][col] != 0)
             {
                 t48SetCellState(idx++, MOVING, row, col, row, T48_GRID_SIZE - 1 - i, t48->boardArr[row][col]);
-                slice[i++] = t48->boardArr[row][col];
+                slice[i].cell.x = row;
+                slice[i].cell.y = col;
+                slice[i++].sliceVal = t48->boardArr[row][col];
                 if (col != (T48_GRID_SIZE - i))
                 {
                     updated = true;
                 }
             }
         }
-        updated = t48MergeSlice(slice, updated);
+        t48MergeSlice(slice, &updated);
         for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
         {
-            t48->boardArr[row][col] = slice[i++];
+            t48->boardArr[row][col] = slice[i++].sliceVal;
         }
     }
     t48BoardUpdate(updated, DOWN);
@@ -779,7 +806,7 @@ static void t48SlideUp()
     int8_t idx   = 0;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
-        uint32_t slice[T48_GRID_SIZE] = {0};
+        Slice_t slice[T48_GRID_SIZE] = {0};
         for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
             if (t48->boardArr[row][col] != 0)
@@ -789,13 +816,15 @@ static void t48SlideUp()
                     updated = true;
                 }
                 t48SetCellState(idx++, MOVING, row, col, row, i, t48->boardArr[row][col]);
-                slice[i++] = t48->boardArr[row][col];
+                slice[i].cell.x = row;
+                slice[i].cell.y = col;
+                slice[i++].sliceVal = t48->boardArr[row][col];
             }
         }
-        updated = t48MergeSlice(slice, updated);
+        t48MergeSlice(slice, &updated);
         for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
-            t48->boardArr[row][col] = slice[i++];
+            t48->boardArr[row][col] = slice[i++].sliceVal;
         }
     }
     t48BoardUpdate(updated, UP);
@@ -808,23 +837,25 @@ static void t48SlideRight()
     int8_t idx   = 0;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
-        uint32_t slice[T48_GRID_SIZE] = {0};
+        Slice_t slice[T48_GRID_SIZE] = {0};
         for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
         {
             if (t48->boardArr[row][col] != 0)
             {
                 t48SetCellState(idx++, MOVING, row, col, T48_GRID_SIZE - 1 - i, col, t48->boardArr[row][col]);
-                slice[i++] = t48->boardArr[row][col];
+                slice[i].cell.x = row;
+                slice[i].cell.y = col;
+                slice[i++].sliceVal = t48->boardArr[row][col];
                 if (row != (T48_GRID_SIZE - i))
                 {
                     updated = true;
                 }
             }
         }
-        updated = t48MergeSlice(slice, updated);
+        t48MergeSlice(slice, &updated);
         for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
         {
-            t48->boardArr[row][col] = slice[i++];
+            t48->boardArr[row][col] = slice[i++].sliceVal;
         }
     }
     t48BoardUpdate(updated, RIGHT);
@@ -837,23 +868,25 @@ static void t48SlideLeft()
     int8_t idx   = 0;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
-        uint32_t slice[T48_GRID_SIZE] = {0};
+        Slice_t slice[T48_GRID_SIZE] = {0};
         for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
         {
             if (t48->boardArr[row][col] != 0)
             {
-                if (col != i)
+                if (row != i)
                 {
                     updated = true;
                 }
                 t48SetCellState(idx++, MOVING, row, col, i, col, t48->boardArr[row][col]);
-                slice[i++] = t48->boardArr[row][col];
+                slice[i].cell.x = row;
+                slice[i].cell.y = col;
+                slice[i++].sliceVal = t48->boardArr[row][col];
             }
         }
-        updated = t48MergeSlice(slice, updated);
+        t48MergeSlice(slice, &updated);
         for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
         {
-            t48->boardArr[row][col] = slice[i++];
+            t48->boardArr[row][col] = slice[i++].sliceVal;
         }
     }
     t48BoardUpdate(updated, LEFT);
@@ -1092,10 +1125,11 @@ static void t48ConvertCellState()
         {
             case MOVING:
                 t48SetSlidingTile(idx++, t48->cellState[i].incoming, t48->cellState[i].end, t48->cellState[i].value);
-
-                t48->cellState[t48->cellState[i].end.x * T48_GRID_SIZE +  t48->cellState[i].end.y].state = MOVED;
+                t48->cellState[t48->cellState[i].end.x * T48_GRID_SIZE + t48->cellState[i].end.y].state = MOVED;
                 break;
             case MERGED:
+                // FIXME: Move this to where the final cell is merged
+                // t48->cellState[t48->cellState[i].end.x * T48_GRID_SIZE + t48->cellState[i].end.y].state = MERGED;
                 break;
             case NEW:
                 break;
@@ -1115,29 +1149,35 @@ static void t48DrawCellState()
     {
         t48ResetCellState();
     }
+
+    // TODO: Ordering of the drawing
+
     t48DrawSlidingTiles();
     for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
+        int8_t row = i / T48_GRID_SIZE;
+        int8_t col = i % T48_GRID_SIZE;
         switch (t48->cellState[i].state)
         {
             case STATIC:
-                int8_t row = i / T48_GRID_SIZE;
-                int8_t col = i % T48_GRID_SIZE;
+
                 t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
                                   t48->boardArr[row][col]); // FIXME: Convert to CellState vars
-                break;
-            case MOVING:
                 break;
             case MOVED:
                 if (t48->globalAnim > T48_MAX_SEQ)
                 {
-                    int8_t row = i / T48_GRID_SIZE;
-                    int8_t col = i % T48_GRID_SIZE;
                     t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
                                       t48->boardArr[row][col]); // FIXME: Convert to CellState vars
                 }
                 break;
             case MERGED:
+                // FIXME: Draw new sprite once the gems combine
+                if (t48->globalAnim > T48_MAX_SEQ)
+                {
+                    t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
+                                      t48->boardArr[row][col]); // FIXME: Convert to CellState vars
+                }
                 break;
             case NEW:
                 break;
@@ -1341,10 +1381,7 @@ static void t48DimLEDs()
 
 static void t48SetRGB(uint8_t idx, led_t color)
 {
-    // FIXME: See if I can make this one line
-    t48->leds[idx].r = color.r;
-    t48->leds[idx].g = color.g;
-    t48->leds[idx].b = color.b;
+    t48->leds[idx] = color;
 }
 
 static void t48LightLEDs(t48Direction_t dir, led_t color)
