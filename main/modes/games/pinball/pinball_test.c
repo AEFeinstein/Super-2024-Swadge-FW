@@ -8,6 +8,48 @@
 #include "pinball_physics.h"
 
 //==============================================================================
+// Structs
+//==============================================================================
+
+typedef struct
+{
+    circleFl_t cPivot;
+    float tRadius;
+    float len;
+    bool facingRight;
+} flipperFl_t;
+
+//==============================================================================
+// Const variables
+//==============================================================================
+
+static const lineFl_t constWalls[] = {
+    {.p1 = {.x = 95, .y = 190}, .p2 = {.x = 0, .y = 116}},  {.p1 = {.x = 184, .y = 190}, .p2 = {.x = 279, .y = 116}},
+    {.p1 = {.x = 0, .y = 0}, .p2 = {.x = 279, .y = 0}},     {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 0, .y = 0}},
+    {.p1 = {.x = 279, .y = 0}, .p2 = {.x = 279, .y = 239}}, {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 279, .y = 239}},
+    {.p1 = {.x = 0, .y = 116}, .p2 = {.x = 3, .y = 97}},    {.p1 = {.x = 3, .y = 97}, .p2 = {.x = 9, .y = 79}},
+    {.p1 = {.x = 9, .y = 79}, .p2 = {.x = 20, .y = 58}},    {.p1 = {.x = 20, .y = 58}, .p2 = {.x = 37, .y = 37}},
+    {.p1 = {.x = 37, .y = 37}, .p2 = {.x = 62, .y = 18}},   {.p1 = {.x = 62, .y = 18}, .p2 = {.x = 78, .y = 11}},
+    {.p1 = {.x = 78, .y = 11}, .p2 = {.x = 96, .y = 5}},    {.p1 = {.x = 96, .y = 5}, .p2 = {.x = 116, .y = 1}},
+    {.p1 = {.x = 116, .y = 1}, .p2 = {.x = 140, .y = 0}},   {.p1 = {.x = 140, .y = 0}, .p2 = {.x = 163, .y = 1}},
+    {.p1 = {.x = 163, .y = 1}, .p2 = {.x = 183, .y = 5}},   {.p1 = {.x = 183, .y = 5}, .p2 = {.x = 201, .y = 11}},
+    {.p1 = {.x = 201, .y = 11}, .p2 = {.x = 217, .y = 18}}, {.p1 = {.x = 217, .y = 18}, .p2 = {.x = 242, .y = 37}},
+    {.p1 = {.x = 242, .y = 37}, .p2 = {.x = 259, .y = 58}}, {.p1 = {.x = 259, .y = 58}, .p2 = {.x = 270, .y = 79}},
+    {.p1 = {.x = 270, .y = 79}, .p2 = {.x = 276, .y = 97}}, {.p1 = {.x = 276, .y = 97}, .p2 = {.x = 279, .y = 116}},
+};
+
+static const circleFl_t constBumpers[] = {
+    {.pos = {.x = 140, .y = 62}, .radius = 19},
+    {.pos = {.x = 182, .y = 105}, .radius = 19},
+    {.pos = {.x = 97, .y = 105}, .radius = 19},
+};
+
+static const flipperFl_t constFlippers[] = {
+    {.cPivot = {.pos = {.x = 90, .y = 200}, .radius = 10}, .tRadius = 5, .len = 35, .facingRight = true},
+    {.cPivot = {.pos = {.x = 189, .y = 200}, .radius = 10}, .tRadius = 5, .len = 35, .facingRight = false},
+};
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -79,11 +121,7 @@ void createRandomBalls(pinball_t* p, int32_t numBalls)
 void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 {
     int fixedBumpersPlaced = 0;
-    circleFl_t bumpers[3]  = {
-        {.pos = {.x = 182, .y = 110}, .radius = 19},
-        {.pos = {.x = 97, .y = 110}, .radius = 19},
-        {.pos = {.x = 140, .y = 58}, .radius = 19},
-    };
+    circleFl_t bumpers[]  = {};
 
     numBumpers += ARRAY_SIZE(bumpers);
 
@@ -150,31 +188,11 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 void createRandomWalls(pinball_t* p, int32_t numWalls)
 {
     // Always Create a boundary
-    lineFl_t walls[24] = {
-        {.p1 = {.x = 95, .y = 190}, .p2 = {.x = 0, .y = 116}},
-        {.p1 = {.x = 184, .y = 190}, .p2 = {.x = 279, .y = 116}},
+    lineFl_t walls[] = {
         {.p1 = {.x = 0, .y = 0}, .p2 = {.x = 279, .y = 0}},
         {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 0, .y = 0}},
         {.p1 = {.x = 279, .y = 0}, .p2 = {.x = 279, .y = 239}},
         {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 279, .y = 239}},
-        {.p1 = {.x = 0, .y = 116}, .p2 = {.x = 3, .y = 97}},
-        {.p1 = {.x = 3, .y = 97}, .p2 = {.x = 9, .y = 79}},
-        {.p1 = {.x = 9, .y = 79}, .p2 = {.x = 20, .y = 58}},
-        {.p1 = {.x = 20, .y = 58}, .p2 = {.x = 37, .y = 37}},
-        {.p1 = {.x = 37, .y = 37}, .p2 = {.x = 62, .y = 18}},
-        {.p1 = {.x = 62, .y = 18}, .p2 = {.x = 78, .y = 11}},
-        {.p1 = {.x = 78, .y = 11}, .p2 = {.x = 96, .y = 5}},
-        {.p1 = {.x = 96, .y = 5}, .p2 = {.x = 116, .y = 1}},
-        {.p1 = {.x = 116, .y = 1}, .p2 = {.x = 140, .y = 0}},
-        {.p1 = {.x = 140, .y = 0}, .p2 = {.x = 163, .y = 1}},
-        {.p1 = {.x = 163, .y = 1}, .p2 = {.x = 183, .y = 5}},
-        {.p1 = {.x = 183, .y = 5}, .p2 = {.x = 201, .y = 11}},
-        {.p1 = {.x = 201, .y = 11}, .p2 = {.x = 217, .y = 18}},
-        {.p1 = {.x = 217, .y = 18}, .p2 = {.x = 242, .y = 37}},
-        {.p1 = {.x = 242, .y = 37}, .p2 = {.x = 259, .y = 58}},
-        {.p1 = {.x = 259, .y = 58}, .p2 = {.x = 270, .y = 79}},
-        {.p1 = {.x = 270, .y = 79}, .p2 = {.x = 276, .y = 97}},
-        {.p1 = {.x = 276, .y = 97}, .p2 = {.x = 279, .y = 116}},
     };
 
     // Don't overflow
@@ -186,18 +204,7 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 
     for (int32_t i = 0; i < ARRAY_SIZE(walls); i++)
     {
-        pbLine_t* pbl = &p->walls[p->numWalls++];
-        pbl->l.p1.x   = walls[i].p1.x;
-        pbl->l.p1.y   = walls[i].p1.y;
-        pbl->l.p2.x   = walls[i].p2.x;
-        pbl->l.p2.y   = walls[i].p2.y;
-        vecFl_t delta = {
-            .x = pbl->l.p2.x - pbl->l.p1.x,
-            .y = pbl->l.p2.y - pbl->l.p1.y,
-        };
-        pbl->length   = magVecFl2d(delta);
-        pbl->color    = c555;
-        pbl->zoneMask = pinZoneLine(p, *pbl);
+        createWall(p, walls[i].p1.x, walls[i].p1.y, walls[i].p2.x, walls[i].p2.y);
     }
 
     // Make a bunch of random lines
@@ -258,42 +265,131 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 }
 
 /**
+ * @brief Create a Wall
+ *
+ * @param p
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ */
+void createWall(pinball_t* p, int32_t x1, int32_t y1, int32_t x2, int32_t y2)
+{
+    // Don't overflow
+    if (p->numWalls + 1 < MAX_NUM_WALLS)
+    {
+        pbLine_t* pbl = &p->walls[p->numWalls++];
+        pbl->l.p1.x   = x1;
+        pbl->l.p1.y   = y1;
+        pbl->l.p2.x   = x2;
+        pbl->l.p2.y   = y2;
+        vecFl_t delta = {
+            .x = pbl->l.p2.x - pbl->l.p1.x,
+            .y = pbl->l.p2.y - pbl->l.p1.y,
+        };
+        pbl->length   = magVecFl2d(delta);
+        pbl->color    = c555;
+        pbl->zoneMask = pinZoneLine(p, *pbl);
+    }
+}
+
+/**
+ * @brief Create a Bumper
+ *
+ * @param p
+ * @param x
+ * @param y
+ * @param r
+ */
+void createBumper(pinball_t* p, int32_t x, int32_t y, int32_t r)
+{
+    // Don't overflow
+    if (p->numBumpers + 1 < MAX_NUM_BUMPERS)
+    {
+        pbCircle_t* b = &p->bumpers[p->numBumpers];
+
+        b->c.radius = r;
+        b->c.pos.x  = x;
+        b->c.pos.y  = y;
+        b->color    = c050;
+        b->filled   = false;
+        b->zoneMask = pinZoneCircle(p, *b);
+
+        p->numBumpers++;
+    }
+}
+
+/**
  * @brief Create a Flipper
  *
  * @param p The pinball state
  * @param pivot_x
  * @param pivot_y
+ * @param pivot_r
+ * @param tip_r
+ * @param len
  * @param facingRight
  */
-void createFlipper(pinball_t* p, int32_t pivot_x, int32_t pivot_y, bool facingRight)
+void createFlipper(pinball_t* p, int32_t pivot_x, int32_t pivot_y, int32_t pivot_r, int32_t tip_r, int32_t len,
+                   bool facingRight)
 {
-    pbFlipper_t* f = &p->flippers[p->numFlippers];
-
-    f->cPivot.color = c505;
-    f->cTip.color   = c505;
-    f->sideL.color  = c505;
-    f->sideR.color  = c505;
-
-    f->cPivot.c.pos.x  = pivot_x;
-    f->cPivot.c.pos.y  = pivot_y;
-    f->cPivot.c.radius = 10;
-    f->length          = 40;
-    f->cTip.c.radius   = 5;
-    f->facingRight     = facingRight;
-
-    f->zoneMask = pinZoneFlipper(p, f);
-
-    // Update angle and position after setting zone
-    if (f->facingRight)
+    // Don't overflow
+    if (p->numFlippers + 1 < MAX_NUM_FLIPPERS)
     {
-        f->angle = M_PI_2 + FLIPPER_DOWN_ANGLE;
-    }
-    else
-    {
-        f->angle = M_PI + M_PI_2 - FLIPPER_DOWN_ANGLE;
-    }
-    updateFlipperPos(f);
+        pbFlipper_t* f = &p->flippers[p->numFlippers];
 
-    // Update flipper count
-    p->numFlippers++;
+        f->cPivot.color = c505;
+        f->cTip.color   = c505;
+        f->sideL.color  = c505;
+        f->sideR.color  = c505;
+
+        f->cPivot.c.pos.x  = pivot_x;
+        f->cPivot.c.pos.y  = pivot_y;
+        f->cPivot.c.radius = pivot_r;
+        f->length          = len;
+        f->cTip.c.radius   = tip_r;
+        f->facingRight     = facingRight;
+
+        f->zoneMask = pinZoneFlipper(p, f);
+
+        // Update angle and position after setting zone
+        if (f->facingRight)
+        {
+            f->angle = M_PI_2 + FLIPPER_DOWN_ANGLE;
+        }
+        else
+        {
+            f->angle = M_PI + M_PI_2 - FLIPPER_DOWN_ANGLE;
+        }
+        updateFlipperPos(f);
+
+        // Update flipper count
+        p->numFlippers++;
+    }
+}
+
+/**
+ * @brief Load a pinball table from const data
+ *
+ * @param p The game state to load into
+ */
+void loadConstPbTable(pinball_t* p)
+{
+    for (int32_t idx = 0; idx < ARRAY_SIZE(constWalls); idx++)
+    {
+        const lineFl_t* w = &constWalls[idx];
+        createWall(p, w->p1.x, w->p1.y, w->p2.x, w->p2.y);
+    }
+
+    for (int32_t idx = 0; idx < ARRAY_SIZE(constBumpers); idx++)
+    {
+        const circleFl_t* b = &constBumpers[idx];
+        createBumper(p, b->pos.x, b->pos.y, b->radius);
+    }
+
+    for (int32_t idx = 0; idx < ARRAY_SIZE(constFlippers); idx++)
+    {
+        const flipperFl_t* f = &constFlippers[idx];
+        createFlipper(p, f->cPivot.pos.x, f->cPivot.pos.y, f->cPivot.radius, f->tRadius, f->len, f->facingRight);
+    }
 }
