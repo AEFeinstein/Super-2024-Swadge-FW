@@ -329,6 +329,7 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (tttMultiStr == label)
         {
+            ttt->game.singlePlayer = false;
             // Show connection UI
             tttShowUi(TUI_CONNECTING);
             // Start multiplayer
@@ -336,8 +337,9 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (tttSingleStr == label)
         {
-            // TODO implement single player
-            printf("Implement Single Player\n");
+            ttt->game.singlePlayer = true;
+            tttBeginGame(ttt);
+            tttShowUi(TUI_GAME);
         }
         else if (tttMarkerSelStr == label)
         {

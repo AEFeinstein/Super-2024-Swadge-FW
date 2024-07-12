@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include "ultimateTTTgame.h"
+#include "ultimateTTTcpuPlayer.h"
 
 //==============================================================================
 // Defines
@@ -76,6 +77,14 @@ void tttBeginGame(ultimateTTT_t* ttt)
     // Clean up after showing instructions
     ttt->showingInstructions = false;
 
+    /// Clear any CPU data
+    ttt->game.cpu.state = TCPU_INACTIVE;
+    ttt->game.cpu.destSubgame.x = 0;
+    ttt->game.cpu.destSubgame.y = 0;
+    ttt->game.cpu.destCell.x = 0;
+    ttt->game.cpu.destCell.y = 0;
+    ttt->game.cpu.delayTime = 0;
+
     // Show the game UI
     tttShowUi(TUI_GAME);
 
@@ -88,6 +97,17 @@ void tttBeginGame(ultimateTTT_t* ttt)
         ttt->game.p1MarkerIdx = ttt->activeMarkerIdx;
         // Send it to the second player
         tttSendMarker(ttt, ttt->game.p1MarkerIdx);
+
+        if (ttt->game.singlePlayer)
+        {
+            ttt->game.state = TGS_PLACING_MARKER;
+            ttt->game.cpu.state = TCPU_INACTIVE;
+        }
+    }
+    else if (ttt->game.singlePlayer)
+    {
+        ttt->game.state = TGS_WAITING;
+        ttt->game.cpu.state = TCPU_THINKING;
     }
     // If going second, wait to receive p1's marker before responding
 }
@@ -448,7 +468,12 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
  */
 void tttSendPlacedMarker(ultimateTTT_t* ttt)
 {
-    if (ttt->game.p2p.cnc.isConnected)
+    if (ttt->game.singlePlayer)
+    {
+        ttt->game.state = TGS_WAITING;
+        ttt->game.cpu.state = TCPU_THINKING;
+    }
+    else if (ttt->game.p2p.cnc.isConnected)
     {
         // Send move to the other swadge
         tttMsgPlaceMarker_t place = {
@@ -593,42 +618,47 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
     if (won || lost || drew)
     {
         // Record the outcome
-        if (won)
+        if (!ttt->game.singlePlayer)
         {
-            // Increment wins
-            ttt->wins++;
-            writeNvs32(tttWinKey, ttt->wins);
-            ttt->lastResult = TTR_WIN;
-
-            // Check for unlocked markers
-            for (int16_t mIdx = 0; mIdx < NUM_UNLOCKABLE_MARKERS; mIdx++)
+            // Don't give points for beating the computer!
+            // At least, not until it has a hard mode
+            if (won)
             {
-                // If the player got the required number of wins
-                if (markersUnlockedAtWins[mIdx] == ttt->wins)
+                // Increment wins
+                ttt->wins++;
+                writeNvs32(tttWinKey, ttt->wins);
+                ttt->lastResult = TTR_WIN;
+
+                // Check for unlocked markers
+                for (int16_t mIdx = 0; mIdx < NUM_UNLOCKABLE_MARKERS; mIdx++)
                 {
-                    // Unlock the next marker
-                    ttt->numUnlockedMarkers++;
-                    // Save to NVS
-                    writeNvs32(tttUnlockKey, ttt->numUnlockedMarkers);
-                    break;
+                    // If the player got the required number of wins
+                    if (markersUnlockedAtWins[mIdx] == ttt->wins)
+                    {
+                        // Unlock the next marker
+                        ttt->numUnlockedMarkers++;
+                        // Save to NVS
+                        writeNvs32(tttUnlockKey, ttt->numUnlockedMarkers);
+                        break;
+                    }
                 }
             }
-        }
-        else if (lost)
-        {
-            ttt->losses++;
-            writeNvs32(tttLossKey, ttt->losses);
-            ttt->lastResult = TTR_LOSE;
-        }
-        else if (drew)
-        {
-            ttt->draws++;
-            writeNvs32(tttDrawKey, ttt->draws);
-            ttt->lastResult = TTR_DRAW;
-        }
+            else if (lost)
+            {
+                ttt->losses++;
+                writeNvs32(tttLossKey, ttt->losses);
+                ttt->lastResult = TTR_LOSE;
+            }
+            else if (drew)
+            {
+                ttt->draws++;
+                writeNvs32(tttDrawKey, ttt->draws);
+                ttt->lastResult = TTR_DRAW;
+            }
 
-        // Stop p2p
-        p2pDeinit(&ttt->game.p2p);
+            // Stop p2p
+            p2pDeinit(&ttt->game.p2p);
+        }
 
         // Show the result
         tttShowUi(TUI_RESULT);
@@ -825,7 +855,14 @@ static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame)
  */
 static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt)
 {
-    return ttt->game.p2p.cnc.playOrder;
+    if (ttt->game.singlePlayer)
+    {
+        return GOING_FIRST;
+    }
+    else
+    {
+        return ttt->game.p2p.cnc.playOrder;
+    }
 }
 
 /**
@@ -973,6 +1010,11 @@ void tttDrawGame(ultimateTTT_t* ttt)
                 }
             }
         }
+    }
+
+    if (ttt->game.singlePlayer && ttt->game.state == TGS_WAITING)
+    {
+        tttCpuNextMove(ttt);
     }
 }
 
