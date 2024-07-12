@@ -63,6 +63,7 @@ typedef enum
 typedef enum
 {
     STATIC,
+    MOVING,
     MOVED,
     MERGED,
     NEW
@@ -277,8 +278,6 @@ static void t48SetCellState(int8_t idx, t48CellStateEnum_t st, int8_t startX, in
 static void t48ConvertCellState(void);
 
 static void t48DrawCellState(void);
-
-static void t48ResetSlideAnim(void);
 
 static void t48SetSlidingTile(int8_t idx, t48CellCoors_t start, t48CellCoors_t end, int32_t value);
 
@@ -756,7 +755,7 @@ static void t48SlideDown()
         {
             if (t48->boardArr[row][col] != 0)
             {
-                t48SetCellState(idx++, MOVED, row, col, row, T48_GRID_SIZE - 1 - i, t48->boardArr[row][col]);
+                t48SetCellState(idx++, MOVING, row, col, row, T48_GRID_SIZE - 1 - i, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
                 if (col != (T48_GRID_SIZE - i))
                 {
@@ -789,7 +788,7 @@ static void t48SlideUp()
                 {
                     updated = true;
                 }
-                t48SetCellState(idx++, MOVED, row, col, row, i, t48->boardArr[row][col]);
+                t48SetCellState(idx++, MOVING, row, col, row, i, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
             }
         }
@@ -814,7 +813,7 @@ static void t48SlideRight()
         {
             if (t48->boardArr[row][col] != 0)
             {
-                t48SetCellState(idx++, MOVED, row, col, T48_GRID_SIZE - 1 - i, col, t48->boardArr[row][col]);
+                t48SetCellState(idx++, MOVING, row, col, T48_GRID_SIZE - 1 - i, col, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
                 if (row != (T48_GRID_SIZE - i))
                 {
@@ -847,7 +846,7 @@ static void t48SlideLeft()
                 {
                     updated = true;
                 }
-                t48SetCellState(idx++, MOVED, row, col, i, col, t48->boardArr[row][col]);
+                t48SetCellState(idx++, MOVING, row, col, i, col, t48->boardArr[row][col]);
                 slice[i++] = t48->boardArr[row][col];
             }
         }
@@ -1064,7 +1063,12 @@ static void t48ResetCellState()
         t48->cellState[i].state      = STATIC;
         t48->cellState[i].value      = 0;
     }
-    t48ResetSlideAnim();
+    for (int8_t i = 0; i < T48_MAX_MERGES; i++)
+    {
+        t48->slidingTiles[i].speed    = 0;
+        t48->slidingTiles[i].value    = 0;
+        t48->slidingTiles[i].sequence = 0;
+    }
 }
 
 static void t48SetCellState(int8_t idx, t48CellStateEnum_t st, int8_t startX, int8_t startY, int8_t endX, int8_t endY,
@@ -1086,8 +1090,10 @@ static void t48ConvertCellState()
     {
         switch (t48->cellState[i].state)
         {
-            case MOVED:
+            case MOVING:
                 t48SetSlidingTile(idx++, t48->cellState[i].incoming, t48->cellState[i].end, t48->cellState[i].value);
+
+                t48->cellState[t48->cellState[i].end.x * T48_GRID_SIZE +  t48->cellState[i].end.y].state = MOVED;
                 break;
             case MERGED:
                 break;
@@ -1109,11 +1115,20 @@ static void t48DrawCellState()
     {
         t48ResetCellState();
     }
+    t48DrawSlidingTiles();
     for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
         switch (t48->cellState[i].state)
         {
             case STATIC:
+                int8_t row = i / T48_GRID_SIZE;
+                int8_t col = i % T48_GRID_SIZE;
+                t48DrawTileOnGrid(&t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
+                                  t48->boardArr[row][col]); // FIXME: Convert to CellState vars
+                break;
+            case MOVING:
+                break;
+            case MOVED:
                 if (t48->globalAnim > T48_MAX_SEQ)
                 {
                     int8_t row = i / T48_GRID_SIZE;
@@ -1129,17 +1144,6 @@ static void t48DrawCellState()
             default:
                 break;
         }
-    }
-    t48DrawSlidingTiles();
-}
-
-static void t48ResetSlideAnim()
-{
-    for (int8_t i = 0; i < T48_MAX_MERGES; i++)
-    {
-        t48->slidingTiles[i].speed    = 0;
-        t48->slidingTiles[i].value    = 0;
-        t48->slidingTiles[i].sequence = 0;
     }
 }
 
