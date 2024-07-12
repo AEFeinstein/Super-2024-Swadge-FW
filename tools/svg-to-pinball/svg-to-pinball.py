@@ -5,6 +5,7 @@ from svgelements import Point
 from svgelements import Circle
 from math import sqrt, pow
 
+
 def extractCircles(gs: list) -> list[str]:
     """Recursively extract all circles from this list of SVG things
 
@@ -51,6 +52,7 @@ def extractPaths(gs: list) -> list[str]:
             print('Found ' + str(type(g)) + ' when extracting Paths')
     return lines
 
+
 def extractFlippers(gs: list) -> list[str]:
     """Recursively extract all flippers (groups of circles and paths) from this list of SVG things
 
@@ -85,11 +87,14 @@ def extractFlippers(gs: list) -> list[str]:
         else:
             facingRight = False
 
-        flipperLen = sqrt(pow(pivot.cx - tip.cx, 2) + pow(pivot.cy - tip.cy, 2))
+        flipperLen = sqrt(pow(pivot.cx - tip.cx, 2) +
+                          pow(pivot.cy - tip.cy, 2))
 
-        lines.append('  pivot (%d, %d), pr %d, tr %d, len %d, facingRight %s' % (pivot.cx, pivot.cy, pivot.rx, tip.rx, flipperLen, facingRight))
+        lines.append('  {.cPivot = {.pos = {.x = %d, .y = %d}, .radius = %d}, .tRadius = %d, .len = %d, .facingRight = %s},' % (
+            pivot.cx, pivot.cy, pivot.rx, tip.rx, flipperLen, 'true' if facingRight else 'false'))
 
     return lines
+
 
 def main():
     # Load the SVG
@@ -99,17 +104,17 @@ def main():
     cstr = ''
 
     # Extract walls
-    cstr += 'lineFl_t walls[] = {\n'
+    cstr += 'static const lineFl_t constWalls[] = {\n'
     cstr += '\n'.join(extractPaths(g.objects['Walls']))
     cstr += '\n};\n\n'
 
     # Extract bumpers
-    cstr += 'circleFl_t bumpers[] = {\n'
+    cstr += 'static const circleFl_t constBumpers[] = {\n'
     cstr += '\n'.join(extractCircles(g.objects['Bumpers']))
     cstr += '\n};\n\n'
 
     # Extract flippers
-    cstr += 'flippers[] = {\n'
+    cstr += 'static const flipperFl_t constFlippers[] = {\n'
     cstr += '\n'.join(extractFlippers(g.objects['Flippers']))
     cstr += '\n};'
 
