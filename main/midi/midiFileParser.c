@@ -5,6 +5,7 @@
 #include "midiFileParser.h"
 #include "midiPlayer.h"
 #include "heatshrink_helper.h"
+#include "hdw-spiffs.h"
 
 #include <esp_log.h>
 #include <esp_heap_caps.h>
@@ -746,7 +747,45 @@ static void readFirstEvents(midiFileReader_t* reader)
 bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 {
     uint32_t size;
-    uint8_t* data = readHeatshrinkFile(name, &size, spiRam);
+    size_t raw_size;
+    uint8_t* data = spiffsReadFile(name, &raw_size, spiRam);
+
+    if (NULL != data)
+    {
+        if (raw_size < sizeof(midiHeader) || memcmp(data, midiHeader, sizeof(midiHeader)))
+        {
+            // This is not a MIDI file! Try to decompress
+            if (heatshrinkDecompress(NULL, &size, data, (uint32_t)raw_size))
+            {
+                // Size was read successfully, allocate the non-compressed buffer
+                uint8_t* decompressed = heap_caps_malloc(size, spiRam ? MALLOC_CAP_SPIRAM : 0);
+                if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
+                {
+                    // Success, free the raw data
+                    free(data);
+                    data = decompressed;
+                }
+                else
+                {
+                    free(decompressed);
+                    free(data);
+                    return false;
+                }
+            }
+            else
+            {
+                ESP_LOGE("MIDIFileParser", "Song %s could not be decompressed!", name);
+                free(data);
+                return false;
+            }
+        }
+        else
+        {
+            ESP_LOGI("MIDIFileParser", "Song %s is loaded uncompressed", name);
+            size = (uint32_t)raw_size;
+        }
+    }
+
     if (data != NULL)
     {
         ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", name, size);
