@@ -263,7 +263,6 @@ LIBRARY_FLAGS += \
 	-static-libstdc++
 else
 LIBRARY_FLAGS += \
-	-framework AudioToolbox
     -framework Foundation \
 	-framework CoreFoundation \
 	-framework CoreMIDI \
