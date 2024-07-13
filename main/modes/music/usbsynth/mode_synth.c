@@ -11,6 +11,9 @@
 #include "shapes.h"
 #include "trigonometry.h"
 #include "linked_list.h"
+#include "wheel_menu.h"
+#include "hdw-nvs.h"
+#include "textEntry.h"
 
 #include "midiPlayer.h"
 #include "midiFileParser.h"
@@ -23,6 +26,43 @@
 #define NUM_FRAME_TIMES 60
 
 #define VIZ_SAMPLE_COUNT 512
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    SS_VIEW = 0,
+    SS_MENU,
+    SS_FILE_SELECT,
+} synthScreen_t;
+
+typedef enum
+{
+    /// @brief D-pad selects note/channel and A/B play/stop
+    BM_NOTE,
+    /// @brief D-pad LR skips, UD changes tempo, A plays/pauses, B stops
+    BM_PLAYBACK,
+} synthButtonMode_t;
+
+typedef enum
+{
+    /// @brief Touchpad acts as pitch bend wheel
+    TM_PITCH,
+    /// @brief Touchpad scrubs through a song
+    TM_SCRUB,
+}
+synthTouchMode_t;
+
+typedef enum
+{
+    VM_PRETTY  = 0,
+    VM_TEXT    = 1,
+    VM_GRAPH   = 2,
+    VM_PACKETS = 4,
+    VM_VIZ     = 8,
+} synthViewMode_t;
 
 //==============================================================================
 // Structs
@@ -52,6 +92,8 @@ typedef struct
     midiFile_t midiFile;
     midiPlayer_t midiPlayer;
     bool fileMode;
+    const char* filename;
+    bool customFile;
 
     bool localPitch;
     uint16_t pitch;
@@ -68,13 +110,10 @@ typedef struct
     uint8_t graphColor;
     uint8_t localChannel;
 
-    enum
-    {
-        VM_PRETTY  = 0,
-        VM_TEXT    = 1,
-        VM_GRAPH   = 2,
-        VM_PACKETS = 4,
-    } viewMode;
+    synthScreen_t screen;
+    synthViewMode_t viewMode;
+    synthButtonMode_t buttonMode;
+    synthTouchMode_t touchMode;
 
     wsg_t instrumentImages[16];
     wsg_t percussionImage;
@@ -84,6 +123,11 @@ typedef struct
 
     list_t midiTexts;
     uint64_t nextExpiry;
+
+    menu_t* menu;
+    menuManiaRenderer_t* renderer;
+    wheelMenuRenderer_t* wheelMenu;
+    rectangle_t wheelTextArea;
 } synthData_t;
 
 //==============================================================================
@@ -95,6 +139,13 @@ static void synthExitMode(void);
 static void synthMainLoop(int64_t elapsedUs);
 static void synthDacCallback(uint8_t* samples, int16_t len);
 
+static void synthSetupMenu(void);
+static void synthSetFile(const char* filename);
+static void synthHandleButton(const buttonEvt_t evt);
+static void synthHandleInput(void);
+
+static void drawSynthMode(void);
+static void drawMidiText(void);
 static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h);
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
                             int16_t height);
@@ -102,6 +153,7 @@ static void drawSampleGraph(void);
 static void drawSampleGraphCircular(void);
 static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text);
 static void midiTextCallback(metaEventType_t type, const char* text, uint32_t length);
+static void synthMenuCb(const char* label, bool selected, uint32_t value);
 
 //==============================================================================
 // Variabes
@@ -336,6 +388,112 @@ static const paletteColor_t noteColors[] = {
     c503, // B  - Pink
 };
 
+static const char* builtInSongs[] = {
+    "credits.mid",
+    "jingle.mid",
+    "item.mid",
+    "gmcc.mid",
+    "block1.mid",
+    "block2.mid",
+    "Follinesque.mid",
+    "yalikejazz.mid",
+    "Fairy_Fountain.mid",
+    "ode.mid",
+    "Fauxrio_Kart.mid",
+    "gamecube.mid",
+    "banana.mid",
+    "stereo.mid",
+    "hotrod.mid",
+    "stereo_test.mid",
+};
+
+// Menu stuff
+static const char* menuItemPlayMode = "MIDI Mode: ";
+static const char* menuItemSelectFile = "Select File...";
+static const char* menuItemCustomSong = "Custom Song";
+static const char* menuItemViewMode = "View Mode: ";
+static const char* menuItemButtonMode = "Button Controls: ";
+static const char* menuItemTouchMode = "Touchpad Controls: ";
+
+static const char*const nvsKeyMode = "synth_playmode";
+static const char*const nvsKeyViewMode = "synth_viewmode";
+static const char*const nvsKeyButtonMode = "synth_btnmode";
+static const char*const nvsKeyTouchMode  = "synth_touchmode";
+
+static const char* menuItemModeOptions[] = {
+    "MIDI Streaming",
+    "MIDI File",
+};
+
+static const char* menuItemViewOptions[] = {
+    "Pretty",
+    "Visualizer",
+    "Waveform",
+    "Waveform+Table",
+    "Waveform+Packets",
+    "Table",
+    "Packets",
+};
+
+static const char* menuItemButtonOptions[] = {
+    "Play Note",
+};
+
+static const char* menuItemTouchOptions[] = {
+    "Pitch Bend",
+};
+
+static const int32_t menuItemModeValues[] = {
+    0,
+    1,
+};
+
+static const int32_t menuItemViewValues[] = {
+    (int32_t)VM_PRETTY,
+    (int32_t)VM_VIZ,
+    (int32_t)VM_GRAPH,
+    (int32_t)(VM_GRAPH | VM_TEXT),
+    (int32_t)(VM_GRAPH | VM_PACKETS),
+    (int32_t)VM_TEXT,
+    (int32_t)VM_PACKETS,
+};
+
+static const int32_t menuItemButtonValues[] = {
+    (int32_t)BM_NOTE,
+};
+
+static const int32_t menuItemTouchValues[] = {
+    (int32_t)TM_PITCH,
+};
+
+static settingParam_t menuItemModeBounds = {
+    .def = 0,
+    .min = 0,
+    .max = 1,
+    .key = nvsKeyMode,
+};
+
+static settingParam_t menuItemViewBounds = {
+    .def = VM_PRETTY,
+    .min = VM_PRETTY,
+    .max = (VM_VIZ << 1) - 1,
+    .key = nvsKeyViewMode,
+};
+
+static settingParam_t menuItemButtonBounds = {
+    .def = BM_NOTE,
+    .min = BM_NOTE,
+    .max = BM_NOTE,
+    .key = nvsKeyButtonMode,
+};
+
+static settingParam_t menuItemTouchBounds = {
+    .def = TM_PITCH,
+    .min = TM_PITCH,
+    .max = TM_PITCH,
+    .key = nvsKeyTouchMode,
+};
+
 const char synthModeName[] = "USB MIDI Synth";
 
 swadgeMode_t synthMode = {
@@ -371,7 +529,50 @@ static void synthEnterMode(void)
     sd->longestProgramName = gmProgramNames[24];
     sd->nextExpiry         = 200000;
 
-    sd->fileMode = false;
+    // Read all the NVS values
+    int32_t nvsRead = 0;
+    // Playback Mode
+    if (!readNvs32(nvsKeyMode, &nvsRead))
+    {
+        nvsRead = 0;
+    }
+    sd->fileMode = nvsRead ? true : false;
+
+    // View mode
+    if (!readNvs32(nvsKeyViewMode, &nvsRead))
+    {
+        nvsRead = (int32_t)VM_PRETTY;
+    }
+    sd->viewMode = (synthViewMode_t)nvsRead;
+
+    // Button mode
+    if (!readNvs32(nvsKeyButtonMode, &nvsRead))
+    {
+        nvsRead = (int32_t)BM_NOTE;
+    }
+    sd->buttonMode = (synthButtonMode_t)nvsRead;
+
+    // Touch mode
+    if (!readNvs32(nvsKeyTouchMode, &nvsRead))
+    {
+        nvsRead = (int32_t)TM_PITCH;
+    }
+    sd->touchMode = (synthTouchMode_t)nvsRead;
+
+    sd->screen = SS_VIEW;
+
+    sd->menu = initMenu("Synth", synthMenuCb);
+    // Use smol font for men items, there might be a lot
+    sd->renderer = initMenuManiaRenderer(NULL, NULL, &sd->font);
+
+    sd->wheelTextArea.pos.x = 15;
+    sd->wheelTextArea.pos.y = TFT_HEIGHT - sd->font.height * 2 - 2 - 15;
+    sd->wheelTextArea.width = TFT_WIDTH - 30;
+    sd->wheelTextArea.height = sd->font.height * 2 + 2;
+    sd->wheelMenu = initWheelMenu(&sd->font, 90, &sd->wheelTextArea);
+
+    synthSetupMenu();
+
     if (sd->fileMode)
     {
         if (loadMidiFile("stereo.mid", &sd->midiFile, true))
@@ -431,8 +632,21 @@ static void synthExitMode(void)
     {
         freeWsg(&sd->instrumentImages[i]);
     }
+
+    deinitWheelMenu(sd->wheelMenu);
+    deinitMenuManiaRenderer(sd->renderer);
+    deinitMenu(sd->menu);
+
     unloadMidiFile(&sd->midiFile);
     midiPlayerReset(&sd->midiPlayer);
+
+    // Unload the filename if it was dynamic
+    if (sd->customFile && sd->filename)
+    {
+        sd->customFile = false;
+        free(sd->filename);
+    }
+
     freeFont(&sd->font);
     free(sd);
     sd = NULL;
@@ -440,72 +654,215 @@ static void synthExitMode(void)
 
 static void synthMainLoop(int64_t elapsedUs)
 {
-    // Blank the screen
-    clearPxTft();
-
-    if (!sd->installed || sd->err != 0)
+    if (sd->screen == SS_MENU)
     {
-        drawText(&sd->font, c500, "ERROR!", 60, 60);
+        drawMenuMania(sd->menu, sd->renderer, elapsedUs);
     }
-    else if (!sd->startupSeqComplete && !sd->fileMode)
+    else if (sd->screen == SS_FILE_SELECT)
     {
-        sd->noteTime -= elapsedUs;
-
-        if (!sd->startupDrums)
+        if (!textEntryDraw(elapsedUs))
         {
-            if (sd->noteTime <= 0)
+            // Entry is finished
+            if (sd->filename)
             {
-                if (sd->startSilence)
+                if (*sd->filename)
                 {
-                    if (sd->startupNote == 0x7f)
+                    synthSetFile(sd->filename);
+                    if (sd->fileMode)
                     {
-                        sd->startupDrums = true;
-                        sd->startSilence = true;
-                        sd->startupNote  = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
-                        // give the drums a second
-                        sd->noteTime = 1000000;
+                        // Setting file succeeded
+                        sd->customFile = true;
+                    }
+                }
+            }
+            else if (sd->customFile)
+            {
+                free(sd->filename);
+                sd->fileMode = false;
+                sd->filename = NULL;
+            }
+            sd->screen = SS_VIEW;
+        }
+    }
+    else if (sd->screen == SS_VIEW)
+    {
+        // Blank the screen
+        clearPxTft();
+
+        if (!sd->fileMode && (!sd->installed || sd->err != 0))
+        {
+            drawText(&sd->font, c500, "ERROR!", 60, 60);
+        }
+        else if (!sd->startupSeqComplete && !sd->fileMode)
+        {
+            sd->noteTime -= elapsedUs;
+
+            if (!sd->startupDrums)
+            {
+                if (sd->noteTime <= 0)
+                {
+                    if (sd->startSilence)
+                    {
+                        if (sd->startupNote == 0x7f)
+                        {
+                            sd->startupDrums = true;
+                            sd->startSilence = true;
+                            sd->startupNote  = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
+                            // give the drums a second
+                            sd->noteTime = 1000000;
+                        }
+                        else
+                        {
+                            // 50ms of note
+                            midiNoteOn(&sd->midiPlayer, 0, ++sd->startupNote, 0x7f);
+                            sd->noteTime = 50000;
+                        }
                     }
                     else
                     {
-                        // 50ms of note
-                        midiNoteOn(&sd->midiPlayer, 0, ++sd->startupNote, 0x7f);
-                        sd->noteTime = 50000;
+                        midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
+                        // 25ms of silence between the notes
+                        sd->noteTime = 25000;
+                    }
+                    sd->startSilence = !sd->startSilence;
+                }
+            }
+            else
+            {
+                if (sd->noteTime <= 0)
+                {
+                    // Just play each drum note with a quarter-second gap between
+                    midiNoteOn(&sd->midiPlayer, 9, sd->startupNote++, 0x7f);
+                    sd->noteTime = 250000;
+
+                    if (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= sd->startupNote && sd->startupNote <= OPEN_TRIANGLE)
+                    {
+                        const char* drumName = gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM];
+                        midiTextCallback(TEXT, drumName, strlen(drumName));
+                    }
+
+                    if (sd->startupNote > OPEN_TRIANGLE)
+                    {
+                        sd->startupSeqComplete = true;
                     }
                 }
-                else
-                {
-                    midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
-                    // 25ms of silence between the notes
-                    sd->noteTime = 25000;
-                }
-                sd->startSilence = !sd->startSilence;
             }
+        }
+
+        drawSynthMode();
+    }
+
+    // Delete any expired texts -- but only every so often, to prevent it from being weird and jumpy
+    uint64_t now = esp_timer_get_time();
+    if (now >= sd->nextExpiry)
+    {
+        node_t* curNode = sd->midiTexts.first;
+        while (curNode != NULL)
+        {
+            midiTextInfo_t* curInfo = curNode->val;
+            if (curInfo->expiration <= now)
+            {
+                node_t* tmp             = curNode->next;
+                midiTextInfo_t* removed = removeEntry(&sd->midiTexts, curNode);
+                if (removed)
+                {
+                    free(removed);
+                }
+                curNode = tmp;
+            }
+            else
+            {
+                curNode = curNode->next;
+            }
+        }
+
+        sd->nextExpiry = now + 2000000;
+    }
+
+    // just a little scope for the frame timer I stole from pinball
+    {
+        int32_t startIdx  = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
+        uint32_t tElapsed = sd->frameTimes[sd->frameTimesIdx] - sd->frameTimes[startIdx];
+        if (0 != tElapsed)
+        {
+            uint32_t fps = (1000000 * NUM_FRAME_TIMES) / tElapsed;
+
+            char tmp[16];
+            snprintf(tmp, sizeof(tmp) - 1, "%" PRIu32, fps);
+            drawText(&sd->font, c555, tmp, 35, 2);
+        }
+    }
+
+    synthHandleInput();
+
+    sd->frameTimesIdx                 = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
+    sd->frameTimes[sd->frameTimesIdx] = esp_timer_get_time();
+}
+
+static void synthSetupMenu(void)
+{
+    addSettingsOptionsItemToMenu(sd->menu, menuItemPlayMode, menuItemModeOptions, menuItemModeValues, 2, &menuItemModeBounds, sd->fileMode);
+
+    sd->menu = startSubMenu(sd->menu, menuItemSelectFile);
+    addSingleItemToMenu(sd->menu, menuItemCustomSong);
+    for (int i = 0; i < ARRAY_SIZE(builtInSongs); i++)
+    {
+        addSingleItemToMenu(sd->menu, builtInSongs[i]);
+    }
+    sd->menu = endSubMenu(sd->menu);
+
+    addSettingsOptionsItemToMenu(sd->menu, menuItemViewMode, menuItemViewOptions, menuItemViewValues, ARRAY_SIZE(menuItemViewValues), &menuItemViewBounds, sd->viewMode);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemButtonMode, menuItemButtonOptions, menuItemButtonValues, ARRAY_SIZE(menuItemButtonValues), &menuItemButtonBounds, sd->buttonMode);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemTouchMode, menuItemTouchOptions, menuItemTouchValues, ARRAY_SIZE(menuItemTouchValues), &menuItemTouchBounds, sd->touchMode);
+}
+
+static void synthSetFile(const char* filename)
+{
+    // First: stop and reset the MIDI player
+    midiPlayerReset(&sd->midiPlayer);
+
+    // Next: Free any text that might reference the song file still
+    midiTextInfo_t* textInfo = NULL;
+    while (NULL != (textInfo = pop(&sd->midiTexts)))
+    {
+        free(textInfo);
+    }
+
+    // Finally: Unload the MIDI file itself
+    unloadMidiFile(&sd->midiFile);
+
+    if (NULL != filename)
+    {
+        // Cleanup done, now load the new file
+        if (loadMidiFile(filename, &sd->midiFile, true))
+        {
+            sd->fileMode = true;
+
+            midiSetFile(&sd->midiPlayer, &sd->midiFile);
+
+            // And tell it to play immediately
+            midiPause(&sd->midiPlayer, false);
         }
         else
         {
-            if (sd->noteTime <= 0)
-            {
-                // Just play each drum note with a quarter-second gap between
-                midiNoteOn(&sd->midiPlayer, 9, sd->startupNote++, 0x7f);
-                sd->noteTime = 250000;
-
-                if (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= sd->startupNote && sd->startupNote <= OPEN_TRIANGLE)
-                {
-                    const char* drumName = gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM];
-                    midiTextCallback(TEXT, drumName, strlen(drumName));
-                }
-
-                if (sd->startupNote > OPEN_TRIANGLE)
-                {
-                    sd->startupSeqComplete = true;
-                }
-            }
+            // We failed to open the file
+            sd->fileMode = false;
+            const char* msg = "Failed to open MIDI file!";
+            midiTextCallback(TEXT, msg, strlen(msg));
         }
+    }
+}
+
+static void drawSynthMode(void)
+{
+    if (sd->viewMode & VM_VIZ)
+    {
+        drawSampleGraphCircular();
     }
 
     if (sd->viewMode & VM_GRAPH)
     {
-        drawSampleGraphCircular();
+        drawSampleGraph();
     }
 
 #define IS_DRUM(note) ((ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= note) && (note <= OPEN_TRIANGLE))
@@ -580,69 +937,7 @@ static void synthMainLoop(int64_t elapsedUs)
         snprintf(tempoStr, sizeof(tempoStr), "%" PRIu32 " BPM", (60000000 / sd->midiPlayer.tempo));
         drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 35, 3);
 
-        int msgLen = 0;
-        char textMessages[1024];
-        textMessages[0] = '\0';
-
-        paletteColor_t midiTextColor = c550;
-        bool colorSet                = false;
-
-        node_t* curNode = sd->midiTexts.first;
-        while (curNode != NULL && msgLen + 1 < sizeof(textMessages))
-        {
-            midiTextInfo_t* curInfo = curNode->val;
-
-            if (!colorSet)
-            {
-                switch (curInfo->type)
-                {
-                    case TEXT:
-                        midiTextColor = c555;
-                        break;
-
-                    case COPYRIGHT:
-                        midiTextColor = c050;
-                        break;
-
-                    case SEQUENCE_OR_TRACK_NAME:
-                    case INSTRUMENT_NAME:
-                        midiTextColor = c005;
-                        break;
-
-                    case LYRIC:
-                        midiTextColor = c550;
-                        break;
-
-                    case MARKER:
-                    case CUE_POINT:
-                    default:
-                        midiTextColor = c333;
-                        break;
-                }
-
-                colorSet = true;
-            }
-
-            if (*textMessages != '\0')
-            {
-                if (*curInfo->text == '/' || *curInfo->text == '\\')
-                {
-                    textMessages[msgLen++] = '\n';
-                }
-                else if (*curInfo->text != ' ')
-                {
-                    textMessages[msgLen++] = ' ';
-                }
-            }
-            msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo);
-
-            curNode = curNode->next;
-        }
-        textMessages[msgLen] = '\0';
-
-        int16_t x = 18;
-        int16_t y = 80;
-        drawTextWordWrap(&sd->font, midiTextColor, textMessages, &x, &y, TFT_WIDTH - 18, TFT_HEIGHT - 60);
+        drawMidiText();
     }
     else
     {
@@ -652,92 +947,100 @@ static void synthMainLoop(int64_t elapsedUs)
         drawText(&sd->font, c500, countsBuf, TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15,
                  TFT_HEIGHT - sd->font.height - 15);
     }
+}
 
-    // Delete any expired texts -- but only every so often, to prevent it from being weird and jumpy
-    uint64_t now = esp_timer_get_time();
-    if (now >= sd->nextExpiry)
+static void drawMidiText(void)
+{
+    int msgLen = 0;
+    char textMessages[1024];
+    textMessages[0] = '\0';
+
+    paletteColor_t midiTextColor = c550;
+    bool colorSet                = false;
+
+    node_t* curNode = sd->midiTexts.first;
+    while (curNode != NULL && msgLen + 1 < sizeof(textMessages))
     {
-        node_t* curNode = sd->midiTexts.first;
-        while (curNode != NULL)
+        midiTextInfo_t* curInfo = curNode->val;
+
+        if (!colorSet)
         {
-            midiTextInfo_t* curInfo = curNode->val;
-            if (curInfo->expiration <= now)
+            switch (curInfo->type)
             {
-                node_t* tmp             = curNode->next;
-                midiTextInfo_t* removed = removeEntry(&sd->midiTexts, curNode);
-                if (removed)
-                {
-                    free(removed);
-                }
-                curNode = tmp;
+                case TEXT:
+                    midiTextColor = c555;
+                    break;
+
+                case COPYRIGHT:
+                    midiTextColor = c050;
+                    break;
+
+                case SEQUENCE_OR_TRACK_NAME:
+                case INSTRUMENT_NAME:
+                    midiTextColor = c005;
+                    break;
+
+                case LYRIC:
+                    midiTextColor = c550;
+                    break;
+
+                case MARKER:
+                case CUE_POINT:
+                default:
+                    midiTextColor = c333;
+                    break;
             }
-            else
-            {
-                curNode = curNode->next;
-            }
+
+            colorSet = true;
         }
 
-        sd->nextExpiry = now + 2000000;
+        if (*textMessages != '\0')
+        {
+            if (*curInfo->text == '/' || *curInfo->text == '\\')
+            {
+                textMessages[msgLen++] = '\n';
+            }
+            else if (*curInfo->text != ' ')
+            {
+                textMessages[msgLen++] = ' ';
+            }
+        }
+        msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo);
+
+        curNode = curNode->next;
     }
+    textMessages[msgLen] = '\0';
 
-    // just a little scope for the frame timer I stole from pinball
+    int16_t x = 18;
+    int16_t y = 80;
+    drawTextWordWrap(&sd->font, midiTextColor, textMessages, &x, &y, TFT_WIDTH - 18, TFT_HEIGHT - 60);
+}
+
+static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h)
+{
+    uint16_t pitch = sd->midiPlayer.channels[chIdx].pitchBend;
+
+    if (pitch != 0x2000)
     {
-        int32_t startIdx  = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
-        uint32_t tElapsed = sd->frameTimes[sd->frameTimesIdx] - sd->frameTimes[startIdx];
-        if (0 != tElapsed)
-        {
-            uint32_t fps = (1000000 * NUM_FRAME_TIMES) / tElapsed;
-
-            char tmp[16];
-            snprintf(tmp, sizeof(tmp) - 1, "%" PRIu32, fps);
-            drawText(&sd->font, c555, tmp, 35, 2);
-        }
+        int16_t deg   = (360 + ((pitch - 0x2000) * 90 / 0x1FFF)) % 360;
+        int16_t lineY = y + h / 2 - (h * getSin1024(deg) / 2048);
+        drawRect(x, y, x + w, y + h + 1, c555);
+        drawLineFast(x + 1, lineY, x + w - 2, lineY, c500);
     }
+}
 
-    int32_t phi, r, intensity;
-    if (getTouchJoystick(&phi, &r, &intensity))
-    {
-        int32_t x, y;
-        getTouchCartesian(phi, r, &x, &y);
-        uint16_t pitch = (0x3FFF * y) / 1023;
-        sd->localPitch = true;
-        if (pitch != sd->pitch)
-        {
-            sd->pitch = pitch;
-            for (uint8_t ch = 0; ch < 16; ch++)
-            {
-                midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
-            }
-        }
-    }
-    else if (sd->localPitch)
-    {
-        sd->localPitch = false;
-        sd->pitch      = 0x2000;
-        for (uint8_t ch = 0; ch < 16; ch++)
-        {
-            midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
-        }
-    }
+static void synthDacCallback(uint8_t* samples, int16_t len)
+{
+    midiPlayerFillBuffer(&sd->midiPlayer, samples, len);
+    memcpy(sd->lastSamples, samples, MIN(len, VIZ_SAMPLE_COUNT));
+    sd->sampleCount = MIN(len, VIZ_SAMPLE_COUNT);
+}
 
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
+static void synthHandleButton(const buttonEvt_t evt)
+{
+    if (sd->buttonMode == BM_NOTE)
     {
-        if (evt.down && !sd->startupSeqComplete)
-        {
-            if (!sd->startupDrums)
-            {
-                midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
-                sd->startupDrums = true;
-                sd->startupNote  = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
-            }
-            else
-            {
-                midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
-                sd->startupSeqComplete = true;
-            }
-        }
-        else if (evt.down && sd->startupSeqComplete)
+        if (evt.down)
         {
             // let us play notes
             switch (evt.button)
@@ -771,30 +1074,6 @@ static void synthMainLoop(int64_t elapsedUs)
                     break;
                 case PB_START:
                 {
-                    if (sd->viewMode == VM_PRETTY)
-                    {
-                        sd->viewMode = VM_GRAPH;
-                    }
-                    else if (sd->viewMode == VM_GRAPH)
-                    {
-                        sd->viewMode |= VM_TEXT;
-                    }
-                    else if (sd->viewMode == (VM_GRAPH | VM_TEXT))
-                    {
-                        sd->viewMode = (VM_GRAPH | VM_PACKETS);
-                    }
-                    else if (sd->viewMode == (VM_GRAPH | VM_PACKETS))
-                    {
-                        sd->viewMode = VM_TEXT;
-                    }
-                    else if (sd->viewMode == VM_TEXT)
-                    {
-                        sd->viewMode = VM_PACKETS;
-                    }
-                    else if (sd->viewMode == VM_PACKETS)
-                    {
-                        sd->viewMode = VM_PRETTY;
-                    }
                     break;
                 }
 
@@ -818,29 +1097,96 @@ static void synthMainLoop(int64_t elapsedUs)
             }
         }
     }
-
-    sd->frameTimesIdx                 = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
-    sd->frameTimes[sd->frameTimesIdx] = esp_timer_get_time();
 }
 
-static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h)
+static void synthHandleInput(void)
 {
-    uint16_t pitch = sd->midiPlayer.channels[chIdx].pitchBend;
-
-    if (pitch != 0x2000)
+    int32_t phi, r, intensity;
+    if (getTouchJoystick(&phi, &r, &intensity))
     {
-        int16_t deg   = (360 + ((pitch - 0x2000) * 90 / 0x1FFF)) % 360;
-        int16_t lineY = y + h / 2 - (h * getSin1024(deg) / 2048);
-        drawRect(x, y, x + w, y + h + 1, c555);
-        drawLineFast(x + 1, lineY, x + w - 2, lineY, c500);
-    }
-}
+        int32_t x, y;
+        getTouchCartesian(phi, r, &x, &y);
 
-static void synthDacCallback(uint8_t* samples, int16_t len)
-{
-    midiPlayerFillBuffer(&sd->midiPlayer, samples, len);
-    memcpy(sd->lastSamples, samples, MIN(len, VIZ_SAMPLE_COUNT));
-    sd->sampleCount = MIN(len, VIZ_SAMPLE_COUNT);
+        if (sd->touchMode == TM_PITCH)
+        {
+            uint16_t pitch = (0x3FFF * y) / 1023;
+            sd->localPitch = true;
+            if (pitch != sd->pitch)
+            {
+                sd->pitch = pitch;
+                for (uint8_t ch = 0; ch < 16; ch++)
+                {
+                    midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
+                }
+            }
+        }
+    }
+    else if (sd->touchMode == TM_PITCH && sd->localPitch)
+    {
+        // Touchpad released after we set local pitch value
+        sd->localPitch = false;
+        sd->pitch      = 0x2000;
+        for (uint8_t ch = 0; ch < 16; ch++)
+        {
+            midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
+        }
+    }
+
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down && !sd->startupSeqComplete)
+        {
+            if (!sd->startupDrums)
+            {
+                midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
+                sd->startupDrums = true;
+                sd->startupNote  = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
+            }
+            else
+            {
+                midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
+                sd->startupSeqComplete = true;
+            }
+        }
+        else if (sd->startupSeqComplete)
+        {
+            switch (sd->screen)
+            {
+                case SS_VIEW:
+                {
+                    if (evt.down && evt.button == PB_START)
+                    {
+                        sd->screen = SS_MENU;
+                    }
+                    synthHandleButton(evt);
+                    break;
+                }
+
+                case SS_MENU:
+                {
+                    if (evt.down && evt.button == PB_START)
+                    {
+                        sd->screen = SS_VIEW;
+                    }
+                    else
+                    {
+                            sd->menu = menuButton(sd->menu, evt);
+                    }
+                    break;
+                }
+
+                case SS_FILE_SELECT:
+                {
+                    if (evt.down)
+                    {
+                        textEntryInput(evt.down, evt.button);
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 static paletteColor_t noteToColor(uint8_t note)
@@ -994,5 +1340,126 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
         info->expiration = esp_timer_get_time() + 5000000;
 
         push(&sd->midiTexts, info);
+    }
+}
+
+static void synthMenuCb(const char* label, bool selected, uint32_t value)
+{
+    printf("%s %s value=%" PRIu32 "\n", label, selected ? "selected" : "scrolled to", value);
+    if (label == menuItemPlayMode)
+    {
+        if (selected && value != sd->fileMode)
+        {
+            if (value)
+            {
+                sd->fileMode = true;
+
+                // fileMode
+                if (sd->filename != NULL)
+                {
+                    synthSetFile(sd->filename);
+                    if (sd->fileMode)
+                    {
+                        // Loading was successful
+                        if (sd->customFile && sd->filename)
+                        {
+                            free(sd->filename);
+                        }
+
+                        sd->filename = label;
+                        sd->customFile = false;
+                    }
+                }
+                else
+                {
+                    // Open the file select menu
+                    sd->menu = menuNavigateToItem(sd->menu, menuItemSelectFile);
+                    sd->menu = menuSelectCurrentItem(sd->menu);
+                }
+            }
+            else
+            {
+                sd->fileMode = false;
+
+                // not file mode
+                synthSetFile(NULL);
+            }
+        }
+    }
+    else if (label == menuItemViewMode)
+    {
+        sd->viewMode = (synthViewMode_t)value;
+        if (selected)
+        {
+            sd->screen = SS_VIEW;
+        }
+    }
+    else if (label == menuItemButtonMode)
+    {
+        sd->buttonMode = (synthButtonMode_t)value;
+        if (selected)
+        {
+            sd->screen = SS_VIEW;
+        }
+    }
+    else if (label == menuItemTouchMode)
+    {
+        sd->touchMode = (synthTouchMode_t)value;
+        if (selected)
+        {
+            sd->screen = SS_VIEW;
+        }
+    }
+    else if (label == menuItemCustomSong)
+    {
+        if (selected)
+        {
+            sd->screen = SS_FILE_SELECT;
+            if (sd->filename && sd->customFile)
+            {
+                free(sd->filename);
+            }
+
+            sd->customFile = true;
+            char* textBuffer = calloc(1, 128);
+            sd->filename = textBuffer;
+
+            if (!textBuffer)
+            {
+                ESP_LOGE("Synth", "Could not allocate memory for text buffer!");
+            }
+            else
+            {
+                sd->filename = textBuffer;
+                textEntryInit(&sd->font, 128, textBuffer);
+            }
+        }
+    }
+    else
+    {
+        // Song items
+        if (selected)
+        {
+            for (int i = 0; i < ARRAY_SIZE(builtInSongs); i++)
+            {
+                if (builtInSongs[i] == label)
+                {
+                    synthSetFile(label);
+
+                    if (sd->fileMode)
+                    {
+                        if (sd->customFile && sd->filename)
+                        {
+                            free(sd->filename);
+                        }
+
+                        sd->filename = builtInSongs[i];
+                    }
+
+                    sd->screen = SS_VIEW;
+                    break;
+                }
+            }
+        }
     }
 }
