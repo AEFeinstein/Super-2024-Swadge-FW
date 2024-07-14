@@ -520,18 +520,14 @@ int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* te
     }
 
     int16_t offset = *timer / MARQUEE_SPEED;
-    // Pause here instead of looping:
-    /*if (offset > -(xMax - textW - xOff - 1))
-    {
-        offset = -(xMax - textW - xOff - 1);
-    }*/
     int16_t endX = drawTextBounds(font, color, text, xOff - offset, yOff, xOff, 0, xMax, TFT_HEIGHT);
-    int16_t endStart = endX + gapW; //xMax + textW + gapW - offset;
-    printf("End of first text is %" PRId16 ", start of next is %" PRId16 "\n", endX, endStart);
+    int16_t endStart = endX + gapW;
+
     if (endStart < xMax)
     {
         return drawTextBounds(font, color, text, endStart, yOff, xOff, 0, xMax, TFT_HEIGHT);
     }
+
     return endX;
 }
 
