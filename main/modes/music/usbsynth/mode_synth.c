@@ -133,6 +133,7 @@ typedef struct
     synthTouchMode_t touchMode;
     bool loop;
     bool stopped;
+    int32_t headroom;
 
     wsg_t instrumentImages[16];
     wsg_t percussionImage;
@@ -158,6 +159,7 @@ static void synthExitMode(void);
 static void synthMainLoop(int64_t elapsedUs);
 static void synthDacCallback(uint8_t* samples, int16_t len);
 
+static void synthSetupPlayer(void);
 static void synthSetupMenu(void);
 static void synthSetFile(const char* filename);
 static void synthHandleButton(const buttonEvt_t evt);
@@ -431,18 +433,20 @@ static const char* builtInSongs[] = {
 // Menu stuff
 static const char* menuItemPlayMode = "MIDI Mode: ";
 static const char* menuItemSelectFile = "Select File...";
-static const char* menuItemCustomSong = "Custom Song";
+static const char* menuItemCustomSong = "Enter Filename...";
 static const char* menuItemViewMode = "View Mode: ";
 static const char* menuItemButtonMode = "Button Controls: ";
 static const char* menuItemTouchMode = "Touchpad Controls: ";
 static const char* menuItemLoop = "Loop: ";
+static const char* menuItemHeadroom = "Headroom: ";
 
 static const char*const nvsKeyMode = "synth_playmode";
 static const char*const nvsKeyViewMode = "synth_viewmode";
 static const char*const nvsKeyButtonMode = "synth_btnmode";
 static const char*const nvsKeyTouchMode  = "synth_touchmode";
 static const char*const nvsKeyLoop       = "synth_loop";
-static const char* nvsKeyLastSong = "synth_lastsong";
+static const char*const nvsKeyLastSong = "synth_lastsong";
+static const char*const nvsKeyHeadroom = "synth_headdroom";
 
 static const char* menuItemModeOptions[] = {
     "MIDI Streaming",
@@ -474,6 +478,30 @@ static const char* menuItemLoopOptions[] = {
     "On",
 };
 
+static const char* menuItemHeadroomOptions[] = {
+    "0%",
+    "10%",
+    "20%",
+    "30%",
+    "40%",
+    "50%",
+    "60% (Default)",
+    "70%",
+    "80%",
+    "90%",
+    "100%",
+    "110%",
+    "120%",
+    "130%",
+    "140%",
+    "150%",
+    "160%",
+    "1&0%",
+    "180%",
+    "190%",
+    "200%",
+};
+
 static const int32_t menuItemModeValues[] = {
     0,
     1,
@@ -502,6 +530,32 @@ static const int32_t menuItemTouchValues[] = {
 static const int32_t menuItemLoopValues[] = {
     0,
     1,
+};
+
+#define VOL_TO_HEADROOM(pct) ((pct) * 0x4000 / 100)
+
+static const int32_t menuItemHeadroomValues[] = {
+    0,
+    VOL_TO_HEADROOM(10),
+    VOL_TO_HEADROOM(20),
+    VOL_TO_HEADROOM(30),
+    VOL_TO_HEADROOM(40),
+    VOL_TO_HEADROOM(50),
+    MIDI_DEF_HEADROOM,
+    VOL_TO_HEADROOM(70),
+    VOL_TO_HEADROOM(80),
+    VOL_TO_HEADROOM(90),
+    VOL_TO_HEADROOM(100),
+    VOL_TO_HEADROOM(110),
+    VOL_TO_HEADROOM(120),
+    VOL_TO_HEADROOM(130),
+    VOL_TO_HEADROOM(140),
+    VOL_TO_HEADROOM(150),
+    VOL_TO_HEADROOM(160),
+    VOL_TO_HEADROOM(170),
+    VOL_TO_HEADROOM(180),
+    VOL_TO_HEADROOM(190),
+    VOL_TO_HEADROOM(200),
 };
 
 static settingParam_t menuItemModeBounds = {
@@ -537,6 +591,13 @@ static settingParam_t menuItemLoopBounds = {
     .min = 0,
     .max = 1,
     .key = nvsKeyLoop,
+};
+
+static settingParam_t menuItemHeadroomBounds = {
+    .def = MIDI_DEF_HEADROOM,
+    .min = 0,
+    .max = 0x8000,
+    .key = nvsKeyHeadroom,
 };
 
 const char synthModeName[] = "USB MIDI Synth";
@@ -613,6 +674,13 @@ static void synthEnterMode(void)
     sd->loop = nvsRead ? true : false;
     sd->midiPlayer.loop = sd->loop;
 
+    if (!readNvs32(nvsKeyHeadroom, &nvsRead))
+    {
+        nvsRead = MIDI_DEF_HEADROOM;
+    }
+    sd->headroom = nvsRead;
+    sd->midiPlayer.headroom = sd->headroom;
+
     if (sd->fileMode)
     {
         size_t savedNameLen;
@@ -653,16 +721,10 @@ static void synthEnterMode(void)
     sd->wheelMenu = initWheelMenu(&sd->font, 90, &sd->wheelTextArea);
 
     synthSetupMenu();
+    synthSetupPlayer();
 
-    if (!sd->fileMode)
-    {
-        sd->installed                    = installMidiUsb();
-        sd->midiPlayer.streamingCallback = usbMidiCallback;
-        sd->midiPlayer.mode              = MIDI_STREAMING;
-        sd->startupSeqComplete           = true;
-        sd->startupNote                  = 60;
-        midiPause(&sd->midiPlayer, false);
-    }
+    sd->startupSeqComplete           = true;
+    sd->startupNote                  = 60;
 
     loadWsg("piano.wsg", &sd->instrumentImages[0], true);
     loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], true);
@@ -884,6 +946,7 @@ static void synthSetupMenu(void)
     addSettingsOptionsItemToMenu(sd->menu, menuItemButtonMode, menuItemButtonOptions, menuItemButtonValues, ARRAY_SIZE(menuItemButtonValues), &menuItemButtonBounds, sd->buttonMode);
     addSettingsOptionsItemToMenu(sd->menu, menuItemTouchMode, menuItemTouchOptions, menuItemTouchValues, ARRAY_SIZE(menuItemTouchValues), &menuItemTouchBounds, sd->touchMode);
     addSettingsOptionsItemToMenu(sd->menu, menuItemLoop, menuItemLoopOptions, menuItemLoopValues, ARRAY_SIZE(menuItemLoopValues), &menuItemLoopBounds, sd->loop);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemHeadroom, menuItemHeadroomOptions, menuItemHeadroomValues, ARRAY_SIZE(menuItemHeadroomValues), &menuItemHeadroomBounds, sd->headroom);
 }
 
 static void synthSetFile(const char* filename)
@@ -892,7 +955,7 @@ static void synthSetFile(const char* filename)
     midiPlayerReset(&sd->midiPlayer);
 
     // TODO: make applyPlayerSettings() function instead
-    sd->midiPlayer.loop = sd->loop;
+    synthSetupPlayer();
 
     // Next: Free any text that might reference the song file still
     midiTextInfo_t* textInfo = NULL;
@@ -917,6 +980,7 @@ static void synthSetFile(const char* filename)
             midiPause(&sd->midiPlayer, false);
 
             writeNvsBlob(nvsKeyLastSong, filename, strlen(filename));
+            sd->stopped = false;
         }
         else
         {
@@ -1249,6 +1313,7 @@ static void synthHandleButton(const buttonEvt_t evt)
                     {
                         sd->stopped = true;
                         midiPlayerReset(&sd->midiPlayer);
+                        synthSetupPlayer();
                     }
                     else
                     {
@@ -1598,10 +1663,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                     sd->installed                = installMidiUsb();
                 }
 
-                sd->midiPlayer.streamingCallback = usbMidiCallback;
-                sd->midiPlayer.mode              = MIDI_STREAMING;
-                sd->startupSeqComplete           = true;
-                sd->startupNote                  = 60;
+                synthSetupPlayer();
                 midiPause(&sd->midiPlayer, false);
 
                 writeNvs32(nvsKeyMode, sd->fileMode);
@@ -1683,6 +1745,12 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                 textEntrySetShadowboxColor(true, c000);
             }
         }
+    }
+    else if (label == menuItemHeadroom || (menuItemHeadroomOptions <= label && label <= (menuItemHeadroomOptions + ARRAY_SIZE(menuItemHeadroomOptions))))
+    {
+        sd->headroom = value;
+        sd->midiPlayer.headroom = sd->headroom;
+        writeNvs32(nvsKeyHeadroom, value);
     }
     else
     {
