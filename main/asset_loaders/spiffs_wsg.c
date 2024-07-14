@@ -11,7 +11,7 @@
 
 #include "heatshrink_helper.h"
 #include "heatshrink_encoder.h"
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "hdw-nvs.h"
 #include "spiffs_wsg.h"
 #include "macros.h"

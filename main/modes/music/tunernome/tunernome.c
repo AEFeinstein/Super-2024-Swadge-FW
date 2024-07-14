@@ -939,7 +939,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
                     // Blink LED Tick color
                     shouldBlink = true;
                 } // if(tAccumulatedUs >= tunernome->usPerBeat)
-            } // if(tunernome->isClockwise)
+            }     // if(tunernome->isClockwise)
             else
             {
                 // Subtract from tAccumulatedUs
@@ -954,7 +954,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
                     // Blink LED Tock color
                     shouldBlink = true;
                 } // if(tunernome->tAccumulatedUs <= 0)
-            } // if(!tunernome->isClockwise)
+            }     // if(!tunernome->isClockwise)
 
             if (shouldBlink)
             {
@@ -1056,7 +1056,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
             drawLine(METRONOME_CENTER_X, METRONOME_CENTER_Y, x, y, c555, 0);
             break;
         } // case TN_METRONOME:
-    } // switch(tunernome->mode)
+    }     // switch(tunernome->mode)
 }
 
 /**
@@ -1118,7 +1118,7 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         break;
                     }
                 } // switch(button)
-            } // if(down)
+            }     // if(down)
             break;
         } // case TN_TUNER:
         case TN_METRONOME:
@@ -1174,7 +1174,7 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         break;
                     }
                 } // switch(button)
-            } // if(down)
+            }     // if(down)
             else
             {
                 // Stop button repetition and reset related variables
@@ -1366,7 +1366,7 @@ void tunernomeSampleHandler(uint16_t* samples, uint32_t sampleCnt)
 
                     break;
                 } // default:
-            } // switch(tunernome->curTunerMode)
+            }     // switch(tunernome->curTunerMode)
 
             if (LISTENING != tunernome->curTunerMode)
             {

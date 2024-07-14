@@ -180,7 +180,6 @@
 #include "hdw-led.h"
 #include "hdw-mic.h"
 #include "hdw-nvs.h"
-#include "hdw-spiffs.h"
 #include "hdw-temperature.h"
 #include "hdw-tft.h"
 #include "hdw-usb.h"
@@ -196,6 +195,7 @@
 #include "menuManiaRenderer.h"
 
 // Asset loaders
+#include "cnfs.h"
 #include "spiffs_wsg.h"
 #include "spiffs_font.h"
 #include "spiffs_txt.h"

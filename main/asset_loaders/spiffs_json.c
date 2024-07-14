@@ -10,7 +10,7 @@
 #include <esp_log.h>
 #include <esp_heap_caps.h>
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "heatshrink_helper.h"
 #include "spiffs_json.h"
 
@@ -39,7 +39,7 @@ char* loadJson(const char* name, bool spiRam)
 #ifndef JSON_COMPRESSION
     // Read JSON from file
     size_t sz;
-    uint8_t* buf = spiffsReadFile(name, &sz, spiRam);
+    uint8_t* buf = cnfsReadFile(name, &sz, spiRam);
     if (NULL == buf)
     {
         ESP_LOGE("JSON", "Failed to read %s", name);
