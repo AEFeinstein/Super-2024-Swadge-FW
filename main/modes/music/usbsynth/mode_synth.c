@@ -599,7 +599,7 @@ static settingParam_t menuItemHeadroomBounds = {
     .key = nvsKeyHeadroom,
 };
 
-const char synthModeName[] = "USB MIDI Synth";
+const char synthModeName[] = "MIDI Player";
 
 swadgeMode_t synthMode = {
     .modeName                 = synthModeName,
@@ -710,7 +710,7 @@ static void synthEnterMode(void)
 
     sd->screen = SS_VIEW;
 
-    sd->menu = initMenu("Synth", synthMenuCb);
+    sd->menu = initMenu(synthModeName, synthMenuCb);
     // Use smol font for men items, there might be a lot
     sd->renderer = initMenuManiaRenderer(NULL, NULL, &sd->font);
 
