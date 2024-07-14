@@ -13,6 +13,16 @@
 #include "cnfs_image.h"
 
 //==============================================================================
+// Variables
+//==============================================================================
+
+static const uint8_t* cnfsData;
+static int32_t cnfsDataSz;
+
+static const cnfsFileEntry* cnfsFiles;
+static int32_t cnfsNumFiles;
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -24,9 +34,15 @@
  */
 bool initCnfs(void)
 {
+    /* Get local references from cnfs_data.c */
+    cnfsData     = getCnfsImage();
+    cnfsDataSz   = getCnfsSize();
+    cnfsFiles    = getCnfsFiles();
+    cnfsNumFiles = getCnfsNumFiles();
+
     /* Debug print */
-    ESP_LOGI("CNFS", "Size: %zu", sizeof(cnfs_data));
-    return sizeof(cnfs_data) != 0;
+    ESP_LOGI("CNFS", "Size: %" PRIu32 ", Files: %" PRIu32, cnfsDataSz, cnfsNumFiles);
+    return (0 != cnfsDataSz) && (0 != cnfsNumFiles);
 }
 
 /**
@@ -53,14 +69,14 @@ bool deinitCnfs(void)
 uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 {
     int low  = 0;
-    int high = NR_FILES - 1;
+    int high = cnfsNumFiles - 1;
     int mid  = (low + high) / 2;
 
     // Binary search the file list, since it's sorted.
     while (low <= high)
     {
-        const struct cnfsFileEntry* e = cnfs_files + mid;
-        int sc                        = strcmp(e->name, fname);
+        const cnfsFileEntry* e = cnfsFiles + mid;
+        int sc                 = strcmp(e->name, fname);
         if (sc < 0)
         {
             low = mid + 1;
@@ -78,7 +94,7 @@ uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
             {
                 output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
             }
-            memcpy(output, &cnfs_data[e->offset], e->len);
+            memcpy(output, &cnfsData[e->offset], e->len);
             return output;
         }
         else
