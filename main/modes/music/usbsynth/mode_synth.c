@@ -437,7 +437,7 @@ static const char* menuItemViewMode = "View Mode: ";
 static const char* menuItemButtonMode = "Button Controls: ";
 static const char* menuItemTouchMode = "Touchpad Controls: ";
 static const char* menuItemLoop = "Loop: ";
-static const char* menuItemHeadroom = "Headroom: ";
+static const char* menuItemHeadroom = "Mix Volume: ";
 
 static const char*const nvsKeyMode = "synth_playmode";
 static const char*const nvsKeyViewMode = "synth_viewmode";
@@ -479,26 +479,26 @@ static const char* menuItemLoopOptions[] = {
 
 static const char* menuItemHeadroomOptions[] = {
     "0%",
+    "5%",
     "10%",
+    "15%",
     "20%",
-    "30%",
+    "25%",
+    "30% (Default)",
+    "35%",
     "40%",
+    "45%",
     "50%",
-    "60% (Default)",
+    "55%",
+    "60%",
+    "65%",
     "70%",
+    "75%",
     "80%",
+    "85%",
     "90%",
+    "95%",
     "100%",
-    "110%",
-    "120%",
-    "130%",
-    "140%",
-    "150%",
-    "160%",
-    "1&0%",
-    "180%",
-    "190%",
-    "200%",
 };
 
 static const int32_t menuItemModeValues[] = {
