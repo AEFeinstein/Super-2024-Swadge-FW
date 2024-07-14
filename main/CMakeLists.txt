@@ -118,18 +118,14 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./utils"
                                 "./utils/fl_math")
 
-function(assets_preprocessor)
-    add_custom_target(assets_preprocessor ALL
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs/cnfs_gen ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
-    )
-endfunction()
-
-# Create a CNFS blob from the contents of the 'assets' directory is compiled
-# directly into the firmware
-assets_preprocessor()
+)
 
 # Save the git hash in a variable
 execute_process(
