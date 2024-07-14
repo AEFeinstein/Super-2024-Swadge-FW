@@ -224,6 +224,84 @@ bool addIdx(list_t* list, void* val, uint16_t index)
 }
 
 /**
+ * @brief Insert a value into the list immediately before the given node.
+ *
+ * If the given node is NULL, inserts at the end of the list
+ *
+ * @param list  The list to add the entry to
+ * @param val   The new value to add to the list
+ * @param entry The existing entry, after which to insert the value
+ */
+void addBefore(list_t* list, void* val, node_t* entry)
+{
+    VALIDATE_LIST(__func__, __LINE__, true, list, val);
+
+    if (entry == list->first)
+    {
+        // Add at head
+        unshift(list, val);
+    }
+    else if (entry == NULL)
+    {
+        push(list, val);
+    }
+    else
+    {
+        node_t* prev = entry->prev;
+        node_t* newNode = malloc(sizeof(node_t));
+        newNode->val = val;
+        newNode->prev = prev;
+        newNode->next = entry;
+
+        if (prev)
+        {
+            prev->next = newNode;
+        }
+        entry->prev = newNode;
+        list->length++;
+    }
+}
+
+/**
+ * @brief Insert a value into the list immediately after the given node.
+ *
+ * If the given node is NULL, inserts at the beginning of the list
+ *
+ * @param list  The list to add the entry to
+ * @param val   The new value to add to the list
+ * @param entry The existing entry, after which to insert the value
+ */
+void addAfter(list_t* list, void* val, node_t* entry)
+{
+    VALIDATE_LIST(__func__, __LINE__, true, list, val);
+
+    if (entry == list->last)
+    {
+        push(list, val);
+    }
+    else if (entry == NULL)
+    {
+        // Add at head
+        unshift(list, val);
+    }
+    else
+    {
+        node_t* next = entry->next;
+        node_t* newNode = malloc(sizeof(node_t));
+        newNode->val = val;
+        newNode->prev = entry;
+        newNode->next = next;
+
+        if (next)
+        {
+            next->prev = newNode;
+        }
+        entry->next = newNode;
+        list->length++;
+    }
+}
+
+/**
  * @brief Remove at an index in the list
  *
  * @param list The list to remove from

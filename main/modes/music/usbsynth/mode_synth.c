@@ -69,6 +69,20 @@ typedef enum
     VM_VIZ     = 8,
 } synthViewMode_t;
 
+typedef enum
+{
+    MI_PLAY,
+    MI_PAUSE,
+    MI_STOP,
+    MI_PLAYPAUSE,
+    MI_FFW,
+    MI_REW,
+    MI_SKIP,
+    MI_PREV,
+    MI_REPEAT,
+    MI_SHUFFLE,
+} musicIcon_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -166,6 +180,8 @@ static void synthHandleButton(const buttonEvt_t evt);
 static void handleButtonTimer(int64_t* timer, int64_t interval, int64_t elapsedUs, buttonBit_t button);
 static void synthHandleInput(int64_t elapsedUs);
 
+static void drawCircleSweep(int x, int y, int r, int startAngle, int sweepDeg, paletteColor_t col);
+static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y, int16_t w, int16_t h);
 static void drawSynthMode(void);
 static void drawMidiText(void);
 static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h);
@@ -781,6 +797,126 @@ static void synthExitMode(void)
     sd = NULL;
 }
 
+static void drawCircleSweep(int x, int y, int r, int startAngle, int sweepDeg, paletteColor_t col)
+{
+    // This is gonna be much slower than doing it the way e.g. drawCircleQuadrants does
+    // But... oh well
+    int lastX = -1;
+    int lastY = -1;
+    bool first = true;
+
+    for (int theta = startAngle + 1; theta != startAngle + sweepDeg; theta++)
+    {
+        int cx = x + getCos1024(theta % 360) * r / 1024;
+        int cy = y - getSin1024(theta % 360) * r / 1024;
+
+        if (!first)
+        {
+            drawLineFast(lastX, lastY, cx, cy, col);
+        }
+        else
+        {
+            first = false;
+        }
+
+        lastX = cx;
+        lastY = cy;
+    }
+}
+
+static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y, int16_t w, int16_t h)
+{
+    switch (icon)
+    {
+        case MI_PLAY:
+        {
+            // Draw triangle
+            drawTriangleOutlined(x, y, x + w, y + h / 2, x, y + h, col, col);
+            break;
+        }
+        case MI_PAUSE:
+        {
+            // Two vertical bars
+            fillDisplayArea(x + (w / 8), y, x + (w / 4), y + h, col);
+            fillDisplayArea(x + w - (w / 4), y, x + w - (w / 8), y + h, col);
+            break;
+        }
+        case MI_STOP:
+        {
+            // Square
+            fillDisplayArea(x, y, x + w, y + h, col);
+            break;
+        }
+        case MI_PLAYPAUSE:
+        {
+            // Vertical bar
+            fillDisplayArea(x + (w / 8), y, x + (w / 4), y + h, col);
+            // Triangle
+            drawTriangleOutlined(x + w - (w / 4), y, x + w, y + h / 2, x + w - (w / 4), y + h, col, col);
+            break;
+        }
+        case MI_FFW:
+        {
+            // Two triangles
+            fillDisplayArea(x + (w / 8), y, x + (w / 4), y + h, col);
+            // Two triangles (TODO)
+            break;
+        }
+        case MI_REW:
+        {
+            // Reverse of FFW
+            break;
+        }
+        case MI_SKIP:
+        {
+            // Triangle left
+            drawTriangleOutlined(x, y, x + w - (w / 4), y + h / 2, x, y + h, col, col);
+            // Vertical bar right
+            fillDisplayArea(x + w - (w / 8), y, x + w - (w / 4), y + h, col);
+            break;
+        }
+        case MI_PREV:
+        {
+            // Vertical bar left
+            fillDisplayArea(x + (w / 8), y, x + (w / 4), y + h, col);
+            // Trangle right (facing left)
+            drawTriangleOutlined(x, y + h / 2, x + w - (w / 4), y, x + w - (w / 4), y + h, col, col);
+            break;
+        }
+        case MI_REPEAT:
+        {
+            // 3/4 of a circle, then we add an arrow at the end
+            drawCircleSweep(x + w / 2, y + h - h / 2, ((w<h)?w:h)/2, 45, 270, col);
+            // Kinda funky but close
+            drawTriangleOutlined(x + w / 2 + w / 4, y + h / 4, x + w, y, x + w, y + h / 2, col, col);
+
+            break;
+        }
+        case MI_SHUFFLE:
+        {
+            // something like this
+            /*
+            ----  --->
+                \/
+            ____/\___>
+            */
+            int crossOffset = (w / 6);
+            int cl = x + (w / 2) - crossOffset;
+            int cr = x + (w / 2) + crossOffset;
+            int yTop = y + h / 8;
+            int yBot = y + h - h / 8;
+            drawLineFast(x, yTop, cl, yTop, col);
+            drawLineFast(x, yBot, cl, yBot, col);
+            drawLineFast(cl, yTop, cr, yBot, col);
+            //drawLineFast(cl, yBot, cr, yTop, col);
+            drawLine(cl, yBot, cr, yTop, col, 2);
+            drawLineFast(cr, yBot, x + w, yBot, col);
+            drawLineFast(cr, yTop, x + w, yTop, col);
+            break;
+        }
+    }
+}
+
 static void synthMainLoop(int64_t elapsedUs)
 {
     if (sd->screen == SS_MENU)
@@ -1077,6 +1213,40 @@ static void drawSynthMode(void)
         drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 35, 3);
 
         drawMidiText();
+
+#define ICON_SIZE (sd->font.height)
+
+        int16_t iconPosR = TFT_WIDTH / 2;
+        int16_t iconPosL = iconPosR - ICON_SIZE - 1;
+        if (sd->fileMode && sd->filename && *sd->filename)
+        {
+            int16_t textX = (TFT_WIDTH - textWidth(&sd->font, sd->filename)) / 2;
+            iconPosR = drawText(&sd->font, c034, sd->filename, textX, TFT_HEIGHT- sd->font.height - 15);
+            iconPosL = textX - ICON_SIZE - 1;
+        }
+
+        musicIcon_t statusIcon = MI_PAUSE;
+        if (sd->midiPlayer.paused)
+        {
+            if (sd->stopped)
+            {
+                statusIcon = MI_STOP;
+            }
+            else
+            {
+                statusIcon = MI_PAUSE;
+            }
+        }
+        else
+        {
+            statusIcon = MI_PLAY;
+        }
+        drawIcon(statusIcon, c555, iconPosR, TFT_HEIGHT - 15 - ICON_SIZE, ICON_SIZE, ICON_SIZE);
+
+        if (sd->loop || sd->midiPlayer.loop)
+        {
+            drawIcon(MI_REPEAT, c555, iconPosL, TFT_HEIGHT - 15 - ICON_SIZE, ICON_SIZE, ICON_SIZE);
+        }
     }
     else
     {
