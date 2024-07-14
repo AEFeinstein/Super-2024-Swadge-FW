@@ -38,8 +38,10 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
  * @param ch    The character bitmap to draw (includes the width of the char)
  * @param xOff  The x offset to draw the char at
  * @param yOff  The y offset to draw the char at
+ * @param xMin  The left edge of the text bounds
+ * @param xMax  The
  */
-void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff)
+void drawCharBounds(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax)
 {
     // Do not draw transparent chars
     if (cTransparent == color)
@@ -57,14 +59,16 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
     const uint8_t* endOfBitmap = &bitmap[((wch * h) + 7) >> 3] - 1;
 
     // Don't draw off the bottom of the screen.
-    if (yOff + h > TFT_HEIGHT)
+    if (yOff + h > yMax)
     {
-        h = TFT_HEIGHT - yOff;
+        h = yMax - yOff;
     }
 
     // Check Y bounds
-    if (yOff < 0)
+    if (yOff < yMin)
     {
+        // This line not micro-optimized, but hopefully it's ok
+        bitIdx += yMin * wch;
         // Above the display, do wacky math with -yOff
         bitIdx -= yOff * wch;
         bitmap += bitIdx >> 3;
@@ -81,24 +85,29 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
         int truncate = 0;
 
         int startX = xOff;
-        if (xOff < 0)
+        if (xOff < xMin)
         {
             // Track how many groups of pixels we are skipping over
             // that weren't displayed on the left of the screen.
-            startX = 0;
+            startX = xMin;
+            bitIdx += xMin;
             bitIdx += -xOff;
             bitmap += bitIdx >> 3;
             bitIdx &= 7;
         }
         int endX = xOff + wch;
-        if (endX > TFT_WIDTH)
+        if (endX > xMax)
         {
             // Track how many groups of pixels we are skipping over,
             // if the letter falls off the end of the screen.
-            truncate = endX - TFT_WIDTH;
-            endX     = TFT_WIDTH;
+            truncate = endX - xMax;
+            endX     = xMax;
         }
 
+        if (bitmap > endOfBitmap)
+        {
+            return;
+        }
         uint8_t thisByte = *bitmap;
         for (int drawX = startX; drawX < endX; drawX++)
         {
@@ -136,6 +145,55 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
 }
 
 /**
+ * @brief Draw a single character from a font to a display
+ *
+ * @param color The color of the character to draw
+ * @param h     The height of the character to draw
+ * @param ch    The character bitmap to draw (includes the width of the char)
+ * @param xOff  The x offset to draw the char at
+ * @param yOff  The y offset to draw the char at
+ */
+void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff)
+{
+    drawCharBounds(color, h, ch, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+}
+
+
+/**
+ * @brief Draw text to a display with the given color and font
+ *
+ * @param font  The font to use for the text
+ * @param color The color of the character to draw
+ * @param text  The text to draw to the display
+ * @param xOff  The x offset to draw the text at
+ * @param yOff  The y offset to draw the text at
+ * @return The x offset at the end of the drawn string
+ */
+int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax)
+{
+    while (*text >= ' ')
+    {
+        // Only draw if the char is on the screen
+        if ((xOff + font->chars[(*text) - ' '].width >= xMin) && (xOff < xMax))
+        {
+            // Draw char
+            drawCharBounds(color, font->height, &font->chars[(*text) - ' '], xOff, yOff, xMin, yMin, xMax, yMax);
+        }
+
+        // Move to the next char
+        xOff += (font->chars[(*text) - ' '].width + 1);
+        text++;
+
+        // If this char is offscreen, finish drawing
+        if (xOff >= xMax)
+        {
+            return xOff;
+        }
+    }
+    return xOff;
+}
+
+/**
  * @brief Draw text to a display with the given color and font
  *
  * @param font  The font to use for the text
@@ -147,26 +205,7 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
  */
 int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff)
 {
-    while (*text >= ' ')
-    {
-        // Only draw if the char is on the screen
-        if ((xOff + font->chars[(*text) - ' '].width >= 0) && (xOff < TFT_WIDTH))
-        {
-            // Draw char
-            drawChar(color, font->height, &font->chars[(*text) - ' '], xOff, yOff);
-        }
-
-        // Move to the next char
-        xOff += (font->chars[(*text) - ' '].width + 1);
-        text++;
-
-        // If this char is offscreen, finish drawing
-        if (xOff >= TFT_WIDTH)
-        {
-            return xOff;
-        }
-    }
-    return xOff;
+    return drawTextBounds(font, color, text, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
 }
 
 /**
@@ -451,5 +490,89 @@ void makeOutlineFont(font_t* srcFont, font_t* dstFont, bool spiRam)
                 setFontPx(oCh, x, y, onBoundary);
             }
         }
+    }
+}
+
+/**
+ * @brief Draw text to the display with a marquee effect
+ *
+ * @param font  The font to use for the text
+ * @param color The color of the character to draw
+ * @param text  The text to draw to the display
+ * @param xOff  The x offset to draw the text at
+ * @param yOff  The y offset to draw the text at
+ * @param xMax  The x offset of the right edge of the marquee text
+ * @param[in,out] timer A pointer to a timer value used to time the marquee
+ * @return The x offset at the end of the drawn string
+ */
+int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff, int16_t xMax, int64_t* timer)
+{
+    // Marquee speed in microseconds per pixel
+    #define MARQUEE_SPEED 40000
+    int16_t gapW = 4 * textWidth(font, " ");
+    int64_t repeatDelay = gapW * MARQUEE_SPEED;
+    uint16_t textW = textWidth(font, text);
+    int64_t loopPeriod = (textW + 1 /*- (xMax - xOff)*/) * MARQUEE_SPEED + repeatDelay;
+
+    if (*timer > loopPeriod)
+    {
+        *timer %= loopPeriod;
+    }
+
+    int16_t offset = *timer / MARQUEE_SPEED;
+    // Pause here instead of looping:
+    /*if (offset > -(xMax - textW - xOff - 1))
+    {
+        offset = -(xMax - textW - xOff - 1);
+    }*/
+    int16_t endX = drawTextBounds(font, color, text, xOff - offset, yOff, xOff, 0, xMax, TFT_HEIGHT);
+    int16_t endStart = endX + gapW; //xMax + textW + gapW - offset;
+    printf("End of first text is %" PRId16 ", start of next is %" PRId16 "\n", endX, endStart);
+    if (endStart < xMax)
+    {
+        return drawTextBounds(font, color, text, endStart, yOff, xOff, 0, xMax, TFT_HEIGHT);
+    }
+    return endX;
+}
+
+/**
+ * @brief Draw text to the display that fits within a given length, replacing any overflowing text with "..."
+ *
+ * @param font  The font to use for the text
+ * @param color The color of the character to draw
+ * @param text  The text to draw to the display
+ * @param xOff  The x offset to draw the text at
+ * @param yOff  The y offset to draw the text at
+ * @param maxW  The maximum width of text to draw
+ * @return true
+ * @return false
+ */
+bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff, int16_t maxW)
+{
+    uint16_t textW = textWidth(font, text);
+    if (textW <= maxW)
+    {
+        drawText(font, color, text, xOff, yOff);
+        return false;
+    }
+    else
+    {
+        uint16_t ellipsisW = textWidth(font, "...");
+        uint16_t trimW = textW;
+
+        // Reduce the text width by one character-width until it all fits
+        if (strlen(text))
+        {
+            const char* cur = text + strlen(text) - 1;
+            while (cur >= text && trimW + ellipsisW > maxW)
+            {
+                trimW -= font->chars[*(cur--) - ' '].width + 1;
+            }
+        }
+
+        drawTextBounds(font, color, text, xOff, yOff, 0, 0, xOff + trimW, TFT_HEIGHT);
+        drawText(font, color, "...", xOff + trimW + 1, yOff);
+
+        return true;
     }
 }
