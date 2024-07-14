@@ -158,6 +158,8 @@ typedef struct
     list_t midiTexts;
     uint64_t nextExpiry;
 
+    list_t customFiles;
+
     menu_t* menu;
     menuManiaRenderer_t* renderer;
     wheelMenuRenderer_t* wheelMenu;
@@ -425,25 +427,6 @@ static const paletteColor_t noteColors[] = {
     c305, // A  - Violet
     c505, // A# - Fuchsia
     c503, // B  - Pink
-};
-
-static const char* builtInSongs[] = {
-    "credits.mid",
-    "jingle.mid",
-    "item.mid",
-    "gmcc.mid",
-    "block1.mid",
-    "block2.mid",
-    "Follinesque.mid",
-    "yalikejazz.mid",
-    "Fairy_Fountain.mid",
-    "ode.mid",
-    "Fauxrio_Kart.mid",
-    "gamecube.mid",
-    "banana.mid",
-    "stereo.mid",
-    "hotrod.mid",
-    "stereo_test.mid",
 };
 
 // Menu stuff
@@ -792,6 +775,12 @@ static void synthExitMode(void)
         sd->filenameBuf = NULL;
     }
 
+    char* customFilename;
+    while (NULL != (customFilename = pop(&sd->customFiles)))
+    {
+        free(customFilename);
+    }
+
     freeFont(&sd->font);
     free(sd);
     sd = NULL;
@@ -1066,16 +1055,70 @@ static void synthMainLoop(int64_t elapsedUs)
     sd->frameTimes[sd->frameTimesIdx] = esp_timer_get_time();
 }
 
+static void synthSetupPlayer(void)
+{
+    if (sd->fileMode)
+    {
+        sd->midiPlayer.loop = sd->loop;
+        sd->midiPlayer.textMessageCallback = midiTextCallback;
+    }
+    else
+    {
+        if (!sd->installed)
+        {
+            sd->installed = installMidiUsb();
+        }
+        sd->midiPlayer.streamingCallback = usbMidiCallback;
+        sd->midiPlayer.mode              = MIDI_STREAMING;
+    }
+
+    sd->midiPlayer.headroom = sd->headroom;
+}
+
 static void synthSetupMenu(void)
 {
     addSettingsOptionsItemToMenu(sd->menu, menuItemPlayMode, menuItemModeOptions, menuItemModeValues, 2, &menuItemModeBounds, sd->fileMode);
 
     sd->menu = startSubMenu(sd->menu, menuItemSelectFile);
     addSingleItemToMenu(sd->menu, menuItemCustomSong);
-    for (int i = 0; i < ARRAY_SIZE(builtInSongs); i++)
+    void* dirh = NULL;
+    char outbuf[128];
+    while (spiffsListFiles(outbuf, sizeof(outbuf), &dirh) > 0)
     {
-        addSingleItemToMenu(sd->menu, builtInSongs[i]);
+        if ((strlen(outbuf) > 4 && (!strcmp(&outbuf[strlen(outbuf) - 4], ".mid")
+                || !strcmp(&outbuf[strlen(outbuf) - 4], ".kar")))
+                || (strlen(outbuf) > 7 && !strcmp(&outbuf[strlen(outbuf)] - 5, ".midi")))
+        {
+            char* copyStr = strdup(outbuf);
+            if (copyStr)
+            {
+                // Insert the file into the list in a sorted manner
+                bool added = false;
+
+                node_t* last = NULL;
+                node_t* node = sd->customFiles.first;
+
+                while (node != NULL)
+                {
+                    if (strcasecmp((char*)node->val, copyStr) >= 0)
+                    {
+                        break;
+                    }
+
+                    last = node;
+                    node = node->next;
+                }
+
+                printf("Adding at end, after %s\n", (char*)(last ? last->val : "NULL"));
+                addAfter(&sd->customFiles, copyStr, last);
+            }
+        }
     }
+    for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
+    {
+        addSingleItemToMenu(sd->menu, (char*)node->val);
+    }
+
     sd->menu = endSubMenu(sd->menu);
 
     addSettingsOptionsItemToMenu(sd->menu, menuItemViewMode, menuItemViewOptions, menuItemViewValues, ARRAY_SIZE(menuItemViewValues), &menuItemViewBounds, sd->viewMode);
@@ -1927,26 +1970,18 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
         // Song items
         if (selected)
         {
-            for (int i = 0; i < ARRAY_SIZE(builtInSongs); i++)
+            for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
             {
-                if (builtInSongs[i] == label)
+                char* str = (char*)node->val;
+                if (label == str)
                 {
                     synthSetFile(label);
 
                     if (sd->fileMode)
                     {
-                        if (sd->filenameBuf)
-                        {
-                            free(sd->filenameBuf);
-                            sd->filenameBuf = NULL;
-                        }
-
-                        sd->filename = builtInSongs[i];
+                        sd->filename = label;
                         writeNvs32(nvsKeyMode, (int32_t)sd->fileMode);
                     }
-
-                    sd->screen = SS_VIEW;
-                    break;
                 }
             }
         }
