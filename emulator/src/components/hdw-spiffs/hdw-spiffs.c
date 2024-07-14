@@ -75,7 +75,6 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
         // Print the error, then quit.
         // Abnormal quitting is a strong indicator something failed
         ESP_LOGE("SPIFFS", "%s doesnt exist!!!!", fname);
-        exit(1);
         return NULL;
     }
 
@@ -102,7 +101,6 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     if (1 != fread(output, *outsize, 1, f))
     {
         ESP_LOGE("SPIFFS", "%s fread error!!!!", fname);
-        exit(1);
         return NULL;
     }
 
