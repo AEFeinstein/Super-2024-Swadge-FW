@@ -88,6 +88,7 @@
 #define MIDI_FALSE        0x00
 #define MIDI_TO_BOOL(val) (val > 63)
 #define BOOL_TO_MIDI(val) (val ? MIDI_TRUE : MIDI_FALSE)
+#define MIDI_DEF_HEADROOM 0x2666
 
 /// @brief Callback function used to provide feedback when a song finishes playing
 typedef void (*songFinishedCbFn)(void);
@@ -458,6 +459,12 @@ typedef struct
 
     /// @brief A callback to call when the playing song is finished
     songFinishedCbFn songFinishedCallback;
+
+    /// @brief The constant value to multiply each frame's samples by, before being shifted right 16 bits
+    /// This value must be between 0x0000 (muted) and 0x7FFF (100% volume). The default value is 0x2666 (30%),
+    /// and something around this value should be considered "full volume" with values higher than that being
+    /// much more likely to clip for louder sounds
+    int32_t headroom;
 
     /// @brief Number of samples that were clipped
     /// Note: This is not set when using \c midiPlayerFillBufferMulti()

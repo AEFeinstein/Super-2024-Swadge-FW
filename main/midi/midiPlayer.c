@@ -547,6 +547,7 @@ void midiPlayerReset(midiPlayer_t* player)
     player->clipped        = 0;
     player->eventAvailable = false;
     player->volume         = UINT14_MAX;
+    player->headroom       = MIDI_DEF_HEADROOM;
 
     deinitMidiParser(&player->reader);
     player->paused = true;
@@ -645,7 +646,7 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
         int32_t sample = midiPlayerStep(player);
 
         // Multiply the sample by 0.3 to provide some headroom for stacking samples
-        sample *= 0x4ccd;
+        sample *= player->headroom;
         sample >>= 16;
 
         if (sample < -128)
@@ -672,11 +673,11 @@ void midiPlayerFillBufferMulti(midiPlayer_t* players, uint8_t playerCount, uint8
         int32_t sample = 0;
         for (int i = 0; i < playerCount; i++)
         {
-            sample += midiPlayerStep(&players[i]);
+            // Apply the player's headroom to its sample sum
+            sample += (midiPlayerStep(&players[i]) * players[i].headroom);
         }
 
-        // Multiply the sample by 0.3 to provide some headroom for stacking samples
-        sample *= 0x4ccd;
+        // Shift right by 16 to account for the headroom application
         sample >>= 16;
 
         // TODO: Can't keep track of clipping here... does it matter?
