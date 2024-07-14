@@ -13,7 +13,7 @@
 #include "heatshrink_encoder.h"
 #include "cnfs.h"
 #include "hdw-nvs.h"
-#include "spiffs_wsg.h"
+#include "fs_wsg.h"
 #include "macros.h"
 
 //==============================================================================
@@ -21,7 +21,7 @@
 //==============================================================================
 
 /**
- * @brief Load a WSG from ROM to RAM. WSGs placed in the spiffs_image folder
+ * @brief Load a WSG from ROM to RAM. WSGs placed in the assets_image folder
  * before compilation will be automatically flashed to ROM
  *
  * @param name The filename of the WSG to load

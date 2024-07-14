@@ -14,8 +14,8 @@
 #include "heatshrink_helper.h"
 
 /**
- * @brief Read a heatshrink compressed file from SPIFFS into an output array.
- * Files that are in the spiffs_image folder before compilation and flashing
+ * @brief Read a heatshrink compressed file from the filesystem into an output array.
+ * Files that are in the assets_image folder before compilation and flashing
  * will automatically be included in the firmware.
  *
  * @param fname   The name of the file to load

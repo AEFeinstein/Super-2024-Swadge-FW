@@ -1,23 +1,23 @@
-/*! \file spiffs_font.h
+/*! \file fs_font.h
  *
- * \section spiffs_font_design Design Philosophy
+ * \section fs_font_design Design Philosophy
  *
- * These functions load and free font assets which are compiled into the SPIFFS filesystem into RAM. Once loaded into
+ * These functions load and free font assets which are compiled into the filesystem into RAM. Once loaded into
  * RAM, fonts may be used to draw text to the screen.
  *
  * For more information about using fonts, see font.h.
  *
  * For information on asset processing, see <a
- * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/tree/main/tools/spiffs_file_preprocessor">spiffs_file_preprocessor</a>.
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/tree/main/tools/assets_preprocessor">assets_preprocessor</a>.
  *
- * \section spiffs_font_usage Usage
+ * \section fs_font_usage Usage
  *
- * Load fonts from SPIFFS to RAM using loadFont(). Fonts may be loaded to normal RAM, which is smaller and faster, or
+ * Load fonts from the filesystem to RAM using loadFont(). Fonts may be loaded to normal RAM, which is smaller and faster, or
  * SPI RAM, which is larger and slower.
  *
  * Free when done using freeFont(). If a font is not freed, the memory will leak.
  *
- * \section spiffs_font_example Example
+ * \section fs_font_example Example
  *
  * \code{.c}
  * // Declare and load a font
@@ -30,8 +30,8 @@
  * \endcode
  */
 
-#ifndef _SPIFFS_FONT_H_
-#define _SPIFFS_FONT_H_
+#ifndef _FS_FONT_H_
+#define _FS_FONT_H_
 
 #include <stdint.h>
 #include <stdbool.h>

@@ -8,12 +8,12 @@
  * href="https://github.com/atomicobject/heatshrink">heatshrink compression</a>.
  *
  * WSGs are handled individually, not in a sheet.
- * The \c spiffs_file_preprocessor program will take PNG files and convert them to WSG.
- * The cmake build will take the generated WSG files and generate a SPIFFS image with the files which is flashed to the
- * Swadge. See \c spiffs_create_partition_image in \c CMakeLists.txt.
+ * The \c assets_preprocessor program will take PNG files and convert them to WSG.
+ * The cmake build will take the generated WSG files and generate \c cnfs_image.c which is included in the firmware
+ * Swadge. See \c assets_preprocessor in \c CMakeLists.txt.
  *
- * WSG files can be loaded from the SPIFFS filesystem with helper functions in spiffs_wsg.h.
- * Once loaded from the SPIFFS filesystem WSGs can be drawn to the display.
+ * WSG files can be loaded from the filesystem with helper functions in fs_wsg.h.
+ * Once loaded from the filesystem WSGs can be drawn to the display.
  *
  * \section wsg_usage Usage
  *

@@ -1,9 +1,9 @@
-# `spiffs_file_preprocessor`
+# `assets_preprocessor`
 
 ## Usage
 ```
 Usage:
-  spiffs_file_preprocessor
+  assets_preprocessor
     -i INPUT_DIRECTORY
     -o OUTPUT_DIRECTORY
 ```

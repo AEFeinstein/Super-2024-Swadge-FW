@@ -39,7 +39,7 @@ bool endsWith(const char* filename, const char* suffix);
  */
 void print_usage(void)
 {
-    printf("Usage:\n  spiffs_file_preprocessor\n    -i INPUT_DIRECTORY\n    -o OUTPUT_DIRECTORY\n");
+    printf("Usage:\n  assets_preprocessor\n    -i INPUT_DIRECTORY\n    -o OUTPUT_DIRECTORY\n");
 }
 
 /**

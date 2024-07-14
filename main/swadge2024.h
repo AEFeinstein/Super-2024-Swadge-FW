@@ -196,10 +196,10 @@
 
 // Asset loaders
 #include "cnfs.h"
-#include "spiffs_wsg.h"
-#include "spiffs_font.h"
-#include "spiffs_txt.h"
-#include "spiffs_json.h"
+#include "fs_wsg.h"
+#include "fs_font.h"
+#include "fs_txt.h"
+#include "fs_json.h"
 
 // Connection interface
 #include "p2pConnection.h"

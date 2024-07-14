@@ -63,7 +63,7 @@ docs/*.pu
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 
-spiffs_image
+assets_image
 managed_components
 nvs.json
 cppcheck_result.txt

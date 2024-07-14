@@ -1,10 +1,10 @@
 idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "asset_loaders/heatshrink_decoder.c"
                             "asset_loaders/heatshrink_helper.c"
-                            "asset_loaders/spiffs_font.c"
-                            "asset_loaders/spiffs_json.c"
-                            "asset_loaders/spiffs_txt.c"
-                            "asset_loaders/spiffs_wsg.c"
+                            "asset_loaders/fs_font.c"
+                            "asset_loaders/fs_json.c"
+                            "asset_loaders/fs_txt.c"
+                            "asset_loaders/fs_wsg.c"
                             "colorchord/DFT32.c"
                             "colorchord/embeddedNf.c"
                             "colorchord/embeddedOut.c"
@@ -118,18 +118,18 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./utils"
                                 "./utils/fl_math")
 
-function(spiffs_file_preprocessor)
-    add_custom_target(spiffs_preprocessor ALL
-    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/spiffs_file_preprocessor/
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../spiffs_image/
+function(assets_preprocessor)
+    add_custom_target(assets_preprocessor ALL
+    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs/cnfs_gen ${CMAKE_CURRENT_SOURCE_DIR}/../spiffs_image/ ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs/cnfs_gen ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
     )
 endfunction()
 
 # Create a CNFS blob from the contents of the 'assets' directory is compiled
 # directly into the firmware
-spiffs_file_preprocessor()
+assets_preprocessor()
 
 # Save the git hash in a variable
 execute_process(
