@@ -12,8 +12,8 @@
  *
  * \section fs_font_usage Usage
  *
- * Load fonts from the filesystem to RAM using loadFont(). Fonts may be loaded to normal RAM, which is smaller and faster, or
- * SPI RAM, which is larger and slower.
+ * Load fonts from the filesystem to RAM using loadFont(). Fonts may be loaded to normal RAM, which is smaller and
+ * faster, or SPI RAM, which is larger and slower.
  *
  * Free when done using freeFont(). If a font is not freed, the memory will leak.
  *

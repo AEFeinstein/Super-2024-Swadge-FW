@@ -10,8 +10,8 @@
  *
  * \section fs_json_usage Usage
  *
- * Load JSON files from the filesystem to RAM using loadJson(). JSON strings may be loaded to normal RAM, which is smaller and
- * faster, or SPI RAM, which is larger and slower.
+ * Load JSON files from the filesystem to RAM using loadJson(). JSON strings may be loaded to normal RAM, which is
+ * smaller and faster, or SPI RAM, which is larger and slower.
  *
  * Free when done using freeJson(). If a json is not freed, the memory will leak.
  *

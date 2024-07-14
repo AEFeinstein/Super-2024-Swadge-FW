@@ -12,8 +12,8 @@
  *
  * \section fs_wsg_usage Usage
  *
- * Load WSGs from the filesystem to RAM using loadWsg(). WSGs may be loaded to normal RAM, which is smaller and faster, or
- * SPI RAM, which is larger and slower.
+ * Load WSGs from the filesystem to RAM using loadWsg(). WSGs may be loaded to normal RAM, which is smaller and faster,
+ * or SPI RAM, which is larger and slower.
  *
  * Free when done using freeWsg(). If a wsg is not freed, the memory will leak.
  *
