@@ -1110,7 +1110,6 @@ static void synthSetupMenu(void)
                     node = node->next;
                 }
 
-                printf("Adding at end, after %s\n", (char*)(last ? last->val : "NULL"));
                 addAfter(&sd->customFiles, copyStr, last);
             }
         }
