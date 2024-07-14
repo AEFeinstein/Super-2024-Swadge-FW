@@ -572,7 +572,7 @@ static settingParam_t menuItemViewBounds = {
 };
 
 static settingParam_t menuItemButtonBounds = {
-    .def = BM_NOTE,
+    .def = BM_PLAYBACK,
     .min = BM_NOTE,
     .max = BM_PLAYBACK,
     .key = nvsKeyButtonMode,
@@ -654,7 +654,7 @@ static void synthEnterMode(void)
     // Button mode
     if (!readNvs32(nvsKeyButtonMode, &nvsRead))
     {
-        nvsRead = (int32_t)BM_NOTE;
+        nvsRead = (int32_t)BM_PLAYBACK;
     }
     sd->buttonMode = (synthButtonMode_t)nvsRead;
 
@@ -1829,7 +1829,6 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
 
 static void synthMenuCb(const char* label, bool selected, uint32_t value)
 {
-    printf("%s %s value=%" PRIu32 "\n", label, selected ? "selected" : "scrolled to", value);
     if (label == menuItemPlayMode)
     {
         if (selected && value != sd->fileMode)
