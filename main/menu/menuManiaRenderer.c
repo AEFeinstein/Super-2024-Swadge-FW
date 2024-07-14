@@ -245,10 +245,13 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
     // Draw the text
     if (isSelected && textWidth(renderer->menuFont, text) > (PARALLELOGRAM_WIDTH - PARALLELOGRAM_HEIGHT - 10))
     {
-        drawTextMarquee(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y + 2, x + PARALLELOGRAM_WIDTH - 5, &renderer->selectedMarqueeTimer);
-    } else
+        drawTextMarquee(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y + 2,
+                        x + PARALLELOGRAM_WIDTH - 5, &renderer->selectedMarqueeTimer);
+    }
+    else
     {
-        drawTextEllipsize(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y + 2, PARALLELOGRAM_WIDTH - PARALLELOGRAM_HEIGHT - 10);
+        drawTextEllipsize(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y + 2,
+                          PARALLELOGRAM_WIDTH - PARALLELOGRAM_HEIGHT - 10);
     }
 
     // Draw the left arrow, if applicable
@@ -553,7 +556,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
                 // Save it
                 renderer->selectedItem = item;
                 // Bounce the selected item
-                renderer->selectedBounceIdx = 1;
+                renderer->selectedBounceIdx    = 1;
                 renderer->selectedMarqueeTimer = 0;
             }
             else if (isSelected)
@@ -565,7 +568,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
                     if (value != renderer->selectedValue)
                     {
                         renderer->selectedMarqueeTimer = 0;
-                        renderer->selectedValue = value;
+                        renderer->selectedValue        = value;
                     }
                 }
             }

@@ -57,8 +57,7 @@ typedef enum
     TM_PITCH,
     /// @brief Touchpad scrubs through a song
     TM_SCRUB,
-}
-synthTouchMode_t;
+} synthTouchMode_t;
 
 typedef enum
 {
@@ -131,7 +130,8 @@ typedef struct
     uint8_t localChannel;
 
     // Hold timers
-    struct {
+    struct
+    {
         bool upHeld;
         bool downHeld;
 
@@ -430,22 +430,22 @@ static const paletteColor_t noteColors[] = {
 };
 
 // Menu stuff
-static const char* menuItemPlayMode = "MIDI Mode: ";
+static const char* menuItemPlayMode   = "MIDI Mode: ";
 static const char* menuItemSelectFile = "Select File...";
 static const char* menuItemCustomSong = "Enter Filename...";
-static const char* menuItemViewMode = "View Mode: ";
+static const char* menuItemViewMode   = "View Mode: ";
 static const char* menuItemButtonMode = "Button Controls: ";
-static const char* menuItemTouchMode = "Touchpad Controls: ";
-static const char* menuItemLoop = "Loop: ";
-static const char* menuItemHeadroom = "Mix Volume: ";
+static const char* menuItemTouchMode  = "Touchpad Controls: ";
+static const char* menuItemLoop       = "Loop: ";
+static const char* menuItemHeadroom   = "Mix Volume: ";
 
-static const char*const nvsKeyMode = "synth_playmode";
-static const char*const nvsKeyViewMode = "synth_viewmode";
-static const char*const nvsKeyButtonMode = "synth_btnmode";
-static const char*const nvsKeyTouchMode  = "synth_touchmode";
-static const char*const nvsKeyLoop       = "synth_loop";
-static const char*const nvsKeyLastSong = "synth_lastsong";
-static const char*const nvsKeyHeadroom = "synth_headdroom";
+static const char* const nvsKeyMode       = "synth_playmode";
+static const char* const nvsKeyViewMode   = "synth_viewmode";
+static const char* const nvsKeyButtonMode = "synth_btnmode";
+static const char* const nvsKeyTouchMode  = "synth_touchmode";
+static const char* const nvsKeyLoop       = "synth_loop";
+static const char* const nvsKeyLastSong   = "synth_lastsong";
+static const char* const nvsKeyHeadroom   = "synth_headdroom";
 
 static const char* menuItemModeOptions[] = {
     "MIDI Streaming",
@@ -453,13 +453,7 @@ static const char* menuItemModeOptions[] = {
 };
 
 static const char* menuItemViewOptions[] = {
-    "Pretty",
-    "Visualizer",
-    "Waveform",
-    "Waveform+Table",
-    "Waveform+Packets",
-    "Table",
-    "Packets",
+    "Pretty", "Visualizer", "Waveform", "Waveform+Table", "Waveform+Packets", "Table", "Packets",
 };
 
 static const char* menuItemButtonOptions[] = {
@@ -478,27 +472,8 @@ static const char* menuItemLoopOptions[] = {
 };
 
 static const char* menuItemHeadroomOptions[] = {
-    "0%",
-    "5%",
-    "10%",
-    "15%",
-    "20%",
-    "25%",
-    "30% (Default)",
-    "35%",
-    "40%",
-    "45%",
-    "50%",
-    "55%",
-    "60%",
-    "65%",
-    "70%",
-    "75%",
-    "80%",
-    "85%",
-    "90%",
-    "95%",
-    "100%",
+    "0%",  "5%",  "10%", "15%", "20%", "25%", "30% (Default)", "35%", "40%", "45%",  "50%",
+    "55%", "60%", "65%", "70%", "75%", "80%", "85%",           "90%", "95%", "100%",
 };
 
 static const int32_t menuItemModeValues[] = {
@@ -629,12 +604,12 @@ static void synthEnterMode(void)
     loadFont("ibm_vga8.font", &sd->font, true);
     sd->perc[9] = true;
     midiPlayerInit(&sd->midiPlayer);
-    sd->noteTime           = 200000;
-    sd->pitch              = 0x2000;
-    sd->longestProgramName = gmProgramNames[24];
-    sd->nextExpiry         = 200000;
+    sd->noteTime                        = 200000;
+    sd->pitch                           = 0x2000;
+    sd->longestProgramName              = gmProgramNames[24];
+    sd->nextExpiry                      = 200000;
     sd->midiPlayer.songFinishedCallback = songEndCb;
-    sd->midiPlayer.textMessageCallback = midiTextCallback;
+    sd->midiPlayer.textMessageCallback  = midiTextCallback;
 
     // Read all the NVS values
     int32_t nvsRead = 0;
@@ -671,14 +646,14 @@ static void synthEnterMode(void)
     {
         nvsRead = 0;
     }
-    sd->loop = nvsRead ? true : false;
+    sd->loop            = nvsRead ? true : false;
     sd->midiPlayer.loop = sd->loop;
 
     if (!readNvs32(nvsKeyHeadroom, &nvsRead))
     {
         nvsRead = MIDI_DEF_HEADROOM;
     }
-    sd->headroom = nvsRead;
+    sd->headroom            = nvsRead;
     sd->midiPlayer.headroom = sd->headroom;
 
     if (sd->fileMode)
@@ -691,8 +666,8 @@ static void synthEnterMode(void)
             if (readNvsBlob(nvsKeyLastSong, sd->filenameBuf, &savedNameLen))
             {
                 sd->filenameBuf[savedNameLen] = '\0';
-                sd->customFile = true;
-                sd->filename = sd->filenameBuf;
+                sd->customFile                = true;
+                sd->filename                  = sd->filenameBuf;
                 synthSetFile(sd->filename);
             }
             else
@@ -714,17 +689,17 @@ static void synthEnterMode(void)
     // Use smol font for men items, there might be a lot
     sd->renderer = initMenuManiaRenderer(NULL, NULL, &sd->font);
 
-    sd->wheelTextArea.pos.x = 15;
-    sd->wheelTextArea.pos.y = TFT_HEIGHT - sd->font.height * 2 - 2 - 15;
-    sd->wheelTextArea.width = TFT_WIDTH - 30;
+    sd->wheelTextArea.pos.x  = 15;
+    sd->wheelTextArea.pos.y  = TFT_HEIGHT - sd->font.height * 2 - 2 - 15;
+    sd->wheelTextArea.width  = TFT_WIDTH - 30;
     sd->wheelTextArea.height = sd->font.height * 2 + 2;
-    sd->wheelMenu = initWheelMenu(&sd->font, 90, &sd->wheelTextArea);
+    sd->wheelMenu            = initWheelMenu(&sd->font, 90, &sd->wheelTextArea);
 
     synthSetupMenu();
     synthSetupPlayer();
 
-    sd->startupSeqComplete           = true;
-    sd->startupNote                  = 60;
+    sd->startupSeqComplete = true;
+    sd->startupNote        = 60;
 
     loadWsg("piano.wsg", &sd->instrumentImages[0], true);
     loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], true);
@@ -791,8 +766,8 @@ static void drawCircleSweep(int x, int y, int r, int startAngle, int sweepDeg, p
 {
     // This is gonna be much slower than doing it the way e.g. drawCircleQuadrants does
     // But... oh well
-    int lastX = -1;
-    int lastY = -1;
+    int lastX  = -1;
+    int lastY  = -1;
     bool first = true;
 
     for (int theta = startAngle + 1; theta != startAngle + sweepDeg; theta++)
@@ -876,7 +851,7 @@ static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y,
         case MI_REPEAT:
         {
             // 3/4 of a circle, then we add an arrow at the end
-            drawCircleSweep(x + w / 2, y + h - h / 2, ((w<h)?w:h)/2, 45, 270, col);
+            drawCircleSweep(x + w / 2, y + h - h / 2, ((w < h) ? w : h) / 2, 45, 270, col);
             // Kinda funky but close
             drawTriangleOutlined(x + w / 2 + w / 4, y + h / 4, x + w, y, x + w, y + h / 2, col, col);
 
@@ -891,14 +866,14 @@ static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y,
             ____/\___>
             */
             int crossOffset = (w / 6);
-            int cl = x + (w / 2) - crossOffset;
-            int cr = x + (w / 2) + crossOffset;
-            int yTop = y + h / 8;
-            int yBot = y + h - h / 8;
+            int cl          = x + (w / 2) - crossOffset;
+            int cr          = x + (w / 2) + crossOffset;
+            int yTop        = y + h / 8;
+            int yBot        = y + h - h / 8;
             drawLineFast(x, yTop, cl, yTop, col);
             drawLineFast(x, yBot, cl, yBot, col);
             drawLineFast(cl, yTop, cr, yBot, col);
-            //drawLineFast(cl, yBot, cr, yTop, col);
+            // drawLineFast(cl, yBot, cr, yTop, col);
             drawLine(cl, yBot, cr, yTop, col, 2);
             drawLineFast(cr, yBot, x + w, yBot, col);
             drawLineFast(cr, yTop, x + w, yTop, col);
@@ -928,15 +903,15 @@ static void synthMainLoop(int64_t elapsedUs)
                 {
                     // Setting file succeeded
                     sd->customFile = true;
-                    sd->filename = sd->filenameBuf;
+                    sd->filename   = sd->filenameBuf;
                 }
             }
             else
             {
                 free(sd->filenameBuf);
                 sd->filenameBuf = NULL;
-                sd->fileMode = false;
-                sd->filename = NULL;
+                sd->fileMode    = false;
+                sd->filename    = NULL;
             }
             sd->screen = SS_VIEW;
         }
@@ -1060,7 +1035,7 @@ static void synthSetupPlayer(void)
 {
     if (sd->fileMode)
     {
-        sd->midiPlayer.loop = sd->loop;
+        sd->midiPlayer.loop                = sd->loop;
         sd->midiPlayer.textMessageCallback = midiTextCallback;
     }
     else
@@ -1078,7 +1053,8 @@ static void synthSetupPlayer(void)
 
 static void synthSetupMenu(void)
 {
-    addSettingsOptionsItemToMenu(sd->menu, menuItemPlayMode, menuItemModeOptions, menuItemModeValues, 2, &menuItemModeBounds, sd->fileMode);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemPlayMode, menuItemModeOptions, menuItemModeValues, 2,
+                                 &menuItemModeBounds, sd->fileMode);
 
     sd->menu = startSubMenu(sd->menu, menuItemSelectFile);
     addSingleItemToMenu(sd->menu, menuItemCustomSong);
@@ -1086,9 +1062,9 @@ static void synthSetupMenu(void)
     char outbuf[128];
     while (spiffsListFiles(outbuf, sizeof(outbuf), &dirh) > 0)
     {
-        if ((strlen(outbuf) > 4 && (!strcmp(&outbuf[strlen(outbuf) - 4], ".mid")
-                || !strcmp(&outbuf[strlen(outbuf) - 4], ".kar")))
-                || (strlen(outbuf) > 7 && !strcmp(&outbuf[strlen(outbuf)] - 5, ".midi")))
+        if ((strlen(outbuf) > 4
+             && (!strcmp(&outbuf[strlen(outbuf) - 4], ".mid") || !strcmp(&outbuf[strlen(outbuf) - 4], ".kar")))
+            || (strlen(outbuf) > 7 && !strcmp(&outbuf[strlen(outbuf)] - 5, ".midi")))
         {
             char* copyStr = strdup(outbuf);
             if (copyStr)
@@ -1121,11 +1097,16 @@ static void synthSetupMenu(void)
 
     sd->menu = endSubMenu(sd->menu);
 
-    addSettingsOptionsItemToMenu(sd->menu, menuItemViewMode, menuItemViewOptions, menuItemViewValues, ARRAY_SIZE(menuItemViewValues), &menuItemViewBounds, sd->viewMode);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemButtonMode, menuItemButtonOptions, menuItemButtonValues, ARRAY_SIZE(menuItemButtonValues), &menuItemButtonBounds, sd->buttonMode);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemTouchMode, menuItemTouchOptions, menuItemTouchValues, ARRAY_SIZE(menuItemTouchValues), &menuItemTouchBounds, sd->touchMode);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemLoop, menuItemLoopOptions, menuItemLoopValues, ARRAY_SIZE(menuItemLoopValues), &menuItemLoopBounds, sd->loop);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemHeadroom, menuItemHeadroomOptions, menuItemHeadroomValues, ARRAY_SIZE(menuItemHeadroomValues), &menuItemHeadroomBounds, sd->headroom);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemViewMode, menuItemViewOptions, menuItemViewValues,
+                                 ARRAY_SIZE(menuItemViewValues), &menuItemViewBounds, sd->viewMode);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemButtonMode, menuItemButtonOptions, menuItemButtonValues,
+                                 ARRAY_SIZE(menuItemButtonValues), &menuItemButtonBounds, sd->buttonMode);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemTouchMode, menuItemTouchOptions, menuItemTouchValues,
+                                 ARRAY_SIZE(menuItemTouchValues), &menuItemTouchBounds, sd->touchMode);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemLoop, menuItemLoopOptions, menuItemLoopValues,
+                                 ARRAY_SIZE(menuItemLoopValues), &menuItemLoopBounds, sd->loop);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemHeadroom, menuItemHeadroomOptions, menuItemHeadroomValues,
+                                 ARRAY_SIZE(menuItemHeadroomValues), &menuItemHeadroomBounds, sd->headroom);
 }
 
 static void synthSetFile(const char* filename)
@@ -1164,7 +1145,7 @@ static void synthSetFile(const char* filename)
         else
         {
             // We failed to open the file
-            sd->fileMode = false;
+            sd->fileMode    = false;
             const char* msg = "Failed to open MIDI file!";
             midiTextCallback(TEXT, msg, strlen(msg));
         }
@@ -1264,8 +1245,8 @@ static void drawSynthMode(void)
         if (sd->fileMode && sd->filename && *sd->filename)
         {
             int16_t textX = (TFT_WIDTH - textWidth(&sd->font, sd->filename)) / 2;
-            iconPosR = drawText(&sd->font, c034, sd->filename, textX, TFT_HEIGHT- sd->font.height - 15);
-            iconPosL = textX - ICON_SIZE - 1;
+            iconPosR      = drawText(&sd->font, c034, sd->filename, textX, TFT_HEIGHT - sd->font.height - 15);
+            iconPosL      = textX - ICON_SIZE - 1;
         }
 
         musicIcon_t statusIcon = MI_PAUSE;
@@ -1460,7 +1441,7 @@ static void synthHandleButton(const buttonEvt_t evt)
                     midiSetTempo(&sd->midiPlayer, BPM_TO_TEMPO(1 + TEMPO_TO_BPM(sd->midiPlayer.tempo)));
                     if (!sd->upHeld)
                     {
-                        sd->upHeld = true;
+                        sd->upHeld      = true;
                         sd->upHeldTimer = 500000;
                     }
                     break;
@@ -1474,7 +1455,7 @@ static void synthHandleButton(const buttonEvt_t evt)
                         midiSetTempo(&sd->midiPlayer, BPM_TO_TEMPO(TEMPO_TO_BPM(sd->midiPlayer.tempo) - 1));
                         if (!sd->downHeld)
                         {
-                            sd->downHeld = true;
+                            sd->downHeld      = true;
                             sd->downHeldTimer = 500000;
                         }
                     }
@@ -1541,13 +1522,13 @@ static void synthHandleButton(const buttonEvt_t evt)
             if (evt.button == PB_UP)
             {
                 // Stop increasing BPM
-                sd->upHeld = false;
+                sd->upHeld      = false;
                 sd->upHeldTimer = 0;
             }
-            else if(evt.button == PB_DOWN)
+            else if (evt.button == PB_DOWN)
             {
                 // Stop decreasing BPM
-                sd->downHeld = false;
+                sd->downHeld      = false;
                 sd->downHeldTimer = 0;
             }
         }
@@ -1559,8 +1540,8 @@ static void handleButtonTimer(int64_t* timer, int64_t interval, int64_t elapsedU
     buttonEvt_t evt;
     while (*timer < elapsedUs)
     {
-        evt.state = sd->lastButtonState;
-        evt.down = true;
+        evt.state  = sd->lastButtonState;
+        evt.down   = true;
         evt.button = button;
         synthHandleButton(evt);
 
@@ -1643,7 +1624,7 @@ static void synthHandleInput(int64_t elapsedUs)
                     }
                     else
                     {
-                            sd->menu = menuButton(sd->menu, evt);
+                        sd->menu = menuButton(sd->menu, evt);
                     }
                     break;
                 }
@@ -1850,7 +1831,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                             sd->filenameBuf = NULL;
                         }
 
-                        sd->filename = label;
+                        sd->filename   = label;
                         sd->customFile = false;
                         writeNvs32(nvsKeyMode, sd->fileMode);
                     }
@@ -1872,7 +1853,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
 
                 if (!sd->installed)
                 {
-                    sd->installed                = installMidiUsb();
+                    sd->installed = installMidiUsb();
                 }
 
                 synthSetupPlayer();
@@ -1910,7 +1891,6 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
     }
     else if (label == menuItemTouchMode)
     {
-
         if (value != sd->touchMode)
         {
             writeNvs32(nvsKeyTouchMode, value);
@@ -1933,7 +1913,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             sd->screen = SS_VIEW;
         }
 
-        sd->loop = value ? true : false;
+        sd->loop            = value ? true : false;
         sd->midiPlayer.loop = sd->loop;
     }
     else if (label == menuItemCustomSong)
@@ -1958,9 +1938,11 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             }
         }
     }
-    else if (label == menuItemHeadroom || (menuItemHeadroomOptions <= label && label <= (menuItemHeadroomOptions + ARRAY_SIZE(menuItemHeadroomOptions))))
+    else if (label == menuItemHeadroom
+             || (menuItemHeadroomOptions <= label
+                 && label <= (menuItemHeadroomOptions + ARRAY_SIZE(menuItemHeadroomOptions))))
     {
-        sd->headroom = value;
+        sd->headroom            = value;
         sd->midiPlayer.headroom = sd->headroom;
         writeNvs32(nvsKeyHeadroom, value);
     }

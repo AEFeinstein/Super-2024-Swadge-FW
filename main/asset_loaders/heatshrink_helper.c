@@ -321,7 +321,7 @@ bool heatshrinkDecompress(uint8_t* dest, uint32_t* destSize, const uint8_t* sour
     if (destSize)
     {
         (*destSize) = (source[0] << 24) | (source[1] << 16) | (source[2] << 8) | (source[3]);
-        sizeRead = true;
+        sizeRead    = true;
     }
 
     // Write the actual data

@@ -247,11 +247,11 @@ void addBefore(list_t* list, void* val, node_t* entry)
     }
     else
     {
-        node_t* prev = entry->prev;
+        node_t* prev    = entry->prev;
         node_t* newNode = malloc(sizeof(node_t));
-        newNode->val = val;
-        newNode->prev = prev;
-        newNode->next = entry;
+        newNode->val    = val;
+        newNode->prev   = prev;
+        newNode->next   = entry;
 
         if (prev)
         {
@@ -286,11 +286,11 @@ void addAfter(list_t* list, void* val, node_t* entry)
     }
     else
     {
-        node_t* next = entry->next;
+        node_t* next    = entry->next;
         node_t* newNode = malloc(sizeof(node_t));
-        newNode->val = val;
-        newNode->prev = entry;
-        newNode->next = next;
+        newNode->val    = val;
+        newNode->prev   = entry;
+        newNode->next   = next;
 
         if (next)
         {

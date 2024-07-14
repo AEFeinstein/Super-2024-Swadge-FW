@@ -41,7 +41,8 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
  * @param xMin  The left edge of the text bounds
  * @param xMax  The
  */
-void drawCharBounds(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax)
+void drawCharBounds(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin,
+                    int16_t yMin, int16_t xMax, int16_t yMax)
 {
     // Do not draw transparent chars
     if (cTransparent == color)
@@ -158,7 +159,6 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
     drawCharBounds(color, h, ch, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
 }
 
-
 /**
  * @brief Draw text to a display with the given color and font
  *
@@ -169,7 +169,8 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
  * @param yOff  The y offset to draw the text at
  * @return The x offset at the end of the drawn string
  */
-int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax)
+int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
+                       int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax)
 {
     while (*text >= ' ')
     {
@@ -505,22 +506,23 @@ void makeOutlineFont(font_t* srcFont, font_t* dstFont, bool spiRam)
  * @param[in,out] timer A pointer to a timer value used to time the marquee
  * @return The x offset at the end of the drawn string
  */
-int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff, int16_t xMax, int64_t* timer)
+int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
+                        int16_t xMax, int64_t* timer)
 {
-    // Marquee speed in microseconds per pixel
-    #define MARQUEE_SPEED 40000
-    int16_t gapW = 4 * textWidth(font, " ");
+// Marquee speed in microseconds per pixel
+#define MARQUEE_SPEED 40000
+    int16_t gapW        = 4 * textWidth(font, " ");
     int64_t repeatDelay = gapW * MARQUEE_SPEED;
-    uint16_t textW = textWidth(font, text);
-    int64_t loopPeriod = (textW + 1 /*- (xMax - xOff)*/) * MARQUEE_SPEED + repeatDelay;
+    uint16_t textW      = textWidth(font, text);
+    int64_t loopPeriod  = (textW + 1 /*- (xMax - xOff)*/) * MARQUEE_SPEED + repeatDelay;
 
     if (*timer > loopPeriod)
     {
         *timer %= loopPeriod;
     }
 
-    int16_t offset = *timer / MARQUEE_SPEED;
-    int16_t endX = drawTextBounds(font, color, text, xOff - offset, yOff, xOff, 0, xMax, TFT_HEIGHT);
+    int16_t offset   = *timer / MARQUEE_SPEED;
+    int16_t endX     = drawTextBounds(font, color, text, xOff - offset, yOff, xOff, 0, xMax, TFT_HEIGHT);
     int16_t endStart = endX + gapW;
 
     if (endStart < xMax)
@@ -543,7 +545,8 @@ int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* te
  * @return true
  * @return false
  */
-bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff, int16_t maxW)
+bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
+                       int16_t maxW)
 {
     uint16_t textW = textWidth(font, text);
     if (textW <= maxW)
@@ -554,7 +557,7 @@ bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* tex
     else
     {
         uint16_t ellipsisW = textWidth(font, "...");
-        uint16_t trimW = textW;
+        uint16_t trimW     = textW;
 
         // Reduce the text width by one character-width until it all fits
         if (strlen(text))
