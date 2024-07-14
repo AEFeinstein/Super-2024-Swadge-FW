@@ -634,6 +634,7 @@ static void synthEnterMode(void)
     sd->longestProgramName = gmProgramNames[24];
     sd->nextExpiry         = 200000;
     sd->midiPlayer.songFinishedCallback = songEndCb;
+    sd->midiPlayer.textMessageCallback = midiTextCallback;
 
     // Read all the NVS values
     int32_t nvsRead = 0;
