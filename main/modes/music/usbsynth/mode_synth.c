@@ -66,6 +66,7 @@ typedef enum
     VM_GRAPH   = 2,
     VM_PACKETS = 4,
     VM_VIZ     = 8,
+    VM_LYRICS  = 16,
 } synthViewMode_t;
 
 typedef enum
@@ -185,7 +186,7 @@ static void synthHandleInput(int64_t elapsedUs);
 static void drawCircleSweep(int x, int y, int r, int startAngle, int sweepDeg, paletteColor_t col);
 static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y, int16_t w, int16_t h);
 static void drawSynthMode(void);
-static void drawMidiText(void);
+static void drawMidiText(bool filter, uint32_t types);
 static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h);
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
                             int16_t height);
@@ -453,7 +454,7 @@ static const char* menuItemModeOptions[] = {
 };
 
 static const char* menuItemViewOptions[] = {
-    "Pretty", "Visualizer", "Waveform", "Waveform+Table", "Waveform+Packets", "Table", "Packets",
+    "Pretty", "Visualizer", "Lyrics", "Lyrics+Visualizer", "Waveform", "Table", "Packets", "Waveform+Table", "Waveform+Packets",
 };
 
 static const char* menuItemButtonOptions[] = {
@@ -484,11 +485,13 @@ static const int32_t menuItemModeValues[] = {
 static const int32_t menuItemViewValues[] = {
     (int32_t)VM_PRETTY,
     (int32_t)VM_VIZ,
+    (int32_t)VM_LYRICS,
+    (int32_t)(VM_VIZ | VM_LYRICS),
     (int32_t)VM_GRAPH,
-    (int32_t)(VM_GRAPH | VM_TEXT),
-    (int32_t)(VM_GRAPH | VM_PACKETS),
     (int32_t)VM_TEXT,
     (int32_t)VM_PACKETS,
+    (int32_t)(VM_GRAPH | VM_TEXT),
+    (int32_t)(VM_GRAPH | VM_PACKETS),
 };
 
 static const int32_t menuItemButtonValues[] = {
@@ -1224,6 +1227,11 @@ static void drawSynthMode(void)
         textY += sd->font.height + 4;
     }
 
+    if (sd->viewMode & VM_LYRICS)
+    {
+        drawMidiText(true, (1 << COPYRIGHT) | (1 << LYRIC) | (1 << TEXT));
+    }
+
     if (sd->viewMode == VM_PRETTY)
     {
         uint16_t pitch = sd->localPitch ? sd->pitch : sd->midiPlayer.channels[sd->localChannel].pitchBend;
@@ -1236,7 +1244,7 @@ static void drawSynthMode(void)
         snprintf(tempoStr, sizeof(tempoStr), "%" PRIu32 " BPM", TEMPO_TO_BPM(sd->midiPlayer.tempo));
         drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 35, 3);
 
-        drawMidiText();
+        drawMidiText(false, 0);
 
 #define ICON_SIZE (sd->font.height)
 
@@ -1282,7 +1290,7 @@ static void drawSynthMode(void)
     }
 }
 
-static void drawMidiText(void)
+static void drawMidiText(bool filter, uint32_t types)
 {
     int msgLen = 0;
     char textMessages[1024];
@@ -1295,6 +1303,12 @@ static void drawMidiText(void)
     while (curNode != NULL && msgLen + 1 < sizeof(textMessages))
     {
         midiTextInfo_t* curInfo = curNode->val;
+
+        if (filter && !((1 << curInfo->type) & types))
+        {
+            curNode = curNode->next;
+            continue;
+        }
 
         if (!colorSet)
         {
