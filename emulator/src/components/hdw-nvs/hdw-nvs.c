@@ -34,6 +34,9 @@ static char* blobToStr(const void* value, size_t length);
 static int hexCharToInt(char c);
 static void strToBlob(char* str, void* outBlob, size_t blobLen);
 
+// Constants
+static const char defaultNvsValue[] = "{\"storage\":{\"test\":1}}";
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -53,7 +56,7 @@ bool initNvs(bool firstTry)
         FILE* nvsFile = fopen(NVS_JSON_FILE, "wb");
         if (NULL != nvsFile)
         {
-            if (1 == fwrite("{}", sizeof("{}"), 1, nvsFile))
+            if (1 == fwrite(defaultNvsValue, sizeof(defaultNvsValue), 1, nvsFile))
             {
                 // Wrote successfully
                 fclose(nvsFile);
