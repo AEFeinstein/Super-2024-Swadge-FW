@@ -103,21 +103,26 @@ int main( int argc, char ** argv )
         fprintf( stderr, "Error: cannot open %s\n", argv[3] );
         return -19;
     }
-    fprintf( f, "#ifndef CNFS_IMAGE_HEADER_H\n" );
-    fprintf( f, "#define CNFS_IMAGE_HEADER_H\n" );
+    fprintf( f, "#pragma once\n" );
+    fprintf( f, "\n" );
     fprintf( f, "#include <stdint.h>\n" );
-    fprintf( f, "#define NR_FILES %d\n", nr_file );
-    fprintf( f, "struct cnfsFileEntry {\n" );
-    fprintf( f, "    const char * name;\n" );
-    fprintf( f, "    uint32_t     len;\n" );
-    fprintf( f, "    uint32_t     offset;\n" );
-    fprintf( f, "};\n" );
-    fprintf( f, "extern const struct cnfsFileEntry cnfs_files[NR_FILES];\n" );
-    fprintf( f, "extern const uint8_t cnfs_data[%d];\n", offset );
-    fprintf( f, "#endif\n" );
+    fprintf( f, "\n" );
+    fprintf( f, "typedef struct\n" );
+    fprintf( f, "{\n" );
+    fprintf( f, "    const char* name;\n" );
+    fprintf( f, "    uint32_t len;\n" );
+    fprintf( f, "    uint32_t offset;\n" );
+    fprintf( f, "} cnfsFileEntry;\n" );
+    fprintf( f, "\n" );
+    fprintf(f, "const uint8_t* getCnfsImage(void);\n");
+    fprintf(f, "int32_t getCnfsSize(void);\n");
+    fprintf(f, "const cnfsFileEntry* getCnfsFiles(void);\n");
+    fprintf(f, "int32_t getCnfsNumFiles(void);\n");
     fclose( f );
 
     int directorySize = 0;
+
+    char* hdrNoPath = strrchr(argv[3], '/') + 1;
 
     f = fopen( argv[2], "w" );
      if( !f )
@@ -126,15 +131,11 @@ int main( int argc, char ** argv )
         return -20;
     }
     fprintf( f, "#include <stdint.h>\n" );
+    fprintf( f, "#include \"%s\"\n", hdrNoPath );
+    fprintf( f, "\n" );
     fprintf( f, "#define NR_FILES %d\n", nr_file );
-    fprintf( f, "#ifndef CNFS_IMAGE_HEADER_H\n" );
-    fprintf( f, "struct cnfsFileEntry {\n" );
-    fprintf( f, "    const char * name;\n" );
-    fprintf( f, "    uint32_t     len;\n" );
-    fprintf( f, "    uint32_t     offset;\n" );
-    fprintf( f, "};\n" );
-    fprintf( f, "#endif\n" );
-    fprintf( f, "const struct cnfsFileEntry cnfs_files[NR_FILES] = {\n" );
+    fprintf( f, "\n" );
+    fprintf( f, "const cnfsFileEntry cnfs_files[NR_FILES] = {\n" );
     for( i = 0; i < nr_file; i++ )
     {
         struct fileEntry * fe = entries + i;
@@ -142,6 +143,7 @@ int main( int argc, char ** argv )
         directorySize += (((strlen( fe->filename ) + 1) + 3 ) & (~3)) + 12;
     }
     fprintf( f, "};\n" );
+    fprintf( f, "\n" );
     fprintf( f, "const uint8_t cnfs_data[%d] = {\n\t", offset );
     int ki = 0;
     for( i = 0; i < nr_file; i++ )
@@ -151,11 +153,31 @@ int main( int argc, char ** argv )
         int k;
         for( k = 0; k < fe->len; k++ )
         {
-            fprintf( f, "%d%s", fe->data[k], (k == fe->len-1 ||  ( ( ki & 0xf ) == 0xf )) ? ",\n\t" : ", " );
+            fprintf( f, "0x%02X%s", fe->data[k], (k == fe->len-1 ||  ( ( ki & 0xf ) == 0xf )) ? ",\n\t" : ", " );
             ki++;
         }
     }
     fprintf( f, "\n};\n" );
+    fprintf(f, "\n");
+    fprintf(f, "const uint8_t* getCnfsImage(void)\n");
+    fprintf(f, "{\n");
+    fprintf(f, "    return cnfs_data;\n");
+    fprintf(f, "}\n");
+    fprintf(f, "\n");
+    fprintf(f, "int32_t getCnfsSize(void)\n");
+    fprintf(f, "{\n");
+    fprintf(f, "    return sizeof(cnfs_data);\n");
+    fprintf(f, "}\n");
+    fprintf(f, "\n");
+    fprintf(f, "const cnfsFileEntry* getCnfsFiles(void)\n");
+    fprintf(f, "{\n");
+    fprintf(f, "    return cnfs_files;\n");
+    fprintf(f, "}\n");
+    fprintf(f, "\n");
+    fprintf(f, "int32_t getCnfsNumFiles(void)\n");
+    fprintf(f, "{\n");
+    fprintf(f, "    return NR_FILES;\n");
+    fprintf(f, "}\n");
     fclose( f );
 
     printf( "Image size: %d bytes\n", offset );

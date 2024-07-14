@@ -45,16 +45,19 @@ endif
 # Source Files
 ################################################################################
 
+CNFS_FILE = main/utils/cnfs_image.c
+
 # This is a list of directories to scan for c files recursively
 SRC_DIRS_RECURSIVE = emulator/src main
 # This is a list of directories to scan for c files not recursively
 SRC_DIRS_FLAT = emulator/src-lib
 # This is a list of files to compile directly. There's no scanning here
-SRC_FILES =
+# cnfs_image.c may not exist when the makefile is invoked, explicitly list it
+SRC_FILES = $(CNFS_FILE)
 # This is all the source directories combined
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
-# This is all the source files combined
-SOURCES   = $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES)
+# This is all the source files combined and deduplicated
+SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES))
 
 # The emulator doesn't build components, but there is a target for formatting them
 ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
@@ -292,10 +295,10 @@ EXECUTABLE = swadge_emulator
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets clean docs format cppcheck firmware clean-firmware print-%
+.PHONY: all assets clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) print-%
 
-# Build everything!
-all: $(EXECUTABLE) assets
+# Build the executable
+all: $(EXECUTABLE)
 
 assets:
 	$(MAKE) -C ./tools/assets_preprocessor/
@@ -310,13 +313,20 @@ $(EXECUTABLE): $(OBJECTS)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
+# To create the c file with assets, run these tools
+$(CNFS_FILE):
+	$(MAKE) -C ./tools/assets_preprocessor/
+	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
+	$(MAKE) -C ./tools/cnfs/
+	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+
 # This cleans emulator files
 clean:
 	$(MAKE) -C ./tools/assets_preprocessor/ clean
 	$(MAKE) -C ./tools/cnfs clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
-	-@rm -rf ./main/utils/cnfs/cnfs_image.*
+	-@rm -rf ./main/utils/cnfs/cnfs_image.c
 
 # This cleans everything
 fullclean: clean
