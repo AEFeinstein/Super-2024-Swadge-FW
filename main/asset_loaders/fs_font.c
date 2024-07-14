@@ -9,7 +9,7 @@
 #include <esp_heap_caps.h>
 
 #include "cnfs.h"
-#include "spiffs_font.h"
+#include "fs_font.h"
 
 //==============================================================================
 // Functions
@@ -77,7 +77,7 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
         font->chars[chIdx++].width = 0;
     }
 
-    // Free the SPIFFS data
+    // Free the read data
     free(buf);
 
     return true;

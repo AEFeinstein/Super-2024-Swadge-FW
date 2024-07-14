@@ -259,7 +259,7 @@ typedef struct
 //==============================================================================
 
 /**
- * @brief Load a MIDI file from SPIFFS
+ * @brief Load a MIDI file from the filesystem
  *
  * @param file A pointer to a midiFile_t struct to load the file into
  * @param name The name of the MIDI file to load

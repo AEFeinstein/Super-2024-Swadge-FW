@@ -298,8 +298,8 @@ EXECUTABLE = swadge_emulator
 all: $(EXECUTABLE) assets
 
 assets:
-	$(MAKE) -C ./tools/cnfs/
-	./tools/cnfs/cnfs_gen spiffs_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+	$(MAKE) -C ./tools/assets_preprocessor/
+	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
@@ -312,7 +312,7 @@ $(EXECUTABLE): $(OBJECTS)
 
 # This cleans emulator files
 clean:
-	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
+	$(MAKE) -C ./tools/assets_preprocessor/ clean
 	$(MAKE) -C ./tools/cnfs clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
@@ -349,9 +349,9 @@ format:
 
 clean-firmware:
 	idf.py clean
-	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
+	$(MAKE) -C ./tools/assets_preprocessor/ clean
 	-@rm -rf ./docs/html
-	-@rm -rf ./spiffs_image/*
+	-@rm -rf ./assets_image/*
 
 firmware:
 	idf.py build

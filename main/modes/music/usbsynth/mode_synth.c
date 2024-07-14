@@ -5,7 +5,7 @@
 #include "esp_timer.h"
 
 #include "swadge2024.h"
-#include "spiffs_font.h"
+#include "fs_font.h"
 #include "hdw-btn.h"
 #include "touchUtils.h"
 #include "shapes.h"

@@ -88,10 +88,10 @@
  *
  * - hdw-nvs.h: Learn how to save and load persistent runtime data
  * - cnfs.h: Learn how to load and use assets from the CNFS blob! These file types have their own loaders:
- *     - spiffs_font.h: Load font bitmaps
- *     - spiffs_wsg.h: Load WSG images
- *     - spiffs_json.h: Load JSON
- *     - spiffs_txt.h: Load plaintext
+ *     - fs_font.h: Load font bitmaps
+ *     - fs_wsg.h: Load WSG images
+ *     - fs_json.h: Load JSON
+ *     - fs_txt.h: Load plaintext
  *     - midiFileParser.h: Load MIDI files
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
@@ -284,7 +284,7 @@ void app_main(void)
     // Init timers
     esp_timer_init();
 
-    // Init SPIFFS file system
+    // Init file system
     initCnfs();
 
     // Init buttons and touch pads

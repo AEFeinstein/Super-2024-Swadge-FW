@@ -38,7 +38,7 @@ bool deinitSpiffs(void)
 
 /**
  * @brief Read a file from SPIFFS into an output array. Files that are in the
- * spiffs_image folder before compilation and flashing will automatically
+ * assets_image folder before compilation and flashing will automatically
  * be included in the firmware
  *
  * @param fname   The name of the file to load
@@ -54,7 +54,7 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     // Make sure the file exists, case sensitive
     bool fileExists = false;
     DIR* d;
-    d = opendir("./spiffs_image/");
+    d = opendir("./assets_image/");
     if (d)
     {
         struct dirent* dir;
@@ -82,7 +82,7 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     // ESP_LOGD("SPIFFS", "Reading %s", fname);
 
     // Open for reading the given file
-    char fnameFull[128] = "./spiffs_image/";
+    char fnameFull[128] = "./assets_image/";
     strcat(fnameFull, fname);
     FILE* f = fopen(fnameFull, "rb");
     if (f == NULL)

@@ -5,8 +5,8 @@
  * Ths Swadge loads an assets "image" as `cnfs_files` and `cnfs_data`.
  *
  * During the build, assets in the \c /assets/ folder, such as PNG images and MIDI songs, are processed into
- * Swadge-friendly formats and written to the \c /spiffs_image/ folder. The contents of the \c /spiffs_image/ are then
- * packaged into a matching `_files` and `_data` image which is stored as a C file and loaded alongside cnfs.c.
+ * Swadge-friendly formats and written to the \c /assets_image/ folder. The contents of the \c /assets_image/ are then
+ * packaged into a matching `cnfs_files` and `cnfs_data` image which are stored as a C file and loaded alongside cnfs.c.
  *
  * \section cnfs_usage Usage
  *

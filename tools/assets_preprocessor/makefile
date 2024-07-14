@@ -128,7 +128,7 @@ LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
 ################################################################################
 
 # These are the files to build
-EXECUTABLE = spiffs_file_preprocessor
+EXECUTABLE = assets_preprocessor
 
 ################################################################################
 # Targets for Building

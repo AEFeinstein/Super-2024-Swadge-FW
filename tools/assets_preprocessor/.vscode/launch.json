@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/spiffs_file_preprocessor",
+            "program": "${workspaceFolder}/assets_preprocessor",
             "args": [
                 "-i",
                 "./in",
