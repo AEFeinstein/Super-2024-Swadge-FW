@@ -118,6 +118,13 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./utils"
                                 "./utils/fl_math")
 
+# Custom target will always cause its dependencies to be evaluated and is
+# run by default
+add_custom_target(dummy_target ALL
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
+)
+
+# custom_output will always be rebuilt because it depends on always_rebuild
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
@@ -125,6 +132,14 @@ add_custom_command(
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs/cnfs_gen ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
+    DEPENDS always_rebuild
+)
+
+# Dummy output which is never actually produced. Anything that depends on
+# this will always be rebuilt.
+add_custom_command(
+    OUTPUT always_rebuild
+    COMMAND cmake -E echo
 )
 
 # Save the git hash in a variable
