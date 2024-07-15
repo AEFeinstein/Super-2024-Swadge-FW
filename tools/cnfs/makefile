@@ -44,7 +44,7 @@ CFLAGS_WARNINGS_EXTRA = \
 #	-Wsign-conversion \
 #	-Wdouble-promotion
 
-CFLAGS += -g -std=gnu99 -Os $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA)
+CFLAGS += -g -std=gnu99 -O2 $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA)
 
 all : cnfs_gen
 
