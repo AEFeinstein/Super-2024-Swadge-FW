@@ -23,8 +23,8 @@
 // Static Function Declarations
 //==============================================================================
 
-static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff,
-                                         int16_t* yOff, int16_t xMax, int16_t yMax, uint16_t flags);
+static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t xStart,
+                                         int16_t yStart, int16_t* xOff, int16_t* yOff, int16_t xMax, int16_t yMax, uint16_t flags);
 
 //==============================================================================
 // Functions
@@ -235,8 +235,8 @@ uint16_t textWidth(const font_t* font, const char* text)
     return width;
 }
 
-static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff,
-                                         int16_t* yOff, int16_t xMax, int16_t yMax, uint16_t flags)
+static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t xStart, int16_t yStart,
+                                         int16_t* xOff, int16_t* yOff, int16_t xMax, int16_t yMax, uint16_t flags)
 {
     const char* textPtr = text;
     int16_t textX = *xOff, textY = *yOff;
@@ -256,7 +256,7 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
         *yOff = textY;
 
         // skip leading spaces if we're at the start of the line
-        for (; textX == *xOff && *textPtr == ' '; textPtr++)
+        for (; textX == xStart && *textPtr == ' '; textPtr++)
         {
             ;
         }
@@ -264,7 +264,7 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
         // handle newlines
         if (*textPtr == '\n')
         {
-            textX = *xOff;
+            textX = xStart;
             textY += font->height + 1;
             textPtr++;
             continue;
@@ -323,7 +323,7 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
         {
             // The line won't fit
             textY += font->height + 1;
-            textX = *xOff;
+            textX = xStart;
             continue;
         }
 
@@ -369,7 +369,15 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
 const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
                              int16_t xMax, int16_t yMax)
 {
-    return drawTextWordWrapFlags(font, color, text, xOff, yOff, xMax, yMax, TEXT_DRAW);
+    return drawTextWordWrapFlags(font, color, text, *xOff, *yOff, xOff, yOff, xMax, yMax, TEXT_DRAW);
+}
+
+const char* drawTextWordWrapFixed(const font_t* font, paletteColor_t color, const char* text,
+                                  int16_t xStart, int16_t yStart,
+                                  int16_t* xOff, int16_t* yOff,
+                                  int16_t xMax, int16_t yMax)
+{
+    return drawTextWordWrapFlags(font, color, text, xStart, yStart, xOff, yOff, xMax, yMax, TEXT_DRAW);
 }
 
 /**
@@ -385,7 +393,7 @@ uint16_t textWordWrapHeight(const font_t* font, const char* text, int16_t width,
 {
     int16_t xEnd = 0;
     int16_t yEnd = 0;
-    drawTextWordWrapFlags(font, cTransparent, text, &xEnd, &yEnd, width, maxHeight, TEXT_MEASURE);
+    drawTextWordWrapFlags(font, cTransparent, text, 0, 0, &xEnd, &yEnd, width, maxHeight, TEXT_MEASURE);
     return yEnd + font->height + 1;
 }
 
