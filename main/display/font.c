@@ -583,3 +583,34 @@ bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* tex
         return true;
     }
 }
+
+/**
+ * @brief Draws text divided into any number of colored segments.
+ *
+ * The entire length of text will be divided into \c colorCount segments
+ *
+ * @param font  The font to use for the text
+ * @param text  The text to draw to the display
+ * @param xOff  The x offset to draw the text at
+ * @param yOff  The y offset to draw the text at
+ * @param colors An array of colors to use when drawing the text
+ * @param colorCount The number of elements in the colors array
+ * @param segmentCount The number of segments to divide the text into
+ * @return int16_t The x-offset at the end of the text
+ */
+int16_t drawTextMulticolored(const font_t* font, const char* text, int16_t xOff, int16_t yOff, paletteColor_t* colors, uint32_t colorCount, uint32_t segmentCount)
+{
+    int16_t w = textWidth(font, text);
+    int16_t result = xOff;
+    if (segmentCount <= 0)
+    {
+        segmentCount = colorCount;
+    }
+
+    for (int i = 0; i < segmentCount; i++)
+    {
+        result = drawTextBounds(font, colors[i % colorCount], text, xOff, yOff, xOff + (w * i / segmentCount), 0, xOff + (w * (i + 1) / segmentCount), TFT_HEIGHT);
+    }
+
+    return result;
+}
