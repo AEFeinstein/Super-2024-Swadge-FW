@@ -89,15 +89,48 @@ typedef enum
 
 typedef struct
 {
-    const char* text;
-    uint32_t length;
+    union
+    {
+        struct
+        {
+            const char* text;
+            uint32_t length;
+            uint32_t tempo;
+        };
+    };
+
     metaEventType_t type;
-    uint64_t expiration;
+    union
+    {
+        uint64_t expiration;
+        uint64_t timestamp;
+    };
 } midiTextInfo_t;
 
 typedef struct
 {
+    /// @brief True if the MIDI file's text is in .KAR format
+    bool karFormat;
+
+    /// @brief Preloaded list of lyrics, in order
+    list_t lyrics;
+
+    /// @brief The file's tempo (TODO it can change)
+    uint32_t tempo;
+
+    /// @brief Number of MIDI ticks in a single note (lyric)
+    uint32_t noteLength;
+
+    /// @brief The length, in MIDI ticks, of one measure
+    uint32_t measureLength;
+} karaokeInfo_t;
+
+typedef struct
+{
     font_t font;
+    font_t betterFont;
+    font_t betterOutline;
+
     bool pluggedIn;
     bool installed;
     bool sustain;
@@ -159,6 +192,8 @@ typedef struct
     list_t midiTexts;
     uint64_t nextExpiry;
 
+    karaokeInfo_t karaoke;
+
     list_t customFiles;
 
     menu_t* menu;
@@ -178,6 +213,8 @@ static void synthDacCallback(uint8_t* samples, int16_t len);
 
 static void synthSetupPlayer(void);
 static void synthSetupMenu(void);
+static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile);
+static void unloadLyrics(karaokeInfo_t* karInfo);
 static void synthSetFile(const char* filename);
 static void synthHandleButton(const buttonEvt_t evt);
 static void handleButtonTimer(int64_t* timer, int64_t interval, int64_t elapsedUs, buttonBit_t button);
@@ -192,7 +229,8 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
                             int16_t height);
 static void drawSampleGraph(void);
 static void drawSampleGraphCircular(void);
-static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text);
+static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo);
+static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text, bool kar);
 static void midiTextCallback(metaEventType_t type, const char* text, uint32_t length);
 static void synthMenuCb(const char* label, bool selected, uint32_t value);
 static void songEndCb(void);
@@ -430,6 +468,33 @@ static const paletteColor_t noteColors[] = {
     c503, // B  - Pink
 };
 
+static const paletteColor_t textColors[] = {
+    c500, // C  - Red
+    c530, // C# - Orange
+    c550, // D  - Yellow
+    c350, // D# - Lime Green
+    c050, // E  - Green
+    c053, // F  - Aqua
+    c055, // F# - Cyan
+    c035, // G  - "Indigo"
+    c005, // G# - Blue
+    c305, // A  - Violet
+    c505, // A# - Fuchsia
+    c503, // B  - Pink
+    c500, // C  - Red
+    c530, // C# - Orange
+    c550, // D  - Yellow
+    c350, // D# - Lime Green
+    c050, // E  - Green
+    c053, // F  - Aqua
+    c055, // F# - Cyan
+    c035, // G  - "Indigo"
+    c005, // G# - Blue
+    c305, // A  - Violet
+    c505, // A# - Fuchsia
+    c503, // B  - Pink
+};
+
 // Menu stuff
 static const char* menuItemPlayMode   = "MIDI Mode: ";
 static const char* menuItemSelectFile = "Select File...";
@@ -578,6 +643,7 @@ static settingParam_t menuItemHeadroomBounds = {
 };
 
 const char synthModeName[] = "MIDI Player";
+static const char intermissionMsg[] = "SWADGAOKE";
 
 swadgeMode_t synthMode = {
     .modeName                 = synthModeName,
@@ -605,6 +671,9 @@ static void synthEnterMode(void)
 {
     sd = calloc(1, sizeof(synthData_t));
     loadFont("ibm_vga8.font", &sd->font, true);
+    loadFont("sonic.font", &sd->betterFont, true);
+    makeOutlineFont(&sd->betterFont, &sd->betterOutline, true);
+
     sd->perc[9] = true;
     midiPlayerInit(&sd->midiPlayer);
     sd->noteTime                        = 200000;
@@ -744,6 +813,7 @@ static void synthExitMode(void)
     deinitMenuManiaRenderer(sd->renderer);
     deinitMenu(sd->menu);
 
+    unloadLyrics(&sd->karaoke);
     unloadMidiFile(&sd->midiFile);
     midiPlayerReset(&sd->midiPlayer);
 
@@ -760,6 +830,8 @@ static void synthExitMode(void)
         free(customFilename);
     }
 
+    freeFont(&sd->betterOutline);
+    freeFont(&sd->betterFont);
     freeFont(&sd->font);
     free(sd);
     sd = NULL;
@@ -1014,6 +1086,18 @@ static void synthMainLoop(int64_t elapsedUs)
         sd->nextExpiry = now + 2000000;
     }
 
+    // And handle specifically the lyrics differently
+
+    // Plan:
+    // - Starting at the <topLyric>, loop through the lyrics.
+    // - IF the lyrics are in .KAR format (check for this earlier), treat the lyrics as a whole paragraph
+    // - IF they don't, use some musical length of time that makes sense to define a whole block of lyrics (measure?)
+    // - Once a whole paragraph has been expired for whatever amount of time, drop it - advance <topLyric> past it
+    // - Keep advancing forward until we get to the start of the next block of not-yet-played lyrics
+    // - If those lyrics are very far in the future (>= 2 measures or something?) don't show em
+    // - If those lyrics are nearby in the future, show the whole group
+    // - Maybe keep it to 2 paragraphs at once? 2 or 3 measures? idk
+
     // just a little scope for the frame timer I stole from pinball
     {
         int32_t startIdx  = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
@@ -1112,6 +1196,76 @@ static void synthSetupMenu(void)
                                  ARRAY_SIZE(menuItemHeadroomValues), &menuItemHeadroomBounds, sd->headroom);
 }
 
+static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
+{
+    bool karFormat = false;
+    uint32_t eventMask = (1 << COPYRIGHT) | (1 << SEQUENCE_OR_TRACK_NAME) | (1 << LYRIC) | (1 << TEXT);
+    midiFileReader_t reader;
+    if (initMidiParser(&reader, midiFile))
+    {
+        reader.handleMetaEvents = true;
+        uint32_t tempo = 500000;
+
+        midiEvent_t event;
+
+        while (midiNextEvent(&reader, &event))
+        {
+            if (event.type == META_EVENT && event.meta.type < 0xF && 0 != ((1 << event.meta.type) & eventMask))
+            {
+                if (!karFormat && (event.meta.type == LYRIC || event.meta.type == TEXT) && event.meta.length > 0)
+                {
+                    char start = event.meta.text[0];
+                    char end = event.meta.text[event.meta.length-1];
+                    if (start == '\\' || end == '\\'
+                        || start == '/' || end == '/')
+                    {
+                        karFormat = true;
+                    }
+                }
+
+                // TODO we could save a couple bytes if we parsed the file an additional time to check how many events there are in total...
+                midiTextInfo_t* info = (midiTextInfo_t*)malloc(sizeof(midiTextInfo_t));
+
+                if (info)
+                {
+                    info->text   = event.meta.text;
+                    info->length = event.meta.length;
+                    info->type   = event.meta.type;
+                    info->tempo  = tempo;
+                    info->timestamp = event.absTime;
+
+                    push(&karInfo->lyrics, info);
+                }
+            }
+            else if (event.type == META_EVENT && event.meta.type == TEMPO)
+            {
+                tempo = event.meta.tempo;
+            }
+            else if (event.type == META_EVENT && event.meta.type == TIME_SIGNATURE)
+            {
+                uint8_t beatsPerMeasure = event.meta.timeSignature.numerator;
+                // I don't understand how this isn't the same thing as the denominator?
+                uint32_t quarterNotesPerBeat = event.meta.timeSignature.num32ndNotesPerBeat / 8;
+                //uint32_t typeOfNotes = (1 << event.meta.timeSignature.denominator);
+                karInfo->measureLength = beatsPerMeasure;
+                karInfo->noteLength = quarterNotesPerBeat;
+            }
+        }
+
+        deinitMidiParser(&reader);
+        karInfo->karFormat = karFormat;
+    }
+}
+
+static void unloadLyrics(karaokeInfo_t* karInfo)
+{
+    void* textInfo = NULL;
+    while (NULL != (textInfo = pop(&karInfo->lyrics)))
+    {
+        free(textInfo);
+    }
+}
+
 static void synthSetFile(const char* filename)
 {
     // First: stop and reset the MIDI player
@@ -1127,6 +1281,8 @@ static void synthSetFile(const char* filename)
         free(textInfo);
     }
 
+    unloadLyrics(&sd->karaoke);
+
     // Finally: Unload the MIDI file itself
     unloadMidiFile(&sd->midiFile);
 
@@ -1138,6 +1294,7 @@ static void synthSetFile(const char* filename)
             sd->fileMode = true;
 
             midiSetFile(&sd->midiPlayer, &sd->midiFile);
+            preloadLyrics(&sd->karaoke, &sd->midiFile);
 
             // And tell it to play immediately
             midiPause(&sd->midiPlayer, false);
@@ -1229,7 +1386,7 @@ static void drawSynthMode(void)
 
     if (sd->viewMode & VM_LYRICS)
     {
-        drawMidiText(true, (1 << COPYRIGHT) | (1 << LYRIC) | (1 << TEXT));
+        drawKaraokeLyrics(SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division), &sd->karaoke);
     }
 
     if (sd->viewMode == VM_PRETTY)
@@ -1288,6 +1445,128 @@ static void drawSynthMode(void)
         drawText(&sd->font, c500, countsBuf, TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15,
                  TFT_HEIGHT - sd->font.height - 15);
     }
+}
+
+static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
+{
+    int msgLen = 0;
+    char textMessages[1024];
+    textMessages[0] = '\0';
+
+    paletteColor_t midiTextColor = c550;
+    bool colorSet                = false;
+
+    uint32_t now = ticks;
+    int32_t noteLength = 24;
+    //printf("noteLength from karInfo == %d\n", karInfo->noteLength);
+    //printf("measureLength from karInfo == %d\n", karInfo->measureLength);
+
+    const int16_t startX = 18;
+    const int16_t startY = 18;
+
+    int16_t x = startX;
+    int16_t y = startY;
+
+    int curStage = 0;
+
+    // Timer for very long pauses
+    bool drawBar = true;
+    uint32_t nearLyric = 0;
+    uint32_t farLyric = 0;
+
+    node_t* curNode = karInfo->lyrics.first;
+    while (curNode != NULL && msgLen + 1 < sizeof(textMessages))
+    {
+        midiTextInfo_t* curInfo = curNode->val;
+        int32_t delta = curInfo->timestamp - now;
+        int32_t oldCutoff = -noteLength * 16;
+        int32_t newCutoff = noteLength * 16;
+        bool skip = false;
+
+        if (oldCutoff < delta && delta < 0)
+        {
+            drawBar = false;
+        }
+        else if (newCutoff > delta && delta >= 0)
+        {
+            drawBar = false;
+            if (curStage < 1)
+            {
+                // Flush previous messages
+                drawTextWordWrapFixed(&sd->font, c550, textMessages, startX, startY, &x, &y, TFT_WIDTH, TFT_HEIGHT);
+                msgLen = 0;
+                textMessages[0] = '\0';
+
+                if (delta <= noteLength)
+                {
+                    msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
+                    int w = textWidth(&sd->font, textMessages);
+                    int progress = w * (noteLength - delta) / noteLength;
+                    skip = true;
+
+                    if (x + w >= TFT_WIDTH)
+                    {
+                        x = startX;
+                        y += sd->font.height + 1;
+                    }
+                    drawTextBounds(&sd->font, c550, textMessages, x, y, 0, 0, x + progress, TFT_HEIGHT);
+                    x = drawTextBounds(&sd->font, c555, textMessages, x, y, x + progress, 0, TFT_WIDTH, TFT_HEIGHT);
+                    msgLen = 0;
+                    textMessages[0] = '\0';
+                }
+
+                curStage = 1;
+            }
+        }
+        else
+        {
+            if (delta > 0)
+            {
+                farLyric = curInfo->timestamp;
+                // Lyric too far in future, we're done this iteration
+                break;
+            }
+
+            nearLyric = curInfo->timestamp;
+            curNode = curNode->next;
+            continue;
+        }
+
+        if (!skip)
+        {
+            msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
+        }
+
+        curNode = curNode->next;
+    }
+
+    if (drawBar)
+    {
+        int w = (TFT_WIDTH - 60) * (farLyric - now) / (farLyric - nearLyric);
+        drawRect(30, TFT_HEIGHT - 30, TFT_WIDTH - 30, TFT_HEIGHT - 20, c550);
+        fillDisplayArea(30, TFT_HEIGHT - 30, 30 + CLAMP(TFT_WIDTH - 60 - w, 0, TFT_WIDTH - 60), TFT_HEIGHT - 20, c550);
+
+        int16_t intermissionX = (TFT_WIDTH - textWidth(&sd->betterFont, intermissionMsg)) / 2;
+        drawTextMulticolored(&sd->betterFont, intermissionMsg, intermissionX, (TFT_HEIGHT - sd->betterFont.height) / 2, textColors + ((((farLyric - nearLyric) - (farLyric - now)) / (noteLength / 2)) % (ARRAY_SIZE(textColors) / 2)), ARRAY_SIZE(textColors) / 2, 16);
+        drawText(&sd->betterOutline, c555, intermissionMsg, intermissionX, (TFT_HEIGHT - sd->betterOutline.height) / 2);
+    }
+
+    switch (curStage)
+    {
+        case 0: // ???
+        midiTextColor = c550;
+        break;
+
+        case 1:
+        midiTextColor = c555;
+        break;
+
+        case 2:
+        midiTextColor = c555;
+        break;
+    }
+
+    drawTextWordWrapFixed(&sd->font, midiTextColor, textMessages, startX, startY, &x, &y, TFT_WIDTH, TFT_HEIGHT);
 }
 
 static void drawMidiText(bool filter, uint32_t types)
@@ -1352,7 +1631,7 @@ static void drawMidiText(bool filter, uint32_t types)
                 textMessages[msgLen++] = ' ';
             }
         }
-        msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo);
+        msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, false);
 
         curNode = curNode->next;
     }
@@ -1379,8 +1658,13 @@ static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, i
 static void synthDacCallback(uint8_t* samples, int16_t len)
 {
     midiPlayerFillBuffer(&sd->midiPlayer, samples, len);
-    memcpy(sd->lastSamples, samples, MIN(len, VIZ_SAMPLE_COUNT));
-    sd->sampleCount = MIN(len, VIZ_SAMPLE_COUNT);
+
+    // Leave the visualizer doing something interesting while paused but not stopped
+    if (!sd->midiPlayer.paused || sd->stopped)
+    {
+        memcpy(sd->lastSamples, samples, MIN(len, VIZ_SAMPLE_COUNT));
+        sd->sampleCount = MIN(len, VIZ_SAMPLE_COUNT);
+    }
 }
 
 static void synthHandleButton(const buttonEvt_t evt)
@@ -1778,9 +2062,10 @@ static void drawSampleGraphCircular(void)
  * @param dest The buffer to write to
  * @param n The maximum number of bytes to write to the buffer
  * @param text A pointer to a struct containing text info
+ * @param kar  True if .KAR formatting should be handled
  * @return int The number of bytes written to dest
  */
-static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text)
+static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text, bool kar)
 {
     char* p            = dest;
     const char* bufEnd = dest + n;
@@ -1790,13 +2075,42 @@ static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text)
 
     while (p < bufEnd && s < srcEnd)
     {
-        if (*s >= ' ' && *s <= '~')
+        bool skip = false;
+        if (kar && (s == text->text || s == srcEnd - 1))
+        {
+            // First or last char -- handle the special chars
+            if (*s == '\\' || *s == '/')
+            {
+                // Line break or paragraph break
+                *p++ = '\n';
+
+                if (p >= bufEnd) break;
+                skip = true;
+            }
+            if (*s == '/')
+            {
+                // Paragraph break
+                *p++ = '\n';
+
+                if (p >= bufEnd) break;
+                skip = true;
+            }
+            if (*s == '-')
+            {
+                // Skip it
+                skip = true;
+            }
+        }
+
+        if (!skip && *s >= ' ' && *s <= '~')
         {
             *p++ = *s;
         }
 
         s++;
     }
+
+    *p = 0;
 
     return p - dest;
 }

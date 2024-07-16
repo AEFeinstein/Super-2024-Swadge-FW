@@ -90,6 +90,9 @@
 #define BOOL_TO_MIDI(val) (val ? MIDI_TRUE : MIDI_FALSE)
 #define MIDI_DEF_HEADROOM 0x2666
 
+/// @brief Convert the sample count to MIDI ticks
+#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
+
 /// @brief Callback function used to provide feedback when a song finishes playing
 typedef void (*songFinishedCbFn)(void);
 
