@@ -67,6 +67,7 @@ typedef enum
     VM_PACKETS = 4,
     VM_VIZ     = 8,
     VM_LYRICS  = 16,
+    VM_TIMING  = 32,
 } synthViewMode_t;
 
 typedef enum
@@ -123,6 +124,8 @@ typedef struct
 
     /// @brief The length, in MIDI ticks, of one measure
     uint32_t measureLength;
+
+    midiTimeSignature_t timeSignature;
 } karaokeInfo_t;
 
 typedef struct
@@ -223,6 +226,7 @@ static void synthHandleInput(int64_t elapsedUs);
 static void drawCircleSweep(int x, int y, int r, int startAngle, int sweepDeg, paletteColor_t col);
 static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y, int16_t w, int16_t h);
 static void drawSynthMode(void);
+static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16_t metX, int16_t metY, int16_t metR);
 static void drawMidiText(bool filter, uint32_t types);
 static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h);
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
@@ -520,6 +524,7 @@ static const char* menuItemModeOptions[] = {
 
 static const char* menuItemViewOptions[] = {
     "Pretty", "Visualizer", "Lyrics", "Lyrics+Visualizer", "Waveform", "Table", "Packets", "Waveform+Table", "Waveform+Packets",
+    "Timing",
 };
 
 static const char* menuItemButtonOptions[] = {
@@ -557,6 +562,7 @@ static const int32_t menuItemViewValues[] = {
     (int32_t)VM_PACKETS,
     (int32_t)(VM_GRAPH | VM_TEXT),
     (int32_t)(VM_GRAPH | VM_PACKETS),
+    (int32_t)VM_TIMING,
 };
 
 static const int32_t menuItemButtonValues[] = {
@@ -610,7 +616,7 @@ static settingParam_t menuItemModeBounds = {
 static settingParam_t menuItemViewBounds = {
     .def = VM_PRETTY,
     .min = VM_PRETTY,
-    .max = (VM_VIZ << 1) - 1,
+    .max = (VM_TIMING << 1) - 1,
     .key = nvsKeyViewMode,
 };
 
@@ -1243,12 +1249,14 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
             }
             else if (event.type == META_EVENT && event.meta.type == TIME_SIGNATURE)
             {
-                uint8_t beatsPerMeasure = event.meta.timeSignature.numerator;
+                /*uint8_t beatsPerMeasure = event.meta.timeSignature.numerator;
                 // I don't understand how this isn't the same thing as the denominator?
                 uint32_t quarterNotesPerBeat = event.meta.timeSignature.num32ndNotesPerBeat / 8;
                 //uint32_t typeOfNotes = (1 << event.meta.timeSignature.denominator);
                 karInfo->measureLength = beatsPerMeasure;
-                karInfo->noteLength = quarterNotesPerBeat;
+                karInfo->noteLength = quarterNotesPerBeat;*/
+
+                memcpy(&karInfo->timeSignature, &event.meta.timeSignature, sizeof(midiTimeSignature_t));
             }
         }
 
@@ -1387,6 +1395,7 @@ static void drawSynthMode(void)
     if (sd->viewMode & VM_LYRICS)
     {
         drawKaraokeLyrics(SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division), &sd->karaoke);
+        drawBeatsMetronome(true, TFT_HEIGHT - 20, true, TFT_WIDTH / 2, TFT_HEIGHT, 15);
     }
 
     if (sd->viewMode == VM_PRETTY)
@@ -1396,10 +1405,6 @@ static void drawSynthMode(void)
         drawCircleQuadrants(0, TFT_HEIGHT / 2, 16, true, false, false, true, (pitch == 0x2000) ? c222 : c555);
         drawLineFast(0, TFT_HEIGHT / 2, 16 * getCos1024(deg) / 1024, TFT_HEIGHT / 2 - (16 * getSin1024(deg) / 1024),
                      c500);
-
-        char tempoStr[16];
-        snprintf(tempoStr, sizeof(tempoStr), "%" PRIu32 " BPM", TEMPO_TO_BPM(sd->midiPlayer.tempo));
-        drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 35, 3);
 
         drawMidiText(false, 0);
 
@@ -1445,6 +1450,139 @@ static void drawSynthMode(void)
         drawText(&sd->font, c500, countsBuf, TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15,
                  TFT_HEIGHT - sd->font.height - 15);
     }
+
+    // Draw BPM
+    char tempoStr[16];
+    snprintf(tempoStr, sizeof(tempoStr), "%" PRIu32 " BPM", TEMPO_TO_BPM(sd->midiPlayer.tempo));
+    drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 35, 3);
+
+
+    if (sd->viewMode & VM_TIMING)
+    {
+        midiTimeSignature_t* ts = &sd->karaoke.timeSignature;
+
+        char buffer[64] = {0};
+
+        // division tells us the number of MIDI ticks (or SMTPE frames) per QUARTER NOTE only!
+        // the tempo tells us how many microseconds are between each quarter note
+        // that's sufficient for playing back the song!
+        // also keep in mind that in MIDI terminology, a quarter note IS a beat
+        // SO, tempo is in <us/beat> and division is in <ticks/beat>
+
+        // So, we can calculate the current tick without any time signature info:
+        uint32_t tick = SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division);
+
+        // enter, time signatures:
+        // They tell us "musically" how everything arranged
+        // Numerator is just the top value of the time signature, aka beats per bar
+        // A beat is just a note, but which type is determined by the denominator
+        // A bar is like, a little bit of a row of sheet music or something
+
+        // Denominator tells us the type of notes in each bar -- so, 4/4 means 4 1/4 notes,
+        // 3/4 means a bar is 3 1/4 quarter notes, 4/8 means a bar is 4 eighth notes, 1/16 means
+        // a bar is one sixteenth note, 4/6 means a bar is 6 dotted eighth notes (aka 1/6 notes)
+        // In MIDI, Denominator is actually log2(1/denominator), so 0 means a whole note (1/(1<<0))
+        // 1 means a half note, 2 means a quarter note, etc.
+        // So, we really just need to convert this to quarter notes, and then we can easily get ticks
+
+
+        // NEXT UP: "midiClocksPerMetronomeClick" is... maybe irrelevant? or maybe it tells us how
+        // long a measure is or something... idk
+
+        // The last value, 32nd notes per beat, is really there to tell you which notes the song's
+        // "notation" uses, I think. So if the song is notated with quarter notes, you would use 8
+        // here, meaning that every 4th 32nd note is actually annotated. A value of 32 would mean
+        // every 32nd note is notated. a value of 1 means a beat is in whole notes.
+        // At least, maybe. I don't know enough (any) music theory to understand any of the explanations.
+        // dammit jim, i'm a programmer, not a musician!
+
+        // So using the last value, we can determine how many notes we "care about"
+        // This is not necessarily quarter notes but song notes
+        uint32_t dispNotesPerBar = ts->numerator * ts->num32ndNotesPerBeat / 8;
+        // The actual number of MIDI ticks in a single bar
+        // TODO this is not correct?
+        uint32_t ticksPerBar = ts->numerator;
+
+        snprintf(buffer, sizeof(buffer), "Signature: %" PRIu8 "/%" PRIu32, ts->numerator, 1 << ts->denominator);
+        drawText(&sd->font, c555, buffer, 18, 60);
+
+        snprintf(buffer, sizeof(buffer), "Beats/Bar: %" PRIu32, ts->numerator);
+        drawText(&sd->font, c555, buffer, 18, 75);
+
+        snprintf(buffer ,sizeof(buffer), "Ticks/Beat: %" PRIu32, sd->midiFile.timeDivision);
+        drawText(&sd->font, c555, buffer, 18, 90);
+
+        snprintf(buffer, sizeof(buffer), "32nd Notes/Beat: %" PRIu32, ts->num32ndNotesPerBeat);
+        drawText(&sd->font, c555, buffer, 18, 105);
+
+        int curMeasure = (tick / ts->midiClocksPerMetronomeTick);// * div;
+        int curNote = (tick / ts->midiClocksPerMetronomeTick) % (ts->num32ndNotesPerBeat / 8);
+        int curBeat = (tick / sd->midiFile.timeDivision);
+
+        snprintf(buffer, sizeof(buffer), "File Division: %" PRIu32 " ticks", sd->midiFile.timeDivision);
+        drawText(&sd->font, c555, buffer, 18, 120);
+
+        //snprintf(buffer, sizeof(buffer), "Cur tick/measure/note: %" PRIu32 ", %" PRIu32 ", %" PRIu32, tick, curMeasure, curNote);
+        snprintf(buffer, sizeof(buffer), "Cur tick: %" PRIu32, tick);
+        drawText(&sd->font, c555, buffer, 18, 140);
+        snprintf(buffer, sizeof(buffer), "Cur beat: %" PRIu32, curBeat);
+        drawText(&sd->font, c555, buffer, 18, 155);
+
+        // Maybe??
+        // So, take the numerator (which is # quarter notes) and convert it to tell us the number of notes per beat
+
+        snprintf(buffer, sizeof(buffer), "Cur bar: %" PRIu32, curBeat / dispNotesPerBar);
+        drawText(&sd->font, c555, buffer, 18, 170);
+
+        // Draw a mini metronome
+        drawBeatsMetronome(true, 190, true, TFT_WIDTH / 2, TFT_HEIGHT - 25, 20);
+    }
+}
+
+static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16_t metX, int16_t metY, int16_t metR)
+{
+    midiTimeSignature_t* ts = &sd->karaoke.timeSignature;
+    uint32_t tick = SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division);
+    int curBeat = (tick / sd->midiFile.timeDivision);
+    uint32_t dispNotesPerBar = ts->numerator * ts->num32ndNotesPerBeat / 8;
+
+    // Draw some circles...
+    for (int i = 0; i < dispNotesPerBar; i++)
+    {
+        if (i == (curBeat % dispNotesPerBar))
+        {
+            drawCircleFilled((i + 1) * TFT_WIDTH / (dispNotesPerBar + 1), beatsY, 5, c500);
+        }
+        drawCircle((i + 1) * TFT_WIDTH / (dispNotesPerBar + 1), beatsY, 5, c555);
+    }
+
+    // Draw a mini metronome
+    // Angle on each side of the metronome
+    // The metronome will travel 4x this angle over its rotation
+    int metAngle = 90;
+
+    // Need to modulo the current tick count by a single beat
+    int ticksPerBeat = sd->midiFile.timeDivision * (ts->num32ndNotesPerBeat / 8);
+    int noteProgress = tick % (ticksPerBeat * 2);
+
+    // now turn noteProgress into an angle
+    //  0% --> 180
+    // 25% --> 135
+    // 50% --> 90
+    // 75% --> 45
+    // 100% -> 0
+    // 125% -> 45
+    // 150% -> 90
+    // 175% -> 135
+    // 200% -> 180
+    // ... needs to be different for odd notes and even notes i think
+
+    int curAngle = 90 - (90 - noteProgress * metAngle * 2 / (ticksPerBeat));
+    // There's a way to do this without branching but I am lazy
+    if (curAngle > 180) curAngle = 360 - curAngle;
+
+    //int curAngle = (450 - abs(noteProgress * (metAngle * 4) / (ticksPerBeat * 2) - (metAngle * 2))) % 360;
+    drawLineFast(metX, metY, metX + getCos1024(curAngle) * metR / 1024, metY - getSin1024(curAngle) * metR / 1024, c555);
 }
 
 static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
@@ -1540,7 +1678,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
         curNode = curNode->next;
     }
 
-    if (drawBar)
+    if (drawBar && nearLyric != farLyric)
     {
         int w = (TFT_WIDTH - 60) * (farLyric - now) / (farLyric - nearLyric);
         drawRect(30, TFT_HEIGHT - 30, TFT_WIDTH - 30, TFT_HEIGHT - 20, c550);
