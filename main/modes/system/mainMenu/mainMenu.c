@@ -22,6 +22,7 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "keebTest.h"
+#include "badapple.h"
 
 #include "settingsManager.h"
 
@@ -164,6 +165,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, badAppleMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     addSingleItemToMenu(mainMenu->menu, introMode.modeName);
@@ -375,6 +377,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == tunernomeMode.modeName)
         {
             switchToSwadgeMode(&tunernomeMode);
+        }
+        else if (label == badAppleMode.modeName)
+        {
+            switchToSwadgeMode(&badAppleMode);
         }
         else if (label == factoryResetName)
         {

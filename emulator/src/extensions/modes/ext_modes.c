@@ -13,10 +13,11 @@
 // Mode Includes
 /*
  Quickly regenerate with:
-   grep -lirE '^extern swadgeMode_t (.*);' | grep -oE '([^/]+\.h)'
+   grep -lirE '^extern swadgeMode_t (.*);' ./main/modes | grep -oE '([^/]+\.h)' \
     | grep -v quickSettings | awk '{printf "#include \"%s\"\n",$1 }' | sort
 */
 #include "accelTest.h"
+#include "badapple.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"
@@ -29,9 +30,9 @@
 #include "mode_credits.h"
 #include "mode_pinball.h"
 #include "mode_synth.h"
-#include "ultimateTTT.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "ultimateTTT.h"
 
 //==============================================================================
 // Defines
@@ -53,12 +54,13 @@ static swadgeMode_t* getRandomSwadgeMode(void);
 
 /*
  Quickly regenerate with:
-   grep -hirE '^extern swadgeMode_t (.*);' main/modes/ | awk '{print $3}'
+   grep -hirE '^extern swadgeMode_t (.*);' main/modes/ | awk '{print $3}' \
      | sed -E 's/(.*);/\&\1,/g' | grep -v quickSettings | sort
 */
 // clang-format off
 static swadgeMode_t* allSwadgeModes[] = {
     &accelTestMode,
+    &badAppleMode,
     &colorchordMode,
     &danceMode,
     &factoryTestMode,
@@ -70,9 +72,9 @@ static swadgeMode_t* allSwadgeModes[] = {
     &modeCredits,
     &pinballMode,
     &synthMode,
-    &tttMode,
     &timerMode,
     &touchTestMode,
+    &tttMode,
     &tunernomeMode,
 };
 // clang-format on

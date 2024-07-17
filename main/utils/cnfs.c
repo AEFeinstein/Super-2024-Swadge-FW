@@ -108,3 +108,43 @@ uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 
     return 0;
 }
+
+/**
+ * @brief Get a pointer to a file directly in CNFS. This is useful for read-only
+ * data because it does not copy it to an output array
+ *
+ * @param fname The name of the file to retrieve
+ * @param outsize The size of the retrieved file
+ * @return A pointer to the file in the CNFS blob
+ */
+const uint8_t* cnfsGetFile(const char* fname, size_t* outsize)
+{
+    int low  = 0;
+    int high = cnfsNumFiles - 1;
+    int mid  = (low + high) / 2;
+
+    // Binary search the file list, since it's sorted.
+    while (low <= high)
+    {
+        const cnfsFileEntry* e = cnfsFiles + mid;
+        int sc                 = strcmp(e->name, fname);
+        if (sc < 0)
+        {
+            low = mid + 1;
+        }
+        else if (sc == 0)
+        {
+            *outsize = e->len;
+            return &cnfsData[e->offset];
+        }
+        else
+        {
+            high = mid - 1;
+        }
+        mid = (low + high) / 2;
+    }
+
+    ESP_LOGE("CNFS", "Failed to open %s", fname);
+
+    return 0;
+}

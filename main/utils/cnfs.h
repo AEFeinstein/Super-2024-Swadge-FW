@@ -56,5 +56,6 @@
 bool initCnfs(void);
 bool deinitCnfs(void);
 uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam);
+const uint8_t* cnfsGetFile(const char* fname, size_t* outsize);
 
 #endif

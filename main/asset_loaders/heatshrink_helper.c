@@ -9,7 +9,6 @@
 #include "hdw-nvs.h"
 #include <nvs.h>
 
-#include "heatshrink_decoder.h"
 #include "heatshrink_encoder.h"
 #include "heatshrink_helper.h"
 
@@ -96,6 +95,75 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
 
     // Return the decompressed bytes
     return decompressedBuf;
+}
+
+/**
+ * @brief Decompress a given array into another given array with a given decoder
+ * This is useful when decompressing lots of data on the fly with minimal overhead
+ *
+ * @param hsd The decoder to use
+ * @param inBuf The input array
+ * @param inSize The size of the input array
+ * @param outBuf The output array
+ * @param outsize The max size of the output array
+ * @return The number of decompressed bytes in the output array
+ */
+uint32_t heatshrinkDecompressBuf(heatshrink_decoder* hsd, const uint8_t* inBuf, uint32_t inSize, uint8_t* outBuf,
+                                 uint32_t outsize)
+{
+    // Create the decoder
+    size_t copied = 0;
+    heatshrink_decoder_reset(hsd);
+
+    // The decompressed filesize is four bytes, so start after that
+    uint32_t inputIdx  = 0;
+    uint32_t outputIdx = 0;
+    // Decode the file in chunks
+    while (inputIdx < inSize)
+    {
+        // Decode some data
+        copied = 0;
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wcast-qual"
+#endif
+
+        heatshrink_decoder_sink(hsd, (uint8_t*)&inBuf[inputIdx], inSize - inputIdx, &copied);
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
+
+        inputIdx += copied;
+
+        if (copied == 0)
+        {
+            heatshrink_decoder_finish(hsd);
+            return 0;
+        }
+
+        // Save it to the output array
+        copied = 0;
+        heatshrink_decoder_poll(hsd, &outBuf[outputIdx], outsize - outputIdx, &copied);
+        outputIdx += copied;
+    }
+
+    // Note that it's all done
+    heatshrink_decoder_finish(hsd);
+
+    // Flush any final output
+    copied = 0;
+    heatshrink_decoder_poll(hsd, &outBuf[outputIdx], outsize - outputIdx, &copied);
+    outputIdx += copied;
+
+    // All done decoding
+    heatshrink_decoder_finish(hsd);
+
+    // Return the number of decompressed bytes
+    return outputIdx;
 }
 
 uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* outsize, bool spiRam)
