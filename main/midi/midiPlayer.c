@@ -889,6 +889,26 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
     uint32_t voiceBit = (1 << voiceIdx);
 
+    bool stolen = 0 != (voiceBit & (states->on | states->held));
+
+    // Not good -- we need to figure out who was using this voice before, and clear it
+    // This is necessary to fix stuck notes, but doesn't take care of everything
+    if (stolen)
+    {
+        // TODO add a voice->channel map and get rid of this loop
+        for (int i = 0; i < 16; i++)
+        {
+            if (player->channels[i].percussion == chan->percussion && (player->channels[i].allocedVoices & voiceBit))
+            {
+                player->channels[i].allocedVoices &= ~voiceBit;
+                // Unnecessary but I'll keep it here for clarity, and the compiler can get rid of it
+                states->on &= ~voiceBit;
+                states->held &= ~voiceBit;
+                break;
+            }
+        }
+    }
+
     chan->allocedVoices |= voiceBit;
     states->on |= voiceBit;
     voices[voiceIdx].note = note;
