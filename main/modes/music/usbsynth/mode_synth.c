@@ -1294,6 +1294,12 @@ static void synthSetFile(const char* filename)
     // Finally: Unload the MIDI file itself
     unloadMidiFile(&sd->midiFile);
 
+    // Set the default values for time signature
+    sd->karaoke.timeSignature.numerator = 4;
+    sd->karaoke.timeSignature.denominator = 2;
+    sd->karaoke.timeSignature.num32ndNotesPerBeat = 8;
+    sd->karaoke.timeSignature.midiClocksPerMetronomeTick = 24;
+
     if (NULL != filename)
     {
         // Cleanup done, now load the new file
@@ -1460,88 +1466,101 @@ static void drawSynthMode(void)
     if (sd->viewMode & VM_TIMING)
     {
         midiTimeSignature_t* ts = &sd->karaoke.timeSignature;
+        if (!ts->midiClocksPerMetronomeTick || !ts->num32ndNotesPerBeat || !ts->numerator)
+        {
+            const char* noTimeMsg = "No Time Signature";
+            drawText(&sd->font, c500, noTimeMsg, (TFT_WIDTH - textWidth(&sd->font, noTimeMsg)) / 2, (TFT_HEIGHT - sd->font.height) / 2);
+        }
+        else
+        {
+            char buffer[64] = {0};
 
-        char buffer[64] = {0};
+            // division tells us the number of MIDI ticks (or SMTPE frames) per QUARTER NOTE only!
+            // the tempo tells us how many microseconds are between each quarter note
+            // that's sufficient for playing back the song!
+            // also keep in mind that in MIDI terminology, a quarter note IS a beat
+            // SO, tempo is in <us/beat> and division is in <ticks/beat>
 
-        // division tells us the number of MIDI ticks (or SMTPE frames) per QUARTER NOTE only!
-        // the tempo tells us how many microseconds are between each quarter note
-        // that's sufficient for playing back the song!
-        // also keep in mind that in MIDI terminology, a quarter note IS a beat
-        // SO, tempo is in <us/beat> and division is in <ticks/beat>
+            // So, we can calculate the current tick without any time signature info:
+            uint32_t tick = SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division);
 
-        // So, we can calculate the current tick without any time signature info:
-        uint32_t tick = SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division);
+            // enter, time signatures:
+            // They tell us "musically" how everything arranged
+            // Numerator is just the top value of the time signature, aka beats per bar
+            // A beat is just a note, but which type is determined by the denominator
+            // A bar is like, a little bit of a row of sheet music or something
 
-        // enter, time signatures:
-        // They tell us "musically" how everything arranged
-        // Numerator is just the top value of the time signature, aka beats per bar
-        // A beat is just a note, but which type is determined by the denominator
-        // A bar is like, a little bit of a row of sheet music or something
-
-        // Denominator tells us the type of notes in each bar -- so, 4/4 means 4 1/4 notes,
-        // 3/4 means a bar is 3 1/4 quarter notes, 4/8 means a bar is 4 eighth notes, 1/16 means
-        // a bar is one sixteenth note, 4/6 means a bar is 6 dotted eighth notes (aka 1/6 notes)
-        // In MIDI, Denominator is actually log2(1/denominator), so 0 means a whole note (1/(1<<0))
-        // 1 means a half note, 2 means a quarter note, etc.
-        // So, we really just need to convert this to quarter notes, and then we can easily get ticks
+            // Denominator tells us the type of notes in each bar -- so, 4/4 means 4 1/4 notes,
+            // 3/4 means a bar is 3 1/4 quarter notes, 4/8 means a bar is 4 eighth notes, 1/16 means
+            // a bar is one sixteenth note, 4/6 means a bar is 6 dotted eighth notes (aka 1/6 notes)
+            // In MIDI, Denominator is actually log2(1/denominator), so 0 means a whole note (1/(1<<0))
+            // 1 means a half note, 2 means a quarter note, etc.
+            // So, we really just need to convert this to quarter notes, and then we can easily get ticks
 
 
-        // NEXT UP: "midiClocksPerMetronomeClick" is... maybe irrelevant? or maybe it tells us how
-        // long a measure is or something... idk
+            // NEXT UP: "midiClocksPerMetronomeClick" is... maybe irrelevant? or maybe it tells us how
+            // long a measure is or something... idk
 
-        // The last value, 32nd notes per beat, is really there to tell you which notes the song's
-        // "notation" uses, I think. So if the song is notated with quarter notes, you would use 8
-        // here, meaning that every 4th 32nd note is actually annotated. A value of 32 would mean
-        // every 32nd note is notated. a value of 1 means a beat is in whole notes.
-        // At least, maybe. I don't know enough (any) music theory to understand any of the explanations.
-        // dammit jim, i'm a programmer, not a musician!
+            // The last value, 32nd notes per beat, is really there to tell you which notes the song's
+            // "notation" uses, I think. So if the song is notated with quarter notes, you would use 8
+            // here, meaning that every 4th 32nd note is actually annotated. A value of 32 would mean
+            // every 32nd note is notated. a value of 1 means a beat is in whole notes.
+            // At least, maybe. I don't know enough (any) music theory to understand any of the explanations.
+            // dammit jim, i'm a programmer, not a musician!
 
-        // So using the last value, we can determine how many notes we "care about"
-        // This is not necessarily quarter notes but song notes
-        uint32_t dispNotesPerBar = ts->numerator * ts->num32ndNotesPerBeat / 8;
-        // The actual number of MIDI ticks in a single bar
-        // TODO this is not correct?
-        uint32_t ticksPerBar = ts->numerator;
+            // So using the last value, we can determine how many notes we "care about"
+            // This is not necessarily quarter notes but song notes
+            uint32_t dispNotesPerBar = ts->numerator * ts->num32ndNotesPerBeat / 8;
+            // The actual number of MIDI ticks in a single bar
+            // TODO this is not correct?
+            uint32_t ticksPerBar = ts->numerator;
 
-        snprintf(buffer, sizeof(buffer), "Signature: %" PRIu8 "/%" PRIu32, ts->numerator, 1 << ts->denominator);
-        drawText(&sd->font, c555, buffer, 18, 60);
+            snprintf(buffer, sizeof(buffer), "Signature: %" PRIu8 "/%" PRIu32, ts->numerator, 1 << ts->denominator);
+            drawText(&sd->font, c555, buffer, 18, 60);
 
-        snprintf(buffer, sizeof(buffer), "Beats/Bar: %" PRIu32, ts->numerator);
-        drawText(&sd->font, c555, buffer, 18, 75);
+            snprintf(buffer, sizeof(buffer), "Beats/Bar: %" PRIu32, ts->numerator);
+            drawText(&sd->font, c555, buffer, 18, 75);
 
-        snprintf(buffer ,sizeof(buffer), "Ticks/Beat: %" PRIu32, sd->midiFile.timeDivision);
-        drawText(&sd->font, c555, buffer, 18, 90);
+            snprintf(buffer ,sizeof(buffer), "Ticks/Beat: %" PRIu32, sd->midiFile.timeDivision);
+            drawText(&sd->font, c555, buffer, 18, 90);
 
-        snprintf(buffer, sizeof(buffer), "32nd Notes/Beat: %" PRIu32, ts->num32ndNotesPerBeat);
-        drawText(&sd->font, c555, buffer, 18, 105);
+            snprintf(buffer, sizeof(buffer), "32nd Notes/Beat: %" PRIu32, ts->num32ndNotesPerBeat);
+            drawText(&sd->font, c555, buffer, 18, 105);
 
-        int curMeasure = (tick / ts->midiClocksPerMetronomeTick);// * div;
-        int curNote = (tick / ts->midiClocksPerMetronomeTick) % (ts->num32ndNotesPerBeat / 8);
-        int curBeat = (tick / sd->midiFile.timeDivision);
+            int curMeasure = (tick / ts->midiClocksPerMetronomeTick);// * div;
+            int curNote = (tick / ts->midiClocksPerMetronomeTick) % (ts->num32ndNotesPerBeat / 8);
+            int curBeat = (tick / sd->midiFile.timeDivision);
 
-        snprintf(buffer, sizeof(buffer), "File Division: %" PRIu32 " ticks", sd->midiFile.timeDivision);
-        drawText(&sd->font, c555, buffer, 18, 120);
+            snprintf(buffer, sizeof(buffer), "File Division: %" PRIu32 " ticks", sd->midiFile.timeDivision);
+            drawText(&sd->font, c555, buffer, 18, 120);
 
-        //snprintf(buffer, sizeof(buffer), "Cur tick/measure/note: %" PRIu32 ", %" PRIu32 ", %" PRIu32, tick, curMeasure, curNote);
-        snprintf(buffer, sizeof(buffer), "Cur tick: %" PRIu32, tick);
-        drawText(&sd->font, c555, buffer, 18, 140);
-        snprintf(buffer, sizeof(buffer), "Cur beat: %" PRIu32, curBeat);
-        drawText(&sd->font, c555, buffer, 18, 155);
+            //snprintf(buffer, sizeof(buffer), "Cur tick/measure/note: %" PRIu32 ", %" PRIu32 ", %" PRIu32, tick, curMeasure, curNote);
+            snprintf(buffer, sizeof(buffer), "Cur tick: %" PRIu32, tick);
+            drawText(&sd->font, c555, buffer, 18, 140);
+            snprintf(buffer, sizeof(buffer), "Cur beat: %" PRIu32, curBeat);
+            drawText(&sd->font, c555, buffer, 18, 155);
 
-        // Maybe??
-        // So, take the numerator (which is # quarter notes) and convert it to tell us the number of notes per beat
+            // Maybe??
+            // So, take the numerator (which is # quarter notes) and convert it to tell us the number of notes per beat
 
-        snprintf(buffer, sizeof(buffer), "Cur bar: %" PRIu32, curBeat / dispNotesPerBar);
-        drawText(&sd->font, c555, buffer, 18, 170);
+            snprintf(buffer, sizeof(buffer), "Cur bar: %" PRIu32, curBeat / dispNotesPerBar);
+            drawText(&sd->font, c555, buffer, 18, 170);
 
-        // Draw a mini metronome
-        drawBeatsMetronome(true, 190, true, TFT_WIDTH / 2, TFT_HEIGHT - 25, 20);
+            // Draw a mini metronome
+            drawBeatsMetronome(true, 190, true, TFT_WIDTH / 2, TFT_HEIGHT - 25, 20);
+        }
     }
 }
 
 static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16_t metX, int16_t metY, int16_t metR)
 {
     midiTimeSignature_t* ts = &sd->karaoke.timeSignature;
+
+    if (!ts->midiClocksPerMetronomeTick || !ts->num32ndNotesPerBeat || !ts->numerator)
+    {
+        return;
+    }
+
     uint32_t tick = SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division);
     int curBeat = (tick / sd->midiFile.timeDivision);
     uint32_t dispNotesPerBar = ts->numerator * ts->num32ndNotesPerBeat / 8;
@@ -1681,8 +1700,8 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     if (drawBar && nearLyric != farLyric)
     {
         int w = (TFT_WIDTH - 60) * (farLyric - now) / (farLyric - nearLyric);
-        drawRect(30, TFT_HEIGHT - 30, TFT_WIDTH - 30, TFT_HEIGHT - 20, c550);
-        fillDisplayArea(30, TFT_HEIGHT - 30, 30 + CLAMP(TFT_WIDTH - 60 - w, 0, TFT_WIDTH - 60), TFT_HEIGHT - 20, c550);
+        drawRect(30, TFT_HEIGHT - 40, TFT_WIDTH - 30, TFT_HEIGHT - 30, c550);
+        fillDisplayArea(30, TFT_HEIGHT - 40, 30 + CLAMP(TFT_WIDTH - 60 - w, 0, TFT_WIDTH - 60), TFT_HEIGHT - 30, c550);
 
         int16_t intermissionX = (TFT_WIDTH - textWidth(&sd->betterFont, intermissionMsg)) / 2;
         drawTextMulticolored(&sd->betterFont, intermissionMsg, intermissionX, (TFT_HEIGHT - sd->betterFont.height) / 2, textColors + ((((farLyric - nearLyric) - (farLyric - now)) / (noteLength / 2)) % (ARRAY_SIZE(textColors) / 2)), ARRAY_SIZE(textColors) / 2, 16);
