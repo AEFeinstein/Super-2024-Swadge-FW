@@ -922,7 +922,7 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
     midiVoice_t* voices   = chan->percussion ? player->percVoices : player->poolVoices;
 
     // check the bitmaps to see if there's any note to release
-    uint32_t playingVoices = (VS_ANY(&player->poolVoiceStates) | player->poolVoiceStates.held) & chan->allocedVoices;
+    uint32_t playingVoices = VS_ANY(states) & chan->allocedVoices;
 
     // Find the channel playing this note
     while (playingVoices != 0)
