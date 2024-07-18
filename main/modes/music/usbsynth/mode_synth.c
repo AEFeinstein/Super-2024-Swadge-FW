@@ -649,7 +649,7 @@ static settingParam_t menuItemHeadroomBounds = {
 };
 
 const char synthModeName[] = "MIDI Player";
-static const char intermissionMsg[] = "SWADGAOKE";
+static const char intermissionMsg[] = "SWADGAOKE!";
 
 swadgeMode_t synthMode = {
     .modeName                 = synthModeName,
@@ -1614,15 +1614,17 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     bool colorSet                = false;
 
     uint32_t now = ticks;
-    int32_t noteLength = 24;
-    //printf("noteLength from karInfo == %d\n", karInfo->noteLength);
-    //printf("measureLength from karInfo == %d\n", karInfo->measureLength);
+    uint32_t curBeat = (now / sd->midiFile.timeDivision);
+    uint32_t notesPerBar = karInfo->timeSignature.numerator * karInfo->timeSignature.num32ndNotesPerBeat / 8;
+    uint32_t ticksPerBeat = sd->midiFile.timeDivision * (karInfo->timeSignature.num32ndNotesPerBeat) / 8;
+    uint32_t ticksPerBar = notesPerBar * ticksPerBeat;
+    uint32_t noteProgress = now % (ticksPerBeat);
 
-    const int16_t startX = 18;
-    const int16_t startY = 18;
+    uint32_t noteLength = ticksPerBeat;
+    uint32_t barStartTime = (now / ticksPerBar) * ticksPerBar;
+    uint32_t noteStartTime = curBeat * sd->midiFile.timeDivision;
 
-    int16_t x = startX;
-    int16_t y = startY;
+    //printf("%d ticks per beat\n", ticksPerBeat);
 
     int curStage = 0;
 
@@ -1631,67 +1633,129 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     uint32_t nearLyric = 0;
     uint32_t farLyric = 0;
 
+    // We want all the lyrics that were part of the last 2 bars (not including the current one)
+    int32_t oldCutoff = barStartTime - ticksPerBar * 2;
+    // And also any lyrics that are part of the next 3 bars (which includes the current one)
+    int32_t newCutoff = barStartTime + ticksPerBar * 3 - 1;
+
+    int32_t curCutoff = noteStartTime - noteLength / 4;
+    int32_t curAfterCutoff = noteStartTime + noteLength / 2;
+
+    // TODO we should just draw a bar of lyrics, then
+    const int16_t startX = 18;
+    const int16_t startY = 18;
+
+    int16_t x = startX;
+    int16_t y = startY;
+
+    bool curNoteReached = false;
+
+#define FLUSH() do { drawTextWordWrapFixed(&sd->font, curNoteReached ? c555 : c550, textMessages, startX, startY, &x, &y, TFT_WIDTH, TFT_HEIGHT); msgLen = 0; textMessages[0] = '\0'; } while (0)
+
     node_t* curNode = karInfo->lyrics.first;
     while (curNode != NULL && msgLen + 1 < sizeof(textMessages))
     {
         midiTextInfo_t* curInfo = curNode->val;
-        int32_t delta = curInfo->timestamp - now;
-        int32_t oldCutoff = -noteLength * 16;
-        int32_t newCutoff = noteLength * 16;
-        bool skip = false;
+        int lyricLength = noteLength;
 
-        if (oldCutoff < delta && delta < 0)
+        if (curNode->next)
         {
+            midiTextInfo_t* nextInfo = (midiTextInfo_t*)curNode->next->val;
+            if (nextInfo->timestamp - curInfo->timestamp < noteLength)
+            {
+                lyricLength = nextInfo->timestamp - curInfo->timestamp;
+                //printf("Next note is %" PRIu64 " ticks away instead of %d\n", nextInfo->timestamp - curInfo->timestamp, noteLength);
+            }
+        }
+
+        if (curInfo->timestamp < oldCutoff)
+        {
+            // This lyric is older than two bars
+            nearLyric = curInfo->timestamp;
+        }
+        else if (curInfo->timestamp < curCutoff)
+        {
+            // This is a lyric which is in the past, but not by more than 2 bars
+            // and not by less than an entire note
+            // Just write it normally, in the 'already sung' text color
+            msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
             drawBar = false;
         }
-        else if (newCutoff > delta && delta >= 0)
+        else if (curInfo->timestamp < curAfterCutoff)
         {
+            // This note is the current note!!!
             drawBar = false;
-            if (curStage < 1)
+            nearLyric = curInfo->timestamp;
+
+            // This is the current note!
+            FLUSH();
+
+            /*if (curInfo->timestamp < noteStartTime && curNode->next != NULL && ((midiTextInfo_t*)curNode->next->val)->timestamp <= noteStartTime)
             {
-                // Flush previous messages
-                drawTextWordWrapFixed(&sd->font, c550, textMessages, startX, startY, &x, &y, TFT_WIDTH, TFT_HEIGHT);
-                msgLen = 0;
-                textMessages[0] = '\0';
+                // This note is within the window, but there's another more-closer note in the window
+                // So, just write this as normal
+                msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
+            }
+            else*/ if (!curNoteReached)
+            {
+                //FLUSH();
+                msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
+                char* cur = textMessages;
 
-                if (delta <= noteLength)
+                // If there's a leading newline or anything, everything gets messed up
+                while (*cur == '\n')
                 {
-                    msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
-                    int w = textWidth(&sd->font, textMessages);
-                    int progress = w * (noteLength - delta) / noteLength;
-                    skip = true;
-
-                    if (x + w >= TFT_WIDTH)
-                    {
-                        x = startX;
-                        y += sd->font.height + 1;
-                    }
-                    drawTextBounds(&sd->font, c550, textMessages, x, y, 0, 0, x + progress, TFT_HEIGHT);
-                    x = drawTextBounds(&sd->font, c555, textMessages, x, y, x + progress, 0, TFT_WIDTH, TFT_HEIGHT);
-                    msgLen = 0;
-                    textMessages[0] = '\0';
+                    cur++;
+                    x = startX;
+                    y += sd->font.height + 1;
                 }
 
-                curStage = 1;
+                int w = textWidth(&sd->font, cur);
+                int offset = curInfo->timestamp - noteStartTime;
+                int progress = w * (now - curInfo->timestamp + offset) / lyricLength;
+                printf("Drawing lyric %s because it is the currently-playing note! offset=%d, w=%d, prog=%d (%d%%)\n", textMessages, offset, w, progress, progress * 100 / w);
+
+                if (x + w >= TFT_WIDTH)
+                {
+                    x = startX;
+                    y += sd->font.height + 1;
+                }
+                drawTextBounds(&sd->font, c550, cur, x, y, 0, 0, x + progress, TFT_HEIGHT);
+                x = drawTextBounds(&sd->font, c555, cur, x, y, x + progress, 0, TFT_WIDTH, TFT_HEIGHT);
+                msgLen = 0;
+                textMessages[0] = '\0';
+                curNoteReached = true;
             }
+            else
+            {
+                msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
+            }
+        }
+        else if (curInfo->timestamp <= newCutoff)
+        {
+            curNoteReached = true;
+            drawBar = false;
+            nearLyric = curInfo->timestamp;
+
+            // This is a lyric which is not more than 2 bars in the future
+            // And it may be up to (noteLength-1) ticks in the past!
+            // If it is...
+            if (!curNoteReached)
+            {
+                curNoteReached = true;
+                // Flush previous messages so we can change the color
+                FLUSH();
+            }
+
+            msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
         }
         else
         {
-            if (delta > 0)
-            {
-                farLyric = curInfo->timestamp;
-                // Lyric too far in future, we're done this iteration
-                break;
-            }
+            farLyric = curInfo->timestamp;
+            // Lyric too far in future, we're done this iteration
+            break;
 
             nearLyric = curInfo->timestamp;
-            curNode = curNode->next;
-            continue;
-        }
-
-        if (!skip)
-        {
-            msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
         }
 
         curNode = curNode->next;
@@ -1699,31 +1763,18 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
 
     if (drawBar && nearLyric != farLyric)
     {
+        // There's a long rest with no lyrics, draw a progress bar
         int w = (TFT_WIDTH - 60) * (farLyric - now) / (farLyric - nearLyric);
         drawRect(30, TFT_HEIGHT - 40, TFT_WIDTH - 30, TFT_HEIGHT - 30, c550);
         fillDisplayArea(30, TFT_HEIGHT - 40, 30 + CLAMP(TFT_WIDTH - 60 - w, 0, TFT_WIDTH - 60), TFT_HEIGHT - 30, c550);
 
+        // Draw a fun thingy
         int16_t intermissionX = (TFT_WIDTH - textWidth(&sd->betterFont, intermissionMsg)) / 2;
-        drawTextMulticolored(&sd->betterFont, intermissionMsg, intermissionX, (TFT_HEIGHT - sd->betterFont.height) / 2, textColors + ((((farLyric - nearLyric) - (farLyric - now)) / (noteLength / 2)) % (ARRAY_SIZE(textColors) / 2)), ARRAY_SIZE(textColors) / 2, 16);
+        drawTextMulticolored(&sd->betterFont, intermissionMsg, intermissionX, (TFT_HEIGHT - sd->betterFont.height) / 2, textColors + (((now - nearLyric) * notesPerBar / (noteLength)) % (ARRAY_SIZE(textColors) / 2)), ARRAY_SIZE(textColors) / 2, 16);
         drawText(&sd->betterOutline, c555, intermissionMsg, intermissionX, (TFT_HEIGHT - sd->betterOutline.height) / 2);
     }
 
-    switch (curStage)
-    {
-        case 0: // ???
-        midiTextColor = c550;
-        break;
-
-        case 1:
-        midiTextColor = c555;
-        break;
-
-        case 2:
-        midiTextColor = c555;
-        break;
-    }
-
-    drawTextWordWrapFixed(&sd->font, midiTextColor, textMessages, startX, startY, &x, &y, TFT_WIDTH, TFT_HEIGHT);
+    FLUSH();
 }
 
 static void drawMidiText(bool filter, uint32_t types)
