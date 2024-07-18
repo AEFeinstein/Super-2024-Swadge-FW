@@ -1661,6 +1661,13 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     const char* remaining = NULL;
     bool curNoteReached = false;
 
+    // TODO LIST:
+    // - Consistent positioning -- use (measure % 2) or something to pick a consistent half of the screen
+    // - Properly handle songs with overlapping lyrics for multiple tracks, which currently get interleaved
+    // - Show the progress bar until the next lyrics start
+    // - Fix weird line breaks and leading spaces, why are those there?
+
+
 #define FLUSH() do { remaining = drawTextWordWrapFixed(&sd->betterFont, curNoteReached ? c555 : c550, textMessages, startX, startY, &x, &y, TFT_WIDTH, TFT_HEIGHT); msgLen = 0; textMessages[0] = '\0'; } while (0)
 
     node_t* curNode = karInfo->lyrics.first;
@@ -1737,21 +1744,26 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
                 {
                     x = startX;
                     y += sd->betterFont.height + 1;
-                    do {
-                        cur++;
-                    } while (*cur == ' ');
+                    cur++;
+                }
+
+                while (x == startX && *cur == ' ') {
+                    cur++;
                 }
 
                 // Figure out the progress bar width
                 int w = textWidth(&sd->betterFont, cur);
                 int progress = w * (now - curInfo->timestamp) / lyricLength;
-                printf("Drawing lyric %s because it is the currently-playing note! w=%d, prog=%d (%d%%)\n", textMessages, w, progress, progress * 100 / w);
 
                 // If the lyric won't fit on screen, handle wrapping here
                 if (x + w >= TFT_WIDTH)
                 {
                     x = startX;
                     y += sd->betterFont.height + 1;
+                }
+
+                while (x == startX && *cur == ' ') {
+                    cur++;
                 }
 
                 // Draw the yellow portion of the text up to the progress point
