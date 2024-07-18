@@ -1770,7 +1770,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
                 drawTextBounds(&sd->betterFont, c550, cur, x, y, 0, 0, x + progress, TFT_HEIGHT);
                 // Draw the white portion of the text after the progress point
                 drawTextBounds(&sd->betterFont, c555, cur, x, y, x + progress, 0, TFT_WIDTH, TFT_HEIGHT);
-                x = drawText(&sd->betterOutline, c055, cur, x, y);
+                x = drawText(&sd->betterOutline, c505, cur, x, y);
 
                 // Reset the buffer since we've printed the text already
                 msgLen = 0;
