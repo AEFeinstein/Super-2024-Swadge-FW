@@ -1262,6 +1262,16 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
 
         deinitMidiParser(&reader);
         karInfo->karFormat = karFormat;
+
+        if (!karInfo->timeSignature.midiClocksPerMetronomeTick)
+        {
+            karInfo->timeSignature.midiClocksPerMetronomeTick = 24;
+        }
+
+        if (!karInfo->timeSignature.num32ndNotesPerBeat)
+        {
+            karInfo->timeSignature.num32ndNotesPerBeat = 8;
+        }
     }
 }
 
