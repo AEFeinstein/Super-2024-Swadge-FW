@@ -1644,7 +1644,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     uint32_t farLyric = 0;
 
     // We want all the lyrics that were part of the last 2 bars (not including the current one)
-    int32_t oldCutoff = barStartTime - ticksPerBar * 2;
+    int32_t oldCutoff = barStartTime - ticksPerBar;
     // And also any lyrics that are part of the next 3 bars (which includes the current one)
     int32_t newCutoff = barStartTime + ticksPerBar * 3 - 1;
 
@@ -1658,114 +1658,135 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     int16_t x = startX;
     int16_t y = startY;
 
+    const char* remaining = NULL;
     bool curNoteReached = false;
 
-#define FLUSH() do { drawTextWordWrapFixed(&sd->font, curNoteReached ? c555 : c550, textMessages, startX, startY, &x, &y, TFT_WIDTH, TFT_HEIGHT); msgLen = 0; textMessages[0] = '\0'; } while (0)
+#define FLUSH() do { remaining = drawTextWordWrapFixed(&sd->betterFont, curNoteReached ? c555 : c550, textMessages, startX, startY, &x, &y, TFT_WIDTH, TFT_HEIGHT); msgLen = 0; textMessages[0] = '\0'; } while (0)
 
     node_t* curNode = karInfo->lyrics.first;
     while (curNode != NULL && msgLen + 1 < sizeof(textMessages))
     {
         midiTextInfo_t* curInfo = curNode->val;
+        midiTextInfo_t* nextInfo = curNode->next ? ((midiTextInfo_t*)curNode->next->val) : NULL;
+        // lyricLength used as the timer for text progress
         int lyricLength = noteLength;
-
-        if (curNode->next)
-        {
-            midiTextInfo_t* nextInfo = (midiTextInfo_t*)curNode->next->val;
-            if (nextInfo->timestamp - curInfo->timestamp < noteLength)
-            {
-                lyricLength = nextInfo->timestamp - curInfo->timestamp;
-                //printf("Next note is %" PRIu64 " ticks away instead of %d\n", nextInfo->timestamp - curInfo->timestamp, noteLength);
-            }
-        }
 
         if (curInfo->timestamp < oldCutoff)
         {
-            // This lyric is older than two bars
+            // Lyric is older than 2 bars
             nearLyric = curInfo->timestamp;
+            // skip without drawing
         }
-        else if (curInfo->timestamp < curCutoff)
+        else if (curInfo->timestamp <= noteStartTime - noteLength)
         {
-            // This is a lyric which is in the past, but not by more than 2 bars
-            // and not by less than an entire note
-            // Just write it normally, in the 'already sung' text color
+            // Lyric is older than 1 note
+            // Draw entire lyric
             msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
-            drawBar = false;
-        }
-        else if (curInfo->timestamp < curAfterCutoff)
-        {
-            // This note is the current note!!!
-            drawBar = false;
-            nearLyric = curInfo->timestamp;
-
-            // This is the current note!
             FLUSH();
 
-            /*if (curInfo->timestamp < noteStartTime && curNode->next != NULL && ((midiTextInfo_t*)curNode->next->val)->timestamp <= noteStartTime)
+            // Lyrics are on screen currently, so no need to draw big progress bar
+            drawBar = false;
+
+            if (remaining)
             {
-                // This note is within the window, but there's another more-closer note in the window
-                // So, just write this as normal
-                msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
+                break;
             }
-            else*/ if (!curNoteReached)
+        }
+        else if (curInfo->timestamp < now)
+        {
+            // Lyric is in the past
+            bool drawNoteProgress = false;
+
+            // Lyrics are on screen currently, so no need to draw big progress bar
+            drawBar = false;
+
+            if (nextInfo && nextInfo->timestamp <= now)
             {
-                //FLUSH();
+                // NEXT lyric is also in the past
+                // Draw this entire lyric
                 msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
-                char* cur = textMessages;
+                FLUSH();
 
-                // If there's a leading newline or anything, everything gets messed up
-                while (*cur == '\n')
+                if (remaining)
                 {
-                    cur++;
-                    x = startX;
-                    y += sd->font.height + 1;
+                    break;
                 }
-
-                int w = textWidth(&sd->font, cur);
-                int offset = curInfo->timestamp - noteStartTime;
-                int progress = w * (now - curInfo->timestamp + offset) / lyricLength;
-                printf("Drawing lyric %s because it is the currently-playing note! offset=%d, w=%d, prog=%d (%d%%)\n", textMessages, offset, w, progress, progress * 100 / w);
-
-                if (x + w >= TFT_WIDTH)
-                {
-                    x = startX;
-                    y += sd->font.height + 1;
-                }
-                drawTextBounds(&sd->font, c550, cur, x, y, 0, 0, x + progress, TFT_HEIGHT);
-                x = drawTextBounds(&sd->font, c555, cur, x, y, x + progress, 0, TFT_WIDTH, TFT_HEIGHT);
-                msgLen = 0;
-                textMessages[0] = '\0';
-                curNoteReached = true;
             }
             else
             {
+                // No next lyric or lyric is not in the past
+
+                if (nextInfo && (nextInfo->timestamp - curInfo->timestamp) < noteLength)
+                {
+                    // NEXT lyric is less than 1 beat after this one (but still in the future)
+                    // Set the timer to the difference
+                    lyricLength = nextInfo->timestamp - curInfo->timestamp;
+                }
+
+                // Print any old pending messages (shouldn't be any though)
+                // Also empties out the buffer so we can use it
+                FLUSH();
+
+                // Write the message into the buffer
                 msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
+                // Make a temporary pointer to the buffer text so we can move it if needed
+                char* cur = textMessages;
+
+                // If there's a leading newline or anything, everything gets messed up, so handle it
+                while (*cur == '\n')
+                {
+                    x = startX;
+                    y += sd->betterFont.height + 1;
+                    do {
+                        cur++;
+                    } while (*cur == ' ');
+                }
+
+                // Figure out the progress bar width
+                int w = textWidth(&sd->betterFont, cur);
+                int progress = w * (now - curInfo->timestamp) / lyricLength;
+                printf("Drawing lyric %s because it is the currently-playing note! w=%d, prog=%d (%d%%)\n", textMessages, w, progress, progress * 100 / w);
+
+                // If the lyric won't fit on screen, handle wrapping here
+                if (x + w >= TFT_WIDTH)
+                {
+                    x = startX;
+                    y += sd->betterFont.height + 1;
+                }
+
+                // Draw the yellow portion of the text up to the progress point
+                drawTextBounds(&sd->betterFont, c550, cur, x, y, 0, 0, x + progress, TFT_HEIGHT);
+                // Draw the white portion of the text after the progress point
+                drawTextBounds(&sd->betterFont, c555, cur, x, y, x + progress, 0, TFT_WIDTH, TFT_HEIGHT);
+                x = drawText(&sd->betterOutline, c055, cur, x, y);
+
+                // Reset the buffer since we've printed the text already
+                msgLen = 0;
+                textMessages[0] = '\0';
+
+                curNoteReached = true;
             }
         }
-        else if (curInfo->timestamp <= newCutoff)
+        else if (curInfo->timestamp < newCutoff)
         {
-            curNoteReached = true;
             drawBar = false;
-            nearLyric = curInfo->timestamp;
-
-            // This is a lyric which is not more than 2 bars in the future
-            // And it may be up to (noteLength-1) ticks in the past!
-            // If it is...
-            if (!curNoteReached)
-            {
-                curNoteReached = true;
-                // Flush previous messages so we can change the color
-                FLUSH();
-            }
-
+            curNoteReached = true;
+            // Note is less than (3 bars - 1 tick) in the future
+            FLUSH();
             msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
+
+            if (remaining)
+            {
+                break;
+            }
         }
         else
         {
+            // Note is 3 bars or more in the future
             farLyric = curInfo->timestamp;
-            // Lyric too far in future, we're done this iteration
-            break;
 
-            nearLyric = curInfo->timestamp;
+            // Don't continue searching
+            break;
         }
 
         curNode = curNode->next;
