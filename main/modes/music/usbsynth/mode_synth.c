@@ -523,8 +523,8 @@ static const char* menuItemModeOptions[] = {
 };
 
 static const char* menuItemViewOptions[] = {
-    "Pretty", "Visualizer", "Lyrics", "Lyrics+Visualizer", "Waveform", "Table", "Packets", "Waveform+Table", "Waveform+Packets",
-    "Timing",
+    "Pretty", "Visualizer", "Lyrics",         "Lyrics+Visualizer", "Waveform",
+    "Table",  "Packets",    "Waveform+Table", "Waveform+Packets",  "Timing",
 };
 
 static const char* menuItemButtonOptions[] = {
@@ -648,7 +648,7 @@ static settingParam_t menuItemHeadroomBounds = {
     .key = nvsKeyHeadroom,
 };
 
-const char synthModeName[] = "MIDI Player";
+const char synthModeName[]          = "MIDI Player";
 static const char intermissionMsg[] = "SWADGAOKE!";
 
 swadgeMode_t synthMode = {
@@ -1204,13 +1204,13 @@ static void synthSetupMenu(void)
 
 static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
 {
-    bool karFormat = false;
+    bool karFormat     = false;
     uint32_t eventMask = (1 << COPYRIGHT) | (1 << SEQUENCE_OR_TRACK_NAME) | (1 << LYRIC) | (1 << TEXT);
     midiFileReader_t reader;
     if (initMidiParser(&reader, midiFile))
     {
         reader.handleMetaEvents = true;
-        uint32_t tempo = 500000;
+        uint32_t tempo          = 500000;
 
         midiEvent_t event;
 
@@ -1221,23 +1221,23 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
                 if (!karFormat && (event.meta.type == LYRIC || event.meta.type == TEXT) && event.meta.length > 0)
                 {
                     char start = event.meta.text[0];
-                    char end = event.meta.text[event.meta.length-1];
-                    if (start == '\\' || end == '\\'
-                        || start == '/' || end == '/')
+                    char end   = event.meta.text[event.meta.length - 1];
+                    if (start == '\\' || end == '\\' || start == '/' || end == '/')
                     {
                         karFormat = true;
                     }
                 }
 
-                // TODO we could save a couple bytes if we parsed the file an additional time to check how many events there are in total...
+                // TODO we could save a couple bytes if we parsed the file an additional time to check how many events
+                // there are in total...
                 midiTextInfo_t* info = (midiTextInfo_t*)malloc(sizeof(midiTextInfo_t));
 
                 if (info)
                 {
-                    info->text   = event.meta.text;
-                    info->length = event.meta.length;
-                    info->type   = event.meta.type;
-                    info->tempo  = tempo;
+                    info->text      = event.meta.text;
+                    info->length    = event.meta.length;
+                    info->type      = event.meta.type;
+                    info->tempo     = tempo;
                     info->timestamp = event.absTime;
 
                     push(&karInfo->lyrics, info);
@@ -1305,9 +1305,9 @@ static void synthSetFile(const char* filename)
     unloadMidiFile(&sd->midiFile);
 
     // Set the default values for time signature
-    sd->karaoke.timeSignature.numerator = 4;
-    sd->karaoke.timeSignature.denominator = 2;
-    sd->karaoke.timeSignature.num32ndNotesPerBeat = 8;
+    sd->karaoke.timeSignature.numerator                  = 4;
+    sd->karaoke.timeSignature.denominator                = 2;
+    sd->karaoke.timeSignature.num32ndNotesPerBeat        = 8;
     sd->karaoke.timeSignature.midiClocksPerMetronomeTick = 24;
 
     if (NULL != filename)
@@ -1410,7 +1410,9 @@ static void drawSynthMode(void)
 
     if (sd->viewMode & VM_LYRICS)
     {
-        drawKaraokeLyrics(SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division), &sd->karaoke);
+        drawKaraokeLyrics(
+            SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division),
+            &sd->karaoke);
         drawBeatsMetronome(true, TFT_HEIGHT - 20, true, TFT_WIDTH / 2, TFT_HEIGHT, 15);
     }
 
@@ -1472,14 +1474,14 @@ static void drawSynthMode(void)
     snprintf(tempoStr, sizeof(tempoStr), "%" PRIu32 " BPM", TEMPO_TO_BPM(sd->midiPlayer.tempo));
     drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 35, 3);
 
-
     if (sd->viewMode & VM_TIMING)
     {
         midiTimeSignature_t* ts = &sd->karaoke.timeSignature;
         if (!ts->midiClocksPerMetronomeTick || !ts->num32ndNotesPerBeat || !ts->numerator)
         {
             const char* noTimeMsg = "No Time Signature";
-            drawText(&sd->font, c500, noTimeMsg, (TFT_WIDTH - textWidth(&sd->font, noTimeMsg)) / 2, (TFT_HEIGHT - sd->font.height) / 2);
+            drawText(&sd->font, c500, noTimeMsg, (TFT_WIDTH - textWidth(&sd->font, noTimeMsg)) / 2,
+                     (TFT_HEIGHT - sd->font.height) / 2);
         }
         else
         {
@@ -1492,7 +1494,8 @@ static void drawSynthMode(void)
             // SO, tempo is in <us/beat> and division is in <ticks/beat>
 
             // So, we can calculate the current tick without any time signature info:
-            uint32_t tick = SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division);
+            uint32_t tick = SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo,
+                                                  sd->midiPlayer.reader.division);
 
             // enter, time signatures:
             // They tell us "musically" how everything arranged
@@ -1506,7 +1509,6 @@ static void drawSynthMode(void)
             // In MIDI, Denominator is actually log2(1/denominator), so 0 means a whole note (1/(1<<0))
             // 1 means a half note, 2 means a quarter note, etc.
             // So, we really just need to convert this to quarter notes, and then we can easily get ticks
-
 
             // NEXT UP: "midiClocksPerMetronomeClick" is... maybe irrelevant? or maybe it tells us how
             // long a measure is or something... idk
@@ -1531,20 +1533,19 @@ static void drawSynthMode(void)
             snprintf(buffer, sizeof(buffer), "Beats/Bar: %" PRIu8, ts->numerator);
             drawText(&sd->font, c555, buffer, 18, 75);
 
-            snprintf(buffer ,sizeof(buffer), "Ticks/Beat: %" PRIu16, sd->midiFile.timeDivision);
+            snprintf(buffer, sizeof(buffer), "Ticks/Beat: %" PRIu16, sd->midiFile.timeDivision);
             drawText(&sd->font, c555, buffer, 18, 90);
 
             snprintf(buffer, sizeof(buffer), "32nd Notes/Beat: %" PRIu8, ts->num32ndNotesPerBeat);
             drawText(&sd->font, c555, buffer, 18, 105);
 
-            int curMeasure = (tick / ts->midiClocksPerMetronomeTick);// * div;
-            int curNote = (tick / ts->midiClocksPerMetronomeTick) % (ts->num32ndNotesPerBeat / 8);
-            int curBeat = (tick / sd->midiFile.timeDivision);
+            int curMeasure = (tick / ts->midiClocksPerMetronomeTick); // * div;
+            int curNote    = (tick / ts->midiClocksPerMetronomeTick) % (ts->num32ndNotesPerBeat / 8);
+            int curBeat    = (tick / sd->midiFile.timeDivision);
 
             snprintf(buffer, sizeof(buffer), "File Division: %" PRIu16 " ticks", sd->midiFile.timeDivision);
             drawText(&sd->font, c555, buffer, 18, 120);
 
-            //snprintf(buffer, sizeof(buffer), "Cur tick/measure/note: %" PRIu32 ", %" PRIu32 ", %" PRIu32, tick, curMeasure, curNote);
             snprintf(buffer, sizeof(buffer), "Cur tick: %" PRIu32, tick);
             drawText(&sd->font, c555, buffer, 18, 140);
             snprintf(buffer, sizeof(buffer), "Cur beat: %d", curBeat);
@@ -1571,8 +1572,9 @@ static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16
         return;
     }
 
-    uint32_t tick = SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division);
-    int curBeat = (tick / sd->midiFile.timeDivision);
+    uint32_t tick
+        = SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount, sd->midiPlayer.tempo, sd->midiPlayer.reader.division);
+    int curBeat              = (tick / sd->midiFile.timeDivision);
     uint32_t dispNotesPerBar = ts->numerator * ts->num32ndNotesPerBeat / 8;
 
     // Draw some circles...
@@ -1608,10 +1610,13 @@ static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16
 
     int curAngle = 90 - (90 - noteProgress * metAngle * 2 / (ticksPerBeat));
     // There's a way to do this without branching but I am lazy
-    if (curAngle > 180) curAngle = 360 - curAngle;
+    if (curAngle > 180)
+    {
+        curAngle = 360 - curAngle;
+    }
 
-    //int curAngle = (450 - abs(noteProgress * (metAngle * 4) / (ticksPerBeat * 2) - (metAngle * 2))) % 360;
-    drawLineFast(metX, metY, metX + getCos1024(curAngle) * metR / 1024, metY - getSin1024(curAngle) * metR / 1024, c555);
+    drawLineFast(metX, metY, metX + getCos1024(curAngle) * metR / 1024, metY - getSin1024(curAngle) * metR / 1024,
+                 c555);
 }
 
 static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
@@ -1623,43 +1628,44 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     paletteColor_t midiTextColor = c550;
     bool colorSet                = false;
 
-    uint32_t now = ticks;
-    uint32_t curBeat = (now / sd->midiFile.timeDivision);
-    uint32_t notesPerBar = karInfo->timeSignature.numerator * karInfo->timeSignature.num32ndNotesPerBeat / 8;
+    uint32_t now          = ticks;
+    uint32_t curBeat      = (now / sd->midiFile.timeDivision);
+    uint32_t notesPerBar  = karInfo->timeSignature.numerator * karInfo->timeSignature.num32ndNotesPerBeat / 8;
     uint32_t ticksPerBeat = sd->midiFile.timeDivision * (karInfo->timeSignature.num32ndNotesPerBeat) / 8;
-    uint32_t ticksPerBar = notesPerBar * ticksPerBeat;
+    uint32_t ticksPerBar  = notesPerBar * ticksPerBeat;
     uint32_t noteProgress = now % (ticksPerBeat);
 
-    uint32_t noteLength = ticksPerBeat;
-    uint32_t barStartTime = (now / ticksPerBar) * ticksPerBar;
+    uint32_t noteLength    = ticksPerBeat;
+    uint32_t barStartTime  = (now / ticksPerBar) * ticksPerBar;
     uint32_t noteStartTime = curBeat * sd->midiFile.timeDivision;
 
-    //printf("%d ticks per beat\n", ticksPerBeat);
+    // printf("%d ticks per beat\n", ticksPerBeat);
 
     int curStage = 0;
 
     // Timer for very long pauses
-    bool drawBar = true;
+    bool drawBar       = true;
     uint32_t nearLyric = 0;
-    uint32_t farLyric = 0;
+    uint32_t farLyric  = 0;
 
     // We want all the lyrics that were part of the last 2 bars (not including the current one)
     int32_t oldCutoff = barStartTime - ticksPerBar;
     // And also any lyrics that are part of the next 3 bars (which includes the current one)
     int32_t newCutoff = barStartTime + ticksPerBar * 3 - 1;
 
-    int32_t curCutoff = noteStartTime - noteLength / 4;
+    int32_t curCutoff      = noteStartTime - noteLength / 4;
     int32_t curAfterCutoff = noteStartTime + noteLength / 2;
 
     // TODO we should just draw a bar of lyrics, then
-    const int16_t startX = 18;
-    const int16_t startY = 18;
+    const int16_t startX = 10;
+    const int16_t startY = 25;
 
     int16_t x = startX;
     int16_t y = startY;
 
     const char* remaining = NULL;
-    bool curNoteReached = false;
+    bool curNoteReached   = false;
+    int lastLyricBar      = 0;
 
     // TODO LIST:
     // - Consistent positioning -- use (measure % 2) or something to pick a consistent half of the screen
@@ -1667,13 +1673,19 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     // - Show the progress bar until the next lyrics start
     // - Fix weird line breaks and leading spaces, why are those there?
 
-
-#define FLUSH() do { remaining = drawTextWordWrapFixed(&sd->betterFont, curNoteReached ? c555 : c550, textMessages, startX, startY, &x, &y, TFT_WIDTH, TFT_HEIGHT); msgLen = 0; textMessages[0] = '\0'; } while (0)
+#define FLUSH()                                                                                                        \
+    do                                                                                                                 \
+    { /* DEBUG: drawLineFast(x, y, x, y + sd->betterFont.height, c500); */                                             \
+        remaining = drawTextWordWrapFixed(&sd->betterFont, curNoteReached ? c555 : c550, textMessages, startX, startY, \
+                                          &x, &y, TFT_WIDTH - startX, TFT_HEIGHT - startY);                            \
+        msgLen    = 0;                                                                                                 \
+        textMessages[0] = '\0';                                                                                        \
+    } while (0)
 
     node_t* curNode = karInfo->lyrics.first;
     while (curNode != NULL && msgLen + 1 < sizeof(textMessages))
     {
-        midiTextInfo_t* curInfo = curNode->val;
+        midiTextInfo_t* curInfo  = curNode->val;
         midiTextInfo_t* nextInfo = curNode->next ? ((midiTextInfo_t*)curNode->next->val) : NULL;
         // lyricLength used as the timer for text progress
         int lyricLength = noteLength;
@@ -1688,16 +1700,11 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
         {
             // Lyric is older than 1 note
             // Draw entire lyric
-            msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
-            FLUSH();
+            msgLen
+                += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
 
             // Lyrics are on screen currently, so no need to draw big progress bar
             drawBar = false;
-
-            if (remaining)
-            {
-                break;
-            }
         }
         else if (curInfo->timestamp < now)
         {
@@ -1711,13 +1718,8 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
             {
                 // NEXT lyric is also in the past
                 // Draw this entire lyric
-                msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
-                FLUSH();
-
-                if (remaining)
-                {
-                    break;
-                }
+                msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo,
+                                        karInfo->karFormat);
             }
             else
             {
@@ -1730,12 +1732,13 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
                     lyricLength = nextInfo->timestamp - curInfo->timestamp;
                 }
 
-                // Print any old pending messages (shouldn't be any though)
+                // Print any old pending messages
                 // Also empties out the buffer so we can use it
                 FLUSH();
 
                 // Write the message into the buffer
-                msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
+                msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo,
+                                        karInfo->karFormat);
                 // Make a temporary pointer to the buffer text so we can move it if needed
                 char* cur = textMessages;
 
@@ -1747,22 +1750,31 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
                     cur++;
                 }
 
-                while (x == startX && *cur == ' ') {
+                while (x == startX && *cur == ' ')
+                {
                     cur++;
                 }
 
-                // Figure out the progress bar width
-                int w = textWidth(&sd->betterFont, cur);
-                int progress = w * (now - curInfo->timestamp) / lyricLength;
-
-                // If the lyric won't fit on screen, handle wrapping here
-                if (x + w >= TFT_WIDTH)
+                if (!karInfo->karFormat && x != startX
+                    && (curInfo->timestamp / ticksPerBar * ticksPerBar) != (lastLyricBar))
                 {
                     x = startX;
                     y += sd->betterFont.height + 1;
                 }
 
-                while (x == startX && *cur == ' ') {
+                // Figure out the progress bar width
+                int w        = textWidth(&sd->betterFont, cur);
+                int progress = w * (now - curInfo->timestamp) / lyricLength;
+
+                // If the lyric won't fit on screen, handle wrapping here
+                if (x + w >= TFT_WIDTH - startX)
+                {
+                    x = startX;
+                    y += sd->betterFont.height + 1;
+                }
+
+                while (x == startX && *cur == ' ')
+                {
                     cur++;
                 }
 
@@ -1773,7 +1785,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
                 x = drawText(&sd->betterOutline, c505, cur, x, y);
 
                 // Reset the buffer since we've printed the text already
-                msgLen = 0;
+                msgLen          = 0;
                 textMessages[0] = '\0';
 
                 curNoteReached = true;
@@ -1782,15 +1794,21 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
         else if (curInfo->timestamp < newCutoff)
         {
             drawBar = false;
+
+            if (!curNoteReached)
+            {
+                FLUSH();
+                if (remaining)
+                {
+                    break;
+                }
+            }
+
             curNoteReached = true;
             // Note is less than (3 bars - 1 tick) in the future
-            FLUSH();
-            msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
 
-            if (remaining)
-            {
-                break;
-            }
+            msgLen
+                += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo, karInfo->karFormat);
         }
         else
         {
@@ -1801,7 +1819,8 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
             break;
         }
 
-        curNode = curNode->next;
+        lastLyricBar = curInfo->timestamp / ticksPerBar * ticksPerBar;
+        curNode      = curNode->next;
     }
 
     if (drawBar && nearLyric != farLyric)
@@ -1813,7 +1832,10 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
 
         // Draw a fun thingy
         int16_t intermissionX = (TFT_WIDTH - textWidth(&sd->betterFont, intermissionMsg)) / 2;
-        drawTextMulticolored(&sd->betterFont, intermissionMsg, intermissionX, (TFT_HEIGHT - sd->betterFont.height) / 2, textColors + (((now - nearLyric) * notesPerBar / (noteLength)) % (ARRAY_SIZE(textColors) / 2)), ARRAY_SIZE(textColors) / 2, 16);
+        drawTextMulticolored(&sd->betterFont, intermissionMsg, intermissionX, (TFT_HEIGHT - sd->betterFont.height) / 2,
+                             textColors
+                                 + (((now - nearLyric) * notesPerBar / (noteLength)) % (ARRAY_SIZE(textColors) / 2)),
+                             ARRAY_SIZE(textColors) / 2, 16);
         drawText(&sd->betterOutline, c555, intermissionMsg, intermissionX, (TFT_HEIGHT - sd->betterOutline.height) / 2);
     }
 
@@ -2335,7 +2357,10 @@ static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text, bool kar)
                 // Line break or paragraph break
                 *p++ = '\n';
 
-                if (p >= bufEnd) break;
+                if (p >= bufEnd)
+                {
+                    break;
+                }
                 skip = true;
             }
             if (*s == '/')
@@ -2343,7 +2368,10 @@ static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text, bool kar)
                 // Paragraph break
                 *p++ = '\n';
 
-                if (p >= bufEnd) break;
+                if (p >= bufEnd)
+                {
+                    break;
+                }
                 skip = true;
             }
             if (*s == '-')

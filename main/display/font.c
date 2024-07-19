@@ -24,7 +24,8 @@
 //==============================================================================
 
 static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t xStart,
-                                         int16_t yStart, int16_t* xOff, int16_t* yOff, int16_t xMax, int16_t yMax, uint16_t flags);
+                                         int16_t yStart, int16_t* xOff, int16_t* yOff, int16_t xMax, int16_t yMax,
+                                         uint16_t flags);
 
 //==============================================================================
 // Functions
@@ -235,8 +236,9 @@ uint16_t textWidth(const font_t* font, const char* text)
     return width;
 }
 
-static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t xStart, int16_t yStart,
-                                         int16_t* xOff, int16_t* yOff, int16_t xMax, int16_t yMax, uint16_t flags)
+static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t xStart,
+                                         int16_t yStart, int16_t* xOff, int16_t* yOff, int16_t xMax, int16_t yMax,
+                                         uint16_t flags)
 {
     const char* textPtr = text;
     int16_t textX = *xOff, textY = *yOff;
@@ -372,10 +374,8 @@ const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const cha
     return drawTextWordWrapFlags(font, color, text, *xOff, *yOff, xOff, yOff, xMax, yMax, TEXT_DRAW);
 }
 
-const char* drawTextWordWrapFixed(const font_t* font, paletteColor_t color, const char* text,
-                                  int16_t xStart, int16_t yStart,
-                                  int16_t* xOff, int16_t* yOff,
-                                  int16_t xMax, int16_t yMax)
+const char* drawTextWordWrapFixed(const font_t* font, paletteColor_t color, const char* text, int16_t xStart,
+                                  int16_t yStart, int16_t* xOff, int16_t* yOff, int16_t xMax, int16_t yMax)
 {
     return drawTextWordWrapFlags(font, color, text, xStart, yStart, xOff, yOff, xMax, yMax, TEXT_DRAW);
 }
@@ -598,9 +598,10 @@ bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* tex
  * @param segmentCount The number of segments to divide the text into
  * @return int16_t The x-offset at the end of the text
  */
-int16_t drawTextMulticolored(const font_t* font, const char* text, int16_t xOff, int16_t yOff, paletteColor_t* colors, uint32_t colorCount, uint32_t segmentCount)
+int16_t drawTextMulticolored(const font_t* font, const char* text, int16_t xOff, int16_t yOff, paletteColor_t* colors,
+                             uint32_t colorCount, uint32_t segmentCount)
 {
-    int16_t w = textWidth(font, text);
+    int16_t w      = textWidth(font, text);
     int16_t result = xOff;
     if (segmentCount <= 0)
     {
@@ -609,7 +610,8 @@ int16_t drawTextMulticolored(const font_t* font, const char* text, int16_t xOff,
 
     for (int i = 0; i < segmentCount; i++)
     {
-        result = drawTextBounds(font, colors[i % colorCount], text, xOff, yOff, xOff + (w * i / segmentCount), 0, xOff + (w * (i + 1) / segmentCount), TFT_HEIGHT);
+        result = drawTextBounds(font, colors[i % colorCount], text, xOff, yOff, xOff + (w * i / segmentCount), 0,
+                                xOff + (w * (i + 1) / segmentCount), TFT_HEIGHT);
     }
 
     return result;
