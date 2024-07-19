@@ -455,6 +455,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 
                     case PROPRIETARY:
                     {
+                        track->nextEvent.meta.type = PROPRIETARY;
                         track->nextEvent.meta.data = track->cur;
                         break;
                     }
