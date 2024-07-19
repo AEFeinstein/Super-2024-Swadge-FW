@@ -306,7 +306,7 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
         buf[nextBreak] = '\0';
 
         // The text is longer than an entire line, so we must shorten it
-        if (*xOff + textWidth(font, buf) > xMax)
+        if (xStart + textWidth(font, buf) > xMax)
         {
             // shorten the text until it fits
             while (textX + textWidth(font, buf) > xMax && nextBreak > 0)
