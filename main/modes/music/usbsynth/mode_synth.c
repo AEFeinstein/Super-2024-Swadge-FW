@@ -1207,11 +1207,15 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
     bool karFormat     = false;
     uint32_t eventMask = (1 << COPYRIGHT) | (1 << SEQUENCE_OR_TRACK_NAME) | (1 << LYRIC) | (1 << TEXT);
     midiFileReader_t reader;
+
     if (initMidiParser(&reader, midiFile))
     {
         reader.handleMetaEvents = true;
         uint32_t tempo          = 500000;
 
+        midiTextInfo_t* lastInfo = NULL;
+        uint8_t textTrack = 0;
+        bool skipOtherTracks = false;
         midiEvent_t event;
 
         while (midiNextEvent(&reader, &event))
@@ -1228,6 +1232,20 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
                     }
                 }
 
+                if (!skipOtherTracks && lastInfo && textTrack != event.track)
+                {
+                    if (lastInfo->timestamp == event.absTime && !strncmp(lastInfo->text, event.meta.text, MIN(lastInfo->length, event.meta.length)))
+                    {
+                        printf("Duplicated text events (%s) on channel %" PRIu8 " and %" PRIu8 "! Skipping.\n", event.meta.text, textTrack, event.track);
+                        skipOtherTracks = true;
+                        continue;
+                    }
+                }
+                else if (skipOtherTracks && event.track != textTrack)
+                {
+                    continue;
+                }
+
                 // TODO we could save a couple bytes if we parsed the file an additional time to check how many events
                 // there are in total...
                 midiTextInfo_t* info = (midiTextInfo_t*)malloc(sizeof(midiTextInfo_t));
@@ -1241,6 +1259,12 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
                     info->timestamp = event.absTime;
 
                     push(&karInfo->lyrics, info);
+
+                    if (event.absTime != 0)
+                    {
+                        lastInfo = info;
+                        textTrack = event.track;
+                    }
                 }
             }
             else if (event.type == META_EVENT && event.meta.type == TEMPO)
