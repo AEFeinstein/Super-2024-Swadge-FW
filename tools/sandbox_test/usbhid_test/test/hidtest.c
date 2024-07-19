@@ -9,7 +9,7 @@
 #include "../../../../emulator/src/sound/os_generic.h"
 
 #define VID 0x303a
-#define PID 0x4004
+#define PID 0x400C
 
 #ifdef WIN32
 const int reg_packet_length = 65;

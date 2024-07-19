@@ -5,7 +5,7 @@
 #include "../hidapi.c"
 
 #define VID 0x303a
-#define PID 0x4004
+#define PID 0x400C
 
 hid_device * hd;
 
