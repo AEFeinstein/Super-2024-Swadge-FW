@@ -1525,29 +1525,29 @@ static void drawSynthMode(void)
             // TODO this is not correct?
             uint32_t ticksPerBar = ts->numerator;
 
-            snprintf(buffer, sizeof(buffer), "Signature: %" PRIu8 "/%" PRIu32, ts->numerator, 1 << ts->denominator);
+            snprintf(buffer, sizeof(buffer), "Signature: %" PRIu8 "/%d", ts->numerator, 1 << ts->denominator);
             drawText(&sd->font, c555, buffer, 18, 60);
 
-            snprintf(buffer, sizeof(buffer), "Beats/Bar: %" PRIu32, ts->numerator);
+            snprintf(buffer, sizeof(buffer), "Beats/Bar: %" PRIu8, ts->numerator);
             drawText(&sd->font, c555, buffer, 18, 75);
 
-            snprintf(buffer ,sizeof(buffer), "Ticks/Beat: %" PRIu32, sd->midiFile.timeDivision);
+            snprintf(buffer ,sizeof(buffer), "Ticks/Beat: %" PRIu16, sd->midiFile.timeDivision);
             drawText(&sd->font, c555, buffer, 18, 90);
 
-            snprintf(buffer, sizeof(buffer), "32nd Notes/Beat: %" PRIu32, ts->num32ndNotesPerBeat);
+            snprintf(buffer, sizeof(buffer), "32nd Notes/Beat: %" PRIu8, ts->num32ndNotesPerBeat);
             drawText(&sd->font, c555, buffer, 18, 105);
 
             int curMeasure = (tick / ts->midiClocksPerMetronomeTick);// * div;
             int curNote = (tick / ts->midiClocksPerMetronomeTick) % (ts->num32ndNotesPerBeat / 8);
             int curBeat = (tick / sd->midiFile.timeDivision);
 
-            snprintf(buffer, sizeof(buffer), "File Division: %" PRIu32 " ticks", sd->midiFile.timeDivision);
+            snprintf(buffer, sizeof(buffer), "File Division: %" PRIu16 " ticks", sd->midiFile.timeDivision);
             drawText(&sd->font, c555, buffer, 18, 120);
 
             //snprintf(buffer, sizeof(buffer), "Cur tick/measure/note: %" PRIu32 ", %" PRIu32 ", %" PRIu32, tick, curMeasure, curNote);
             snprintf(buffer, sizeof(buffer), "Cur tick: %" PRIu32, tick);
             drawText(&sd->font, c555, buffer, 18, 140);
-            snprintf(buffer, sizeof(buffer), "Cur beat: %" PRIu32, curBeat);
+            snprintf(buffer, sizeof(buffer), "Cur beat: %d", curBeat);
             drawText(&sd->font, c555, buffer, 18, 155);
 
             // Maybe??
