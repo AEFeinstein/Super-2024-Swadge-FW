@@ -31,7 +31,7 @@ The ESP-IDF Programming Guide also [specifies a udev rule for Linux](https://doc
 > 
 >
 > ```
-> SUBSYSTEMS=="usb", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="00??", GROUP="plugdev", MODE="0666"
+> SUBSYSTEMS=="usb", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="4269", GROUP="plugdev", MODE="0666"
 > ```
 > **Note** Please check the output of command `groups`. The user has to be a member of the _GROUP_ specified above. You may use some other existing group for this purpose (e.g. _uucp_ on some systems instead of _plugdev_) or create a new group for this purpose.
 > 

@@ -8,8 +8,8 @@
 
 #include <time.h>
 
-#define VID 0x303a
-#define PID 0x400C
+#define VID 0x1209
+#define PID 0x4269
 
 #ifdef WIN32
 const int chunksize = 244;
