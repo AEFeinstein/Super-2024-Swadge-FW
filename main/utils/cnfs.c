@@ -56,17 +56,15 @@ bool deinitCnfs(void)
 }
 
 /**
- * @brief Read a file from CNFS into an output array. Files that are in the
- * assets_image folder before compilation and flashing will automatically
- * be included in the firmware.
+ * @brief Get a pointer to a file, without needing to read it. Same rules that
+ * apply to cnfsGetFile, and under the hood, cnfsGetFile uses this function.
  *
- * @param fname   The name of the file to load
- * @param outsize A pointer to a size_t to return how much data was read
- * @param readToSpiRam true to use SPI RAM, false to use normal RAM
+ * @param fname   The name of the file to find.
+ * @param flen    A pointer to a size_t to return the size of the file.
  * @return A pointer to the read data if successful, or NULL if there is a failure
- *         This data must be freed when done
+ *         Do not free this pointer. It is pointing to flash.
  */
-uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
+const uint8_t* cnfsGetFile(const char* fname, size_t* flen)
 {
     int low  = 0;
     int high = cnfsNumFiles - 1;
@@ -83,19 +81,8 @@ uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
         }
         else if (sc == 0)
         {
-            *outsize = e->len;
-            uint8_t* output;
-
-            if (readToSpiRam)
-            {
-                output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-            }
-            else
-            {
-                output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
-            }
-            memcpy(output, &cnfsData[e->offset], e->len);
-            return output;
+            *flen = e->len;
+            return &cnfsData[e->offset];
         }
         else
         {
@@ -103,8 +90,40 @@ uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
         }
         mid = (low + high) / 2;
     }
-
     ESP_LOGE("CNFS", "Failed to open %s", fname);
-
     return 0;
+}
+
+/**
+ * @brief Read a file from CNFS into an output array. Files that are in the
+ * assets_image folder before compilation and flashing will automatically
+ * be included in the firmware.
+ *
+ * @param fname   The name of the file to load
+ * @param outsize A pointer to a size_t to return how much data was read
+ * @param readToSpiRam true to use SPI RAM, false to use normal RAM
+ * @return A pointer to the read data if successful, or NULL if there is a failure
+ *         This data must be freed when done
+ */
+uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
+{
+    const uint8_t * fptr = cnfsGetFile( fname, outsize );
+
+    if (!fptr)
+    {
+        return 0;
+    }
+
+    uint8_t* output;
+
+    if (readToSpiRam)
+    {
+        output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    }
+    else
+    {
+        output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
+    }
+    memcpy(output, fptr, *outsize);
+    return output;
 }
