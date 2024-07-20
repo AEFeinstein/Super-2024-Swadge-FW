@@ -614,23 +614,20 @@ void drawLaserFromEntity(soko_abs_t* self, sokoEntity_t* emitter)
     drawLine(playerPix.x, playerPix.y, impactPix.x, impactPix.y, c500, 0);
 }
 
-int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, sokoDirection_t emitterDir,
-                            sokoEntity_t* rootEmitter);
-
-void sokoDoBeam(soko_abs_t* self)
-{
-    // bool receiverImpact;
-    // for (int entInd = 0; entInd < self->currentLevel.entityCount; entInd++)
-    // {
-    //     if (self->currentLevel.entities[entInd].type == SKE_LASER_EMIT_UP)
-    //     {
-    //         self->currentLevel.entities[entInd].properties->targetCount = 0;
-    //         receiverImpact = sokoBeamImpactRecursive(
-    //             self, self->currentLevel.entities[entInd].x, self->currentLevel.entities[entInd].y,
-    //             self->currentLevel.entities[entInd].type, &self->currentLevel.entities[entInd]);
-    //     }
-    // }
-}
+// void sokoDoBeam(soko_abs_t* self)
+// {
+//     // bool receiverImpact;
+//     // for (int entInd = 0; entInd < self->currentLevel.entityCount; entInd++)
+//     // {
+//     //     if (self->currentLevel.entities[entInd].type == SKE_LASER_EMIT_UP)
+//     //     {
+//     //         self->currentLevel.entities[entInd].properties->targetCount = 0;
+//     //         receiverImpact = sokoBeamImpactRecursive(
+//     //             self, self->currentLevel.entities[entInd].x, self->currentLevel.entities[entInd].y,
+//     //             self->currentLevel.entities[entInd].type, &self->currentLevel.entities[entInd]);
+//     //     }
+//     // }
+// }
 
 bool sokoLaserTileCollision(sokoTile_t testTile)
 {
