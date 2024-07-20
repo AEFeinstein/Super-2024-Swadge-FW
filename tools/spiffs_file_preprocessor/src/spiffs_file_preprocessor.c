@@ -15,8 +15,18 @@
 #include "json_processor.h"
 #include "bin_processor.h"
 #include "txt_processor.h"
-#include "midi_processor.h"
 #include "rmd_processor.h"
+#include "raw_processor.h"
+
+/**
+ * @brief A mapping of file extensions that should be compressed using heatshrink without any other processing
+ *
+ */
+static const char* rawFileTypes[][2] = {
+    { "mid",  "mid"},
+    { "midi", "mid"},
+    { "raw", "raw"},
+};
 
 const char* outDirName = NULL;
 
@@ -83,13 +93,24 @@ static int processFile(const char* fpath, const struct stat* st __attribute__((u
             {
                 process_txt(fpath, outDirName);
             }
-            else if (endsWith(fpath, ".mid") || endsWith(fpath, ".midi"))
-            {
-                process_midi(fpath, outDirName);
-            }
             else if (endsWith(fpath, ".rmd"))
             {
                 process_rmd(fpath, outDirName);
+            }
+            else
+            {
+                char extBuf[16];
+                for (int i = 0; i < (sizeof(rawFileTypes) / sizeof(rawFileTypes[0])); i++)
+                {
+                    snprintf(extBuf, sizeof(extBuf), ".%s", rawFileTypes[i][0]);
+
+                    if (endsWith(fpath, extBuf))
+                    {
+                        // printf("Processing %s to raw .%s file\n", fpath, rawFileTypes[i][1]);
+                        process_raw(fpath, outDirName, rawFileTypes[i][1]);
+                        break;
+                    }
+                }
             }
             break;
         }

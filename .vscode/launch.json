@@ -30,6 +30,14 @@
             "preLaunchTask": "make emulator"
         },
         {
+            "name": "(lldb) Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/swadge_emulator",
+            "args": ["-t", "-m", "Main Menu"],
+            "preLaunchTask": "make emulator"
+        },
+        {
             // For use with https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb
             // Also requires https://rr-project.org/
             // See instructions here: https://github.com/vadimcn/codelldb/blob/master/MANUAL.md#reverse-debugging

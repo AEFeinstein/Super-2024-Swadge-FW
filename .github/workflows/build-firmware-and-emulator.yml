@@ -5,7 +5,7 @@ on:
     branches:
       - main
   pull_request:
-    branches:    
+    branches:
       - main
 
 env:
@@ -14,58 +14,151 @@ env:
 
 jobs:
   Build-Firmware-And-Emulator:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [ windows, osx-arm, osx-intel, linux ]
+        include:
+          - os: windows
+            runner: windows-latest
+            family: windows
+            emulator: true
+            firmware: true
+            emu_binary: swadge_emulator.exe
+            # TODO: What variable can we use to not hardcode this???
+            idf_install: C:\Users\runneradmin\.espressif
+          - os: osx-arm
+            runner: macos-latest
+            family: osx
+            emulator: true
+            firmware: false
+            emu_binary: swadge_emulator
+            idf_install: ~/.espressif
+          - os: osx-intel
+            runner: macos-13
+            family: osx
+            emulator: true
+            firmware: false
+            emu_binary: swadge_emulator
+            idf_install: ~/.espressif
+          - os: linux
+            runner: ubuntu-latest
+            family: linux
+            emulator: true
+            firmware: false
+            emu_binary: swadge_emulator
+            idf_install: ~/.espressif
+
+    runs-on: ${{ matrix.runner }}
     steps:
 
     # - name: Debug print event
     #   run: echo '${{ toJSON(github.event) }}'
 
+    #### Basic Steps
     - name: Check out repository code
       uses: actions/checkout@v4.1.4
       with:
         submodules: recursive
-      
+
     - name: Create a version file
       run: |
-        printf "Commit: https://github.com/AEFeinstein/Super-2024-Swadge-FW/commit/$(git rev-parse HEAD) \nBuilt at: $(date)" >> version.txt
+        printf "Commit: https://github.com/AEFeinstein/Super-2024-Swadge-FW/commit/$(git rev-parse HEAD) \nBuilt on ${{ matrix.os }} at: $(date)" >> version.txt
 
+    #### Platform-specific Dependencies
     - name: Install msys64 packages
+      if: matrix.family == 'windows'
       run: |
         C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel gcc gdb zip mingw-w64-x86_64-graphviz mingw-w64-x86_64-cppcheck doxygen'
 
+    - name: Install homebrew packages
+      if: matrix.family == 'osx'
+      run: |
+        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake graphviz
+
+    - name: Install apt packages
+      if: matrix.family == 'linux'
+      run: |
+        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
+
+    #### Platform-specific Emulator Builds
     - name: Compile the Emulator
+      if: matrix.emulator && matrix.family == 'windows'
       run: |
         $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
         make -j2
 
-    - name: Upload Emulator EXE
+    - name: Compile the Emulator
+      if: matrix.emulator && matrix.family != 'windows'
+      run: |
+        make -j3
+
+    #### Generic Emulator Upload
+    - name: Upload Emulator Binary
+      if: matrix.emulator
       uses: actions/upload-artifact@v4.3.3
       with:
-        name: ${{ env.EMULATOR_ARTIFACT }}-exe
+        name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-exe
         path: |
-          swadge_emulator.exe
+          ${{ matrix.emu_binary }}
           spiffs_image
           version.txt
 
+    ## Platform-specific Emulator Uploads
     - name: Upload Emulator DLL
+      if: matrix.emulator && matrix.family == 'windows'
       uses: actions/upload-artifact@v4.3.3
       with:
-        name: ${{ env.EMULATOR_ARTIFACT }}-dll
+        name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-dll
         path: |
           C:\msys64\mingw64\bin\libwinpthread-1.dll
 
+    # Merge all emulator artifacts for each OS into one
+    - name: Merge Emulator Artifacts
+      if: matrix.emulator
+      uses: actions/upload-artifact/merge@v4.3.3
+      with:
+        name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}
+        pattern: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-*
+        delete-merged: true
+
+    ## Firmware
+    - name: Restore IDF Cache
+      id: cache-esp-idf
+      if: matrix.firmware
+      uses: actions/cache@v3
+      with:
+        path: |
+          ${{ matrix.idf_install }}
+          ${{ runner.temp }}/esp-idf
+        key: esp-idf-cache-${{ matrix.os }}
+
     - name: Set up the IDF
+      if: steps.cache-esp-idf.outputs.cache-hit != 'true' && matrix.firmware && matrix.family == 'windows'
       run: |
         git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
         ${{ runner.temp }}/esp-idf/install.ps1
- 
+
+    - name: Set up the IDF
+      if: steps.cache-esp-idf.outputs.cache-hit != 'true' && matrix.firmware && matrix.family != 'windows'
+      run: |
+        git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
+        ${{ runner.temp }}/esp-idf/install.sh
+
     - name: Compile the firmware
+      if: matrix.firmware && matrix.family == 'windows'
       run: |
         $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
         ${{ runner.temp }}/esp-idf/export.ps1
         idf.py build dfu
 
+    - name: Compile the firmware
+      if: matrix.firmware && matrix.family != 'windows'
+      run: |
+        ${{ runner.temp }}/esp-idf/export.sh
+        idf.py build dfu
+
     - name: Add firmware, bootloader, partition table, version, and flasher files to firmware artifact
+      if: matrix.firmware
       uses: actions/upload-artifact@v4.3.3
       with:
         name: ${{ env.FIRMWARE_ARTIFACT }}
@@ -79,6 +172,10 @@ jobs:
           version.txt
           tools/pyFlashGui/pyFlashGui.py
 
+  Post-Slack-Message:
+    runs-on: windows-latest
+    needs: Build-Firmware-And-Emulator
+    steps:
     - name: Post to a Slack channel
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
       id: slack
@@ -92,14 +189,3 @@ jobs:
         slack-message: "*Build Result*: ${{ job.status }}\n*Author*: ${{ github.event.head_commit.author.username }}\n*Head Commit Message*:\n```\n${{ github.event.head_commit.message }}\n```\n*Comparison*: ${{ github.event.compare }}\n*Artifacts*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
-  Merge-Emulator-Artifacts:
-    runs-on: windows-latest
-    needs: Build-Firmware-And-Emulator
-    steps:
-      - name: Merge Emulator Artifacts
-        uses: actions/upload-artifact/merge@v4.3.3
-        with:
-          name: ${{ env.EMULATOR_ARTIFACT }}
-          pattern: ${{ env.EMULATOR_ARTIFACT }}-*
-          delete-merged: true

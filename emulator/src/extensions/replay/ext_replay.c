@@ -154,7 +154,6 @@ static bool replayInit(emuArgs_t* emuArgs)
     if (emuArgs->record)
     {
         // Construct a timestamp-based filename
-        struct timespec ts;
         char buf[64];
         const char* filename = emuArgs->recordFile;
 
@@ -614,8 +613,11 @@ static bool readEntry(replayEntry_t* entry)
 
         case FUZZ:
         {
-            // Just advance to the next line
-            fscanf(replay.file, "%*[^\n]\n");
+            // Just advance to the next line, with warning suppression
+            if (fscanf(replay.file, "%*[^\n]\n"))
+            {
+                ;
+            }
 
             break;
         }
@@ -748,10 +750,14 @@ void recordScreenshotTaken(const char* name)
     // Check that we're recording, otherwise we don't do anything
     if (replay.mode == RECORD && replay.file)
     {
+        // Create a copy of the filename since entry.filename is not const
+        char tmp[strlen(name) + 1];
+        strcpy(tmp, name);
+
         replayEntry_t entry = {
             .time     = esp_timer_get_time(),
             .type     = SCREENSHOT,
-            .filename = name,
+            .filename = tmp,
         };
         writeEntry(&entry);
     }

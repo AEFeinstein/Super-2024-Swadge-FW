@@ -2,8 +2,15 @@
 
 #include "mode_pinball.h"
 
-void updatePinballPhysicsFrame(pinball_t* p);
+#define PINBALL_GRAVITY (1 / 60.0f) ///< Gravitational constant
 
-circle_t intCircle(pbCircle_t pbc);
-line_t intLine(pbLine_t pbl);
-rectangle_t intRect(pbRect_t pbr);
+#define WALL_BOUNCINESS 0.5f
+
+#define FLIPPER_UP_DEGREES_PER_FRAME 0.296705972839036f ///< Number of degrees (17) to move a flipper up per 60fps frame
+#define FLIPPER_DOWN_DEGREES_PER_FRAME \
+    0.174532925199433f                        ///< Number of degrees (10) to move a flipper down per 60fps frame
+#define FLIPPER_UP_ANGLE   0.349065850398866f ///< Angle of a flipper (20) when actuated
+#define FLIPPER_DOWN_ANGLE 0.523598775598299f ///< Angle of a flipper (30) when idle
+
+void updateFlipperPos(pbFlipper_t* f);
+void updatePinballPhysicsFrame(pinball_t* p);

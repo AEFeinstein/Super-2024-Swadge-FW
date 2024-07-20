@@ -175,7 +175,6 @@
 #include "hdw-imu.h"
 #include "hdw-battmon.h"
 #include "hdw-btn.h"
-#include "hdw-bzr.h"
 #include "hdw-dac.h"
 #include "hdw-esp-now.h"
 #include "hdw-led.h"
@@ -194,14 +193,13 @@
 #include "shapes.h"
 #include "fill.h"
 #include "menu.h"
-#include "menuLogbookRenderer.h"
+#include "menuManiaRenderer.h"
 
 // Asset loaders
 #include "spiffs_wsg.h"
 #include "spiffs_font.h"
 #include "spiffs_txt.h"
 #include "spiffs_json.h"
-#include "spiffs_song.h"
 
 // Connection interface
 #include "p2pConnection.h"
@@ -214,11 +212,13 @@
 #include "geometry.h"
 #include "settingsManager.h"
 #include "touchUtils.h"
+#include "vectorFl2d.h"
+#include "geometryFl.h"
 
 // Sound utilities
 #include "soundFuncs.h"
 #include "swSynth.h"
-#include "sngPlayer.h"
+#include "midiPlayer.h"
 
 #define EXIT_TIME_US 1000000
 /// @brief the default time between drawn frames, in microseconds
@@ -339,8 +339,8 @@ typedef struct
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
 
     /**
-     * @brief This function is called to fill sample buffers for the DAC. If this is NULL, then sngPlayerFillBuffer()
-     * will be used instead to fill sample buffers
+     * @brief This function is called to fill sample buffers for the DAC. If this is NULL, then
+     * globalMidiPlayerFillBuffer() will be used instead to fill sample buffers
      */
     fnDacCallback_t fnDacCb;
 } swadgeMode_t;
@@ -352,6 +352,7 @@ void softSwitchToPendingSwadge(void);
 
 void deinitSystem(void);
 
+void openQuickSettings(void);
 void setFrameRateUs(uint32_t newFrameRateUs);
 
 #endif

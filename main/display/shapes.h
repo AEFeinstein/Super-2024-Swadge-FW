@@ -64,6 +64,7 @@ void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool 
 void drawCircleFilled(int xm, int ym, int r, paletteColor_t col);
 void drawCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
                             int yScale);
+void drawCircleOutline(int xm, int ym, int r, int stroke, paletteColor_t col);
 void drawEllipseRect(int x0, int y0, int x1, int y1, paletteColor_t col);
 void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
                            int yScale);

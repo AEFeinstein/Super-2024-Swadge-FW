@@ -23,7 +23,7 @@ typedef struct
     int64_t tElapsedUs;
     int8_t scrollMod;
     int16_t yOffset;
-    song_t song;
+    midiFile_t song;
 
     const creditsEntry_t* entries;
     int32_t numEntries;

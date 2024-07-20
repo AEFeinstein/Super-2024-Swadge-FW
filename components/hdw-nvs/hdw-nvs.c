@@ -8,7 +8,9 @@
 #include <nvs.h>
 
 #include "hdw-nvs.h"
-#include "hdw-bzr.h"
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
+    #include "hdw-bzr.h"
+#endif
 
 //==============================================================================
 // Functions
@@ -90,8 +92,10 @@ bool deinitNvs(void)
  */
 bool eraseNvs(void)
 {
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     bool bzrPaused = bzrPause();
-    bool retVal    = false;
+#endif
+    bool retVal = false;
 
     switch (nvs_flash_erase())
     {
@@ -109,11 +113,13 @@ bool eraseNvs(void)
         }
     }
 
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     // Resume the buzzer if it was paused
     if (bzrPaused)
     {
         bzrResume();
     }
+#endif
     return retVal;
 }
 
@@ -152,8 +158,10 @@ bool writeNvs32(const char* key, int32_t val)
 bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
 {
     // Pause the buzzer before NVS operations
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     bool bzrPaused = bzrPause();
-    bool retVal    = false;
+#endif
+    bool retVal = false;
 
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READONLY, &handle);
@@ -197,11 +205,13 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
         }
     }
 
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     // Resume the buzzer if it was paused
     if (bzrPaused)
     {
         bzrResume();
     }
+#endif
     return retVal;
 }
 
@@ -215,8 +225,10 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
  */
 bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
 {
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     bool bzrPaused = bzrPause();
-    bool retVal    = false;
+#endif
+    bool retVal = false;
 
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READWRITE, &handle);
@@ -263,11 +275,13 @@ bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
         }
     }
 
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     // Resume the buzzer if it was paused
     if (bzrPaused)
     {
         bzrResume();
     }
+#endif
     return retVal;
 }
 
@@ -314,8 +328,10 @@ bool writeNvsBlob(const char* key, const void* value, size_t length)
  */
 bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_value, size_t* length)
 {
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     bool bzrPaused = bzrPause();
-    bool retVal    = false;
+#endif
+    bool retVal = false;
 
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READONLY, &handle);
@@ -359,11 +375,13 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
         }
     }
 
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     // Resume the buzzer if it was paused
     if (bzrPaused)
     {
         bzrResume();
     }
+#endif
     return retVal;
 }
 
@@ -378,8 +396,10 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
  */
 bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* value, size_t length)
 {
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     bool bzrPaused = bzrPause();
-    bool retVal    = false;
+#endif
+    bool retVal = false;
 
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READWRITE, &handle);
@@ -426,11 +446,13 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
         }
     }
 
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     // Resume the buzzer if it was paused
     if (bzrPaused)
     {
         bzrResume();
     }
+#endif
     return retVal;
 }
 
@@ -454,8 +476,10 @@ bool eraseNvsKey(const char* key)
  */
 bool eraseNamespaceNvsKey(const char* namespace, const char* key)
 {
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     bool bzrPaused = bzrPause();
-    bool retVal    = false;
+#endif
+    bool retVal = false;
 
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READWRITE, &handle);
@@ -502,11 +526,13 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
         }
     }
 
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     // Resume the buzzer if it was paused
     if (bzrPaused)
     {
         bzrResume();
     }
+#endif
     return retVal;
 }
 
