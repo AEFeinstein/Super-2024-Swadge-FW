@@ -108,7 +108,7 @@ class ProgrammerApplication:
                 # If the serial port exists but isn't in swadgeSerialPorts
                 if serialPort not in self.swadgeSerialPorts:
                     # If the VID and PID match the ESP32-S2's values, use it
-                    if(serialPort.vid == 0x1209 and serialPort.pid == 0x4269):
+                    if(serialPort.vid == 0x303A and serialPort.pid == 0x0002):
                         self.swadgeSerialPorts.append(serialPort)
                         # Then create a thread for esptool associated with this serial port and label and run it
                         programmerThread = LabelThread(_serialPort=serialPort)
