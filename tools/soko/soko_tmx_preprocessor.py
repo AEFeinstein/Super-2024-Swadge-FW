@@ -13,6 +13,8 @@ def main():
     if not os.path.exists(output):
         os.makedirs(output)
 
+    # todo: automatically check and move SK_LEVEL_LIST.txt, it doesn't update automatically.
+
     # todo: ensure output ends in a trailing slash.
     convertDir(sys.argv[1],output)
     print("Completed soko tmx converstion. "+str(count)+ "/"+str(total)+" tmx files converted. "+str(comp_total)+"/"+str(raw_total)+" - "+str(raw_total-comp_total)+" (of converted) bytes saved with compression.")

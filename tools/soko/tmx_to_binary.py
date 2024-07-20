@@ -54,6 +54,7 @@ def insert_position(position, sourceList, insertionList):
 # root.withdraw()
 
 def convertTMX(file_path):
+    print("convert "+file_path)
     document = parse(file_path)
     entities = {}
     mapHeaderWidth = int(document.getElementsByTagName("map")[0].attributes.getNamedItem("width").nodeValue)
@@ -98,6 +99,7 @@ def convertTMX(file_path):
         ebytes = getEntityBytesFromEntity(entity,tileLookups)
         x = int(float(entity.getAttribute("x"))/16)
         y = int(float(entity.getAttribute("y"))/16)
+        #print(str(x)+","+str(y)+" = "+str(ebytes))
         entities[str(x)+","+str(y)] = ebytes
     
    
@@ -110,18 +112,19 @@ def convertTMX(file_path):
     output = [mapHeaderWidth,mapHeaderHeight,modeInt]
     for i in range(len(scrub)):
         x = (i-1)%mapHeaderWidth
-        y = ((i-1)//mapHeaderWidth)+1 #todo: figure out why this is +1 ????
-        key = str(x)+","+str(y)
+        y = ((i-1)//mapHeaderWidth)+1 #todo: figure out why this is +1
+        keypos = str(x)+","+str(y)
         #print("playing with "+key)
-        if(key in entities):
-            for b in entities[key]:
-                output.append(b)
+        if(keypos in entities):
+            #append each byte of the entity data.
+            for b in entities[keypos]:
+                output.append(b) 
         output.append(int(getTile(scrub[i],tileLookups)))
 
     # output now is a list of tiles. 
 
-    # add header information at start of tiles list.
-    output2 = compress(output)
+    #output2 = compress(output)
+    output2 = output
     rawsize = len(output)
     compsize = len(output2)
     rawBytesc = bytearray(output2)

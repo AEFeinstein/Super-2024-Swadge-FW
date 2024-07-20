@@ -102,7 +102,7 @@ static void sokoEnterMode(void)
 
     // Initialize the menu
     soko->menu                = initMenu(sokoModeName, sokoMenuCb);
-    soko->menuLogbookRenderer = initMenuLogbookRenderer(&soko->ibm);
+    soko->menuManiaRenderer = initMenuManiaRenderer(&soko->ibm, NULL, NULL);
 
     addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
     addSingleItemToMenu(soko->menu, sokoNewGameLabel);
@@ -123,7 +123,7 @@ static void sokoExitMode(void)
 {
     // Deinitialize the menu
     deinitMenu(soko->menu);
-    deinitMenuLogbookRenderer(soko->menuLogbookRenderer);
+    deinitMenuManiaRenderer(soko->menuManiaRenderer);
 
     // Free the font
     freeFont(&soko->ibm);
@@ -192,7 +192,7 @@ static void sokoMainLoop(int64_t elapsedUs)
             }
 
             // Draw the menu
-            drawMenuLogbook(soko->menu, soko->menuLogbookRenderer, elapsedUs);
+            drawMenuMania(soko->menu, soko->menuManiaRenderer, elapsedUs);
             break;
         }
         case SOKO_LEVELPLAY:
