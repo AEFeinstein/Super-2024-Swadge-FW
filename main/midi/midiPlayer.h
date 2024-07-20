@@ -488,6 +488,9 @@ typedef struct
     /// @brief True when playback of the current file is paused
     bool paused;
 
+    /// @brief True when the MIDI player is seeking, and will not produce sound
+    bool seeking;
+
     /// @brief If true, the playing file will automatically repeat when complete
     bool loop;
 } midiPlayer_t;
@@ -640,6 +643,18 @@ void midiSetFile(midiPlayer_t* player, midiFile_t* file);
  * @param pause True to pause, false to play
  */
 void midiPause(midiPlayer_t* player, bool pause);
+
+/**
+ * @brief Seek to a given time offset within a file
+ *
+ * Note that in the current implementation, seeking backwards by any amount requires
+ * re-reading the file from the beginning, and so may be very slow, particularly for
+ * large MIDI files.
+ *
+ * @param player The MIDI player to seek on
+ * @param ticks The absolute number of MIDI ticks to seek to.
+ */
+void midiSeek(midiPlayer_t* player, uint32_t ticks);
 
 /**
  * @brief Initialize the system-wide MIDI players for both BGM and SFX
