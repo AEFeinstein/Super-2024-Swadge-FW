@@ -1700,9 +1700,9 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
 
     // TODO LIST:
     // - Consistent positioning -- use (measure % 2) or something to pick a consistent half of the screen
-    // - Properly handle songs with overlapping lyrics for multiple tracks, which currently get interleaved
-    // - Show the progress bar until the next lyrics start
-    // - Fix weird line breaks and leading spaces, why are those there?
+    // - Properly handle songs with overlapping lyrics for multiple tracks, which currently get interleaved (almost!)
+    // - Show the progress bar until the next lyrics start, not just until they're shown
+    // - Don't insert a newline if there are no spaces between two lyrics
 
 #define FLUSH()                                                                                                        \
     do                                                                                                                 \
