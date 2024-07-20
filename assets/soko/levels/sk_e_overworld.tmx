@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="23" height="18" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="61">
+ <editorsettings>
+  <export format="sokoMap"/>
+ </editorsettings>
+ <tileset firstgid="1" source="../../../tools/soko/templateTiledProject/soko_entities.tsx"/>
+ <tileset firstgid="12" name="tilesheet" tilewidth="16" tileheight="16" tilecount="64" columns="8">
+  <image source="../../../tools/soko/templateTiledProject/tileSprites/tilesheet.png" width="128" height="128"/>
+  <tile id="0" type="wall"/>
+  <tile id="1" type="floor"/>
+  <tile id="2" type="goal"/>
+  <tile id="3" type="nowalkfloor"/>
+ </tileset>
+ <tileset firstgid="76" source="../../../tools/soko/templateTiledProject/tilesheet.tsx"/>
+ <layer id="1" name="tiles" width="23" height="18">
+  <data encoding="csv">
+0,12,12,12,12,76,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+12,76,13,13,13,76,76,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+12,13,13,13,77,77,76,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+12,13,13,13,77,77,76,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+12,13,13,13,77,77,76,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+12,13,76,76,13,77,76,76,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+12,13,77,76,77,77,77,76,76,76,76,76,76,76,76,76,76,76,76,0,0,0,0,
+12,13,13,76,77,77,13,13,13,13,13,13,13,13,13,13,13,77,76,76,0,0,0,
+12,13,13,76,77,77,77,76,76,13,13,13,13,13,13,13,13,77,77,76,76,0,0,
+12,13,13,76,76,76,77,77,76,77,77,13,13,13,13,13,13,77,77,77,76,76,0,
+12,13,13,13,13,76,77,77,77,77,77,77,13,13,13,13,13,77,77,77,77,76,76,
+12,13,13,13,13,76,77,77,77,77,77,76,76,76,76,76,76,76,76,76,76,76,76,
+12,13,13,13,13,76,77,77,77,77,77,77,77,76,77,77,77,77,77,77,77,77,76,
+12,12,13,13,13,76,13,13,77,77,77,77,77,77,77,77,77,77,77,77,77,77,76,
+0,76,12,76,76,76,13,13,77,77,77,77,77,77,76,76,76,76,76,77,77,76,76,
+0,0,0,0,76,13,13,13,13,13,13,77,77,77,76,77,77,77,77,77,76,76,0,
+0,0,0,0,12,13,13,13,13,13,13,13,13,77,77,77,77,77,76,76,76,0,0,
+0,0,0,0,12,12,12,12,12,12,12,12,12,12,76,76,76,76,76,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="4" name="entities">
+  <object id="33" gid="4" x="272" y="128" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="34" gid="4" x="208" y="144" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="35" gid="4" x="320" y="176" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="6"/>
+   </properties>
+  </object>
+  <object id="36" gid="4" x="240" y="176" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="2"/>
+   </properties>
+  </object>
+  <object id="48" gid="4" x="304" y="160" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="5"/>
+   </properties>
+  </object>
+  <object id="49" gid="4" x="320" y="240" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="33"/>
+   </properties>
+  </object>
+  <object id="50" gid="4" x="288" y="144" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="4"/>
+   </properties>
+  </object>
+  <object id="51" gid="4" x="336" y="208" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="34"/>
+   </properties>
+  </object>
+  <object id="37" gid="1" x="176" y="144" width="16" height="16">
+   <properties>
+    <property name="gamemode" value="SOKO_OVERWORLD"/>
+   </properties>
+  </object>
+  <object id="41" gid="4" x="32" y="112" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="102"/>
+   </properties>
+  </object>
+  <object id="42" gid="4" x="16" y="208" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="104"/>
+   </properties>
+  </object>
+  <object id="43" gid="4" x="64" y="176" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="103"/>
+   </properties>
+  </object>
+  <object id="44" gid="4" x="64" y="224" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="105"/>
+   </properties>
+  </object>
+  <object id="45" gid="4" x="80" y="272" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="37"/>
+   </properties>
+  </object>
+  <object id="46" gid="4" x="144" y="272" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="36"/>
+   </properties>
+  </object>
+  <object id="47" gid="4" x="208" y="256" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="35"/>
+   </properties>
+  </object>
+  <object id="55" gid="4" x="96" y="224" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="32"/>
+   </properties>
+  </object>
+  <object id="56" gid="4" x="192" y="208" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="30"/>
+   </properties>
+  </object>
+  <object id="57" gid="4" x="16" y="48" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="101"/>
+   </properties>
+  </object>
+  <object id="58" gid="4" x="64" y="32" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="100"/>
+   </properties>
+  </object>
+  <object id="59" gid="4" x="240" y="256" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="38"/>
+   </properties>
+  </object>
+  <object id="60" gid="4" x="224" y="208" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="31"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

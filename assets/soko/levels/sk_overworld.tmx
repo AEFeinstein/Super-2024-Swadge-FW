@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="18" height="18" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="57">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="18" height="18" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="58">
  <editorsettings>
   <export format="sokoMap"/>
  </editorsettings>
@@ -123,6 +123,11 @@
   <object id="56" gid="4" x="192" y="240" width="16" height="16">
    <properties>
     <property name="target_id" type="int" value="109"/>
+   </properties>
+  </object>
+  <object id="57" gid="4" x="32" y="64" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="110"/>
    </properties>
   </object>
  </objectgroup>

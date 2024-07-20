@@ -9,7 +9,7 @@
 0,2,2,2,2,2,1,2,1,2,
 0,2,1,1,1,1,1,2,1,2,
 0,2,1,1,2,2,2,2,1,2,
-2,2,1,2,2,2,2,2,2,2,
+0,2,1,2,2,2,2,2,2,2,
 2,2,1,2,2,2,2,2,0,0,
 2,2,2,2,2,2,2,2,0,0,
 2,2,0,0,0,0,0,0,0,0,
@@ -25,11 +25,13 @@
   <object id="2" gid="66" x="64" y="16" width="16" height="16">
    <properties>
     <property name="sticky" type="bool" value="true"/>
+    <property name="trail" type="bool" value="false"/>
    </properties>
   </object>
   <object id="3" gid="66" x="64" y="80" width="16" height="16">
    <properties>
     <property name="sticky" type="bool" value="true"/>
+    <property name="trail" type="bool" value="false"/>
    </properties>
   </object>
  </objectgroup>
