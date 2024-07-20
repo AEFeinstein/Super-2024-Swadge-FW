@@ -29,16 +29,19 @@ int main()
     int r;
 redo:
     hid_init();
+
     hd = hid_open( VID, PID, 0);
     if( !hd )
     {
 #ifdef WIN32
-	    Sleep( 2000 );
+        Sleep( 2000 );
 #else
-	    usleep(200000);
+        usleep(200000);
 #endif
-
-        fprintf( stderr, "Could not open USB\n" );
+        if( do_for_tries < 80 )
+        {
+            fprintf( stderr, "Could not open USB (%04x:%04x)\n", VID, PID );
+        }
         if( do_for_tries-- ) goto redo;
         return -94;
     }

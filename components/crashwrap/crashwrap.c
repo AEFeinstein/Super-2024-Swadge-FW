@@ -146,6 +146,10 @@ void checkAndInstallCrashwrap(void)
                  "EXECVADDR: 0x%08" PRIx32 "",
                  (uint32_t)fr.exit, (uint32_t)fr.pc, (uint32_t)fr.ps, (uint32_t)fr.a0, (uint32_t)fr.a1,
                  (uint32_t)fr.sar, (uint32_t)fr.exccause, (uint32_t)fr.excvaddr);
+
+        ESP_LOGW(crashwrapTag, "Backtrace:");
+
+        ESP_LOGW(crashwrapTag, "xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x%08lx:0x%08lx", (uint32_t)fr.pc, (uint32_t)fr.ps);
     }
 
     nvs_close(handle);
