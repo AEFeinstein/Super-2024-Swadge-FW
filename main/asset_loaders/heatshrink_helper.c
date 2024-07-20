@@ -28,7 +28,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
 {
     // Read WSG from file
     size_t sz;
-    uint8_t* buf = cnfsGetFile(fname, &sz);
+    const uint8_t* buf = cnfsGetFile(fname, &sz);
     if (NULL == buf)
     {
         ESP_LOGE("WSG", "Failed to read %s", fname);
