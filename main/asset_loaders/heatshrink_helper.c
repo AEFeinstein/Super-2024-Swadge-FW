@@ -28,7 +28,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
 {
     // Read WSG from file
     size_t sz;
-    uint8_t* buf = cnfsReadFile(fname, &sz, readToSpiRam);
+    uint8_t* buf = cnfsGetFile(fname, &sz);
     if (NULL == buf)
     {
         ESP_LOGE("WSG", "Failed to read %s", fname);
@@ -69,7 +69,6 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
             ESP_LOGE("WSG", "Failed to read %s fault on decode", fname);
             heatshrink_decoder_finish(hsd);
             heatshrink_decoder_free(hsd);
-            free(buf);
             free(decompressedBuf);
             return 0;
         }
@@ -91,8 +90,6 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
     // All done decoding
     heatshrink_decoder_finish(hsd);
     heatshrink_decoder_free(hsd);
-    // Free the bytes read from the file
-    free(buf);
 
     // Return the decompressed bytes
     return decompressedBuf;
