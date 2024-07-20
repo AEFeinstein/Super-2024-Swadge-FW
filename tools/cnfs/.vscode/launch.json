@@ -8,12 +8,9 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/spiffs_file_preprocessor",
+            "program": "${workspaceFolder}/cnfs_gen",
             "args": [
-                "-i",
-                "./in",
-                "-o",
-                "./out"
+                "../../assets_image/","image.c","image.h"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

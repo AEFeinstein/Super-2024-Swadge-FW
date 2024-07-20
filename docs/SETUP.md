@@ -42,7 +42,7 @@ The continuous integration for this project runs on a Windows instance. This mea
     
     You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. When it's all set up, it should look something like this:
     
-    ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
+    <img src="./win_path.png">
 
 6. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
 Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe

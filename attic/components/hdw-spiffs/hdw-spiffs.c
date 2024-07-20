@@ -63,7 +63,7 @@ bool deinitSpiffs(void)
 
 /**
  * @brief Read a file from SPIFFS into an output array. Files that are in the
- * spiffs_image folder before compilation and flashing will automatically
+ * assets_image folder before compilation and flashing will automatically
  * be included in the firmware
  *
  * @param fname   The name of the file to load

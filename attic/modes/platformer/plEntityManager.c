@@ -10,7 +10,7 @@
 #include "esp_random.h"
 #include "palette.h"
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "spiffs_wsg.h"
 
 //==============================================================================

@@ -6,8 +6,8 @@
 #include "../hidapi.h"
 #include "../hidapi.c"
 
-#define VID 0x303a
-#define PID 0x4004
+#define VID 0x1209
+#define PID 0x4269
 
 hid_device * hd;
 
@@ -89,7 +89,7 @@ int DoUpload( const char * file, uint32_t address )
 	// Now, we have blob and bloblen.
 
 	{
-		// MAGFest Swadge Controller is 303a:4004
+		// MAGFest Swadge Controller is 1209:4269
 
 		if( !hd )
 		{

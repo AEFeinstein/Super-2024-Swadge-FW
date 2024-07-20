@@ -11,8 +11,8 @@
  * Each character is represented by a bit-packed bitmap where each bit is one pixel.
  * Characters may be drawn in any color.
  *
- * Fonts can be loaded from the SPIFFS filesystem with helper functions in spiffs_font.h.
- * Once loaded from the SPIFFS filesystem they can be used to draw text to the display.
+ * Fonts can be loaded from the filesystem with helper functions in fs_font.h.
+ * Once loaded from the filesystem they can be used to draw text to the display.
  *
  * \section font_usage Usage
  *

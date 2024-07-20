@@ -10,15 +10,15 @@
 #include <esp_log.h>
 #include <esp_heap_caps.h>
 
-#include "hdw-spiffs.h"
-#include "spiffs_txt.h"
+#include "cnfs.h"
+#include "fs_txt.h"
 
 //==============================================================================
 // Functions
 //==============================================================================
 
 /**
- * @brief Load a TXT from ROM to RAM. TXTs placed in the spiffs_image folder
+ * @brief Load a TXT from ROM to RAM. TXTs placed in the assets_image folder
  * before compilation will be automatically flashed to ROM
  *
  * @param name The filename of the TXT to load
@@ -31,7 +31,7 @@ char* loadTxt(const char* name, bool spiRam)
 {
     // Read TXT from file
     size_t sz;
-    uint8_t* buf = spiffsReadFile(name, &sz, spiRam);
+    uint8_t* buf = cnfsReadFile(name, &sz, spiRam);
     if (NULL == buf)
     {
         ESP_LOGE("TXT", "Failed to read %s", name);

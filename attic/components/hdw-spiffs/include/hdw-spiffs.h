@@ -10,7 +10,7 @@
  * Ths Swadge treats SPIFFS as a read-only file system.
  *
  * During the build, assets in the \c /assets/ folder, such as PNG images and MIDI songs, are processed into
- * Swadge-friendly formats and written to the \c /spiffs_image/ folder. The contents of the \c /spiffs_image/ are then
+ * Swadge-friendly formats and written to the \c /assets_image/ folder. The contents of the \c /assets_image/ are then
  * packaged into a SPIFFS image which is written to the \c storage partition in firmware. These files may be read and
  * used during runtime.
  *

@@ -9,7 +9,7 @@
 
 #include <esp_heap_caps.h>
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "heatshrink_helper.h"
 #include "ray_map.h"
 #include "ray_tex_manager.h"
@@ -22,7 +22,7 @@
 //==============================================================================
 
 /**
- * @brief Load a RMH from ROM to RAM. RMHs placed in the spiffs_image folder
+ * @brief Load a RMH from ROM to RAM. RMHs placed in the assets_image folder
  * before compilation will be automatically flashed to ROM
  *
  * @param mapId The map ID to load

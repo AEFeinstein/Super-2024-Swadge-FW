@@ -5,9 +5,9 @@
 #include <stdint.h>
 
 #include "mainMenu.h"
-#include "spiffs_font.h"
-#include "spiffs_wsg.h"
-#include "spiffs_json.h"
+#include "fs_font.h"
+#include "fs_wsg.h"
+#include "fs_json.h"
 #include "swadge2024.h"
 #include "macros.h"
 #include "menu.h"

@@ -12,7 +12,7 @@
 #include "leveldef.h"
 #include "esp_random.h"
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "soundFuncs.h"
 
 //==============================================================================

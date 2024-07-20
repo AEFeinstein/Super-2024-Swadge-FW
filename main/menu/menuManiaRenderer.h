@@ -28,8 +28,8 @@
 #define _MENU_MANIA_RENDERER_H_
 
 #include "menu.h"
-#include "spiffs_font.h"
-#include "spiffs_wsg.h"
+#include "fs_font.h"
+#include "fs_wsg.h"
 #include "hdw-led.h"
 
 #define Y_SECTION_MARGIN 14

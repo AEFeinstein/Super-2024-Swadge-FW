@@ -34,6 +34,7 @@
  * action.
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
  * the Swadge firmware.
+ * -# If you have any crashes on real hardware, read and use \ref serial_out to help debug the issue.
  * -# When you're ready to make a contribution, read the \ref contribution_guide first to see how to do it in the most
  * productive way.
  * -# If you want to bring a mode forward from last year's Swadge, take a look at \ref porting.
@@ -87,11 +88,11 @@
  * \subsection pm_api Persistent Memory APIs
  *
  * - hdw-nvs.h: Learn how to save and load persistent runtime data
- * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
- *     - spiffs_font.h: Load font bitmaps
- *     - spiffs_wsg.h: Load WSG images
- *     - spiffs_json.h: Load JSON
- *     - spiffs_txt.h: Load plaintext
+ * - cnfs.h: Learn how to load and use assets from the CNFS blob! These file types have their own loaders:
+ *     - fs_font.h: Load font bitmaps
+ *     - fs_wsg.h: Load WSG images
+ *     - fs_json.h: Load JSON
+ *     - fs_txt.h: Load plaintext
  *     - midiFileParser.h: Load MIDI files
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
@@ -284,8 +285,8 @@ void app_main(void)
     // Init timers
     esp_timer_init();
 
-    // Init SPIFFS file system
-    initSpiffs();
+    // Init file system
+    initCnfs();
 
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
@@ -578,7 +579,7 @@ void deinitSystem(void)
     deinitLeds();
     deinitMic();
     deinitNvs();
-    deinitSpiffs();
+    deinitCnfs();
     deinitTemperatureSensor();
     deinitTFT();
     deinitUsb();
