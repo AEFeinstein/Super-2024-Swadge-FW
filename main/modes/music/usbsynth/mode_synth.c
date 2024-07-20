@@ -1593,7 +1593,7 @@ static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16
 {
     midiTimeSignature_t* ts = &sd->karaoke.timeSignature;
 
-    if (!ts->midiClocksPerMetronomeTick || !ts->num32ndNotesPerBeat || !ts->numerator)
+    if (!sd->fileMode || !sd->midiFile.data || !ts->midiClocksPerMetronomeTick || !ts->num32ndNotesPerBeat || !ts->numerator)
     {
         return;
     }
@@ -1647,6 +1647,11 @@ static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16
 
 static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
 {
+    if (!sd->fileMode || !sd->midiFile.data || !sd->midiFile.timeDivision)
+    {
+        return;
+    }
+
     int msgLen = 0;
     char textMessages[1024];
     textMessages[0] = '\0';
