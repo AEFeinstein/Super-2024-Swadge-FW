@@ -5,7 +5,7 @@
 #include "midiFileParser.h"
 #include "midiPlayer.h"
 #include "heatshrink_helper.h"
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 
 #include <esp_log.h>
 #include <esp_heap_caps.h>
@@ -749,7 +749,7 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 {
     uint32_t size;
     size_t raw_size;
-    uint8_t* data = spiffsReadFile(name, &raw_size, spiRam);
+    uint8_t* data = cnfsReadFile(name, &raw_size, spiRam);
 
     if (NULL != data)
     {
