@@ -640,6 +640,12 @@ int32_t midiPlayerStep(midiPlayer_t* player)
 
 void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
 {
+    if (player->seeking)
+    {
+        memset(samples, 128, len);
+        return;
+    }
+
     for (int16_t n = 0; n < len; n++)
     {
         // Step the state forward by one sample and return the next sample sum
@@ -673,6 +679,11 @@ void midiPlayerFillBufferMulti(midiPlayer_t* players, uint8_t playerCount, uint8
         int32_t sample = 0;
         for (int i = 0; i < playerCount; i++)
         {
+            if (players[i].seeking)
+            {
+                continue;
+            }
+
             // Apply the player's headroom to its sample sum
             sample += (midiPlayerStep(&players[i]) * players[i].headroom);
         }
@@ -1099,6 +1110,52 @@ void midiSetFile(midiPlayer_t* player, midiFile_t* song)
 void midiPause(midiPlayer_t* player, bool pause)
 {
     player->paused = pause;
+}
+
+void midiSeek(midiPlayer_t* player, uint32_t ticks)
+{
+    bool paused = player->paused;
+
+    if (player->mode == MIDI_FILE && player->reader.file)
+    {
+        midiFile_t* loadedFile = player->reader.file;
+        midiTextCallback_t textCb = player->textMessageCallback;
+        player->textMessageCallback = NULL;
+        bool loop = player->loop;
+
+        if (SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) > ticks)
+        {
+            // We have to go back
+            midiPlayerReset(player);
+            midiSetFile(player, loadedFile);
+        }
+
+        // Set the seeking flag so that the DAC won't get any output
+        player->seeking = true;
+
+        // Unpause the player otherwise nothing will happen
+        midiPause(player, false);
+        player->loop = false;
+
+        while (SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) < ticks)
+        {
+            midiPlayerStep(player);
+
+            // TODO I should really add a "stopped" flag instead...
+            if (player->mode == MIDI_STREAMING)
+            {
+                // Song was finished, can't actually seek that far!
+                midiAllSoundOff(player);
+                break;
+            }
+        }
+
+        player->textMessageCallback = textCb;
+        player->loop = loop;
+        player->seeking = false;
+    }
+
+    midiPause(player, paused);
 }
 
 //==============================================================================

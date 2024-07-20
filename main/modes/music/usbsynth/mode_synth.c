@@ -171,9 +171,13 @@ typedef struct
     {
         bool upHeld;
         bool downHeld;
+        bool leftHeld;
+        bool rightHeld;
 
         int64_t upHeldTimer;
         int64_t downHeldTimer;
+        int64_t leftHeldTimer;
+        int64_t rightHeldTimer;
 
         uint16_t lastButtonState;
     };
@@ -2095,14 +2099,33 @@ static void synthHandleButton(const buttonEvt_t evt)
                 case PB_LEFT:
                 {
                     // Seek Left
-                    // TODO
+                    const uint32_t seekLeftAmt = 10 * DAC_SAMPLE_RATE_HZ;
+
+                    if (sd->midiPlayer.sampleCount > seekLeftAmt)
+                    {
+                        midiSeek(&sd->midiPlayer, SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount - seekLeftAmt, sd->midiPlayer.tempo, sd->midiPlayer.reader.division));
+
+                        if (!sd->leftHeld)
+                        {
+                            sd->leftHeld = true;
+
+                            sd->leftHeldTimer = 2000000;
+                        }
+                    }
                     break;
                 }
 
                 case PB_RIGHT:
                 {
                     // Seek Right
-                    // TODO
+                    const uint32_t seekRightAmt = DAC_SAMPLE_RATE_HZ;
+                    midiSeek(&sd->midiPlayer, SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount + seekRightAmt, sd->midiPlayer.tempo, sd->midiPlayer.reader.division));
+
+                    if (!sd->rightHeld)
+                    {
+                        sd->rightHeld = true;
+                        sd->rightHeldTimer = 500000;
+                    }
                     break;
                 }
 
@@ -2160,6 +2183,16 @@ static void synthHandleButton(const buttonEvt_t evt)
                 // Stop decreasing BPM
                 sd->downHeld      = false;
                 sd->downHeldTimer = 0;
+            }
+            else if (evt.button == PB_LEFT)
+            {
+                sd->leftHeld = false;
+                sd->leftHeldTimer = 0;
+            }
+            else if (evt.button == PB_RIGHT)
+            {
+                sd->rightHeld = false;
+                sd->rightHeldTimer = 0;
             }
         }
     }
@@ -2280,6 +2313,16 @@ static void synthHandleInput(int64_t elapsedUs)
         if (sd->downHeld)
         {
             handleButtonTimer(&sd->downHeldTimer, 100000, elapsedUs, PB_DOWN);
+        }
+
+        if (sd->leftHeld)
+        {
+            handleButtonTimer(&sd->leftHeldTimer, 1500000, elapsedUs, PB_LEFT);
+        }
+
+        if (sd->rightHeld)
+        {
+            handleButtonTimer(&sd->rightHeldTimer, 100000, elapsedUs, PB_RIGHT);
         }
     }
 }
