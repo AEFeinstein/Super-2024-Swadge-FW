@@ -195,7 +195,7 @@ typedef struct soko_abs_s
 {
     // meta
     menu_t* menu;                               ///< The menu structure
-    menuLogbookRenderer_t* menuLogbookRenderer; ///< Renderer for the menu
+    menuManiaRenderer_t* menuManiaRenderer; ///< Renderer for the menu
     font_t ibm;                                 ///< The font used in the menu and game
     sokoScreen_t screen;                        ///< The screen being displayed
 
