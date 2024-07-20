@@ -15,6 +15,7 @@
 #include "hdw-nvs.h"
 #include "textEntry.h"
 #include "macros.h"
+#include "cnfs_image.h"
 
 #include "midiPlayer.h"
 #include "midiFileParser.h"
@@ -1151,15 +1152,16 @@ static void synthSetupMenu(void)
 
     sd->menu = startSubMenu(sd->menu, menuItemSelectFile);
     addSingleItemToMenu(sd->menu, menuItemCustomSong);
-    void* dirh = NULL;
-    char outbuf[128];
-    while (spiffsListFiles(outbuf, sizeof(outbuf), &dirh) > 0)
+
+    const cnfsFileEntry* files = getCnfsFiles();
+    for (const cnfsFileEntry* file = files; file < files + getCnfsNumFiles(); file++)
     {
-        if ((strlen(outbuf) > 4
-             && (!strcmp(&outbuf[strlen(outbuf) - 4], ".mid") || !strcmp(&outbuf[strlen(outbuf) - 4], ".kar")))
-            || (strlen(outbuf) > 7 && !strcmp(&outbuf[strlen(outbuf)] - 5, ".midi")))
+        if ((strlen(file->name) > 4
+             && (!strcmp(&file->name[strlen(file->name) - 4], ".mid") || !strcmp(&file->name[strlen(file->name) - 4], ".kar")))
+            || (strlen(file->name) > 5 && !strcmp(&file->name[strlen(file->name) - 5], ".midi")))
         {
-            char* copyStr = strdup(outbuf);
+            // No longer strictly necessary with CNFS, but let's keep it how it was
+            char* copyStr = strdup(file->name);
             if (copyStr)
             {
                 // Insert the file into the list in a sorted manner
