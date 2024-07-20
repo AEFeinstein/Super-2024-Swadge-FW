@@ -1882,9 +1882,12 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     if (drawBar && nearLyric != farLyric)
     {
         // There's a long rest with no lyrics, draw a progress bar
-        int w = (TFT_WIDTH - 60) * (farLyric - now) / (farLyric - nearLyric);
-        drawRect(30, TFT_HEIGHT - 40, TFT_WIDTH - 30, TFT_HEIGHT - 30, c550);
-        fillDisplayArea(30, TFT_HEIGHT - 40, 30 + CLAMP(TFT_WIDTH - 60 - w, 0, TFT_WIDTH - 60), TFT_HEIGHT - 30, c550);
+        if ((farLyric - now) <= (farLyric - nearLyric))
+        {
+            int w = (TFT_WIDTH - 60) * (farLyric - now) / (farLyric - nearLyric);
+            drawRect(30, TFT_HEIGHT - 40, TFT_WIDTH - 30, TFT_HEIGHT - 30, c550);
+            fillDisplayArea(30, TFT_HEIGHT - 40, 30 + CLAMP(TFT_WIDTH - 60 - w, 0, TFT_WIDTH - 60), TFT_HEIGHT - 30, c550);
+        }
 
         // Draw a fun thingy
         int16_t intermissionX = (TFT_WIDTH - textWidth(&sd->betterFont, intermissionMsg)) / 2;
