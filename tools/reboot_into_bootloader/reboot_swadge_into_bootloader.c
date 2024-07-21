@@ -13,6 +13,15 @@ hid_device * hd;
 const int chunksize = 244;
 const int force_packet_length = 255;
 const int reg_packet_length = 65;
+BOOL CtrlCHandlerRoutine( DWORD dwCtrlType )
+{
+	if( dwCtrlType == 0)
+	{
+		exit( 0 );
+	}
+	printf( "dwCtrlType = %d\n", dwCtrlType );
+	return FALSE;
+}
 #else
 const int chunksize = 244;
 const int force_packet_length = 255;
@@ -25,6 +34,12 @@ int tries = 0;
 int main()
 {
     int do_for_tries = 100;
+
+#ifdef WIN32
+	SetConsoleCtrlHandler( CtrlCHandlerRoutine, 1 );
+	HANDLE hConsole = GetStdHandle( STD_OUTPUT_HANDLE );
+	system(""); // enable VT100 Escape Sequence for WINDOWS 10 Ver. 1607 
+#endif
 
     int r;
 redo:
