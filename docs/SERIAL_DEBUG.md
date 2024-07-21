@@ -111,7 +111,19 @@ This option will route serial debug output through a pin on the Simple Add-On (S
 
 ### DEBUG_OUTPUT_USB
 
-This option will route serial debug output over the USB header. The Swadge doesn't enumerate as a regular serial port, so you must run our own serial monitor, [`swadgeterm`](../tools/swadgeterm/) to view the output. To build `swadgeterm` from the root of this repository, run:
+This option will route serial debug output over the USB header. In general you can perform the following two steps to accomplish flashing and logging over the USB interface while the swadge is operating.
+
+This command will install udev rules on Linux to allow you to use the swadge for printf and other advanced USB features. **You only need to call it once**
+```bash
+make installudev
+```
+
+Then any time you wish to reboot the swadge into bootloader, flash, reboot back into code and monitor, execute the following:
+```bash
+make usbflash
+```
+
+For more background, the Swadge doesn't enumerate as a regular serial port, so you must run our own serial monitor, [`swadgeterm`](../tools/swadgeterm/) to view the output. To build `swadgeterm` from the root of this repository, run:
 
 ```bash
 make -C tools/swadgeterm
@@ -137,12 +149,14 @@ PS D:\git\Super-2024-Swadge-FW> .\tools\swadgeterm\swadgeterm.exe
 Waiting for USB...
 Connected.
 I (652) USB: USB initialization DONE
-I (652) crashwrap: Crashwrap Install
-W (652) crashwrap: Crashwrap length: 36/36
-W (652) crashwrap: Last Crash: ADDR: 4008b04a FRAME: 3ffda3c0 EXCEPTION: 4
-W (652) crashwrap: Reason: LoadProhibited
-W (652) crashwrap: Description: Exception was unhandled.
-W (652) crashwrap: EXIT: 0x00000003 / PC: 0x4008b04a / PS: 0x00060b30 / A0: 0x80087671 / A1: 0x3ffda450 / SAR: 0x00000014 / EXECCAUSE: 0x0000001c / EXECVADDR: 0x00000000
+I (661) crashwrap: Crashwrap Install
+W (661) crashwrap: Crashwrap length: 36/36
+W (661) crashwrap: Last Crash: ADDR: 4008aab0 FRAME: 3ffda310 EXCEPTION: 4
+W (661) crashwrap: Reason: StoreProhibited
+W (661) crashwrap: Description: Exception was unhandled.
+W (661) crashwrap: EXIT: 0x800a1e24 / PC: 0x4008aab0 / PS: 0x00060930 / A0: 0x8009301c / A1: 0x3ffda3a0 / SAR: 0x00000004 / EXECCAUSE: 0x0000001d / EXECVADDR: 0x00000000
+W (661) crashwrap: Backtrace:
+W (661) crashwrap: xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x4008aab0:0x00060930
 I (692) SPIFFS: Partition size: total: 1890281, used: 110691
 I (692) gpio: GPIO[0]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0
 I (692) gpio: GPIO[4]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0
@@ -154,6 +168,12 @@ I (692) gpio: GPIO[8]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldow
 I (692) gpio: GPIO[5]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0
 I (752) gpio: GPIO[21]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0
 I (752) gpio: GPIO[38]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0
+```
+To figure out where your last crash was, xecute the `xtensa-esp32s2-elf-addr2line` line as it appears in the log. I.e.
+
+```bash
+$ xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x4008aab0:0x00060930
+/home/cnlohr/git/Super-2024-Swadge-FW/main/modes/system/mainMenu/mainMenu.c:343
 ```
 
 Note that the [`reflash_and_monitor.bat`](../tools/reflash_and_monitor.bat) batch launches `swadgeterm` and assumes the firmware was compiled with `DEBUG_OUTPUT_USB`.
@@ -196,16 +216,27 @@ xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x4008b047:0x3ffda450 0x400
 When `DEBUG_OUTPUT_USB` is used, the Swadge will save crash information when it crashes and print it the next time it boots up. It will look something like this:
 
 ```
-W (1042) crashwrap: Last Crash: ADDR: 4008b04a FRAME: 3ffda3c0 EXCEPTION: 4
-W (1052) crashwrap: Reason: LoadProhibited
-W (1052) crashwrap: Description: Exception was unhandled.
-W (1062) crashwrap: EXIT: 0x00000003 / PC: 0x4008b04a / PS: 0x00060b30 / A0: 0x80087671 / A1: 0x3ffda450 / SAR: 0x00000014 / EXECCAUSE: 0x0000001c / EXECVADDR: 0x00000000
+I (660) crashwrap: Crashwrap Install
+W (660) crashwrap: Crashwrap length: 36/36
+W (660) crashwrap: Last Crash: ADDR: 4008ab82 FRAME: 3ffda430 EXCEPTION: 4
+W (660) crashwrap: Reason: StoreProhibited
+W (660) crashwrap: Description: Exception was unhandled.
+W (660) crashwrap: EXIT: 0x800a1f04 / PC: 0x4008ab82 / PS: 0x00060930 / A0: 0x800930fc / A1: 0x3ffda4c0 / SAR: 0x00000004 / EXECCAUSE: 0x0000001d / EXECVADDR: 0x00000000
+W (660) crashwrap: Backtrace:
+W (660) crashwrap: xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x40083806:0x3ffda3c0 0x400251ad:0x3ffda410 0x40027210:0x3ffda430 0x4008ab7f:0x3ffda4c0 0x400930f9:0x3ffda4e0 0x4009318f:0x3ffda500 0x4008adfd:0x3ffda530 0x4008784d:0x3ffda570 0x400f230c:0x3ffda810
 ```
 
-You can also interpret the Last Crash ADDR with the program `xtensa-esp32s2-elf-addr2line` and the exact `elf` file that was flashed. This will print the single line where the crash occurred.
+You can copy/paste the last line into your terminal to get a full stack trace to get the function name / line numbers of all the calls.
 
 ```bash
-xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x4008b04a 
-
-/home/user/esp/Swadge-IDF-5.0/main/modes/system/mainMenu/mainMenu.c:208
+$ xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x40083806:0x3ffda3c0 0x400251ad:0x3ffda410 0x40027210:0x3ffda430 0x4008ab7f:0x3ffda4c0 0x400930f9:0x3ffda4e0 0x4009318f:0x3ffda500 0x4008adfd:0x3ffda530 0x4008784d:0x3ffda570 0x400f230c:0x3ffda810
+.../esp-idf/components/esp_system/port/panic_handler.c:190
+.../esp-idf/components/esp_system/port/panic_handler.c:225
+.../esp-idf/components/xtensa/xtensa_vectors.S:805
+.../Super-2024-Swadge-FW/main/modes/system/mainMenu/mainMenu.c:354 <<<< This is where the crash actually happened.
+.../Super-2024-Swadge-FW/main/menu/menu.c:736
+.../Super-2024-Swadge-FW/main/menu/menu.c:810
+.../Super-2024-Swadge-FW/main/modes/system/mainMenu/mainMenu.c:287
+.../Super-2024-Swadge-FW/main/swadge2024.c:418
+.../esp-idf/components/freertos/app_startup.c:208
 ```
