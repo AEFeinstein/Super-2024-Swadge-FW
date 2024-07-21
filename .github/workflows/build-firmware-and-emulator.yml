@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - midi-synth-platform-midi
+      - midi-synth-cnfs-osx-app-bundle
   pull_request:
     branches:
       - main
@@ -17,7 +17,7 @@ jobs:
   Build-Firmware-And-Emulator:
     strategy:
       matrix:
-        os: [ windows, osx-arm, osx-intel, linux ]
+        os: [osx-arm, osx-intel] #[ windows, osx-arm, osx-intel, linux ]
         include:
           - os: windows
             runner: windows-latest
