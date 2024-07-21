@@ -74,6 +74,7 @@ void sokoConfigGamemode(
         //but like... not an infinite loop?
         soko->soko_player->x = soko->overworld_playerX;
         soko->soko_player->y = soko->overworld_playerY;
+        soko->background = SKBG_FORREST;
 
         for (size_t i = 0; i < soko->portalCount; i++){
             soko->portals[i].levelCompleted = soko->levelSolved[soko->portals[i].index];

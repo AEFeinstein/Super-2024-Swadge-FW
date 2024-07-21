@@ -25,7 +25,8 @@ typedef enum
 typedef enum
 {
     SKBG_GRID = 0,
-    SKBG_BLACK = 1
+    SKBG_BLACK = 1,
+    SKBG_FORREST = 2,
 } sokoBackground_t;
 
 typedef enum

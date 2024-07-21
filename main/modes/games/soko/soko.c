@@ -53,7 +53,7 @@ static void sokoEnterMode(void)
     soko->sokoDefaultTheme.wallColor  = c111;
     soko->sokoDefaultTheme.floorColor = c444;
     soko->sokoDefaultTheme.altFloorColor = c444;
-    soko->background = SKBG_GRID;
+    soko->background = SKBG_FORREST;
     //load or set themes...
     // Default Theme
     loadWsg("sk_pixel_front.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
@@ -247,31 +247,63 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
     // Use TURBO drawing mode to draw individual pixels fast
     SETUP_FOR_TURBO();
 
-    if(soko->background == SKBG_GRID){
-    // Draw a grid
-    for (int16_t yp = y; yp < y + h; yp++)
+    switch (soko->background)
     {
-        for (int16_t xp = x; xp < x + w; xp++)
-        {
-            if ((0 == xp % 20) || (0 == yp % 20))
+        case SKBG_GRID:
+            for (int16_t yp = y; yp < y + h; yp++)
             {
-                TURBO_SET_PIXEL(xp, yp, c002);
+                for (int16_t xp = x; xp < x + w; xp++)
+                {
+                    if ((0 == xp % 20) || (0 == yp % 20))
+                    {
+                        TURBO_SET_PIXEL(xp, yp, c002);
+                    }
+                    else
+                    {
+                        TURBO_SET_PIXEL(xp, yp, c001);
+                    }
+                }
             }
-            else
+        break;
+        case SKBG_BLACK:
+            for (int16_t yp = y; yp < y + h; yp++)
             {
-                TURBO_SET_PIXEL(xp, yp, c001);
-            }
-        }
-    }
-    }else{//SKBG_BLACK
-        for (int16_t yp = y; yp < y + h; yp++)
-        {
-            for (int16_t xp = x; xp < x + w; xp++)
-            {
+                for (int16_t xp = x; xp < x + w; xp++)
+                {
 
-                TURBO_SET_PIXEL(xp, yp, c000);
+                    TURBO_SET_PIXEL(xp, yp, c000);
+                }
             }
-        }
+            break;
+        case SKBG_FORREST:
+            uint16_t shiftReg = 0xACE1u;
+            for (int16_t yp = y; yp < y + h; yp+=8)
+            {
+                for (int16_t xp = x; xp < x + w; xp+=8)
+                {
+                    //not random enough but im going to leave it as is.
+                    //LFSR
+                    uint16_t bit = ((shiftReg >> 0) ^ (shiftReg >> 2) ^ (shiftReg >> 3) ^ (shiftReg >> 5)) & 1u;
+                    shiftReg     = (shiftReg >> 1) | (bit << 15);
+                    shiftReg = shiftReg+yp+xp*3+1;
+
+                    for (int16_t ypp = yp; ypp < yp + 8; ypp++)
+                    {
+                        for (int16_t xpp = xp; xpp < xp + 8; xpp++)
+                        {
+                            if((shiftReg&3)==0)
+                            {
+                                TURBO_SET_PIXEL(xpp, ypp, c020);
+                            }else{
+                                TURBO_SET_PIXEL(xpp, ypp, c121);
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+    default:
+        break;
     }
 }
 //todo: move to soko_save
