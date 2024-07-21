@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>English</string>
+    <key>CFBundleExecutable</key>
+    <string>SwadgeEmulator</string>
+    <key>CFBundleGetInfoString</key>
+    <string>##GIT_HASH##, Copyright 2013 my company</string>
+    <key>CFBundleIconFile</key>
+    <string>MyApp.icns</string>
+    <key>CFBundleIdentifier</key>
+    <string>org.magfest.SwadgeEmulator</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>##GIT_HASH##</string>
+    <key>CFBundleSignature</key>
+    <string>MyAp</string>
+    <key>CFBundleVersion</key>
+    <string>##GIT_HASH##</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright (c) 2023 gelakinetic</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.3</string>
+</dict>
+</plist>

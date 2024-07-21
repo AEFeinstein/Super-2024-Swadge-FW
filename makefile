@@ -330,10 +330,10 @@ $(CNFS_FILE):
 
 bundle: SwadgeEmulator.app
 
-SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns tools/macosx/Info.plist
+SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns tools/macos/Info.plist
 	rm -rf SwadgeEmulator.app
-	mkdir -p SwadgeEmulator.app/Contents/{MacOS,Resources.libs}
-	cp tools/macosx/Info.plist SwadgeEmulator.app/Contents/
+	mkdir -p SwadgeEmulator.app/Contents/{MacOS,Resources,libs}
+	cat tools/macos/Info.plist | sed "s/##GIT_HASH##/$(GIT_HASH)/" > SwadgeEmulator.app/Contents/Info.plist
 	echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
 	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
 	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/$(EXECUTABLE) -d ./SwadgeEmulator.app/Contents/libs/
