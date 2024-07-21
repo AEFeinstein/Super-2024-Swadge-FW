@@ -41,6 +41,14 @@ ifeq (, $(shell which $(CLANG_FORMAT)))
 	CLANG_FORMAT:=clang-format-17
 endif
 
+ifeq ($(HOST_OS),Linux)
+	ifneq (,$(shell getent group plugdev))
+		UDEV_GROUP:=plugdev
+	else
+		UDEV_GROUP:=$(USER)
+	endif
+endif
+
 ################################################################################
 # Source Files
 ################################################################################
@@ -380,13 +388,15 @@ endif
 monitor :
 	$(MAKE) -C tools/swadgeterm monitor
 
-installudev :
-	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"plugdev\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\"\n" > /tmp/99-swadge.rules
-	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\", GROUP=\"plugdev\", MODE=\"0660\"\n" >> /tmp/99-swadge.rules
-	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"plugdev\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\"\n" >> /tmp/99-swadge.rules
-	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\", GROUP=\"plugdev\", MODE=\"0660\"\n" >> /tmp/99-swadge.rules
+/etc/udev/rules.d/99-swadge.rules :
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\"\n" $(UDEV_GROUP) > /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
 	sudo cp -a /tmp/99-swadge.rules /etc/udev/rules.d/99-swadge.rules
-	sudo usermod -aG plugdev cnlohr
+
+installudev : /etc/udev/rules.d/99-swadge.rules
+	getent group plugdev >/dev/null && sudo usermod -aG plugdev $(USER) || true
 	sudo udevadm control --reload
 	sudo udevadm trigger
 
