@@ -56,7 +56,7 @@ static const flipperFl_t constFlippers[] = {
 /**
  * @brief TODO
  *
- * @param p
+ * @param p The entire game state
  * @param x
  * @param y
  */
@@ -115,13 +115,13 @@ void createRandomBalls(pinball_t* p, int32_t numBalls)
 /**
  * @brief TODO
  *
- * @param p
+ * @param p The entire game state
  * @param numBumpers
  */
 void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 {
     int fixedBumpersPlaced = 0;
-    circleFl_t bumpers[]  = {};
+    circleFl_t bumpers[]   = {};
 
     numBumpers += ARRAY_SIZE(bumpers);
 
@@ -267,7 +267,7 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 /**
  * @brief Create a Wall
  *
- * @param p
+ * @param p The entire game state
  * @param x1
  * @param y1
  * @param x2
@@ -296,7 +296,7 @@ void createWall(pinball_t* p, int32_t x1, int32_t y1, int32_t x2, int32_t y2)
 /**
  * @brief Create a Bumper
  *
- * @param p
+ * @param p The entire game state
  * @param x
  * @param y
  * @param r

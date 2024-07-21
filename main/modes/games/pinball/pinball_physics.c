@@ -14,14 +14,14 @@ bool checkBallPbCircleCollision(pbCircle_t* ball, pbCircle_t* circle, pbTouchRef
 bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* touchRef);
 
 void checkBallBallCollisions(pinball_t* p);
-void checkBallStaticCollision(pinball_t* p);
+void checkBallFixedCollision(pinball_t* p);
 void sweepCheckFlippers(pinball_t* p);
 
 void moveBalls(pinball_t* p);
 
 void checkBallsNotTouching(pinball_t* p);
 void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type);
-pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj);
+bool ballIsTouching(pbTouchRef_t* ballTouching, const void* obj);
 
 void checkBallsAtRest(pinball_t* p);
 
@@ -33,9 +33,9 @@ void moveBallBackFromCircle(pbCircle_t* ball, pbCircle_t* fixed);
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Update a single physics frame by moving and colliding all objects
  *
- * @param p
+ * @param p The entire game state
  */
 void updatePinballPhysicsFrame(pinball_t* p)
 {
@@ -52,8 +52,8 @@ void updatePinballPhysicsFrame(pinball_t* p)
         checkBallBallCollisions(p);
     }
 
-    // Check for collisions between balls and static objects
-    checkBallStaticCollision(p);
+    // Check for collisions between balls and fixed objects
+    checkBallFixedCollision(p);
 
     // Check if balls are actually at rest
     checkBallsAtRest(p);
@@ -63,9 +63,9 @@ void updatePinballPhysicsFrame(pinball_t* p)
 }
 
 /**
- * @brief TODO
+ * @brief Check for collisions between moving balls and other moving balls
  *
- * @param p
+ * @param p The entire game state
  */
 void checkBallBallCollisions(pinball_t* p)
 {
@@ -76,13 +76,14 @@ void checkBallBallCollisions(pinball_t* p)
         for (uint32_t obIdx = bIdx + 1; obIdx < p->numBalls; obIdx++)
         {
             pbCircle_t* otherBall = &p->balls[obIdx];
-            vecFl_t centerToCenter;
+
             // Check for a new collision
+            vecFl_t centerToCenter;
             if ((ball->zoneMask & otherBall->zoneMask)                                       // In the same zone
                 && circleCircleFlIntersection(ball->c, otherBall->c, NULL, &centerToCenter)) // and intersecting
             {
                 // Move balls backwards equally from the midpoint to not clip
-                float halfDistM     = (ball->c.radius + otherBall->c.radius - EPSILON) / 2.0f;
+                float halfDistM     = (ball->c.radius + otherBall->c.radius + EPSILON) / 2.0f;
                 vecFl_t midwayPoint = divVecFl2d(addVecFl2d(ball->c.pos, otherBall->c.pos), 2.0f);
                 vecFl_t vecFromMid  = mulVecFl2d(normVecFl2d(centerToCenter), halfDistM);
 
@@ -91,7 +92,7 @@ void checkBallBallCollisions(pinball_t* p)
                 otherBall->c.pos = subVecFl2d(midwayPoint, vecFromMid);
 
                 // If the balls aren't touching yet, adjust velocities (bounce)
-                if (PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], otherBall))
+                if (!ballIsTouching(p->ballsTouching[bIdx], otherBall))
                 {
                     // Math for the first ball
                     vecFl_t v1         = ball->vel;
@@ -117,8 +118,7 @@ void checkBallBallCollisions(pinball_t* p)
                     xSqMag = sqMagVecFl2d(x1_x2);
                     if (xSqMag > 0)
                     {
-                        otherBall->vel
-                            = subVecFl2d(v1, mulVecFl2d(x1_x2, (dotVecFl2d(v1_v2, x1_x2) / sqMagVecFl2d(x1_x2))));
+                        otherBall->vel = subVecFl2d(v1, mulVecFl2d(x1_x2, (dotVecFl2d(v1_v2, x1_x2) / xSqMag)));
                     }
 
                     // Set the new velocity for the first ball after finding the second's
@@ -138,64 +138,61 @@ void checkBallBallCollisions(pinball_t* p)
 }
 
 /**
- * @brief TODO
+ * @brief Check for collisions between moving balls and fixed circles
  *
- * @param ball
- * @param circle
- * @param touchRef
- * @return true
- * @return false
+ * @param ball The moving ball
+ * @param circle The fixed circle
+ * @param touchRef The touch references for the moving ball
+ * @return true if the ball actively bounced off the circle this frame, false otherwise
  */
 bool checkBallPbCircleCollision(pbCircle_t* ball, pbCircle_t* circle, pbTouchRef_t* touchRef)
 {
+    // Assume no bounce this frame
     bool bounced = false;
-    vecFl_t collisionVec;
 
     // Check for a collision
+    vecFl_t collisionVec;
     if ((ball->zoneMask & circle->zoneMask)                                     // In the same zone
         && circleCircleFlIntersection(ball->c, circle->c, NULL, &collisionVec)) // and intersecting
     {
-        // Find the normalized vector along the collision normal
-        vecFl_t reflVec = normVecFl2d(collisionVec);
-
         // If the ball isn't already touching the circle
-        if (PIN_NO_SHAPE == ballIsTouching(touchRef, circle))
+        if (!ballIsTouching(touchRef, circle))
         {
             // Bounced on a circle
             ball->bounce = true;
             bounced      = true;
+
+            // Find the normalized vector along the collision direction to reflect across
+            vecFl_t reflVec = normVecFl2d(collisionVec);
             // Reflect the velocity vector along the normal between the two radii
             // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
             ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
-            // Lose some speed on the bounce
-            ball->vel = mulVecFl2d(ball->vel, WALL_BOUNCINESS);
-            // printf("%d,%.4f,%.4f\n", __LINE__, ball->vel.x, ball->vel.y);
             // Mark this circle as being touched to not double-bounce
             setBallTouching(touchRef, circle, PIN_CIRCLE);
         }
 
         // Move ball back to not clip into the circle
         moveBallBackFromCircle(ball, circle);
-        // ball->c.pos = addVecFl2d(circle->c.pos, mulVecFl2d(reflVec, ball->c.radius + circle->c.radius - EPSILON));
     }
     return bounced;
 }
 
 /**
- * @brief TODO
+ * @brief Check for collisions between moving balls and fixed lines
  *
- * @param ball
- * @param line
- * @param touchRef
- * @return true
- * @return false
+ * @param ball The moving ball
+ * @param line The fixed line
+ * @param touchRef The touch references for the moving ball
+ * @return true if the ball actively bounced off the circle this frame, false otherwise
  */
 bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* touchRef)
 {
+    // Assume no bounce
     bool bounced = false;
+
+    // Check for a collision
     vecFl_t collisionVec;
     vecFl_t cpOnLine;
-    // Check for a collision
     if ((ball->zoneMask & line->zoneMask)                                              // In the same zone
         && circleLineFlIntersection(ball->c, line->l, true, &cpOnLine, &collisionVec)) // and intersecting
     {
@@ -204,11 +201,11 @@ bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* to
          * The solution is probably to binary-search-move the ball as far as it'll go without clipping
          */
 
-        // Find the normalized vector along the collision normal
+        // Find the normalized vector along the collision direction
         vecFl_t reflVec = normVecFl2d(collisionVec);
 
         // If the ball isn't already touching the line
-        if (PIN_NO_SHAPE == ballIsTouching(touchRef, line))
+        if (!ballIsTouching(touchRef, line))
         {
             // The dot product with the collision normal is how much Y velocity component there is.
             // If this value is small the ball should slide down the line (i.e. don't lose velocity on the bounce)
@@ -220,11 +217,12 @@ bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* to
             // Check if the ball should slide (i.e. not lose velocity) or bounce (i.e. lose velocity)
             // 0 means the ball's velocity is parallel to the wall (slide)
             // -mag(vel) means the ball's velocity is perpendicular to the wall (bounce)
-            if (velDotColNorm < -0.2f)
-            {
-                // Lose some speed on the bounce.
-                ball->vel = mulVecFl2d(ball->vel, WALL_BOUNCINESS);
-            }
+            // TODO this needs tuning, and badly
+            // if (velDotColNorm < -0.2f)
+            // {
+            //     // Lose some speed on the bounce.
+            //     ball->vel = mulVecFl2d(ball->vel, WALL_BOUNCINESS);
+            // }
 
             // Mark this line as being touched to not double-bounce
             setBallTouching(touchRef, line, PIN_LINE);
@@ -234,25 +232,25 @@ bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* to
             bounced      = true;
         }
 
+        // TODO accommodate line tip collisions (points)
+
         // Move ball back to not clip into the bumper
-        // TODO accommodate line end collisions (circle)
         moveBallBackFromLine(ball, line, &reflVec);
-        // ball->c.pos = addVecFl2d(cpOnLine, mulVecFl2d(reflVec, ball->c.radius - EPSILON));
     }
     return bounced;
 }
 
 /**
- * @brief TODO
+ * @brief Check for collisions between moving balls and all fixed objects
  *
- * @param p
+ * @param p The entire game state
  */
-void checkBallStaticCollision(pinball_t* p)
+void checkBallFixedCollision(pinball_t* p)
 {
-    // For each ball, check collisions with static objects
+    // For each ball, check collisions with fixed objects
     for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
-        // Reference and integer representation
+        // Convenience reference
         pbCircle_t* ball = &p->balls[bIdx];
 
         // Iterate over all bumpers
@@ -270,9 +268,9 @@ void checkBallStaticCollision(pinball_t* p)
 }
 
 /**
- * @brief TODO
+ * @brief Check for collisions between moving balls and moving flippers
  *
- * @param p
+ * @param p The entire game state
  */
 void sweepCheckFlippers(pinball_t* p)
 {
@@ -282,30 +280,21 @@ void sweepCheckFlippers(pinball_t* p)
         pbFlipper_t* flipper = &p->flippers[fIdx];
 
         // Check if the flipper is moving up or down
-        float angularVel = 0;
+        float angularVel = -FLIPPER_DOWN_RADIANS_PER_FRAME;
         if (flipper->buttonHeld)
         {
-            angularVel = FLIPPER_UP_DEGREES_PER_FRAME;
-        }
-        else
-        {
-            angularVel = -FLIPPER_DOWN_DEGREES_PER_FRAME;
+            angularVel = FLIPPER_UP_RADIANS_PER_FRAME;
         }
 
         // Find the bounds for the flipper depending on the direction it's facing
-        float lBound = 0;
-        float uBound = 0;
+        float lBound = (M_PI + M_PI_2) - FLIPPER_DOWN_ANGLE;
+        float uBound = (M_PI + M_PI_2) + FLIPPER_UP_ANGLE;
         if (flipper->facingRight)
         {
             lBound = M_PI_2 - FLIPPER_UP_ANGLE;
             uBound = M_PI_2 + FLIPPER_DOWN_ANGLE;
             // Flip velocity if facing right
             angularVel *= -1;
-        }
-        else
-        {
-            lBound = (M_PI + M_PI_2) - FLIPPER_DOWN_ANGLE;
-            uBound = (M_PI + M_PI_2) + FLIPPER_UP_ANGLE;
         }
 
         // Flipper starts here
@@ -315,19 +304,11 @@ void sweepCheckFlippers(pinball_t* p)
         sweepEnd       = CLAMP((sweepEnd), lBound, uBound);
 
         // Find sweep steps if in motion
-        float sweepStep = 0.0f;
-        int numSteps    = 0;
-        if (sweepStart == sweepEnd)
-        {
-            // Flipper not in motion
-            angularVel = 0;
-            sweepStep  = 0;
-            numSteps   = 1;
-        }
-        else
+        float sweepStep = 0;
+        int numSteps    = 1;
+        if (sweepStart != sweepEnd)
         {
             // Flipper in motion
-            // TODO large sweep steps kill framerate....
             numSteps  = 8;
             sweepStep = (sweepEnd - sweepStart) / (float)numSteps;
         }
@@ -346,13 +327,15 @@ void sweepCheckFlippers(pinball_t* p)
             // For each ball, check collisions with flippers objects
             for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
             {
-                // Reference and integer representation
+                // Convenience references
                 pbCircle_t* ball       = &p->balls[bIdx];
                 pbTouchRef_t* touchRef = p->ballsTouching[bIdx];
 
+                // If the ball and the flipper are in the same zone
                 if (ball->zoneMask & flipper->zoneMask)
                 {
                     // Check if the ball is touching any part of the flipper
+                    // TODO maybe don't check pivot circle? or line tips?
                     bool touching = false;
                     vecFl_t colPoint, colVec;
                     if (circleLineFlIntersection(ball->c, flipper->sideL.l, false, &colPoint, &colVec))
@@ -360,8 +343,6 @@ void sweepCheckFlippers(pinball_t* p)
                         // Move ball back to not clip into the flipper
                         colVec = normVecFl2d(colVec);
                         moveBallBackFromLine(ball, &flipper->sideL, &colVec);
-                        // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius -
-                        // EPSILON));
                         touching = true;
                     }
                     if (circleLineFlIntersection(ball->c, flipper->sideR.l, false, &colPoint, &colVec))
@@ -369,29 +350,23 @@ void sweepCheckFlippers(pinball_t* p)
                         // Move ball back to not clip into the flipper
                         colVec = normVecFl2d(colVec);
                         moveBallBackFromLine(ball, &flipper->sideR, &colVec);
-                        // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius -
-                        // EPSILON));
                         touching = true;
                     }
                     if (circleCircleFlIntersection(ball->c, flipper->cPivot.c, &colPoint, &colVec))
                     {
                         // Move ball back to not clip into the flipper
                         moveBallBackFromCircle(ball, &flipper->cPivot);
-                        // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius -
-                        // EPSILON));
                         touching = true;
                     }
                     if (circleCircleFlIntersection(ball->c, flipper->cTip.c, &colPoint, &colVec))
                     {
                         // Move ball back to not clip into the flipper
                         moveBallBackFromCircle(ball, &flipper->cTip);
-                        // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius -
-                        // EPSILON));
                         touching = true;
                     }
 
                     // If the ball is touching the flipper for the first time
-                    if (touching && (PIN_NO_SHAPE == ballIsTouching(touchRef, flipper)))
+                    if (touching && !ballIsTouching(touchRef, flipper))
                     {
                         // Mark them as in contact
                         setBallTouching(touchRef, flipper, PIN_FLIPPER);
@@ -401,11 +376,12 @@ void sweepCheckFlippers(pinball_t* p)
                         ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
 
                         // If the flipper is in motion
-                        if (0 != angularVel)
+                        if (sweepStart != sweepEnd)
                         {
                             // Get the distance between the pivot and the ball
                             float dist = magVecFl2d(subVecFl2d(flipper->cPivot.c.pos, ball->c.pos));
                             // Convert angular velocity of the flipper to linear velocity at that point
+                            // TODO this should probably be turned down
                             float impulseMag = (ABS(angularVel) * dist);
 
                             // Impart an impulse on the ball along the collision normal
@@ -422,21 +398,20 @@ void sweepCheckFlippers(pinball_t* p)
 }
 
 /**
- * @brief TODO
+ * @brief Move all balls
  *
- * @param p
+ * @param p The entire game state
  */
 void moveBalls(pinball_t* p)
 {
-    // For each ball, check collisions with static objects
+    // For each ball
     for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
+        // Convenience reference
         pbCircle_t* ball = &p->balls[bIdx];
 
         // Acceleration changes velocity
-        // TODO adjust gravity vector when on top of a line
         ball->vel = addVecFl2d(ball->vel, ball->accel);
-        // printf("%d,%.4f,%.4f\n", __LINE__, ball->vel.x, ball->vel.y);
 
         // Save the last position to check if the ball is at rest
         ball->lastPos = ball->c.pos;
@@ -452,9 +427,9 @@ void moveBalls(pinball_t* p)
 }
 
 /**
- * @brief TODO
+ * @brief Check if a ball is no longer touching an object
  *
- * @param p
+ * @param p The entire game state
  */
 void checkBallsNotTouching(pinball_t* p)
 {
@@ -536,11 +511,11 @@ void checkBallsNotTouching(pinball_t* p)
 }
 
 /**
- * @brief TODO
+ * @brief Set that a ball is touching an object. This is used to track the moment of collision versus prolonged contact
  *
- * @param ballTouching
- * @param obj
- * @param type
+ * @param ballTouching A list of touch references for the ball
+ * @param obj The object to set as touching the ball
+ * @param type The object's type
  */
 void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type)
 {
@@ -556,28 +531,28 @@ void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t 
 }
 
 /**
- * @brief TODO
+ * @brief Check if a ball is touching an object
  *
- * @param ballTouching
- * @param obj
- * @return pbShapeType_t
+ * @param ballTouching A list of touch references for the ball
+ * @param obj The object to set as touching the ball
+ * @return true if the ball is touching the object, false otherwise
  */
-pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj)
+bool ballIsTouching(pbTouchRef_t* ballTouching, const void* obj)
 {
     for (uint32_t i = 0; i < MAX_NUM_TOUCHES; i++)
     {
         if (ballTouching->obj == obj)
         {
-            return ballTouching->type;
+            return true;
         }
     }
-    return PIN_NO_SHAPE;
+    return false;
 }
 
 /**
- * @brief TODO
+ * @brief Check if balls are at rest and adjust acceleration accordingly
  *
- * @param p
+ * @param p The entire game state
  */
 void checkBallsAtRest(pinball_t* p)
 {
@@ -625,7 +600,7 @@ void checkBallsAtRest(pinball_t* p)
  */
 void updateFlipperPos(pbFlipper_t* f)
 {
-    // Make sure the angle is between 0 and 360
+    // Make sure the angle is between 0 and (2 * M_PI)
     while (f->angle < 0)
     {
         f->angle += (2 * M_PI);
@@ -689,18 +664,14 @@ void updateFlipperPos(pbFlipper_t* f)
 }
 
 /**
- * @brief TODO
+ * @brief Move a ball backwards from a collision with a fixed line so that they are not intersecting
  *
- * see
- * https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/4d7d41d9ab0e3a7670a967a0a4cd72364a8c39ac/main/modes/pinball/pinball_physics.c
- *
- * @param ball
- * @param line
- * @param collisionVec
+ * @param ball The ball to move backwards
+ * @param line The fixed line
+ * @param collisionNorm The collision normal vector
  */
 void moveBallBackFromLine(pbCircle_t* ball, pbLine_t* line, vecFl_t* collisionNorm)
 {
-    // Do a bunch of work to adjust the ball's position to not clip into this line.
     // First create a copy of the line
     lineFl_t barrierLine = line->l;
 
@@ -724,10 +695,10 @@ void moveBallBackFromLine(pbCircle_t* ball, pbLine_t* line, vecFl_t* collisionNo
 }
 
 /**
- * @brief TODO
+ * @brief Move a ball backwards from a collision with a fixed circle so that they are not intersecting
  *
- * @param ball
- * @param fixed
+ * @param ball The ball to move backwards
+ * @param fixed The fixed circle
  */
 void moveBallBackFromCircle(pbCircle_t* ball, pbCircle_t* fixed)
 {
@@ -741,6 +712,7 @@ void moveBallBackFromCircle(pbCircle_t* ball, pbCircle_t* fixed)
         .p2 = addVecFl2d(ball->c.pos, ball->vel),
     };
 
+    // Find the intersection between the ball's center's motion and the barrier circle
     vecFl_t intersection_1;
     vecFl_t intersection_2;
     switch (circleLineFlIntersectionPoints(barrier, ballLine, &intersection_1, &intersection_2))
@@ -753,6 +725,7 @@ void moveBallBackFromCircle(pbCircle_t* ball, pbCircle_t* fixed)
         }
         case 1:
         {
+            // Single point of intersection (tangent)
             ball->c.pos = intersection_1;
             break;
         }
