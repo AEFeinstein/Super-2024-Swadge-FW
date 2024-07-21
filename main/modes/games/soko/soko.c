@@ -10,10 +10,7 @@ static void sokoEnterMode(void);
 static void sokoExitMode(void);
 static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static sokoTile_t sokoGetTileFromColor(paletteColor_t);
-static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t);
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
-static void sokoLoadBinTiles(soko_abs_t* self, int byteCount);
 
 // strings
 static const char sokoModeName[]        = "Sokobanabokabon";
@@ -226,27 +223,28 @@ static void sokoMainLoop(int64_t elapsedUs)
     }
 }
 
-void freeEntity(soko_abs_t* self, sokoEntity_t* entity) // Free internal entity structures
-{
-    if (entity->propFlag)
-    {
-        if (entity->properties->targetCount)
-        {
-            free(entity->properties->targetX);
-            free(entity->properties->targetY);
-        }
-        free(entity->properties);
-        entity->propFlag = false;
-    }
-    self->currentLevel.entityCount -= 1;
-}
+// void freeEntity(soko_abs_t* self, sokoEntity_t* entity) // Free internal entity structures
+// {
+//     if (entity->propFlag)
+//     {
+//         if (entity->properties->targetCount)
+//         {
+//             free(entity->properties->targetX);
+//             free(entity->properties->targetY);
+//         }
+//         free(entity->properties);
+//         entity->propFlag = false;
+//     }
+//     self->currentLevel.entityCount -= 1;
+// }
 
 // placeholder.
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     // Use TURBO drawing mode to draw individual pixels fast
     SETUP_FOR_TURBO();
-
+    uint16_t shiftReg = 0xACE1u;
+    uint16_t bit = 0;
     switch (soko->background)
     {
         case SKBG_GRID:
@@ -276,14 +274,14 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
             }
             break;
         case SKBG_FORREST:
-            uint16_t shiftReg = 0xACE1u;
+            
             for (int16_t yp = y; yp < y + h; yp+=8)
             {
                 for (int16_t xp = x; xp < x + w; xp+=8)
                 {
                     //not random enough but im going to leave it as is.
                     //LFSR
-                    uint16_t bit = ((shiftReg >> 0) ^ (shiftReg >> 2) ^ (shiftReg >> 3) ^ (shiftReg >> 5)) & 1u;
+                    bit = ((shiftReg >> 0) ^ (shiftReg >> 2) ^ (shiftReg >> 3) ^ (shiftReg >> 5)) & 1u;
                     shiftReg     = (shiftReg >> 1) | (bit << 15);
                     shiftReg = shiftReg+yp+xp*3+1;
 
@@ -302,8 +300,8 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
                 }
             }
             break;
-    default:
-        break;
+        default:
+            break;
     }
 }
 //todo: move to soko_save
@@ -337,7 +335,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
             if (!strpbrk(storageStr, "\n\t\r ") && (strstr(storageStr, ".bin")))
             {
                 int tokLen    = strlen(storageStr);
-                char* tempPtr = calloc((tokLen + 1), sizeof(char)); // Length plus null teminator
+               // char* tempPtr = calloc((tokLen + 1), sizeof(char)); // Length plus null teminator
                 // strcpy(tempPtr,storageStr);
                 // stringPtrs[ind] = tempPtr;
                 stringPtrs[ind] = storageStr;

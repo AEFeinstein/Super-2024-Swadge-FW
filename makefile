@@ -302,9 +302,7 @@ assets:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/
 	./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets/ -o ./spiffs_image/
 
-# Sokoban .tmx to bin preprocessor
-# using spiffs_image was because no extra work for project setup. .bin files shouldn't conflict with any wsg's.
-	 python ./tools/soko/soko_tmx_preprocessor.py ./assets/soko/ ./spiffs_image/
+
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
@@ -317,10 +315,16 @@ $(EXECUTABLE): $(OBJECTS)
 
 # To create the c file with assets, run these tools
 $(CNFS_FILE):
+# Sokoban .tmx to bin preprocessor
+	python ./tools/soko/soko_tmx_preprocessor.py ./assets/soko/ ./assets_image/
+	
 	$(MAKE) -C ./tools/assets_preprocessor/
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 	$(MAKE) -C ./tools/cnfs/
 	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+	
+
+
 
 # This cleans emulator files
 clean:

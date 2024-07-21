@@ -262,7 +262,7 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     printf("load bin level %d, %s\n", levelIndex, soko->levelNames[levelIndex]);
     soko->state = SKS_INIT;
     size_t fileSize;
-    soko->levelBinaryData = spiffsReadFile(soko->levelNames[levelIndex], &fileSize, true); // Heap CAPS malloc/calloc allocation for SPI RAM
+    soko->levelBinaryData = cnfsReadFile(soko->levelNames[levelIndex], &fileSize, true); // Heap CAPS malloc/calloc allocation for SPI RAM
 
     // The pointer returned by spiffsReadFile can be freed with free() with no additional steps.
     soko->currentLevel.width = soko->levelBinaryData[0];  // first two bytes of a level's data always describe the
@@ -319,7 +319,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
             int objY = (tileIndex - 1) / (self->currentLevel.width);
             uint8_t flagByte, direction;
             bool players, crates, sticky, trail, inverted;
-            int hp, targetX, targetY;
+            int hp;//, targetX, targetY;
             //printf("reading object byte after start: %i,%i:%i\n",objX,objY,self->levelBinaryData[i+1]);
 
             switch (self->levelBinaryData[i + 1]) // On creating entities, index should be advanced to the SKB_OBJEND
@@ -364,8 +364,8 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     flagByte = self->levelBinaryData[i + 2];
                     crates   = !!(flagByte & (0x1 << 0));
                     hp       = self->levelBinaryData[i + 3];
-                    targetX  = self->levelBinaryData[i + 4];
-                    targetY  = self->levelBinaryData[i + 5];
+                    // targetX  = self->levelBinaryData[i + 4];
+                    // targetY  = self->levelBinaryData[i + 5];
 
                     self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_WARP;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
