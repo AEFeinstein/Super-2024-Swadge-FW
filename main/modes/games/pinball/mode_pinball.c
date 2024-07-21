@@ -76,7 +76,7 @@ static void pinEnterMode(void)
 
     // Create random balls
     // createRandomBalls(pinball, 0);
-    pbCreateBall(pinball, 6, 114);
+    pbCreateBall(pinball, 6, 120);
     // pbCreateBall(pinball, 274, 114);
     // pbCreateBall(pinball, 135, 10);
 

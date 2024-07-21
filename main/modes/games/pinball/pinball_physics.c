@@ -551,6 +551,8 @@ bool ballIsTouching(pbTouchRef_t* ballTouching, const void* obj)
 
 /**
  * @brief Check if balls are at rest and adjust acceleration accordingly
+ * 
+ * TODO this seems to think balls are at rest erroneously...
  *
  * @param p The entire game state
  */
