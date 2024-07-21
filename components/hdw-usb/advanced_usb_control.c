@@ -87,7 +87,8 @@ static int advanced_usb_write_log(void* cookie __attribute__((unused)), const ch
     }
 
     // Write out to UART as well.
-    //uart_write_bytes(0, (const char*)data, size);
+    // This currently crashes
+    // uart_write_bytes(0, (const char*)data, size);
 
     return size;
 }

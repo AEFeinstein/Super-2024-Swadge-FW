@@ -107,7 +107,7 @@ const uint8_t* cnfsGetFile(const char* fname, size_t* flen)
  */
 uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 {
-    const uint8_t * fptr = cnfsGetFile( fname, outsize );
+    const uint8_t* fptr = cnfsGetFile(fname, outsize);
 
     if (!fptr)
     {
