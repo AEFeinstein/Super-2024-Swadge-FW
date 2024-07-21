@@ -20,6 +20,7 @@
 #include "soko.h"
 #include "mode_synth.h"
 #include "ultimateTTT.h"
+#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "keebTest.h"
