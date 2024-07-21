@@ -189,6 +189,9 @@ typedef struct
     synthTouchMode_t touchMode;
     bool loop;
     bool stopped;
+    bool shuffle;
+    bool autoplay;
+    int32_t shufflePos;
     int32_t headroom;
 
     wsg_t instrumentImages[16];
@@ -243,6 +246,8 @@ static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text, bool kar);
 static void midiTextCallback(metaEventType_t type, const char* text, uint32_t length);
 static void synthMenuCb(const char* label, bool selected, uint32_t value);
 static void songEndCb(void);
+static void setupShuffle(int numSongs);
+static void nextSong(void);
 
 //==============================================================================
 // Variabes
@@ -512,6 +517,8 @@ static const char* menuItemViewMode   = "View Mode: ";
 static const char* menuItemButtonMode = "Button Controls: ";
 static const char* menuItemTouchMode  = "Touchpad Controls: ";
 static const char* menuItemLoop       = "Loop: ";
+static const char* menuItemShuffle    = "Shuffle: ";
+static const char* menuItemAutoplay   = "Auto-play: ";
 static const char* menuItemHeadroom   = "Mix Volume: ";
 
 static const char* const nvsKeyMode       = "synth_playmode";
@@ -519,8 +526,11 @@ static const char* const nvsKeyViewMode   = "synth_viewmode";
 static const char* const nvsKeyButtonMode = "synth_btnmode";
 static const char* const nvsKeyTouchMode  = "synth_touchmode";
 static const char* const nvsKeyLoop       = "synth_loop";
+static const char* const nvsKeyShuffle    = "synth_shuffle";
+static const char* const nvsKeyAutoplay   = "synth_autoplay";
 static const char* const nvsKeyLastSong   = "synth_lastsong";
 static const char* const nvsKeyHeadroom   = "synth_headdroom";
+static const char* const nvsKeyShufflePos = "synth_shufpos";
 
 static const char* menuItemModeOptions[] = {
     "MIDI Streaming",
@@ -542,7 +552,7 @@ static const char* menuItemTouchOptions[] = {
     "Scrub",
 };
 
-static const char* menuItemLoopOptions[] = {
+static const char* menuItemOffOnOptions[] = {
     "Off",
     "On",
 };
@@ -581,6 +591,16 @@ static const int32_t menuItemTouchValues[] = {
 };
 
 static const int32_t menuItemLoopValues[] = {
+    0,
+    1,
+};
+
+static const int32_t menuItemShuffleValues[] = {
+    0,
+    1,
+};
+
+static const int32_t menuItemAutoplayValues[] = {
     0,
     1,
 };
@@ -646,6 +666,20 @@ static settingParam_t menuItemLoopBounds = {
     .key = nvsKeyLoop,
 };
 
+static settingParam_t menuItemShuffleBounds = {
+    .def = 0,
+    .min = 0,
+    .max = 1,
+    .key = nvsKeyShuffle,
+};
+
+static settingParam_t menuItemAutoplayBounds = {
+    .def = 0,
+    .min = 0,
+    .max = 1,
+    .key = nvsKeyAutoplay,
+};
+
 static settingParam_t menuItemHeadroomBounds = {
     .def = MIDI_DEF_HEADROOM,
     .min = 0,
@@ -672,6 +706,24 @@ swadgeMode_t synthMode = {
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = synthDacCallback,
+};
+
+static const uint32_t lfsrTaps[] = {
+    0x3, // 2 bits
+    0x6, // 3 bits
+    0xC, // 4 bits
+    0x14, // 5 bits
+    0x30, // 6 bits
+    0x60, // 7 bits
+    0xB8, // 8 bits
+    0x110, // 9 bits
+    0x240, // 10 bits
+    0x500, // 11 bits
+    0xE08, // 12 bits
+    0x1C80, // 13 bits
+    0x3802, // 14 bits
+    0x6000, // 15 bits
+    0xD008, // 16 bits
 };
 
 static synthData_t* sd;
@@ -732,6 +784,24 @@ static void synthEnterMode(void)
     sd->loop            = nvsRead ? true : false;
     sd->midiPlayer.loop = sd->loop;
 
+    if (!readNvs32(nvsKeyShuffle, &nvsRead))
+    {
+        nvsRead = 0;
+    }
+    sd->shuffle = nvsRead ? true : false;
+
+    if (!readNvs32(nvsKeyShufflePos, &nvsRead) || !nvsRead)
+    {
+        nvsRead = 0xACE1u;
+    }
+    sd->shufflePos = nvsRead;
+
+    if (!readNvs32(nvsKeyAutoplay, &nvsRead))
+    {
+        nvsRead = 0;
+    }
+    sd->autoplay = nvsRead ? true : false;
+
     if (!readNvs32(nvsKeyHeadroom, &nvsRead))
     {
         nvsRead = MIDI_DEF_HEADROOM;
@@ -779,6 +849,7 @@ static void synthEnterMode(void)
     sd->wheelMenu            = initWheelMenu(&sd->font, 90, &sd->wheelTextArea);
 
     synthSetupMenu();
+    setupShuffle(sd->customFiles.length);
     synthSetupPlayer();
 
     sd->startupSeqComplete = true;
@@ -1202,8 +1273,12 @@ static void synthSetupMenu(void)
                                  ARRAY_SIZE(menuItemButtonValues), &menuItemButtonBounds, sd->buttonMode);
     addSettingsOptionsItemToMenu(sd->menu, menuItemTouchMode, menuItemTouchOptions, menuItemTouchValues,
                                  ARRAY_SIZE(menuItemTouchValues), &menuItemTouchBounds, sd->touchMode);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemLoop, menuItemLoopOptions, menuItemLoopValues,
+    addSettingsOptionsItemToMenu(sd->menu, menuItemLoop, menuItemOffOnOptions, menuItemLoopValues,
                                  ARRAY_SIZE(menuItemLoopValues), &menuItemLoopBounds, sd->loop);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemShuffle, menuItemOffOnOptions, menuItemShuffleValues,
+                                 ARRAY_SIZE(menuItemShuffleValues), &menuItemShuffleBounds, sd->shuffle);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemAutoplay, menuItemOffOnOptions, menuItemAutoplayValues,
+                                 ARRAY_SIZE(menuItemAutoplayValues), &menuItemAutoplayBounds, sd->autoplay);
     addSettingsOptionsItemToMenu(sd->menu, menuItemHeadroom, menuItemHeadroomOptions, menuItemHeadroomValues,
                                  ARRAY_SIZE(menuItemHeadroomValues), &menuItemHeadroomBounds, sd->headroom);
 }
@@ -1347,6 +1422,8 @@ static void synthSetFile(const char* filename)
         {
             sd->fileMode = true;
 
+            midiPlayerReset(&sd->midiPlayer);
+            synthSetupPlayer();
             midiSetFile(&sd->midiPlayer, &sd->midiFile);
             preloadLyrics(&sd->karaoke, &sd->midiFile);
 
@@ -2632,6 +2709,30 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
         sd->loop            = value ? true : false;
         sd->midiPlayer.loop = sd->loop;
     }
+    else if (label == menuItemShuffle)
+    {
+        if (value != sd->shuffle)
+        {
+            writeNvs32(nvsKeyShuffle, value);
+        }
+        if (selected)
+        {
+            sd->screen = SS_VIEW;
+        }
+        sd->shuffle = value ? true : false;
+    }
+    else if (label == menuItemAutoplay)
+    {
+        if (value != sd->autoplay)
+        {
+            writeNvs32(nvsKeyAutoplay, value);
+        }
+        if (selected)
+        {
+            sd->screen = SS_VIEW;
+        }
+        sd->autoplay = value ? true : false;
+    }
     else if (label == menuItemCustomSong)
     {
         if (selected)
@@ -2694,6 +2795,103 @@ static void songEndCb(void)
     }
     else
     {
-        sd->stopped = true;
+        if (sd->autoplay)
+        {
+            nextSong();
+            midiPause(&sd->midiPlayer, false);
+        }
+        else
+        {
+            sd->stopped = true;
+        }
+    }
+}
+
+static void setupShuffle(int numSongs)
+{
+    int numBits = 0;
+    while (numSongs > (1 << numBits) - 1)
+    {
+        numBits++;
+    }
+
+    printf("Shuffling %d songs needs a %d bit LFSR\n", numSongs, numBits);
+}
+
+static void nextSong(void)
+{
+    const char* pickedSong = NULL;
+
+    if (sd->shuffle)
+    {
+        // Get the number of bits needed for the current number of songs, minimumn 2
+        uint16_t bits = 32 - __builtin_clz((sd->customFiles.length + 1) | 0x2);
+        uint16_t val = sd->shufflePos & 0xFFFFu;
+
+        printf("%d has %" PRIu16 " bits\n", sd->customFiles.length, bits);
+
+        do {
+            val >>= 1;
+            if (val & 1)
+            {
+                val ^= lfsrTaps[bits-2];
+            }
+        } while (val >= sd->customFiles.length);
+
+        sd->shufflePos = val;
+        writeNvs32(nvsKeyShufflePos, sd->shufflePos);
+
+        node_t* node = sd->customFiles.first;
+        for (int i = 0; i < sd->shufflePos; i++)
+        {
+            if (!node)
+            {
+                break;
+            }
+
+            node = node->next;
+        }
+
+        if (node && node->val)
+        {
+            pickedSong = (const char*)node->val;
+            synthSetFile(pickedSong);
+        }
+    }
+    else
+    {
+        if (sd->filename)
+        {
+            for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
+            {
+                if (!strcmp((const char*)node->val, sd->filename))
+                {
+                    if (node->next && node->next->val)
+                    {
+
+                        pickedSong = (const char*)node->next->val;
+                        synthSetFile(pickedSong);
+
+                    }
+                    else if (sd->loop && sd->customFiles.first)
+                    {
+                        if (sd->customFiles.first->val)
+                        {
+                            pickedSong = (const char*)sd->customFiles.first->val;
+                            synthSetFile(pickedSong);
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    if (sd->fileMode && pickedSong)
+    {
+        sd->filename = pickedSong;
+        writeNvs32(nvsKeyMode, (int32_t)sd->fileMode);
+        synthSetupPlayer();
     }
 }
