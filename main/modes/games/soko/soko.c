@@ -52,6 +52,7 @@ static void sokoEnterMode(void)
     soko->currentTheme = &soko->sokoDefaultTheme;
     soko->sokoDefaultTheme.wallColor  = c111;
     soko->sokoDefaultTheme.floorColor = c444;
+    soko->sokoDefaultTheme.altFloorColor = c444;
     soko->background = SKBG_GRID;
     //load or set themes...
     // Default Theme
@@ -84,7 +85,6 @@ static void sokoEnterMode(void)
     soko->overworldTheme.wallColor  = c111;
     soko->overworldTheme.floorColor = c444;
 
-
     // Euler Theme
     soko->eulerTheme.playerDownWSG  = soko->sokoDefaultTheme.playerDownWSG;
     soko->eulerTheme.playerUpWSG    = soko->sokoDefaultTheme.playerUpWSG;
@@ -99,6 +99,7 @@ static void sokoEnterMode(void)
     soko->eulerTheme.portal_incompleteWSG = soko->sokoDefaultTheme.portal_incompleteWSG;
     soko->eulerTheme.wallColor  = c000;
     soko->eulerTheme.floorColor = c555;
+    soko->eulerTheme.altFloorColor = c433;//painted tiles color.
 
     // Initialize the menu
     soko->menu                = initMenu(sokoModeName, sokoMenuCb);
