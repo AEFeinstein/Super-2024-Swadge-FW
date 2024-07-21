@@ -331,33 +331,33 @@ $(CNFS_FILE):
 bundle: SwadgeEmulator.app
 
 SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns tools/macosx/Info.plist
-    rm -rf SwadgeEmulator.app
-    mkdir SwadgeEmulator.app
-    mkdir SwadgeEmulator.app/Contents
-    mkdir SwadgeEmulator.app/Contents/MacOS
-    mkdir SwadgeEmulator.app/Contents/Resources
+	rm -rf SwadgeEmulator.app
+	mkdir SwadgeEmulator.app
+	mkdir SwadgeEmulator.app/Contents
+	mkdir SwadgeEmulator.app/Contents/MacOS
+	mkdir SwadgeEmulator.app/Contents/Resources
 	mkdir SwadgeEmulator.app/Contents/libs
-    cp tools/macosx/Info.plist SwadgeEmulator.app/Contents/
-    echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
-    cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
+	cp tools/macosx/Info.plist SwadgeEmulator.app/Contents/
+	echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
+	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
 	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/$(EXECUTABLE) -d ./SwadgeEmulator.app/Contents/libs/
-    #cp $(EXECUTABLE) SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator.app
+	#cp $(EXECUTABLE) SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator.app
 
 build/SwadgeEmulator.icns: emulator/icon.png
-    rm -rf build/SwadgeEmulator.iconset
-    mkdir build/SwadgeEmulator.iconset
-    sips -z 16 16     $< --out build/SwadgeEmulator.iconset/icon_16x16.png
-    sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_16x16@2x.png
-    sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_32x32.png
-    sips -z 64 64     $< --out build/SwadgeEmulator.iconset/icon_32x32@2x.png
-    sips -z 128 128   $< --out build/SwadgeEmulator.iconset/icon_128x128.png
-    sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_128x128@2x.png
-    sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_256x256.png
-    sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_256x256@2x.png
-    sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_512x512.png
-    sips -z 1024 1024 $< --out build/SwadgeEmulator.iconset/icon_512x512@2x.png
-    iconutil -c icns -o build/SwadgeEmulator.icns build/SwadgeEmulator.iconset
-    rm -r build/SwadgeEmulator.iconset
+	rm -rf build/SwadgeEmulator.iconset
+	mkdir build/SwadgeEmulator.iconset
+	sips -z 16 16     $< --out build/SwadgeEmulator.iconset/icon_16x16.png
+	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_16x16@2x.png
+	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_32x32.png
+	sips -z 64 64     $< --out build/SwadgeEmulator.iconset/icon_32x32@2x.png
+	sips -z 128 128   $< --out build/SwadgeEmulator.iconset/icon_128x128.png
+	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_128x128@2x.png
+	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_256x256.png
+	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_256x256@2x.png
+	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_512x512.png
+	sips -z 1024 1024 $< --out build/SwadgeEmulator.iconset/icon_512x512@2x.png
+	iconutil -c icns -o build/SwadgeEmulator.icns build/SwadgeEmulator.iconset
+	rm -r build/SwadgeEmulator.iconset
 
 # This cleans emulator files
 clean:
