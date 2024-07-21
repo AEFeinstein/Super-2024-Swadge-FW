@@ -491,6 +491,9 @@ typedef struct
     /// @brief True when the MIDI player is seeking, and will not produce sound
     bool seeking;
 
+    /// @brief The current seek value
+    uint64_t seekPos;
+
     /// @brief If true, the playing file will automatically repeat when complete
     bool loop;
 } midiPlayer_t;
