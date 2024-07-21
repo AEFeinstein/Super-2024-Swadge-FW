@@ -74,7 +74,7 @@ jobs:
     - name: Install homebrew packages
       if: matrix.family == 'osx'
       run: |
-        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake graphviz
+        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake graphviz dylibbundler
 
     - name: Install apt packages
       if: matrix.family == 'linux'
@@ -92,6 +92,11 @@ jobs:
       if: matrix.emulator && matrix.family != 'windows'
       run: |
         make -j3
+
+    - name: Build OSX Bundle
+      if: matrix.emulator && matrix.family == 'osx'
+      run: |
+        make SwadgeEmulator.app
 
     #### Generic Emulator Upload
     - name: Upload Emulator Binary
