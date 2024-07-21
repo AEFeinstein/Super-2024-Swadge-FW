@@ -175,6 +175,7 @@ typedef struct
     wsg_t portal_completeWSG;
     paletteColor_t wallColor;
     paletteColor_t floorColor;
+    paletteColor_t altFloorColor;
 } sokoTheme_t;
 
 typedef struct

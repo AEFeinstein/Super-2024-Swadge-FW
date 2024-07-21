@@ -423,7 +423,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                     color = self->currentTheme->floorColor;
                     break;
                 case SKT_FLOOR_WALKED:
-                    color = c334;
+                    color = self->currentTheme->altFloorColor;
                     break;
                 case SKT_EMPTY:
                     color = cTransparent;
@@ -870,7 +870,7 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
         possibleSquares = self->currentLevel.height - emitVec.y;
     }
 
-    int tileCollFlag, entCollFlag, entCollInd;
+    int tileCollFlag, entCollFlag, entCollInd;// ,
     tileCollFlag = entCollFlag = entCollInd = 0;
 
     sokoCollision_t retVal;
