@@ -97,6 +97,7 @@ jobs:
       if: matrix.emulator && matrix.family == 'osx'
       run: |
         make SwadgeEmulator.app
+        tar -cvf SwadgeEmulator.app.tar SwadgeEmulator.app
 
     #### Generic Emulator Upload
     - name: Upload Emulator Binary
@@ -123,7 +124,7 @@ jobs:
       with:
         name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-bundle
         path: |
-          SwadgeEmulator.app
+          SwadgeEmulator.app.tar
 
     # Merge all emulator artifacts for each OS into one
     - name: Merge Emulator Artifacts
