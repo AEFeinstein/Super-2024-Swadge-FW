@@ -336,8 +336,9 @@ SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns tools/macos/Info.pli
 	cat tools/macos/Info.plist | sed "s/##GIT_HASH##/$(GIT_HASH)/" > SwadgeEmulator.app/Contents/Info.plist
 	echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
 	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
-	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/$(EXECUTABLE) -d ./SwadgeEmulator.app/Contents/libs/
-	#cp $(EXECUTABLE) SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator.app
+	cp $(EXECUTABLE) SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator
+	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator -d ./SwadgeEmulator.app/Contents/libs/
+
 
 build/SwadgeEmulator.icns: emulator/icon.png
 	rm -rf build/SwadgeEmulator.iconset
