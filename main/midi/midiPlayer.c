@@ -958,10 +958,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     else
     {
         // Ensure the selected voice will play with the right instrument
-        if (voices[voiceIdx].timbre != &chan->timbre)
-        {
-            setVoiceTimbre(&voices[voiceIdx], &chan->timbre);
-        }
+        setVoiceTimbre(&voices[voiceIdx], &chan->timbre);
 
         swSynthSetVolume(&voices[voiceIdx].oscillators[0], targetVol);
         swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[0], bendPitchWheel(note, chan->pitchBend));
