@@ -9,7 +9,7 @@
 
 #include <esp_heap_caps.h>
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "heatshrink_helper.h"
 #include "ray_map.h"
 #include "ray_tex_manager.h"

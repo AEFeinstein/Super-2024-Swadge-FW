@@ -53,6 +53,8 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "modes/utilities/timer/modeTimer.c"
                             "swadge2024.c"
                             "utils/color_utils.c"
+                            "utils/cnfs.c"
+                            "utils/cnfs_image.c"
                             "utils/dialogBox.c"
                             "utils/fl_math/geometryFl.c"
                             "utils/fl_math/vectorFl2d.c"
@@ -77,7 +79,6 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                   hdw-led
                                   hdw-mic
                                   hdw-nvs
-                                  hdw-spiffs
                                   hdw-tft
                                   hdw-temperature
                                   hdw-usb
@@ -121,15 +122,14 @@ function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/spiffs_file_preprocessor/
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../spiffs_image/
+    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs/cnfs_gen ${CMAKE_CURRENT_SOURCE_DIR}/../spiffs_image/ ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
     )
 endfunction()
 
-# Create a SPIFFS image from the contents of the 'spiffs_image' directory
-# that fits the partition named 'storage'. FLASH_IN_PROJECT indicates that
-# the generated image should be flashed when the entire project is flashed to
-# the target with 'idf.py -p PORT flash'.
+# Create a CNFS blob from the contents of the 'assets' directory is compiled
+# directly into the firmware
 spiffs_file_preprocessor()
-spiffs_create_partition_image(storage ../spiffs_image FLASH_IN_PROJECT)
 
 # Save the git hash in a variable
 execute_process(

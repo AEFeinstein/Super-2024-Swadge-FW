@@ -8,7 +8,7 @@
 #include <esp_log.h>
 #include <esp_heap_caps.h>
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "spiffs_font.h"
 
 //==============================================================================
@@ -34,7 +34,7 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
     size_t bufIdx = 0;
     uint8_t chIdx = 0;
     size_t sz;
-    uint8_t* buf = spiffsReadFile(name, &sz, true);
+    uint8_t* buf = cnfsReadFile(name, &sz, true);
     if (NULL == buf)
     {
         ESP_LOGE("FONT", "Failed to read %s", name);

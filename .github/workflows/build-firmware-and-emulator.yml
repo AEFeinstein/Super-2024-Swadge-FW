@@ -101,7 +101,6 @@ jobs:
         name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-exe
         path: |
           ${{ matrix.emu_binary }}
-          spiffs_image
           version.txt
 
     ## Platform-specific Emulator Uploads

@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <esp_err.h>
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "hdw-nvs.h"
 #include <nvs.h>
 
@@ -28,7 +28,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
 {
     // Read WSG from file
     size_t sz;
-    uint8_t* buf = spiffsReadFile(fname, &sz, readToSpiRam);
+    uint8_t* buf = cnfsReadFile(fname, &sz, readToSpiRam);
     if (NULL == buf)
     {
         ESP_LOGE("WSG", "Failed to read %s", fname);

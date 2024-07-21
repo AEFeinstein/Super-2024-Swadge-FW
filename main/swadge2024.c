@@ -87,7 +87,7 @@
  * \subsection pm_api Persistent Memory APIs
  *
  * - hdw-nvs.h: Learn how to save and load persistent runtime data
- * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
+ * - cnfs.h: Learn how to load and use assets from the CNFS blob! These file types have their own loaders:
  *     - spiffs_font.h: Load font bitmaps
  *     - spiffs_wsg.h: Load WSG images
  *     - spiffs_json.h: Load JSON
@@ -285,7 +285,7 @@ void app_main(void)
     esp_timer_init();
 
     // Init SPIFFS file system
-    initSpiffs();
+    initCnfs();
 
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
@@ -578,7 +578,7 @@ void deinitSystem(void)
     deinitLeds();
     deinitMic();
     deinitNvs();
-    deinitSpiffs();
+    deinitCnfs();
     deinitTemperatureSensor();
     deinitTFT();
     deinitUsb();
