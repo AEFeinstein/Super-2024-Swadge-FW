@@ -117,6 +117,14 @@ jobs:
         path: |
           C:\msys64\mingw64\bin\libwinpthread-1.dll
 
+    - name: Upload Emulator Bundle
+      if: matrix.emulator && matrix.family == 'osx'
+      uses: actions/upload-artifact@v4.3.3
+      with:
+        name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-bundle
+        path: |
+          SwadgeEmulator.app
+
     # Merge all emulator artifacts for each OS into one
     - name: Merge Emulator Artifacts
       if: matrix.emulator
