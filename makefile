@@ -332,11 +332,7 @@ bundle: SwadgeEmulator.app
 
 SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns tools/macosx/Info.plist
 	rm -rf SwadgeEmulator.app
-	mkdir SwadgeEmulator.app
-	mkdir SwadgeEmulator.app/Contents
-	mkdir SwadgeEmulator.app/Contents/MacOS
-	mkdir SwadgeEmulator.app/Contents/Resources
-	mkdir SwadgeEmulator.app/Contents/libs
+	mkdir -p SwadgeEmulator.app/Contents/{MacOS,Resources.libs}
 	cp tools/macosx/Info.plist SwadgeEmulator.app/Contents/
 	echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
 	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
@@ -345,7 +341,7 @@ SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns tools/macosx/Info.pl
 
 build/SwadgeEmulator.icns: emulator/icon.png
 	rm -rf build/SwadgeEmulator.iconset
-	mkdir build/SwadgeEmulator.iconset
+	mkdir -p build/SwadgeEmulator.iconset
 	sips -z 16 16     $< --out build/SwadgeEmulator.iconset/icon_16x16.png
 	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_16x16@2x.png
 	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_32x32.png
