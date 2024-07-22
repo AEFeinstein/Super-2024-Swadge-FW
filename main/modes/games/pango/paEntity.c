@@ -311,13 +311,11 @@ void updateTestObject(paEntity_t* self)
 
                     if((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3)) { 
                        
-
                         if(doAgression && t2 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->yspeed = -8;
-                            self->xspeed = 0;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_UP, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_UP, 16);
                         }
@@ -329,8 +327,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->yspeed = 8;
-                            self->xspeed = 0;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, 16);
                         }
@@ -348,12 +345,11 @@ void updateTestObject(paEntity_t* self)
                             break;
                         }
 
-
                         if(doAgression && t1 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->xspeed = -8;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, 16);
                         }
@@ -382,8 +378,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->yspeed = -8;
-                            self->xspeed = 0;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_UP, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_UP, 16);
                         }
@@ -395,8 +390,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->yspeed = 8;
-                            self->xspeed = 0;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, 16);
                         }
@@ -417,7 +411,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE );
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->xspeed = 8;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, 16);
                         }
@@ -444,8 +438,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->xspeed = -8;
-                            self->yspeed = 0;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, 16);
                         }
@@ -457,8 +450,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->xspeed = 8;
-                            self->yspeed = 0;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, 16);
                         }
@@ -480,7 +472,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->yspeed = -8;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_UP, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, 16);
                         }
@@ -516,8 +508,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->xspeed = -8;
-                            self->yspeed = 0;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, 16);
                         }
@@ -530,8 +521,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->xspeed = 8;
-                            self->yspeed = 0;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, 16);
                         }
@@ -553,7 +543,7 @@ void updateTestObject(paEntity_t* self)
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
                             self->stateTimer = 16;
-                            self->yspeed = 8;
+                            pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, 8);
                         } else {
                             pa_enemyChangeDirection(self, PA_DIRECTION_UP, 16);
                         }
