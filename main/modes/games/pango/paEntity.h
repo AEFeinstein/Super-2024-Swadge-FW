@@ -136,6 +136,7 @@ struct paEntity_t
     uint8_t targetTileY;
     uint16_t state;
     int16_t stateTimer;
+    int16_t tempStateTimer;
 
     // paEntity_t *entities;
     paEntityManager_t* entityManager;
@@ -155,6 +156,7 @@ void pa_initializeEntity(paEntity_t* self, paEntityManager_t* entityManager, paT
 void pa_updatePlayer(paEntity_t* self);
 void updateTestObject(paEntity_t* self);
 void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t speed);
+void pa_enemyBreakBlock(paEntity_t* self, uint16_t newDirection, int16_t speed, uint8_t tx, uint8_t ty);
 void updateHitBlock(paEntity_t* self);
 
 void pa_moveEntityWithTileCollisions(paEntity_t* self);

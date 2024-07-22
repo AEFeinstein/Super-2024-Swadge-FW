@@ -437,6 +437,7 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
     entity->stateTimer           = -1;
+    entity->tempStateTimer       = -1;
 
     entity->type                 = PA_ENTITY_TEST;
     entity->spriteIndex          = PA_SP_ENEMY_SOUTH;
