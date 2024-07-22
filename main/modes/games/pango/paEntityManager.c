@@ -46,31 +46,31 @@ void pa_initializeEntityManager(paEntityManager_t* entityManager, paTilemap_t* t
 
 void pa_loadSprites(paEntityManager_t* entityManager)
 {
-    loadWsg("kr-000.wsg", &(entityManager->sprites[PA_SP_PLAYER_SOUTH].wsg), false);
+    loadWsg("pa-000.wsg", &(entityManager->sprites[PA_SP_PLAYER_SOUTH].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_SOUTH].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_SOUTH].originY         = 16;
     
-    loadWsg("kr-001.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SOUTH].wsg), false);
+    loadWsg("pa-001.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SOUTH].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_WALK_SOUTH].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_WALK_SOUTH].originY         = 16;
     
-    loadWsg("kr-002.wsg", &(entityManager->sprites[PA_SP_PLAYER_NORTH].wsg), false);
+    loadWsg("pa-002.wsg", &(entityManager->sprites[PA_SP_PLAYER_NORTH].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_NORTH].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_NORTH].originY         = 16;
     
-    loadWsg("kr-003.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_NORTH].wsg), false);
+    loadWsg("pa-003.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_NORTH].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_WALK_NORTH].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_WALK_NORTH].originY         = 16;
     
-    loadWsg("kr-004.wsg", &(entityManager->sprites[PA_SP_PLAYER_SIDE].wsg), false);
+    loadWsg("pa-004.wsg", &(entityManager->sprites[PA_SP_PLAYER_SIDE].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_SIDE].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_SIDE].originY         = 16;
     
-    loadWsg("kr-005.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].wsg), false);
+    loadWsg("pa-005.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].originY         = 16;
     
-    loadWsg("kr-006.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].wsg), false);
+    loadWsg("pa-006.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].originY         = 16;
    
@@ -82,7 +82,7 @@ void pa_loadSprites(paEntityManager_t* entityManager)
     entityManager->sprites[PA_SP_PLAYER_FALL].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_FALL].originY         = 16;
     
-    loadWsg("kr-009.wsg", &(entityManager->sprites[PA_SP_PLAYER_HURT].wsg), false);
+    loadWsg("pa-007.wsg", &(entityManager->sprites[PA_SP_PLAYER_HURT].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_HURT].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_HURT].originY         = 16;
     
@@ -436,11 +436,13 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
+    entity->stateTimer           = -1;
 
     entity->type                 = PA_ENTITY_TEST;
     entity->spriteIndex          = PA_SP_ENEMY_SOUTH;
     entity->facingDirection      = PA_DIRECTION_NONE;
     entity->state                = PA_EN_ST_NORMAL;
+    entity->stateTimer           = 300 + (esp_random() % 600); //Min 5 seconds, max 15 seconds
     entity->updateFunction       = &updateTestObject;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;

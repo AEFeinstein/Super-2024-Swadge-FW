@@ -135,6 +135,7 @@ struct paEntity_t
     uint8_t targetTileX;
     uint8_t targetTileY;
     uint16_t state;
+    int16_t stateTimer;
 
     // paEntity_t *entities;
     paEntityManager_t* entityManager;

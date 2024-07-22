@@ -49,6 +49,7 @@ void pa_initializeEntity(paEntity_t* self, paEntityManager_t* entityManager, paT
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical   = false;
     self->facingDirection = PA_DIRECTION_DOWN;
+    self->stateTimer = -1;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -274,6 +275,12 @@ void updateTestObject(paEntity_t* self)
     switch(self->state){
         case PA_EN_ST_NORMAL:
         case PA_EN_ST_AGGRESSIVE: {
+            self->stateTimer--;
+            if(self->stateTimer < 0){
+                self->state = (self->state == PA_EN_ST_NORMAL) ? PA_EN_ST_AGGRESSIVE : PA_EN_ST_NORMAL;
+                self->stateTimer = (300 + esp_random() % 600); //Min 5 seconds, max 15 seconds
+            }
+
             uint8_t tx = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
             uint8_t ty = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
 
@@ -286,7 +293,7 @@ void updateTestObject(paEntity_t* self)
             int16_t hcof = (((self->x >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
             int16_t vcof = (((self->y >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
 
-            bool doAgression = true ? esp_random() % 2 : false;
+            bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE) ? esp_random() % 2 : false;
 
             switch(self->facingDirection){
                 case PA_DIRECTION_LEFT:
@@ -308,7 +315,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t2 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->yspeed = -8;
                         } else {
                             self->yspeed = -16;
@@ -321,7 +328,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t3 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->yspeed = 8;
                         } else {
                             self->yspeed = 16;
@@ -346,7 +353,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t1 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->xspeed = -8;
                         } else {
                             self->xspeed = 16;
@@ -375,7 +382,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t2 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->yspeed = -8;
                         } else {
                             self->yspeed = -16;
@@ -388,7 +395,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t3 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->yspeed = 8;
                         } else {
                             self->yspeed = 16;
@@ -411,7 +418,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t1 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE );
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->xspeed = 8;
                         } else {
                             self->xspeed = -16;
@@ -439,7 +446,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t2 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->xspeed = -8;
                         } else {
                             self->xspeed = -16;
@@ -452,7 +459,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t3 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->xspeed = 8;
                         } else {
                             self->xspeed = 16;
@@ -476,7 +483,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t1 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->yspeed = -8;
                         } else {
                             self->yspeed = 16;
@@ -512,7 +519,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t2 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->xspeed = -8;
                         } else {
                             self->xspeed = -16;
@@ -526,7 +533,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t3 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->xspeed = 8;
                         } else {
                             self->xspeed = 16;
@@ -550,7 +557,7 @@ void updateTestObject(paEntity_t* self)
                         if(doAgression && t1 == PA_TILE_BLOCK){
                             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
                             self->state = PA_EN_ST_BREAK_BLOCK;
-                            self->animationTimer = 16;
+                            self->stateTimer = 16;
                             self->yspeed = 8;
                         } else {
                             self->yspeed = -16;
@@ -571,7 +578,7 @@ void updateTestObject(paEntity_t* self)
 
                     if (self->gameData->frameCount % 5 == 0)
                     {
-                        self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2);
+                        self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
                         self->facingDirection = !self->spriteFlipHorizontal;
                     }
                 }
@@ -584,7 +591,7 @@ void updateTestObject(paEntity_t* self)
                 if (self->yspeed > 0){
                     if (self->gameData->frameCount % 5 == 0)
                     {
-                        self->spriteIndex = PA_SP_ENEMY_SOUTH;
+                        self->spriteIndex = PA_SP_ENEMY_SOUTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
                         self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
                         self->facingDirection = PA_DIRECTION_DOWN;
                     }
@@ -594,7 +601,7 @@ void updateTestObject(paEntity_t* self)
                 if (self->yspeed < 0){
                     if (self->gameData->frameCount % 5 == 0)
                     {
-                        self->spriteIndex = PA_SP_ENEMY_NORTH;
+                        self->spriteIndex = PA_SP_ENEMY_NORTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
                         self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
                         self->facingDirection = PA_DIRECTION_UP;
                     }
@@ -639,11 +646,12 @@ void updateTestObject(paEntity_t* self)
             self->x += self->xspeed;
             self->y += self->yspeed;
 
-            self->animationTimer--;
-            if(self->animationTimer <= 0){
+            self->stateTimer--;
+            if(self->stateTimer < 0){
                 self->state = PA_EN_ST_AGGRESSIVE;
                 self->xspeed *= 2;
                 self->yspeed *= 2;
+                self->stateTimer = 300 + (esp_random() % 600); //Min 5 seconds, max 15 seconds
             }
 
             break;
