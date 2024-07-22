@@ -154,6 +154,7 @@ void pa_initializeEntity(paEntity_t* self, paEntityManager_t* entityManager, paT
 
 void pa_updatePlayer(paEntity_t* self);
 void updateTestObject(paEntity_t* self);
+void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t speed);
 void updateHitBlock(paEntity_t* self);
 
 void pa_moveEntityWithTileCollisions(paEntity_t* self);
