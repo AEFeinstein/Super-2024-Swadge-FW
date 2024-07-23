@@ -34,6 +34,7 @@
  * action.
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
  * the Swadge firmware.
+ * -# If you have any crashes on real hardware, read and use \ref serial_out to help debug the issue.
  * -# When you're ready to make a contribution, read the \ref contribution_guide first to see how to do it in the most
  * productive way.
  * -# If you want to bring a mode forward from last year's Swadge, take a look at \ref porting.

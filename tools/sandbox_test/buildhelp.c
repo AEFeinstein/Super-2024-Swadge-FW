@@ -9,8 +9,8 @@
 #include "../hidapi.h"
 #include "../hidapi.c"
 
-#define VID 0x303a
-#define PID 0x4004
+#define VID 0x1209
+#define PID 0x4269
 
 const char * sym_dump_cmd = "objdump -t %s > build/system_symbols.txt";
 const char * compile_cmd = "xtensa-esp32s2-elf-gcc -mlongcalls %s -DHAVE_CONFIG_H  -ffunction-sections -fdata-sections -Wall -Werror=all -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare -ggdb -O2 -fmacro-prefix-map=/home/cnlohr/git/esp32-c3-playground=. -fmacro-prefix-map=/home/cnlohr/esp/esp-idf=IDF -fstrict-volatile-bitfields -Wno-error=unused-but-set-variable -fno-jump-tables -fno-tree-switch-conversion sandbox.c sandbox.S -T build/sandbox.lds -o build/sandbox.o -nodefaultlibs -nostartfiles";

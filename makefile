@@ -41,6 +41,14 @@ ifeq (, $(shell which $(CLANG_FORMAT)))
 	CLANG_FORMAT:=clang-format-17
 endif
 
+ifeq ($(HOST_OS),Linux)
+	ifneq (,$(shell getent group plugdev))
+		UDEV_GROUP:=plugdev
+	else
+		UDEV_GROUP:=$(USER)
+	endif
+endif
+
 ################################################################################
 # Source Files
 ################################################################################
@@ -373,17 +381,30 @@ usbflash :
 	tools/reflash_and_monitor.bat
 else
 usbflash :
+	# In case we are already in the bootloader...
+	($(MAKE) -C tools/bootload_reboot_stub reboot)||(true)
+	# Command reboot out of game into bootloader.
 	$(MAKE) -C tools/reboot_into_bootloader
-	sleep 1.2
 	idf.py flash
 	sleep 1.2
 	$(MAKE) -C tools/bootload_reboot_stub reboot
-	sleep 2.5
 	$(MAKE) -C tools/swadgeterm monitor
 endif
 
 monitor :
 	$(MAKE) -C tools/swadgeterm monitor
+
+/etc/udev/rules.d/99-swadge.rules :
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\"\n" $(UDEV_GROUP) > /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	sudo cp -a /tmp/99-swadge.rules /etc/udev/rules.d/99-swadge.rules
+
+installudev : /etc/udev/rules.d/99-swadge.rules
+	getent group plugdev >/dev/null && sudo usermod -aG plugdev $(USER) || true
+	sudo udevadm control --reload
+	sudo udevadm trigger
 
 ################################################################################
 # cppcheck targets

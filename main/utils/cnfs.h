@@ -14,6 +14,8 @@
  *
  * cnfsReadFile() may be used to read a file straight from cnfs, but this probably should not be done directly.
  *
+ * cnfsGetFile() gets a reference to the file in flash, to obviate need to "load it into RAM"
+ *
  * Each asset type has it's own file loader which handles things like decompression if the asset type is compressed,
  * and writing values from the read file into a convenient struct. The loader functions are:
  *  - loadFont() & freeFont() - Load font assets from CNFS to draw text to the display
@@ -55,6 +57,7 @@
 
 bool initCnfs(void);
 bool deinitCnfs(void);
+const uint8_t* cnfsGetFile(const char* fname, size_t* flen);
 uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam);
 
 #endif
