@@ -28,6 +28,8 @@ void checkBallsAtRest(pinball_t* p);
 void moveBallBackFromLine(pbCircle_t* ball, pbLine_t* line, vecFl_t* collisionVec);
 void moveBallBackFromCircle(pbCircle_t* ball, pbCircle_t* fixed);
 
+vecFl_t dampenBounce(vecFl_t velocity, vecFl_t normRefl);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -207,22 +209,11 @@ bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* to
         // If the ball isn't already touching the line
         if (!ballIsTouching(touchRef, line))
         {
-            // The dot product with the collision normal is how much Y velocity component there is.
-            // If this value is small the ball should slide down the line (i.e. don't lose velocity on the bounce)
-            float velDotColNorm = dotVecFl2d(ball->vel, reflVec);
-
             // Bounce it by reflecting across the collision normal
-            ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * velDotColNorm)));
+            ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
 
-            // Check if the ball should slide (i.e. not lose velocity) or bounce (i.e. lose velocity)
-            // 0 means the ball's velocity is parallel to the wall (slide)
-            // -mag(vel) means the ball's velocity is perpendicular to the wall (bounce)
-            // TODO this needs tuning, and badly
-            // if (velDotColNorm < -0.2f)
-            // {
-            //     // Lose some speed on the bounce.
-            //     ball->vel = mulVecFl2d(ball->vel, WALL_BOUNCINESS);
-            // }
+            // Dampen it
+            ball->vel = dampenBounce(ball->vel, reflVec);
 
             // Mark this line as being touched to not double-bounce
             setBallTouching(touchRef, line, PIN_LINE);
@@ -375,6 +366,9 @@ void sweepCheckFlippers(pinball_t* p)
                         vecFl_t reflVec = normVecFl2d(colVec);
                         ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
 
+                        // Dampen the bounce
+                        ball->vel = dampenBounce(normVecFl2d(ball->vel), reflVec);
+
                         // If the flipper is in motion
                         if (sweepStart != sweepEnd)
                         {
@@ -395,6 +389,22 @@ void sweepCheckFlippers(pinball_t* p)
         // Make sure the final angle is correct
         flipper->angle = sweepEnd;
     }
+}
+
+/**
+ * @brief Dampen a bounce linearly proportional to the incident angle
+ * 
+ * @param velocity The ball's velocity, to be normalized into a direction
+ * @param normRefl The normalized vector begin reflected across
+ * @return The dampened velocity
+ */
+vecFl_t dampenBounce(vecFl_t velocity, vecFl_t normRefl)
+{
+    // The dot product of the normalized direction with the normalized collision vector is how much Y velocity
+    // component there is. If this value is closer to 0 the ball should slide down the line (i.e. multiplier
+    // closer to 1). If the value is closer to 1, lose more speed (i.e. multiplier closer to 0)
+    float bounceMult = 0.25f + 0.75f * (1 - dotVecFl2d(normVecFl2d(velocity), normRefl));
+    return mulVecFl2d(velocity, bounceMult);
 }
 
 /**
@@ -551,7 +561,7 @@ bool ballIsTouching(pbTouchRef_t* ballTouching, const void* obj)
 
 /**
  * @brief Check if balls are at rest and adjust acceleration accordingly
- * 
+ *
  * TODO this seems to think balls are at rest erroneously...
  *
  * @param p The entire game state
