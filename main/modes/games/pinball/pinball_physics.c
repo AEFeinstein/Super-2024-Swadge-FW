@@ -393,7 +393,7 @@ void sweepCheckFlippers(pinball_t* p)
 
 /**
  * @brief Dampen a bounce linearly proportional to the incident angle
- * 
+ *
  * @param velocity The ball's velocity, to be normalized into a direction
  * @param normRefl The normalized vector begin reflected across
  * @return The dampened velocity
@@ -403,7 +403,11 @@ vecFl_t dampenBounce(vecFl_t velocity, vecFl_t normRefl)
     // The dot product of the normalized direction with the normalized collision vector is how much Y velocity
     // component there is. If this value is closer to 0 the ball should slide down the line (i.e. multiplier
     // closer to 1). If the value is closer to 1, lose more speed (i.e. multiplier closer to 0)
-    float bounceMult = 0.25f + 0.75f * (1 - dotVecFl2d(normVecFl2d(velocity), normRefl));
+    vecFl_t dir = normVecFl2d(velocity);
+    float aDot = fabsf(dotVecFl2d(dir, normRefl));
+    // printf("|[%f, %f] dot [%f, %f]| == %f\n", dir.x, dir.y, normRefl.x, normRefl.y, aDot);
+    float bounceMult = 0.25f + 0.75f * (1 - aDot);
+    // printf("%f\n", bounceMult);
     return mulVecFl2d(velocity, bounceMult);
 }
 
@@ -688,7 +692,7 @@ void moveBallBackFromLine(pbCircle_t* ball, pbLine_t* line, vecFl_t* collisionNo
     lineFl_t barrierLine = line->l;
 
     // Then find the normal vector to the barrier, pointed towards the ball
-    vecFl_t barrierOffset = mulVecFl2d(*collisionNorm, ball->c.radius);
+    vecFl_t barrierOffset = mulVecFl2d(*collisionNorm, ball->c.radius + EPSILON);
 
     // Translate the along the normal vector, the distance of the radius
     // This creates a line parallel to the wall where the ball's center could be
@@ -716,7 +720,7 @@ void moveBallBackFromCircle(pbCircle_t* ball, pbCircle_t* fixed)
 {
     // Create a barrier circle around the fixed that the ball's center can't pass through
     circleFl_t barrier = fixed->c;
-    barrier.radius += ball->c.radius;
+    barrier.radius += ball->c.radius + EPSILON;
 
     // Create a line for the ball's motion
     lineFl_t ballLine = {
