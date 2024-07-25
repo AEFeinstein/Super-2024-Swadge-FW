@@ -49,5 +49,6 @@ vecFl_t rotateVecFl2d(vecFl_t vector, float radians);
 float magVecFl2d(vecFl_t vector);
 float sqMagVecFl2d(vecFl_t vector);
 vecFl_t normVecFl2d(vecFl_t in);
+vecFl_t perpendicularVecFl2d(vecFl_t in);
 
 #endif

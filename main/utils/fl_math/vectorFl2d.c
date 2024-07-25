@@ -135,3 +135,18 @@ vecFl_t normVecFl2d(vecFl_t in)
     };
     return norm;
 }
+
+/**
+ * @brief Return 
+ * 
+ * @param in 
+ * @return vecFl_t 
+ */
+vecFl_t perpendicularVecFl2d(vecFl_t in)
+{
+    vecFl_t perp = {
+        .x = -in.y,
+        .y = in.x,
+    };
+    return perp;
+}

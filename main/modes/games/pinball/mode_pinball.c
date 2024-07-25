@@ -6,10 +6,16 @@
 #include <esp_heap_caps.h>
 
 #include "mode_pinball.h"
-#include "pinball_zones.h"
-#include "pinball_physics.h"
-#include "pinball_draw.h"
-#include "pinball_test.h"
+#include "pinballjs.h"
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+typedef struct
+{
+    jsScene_t scene;
+} pinball_t;
 
 //==============================================================================
 // Function Prototypes
@@ -60,38 +66,7 @@ static void pinEnterMode(void)
     // Allocate all the memory
     pinball = calloc(sizeof(pinball_t), 1);
 
-    pinball->balls    = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
-    pinball->bumpers  = heap_caps_calloc(MAX_NUM_BUMPERS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
-    pinball->walls    = heap_caps_calloc(MAX_NUM_WALLS, sizeof(pbLine_t), MALLOC_CAP_SPIRAM);
-    pinball->flippers = heap_caps_calloc(MAX_NUM_FLIPPERS, sizeof(pbFlipper_t), MALLOC_CAP_SPIRAM);
-
-    pinball->ballsTouching = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbTouchRef_t*), MALLOC_CAP_SPIRAM);
-    for (uint32_t i = 0; i < MAX_NUM_BALLS; i++)
-    {
-        pinball->ballsTouching[i] = heap_caps_calloc(MAX_NUM_TOUCHES, sizeof(pbTouchRef_t), MALLOC_CAP_SPIRAM);
-    }
-
-    // Split the table into zones
-    createTableZones(pinball);
-
-    // Create random balls
-    createRandomBalls(pinball, 0);
-    pbCreateBall(pinball, 6, 114);
-    pbCreateBall(pinball, 274, 114);
-    pbCreateBall(pinball, 135, 10);
-
-    // Create random bumpers
-    createRandomBumpers(pinball, 0);
-
-    // Create random walls
-    createRandomWalls(pinball, 0);
-
-    // Create flippers
-    createFlipper(pinball, TFT_WIDTH / 2 - 50, 200, true);
-    createFlipper(pinball, TFT_WIDTH / 2 + 50, 200, false);
-
-    // Load font
-    loadFont("ibm_vga8.font", &pinball->ibm_vga8, false);
+    jsSceneInit(&pinball->scene);
 }
 
 /**
@@ -100,18 +75,6 @@ static void pinEnterMode(void)
  */
 static void pinExitMode(void)
 {
-    for (uint32_t i = 0; i < MAX_NUM_BALLS; i++)
-    {
-        free(pinball->ballsTouching[i]);
-    }
-    free(pinball->ballsTouching);
-
-    free(pinball->balls);
-    free(pinball->walls);
-    free(pinball->bumpers);
-    free(pinball->flippers);
-    // Free font
-    freeFont(&pinball->ibm_vga8);
     // Free the rest of the state
     free(pinball);
 }
@@ -123,37 +86,15 @@ static void pinExitMode(void)
  */
 static void pinMainLoop(int64_t elapsedUs)
 {
-    // Make a local copy for speed
-    pinball_t* p = pinball;
-
-    // Check all queued button events
-    buttonEvt_t evt;
+    // Handle inputs
+    buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        if (PB_RIGHT == evt.button)
-        {
-            p->flippers[1].buttonHeld = evt.down;
-        }
-        else if (PB_LEFT == evt.button)
-        {
-            p->flippers[0].buttonHeld = evt.down;
-        }
+        // TODO flipper input
     }
 
-    // Only check physics once per frame
-    p->frameTimer += elapsedUs;
-    while (p->frameTimer >= PIN_US_PER_FRAME)
-    {
-        p->frameTimer -= PIN_US_PER_FRAME;
-        updatePinballPhysicsFrame(pinball);
-    }
-
-    // Always draw foreground to prevent flicker
-    pinballDrawForeground(pinball);
-
-    // Log frame time for FPS
-    p->frameTimesIdx                = (p->frameTimesIdx + 1) % NUM_FRAME_TIMES;
-    p->frameTimes[p->frameTimesIdx] = esp_timer_get_time();
+    jsSimulate(&pinball->scene);
+    jsSceneDraw(&pinball->scene);
 }
 
 /**
@@ -168,5 +109,5 @@ static void pinMainLoop(int64_t elapsedUs)
  */
 static void pinBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    pinballDrawBackground(pinball, x, y, w, h);
+
 }
