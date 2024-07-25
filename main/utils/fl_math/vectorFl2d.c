@@ -137,10 +137,10 @@ vecFl_t normVecFl2d(vecFl_t in)
 }
 
 /**
- * @brief Return 
- * 
- * @param in 
- * @return vecFl_t 
+ * @brief Return a vector perpendicular to the input
+ *
+ * @param in The input vector
+ * @return The perpendicular vector
  */
 vecFl_t perpendicularVecFl2d(vecFl_t in)
 {

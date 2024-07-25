@@ -90,7 +90,7 @@ static void pinMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        // TODO flipper input
+        jsButtonPressed(&pinball->scene, &evt);
     }
 
     jsSimulate(&pinball->scene);
@@ -109,5 +109,4 @@ static void pinMainLoop(int64_t elapsedUs)
  */
 static void pinBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-
 }
