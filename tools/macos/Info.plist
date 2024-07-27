@@ -7,9 +7,9 @@
     <key>CFBundleExecutable</key>
     <string>SwadgeEmulator</string>
     <key>CFBundleGetInfoString</key>
-    <string>##GIT_HASH##, Copyright 2013 my company</string>
+    <string>##GIT_HASH##, Copyright (c) 2023 gelakinetic</string>
     <key>CFBundleIconFile</key>
-    <string>MyApp.icns</string>
+    <string>SwadgeEmulator.icns</string>
     <key>CFBundleIdentifier</key>
     <string>org.magfest.SwadgeEmulator</string>
     <key>CFBundleInfoDictionaryVersion</key>
@@ -19,12 +19,12 @@
     <key>CFBundleShortVersionString</key>
     <string>##GIT_HASH##</string>
     <key>CFBundleSignature</key>
-    <string>MyAp</string>
+    <string>SwadgeEmulator</string>
     <key>CFBundleVersion</key>
     <string>##GIT_HASH##</string>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright (c) 2023 gelakinetic</string>
     <key>LSMinimumSystemVersion</key>
-    <string>10.3</string>
+    <string>10</string>
 </dict>
 </plist>
