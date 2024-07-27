@@ -39,7 +39,7 @@ typedef struct
     // changing
     float rotation;
     float currentAngularVelocity;
-    float touchIdentifier;
+    bool buttonHeld;
 } jsFlipper_t;
 
 typedef struct
