@@ -118,6 +118,10 @@ void pa_loadSprites(paEntityManager_t* entityManager)
     entityManager->sprites[PA_SP_ENEMY_DRILL_NORTH].originX         = 8;
     entityManager->sprites[PA_SP_ENEMY_DRILL_NORTH].originY         = 16;
 
+    loadWsg("pa-en-008.wsg", &(entityManager->sprites[PA_SP_ENEMY_STUN].wsg), false);
+    entityManager->sprites[PA_SP_ENEMY_STUN].originX         = 8;
+    entityManager->sprites[PA_SP_ENEMY_STUN].originY         = 16;
+
     loadWsg("pa-en-002.wsg", &(entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_1].wsg), false);
     entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_1].originX         = 8;
     entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_1].originY         = 16;
@@ -1543,6 +1547,8 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
                         
                         if(newEnemy != NULL){
                             //pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
+                            newEnemy->state = PA_EN_ST_STUN;
+                            newEnemy->stateTimer = 120;
                             pa_createBreakBlock(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
                             entityManager->activeEnemies++;
                             entityManager->remainingEnemies--;

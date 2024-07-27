@@ -274,6 +274,22 @@ void pa_updatePlayer(paEntity_t* self)
 void updateTestObject(paEntity_t* self)
 {
     switch(self->state){
+        case PA_EN_ST_STUN: 
+            self->stateTimer--;
+            if(self->stateTimer < 0){
+                self->state = PA_EN_ST_NORMAL;
+                self->facingDirection = PA_DIRECTION_NONE;
+                self->stateTimer = (300 + esp_random() % 600); //Min 5 seconds, max 15 seconds
+            } else {
+                if (self->gameData->frameCount % ((self->stateTimer >> 1)+1) == 0)
+                {
+                    self->spriteIndex = PA_SP_ENEMY_STUN;
+                    self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
+                }
+            }
+
+            pa_detectEntityCollisions(self);
+            break;
         case PA_EN_ST_NORMAL:
         case PA_EN_ST_AGGRESSIVE: {
             self->stateTimer--;
@@ -1006,7 +1022,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
                 self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
                 self->falling   = true;
             }
-            else*/ if (self->invincibilityFrames <= 0)
+            else*/ if (self->invincibilityFrames <= 0 && other->state != PA_EN_ST_STUN)
             {
                 self->hp--;
                 pa_updateLedsHpMeter(self->entityManager, self->gameData);
