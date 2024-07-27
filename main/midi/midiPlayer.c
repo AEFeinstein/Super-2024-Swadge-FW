@@ -644,27 +644,6 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
     if (player->seeking)
     {
         memset(samples, 128, len);
-
-        // Loop 100 times or until the seek position is reached
-        for (int i = 0; i < len * 100 && SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) < player->seekPos; i++)
-        {
-            midiPlayerStep(player);
-
-            if (player->mode == MIDI_STREAMING)
-            {
-                // Song was finished, can't actually seek that far!
-                midiAllSoundOff(player);
-
-                return;
-            }
-        }
-
-        if (SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) >= player->seekPos)
-        {
-            player->seeking = false;
-            player->seekPos = 0;
-        }
-
         return;
     }
 
@@ -1149,16 +1128,32 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
             midiSetFile(player, loadedFile);
         }
 
-        player->textMessageCallback = textCb;
-        player->loop = loop;
-
         // Set the seeking flag so that the DAC won't get any output
         player->seeking = true;
-        player->seekPos = ticks;
 
         // Unpause the player otherwise nothing will happen
         midiPause(player, false);
+        player->loop = false;
+
+        while (SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) < ticks)
+        {
+            midiPlayerStep(player);
+
+            // TODO I should really add a "stopped" flag instead...
+            if (player->mode == MIDI_STREAMING)
+            {
+                // Song was finished, can't actually seek that far!
+                midiAllSoundOff(player);
+                break;
+            }
+        }
+
+        player->textMessageCallback = textCb;
+        player->loop = loop;
+        player->seeking = false;
     }
+
+    midiPause(player, paused);
 }
 
 //==============================================================================
