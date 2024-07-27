@@ -66,11 +66,11 @@ void pa_loadSprites(paEntityManager_t* entityManager)
     entityManager->sprites[PA_SP_PLAYER_SIDE].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_SIDE].originY         = 16;
     
-    loadWsg("pa-005.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].wsg), false);
+    loadWsg("pa-006.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].originY         = 16;
     
-    loadWsg("pa-006.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].wsg), false);
+    loadWsg("pa-005.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].originY         = 16;
    
