@@ -157,6 +157,7 @@ void pa_updatePlayer(paEntity_t* self);
 void updateTestObject(paEntity_t* self);
 void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t speed);
 void pa_enemyBreakBlock(paEntity_t* self, uint16_t newDirection, int16_t speed, uint8_t tx, uint8_t ty);
+void pa_animateEnemy(paEntity_t* self);
 void updateHitBlock(paEntity_t* self);
 
 void pa_moveEntityWithTileCollisions(paEntity_t* self);
