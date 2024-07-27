@@ -114,7 +114,8 @@ else
 # Required for OpenGL and some other libraries
 CFLAGS += \
 	-I/opt/X11/include \
-	-I/opt/homebrew/include
+	-I/opt/homebrew/include \
+	-mmacosx-version-min=10.0
 endif
 
 ifeq ($(HOST_OS),Linux)
