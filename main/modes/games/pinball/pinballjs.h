@@ -56,7 +56,6 @@ typedef struct
     int32_t numObstacles;
     jsFlipper_t flippers[MAX_NUM_FLIPPERS];
     int32_t numFlippers;
-    float cScale;
 } jsScene_t;
 
 void jsSceneInit(jsScene_t* scene);
