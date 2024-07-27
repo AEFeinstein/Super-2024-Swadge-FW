@@ -35,6 +35,9 @@ static const uint8_t oscDither[] = {
 /// @brief Convert the sample count to MIDI ticks
 #define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
 
+/// @brief Convert a number of MIDI ticks to the offset of the first sample of the
+#define TICKS_TO_SAMPLES(ticks, tempo, div) ((ticks) * DAC_SAMPLE_RATE_HZ / (1000000) * (tempo) / (div))
+
 /// @brief Calculate the number of DAC samples in the given number of milliseconds
 #define MS_TO_TICKS(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
 
@@ -1135,18 +1138,39 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
         midiPause(player, false);
         player->loop = false;
 
-        while (SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) < ticks)
-        {
-            midiPlayerStep(player);
+        // Okay, new strategy:
+        // We work in ticks here to preserve precision
+        // Calculate the current tick, use that to skip through events
+        // Once the tick is up-to-date, update the sample count
+        // Done!
 
-            // TODO I should really add a "stopped" flag instead...
-            if (player->mode == MIDI_STREAMING)
+        ESP_LOGD("MIDI", "Seeking to %" PRIu32 "\n", ticks);
+
+        uint32_t curTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
+        ESP_LOGD("MIDI", "Current tick is %" PRIu32 "\n", curTick);
+
+        while (curTick < ticks)
+        {
+            if (!player->eventAvailable)
             {
-                // Song was finished, can't actually seek that far!
-                midiAllSoundOff(player);
+                player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
+            }
+
+            if (!player->eventAvailable || player->pendingEvent.absTime > ticks)
+            {
+                ESP_LOGD("MIDI", "No more events between start and end time\n");
+                curTick = ticks;
                 break;
             }
+
+            curTick = player->pendingEvent.absTime;
+            ESP_LOGD("MIDI", "Next event is at tick %" PRIu32 "\n", curTick);
+            player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
+            handleEvent(player, &player->pendingEvent);
+            player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
         }
+
+        player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
 
         player->textMessageCallback = textCb;
         player->loop = loop;
