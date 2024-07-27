@@ -544,50 +544,7 @@ void updateTestObject(paEntity_t* self)
                     break;
             }
 
-            if (self->xspeed != 0)
-            {
-                if ((self->xspeed < 0)
-                    || (self->xspeed > 0))
-                {
-                    // Running
-                    self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
-
-                    if (self->gameData->frameCount % 5 == 0)
-                    {
-                        self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
-                        self->facingDirection = !self->spriteFlipHorizontal;
-                    }
-                }
-                else
-                {
-                    //self->spriteIndex = SP_PLAYER_SLIDE;
-                }
-            }
-            else if (self->yspeed > 0){
-                if (self->yspeed > 0){
-                    if (self->gameData->frameCount % 5 == 0)
-                    {
-                        self->spriteIndex = PA_SP_ENEMY_SOUTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
-                        self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                        self->facingDirection = PA_DIRECTION_DOWN;
-                    }
-                }
-            }
-            else if (self->yspeed < 0){
-                if (self->yspeed < 0){
-                    if (self->gameData->frameCount % 5 == 0)
-                    {
-                        self->spriteIndex = PA_SP_ENEMY_NORTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
-                        self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                        self->facingDirection = PA_DIRECTION_UP;
-                    }
-                }
-            }
-            else
-            {
-                self->facingDirection = PA_DIRECTION_NONE;
-            }
-
+            pa_animateEnemy(self);
             despawnWhenOffscreen(self);
             if(self->state != PA_EN_ST_BREAK_BLOCK){
                 //Need to skip this if enemy has just changed to breaking block state
@@ -630,15 +587,13 @@ void updateTestObject(paEntity_t* self)
                 self->stateTimer = self->tempStateTimer;
             }
 
+            pa_animateEnemy(self);
             break;
         }
         default:{
             break;
         }
     }
-
-    
-    
 }
 
 void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t speed){
@@ -692,6 +647,52 @@ void pa_enemyBreakBlock(paEntity_t* self, uint16_t newDirection, int16_t speed, 
     self->tempStateTimer = self->stateTimer;
     self->stateTimer = 16;
     pa_enemyChangeDirection(self, newDirection, speed);
+}
+
+void pa_animateEnemy(paEntity_t* self){
+    if (self->xspeed != 0)
+    {
+        if ((self->xspeed < 0)
+            || (self->xspeed > 0))
+        {
+            // Running
+            self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
+
+            if (self->gameData->frameCount % 5 == 0)
+            {
+                self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+                self->facingDirection = !self->spriteFlipHorizontal;
+            }
+        }
+        else
+        {
+            //self->spriteIndex = SP_PLAYER_SLIDE;
+        }
+    }
+    else if (self->yspeed > 0){
+        if (self->yspeed > 0){
+            if (self->gameData->frameCount % 5 == 0)
+            {
+                self->spriteIndex = PA_SP_ENEMY_SOUTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                self->facingDirection = PA_DIRECTION_DOWN;
+            }
+        }
+    }
+    else if (self->yspeed < 0){
+        if (self->yspeed < 0){
+            if (self->gameData->frameCount % 5 == 0)
+            {
+                self->spriteIndex = PA_SP_ENEMY_NORTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                self->facingDirection = PA_DIRECTION_UP;
+            }
+        }
+    }
+    else
+    {
+        self->facingDirection = PA_DIRECTION_NONE;
+    }
 }
 
 void updateHitBlock(paEntity_t* self)
