@@ -90,7 +90,7 @@ static void jsFlipperInit(jsFlipper_t* flipper, float radius, vecFl_t pos, float
     flipper->length          = length;
     flipper->restAngle       = restAngle;
     flipper->maxRotation     = ABS(maxRotation);
-    flipper->sign            = (maxRotation >= 0) ? 1 : -1;
+    flipper->sign            = (maxRotation >= 0) ? -1 : 1;
     flipper->angularVelocity = angularVelocity;
     // changing
     flipper->rotation               = 0;
@@ -148,7 +148,7 @@ static vecFl_t jsFlipperGetTip(jsFlipper_t* flipper)
 void jsSceneInit(jsScene_t* scene)
 {
     scene->gravity.x = 0;
-    scene->gravity.y = 3;
+    scene->gravity.y = 30;
     scene->dt        = 1 / 60.0f;
     scene->score     = 0;
     scene->paused    = true;
@@ -206,14 +206,14 @@ void jsSceneInit(jsScene_t* scene)
 
     // flippers
 
-    radius                = 0.03f;
-    float length          = 0.2f;
+    radius                = 5.0f;
+    float length          = 40.0f;
     float maxRotation     = 1.0f;
-    float restAngle       = 0.5f;
+    float restAngle       = -0.5f;
     float angularVelocity = 10.0f;
 
-    vecFl_t pos1 = {.x = 0.26f, .y = 0.22f};
-    vecFl_t pos2 = {.x = 0.74f, .y = 0.22f};
+    vecFl_t pos1 = {.x = 80.0f, .y = 120.0f};
+    vecFl_t pos2 = {.x = 200.0f, .y = 120.0f};
 
     jsFlipperInit(&scene->flippers[scene->numFlippers++], radius, pos1, length, -restAngle, maxRotation,
                   angularVelocity);
@@ -420,9 +420,6 @@ static void handleBallBorderCollision(jsBall_t* ball, vecFl_t* border, int32_t n
 
 void jsSimulate(jsScene_t* scene)
 {
-    scene->flippers[0].rotation += M_PI / 64.0f;
-    printf("%f\n", scene->flippers[0].rotation);
-
     for (int32_t i = 0; i < scene->numFlippers; i++)
     {
         jsFlipperSimulate(&scene->flippers[i], scene->dt);
