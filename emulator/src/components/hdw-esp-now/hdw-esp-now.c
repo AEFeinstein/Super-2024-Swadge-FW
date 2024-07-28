@@ -2,15 +2,22 @@
 // Includes
 //==============================================================================
 
-#if defined(WINDOWS) || defined(WIN32) || defined(WIN64) || defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__)
+// clang-format off
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
+                     || defined(WIN32)       || defined(WIN64) \
+                     || defined(_WIN32)      || defined(_WIN64) \
+                     || defined(__WIN32__)   || defined(__CYGWIN__) \
+                     || defined(__MINGW32__) || defined(__MINGW64__) \
+                     || defined(__TOS_WIN__) || defined(_MSC_VER)
     #define USING_WINDOWS 1
-#elif defined(__linux__)
+#elif defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
     #define USING_LINUX 1
 #elif __APPLE__
     #define USING_MAC 1
 #else
     #error "OS Not Detected"
 #endif
+// clang-format on
 
 #if defined(USING_WINDOWS)
     #include <WinSock2.h>
@@ -215,7 +222,7 @@ void espNowSend(const char* data, uint8_t dataLen)
     // Construct local address structure
     memset(&broadcastAddr, 0, sizeof(broadcastAddr));    // Zero out structure
     broadcastAddr.sin_family      = AF_INET;             // Internet address family
-    broadcastAddr.sin_addr.s_addr = htonl(INADDR_NONE);  // Broadcast IP address  // inet_addr("255.255.255.255");
+    broadcastAddr.sin_addr.s_addr = htonl(0x7FFFFFFF);   // Local broadcast IP address, 127.255.255.255
     broadcastAddr.sin_port        = htons(ESP_NOW_PORT); // Broadcast port
 
     // Tack on ESP-NOW header and randomized MAC address

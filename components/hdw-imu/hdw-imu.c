@@ -5,12 +5,15 @@
 #include <esp_log.h>
 #include <math.h>
 #include <string.h>
-#include "hdw-imu.h"
-#include "soc/rtc_cntl_reg.h"
-#include "soc/gpio_reg.h"
-#include "soc/io_mux_reg.h"
+#include "driver/gpio.h"
 #include "rom/gpio.h"
+#include "soc/gpio_reg.h"
 #include "soc/gpio_struct.h"
+#include "soc/io_mux_reg.h"
+#include "soc/rtc_cntl_reg.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include "hdw-imu.h"
 #include "hdw-nvs.h"
 #include "quaternions.h"
 
@@ -301,7 +304,12 @@ do_retry:
     // Enable access
     LSM6DSLSet(LSM6DSL_FUNC_CFG_ACCESS, 0x20);
     LSM6DSLSet(LSM6DSL_CTRL3_C, 0x81); // Force reset
-    esp_rom_delay_us(100);
+
+    // Found out we have to delay here.
+    // 1000us = not long enough
+    // 1100us = long enough
+    // 1200us = be safe.
+    esp_rom_delay_us(1200);
     LSM6DSLSet(LSM6DSL_CTRL3_C, 0x44); // unforce reset
 
     uint8_t who = 0xaa;

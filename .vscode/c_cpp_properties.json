@@ -1,0 +1,81 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/main/**",
+                "${workspaceFolder}/components/**",
+                "${workspaceFolder}/emulator/**"
+            ],
+            "defines": [
+                "CONFIG_IDF_TARGET_ESP32S2=y",
+                "SOC_RMT_CHANNELS_PER_GROUP=4",
+                "SOC_TOUCH_SENSOR_NUM=15",
+                "SOC_ULP_SUPPORTED=y",
+                "SOC_PM_SUPPORT_EXT_WAKEUP=y",
+                "SOC_GPIO_SUPPORT_SLP_SWITCH=y",
+                "SOC_TIMER_GROUP_TIMERS_PER_GROUP=2",
+                "SOC_TIMER_GROUPS=2",
+                "SOC_I2C_NUM=2",
+                "SOC_I2C_SUPPORT_SLAVE=y",
+                "SOC_LEDC_CHANNEL_NUM=8",
+                "SOC_UART_NUM=2",
+                "SOC_ADC_DIGI_RESULT_BYTES=2",
+                "CONFIG_ESP_TIMER_SUPPORTS_ISR_DISPATCH_METHOD=0",
+                "CONFIG_LOG_MAXIMUM_LEVEL=3",
+                "CONFIG_GC9307_240x280=y",
+                "CONFIG_TFT_MAX_BRIGHTNESS=200",
+                "CONFIG_TFT_MIN_BRIGHTNESS=10",
+                "CONFIG_NUM_LEDS=8",
+                "configENABLE_FREERTOS_DEBUG_OCDAWARE=1",
+                "_GNU_SOURCE",
+                "IDF_VER=\"v5.2.1\"",
+                "ESP_PLATFORM",
+                "_POSIX_READER_WRITER_LOCKS",
+                "CFG_TUSB_MCU=OPT_MCU_ESP32S2",
+                "EMULATOR=1",
+                "GIT_SHA1=\"03ba217\"",
+                "HAS_XINERAMA=1",
+                "FULL_SCREEN_STEAL_FOCUS=1",
+                "CONFIG_SOUND_OUTPUT_SPEAKER=y"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "configurationProvider": "ms-vscode.makefile-tools",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/main/**",
+                    "${workspaceFolder}/emulator/**"
+                ],
+                "limitSymbolsToIncludedHeaders": false
+            }
+        },
+        {
+            "name": "ESP-IDF",
+            "compilerPath": "~/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20230928/xtensa-esp-elf/bin/xtensa-esp32s2-elf-gcc",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "includePath": [
+                "${config:idf.espIdfPath}/components/**",
+                "${config:idf.espIdfPathWin}/components/**",
+                "${config:idf.espAdfPath}/components/**",
+                "${config:idf.espAdfPathWin}/components/**",
+                "${workspaceFolder}/main/**",
+                "${workspaceFolder}/components/**"
+            ],
+            "browse": {
+                "path": [
+                    "${config:idf.espIdfPath}/components",
+                    "${config:idf.espIdfPathWin}/components",
+                    "${config:idf.espAdfPath}/components/**",
+                    "${config:idf.espAdfPathWin}/components/**",
+                    "${workspaceFolder}/main/**",
+                    "${workspaceFolder}/components/**"
+                ],
+                "limitSymbolsToIncludedHeaders": false
+            }
+        }
+    ],
+    "version": 4
+}

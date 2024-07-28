@@ -61,8 +61,10 @@
  * \endcode
  */
 
+#pragma once
+
 #include "emu_ext.h"
 
 extern emuExtension_t replayEmuExtension;
 
-bool takeScreenshot(const char* name);
+void recordScreenshotTaken(const char* name);

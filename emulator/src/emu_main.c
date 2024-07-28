@@ -3,9 +3,14 @@
 //==============================================================================
 
 #include <unistd.h>
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
+    #include <stdlib.h>
     #include <signal.h>
     #include <execinfo.h>
+    #ifndef _GNU_SOURCE
+        #define _GNU_SOURCE
+    #endif
+    #include <dlfcn.h>
 #endif
 #include <time.h>
 
@@ -23,10 +28,15 @@
 #include "hdw-tft_emu.h"
 #include "hdw-led.h"
 #include "hdw-led_emu.h"
-#include "hdw-bzr.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
 #include "hdw-imu_emu.h"
+
+#include "hdw-mic.h"
+#include "hdw-mic_emu.h"
+#include "hdw-dac.h"
+#include "hdw-dac_emu.h"
+
 #include "swadge2024.h"
 #include "macros.h"
 #include "trigonometry.h"
@@ -34,10 +44,42 @@
 #include "hdw-esp-now.h"
 #include "mainMenu.h"
 
+// clang-format off
+// Necessary for CNFA
+#if !defined(WINDOWS) && ( defined(__WINDOWS__) || defined(_WINDOWS) \
+                        || defined(WIN32)       || defined(WIN64) \
+                        || defined(_WIN32)      || defined(_WIN64) \
+                        || defined(__WIN32__)   || defined(__CYGWIN__) \
+                        || defined(__MINGW32__) || defined(__MINGW64__) \
+                        || defined(__TOS_WIN__) || defined(_MSC_VER))
+    #define WINDOWS
+#endif
+// clang-format on
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+    #pragma GCC diagnostic ignored "-Wjump-misses-init"
+    #pragma GCC diagnostic ignored "-Wundef"
+#endif
+
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
-#define CNFGOGL
-#include "rawdraw_sf.h"
+// CNFGOGL May be defined in the makefile
+#include "CNFG.h"
+
+#define CNFA_IMPLEMENTATION
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
+    #define PULSEAUDIO
+#endif
+#include "CNFA.h"
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
 
 // Useful if you're trying to find the code for a key/button
 // #define DEBUG_INPUTS
@@ -50,8 +92,15 @@
 // Defines
 //==============================================================================
 
-#define BG_COLOR  0x191919FF // This color isn't parjt of the palette
+#define BG_COLOR  0x191919FF // This color isn't part of the palette
 #define DIV_COLOR 0x808080FF
+
+#if defined(CNFGOGL)
+    #define CORNER_COLOR BG_COLOR
+#else
+    // Swap RGBA to ARGB
+    #define CORNER_COLOR (((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24))
+#endif
 
 //==============================================================================
 // Variables
@@ -59,17 +108,21 @@
 
 static bool isRunning = true;
 
+/// The sound driver
+static struct CNFADriver* soundDriver = NULL;
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
 
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
 void init_crashSignals(void);
 void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 #endif
 
 static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col);
-static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uint32_t col);
+static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr);
+void handleArgs(int argc, char** argv);
 
 //==============================================================================
 // Functions
@@ -109,7 +162,7 @@ void handleArgs(int argc, char** argv)
  */
 int main(int argc, char** argv)
 {
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
     init_crashSignals();
 #endif
 
@@ -158,6 +211,23 @@ int main(int argc, char** argv)
 
         // Add the screen size to the minimum pane sizes to get our window size
         CNFGSetup("Swadge 2024 Simulator", winW, winH);
+    }
+
+    // Then initialize audio
+    if (!soundDriver)
+    {
+        soundDriver = CNFAInit(NULL,               // const char* driver_name
+                               "Swadge Emulator",  // const char* your_name
+                               EmuSoundCb,         // CNFACBType cb
+                               DAC_SAMPLE_RATE_HZ, // int reqSPSPlay
+                               ADC_SAMPLE_RATE_HZ, // int reqSPSRec
+                               2,                  // int reqChannelsPlay
+                               1,                  // int reqChannelsRec
+                               DAC_BUF_SIZE,       // int sugBufferSize
+                               NULL,               // const char* outputSelect
+                               NULL,               // const char* inputSelect
+                               NULL                // void* opaque
+        );
     }
 
     // We won't call the pre-frame callback for the very first frame
@@ -219,7 +289,8 @@ void taskYIELD(void)
     if (!isRunning)
     {
         deinitSystem();
-        CNFGTearDown();
+        // This is registered with atexit()
+        // CNFGTearDown();
 
 #ifdef ENABLE_GCOV
         __gcov_dump();
@@ -295,7 +366,7 @@ void taskYIELD(void)
     if ((0 != bitmapWidth) && (0 != bitmapHeight) && (NULL != bitmapDisplay))
     {
 #if defined(CONFIG_GC9307_240x280)
-        plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, BG_COLOR);
+        plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, CORNER_COLOR);
 #endif
         // Update the display, centered
         CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
@@ -348,17 +419,17 @@ void taskYIELD(void)
  * @brief Helper function to draw to a bitmap display
  *
  * @param bitmapDisplay The display to draw to
- * @param w The width of the display
- * @param h The height of the display
+ * @param width The width of the display
+ * @param height The height of the display
  * @param x The X coordinate to draw a pixel at
  * @param y The Y coordinate to draw a pixel at
  * @param col The color to draw the pixel
  */
-static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col)
+static void drawBitmapPixel(uint32_t* bitmapDisplay, int width, int height, int x, int y, uint32_t col)
 {
-    if ((y * w) + x < (w * h))
+    if ((y * width) + x < (width * height))
     {
-        bitmapDisplay[(y * w) + x] = col;
+        bitmapDisplay[(y * width) + x] = col;
     }
 }
 
@@ -371,7 +442,7 @@ static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y,
  * @param r The radius of the rounded corners
  * @param col The color to draw the rounded corners
  */
-static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uint32_t col)
+void plotRoundedCorners(uint32_t* bitmapDisplay, int width, int height, int r, uint32_t col)
 {
     int or = r;
     int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
@@ -379,10 +450,11 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
     {
         for (int xLine = 0; xLine <= (or +x); xLine++)
         {
-            drawBitmapPixel(bitmapDisplay, w, h, xLine, h - (or -y) - 1, col);         /* I.   Quadrant -x -y */
-            drawBitmapPixel(bitmapDisplay, w, h, w - xLine - 1, h - (or -y) - 1, col); /* II.  Quadrant +x -y */
-            drawBitmapPixel(bitmapDisplay, w, h, xLine, (or -y), col);                 /* III. Quadrant -x -y */
-            drawBitmapPixel(bitmapDisplay, w, h, w - xLine - 1, (or -y), col);         /* IV.  Quadrant +x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, xLine, height - (or -y) - 1, col); /* I.   Quadrant -x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, width - xLine - 1, height - (or -y) - 1,
+                            col);                                                           /* II.  Quadrant +x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, xLine, (or -y), col);             /* III. Quadrant -x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, width - xLine - 1, (or -y), col); /* IV.  Quadrant +x -y */
         }
 
         r = err;
@@ -405,37 +477,89 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
  */
 void HandleKey(int keycode, int bDown)
 {
+    static modKey_t modifiers = EMU_MOD_NONE;
+
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69602
+// https://stackoverflow.com/a/26003732/882406
+// I can't help that CNFG_KEY_ALT and CNFG_KEY_LEFT_ALT might be identical...
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlogical-op"
+    // can't use a switch here in case these are the same on some platforms
+    if (keycode == CNFG_KEY_ALT || keycode == CNFG_KEY_LEFT_ALT || keycode == CNFG_KEY_RIGHT_ALT)
+    {
+        if (bDown)
+        {
+            modifiers |= EMU_MOD_ALT;
+        }
+        else
+        {
+            modifiers &= ~EMU_MOD_ALT;
+        }
+    }
+
+    else if (keycode == CNFG_KEY_CTRL || keycode == CNFG_KEY_LEFT_CONTROL || keycode == CNFG_KEY_RIGHT_CONTROL)
+    {
+        if (bDown)
+        {
+            modifiers |= EMU_MOD_CTRL;
+        }
+        else
+        {
+            modifiers &= ~EMU_MOD_CTRL;
+        }
+    }
+    else if (keycode == CNFG_KEY_SHIFT || keycode == CNFG_KEY_LEFT_SHIFT || keycode == CNFG_KEY_RIGHT_SHIFT)
+    {
+        if (bDown)
+        {
+            modifiers |= EMU_MOD_SHIFT;
+        }
+        else
+        {
+            modifiers &= ~EMU_MOD_SHIFT;
+        }
+    }
+    else if (keycode == CNFG_KEY_LEFT_SUPER || keycode == CNFG_KEY_RIGHT_SUPER)
+    {
+        if (bDown)
+        {
+            modifiers |= EMU_MOD_SUPER;
+        }
+        else
+        {
+            modifiers &= ~EMU_MOD_SUPER;
+        }
+    }
+#pragma GCC diagnostic pop
+
 #ifdef DEBUG_INPUTS
     if (' ' <= keycode && keycode <= '~')
     {
-        printf("HandleKey(keycode='%c', bDown=%s\n", keycode, bDown ? "true" : "false");
+        printf("HandleKey(keycode='%c', bDown=%s, modifiers=%02x)\n", keycode, bDown ? "true" : "false", modifiers);
     }
     else
     {
-        printf("HandleKey(keycode=%d, bDown=%s\n", keycode, bDown ? "true" : "false");
+        printf("HandleKey(keycode=%d, bDown=%s, modifiers=%02x)\n", keycode, bDown ? "true" : "false", modifiers);
     }
 #endif
 
-    keycode = doExtKeyCb(keycode, bDown);
+    keycode = doExtKeyCb(keycode, bDown, modifiers);
     if (keycode < 0)
     {
         return;
     }
 
     // Assuming no callbacks canceled the key event earlier, handle it normally
-    emulatorHandleKeys(keycode, bDown);
-
-    // Keep track of when shift is held so we can exit on SHIFT + BACKSPACE
-    // I would do CTRL+W, but rawdraw doesn't have a define for ctrl...
-    static bool shiftDown = false;
-    if (keycode == CNFG_KEY_SHIFT)
+    // We only care about bare keys though, so ignore if any modifier keys are down
+    if (!modifiers)
     {
-        shiftDown = bDown;
+        emulatorHandleKeys(keycode, bDown);
     }
 
     // When in fullscreen, exit with Escape
     // And any time with Shift + Backspace
-    if ((keycode == CNFG_KEY_ESCAPE && emulatorArgs.fullscreen) || (keycode == CNFG_KEY_BACKSPACE && shiftDown))
+    if ((keycode == CNFG_KEY_ESCAPE && emulatorArgs.fullscreen)
+        || (keycode == CNFG_KEY_BACKSPACE && (modifiers & EMU_MOD_SHIFT)))
     {
         isRunning = false;
         return;
@@ -475,16 +599,69 @@ void HandleMotion(int x, int y, int mask)
     doExtMouseMoveCb(x, y, mask);
 }
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#endif
+
 /**
  * @brief Free memory on exit
  */
-void HandleDestroy(void)
+int HandleDestroy()
 {
     isRunning = false;
-    WARN_UNIMPLEMENTED();
+
+    if (soundDriver)
+    {
+        // clang-format off
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
+                     || defined(WIN32)       || defined(WIN64) \
+                     || defined(_WIN32)      || defined(_WIN64) \
+                     || defined(__WIN32__)   || defined(__CYGWIN__) \
+                     || defined(__MINGW32__) || defined(__MINGW64__) \
+                     || defined(__TOS_WIN__) || defined(_MSC_VER)
+        CNFAClose(NULL);
+#else
+        CNFAClose(soundDriver); // when calling this on Windows, it halts
+#endif
+        // clang-format on
+        soundDriver = NULL;
+    }
+
+    return 0;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
+
+/**
+ * @brief Callback for sound events, both input and output
+ * Handle output here, pass input to handleSoundInput()
+ *
+ * @param sd The sound driver
+ * @param out A pointer to write samples to. May be NULL
+ * @param in A pointer to read samples from. May be NULL
+ * @param framesp The number of samples to write
+ * @param framesr The number of samples to read
+ */
+static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr)
+{
+    // Pass to microphone
+    micHandleSoundInput(in, framesr, sd->channelsRec);
+
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
+    // Pass to buzzer
+    bzrHandleSoundOutput(out, framesp, sd->channelsPlay);
+#elif defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+    // Pass to speaker
+    dacHandleSoundOutput(out, framesp, sd->channelsPlay);
+#endif
+}
+
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
 
 /**
  * @brief Initialize a crash handler, only for Linux and MacOS
@@ -511,47 +688,137 @@ void init_crashSignals(void)
  */
 void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
 {
-    char msg[128] = {'\0'};
-    ssize_t result;
+    // Get the backtrace
+    void* array[128];
+    size_t size = backtrace(array, ARRAY_SIZE(array));
 
-    char fname[64] = {0};
-    sprintf(fname, "crash-%ld.txt", time(NULL));
-    int dumpFileDescriptor
-        = open(fname, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-
-    if (-1 != dumpFileDescriptor)
+    // Only write a file if there's a backtrace
+    if (0 < size)
     {
-        snprintf(msg, sizeof(msg), "Signal %d received!\nsigno: %d, errno %d\n, code %d\n", signum, si->si_signo,
-                 si->si_errno, si->si_code);
-        result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
-        (void)result;
+        char msg[512] = {'\0'};
+        ssize_t result;
 
-        memset(msg, 0, sizeof(msg));
-    #ifdef __linux__
-        for (int i = 0; i < __SI_PAD_SIZE; i++)
-    #else
-        // Seems to be hardcoded on MacOS
-        for (int i = 0; i < 7; i++)
-    #endif
+        char fname[64] = {0};
+        sprintf(fname, "crash-%ld.txt", time(NULL));
+        int dumpFileDescriptor
+            = open(fname, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+
+        if (-1 != dumpFileDescriptor)
         {
-            char tmp[8];
-    #ifdef __linux__
-            snprintf(tmp, sizeof(tmp), "%02X", si->_sifields._pad[i]);
-    #else
-            snprintf(tmp, sizeof(tmp), "%02X", (int)si->__pad[i]);
-    #endif
-            tmp[sizeof(tmp) - 1] = '\0';
-            strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
-        }
-        strncat(msg, "\n", sizeof(msg) - strlen(msg) - 1);
-        result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
-        (void)result;
+            snprintf(msg, sizeof(msg), "Signal %-2d received!\nsigno: %-2d\nerrno: %-2d\ncode:  %-2d\n", signum,
+                     si->si_signo, si->si_errno, si->si_code);
+            result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
+            (void)result;
 
-        // Print backtrace
-        void* array[128];
-        size_t size = backtrace(array, (sizeof(array) / sizeof(array[0])));
-        backtrace_symbols_fd(array, size, dumpFileDescriptor);
-        close(dumpFileDescriptor);
+            memset(msg, 0, sizeof(msg));
+            strncat(msg, "sifields: ", sizeof(msg) - 1);
+    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
+            for (int i = 0; i < __SI_PAD_SIZE; i++)
+    #else
+            // Seems to be hardcoded on MacOS
+            for (int i = 0; i < 7; i++)
+    #endif
+            {
+                char tmp[8];
+    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
+                snprintf(tmp, sizeof(tmp), "%02X ", si->_sifields._pad[i]);
+    #else
+                snprintf(tmp, sizeof(tmp), "%02X ", (int)si->__pad[i]);
+    #endif
+                tmp[sizeof(tmp) - 1] = '\0';
+                strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
+            }
+            strncat(msg, "\n", sizeof(msg) - strlen(msg) - 1);
+            result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
+            (void)result;
+
+            /* This dumps the backtrace to a file, but it doesn't resolve addresses to function names */
+            // backtrace_symbols_fd(array, size, dumpFileDescriptor);
+            // result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
+            // (void)result;
+
+            // Boolean to write the header first
+            bool catHdr = false;
+
+            // For each address in the stack trace
+            for (size_t i = 0; i < size; i++)
+            {
+                // Get more information about the address
+                Dl_info dli;
+                dladdr(array[i], &dli);
+
+                // If the addr2line header isn't written yet
+                if (!catHdr)
+                {
+                    // Write it
+                    snprintf(msg, sizeof(msg) - 1, "addr2line -fpriCe %s ", dli.dli_fname);
+                    catHdr = true;
+                }
+
+                // Calculate the offset relative to the file
+                char sign;
+                ptrdiff_t offset;
+                if (array[i] >= (void*)dli.dli_fbase)
+                {
+                    sign   = '+';
+                    offset = ((char*)array[i]) - ((char*)dli.dli_fbase);
+                }
+                else
+                {
+                    sign   = '-';
+                    offset = ((char*)dli.dli_fbase) - ((char*)array[i]);
+                }
+
+                // Concatenate each address
+                char tmp[32] = {0};
+                snprintf(tmp, sizeof(tmp) - 1, "%c%#tx ", sign, offset);
+                strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
+            }
+
+            // Execute addr2line and write the output to the logfile and the terminal
+            FILE* fp;
+            char path[128];
+            fp = popen(msg, "r");
+            if (fp != NULL)
+            {
+                // Print this to the terminal and file
+                snprintf(msg, sizeof(msg) - 1, "\nCRASH BACKTRACE\n");
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
+                printf("%s", msg);
+
+                snprintf(msg, sizeof(msg) - 1, "===============\n");
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
+                printf("%s", msg);
+
+                /* Read the output a line at a time - output it. */
+                while (fgets(path, sizeof(path), fp) != NULL)
+                {
+                    if (0 >= write(dumpFileDescriptor, path, strlen(path)))
+                    {
+                        // Write failed, jump out early
+                        return;
+                    }
+                    printf("%s", path);
+                }
+
+                /* Flush the terminal */
+                fflush(stdout);
+
+                /* close */
+                pclose(fp);
+            }
+
+            // Close the file
+            close(dumpFileDescriptor);
+        }
     }
 
     // Exit

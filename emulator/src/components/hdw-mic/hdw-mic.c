@@ -86,19 +86,17 @@ void deinitMic(void)
  * @brief Callback for sound events, both input and output
  * Only handle input here
  *
- * @param sd The sound driver
  * @param in A pointer to read samples from. May be NULL
- * @param out A pointer to write samples to. May be NULL
- * @param samplesr The number of samples to read
- * @param samplesp The number of samples to write
+ * @param framesr The number of samples to read
+ * @param numChannels The number of channels to read
  */
-void handleSoundInput(struct SoundDriver* sd, const short* in, short* out, int samplesr, int samplesp)
+void micHandleSoundInput(short* in, int framesr, short numChannels)
 {
     // If there are samples to read
-    if (adcSampling && samplesr)
+    if (adcSampling && framesr)
     {
         // For each sample
-        for (int i = 0; i < samplesr; i++)
+        for (int i = 0; i < framesr; i++)
         {
             // Read the sample into the circular ssamples[] buffer
             if (sstail != ((sshead + 1) % SSBUF))

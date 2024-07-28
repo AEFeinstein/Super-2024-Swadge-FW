@@ -103,7 +103,7 @@ emuArgs_t emulatorArgs = {
     .motionJitterAmount = 5,
     .motionDrift        = false,
 
-    .emulateTouch = true,
+    .emulateTouch = false,
 
     .record   = false,
     .playback = false,
@@ -155,7 +155,7 @@ static const struct option options[] =
     { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
     { argModeSwitch,  optional_argument, NULL,                             10   },
     { argModeList,    no_argument,       NULL,                             0    },
-    { argTouch,       no_argument,       (int*)&emulatorArgs.emulateTouch, true },
+    { argTouch,       no_argument,       (int*)&emulatorArgs.emulateTouch, 't'  },
     { argHelp,        no_argument,       NULL,                             'h'  },
     { argUsage,       no_argument,       NULL,                             0    },
     {0},

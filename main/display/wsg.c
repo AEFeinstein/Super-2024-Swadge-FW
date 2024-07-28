@@ -370,6 +370,7 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
         // Entire "pixel" is off-screen
         if (y1 <= 0)
         {
+            linein += wWidth;
             continue;
         }
 

@@ -19,6 +19,7 @@
 #include "ext_keymap.h"
 #include "ext_modes.h"
 #include "ext_replay.h"
+#include "ext_tools.h"
 
 //==============================================================================
 // Registered Extensions
@@ -29,8 +30,8 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &touchEmuCallback,  &ledEmuExtension,   &fuzzerEmuExtension,
-    &keymapEmuCallback, &modesEmuExtension, &replayEmuExtension,
+    &touchEmuCallback,  &ledEmuExtension,    &fuzzerEmuExtension, &keymapEmuCallback,
+    &modesEmuExtension, &replayEmuExtension, &toolsEmuExtension,
 };
 
 //==============================================================================
@@ -621,12 +622,12 @@ void doExtPostFrameCb(uint64_t frame)
  * @param down    True if the key was pressed, false if it was released
  * @return int32_t The final keycode after handling, or a negative numbe if the key event was consumed
  */
-int32_t doExtKeyCb(uint32_t keycode, bool down)
+int32_t doExtKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
 {
     int32_t finalKey = keycode;
     EMU_CB_LOOP(fnKeyCb)
     {
-        int32_t newKey = EMU_CB(fnKeyCb, finalKey, down);
+        int32_t newKey = EMU_CB(fnKeyCb, finalKey, down, modifiers);
 
         if (newKey < 0)
         {
