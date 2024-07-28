@@ -1,6 +1,6 @@
 # Swadgimon
 
-Pokemon, for the people! A homage to the pokemon games (legally distinct though) based on MAGFest and the Gaylord National Harbor Hotel where the event is held.
+Pokemon, for the people! A homage to the Pokemon games (legally distinct though) based on MAGFest and the Gaylord National Harbor Hotel where the event is held.
 
 #### Other name ideas:
 - Swadgemon
@@ -23,7 +23,7 @@ There are four versions of this game:
 ### MVP
 
 - [ ] Theme
-    - [ ] Moves, pokemon, items, etc have minimal updates, reskins and not actually something unique
+    - [ ] Moves, monsters, items, etc have minimal updates, reskins and not actually something unique
     - [ ] Minimal MAG stylization on top
 - [ ] Scope
     - [ ] Map
@@ -39,11 +39,11 @@ There are four versions of this game:
     - [ ] 2-3 Boss trainers
     - [ ] 25 monsters
     - [ ] 1-2 Legendaries
-    - [ ] 1 mythic Pokemon
+    - [ ] 1 mythic monster
     - [ ] 2-3 starters
 - [ ] Balance
     - [ ] All core stats
-    - [ ] Pokemon, types, moves, etc are copied from Gen III to require minimal balancing
+    - [ ] Monsters, types, moves, etc are copied from Gen III to require minimal balancing
     - [ ] Add in EXP increasing items, boost EXP gain, something to reduce the grind
         - [ ] Or a low level cap. Not idea, but minimal testing
 - [ ] Audio
@@ -79,7 +79,7 @@ There are four versions of this game:
 Includes everything in MVP, plus:
 
 - [ ] Theme
-    - [ ] Pokemon get an overhaul, with new movesets made of original moves.
+    - [ ] Monsters get an overhaul, with new movesets made of original moves.
     - [ ] More styling
     - [ ] New types that are just reskins
     - [ ] New items
@@ -98,12 +98,12 @@ Includes everything in MVP, plus:
         - [ ] Riverview
         - [ ] Limited Exterior
         - [ ] Farawaay land
-            - [ ] Small section of half-underwater mark center
+            - [ ] Small section of half-underwater Mark Center
     - [ ] 3-4 Gyms
     - [ ] 3-5 Boss trainers
     - [ ] 50-75 monsters
-    - [ ] 14 Legendaries
-    - [ ] 1 mythic Pokemon
+    - [ ] 2-4 Legendaries
+    - [ ] 1 mythic monster
     - [ ] 3 starters
 - [ ] Balancing
     - [ ] Improve the grind by reducing rarity
@@ -199,10 +199,10 @@ Includes everything in MVP and Level 1, plus:
 
 ## Core cameplay loop
 
-1. Get a new pokemon
-2. Raise that pokemon via battles and items
+1. Get a new monster
+2. Raise that monster via battles and items
 3. Win difficult battles to be able to explore new areas
-4. New areas contain new pokemon
+4. New areas contain new monster
 
 ## Theme
 
@@ -230,7 +230,7 @@ Visuals should be in-line with Gen II Pokemon games. See the srceenshots below f
 
 Various sound effects need to be created. 
 
-BGMs for each area, Cries for each pokemon, UI beeps and bloops, capturing pokemon, etc.
+BGMs for each area, Cries for each monster, UI beeps and bloops, capturing monster, etc.
 
  A list of requires assest can be found [here](Asset lists\AudioAssets.csv)
 
@@ -263,7 +263,7 @@ Each grid space will take up to 64 bits of data to store. Might be able to bitpa
 Some impassable grid spaces are interactable. When an interaction is triggered (Pressing A when facing), the ID is checked and the associated action is called.
 
 Examples:
-- Dialogue: Signs, Pokemon, People. Dialogue can be multiple pages, A advances, B retreats
+- Dialogue: Signs, Monsters, People. Dialogue can be multiple pages, A advances, B retreats
 - Items: Pick up and add to inventory
 - Traversal options: E.G. Swimming across water requires inteacting with a body of water
 - Use Moves in overworld: Flash, Cut, etc.
@@ -271,22 +271,22 @@ Examples:
 
 ##### Spawngroup
 
-Spawngroups are small data structures containing a list of spawnable pokemon and what level they can spawn at
+Spawngroups are small data structures containing a list of spawnable monsters and what level they can spawn at
 
 - ID: How a grid space references this item
-- List of Spawnable pokemon IDs
-- Level range (two 8 bit numbers) per spawnable pokemon
+- List of Spawnable monster IDs
+- Level range (two 8 bit numbers) per spawnable monster
 
 #### NPCs
 
-NPCs are objects that block a grid space and can have pokemon, dialogue, etc.
+NPCs are objects that block a grid space and can have monsters, dialogue, etc.
 
 - Movement (Still, spinning, movement pattern, random (confined to an area))
-- Pokemon (0-6, if have none cannot initiate battle)
+- Monsters (0-6, if have none cannot initiate battle)
 - Sprites (Overworld sprites, battle sprites)
 - Entrance/lose/talk again dialogue 
-- Attack patterns (How they pick moves for their pokemon)
-- Money earned by defeating their pokemon
+- Attack patterns (How they pick moves for their monsters)
+- Money earned by defeating their monsters
 
 #### Story State 
 
@@ -309,11 +309,11 @@ Player controls are largely stripped, and a scripted set of things can occur:
 
 #### Swadgidex
 
-Displays Species information for encountered and caught pokemon, shows slot for all unencounted pokemon to incentivize collecting.
+Displays Species information for encountered and caught monsters, shows slot for all unencounted monsters to incentivize collecting.
 
 #### Item Bag
 
-Items can be used in battle or outside of battle, depending on the item. They are stored in an item bag. Some items can be held by Pokemon.
+Items can be used in battle or outside of battle, depending on the item. They are stored in an item bag. Some items can be held by monsters.
 
 Different items go into different "pockets" so you can't run out of room for healing items by buying too many pokeballs.
 
@@ -321,19 +321,19 @@ Player also has a wallet.
 
 #### Battle Order
 
-Pokemon can be swapped around to determine what order they come in when starting, or when one faints.
+Monsters can be swapped around to determine what order they come in when starting, or when one faints.
 
-#### Pokemon storage
+#### Monster storage
 
-Pokemon not in the player's party are sent to a storage PC.
+Monsters not in the player's party are sent to a storage PC.
 
 #### Store menus
 
 Store allow you to buy items. Inventory is controlled by inventory lists. Player must have the required money to buy items. Items can be batch-purchased.
 
-### Pokemon
+### Monsters
 
-Pokemon are ther individual creatures caught and used to battle and navigate the environment.
+Monsters are ther individual creatures caught and used to battle and navigate the environment.
 
 #### Data structure
 
@@ -357,7 +357,7 @@ Pokemon are ther individual creatures caught and used to battle and navigate the
 
 #### Personality value
 
-This randomly generated 32 bit number determins a few attributes of a Pokemon:
+This randomly generated 32 bit number determins a few attributes of a monster:
 - Gender (Lowest 8 bits)
 - Ability: If two abilities are available, use the 1 place bit to pick
 - Nature: Mod 25 of the entire number
@@ -366,7 +366,7 @@ This randomly generated 32 bit number determins a few attributes of a Pokemon:
 
 #### Species
 
-Each Pokemon species has a few stats attached to them:
+Each monster species has a few stats attached to them:
 - Index
 - Catch rate
 - Base Experence yield
@@ -385,7 +385,7 @@ Each Pokemon species has a few stats attached to them:
 - Shiny Sprite (Facing)
 - Shiny Sprite (Back)
 - Shiny Sprite (Pokedex)
-- Pokemon cries
+- Monster cries
 - Egg group 1
 - Egg group 2
 - Status immunities
@@ -402,16 +402,16 @@ There are six main stats:
 
 The formula for determining each of these is as follows:  
 `HP = (2 * Base + IV + (EV/4)) * Level/100`
-- Base: Pokemon Species base HP
+- Base: Monster Species base HP
 - IV: See IVs below
 - EV: See EVs below
-- Level: Level of the pokemon
+- Level: Level of the monster
 
 `All other stats = ((((2 * Base + IV + (EV/4)) * Level) / 100) + 5) * Nature`
-- Base: Pokemon Species base stat
+- Base: Monster Species base stat
 - IV: See IVs below
 - EV: See EVs below
-- Level: Pokemon's level
+- Level: monster's level
 - Nature: See natures below
 
 ##### IVs
@@ -420,10 +420,10 @@ Each stat is assigned a random IV at creation. The number varies from 0-31.
 
 ##### EVs
 
-EVs are effort values. When an opposing pokemon faints, they give between 1-3 EV of a specific stat. The stat and value is based on species.
+EVs are effort values. When an opposing monster faints, they give between 1-3 EV of a specific stat. The stat and value is based on species.
 
 EVs have two hard caps:
-- Individual: Highest any particular EV can go is 255
+- Individual: Highest any particular EV can go is 252 (it goes in increments of 4: each 4 of an EV adds 1 to its stat)
 - Combined: The total of all EVs can only add up to 510
 
 ##### Natures
@@ -460,7 +460,7 @@ Natures are decided at creation. They have a positive trait and negative trait. 
 
 #### Types
 
-Types determine the STAB bonus, as well as which moves do more or less damage, or even which moves a pokemon is immune from. Pokemone have 1 or 2 types, depending on species.
+Types determine the STAB bonus, as well as which moves do more or less damage, or even which moves a monster is immune from. Monsters have 1 or 2 types, depending on species.
 
 Overall chart
 | Attacking \ Defending | Normal | Figthing | Flying | Poison | Ground | Rock | Bug | Ghost | Steel | Fire | Water | Grass | Electric | Psychic | Ice | Dragon | Dark |
@@ -485,22 +485,22 @@ Overall chart
 
 #### EXP
 
-One a pokemon falls in battle, EXP is awarded to the other team's pokemon that participated in taking it down that have not fainted.
+One a monster falls in battle, EXP is awarded to the other team's monsters that participated in taking it down that have not fainted.
 
 ##### EXP calculation
 
 EXP awarded is measured by the following formula:  
 `(b * L)/7 * 1/s * e * a * t`
-- b: Base EXP value for the fainted pokemon
-- L: Level of the fainted pokemon
-- s: How many ways the EXP is split (Multiple pokemon participated)
-- e: If pokemon is holding a lucky egg, 1.5. otherwise, 1.0
+- b: Base EXP value for the fainted monster
+- L: Level of the fainted monster
+- s: How many ways the EXP is split (Multiple monster participated)
+- e: If monster is holding a lucky egg, 1.5. otherwise, 1.0
 - a: If versus a trainer, 1.5. wild, 1.0
-- t: If the pokemon was traded
+- t: If the monster was traded
 
 ##### Growth speed
 
-Pokemon exist in one of six EXP growth speeds, where n is the level of the pokemon _currently_.
+Monsters exist in one of six EXP growth speeds, where n is the level of the monster _currently_.
 
 1. Fast (4n^3)/5
 2. Medium fast (n^3)
@@ -526,17 +526,17 @@ n < 15,         n^3(n+1/3)+24/50
 36 <= n < 100,  n^3((n/2)+32)/50
 ```
 
-Example! Total EXP need for a Slow pokemon to reach level 58:  
+Example! Total EXP need for a Slow monster to reach level 58:  
 (5*57)^3 / 4 =  5,787,281 EXP
 
 ##### Pokerus
 
-After a battle, there's a chance for a pokemon to get Pokerus. Pokerus doubles EV gain for that pokemon permanently. There's an infectivity period, and after battle, the virus is likely to spread to other pokemon adjacent in the battle order. Once infected, the pokemone will permanently gain double EVs.
+After a battle, there's a chance for a monster to get Pokerus. Pokerus doubles EV gain for that monster permanently. There's an infectivity period, and after battle, the virus is likely to spread to other monsters adjacent in the battle order. Once infected, the monster will permanently gain double EVs.
 
 - Strain: 4 bit number
 - Catch chance: 3/65535 per battle
 - Immunity timer: 1-4 days, even distribution (strain mod 4 + 1)
-- Transfer chance: 1/3 to adjacent pokemon in battle order
+- Transfer chance: 1/3 to adjacent monsters in battle order
 - At midnight, Immunity timer ticks down by one.
 
 #### Shinies!
@@ -550,12 +550,12 @@ The formula is `TrainerID XOR SecretID XOR Personailty value[31..16] XOR Persona
 
 #### Breeding
 
-When two pokemon are left at a nursery, they do the sex and you get an egg.
+When two monsters are left at a nursery, they do the sex and you get an egg.
 
 Well, it's slightly more complicated than that...
 
 Every 256 steps, a chance for an egg to hatch occurs. The likelyhood is determined be a few factors:
-- Egg group: Pokemon must share an Egg group 
+- Egg group: Monster must share an Egg group 
 - Gender: Mechanics work like real life mammals. Consider expanding.
 - Can't both be in ditto group
 - Can't be in unbreedable egg group
@@ -577,7 +577,7 @@ Egg groups are nominally similar biologies. Fish can breed with other fish, Mamm
 
 There are special groups.
 
-Pokemon can belong to one or two egg groups
+Monster can belong to one or two egg groups
 
 | Group | Types of creatures |
 | ----- | ------------------ |
@@ -599,13 +599,13 @@ Pokemon can belong to one or two egg groups
 
 ##### Eggs
 
-After every 256 steps, the timer on the egg decreases. The initial value of the timer is specified by the pokemon species.
+After every 256 steps, the timer on the egg decreases. The initial value of the timer is specified by the monster species.
 
 Eggs hatch at level 5, and know moves based on parentage and what they would already know at level 5.
 
 #### Obediance
 
-Pokemon of too high a level will start doing things they aren't commanded to if the player doesn't have the appropriate badges.
+Monster of too high a level will start doing things they aren't commanded to if the player doesn't have the appropriate badges.
 
 | Level | Required Badges |
 | ----- | --------------- |
@@ -618,17 +618,17 @@ Pokemon of too high a level will start doing things they aren't commanded to if 
 | 70 <= X < 80 | Badge 7 |
 | 80 <= X < 100 | Badge 8 |
 
-`DA = Pokemon Level + Obedience cap) * R / 256`
+`DA = Monster Level + Obedience cap) * R / 256`
 - R is random value[0..255]
-If DA is greater than Obedience cap, pokemon disobeys
+If DA is greater than Obedience cap, monster disobeys
 
-If disobedient, use the same formula to get action disobedient pokemon takes
+If disobedient, use the same formula to get action disobedient monster takes
 
 If DA < Obedience Cap, uses a random move that wasn't specified by trainer. If false, generate rand[0..255]
 
-If Rand[0..255] < (Pokemon Level - Obedience cap), Pokemon goes to sleep
+If Rand[0..255] < (Monster Level - Obedience cap), monster goes to sleep
 
-Otherwise, if Rand[0..255] < 2 * (Pokemon Level - Obedience cap), Pokemon does confusion damage to itself
+Otherwise, if Rand[0..255] < 2 * (Monster Level - Obedience cap), monster does confusion damage to itself
 
 #### Moves 
 
@@ -637,7 +637,7 @@ Moves are acquired by leveling up, using a TM or HM, Inheritance from breeding, 
 Moves have the following properties:
 - Type: What it's effective and ineffective against
 - Category: Physical, Special, or Status. Determines some effects and stats to use
-- PP: Number of times  amove can be used before returning to a pokemon center
+- PP: Number of times  amove can be used before returning to a Swadgimon center
 - Power: Determines the damage output of the move
 - Accuracy: How likely an attack s to hit.
 
@@ -652,7 +652,7 @@ Moves have the following properties:
 
 ### Battles
 
-Battles are one of the core gameplay pillars, and prossibly the most important one. Battles are between 2-4 humans, who each have a maximum of 6 pokemon that they can field at any time
+Battles are one of the core gameplay pillars, and prossibly the most important one. Battles are between 2-4 humans, who each have a maximum of 6 monsters that they can field at any time
 
 #### Accuracy
 
@@ -674,13 +674,13 @@ Some moves are auto hits. Accuracy formula can be subsittuted under special circ
 
 Damage is a very long formula with a lot of variables:  
 `DMG = (((2*L/5 + 2) * Power * A/D)/50 * Burn * Screen * Targets * Weather * FF + 2) * Stockpile * Crit * DblDmg * Charge * HH * STAB * Type1 * Type2 * Random`
-- L: Pokemon's current level
+- L: Monster's current level
 - Power: Power of the move being used
-- A: Attack (or Sp. Attack) stat of attacking pokemon
-- D: Defense (or Sp. Defense) stat of defending pokemon
+- A: Attack (or Sp. Attack) stat of attacking monster
+- D: Defense (or Sp. Defense) stat of defending monster
 - Burn: 0.5 if defender is burned, move isn't guts, but is physical.
 - Screen: 0.5 if using either relfect against physical attacks or Light screen against special attacks.
-- Targets: In double battles, if a move hits two pokemon, 0.5. 1 otherwise. Moves that hit all pokemon also do 1.0, like earthquake.
+- Targets: In double battles, if a move hits two monsters, 0.5. 1 otherwise. Moves that hit all monsters also do 1.0, like earthquake.
 - Weather: halves fire move in rain, doubles water type moves, reverse for Sunlight
 - FF: If flash-fire triggered and is a fire type move, 1.5. Otherwise 1.0.
 - Stockpile: If energy has been stockpiled, multiply by 2 or 3. Otherwise 1.
@@ -749,19 +749,19 @@ For Accuracy and evasion:
 
 #### Status Effects
 
-Some moves casue status effects, or have a chance to cause a status effect. Non-Volitile statuses don't go away when the pokemon is switched out, Volitile do, and Transient statuses go away at the end of the turn.
+Some moves casue status effects, or have a chance to cause a status effect. Non-Volitile statuses don't go away when the monster is switched out, Volitile do, and Transient statuses go away at the end of the turn.
 
-Non-Volitile status are mutually exclusive. If one is already in effect, another cannot be gotten. NV status effects have badges assocated with them when viewing the Pokemon.
+Non-Volitile status are mutually exclusive. If one is already in effect, another cannot be gotten. NV status effects have badges assocated with them when viewing the monster.
 
 Non-Volitile
 | Name | Shorthand | Effect |
 | ---- | --------- | ------ |
 | Burn | BRN | Inflicts 1/8th max HP per turn, physical move damage is halved. |
-| Freeze | FRZ | Pokemon cannot use moves. Thaw chance is 20% per turn |
+| Freeze | FRZ | Monster cannot use moves. Thaw chance is 20% per turn |
 | Paralysis | PAR | Reduces Speed stat by 25%, 25% move failure chance. 
 | Poison | PSN | Influcts 1/8th total HP each turn. Outside of battle, takes 1 ddmage every 4 steps. |
 | Badly Poison | BPS | starts doing 1/16th max HP, adds 1/16th to damage each turn. Becomes regular poison once battle ends. |
-| Sleep | SLP | Sleep stops  apokemon from using moves for a random amount of turns, from 1-7. Self inflicted sleep is always 2 turns. |
+| Sleep | SLP | Sleep stops a monster from using moves for a random amount of turns, from 1-7. Self inflicted sleep is always 2 turns. |
 
 No status flag for Volitile statuses, and they are not necesassary mutually exclusive. Volitile status can exist alongside a single Non-Volitile status.
 
@@ -770,16 +770,16 @@ Volitile
 | ---- | ------ |
 | Ability Change | Ability temporarily changes into another one |
 | Ability Supression | A targeted move cannot be used while status is active | 
-| Type Change | Pokemon's type changes temporarily |
+| Type Change | Monster's type changes temporarily |
 | Mimic | Move is temporarily replaced by opponent's last used move |
 | Substitute | User loses 1/4 of their HP to make a substitute that will take incoming attacks until it breaks. |
-| Tranformed | Turns pokemon into target pokemon |
-| Illusion | Appears as the last pokemon in the opponent's party. Cosmetic only |
+| Tranformed | Turns monster into target monster |
+| Illusion | Appears as the last monster in the opponent's party. Cosmetic only |
 | Bound | Target cannot switch of flee. 1/16th max HP per turn. Duration is 2-5 turns | 
 | Curse | Takes damage equal to 1/4 max HP per turn |
-| Nightmare | Only affect sleeping Pokemon. loses 1/4th max HP per turn |
-| Perish Song | After three turns, Pokemon faints. |
-| Seeded | Pokemon loses 1/16th max HP, attacker gains that HP back |
+| Nightmare | Only affect sleeping monsters. loses 1/4th max HP per turn |
+| Perish Song | After three turns, monster faints. |
+| Seeded | Monster loses 1/16th max HP, attacker gains that HP back |
 | Salt Cure | 1/8th Max HP per turn |
 | Automize | Speed Stat goes up by two stages. Reduces weight |
 | Identified | Evasion modifier will not affect next incoming attack |
@@ -792,21 +792,21 @@ Volitile
 | Rooting | Restors 1/16th Max HP per turn, but cannot flee or switch out | 
 | Laser Focus | Until the end of next turn, moves will crit |
 | Taking Aim | Accuracy of next damage dealing move is 100% | 
-| Drowsy | Pokemone will fall asleep next turn |
+| Drowsy | Monster will fall asleep next turn |
 | Charged | Damaged of next electric attack is doubled |
 | Stockpile count | Can store energy up to three times. |
 | Defense Curl | Doubles power of rollout and ice ball |
 | Can't Escape | Can't switch out or flee |
 | Octolock | Same as can't escape, but also lowers Defense and Sp. Defense by one stage |
 | Disable | A move isn't able to be used for 2-5 turns. Last move the opponent used |
-| Embargo | Held Item does not affect battle, items cannot be used on this pokemon |
+| Embargo | Held Item does not affect battle, items cannot be used on this monster |
 | Heal block | Prevented from healing for a specified number of turns
-| Imprison | Pokemon under effect of imprison locks any moves shared between imprisond pokemon and opponent. Other pokemon will be able to struggle if all moves are locked up. |
+| Imprison | Monsters under effect of imprison locks any moves shared between imprisoned monster and opponent. Other monsters will be able to struggle if all moves are locked up. |
 | Taunt | Cannot use non-damaging moves for 2-4 turns |
 | Throat Chop | Cannot use sound based moves for 2 turns |
 | Torment | Cannot use the same move twice in a row |
 | Confusion | Will sometimes do a self damging attack |
-| Infatuation | Cannot use moves 50% of the time. Will remain infatuated until casting pokemon is removed from the field |
+| Infatuation | Cannot use moves 50% of the time. Will remain infatuated until casting monster is removed from the field |
 | Getting Pumped | Increases crit chance by one stage |
 | Guard Split | Averages user and target's Defense and Sp. Defense |
 | Power Split | Averages user and target's Attack and Sp. Attack |
@@ -816,62 +816,62 @@ Volitile
 | Encore | Forces the use of the last move for 4-8 turns |
 | Rampage | Forced to use move that starts rage for 2-3 turns, will be confused at the end |
 | Rolling | Forced to use initiating move for 5 turns, doubling in power each hit |
-| Making an Uproar | Forced to use calling move for 2-5 turns. No pokemon can sleep during |
+| Making an Uproar | Forced to use calling move for 2-5 turns. No monsters can sleep during |
 | Bide | Cannot use a move for 2 turns. Will deal twice damage taken once effect ends |
 | Recharging | Consequence of some moves. Cannot take actions |
-| Charging Turn | Pokemon charges up an attack for a turn. Cannot attack. |
+| Charging Turn | Monster charges up an attack for a turn. Cannot attack. |
 | Semi-Invulnerable turn | Changes accuracy calculation depending on situation. Includes Dig |
 
 Transient
 | Name | Effect |
 | ---- | ------ |
-| Flinch | Prevents pokemon from attacking this turn |
-| Bracing | When bracing, Pokemon will survive with 1 HP |
-| Center of attention | Forces other pokemon to attack this one |
-| Magic Coat | Reflects most statuses back at the attacking pokemon |
+| Flinch | Prevents monster from attacking this turn |
+| Bracing | When bracing, monster will survive with 1 HP |
+| Center of attention | Forces other monsters to attack this one |
+| Magic Coat | Reflects most statuses back at the attacking monster |
 | Protection | Immune to Physical, Special and/or Status moves for this turn |
 
 See [this website](https://m.bulbapedia.bulbagarden.net/wiki/Status_condition) for more details
 
 #### Escape
 
-Depending on the battle, the player may choose to run away from a battle with a wild pokemon. Success is determined by the following formula:  
+Depending on the battle, the player may choose to run away from a battle with a wild monster. Success is determined by the following formula:  
 `If Player_speed > Wild_speed`
 -or-
 `If Rand[0..255] < ((Speed_player * 128/Speed_wild) + 30 * attemtps)`
-- Speed_player is the speed of the player's pokemon
-- Speed_wild is the speed of the wild pokemon
+- Speed_player is the speed of the player's monster
+- Speed_wild is the speed of the wild monster
 - Attempts is the number of attempts to escape have been made
 
-#### Catching Wild Pokemon
+#### Catching Wild Monsters
 
-If figthing a wild pokemon, the player can attempt to catch the pokemon. The capture attempt is run by the following formula:  
+If figthing a wild monster, the player can attempt to catch the monster. The capture attempt is run by the following formula:  
 `X = (3 * MaxHP - 2 * CurrentHP)/3 * MaxHP * rate * Ball_Bonus * Status_Bonus`
-- MaxHP: he full HP of the wild pokemon
-- CurrentHP: The current value of the wild pokemone HP
+- MaxHP: he full HP of the wild monster
+- CurrentHP: The current value of the wild monster HP
 - rate: Species based capture rate
 - Ball_Bonus: Multiplier based on the ball used
-- Status_Bonus: If the pokemon has a status condition, a bonus is applied based on condition.
+- Status_Bonus: If the monster has a status condition, a bonus is applied based on condition.
 
-If X is higher than 255, pokemon is automatically captured.
+If X is higher than 255, monster is automatically captured.
 
 Otherwise, get a value from the folowing equation:  
 `Y = 1048560/sqrt(sqrt(16711680/X))`  
 The game then runs the following comparison four times:  
 `Break out if Y >= rand[0..63353]`  
-Ball wobbles each time the equation above is not met. On the fourth cycle, the pokemon is caught.
+Ball wobbles each time the equation above is not met. On the fourth cycle, the monster is caught.
 
 #### Fainting
 
-If all your pokemon faint, you also pass out and return to the last pokemone center you visited. Some of your money is lost.
+If all your monsters faint, you also pass out and return to the last Swadgimon center you visited. Some of your money is lost.
 
 #### Arena
 
-Arenas are the space where pokemon fight. They are blank voids with a 3/4th perpective on the pokemon battling.
+Arenas are the space where monsters fight. They are blank voids with a 3/4th perpective on the monsters battling.
 
 ##### Doubles
 
-Double battles involve up to four pokemone at a time, two-on-two. Both pokemon can be controlled by one player on one side, or they can be indiependantly controlled.
+Double battles involve up to four monsters at a time, two-on-two. Both monsters can be controlled by one player on one side, or they can be indiependantly controlled.
 
 ##### Weather
 
@@ -879,7 +879,7 @@ Weather effects are battle modifiers that can occur naturally depending on locat
 
 | Name | Description | Effects |
 | ---- | ----------- | ------- |
-| Harsh Sunlight | Sunbeams come from the sky | +50% fire move power, -50% water move power, Pokemone cannot be frozen |
+| Harsh Sunlight | Sunbeams come from the sky | +50% fire move power, -50% water move power, monsters cannot be frozen |
 | Rain | Raindrops fall from the sky | -50% fire move power, +50% water move power, |
 | Sandstorm | Sand swirls around the screen | If ground, rock, or steel, +50% Special defense. Others take 1/16th max HP damage at the end of each turn unless mitigated by items or abilities |
 | Hail | Thick white chunks of ice fall from the sky | If Ice type, +50% Special defense. Others take 1/16th max HP damage at the end of each turn unless mitigated by items or abilities |
@@ -893,7 +893,7 @@ Players can set up an ID card so other players can see them and their teams.
 
 #### Trading
 
-Players can trade pokemon. Both players are given full information on the other pokemon and given chances to back out if they think it's unfavorable.
+Players can trade monsters. Both players are given full information on the other monster and given chances to back out if they think it's unfavorable.
 
 #### Battling
 
@@ -925,7 +925,7 @@ A list of trainers, including uniques. Example trainer is provided.
 
 A .csv file can be found [here](/main/modes/swadgimon/Docs/Data%20files/Trainers.csv), for more frequent updates
 
-| Name | Type | Sprite | Overworld Sprite | Pokemon | Money to be paid out | Battle entered quote | Battle lost Quote |
+| Name | Type | Sprite | Overworld Sprite | Monster | Money to be paid out | Battle entered quote | Battle lost Quote |
 | ---- | ---- | ------ | ---------------- | ------- | -------------------- | -------------------- | ----------------- |
 | Johnny Wycliffe | Cosplayer A | ![CospalyerASpr]() | ![CospalyerAOvrSpr]() | 001, LV 10 | 1000 | "I hope you like sandwiches!" | "Aw, my sandwich got crushed." | 
 
@@ -952,7 +952,7 @@ A pokeball is provided for reference
 
 A .csv file can be found [here](/main/modes/swadgimon/Docs/Data%20files/Items.csv), for more frequent updates
 
-| Index | Item | Effect | Storage | Pokemon can hold? | In-Battle | Overworld | Price |
+| Index | Item | Effect | Storage | Monster can hold? | In-Battle | Overworld | Price |
 | ----- | ---- | ------ | ------- | ----------------- | --------- | --------- | ----- |
 | 0 | Pokeball | Catch modifier of 1.0 | Ball pouch | No | Yes | No | 200 |
 
@@ -965,7 +965,7 @@ A .csv file can be found [here](/main/modes/swadgimon/Docs/Data%20files/Abilitie
 ### Level design
 - High level areas need to be gated off
     - Use ass kicking? Dark souls approach
-    - Default Pokemon approach, blockl off paths until a story event is triggered
+    - Default Pokemon approach, block off paths until a story event is triggered
     - Warning popup when entering a difficult zone
 - Tall grass analogue
     - Carpet, very plush
