@@ -5,7 +5,7 @@
 #include <vectorFl2d.h>
 #include "hdw-btn.h"
 
-#define MAX_NUM_BORDER    128
+#define MAX_NUM_WALLS     128
 #define MAX_NUM_BALLS     128
 #define MAX_NUM_OBSTACLES 128
 #define MAX_NUM_FLIPPERS  128
@@ -44,12 +44,18 @@ typedef struct
 
 typedef struct
 {
+    vecFl_t p1;
+    vecFl_t p2;
+} jsLine_t;
+
+typedef struct
+{
     vecFl_t gravity;
     float dt;
     int32_t score;
     bool paused;
-    vecFl_t border[MAX_NUM_BORDER];
-    int32_t numBorders;
+    jsLine_t walls[MAX_NUM_WALLS];
+    int32_t numWalls;
     jsBall_t balls[MAX_NUM_BALLS];
     int32_t numBalls;
     jsObstacle_t obstacles[MAX_NUM_OBSTACLES];

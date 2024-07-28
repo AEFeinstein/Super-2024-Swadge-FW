@@ -19,7 +19,23 @@ static vecFl_t jsFlipperGetTip(jsFlipper_t* flipper);
 static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2);
 static void handleBallObstacleCollision(jsScene_t* scene, jsBall_t* ball, jsObstacle_t* obstacle);
 static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper);
-static void handleBallBorderCollision(jsBall_t* ball, vecFl_t* border, int32_t numBorders);
+static void handleBallWallCollision(jsBall_t* ball, jsLine_t* wall, int32_t numWalls);
+
+static const jsLine_t constWalls[] = {
+    {.p1 = {.x = 95, .y = 190}, .p2 = {.x = 0, .y = 116}},    {.p1 = {.x = 184, .y = 190}, .p2 = {.x = 261, .y = 129}},
+    {.p1 = {.x = 0, .y = 0}, .p2 = {.x = 279, .y = 0}},       {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 0, .y = 0}},
+    {.p1 = {.x = 279, .y = 0}, .p2 = {.x = 279, .y = 239}},   {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 279, .y = 239}},
+    {.p1 = {.x = 0, .y = 116}, .p2 = {.x = 3, .y = 97}},      {.p1 = {.x = 3, .y = 97}, .p2 = {.x = 9, .y = 79}},
+    {.p1 = {.x = 9, .y = 79}, .p2 = {.x = 20, .y = 58}},      {.p1 = {.x = 20, .y = 58}, .p2 = {.x = 37, .y = 37}},
+    {.p1 = {.x = 37, .y = 37}, .p2 = {.x = 62, .y = 18}},     {.p1 = {.x = 62, .y = 18}, .p2 = {.x = 78, .y = 11}},
+    {.p1 = {.x = 78, .y = 11}, .p2 = {.x = 96, .y = 5}},      {.p1 = {.x = 96, .y = 5}, .p2 = {.x = 116, .y = 1}},
+    {.p1 = {.x = 116, .y = 1}, .p2 = {.x = 140, .y = 0}},     {.p1 = {.x = 140, .y = 0}, .p2 = {.x = 163, .y = 1}},
+    {.p1 = {.x = 163, .y = 1}, .p2 = {.x = 183, .y = 5}},     {.p1 = {.x = 183, .y = 5}, .p2 = {.x = 201, .y = 11}},
+    {.p1 = {.x = 201, .y = 11}, .p2 = {.x = 217, .y = 18}},   {.p1 = {.x = 217, .y = 18}, .p2 = {.x = 242, .y = 37}},
+    {.p1 = {.x = 242, .y = 37}, .p2 = {.x = 259, .y = 58}},   {.p1 = {.x = 259, .y = 58}, .p2 = {.x = 270, .y = 79}},
+    {.p1 = {.x = 270, .y = 79}, .p2 = {.x = 276, .y = 97}},   {.p1 = {.x = 276, .y = 97}, .p2 = {.x = 279, .y = 116}},
+    {.p1 = {.x = 261, .y = 129}, .p2 = {.x = 261, .y = 239}},
+};
 
 // physics scene -------------------------------------------------------
 
@@ -153,39 +169,23 @@ void jsSceneInit(jsScene_t* scene)
     scene->score     = 0;
     scene->paused    = true;
 
-    // borders
-    vecFl_t borders[] = {
-        // {.x = 0.74f, .y = 0.25f},
-        // {.x = 1.0f - offset, .y = 0.4f},
-        // {.x = 1.0f - offset, .y = flipperHeight - offset},
-        // {.x = offset, .y = flipperHeight - offset},
-        // {.x = offset, .y = 0.4f},
-        // {.x = 0.26f, .y = 0.25f},
-        // {.x = 0.26f, .y = 0.0f},
-        // {.x = 0.74f, .y = 0.0f},
-        {.x = 20, .y = 20},
-        {.x = 20, .y = TFT_HEIGHT - 100},
-        {.x = TFT_WIDTH - 20, .y = TFT_HEIGHT - 20},
-        {.x = TFT_WIDTH - 20, .y = 20},
-    };
-
-    scene->numBorders = 0;
-    for (int32_t wIdx = 0; wIdx < ARRAY_SIZE(borders); wIdx++)
+    scene->numWalls = 0;
+    for (int32_t wIdx = 0; wIdx < ARRAY_SIZE(constWalls); wIdx++)
     {
-        scene->border[scene->numBorders++] = borders[wIdx];
+        scene->walls[scene->numWalls++] = constWalls[wIdx];
     }
     // balls
 
     float radius = 4.0f;
-    vecFl_t pos  = {.x = 140.0f, .y = 30.0f};
-    vecFl_t vel  = {.x = 0.0f, .y = 0.0f};
+    vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
+    vecFl_t vel  = {.x = 0.0f, .y = -200.0f};
     jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
 
-    pos.x = 160.0f;
-    pos.y = 60.0f;
-    vel.x = 0.0f;
-    vel.y = -20.0f;
-    jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
+    // pos.x = 160.0f;
+    // pos.y = 60.0f;
+    // vel.x = 0.0f;
+    // vel.y = -20.0f;
+    // jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
 
     // obstacles
 
@@ -212,8 +212,8 @@ void jsSceneInit(jsScene_t* scene)
     float restAngle       = -0.5f;
     float angularVelocity = 10.0f;
 
-    vecFl_t pos1 = {.x = 80.0f, .y = 120.0f};
-    vecFl_t pos2 = {.x = 200.0f, .y = 120.0f};
+    vecFl_t pos1 = {.x = 94.0f, .y = 196.0f};
+    vecFl_t pos2 = {.x = 185.0f, .y = 196.0f};
 
     jsFlipperInit(&scene->flippers[scene->numFlippers++], radius, pos1, length, -restAngle, maxRotation,
                   angularVelocity);
@@ -356,12 +356,12 @@ static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper)
  * @brief TODO doc
  *
  * @param ball
- * @param border
- * @param numBorders
+ * @param wall
+ * @param numWalls
  */
-static void handleBallBorderCollision(jsBall_t* ball, vecFl_t* border, int32_t numBorders)
+static void handleBallWallCollision(jsBall_t* ball, jsLine_t* walls, int32_t numWalls)
 {
-    // if (numBorders < 3)
+    // if (numWalls < 3)
     // {
     //     return;
     // }
@@ -373,12 +373,12 @@ static void handleBallBorderCollision(jsBall_t* ball, vecFl_t* border, int32_t n
     vecFl_t normal;
     float minDist = FLT_MAX;
 
-    // For each segment of the border
-    for (int32_t i = 0; i < numBorders; i++)
+    // For each segment of the wall
+    for (int32_t i = 0; i < numWalls; i++)
     {
-        // Get the line segment from the list of borders
-        vecFl_t a = border[i];
-        vecFl_t b = border[(i + 1) % numBorders];
+        // Get the line segment from the list of walls
+        vecFl_t a = walls[i].p1;
+        vecFl_t b = walls[i].p2;
         // Get the closest point on the segment to the center of the ball
         vecFl_t c = closestPointOnSegment(ball->pos, a, b);
         // Find the distance between the center of the ball and the closest point on the line
@@ -446,7 +446,7 @@ void jsSimulate(jsScene_t* scene)
             handleBallFlipperCollision(ball, &scene->flippers[j]);
         }
 
-        handleBallBorderCollision(ball, scene->border, scene->numBorders);
+        handleBallWallCollision(ball, scene->walls, scene->numWalls);
     }
 }
 
@@ -461,13 +461,13 @@ void jsSceneDraw(jsScene_t* scene)
 {
     clearPxTft();
 
-    // border
-    if (scene->numBorders >= 2)
+    // wall
+    if (scene->numWalls >= 2)
     {
-        for (int32_t i = 0; i < scene->numBorders; i++)
+        for (int32_t i = 0; i < scene->numWalls; i++)
         {
-            vecFl_t* p1 = &scene->border[i];
-            vecFl_t* p2 = &scene->border[(i + 1) % scene->numBorders];
+            vecFl_t* p1 = &scene->walls[i].p1;
+            vecFl_t* p2 = &scene->walls[i].p2;
             drawLineFast(p1->x, p1->y, p2->x, p2->y, c555);
         }
     }
@@ -476,14 +476,14 @@ void jsSceneDraw(jsScene_t* scene)
     for (int32_t i = 0; i < scene->numBalls; i++)
     {
         vecFl_t* pos = &scene->balls[i].pos;
-        drawCircleFilled(pos->x, pos->y, scene->balls[i].radius, c222);
+        drawCircleFilled(pos->x, pos->y, scene->balls[i].radius, c500);
     }
 
     // obstacles
     for (int32_t i = 0; i < scene->numObstacles; i++)
     {
         vecFl_t* pos = &scene->obstacles[i].pos;
-        drawCircleFilled(pos->x, pos->y, scene->obstacles[i].radius, c511);
+        drawCircleFilled(pos->x, pos->y, scene->obstacles[i].radius, c131);
     }
 
     // flippers
@@ -492,9 +492,10 @@ void jsSceneDraw(jsScene_t* scene)
         jsFlipper_t* flipper = &scene->flippers[i];
         vecFl_t pos          = flipper->pos;
         drawCircleFilled(pos.x, pos.y, flipper->radius, c115);
-        pos = jsFlipperGetTip(flipper);
-        drawCircleFilled(pos.x, pos.y, flipper->radius, c115);
-        // TODO raw lines between tip and base
+        vecFl_t tip = jsFlipperGetTip(flipper);
+        drawCircleFilled(tip.x, tip.y, flipper->radius, c115);
+        drawLineFast(pos.x, pos.y + flipper->radius, tip.x, tip.y + flipper->radius, c115);
+        drawLineFast(pos.x, pos.y - flipper->radius, tip.x, tip.y - flipper->radius, c115);
     }
 }
 
