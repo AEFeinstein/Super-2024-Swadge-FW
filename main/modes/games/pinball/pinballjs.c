@@ -3,6 +3,7 @@
 #include <float.h>
 
 #include "hdw-tft.h"
+#include "geometryFl.h"
 #include "shapes.h"
 #include "macros.h"
 #include "vectorFl2d.h"
@@ -20,6 +21,8 @@ static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2);
 static void handleBallObstacleCollision(jsScene_t* scene, jsBall_t* ball, jsObstacle_t* obstacle);
 static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper);
 static void handleBallWallCollision(jsBall_t* ball, jsLine_t* wall, int32_t numWalls);
+static void jsLauncherInit(jsLauncher_t* launcher, float x, float y, float w, float h);
+static void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBalls, float dt);
 
 static const jsLine_t constWalls[] = {
     {.p1 = {.x = 95, .y = 190}, .p2 = {.x = 0, .y = 116}},    {.p1 = {.x = 184, .y = 190}, .p2 = {.x = 261, .y = 129}},
@@ -159,6 +162,55 @@ static vecFl_t jsFlipperGetTip(jsFlipper_t* flipper)
 /**
  * @brief TODO doc
  *
+ * @param launcher
+ * @param x
+ * @param y
+ * @param w
+ * @param h
+ */
+static void jsLauncherInit(jsLauncher_t* launcher, float x, float y, float w, float h)
+{
+    launcher->pos.x      = x;
+    launcher->pos.y      = y;
+    launcher->width      = w;
+    launcher->height     = h;
+    launcher->buttonHeld = false;
+    launcher->impulse    = 0;
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param launcher
+ * @param balls
+ * @param numBalls
+ * @param dt
+ */
+static void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBalls, float dt)
+{
+    if (launcher->buttonHeld)
+    {
+        launcher->impulse += (200.0f * dt);
+    }
+    else
+    {
+        rectangleFl_t r = {.pos = launcher->pos, .width = launcher->width, .height = launcher->height};
+        // If touching a ball, transfer to a ball
+        for (int32_t bIdx = 0; bIdx < numBalls; bIdx++)
+        {
+            circleFl_t b = {.pos = balls[bIdx].pos, .radius = balls[bIdx].radius};
+            if (circleRectFlIntersection(b, r, NULL))
+            {
+                balls[bIdx].vel.y -= launcher->impulse;
+            }
+        }
+        launcher->impulse = 0;
+    }
+}
+
+/**
+ * @brief TODO doc
+ *
  * @param scene
  */
 void jsSceneInit(jsScene_t* scene)
@@ -178,7 +230,7 @@ void jsSceneInit(jsScene_t* scene)
 
     float radius = 4.0f;
     vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
-    vecFl_t vel  = {.x = 0.0f, .y = -200.0f};
+    vecFl_t vel  = {.x = 0.0f, .y = 0.0f};
     jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
 
     // pos.x = 160.0f;
@@ -219,6 +271,16 @@ void jsSceneInit(jsScene_t* scene)
                   angularVelocity);
     jsFlipperInit(&scene->flippers[scene->numFlippers++], radius, pos2, length, M_PI + restAngle, -maxRotation,
                   angularVelocity);
+
+    static const rectangleFl_t constLaunchers[] = {
+        {.pos = {.x = 261, .y = 231}, .width = 19, .height = 9},
+    };
+    scene->numLaunchers = 0;
+    for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(constLaunchers); lIdx++)
+    {
+        jsLauncherInit(&scene->launchers[scene->numLaunchers++], constLaunchers[lIdx].pos.x, constLaunchers[lIdx].pos.y,
+                       constLaunchers[lIdx].width, constLaunchers[lIdx].height);
+    }
 }
 
 // --- collision handling -------------------------------------------------------
@@ -448,6 +510,11 @@ void jsSimulate(jsScene_t* scene)
 
         handleBallWallCollision(ball, scene->walls, scene->numWalls);
     }
+
+    for (int32_t i = 0; i < scene->numLaunchers; i++)
+    {
+        jsLauncherSimulate(&scene->launchers[i], scene->balls, scene->numBalls, scene->dt);
+    }
 }
 
 // draw -------------------------------------------------------
@@ -497,6 +564,13 @@ void jsSceneDraw(jsScene_t* scene)
         drawLineFast(pos.x, pos.y + flipper->radius, tip.x, tip.y + flipper->radius, c115);
         drawLineFast(pos.x, pos.y - flipper->radius, tip.x, tip.y - flipper->radius, c115);
     }
+
+    // launchers
+    for (int32_t i = 0; i < scene->numLaunchers; i++)
+    {
+        jsLauncher_t* l = &scene->launchers[i];
+        drawRect(l->pos.x, l->pos.y, l->pos.x + l->width, l->pos.y + l->height, c330);
+    }
 }
 
 // ------------------------ user interaction ---------------------------
@@ -520,7 +594,8 @@ void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event)
             }
             case PB_RIGHT:
             {
-                scene->flippers[1].buttonHeld = true;
+                scene->flippers[1].buttonHeld  = true;
+                scene->launchers[0].buttonHeld = true;
                 break;
             }
             default:
@@ -540,7 +615,8 @@ void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event)
             }
             case PB_RIGHT:
             {
-                scene->flippers[1].buttonHeld = false;
+                scene->flippers[1].buttonHeld  = false;
+                scene->launchers[0].buttonHeld = false;
                 break;
             }
             default:
