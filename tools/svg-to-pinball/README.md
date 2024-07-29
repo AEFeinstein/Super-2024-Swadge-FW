@@ -1,0 +1,1 @@
+If objects aren't where they're supposed to be, svgelements may not be applying transforms correctly. Use this Inkscape plugin to apply transforms to objects before saving the SVG: https://github.com/Klowner/inkscape-applytransforms
