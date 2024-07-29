@@ -9,6 +9,7 @@
 #define MAX_NUM_BALLS     128
 #define MAX_NUM_OBSTACLES 128
 #define MAX_NUM_FLIPPERS  128
+#define MAX_NUM_LAUNCHERS 128
 
 typedef struct
 {
@@ -50,6 +51,15 @@ typedef struct
 
 typedef struct
 {
+    vecFl_t pos;
+    float width;
+    float height;
+    bool buttonHeld;
+    float impulse;
+} jsLauncher_t;
+
+typedef struct
+{
     vecFl_t gravity;
     float dt;
     int32_t score;
@@ -62,6 +72,8 @@ typedef struct
     int32_t numObstacles;
     jsFlipper_t flippers[MAX_NUM_FLIPPERS];
     int32_t numFlippers;
+    jsLauncher_t launchers[MAX_NUM_LAUNCHERS];
+    int32_t numLaunchers;
 } jsScene_t;
 
 void jsSceneInit(jsScene_t* scene);
