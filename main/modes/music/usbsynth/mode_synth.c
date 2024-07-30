@@ -2205,30 +2205,32 @@ static void synthHandleButton(const buttonEvt_t evt)
                     // Seek Left
                     const uint32_t seekLeftAmt = 10 * DAC_SAMPLE_RATE_HZ;
 
-                    if (sd->midiPlayer.sampleCount > seekLeftAmt)
+                    if (!sd->leftHeld)
+                    {
+                        sd->leftHeld = true;
+
+                        sd->leftHeldTimer = 2000000;
+                    }
+                    else if (sd->midiPlayer.sampleCount > seekLeftAmt)
                     {
                         midiSeek(&sd->midiPlayer, SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount - seekLeftAmt, sd->midiPlayer.tempo, sd->midiPlayer.reader.division));
-
-                        if (!sd->leftHeld)
-                        {
-                            sd->leftHeld = true;
-
-                            sd->leftHeldTimer = 2000000;
-                        }
                     }
                     break;
                 }
 
                 case PB_RIGHT:
                 {
-                    // Seek Right
-                    const uint32_t seekRightAmt = DAC_SAMPLE_RATE_HZ;
-                    midiSeek(&sd->midiPlayer, SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount + seekRightAmt, sd->midiPlayer.tempo, sd->midiPlayer.reader.division));
 
                     if (!sd->rightHeld)
                     {
                         sd->rightHeld = true;
                         sd->rightHeldTimer = 500000;
+                    }
+                    else
+                    {
+                        // Seek Right
+                        const uint32_t seekRightAmt = DAC_SAMPLE_RATE_HZ;
+                        midiSeek(&sd->midiPlayer, SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount + seekRightAmt, sd->midiPlayer.tempo, sd->midiPlayer.reader.division));
                     }
                     break;
                 }
@@ -2290,11 +2292,24 @@ static void synthHandleButton(const buttonEvt_t evt)
             }
             else if (evt.button == PB_LEFT)
             {
+                if (sd->leftHeld && sd->leftHeldTimer > 1500000)
+                {
+                    // The button wasn't held, just clicked
+                    prevSong();
+                }
+                // Stop seeking left
                 sd->leftHeld = false;
                 sd->leftHeldTimer = 0;
             }
             else if (evt.button == PB_RIGHT)
             {
+                if (sd->rightHeld && sd->rightHeldTimer > 100000)
+                {
+                    // The button wasn't held, just clicked
+                    nextSong();
+                }
+
+                // Stop seeking right
                 sd->rightHeld = false;
                 sd->rightHeldTimer = 0;
             }
