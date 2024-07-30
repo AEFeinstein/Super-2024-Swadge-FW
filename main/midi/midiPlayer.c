@@ -70,6 +70,7 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
 static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex);
 static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event);
 static void handleEvent(midiPlayer_t* player, const midiEvent_t* event);
+static void midiSongEnd(midiPlayer_t* player);
 
 static const midiTimbre_t defaultDrumkitTimbre = {
     .type = NOISE,
@@ -523,6 +524,30 @@ static void handleEvent(midiPlayer_t* player, const midiEvent_t* event)
     }
 }
 
+static void midiSongEnd(midiPlayer_t* player)
+{
+    for (uint8_t ch = 0; ch < MIDI_CHANNEL_COUNT; ch++)
+    {
+        midiAllNotesOff(player, 0);
+    }
+
+    if (player->loop && player->mode == MIDI_FILE && player->reader.file)
+    {
+        resetMidiParser(&player->reader);
+        player->sampleCount = 0;
+        player->paused = false;
+    }
+    else
+    {
+        player->paused = true;
+    }
+
+    if (player->songFinishedCallback)
+    {
+        player->songFinishedCallback();
+    }
+}
+
 void midiPlayerInit(midiPlayer_t* player)
 {
     // Zero out EVERYTHING
@@ -582,26 +607,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         else
         {
             ESP_LOGI("MIDI", "Done playing file!");
-            for (uint8_t ch = 0; ch < MIDI_CHANNEL_COUNT; ch++)
-            {
-                midiAllNotesOff(player, 0);
-            }
-
-            if (player->loop && player->mode == MIDI_FILE && player->reader.file)
-            {
-                resetMidiParser(&player->reader);
-                player->sampleCount = 0;
-                player->paused = false;
-            }
-            else
-            {
-                player->paused = true;
-            }
-
-            if (player->songFinishedCallback)
-            {
-                player->songFinishedCallback();
-            }
+            midiSongEnd(player);
         }
 
         // Use a while loop since we may need to handle multiple events at the exact same time
@@ -1089,7 +1095,7 @@ void midiSetTempo(midiPlayer_t* player, uint32_t tempo)
     player->sampleCount = player->sampleCount * tempo / oldTempo;
 }
 
-void midiSetFile(midiPlayer_t* player, midiFile_t* song)
+void midiSetFile(midiPlayer_t* player, const midiFile_t* song)
 {
     player->mode = MIDI_FILE;
     if (player->reader.states == NULL)
@@ -1116,12 +1122,15 @@ void midiPause(midiPlayer_t* player, bool pause)
 void midiSeek(midiPlayer_t* player, uint32_t ticks)
 {
     bool paused = player->paused;
+    bool stopped = false;
 
     if (player->mode == MIDI_FILE && player->reader.file)
     {
-        midiFile_t* loadedFile = player->reader.file;
+        const midiFile_t* loadedFile = player->reader.file;
         midiTextCallback_t textCb = player->textMessageCallback;
+        songFinishedCbFn endCb = player->songFinishedCallback;
         player->textMessageCallback = NULL;
+        player->songFinishedCallback = NULL;
         bool loop = player->loop;
 
         if (SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) > ticks)
@@ -1172,12 +1181,24 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
 
         player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
 
+        stopped = !player->eventAvailable;
+        if (stopped)
+        {
+            midiSongEnd(player);
+
+            if (endCb)
+            {
+                endCb();
+            }
+        }
+
+        player->songFinishedCallback = endCb;
         player->textMessageCallback = textCb;
         player->loop = loop;
         player->seeking = false;
     }
 
-    midiPause(player, paused);
+    midiPause(player, paused || stopped);
 }
 
 //==============================================================================

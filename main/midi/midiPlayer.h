@@ -634,7 +634,7 @@ void midiSetTempo(midiPlayer_t* player, uint32_t tempo);
  * @param player The MIDI player
  * @param file A pointer to the MIDI file to be played
  */
-void midiSetFile(midiPlayer_t* player, midiFile_t* file);
+void midiSetFile(midiPlayer_t* player, const midiFile_t* file);
 
 /**
  * @brief Set the paused state of a MIDI song
