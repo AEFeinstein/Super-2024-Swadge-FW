@@ -24,7 +24,7 @@ def extractCircles(gs: list) -> list[str]:
         elif isinstance(g, Group):
             lines.extend(extractCircles(g))
         else:
-            print('Found ' + type(g) + ' when extracting Circles')
+            print('Found ' + str(type(g)) + ' when extracting Circles')
     return lines
 
 
@@ -130,9 +130,14 @@ def main():
     cstr += '\n'.join(extractPaths(g.objects['Walls']))
     cstr += '\n};\n\n'
 
-    # Extract bumpers
+    # Extract round bumpers
     cstr += 'static const circleFl_t constBumpers[] = {\n'
     cstr += '\n'.join(extractCircles(g.objects['Bumpers']))
+    cstr += '\n};\n\n'
+
+    # Extract straight bumpers
+    cstr += 'static const lineFl_t constStraightBumpers[] = {\n'
+    cstr += '\n'.join(extractPaths(g.objects['Bumpers']))
     cstr += '\n};\n\n'
 
     # Extract launchers
