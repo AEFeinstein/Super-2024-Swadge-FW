@@ -90,7 +90,14 @@ static void pinMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        jsButtonPressed(&pinball->scene, &evt);
+        if (evt.down && PB_START == evt.button)
+        {
+            jsSceneInit(&pinball->scene);
+        }
+        else
+        {
+            jsButtonPressed(&pinball->scene, &evt);
+        }
     }
 
     jsSimulate(&pinball->scene);
