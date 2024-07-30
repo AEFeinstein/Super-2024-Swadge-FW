@@ -131,6 +131,13 @@ typedef struct
 
 typedef struct
 {
+    uint32_t state;
+    uint32_t range;
+    bool reversed;
+} lfsrState_t;
+
+typedef struct
+{
     font_t font;
     font_t betterFont;
     font_t betterOutline;
@@ -191,6 +198,7 @@ typedef struct
     bool stopped;
     bool shuffle;
     bool autoplay;
+    lfsrState_t shuffleState;
     int32_t shufflePos;
     int32_t headroom;
 
@@ -247,7 +255,17 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
 static void synthMenuCb(const char* label, bool selected, uint32_t value);
 static void songEndCb(void);
 static void setupShuffle(int numSongs);
+static void prevSong(void);
 static void nextSong(void);
+
+static uint32_t setupLfsr(lfsrState_t* state, uint32_t range);
+static void loadLfsr(lfsrState_t* state);
+static void saveLfsr(const lfsrState_t* state);
+static uint32_t flipToMsb(uint32_t val);
+static uint32_t bitRevert(uint32_t v, uint8_t bits);
+static uint32_t lfsrNext(lfsrState_t* state);
+static uint32_t lfsrPrev(lfsrState_t* state);
+static uint32_t lfsrCur(const lfsrState_t* state);
 
 //==============================================================================
 // Variabes
@@ -792,7 +810,7 @@ static void synthEnterMode(void)
 
     if (!readNvs32(nvsKeyShufflePos, &nvsRead) || !nvsRead)
     {
-        nvsRead = 0xACE1u;
+        nvsRead = 0;
     }
     sd->shufflePos = nvsRead;
 
@@ -2809,13 +2827,75 @@ static void songEndCb(void)
 
 static void setupShuffle(int numSongs)
 {
-    int numBits = 0;
-    while (numSongs > (1 << numBits) - 1)
+    loadLfsr(&sd->shuffleState);
+    sd->shufflePos = lfsrCur(&sd->shuffleState);
+}
+
+static void prevSong(void)
+{
+    const char* pickedSong = NULL;
+
+    if (sd->shuffle)
     {
-        numBits++;
+        // Get the number of bits needed for the current number of songs, minimumn 2
+        uint32_t pos = lfsrPrev(&sd->shuffleState);
+
+        sd->shufflePos = (int32_t)pos;
+        saveLfsr(&sd->shuffleState);
+        writeNvs32(nvsKeyShufflePos, sd->shufflePos);
+
+        node_t* node = sd->customFiles.first;
+        for (int i = 0; i < sd->shufflePos; i++)
+        {
+            if (!node)
+            {
+                break;
+            }
+
+            node = node->next;
+        }
+
+        if (node && node->val)
+        {
+            pickedSong = (const char*)node->val;
+            synthSetFile(pickedSong);
+        }
+    }
+    else
+    {
+        if (sd->filename)
+        {
+            for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
+            {
+                if (!strcmp((const char*)node->val, sd->filename))
+                {
+                    if (node->prev && node->prev->val)
+                    {
+
+                        pickedSong = (const char*)node->prev->val;
+                        synthSetFile(pickedSong);
+                    }
+                    else if (sd->loop && sd->customFiles.last)
+                    {
+                        if (sd->customFiles.last->val)
+                        {
+                            pickedSong = (const char*)sd->customFiles.last->val;
+                            synthSetFile(pickedSong);
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
     }
 
-    printf("Shuffling %d songs needs a %d bit LFSR\n", numSongs, numBits);
+    if (sd->fileMode && pickedSong)
+    {
+        sd->filename = pickedSong;
+        writeNvs32(nvsKeyMode, (int32_t)sd->fileMode);
+        synthSetupPlayer();
+    }
 }
 
 static void nextSong(void)
@@ -2825,20 +2905,9 @@ static void nextSong(void)
     if (sd->shuffle)
     {
         // Get the number of bits needed for the current number of songs, minimumn 2
-        uint16_t bits = 32 - __builtin_clz((sd->customFiles.length + 1) | 0x2);
-        uint16_t val = sd->shufflePos & 0xFFFFu;
-
-        printf("%d has %" PRIu16 " bits\n", sd->customFiles.length, bits);
-
-        do {
-            val >>= 1;
-            if (val & 1)
-            {
-                val ^= lfsrTaps[bits-2];
-            }
-        } while (val >= sd->customFiles.length);
-
-        sd->shufflePos = val;
+        uint32_t pos = lfsrNext(&sd->shuffleState);
+        sd->shufflePos = (int32_t)pos;
+        saveLfsr(&sd->shuffleState);
         writeNvs32(nvsKeyShufflePos, sd->shufflePos);
 
         node_t* node = sd->customFiles.first;
@@ -2894,4 +2963,149 @@ static void nextSong(void)
         writeNvs32(nvsKeyMode, (int32_t)sd->fileMode);
         synthSetupPlayer();
     }
+}
+
+static void saveLfsr(const lfsrState_t* state)
+{
+    writeNvs32("lfsrState", (int32_t)state->state);
+    writeNvs32("lfsrRange", (int32_t)state->range);
+    writeNvs32("lfsrRev", state->reversed);
+}
+
+static void loadLfsr(lfsrState_t* state)
+{
+    int32_t nvsRead;
+
+    if (!readNvs32("lfsrRange", &nvsRead))
+    {
+        nvsRead = sd->customFiles.length;
+    }
+    state->range = (uint32_t)nvsRead;
+
+    if (!readNvs32("lfsrRev", &nvsRead))
+    {
+        nvsRead = 1;
+    }
+    state->reversed = nvsRead ? true : false;
+
+    if (!readNvs32("lfsrState", &nvsRead))
+    {
+        nvsRead = (int32_t)(state->range - 1);
+    }
+    state->state = (uint32_t)nvsRead;
+}
+
+static uint32_t setupLfsr(lfsrState_t* state, uint32_t range)
+{
+    state->state = range - 1;
+    state->range = range;
+    state->reversed = false;
+
+    return lfsrNext(state);
+}
+
+static uint32_t flipToMsb(uint32_t val)
+{
+    if (!val)
+    {
+        // can't clz(0)
+        return 0;
+    }
+
+    uint8_t bits = 32 - __builtin_clz(val);
+    uint32_t result = 1 << (bits - 1);
+
+    for (int i = 0; i < bits - 1; i++)
+    {
+        if (val & (1 << i))
+        {
+            result |= 1 << (bits - i - 2);
+        }
+    }
+
+    return result;
+}
+
+static uint32_t bitRevert(uint32_t v, uint8_t bits)
+{
+    uint8_t i = 0;
+    uint32_t lsb = 0;
+    uint32_t n = 0;
+
+    for (i = 0; i < bits; i++)
+    {
+        lsb = v & 1;
+        v >>= 1;
+        n <<= 1;
+        n |= lsb;
+    }
+
+    return n;
+}
+
+static uint32_t lfsrNext(lfsrState_t* state)
+{
+    uint16_t bits = 32 - __builtin_clz((state->range + 1) | 0x2);
+    uint16_t val = state->state & 0xFFFFu;
+
+    if (state->reversed)
+    {
+        state->reversed = false;
+        val = bitRevert(state->state, bits);
+    }
+
+    do {
+        uint16_t bit = 0;
+        for (int bitc = 0; bitc < bits; bitc++)
+        {
+            if (lfsrTaps[bits-2] & (1 << bitc))
+            {
+                bit ^= (val >> (bits - bitc - 1));
+            }
+        }
+
+        bit &= 1;
+        val = (val >> 1) | (bit << (bits-1));
+    } while (val > state->range);
+
+    state->state = val;
+
+    return val - 1;
+}
+
+static uint32_t lfsrPrev(lfsrState_t* state)
+{
+    uint16_t bits = 32 - __builtin_clz((state->range + 1) | 0x2);
+    uint16_t val = state->state & 0xFFFFu;
+    uint32_t taps = flipToMsb(lfsrTaps[bits-2]);
+
+    if (!state->reversed)
+    {
+        state->reversed = true;
+        val = bitRevert(state->state, bits);
+    }
+
+    do {
+        uint16_t bit = 0;
+        for (int bitc = 0; bitc < bits; bitc++)
+        {
+            if ((taps) & (1 << bitc))
+            {
+                bit ^= (val >> (bits - bitc - 1));
+            }
+        }
+
+        bit &= 1;
+        val = (val >> 1) | (bit << (bits-1));
+    } while (bitRevert(val, bits) > state->range);
+
+    state->state = val;
+
+    return bitRevert(val, bits) - 1;
+}
+
+static uint32_t lfsrCur(const lfsrState_t* state)
+{
+    uint16_t bits = 32 - __builtin_clz((state->range + 1) | 0x2);
+    return (state->reversed ? bitRevert(state->state, bits) : state->state) - 1;
 }
