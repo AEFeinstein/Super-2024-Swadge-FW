@@ -5,11 +5,12 @@
 #include <vectorFl2d.h>
 #include "hdw-btn.h"
 
-#define MAX_NUM_WALLS     128
-#define MAX_NUM_BALLS     128
-#define MAX_NUM_OBSTACLES 128
-#define MAX_NUM_FLIPPERS  128
-#define MAX_NUM_LAUNCHERS 128
+#define MAX_NUM_WALLS            128
+#define MAX_NUM_BALLS            128
+#define MAX_NUM_OBSTACLES        128
+#define MAX_NUM_FLIPPERS         128
+#define MAX_NUM_LAUNCHERS        128
+#define MAX_NUM_STRAIGHT_BUMPERS 128
 
 typedef struct
 {
@@ -47,6 +48,7 @@ typedef struct
 {
     vecFl_t p1;
     vecFl_t p2;
+    float pushVel;
 } jsLine_t;
 
 typedef struct
@@ -74,6 +76,8 @@ typedef struct
     int32_t numFlippers;
     jsLauncher_t launchers[MAX_NUM_LAUNCHERS];
     int32_t numLaunchers;
+    jsLine_t straightBumpers[MAX_NUM_STRAIGHT_BUMPERS];
+    int32_t numStraightBumpers;
 } jsScene_t;
 
 void jsSceneInit(jsScene_t* scene);

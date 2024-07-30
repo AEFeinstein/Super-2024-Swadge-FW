@@ -20,7 +20,8 @@ static vecFl_t jsFlipperGetTip(jsFlipper_t* flipper);
 static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2);
 static void handleBallObstacleCollision(jsScene_t* scene, jsBall_t* ball, jsObstacle_t* obstacle);
 static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper);
-static void handleBallWallCollision(jsBall_t* ball, jsLine_t* wall, int32_t numWalls);
+static void handleBallWallCollision(jsBall_t* ball, jsLine_t* walls, int32_t numWalls, jsLine_t* straightBumpers,
+                                    int32_t numStraightBumpers);
 static void jsLauncherInit(jsLauncher_t* launcher, float x, float y, float w, float h);
 static void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBalls, float dt);
 
@@ -37,7 +38,14 @@ static const jsLine_t constWalls[] = {
     {.p1 = {.x = 201, .y = 11}, .p2 = {.x = 217, .y = 18}},   {.p1 = {.x = 217, .y = 18}, .p2 = {.x = 242, .y = 37}},
     {.p1 = {.x = 242, .y = 37}, .p2 = {.x = 259, .y = 58}},   {.p1 = {.x = 259, .y = 58}, .p2 = {.x = 270, .y = 79}},
     {.p1 = {.x = 270, .y = 79}, .p2 = {.x = 276, .y = 97}},   {.p1 = {.x = 276, .y = 97}, .p2 = {.x = 279, .y = 116}},
-    {.p1 = {.x = 261, .y = 129}, .p2 = {.x = 261, .y = 239}},
+    {.p1 = {.x = 261, .y = 129}, .p2 = {.x = 261, .y = 239}}, {.p1 = {.x = 219, .y = 143}, .p2 = {.x = 190, .y = 163}},
+    {.p1 = {.x = 219, .y = 107}, .p2 = {.x = 219, .y = 143}}, {.p1 = {.x = 60, .y = 143}, .p2 = {.x = 89, .y = 163}},
+    {.p1 = {.x = 60, .y = 107}, .p2 = {.x = 60, .y = 143}},
+};
+
+static const jsLine_t constStraightBumpers[] = {
+    {.p1 = {.x = 190, .y = 163}, .p2 = {.x = 219, .y = 107}},
+    {.p1 = {.x = 89, .y = 163}, .p2 = {.x = 60, .y = 107}},
 };
 
 // physics scene -------------------------------------------------------
@@ -224,13 +232,16 @@ void jsSceneInit(jsScene_t* scene)
     scene->numWalls = 0;
     for (int32_t wIdx = 0; wIdx < ARRAY_SIZE(constWalls); wIdx++)
     {
-        scene->walls[scene->numWalls++] = constWalls[wIdx];
+        scene->walls[scene->numWalls]           = constWalls[wIdx];
+        scene->walls[scene->numWalls++].pushVel = 0;
     }
     // balls
 
     float radius = 4.0f;
-    vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
-    vecFl_t vel  = {.x = 0.0f, .y = 0.0f};
+    // vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
+    vecFl_t pos     = {.x = 120.0f, .y = 60.0f};
+    vecFl_t vel     = {.x = 0.0f, .y = 0.0f};
+    scene->numBalls = 0;
     jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
 
     // pos.x = 160.0f;
@@ -241,8 +252,16 @@ void jsSceneInit(jsScene_t* scene)
 
     // obstacles
 
-    pos.x = 130.0f;
-    pos.y = 120.0f;
+    scene->numStraightBumpers = 0;
+    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(constStraightBumpers); bIdx++)
+    {
+        scene->straightBumpers[scene->numStraightBumpers]           = constStraightBumpers[bIdx];
+        scene->straightBumpers[scene->numStraightBumpers++].pushVel = 80.0f;
+    }
+
+    pos.x               = 130.0f;
+    pos.y               = 120.0f;
+    scene->numObstacles = 0;
     jsObstacleInit(&scene->obstacles[scene->numObstacles++], 10.0f, pos, 40.0f);
 #if 0
     pos.x = 0.75f;
@@ -267,6 +286,7 @@ void jsSceneInit(jsScene_t* scene)
     vecFl_t pos1 = {.x = 94.0f, .y = 196.0f};
     vecFl_t pos2 = {.x = 185.0f, .y = 196.0f};
 
+    scene->numFlippers = 0;
     jsFlipperInit(&scene->flippers[scene->numFlippers++], radius, pos1, length, -restAngle, maxRotation,
                   angularVelocity);
     jsFlipperInit(&scene->flippers[scene->numFlippers++], radius, pos2, length, M_PI + restAngle, -maxRotation,
@@ -418,22 +438,20 @@ static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper)
  * @brief TODO doc
  *
  * @param ball
- * @param wall
+ * @param walls
  * @param numWalls
+ * @param straightBumpers
+ * @param numStraightBumpers
  */
-static void handleBallWallCollision(jsBall_t* ball, jsLine_t* walls, int32_t numWalls)
+static void handleBallWallCollision(jsBall_t* ball, jsLine_t* walls, int32_t numWalls, jsLine_t* straightBumpers,
+                                    int32_t numStraightBumpers)
 {
-    // if (numWalls < 3)
-    // {
-    //     return;
-    // }
-
     // find closest segment;
-
     vecFl_t ballToClosest;
     vecFl_t ab;
     vecFl_t normal;
     float minDist = FLT_MAX;
+    float pushVel = 0;
 
     // For each segment of the wall
     for (int32_t i = 0; i < numWalls; i++)
@@ -454,6 +472,29 @@ static void handleBallWallCollision(jsBall_t* ball, jsLine_t* walls, int32_t num
             ballToClosest = d;
             ab            = subVecFl2d(b, a);
             normal        = perpendicularVecFl2d(ab);
+            pushVel       = walls[i].pushVel;
+        }
+    }
+
+    for (int32_t i = 0; i < numStraightBumpers; i++)
+    {
+        // Get the line segment from the list of walls
+        vecFl_t a = straightBumpers[i].p1;
+        vecFl_t b = straightBumpers[i].p2;
+        // Get the closest point on the segment to the center of the ball
+        vecFl_t c = closestPointOnSegment(ball->pos, a, b);
+        // Find the distance between the center of the ball and the closest point on the line
+        vecFl_t d  = subVecFl2d(ball->pos, c);
+        float dist = magVecFl2d(d);
+        // If the distance is less than the radius, and the distance is less
+        // than the minimum distance, its the best collision
+        if ((dist < ball->radius) && (dist < minDist))
+        {
+            minDist       = dist;
+            ballToClosest = d;
+            ab            = subVecFl2d(b, a);
+            normal        = perpendicularVecFl2d(ab);
+            pushVel       = straightBumpers[i].pushVel;
         }
     }
 
@@ -472,10 +513,18 @@ static void handleBallWallCollision(jsBall_t* ball, jsLine_t* walls, int32_t num
     ballToClosest = divVecFl2d(ballToClosest, minDist);
     ball->pos     = addVecFl2d(ball->pos, mulVecFl2d(ballToClosest, ball->radius - minDist)); // TODO epsilon here?
 
-    // update velocity
-    float v    = dotVecFl2d(ball->vel, ballToClosest);
-    float vNew = ABS(v) * ball->restitution; // TODO care about wall's restitution?
-    ball->vel  = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, vNew - v));
+    float v = dotVecFl2d(ball->vel, ballToClosest);
+    if (pushVel)
+    {
+        // Adjust the velocity
+        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, pushVel - v));
+    }
+    else
+    {
+        // update velocity
+        float vNew = ABS(v) * ball->restitution; // TODO care about wall's restitution?
+        ball->vel  = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, vNew - v));
+    }
 }
 
 // simulation -------------------------------------------------------
@@ -508,7 +557,7 @@ void jsSimulate(jsScene_t* scene)
             handleBallFlipperCollision(ball, &scene->flippers[j]);
         }
 
-        handleBallWallCollision(ball, scene->walls, scene->numWalls);
+        handleBallWallCollision(ball, scene->walls, scene->numWalls, scene->straightBumpers, scene->numStraightBumpers);
     }
 
     for (int32_t i = 0; i < scene->numLaunchers; i++)
@@ -529,14 +578,11 @@ void jsSceneDraw(jsScene_t* scene)
     clearPxTft();
 
     // wall
-    if (scene->numWalls >= 2)
+    for (int32_t i = 0; i < scene->numWalls; i++)
     {
-        for (int32_t i = 0; i < scene->numWalls; i++)
-        {
-            vecFl_t* p1 = &scene->walls[i].p1;
-            vecFl_t* p2 = &scene->walls[i].p2;
-            drawLineFast(p1->x, p1->y, p2->x, p2->y, c555);
-        }
+        vecFl_t* p1 = &scene->walls[i].p1;
+        vecFl_t* p2 = &scene->walls[i].p2;
+        drawLineFast(p1->x, p1->y, p2->x, p2->y, c555);
     }
 
     // balls
@@ -551,6 +597,13 @@ void jsSceneDraw(jsScene_t* scene)
     {
         vecFl_t* pos = &scene->obstacles[i].pos;
         drawCircleFilled(pos->x, pos->y, scene->obstacles[i].radius, c131);
+    }
+
+    for (int32_t i = 0; i < scene->numWalls; i++)
+    {
+        vecFl_t* p1 = &scene->straightBumpers[i].p1;
+        vecFl_t* p2 = &scene->straightBumpers[i].p2;
+        drawLineFast(p1->x, p1->y, p2->x, p2->y, c500);
     }
 
     // flippers
