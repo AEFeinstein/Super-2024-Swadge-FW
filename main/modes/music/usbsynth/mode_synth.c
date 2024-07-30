@@ -33,6 +33,8 @@
 // math is wild yo
 #define BPM_TO_TEMPO(b) TEMPO_TO_BPM(b)
 
+#define SYNTH_BG_COLOR c112
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -1065,7 +1067,7 @@ static void synthMainLoop(int64_t elapsedUs)
     }
     else if (sd->screen == SS_FILE_SELECT)
     {
-        clearPxTft();
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, SYNTH_BG_COLOR);
         drawSynthMode();
 
         if (!textEntryDraw(elapsedUs))
@@ -1094,7 +1096,7 @@ static void synthMainLoop(int64_t elapsedUs)
     else if (sd->screen == SS_VIEW)
     {
         // Blank the screen
-        clearPxTft();
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, SYNTH_BG_COLOR);
 
         if (!sd->fileMode && (!sd->installed || sd->err != 0))
         {
