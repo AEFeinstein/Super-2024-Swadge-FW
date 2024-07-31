@@ -1181,7 +1181,7 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
 
         player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
 
-        stopped = !player->eventAvailable;
+        stopped = !player->eventAvailable && !(player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent));
         if (stopped)
         {
             midiSongEnd(player);

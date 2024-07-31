@@ -2203,17 +2203,25 @@ static void synthHandleButton(const buttonEvt_t evt)
                 case PB_LEFT:
                 {
                     // Seek Left
-                    const uint32_t seekLeftAmt = 10 * DAC_SAMPLE_RATE_HZ;
+                    const uint32_t seekLeftAmt = 5 * DAC_SAMPLE_RATE_HZ;
 
                     if (!sd->leftHeld)
                     {
                         sd->leftHeld = true;
-
-                        sd->leftHeldTimer = 2000000;
+                        sd->leftHeldTimer = 500000;
                     }
-                    else if (sd->midiPlayer.sampleCount > seekLeftAmt)
+                    else if (sd->fileMode && sd->midiPlayer.sampleCount > seekLeftAmt)
                     {
                         midiSeek(&sd->midiPlayer, SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount - seekLeftAmt, sd->midiPlayer.tempo, sd->midiPlayer.reader.division));
+                    }
+                    else if (sd->fileMode && sd->midiPlayer.sampleCount > (DAC_SAMPLE_RATE_HZ / 2))
+                    {
+                        // Restart song
+                        midiSeek(&sd->midiPlayer, 0);
+                    }
+                    else
+                    {
+                        prevSong();
                     }
                     break;
                 }
@@ -2292,11 +2300,21 @@ static void synthHandleButton(const buttonEvt_t evt)
             }
             else if (evt.button == PB_LEFT)
             {
-                if (sd->leftHeld && sd->leftHeldTimer > 1500000)
+                if (sd->leftHeld && sd->leftHeldTimer > 100000)
                 {
                     // The button wasn't held, just clicked
-                    prevSong();
+                    if (sd->midiPlayer.sampleCount > DAC_SAMPLE_RATE_HZ)
+                    {
+                        // If you click left after the song has played for 1s, restart first
+                        midiSeek(&sd->midiPlayer, 0);
+                    }
+                    else
+                    {
+                        // If you click within the first 1s of the song, go to the previous song
+                        prevSong();
+                    }
                 }
+
                 // Stop seeking left
                 sd->leftHeld = false;
                 sd->leftHeldTimer = 0;
