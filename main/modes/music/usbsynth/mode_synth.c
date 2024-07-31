@@ -221,6 +221,8 @@ typedef struct
     menuManiaRenderer_t* renderer;
     wheelMenuRenderer_t* wheelMenu;
     rectangle_t wheelTextArea;
+
+    int64_t marqueeTimer;
 } synthData_t;
 
 //==============================================================================
@@ -1061,6 +1063,7 @@ static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y,
 
 static void synthMainLoop(int64_t elapsedUs)
 {
+    sd->marqueeTimer += elapsedUs;
     if (sd->screen == SS_MENU)
     {
         drawMenuMania(sd->menu, sd->renderer, elapsedUs);
@@ -1559,9 +1562,21 @@ static void drawSynthMode(void)
         int16_t iconPosL = iconPosR - ICON_SIZE - 1;
         if (sd->fileMode && sd->filename && *sd->filename)
         {
-            int16_t textX = (TFT_WIDTH - textWidth(&sd->font, sd->filename)) / 2;
-            iconPosR      = drawText(&sd->font, c034, sd->filename, textX, TFT_HEIGHT - sd->font.height - 15);
-            iconPosL      = textX - ICON_SIZE - 1;
+            int16_t textW = textWidth(&sd->font, sd->filename);
+            int16_t textX = MAX(15, (TFT_WIDTH - textW) / 2);
+
+            if (textW > TFT_WIDTH - (ICON_SIZE + 3) * 2 - 10)
+            {
+                textX = ICON_SIZE + 3 + 5;
+                drawTextMarquee(&sd->font, c034, sd->filename, textX, TFT_HEIGHT - sd->font.height - 15, TFT_WIDTH - ICON_SIZE - 3 - 5, &sd->marqueeTimer);
+                iconPosR = TFT_WIDTH - ICON_SIZE - 2 - 5;
+                iconPosL = 1;
+            }
+            else
+            {
+                iconPosR = drawText(&sd->font, c034, sd->filename, textX, TFT_HEIGHT - sd->font.height - 15);
+                iconPosL = textX - ICON_SIZE - 1;
+            }
         }
 
         musicIcon_t statusIcon = MI_PAUSE;
