@@ -136,8 +136,18 @@ def main():
     cstr += '\n};\n\n'
 
     # Extract straight bumpers
-    cstr += 'static const lineFl_t constStraightBumpers[] = {\n'
+    cstr += 'static const lineFl_t constSlingshots[] = {\n'
     cstr += '\n'.join(extractPaths(g.objects['Bumpers']))
+    cstr += '\n};\n\n'
+
+    # Extract drop targets
+    cstr += 'static const lineFl_t constDropTargets[] = {\n'
+    cstr += '\n'.join(extractPaths(g.objects['Drop_Targets']))
+    cstr += '\n};\n\n'
+
+    # Extract standup_targets
+    cstr += 'static const lineFl_t constStandupTargets[] = {\n'
+    cstr += '\n'.join(extractPaths(g.objects['Standup_Targets']))
     cstr += '\n};\n\n'
 
     # Extract launchers
