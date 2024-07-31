@@ -20,8 +20,7 @@ static vecFl_t jsFlipperGetTip(jsFlipper_t* flipper);
 static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2);
 static void handleBallObstacleCollision(jsScene_t* scene, jsBall_t* ball, jsObstacle_t* obstacle);
 static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper);
-static void handleBallWallCollision(jsBall_t* ball, jsLine_t* walls, int32_t numWalls, jsLine_t* straightBumpers,
-                                    int32_t numStraightBumpers);
+static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines);
 static void jsLauncherInit(jsLauncher_t* launcher, float x, float y, float w, float h);
 static void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBalls, float dt);
 
@@ -43,9 +42,21 @@ static const jsLine_t constWalls[] = {
     {.p1 = {.x = 60, .y = 107}, .p2 = {.x = 60, .y = 143}},
 };
 
-static const jsLine_t constStraightBumpers[] = {
+static const jsLine_t constSlingshots[] = {
     {.p1 = {.x = 190, .y = 163}, .p2 = {.x = 219, .y = 107}},
     {.p1 = {.x = 89, .y = 163}, .p2 = {.x = 60, .y = 107}},
+};
+
+static const jsLine_t constDropTargets[] = {
+    {.p1 = {.x = 54, .y = 70}, .p2 = {.x = 70, .y = 59}},
+    {.p1 = {.x = 76, .y = 56}, .p2 = {.x = 92, .y = 44}},
+    {.p1 = {.x = 97, .y = 41}, .p2 = {.x = 114, .y = 29}},
+};
+
+static const jsLine_t constStandupTargets[] = {
+    {.p1 = {.x = 225, .y = 70}, .p2 = {.x = 209, .y = 59}},
+    {.p1 = {.x = 203, .y = 56}, .p2 = {.x = 187, .y = 44}},
+    {.p1 = {.x = 182, .y = 41}, .p2 = {.x = 165, .y = 29}},
 };
 
 // physics scene -------------------------------------------------------
@@ -229,17 +240,54 @@ void jsSceneInit(jsScene_t* scene)
     scene->score     = 0;
     scene->paused    = true;
 
-    scene->numWalls = 0;
+    scene->numLines = 0;
     for (int32_t wIdx = 0; wIdx < ARRAY_SIZE(constWalls); wIdx++)
     {
-        scene->walls[scene->numWalls]           = constWalls[wIdx];
-        scene->walls[scene->numWalls++].pushVel = 0;
+        jsLine_t* line = &scene->lines[scene->numLines++];
+        // Copy location
+        *line = constWalls[wIdx];
+        // Walls don't push
+        line->type    = JS_WALL;
+        line->pushVel = 0;
+        line->isSolid = true;
+    }
+    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(constSlingshots); bIdx++)
+    {
+        jsLine_t* line = &scene->lines[scene->numLines++];
+        // Copy location
+        *line = constSlingshots[bIdx];
+        // Slingshots push
+        line->type    = JS_SLINGSHOT;
+        line->pushVel = 80.0f;
+        line->isSolid = true;
+    }
+    for (int32_t dIdx = 0; dIdx < ARRAY_SIZE(constDropTargets); dIdx++)
+    {
+        jsLine_t* line = &scene->lines[scene->numLines++];
+        // Copy location
+        *line = constDropTargets[dIdx];
+        // Drop targets don't push
+        line->type    = JS_DROP_TARGET;
+        line->pushVel = 0;
+        line->isUp    = true;
+        line->isSolid = true;
+    }
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(constStandupTargets); sIdx++)
+    {
+        jsLine_t* line = &scene->lines[scene->numLines++];
+        // Copy location
+        *line = constStandupTargets[sIdx];
+        // Standups don't push
+        line->type    = JS_STANDUP_TARGET;
+        line->pushVel = 0;
+        line->isSolid = true;
+        // TODO save group somewhere
     }
     // balls
 
     float radius = 4.0f;
     // vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
-    vecFl_t pos     = {.x = 120.0f, .y = 60.0f};
+    vecFl_t pos     = {.x = 48.0f, .y = 140.0f};
     vecFl_t vel     = {.x = 0.0f, .y = 0.0f};
     scene->numBalls = 0;
     jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
@@ -251,13 +299,6 @@ void jsSceneInit(jsScene_t* scene)
     // jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
 
     // obstacles
-
-    scene->numStraightBumpers = 0;
-    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(constStraightBumpers); bIdx++)
-    {
-        scene->straightBumpers[scene->numStraightBumpers]           = constStraightBumpers[bIdx];
-        scene->straightBumpers[scene->numStraightBumpers++].pushVel = 80.0f;
-    }
 
     pos.x               = 130.0f;
     pos.y               = 120.0f;
@@ -438,68 +479,46 @@ static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper)
  * @brief TODO doc
  *
  * @param ball
- * @param walls
- * @param numWalls
- * @param straightBumpers
- * @param numStraightBumpers
+ * @param lines
+ * @param numLines
  */
-static void handleBallWallCollision(jsBall_t* ball, jsLine_t* walls, int32_t numWalls, jsLine_t* straightBumpers,
-                                    int32_t numStraightBumpers)
+static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines)
 {
     // find closest segment;
     vecFl_t ballToClosest;
     vecFl_t ab;
     vecFl_t normal;
-    float minDist = FLT_MAX;
-    float pushVel = 0;
+    float minDist  = FLT_MAX;
+    jsLine_t* line = NULL;
 
     // For each segment of the wall
-    for (int32_t i = 0; i < numWalls; i++)
+    for (int32_t i = 0; i < numLines; i++)
     {
-        // Get the line segment from the list of walls
-        vecFl_t a = walls[i].p1;
-        vecFl_t b = walls[i].p2;
-        // Get the closest point on the segment to the center of the ball
-        vecFl_t c = closestPointOnSegment(ball->pos, a, b);
-        // Find the distance between the center of the ball and the closest point on the line
-        vecFl_t d  = subVecFl2d(ball->pos, c);
-        float dist = magVecFl2d(d);
-        // If the distance is less than the radius, and the distance is less
-        // than the minimum distance, its the best collision
-        if ((dist < ball->radius) && (dist < minDist))
+        if (lines[i].isSolid)
         {
-            minDist       = dist;
-            ballToClosest = d;
-            ab            = subVecFl2d(b, a);
-            normal        = perpendicularVecFl2d(ab);
-            pushVel       = walls[i].pushVel;
-        }
-    }
-
-    for (int32_t i = 0; i < numStraightBumpers; i++)
-    {
-        // Get the line segment from the list of walls
-        vecFl_t a = straightBumpers[i].p1;
-        vecFl_t b = straightBumpers[i].p2;
-        // Get the closest point on the segment to the center of the ball
-        vecFl_t c = closestPointOnSegment(ball->pos, a, b);
-        // Find the distance between the center of the ball and the closest point on the line
-        vecFl_t d  = subVecFl2d(ball->pos, c);
-        float dist = magVecFl2d(d);
-        // If the distance is less than the radius, and the distance is less
-        // than the minimum distance, its the best collision
-        if ((dist < ball->radius) && (dist < minDist))
-        {
-            minDist       = dist;
-            ballToClosest = d;
-            ab            = subVecFl2d(b, a);
-            normal        = perpendicularVecFl2d(ab);
-            pushVel       = straightBumpers[i].pushVel;
+            // Get the line segment from the list of walls
+            vecFl_t a = lines[i].p1;
+            vecFl_t b = lines[i].p2;
+            // Get the closest point on the segment to the center of the ball
+            vecFl_t c = closestPointOnSegment(ball->pos, a, b);
+            // Find the distance between the center of the ball and the closest point on the line
+            vecFl_t d  = subVecFl2d(ball->pos, c);
+            float dist = magVecFl2d(d);
+            // If the distance is less than the radius, and the distance is less
+            // than the minimum distance, its the best collision
+            if ((dist < ball->radius) && (dist < minDist))
+            {
+                minDist       = dist;
+                ballToClosest = d;
+                ab            = subVecFl2d(b, a);
+                normal        = perpendicularVecFl2d(ab);
+                line          = &lines[i];
+            }
         }
     }
 
     // Check if there were any collisions
-    if (FLT_MAX == minDist)
+    if (NULL == line)
     {
         return;
     }
@@ -514,16 +533,23 @@ static void handleBallWallCollision(jsBall_t* ball, jsLine_t* walls, int32_t num
     ball->pos     = addVecFl2d(ball->pos, mulVecFl2d(ballToClosest, ball->radius - minDist)); // TODO epsilon here?
 
     float v = dotVecFl2d(ball->vel, ballToClosest);
-    if (pushVel)
+    if (line->pushVel)
     {
         // Adjust the velocity
-        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, pushVel - v));
+        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, line->pushVel - v));
     }
     else
     {
         // update velocity
         float vNew = ABS(v) * ball->restitution; // TODO care about wall's restitution?
         ball->vel  = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, vNew - v));
+    }
+
+    if (JS_DROP_TARGET == line->type)
+    {
+        line->isUp    = false;
+        line->isSolid = false;
+        // TODO check if all targets in the group are hit
     }
 }
 
@@ -557,7 +583,7 @@ void jsSimulate(jsScene_t* scene)
             handleBallFlipperCollision(ball, &scene->flippers[j]);
         }
 
-        handleBallWallCollision(ball, scene->walls, scene->numWalls, scene->straightBumpers, scene->numStraightBumpers);
+        handleBallLineCollision(ball, scene->lines, scene->numLines);
     }
 
     for (int32_t i = 0; i < scene->numLaunchers; i++)
@@ -577,12 +603,49 @@ void jsSceneDraw(jsScene_t* scene)
 {
     clearPxTft();
 
-    // wall
-    for (int32_t i = 0; i < scene->numWalls; i++)
+    // LInes
+    for (int32_t i = 0; i < scene->numLines; i++)
     {
-        vecFl_t* p1 = &scene->walls[i].p1;
-        vecFl_t* p2 = &scene->walls[i].p2;
-        drawLineFast(p1->x, p1->y, p2->x, p2->y, c555);
+        vecFl_t* p1          = &scene->lines[i].p1;
+        vecFl_t* p2          = &scene->lines[i].p2;
+        paletteColor_t color = c555;
+        switch (scene->lines[i].type)
+        {
+            case JS_WALL:
+            {
+                color = c555;
+                break;
+            }
+            case JS_SLINGSHOT:
+            {
+                color = c500;
+                break;
+            }
+            case JS_DROP_TARGET:
+            {
+                if (scene->lines[i].isUp)
+                {
+                    color = c050;
+                }
+                else
+                {
+                    color = c010;
+                };
+                break;
+            }
+            case JS_STANDUP_TARGET:
+            {
+                color = c004;
+                break;
+            }
+            case JS_SPINNER:
+            {
+                color = c123;
+                break;
+            }
+        }
+
+        drawLineFast(p1->x, p1->y, p2->x, p2->y, color);
     }
 
     // balls
@@ -597,13 +660,6 @@ void jsSceneDraw(jsScene_t* scene)
     {
         vecFl_t* pos = &scene->obstacles[i].pos;
         drawCircleFilled(pos->x, pos->y, scene->obstacles[i].radius, c131);
-    }
-
-    for (int32_t i = 0; i < scene->numWalls; i++)
-    {
-        vecFl_t* p1 = &scene->straightBumpers[i].p1;
-        vecFl_t* p2 = &scene->straightBumpers[i].p2;
-        drawLineFast(p1->x, p1->y, p2->x, p2->y, c500);
     }
 
     // flippers

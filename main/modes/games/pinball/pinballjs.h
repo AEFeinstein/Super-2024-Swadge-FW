@@ -5,13 +5,20 @@
 #include <vectorFl2d.h>
 #include "hdw-btn.h"
 
-#define MAX_NUM_WALLS            128
-#define MAX_NUM_BALLS            128
-#define MAX_NUM_OBSTACLES        128
-#define MAX_NUM_FLIPPERS         128
-#define MAX_NUM_LAUNCHERS        128
-#define MAX_NUM_STRAIGHT_BUMPERS 128
+#define MAX_NUM_LINES     128
+#define MAX_NUM_BALLS     128
+#define MAX_NUM_OBSTACLES 128
+#define MAX_NUM_FLIPPERS  128
+#define MAX_NUM_LAUNCHERS 128
 
+typedef enum
+{
+    JS_WALL,
+    JS_SLINGSHOT,
+    JS_DROP_TARGET,
+    JS_STANDUP_TARGET,
+    JS_SPINNER,
+} jsLineType_t;
 typedef struct
 {
     float radius;
@@ -46,9 +53,12 @@ typedef struct
 
 typedef struct
 {
+    jsLineType_t type;
     vecFl_t p1;
     vecFl_t p2;
     float pushVel;
+    bool isSolid;
+    bool isUp;
 } jsLine_t;
 
 typedef struct
@@ -66,8 +76,8 @@ typedef struct
     float dt;
     int32_t score;
     bool paused;
-    jsLine_t walls[MAX_NUM_WALLS];
-    int32_t numWalls;
+    jsLine_t lines[MAX_NUM_LINES];
+    int32_t numLines;
     jsBall_t balls[MAX_NUM_BALLS];
     int32_t numBalls;
     jsObstacle_t obstacles[MAX_NUM_OBSTACLES];
@@ -76,8 +86,6 @@ typedef struct
     int32_t numFlippers;
     jsLauncher_t launchers[MAX_NUM_LAUNCHERS];
     int32_t numLaunchers;
-    jsLine_t straightBumpers[MAX_NUM_STRAIGHT_BUMPERS];
-    int32_t numStraightBumpers;
 } jsScene_t;
 
 void jsSceneInit(jsScene_t* scene);
