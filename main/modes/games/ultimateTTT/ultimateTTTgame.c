@@ -172,8 +172,13 @@ static void decCursorY(ultimateTTT_t* ttt)
  * @param ttt The entire game state
  * @return true if the cursor is on a valid subgame or cell, false otherwise
  */
-static bool cursorIsValid(ultimateTTT_t* ttt)
+bool tttCursorIsValid(ultimateTTT_t* ttt, const vec_t* cursor)
 {
+    if (cursor->x < 0 || cursor->y < 0 || cursor->x > 2 || cursor->y > 2)
+    {
+        return false;
+    }
+
     switch (ttt->game.cursorMode)
     {
         case NO_CURSOR:
@@ -185,7 +190,7 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
         case SELECT_SUBGAME:
         {
             // Subgames are valid if there is no winner
-            return TTT_NONE == ttt->game.subgames[ttt->game.cursor.x][ttt->game.cursor.y].winner;
+            return TTT_NONE == ttt->game.subgames[cursor->x][cursor->y].winner;
         }
         case SELECT_CELL:
         case SELECT_CELL_LOCKED:
@@ -193,7 +198,7 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
             // Cells are valid if there is no marker
             return TTT_NONE
                    == ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y]
-                          .game[ttt->game.cursor.x][ttt->game.cursor.y];
+                          .game[cursor->x][cursor->y];
         }
     }
 }
@@ -264,7 +269,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                     {
                         for (int16_t x = 0; x < 3; x++)
                         {
-                            if (!cursorIsValid(ttt))
+                            if (!tttCursorIsValid(ttt, &ttt->game.cursor))
                             {
                                 incCursorX(ttt);
                             }
@@ -274,7 +279,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                             }
                         }
 
-                        if (!cursorIsValid(ttt))
+                        if (!tttCursorIsValid(ttt, &ttt->game.cursor))
                         {
                             incCursorY(ttt);
                         }
@@ -327,7 +332,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
             for (int16_t a = 0; a < 2; a++)
             {
                 cursorFunc(ttt);
-                if (cursorIsValid(ttt))
+                if (tttCursorIsValid(ttt, &ttt->game.cursor))
                 {
                     cursorIsSet = true;
                     break;
@@ -351,7 +356,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                         cursorFuncSecondary(ttt);
 
                         // If it's valid
-                        if (cursorIsValid(ttt))
+                        if (tttCursorIsValid(ttt, &ttt->game.cursor))
                         {
                             // Mark and break
                             cursorIsSet = true;
@@ -590,7 +595,7 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
                 {
                     for (int16_t x = 0; x < 3; x++)
                     {
-                        if (!cursorIsValid(ttt))
+                        if (!tttCursorIsValid(ttt, &ttt->game.cursor))
                         {
                             incCursorX(ttt);
                         }
@@ -600,7 +605,7 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
                         }
                     }
 
-                    if (!cursorIsValid(ttt))
+                    if (!tttCursorIsValid(ttt, &ttt->game.cursor))
                     {
                         incCursorY(ttt);
                     }

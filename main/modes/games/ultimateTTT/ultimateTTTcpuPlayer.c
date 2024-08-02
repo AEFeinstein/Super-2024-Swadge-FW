@@ -129,31 +129,35 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
             payload.cursor.x = ttt->game.cursor.x;
             payload.cursor.y = ttt->game.cursor.y;
 
-            if (ttt->game.selectedSubgame.x < ttt->game.cpu.destSubgame.x)
-            {
-                payload.selectedSubgame.x++;
-            }
-            else if (ttt->game.selectedSubgame.x > ttt->game.cpu.destSubgame.x)
-            {
-                payload.selectedSubgame.x--;
-            }
-            else if (ttt->game.selectedSubgame.y < ttt->game.cpu.destSubgame.y)
-            {
-                payload.selectedSubgame.y++;
-            }
-            else if (ttt->game.selectedSubgame.y > ttt->game.cpu.destSubgame.y)
-            {
-                payload.selectedSubgame.y--;
-            }
-            else
-            {
-                // We're in the right place already!
-                payload.cursorMode = SELECT_CELL;
-                // TODO don't select an invalid cell
-                payload.cursor.x = 1;
-                payload.cursor.y = 1;
-            }
+            do {
+                if (payload.selectedSubgame.x < ttt->game.cpu.destSubgame.x && payload.selectedSubgame.x < 2)
+                {
+                    payload.selectedSubgame.x++;
+                }
+                else if (payload.selectedSubgame.y < ttt->game.cpu.destSubgame.y && payload.selectedSubgame.y < 2)
+                {
+                    payload.selectedSubgame.y++;
+                }
+                else if (payload.selectedSubgame.x > ttt->game.cpu.destSubgame.x && payload.selectedSubgame.x > 0)
+                {
+                    payload.selectedSubgame.x--;
+                }
+                else if (payload.selectedSubgame.y > ttt->game.cpu.destSubgame.y && payload.selectedSubgame.y > 0)
+                {
+                    payload.selectedSubgame.y--;
+                }
+                else
+                {
+                    // We're in the right place already!
+                    payload.cursorMode = SELECT_CELL;
+                    // TODO don't select an invalid cell
+                    payload.cursor.x = 1;
+                    payload.cursor.y = 1;
+                }
+            } while (ttt->game.subgames[payload.selectedSubgame.x][payload.selectedSubgame.y].winner != TTT_NONE);
 
+            payload.cursor.x = payload.selectedSubgame.x;
+            payload.cursor.y = payload.selectedSubgame.y;
             tttReceiveCursor(ttt, &payload);
         }
         else if (ttt->game.cursorMode == SELECT_CELL || ttt->game.cursorMode == SELECT_CELL_LOCKED)
@@ -167,37 +171,39 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
             payload.selectedSubgame.x = ttt->game.selectedSubgame.x;
             payload.selectedSubgame.y = ttt->game.selectedSubgame.y;
 
-            if (ttt->game.cursor.x < ttt->game.cpu.destCell.x)
-            {
-                payload.cursor.x++;
-            }
-            else if (ttt->game.cursor.x > ttt->game.cpu.destCell.x)
-            {
-                payload.cursor.x--;
-            }
-            else if (ttt->game.cursor.y < ttt->game.cpu.destCell.y)
-            {
-                payload.cursor.y++;
-            }
-            else if (ttt->game.cursor.y > ttt->game.cpu.destCell.y)
-            {
-                payload.cursor.y--;
-            }
-            else
-            {
-                // The cursor is in the right place, select it!
-                tttMsgPlaceMarker_t placePayload;
-                placePayload.type = MSG_PLACE_MARKER;
-                placePayload.selectedSubgame = ttt->game.selectedSubgame;
-                placePayload.selectedCell.x = ttt->game.cpu.destCell.x;
-                placePayload.selectedCell.y = ttt->game.cpu.destCell.y;
+            do {
+                if (payload.cursor.x < ttt->game.cpu.destCell.x && payload.cursor.x < 2)
+                {
+                    payload.cursor.x++;
+                }
+                else if (payload.cursor.y < ttt->game.cpu.destCell.y && payload.cursor.y < 2)
+                {
+                    payload.cursor.y++;
+                }
+                else if (payload.cursor.x > ttt->game.cpu.destCell.x && payload.cursor.x > 0)
+                {
+                    payload.cursor.x--;
+                }
+                else if (payload.cursor.y > ttt->game.cpu.destCell.y && payload.cursor.y > 0)
+                {
+                    payload.cursor.y--;
+                }
+                else
+                {
+                    // The cursor is in the right place, select it!
+                    tttMsgPlaceMarker_t placePayload;
+                    placePayload.type = MSG_PLACE_MARKER;
+                    placePayload.selectedSubgame = ttt->game.selectedSubgame;
+                    placePayload.selectedCell.x = ttt->game.cpu.destCell.x;
+                    placePayload.selectedCell.y = ttt->game.cpu.destCell.y;
 
-                ttt->game.cpu.state = TCPU_INACTIVE;
+                    ttt->game.cpu.state = TCPU_INACTIVE;
 
-                tttReceivePlacedMarker(ttt, &placePayload);
+                    tttReceivePlacedMarker(ttt, &placePayload);
 
-                return;
-            }
+                    return;
+                }
+            } while (!tttCursorIsValid(ttt, &payload.cursor));
 
             tttReceiveCursor(ttt, &payload);
         }
