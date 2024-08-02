@@ -939,11 +939,11 @@ void animatePlayer(paEntity_t* self)
         {
             // Running
             self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
+            self->facingDirection = !self->spriteFlipHorizontal;
 
             if (self->gameData->frameCount % 7 == 0)
             {
                 self->spriteIndex = PA_SP_PLAYER_SIDE + ((self->spriteIndex + 1) % 3);
-                self->facingDirection = !self->spriteFlipHorizontal;
             }
         }
         else
@@ -953,21 +953,23 @@ void animatePlayer(paEntity_t* self)
     }
     else if (self->yspeed > 0){
         if ((self->gameData->btnState & PB_DOWN) && self->yspeed > 0){
+            self->facingDirection = PA_DIRECTION_DOWN;
+
             if (self->gameData->frameCount % 7 == 0)
             {
                 self->spriteIndex = PA_SP_PLAYER_SOUTH + ((self->spriteIndex + 1) % 2);
-                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                self->facingDirection = PA_DIRECTION_DOWN;
+                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;   
             }
         }
     }
      else if (self->yspeed < 0){
         if ((self->gameData->btnState & PB_UP) && self->yspeed < 0){
+            self->facingDirection = PA_DIRECTION_UP;
+
             if (self->gameData->frameCount % 7 == 0)
             {
                 self->spriteIndex = PA_SP_PLAYER_NORTH + ((self->spriteIndex + 1) % 2);
                 self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                self->facingDirection = PA_DIRECTION_UP;
             }
         }
     }
