@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <esp_err.h>
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "hdw-nvs.h"
 #include <nvs.h>
 
@@ -14,8 +14,8 @@
 #include "heatshrink_helper.h"
 
 /**
- * @brief Read a heatshrink compressed file from SPIFFS into an output array.
- * Files that are in the spiffs_image folder before compilation and flashing
+ * @brief Read a heatshrink compressed file from the filesystem into an output array.
+ * Files that are in the assets_image folder before compilation and flashing
  * will automatically be included in the firmware.
  *
  * @param fname   The name of the file to load
@@ -28,7 +28,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
 {
     // Read WSG from file
     size_t sz;
-    uint8_t* buf = spiffsReadFile(fname, &sz, readToSpiRam);
+    const uint8_t* buf = cnfsGetFile(fname, &sz);
     if (NULL == buf)
     {
         ESP_LOGE("WSG", "Failed to read %s", fname);
@@ -69,7 +69,6 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
             ESP_LOGE("WSG", "Failed to read %s fault on decode", fname);
             heatshrink_decoder_finish(hsd);
             heatshrink_decoder_free(hsd);
-            free(buf);
             free(decompressedBuf);
             return 0;
         }
@@ -91,8 +90,6 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
     // All done decoding
     heatshrink_decoder_finish(hsd);
     heatshrink_decoder_free(hsd);
-    // Free the bytes read from the file
-    free(buf);
 
     // Return the decompressed bytes
     return decompressedBuf;

@@ -6,13 +6,12 @@
  * to play songs in a hardware-agnostic way. The configuration may be changed using <tt>idf.py menuconfig</tt> in the
  * "Swadge Configuration" menu's "Select Sound Output" option.
  *
- * See sngPlayer.h and hdw-bzr.h for the DAC speaker and buzzer respective functions that these macros route to.
+ * See sngPlayer.h for the DAC speaker functions that these macros route to.
  */
 
 #pragma once
 
-#include "hdw-bzr.h"
-#include "sngPlayer.h"
+#include "midiPlayer.h"
 
 #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
 
@@ -25,7 +24,7 @@
      * @param song    The song to play
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      */
-    #define soundPlaySfx(song, channel) spkSongPlay(0, song)
+    #define soundPlaySfx(song, channel) globalMidiPlayerPlaySong(song, MIDI_SFX)
 
     /**
      * @brief Play a song as background music. For buzzers, background music may be interrupted by sound effects and may
@@ -37,7 +36,7 @@
      * @param song    The song to play
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      */
-    #define soundPlayBgm(song, channel) spkSongPlay(1, song)
+    #define soundPlayBgm(song, channel) globalMidiPlayerPlaySong(song, MIDI_BGM)
 
     /**
      * @brief Just like soundPlaySfx(), but with a callback which is called when the song ends
@@ -48,7 +47,7 @@
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      * @param cb      A callback called when the song finishes
      */
-    #define soundPlaySfxCb(song, channel, cb) spkSongPlayCb(0, song, cb)
+    #define soundPlaySfxCb(song, channel, cb) globalMidiPlayerPlaySongCb(song, MIDI_SFX, cb)
 
     /**
      * @brief Just like soundPlayBgm(), but with a callback which is called when the song ends
@@ -59,7 +58,7 @@
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      * @param cb      A callback called when the song finishes
      */
-    #define soundPlayBgmCb(song, channel, cb) spkSongPlayCb(1, song, cb)
+    #define soundPlayBgmCb(song, channel, cb) globalMidiPlayerPlaySongCb(song, MIDI_BGM, cb)
 
     /**
      * @brief Stop all playing songs
@@ -68,32 +67,32 @@
      *
      * @param reset true to clear out song data as well
      */
-    #define soundStop(reset) spkSongStop(reset)
+    #define soundStop(reset) globalMidiPlayerStop(reset)
 
     /**
      * @brief Pause all songs. This stops output and may be resumed from that point in the song later
      *
      * Calls spkSongPause() or bzrPause()
      */
-    #define soundPause() spkSongPause()
+    #define soundPause() globalMidiPlayerPauseAll()
 
     /**
      * @brief Resume all songs. This should be called after soundPause()
      *
      * Calls soundResume() or bzrResume()
      */
-    #define soundResume() spkSongResume()
+    #define soundResume() globalMidiPlayerResumeAll()
 
     /**
      * @brief Stop all songs and return a void* containing all the state. The state must be freed or restored with
      * soundRestore() later. This is useful to stop the audio output, play something completely different, and resume
      * the original output later.
      *
-     * Calls spkSongSave() or bzrSave()
+     * Calls globalMidiSave() or bzrSave()
      *
      * @return A void* containing song state
      */
-    #define soundSave() spkSongSave()
+    #define soundSave() globalMidiSave()
 
     /**
      * @brief Restore state and resume audio output
@@ -102,19 +101,19 @@
      *
      * @param data The state saved with spkSongSave()
      */
-    #define soundRestore(data) spkSongRestore(data)
+    #define soundRestore(data) globalMidiRestore(data)
 
     /**
      * @brief Play a specific note
      *
-     * Calls spkPlayNote() or bzrPlayNote()
+     * Calls midiNoteOn() or bzrPlayNote()
      *
      * @param freq The frequency of the note to play
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      * @param vol The volume of the note to play
      *
      */
-    #define soundPlayNote(freq, channel, vol) spkPlayNote(freq, channel, vol)
+    #define soundPlayNote(freq, channel, vol) midiNoteOn(globalMidiPlayerGet(channel), 0, freq, vol)
 
     /**
      * @brief Stop a specific note
@@ -123,23 +122,20 @@
      *
      * @param channel The channel (L/R/Stereo) to stop, ignored for DAC speakers
      */
-    #define soundStopNote(channel) spkStopNote(channel)
+    #define soundStopNote(channel) midiNoteOff(globalMidiPlayerGet(channel), 0, freq, vol)
+
+    /**
+     * @brief Return the MIDI player used for SFX
+     *
+     */
+    #define soundGetPlayerSfx() globalMidiPlayerGet(0)
+
+    /**
+     * @brief Return the MIDI player used for BGM
+     *
+     */
+    #define soundGetPlayerBgm() globalMidiPlayerGet(1)
 
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-
-    #define soundPlaySfx(song, channel)       bzrPlaySfx(song, channel)
-    #define soundPlayBgm(song, channel)       bzrPlayBgm(song, channel)
-    #define soundPlaySfxCb(song, channel, cb) bzrPlaySfxCb(song, channel, cb)
-    #define soundPlayBgmCb(song, channel, cb) bzrPlayBgmCb(song, channel, cb)
-    #define soundStop(reset)                  bzrStop(reset)
-
-    #define soundPause()  bzrPause()
-    #define soundResume() bzrResume()
-
-    #define soundSave()        bzrSave()
-    #define soundRestore(data) bzrRestore(data)
-
-    #define soundPlayNote(freq, track, vol) bzrPlayNote(freq, track, vol)
-    #define soundStopNote(track)            bzrStopNote(track)
-
+    #error "Buzzer is no longer supported, get with the times!"
 #endif

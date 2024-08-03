@@ -11,8 +11,8 @@
  * Each character is represented by a bit-packed bitmap where each bit is one pixel.
  * Characters may be drawn in any color.
  *
- * Fonts can be loaded from the SPIFFS filesystem with helper functions in spiffs_font.h.
- * Once loaded from the SPIFFS filesystem they can be used to draw text to the display.
+ * Fonts can be loaded from the filesystem with helper functions in fs_font.h.
+ * Once loaded from the filesystem they can be used to draw text to the display.
  *
  * \section font_usage Usage
  *
@@ -44,6 +44,7 @@
 #define _FONT_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "palette.h"
 
@@ -73,5 +74,7 @@ const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const cha
                              int16_t xMax, int16_t yMax);
 uint16_t textWidth(const font_t* font, const char* text);
 uint16_t textWordWrapHeight(const font_t* font, const char* text, int16_t width, int16_t maxHeight);
+
+void makeOutlineFont(font_t* srcFont, font_t* dstFont, bool spiRam);
 
 #endif

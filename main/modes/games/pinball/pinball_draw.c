@@ -10,7 +10,8 @@
 
 static void drawPinCircle(pbCircle_t* c);
 static void drawPinLine(pbLine_t* l);
-static void drawPinRect(pbRect_t* r);
+// static void drawPinRect(pbRect_t* r);
+static void drawPinFlipper(pbFlipper_t* f);
 
 //==============================================================================
 // Functions
@@ -56,6 +57,12 @@ void pinballDrawForeground(pinball_t* p)
         drawPinCircle(&p->balls[bIdx]);
     }
 
+    // Draw flippers
+    for (uint32_t fIdx = 0; fIdx < p->numFlippers; fIdx++)
+    {
+        drawPinFlipper(&p->flippers[fIdx]);
+    }
+
     // Debug draw zones
     // for (int32_t i = 0; i < NUM_ZONES; i++)
     // {
@@ -80,15 +87,15 @@ void pinballDrawForeground(pinball_t* p)
  *
  * @param c The circle to draw
  */
-void drawPinCircle(pbCircle_t* c)
+void drawPinCircle(pbCircle_t* circ)
 {
-    if (c->filled)
+    if (circ->filled)
     {
-        drawCircleFilled(FROM_FX(c->pos.x), FROM_FX(c->pos.y), FROM_FX(c->radius), c->color);
+        drawCircleFilled((circ->c.pos.x), (circ->c.pos.y), (circ->c.radius), circ->color);
     }
     else
     {
-        drawCircle(FROM_FX(c->pos.x), FROM_FX(c->pos.y), FROM_FX(c->radius), c->color);
+        drawCircle((circ->c.pos.x), (circ->c.pos.y), (circ->c.radius), circ->color);
     }
 }
 
@@ -97,9 +104,9 @@ void drawPinCircle(pbCircle_t* c)
  *
  * @param l The line to draw
  */
-void drawPinLine(pbLine_t* l)
+void drawPinLine(pbLine_t* line)
 {
-    drawLineFast(FROM_FX(l->p1.x), FROM_FX(l->p1.y), FROM_FX(l->p2.x), FROM_FX(l->p2.y), l->color);
+    drawLineFast((line->l.p1.x), (line->l.p1.y), (line->l.p2.x), (line->l.p2.y), line->color);
 }
 
 /**
@@ -107,8 +114,21 @@ void drawPinLine(pbLine_t* l)
  *
  * @param r The rectangle to draw
  */
-void drawPinRect(pbRect_t* r)
+// void drawPinRect(pbRect_t* rect)
+// {
+//     drawRect(rect->r.pos.x, rect->r.pos.y, rect->r.pos.x + rect->r.width, rect->r.pos.y + rect->r.height,
+//     rect->color);
+// }
+
+/**
+ * @brief Draw a pinball flipper
+ *
+ * @param f The flipper to draw
+ */
+void drawPinFlipper(pbFlipper_t* f)
 {
-    drawRect(FROM_FX(r->pos.x), FROM_FX(r->pos.y), FROM_FX(ADD_FX(r->pos.x, r->width)),
-             FROM_FX(ADD_FX(r->pos.y, r->height)), r->color);
+    drawPinCircle(&f->cPivot);
+    drawPinCircle(&f->cTip);
+    drawPinLine(&f->sideL);
+    drawPinLine(&f->sideR);
 }

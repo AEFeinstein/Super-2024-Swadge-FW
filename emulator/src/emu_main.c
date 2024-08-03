@@ -4,8 +4,13 @@
 
 #include <unistd.h>
 #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
+    #include <stdlib.h>
     #include <signal.h>
     #include <execinfo.h>
+    #ifndef _GNU_SOURCE
+        #define _GNU_SOURCE
+    #endif
+    #include <dlfcn.h>
 #endif
 #include <time.h>
 
@@ -29,8 +34,6 @@
 
 #include "hdw-mic.h"
 #include "hdw-mic_emu.h"
-#include "hdw-bzr.h"
-#include "hdw-bzr_emu.h"
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
 
@@ -53,16 +56,30 @@
 #endif
 // clang-format on
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+    #pragma GCC diagnostic ignored "-Wjump-misses-init"
+    #pragma GCC diagnostic ignored "-Wundef"
+#endif
+
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
-#define CNFGOGL
+// CNFGOGL May be defined in the makefile
 #include "CNFG.h"
 
 #define CNFA_IMPLEMENTATION
-#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
     #define PULSEAUDIO
 #endif
 #include "CNFA.h"
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
 
 // Useful if you're trying to find the code for a key/button
 // #define DEBUG_INPUTS
@@ -77,6 +94,13 @@
 
 #define BG_COLOR  0x191919FF // This color isn't part of the palette
 #define DIV_COLOR 0x808080FF
+
+#if defined(CNFGOGL)
+    #define CORNER_COLOR BG_COLOR
+#else
+    // Swap RGBA to ARGB
+    #define CORNER_COLOR (((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24))
+#endif
 
 //==============================================================================
 // Variables
@@ -98,6 +122,7 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 
 static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col);
 static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr);
+void handleArgs(int argc, char** argv);
 
 //==============================================================================
 // Functions
@@ -264,7 +289,8 @@ void taskYIELD(void)
     if (!isRunning)
     {
         deinitSystem();
-        CNFGTearDown();
+        // This is registered with atexit()
+        // CNFGTearDown();
 
 #ifdef ENABLE_GCOV
         __gcov_dump();
@@ -340,7 +366,7 @@ void taskYIELD(void)
     if ((0 != bitmapWidth) && (0 != bitmapHeight) && (NULL != bitmapDisplay))
     {
 #if defined(CONFIG_GC9307_240x280)
-        plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, BG_COLOR);
+        plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, CORNER_COLOR);
 #endif
         // Update the display, centered
         CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
@@ -573,6 +599,13 @@ void HandleMotion(int x, int y, int mask)
     doExtMouseMoveCb(x, y, mask);
 }
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#endif
+
 /**
  * @brief Free memory on exit
  */
@@ -599,6 +632,10 @@ int HandleDestroy()
 
     return 0;
 }
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
 
 /**
  * @brief Callback for sound events, both input and output
@@ -651,47 +688,137 @@ void init_crashSignals(void)
  */
 void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
 {
-    char msg[128] = {'\0'};
-    ssize_t result;
+    // Get the backtrace
+    void* array[128];
+    size_t size = backtrace(array, ARRAY_SIZE(array));
 
-    char fname[64] = {0};
-    sprintf(fname, "crash-%ld.txt", time(NULL));
-    int dumpFileDescriptor
-        = open(fname, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-
-    if (-1 != dumpFileDescriptor)
+    // Only write a file if there's a backtrace
+    if (0 < size)
     {
-        snprintf(msg, sizeof(msg), "Signal %d received!\nsigno: %d, errno %d\n, code %d\n", signum, si->si_signo,
-                 si->si_errno, si->si_code);
-        result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
-        (void)result;
+        char msg[512] = {'\0'};
+        ssize_t result;
 
-        memset(msg, 0, sizeof(msg));
-    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
-        for (int i = 0; i < __SI_PAD_SIZE; i++)
-    #else
-        // Seems to be hardcoded on MacOS
-        for (int i = 0; i < 7; i++)
-    #endif
+        char fname[64] = {0};
+        sprintf(fname, "crash-%ld.txt", time(NULL));
+        int dumpFileDescriptor
+            = open(fname, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+
+        if (-1 != dumpFileDescriptor)
         {
-            char tmp[8];
-    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
-            snprintf(tmp, sizeof(tmp), "%02X", si->_sifields._pad[i]);
-    #else
-            snprintf(tmp, sizeof(tmp), "%02X", (int)si->__pad[i]);
-    #endif
-            tmp[sizeof(tmp) - 1] = '\0';
-            strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
-        }
-        strncat(msg, "\n", sizeof(msg) - strlen(msg) - 1);
-        result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
-        (void)result;
+            snprintf(msg, sizeof(msg), "Signal %-2d received!\nsigno: %-2d\nerrno: %-2d\ncode:  %-2d\n", signum,
+                     si->si_signo, si->si_errno, si->si_code);
+            result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
+            (void)result;
 
-        // Print backtrace
-        void* array[128];
-        size_t size = backtrace(array, (sizeof(array) / sizeof(array[0])));
-        backtrace_symbols_fd(array, size, dumpFileDescriptor);
-        close(dumpFileDescriptor);
+            memset(msg, 0, sizeof(msg));
+            strncat(msg, "sifields: ", sizeof(msg) - 1);
+    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
+            for (int i = 0; i < __SI_PAD_SIZE; i++)
+    #else
+            // Seems to be hardcoded on MacOS
+            for (int i = 0; i < 7; i++)
+    #endif
+            {
+                char tmp[8];
+    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
+                snprintf(tmp, sizeof(tmp), "%02X ", si->_sifields._pad[i]);
+    #else
+                snprintf(tmp, sizeof(tmp), "%02X ", (int)si->__pad[i]);
+    #endif
+                tmp[sizeof(tmp) - 1] = '\0';
+                strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
+            }
+            strncat(msg, "\n", sizeof(msg) - strlen(msg) - 1);
+            result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
+            (void)result;
+
+            /* This dumps the backtrace to a file, but it doesn't resolve addresses to function names */
+            // backtrace_symbols_fd(array, size, dumpFileDescriptor);
+            // result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
+            // (void)result;
+
+            // Boolean to write the header first
+            bool catHdr = false;
+
+            // For each address in the stack trace
+            for (size_t i = 0; i < size; i++)
+            {
+                // Get more information about the address
+                Dl_info dli;
+                dladdr(array[i], &dli);
+
+                // If the addr2line header isn't written yet
+                if (!catHdr)
+                {
+                    // Write it
+                    snprintf(msg, sizeof(msg) - 1, "addr2line -fpriCe %s ", dli.dli_fname);
+                    catHdr = true;
+                }
+
+                // Calculate the offset relative to the file
+                char sign;
+                ptrdiff_t offset;
+                if (array[i] >= (void*)dli.dli_fbase)
+                {
+                    sign   = '+';
+                    offset = ((char*)array[i]) - ((char*)dli.dli_fbase);
+                }
+                else
+                {
+                    sign   = '-';
+                    offset = ((char*)dli.dli_fbase) - ((char*)array[i]);
+                }
+
+                // Concatenate each address
+                char tmp[32] = {0};
+                snprintf(tmp, sizeof(tmp) - 1, "%c%#tx ", sign, offset);
+                strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
+            }
+
+            // Execute addr2line and write the output to the logfile and the terminal
+            FILE* fp;
+            char path[128];
+            fp = popen(msg, "r");
+            if (fp != NULL)
+            {
+                // Print this to the terminal and file
+                snprintf(msg, sizeof(msg) - 1, "\nCRASH BACKTRACE\n");
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
+                printf("%s", msg);
+
+                snprintf(msg, sizeof(msg) - 1, "===============\n");
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
+                printf("%s", msg);
+
+                /* Read the output a line at a time - output it. */
+                while (fgets(path, sizeof(path), fp) != NULL)
+                {
+                    if (0 >= write(dumpFileDescriptor, path, strlen(path)))
+                    {
+                        // Write failed, jump out early
+                        return;
+                    }
+                    printf("%s", path);
+                }
+
+                /* Flush the terminal */
+                fflush(stdout);
+
+                /* close */
+                pclose(fp);
+            }
+
+            // Close the file
+            close(dumpFileDescriptor);
+        }
     }
 
     // Exit
