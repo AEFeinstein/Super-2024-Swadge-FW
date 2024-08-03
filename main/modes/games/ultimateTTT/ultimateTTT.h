@@ -70,6 +70,13 @@ typedef enum __attribute__((packed))
     TCPU_MOVING,
 } tttCpuState_t;
 
+typedef enum __attribute__((packed))
+{
+    TDIFF_EASY,
+    TDIFF_MEDIUM,
+    TDIFF_HARD,
+} tttCpuDifficulty_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -95,6 +102,7 @@ typedef struct
 typedef struct
 {
     tttCpuState_t state;
+    tttCpuDifficulty_t difficulty;
     vec_t destSubgame;
     vec_t destCell;
     int64_t delayTime;

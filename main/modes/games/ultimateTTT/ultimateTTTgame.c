@@ -174,11 +174,6 @@ static void decCursorY(ultimateTTT_t* ttt)
  */
 bool tttCursorIsValid(ultimateTTT_t* ttt, const vec_t* cursor)
 {
-    if (cursor->x < 0 || cursor->y < 0 || cursor->x > 2 || cursor->y > 2)
-    {
-        return false;
-    }
-
     switch (ttt->game.cursorMode)
     {
         case NO_CURSOR:

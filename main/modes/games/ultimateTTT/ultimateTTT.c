@@ -34,6 +34,9 @@ static const char tttName[]          = "Ultimate TTT";
 static const char tttMultiStr[]      = "Wireless Connect";
 static const char tttMultiShortStr[] = "Connect";
 static const char tttSingleStr[]     = "Single Player";
+static const char tttDiffEasyStr[]   = "Easy";
+static const char tttDiffMediumStr[] = "Medium";
+static const char tttDiffHardStr[]   = "Hard";
 static const char tttMarkerSelStr[]  = "Marker Select";
 static const char tttHowToStr[]      = "How To Play";
 static const char tttResultStr[]     = "Result";
@@ -121,7 +124,13 @@ static void tttEnterMode(void)
     // Initialize the main menu
     ttt->menu = initMenu(tttName, tttMenuCb);
     addSingleItemToMenu(ttt->menu, tttMultiStr);
-    addSingleItemToMenu(ttt->menu, tttSingleStr);
+
+    ttt->menu = startSubMenu(ttt->menu, tttSingleStr);
+    addSingleItemToMenu(ttt->menu, tttDiffEasyStr);
+    addSingleItemToMenu(ttt->menu, tttDiffMediumStr);
+    addSingleItemToMenu(ttt->menu, tttDiffHardStr);
+    ttt->menu = endSubMenu(ttt->menu);
+
     addSingleItemToMenu(ttt->menu, tttMarkerSelStr);
     addSingleItemToMenu(ttt->menu, tttHowToStr);
     addSingleItemToMenu(ttt->menu, tttRecordsStr);
@@ -335,9 +344,24 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
             // Start multiplayer
             p2pStartConnection(&ttt->game.p2p);
         }
-        else if (tttSingleStr == label)
+        else if (tttDiffEasyStr == label)
         {
             ttt->game.singlePlayer = true;
+            ttt->game.cpu.difficulty = TDIFF_EASY;
+            tttBeginGame(ttt);
+            tttShowUi(TUI_GAME);
+        }
+        else if (tttDiffMediumStr == label)
+        {
+            ttt->game.singlePlayer = true;
+            ttt->game.cpu.difficulty = TDIFF_MEDIUM;
+            tttBeginGame(ttt);
+            tttShowUi(TUI_GAME);
+        }
+        else if (tttDiffHardStr == label)
+        {
+            ttt->game.singlePlayer = true;
+            ttt->game.cpu.difficulty = TDIFF_HARD;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);
         }
