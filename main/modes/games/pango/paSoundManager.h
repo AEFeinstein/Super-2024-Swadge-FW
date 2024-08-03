@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <spiffs_song.h>
+#include <midiPlayer.h>
 
 //==============================================================================
 // Constants
@@ -19,39 +19,39 @@
 
 typedef struct
 {
-    song_t bgmDemagio;
-    song_t bgmIntro;
-    song_t bgmSmooth;
-    song_t bgmUnderground;
-    song_t bgmCastle;
-    song_t bgmGameStart;
-    song_t sndDie;
-    song_t sndMenuSelect;
-    song_t sndMenuConfirm;
-    song_t sndMenuDeny;
-    song_t sndPause;
-    song_t sndHit;
-    song_t sndSquish;
-    song_t sndBreak;
-    song_t sndCoin;
-    song_t sndPowerUp;
-    song_t sndJump1;
-    song_t sndJump2;
-    song_t sndJump3;
-    song_t sndWarp;
-    song_t sndHurt;
-    song_t sndWaveBall;
-    song_t snd1up;
-    song_t sndCheckpoint;
-    song_t sndLevelClearD;
-    song_t sndLevelClearC;
-    song_t sndLevelClearB;
-    song_t sndLevelClearA;
-    song_t sndLevelClearS;
-    song_t sndTally;
-    song_t bgmNameEntry;
-    song_t bgmGameOver;
-    song_t sndOuttaTime;
+    midiFile_t bgmDemagio;
+    midiFile_t bgmIntro;
+    midiFile_t bgmSmooth;
+    midiFile_t bgmUnderground;
+    midiFile_t bgmCastle;
+    midiFile_t bgmGameStart;
+    midiFile_t sndDie;
+    midiFile_t sndMenuSelect;
+    midiFile_t sndMenuConfirm;
+    midiFile_t sndMenuDeny;
+    midiFile_t sndPause;
+    midiFile_t sndHit;
+    midiFile_t sndSquish;
+    midiFile_t sndBreak;
+    midiFile_t sndCoin;
+    midiFile_t sndPowerUp;
+    midiFile_t sndJump1;
+    midiFile_t sndJump2;
+    midiFile_t sndJump3;
+    midiFile_t sndWarp;
+    midiFile_t sndHurt;
+    midiFile_t sndWaveBall;
+    midiFile_t snd1up;
+    midiFile_t sndCheckpoint;
+    midiFile_t sndLevelClearD;
+    midiFile_t sndLevelClearC;
+    midiFile_t sndLevelClearB;
+    midiFile_t sndLevelClearA;
+    midiFile_t sndLevelClearS;
+    midiFile_t sndTally;
+    midiFile_t bgmNameEntry;
+    midiFile_t bgmGameOver;
+    midiFile_t sndOuttaTime;
 } paSoundManager_t;
 
 //==============================================================================

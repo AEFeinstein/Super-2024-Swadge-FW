@@ -7,12 +7,12 @@
 #include <string.h>
 #include <esp_heap_caps.h>
 
-#include "spiffs_wsg.h"
+#include "fs_wsg.h"
 #include "paTilemap.h"
 #include "paLeveldef.h"
 #include "esp_random.h"
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 
 //==============================================================================
 // Function Prototypes
@@ -160,7 +160,7 @@ bool pa_loadMapFromFile(paTilemap_t* tilemap, const char* name)
     }
 
     size_t sz;
-    uint8_t* buf = spiffsReadFile(name, &sz, false);
+    uint8_t* buf = cnfsReadFile(name, &sz, false);
 
     if (NULL == buf)
     {

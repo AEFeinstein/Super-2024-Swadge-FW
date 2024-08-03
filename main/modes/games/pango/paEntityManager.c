@@ -10,8 +10,8 @@
 #include "esp_random.h"
 #include "palette.h"
 
-#include "hdw-spiffs.h"
-#include "spiffs_wsg.h"
+#include "cnfs.h"
+#include "fs_wsg.h"
 
 //==============================================================================
 // Constants
