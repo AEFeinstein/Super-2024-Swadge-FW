@@ -137,6 +137,7 @@ struct paEntity_t
     uint16_t state;
     int16_t stateTimer;
     int16_t tempStateTimer;
+    int16_t baseSpeed;
 
     // paEntity_t *entities;
     paEntityManager_t* entityManager;
