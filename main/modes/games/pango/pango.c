@@ -655,9 +655,9 @@ void updateTitleScreen(pango_t* self)
 
 void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
 {
-    pa_drawTileMap(&(pango->tilemap));
+    //pa_drawTileMap(&(pango->tilemap));
 
-    drawText(font, c555, "<insert title here>", 40, 32);
+    drawText(font, c555, "P A N G O", 96, 32);
 
     if (pango->gameData.debugMode)
     {
@@ -1122,6 +1122,8 @@ void updateLevelClear(pango_t* self)
             {
                 savePangoUnlockables(self);
             }
+
+            return;
         }
     }
 
