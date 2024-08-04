@@ -41,7 +41,6 @@ typedef enum
 #define BLOCK 8
 #define FORK 7
 #define BLOCK_FORK 6
-#define FORCE_BLOCK 6
 #define CENTER 5
 #define OPPOSITE_CORNER 4
 #define EMPTY_CORNER 3
@@ -68,7 +67,7 @@ static rowCount_t checkRow(const tttPlayer_t game[3][3], int y, tttPlayer_t play
 static rowCount_t checkCol(const tttPlayer_t game[3][3], int x, tttPlayer_t player);
 static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t player);
 
-static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player);
+static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player, uint16_t filter);
 static void analyzeGame(ultimateTTT_t* ttt);
 
 void tttCpuNextMove(ultimateTTT_t* ttt)
@@ -281,12 +280,43 @@ static bool selectSubgame_easy(ultimateTTT_t* ttt, int *x, int *y)
 
 static bool selectSubgame_medium(ultimateTTT_t* ttt, int *x, int *y)
 {
+    // Still just random
     return selectSubgame_easy(ttt, x, y);
 }
 
 static bool selectSubgame_hard(ultimateTTT_t* ttt, int *x, int *y)
 {
-    return selectSubgame_medium(ttt, x, y);
+    // Eventually this will become the medium difficulty once I get the actual difficult AI working
+    // Here's what to do:
+    // - Construct a 'subgame' to match the main board (which we can modify if needed to simulate stuff) and also to avoid rewriting the algorithm
+    // - Its board will have all the completed subgames marked with the winner, and the rest as NONE (TODO: how to handle a tie??? Just use the TIE player? Yeah probably)
+    // - We calculate the next possible move on that board, and then take a look at the board we'd need to win to get our marker there
+    // - So... I guess we should take all the possible moves in that board, and then what...
+    tttPlayer_t subgame[3][3];
+    for (int x = 0; x < 3; x++)
+    {
+        for (int y = 0; y < 3; y++)
+        {
+            subgame[x][y] = ttt->game.subgames[x][y].winner;
+        }
+    }
+
+    uint16_t mainResult = analyzeSubgame(subgame, TTT_P2, 0);
+    uint16_t mainMove = DECODE_MOVE(mainResult);
+    int mainX = DECODE_LOC_X(mainResult);
+    int mainY = DECODE_LOC_Y(mainResult);
+
+    if (WON != mainMove && mainMove)
+    {
+        // X/Y must have been set
+
+        *x = mainX;
+        *y = mainY;
+
+        return true;
+    }
+
+    return false;
 }
 
 static void tttCpuSelectSubgame(ultimateTTT_t* ttt)
@@ -355,7 +385,7 @@ static bool selectCell_medium(ultimateTTT_t* ttt, int *x, int *y)
 {
     // Medium plays perfectly within a subgame, but has no overall strategy and picks randomly when selecting a subgame
     tttSubgame_t* subgame = &ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y];
-    uint16_t result = analyzeSubgame(subgame->game, TTT_P2);
+    uint16_t result = analyzeSubgame(subgame->game, TTT_P2, 0);
     uint16_t move = DECODE_MOVE(result);
     int moveX = DECODE_LOC_X(result);
     int moveY = DECODE_LOC_Y(result);
@@ -369,7 +399,6 @@ static bool selectCell_medium(ultimateTTT_t* ttt, int *x, int *y)
         case BLOCK:
         case FORK:
         case BLOCK_FORK:
-        //case FORCE_BLOCK:
         case CENTER:
         case OPPOSITE_CORNER:
         case EMPTY_CORNER:
@@ -385,7 +414,176 @@ static bool selectCell_medium(ultimateTTT_t* ttt, int *x, int *y)
 
 static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
 {
-    return selectCell_medium(ttt, x, y);
+    // For selecting the next move within a subgame, we would want to take into account the current subgame, but...
+    // depending on the score of the next action, we have some freedom. Basically we don't need to worry _too_ much
+    // about playing the cell perfectly and instead we can base the decision mostly on where the opponent will go.
+    // Obviously if we want to win this subgame (maybe it isn't necessary!) you first would want to take into account
+    // any wins/blocks, but anything past that isn't going to matter, especially since your opponent doesn't necessarily
+    // get another turn in the same square immediately.
+    // So, once any wins/blocks in this cell are considered, you would then rank each of the most favorable moves within
+    // this cell against which one has the most favorable score for the opponent
+    // Somehow those two priorities will need to be traded off -- probably should make that configurable.
+
+    // The score of the opponent's ideal next move in each subgame
+    uint16_t opponentScore[3][3];
+    uint16_t maxScore = 0;
+#define SCORE_MIN 0x0000
+#define SCORE_MAX 0xFFFF
+
+    tttSubgame_t* subgame = &ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y];
+
+    uint16_t result = analyzeSubgame(subgame->game, TTT_P2, 0);
+    uint16_t move = DECODE_MOVE(result);
+    int moveX = DECODE_LOC_X(result);
+    int moveY = DECODE_LOC_Y(result);
+
+    for (int ix = 0; ix < 3; ix++)
+    {
+        for (int iy = 0; iy < 3; iy++)
+        {
+            tttSubgame_t* oppSubgame = &ttt->game.subgames[ix][iy];
+
+            if (subgame->game[ix][iy] != TTT_NONE)
+            {
+                // Invalid position, don't bother scoring it
+                continue;
+            }
+
+            // Check if placing this cell wins us the entire game
+            tttPlayer_t tempSubgame[3][3];
+            memcpy(tempSubgame, oppSubgame->game, sizeof(tempSubgame));
+
+            // Place the marker we would have added it this turn
+            tempSubgame[ix][iy] = TTT_P2;
+
+            tttPlayer_t winner = tttCheckWinner(tempSubgame);
+            if (winner == TTT_P2)
+            {
+                // Hey, making this move wins us the subgame!
+                // Check if that subgame wins us the whole game too!
+                tttPlayer_t tempMetagame[3][3];
+                for (int jx = 0; jx < 3; jx++)
+                {
+                    for (int jy = 0; jy < 3; jy++)
+                    {
+                        tempMetagame[jx][jy] = ttt->game.subgames[jx][jy].winner;
+                    }
+                }
+                tempMetagame[ix][iy] = TTT_P2;
+                if (tttCheckWinner(tempMetagame) == TTT_P2)
+                {
+                    // This is a winning move, so immediately decide to move there
+                    *x = ix;
+                    *y = iy;
+                    return true;
+                }
+            }
+
+            // The corresponding subgame to this square has a winner, so the opponent gets to go anywhere
+            if (oppSubgame->winner != TTT_NONE)
+            {
+                opponentScore[ix][iy] = SCORE_MAX;
+                continue;
+            }
+
+            if (subgame == oppSubgame)
+            {
+                // This cell is the current cell, which we analyzed earlier, so use that result
+                // Check if we caused the subgame to end (i.e. in a win or draw)
+                if (winner != TTT_NONE)
+                {
+                    // Opponent gets to pick any board they want, they get the max score
+                    opponentScore[ix][iy] = SCORE_MAX;
+                }
+                else
+                {
+                    // Opponent is locked to this board, so use their score for the subgame
+                    opponentScore[ix][iy] = analyzeSubgame(tempSubgame, TTT_P1, 0);
+                }
+            }
+            else
+            {
+                // Score the current state of that board as the opponent
+                opponentScore[ix][iy] = analyzeSubgame(oppSubgame->game, TTT_P1, 0);
+            }
+
+            // Update the max score, used as the value when the opponent can pick any subgame
+            if (opponentScore[ix][iy] != SCORE_MAX && DECODE_MOVE(opponentScore[ix][iy]) > maxScore)
+            {
+                maxScore = DECODE_MOVE(opponentScore[ix][iy]);
+            }
+        }
+    }
+
+    int minOppX = 0;
+    int minOppY = 0;
+    uint16_t minOppScore = SCORE_MAX;
+    for (int ix = 0; ix < 3; ix++)
+    {
+        for (int iy = 0; iy < 3; iy++)
+        {
+            if (subgame->game[ix][iy] == TTT_NONE && DECODE_MOVE(opponentScore[ix][iy]) < minOppScore)
+            {
+                minOppScore = DECODE_MOVE(opponentScore[ix][iy]);
+                minOppX = ix;
+                minOppY = iy;
+            }
+        }
+    }
+
+    // Just some debugging
+    printf("--------------------\n");
+    printf(" In subgame (%" PRIu32 ", %" PRIu32 "):\n", ttt->game.selectedSubgame.x, ttt->game.selectedSubgame.y);
+    printf("[---] - Invalid move\n");
+    printf("[xx ] - Opponent's score for corresponding subgame\n");
+    printf("[xx*] - Ideal subgame move\n");
+    printf("[xx^] - Least favorable for opponent\n");
+    for (int ix = 0; ix < 3; ix++)
+    {
+        for (int iy = 0; iy < 3; iy++)
+        {
+            if (subgame->game[ix][iy] != TTT_NONE)
+            {
+                // Not valid
+                printf("[---]   ");
+                continue;
+            }
+
+            uint16_t score = DECODE_MOVE(opponentScore[ix][iy]);
+            if (opponentScore[ix][iy] == SCORE_MAX)
+            {
+                score = maxScore;
+            }
+
+            char flag = ' ';
+            if (ix == minOppX && iy == minOppY)
+            {
+                flag = '^';
+            }
+            else if (ix == moveX && iy == moveY)
+            {
+                flag = '*';
+            }
+
+            printf("[%02" PRIu16 "%c]   ", score, flag);
+        }
+
+        putchar('\n');
+    }
+
+    if (minOppScore <= move)
+    {
+        *x = minOppX;
+        *y = minOppY;
+    }
+    else
+    {
+        *x = moveX;
+        *y = moveY;
+    }
+    return true;
+
+    //return selectCell_medium(ttt, x, y);
 }
 
 static void tttCpuSelectCell(ultimateTTT_t* ttt)
@@ -536,7 +734,7 @@ static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t pla
     return (rowCount_t)(playerCount | opponentCount << 2 | noneCount << 4);
 }
 
-static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player)
+static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player, uint16_t filter)
 {
 /*
 1. Win: If you have two in a row, play the third to get three in a row.
@@ -556,10 +754,11 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
 8. Empty Side: Play an empty side.
 */
 
+#define CHECK_FILTER(v) (!filter || (filter > (v)))
     tttPlayer_t otherPlayer = (player == TTT_P1) ? TTT_P2 : TTT_P1;
 
     // 0. Check for already won
-    if (player == tttCheckWinner(subgame))
+    if (CHECK_FILTER(WON) && player == tttCheckWinner(subgame))
     {
         return WON;
     }
@@ -579,12 +778,12 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
         {
             counts = checkRow(subgame, y, player);
 
-            if (TO_PLAYERS(counts) == 2 && TO_NONES(counts) == 1)
+            if (CHECK_FILTER(WIN) && TO_PLAYERS(counts) == 2 && TO_NONES(counts) == 1)
             {
                 return WIN | ENCODE_LOC(((subgame[0][y] == TTT_NONE) ? 0 : ((subgame[1][y] == TTT_NONE) ? 1 : 2)), y);
             }
 
-            if (TO_OPPONENTS(counts) == 2 && TO_NONES(counts) == 1)
+            if (CHECK_FILTER(BLOCK) && TO_OPPONENTS(counts) == 2 && TO_NONES(counts) == 1)
             {
                 return BLOCK | ENCODE_LOC(((subgame[0][y] == TTT_NONE) ? 0 : ((subgame[1][y] == TTT_NONE) ? 1 : 2)), y);
             }
@@ -595,12 +794,12 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
         {
             counts = checkCol(subgame, x, player);
 
-            if (TO_PLAYERS(counts) == 2 && TO_NONES(counts) == 1)
+            if (CHECK_FILTER(WIN) && TO_PLAYERS(counts) == 2 && TO_NONES(counts) == 1)
             {
                 return WIN | ENCODE_LOC(x, ((subgame[x][0] == TTT_NONE) ? 0 : ((subgame[x][1] == TTT_NONE) ? 1 : 2)));
             }
 
-            if (TO_OPPONENTS(counts) == 2 && TO_NONES(counts) == 1)
+            if (CHECK_FILTER(BLOCK) && TO_OPPONENTS(counts) == 2 && TO_NONES(counts) == 1)
             {
                 return BLOCK | ENCODE_LOC(x, ((subgame[x][0] == TTT_NONE) ? 0 : ((subgame[x][1] == TTT_NONE) ? 1 : 2)));
             }
@@ -614,12 +813,12 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
             counts = checkDiag(subgame, n + 1, player);
             int loc = (subgame[0][n ? 2 : 0] == TTT_NONE) ? 0 : ((subgame[1][1] == TTT_NONE) ? 1 : 2);
 
-            if (TO_PLAYERS(counts) == 2 && TO_NONES(counts) == 1)
+            if (CHECK_FILTER(WIN) && TO_PLAYERS(counts) == 2 && TO_NONES(counts) == 1)
             {
                 return WIN | ENCODE_LOC(loc, loc);
             }
 
-            if (TO_OPPONENTS(counts) == 2 && TO_NONES(counts) == 1)
+            if (CHECK_FILTER(BLOCK) && TO_OPPONENTS(counts) == 2 && TO_NONES(counts) == 1)
             {
                 return BLOCK | ENCODE_LOC(loc, loc);
             }
@@ -649,85 +848,91 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
             }
         }
 
-        // Next, take those totals and evaluate each spot on the board for fork creation
-        for (int x = 0; x < 3; x++)
+        if (CHECK_FILTER(FORK))
         {
-            for (int y = 0; y < 3; y++)
+            // Next, take those totals and evaluate each spot on the board for fork creation
+            for (int x = 0; x < 3; x++)
             {
-                // Spot is empty!
-                if (TTT_NONE == subgame[x][y])
+                for (int y = 0; y < 3; y++)
                 {
-                    // So, okay, what we need to do here is figure out, for the current square:
-                    // - If it is empty
-                    // - If two of its rows/columns/diagonals meet these criteria:
-                    //    - Two NONEs, and one PLAYER
-
-                    int matchCount = 0;
-                    if (TO_PLAYERS(rows[y]) == 1 && TO_NONES(rows[y]) == 2)
+                    // Spot is empty!
+                    if (TTT_NONE == subgame[x][y])
                     {
-                        matchCount++;
-                    }
+                        // So, okay, what we need to do here is figure out, for the current square:
+                        // - If it is empty
+                        // - If two of its rows/columns/diagonals meet these criteria:
+                        //    - Two NONEs, and one PLAYER
 
-                    if (TO_PLAYERS(cols[x]) == 1 && TO_NONES(cols[x]) == 2)
-                    {
-                        matchCount++;
-                    }
+                        int matchCount = 0;
+                        if (TO_PLAYERS(rows[y]) == 1 && TO_NONES(rows[y]) == 2)
+                        {
+                            matchCount++;
+                        }
 
-                    if ((hasDiagonal(x, y) & 1) && TO_PLAYERS(diags[0]) == 1 && TO_NONES(diags[0]) == 2)
-                    {
-                        matchCount++;
-                    }
+                        if (TO_PLAYERS(cols[x]) == 1 && TO_NONES(cols[x]) == 2)
+                        {
+                            matchCount++;
+                        }
 
-                    if ((hasDiagonal(x, y) & 2) && TO_PLAYERS(diags[1]) == 1 && TO_NONES(diags[1]) == 2)
-                    {
-                        matchCount++;
-                    }
+                        if ((hasDiagonal(x, y) & 1) && TO_PLAYERS(diags[0]) == 1 && TO_NONES(diags[0]) == 2)
+                        {
+                            matchCount++;
+                        }
 
-                    if (matchCount > 1)
-                    {
-                        return FORK | ENCODE_LOC(x, y);
+                        if ((hasDiagonal(x, y) & 2) && TO_PLAYERS(diags[1]) == 1 && TO_NONES(diags[1]) == 2)
+                        {
+                            matchCount++;
+                        }
+
+                        if (matchCount > 1)
+                        {
+                            return FORK | ENCODE_LOC(x, y);
+                        }
                     }
                 }
             }
         }
 
-        // Now, do the same pass again but check if there's anywhere the opponent can block instead
-        for (int x = 0; x < 3; x++)
+        if (CHECK_FILTER(BLOCK_FORK))
         {
-            for (int y = 0; y < 3; y++)
+            // Now, do the same pass again but check if there's anywhere the opponent can block instead
+            for (int x = 0; x < 3; x++)
             {
-                // Spot is empty!
-                if (TTT_NONE == subgame[x][y])
+                for (int y = 0; y < 3; y++)
                 {
-                    // So, okay, what we need to do here is figure out, for the current square:
-                    // - If it is empty
-                    // - If two of its rows/columns/diagonals meet these criteria:
-                    //    - Two NONEs, and one OPPONENT
-
-                    int matchCount = 0;
-                    if (TO_OPPONENTS(rows[y]) == 1 && TO_NONES(rows[y]) == 2)
+                    // Spot is empty!
+                    if (TTT_NONE == subgame[x][y])
                     {
-                        matchCount++;
-                    }
+                        // So, okay, what we need to do here is figure out, for the current square:
+                        // - If it is empty
+                        // - If two of its rows/columns/diagonals meet these criteria:
+                        //    - Two NONEs, and one OPPONENT
 
-                    if (TO_OPPONENTS(cols[x]) == 1 && TO_NONES(cols[x]) == 2)
-                    {
-                        matchCount++;
-                    }
+                        int matchCount = 0;
+                        if (TO_OPPONENTS(rows[y]) == 1 && TO_NONES(rows[y]) == 2)
+                        {
+                            matchCount++;
+                        }
 
-                    if ((hasDiagonal(x, y) & 1) && TO_OPPONENTS(diags[0]) == 1 && TO_NONES(diags[0]) == 2)
-                    {
-                        matchCount++;
-                    }
+                        if (TO_OPPONENTS(cols[x]) == 1 && TO_NONES(cols[x]) == 2)
+                        {
+                            matchCount++;
+                        }
 
-                    if ((hasDiagonal(x, y) & 2) && TO_OPPONENTS(diags[1]) == 1 && TO_NONES(diags[1]) == 2)
-                    {
-                        matchCount++;
-                    }
+                        if ((hasDiagonal(x, y) & 1) && TO_OPPONENTS(diags[0]) == 1 && TO_NONES(diags[0]) == 2)
+                        {
+                            matchCount++;
+                        }
 
-                    if (matchCount > 1)
-                    {
-                        return BLOCK_FORK | ENCODE_LOC(x, y);
+                        if ((hasDiagonal(x, y) & 2) && TO_OPPONENTS(diags[1]) == 1 && TO_NONES(diags[1]) == 2)
+                        {
+                            matchCount++;
+                        }
+
+                        if (matchCount > 1)
+                        {
+                            return BLOCK_FORK | ENCODE_LOC(x, y);
+                        }
                     }
                 }
             }
@@ -735,42 +940,51 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
     }
 
     // 5. Center: Play the center.
-    if (TTT_NONE == subgame[1][1])
+    if (CHECK_FILTER(CENTER) && TTT_NONE == subgame[1][1])
     {
         return CENTER | ENCODE_LOC(1, 1);
     }
 
     // 6. Opposite Corner: If the opponent is in the corner, play the opposite corner.
-    for (int n = 0; n < 4; n++)
+    if (CHECK_FILTER(OPPOSITE_CORNER))
     {
-        int x = (n % 2) * 2;
-        int y = (n / 2) * 2;
-        if (otherPlayer == subgame[x][y] && TTT_NONE == subgame[2-x][2-y])
+        for (int n = 0; n < 4; n++)
         {
-            return OPPOSITE_CORNER | ENCODE_LOC(2-x, 2-y);
+            int x = (n % 2) * 2;
+            int y = (n / 2) * 2;
+            if (otherPlayer == subgame[x][y] && TTT_NONE == subgame[2-x][2-y])
+            {
+                return OPPOSITE_CORNER | ENCODE_LOC(2-x, 2-y);
+            }
         }
     }
 
-    // 7. Empty Corner: Play an empty corner.
-    for (int n = 0; n < 4; n++)
+    if (CHECK_FILTER(EMPTY_CORNER))
     {
-        int x = (n % 2) * 2;
-        int y = (n / 2) * 2;
-        if (TTT_NONE == subgame[x][y])
+        // 7. Empty Corner: Play an empty corner.
+        for (int n = 0; n < 4; n++)
         {
-            return EMPTY_CORNER | ENCODE_LOC(x, y);
+            int x = (n % 2) * 2;
+            int y = (n / 2) * 2;
+            if (TTT_NONE == subgame[x][y])
+            {
+                return EMPTY_CORNER | ENCODE_LOC(x, y);
+            }
         }
     }
 
-    // 8. Empty Side: Play an empty side.
-    for (int n = 0; n < 4; n++)
+    if (CHECK_FILTER(EMPTY_SIDE))
     {
-        // I'm sure I could math it but that's hard
-        const int xs[] = {0, 1, 2, 1};
-        const int ys[] = {1, 0, 1, 2};
-        if (TTT_NONE == subgame[xs[n]][ys[n]])
+        // 8. Empty Side: Play an empty side.
+        for (int n = 0; n < 4; n++)
         {
-            return EMPTY_SIDE | ENCODE_LOC(xs[n], ys[n]);
+            // I'm sure I could math it but that's hard
+            const int xs[] = {0, 1, 2, 1};
+            const int ys[] = {1, 0, 1, 2};
+            if (TTT_NONE == subgame[xs[n]][ys[n]])
+            {
+                return EMPTY_SIDE | ENCODE_LOC(xs[n], ys[n]);
+            }
         }
     }
 
