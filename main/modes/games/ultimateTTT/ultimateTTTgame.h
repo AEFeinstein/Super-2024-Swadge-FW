@@ -24,3 +24,4 @@ void tttSendPlacedMarker(ultimateTTT_t* ttt);
 void tttReceivePlacedMarker(ultimateTTT_t* ttt, const tttMsgPlaceMarker_t* msg);
 
 bool tttCursorIsValid(ultimateTTT_t* ttt, const vec_t* cursor);
+tttPlayer_t tttCheckWinner(const tttPlayer_t subgame[3][3]);

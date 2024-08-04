@@ -29,7 +29,7 @@ typedef void (*cursorFunc_t)(ultimateTTT_t* ttt);
 
 static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPlayer_t marker);
 static tttPlayer_t checkWinner(ultimateTTT_t* ttt);
-static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame);
+tttPlayer_t tttCheckSubgameWinner(tttSubgame_t* subgame);
 static wsg_t* getMarkerWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig);
 static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt);
 
@@ -678,7 +678,7 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
     {
         for (uint16_t x = 0; x < 3; x++)
         {
-            checkSubgameWinner(&ttt->game.subgames[x][y]);
+            tttCheckSubgameWinner(&ttt->game.subgames[x][y]);
         }
     }
 
@@ -766,83 +766,15 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
  * @param subgame The subgame to check
  * @return The winner of the subgame, if there was one
  */
-static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame)
+tttPlayer_t tttCheckSubgameWinner(tttSubgame_t* subgame)
 {
     // If it wasn't already won
     if (TTT_NONE == subgame->winner)
     {
-        for (uint16_t i = 0; i < 3; i++)
-        {
-            // Check horizontals
-            if (subgame->game[i][0] == subgame->game[i][1] && subgame->game[i][1] == subgame->game[i][2])
-            {
-                if (TTT_NONE != subgame->game[i][0])
-                {
-                    subgame->winner = subgame->game[i][0];
-                    return subgame->game[i][0];
-                }
-            }
-
-            // Check verticals
-            if (subgame->game[0][i] == subgame->game[1][i] && subgame->game[1][i] == subgame->game[2][i])
-            {
-                if (TTT_NONE != subgame->game[0][i])
-                {
-                    subgame->winner = subgame->game[0][i];
-                    return subgame->game[0][i];
-                }
-            }
-        }
-
-        // Check diagonals
-        if (subgame->game[0][0] == subgame->game[1][1] && subgame->game[1][1] == subgame->game[2][2])
-        {
-            if (TTT_NONE != subgame->game[0][0])
-            {
-                subgame->winner = subgame->game[0][0];
-                return subgame->game[0][0];
-            }
-        }
-        else if (subgame->game[2][0] == subgame->game[1][1] && subgame->game[1][1] == subgame->game[0][2])
-        {
-            if (TTT_NONE != subgame->game[2][0])
-            {
-                subgame->winner = subgame->game[2][0];
-                return subgame->game[2][0];
-            }
-        }
-
-        // Check for a draw
-        if (TTT_NONE == subgame->winner)
-        {
-            // Assume it's a draw
-            bool isDraw = true;
-            // Check for an empty space
-            for (uint16_t y = 0; y < 3; y++)
-            {
-                for (uint16_t x = 0; x < 3; x++)
-                {
-                    if (TTT_NONE == subgame->game[x][y])
-                    {
-                        // Empty space means not a draw
-                        isDraw = false;
-                        break;
-                    }
-                }
-            }
-
-            if (isDraw)
-            {
-                subgame->winner = TTT_DRAW;
-                return subgame->winner;
-            }
-        }
+        subgame->winner = tttCheckWinner(subgame->game);
     }
-    else
-    {
-        return subgame->winner;
-    }
-    return TTT_NONE;
+
+    return subgame->winner;
 }
 
 /**
@@ -1060,4 +992,60 @@ void tttDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t margin,
                  x0 + cellWidth, y1 - 1 - margin, color);
     drawLineFast(x0 + (2 * cellWidth) + 1, y0 + margin, //
                  x0 + (2 * cellWidth) + 1, y1 - 1 - margin, color);
+}
+
+tttPlayer_t tttCheckWinner(const tttPlayer_t game[3][3])
+{
+    for (uint16_t i = 0; i < 3; i++)
+    {
+        // Check horizontals
+        if (game[i][0] == game[i][1] && game[i][1] == game[i][2])
+        {
+            if (TTT_NONE != game[i][0])
+            {
+                return game[i][0];
+            }
+        }
+
+        // Check verticals
+        if (game[0][i] == game[1][i] && game[1][i] == game[2][i])
+        {
+            if (TTT_NONE != game[0][i])
+            {
+                return game[0][i];
+            }
+        }
+    }
+
+    // Check diagonals
+    if (game[0][0] == game[1][1] && game[1][1] == game[2][2])
+    {
+        if (TTT_NONE != game[0][0])
+        {
+            return game[0][0];
+        }
+    }
+    else if (game[2][0] == game[1][1] && game[1][1] == game[0][2])
+    {
+        if (TTT_NONE != game[2][0])
+        {
+            return game[2][0];
+        }
+    }
+
+    // Check for an empty space
+    for (uint16_t y = 0; y < 3; y++)
+    {
+        for (uint16_t x = 0; x < 3; x++)
+        {
+            if (TTT_NONE == game[x][y])
+            {
+                // Empty space means not a draw
+                return TTT_NONE;
+            }
+        }
+    }
+
+    // Assume it's a draw
+    return TTT_DRAW;
 }
