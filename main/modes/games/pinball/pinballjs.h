@@ -49,6 +49,7 @@ typedef struct
     float rotation;
     float currentAngularVelocity;
     bool buttonHeld;
+    bool facingRight;
 } jsFlipper_t;
 
 typedef struct
