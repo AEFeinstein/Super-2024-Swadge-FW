@@ -7,14 +7,15 @@
 #include "shapes.h"
 #include "macros.h"
 #include "vectorFl2d.h"
+#include "heatshrink_helper.h"
 #include "pinballjs.h"
 
 static vecFl_t closestPointOnSegment(vecFl_t p, vecFl_t a, vecFl_t b);
 static void jsBallInit(jsBall_t* ball, float radius, float mass, vecFl_t pos, vecFl_t vel, float restitution);
 static void jsBallSimulate(jsBall_t* ball, float dt, vecFl_t gravity);
 static void jsObstacleInit(jsObstacle_t* obstacle, float radius, vecFl_t pos, float pushVel);
-static void jsFlipperInit(jsFlipper_t* flipper, float radius, vecFl_t pos, float length, float restAngle,
-                          float maxRotation, float angularVelocity);
+static void jsFlipperInit(jsFlipper_t* flipper, float radius, vecFl_t pos, float length, bool facingRight,
+                          float restAngle, float maxRotation, float angularVelocity);
 static void jsFlipperSimulate(jsFlipper_t* flipper, float dt);
 static vecFl_t jsFlipperGetTip(jsFlipper_t* flipper);
 static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2);
@@ -23,41 +24,6 @@ static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper);
 static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines);
 static void jsLauncherInit(jsLauncher_t* launcher, float x, float y, float w, float h);
 static void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBalls, float dt);
-
-static const jsLine_t constWalls[] = {
-    {.p1 = {.x = 95, .y = 190}, .p2 = {.x = 0, .y = 116}},    {.p1 = {.x = 184, .y = 190}, .p2 = {.x = 261, .y = 129}},
-    {.p1 = {.x = 0, .y = 0}, .p2 = {.x = 279, .y = 0}},       {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 0, .y = 0}},
-    {.p1 = {.x = 279, .y = 0}, .p2 = {.x = 279, .y = 239}},   {.p1 = {.x = 0, .y = 239}, .p2 = {.x = 279, .y = 239}},
-    {.p1 = {.x = 0, .y = 116}, .p2 = {.x = 3, .y = 97}},      {.p1 = {.x = 3, .y = 97}, .p2 = {.x = 9, .y = 79}},
-    {.p1 = {.x = 9, .y = 79}, .p2 = {.x = 20, .y = 58}},      {.p1 = {.x = 20, .y = 58}, .p2 = {.x = 37, .y = 37}},
-    {.p1 = {.x = 37, .y = 37}, .p2 = {.x = 62, .y = 18}},     {.p1 = {.x = 62, .y = 18}, .p2 = {.x = 78, .y = 11}},
-    {.p1 = {.x = 78, .y = 11}, .p2 = {.x = 96, .y = 5}},      {.p1 = {.x = 96, .y = 5}, .p2 = {.x = 116, .y = 1}},
-    {.p1 = {.x = 116, .y = 1}, .p2 = {.x = 140, .y = 0}},     {.p1 = {.x = 140, .y = 0}, .p2 = {.x = 163, .y = 1}},
-    {.p1 = {.x = 163, .y = 1}, .p2 = {.x = 183, .y = 5}},     {.p1 = {.x = 183, .y = 5}, .p2 = {.x = 201, .y = 11}},
-    {.p1 = {.x = 201, .y = 11}, .p2 = {.x = 217, .y = 18}},   {.p1 = {.x = 217, .y = 18}, .p2 = {.x = 242, .y = 37}},
-    {.p1 = {.x = 242, .y = 37}, .p2 = {.x = 259, .y = 58}},   {.p1 = {.x = 259, .y = 58}, .p2 = {.x = 270, .y = 79}},
-    {.p1 = {.x = 270, .y = 79}, .p2 = {.x = 276, .y = 97}},   {.p1 = {.x = 276, .y = 97}, .p2 = {.x = 279, .y = 116}},
-    {.p1 = {.x = 261, .y = 129}, .p2 = {.x = 261, .y = 239}}, {.p1 = {.x = 219, .y = 143}, .p2 = {.x = 190, .y = 163}},
-    {.p1 = {.x = 219, .y = 107}, .p2 = {.x = 219, .y = 143}}, {.p1 = {.x = 60, .y = 143}, .p2 = {.x = 89, .y = 163}},
-    {.p1 = {.x = 60, .y = 107}, .p2 = {.x = 60, .y = 143}},
-};
-
-static const jsLine_t constSlingshots[] = {
-    {.p1 = {.x = 190, .y = 163}, .p2 = {.x = 219, .y = 107}},
-    {.p1 = {.x = 89, .y = 163}, .p2 = {.x = 60, .y = 107}},
-};
-
-static const jsLine_t constDropTargets[] = {
-    {.p1 = {.x = 54, .y = 70}, .p2 = {.x = 70, .y = 59}},
-    {.p1 = {.x = 76, .y = 56}, .p2 = {.x = 92, .y = 44}},
-    {.p1 = {.x = 97, .y = 41}, .p2 = {.x = 114, .y = 29}},
-};
-
-static const jsLine_t constStandupTargets[] = {
-    {.p1 = {.x = 225, .y = 70}, .p2 = {.x = 209, .y = 59}},
-    {.p1 = {.x = 203, .y = 56}, .p2 = {.x = 187, .y = 44}},
-    {.p1 = {.x = 182, .y = 41}, .p2 = {.x = 165, .y = 29}},
-};
 
 // physics scene -------------------------------------------------------
 
@@ -115,17 +81,24 @@ static void jsObstacleInit(jsObstacle_t* obstacle, float radius, vecFl_t pos, fl
  * @param radius
  * @param pos
  * @param length
+ * @param facingRight
  * @param restAngle
  * @param maxRotation
  * @param angularVelocity
  */
-static void jsFlipperInit(jsFlipper_t* flipper, float radius, vecFl_t pos, float length, float restAngle,
-                          float maxRotation, float angularVelocity)
+static void jsFlipperInit(jsFlipper_t* flipper, float radius, vecFl_t pos, float length, bool facingRight,
+                          float restAngle, float maxRotation, float angularVelocity)
 {
     // fixed
-    flipper->radius          = radius;
-    flipper->pos             = pos;
-    flipper->length          = length;
+    flipper->radius      = radius;
+    flipper->pos         = pos;
+    flipper->length      = length;
+    flipper->facingRight = facingRight;
+    if (!facingRight)
+    {
+        restAngle   = M_PI - restAngle;
+        maxRotation = -maxRotation;
+    }
     flipper->restAngle       = restAngle;
     flipper->maxRotation     = ABS(maxRotation);
     flipper->sign            = (maxRotation >= 0) ? -1 : 1;
@@ -227,6 +200,18 @@ static void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t 
     }
 }
 
+static inline uint8_t readInt8(uint8_t* data, uint32_t* idx)
+{
+    return data[(*idx)++];
+}
+
+static inline uint16_t readInt16(uint8_t* data, uint32_t* idx)
+{
+    int16_t ret = (data[*idx] << 8) | (data[(*idx) + 1]);
+    (*idx) += 2;
+    return ret;
+}
+
 /**
  * @brief TODO doc
  *
@@ -240,108 +225,91 @@ void jsSceneInit(jsScene_t* scene)
     scene->score     = 0;
     scene->paused    = true;
 
-    scene->numLines = 0;
-    for (int32_t wIdx = 0; wIdx < ARRAY_SIZE(constWalls); wIdx++)
-    {
-        jsLine_t* line = &scene->lines[scene->numLines++];
-        // Copy location
-        *line = constWalls[wIdx];
-        // Walls don't push
-        line->type    = JS_WALL;
-        line->pushVel = 0;
-        line->isSolid = true;
-    }
-    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(constSlingshots); bIdx++)
-    {
-        jsLine_t* line = &scene->lines[scene->numLines++];
-        // Copy location
-        *line = constSlingshots[bIdx];
-        // Slingshots push
-        line->type    = JS_SLINGSHOT;
-        line->pushVel = 80.0f;
-        line->isSolid = true;
-    }
-    for (int32_t dIdx = 0; dIdx < ARRAY_SIZE(constDropTargets); dIdx++)
-    {
-        jsLine_t* line = &scene->lines[scene->numLines++];
-        // Copy location
-        *line = constDropTargets[dIdx];
-        // Drop targets don't push
-        line->type    = JS_DROP_TARGET;
-        line->pushVel = 0;
-        line->isUp    = true;
-        line->isSolid = true;
-    }
-    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(constStandupTargets); sIdx++)
-    {
-        jsLine_t* line = &scene->lines[scene->numLines++];
-        // Copy location
-        *line = constStandupTargets[sIdx];
-        // Standups don't push
-        line->type    = JS_STANDUP_TARGET;
-        line->pushVel = 0;
-        line->isSolid = true;
-        // TODO save group somewhere
-    }
-    // balls
+    uint32_t decompressedSize = 0;
+    uint8_t* tableData        = (uint8_t*)readHeatshrinkFile("pinball.raw", &decompressedSize, true);
+    uint32_t dIdx             = 0;
 
+    uint8_t numGroups = readInt8(tableData, &dIdx);
+    // TODO alloc groups
+
+    uint16_t linesInFile = readInt16(tableData, &dIdx);
+    scene->numLines      = 0;
+    for (uint16_t lIdx = 0; lIdx < linesInFile; lIdx++)
+    {
+        jsLine_t* line = &scene->lines[scene->numLines++];
+        uint16_t id    = readInt16(tableData, &dIdx);
+        uint8_t gIdx   = readInt8(tableData, &dIdx);
+        line->p1.x     = readInt16(tableData, &dIdx);
+        line->p1.y     = readInt16(tableData, &dIdx);
+        line->p2.x     = readInt16(tableData, &dIdx);
+        line->p2.y     = readInt16(tableData, &dIdx);
+        line->type     = readInt8(tableData, &dIdx);
+        line->pushVel  = readInt8(tableData, &dIdx);
+        line->isSolid  = readInt8(tableData, &dIdx);
+    }
+
+    uint16_t circlesInFile = readInt16(tableData, &dIdx);
+    scene->numObstacles    = 0;
+    for (uint16_t cIdx = 0; cIdx < circlesInFile; cIdx++)
+    {
+        uint16_t id  = readInt16(tableData, &dIdx);
+        uint8_t gIdx = readInt8(tableData, &dIdx);
+        vecFl_t pos;
+        pos.x           = readInt16(tableData, &dIdx);
+        pos.y           = readInt16(tableData, &dIdx);
+        uint8_t radius  = readInt8(tableData, &dIdx);
+        uint8_t pushVel = readInt8(tableData, &dIdx);
+        jsObstacleInit(&scene->obstacles[scene->numObstacles++], radius, pos, pushVel);
+    }
+
+    uint16_t rectanglesInFile = readInt16(tableData, &dIdx);
+    scene->numLaunchers       = 0;
+    for (uint16_t rIdx = 0; rIdx < rectanglesInFile; rIdx++)
+    {
+        uint16_t id    = readInt16(tableData, &dIdx);
+        uint8_t gIdx   = readInt8(tableData, &dIdx);
+        int16_t x      = readInt16(tableData, &dIdx);
+        int16_t y      = readInt16(tableData, &dIdx);
+        int16_t width  = readInt16(tableData, &dIdx);
+        int16_t height = readInt16(tableData, &dIdx);
+
+        jsLauncherInit(&scene->launchers[scene->numLaunchers++], x, y, width, height);
+    }
+
+    uint16_t flippersInFile = readInt16(tableData, &dIdx);
+    scene->numFlippers      = 0;
+    for (uint16_t fIdx = 0; fIdx < flippersInFile; fIdx++)
+    {
+        vecFl_t pos;
+        pos.x            = readInt16(tableData, &dIdx);
+        pos.y            = readInt16(tableData, &dIdx);
+        uint8_t radius   = readInt8(tableData, &dIdx);
+        uint8_t length   = readInt8(tableData, &dIdx);
+        bool facingRight = readInt8(tableData, &dIdx) != 0;
+
+        float maxRotation     = 1.0f;
+        float restAngle       = -0.5f;
+        float angularVelocity = 10.0f;
+
+        jsFlipperInit(&scene->flippers[scene->numFlippers++], radius, pos, length, facingRight, -restAngle, maxRotation,
+                      angularVelocity);
+    }
+
+    free(tableData);
+
+    // TODO load ball position from file
     float radius = 4.0f;
-    // vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
-    vecFl_t pos     = {.x = 48.0f, .y = 140.0f};
+    vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
+    // vecFl_t pos     = {.x = 48.0f, .y = 140.0f};
     vecFl_t vel     = {.x = 0.0f, .y = 0.0f};
     scene->numBalls = 0;
     jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
 
-    // pos.x = 160.0f;
-    // pos.y = 60.0f;
-    // vel.x = 0.0f;
-    // vel.y = -20.0f;
-    // jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
-
-    // obstacles
-
-    pos.x               = 130.0f;
-    pos.y               = 120.0f;
-    scene->numObstacles = 0;
-    jsObstacleInit(&scene->obstacles[scene->numObstacles++], 10.0f, pos, 40.0f);
-#if 0
-    pos.x = 0.75f;
-    pos.y = 0.5f;
-    jsObstacleInit(&scene->obstacles[scene->numObstacles++], 0.1f, pos, 2.0f);
-    pos.x = 0.7f;
-    pos.y = 1.0f;
-    jsObstacleInit(&scene->obstacles[scene->numObstacles++], 0.12f, pos, 2.0f);
-    pos.x = 0.2f;
-    pos.y = 1.2f;
-    jsObstacleInit(&scene->obstacles[scene->numObstacles++], 0.1f, pos, 2.0f);
-#endif
-
-    // flippers
-
-    radius                = 5.0f;
-    float length          = 40.0f;
-    float maxRotation     = 1.0f;
-    float restAngle       = -0.5f;
-    float angularVelocity = 10.0f;
-
-    vecFl_t pos1 = {.x = 94.0f, .y = 196.0f};
-    vecFl_t pos2 = {.x = 185.0f, .y = 196.0f};
-
-    scene->numFlippers = 0;
-    jsFlipperInit(&scene->flippers[scene->numFlippers++], radius, pos1, length, -restAngle, maxRotation,
-                  angularVelocity);
-    jsFlipperInit(&scene->flippers[scene->numFlippers++], radius, pos2, length, M_PI + restAngle, -maxRotation,
-                  angularVelocity);
-
-    static const rectangleFl_t constLaunchers[] = {
-        {.pos = {.x = 261, .y = 231}, .width = 19, .height = 9},
-    };
-    scene->numLaunchers = 0;
-    for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(constLaunchers); lIdx++)
-    {
-        jsLauncherInit(&scene->launchers[scene->numLaunchers++], constLaunchers[lIdx].pos.x, constLaunchers[lIdx].pos.y,
-                       constLaunchers[lIdx].width, constLaunchers[lIdx].height);
-    }
+    //     // pos.x = 160.0f;
+    //     // pos.y = 60.0f;
+    //     // vel.x = 0.0f;
+    //     // vel.y = -20.0f;
+    //     // jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
 }
 
 // --- collision handling -------------------------------------------------------
@@ -698,13 +666,28 @@ void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event)
         {
             case PB_LEFT:
             {
-                scene->flippers[0].buttonHeld = true;
+                for (int32_t fIdx = 0; fIdx < scene->numFlippers; fIdx++)
+                {
+                    if (scene->flippers[fIdx].facingRight)
+                    {
+                        scene->flippers[fIdx].buttonHeld = true;
+                    }
+                }
                 break;
             }
             case PB_RIGHT:
             {
-                scene->flippers[1].buttonHeld  = true;
-                scene->launchers[0].buttonHeld = true;
+                for (int32_t fIdx = 0; fIdx < scene->numFlippers; fIdx++)
+                {
+                    if (!scene->flippers[fIdx].facingRight)
+                    {
+                        scene->flippers[fIdx].buttonHeld = true;
+                    }
+                }
+                for (int32_t rIdx = 0; rIdx < scene->numLaunchers; rIdx++)
+                {
+                    scene->launchers[rIdx].buttonHeld = true;
+                }
                 break;
             }
             default:
@@ -719,13 +702,28 @@ void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event)
         {
             case PB_LEFT:
             {
-                scene->flippers[0].buttonHeld = false;
+                for (int32_t fIdx = 0; fIdx < scene->numFlippers; fIdx++)
+                {
+                    if (scene->flippers[fIdx].facingRight)
+                    {
+                        scene->flippers[fIdx].buttonHeld = false;
+                    }
+                }
                 break;
             }
             case PB_RIGHT:
             {
-                scene->flippers[1].buttonHeld  = false;
-                scene->launchers[0].buttonHeld = false;
+                for (int32_t fIdx = 0; fIdx < scene->numFlippers; fIdx++)
+                {
+                    if (!scene->flippers[fIdx].facingRight)
+                    {
+                        scene->flippers[fIdx].buttonHeld = false;
+                    }
+                }
+                for (int32_t rIdx = 0; rIdx < scene->numLaunchers; rIdx++)
+                {
+                    scene->launchers[rIdx].buttonHeld = false;
+                }
                 break;
             }
             default:
