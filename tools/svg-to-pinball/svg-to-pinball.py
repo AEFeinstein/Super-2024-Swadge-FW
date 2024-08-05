@@ -90,6 +90,7 @@ class pbLine:
         b.append(self.type)
         b.append(self.pushVel)
         b.append(self.isSolid)
+        # print(' '.join(['%02X' % x for x in b]))
         return b
 
 
@@ -109,6 +110,7 @@ class pbCircle:
         b.extend(self.position.toBytes())
         b.append(self.radius)
         b.append(self.pushVel)
+        # print(' '.join(['%02X' % x for x in b]))
         return b
 
 
@@ -126,6 +128,7 @@ class pbRectangle:
         b = bytearray([(self.id >> 8), self.id, self.gId])
         b.extend(self.position.toBytes())
         b.extend(self.size.toBytes())
+        # print(' '.join(['%02X' % x for x in b]))
         return b
 
 
@@ -146,6 +149,7 @@ class pbFlipper:
         b.append(self.radius)
         b.append(self.length)
         b.append(self.facingRight)
+        # print(' '.join(['%02X' % x for x in b]))
         return b
 
 
@@ -260,6 +264,13 @@ def extractFlippers(gs: list, gId: str) -> list[pbFlipper]:
     return lines
 
 
+def addLength(tableData: bytearray, array: int):
+    length = len(array)
+    b = [(length >> 8) & 0xFF, (length) & 0xFF]
+    tableData.extend(b)
+    # print(' '.join(['%02X' % x for x in b]))
+
+
 def main():
     # Load the SVG
     g: Group = SVG().parse('pinball.svg')
@@ -277,24 +288,22 @@ def main():
     rectangles = extractRectangles(g.objects['Launchers'], None)
     flippers = extractFlippers(g.objects['Flippers'], None)
 
-    print('Groups: ' + str(max(groups)))
-
     tableData: bytearray = bytearray()
     tableData.append(max(groups))
 
-    tableData.append(len(lines))
+    addLength(tableData, lines)
     for line in lines:
         tableData.extend(line.toBytes())
 
-    tableData.append(len(circles))
+    addLength(tableData, circles)
     for circle in circles:
         tableData.extend(circle.toBytes())
 
-    tableData.append(len(rectangles))
+    addLength(tableData, rectangles)
     for rectangle in rectangles:
         tableData.extend(rectangle.toBytes())
 
-    tableData.append(len(flippers))
+    addLength(tableData, flippers)
     for flipper in flippers:
         tableData.extend(flipper.toBytes())
 
