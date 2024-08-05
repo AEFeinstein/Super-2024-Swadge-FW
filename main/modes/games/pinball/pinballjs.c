@@ -246,6 +246,7 @@ void jsSceneInit(jsScene_t* scene)
         line->type     = readInt8(tableData, &dIdx);
         line->pushVel  = readInt8(tableData, &dIdx);
         line->isSolid  = readInt8(tableData, &dIdx);
+        line->isUp     = true;
     }
 
     uint16_t circlesInFile = readInt16(tableData, &dIdx);
@@ -305,11 +306,11 @@ void jsSceneInit(jsScene_t* scene)
     scene->numBalls = 0;
     jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
 
-    //     // pos.x = 160.0f;
-    //     // pos.y = 60.0f;
-    //     // vel.x = 0.0f;
-    //     // vel.y = -20.0f;
-    //     // jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
+    // pos.x = 160.0f;
+    // pos.y = 60.0f;
+    // vel.x = 0.0f;
+    // vel.y = -20.0f;
+    // jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
 }
 
 // --- collision handling -------------------------------------------------------
