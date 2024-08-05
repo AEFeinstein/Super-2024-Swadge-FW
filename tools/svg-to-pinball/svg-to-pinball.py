@@ -5,9 +5,151 @@ from svgelements import Point
 from svgelements import Circle
 from svgelements import Rect
 from math import sqrt, pow
+from enum import Enum
+
+groups = []
 
 
-def extractCircles(gs: list) -> list[str]:
+def getIntGroupId(gId: str) -> int:
+    try:
+        if (gId.startswith('group_')):
+            gInt = int(gId.split('_')[1])
+            if gInt not in groups:
+                groups.append(gInt)
+            return gInt
+        return 0
+    except:
+        return 0
+
+
+def getIntId(id: str) -> int:
+    try:
+        return int(id)
+    except:
+        return 0
+
+
+class LineType(Enum):
+    JS_WALL = 0
+    JS_SLINGSHOT = 1
+    JS_DROP_TARGET = 2
+    JS_STANDUP_TARGET = 3
+    JS_SPINNER = 4
+
+
+class pbPoint:
+    def __init__(self, p: Point = None, x: int = 0, y: int = 0) -> None:
+        if (p is not None):
+            self.x: int = int(p.x)
+            self.y: int = int(p.y)
+        else:
+            self.x: int = int(x)
+            self.y: int = int(y)
+
+    def toBytes(self) -> bytearray:
+        return bytearray([(self.x >> 8) & 0xFF, self.x & 0xFF, (self.y >> 8) & 0xFF, self.y & 0xFF])
+
+
+class pbLine:
+    def __init__(self, p1: pbPoint, p2: pbPoint, type: LineType, gId: str, id: str) -> None:
+        self.p1 = p1
+        self.p2 = p2
+        self.type: int = type.value
+        self.gId: int = getIntGroupId(gId)
+        self.id: int = getIntId(id)
+
+        match(type):
+            case LineType.JS_WALL:
+                self.isSolid = True
+                self.pushVel = 0
+                pass
+            case LineType.JS_SLINGSHOT:
+                self.isSolid = True
+                self.pushVel = 40
+                pass
+            case LineType.JS_DROP_TARGET:
+                self.isSolid = True
+                self.pushVel = 0
+                pass
+            case LineType.JS_STANDUP_TARGET:
+                self.isSolid = True
+                self.pushVel = 0
+                pass
+            case LineType.JS_SPINNER:
+                self.isSolid = False
+                self.pushVel = 0
+                pass
+
+    def __str__(self) -> str:
+        return "{.p1 = {.x = %d, .y = %d}, .p2 = {.x = %d, .y = %d}}," % (self.p1.x, self.p1.y, self.p2.x, self.p2.y)
+
+    def toBytes(self) -> bytearray:
+        b = bytearray([(self.id >> 8), self.id, self.gId])
+        b.extend(self.p1.toBytes())
+        b.extend(self.p2.toBytes())
+        b.append(self.type)
+        b.append(self.pushVel)
+        b.append(self.isSolid)
+        return b
+
+
+class pbCircle:
+    def __init__(self, pos: pbPoint, radius: int, pushVel: int, gId: str, id: str) -> None:
+        self.position = pos
+        self.radius = int(radius)
+        self.gId: int = getIntGroupId(gId)
+        self.id: int = getIntId(id)
+        self.pushVel = int(pushVel)
+
+    def __str__(self) -> str:
+        return '{.pos = {.x = %d, .y = %d}, .radius = %d},' % (self.position.x, self.position.y, self.radius)
+
+    def toBytes(self) -> bytearray:
+        b = bytearray([(self.id >> 8), self.id, self.gId])
+        b.extend(self.position.toBytes())
+        b.append(self.radius)
+        b.append(self.pushVel)
+        return b
+
+
+class pbRectangle:
+    def __init__(self, position: pbPoint, size: pbPoint, gId: str, id: str) -> None:
+        self.position = position
+        self.size = size
+        self.gId: int = getIntGroupId(gId)
+        self.id: int = getIntId(id)
+
+    def __str__(self) -> str:
+        return '{.pos = {.x = %d, .y = %d}, .width = %d, .height = %d},' % (self.position.x, self.position.y, self.size.x, self.size.y)
+
+    def toBytes(self) -> bytearray:
+        b = bytearray([(self.id >> 8), self.id, self.gId])
+        b.extend(self.position.toBytes())
+        b.extend(self.size.toBytes())
+        return b
+
+
+class pbFlipper:
+    def __init__(self, pivot: pbPoint, radius: int, length: int, facingRight: bool) -> None:
+        self.pivot = pivot
+        self.radius = int(radius)
+        self.length = int(length)
+        self.facingRight = bool(facingRight)
+
+    def __str__(self) -> str:
+        return '{.cPivot = {.pos = {.x = %d, .y = %d}, .radius = %d}, .len = %d, .facingRight = %s},' % (
+            self.pivot.x, self.pivot.y, self.radius, self.length, 'true' if self.facingRight else 'false')
+
+    def toBytes(self) -> bytearray:
+        b = bytearray()
+        b.extend(self.pivot.toBytes())
+        b.append(self.radius)
+        b.append(self.length)
+        b.append(self.facingRight)
+        return b
+
+
+def extractCircles(gs: list, gId: str) -> list[pbCircle]:
     """Recursively extract all circles from this list of SVG things
 
     Args:
@@ -16,19 +158,19 @@ def extractCircles(gs: list) -> list[str]:
     Returns:
         list[str]: A list of C strings for the circles
     """
-    lines = []
+    circles = []
     for g in gs:
         if isinstance(g, Circle):
-            lines.append('  {.pos = {.x = %d, .y = %d}, .radius = %d},' % (
-                g.cx, g.cy, (g.rx + g.ry) / 2))
+            circles.append(pbCircle(pbPoint(x=g.cx, y=g.cy),
+                           (g.rx + g.ry) / 2, 40, gId, g.id))
         elif isinstance(g, Group):
-            lines.extend(extractCircles(g))
+            circles.extend(extractCircles(g, g.id))
         else:
             print('Found ' + str(type(g)) + ' when extracting Circles')
-    return lines
+    return circles
 
 
-def extractRectangles(gs: list) -> list[str]:
+def extractRectangles(gs: list, gId: str) -> list[pbRectangle]:
     """Recursively extract all circles from this list of SVG things
 
     Args:
@@ -37,19 +179,19 @@ def extractRectangles(gs: list) -> list[str]:
     Returns:
         list[str]: A list of C strings for the circles
     """
-    lines = []
+    rectangles = []
     for g in gs:
         if isinstance(g, Rect):
-            lines.append('  {.pos = {.x = %d, .y = %d}, .width = %d, .height = %d},' % (
-                g.x, g.y, g.width, g.height))
+            rectangles.append(pbRectangle(
+                pbPoint(x=g.x, y=g.y), pbPoint(x=g.width, y=g.height), gId, g.id))
         elif isinstance(g, Group):
-            lines.extend(extractRectangles(g))
+            rectangles.extend(extractRectangles(g, g.id))
         else:
             print('Found ' + str(type(g)) + ' when extracting Rects')
-    return lines
+    return rectangles
 
 
-def extractPaths(gs: list) -> list[str]:
+def extractPaths(gs: list, lineType: LineType, gId: str) -> list[pbLine]:
     """Recursively extract all paths from this list of SVG things
 
     Args:
@@ -65,17 +207,17 @@ def extractPaths(gs: list) -> list[str]:
             point: Point
             for point in g.as_points():
                 if lastPoint is not None and lastPoint != point:
-                    lines.append('  {.p1 = {.x = %d, .y = %d}, .p2 = {.x = %d, .y = %d}},' % (
-                        lastPoint.x, lastPoint.y, point.x, point.y))
+                    lines.append(pbLine(pbPoint(p=lastPoint),
+                                 pbPoint(p=point), lineType, gId, g.id))
                 lastPoint = point
         elif isinstance(g, Group):
-            lines.extend(extractPaths(g))
+            lines.extend(extractPaths(g, lineType, g.id))
         else:
             print('Found ' + str(type(g)) + ' when extracting Paths')
     return lines
 
 
-def extractFlippers(gs: list) -> list[str]:
+def extractFlippers(gs: list, gId: str) -> list[pbFlipper]:
     """Recursively extract all flippers (groups of circles and paths) from this list of SVG things
 
     Args:
@@ -92,12 +234,12 @@ def extractFlippers(gs: list) -> list[str]:
         elif isinstance(g, Path):
             pass
         elif isinstance(g, Group):
-            lines.extend(extractFlippers(g))
+            lines.extend(extractFlippers(g, g.id))
         else:
             print('Found ' + str(type(g)) + ' when extracting Flippers')
 
     if 2 == len(flipperParts):
-        if flipperParts[0].rx > flipperParts[1].rx:
+        if 'pivot' in flipperParts[0].id.lower():
             pivot = flipperParts[0]
             tip = flipperParts[1]
         else:
@@ -112,8 +254,8 @@ def extractFlippers(gs: list) -> list[str]:
         flipperLen = sqrt(pow(pivot.cx - tip.cx, 2) +
                           pow(pivot.cy - tip.cy, 2))
 
-        lines.append('  {.cPivot = {.pos = {.x = %d, .y = %d}, .radius = %d}, .tRadius = %d, .len = %d, .facingRight = %s},' % (
-            pivot.cx, pivot.cy, pivot.rx, tip.rx, flipperLen, 'true' if facingRight else 'false'))
+        lines.append(pbFlipper(pbPoint(x=pivot.cx, y=pivot.cy),
+                     pivot.rx, flipperLen, facingRight))
 
     return lines
 
@@ -122,46 +264,42 @@ def main():
     # Load the SVG
     g: Group = SVG().parse('pinball.svg')
 
-    # Start a string
-    cstr = ''
+    lines: list[pbLine] = []
+    lines.extend(extractPaths(g.objects['Walls'], LineType.JS_WALL, None))
+    lines.extend(extractPaths(
+        g.objects['Slingshots'], LineType.JS_SLINGSHOT, None))
+    lines.extend(extractPaths(
+        g.objects['Drop_Targets'], LineType.JS_DROP_TARGET, None))
+    lines.extend(extractPaths(
+        g.objects['Standup_Targets'], LineType.JS_STANDUP_TARGET, None))
 
-    # Extract walls
-    cstr += 'static const lineFl_t constWalls[] = {\n'
-    cstr += '\n'.join(extractPaths(g.objects['Walls']))
-    cstr += '\n};\n\n'
+    circles = extractCircles(g.objects['Bumpers'], None)
+    rectangles = extractRectangles(g.objects['Launchers'], None)
+    flippers = extractFlippers(g.objects['Flippers'], None)
 
-    # Extract round bumpers
-    cstr += 'static const circleFl_t constBumpers[] = {\n'
-    cstr += '\n'.join(extractCircles(g.objects['Bumpers']))
-    cstr += '\n};\n\n'
+    print('Groups: ' + str(max(groups)))
 
-    # Extract straight bumpers
-    cstr += 'static const lineFl_t constSlingshots[] = {\n'
-    cstr += '\n'.join(extractPaths(g.objects['Bumpers']))
-    cstr += '\n};\n\n'
+    tableData: bytearray = bytearray()
+    tableData.append(max(groups))
 
-    # Extract drop targets
-    cstr += 'static const lineFl_t constDropTargets[] = {\n'
-    cstr += '\n'.join(extractPaths(g.objects['Drop_Targets']))
-    cstr += '\n};\n\n'
+    tableData.append(len(lines))
+    for line in lines:
+        tableData.extend(line.toBytes())
 
-    # Extract standup_targets
-    cstr += 'static const lineFl_t constStandupTargets[] = {\n'
-    cstr += '\n'.join(extractPaths(g.objects['Standup_Targets']))
-    cstr += '\n};\n\n'
+    tableData.append(len(circles))
+    for circle in circles:
+        tableData.extend(circle.toBytes())
 
-    # Extract launchers
-    cstr += 'static const rectangleFl_t constLaunchers[] = {\n'
-    cstr += '\n'.join(extractRectangles(g.objects['Launchers']))
-    cstr += '\n};\n\n'
+    tableData.append(len(rectangles))
+    for rectangle in rectangles:
+        tableData.extend(rectangle.toBytes())
 
-    # Extract flippers
-    cstr += 'static const flipperFl_t constFlippers[] = {\n'
-    cstr += '\n'.join(extractFlippers(g.objects['Flippers']))
-    cstr += '\n};'
+    tableData.append(len(flippers))
+    for flipper in flippers:
+        tableData.extend(flipper.toBytes())
 
-    # Print the result
-    print(cstr)
+    with open('table.bin', 'wb') as outFile:
+        outFile.write(tableData)
 
 
 if __name__ == "__main__":
