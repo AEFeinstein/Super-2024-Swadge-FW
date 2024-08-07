@@ -94,6 +94,7 @@ bool initNvs(bool firstTry)
                         // Wrote successfully
                         fclose(nvsFile);
                         nvsFileName = curFile;
+                        printf("Using NVS file %s\n", *nvsFileName);
                         return true;
                     }
                     else
@@ -108,11 +109,14 @@ bool initNvs(bool firstTry)
         {
             // File exists
             nvsFileName = curFile;
+            printf("Using NVS file %s\n", *nvsFileName);
             return true;
         }
+
+
+        printf("Could not load NVS file %s\n", *curFile);
     }
 
-    printf("Could not load NVS file %s\n", NVS_JSON_FILE);
     return false;
 }
 
