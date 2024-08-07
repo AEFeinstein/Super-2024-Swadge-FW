@@ -6,7 +6,7 @@
 #include <esp_heap_caps.h>
 
 #include "mode_pinball.h"
-#include "pinballjs.h"
+#include "pinball_game.h"
 
 //==============================================================================
 // Structs

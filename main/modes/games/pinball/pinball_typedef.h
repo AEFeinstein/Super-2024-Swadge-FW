@@ -1,15 +1,12 @@
 #pragma once
 
 #include <stdint.h>
+#include <float.h>
 #include <stdbool.h>
-#include <vectorFl2d.h>
-#include "hdw-btn.h"
+#include <stddef.h>
 
-#define MAX_NUM_LINES     128
-#define MAX_NUM_BALLS     128
-#define MAX_NUM_OBSTACLES 128
-#define MAX_NUM_FLIPPERS  128
-#define MAX_NUM_LAUNCHERS 128
+#include "vectorFl2d.h"
+#include "macros.h"
 
 typedef enum
 {
@@ -19,21 +16,16 @@ typedef enum
     JS_STANDUP_TARGET,
     JS_SPINNER,
 } jsLineType_t;
-typedef struct
-{
-    float radius;
-    float mass;
-    float restitution;
-    vecFl_t pos;
-    vecFl_t vel;
-} jsBall_t;
 
 typedef struct
 {
-    float radius;
-    vecFl_t pos;
+    jsLineType_t type;
+    vecFl_t p1;
+    vecFl_t p2;
     float pushVel;
-} jsObstacle_t;
+    bool isSolid;
+    bool isUp;
+} jsLine_t;
 
 typedef struct
 {
@@ -52,15 +44,22 @@ typedef struct
     bool facingRight;
 } jsFlipper_t;
 
+// TODO merge these
 typedef struct
 {
-    jsLineType_t type;
-    vecFl_t p1;
-    vecFl_t p2;
+    float radius;
+    float mass;
+    float restitution;
+    vecFl_t pos;
+    vecFl_t vel;
+} jsBall_t;
+
+typedef struct
+{
+    float radius;
+    vecFl_t pos;
     float pushVel;
-    bool isSolid;
-    bool isUp;
-} jsLine_t;
+} jsObstacle_t;
 
 typedef struct
 {
@@ -70,6 +69,12 @@ typedef struct
     bool buttonHeld;
     float impulse;
 } jsLauncher_t;
+
+#define MAX_NUM_LINES     128
+#define MAX_NUM_BALLS     128
+#define MAX_NUM_OBSTACLES 128
+#define MAX_NUM_FLIPPERS  128
+#define MAX_NUM_LAUNCHERS 128
 
 typedef struct
 {
@@ -88,8 +93,3 @@ typedef struct
     jsLauncher_t launchers[MAX_NUM_LAUNCHERS];
     int32_t numLaunchers;
 } jsScene_t;
-
-void jsSceneInit(jsScene_t* scene);
-void jsSimulate(jsScene_t* scene);
-void jsSceneDraw(jsScene_t* scene);
-void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event);
