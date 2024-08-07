@@ -181,7 +181,10 @@ void setMidiClientName(const char* name)
 void midid_init(void)
 {
     printf("Initializing MIDI!\n");
-    midiDriver = platform_midi_init(clientName ? "Swadge Emulator MIDI" : clientName);
+    if (midiDriver == NULL)
+    {
+        midiDriver = platform_midi_init(clientName ? "Swadge Emulator MIDI" : clientName);
+    }
 }
 
 void midid_reset(uint8_t rhport)

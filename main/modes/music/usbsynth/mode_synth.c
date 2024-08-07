@@ -1225,6 +1225,11 @@ static void synthMainLoop(int64_t elapsedUs)
 
 static void synthSetupPlayer(void)
 {
+    if (!sd->installed)
+    {
+        sd->installed = installMidiUsb();
+    }
+
     if (sd->fileMode)
     {
         sd->midiPlayer.loop                = sd->loop;
@@ -1232,12 +1237,9 @@ static void synthSetupPlayer(void)
     }
     else
     {
-        if (!sd->installed)
-        {
-            sd->installed = installMidiUsb();
-        }
         sd->midiPlayer.streamingCallback = usbMidiCallback;
         sd->midiPlayer.mode              = MIDI_STREAMING;
+        midiPause(&sd->midiPlayer, false);
     }
 
     sd->midiPlayer.headroom = sd->headroom;
@@ -2285,15 +2287,22 @@ static void synthHandleButton(const buttonEvt_t evt)
 
                 case PB_B:
                 {
-                    if (sd->midiPlayer.paused)
+                    if (sd->fileMode)
                     {
-                        sd->stopped = true;
-                        midiPlayerReset(&sd->midiPlayer);
-                        synthSetupPlayer();
+                        if (sd->midiPlayer.paused)
+                        {
+                            sd->stopped = true;
+                            midiPlayerReset(&sd->midiPlayer);
+                            synthSetupPlayer();
+                        }
+                        else
+                        {
+                            midiPause(&sd->midiPlayer, true);
+                        }
                     }
                     else
                     {
-                        midiPause(&sd->midiPlayer, true);
+                        midiAllSoundOff(&sd->midiPlayer);
                     }
                     break;
                 }
@@ -2712,13 +2721,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                 synthSetFile(NULL);
                 midiPlayerReset(&sd->midiPlayer);
 
-                if (!sd->installed)
-                {
-                    sd->installed = installMidiUsb();
-                }
-
                 synthSetupPlayer();
-                midiPause(&sd->midiPlayer, false);
 
                 writeNvs32(nvsKeyMode, sd->fileMode);
             }
