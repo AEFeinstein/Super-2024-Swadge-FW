@@ -78,14 +78,15 @@ bool initNvs(bool firstTry)
         curFile < (defaultNvsFiles + (sizeof(defaultNvsFiles) / sizeof(*defaultNvsFiles)));
         curFile++)
     {
+        char expanded[1024];
+        expandPath(expanded, sizeof(expanded), *curFile);
+
         // Check if the json file exists
-        if (access(*curFile, F_OK) != 0)
+        if (access(expanded, F_OK) != 0)
         {
             // Create parent directories if necessary
             if (makeDirs(*curFile))
             {
-                char expanded[1024];
-                expandPath(expanded, sizeof(expanded), *curFile);
                 FILE* nvsFile = fopen(expanded, "wb");
                 if (NULL != nvsFile)
                 {
