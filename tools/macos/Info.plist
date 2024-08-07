@@ -26,5 +26,10 @@
     <string>Copyright (c) 2023 gelakinetic</string>
     <key>LSMinimumSystemVersion</key>
     <string>10</string>
+    <key>LSEnvironment</key>
+    <dict>
+        <key>DISPLAY</key>
+        <string>:0</string>
+    </dict>
 </dict>
 </plist>
