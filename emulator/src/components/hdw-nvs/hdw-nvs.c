@@ -1047,7 +1047,7 @@ static bool makeDirs(const char* path)
             }
             else
             {
-                if (statResult == ENOENT)
+                if (statResult == -1 || statResult == ENOENT)
                 {
                     // Doesn't exist! Let's change that
                     if (0 != mkdir(buffer, 0751))
