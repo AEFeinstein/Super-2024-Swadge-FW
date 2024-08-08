@@ -39,7 +39,7 @@ jobs:
             family: osx
             emulator: true
             firmware: false
-            emu_binary: swadge_emulator
+            emu_binary: SwadgeEmulator.zip
             idf_install: ~/.espressif
           - os: linux
             runner: ubuntu-latest
