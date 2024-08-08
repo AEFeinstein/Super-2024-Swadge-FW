@@ -14,8 +14,8 @@ int32_t readLineFromFile(uint8_t* tableData, jsScene_t* scene)
 {
     jsLine_t* line = &scene->lines[scene->numLines++];
     uint32_t dIdx  = 0;
-    uint16_t id    = readInt16(tableData, &dIdx);
-    uint8_t gIdx   = readInt8(tableData, &dIdx);
+    line->id       = readInt16(tableData, &dIdx);
+    line->group    = addToGroup(scene, line, readInt8(tableData, &dIdx));
     line->p1.x     = readInt16(tableData, &dIdx);
     line->p1.y     = readInt16(tableData, &dIdx);
     line->p2.x     = readInt16(tableData, &dIdx);

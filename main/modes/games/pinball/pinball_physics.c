@@ -253,6 +253,34 @@ static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t num
     {
         line->isUp    = false;
         line->isSolid = false;
-        // TODO check if all targets in the group are hit
+
+        // Check if all targets in the group are hit
+        bool someLineUp = false;
+        list_t* group   = line->group;
+        node_t* node    = group->first;
+        while (NULL != node)
+        {
+            jsLine_t* groupLine = node->val;
+            if (groupLine->isUp)
+            {
+                someLineUp = true;
+                break;
+            }
+            node = node->next;
+        }
+
+        // If all lines are down
+        if (!someLineUp)
+        {
+            // Reset them
+            node = group->first;
+            while (NULL != node)
+            {
+                // TODO delay this by some time?
+                ((jsLine_t*)node->val)->isUp    = true;
+                ((jsLine_t*)node->val)->isSolid = true;
+                node                            = node->next;
+            }
+        }
     }
 }

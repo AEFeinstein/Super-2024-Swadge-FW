@@ -7,6 +7,7 @@
 
 #include "vectorFl2d.h"
 #include "macros.h"
+#include "linked_list.h"
 
 typedef enum
 {
@@ -19,6 +20,8 @@ typedef enum
 
 typedef struct
 {
+    int32_t id;
+    list_t* group;
     jsLineType_t type;
     vecFl_t p1;
     vecFl_t p2;
@@ -56,6 +59,8 @@ typedef struct
 
 typedef struct
 {
+    int32_t id;
+    list_t* group;
     float radius;
     vecFl_t pos;
     float pushVel;
@@ -63,6 +68,8 @@ typedef struct
 
 typedef struct
 {
+    int32_t id;
+    list_t* group;
     vecFl_t pos;
     float width;
     float height;
@@ -82,6 +89,8 @@ typedef struct
     float dt;
     int32_t score;
     bool paused;
+    int32_t numGroups;
+    list_t* groups;
     jsLine_t lines[MAX_NUM_LINES];
     int32_t numLines;
     jsBall_t balls[MAX_NUM_BALLS];

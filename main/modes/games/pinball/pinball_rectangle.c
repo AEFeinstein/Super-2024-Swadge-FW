@@ -13,8 +13,8 @@ uint32_t readRectangleFromFile(uint8_t* tableData, jsScene_t* scene)
 {
     uint32_t dIdx          = 0;
     jsLauncher_t* launcher = &scene->launchers[scene->numLaunchers++];
-    int16_t id             = readInt16(tableData, &dIdx);
-    int8_t gIdx            = readInt8(tableData, &dIdx);
+    launcher->id           = readInt16(tableData, &dIdx);
+    launcher->group        = addToGroup(scene, launcher, readInt8(tableData, &dIdx));
     launcher->pos.x        = readInt16(tableData, &dIdx);
     launcher->pos.y        = readInt16(tableData, &dIdx);
     launcher->width        = readInt16(tableData, &dIdx);
