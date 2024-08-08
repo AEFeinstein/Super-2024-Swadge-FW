@@ -65,11 +65,11 @@ class pbLine:
                 pass
             case LineType.JS_SLINGSHOT:
                 self.isSolid = True
-                self.pushVel = 40
+                self.pushVel = 80
                 pass
             case LineType.JS_DROP_TARGET:
                 self.isSolid = True
-                self.pushVel = 0
+                self.pushVel = 40
                 pass
             case LineType.JS_STANDUP_TARGET:
                 self.isSolid = True
