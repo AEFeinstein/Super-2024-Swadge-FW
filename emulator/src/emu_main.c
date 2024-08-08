@@ -43,6 +43,7 @@
 #include "trigonometry.h"
 
 #include "hdw-esp-now.h"
+#include "esp_random_emu.h"
 #include "mainMenu.h"
 
 // clang-format off
@@ -185,6 +186,11 @@ int main(int argc, char** argv)
     {
         // One of the extension must have quit due to an error.
         return 0;
+    }
+
+    if (emulatorArgs.seed != UINT32_MAX)
+    {
+        emulatorSetEspRandomSeed(emulatorArgs.seed);
     }
 
     // First initialize rawdraw

@@ -113,6 +113,8 @@ emuArgs_t emulatorArgs = {
     .recordFile = NULL,
     .replayFile = NULL,
 
+    .seed = UINT32_MAX,
+
     .showFps = false,
 
     .vsync = true,
@@ -140,6 +142,7 @@ static const char argModeSwitch[]  = "mode-switch";
 static const char argModeList[]    = "modes-list";
 static const char argPlayback[]    = "playback";
 static const char argRecord[]      = "record";
+static const char argSeed[]        = "seed";
 static const char argShowFps[]     = "show-fps";
 static const char argTouch[]       = "touch";
 static const char argVsync[]       = "vsync";
@@ -167,6 +170,7 @@ static const struct option options[] =
     { argMode,        required_argument, NULL,                             'm'  },
     { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
     { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
+    { argSeed,        required_argument, (int*)&emulatorArgs.seed,         0    },
     { argShowFps,     optional_argument, (int*)&emulatorArgs.showFps,      'c'  },
     { argModeSwitch,  optional_argument, NULL,                             10   },
     { argModeList,    no_argument,       NULL,                             0    },
@@ -199,6 +203,7 @@ static const optDoc_t argDocs[] =
     { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
     {'p', argPlayback,    "FILE",  "Play back recorded emulator inputs from a file" },
     {'r', argRecord,      "FILE",  "Record emulator inputs to a file" },
+    {'s', argSeed,        "SEED",  "Seed the random number generator with a specific value" },
     {'c', argShowFps,     NULL,    "Display an FPS counter" },
     {'t', argTouch,       NULL,    "Simulate touch sensor readings with a virtual touchpad" },
     { 0,  argVsync,       "y|n",   "Set whether VSync is enabled" },
@@ -367,6 +372,25 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
         if (arg)
         {
             emulatorArgs.replayFile = arg;
+        }
+    }
+    else if (argSeed == optName)
+    {
+        if (arg)
+        {
+            errno             = 0;
+            emulatorArgs.seed = atoi(arg);
+            if (errno)
+            {
+                printf("ERR: Invalid integer value '%s'\n", arg);
+                return false;
+            }
+
+            if (arg < 0)
+            {
+                printf("ERR: Seed value must be greater than or equal to 0\n");
+                return false;
+            }
         }
     }
     else if (argShowFps == optName)

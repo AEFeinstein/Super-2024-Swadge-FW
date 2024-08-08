@@ -9,6 +9,7 @@
 #include "emu_main.h"
 #include "ext_modes.h"
 #include "ext_tools.h"
+#include "esp_random_emu.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,9 +56,10 @@ typedef enum
     QUIT,
     SCREENSHOT,
     SET_MODE,
+    RANDOM_SEED,
 } replayLogType_t;
 
-#define LAST_TYPE SET_MODE
+#define LAST_TYPE RANDOM_SEED
 
 //==============================================================================
 // Structs
@@ -74,6 +76,7 @@ typedef struct
         buttonBit_t buttonVal;
         int32_t touchVal;
         int16_t accelVal;
+        uint32_t seedVal;
         char* filename;
         char* modeName;
     };
@@ -97,6 +100,8 @@ typedef struct
     int16_t lastAccelY;
     int16_t lastAccelZ;
 
+    uint32_t newSeed;
+
     replayEntry_t nextEntry;
 } replay_t;
 
@@ -119,6 +124,7 @@ static void writeEntry(const replayEntry_t* entry);
 static const char* replayLogTypeStrs[] = {
     "BtnDown", "BtnUp",  "TouchPhi", "TouchR", "TouchI",     "AccelX",
     "AccelY",  "AccelZ", "Fuzz",     "Quit",   "Screenshot", "SetMode",
+    "Seed",
 };
 
 static const char* replayButtonNames[] = {
@@ -166,7 +172,45 @@ static bool replayInit(emuArgs_t* emuArgs)
         printf("\nReplay: Recording inputs to file %s\n", filename);
         replay.file = fopen(filename, "w");
         replay.mode = RECORD;
-        return replay.file != NULL;
+        replay.lastAccelZ = 256;
+        if (replay.file != NULL)
+        {
+            if (emuArgs->startMode)
+            {
+                if (!replay.headerHandled)
+                {
+                    replay.headerHandled = true;
+                    fwrite(HEADER, 1, strlen(HEADER), replay.file);
+                }
+
+                // Immediately record the start mode
+                replayEntry_t modeEntry = {
+                    .type = SET_MODE,
+                    .time = 0,
+                    .modeName = emuArgs->startMode,
+                };
+                writeEntry(&modeEntry);
+            }
+
+            if (emuArgs->seed)
+            {
+                if (!replay.headerHandled)
+                {
+                    replay.headerHandled = true;
+                    fwrite(HEADER, 1, strlen(HEADER), replay.file);
+                }
+
+                // Immediately record the start mode
+                replayEntry_t seedEntry = {
+                    .type = RANDOM_SEED,
+                    .time = 0,
+                    .seedVal = emuArgs->seed,
+                };
+                writeEntry(&seedEntry);
+            }
+            return true;
+        }
+        return false;
     }
     else if (emuArgs->playback)
     {
@@ -301,11 +345,12 @@ static void replayRecordFrame(uint64_t frame)
                 break;
             }
 
-            // These would be manually inserted, so no need to handle writing
+            // These are already inserted elsewhere, so there's nothing to do per-frame
             case FUZZ:
             case QUIT:
             case SCREENSHOT:
             case SET_MODE:
+            case RANDOM_SEED:
                 break;
         }
     }
@@ -451,6 +496,12 @@ static void replayPlaybackFrame(uint64_t frame)
                     }
                     break;
                 }
+
+                case RANDOM_SEED:
+                {
+                    emulatorSetEspRandomSeed(replay.nextEntry.seedVal);
+                    break;
+                }
             }
 
             // Get the next entry
@@ -518,7 +569,7 @@ static bool readEntry(replayEntry_t* entry)
 
     int result;
     // Read timestamp index
-    result = fscanf(replay.file, "%" PRId64 ",", &replay.nextEntry.time);
+    result = fscanf(replay.file, "%" PRId64 ",", &entry->time);
 
     // Check if the index key was readable
     if (result != 1)
@@ -546,7 +597,7 @@ static bool readEntry(replayEntry_t* entry)
         const char* str = replayLogTypeStrs[type];
         if (!strncmp(str, buffer, sizeof(buffer) - 1))
         {
-            replay.nextEntry.type = type;
+            entry->type = type;
             break;
         }
 
@@ -558,7 +609,7 @@ static bool readEntry(replayEntry_t* entry)
         }
     }
 
-    switch (replay.nextEntry.type)
+    switch (entry->type)
     {
         case BUTTON_PRESS:
         case BUTTON_RELEASE:
@@ -574,7 +625,7 @@ static bool readEntry(replayEntry_t* entry)
                 buttonBit_t button = (1 << i);
                 if (!strncmp(replayButtonNames[i], buffer, sizeof(buffer) - 1))
                 {
-                    replay.nextEntry.buttonVal = button;
+                    entry->buttonVal = button;
                     break;
                 }
 
@@ -593,7 +644,7 @@ static bool readEntry(replayEntry_t* entry)
         case TOUCH_R:
         case TOUCH_INTENSITY:
         {
-            if (1 != fscanf(replay.file, "%" PRId32 "\n", &replay.nextEntry.touchVal))
+            if (1 != fscanf(replay.file, "%" PRId32 "\n", &entry->touchVal))
             {
                 return false;
             }
@@ -604,7 +655,7 @@ static bool readEntry(replayEntry_t* entry)
         case ACCEL_Y:
         case ACCEL_Z:
         {
-            if (1 != fscanf(replay.file, "%hd\n", &replay.nextEntry.accelVal))
+            if (1 != fscanf(replay.file, "%hd\n", &entry->accelVal))
             {
                 return false;
             }
@@ -662,6 +713,16 @@ static bool readEntry(replayEntry_t* entry)
             strncpy(tmpStr, buffer, strlen(buffer) + 1);
             entry->modeName = tmpStr;
 
+            break;
+        }
+
+        case RANDOM_SEED:
+        {
+            // Read the seed value from the file
+            if (1 != fscanf(replay.file, "%" PRIu32 "\n", &entry->seedVal))
+            {
+                return false;
+            }
             break;
         }
 
@@ -733,6 +794,13 @@ static void writeEntry(const replayEntry_t* entry)
 
         case SET_MODE:
         {
+            snprintf(ptr, BUFSIZE, "%s\n", entry->modeName ? entry->modeName : "");
+            break;
+        }
+
+        case RANDOM_SEED:
+        {
+            snprintf(ptr, BUFSIZE, "%" PRIu32 "\n", entry->seedVal);
             break;
         }
     }
@@ -750,14 +818,41 @@ void recordScreenshotTaken(const char* name)
     // Check that we're recording, otherwise we don't do anything
     if (replay.mode == RECORD && replay.file)
     {
-        // Create a copy of the filename since entry.filename is not const
-        char tmp[strlen(name) + 1];
-        strcpy(tmp, name);
-
         replayEntry_t entry = {
             .time     = esp_timer_get_time(),
             .type     = SCREENSHOT,
-            .filename = tmp,
+            .filename = NULL,
+        };
+
+        if (name)
+        {
+            // Create a copy of the filename since entry.filename is not const
+            char tmp[strlen(name) + 1];
+            strcpy(tmp, name);
+            entry.filename = tmp;
+            writeEntry(&entry);
+        }
+        else
+        {
+            writeEntry(&entry);
+        }
+    }
+}
+
+/**
+ * @brief Notifies the replay extension that the random seed was set
+ *
+ * @param seed The seed value
+ */
+void emulatorRecordRandomSeed(uint32_t seed)
+{
+    if (replay.mode == RECORD && replay.file)
+    {
+        replayEntry_t entry = {
+            // We want this to happen as early as possible so minor timing differences don't cause it to get missed
+            .time = 0,
+            .type = RANDOM_SEED,
+            .seedVal = seed,
         };
         writeEntry(&entry);
     }

@@ -64,7 +64,9 @@
 #pragma once
 
 #include "emu_ext.h"
+#include <stdint.h>
 
 extern emuExtension_t replayEmuExtension;
 
 void recordScreenshotTaken(const char* name);
+void emulatorRecordRandomSeed(uint32_t seed);

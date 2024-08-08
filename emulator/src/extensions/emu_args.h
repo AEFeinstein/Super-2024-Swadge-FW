@@ -66,6 +66,9 @@ typedef struct
     /// @brief Name of the file to replay inputs from
     const char* replayFile;
 
+    /// @brief A value to use to manually seed the random number generator
+    uint32_t seed;
+
     /// @brief Whether to display an FPS counter
     bool showFps;
 
