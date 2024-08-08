@@ -35,6 +35,7 @@
                      || defined(__MINGW32__) || defined(__MINGW64__) \
                      || defined(__TOS_WIN__) || defined(_MSC_VER)
 #define SUPPORT_LINKS 0
+#include <direct.h>
 #else
 #define SUPPORT_LINKS 1
 #endif
