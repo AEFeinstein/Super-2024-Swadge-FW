@@ -14,6 +14,7 @@
 #include "gameData_bigbug.h"
 #include "tilemap_bigbug.h"
 #include "entityManager_bigbug.h"
+#include "esp_heap_caps.h"
 #include <math.h>
 
 //==============================================================================
@@ -137,7 +138,7 @@ bb_t* bigbug = NULL;
 static void bb_EnterMode(void)
 {
     printf("a\n");
-    bigbug = calloc(1, sizeof(bb_t));
+    bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
     printf("b\n");
 
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
@@ -436,7 +437,7 @@ static void bb_UpdateTileSupport(void){
                     && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] >= 0
                     && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] < TILE_FIELD_HEIGHT)
                     {
-                        uint32_t* val = calloc(2,sizeof(uint32_t));
+                        uint32_t* val = heap_caps_calloc(2,sizeof(uint32_t), MALLOC_CAP_SPIRAM);
                         val[0] = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
                         val[1] = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
 
@@ -551,10 +552,10 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 /////////////////////
 
                 //crumble test
-                uint32_t* val = calloc(2,sizeof(uint32_t));
-                val[0] = 5;
-                val[1] = 3;
-                push(bigbug->gameData.unsupported, (void*)val);
+                // uint32_t* val = calloc(2,sizeof(uint32_t));
+                // val[0] = 5;
+                // val[1] = 3;
+                // push(bigbug->gameData.unsupported, (void*)val);
 
                 //Update the dirt by decrementing it.
                 bigbug->tilemap.fgTiles[best_i][best_j] -= 1;

@@ -38,7 +38,7 @@ struct bb_tilemap_t
     wsg_t bgWsg;          ///< The paralax background for depth
 
     int8_t fgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of foreground tiles. The number is the dirt's health. 0 is air.
-    bool mgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of midground tiles. True is tile, False is not.
+    int8_t mgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of midground tiles.
 };
 
 //==============================================================================
