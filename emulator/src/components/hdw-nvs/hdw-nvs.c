@@ -28,6 +28,17 @@
 #define NVS_ENTRY_BYTES      32
 #define NVS_OVERHEAD_ENTRIES 12
 
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
+                     || defined(WIN32)       || defined(WIN64) \
+                     || defined(_WIN32)      || defined(_WIN64) \
+                     || defined(__WIN32__)   || defined(__CYGWIN__) \
+                     || defined(__MINGW32__) || defined(__MINGW64__) \
+                     || defined(__TOS_WIN__) || defined(_MSC_VER)
+#define SUPPORT_LINKS 0
+#else
+#define SUPPORT_LINKS 1
+#endif
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -35,6 +46,7 @@
 static char* blobToStr(const void* value, size_t length);
 static int hexCharToInt(char c);
 static void strToBlob(char* str, void* outBlob, size_t blobLen);
+static int makeDir(const char* path);
 static bool makeDirs(const char* path);
 static void expandPath(char* buffer, size_t length, const char* path);
 static FILE* openNvsFile(const char* mode);
@@ -989,6 +1001,20 @@ static void strToBlob(char* str, void* outBlob, size_t blobLen)
     }
 }
 
+static int makeDir(const char* path)
+{
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
+                     || defined(WIN32)       || defined(WIN64) \
+                     || defined(_WIN32)      || defined(_WIN64) \
+                     || defined(__WIN32__)   || defined(__CYGWIN__) \
+                     || defined(__MINGW32__) || defined(__MINGW64__) \
+                     || defined(__TOS_WIN__) || defined(_MSC_VER)
+    return _mkdir(path);
+#else
+    return mkdir(path, 0751);
+#endif
+}
+
 /**
  * @brief Recursively create directories containing a file
  *
@@ -1030,6 +1056,7 @@ static bool makeDirs(const char* path)
                     // Can't do anything about that.
                     return false;
                 }
+#if SUPPORT_LINKS
                 else if ((statbuf.st_mode & S_IFLNK) == S_IFLNK)
                 {
                     // Symbolic link
@@ -1039,6 +1066,7 @@ static bool makeDirs(const char* path)
                     readlink(tmp, buffer, sizeof(buffer) - strlen(buffer) - 1);
                     //printf("Symbolic Link: %s --> %s\n", tmp, buffer);
                 }
+#endif
                 else if ((statbuf.st_mode & S_IFDIR) != S_IFDIR)
                 {
                     // Not supported
@@ -1051,7 +1079,7 @@ static bool makeDirs(const char* path)
                 if (statResult == -1 || statResult == ENOENT)
                 {
                     // Doesn't exist! Let's change that
-                    if (0 != mkdir(buffer, 0751))
+                    if (0 != makeDir(buffer))
                     {
                         printf("Couldn't create directory %s\n", buffer);
                         // Failed
