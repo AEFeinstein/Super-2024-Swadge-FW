@@ -76,6 +76,11 @@ static void pinEnterMode(void)
 static void pinExitMode(void)
 {
     // Free the rest of the state
+    for (int32_t gIdx = 0; gIdx < pinball->scene.numGroups; gIdx++)
+    {
+        clear(&pinball->scene.groups[gIdx]);
+    }
+    free(pinball->scene.groups);
     free(pinball);
 }
 

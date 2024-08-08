@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include "heatshrink_helper.h"
 
 #include "pinball_game.h"
@@ -35,6 +36,20 @@ uint16_t readInt16(uint8_t* data, uint32_t* idx)
 }
 
 /**
+ * @brief TODO
+ *
+ * @param scene
+ * @param obj
+ * @param groupId
+ * @return list_t*
+ */
+list_t* addToGroup(jsScene_t* scene, void* obj, uint8_t groupId)
+{
+    push(&scene->groups[groupId], obj);
+    return &scene->groups[groupId];
+}
+
+/**
  * @brief TODO doc
  *
  * @param scene
@@ -51,8 +66,9 @@ void jsSceneInit(jsScene_t* scene)
     uint8_t* tableData        = (uint8_t*)readHeatshrinkFile("pinball.raw", &decompressedSize, true);
     uint32_t dIdx             = 0;
 
-    uint8_t numGroups = readInt8(tableData, &dIdx);
-    // TODO alloc groups
+    // Allocate groups
+    scene->numGroups = readInt8(tableData, &dIdx) + 1;
+    scene->groups    = (list_t*)calloc(scene->numGroups, sizeof(list_t));
 
     uint16_t linesInFile = readInt16(tableData, &dIdx);
     scene->numLines      = 0;
@@ -85,18 +101,24 @@ void jsSceneInit(jsScene_t* scene)
     free(tableData);
 
     // TODO load ball position from file
-    float radius = 4.0f;
-    vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
-    // vecFl_t pos     = {.x = 48.0f, .y = 140.0f};
-    vecFl_t vel     = {.x = 0.0f, .y = 0.0f};
-    scene->numBalls = 0;
-    // jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
+    // vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
+    vecFl_t ballPositions[] = {
+        {.x = 57, .y = 28},
+        {.x = 79, .y = 28},
+        {.x = 100, .y = 28},
+    };
 
-    // pos.x = 160.0f;
-    // pos.y = 60.0f;
-    // vel.x = 0.0f;
-    // vel.y = -20.0f;
-    // jsBallInit(&scene->balls[scene->numBalls++], radius, M_PI * radius * radius, pos, vel, 0.2f);
+    scene->numBalls = 0;
+    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(ballPositions); bIdx++)
+    {
+        jsBall_t* ball    = &scene->balls[scene->numBalls++];
+        ball->pos         = ballPositions[bIdx];
+        ball->vel.x       = 0;
+        ball->vel.y       = 0;
+        ball->radius      = 4.0f;
+        ball->mass        = M_PI * 4.0f * 4.0f;
+        ball->restitution = 0.2f;
+    }
 }
 
 // ------------------------ user interaction ---------------------------

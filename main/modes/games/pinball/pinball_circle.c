@@ -11,10 +11,9 @@ uint32_t readCircleFromFile(uint8_t* tableData, jsScene_t* scene)
 {
     jsObstacle_t* obstacle = &scene->obstacles[scene->numObstacles++];
 
-    uint32_t dIdx = 0;
-    uint16_t id   = readInt16(tableData, &dIdx);
-    uint8_t gIdx  = readInt8(tableData, &dIdx);
-    vecFl_t pos;
+    uint32_t dIdx     = 0;
+    obstacle->id      = readInt16(tableData, &dIdx);
+    obstacle->group   = addToGroup(scene, obstacle, readInt8(tableData, &dIdx));
     obstacle->pos.x   = readInt16(tableData, &dIdx);
     obstacle->pos.y   = readInt16(tableData, &dIdx);
     obstacle->radius  = readInt8(tableData, &dIdx);
