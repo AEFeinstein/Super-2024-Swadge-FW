@@ -9,13 +9,13 @@
 #include "emu_main.h"
 #include "ext_modes.h"
 #include "ext_tools.h"
+#include "emu_utils.h"
 #include "esp_random_emu.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "hdw-tft_emu.h"
@@ -142,6 +142,7 @@ emuExtension_t replayEmuExtension = {
     .fnRenderCb      = NULL,
 };
 
+bool replayInitialized = false;
 replay_t replay = {0};
 
 //==============================================================================
@@ -157,69 +158,18 @@ replay_t replay = {0};
  */
 static bool replayInit(emuArgs_t* emuArgs)
 {
+    replay.lastAccelZ = 256;
+
     if (emuArgs->record)
     {
-        // Construct a timestamp-based filename
-        char buf[64];
-        const char* filename = emuArgs->recordFile;
+        startRecording(emuArgs->recordFile);
 
-        if (!filename || !*filename)
-        {
-            filename = getTimestampFilename(buf, sizeof(buf) - 1, "rec-", "csv");
-        }
-
-        // If specified, use custom filename, otherwise use timestamp one
-        printf("\nReplay: Recording inputs to file %s\n", filename);
-        replay.file = fopen(filename, "w");
-        replay.mode = RECORD;
-        replay.lastAccelZ = 256;
-        if (replay.file != NULL)
-        {
-            if (emuArgs->startMode)
-            {
-                if (!replay.headerHandled)
-                {
-                    replay.headerHandled = true;
-                    fwrite(HEADER, 1, strlen(HEADER), replay.file);
-                }
-
-                // Immediately record the start mode
-                replayEntry_t modeEntry = {
-                    .type = SET_MODE,
-                    .time = 0,
-                    .modeName = emuArgs->startMode,
-                };
-                writeEntry(&modeEntry);
-            }
-
-            if (emuArgs->seed)
-            {
-                if (!replay.headerHandled)
-                {
-                    replay.headerHandled = true;
-                    fwrite(HEADER, 1, strlen(HEADER), replay.file);
-                }
-
-                // Immediately record the start mode
-                replayEntry_t seedEntry = {
-                    .type = RANDOM_SEED,
-                    .time = 0,
-                    .seedVal = emuArgs->seed,
-                };
-                writeEntry(&seedEntry);
-            }
-            return true;
-        }
-        return false;
+        return (replayInitialized = (replay.file != NULL));
     }
     else if (emuArgs->playback)
     {
-        printf("\nReplay: Replaying inputs from file %s\n", emuArgs->replayFile);
-        replay.file = fopen(emuArgs->replayFile, "r");
-        replay.mode = REPLAY;
-
-        // Return true if the file was opened OK and has a valid header and first entry
-        return NULL != replay.file && readEntry(&replay.nextEntry);
+        startPlayback(emuArgs->replayFile);
+        return (replayInitialized = true);
     }
 
     return false;
@@ -806,6 +756,88 @@ static void writeEntry(const replayEntry_t* entry)
     }
 
     fwrite(buffer, 1, strlen(buffer), replay.file);
+}
+
+/**
+ * @brief Begins recording emulator inputs to the given filename
+ *
+ * @param filename The name of the recording file to write
+ */
+void startRecording(const char* filename)
+{
+    if (replay.file != NULL)
+    {
+        fclose(replay.file);
+        replay.file = NULL;
+    }
+
+    char buf[128];
+    if (!filename || !*filename)
+    {
+        filename = getTimestampFilename(buf, sizeof(buf) - 1, "rec-", "csv");
+    }
+
+    // If specified, use custom filename, otherwise use timestamp one
+    printf("\nReplay: Recording inputs to file %s\n", filename);
+    replay.file = fopen(filename, "w");
+    replay.mode = RECORD;
+    if (replay.file != NULL)
+    {
+        if (emulatorArgs.startMode)
+        {
+            if (!replay.headerHandled)
+            {
+                replay.headerHandled = true;
+                fwrite(HEADER, 1, strlen(HEADER), replay.file);
+            }
+
+            // Immediately record the start mode
+            replayEntry_t modeEntry = {
+                .type = SET_MODE,
+                .time = 0,
+                .modeName = emulatorArgs.startMode,
+            };
+            writeEntry(&modeEntry);
+        }
+
+        if (emulatorArgs.seed)
+        {
+            if (!replay.headerHandled)
+            {
+                replay.headerHandled = true;
+                fwrite(HEADER, 1, strlen(HEADER), replay.file);
+            }
+
+            // Immediately record the start mode
+            replayEntry_t seedEntry = {
+                .type = RANDOM_SEED,
+                .time = 0,
+                .seedVal = emulatorArgs.seed,
+            };
+            writeEntry(&seedEntry);
+        }
+    }
+}
+
+/**
+ * @brief Begins playing back emulator inputs from the given file
+ *
+ * @param recordingName The name of the recording file to play back
+ */
+void startPlayback(const char* recordingName)
+{
+    if (replay.file != NULL)
+    {
+        fclose(replay.file);
+        replay.file = NULL;
+    }
+
+    printf("\nReplay: Replaying inputs from file %s\n", recordingName);
+    replay.file = fopen(recordingName, "r");
+    replay.mode = REPLAY;
+
+    // Return true if the file was opened OK and has a valid header and first entry
+    readEntry(&replay.nextEntry);
 }
 
 /**

@@ -15,5 +15,4 @@
 
 extern emuExtension_t toolsEmuExtension;
 
-const char* getTimestampFilename(char* dst, size_t n, const char* prefix, const char* ext);
 bool takeScreenshot(const char* name);

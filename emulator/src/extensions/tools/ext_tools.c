@@ -10,6 +10,9 @@
 #include "ext_replay.h"
 #include "hdw-tft.h"
 #include "emu_args.h"
+#include "ext_modes.h"
+#include "emu_utils.h"
+#include "emu_console_cmds.h"
 
 #if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
     #pragma GCC diagnostic push
@@ -47,6 +50,7 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
 static void toolsPreFrame(uint64_t frame);
 static void toolsPostFrame(uint64_t frame);
 static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes);
+static void handleConsoleCommand(const char* command);
 
 static const char* getScreenshotName(char* buffer, size_t maxlen);
 
@@ -88,6 +92,8 @@ static bool showConsole = false;
 static int consolePaneId = -1;
 static char consoleBuffer[1024] = {0};
 static char* consolePtr = consoleBuffer;
+
+static char consoleOutput[1024] = {0};
 
 //==============================================================================
 // Functions
@@ -141,7 +147,7 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
             else if (keycode == CNFG_KEY_ENTER)
             {
                 // Handle console command
-                // TODO
+                handleConsoleCommand(consoleBuffer);
 
                 consolePtr = consoleBuffer;
                 *consolePtr = '\0';
@@ -163,12 +169,13 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
     else if (!down && keycode == CNFG_KEY_F4)
     {
         showConsole = true;
-        if (consolePaneId == -1)
+        /*if (consolePaneId == -1)
         {
             consolePaneId = requestPane(&toolsEmuExtension, PANE_TOP, 10, 32);
-        }
+        }*/
         consolePtr = consoleBuffer;
         *consolePtr = '\0';
+        *consoleOutput = '\0';
 
         setPaneVisibility(&toolsEmuExtension, consolePaneId, true);
         emuTimerPause();
@@ -366,7 +373,7 @@ static void toolsPostFrame(uint64_t frame)
         if (!setup)
         {
             getTimestampFilename(dirbuf, sizeof(dirbuf)-1, "screen-recording-", "");
-            if (0 != mkdir(dirbuf, 0777))
+            if (0 != makeDir(dirbuf))
             {
                 printf("ERR! ext_tools.c: Failed to create directory for recording. stopping.\n");
                 recordScreen = false;
@@ -410,63 +417,127 @@ static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, 
             CNFGPenY = fpsPane->paneY + (fpsPane->paneH - h) / 2;
             CNFGDrawText(buf, 5);
         }
-        else if (paneId == consolePaneId)
+    }
+
+    if (showConsole)
+    {
+        //const emuPane_t* consolePane = &panes[i];
+        char buf[1030];
+        buf[0] = '>';
+        buf[1] = ' ';
+        strcpy(buf + 2, consoleBuffer);
+
+        // Measure text (mostly for height here)
+        int w, h;
+        CNFGGetTextExtents(consoleBuffer, &w, &h, 5);
+
+        // Transparent outline
+        CNFGColor(0x00000000);
+
+        // 50% opacity black background
+        CNFGDialogColor = 0x0000007f;
+        CNFGDrawBox(0, 0, winW, h + 5);
+
+        // Draw text
+        CNFGColor(0xFFFFFFFF);
+        CNFGPenX = 5;
+        CNFGPenY = 5;
+        CNFGDrawText(buf, 5);
+
+        if (*consoleOutput)
         {
-            const emuPane_t* consolePane = &panes[i];
-            char buf[1030];
-            buf[0] = '>';
-            buf[1] = ' ';
-            strcpy(buf + 2, consoleBuffer);
+            int startY = h + 5;
+
+            CNFGGetTextExtents(consoleOutput, &w, &h, 5);
+
+            // Transparent outline
+            CNFGColor(0x00000000);
+
+            // 50% opacity black background
+            CNFGDialogColor = 0x0000007f;
+            CNFGDrawBox(0, startY, winW, startY + h + 5);
 
             CNFGColor(0xFFFFFFFF);
-            CNFGPenX = consolePane->paneX + 5;
-            CNFGPenY = consolePane->paneY + 5;
-            CNFGDrawText(buf, 5);
+            CNFGPenY = startY;
+            CNFGPenX = 5;
+            CNFGDrawText(consoleOutput, 5);
         }
+    }
+}
+
+static void handleConsoleCommand(const char* command)
+{
+    char tmpBuffer[sizeof(consoleBuffer)];
+    const char* cur = command;
+    char* out = tmpBuffer;
+    char* argStart = out;
+
+    // Divide the command at spaces and store a pointer to the start of each one
+    const char* values[64];
+    int argCount = 0;
+
+    while (out < (tmpBuffer + sizeof(tmpBuffer)) && argCount < (sizeof(values) / sizeof(*values)))
+    {
+        if (*cur == ' ' || *cur == '\0')
+        {
+            // Next arg
+            *out++ = '\0';
+
+            values[argCount++] = argStart;
+            argStart = (out);
+
+            if (*cur)
+            {
+                cur++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        else
+        {
+            // Just copy
+            *out++ = *cur++;
+        }
+    }
+    *out = '\0';
+
+    if (out == tmpBuffer)
+    {
+        return;
+    }
+
+    printf("Got %d args:\n", argCount);
+    for (int i = 0; i < argCount; i++)
+    {
+        printf(" - %s\n", values[i]);
+    }
+
+    if (argCount > 0)
+    {
+        for (const consoleCommand_t* action = getConsoleCommands(); action < (getConsoleCommands() + consoleCommandCount()); action++)
+        {
+            if (!strcmp(action->name, values[0]))
+            {
+                int outputLen = action->cb(values + 1, argCount - 1, consoleOutput);
+
+                consoleOutput[outputLen] = '\0';
+                return;
+            }
+        }
+
+        snprintf(consoleOutput, sizeof(consoleOutput), "Unknown command: %s", values[0]);
+    }
+    else
+    {
+        consoleOutput[0] = '\0';
     }
 }
 
 static const char* getScreenshotName(char* buffer, size_t maxlen)
 {
     return getTimestampFilename(buffer, maxlen, "screenshot-", "png");
-}
-
-/**
- * @brief Write a timestamp-based filename into the given buffer, formatted as "<prefix><timestamp>.<ext>"
- *
- * @param dst The buffer to write the timestamp into
- * @param n The maximum number of characters to write into dst
- * @param prefix The filename prefix to write before the timestamp
- * @param ext The file extension to write after the timestamp and a dot
- * @return const char* A pointer to the beginning of dst
- */
-const char* getTimestampFilename(char* dst, size_t n, const char* prefix, const char* ext)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    // Turns out time_t doesn't printf well, so stick it in something that does
-    uint64_t timeSec    = (uint64_t)ts.tv_sec;
-    uint64_t timeMillis = (uint64_t)ts.tv_nsec / 1000000;
-
-    uint32_t tries = 0;
-    do
-    {
-        snprintf(dst, n, "%s%" PRIu64 "%03" PRIu64 "%s%s", prefix, timeSec, timeMillis, ((ext && *ext) ? "." : ""), ext);
-        // Increment millis by one in case the file already exists
-        timeMillis++;
-
-        // Might as well handle the edge cases to avoid weird stuff
-        if (timeMillis >= 1000000)
-        {
-            timeMillis %= 1000000;
-            timeSec++;
-        }
-
-        // If the file exists, keep trying, up to 5 times, then just give up and overwrite it?
-    } while (0 == access(dst, R_OK) && ++tries < 5);
-
-    return dst;
 }
 
 /**
@@ -511,6 +582,11 @@ bool takeScreenshot(const char* name)
     if (!name || !*name)
     {
         name = getScreenshotName(buf, sizeof(buf) - 1);
+    }
+    else if (strlen(name) <= 4 || strncmp(name + strlen(name) - 4, ".png", 4))
+    {
+        snprintf(buf, sizeof(buf), "%s.png", name);
+        name = buf;
     }
 
     printf("Saving screenshot %s\n", name);

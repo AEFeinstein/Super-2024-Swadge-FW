@@ -68,5 +68,7 @@
 
 extern emuExtension_t replayEmuExtension;
 
+void startRecording(const char* recordingName);
+void startPlayback(const char* recordingName);
 void recordScreenshotTaken(const char* name);
 void emulatorRecordRandomSeed(uint32_t seed);
