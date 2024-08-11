@@ -395,55 +395,55 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
 
 
 
-// //Top Left
-// 00RD 0...                     (0,0),  (2,1),  (0,2),  (2,3),#convex corners
-// 1100 1.0..                    (14,0), (12,1), (6,2),  (4,3),#opposite convex corners
-// 10RD 0...                     (1,0),  (1,1),  (1,2),  (1,3),#horizontal light
-// 01RD 0...                     (11,0), (11,1), (11,2), (11,3),#vertical light
-// 1110 1...                     (13,0), (13,1), (5,2),  (5,3),#horizontal shadow
-// 1101 1...                     (10,0), (8,1),  (10,2), (8,3),#vertical shadow
-// 1111 0...                      (19,0), (17,1), (18,2), (16,3),#concave corners
-// 1111 10..                     (17,0), (16,1), (19,2), (18,3),#left of concave corners
-// 1111 1.0.                    (18,0), (19,1), (16,2), (17,3),#right of concave corners
-// 1111 1110                   (16,0), (18,1), (17,2), (19,3)#opposite concave corners
+// Top Left      V
+// 00RD 0...   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+// 1100 1..0   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+// 10RD ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+// 01RD ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+// 1110 1...   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+// 1101 1...   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+// 1111 0...   (19,0), (17,1), (18,2), (16,3),#concave corners
+// 1111 10..   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+// 1111 1.0.   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+// 1111 1110   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
 
 
-// //Top Right
-// L00D .0...                     (0,0),  (2,1),  (0,2),  (2,3),#convex corners
-// 0110 .1.0                     (14,0), (12,1), (6,2),  (4,3),#opposite convex corners
-// L01D .0..                     (1,0),  (1,1),  (1,2),  (1,3),#horizontal light
-// L10D .0..                     (11,0), (11,1), (11,2), (11,3),#vertical light
-// 1110 .1..                     (13,0), (13,1), (5,2),  (5,3),#horizontal shadow
-// 0111 .1..                     (10,0), (8,1),  (10,2), (8,3),#vertical shadow
-// 1111 .0...                      (19,0), (17,1), (18,2), (16,3),#concave corners
-// 1111 .1.0                   (17,0), (16,1), (19,2), (18,3),#left of concave corners
-// 1111 01..                   (18,0), (19,1), (16,2), (17,3),#right of concave corners
-// 1111 1101                  (16,0), (18,1), (17,2), (19,3)#opposite concave corners
+// Top Right             V
+// L00D .0...  (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+// 0110 .10.   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+// L01D ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+// L10D ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+// 1110 .1..   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+// 0111 .1..   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+// 1111 .0...  (19,0), (17,1), (18,2), (16,3),#concave corners
+// 1111 .1.0   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+// 1111 01..   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+// 1111 1101   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
 
-// //Bottom Left
-//                      (0,0),  (2,1),  (0,2),  (2,3),#convex corners
-//                     (14,0), (12,1), (6,2),  (4,3),#opposite convex corners
-//                      (1,0),  (1,1),  (1,2),  (1,3),#horizontal light
-//                     (11,0), (11,1), (11,2), (11,3),#vertical light
-//                      (13,0), (13,1), (5,2),  (5,3),#horizontal shadow
-//                      (10,0), (8,1),  (10,2), (8,3),#vertical shadow
-//                       (19,0), (17,1), (18,2), (16,3),#concave corners
-//                      (17,0), (16,1), (19,2), (18,3),#left of concave corners
-//                     (18,0), (19,1), (16,2), (17,3),#right of concave corners
-//                    (16,0), (18,1), (17,2), (19,3)#opposite concave corners
+// Bottom Left                   V
+// 0UR0 ..0.   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+// 0110 .01.   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+// 1UR0 ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+// 0UR1 ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+// 1011 ..1.   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+// 1101 ..1.   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+// 1111 ..0.   (19,0), (17,1), (18,2), (16,3),#concave corners
+// 1111 0.1.   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+// 1111 ..10   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+// 1111 1011   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
 
 
-// //Bottom Right
-//                      (0,0),  (2,1),  (0,2),  (2,3),#convex corners
-//                   (14,0), (12,1), (6,2),  (4,3),#opposite convex corners
-//                    (1,0),  (1,1),  (1,2),  (1,3),#horizontal light
-//                     (11,0), (11,1), (11,2), (11,3),#vertical light
-//                     (13,0), (13,1), (5,2),  (5,3),#horizontal shadow
-//                    (10,0), (8,1),  (10,2), (8,3),#vertical shadow
-//                       (19,0), (17,1), (18,2), (16,3),#concave corners
-//                      (17,0), (16,1), (19,2), (18,3),#left of concave corners
-//                     (18,0), (19,1), (16,2), (17,3),#right of concave corners
-//                    (16,0), (18,1), (17,2), (19,3)#opposite concave corners
+// Bottom Right                          V
+// LU00 ...0   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+// 0011 0..1   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+// LU10 ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+// LU01 ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+// 1011 ...1   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+// 0111 ...1   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+// 1111 ...0   (19,0), (17,1), (18,2), (16,3),#concave corners
+// 1111 ..01   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+// 1111 .0.1   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+// 1111 0111   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
 
 
 
