@@ -83,6 +83,12 @@ static const int8_t DRAM_ATTR triTab[] = {
     -18,  -16,  -14,  -12,  -10,  -8,   -6,   -4,   -2,
 };
 
+static const uint8_t chorusOffsets[] = {
+    139, 227, 5,   103, 241, 67, 251, 109, 197, 59,  61,  3,   53,  229, 127, 23,  73,  223,
+    13,  19,  47,  7,   181, 37, 2,   239, 29,  113, 167, 131, 41,  151, 83,  137, 11,  193,
+    107, 17,  191, 43,  101, 71, 233, 179, 97,  79,  31,  211, 163, 157, 89,  199, 149, 173,
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -166,6 +172,7 @@ void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint
 {
     osc->accumulator.accum32 = 0;
     osc->cVol                = 0;
+    osc->chorus              = 0;
     osc->stepSize            = 0;
     osc->waveFuncData        = NULL;
     swSynthSetShape(osc, shape);
@@ -188,6 +195,7 @@ void swSynthInitOscillatorWave(synthOscillator_t* osc, waveFunc_t waveFunc, void
     osc->accumulator.accum32 = 0;
     osc->cVol                = 0;
     osc->stepSize            = 0;
+    osc->chorus              = 0;
     swSynthSetWaveFunc(osc, waveFunc, waveData);
     swSynthSetFreq(osc, freq);
     swSynthSetVolume(osc, volume);
@@ -330,7 +338,10 @@ int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOsci
         }
 
         // Mix this oscillator's output into the sample
-        sample += ((osc->waveFunc(osc->accumulator.bytes[2], osc->waveFuncData) * ((int32_t)osc->cVol)) / 256);
+        uint8_t offset = 0;
+        do {
+            sample += ((osc->waveFunc((osc->accumulator.bytes[2] + chorusOffsets[offset]) % 256, osc->waveFuncData) * ((int32_t)osc->cVol)) / 256);
+        } while (offset++ < osc->chorus);
     }
 
     return sample;

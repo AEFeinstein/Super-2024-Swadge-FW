@@ -89,6 +89,7 @@
 #define MIDI_TO_BOOL(val) (val > 63)
 #define BOOL_TO_MIDI(val) (val ? MIDI_TRUE : MIDI_FALSE)
 #define MIDI_DEF_HEADROOM 0x2666
+#define PITCH_BEND_CENTER 0x2000
 
 /// @brief Convert the sample count to MIDI ticks
 #define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
@@ -230,17 +231,29 @@ typedef enum
  */
 typedef struct
 {
-    // Time taken to ramp up to full volume
-    int32_t attack;
+    /// @brief Base time taken to ramp up to full volume
+    int32_t attackTime;
 
-    // Time taken for the volume to fade to the sustain volume
-    int32_t decay;
+    /// @brief This value will be multiplied by the note velocity and added to the attack time,
+    q24_8 attackTimeVel;
 
-    // Time it takes to silence the note after release
-    int32_t release;
+    /// @brief Base time taken for the volume to fade to the sustain volume
+    int32_t decayTime;
 
-    // The volume of the sustain note, proportional to the original volume
-    uint8_t sustain;
+    /// @brief This value will be multiplied by the note velocity and added to the decay time
+    q24_8 decayTimeVel;
+
+    /// @brief Base time it takes to silence the note after release, in DAC samples
+    int32_t releaseTime;
+
+    /// @brief This value will be multiplied by the note velocity and added to the attack time
+    q24_8 releaseTimeVel;
+
+    /// @brief The base volume of the sustained note, proportional to the sample volume
+    uint8_t sustainVol;
+
+    /// @brief This value will be multiplied by the note velocity and added to the attack time
+    q24_8 sustainVolVel;
 
     /// @brief The index of the repeat loop
     // uint32_t loopStart;
@@ -248,6 +261,13 @@ typedef struct
     // uint32_t loopEnd;
 
 } envelope_t;
+
+
+typedef struct
+{
+    /// @brief The number of chorused voices to mix
+    uint8_t chorus;
+} timbreEffects_t;
 
 /**
  * @brief A function that returns samples for a percussion timbre rather than a melodic one
@@ -321,6 +341,9 @@ typedef struct
     /// @brief The ASDR characterstics of this timbre
     envelope_t envelope;
 
+    /// @brief Various effects applied to this timbre. May be ignored by percussion timbres
+    timbreEffects_t effects;
+
     /// @brief The name of this timbre, if any
     const char* name;
 } midiTimbre_t;
@@ -332,8 +355,14 @@ typedef struct
  */
 typedef struct
 {
-    /// @brief The number of ticks remaining before transitioning to the next state
+    /// @brief The number of samples remaining before transitioning to the next state
     uint32_t transitionTicks;
+
+    /// @brief The number of samples remaining before the next volume adjustment
+    uint32_t transitionTicksTotal;
+
+    /// @brief The volume at the start of the transition time
+    uint8_t transitionStartVol;
 
     /// @brief The target volume of this tick
     uint8_t targetVol;
@@ -343,6 +372,12 @@ typedef struct
 
     /// @brief The MIDI note number for the sound being played
     uint8_t note;
+
+    /// @brief The MIDI note velocity of the playing note
+    uint8_t velocity;
+
+    /// @brief The index of the MIDI channel that owns the currently playing note
+    uint8_t channel;
 
     /// @brief The synthesizer oscillators used to generate the sounds
     synthOscillator_t oscillators[OSC_PER_VOICE];
@@ -366,7 +401,6 @@ typedef struct
     /// @brief Whether this note is set to on via MIDI, regardless of if it's making sound
     uint32_t on;
 
-    /*
     /// @brief Bitfield of voices currently in the attack stage
     uint32_t attack;
 
@@ -378,10 +412,12 @@ typedef struct
 
     /// @brief Bitfield of voices currently in the release stage
     uint32_t release;
-    */
 
     /// @brief Bitfield of voices which are being held by the pedal
     uint32_t held;
+
+    /// @brief Bitfield of voices which are being held by the sustenuto pedal
+    uint32_t sustenuto;
 } voiceStates_t;
 
 /**
@@ -391,6 +427,9 @@ typedef struct
 {
     /// @brief The 14-bit volume level for this channel only
     uint16_t volume;
+
+    /// @brief The bank to use for program changes on this channel
+    uint8_t bank;
 
     /// @brief The ID of the program (timbre) set for this channel
     uint8_t program;
@@ -410,6 +449,11 @@ typedef struct
     /// @brief Whether notes will be held after release
     bool held;
 
+    /// @brief Whether certain notes will be held after release
+    bool sustenuto;
+
+    /// @brief If set, events on this channel will be completely ignored
+    bool ignore;
 } midiChannel_t;
 
 /**
@@ -545,6 +589,18 @@ void midiPlayerFillBufferMulti(midiPlayer_t* players, uint8_t playerCount, uint8
 void midiAllSoundOff(midiPlayer_t* player);
 
 /**
+ * @brief Reset all controllers on a MIDI channel.
+ *
+ * This includes:
+ * - Sustain Pedal
+ * - Legato, Vibrato, Sustenuto, etc.
+ *
+ * @param player
+ * @param channel
+ */
+void midiResetChannelControllers(midiPlayer_t* player, uint8_t channel);
+
+/**
  * @brief Tun off all notes which are currently on, as though midiNoteOff() were called
  * for each note. This respects the sustain pedal.
  *
@@ -561,9 +617,19 @@ void midiAllNotesOff(midiPlayer_t* player, uint8_t channel);
  * @param player The MIDI player
  * @param channel The MIDI channel on which to start the note
  * @param note The note number to play
- * @param velocity The note velocity which affects its volume.
+ * @param velocity The note velocity which affects its volume and effects
  */
 void midiNoteOn(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t velocity);
+
+/**
+ * @brief Change the velocity of a note on a given MIDI channel, after the note starts playing
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel on which to change the note velocity
+ * @param note The currently-playing note number to modify
+ * @param velocity The note velocity which affects its volume and effects
+ */
+void midiAfterTouch(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t velocity);
 
 /**
  * @brief Stop playing a particular note on a given MIDI channel
@@ -587,6 +653,9 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program);
 /**
  * @brief Set the hold pedal status.
  *
+ * When set, all notes that are currently on will be sustained until the pedal is unset, as well as
+ * all notes that are played after the pedal is set.
+ *
  * This is a convenience method for midiControlChange(player, channel, CONTROL_HOLD (64), val ? 127:0)
  *
  * @param player The MIDI player
@@ -594,6 +663,18 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program);
  * @param val The sustain pedal value. Values 0-63 are OFF, and 64-127 are ON.
  */
 void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val);
+
+/**
+ * @brief Set the sustenuto pedal status.
+ *
+ * When set, only the notes that are currently on will be sustained until the pedal is unset. Notes
+ * that are played after the pedal is set will not be sustained.
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel to set the sustenuto status for
+ * @param val The sustenuto pedal value. Values 0-63 are OFF, and 64-127 are ON.
+ */
+void midiSustenuto(midiPlayer_t* player, uint8_t channel, uint8_t val);
 
 /**
  * @brief Set a MIDI control value
