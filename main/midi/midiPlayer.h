@@ -123,6 +123,7 @@ typedef enum
     WAVETABLE,
     SAMPLE,
     NOISE,
+    WAVE_SHAPE,
 } timbreType_t;
 
 /**
@@ -308,8 +309,14 @@ typedef struct
 
     union
     {
-        /// @brief The index of this timbre's wave in the table, when type is WAVETABLE
-        uint16_t waveIndex;
+        struct
+        {
+            /// @brief The index of this timbre's wave in the table, when type is WAVETABLE
+            uint16_t waveIndex;
+
+            /// @brief The function to use to retrieve wavetable samples
+            waveFunc_t waveFunc;
+        };
 
         struct
         {
@@ -336,6 +343,9 @@ typedef struct
             /// @brief User data to pass to the drumkit
             void* data;
         } percussion;
+
+        /// @brief The shape of this wave, when type is RAW_WAVE
+        oscillatorShape_t shape;
     };
 
     /// @brief The ASDR characterstics of this timbre

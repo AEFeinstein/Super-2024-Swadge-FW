@@ -5,6 +5,7 @@
 
 #include "waveTables.h"
 #include "midiNoteFreqs.h"
+#include "midiData.h"
 #include "midiUtil.h"
 #include "hdw-dac.h"
 #include "fp_math.h"
@@ -76,62 +77,6 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
 static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event);
 static void handleEvent(midiPlayer_t* player, const midiEvent_t* event);
 static void midiSongEnd(midiPlayer_t* player);
-
-static const midiTimbre_t defaultDrumkitTimbre = {
-    .type = NOISE,
-    .flags = TF_PERCUSSION,
-    .percussion = {
-        .playFunc = defaultDrumkitFunc,
-        // TODO: Define the data and put it here!
-        .data = NULL,
-    },
-    .envelope = { 0 },
-    .name = "Swadge Drums 0",
-};
-
-static const midiTimbre_t donutDrumkitTimbre = {
-    .type = NOISE,
-    .flags = TF_PERCUSSION,
-    .percussion = {
-        .playFunc = donutDrumkitFunc,
-        // This should be set though
-        .data = NULL,
-    },
-    .envelope = { 0 },
-    .name = "Donut Swadge Drums",
-};
-
-static const midiTimbre_t acousticGrandPianoTimbre = {
-    .type = WAVETABLE,
-    .flags = TF_NONE,
-    .waveIndex = 0,
-    .envelope = {
-        // TODO: Just realized I forgot how ADSR actually works halfway through writing everything else...
-        // Pretty fast attack
-        .attackTime = 0, //MS_TO_SAMPLES(32),
-        // Decrease attack time by 1ms for every 4 velocity value
-        .attackTimeVel = 0,//TO_FX_FRAC(-MS_TO_SAMPLES(1), 4),
-
-        // Take a good long-ish while to reach the sustain level
-        .decayTime = 0, //MS_TO_SAMPLES(75),
-        // Take a bit longer the higher the velocity -- 25ms for every 16 velocity (so up to +200ms)
-        .decayTimeVel = 0,//TO_FX_FRAC(MS_TO_SAMPLES(25), 16),
-
-        // Sustain at 1 plus 75% of initial volume
-        .sustainVol = 127,
-        .sustainVolVel = 0, //TO_FX_FRAC(3, 4),
-
-        // And a not-too-short release time
-        .releaseTime = 0,//MS_TO_SAMPLES(100),
-        // Plus some extra time if the note was very loud initially - up to double
-        .releaseTimeVel = 0,//TO_FX_FRAC(MS_TO_SAMPLES(50), 63),
-        // Yup, I'm sure it will sound exactly like a grand piano now!
-    },
-    .effects = {
-        .chorus = 0,
-    },
-    .name = "Acoustic Grand Piano",
-};
 
 // Check for the first unused note, then try to steal one in order of less to more bad, and return INT32_MAX if none are
 // available
@@ -360,7 +305,7 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
         {
             case WAVETABLE:
             {
-                swSynthSetWaveFunc(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uintptr_t)timbre->waveIndex));
+                swSynthSetWaveFunc(&voice->oscillators[oscIdx], timbre->waveFunc, (void*)((uintptr_t)timbre->waveIndex));
                 voice->oscillators[oscIdx].chorus = timbre->effects.chorus;
                 break;
             }
@@ -368,6 +313,12 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
             case NOISE:
             {
                 swSynthSetShape(&voice->oscillators[oscIdx], SHAPE_NOISE);
+                break;
+            }
+
+            case WAVE_SHAPE:
+            {
+                swSynthSetShape(&voice->oscillators[oscIdx], timbre->shape);
                 break;
             }
 
@@ -403,7 +354,22 @@ static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, ui
     }
     else
     {
-        return &acousticGrandPianoTimbre;
+        switch (bank)
+        {
+            case 1:
+            {
+                if (program < magfestTimbreCount)
+                {
+                    return magfestTimbres[program];
+                }
+
+                return &magfestWaveTimbre;
+            }
+
+            case 0:
+            default:
+                return &acousticGrandPianoTimbre;
+        }
     }
 }
 
@@ -1174,6 +1140,9 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
     // TODO: Add a note -> voice map in the channel?
 
+    // Ensure the selected voice will play with the right instrument
+    setVoiceTimbre(voice, &chan->timbre);
+
     if (chan->timbre.flags & TF_PERCUSSION)
     {
         // Reset the percussion voice state
@@ -1186,9 +1155,6 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
         // By default, use the pressure volume for the oscillator
         uint8_t oscVol = sustainVol;
-
-        // Ensure the selected voice will play with the right instrument
-        setVoiceTimbre(voice, &chan->timbre);
 
         uint32_t attackTime = chan->timbre.envelope.attackTime + ((chan->timbre.envelope.attackTimeVel * (int8_t)velocity) >> 16);
         if (attackTime)
@@ -1353,9 +1319,16 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
 {
     // Dynamic voice allocation somehow makes this way simpler
     player->channels[channel].program = program;
+
+    memcpy(&player->channels[channel].timbre, getTimbreForProgram(player->channels[channel].percussion, player->channels[channel].bank, program), sizeof(midiTimbre_t));
+
     // TODO: Actually define all the timbres individually instead of editing them like this
-    // It's fine for now because envelopes, etc. aren't fully implemented so the only difference is the wave index
-    player->channels[channel].timbre.waveIndex = program;
+    // TODO: Remove hardcoded bank == 0 check
+    if (player->channels[channel].timbre.type == WAVETABLE && player->channels[channel].bank == 0)
+    {
+        // It's fine for now because envelopes, etc. aren't fully implemented so the only difference is the wave index
+        player->channels[channel].timbre.waveIndex = program;
+    }
 }
 
 void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
