@@ -3503,18 +3503,21 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
     }
     else if (label == menuItemPercussion)
     {
-        if (value)
+        if (value != ((sd->synthConfig.percChannelMask & (1 << sd->menuSelectedChannel)) ? 1 : 0))
         {
-            sd->synthConfig.percChannelMask |= (1 << sd->menuSelectedChannel);
-        }
-        else
-        {
-            sd->synthConfig.percChannelMask &= ~(1 << sd->menuSelectedChannel);
-        }
-        synthApplyConfig();
+            if (value)
+            {
+                sd->synthConfig.percChannelMask |= (1 << sd->menuSelectedChannel);
+            }
+            else
+            {
+                sd->synthConfig.percChannelMask &= ~(1 << sd->menuSelectedChannel);
+            }
+            synthApplyConfig();
 
-        // Update the menu because percussion has different items
-        sd->updateMenu = true;
+            // Update the menu because percussion has different items
+            sd->updateMenu = true;
+        }
     }
     else if (label == menuItemBank)
     {
