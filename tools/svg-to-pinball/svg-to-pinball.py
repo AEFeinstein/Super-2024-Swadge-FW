@@ -166,7 +166,7 @@ def extractCircles(gs: list, gId: str) -> list[pbCircle]:
     for g in gs:
         if isinstance(g, Circle):
             circles.append(pbCircle(pbPoint(x=g.cx, y=g.cy),
-                           (g.rx + g.ry) / 2, 40, gId, g.id))
+                           (g.rx + g.ry) / 2, 120, gId, g.id))
         elif isinstance(g, Group):
             circles.extend(extractCircles(g, g.id))
         else:
