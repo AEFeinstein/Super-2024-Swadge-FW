@@ -74,17 +74,41 @@ void pa_loadSprites(paEntityManager_t* entityManager)
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].originY         = 16;
    
-    loadWsg("kr-007.wsg", &(entityManager->sprites[PA_SP_PLAYER_JUMP].wsg), false);
-    entityManager->sprites[PA_SP_PLAYER_JUMP].originX         = 8;
-    entityManager->sprites[PA_SP_PLAYER_JUMP].originY         = 16;
+    loadWsg("pa-007.wsg", &(entityManager->sprites[PA_SP_PLAYER_PUSH_SOUTH_1].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_PUSH_SOUTH_1].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_PUSH_SOUTH_1].originY         = 16;
     
-    loadWsg("kr-008.wsg", &(entityManager->sprites[PA_SP_PLAYER_FALL].wsg), false);
-    entityManager->sprites[PA_SP_PLAYER_FALL].originX         = 8;
-    entityManager->sprites[PA_SP_PLAYER_FALL].originY         = 16;
-    
-    loadWsg("pa-007.wsg", &(entityManager->sprites[PA_SP_PLAYER_HURT].wsg), false);
+    loadWsg("pa-008.wsg", &(entityManager->sprites[PA_SP_PLAYER_PUSH_SOUTH_2].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_PUSH_SOUTH_2].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_PUSH_SOUTH_2].originY         = 16;
+
+    loadWsg("pa-009.wsg", &(entityManager->sprites[PA_SP_PLAYER_PUSH_NORTH_1].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_PUSH_NORTH_1].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_PUSH_NORTH_1].originY         = 16;
+
+    loadWsg("pa-010.wsg", &(entityManager->sprites[PA_SP_PLAYER_PUSH_NORTH_2].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_PUSH_NORTH_2].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_PUSH_NORTH_2].originY         = 16;
+
+    loadWsg("pa-011.wsg", &(entityManager->sprites[PA_SP_PLAYER_PUSH_SIDE_1].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_PUSH_SIDE_1].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_PUSH_SIDE_1].originY         = 16;
+
+    loadWsg("pa-012.wsg", &(entityManager->sprites[PA_SP_PLAYER_PUSH_SIDE_2].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_PUSH_SIDE_2].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_PUSH_SIDE_2].originY         = 16;
+
+    loadWsg("pa-013.wsg", &(entityManager->sprites[PA_SP_PLAYER_HURT].wsg), false);
     entityManager->sprites[PA_SP_PLAYER_HURT].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_HURT].originY         = 16;
+
+    loadWsg("pa-014.wsg", &(entityManager->sprites[PA_SP_PLAYER_WIN].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_WIN].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_WIN].originY         = 16;
+
+    loadWsg("pa-015.wsg", &(entityManager->sprites[PA_SP_PLAYER_ICON].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_ICON].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_ICON].originY         = 16;
     
     loadWsg("pa-tile-009.wsg", &(entityManager->sprites[PA_SP_BLOCK].wsg), false);
     entityManager->sprites[PA_SP_BLOCK].originX         = 8;
