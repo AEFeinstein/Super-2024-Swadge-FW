@@ -105,16 +105,16 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     }
 
     //Foreground
-    for(int16_t i = 0; i < 216; i++){
+    for(int16_t i = 0; i < 240; i++){
         char filename[15];
         snprintf(filename, sizeof(filename), "fore_s_%d.wsg", i);
-        loadWsg(filename, &tilemap->mid_s_Wsg[i], true);
+        loadWsg(filename, &tilemap->fore_s_Wsg[i], true);
 
         snprintf(filename, sizeof(filename), "fore_m_%d.wsg", i);
-        loadWsg(filename, &tilemap->mid_m_Wsg[i], true);
+        loadWsg(filename, &tilemap->fore_m_Wsg[i], true);
 
         snprintf(filename, sizeof(filename), "fore_h_%d.wsg", i);
-        loadWsg(filename, &tilemap->mid_h_Wsg[i], true);
+        loadWsg(filename, &tilemap->fore_h_Wsg[i], true);
     }
 }
 
@@ -393,66 +393,9 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                 }
                 
 
-
-
-// Top Left      V
-// 00RD 0...   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
-// 1100 1..0   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
-// 10RD ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
-// 01RD ....   (11,0), (11,1), (11,2), (11,3),#vertical light
-// 1110 1...   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
-// 1101 1...   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
-// 1111 0...   (19,0), (17,1), (18,2), (16,3),#concave corners
-// 1111 10..   (17,0), (16,1), (19,2), (18,3),#left of concave corners
-// 1111 1.0.   (18,0), (19,1), (16,2), (17,3),#right of concave corners
-// 1111 1110   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
-
-
-// Top Right             V
-// L00D .0...  (0,0),  (2,1),  (0,2),  (2,3), #convex corners
-// 0110 .10.   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
-// L01D ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
-// L10D ....   (11,0), (11,1), (11,2), (11,3),#vertical light
-// 1110 .1..   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
-// 0111 .1..   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
-// 1111 .0...  (19,0), (17,1), (18,2), (16,3),#concave corners
-// 1111 .1.0   (17,0), (16,1), (19,2), (18,3),#left of concave corners
-// 1111 01..   (18,0), (19,1), (16,2), (17,3),#right of concave corners
-// 1111 1101   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
-
-// Bottom Left                   V
-// 0UR0 ..0.   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
-// 0110 .01.   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
-// 1UR0 ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
-// 0UR1 ....   (11,0), (11,1), (11,2), (11,3),#vertical light
-// 1011 ..1.   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
-// 1101 ..1.   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
-// 1111 ..0.   (19,0), (17,1), (18,2), (16,3),#concave corners
-// 1111 0.1.   (17,0), (16,1), (19,2), (18,3),#left of concave corners
-// 1111 ..10   (18,0), (19,1), (16,2), (17,3),#right of concave corners
-// 1111 1011   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
-
-
-// Bottom Right                          V
-// LU00 ...0   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
-// 0011 0..1   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
-// LU10 ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
-// LU01 ....   (11,0), (11,1), (11,2), (11,3),#vertical light
-// 1011 ...1   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
-// 0111 ...1   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
-// 1111 ...0   (19,0), (17,1), (18,2), (16,3),#concave corners
-// 1111 ..01   (17,0), (16,1), (19,2), (18,3),#left of concave corners
-// 1111 .0.1   (18,0), (19,1), (16,2), (17,3),#right of concave corners
-// 1111 0111   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
-
-
-
-
-
-
                 // Draw foreground tiles
                 if(tilemap->fgTiles[i][j] >= 1){
-                    wsg_t (*wsgForegroundArrayPtr)[216] = bb_GetForegroundWsgArrForCoord(tilemap, i, j);
+                    wsg_t (*wsgForegroundArrayPtr)[240] = bb_GetForegroundWsgArrForCoord(tilemap, i, j);
                     
                     //sprite_idx LURD order.
                     uint8_t sprite_idx = 8 * ((i-1 < 0) ? 0 : (tilemap->fgTiles[i-1][j]>0)) +
@@ -465,7 +408,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     2 * ((i-1 < 0) ? 0 : (j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (tilemap->fgTiles[i-1][j+1]>0)) +
                                     1 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (tilemap->fgTiles[i+1][j+1])>0);
 
-                    vec_t lookup = {tilePos.x + 8 - garbotnikPos->x + tilemap->headlampWsg.w,
+                    vec_t lookup = {tilePos.x - 8 - garbotnikPos->x + tilemap->headlampWsg.w,
                                     tilePos.y - garbotnikPos->y + tilemap->headlampWsg.h};
                     lookup = divVec2d(lookup, 2);
                     brightness = 0;
@@ -476,153 +419,209 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
                     // printf("red: %d\n", red);
                     
-                    switch(sprite_idx & 0b1100){
-                        case 0b1100://0 16
-                            switch(corner_info & 0b1000){
-                                case 0b1000://0
-                                    drawWsgSimple(&(*wsgForegroundArrayPtr)[20*brightness+0], tilePos.x, tilePos.y);
-                                    break;
-                                default: //0b0000 16
-                                    drawWsgSimple(&(*wsgForegroundArrayPtr)[20*brightness+16], tilePos.x, tilePos.y);
-                                    break;
-                            }
-                            break;
-                        case 0b1000://4
-                            drawWsgSimple(&(*wsgForegroundArrayPtr)[20*brightness+4], tilePos.x, tilePos.y);
-                            break;
-                        case 0b0100://8
-                            drawWsgSimple(&(*wsgForegroundArrayPtr)[20*brightness+8], tilePos.x, tilePos.y);
-                            break;
-                        default: //0b0000:12
-                            drawWsgSimple(&(*wsgForegroundArrayPtr)[20*brightness+12], tilePos.x, tilePos.y);
-                            break;
+                    // Top Left      V
+                    // 00RD ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+                    // 1100 1...   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+                    // 10RD ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+                    // 01RD ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+                    // 1110 1...   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+                    // 1101 1...   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+                    // 11RD 0...   (19,0), (17,1), (18,2), (16,3),#concave corners
+                    // 1111 10..   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+                    // 1111 1.0.   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+                    // 1111 1110   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
+                    uint8_t num = (sprite_idx<<4) + corner_info; // 8-bit number
+
+                    if ((num & 0b11000000) == 0b00000000) {
+                        // Case 1: 00.. ....
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+0], tilePos.x, tilePos.y);
+                    } else if ((num & 0b11111000) == 0b11001000) {
+                        // Case 2: 1100 1...
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+4], tilePos.x, tilePos.y);
+                    } else if ((num & 0b11000000) == 0b10000000) {
+                        // Case 3: 10.. ....
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+8], tilePos.x, tilePos.y);
+                    } else if ((num & 0b11000000) == 0b01000000) {
+                        // Case 4: 01.. ....
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+12], tilePos.x, tilePos.y);
+                    } else if ((num & 0b11111000) == 0b11101000) {
+                        // Case 5: 1110 1...
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+16], tilePos.x, tilePos.y);
+                    } else if ((num & 0b11111000) == 0b11011000) {
+                        // Case 6: 1101 1...
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+20], tilePos.x, tilePos.y);
+                    } else if ((num & 0b11001000) == 0b11000000) {
+                        // Case 7: 11.. 0...
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+24], tilePos.x, tilePos.y);
+                    } else if ((num & 0b11111100) == 0b11111000) {
+                        // Case 8: 1111 10..
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+28], tilePos.x, tilePos.y);
+                    } else if ((num & 0b11111010) == 0b11111000) {
+                        // Case 9: 1111 1.0.
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+32], tilePos.x, tilePos.y);
+                    } else if (num == 0b11111110) {
+                        // Case 10: 1111 1110
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+36], tilePos.x, tilePos.y);
+                    } else {
+                        // Case 11: 1111 1111
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[39], tilePos.x, tilePos.y);
                     }
 
-                    // Top Right
-                    // 1 x11x x1xx
-                    // 5 x01x xxxx
-                    // 9 x10x xxxx
-                    // 13 x00x xxxx 
-                    // 17 x11x x0xx
+                    
                     lookup.x += 8;
-                    brightness = 5 - j/5;
-                    if (brightness < 0){
-                        brightness = 0;
-                    }
+                    brightness = 0;
                     //if within bounds of the headlamp texture...
                     if(lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106){
                         uint32_t rgbCol = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                        brightness += ((rgbCol >> 16) & 255)/51; // red channel
+                        brightness += ((rgbCol >> 8) & 0xFF)/51; // >> 8 & 0xFF gets green channel
                     }
-                    if(brightness > 5){
-                        brightness = 5;
-                    }
-                    switch(sprite_idx & 0b110){
-                        case 0b110://1 17
-                            switch(corner_info & 0b0100){
-                                case 0b0100://1
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+1], tilePos.x + HALF_TILE, tilePos.y);
-                                    break;
-                                default: //0b0000 17
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+17], tilePos.x + HALF_TILE, tilePos.y);
-                                    break;
-                            }
-                            break;
-                        case 0b010://5
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+5], tilePos.x + HALF_TILE, tilePos.y);
-                            break;
-                        case 0b100://9
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+9], tilePos.x + HALF_TILE, tilePos.y);
-                            break;
-                        default: //0b0000:13
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+13], tilePos.x + HALF_TILE, tilePos.y);
-                            break;
+                    // Top Right             V
+                    // L00D ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+                    // 0110 .1..   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+                    // L01D ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+                    // L10D ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+                    // 1110 .1..   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+                    // 0111 .1..   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+                    // L11D .0...  (19,0), (17,1), (18,2), (16,3),#concave corners
+                    // 1111 .1.0   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+                    // 1111 01..   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+                    // 1111 1101   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
+                    if ((num & 0b01100000) == 0b00000000) {
+                        // L00D ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+1], tilePos.x + HALF_TILE, tilePos.y);
+                    } else if ((num & 0b11110100) == 0b01100100) {
+                        // 0110 .1..   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+5], tilePos.x + HALF_TILE, tilePos.y);
+                    } else if ((num & 0b01100000) == 0b00100000) {
+                        // L01D ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+9], tilePos.x + HALF_TILE, tilePos.y);
+                    } else if ((num & 0b01100000) == 0b01000000) {
+                        // L10D ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+13], tilePos.x + HALF_TILE, tilePos.y);
+                    } else if ((num & 0b11110100) == 0b11100100) {
+                        // 1110 .1..   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+17], tilePos.x + HALF_TILE, tilePos.y);
+                    } else if ((num & 0b11110100) == 0b01110100) {
+                        // 0111 .1..   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+21], tilePos.x + HALF_TILE, tilePos.y);
+                    } else if ((num & 0b01100100) == 0b01100000) {
+                        // L11D .0..  (19,0), (17,1), (18,2), (16,3),#concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+25], tilePos.x + HALF_TILE, tilePos.y);
+                    } else if ((num & 0b11110101) == 0b11110100) {
+                        // 1111 .1.0   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+29], tilePos.x + HALF_TILE, tilePos.y);
+                    } else if ((num & 0b11111100) == 0b11110100) {
+                        // 1111 01..   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+33], tilePos.x + HALF_TILE, tilePos.y);
+                    } else if (num == 0b11111101) {
+                        // 1111 1101   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+37], tilePos.x + HALF_TILE, tilePos.y);
+                    } else {
+                        // Case 11: 1111 1111
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[39], tilePos.x + HALF_TILE, tilePos.y);
                     }
 
-                    // Bottom Left
-                    // 2 1xx1 xx1x
-                    // 6 1xx0 xxxx
-                    // 10 0xx1 xxxx
-                    // 14 0xx0 xxxx 
-                    // 18 1xx1 xx0x
+
                     lookup.x -= 8;
                     lookup.y += 8;
-                    brightness = 5 - j/5;
-                    if (brightness < 0){
-                        brightness = 0;
-                    }
+                    brightness = 0;
                     //if within bounds of the headlamp texture...
                     if(lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106){
                         uint32_t rgbCol = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                        brightness += ((rgbCol >> 16) & 255)/51; // red channel
+                        brightness += ((rgbCol >> 8) & 0xFF)/51; // >> 8 & 0xFF gets green channel
                     }
-                    if(brightness > 5){
-                        brightness = 5;
-                    }
-                    switch(sprite_idx & 0b1001){
-                        case 0b1001://2 18
-                            switch(corner_info & 0b0010){
-                                case 0b0010://2
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+2], tilePos.x, tilePos.y + HALF_TILE);
-                                    break;
-                                default: //0b0000 18
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+18], tilePos.x, tilePos.y + HALF_TILE);
-                                    break;
-                            }
-                            break;
-                        case 0b1000://6
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+6], tilePos.x, tilePos.y + HALF_TILE);
-                            break;
-                        case 0b0001://10
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+10], tilePos.x, tilePos.y + HALF_TILE);
-                            break;
-                        default: //0b0000:14
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+14], tilePos.x, tilePos.y + HALF_TILE);
-                            break;
+                    // Bottom Left                   V
+                    // 0UR0 ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+                    // 0110 ..1.   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+                    // 1UR0 ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+                    // 0UR1 ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+                    // 1011 ..1.   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+                    // 1101 ..1.   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+                    // 1UR1 ..0.   (19,0), (17,1), (18,2), (16,3),#concave corners
+                    // 1111 0.1.   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+                    // 1111 ..10   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+                    // 1111 1011   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
+                    if ((num & 0b10010000) == 0b00000000) {
+                        // 0UR0 ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+2], tilePos.x, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11110010) == 0b01100010) {
+                        // 0110 ..1.   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+6], tilePos.x, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b10010000) == 0b10000000) {
+                        // 1UR0 ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+10], tilePos.x, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b10010000) == 0b00010000) {
+                        // 0UR1 ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+14], tilePos.x, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11110010) == 0b10110010) {
+                        // 1011 ..1.   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+18], tilePos.x, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11110010) == 0b11010010) {
+                        // 1101 ..1.   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+22], tilePos.x, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b10010010) == 0b10010000) {
+                        // 1UR1 ..0.   (19,0), (17,1), (18,2), (16,3),#concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+26], tilePos.x, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11111010) == 0b11110010) {
+                        // 1111 0.1.   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+30], tilePos.x, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11110011) == 0b11110010) {
+                        // 1111 ..10   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+34], tilePos.x, tilePos.y + HALF_TILE);
+                    } else if (num == 0b11111011) {
+                        // 1111 1011   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+38], tilePos.x, tilePos.y + HALF_TILE);
+                    } else {
+                        // Case 11: 1111 1111
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[39], tilePos.x, tilePos.y + HALF_TILE);
                     }
 
-                    // Bottom Right
-                    // 3 xx11 xxx1
-                    // 7 xx10 xxxx
-                    // 11 xx01 xxxx
-                    // 15 xx00 xxxx 
-                    // 19 xx11 xxx0
+
                     lookup.x += 8;
-                    brightness = 5 - j/5;
-                    if (brightness < 0){
-                        brightness = 0;
-                    }
+                    brightness = 0;
                     //if within bounds of the headlamp texture...
                     if(lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106){
                         uint32_t rgbCol = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                        brightness += ((rgbCol >> 16) & 255)/51; // red channel
+                        brightness += ((rgbCol >> 8) & 0xFF)/51; // >> 8 & 0xFF gets green channel
                     }
-                    if(brightness > 5){
-                        brightness = 5;
+                    // Bottom Right                          V
+                    if ((num & 0b00110000) == 0b00000000) {
+                    // LU00 ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+3], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11110001) == 0b00110001) {
+                    // 0011 ...1   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+7], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b00110000) == 0b00100000) {
+                    // LU10 ....   (1,0),  (1,1),  (1,2),  (1,3), #horizontal light
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+11], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b00110000) == 0b00010000) {
+                    // LU01 ....   (11,0), (11,1), (11,2), (11,3),#vertical light
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+15], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11110001) == 0b10110001) {
+                    // 1011 ...1   (13,0), (13,1), (5,2),  (5,3), #horizontal shadow
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+19], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11110001) == 0b01110001) {
+                    // 0111 ...1   (10,0), (8,1),  (10,2), (8,3), #vertical shadow
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+23], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b00110001) == 0b00110000) {
+                    // LU11 ...0   (19,0), (17,1), (18,2), (16,3),#concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+27], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11110011) == 0b11110001) {
+                    // 1111 ..01   (17,0), (16,1), (19,2), (18,3),#left of concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+31], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else if ((num & 0b11110101) == 0b11110001) {
+                    // 1111 .0.1   (18,0), (19,1), (16,2), (17,3),#right of concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+35], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else if (num == 0b11110111) {
+                    // 1111 0111   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[40*brightness+39], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
+                    } else { 
+                        drawWsgSimple(&(*wsgForegroundArrayPtr)[39], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
                     }
-                    switch(sprite_idx & 0b0011){
-                        case 0b11://3 19
-                            switch(corner_info & 0b1){
-                                case 0b1://3
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+3], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
-                                    break;
-                                default: //0b0000 19
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+19], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
-                                    break;
-                            }
-                            break;
-                        case 0b10://7
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+7], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
-                            break;
-                        case 0b01://11
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+11], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
-                            break;
-                        default: //0b0000:15
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20*brightness+15], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
-                            break;
-                    }
+
+
                     // char snum[4];
-                    // sprintf(snum, "%d", 20*brightness);
+                    // sprintf(snum, "%d", brightness);
                     // drawText(&ibm, c555, snum, tilePos.x, tilePos.y);
                 }
             }
@@ -642,7 +641,7 @@ wsg_t (*bb_GetMidgroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, c
     return &tilemap->mid_s_Wsg;
 }
 
-wsg_t (*bb_GetForegroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[216]
+wsg_t (*bb_GetForegroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[240]
 {
     if(tilemap->fgTiles[i][j]>4){
         return &tilemap->fore_h_Wsg;

@@ -552,10 +552,10 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 /////////////////////
 
                 //crumble test
-                uint32_t* val = calloc(2,sizeof(uint32_t));
-                val[0] = 5;
-                val[1] = 3;
-                push(bigbug->gameData.unsupported, (void*)val);
+                // uint32_t* val = calloc(2,sizeof(uint32_t));
+                // val[0] = 5;
+                // val[1] = 3;
+                // push(bigbug->gameData.unsupported, (void*)val);
 
                 //Update the dirt by decrementing it.
                 bigbug->tilemap.fgTiles[best_i][best_j] -= 1;
