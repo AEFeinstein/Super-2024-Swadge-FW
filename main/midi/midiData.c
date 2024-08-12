@@ -5,6 +5,7 @@
 #include "drums.h"
 
 #include "macros.h"
+#include "hdw-dac.h"
 
 const midiTimbre_t acousticGrandPianoTimbre = {
     .type = WAVETABLE,
@@ -99,14 +100,15 @@ const midiTimbre_t magfestWaveTimbre = {
     .waveIndex = 0,
     .waveFunc = magfestWaveTableFunc,
     .envelope = {
-        .attackTime = 0,
+        .attackTime = MS_TO_SAMPLES(500),
         .attackTimeVel = 0,
-        .decayTime = 0,
+        .decayTime = MS_TO_SAMPLES(1000),
         .decayTimeVel = 0,
-        .sustainVol = 127,
+        .sustainVol = 0,
         .sustainVolVel = 0x200,
-        .releaseTime = 0,
-        .releaseTimeVel = 0,
+        .releaseTime = MS_TO_SAMPLES(256),
+        // the higher the velocity the longer the release time
+        .releaseTimeVel = 0x800,
     },
     .effects = {
         .chorus = 0,
