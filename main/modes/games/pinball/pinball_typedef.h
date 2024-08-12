@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "vector2d.h"
 #include "vectorFl2d.h"
 #include "macros.h"
 #include "linked_list.h"
@@ -101,4 +102,6 @@ typedef struct
     int32_t numFlippers;
     jsLauncher_t launchers[MAX_NUM_LAUNCHERS];
     int32_t numLaunchers;
+    vec_t cameraOffset;
+    vecFl_t tableDim;
 } jsScene_t;

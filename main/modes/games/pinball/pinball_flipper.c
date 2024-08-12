@@ -90,12 +90,17 @@ vecFl_t jsFlipperGetTip(jsFlipper_t* flipper)
  *
  * @param flipper
  */
-void pinballDrawFlipper(jsFlipper_t* flipper)
+void pinballDrawFlipper(jsFlipper_t* flipper, vec_t* cameraOffset)
 {
-    vecFl_t pos = flipper->pos;
+    vecFl_t pos = {
+        .x = flipper->pos.x - cameraOffset->x,
+        .y = flipper->pos.y - cameraOffset->y,
+    };
     drawCircleFilled(pos.x, pos.y, flipper->radius, c115);
     vecFl_t tip = jsFlipperGetTip(flipper);
+    tip.x -= cameraOffset->x;
+    tip.y -= cameraOffset->y;
     drawCircleFilled(tip.x, tip.y, flipper->radius, c115);
-    drawLineFast(pos.x, pos.y + flipper->radius, tip.x, tip.y + flipper->radius, c115);
-    drawLineFast(pos.x, pos.y - flipper->radius, tip.x, tip.y - flipper->radius, c115);
+    drawLine(pos.x, pos.y + flipper->radius, tip.x, tip.y + flipper->radius, c115, 0);
+    drawLine(pos.x, pos.y - flipper->radius, tip.x, tip.y - flipper->radius, c115, 0);
 }

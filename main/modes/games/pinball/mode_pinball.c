@@ -7,6 +7,8 @@
 
 #include "mode_pinball.h"
 #include "pinball_game.h"
+#include "pinball_physics.h"
+#include "pinball_draw.h"
 
 //==============================================================================
 // Structs
@@ -106,6 +108,7 @@ static void pinMainLoop(int64_t elapsedUs)
     }
 
     jsSimulate(&pinball->scene);
+    jsAdjustCamera(&pinball->scene);
     jsSceneDraw(&pinball->scene);
 }
 

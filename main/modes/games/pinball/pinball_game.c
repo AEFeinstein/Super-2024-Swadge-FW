@@ -57,7 +57,7 @@ list_t* addToGroup(jsScene_t* scene, void* obj, uint8_t groupId)
 void jsSceneInit(jsScene_t* scene)
 {
     scene->gravity.x = 0;
-    scene->gravity.y = 30;
+    scene->gravity.y = 90;
     scene->dt        = 1 / 60.0f;
     scene->score     = 0;
     scene->paused    = true;
@@ -75,6 +75,20 @@ void jsSceneInit(jsScene_t* scene)
     for (uint16_t lIdx = 0; lIdx < linesInFile; lIdx++)
     {
         dIdx += readLineFromFile(&tableData[dIdx], scene);
+        jsLine_t* newLine = &scene->lines[scene->numLines - 1];
+
+        // Record the table dimension
+        float maxX = MAX(newLine->p1.x, newLine->p2.x);
+        float maxY = MAX(newLine->p1.y, newLine->p2.y);
+
+        if (maxX > scene->tableDim.x)
+        {
+            scene->tableDim.x = maxX;
+        }
+        if (maxY > scene->tableDim.y)
+        {
+            scene->tableDim.y = maxY;
+        }
     }
 
     uint16_t circlesInFile = readInt16(tableData, &dIdx);
@@ -119,6 +133,9 @@ void jsSceneInit(jsScene_t* scene)
         ball->mass        = M_PI * 4.0f * 4.0f;
         ball->restitution = 0.2f;
     }
+
+    scene->cameraOffset.x = 0;
+    scene->cameraOffset.y = 0;
 }
 
 // ------------------------ user interaction ---------------------------

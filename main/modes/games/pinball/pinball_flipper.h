@@ -4,6 +4,6 @@
 #include "pinball_game.h"
 
 uint32_t readFlipperFromFile(uint8_t* tableData, jsScene_t* scene);
-void pinballDrawFlipper(jsFlipper_t* flipper);
+void pinballDrawFlipper(jsFlipper_t* flipper, vec_t* cameraOffset);
 void jsFlipperSimulate(jsFlipper_t* flipper, float dt);
 vecFl_t jsFlipperGetTip(jsFlipper_t* flipper);
