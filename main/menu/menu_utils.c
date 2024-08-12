@@ -193,13 +193,17 @@ menu_t* menuRestorePosition(const char** in, int len, menu_t* menu)
 
     // Now navigate down
     const char** curIn = in;
-    while (*curIn && curIn < (in + len) && curMenu)
+    const char* toSelect = NULL;
+    while (curIn < (in + len) && *curIn && curMenu)
     {
-        menuNavigateToItem(curMenu, *curIn++);
-        if (curIn != (in + len - 1) && menuItemHasSubMenu((menuItem_t*)curMenu->currentItem->val))
+        if (toSelect && menuItemHasSubMenu((menuItem_t*)curMenu->currentItem->val))
         {
             curMenu = menuSelectCurrentItem(curMenu);
         }
+
+        menuNavigateToItem(curMenu, *curIn);
+
+        toSelect = *(++curIn);
     }
 
     return curMenu ? curMenu : menu;
