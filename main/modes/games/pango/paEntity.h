@@ -76,6 +76,12 @@ typedef enum
     PA_EN_ST_BREAK_BLOCK,
 } paEnemyState_t;
 
+typedef enum
+{
+    PA_PL_ST_NORMAL,
+    PA_PL_ST_PUSHING
+} paPlayerState_t;
+
 //==============================================================================
 // Structs
 //==============================================================================

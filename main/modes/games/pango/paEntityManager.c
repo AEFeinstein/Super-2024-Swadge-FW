@@ -430,6 +430,8 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->spriteFlipVertical = false;
     entity->hp                 = 1;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
+    entity->state = PA_PL_ST_NORMAL;
+    entity->stateTimer = -1;
 
     entity->type                 = ENTITY_PLAYER;
     entity->spriteIndex          = PA_SP_PLAYER_SOUTH;
@@ -466,7 +468,7 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->scoreValue           = 100;
     entity->stateTimer           = -1;
     entity->tempStateTimer       = -1;
-    entity->baseSpeed = 15;
+    entity->baseSpeed = 1;
 
     entity->type                 = PA_ENTITY_TEST;
     entity->spriteIndex          = PA_SP_ENEMY_SOUTH;

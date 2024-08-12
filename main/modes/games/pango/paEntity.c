@@ -79,197 +79,168 @@ void pa_initializeEntity(paEntity_t* self, paEntityManager_t* entityManager, paT
 
 void pa_updatePlayer(paEntity_t* self)
 {
-    if (self->gameData->btnState & PB_LEFT)
-    {
-        self->xspeed -= 4;
-
-        if (self->xspeed < -16)
-        {
-            self->xspeed = -16;
-        }
-    }
-    else if (self->gameData->btnState & PB_RIGHT)
-    {
-        self->xspeed += 4;
-
-        if (self->xspeed > 16)
-        {
-            self->xspeed = 16;
-        }
-    }
-
-    if (self->gameData->btnState & PB_UP)
-    {
-        self->yspeed -= 4;
-
-        if (self->yspeed < -16)
-        {
-            self->yspeed = -16;
-        }
-    }
-    else if (self->gameData->btnState & PB_DOWN)
-    {
-        self->yspeed += 4;
-
-        if (self->yspeed > 16)
-        {
-            self->yspeed = 16;
-        }
-    }
-/*
-    if (self->gameData->btnState & PB_A)
-    {
-        if (!self->falling && !(self->gameData->prevBtnState & PB_A))
-        {
-            // initiate jump
-            self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
-            self->yspeed    = -self->jumpPower;
-            self->falling   = true;
-            soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
-        }
-        else if (self->jumpPower > 0 && self->yspeed < 0)
-        {
-            // jump dampening
-            self->jumpPower -= 2; // 32
-            self->yspeed = -self->jumpPower;
-
-            if (self->jumpPower > 35 && self->jumpPower < 37)
-            {
-                soundPlaySfx(&(self->soundManager->sndJump2), BZR_LEFT);
-            }
-
-            if (self->yspeed > -6 && self->yspeed < -2)
-            {
-                soundPlaySfx(&(self->soundManager->sndJump3), BZR_LEFT);
-            }
-
-            if (self->jumpPower < 0)
-            {
-                self->jumpPower = 0;
-            }
-        }
-    }
-    else if (self->falling && self->jumpPower > 0 && self->yspeed < 0)
-    {
-        // Cut jump short if player lets go of jump button
-        self->jumpPower = 0;
-        self->yspeed    = self->yspeed / 4;
-    }
-
-    if (self->invincibilityFrames > 0)
-    {
-        self->invincibilityFrames--;
-        if (self->invincibilityFrames % 2)
-        {
-            self->visible = !self->visible;
-        }
-
-        if (self->invincibilityFrames <= 0)
-        {
-            self->visible = true;
-        }
-    }
-*/
-    if (self->animationTimer > 0)
-    {
-        self->animationTimer--;
-    }
-
-/*
-    if (self->hp > 2 && self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B)
-        && self->animationTimer == 0)
-    {
-        paEntity_t* createdEntity = pa_createEntity(self->entityManager, ENTITY_WAVE_BALL,
-                                                    self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-        if (createdEntity != NULL)
-        {
-            createdEntity->xspeed    = (self->spriteFlipHorizontal) ? -(128 + abs(self->xspeed) + abs(self->yspeed))
-                                                                    : 128 + abs(self->xspeed) + abs(self->yspeed);
-            createdEntity->homeTileX = 0;
-            createdEntity->homeTileY = 0;
-            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-        }
-        self->animationTimer = 30;
-    }
-*/
-    if (((self->gameData->btnState & PB_START) && !(self->gameData->prevBtnState & PB_START)))
-    {
-        self->gameData->changeState = PA_ST_PAUSE;
-    }
-
-/*
-    if(self->xspeed){
-        self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) + SIGNOF(self->xspeed);
-
-        if(!self->yspeed){
-             self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
-        }
-    }
-
-    if(self->yspeed){
-        self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) + SIGNOF(self->yspeed);
-
-        if(!self->xspeed){
-             self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
-        }
-    }
-*/
-
-    switch(self->facingDirection){
-        case PA_DIRECTION_LEFT:
-            self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) - 1;
-            self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
-            break;
-        case PA_DIRECTION_RIGHT:
-            self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) + 1;
-            self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
-            break;
-        case PA_DIRECTION_UP:
-            self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
-            self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) - 1;
-            break;
-        case PA_DIRECTION_DOWN:
+    switch(self->state){
+        case PA_PL_ST_NORMAL:
         default:
-            self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
-            self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) + 1;
-            break;
-    }
+        {
+            if (self->gameData->btnState & PB_LEFT)
+            {
+                self->xspeed -= 4;
 
-    if (self->gameData->btnState & PB_A && !(self->gameData->prevBtnState & PB_A))
-    {
-        uint8_t t = pa_getTile(self->tilemap, self->targetTileX, self->targetTileY);
-        if(t == PA_TILE_BLOCK || t  == PA_TILE_SPAWN_BLOCK_0 || t == PA_TILE_BONUS_BLOCK_0){
-            paEntity_t* newHitBlock = createHitBlock(self->entityManager, (self->targetTileX << SUBPIXEL_RESOLUTION) + PA_HALF_TILESIZE, (self->targetTileY << SUBPIXEL_RESOLUTION) + PA_HALF_TILESIZE);
-            
-            if(newHitBlock != NULL){
-                pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
-                newHitBlock->jumpPower = t;
+                if (self->xspeed < -16)
+                {
+                    self->xspeed = -16;
+                }
+            }
+            else if (self->gameData->btnState & PB_RIGHT)
+            {
+                self->xspeed += 4;
+
+                if (self->xspeed > 16)
+                {
+                    self->xspeed = 16;
+                }
+            }
+
+            if (self->gameData->btnState & PB_UP)
+            {
+                self->yspeed -= 4;
+
+                if (self->yspeed < -16)
+                {
+                    self->yspeed = -16;
+                }
+            }
+            else if (self->gameData->btnState & PB_DOWN)
+            {
+                self->yspeed += 4;
+
+                if (self->yspeed > 16)
+                {
+                    self->yspeed = 16;
+                }
+            }
+
+            if (self->animationTimer > 0)
+            {
+                self->animationTimer--;
+            }
+
+            if (((self->gameData->btnState & PB_START) && !(self->gameData->prevBtnState & PB_START)))
+            {
+                self->gameData->changeState = PA_ST_PAUSE;
+            }
+
+        /*
+            if(self->xspeed){
+                self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) + SIGNOF(self->xspeed);
+
+                if(!self->yspeed){
+                    self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+                }
+            }
+
+            if(self->yspeed){
+                self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) + SIGNOF(self->yspeed);
+
+                if(!self->xspeed){
+                    self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+                }
+            }
+        */
+
+            switch(self->facingDirection){
+                case PA_DIRECTION_LEFT:
+                    self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) - 1;
+                    self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+                    break;
+                case PA_DIRECTION_RIGHT:
+                    self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) + 1;
+                    self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+                    break;
+                case PA_DIRECTION_UP:
+                    self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+                    self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) - 1;
+                    break;
+                case PA_DIRECTION_DOWN:
+                default:
+                    self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+                    self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) + 1;
+                    break;
+            }
+
+            if (self->gameData->btnState & PB_A && !(self->gameData->prevBtnState & PB_A))
+            {
+                uint8_t t = pa_getTile(self->tilemap, self->targetTileX, self->targetTileY);
+                if(t == PA_TILE_BLOCK || t  == PA_TILE_SPAWN_BLOCK_0 || t == PA_TILE_BONUS_BLOCK_0){
+                    paEntity_t* newHitBlock = createHitBlock(self->entityManager, (self->targetTileX << SUBPIXEL_RESOLUTION) + PA_HALF_TILESIZE, (self->targetTileY << SUBPIXEL_RESOLUTION) + PA_HALF_TILESIZE);
+                    
+                    if(newHitBlock != NULL){
+                        pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
+                        newHitBlock->jumpPower = t;
+                        switch(self->facingDirection){
+                            case PA_DIRECTION_LEFT:
+                                newHitBlock->xspeed = -64;
+                                break;
+                            case PA_DIRECTION_RIGHT:
+                                newHitBlock->xspeed = 64;
+                                break;
+                            case PA_DIRECTION_UP:
+                                newHitBlock->yspeed = -64;
+                                break;
+                            case PA_DIRECTION_DOWN:
+                            default:
+                                newHitBlock->yspeed = 64;
+                                break;
+                        }
+                        soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
+                    }
+                }
+
+                self->state = PA_PL_ST_PUSHING;
+                self->stateTimer = 8;
+
                 switch(self->facingDirection){
                     case PA_DIRECTION_LEFT:
-                        newHitBlock->xspeed = -64;
+                        self->spriteIndex = PA_SP_PLAYER_PUSH_SIDE_1;
                         break;
                     case PA_DIRECTION_RIGHT:
-                        newHitBlock->xspeed = 64;
+                        self->spriteIndex = PA_SP_PLAYER_PUSH_SIDE_1;
                         break;
                     case PA_DIRECTION_UP:
-                        newHitBlock->yspeed = -64;
+                        self->spriteIndex = PA_SP_PLAYER_PUSH_NORTH_1;
                         break;
                     case PA_DIRECTION_DOWN:
                     default:
-                        newHitBlock->yspeed = 64;
+                        self->spriteIndex = PA_SP_PLAYER_PUSH_SOUTH_1;
                         break;
                 }
-                soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
+
+                break;
             }
+            animatePlayer(self);
+            break;
+        }
+        case PA_PL_ST_PUSHING:
+        {
+            self->stateTimer--;
+
+            if(self->stateTimer < 0){
+                self->state = PA_PL_ST_NORMAL;
+                break;
+            }
+
+            if(self->stateTimer == 2){
+                self->spriteIndex++;
+            }
+
+            break;
         }
     }
-    animatePlayer(self);
+    
     pa_moveEntityWithTileCollisions(self);
-    //dieWhenFallingOffScreen(self);
-    //applyGravity(self);
     applyDamping(self);
     pa_detectEntityCollisions(self);
-    
 }
 
 void updateTestObject(paEntity_t* self)
@@ -2262,6 +2233,8 @@ void killEnemy(paEntity_t* target)
 
     if(target->entityManager->activeEnemies == 0 && target->entityManager->remainingEnemies == 0){
         target->gameData->changeState = PA_ST_LEVEL_CLEAR;
+        target->entityManager->playerEntity->spriteIndex = PA_SP_PLAYER_WIN;
+        target->entityManager->playerEntity->updateFunction = &pa_updateDummy;
     }
 }
 
