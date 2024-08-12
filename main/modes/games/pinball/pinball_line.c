@@ -33,7 +33,7 @@ int32_t readLineFromFile(uint8_t* tableData, jsScene_t* scene)
  *
  * @param line
  */
-void pinballDrawLine(jsLine_t* line)
+void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
 {
     paletteColor_t color = c555;
     switch (line->type)
@@ -72,5 +72,6 @@ void pinballDrawLine(jsLine_t* line)
         }
     }
 
-    drawLineFast(line->p1.x, line->p1.y, line->p2.x, line->p2.y, color);
+    drawLine(line->p1.x - cameraOffset->x, line->p1.y - cameraOffset->y, line->p2.x - cameraOffset->x,
+             line->p2.y - cameraOffset->y, color, 0);
 }

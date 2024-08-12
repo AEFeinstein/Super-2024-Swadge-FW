@@ -4,4 +4,4 @@
 #include "pinball_game.h"
 
 int32_t readLineFromFile(uint8_t* tableData, jsScene_t* scene);
-void pinballDrawLine(jsLine_t* line);
+void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset);
