@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include <inttypes.h>
 
 /**
@@ -130,4 +131,76 @@ bool menuItemIsBack(const menuItem_t* item)
 bool menuItemHasSubMenu(const menuItem_t* item)
 {
     return (NULL != item->subMenu);
+}
+
+/**
+ * @brief Stores the current menu position in a buffer
+ *
+ * The output array should contain at least as many items as the maximum nesting depth of the menu
+ *
+ * @param out A pointer to an array of char-pointers that will receive the state
+ * @param len The maximum number of items to write into the out buffer.
+ * @param menu The menu whose state to save
+ */
+void menuSavePosition(const char** out, int len, const menu_t* menu)
+{
+    const menu_t* curMenu = menu;
+
+    // Just calculate the depth
+    int depth = 0;
+    while (curMenu->parentMenu)
+    {
+        curMenu = curMenu->parentMenu;
+        depth++;
+    }
+
+    curMenu = menu;
+
+    // Zero out the rest of the array if we won't be setting it
+    if (depth + 1 < len)
+    {
+        memset(out + depth + 1, 0, sizeof(out) * (len - depth - 1));
+    }
+
+    const char** curOut = (out + depth);
+    do
+    {
+        menuItem_t* curItem = (menuItem_t*)curMenu->currentItem->val;
+
+        *curOut-- = curItem->label;
+        curMenu = curMenu->parentMenu;
+    } while (curOut >= out);
+}
+
+/**
+ * @brief Restores the menu position from the given buffer
+ *
+ * @param in The char-pointer array that was set by menuSavePosition()
+ * @param len The length of the char-poniter array
+ * @param menu The menu
+ *
+ * @return A pointer to the currently-selected menu
+ */
+menu_t* menuRestorePosition(const char** in, int len, menu_t* menu)
+{
+    const menu_t* curMenu = menu;
+
+    // Go to the start of the menu first
+    while (curMenu->parentMenu)
+    {
+        curMenu = curMenu->parentMenu;
+    }
+
+    // Now navigate down
+    const char** curIn = in;
+    while (*curIn && curIn < (in + len) && curMenu)
+    {
+        menuNavigateToItem(curMenu, *curIn++);
+        if (curIn != (in + len - 1) && menuItemHasSubMenu((menuItem_t*)curMenu->currentItem->val))
+        {
+            curMenu = menuSelectCurrentItem(curMenu);
+        }
+    }
+
+    return curMenu ? curMenu : menu;
 }
