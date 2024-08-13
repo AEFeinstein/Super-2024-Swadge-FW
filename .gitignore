@@ -73,6 +73,7 @@ plantuml.jar
 swadge_emulator
 crash-*.txt
 screenshot-*.png
+screen-recording-*.gif
 rec-*.csv
 
 *.pyc

@@ -16,3 +16,6 @@
 extern emuExtension_t toolsEmuExtension;
 
 bool takeScreenshot(const char* name);
+void startScreenRecording(const char* name);
+void stopScreenRecording(void);
+bool isScreenRecording(void);

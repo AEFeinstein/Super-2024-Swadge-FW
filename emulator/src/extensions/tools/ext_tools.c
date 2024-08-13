@@ -29,6 +29,8 @@
     #pragma GCC diagnostic pop
 #endif
 
+#include "gifenc.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,6 +53,7 @@ static void toolsPreFrame(uint64_t frame);
 static void toolsPostFrame(uint64_t frame);
 static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes);
 static void handleConsoleCommand(const char* command);
+static void makeTransparent(uint8_t* framebuffer);
 
 static const char* getScreenshotName(char* buffer, size_t maxlen);
 
@@ -74,6 +77,7 @@ static uint64_t fakeTime      = 0;
 static uint64_t fakeFrameTime = 0;
 
 static bool recordScreen = false;
+static char recordingFilename[256] = {0};
 
 static bool pauseNextFrame = false;
 
@@ -253,23 +257,16 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
     }
     else if (keycode == CNFG_KEY_F11)
     {
-        // Record
-        static bool recordKey = false;
-        if (down && !recordKey)
+        if (down)
         {
-            recordKey = true;
             if (recordScreen)
             {
-                recordScreen = false;
+                stopScreenRecording();
             }
             else
             {
-                recordScreen = true;
+                startScreenRecording(NULL);
             }
-        }
-        else if (!down)
-        {
-            recordKey = false;
         }
     }
     else if (useFakeTime && keycode == CNFG_KEY_PAGE_UP)// && modifiers == EMU_MOD_CTRL)
@@ -364,36 +361,73 @@ static void toolsPreFrame(uint64_t frame)
 
 static void toolsPostFrame(uint64_t frame)
 {
-    static char dirbuf[64];
     static uint64_t index = 0;
     static bool setup = false;
+    static ge_GIF* gif = NULL;
 
     if (recordScreen)
     {
+        static const paletteColor_t* fb = NULL;
+        if (!fb)
+        {
+            fb = getLastTftBitmap();
+        }
+
         if (!setup)
         {
-            getTimestampFilename(dirbuf, sizeof(dirbuf)-1, "screen-recording-", "");
-            if (0 != makeDir(dirbuf))
+            if (!recordingFilename[0])
             {
-                printf("ERR! ext_tools.c: Failed to create directory for recording. stopping.\n");
-                recordScreen = false;
+                getTimestampFilename(recordingFilename, sizeof(recordingFilename)-1, "screen-recording-", "gif");
             }
+
+            uint8_t gifPalette[256 * 3];
+            for (int i = 0; i < 256; i++)
+            {
+                uint8_t* r = &gifPalette[i * 3];
+                uint8_t* g = &gifPalette[i * 3 + 1];
+                uint8_t* b = &gifPalette[i * 3 + 2];
+
+                if (i < cTransparent)
+                {
+                    uint32_t rgb = paletteToRGB((paletteColor_t)i);
+                    *r = (rgb >> 16) & 0xFF;
+                    *g = (rgb >> 8) & 0xFF;
+                    *b = (rgb & 0xFF);
+                }
+                else
+                {
+                    *r = 0;
+                    *g = 0;
+                    *b = 0;
+                }
+            }
+
+            gif = ge_new_gif(recordingFilename, TFT_WIDTH, TFT_HEIGHT, gifPalette, 8, cTransparent, 0);
+            if (!gif)
+            {
+                printf("ERR! ext_tools.c: Unable to write to file %s for recording.\n", recordingFilename);
+                return;
+            }
+
             index = 0;
             setup = true;
         }
 
-        char filebuf[128];
-        snprintf(filebuf, sizeof(filebuf), "%s/%06" PRIu64 ".png", dirbuf, index++);
-        if (!takeScreenshot(filebuf))
-        {
-            printf("ERR! ext_tools.c: Failed to save recording screenshot, stopping.\n");
-        }
+        //char filebuf[128];
+        //snprintf(filebuf, sizeof(filebuf), "%s/%06" PRIu64 ".png", fnbuf, index++);
+        memcpy(gif->frame, fb, TFT_WIDTH * TFT_HEIGHT);
+        makeTransparent(gif->frame);
+        ge_add_frame(gif, MAX(1, getFrameRateUs() / 10000));
+
+        // Count frames
+        index++;
     }
     else if (setup)
     {
-        printf("Done Recording! Wrote %" PRIu64 " frames to %s/{000000..%06" PRIu64 "}.png\n", index, dirbuf, index-1);
-        int frameRate = 25;
-        printf("Convert to video with this:\nffmpeg -framerate %1$d -i '%2$s/%%06d.png' %2$s.mp4\n", frameRate, dirbuf);
+        ge_close_gif(gif);
+        gif = NULL;
+
+        printf("Done Recording! Wrote %" PRIu64 " frames to %s\n", index, recordingFilename);
         setup = false;
     }
 }
@@ -535,6 +569,35 @@ static void handleConsoleCommand(const char* command)
     }
 }
 
+// This is copy-pasted a lot from plotRoundedCorners() but oh well it's pretty different
+static void makeTransparent(uint8_t* framebuffer)
+{
+    int r = 40;
+    int or = r;
+    int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+    do
+    {
+        for (int xLine = 0; xLine <= (or +x); xLine++)
+        {
+
+            framebuffer[(TFT_HEIGHT - (or - y) - 1) * TFT_WIDTH + (xLine)] = cTransparent;                 /* I.   Quadrant -x -y */
+            framebuffer[(TFT_HEIGHT - (or - y) - 1) * TFT_WIDTH + (TFT_WIDTH - xLine - 1)] = cTransparent; /* II.  Quadrant +x -y */
+            framebuffer[(or - y) * TFT_WIDTH + (xLine)] = cTransparent;                                    /* III. Quadrant -x -y */
+            framebuffer[(or - y) * TFT_WIDTH + (TFT_WIDTH - xLine - 1)] = cTransparent;                    /* IV.  Quadrant +x -y */
+        }
+
+        r = err;
+        if (r <= y)
+        {
+            err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+        }
+        if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+        {
+            err += ++x * 2 + 1; /* -> x-step now */
+        }
+    } while (x < 0);
+}
+
 static const char* getScreenshotName(char* buffer, size_t maxlen)
 {
     return getTimestampFilename(buffer, maxlen, "screenshot-", "png");
@@ -605,4 +668,35 @@ bool takeScreenshot(const char* name)
     }
 
     return 0 != res;
+}
+
+void startScreenRecording(const char* name)
+{
+    if (name && *name)
+    {
+        if (strlen(name) <= 4 || strncmp(name + strlen(name) - 4, ".gif", 4))
+        {
+            snprintf(recordingFilename, sizeof(recordingFilename), "%s.gif", name);
+        }
+        else
+        {
+            strncpy(recordingFilename, name, sizeof(recordingFilename));
+        }
+    }
+    else
+    {
+        getTimestampFilename(recordingFilename, sizeof(recordingFilename), "screen-recording-", "gif");
+    }
+
+    recordScreen = true;
+}
+
+void stopScreenRecording(void)
+{
+    recordScreen = false;
+}
+
+bool isScreenRecording(void)
+{
+    return recordScreen;
 }

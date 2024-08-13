@@ -89,6 +89,7 @@
 #include "emu_args.h"
 #include "emu_ext.h"
 #include "emu_main.h"
+#include "ext_tools.h"
 
 //==============================================================================
 // Defines
@@ -100,10 +101,12 @@
 #if defined(CNFGOGL)
     #define CORNER_COLOR BG_COLOR
     #define PAUSED_COLOR 0xFFFF00FF
+    #define RECORDING_COLOR 0xFF0000FF
 #else
     // Swap RGBA to ARGB
     #define CORNER_COLOR (((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24))
     #define PAUSED_COLOR 0xFFFFFF00
+    #define RECORDING_COLOR 0xFFFF0000
 #endif
 
 //==============================================================================
@@ -380,7 +383,17 @@ void taskYIELD(void)
         if ((0 != bitmapWidth) && (0 != bitmapHeight) && (NULL != bitmapDisplay))
         {
 #if defined(CONFIG_GC9307_240x280)
-            plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, emuTimerIsPaused() ? PAUSED_COLOR : CORNER_COLOR);
+            uint32_t cornerColor = CORNER_COLOR;
+            if (emuTimerIsPaused())
+            {
+                cornerColor = PAUSED_COLOR;
+            }
+            else if (isScreenRecording())
+            {
+                cornerColor = RECORDING_COLOR;
+            }
+
+            plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, cornerColor);
 #endif
             // Update the display, centered
             CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);

@@ -81,30 +81,23 @@ static int setModeCommandCb(const char** args, int argCount, char* out)
 
 static int recordCommandCb(const char** args, int argCount, char* out)
 {
-    char buffer[128];
-    const char* name;
+    const char* name = NULL;
 
-    if (argCount > 0)
+    if (isScreenRecording())
     {
-        name = args[0];
-        if (!name || !*name)
-        {
-            name = getTimestampFilename(buffer, sizeof(buffer), "recording-", "csv");
-        }
-        else if (strlen(name) <= 4 || strncmp(name + strlen(name) - 4, ".csv", 4))
-        {
-            snprintf(buffer, sizeof(buffer), "%s.png", name);
-            name = buffer;
-        }
+        stopScreenRecording();
+        return sprintf(out, "Recording finished");
     }
     else
     {
-        name = getTimestampFilename(buffer, sizeof(buffer), "recording-", "csv");
+        if (argCount > 0)
+        {
+            name = args[0];
+        }
+
+        startRecording(name);
+        return sprintf(out, "Recording started");
     }
-
-    startRecording(name);
-
-    return sprintf(out, "Recording started");
 }
 
 static int replayCommandCb(const char** args, int argCount, char* out)
