@@ -1289,6 +1289,25 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
     // check the bitmaps to see if there's any note to release
     uint32_t playingVoices = VS_ANY(states) & chan->allocedVoices;
 
+    if (chan->percussion)
+    {
+        switch (note)
+        {
+            case SHORT_WHISTLE:
+            case LONG_WHISTLE:
+            case SHORT_GUIRO:
+            case LONG_GUIRO:
+            if (chan->bank != 0)
+            {
+                return;
+            }
+            break;
+
+            default:
+            return;
+        }
+    }
+
     // Find the channel playing this note
     while (playingVoices != 0)
     {
