@@ -41,7 +41,7 @@ static const uint8_t oscDither[] = {
 
 #define VS_ANY(statePtr) ((statePtr)->on)
 
-#define VOICE_CUR_VOL(voice) ((uint8_t)CLAMP(((voice)->transitionStartVol + ((int)(voice)->targetVol - (int)(voice)->transitionStartVol) * ((int)(voice)->transitionTicksTotal - (int)(voice)->transitionTicks) / (int)(voice)->transitionTicksTotal), 0, 255))
+#define VOICE_CUR_VOL(voice) (/*(uint8_t)*/((voice)->transitionStartVol + ((int)(voice)->targetVol - (int)(voice)->transitionStartVol) * ((int)(voice)->transitionTicksTotal - (int)(voice)->transitionTicks) / (int)(voice)->transitionTicksTotal))
 
 // Values for the percussion special states bitmap
 #define SHIFT_HI_HAT   (0)
@@ -121,6 +121,18 @@ static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount)
     }
 }
 
+
+    #define CUR_STATE_STR ( \
+        (states->attack & voiceBit) ? "ATK" : ( \
+            (states->decay & voiceBit) ? "DEC" : ( \
+                (states->sustain & voiceBit) ? "SUS" : ( \
+                    (states->release & voiceBit) ? "REL" : ( \
+                        (states->on & voiceBit) ? "ON " : "OFF" \
+                    ) \
+                ) \
+            ) \
+    ))
+
 /**
  * @brief Release a note and transition it to the release state if it has one
  *
@@ -135,22 +147,30 @@ static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* vo
     uint32_t voiceBit = 1 << voiceIdx;
     uint32_t mask = UINT32_MAX & ~voiceBit;
 
-    // Unconditionally unset the voice for all states
-    states->on &= mask;
-    states->attack &= mask;
-    states->decay &= mask;
-    states->sustain &= mask;
 
     uint8_t oscVol = 0;
-
-    uint32_t releaseTime = voice->timbre->envelope.releaseTime + ((voice->timbre->envelope.releaseTimeVel * (int8_t)voice->velocity) >> 16);
+    uint32_t releaseTime = voice->timbre->envelope.releaseTime + ((voice->timbre->envelope.releaseTimeVel * (int8_t)voice->velocity) >> 8);
+    uint32_t sustainVol = voice->timbre->envelope.sustainVol + ((voice->timbre->envelope.sustainVolVel * (int)voice->velocity) >> 8);
 
     // We don't care what state the note is in, as long as it's not already in the release state
     if ((0 == (states->release & voiceBit)) && releaseTime)
     {
         // Release time will take some
         states->release |= voiceBit;
-        voice->transitionStartVol = VOICE_CUR_VOL(voice);
+        // start the transition at the current calculated volume
+        if (states->sustain & voiceBit)
+        {
+            voice->transitionStartVol = sustainVol;
+        }
+        else if (voice->transitionTicksTotal)
+        {
+            voice->transitionStartVol = VOICE_CUR_VOL(voice);
+        }
+        else
+        {
+            voice->transitionStartVol = voice->velocity << 1 | 1;
+        }
+
         voice->transitionTicksTotal = voice->transitionTicks = releaseTime;
         voice->targetVol = 0;
 
@@ -171,6 +191,12 @@ static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* vo
         voice->targetVol = 0;
     }
 
+    // Unconditionally unset the voice for all states
+    states->on &= mask;
+    states->attack &= mask;
+    states->decay &= mask;
+    states->sustain &= mask;
+
     for (uint8_t i = 0; i < OSC_PER_VOICE; i++)
     {
         swSynthSetVolume(&voice->oscillators[i], oscVol);
@@ -178,7 +204,7 @@ static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* vo
         // add up the actual current oscillator volume
     }
 
-    if (0 == oscVol)
+    if (0 == releaseTime)
     {
         // If there's no volume on any oscillator, then the note is done playing
         states->release &= mask;
@@ -193,11 +219,13 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
     uint32_t voiceBit = 1 << voiceIdx;
     uint32_t pressureVol = voice->velocity << 1 | 1;
 
+    // While we're in the sustain state, don't bother checking for transitions
     if (voice->transitionTicks != UINT32_MAX)
     {
         while (!voice->transitionTicks)
         {
-            uint32_t sustainVol = CLAMP(voice->timbre->envelope.sustainVol + ((voice->timbre->envelope.sustainVolVel * (int8_t)voice->velocity) >> 16), 0, 255);
+
+            uint32_t sustainVol = CLAMP(voice->timbre->envelope.sustainVol + ((voice->timbre->envelope.sustainVolVel * (int)voice->velocity) >> 8), 0, 255);
 
             if (states->attack & voiceBit)
             {
@@ -205,7 +233,7 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                 states->attack &= ~voiceBit;
                 states->decay |= voiceBit;
 
-                uint32_t decayTime = voice->timbre->envelope.decayTime + ((voice->timbre->envelope.attackTimeVel * (int8_t)voice->velocity) >> 16);
+                uint32_t decayTime = voice->timbre->envelope.decayTime + ((voice->timbre->envelope.attackTimeVel * (int)voice->velocity) >> 8);
 
                 if (voice->transitionTicksTotal)
                 {
@@ -220,12 +248,11 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
 
                 voice->transitionTicksTotal = voice->transitionTicks = decayTime;
                 voice->targetVol = (uint8_t)(sustainVol & 0xFF);
+                pressureVol = sustainVol;
             }
             else if (states->decay & voiceBit)
             {
                 states->decay &= ~voiceBit;
-
-                pressureVol = sustainVol;
 
                 // Ok so we're going from DECAY to SUSTAIN, sustain lasts forever
                 // BUT - we only go to sustain IF the note is still ON (via key on, hold, or sustenuto)
@@ -246,6 +273,8 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                         voice->transitionStartVol = voice->targetVol;
                     }
 
+                    pressureVol = voice->transitionStartVol;
+
                     voice->targetVol = (uint8_t)(sustainVol & 0xFF);
                     voice->transitionTicksTotal = UINT32_MAX;
                     voice->transitionTicks = UINT32_MAX;
@@ -261,7 +290,7 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                     states->release |= voiceBit;
 
                     // Calculate how long the release fadeout will take
-                    uint32_t releaseTime = voice->timbre->envelope.releaseTime + ((voice->timbre->envelope.releaseTimeVel * (int8_t)voice->velocity) >> 16);
+                    uint32_t releaseTime = voice->timbre->envelope.releaseTime + ((voice->timbre->envelope.releaseTimeVel * (int8_t)voice->velocity) >> 8);
 
                     // Save the start volume to current volume and the target to 0
                     if (voice->transitionTicksTotal)
@@ -273,6 +302,7 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                         voice->transitionStartVol = voice->targetVol;
                     }
 
+                    pressureVol = voice->transitionStartVol;
                     voice->targetVol = 0;
 
                     // Set the transition length accordingly
@@ -294,6 +324,12 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                 voice->transitionTicksTotal = UINT32_MAX;
                 voice->transitionTicks = UINT32_MAX;
                 // Note's done, don't need to check again
+                break;
+            }
+            else
+            {
+                voice->transitionTicksTotal = voice->transitionTicks = UINT32_MAX;
+                voice->targetVol = 0;
                 break;
             }
         }
@@ -840,7 +876,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
     }
 
     // Handle ADSR transitions, etc. for all voices
-    uint32_t activeVoices = player->poolVoiceStates.on | player->poolVoiceStates.held | player->poolVoiceStates.sustenuto; //player->poolVoiceStates.attack | player->poolVoiceStates.decay | player->poolVoiceStates.sustain | player->poolVoiceStates.release;
+    uint32_t activeVoices = player->poolVoiceStates.on | player->poolVoiceStates.held | player->poolVoiceStates.sustenuto | player->poolVoiceStates.release; //player->poolVoiceStates.attack | player->poolVoiceStates.decay | player->poolVoiceStates.sustain | player->poolVoiceStates.release;
     while (0 != activeVoices)
     {
         uint8_t voiceIdx = __builtin_ctz(activeVoices);
@@ -1138,28 +1174,24 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
     uint32_t voiceBit = (1 << voiceIdx);
 
-    bool stolen = 0 != (voiceBit & (states->on | states->held));
+    bool stolen = 0 != (voiceBit & (states->on | states->held | states->sustenuto));
 
     // Not good -- we need to figure out who was using this voice before, and clear it
     // This is necessary to fix stuck notes, but doesn't take care of everything
     if (stolen)
     {
-        // TODO add a voice->channel map and get rid of this loop
-        for (int i = 0; i < 16; i++)
+        uint8_t stolenChannel = voices[voiceIdx].channel;
+        if (player->channels[stolenChannel].percussion == chan->percussion && (player->channels[stolenChannel].allocedVoices & voiceBit))
         {
-            if (player->channels[i].percussion == chan->percussion && (player->channels[i].allocedVoices & voiceBit))
-            {
-                player->channels[i].allocedVoices &= ~voiceBit;
-                // Unnecessary but I'll keep it here for clarity, and the compiler can get rid of it
-                states->on &= ~voiceBit;
-                states->held &= ~voiceBit;
-                states->sustenuto &= ~voiceBit;
-                states->attack &= ~voiceBit;
-                states->decay &= ~voiceBit;
-                states->sustain &= ~voiceBit;
-                states->release &= ~voiceBit;
-                break;
-            }
+            player->channels[stolenChannel].allocedVoices &= ~voiceBit;
+            // Unnecessary but I'll keep it here for clarity, and the compiler can get rid of it
+            states->on &= ~voiceBit;
+            states->held &= ~voiceBit;
+            states->sustenuto &= ~voiceBit;
+            states->attack &= ~voiceBit;
+            states->decay &= ~voiceBit;
+            states->sustain &= ~voiceBit;
+            states->release &= ~voiceBit;
         }
     }
 
@@ -1185,10 +1217,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     {
         // The volume based on the note velocity, used for the attack volume
         uint8_t pressureVol          = velocity << 1 | 1;
-        // The volume to be used after the decay stage while the key is pressed or held
-        uint32_t sustainVol = CLAMP(chan->timbre.envelope.sustainVol + ((chan->timbre.envelope.sustainVolVel * (int8_t)velocity) >> 16), 0, 255);
-
-        uint32_t attackTime = chan->timbre.envelope.attackTime + ((chan->timbre.envelope.attackTimeVel * (int8_t)velocity) >> 16);
+        uint32_t attackTime = chan->timbre.envelope.attackTime + ((chan->timbre.envelope.attackTimeVel * (int8_t)velocity) >> 8);
 
         voice->transitionTicks = voice->transitionTicksTotal = attackTime;
         states->attack |= voiceBit;
@@ -1197,73 +1226,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
         // StepVoice() will take care of everything else
 
-        // By default, use the pressure volume for the oscillator
-        /*uint8_t oscVol = sustainVol;
-
-        uint32_t attackTime = chan->timbre.envelope.attackTime + ((chan->timbre.envelope.attackTimeVel * (int8_t)velocity) >> 16);
-        if (attackTime)
-        {
-            // We need to go into attack state
-            states->attack |= voiceBit;
-            voice->transitionTicksTotal = voice->transitionTicks = attackTime;
-            voice->transitionStartVol = voice->targetVol;
-            voice->targetVol = pressureVol;
-        }
-        else
-        {
-            // No time in attack, so go directly to decay
-            uint32_t decayTime = chan->timbre.envelope.decayTime + ((chan->timbre.envelope.attackTimeVel * (int8_t)velocity) >> 16);
-            if (decayTime)
-            {
-                states->decay |= voiceBit;
-                voice->transitionTicksTotal = voice->transitionTicks = decayTime;
-                voice->transitionStartVol = voice->targetVol;
-                voice->targetVol = sustainVol;
-            }
-            else
-            {
-                if (sustainVol)
-                {
-                    states->sustain |= voiceBit;
-                    voice->transitionTicksTotal = UINT32_MAX;
-                    voice->transitionTicks = UINT32_MAX;
-
-                    pressureVol = (uint8_t)(sustainVol & 0x7F);
-                    voice->targetVol = pressureVol;
-                }
-                else
-                {
-                    uint32_t releaseTime = chan->timbre.envelope.releaseTime + ((chan->timbre.envelope.releaseTimeVel * (int8_t)velocity) >> 16);
-
-                    if (releaseTime)
-                    {
-                        states->release |= voiceBit;
-                        voice->transitionTicksTotal = voice->transitionTicks = releaseTime;
-                        voice->transitionStartVol = voice->targetVol;
-                        voice->targetVol = 0;
-                    }
-                    else
-                    {
-                        // Note is already over, do note off...
-                        voice->targetVol = 0;
-                        voice->transitionTicksTotal = voice->transitionTicks = UINT32_MAX;
-                    }
-                }
-            }
-        }
-
-        // Make sure we're in a transitionable state and wouldn't do a divide-by-zero to interpolate the target volume
-        if (voice->transitionTicksTotal != UINT32_MAX)
-        {
-            // Calculate the rate at which the volume will adjust based on the state transition length
-            oscVol = VOICE_CUR_VOL(voice);// voice->transitionStartVol + (voice->targetVol - voice->transitionStartVol) * (voice->transitionTicksTotal - voice->transitionTicks) / voice->transitionTicksTotal;
-        }
-        else
-        {
-            oscVol = (uint8_t)(sustainVol & 0xFF);
-        }*/
-
-        swSynthSetVolume(&voice->oscillators[0], 0);
+        swSynthSetVolume(&voice->oscillators[0], attackTime ? 0 : pressureVol);
         swSynthSetFreqPrecise(&voice->oscillators[0], bendPitchWheel(note, chan->pitchBend));
     }
 }
@@ -1296,7 +1259,7 @@ void midiAfterTouch(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t
             // This is the one we want!
             voice->velocity = velocity;
 
-            uint32_t sustainVol = voice->timbre->envelope.sustainVol + ((voice->timbre->envelope.sustainVolVel * (int8_t)voice->velocity) >> 16);
+            uint32_t sustainVol = voice->timbre->envelope.sustainVol + ((voice->timbre->envelope.sustainVolVel * (int8_t)voice->velocity) >> 8);
 
             if (states->attack & voiceBit)
             {
@@ -1338,6 +1301,7 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
 
             // Unset the on-ness of this note
             states->on &= ~voiceBit;
+
             if (chan->held)
             {
                 states->held |= voiceBit;

@@ -3342,7 +3342,6 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
 
 static void synthMenuCb(const char* label, bool selected, uint32_t value)
 {
-    printf("synthMenuCb(%s)\n", label);
     if (label == menuItemPlayMode)
     {
         if (selected && value != sd->fileMode)
