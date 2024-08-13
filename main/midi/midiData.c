@@ -45,7 +45,7 @@ const midiTimbre_t squareWaveTimbre = {
     .flags = TF_NONE,
     .shape = SHAPE_SQUARE,
     .envelope = {
-        .sustainVol = 127,
+        .sustainVol = 1,
         .sustainVolVel = 0x200,
     },
     .name = "Square Wave",
@@ -56,7 +56,7 @@ const midiTimbre_t sineWaveTimbre = {
     .flags = TF_NONE,
     .shape = SHAPE_SINE,
     .envelope = {
-        .sustainVol = 127,
+        .sustainVol = 1,
         .sustainVolVel = 0x200,
     },
     .name = "Sine Wave",
@@ -67,7 +67,7 @@ const midiTimbre_t triangleWaveTimbre = {
     .flags = TF_NONE,
     .shape = SHAPE_TRIANGLE,
     .envelope = {
-        .sustainVol = 127,
+        .sustainVol = 1,
         .sustainVolVel = 0x200,
     },
     .name = "Triangle Wave",
@@ -78,7 +78,7 @@ const midiTimbre_t sawtoothWaveTimbre = {
     .flags = TF_NONE,
     .shape = SHAPE_SAWTOOTH,
     .envelope = {
-        .sustainVol = 127,
+        .sustainVol = 1,
         .sustainVolVel = 0x200,
     },
     .name = "Sawtooth Wave",
@@ -88,7 +88,7 @@ const midiTimbre_t noiseTimbre = {
     .type = NOISE,
     .flags = TF_NONE,
     .envelope = {
-        .sustainVol = 127,
+        .sustainVol = 1,
         .sustainVolVel = 0x200,
     },
     .name = "Noise",
