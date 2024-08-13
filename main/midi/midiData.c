@@ -15,23 +15,23 @@ const midiTimbre_t acousticGrandPianoTimbre = {
     .envelope = {
         // TODO: Just realized I forgot how ADSR actually works halfway through writing everything else...
         // Pretty fast attack
-        .attackTime = 0, //MS_TO_SAMPLES(32),
+        .attackTime = MS_TO_SAMPLES(64),
         // Decrease attack time by 1ms for every 4 velocity value
-        .attackTimeVel = 0,//TO_FX_FRAC(-MS_TO_SAMPLES(1), 4),
+        .attackTimeVel = TO_FX_FRAC(-MS_TO_SAMPLES(1), 4),
 
         // Take a good long-ish while to reach the sustain level
-        .decayTime = 0, //MS_TO_SAMPLES(75),
+        .decayTime = MS_TO_SAMPLES(75),
         // Take a bit longer the higher the velocity -- 25ms for every 16 velocity (so up to +200ms)
-        .decayTimeVel = 0,//TO_FX_FRAC(MS_TO_SAMPLES(25), 16),
+        .decayTimeVel = TO_FX_FRAC(MS_TO_SAMPLES(25), 16),
 
         // Sustain at 1 plus 75% of initial volume
-        .sustainVol = 127,
-        .sustainVolVel = 0, //TO_FX_FRAC(3, 4),
+        .sustainVol = 1,
+        .sustainVolVel = TO_FX_FRAC(3, 4),
 
         // And a not-too-short release time
-        .releaseTime = 0,//MS_TO_SAMPLES(100),
+        .releaseTime = MS_TO_SAMPLES(100),
         // Plus some extra time if the note was very loud initially - up to double
-        .releaseTimeVel = 0,//TO_FX_FRAC(MS_TO_SAMPLES(50), 63),
+        .releaseTimeVel = MS_TO_SAMPLES(10) << 8, //TO_FX_FRAC(MS_TO_SAMPLES(150), 63),
         // Yup, I'm sure it will sound exactly like a grand piano now!
     },
     .effects = {
@@ -100,13 +100,14 @@ const midiTimbre_t magfestWaveTimbre = {
     .waveIndex = 0,
     .waveFunc = magfestWaveTableFunc,
     .envelope = {
-        .attackTime = MS_TO_SAMPLES(500),
-        .attackTimeVel = 0,
-        .decayTime = MS_TO_SAMPLES(1000),
+        .attackTime = MS_TO_SAMPLES(8),
+        // attack is .5(samples)
+        .attackTimeVel = -0x80,
+        .decayTime = MS_TO_SAMPLES(16),
         .decayTimeVel = 0,
-        .sustainVol = 0,
+        .sustainVol = 1,
         .sustainVolVel = 0x200,
-        .releaseTime = MS_TO_SAMPLES(256),
+        .releaseTime = MS_TO_SAMPLES(320),
         // the higher the velocity the longer the release time
         .releaseTimeVel = 0x800,
     },
