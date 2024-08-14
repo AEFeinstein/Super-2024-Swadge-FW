@@ -5,9 +5,9 @@ environment setup instructions, see [Configuring a Development Environment](#set
 
 ## Installing
 
-To install the emulator, go to the project's [releases page][downloads] and download the appropriate
-`...-emulator.zip` for your operating system. Windows, Linux, and Mac (both Intel and ARM) are supported.
-Then, follow the instructions for your platform below.
+To install the emulator, go to the project's [releases page](https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases)
+and download the appropriate `...-emulator.zip` for your operating system. Windows, Linux, and
+Mac (both Intel and ARM) are supported. Then, follow the instructions for your platform below.
 
 ### Windows
 
@@ -29,8 +29,6 @@ which can be done with the command `chmod +x swadge_emulator`.
    application is not signed, and you will need to click "Open" to continue. The "Open" option will only
    appear if SwadgeEmulator is opened with right-click (or control-click) and Open, and *not* when double-clicking.
 5. The Swadge Emulator window should open to the main menu.
-
-[downloads]: https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases "Swadge Emulator Releases"
 
 ## Key Bindings
 
