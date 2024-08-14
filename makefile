@@ -114,7 +114,8 @@ else
 # Required for OpenGL and some other libraries
 CFLAGS += \
 	-I/opt/X11/include \
-	-I/opt/homebrew/include
+	-I/opt/homebrew/include \
+	-mmacosx-version-min=10.0
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -256,7 +257,7 @@ ifeq ($(HOST_OS),Darwin)
 endif
 
 # These are directories to look for library files in
-LIB_DIRS = 
+LIB_DIRS =
 
 # On MacOS we need to ensure that X11 is added for OpenGL and some others
 ifeq ($(HOST_OS),Darwin)
@@ -274,6 +275,9 @@ LIBRARY_FLAGS += \
 	-static-libstdc++
 else
 LIBRARY_FLAGS += \
+    -framework Foundation \
+	-framework CoreFoundation \
+	-framework CoreMIDI \
 	-framework AudioToolbox
 endif
 
@@ -283,7 +287,6 @@ LIBRARY_FLAGS += \
 	-fsanitize=bounds-strict \
 	-fno-omit-frame-pointer \
 	-static-libasan
-
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
@@ -301,12 +304,16 @@ EXECUTABLE = swadge_emulator
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) print-%
+.PHONY: all assets bundle clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) print-%
 
 # Build the executable
 all: $(EXECUTABLE)
 
-# To build the executable file, you have to compile the objects first
+assets:
+	$(MAKE) -C ./tools/assets_preprocessor/
+	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
+
+# To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBRARY_FLAGS) -o $@
 
@@ -321,6 +328,34 @@ $(CNFS_FILE):
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 	$(MAKE) -C ./tools/cnfs/
 	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+
+bundle: SwadgeEmulator.app
+
+SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns emulator/resources/Info.plist
+	rm -rf SwadgeEmulator.app
+	mkdir -p SwadgeEmulator.app/Contents/{MacOS,Resources,libs}
+	cat emulator/resources/Info.plist | sed "s/##GIT_HASH##/$(GIT_HASH)/" > SwadgeEmulator.app/Contents/Info.plist
+	echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
+	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
+	vtool -set-build-version macos 10.0 10.0 -replace -output SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator $(EXECUTABLE)
+	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator -d ./SwadgeEmulator.app/Contents/libs/
+
+
+build/SwadgeEmulator.icns: emulator/resources/icon.png
+	rm -rf build/SwadgeEmulator.iconset
+	mkdir -p build/SwadgeEmulator.iconset
+	sips -z 16 16     $< --out build/SwadgeEmulator.iconset/icon_16x16.png
+	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_16x16@2x.png
+	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_32x32.png
+	sips -z 64 64     $< --out build/SwadgeEmulator.iconset/icon_32x32@2x.png
+	sips -z 128 128   $< --out build/SwadgeEmulator.iconset/icon_128x128.png
+	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_128x128@2x.png
+	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_256x256.png
+	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_256x256@2x.png
+	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_512x512.png
+	sips -z 1024 1024 $< --out build/SwadgeEmulator.iconset/icon_512x512@2x.png
+	iconutil -c icns -o build/SwadgeEmulator.icns build/SwadgeEmulator.iconset
+	rm -r build/SwadgeEmulator.iconset
 
 # This cleans emulator files
 clean:
