@@ -30,7 +30,7 @@
 #define NVS_OVERHEAD_ENTRIES 12
 
 #ifdef EMU_WINDOWS
-#include <direct.h>
+    #include <direct.h>
 #endif
 
 //==============================================================================
@@ -77,9 +77,8 @@ static const char** nvsFileName = defaultNvsFiles;
 bool initNvs(bool firstTry)
 {
     const char** curFile;
-    for (curFile = defaultNvsFiles;
-        curFile < (defaultNvsFiles + (sizeof(defaultNvsFiles) / sizeof(*defaultNvsFiles)));
-        curFile++)
+    for (curFile = defaultNvsFiles; curFile < (defaultNvsFiles + (sizeof(defaultNvsFiles) / sizeof(*defaultNvsFiles)));
+         curFile++)
     {
         char expanded[1024];
         expandPath(expanded, sizeof(expanded), *curFile);
@@ -116,7 +115,6 @@ bool initNvs(bool firstTry)
             printf("Using NVS file %s\n", *nvsFileName);
             return true;
         }
-
 
         printf("Could not load NVS file %s\n", *curFile);
     }

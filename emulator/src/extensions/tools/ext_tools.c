@@ -76,26 +76,26 @@ static bool useFakeTime       = false;
 static uint64_t fakeTime      = 0;
 static uint64_t fakeFrameTime = 0;
 
-static bool recordScreen = false;
+static bool recordScreen           = false;
 static char recordingFilename[256] = {0};
 
 static bool pauseNextFrame = false;
 
-static bool showFps = false;
+static bool showFps  = false;
 static int fpsPaneId = -1;
 static int64_t frameStartTime;
 static int64_t frameTimes[120] = {0};
 static const int frameTimeSize = sizeof(frameTimes) / sizeof(int64_t);
-static int frameStartIndex = 0;
-static int frameEndIndex = 0;
+static int frameStartIndex     = 0;
+static int frameEndIndex       = 0;
 
 static int64_t lastFrameTime = 0;
-static float lastFps = 0.0;
+static float lastFps         = 0.0;
 
-static bool showConsole = false;
-static int consolePaneId = -1;
+static bool showConsole         = false;
+static int consolePaneId        = -1;
 static char consoleBuffer[1024] = {0};
-static char* consolePtr = consoleBuffer;
+static char* consolePtr         = consoleBuffer;
 
 static char consoleOutput[1024] = {0};
 
@@ -121,8 +121,8 @@ static bool toolsInit(emuArgs_t* emuArgs)
 
     if (emuArgs->showFps)
     {
-        fpsPaneId = requestPane(&toolsEmuExtension, PANE_BOTTOM, 30, 30);
-        showFps = true;
+        fpsPaneId      = requestPane(&toolsEmuExtension, PANE_BOTTOM, 30, 30);
+        showFps        = true;
         frameStartTime = esp_timer_get_time();
     }
 
@@ -153,17 +153,18 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
                 // Handle console command
                 handleConsoleCommand(consoleBuffer);
 
-                consolePtr = consoleBuffer;
+                consolePtr  = consoleBuffer;
                 *consolePtr = '\0';
             }
             else if (' ' <= keycode && keycode <= '~')
             {
-                if ((('A' <= keycode && keycode <= 'Z') || ('a' <= keycode && keycode <= 'z')) && (modifiers & EMU_MOD_SHIFT))
+                if ((('A' <= keycode && keycode <= 'Z') || ('a' <= keycode && keycode <= 'z'))
+                    && (modifiers & EMU_MOD_SHIFT))
                 {
                     keycode ^= 32;
                 }
                 *consolePtr++ = (char)(keycode & 0x7F);
-                *consolePtr = '\0';
+                *consolePtr   = '\0';
             }
         }
 
@@ -177,8 +178,8 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
         {
             consolePaneId = requestPane(&toolsEmuExtension, PANE_TOP, 10, 32);
         }*/
-        consolePtr = consoleBuffer;
-        *consolePtr = '\0';
+        consolePtr     = consoleBuffer;
+        *consolePtr    = '\0';
         *consoleOutput = '\0';
 
         setPaneVisibility(&toolsEmuExtension, consolePaneId, true);
@@ -269,7 +270,7 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
             }
         }
     }
-    else if (useFakeTime && keycode == CNFG_KEY_PAGE_UP)// && modifiers == EMU_MOD_CTRL)
+    else if (useFakeTime && keycode == CNFG_KEY_PAGE_UP) // && modifiers == EMU_MOD_CTRL)
     {
         // Speed up frames
         if (!down)
@@ -289,7 +290,7 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
             printf("Frame time set to %" PRIu64 "\n", fakeFrameTime);
         }
     }
-    else if (useFakeTime && keycode == CNFG_KEY_PAGE_DOWN)// && modifiers == EMU_MOD_CTRL)
+    else if (useFakeTime && keycode == CNFG_KEY_PAGE_DOWN) // && modifiers == EMU_MOD_CTRL)
     {
         // Slow down frames
         if (!down)
@@ -333,9 +334,9 @@ static void toolsPreFrame(uint64_t frame)
     }
 
     // track the frame time in the buffer
-    int64_t now = esp_timer_get_time();
+    int64_t now               = esp_timer_get_time();
     frameTimes[frameEndIndex] = now - frameStartTime;
-    frameStartTime = now;
+    frameStartTime            = now;
 
     // if the buffer is full, advance the start index
     if (((frameEndIndex + 1) % frameTimeSize) == frameStartIndex)
@@ -348,7 +349,7 @@ static void toolsPreFrame(uint64_t frame)
 
     // calculate the actual time
     int64_t totalLength = 0;
-    int totalFrames = 0;
+    int totalFrames     = 0;
     for (int i = frameStartIndex; i != frameEndIndex; i = (i + 1) % frameTimeSize)
     {
         totalLength += frameTimes[i];
@@ -356,14 +357,14 @@ static void toolsPreFrame(uint64_t frame)
     }
 
     lastFrameTime = (totalLength) / (totalFrames);
-    lastFps = 1000000.0 * totalFrames / totalLength;
+    lastFps       = 1000000.0 * totalFrames / totalLength;
 }
 
 static void toolsPostFrame(uint64_t frame)
 {
     static uint64_t index = 0;
-    static bool setup = false;
-    static ge_GIF* gif = NULL;
+    static bool setup     = false;
+    static ge_GIF* gif    = NULL;
 
     if (recordScreen)
     {
@@ -377,7 +378,7 @@ static void toolsPostFrame(uint64_t frame)
         {
             if (!recordingFilename[0])
             {
-                getTimestampFilename(recordingFilename, sizeof(recordingFilename)-1, "screen-recording-", "gif");
+                getTimestampFilename(recordingFilename, sizeof(recordingFilename) - 1, "screen-recording-", "gif");
             }
 
             uint8_t gifPalette[256 * 3];
@@ -390,9 +391,9 @@ static void toolsPostFrame(uint64_t frame)
                 if (i < cTransparent)
                 {
                     uint32_t rgb = paletteToRGB((paletteColor_t)i);
-                    *r = (rgb >> 16) & 0xFF;
-                    *g = (rgb >> 8) & 0xFF;
-                    *b = (rgb & 0xFF);
+                    *r           = (rgb >> 16) & 0xFF;
+                    *g           = (rgb >> 8) & 0xFF;
+                    *b           = (rgb & 0xFF);
                 }
                 else
                 {
@@ -413,8 +414,8 @@ static void toolsPostFrame(uint64_t frame)
             setup = true;
         }
 
-        //char filebuf[128];
-        //snprintf(filebuf, sizeof(filebuf), "%s/%06" PRIu64 ".png", fnbuf, index++);
+        // char filebuf[128];
+        // snprintf(filebuf, sizeof(filebuf), "%s/%06" PRIu64 ".png", fnbuf, index++);
         memcpy(gif->frame, fb, TFT_WIDTH * TFT_HEIGHT);
         makeTransparent(gif->frame);
         ge_add_frame(gif, MAX(1, getFrameRateUs() / 10000));
@@ -455,7 +456,7 @@ static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, 
 
     if (showConsole)
     {
-        //const emuPane_t* consolePane = &panes[i];
+        // const emuPane_t* consolePane = &panes[i];
         char buf[1030];
         buf[0] = '>';
         buf[1] = ' ';
@@ -503,8 +504,8 @@ static void handleConsoleCommand(const char* command)
 {
     char tmpBuffer[sizeof(consoleBuffer)];
     const char* cur = command;
-    char* out = tmpBuffer;
-    char* argStart = out;
+    char* out       = tmpBuffer;
+    char* argStart  = out;
 
     // Divide the command at spaces and store a pointer to the start of each one
     const char* values[64];
@@ -518,7 +519,7 @@ static void handleConsoleCommand(const char* command)
             *out++ = '\0';
 
             values[argCount++] = argStart;
-            argStart = (out);
+            argStart           = (out);
 
             if (*cur)
             {
@@ -550,7 +551,8 @@ static void handleConsoleCommand(const char* command)
 
     if (argCount > 0)
     {
-        for (const consoleCommand_t* action = getConsoleCommands(); action < (getConsoleCommands() + consoleCommandCount()); action++)
+        for (const consoleCommand_t* action = getConsoleCommands();
+             action < (getConsoleCommands() + consoleCommandCount()); action++)
         {
             if (!strcmp(action->name, values[0]))
             {
@@ -572,18 +574,18 @@ static void handleConsoleCommand(const char* command)
 // This is copy-pasted a lot from plotRoundedCorners() but oh well it's pretty different
 static void makeTransparent(uint8_t* framebuffer)
 {
-    int r = 40;
+    int r  = 40;
     int or = r;
     int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
     do
     {
         for (int xLine = 0; xLine <= (or +x); xLine++)
         {
-
-            framebuffer[(TFT_HEIGHT - (or - y) - 1) * TFT_WIDTH + (xLine)] = cTransparent;                 /* I.   Quadrant -x -y */
-            framebuffer[(TFT_HEIGHT - (or - y) - 1) * TFT_WIDTH + (TFT_WIDTH - xLine - 1)] = cTransparent; /* II.  Quadrant +x -y */
-            framebuffer[(or - y) * TFT_WIDTH + (xLine)] = cTransparent;                                    /* III. Quadrant -x -y */
-            framebuffer[(or - y) * TFT_WIDTH + (TFT_WIDTH - xLine - 1)] = cTransparent;                    /* IV.  Quadrant +x -y */
+            framebuffer[(TFT_HEIGHT - (or -y) - 1) * TFT_WIDTH + (xLine)] = cTransparent; /* I.   Quadrant -x -y */
+            framebuffer[(TFT_HEIGHT - (or -y) - 1) * TFT_WIDTH + (TFT_WIDTH - xLine - 1)]
+                = cTransparent;                                                        /* II.  Quadrant +x -y */
+            framebuffer[(or -y) * TFT_WIDTH + (xLine)]                 = cTransparent; /* III. Quadrant -x -y */
+            framebuffer[(or -y) * TFT_WIDTH + (TFT_WIDTH - xLine - 1)] = cTransparent; /* IV.  Quadrant +x -y */
         }
 
         r = err;
@@ -613,7 +615,7 @@ static const char* getScreenshotName(char* buffer, size_t maxlen)
 bool takeScreenshot(const char* name)
 {
     uint16_t width, height;
-    uint32_t* bitmap = getDisplayBitmap(&width, &height);
+    uint32_t* bitmap    = getDisplayBitmap(&width, &height);
     bool timerWasPaused = emuTimerIsPaused();
 
     if (!timerWasPaused)

@@ -122,9 +122,8 @@ static void writeEntry(const replayEntry_t* entry);
 //==============================================================================
 
 static const char* replayLogTypeStrs[] = {
-    "BtnDown", "BtnUp",  "TouchPhi", "TouchR", "TouchI",     "AccelX",
-    "AccelY",  "AccelZ", "Fuzz",     "Quit",   "Screenshot", "SetMode",
-    "Seed",
+    "BtnDown", "BtnUp", "TouchPhi", "TouchR",     "TouchI",  "AccelX", "AccelY",
+    "AccelZ",  "Fuzz",  "Quit",     "Screenshot", "SetMode", "Seed",
 };
 
 static const char* replayButtonNames[] = {
@@ -143,7 +142,7 @@ emuExtension_t replayEmuExtension = {
 };
 
 bool replayInitialized = false;
-replay_t replay = {0};
+replay_t replay        = {0};
 
 //==============================================================================
 // Functions
@@ -793,8 +792,8 @@ void startRecording(const char* filename)
 
             // Immediately record the start mode
             replayEntry_t modeEntry = {
-                .type = SET_MODE,
-                .time = 0,
+                .type     = SET_MODE,
+                .time     = 0,
                 .modeName = emulatorArgs.startMode,
             };
             writeEntry(&modeEntry);
@@ -810,8 +809,8 @@ void startRecording(const char* filename)
 
             // Immediately record the start mode
             replayEntry_t seedEntry = {
-                .type = RANDOM_SEED,
-                .time = 0,
+                .type    = RANDOM_SEED,
+                .time    = 0,
                 .seedVal = emulatorArgs.seed,
             };
             writeEntry(&seedEntry);
@@ -882,8 +881,8 @@ void emulatorRecordRandomSeed(uint32_t seed)
     {
         replayEntry_t entry = {
             // We want this to happen as early as possible so minor timing differences don't cause it to get missed
-            .time = 0,
-            .type = RANDOM_SEED,
+            .time    = 0,
+            .type    = RANDOM_SEED,
             .seedVal = seed,
         };
         writeEntry(&entry);

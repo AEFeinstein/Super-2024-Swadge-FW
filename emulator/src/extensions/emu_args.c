@@ -125,7 +125,7 @@ static const char mainDoc[] = "Emulates a swadge";
 // Long argument name definitions
 // These MUST be defined here, so that they are
 // the same in both options and argDocs
-static const char argFakeFps[]    = "fake-fps";
+static const char argFakeFps[]     = "fake-fps";
 static const char argFakeTime[]    = "fake-time";
 static const char argFullscreen[]  = "fullscreen";
 static const char argFuzz[]        = "fuzz";
@@ -233,7 +233,7 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
         // Set fake FPS
         if (arg)
         {
-            char* end = NULL;
+            char* end            = NULL;
             emulatorArgs.fakeFps = strtof(arg, &end);
             if (emulatorArgs.fakeFps == 0.0 && end == arg)
             {

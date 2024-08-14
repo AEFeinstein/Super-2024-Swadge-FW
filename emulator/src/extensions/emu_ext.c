@@ -339,11 +339,11 @@ int requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, ui
     {
         emuPaneInfo_t* paneInfo = calloc(1, sizeof(emuPaneInfo_t));
 
-        paneInfo->loc  = loc;
-        paneInfo->minW = minW;
-        paneInfo->minH = minH;
+        paneInfo->loc          = loc;
+        paneInfo->minW         = minW;
+        paneInfo->minH         = minH;
         paneInfo->pane.visible = true;
-        paneInfo->pane.id = extInfo->panes.length;
+        paneInfo->pane.id      = extInfo->panes.length;
 
         push(&extInfo->panes, paneInfo);
         return paneInfo->pane.id;
@@ -371,8 +371,8 @@ void setPaneVisibility(const emuExtension_t* ext, int paneId, bool visible)
 
         if (node != NULL)
         {
-            emuPaneInfo_t* pane = node->val;
-            pane->pane.visible = visible;
+            emuPaneInfo_t* pane           = node->val;
+            pane->pane.visible            = visible;
             extManager.paneMinsCalculated = false;
         }
     }
@@ -456,7 +456,7 @@ bool calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
 
         // Cache is valid again!
         extManager.paneMinsCalculated = true;
-        result = true;
+        result                        = true;
     }
 
     // Copy the cached pane minimums to the output
@@ -529,7 +529,6 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
         winPanes[PANE_LEFT].paneH = 0;
     }
 
-
     // The screen will be just to the right of the left pane and its divider
     screenPane->paneX = winPanes[PANE_LEFT].paneW + leftDivW;
 
@@ -546,7 +545,6 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
         winPanes[PANE_RIGHT].paneW = 0;
         winPanes[PANE_RIGHT].paneH = 0;
     }
-
 
     // Now do the horizontal panes, which have the same X and W as the screen
     winPanes[PANE_TOP].paneX = screenPane->paneX;

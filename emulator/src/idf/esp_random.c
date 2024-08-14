@@ -10,7 +10,7 @@
 #include "ext_replay.h"
 #include "esp_timer.h"
 
-static bool seeded = false;
+static bool seeded       = false;
 static bool seedValueSet = false;
 static unsigned int seed = 0;
 
@@ -22,10 +22,10 @@ uint32_t esp_random(void)
         if (!seedValueSet)
         {
             pid_t pid = getpid();
-            seed = time(NULL) ^ pid;
+            seed      = time(NULL) ^ pid;
         }
 
-        seeded    = true;
+        seeded = true;
         srand(seed);
 
         printf("Random Seed: %" PRIu32 "\n", seed);

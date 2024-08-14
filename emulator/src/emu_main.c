@@ -99,13 +99,13 @@
 #define DIV_COLOR 0x808080FF
 
 #if defined(CNFGOGL)
-    #define CORNER_COLOR BG_COLOR
-    #define PAUSED_COLOR 0xFFFF00FF
+    #define CORNER_COLOR    BG_COLOR
+    #define PAUSED_COLOR    0xFFFF00FF
     #define RECORDING_COLOR 0xFF0000FF
 #else
     // Swap RGBA to ARGB
-    #define CORNER_COLOR (((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24))
-    #define PAUSED_COLOR 0xFFFFFF00
+    #define CORNER_COLOR    (((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24))
+    #define PAUSED_COLOR    0xFFFFFF00
     #define RECORDING_COLOR 0xFFFF0000
 #endif
 
@@ -288,7 +288,8 @@ void taskYIELD(void)
     // Below: Support for pausing and unpausing the emulator
     // Keep track of whether we've called the pre-frame callbacks yet
     bool preFrameCalled = false;
-    do {
+    do
+    {
         // Always handle inputs
         if (!CNFGHandleInput())
         {
@@ -408,8 +409,8 @@ void taskYIELD(void)
         // Sleep for one ms
         static struct timespec tRemaining = {0};
         const struct timespec tSleep      = {
-                .tv_sec  = 0 + tRemaining.tv_sec,
-                .tv_nsec = 1000000 + tRemaining.tv_nsec,
+                 .tv_sec  = 0 + tRemaining.tv_sec,
+                 .tv_nsec = 1000000 + tRemaining.tv_nsec,
         };
         nanosleep(&tSleep, &tRemaining);
 
@@ -436,8 +437,8 @@ void taskYIELD(void)
         // shortcuts that)
         tElapsedUs = 0;
 
-    // Make sure we stop if no longer running, but otherwise run until the emulator is unpaused
-    // and the pre-frame callbacks have all been called
+        // Make sure we stop if no longer running, but otherwise run until the emulator is unpaused
+        // and the pre-frame callbacks have all been called
     } while (isRunning && (!preFrameCalled || emuTimerIsPaused()));
 }
 

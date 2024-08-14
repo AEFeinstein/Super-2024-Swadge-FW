@@ -12,12 +12,11 @@
 #include <inttypes.h>
 
 #if defined(EMU_WINDOWS)
-#include <direct.h>
-#define SUPPORT_LINKS 0
+    #include <direct.h>
+    #define SUPPORT_LINKS 0
 #else
-#define SUPPORT_LINKS 1
+    #define SUPPORT_LINKS 1
 #endif
-
 
 /**
  * @brief Create a directory
@@ -54,19 +53,20 @@ bool makeDirs(const char* path)
         if (home)
         {
             strncpy(buffer, home, sizeof(buffer) - 1);
-            buffer[sizeof(buffer)-1] = '\0';
+            buffer[sizeof(buffer) - 1] = '\0';
         }
 
         cur++;
     }
 
     // We want to make the base dir first
-    do {
+    do
+    {
         // Ignore an empty string
         if (buffer[0])
         {
             struct stat statbuf = {0};
-            int statResult = stat(buffer, &statbuf);
+            int statResult      = stat(buffer, &statbuf);
             if (0 == statResult)
             {
                 if ((statbuf.st_mode & S_IFREG) == S_IFREG)
@@ -83,7 +83,7 @@ bool makeDirs(const char* path)
                     char tmp[1024];
                     strncpy(tmp, buffer, sizeof(tmp));
                     readlink(tmp, buffer, sizeof(buffer) - strlen(buffer) - 1);
-                    //printf("Symbolic Link: %s --> %s\n", tmp, buffer);
+                    // printf("Symbolic Link: %s --> %s\n", tmp, buffer);
                 }
 #endif
                 else if ((statbuf.st_mode & S_IFDIR) != S_IFDIR)
@@ -116,8 +116,8 @@ bool makeDirs(const char* path)
 
         while (*cur == '/')
         {
-            int len = strlen(buffer);
-            buffer[len] = '/';
+            int len         = strlen(buffer);
+            buffer[len]     = '/';
             buffer[len + 1] = '\0';
 
             cur++;
@@ -150,10 +150,9 @@ bool makeDirs(const char* path)
 void expandPath(char* buffer, size_t length, const char* path)
 {
     const char* cur = path;
-    char* out = buffer;
+    char* out       = buffer;
 
     *out = '\0';
-
 
     if (*cur == '~')
     {
@@ -198,7 +197,8 @@ const char* getTimestampFilename(char* dst, size_t n, const char* prefix, const 
     uint32_t tries = 0;
     do
     {
-        snprintf(dst, n, "%s%" PRIu64 "%03" PRIu64 "%s%s", prefix, timeSec, timeMillis, ((ext && *ext) ? "." : ""), ext);
+        snprintf(dst, n, "%s%" PRIu64 "%03" PRIu64 "%s%s", prefix, timeSec, timeMillis, ((ext && *ext) ? "." : ""),
+                 ext);
         // Increment millis by one in case the file already exists
         timeMillis++;
 

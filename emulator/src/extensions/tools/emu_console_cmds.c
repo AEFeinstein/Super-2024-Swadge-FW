@@ -14,11 +14,11 @@ static int replayCommandCb(const char** args, int argCount, char* out);
 static int helpCommandCb(const char** args, int argCount, char* out);
 
 static const consoleCommand_t consoleCommands[] = {
-    { .name = "screenshot", .cb = screenshotCommandCb },
-    { .name = "mode",       .cb = setModeCommandCb },
-    { .name = "record",     .cb = recordCommandCb },
-    { .name = "replay",     .cb = replayCommandCb },
-    { .name = "help",       .cb = helpCommandCb },
+    {.name = "screenshot", .cb = screenshotCommandCb},
+    {.name = "mode", .cb = setModeCommandCb},
+    {.name = "record", .cb = recordCommandCb},
+    {.name = "replay", .cb = replayCommandCb},
+    {.name = "help", .cb = helpCommandCb},
 };
 
 const consoleCommand_t* getConsoleCommands(void)
@@ -110,7 +110,8 @@ static int helpCommandCb(const char** args, int argCount, char* out)
     char* cur = out;
 
     cur += snprintf(cur, 1024, "Available Commands:\n");
-    for (const consoleCommand_t* action = consoleCommands; action < (consoleCommands + ARRAY_SIZE(consoleCommands)); action++)
+    for (const consoleCommand_t* action = consoleCommands; action < (consoleCommands + ARRAY_SIZE(consoleCommands));
+         action++)
     {
         cur += snprintf(cur, 1024 - (cur - out), "- %s\n", action->name);
     }
