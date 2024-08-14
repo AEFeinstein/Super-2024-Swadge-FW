@@ -955,6 +955,7 @@ INPUT                  = ./main \
                          ./docs/CONTRIBUTING.md \
                          ./docs/CODE_OF_CONDUCT.md \
                          ./docs/PORTING.md \
+                         ./docs/EMULATOR.md \
                          ./docs/SERIAL_DEBUG.md
 
 # This tag can be used to specify the character encoding of the source files
