@@ -408,10 +408,6 @@ void taskYIELD(void)
         };
         nanosleep(&tSleep, &tRemaining);
 
-        // Below: Support for pausing and unpausing the emulator
-        // Note:  Remove the above doExtPreFrameCb()... if uncommenting the below
-        // Don't call the pre-frame callbacks until the emulator is unpaused.
-        // And also, only call it once per frame
         // This means that the pre-frame callback gets called once (assuming the post-frame
         // callback didn't already pause) and then, if one of them pauses, they don't get called
         // again until after, which is good since that's the only way we'd be able to handle input
