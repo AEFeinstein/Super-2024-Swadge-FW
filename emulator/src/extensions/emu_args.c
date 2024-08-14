@@ -386,7 +386,7 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
                 return false;
             }
 
-            if (arg < 0)
+            if (emulatorArgs.seed < 0)
             {
                 printf("ERR: Seed value must be greater than or equal to 0\n");
                 return false;
