@@ -26,7 +26,7 @@
  */
 int makeDir(const char* path)
 {
-#if defined(EMU_WINDDOWS)
+#if defined(EMU_WINDOWS)
     return _mkdir(path);
 #else
     return mkdir(path, 0777);
