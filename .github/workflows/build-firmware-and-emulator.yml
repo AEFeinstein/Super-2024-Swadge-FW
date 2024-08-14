@@ -73,7 +73,15 @@ jobs:
     - name: Install homebrew packages
       if: matrix.family == 'osx'
       run: |
-        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake graphviz dylibbundler
+        # Hack, because homebrew doesn't have anything like `--exclude python` or `--no-link python` flag
+        # Instead you have --ignore-dependencies, which ignores everything. So, let's install them manually, yay.
+        # Install all dependencies on graphviz and its dependency, gts
+        brew install jasper netpbm gdk-pixbuf fribidi pango librsvg
+        # Install gts without its remaining dependency, python
+        brew install --ignore-dependencies gts
+        # Install graphviz, now that all of its dependencies are installed
+        brew install graphviz
+        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake dylibbundler
 
     - name: Install apt packages
       if: matrix.family == 'linux'
