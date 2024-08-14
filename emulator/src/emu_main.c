@@ -296,12 +296,6 @@ void taskYIELD(void)
             isRunning = false;
         }
 
-        // Always handle inputs
-        if (!CNFGHandleInput())
-        {
-            isRunning = false;
-        }
-
         // If not running anymore, don't handle graphics
         // Must be checked after handling input, before graphics
         if (!isRunning)
