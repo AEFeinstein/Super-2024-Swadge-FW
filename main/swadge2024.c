@@ -24,6 +24,9 @@
  *
  * \section start Where to Start
  *
+ * If you just want to run the Swadge emulator without setting up a development environment, see the \ref emulator
+ * for an installation guide and usage instructions.
+ *
  * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
  * pages to read from here.
  *
@@ -758,6 +761,16 @@ void openQuickSettings(void)
 void setFrameRateUs(uint32_t newFrameRateUs)
 {
     frameRateUs = newFrameRateUs;
+}
+
+/**
+ * @brief Get the current framerate, in microseconds
+ *
+ * @return uint32_t The time between frame draws, in microseconds
+ */
+uint32_t getFrameRateUs(void)
+{
+    return frameRateUs;
 }
 
 /**
