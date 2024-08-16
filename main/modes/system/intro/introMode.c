@@ -5,9 +5,9 @@
 #include <stdint.h>
 
 #include "mainMenu.h"
-#include "spiffs_font.h"
-#include "spiffs_wsg.h"
-#include "spiffs_json.h"
+#include "fs_font.h"
+#include "fs_wsg.h"
+#include "fs_json.h"
 #include "swadge2024.h"
 #include "macros.h"
 #include "menu.h"
@@ -82,16 +82,16 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_START,
         },
-        .title = "Mode Button",
-        .detail = "The Mode button, like the name implies, is mode-specific, but usually pauses a game. Give it a try!",
+        .title = "Pause Button",
+        .detail = "The Pause button is mode-specific, but usually pauses a game or performs a special function. Give it a try!",
     },
     {
         .trigger = {
             .type = BUTTON_PRESS,
             .buttons = PB_SELECT,
         },
-        .title = "Pause Button",
-        .detail = "The Pause button is special! A short press opens up the Quick Settings menu.",
+        .title = "Menu Button",
+        .detail = "The Menu button is special! A short press opens up the Quick Settings menu.",
     },
     {
         .trigger = {
@@ -113,7 +113,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .custom.checkFn = introCheckQuickSettingsTrigger,
         },
         .title = "",
-        .detail = "This is the Quick Settings Menu! It's available in all modes, except for the Main Menu and USB Gamepad. Press the Pause button again to close it.",
+        .detail = "This is the Quick Settings Menu! It's available in all modes, except for the Main Menu and USB Gamepad. Press the Menu button again to close it.",
     },
     {
         .trigger = {
@@ -340,23 +340,23 @@ static void introEnterMode(void)
     // a
     iv->buttonIcons[4].icon    = &iv->icon.button.a;
     iv->buttonIcons[4].visible = true;
-    iv->buttonIcons[4].x       = 95;
-    iv->buttonIcons[4].y       = 20;
+    iv->buttonIcons[4].x       = 105;
+    iv->buttonIcons[4].y       = 10;
 
     // b
     iv->buttonIcons[5].icon    = &iv->icon.button.b;
     iv->buttonIcons[5].visible = true;
-    iv->buttonIcons[5].x       = 105;
-    iv->buttonIcons[5].y       = 10;
+    iv->buttonIcons[5].x       = 95;
+    iv->buttonIcons[5].y       = 20;
 
     // start
-    iv->buttonIcons[6].icon    = &iv->icon.button.menu;
+    iv->buttonIcons[6].icon    = &iv->icon.button.pause;
     iv->buttonIcons[6].visible = true;
     iv->buttonIcons[6].x       = 70;
     iv->buttonIcons[6].y       = 15;
 
     // select
-    iv->buttonIcons[7].icon    = &iv->icon.button.pause;
+    iv->buttonIcons[7].icon    = &iv->icon.button.menu;
     iv->buttonIcons[7].visible = true;
     iv->buttonIcons[7].x       = 50;
     iv->buttonIcons[7].y       = 15;

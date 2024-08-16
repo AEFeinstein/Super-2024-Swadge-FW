@@ -1,10 +1,10 @@
 idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "asset_loaders/heatshrink_decoder.c"
                             "asset_loaders/heatshrink_helper.c"
-                            "asset_loaders/spiffs_font.c"
-                            "asset_loaders/spiffs_json.c"
-                            "asset_loaders/spiffs_txt.c"
-                            "asset_loaders/spiffs_wsg.c"
+                            "asset_loaders/fs_font.c"
+                            "asset_loaders/fs_json.c"
+                            "asset_loaders/fs_txt.c"
+                            "asset_loaders/fs_wsg.c"
                             "colorchord/DFT32.c"
                             "colorchord/embeddedNf.c"
                             "colorchord/embeddedOut.c"
@@ -54,6 +54,8 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "modes/utilities/timer/modeTimer.c"
                             "swadge2024.c"
                             "utils/color_utils.c"
+                            "utils/cnfs.c"
+                            "utils/cnfs_image.c"
                             "utils/dialogBox.c"
                             "utils/fl_math/geometryFl.c"
                             "utils/fl_math/vectorFl2d.c"
@@ -78,7 +80,6 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                   hdw-led
                                   hdw-mic
                                   hdw-nvs
-                                  hdw-spiffs
                                   hdw-tft
                                   hdw-temperature
                                   hdw-usb
@@ -119,19 +120,29 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./utils"
                                 "./utils/fl_math")
 
-function(spiffs_file_preprocessor)
-    add_custom_target(spiffs_preprocessor ALL
-    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/spiffs_file_preprocessor/
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../spiffs_image/
-    )
-endfunction()
+# Custom target will always cause its dependencies to be evaluated and is
+# run by default
+add_custom_target(dummy_target ALL
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
+)
 
-# Create a SPIFFS image from the contents of the 'spiffs_image' directory
-# that fits the partition named 'storage'. FLASH_IN_PROJECT indicates that
-# the generated image should be flashed when the entire project is flashed to
-# the target with 'idf.py -p PORT flash'.
-spiffs_file_preprocessor()
-spiffs_create_partition_image(storage ../spiffs_image FLASH_IN_PROJECT)
+# custom_output will always be rebuilt because it depends on always_rebuild
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
+    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
+    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs/cnfs_gen ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
+    DEPENDS always_rebuild
+)
+
+# Dummy output which is never actually produced. Anything that depends on
+# this will always be rebuilt.
+add_custom_command(
+    OUTPUT always_rebuild
+    COMMAND cmake -E echo
+)
 
 # Save the git hash in a variable
 execute_process(

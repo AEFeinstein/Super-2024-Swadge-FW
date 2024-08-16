@@ -12,7 +12,7 @@
 #include "plLeveldef.h"
 #include "esp_random.h"
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 
 //==============================================================================
 // Function Prototypes

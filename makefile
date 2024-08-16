@@ -41,20 +41,31 @@ ifeq (, $(shell which $(CLANG_FORMAT)))
 	CLANG_FORMAT:=clang-format-17
 endif
 
+ifeq ($(HOST_OS),Linux)
+	ifneq (,$(shell getent group plugdev))
+		UDEV_GROUP:=plugdev
+	else
+		UDEV_GROUP:=$(USER)
+	endif
+endif
+
 ################################################################################
 # Source Files
 ################################################################################
+
+CNFS_FILE = main/utils/cnfs_image.c
 
 # This is a list of directories to scan for c files recursively
 SRC_DIRS_RECURSIVE = emulator/src main
 # This is a list of directories to scan for c files not recursively
 SRC_DIRS_FLAT = emulator/src-lib
 # This is a list of files to compile directly. There's no scanning here
-SRC_FILES = 
+# cnfs_image.c may not exist when the makefile is invoked, explicitly list it
+SRC_FILES = $(CNFS_FILE)
 # This is all the source directories combined
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
-# This is all the source files combined
-SOURCES   = $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES)
+# This is all the source files combined and deduplicated
+SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES))
 
 # The emulator doesn't build components, but there is a target for formatting them
 ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
@@ -81,7 +92,6 @@ INC = $(patsubst %, -I%, $(INC_DIRS) )
 CFLAGS = \
 	-c \
 	-g \
-	-static-libstdc++ \
 	-fdiagnostics-color=always \
 	-ffunction-sections \
 	-fdata-sections \
@@ -96,21 +106,22 @@ ifneq ($(HOST_OS),Darwin)
 # Incompatible flags for clang on MacOS
 CFLAGS += \
 	-static-libgcc \
+	-static-libstdc++ \
 	-fstrict-volatile-bitfields \
-	-fno-tree-switch-conversion
+	-fno-tree-switch-conversion \
+	-fno-omit-frame-pointer
 else
 # Required for OpenGL and some other libraries
 CFLAGS += \
 	-I/opt/X11/include \
-	-I/opt/homebrew/include
+	-I/opt/homebrew/include \
+	-mmacosx-version-min=10.0
 endif
 
 ifeq ($(HOST_OS),Linux)
 CFLAGS += \
 	-fsanitize=address \
-	-fsanitize=bounds-strict \
-	-fno-omit-frame-pointer
-
+	-fsanitize=bounds-strict
 ENABLE_GCOV=false
 
 ifeq ($(ENABLE_GCOV),true)
@@ -129,15 +140,13 @@ CFLAGS_WARNINGS = \
 	-Wno-unused-parameter \
 	-Wno-sign-compare \
 	-Wno-enum-conversion \
-	-Wno-error=unused-but-set-variable \
-	-Wno-old-style-declaration
+	-Wno-error=unused-but-set-variable
 
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \
 	-Wundef \
 	-Wformat=2 \
 	-Winvalid-pch \
-	-Wlogical-op \
 	-Wmissing-format-attribute \
 	-Wmissing-include-dirs \
 	-Wpointer-arith \
@@ -145,7 +154,6 @@ CFLAGS_WARNINGS_EXTRA = \
 	-Wuninitialized \
 	-Wshadow \
 	-Wredundant-decls \
-	-Wjump-misses-init \
 	-Wswitch \
 	-Wcast-align \
 	-Wformat-nonliteral \
@@ -162,6 +170,16 @@ CFLAGS_WARNINGS_EXTRA = \
 #	-Wconversion \
 #	-Wsign-conversion \
 #	-Wdouble-promotion
+
+ifneq ($(HOST_OS),Darwin)
+# Incompatible warnings for clang on MacOS
+CFLAGS_WARNINGS += \
+	-Wno-old-style-declaration
+
+CFLAGS_WARNINGS_EXTRA += \
+	-Wlogical-op \
+	-Wjump-misses-init
+endif
 
 ################################################################################
 # Defines
@@ -235,11 +253,11 @@ ifeq ($(HOST_OS),Linux)
     LIBS = m X11 asound pulse rt GL GLX pthread Xext Xinerama
 endif
 ifeq ($(HOST_OS),Darwin)
-    LIBS = m X11 GL pulse pthread Xext Xinerama
+    LIBS = m X11 GL pthread Xext Xinerama
 endif
 
 # These are directories to look for library files in
-LIB_DIRS = 
+LIB_DIRS =
 
 # On MacOS we need to ensure that X11 is added for OpenGL and some others
 ifeq ($(HOST_OS),Darwin)
@@ -248,13 +266,19 @@ endif
 
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
-	-static-libstdc++ \
 	-ggdb
 
 # Incompatible flags for clang on MacOS
 ifneq ($(HOST_OS),Darwin)
 LIBRARY_FLAGS += \
-	-static-libgcc
+	-static-libgcc \
+	-static-libstdc++
+else
+LIBRARY_FLAGS += \
+    -framework Foundation \
+	-framework CoreFoundation \
+	-framework CoreMIDI \
+	-framework AudioToolbox
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -263,7 +287,6 @@ LIBRARY_FLAGS += \
 	-fsanitize=bounds-strict \
 	-fno-omit-frame-pointer \
 	-static-libasan
-
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
@@ -281,14 +304,14 @@ EXECUTABLE = swadge_emulator
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets clean docs format cppcheck firmware clean-firmware print-%
+.PHONY: all assets bundle clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) print-%
 
-# Build everything!
-all: $(EXECUTABLE) assets
+# Build the executable
+all: $(EXECUTABLE)
 
 assets:
-	$(MAKE) -C ./tools/spiffs_file_preprocessor/
-	./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets/ -o ./spiffs_image/
+	$(MAKE) -C ./tools/assets_preprocessor/
+	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
@@ -299,12 +322,48 @@ $(EXECUTABLE): $(OBJECTS)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
+# To create the c file with assets, run these tools
+$(CNFS_FILE):
+	$(MAKE) -C ./tools/assets_preprocessor/
+	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
+	$(MAKE) -C ./tools/cnfs/
+	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+
+bundle: SwadgeEmulator.app
+
+SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns emulator/resources/Info.plist
+	rm -rf SwadgeEmulator.app
+	mkdir -p SwadgeEmulator.app/Contents/{MacOS,Resources,libs}
+	cat emulator/resources/Info.plist | sed "s/##GIT_HASH##/$(GIT_HASH)/" > SwadgeEmulator.app/Contents/Info.plist
+	echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
+	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
+	vtool -set-build-version macos 10.0 10.0 -replace -output SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator $(EXECUTABLE)
+	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator -d ./SwadgeEmulator.app/Contents/libs/
+
+
+build/SwadgeEmulator.icns: emulator/resources/icon.png
+	rm -rf build/SwadgeEmulator.iconset
+	mkdir -p build/SwadgeEmulator.iconset
+	sips -z 16 16     $< --out build/SwadgeEmulator.iconset/icon_16x16.png
+	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_16x16@2x.png
+	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_32x32.png
+	sips -z 64 64     $< --out build/SwadgeEmulator.iconset/icon_32x32@2x.png
+	sips -z 128 128   $< --out build/SwadgeEmulator.iconset/icon_128x128.png
+	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_128x128@2x.png
+	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_256x256.png
+	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_256x256@2x.png
+	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_512x512.png
+	sips -z 1024 1024 $< --out build/SwadgeEmulator.iconset/icon_512x512@2x.png
+	iconutil -c icns -o build/SwadgeEmulator.icns build/SwadgeEmulator.iconset
+	rm -r build/SwadgeEmulator.iconset
+
 # This cleans emulator files
 clean:
-	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
+	$(MAKE) -C ./tools/assets_preprocessor/ clean
+	$(MAKE) -C ./tools/cnfs clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
-	-@rm -rf ./spiffs_image/*
+	-@rm -rf ./main/utils/cnfs/cnfs_image.c
 
 # This cleans everything
 fullclean: clean
@@ -337,9 +396,9 @@ format:
 
 clean-firmware:
 	idf.py clean
-	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
+	$(MAKE) -C ./tools/assets_preprocessor/ clean
 	-@rm -rf ./docs/html
-	-@rm -rf ./spiffs_image/*
+	-@rm -rf ./assets_image/*
 
 firmware:
 	idf.py build
@@ -351,17 +410,30 @@ usbflash :
 	tools/reflash_and_monitor.bat
 else
 usbflash :
+	# In case we are already in the bootloader...
+	($(MAKE) -C tools/bootload_reboot_stub reboot)||(true)
+	# Command reboot out of game into bootloader.
 	$(MAKE) -C tools/reboot_into_bootloader
-	sleep 1.2
 	idf.py flash
 	sleep 1.2
 	$(MAKE) -C tools/bootload_reboot_stub reboot
-	sleep 2.5
 	$(MAKE) -C tools/swadgeterm monitor
 endif
 
 monitor :
 	$(MAKE) -C tools/swadgeterm monitor
+
+/etc/udev/rules.d/99-swadge.rules :
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\"\n" $(UDEV_GROUP) > /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	sudo cp -a /tmp/99-swadge.rules /etc/udev/rules.d/99-swadge.rules
+
+installudev : /etc/udev/rules.d/99-swadge.rules
+	getent group plugdev >/dev/null && sudo usermod -aG plugdev $(USER) || true
+	sudo udevadm control --reload
+	sudo udevadm trigger
 
 ################################################################################
 # cppcheck targets
@@ -387,7 +459,7 @@ CPPCHECK_DIRS= \
 CPPCHECK_IGNORE= \
 	$(shell $(FIND) emulator/src-lib -type f) \
 	$(shell $(FIND) main/asset_loaders -type f -iname "*heatshrink*")
-	
+
 CPPCHECK_IGNORE_FLAGS = $(patsubst %,-i%, $(CPPCHECK_IGNORE))
 
 cppcheck:

@@ -9,7 +9,11 @@
 #include "nvs.h"
 #include <string.h>
 #include "esp_private/panic_internal.h"
+#include "esp_debug_helpers.h"
+#include "esp_memory_utils.h"
+#include "esp_cpu_utils.h"
 #include <xtensa_context.h>
+#include "hdw-nvs.h"
 
 //==============================================================================
 // Function Prototypes
@@ -29,6 +33,9 @@ static const char crashdesc[]   = "crashdesc";
 static const char crashreason[] = "crashreason";
 static const char crashframe[]  = "crashframe";
 static const char crashpanic[]  = "crashpanic";
+static const char crashstack[]  = "crashstack";
+
+#define STACKPAIRS 16
 
 //==============================================================================
 // Functions
@@ -46,7 +53,7 @@ void IRAM_ATTR __wrap_esp_panic_handler(void* info)
     esp_rom_printf("Panic has been triggered\n");
 
     nvs_handle_t handle;
-    if (nvs_open("storage", NVS_READWRITE, &handle) == ESP_OK)
+    if (nvs_open(NVS_NAMESPACE_NAME, NVS_READWRITE, &handle) == ESP_OK)
     {
         // Write and hope for the best.
         nvs_set_blob(handle, crashwrapTag, info, 36);
@@ -69,7 +76,44 @@ void IRAM_ATTR __wrap_esp_panic_handler(void* info)
 
         nvs_set_blob(handle, crashpanic, panicreason ? panicreason : "", panicreason ? strlen(panicreason) : 0);
 
+        // First, wipe the stack trace, becuase it might not work.
+        uint32_t epc_sp_pairs[STACKPAIRS * 2] = {0};
+        nvs_set_blob(handle, crashstack, epc_sp_pairs, sizeof(epc_sp_pairs));
         nvs_close(handle);
+
+        // Try to actually get a stack trace.
+        if (nvs_open(NVS_NAMESPACE_NAME, NVS_READWRITE, &handle) == ESP_OK)
+        {
+            esp_backtrace_frame_t stk_frame = {0};
+            esp_backtrace_get_start(&(stk_frame.pc), &(stk_frame.sp), &(stk_frame.next_pc));
+
+            uint32_t epc_sp_pairs[STACKPAIRS * 2] = {0};
+            for (int i = 0; i < STACKPAIRS; i++)
+            {
+                epc_sp_pairs[i * 2 + 0] = esp_cpu_process_stack_pc(stk_frame.pc);
+                epc_sp_pairs[i * 2 + 1] = stk_frame.sp;
+
+                // Use frame(i-1)'s BS area located below frame(i)'s sp to get frame(i-1)'s sp and frame(i-2)'s pc
+                void* base_save = (void*)stk_frame.sp; // Base save area consists of 4 words under SP
+                stk_frame.pc    = stk_frame.next_pc;
+                // If next_pc = 0, indicates frame(i-1) is the last frame on the stack
+                stk_frame.next_pc = *((uint32_t*)(base_save - 16));
+                stk_frame.sp      = *((uint32_t*)(base_save - 12));
+
+                // Return true if both sp and pc of frame(i-1) are sane, false otherwise
+                int valid = (esp_stack_ptr_is_sane(stk_frame.sp)
+                             && esp_ptr_executable((void*)esp_cpu_process_stack_pc(stk_frame.pc)));
+
+                if (!valid)
+                {
+                    break;
+                }
+            }
+
+            nvs_set_blob(handle, crashstack, epc_sp_pairs, sizeof(epc_sp_pairs));
+
+            nvs_close(handle);
+        }
     }
 
     __real_esp_panic_handler(info);
@@ -102,7 +146,7 @@ void checkAndInstallCrashwrap(void)
 
     ESP_LOGI(crashwrapTag, "Crashwrap Install");
 
-    if (nvs_open("storage", NVS_READONLY, &handle) != ESP_OK)
+    if (nvs_open(NVS_NAMESPACE_NAME, NVS_READONLY, &handle) != ESP_OK)
     {
         ESP_LOGW(crashwrapTag, "Couldnot find 'storage' NVS");
         return;
@@ -146,6 +190,31 @@ void checkAndInstallCrashwrap(void)
                  "EXECVADDR: 0x%08" PRIx32 "",
                  (uint32_t)fr.exit, (uint32_t)fr.pc, (uint32_t)fr.ps, (uint32_t)fr.a0, (uint32_t)fr.a1,
                  (uint32_t)fr.sar, (uint32_t)fr.exccause, (uint32_t)fr.excvaddr);
+
+        uint32_t epc_sp_pairs[STACKPAIRS * 2] = {0};
+        length                                = sizeof(epc_sp_pairs);
+        if (nvs_get_blob(handle, crashstack, epc_sp_pairs, &length) == ESP_OK && length > 0)
+        {
+            ESP_LOGW(crashwrapTag, "Backtrace:");
+            int i;
+            char fulllog[1024];
+            char* flend = fulllog;
+            flend += sprintf(flend, "xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf");
+            for (i = 0; i < STACKPAIRS; i++)
+            {
+                if (sizeof(fulllog) + fulllog - flend > 24 && epc_sp_pairs[i * 2 + 0])
+                {
+                    flend += sprintf(flend, " 0x%08lx:0x%08lx", epc_sp_pairs[i * 2 + 0], epc_sp_pairs[i * 2 + 1]);
+                }
+            }
+            ESP_LOGW(crashwrapTag, "%s", fulllog);
+        }
+        else
+        {
+            // Could not get full stack trace, do the best we can.
+            ESP_LOGW(crashwrapTag, "xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x%08lx:0x%08lx",
+                     (uint32_t)fr.pc, (uint32_t)fr.ps);
+        }
     }
 
     nvs_close(handle);

@@ -37,7 +37,7 @@ typedef struct
     size_t* output_size; /* bytes pushed to buffer, so far */
 } output_info;
 
-#define NO_BITS ((uint16_t) - 1)
+#define NO_BITS ((uint16_t)-1)
 
 /* Forward references. */
 static uint16_t get_bits(heatshrink_decoder* hsd, uint8_t count);
@@ -92,7 +92,7 @@ void heatshrink_decoder_reset(heatshrink_decoder* hsd)
 }
 
 /* Copy SIZE bytes into the decoder's input buffer, if it will fit. */
-HSD_sink_res heatshrink_decoder_sink(heatshrink_decoder* hsd, uint8_t* in_buf, size_t size, size_t* input_size)
+HSD_sink_res heatshrink_decoder_sink(heatshrink_decoder* hsd, const uint8_t* in_buf, size_t size, size_t* input_size)
 {
     if ((hsd == NULL) || (in_buf == NULL) || (input_size == NULL))
     {
