@@ -67,7 +67,6 @@ static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* vo
 static void midiStepVoice(midiChannel_t* channel, voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
 static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre);
 static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program);
-static void midiGmOn(midiPlayer_t* player);
 static int32_t midiSumPercussion(midiPlayer_t* player);
 static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event);
 static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex);
@@ -375,7 +374,7 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
             case WAVETABLE:
             {
                 swSynthSetWaveFunc(&voice->oscillators[oscIdx], timbre->waveFunc, (void*)((uintptr_t)timbre->waveIndex));
-                voice->oscillators[oscIdx].chorus = timbre->effects.chorus;
+                voice->oscillators[oscIdx].chorus = (timbre->effects.chorus) >> 3;
                 break;
             }
 
@@ -439,28 +438,6 @@ static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, ui
             default:
                 return &acousticGrandPianoTimbre;
         }
-    }
-}
-
-/**
- * @brief Activate General MIDI mode for a MIDI player
- *
- * @param player The MIDI player to set to General MIDI mode
- */
-static void midiGmOn(midiPlayer_t* player)
-{
-    for (uint8_t chanIdx = 0; chanIdx < MIDI_CHANNEL_COUNT; chanIdx++)
-    {
-        midiChannel_t* chan = &player->channels[chanIdx];
-
-        chan->volume    = UINT14_MAX;
-        chan->pitchBend = PITCH_BEND_CENTER;
-        chan->program   = 0;
-
-        // Channel 10 (index 9) is reserved for percussion.
-        chan->percussion = (9 == chanIdx);
-
-        memcpy(&chan->timbre, getTimbreForProgram(chan->percussion, 0, chan->program), sizeof(midiTimbre_t));
     }
 }
 
@@ -593,7 +570,7 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
             // Control change
             case 0xB:
             {
-                uint8_t controlId  = event->data[0];
+                midiControl_t controlId  = (midiControl_t)event->data[0];
                 uint8_t controlVal = event->data[1];
                 midiControlChange(player, channel, controlId, controlVal);
                 break;
@@ -1027,7 +1004,41 @@ void midiResetChannelControllers(midiPlayer_t* player, uint8_t channel)
     midiSustain(player, channel, MIDI_FALSE);
     chan->volume = UINT14_MAX;
     chan->pitchBend = PITCH_BEND_CENTER;
+    chan->program   = 0;
+    chan->held      = 0;
+    chan->sustenuto = 0;
     memcpy(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program), sizeof(midiTimbre_t));
+}
+
+void midiGmOn(midiPlayer_t* player)
+{
+    for (uint8_t chanIdx = 0; chanIdx < MIDI_CHANNEL_COUNT; chanIdx++)
+    {
+        midiChannel_t* chan = &player->channels[chanIdx];
+
+        midiResetChannelControllers(player, chanIdx);
+
+        // Channel 10 (index 9) is reserved for percussion.
+        chan->percussion = (9 == chanIdx);
+
+        memcpy(&chan->timbre, getTimbreForProgram(chan->percussion, 0, chan->program), sizeof(midiTimbre_t));
+    }
+}
+
+void midiGmOff(midiPlayer_t* player)
+{
+    for (uint8_t chanIdx = 0; chanIdx < MIDI_CHANNEL_COUNT; chanIdx++)
+    {
+        midiChannel_t* chan = &player->channels[chanIdx];
+
+        midiResetChannelControllers(player, chanIdx);
+
+        // Channel 10 (index 9) is reserved for percussion.
+        chan->percussion = (9 == chanIdx);
+        chan->bank       = 1;
+
+        memcpy(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program), sizeof(midiTimbre_t));
+    }
 }
 
 void midiAllNotesOff(midiPlayer_t* player, uint8_t channel)
@@ -1174,7 +1185,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
     uint32_t voiceBit = (1 << voiceIdx);
 
-    bool stolen = 0 != (voiceBit & (states->on | states->held | states->sustenuto));
+    bool stolen = 0 != (voiceBit & (states->on | states->held | states->sustenuto | states->attack | states->decay | states->sustain | states->release));
 
     // Not good -- we need to figure out who was using this voice before, and clear it
     // This is necessary to fix stuck notes, but doesn't take care of everything
@@ -1447,43 +1458,61 @@ void midiSustenuto(midiPlayer_t* player, uint8_t channel, uint8_t val)
     }
 }
 
-void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, uint8_t val)
+void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t control, uint8_t val)
 {
-    // MIDI spec says control changes stop the channel
-    // TODO: Implement some controls
-    // TODO maybe some sort of resetChannel() function?
     switch (control)
     {
+        case MCC_BANK_MSB:
+        {
+            player->channels[channel].bank = (val & 0x7F) << 7 | (player->channels[channel].bank & 0x7F);
+            break;
+        }
+
+        case MCC_BANK_LSB:
+        {
+            player->channels[channel].bank = (player->channels[channel].bank & 0x7F) << 7 | (val & 0x7F);
+            break;
+        }
+
+        case MCC_VOLUME_MSB:
+        {
+            player->channels[channel].volume = ((val & 0x7F) << 7) | (player->channels[channel].volume & 0x7F);
+            break;
+        }
+
         // Sustain (64)
-        case 0x40:
+        case MCC_HOLD_PEDAL:
         {
             midiSustain(player, channel, val);
             break;
         }
 
         // Sustenuto (66)
-        case 0x42:
+        case MCC_SUSTENUTO_PEDAL:
         {
             midiSustenuto(player, channel, val);
             break;
         }
 
         // Sound Release Time (72)
-        case 0x48:
+        case MCC_SOUND_RELEASE_TIME:
         {
+            // Set the release time in 10ms increments!
+            // That gives us a range of 0ms to 1.270s... is that enough?
             player->channels[channel].timbre.envelope.releaseTime = MS_TO_SAMPLES(10 * val);
             break;
         }
 
         // Sound Attack Time (73)
-        case 0x49:
+        case MCC_SOUND_ATTACK_TIME:
         {
+            // Also sest attack with 10ms increments
             player->channels[channel].timbre.envelope.attackTime = MS_TO_SAMPLES(10 * val);
             break;
         }
 
         // Chorus Level (93)
-        case 0x5D:
+        case MCC_CHORUS_LEVEL:
         {
             // Set chorus (within reason, up to 16... which is kinda ridiculous anyway)
             player->channels[channel].timbre.effects.chorus = MIN(val, 16);
@@ -1491,29 +1520,86 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, u
         }
 
         // All sounds off (120)
-        case 0x78:
+        case MCC_ALL_SOUND_OFF:
         {
             midiAllSoundOff(player);
             break;
         }
 
         // All controllers off (121)
-        case 0x79:
+        case MCC_ALL_CONTROLS_OFF:
         {
             midiResetChannelControllers(player, channel);
             break;
         }
 
         // All notes off (123)
-        case 0x7B:
+        case MCC_ALL_NOTE_OFF:
         {
             midiAllNotesOff(player, channel);
             break;
         }
 
         default:
-            break;
+        {
+            static uint32_t state[4] = {0};
+            uint8_t ctlNum = (uint8_t)control;
+            if (!(state[ctlNum / 32] & (1 << (ctlNum % 32))))
+            {
+                ESP_LOGI("MIDI", "Ignoring unknown/unsupported controller: %" PRIu8, ctlNum);
+                state[ctlNum / 32] |= (1 << (ctlNum % 32));
+            }
+            return;
+        }
     }
+}
+
+uint8_t midiGetControlValue(midiPlayer_t* player, uint8_t channel, midiControl_t control)
+{
+    switch(control)
+    {
+        case MCC_BANK_MSB:
+            return (player->channels[channel].bank >> 7) & 0x7F;
+
+        case MCC_BANK_LSB:
+            return (player->channels[channel].bank & 0x7F);
+
+        case MCC_HOLD_PEDAL:
+            return BOOL_TO_MIDI(player->channels[channel].held);
+
+        case MCC_SUSTENUTO_PEDAL:
+            return BOOL_TO_MIDI(player->channels[channel].held);
+
+        case MCC_SOUND_RELEASE_TIME:
+            return (player->channels[channel].timbre.envelope.releaseTime * 1000 / 32768 / 10) & 0x7F;
+
+        case MCC_SOUND_ATTACK_TIME:
+            return (player->channels[channel].timbre.envelope.attackTime * 1000 / 32768 / 10) & 0x7F;
+
+        case MCC_CHORUS_LEVEL:
+            return player->channels[channel].timbre.effects.chorus & 0x7F;
+
+        default:
+        return 0;
+    }
+}
+
+uint16_t midiGetControlValue14bit(midiPlayer_t* player, uint8_t channel, midiControl_t control)
+{
+    uint8_t msbControl = (uint8_t)control & ~(1 << 5);
+    uint8_t lsbControl = (uint8_t)control | (1 << 5);
+
+    if (control >= 64)
+    {
+        // There are a couple other MSB/LSB controllers, and those have an odd MSB and an even LSB
+        msbControl = (uint8_t)control | 1;
+        lsbControl = (uint8_t)control & ~1;
+    }
+
+    uint16_t result = midiGetControlValue(player, channel, (midiControl_t)msbControl) & 0x7f;
+    result <<= 7;
+    result |= midiGetControlValue(player, channel, (midiControl_t)msbControl) & 0x7F;
+    return result;
 }
 
 void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)

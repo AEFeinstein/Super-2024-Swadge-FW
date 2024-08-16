@@ -225,6 +225,113 @@ typedef enum
     // End Roland GS Extensions
 } percussionNote_t;
 
+/**
+ * @brief Defines the MIDI continuous controller registers
+ *
+ * Values suffixed with `_MSB` and `_LSB` represent the upper and lower 7 bits of two
+ * separate MIDI controller values. Some values are designated as switches, which
+ * will be considered off when set between 0 and 63, and on when set from 64 to 127.
+ * All other values represent a single 7-bit value with a range of 0 to 127 inclusive
+ * unless otherwise specified.
+ */
+typedef enum
+{
+    MCC_BANK_MSB = 0,
+    MCC_MODULATION_WHEEL_MSB = 1,
+    MCC_BREATH_MSB = 2,
+
+    MCC_FOOT_PEDAL_MSB = 4,
+    MCC_PORTAMENTO_TIME_MSB = 5,
+    MCC_DATA_ENTRY_MSB = 6,
+    MCC_VOLUME_MSB = 7,
+    MCC_BALANCE_MSB = 8,
+
+    MCC_PAN_MSB = 10,
+    MCC_EXPRESSION_MSB = 11,
+    MCC_EFFECT_1_MSB = 12,
+    MCC_EFFECT_2_MSB = 13,
+
+    MCC_GP_SLIDER_1 = 16,
+    MCC_GP_SLIDER_2 = 17,
+    MCC_GP_SLIDER_3 = 18,
+    MCC_GP_SLIDER_4 = 19,
+
+    MCC_BANK_LSB = 32,
+    MCC_MODULATION_WHEEL_LSB = 33,
+    MCC_BREATH_LSB = 34,
+
+    MCC_FOOT_PEDAL_LSB = 36,
+    MCC_PORTAMENTO_TIME_LSB = 37,
+    MCC_DATA_ENTRY_LSB = 38,
+    MCC_VOLUME_LSB = 39,
+    MCC_BALANCE_LSB = 40,
+
+    MCC_PAN_LSB = 42,
+    MCC_EXPRESSION_LSB = 43,
+    MCC_EFFECT_1_LSB = 44,
+    MCC_EFFECT_2_LSB = 45,
+
+    //< Switch
+    MCC_HOLD_PEDAL = 64,
+    //< Switch
+    MCC_PORTAMENTO = 65,
+    //< Switch
+    MCC_SUSTENUTO_PEDAL = 66,
+    //< Switch
+    MCC_SOFT_PEDAL = 67,
+    //< Switch
+    MCC_LEGATO_PEDAL = 68,
+    //< Switch
+    MCC_HOLD_2_PEDAL = 69,
+    MCC_SOUND_VARIATION = 70,
+    MCC_SOUND_TIMBRE = 71,
+    MCC_SOUND_RELEASE_TIME = 72,
+    MCC_SOUND_ATTACK_TIME = 73,
+    MCC_SOUND_BRIGHTNESS = 74,
+    MCC_SOUND_CONTROL_6 = 75,
+    MCC_SOUND_CONTROL_7 = 76,
+    MCC_SOUND_CONTROL_8 = 77,
+    MCC_SOUND_CONTROL_9 = 78,
+    MCC_SOUND_CONTROL_10 = 79,
+    //< Switch
+    MCC_GP_BUTTON_1 = 80,
+    //< Switch
+    MCC_GP_BUTTON_2 = 81,
+    //< Switch
+    MCC_GP_BUTTON_3 = 82,
+    //< Switch
+    MCC_GP_BUTTON_4 = 83,
+
+    MCC_EFFECTS_LEVEL = 91,
+    MCC_TREMOLO_LEVEL = 92,
+    MCC_CHORUS_LEVEL = 93,
+    MCC_DETUNE_LEVEL = 94,
+    MCC_PHASER_LEVEL = 95,
+    MCC_DATA_BUTTON_INC = 96,
+    MCC_DATA_BUTTON_DEC = 97,
+    MCC_NON_REGISTERED_PARAM_LSB = 98,
+    MCC_NON_REGISTERED_PARAM_MSB = 99,
+    MCC_REGISTERED_PARAM_LSB = 100,
+    MCC_REGISTERED_PARAM_MSB = 101,
+
+    //< No data
+    MCC_ALL_SOUND_OFF = 120,
+    //< No data
+    MCC_ALL_CONTROLS_OFF = 121,
+    //< Switch
+    MCC_LOCAL_KEYBOARD = 122,
+    //< No data
+    MCC_ALL_NOTE_OFF = 123,
+    //< No data
+    MCC_OMNI_MODE_OFF = 124,
+    //< No data
+    MCC_OMNI_MODE_ON = 125,
+    //< No data
+    MCC_MONO_OPERATION = 126,
+    //< No data
+    MCC_POLY_OPERATION = 127,
+} midiControl_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -442,7 +549,7 @@ typedef struct
     uint16_t volume;
 
     /// @brief The bank to use for program changes on this channel
-    uint8_t bank;
+    uint16_t bank;
 
     /// @brief The ID of the program (timbre) set for this channel
     uint8_t program;
@@ -614,6 +721,20 @@ void midiAllSoundOff(midiPlayer_t* player);
 void midiResetChannelControllers(midiPlayer_t* player, uint8_t channel);
 
 /**
+ * @brief Activate General MIDI mode on a MIDI player
+ *
+ * @param player The MIDI player to set to General MIDI mode
+ */
+void midiGmOn(midiPlayer_t* player);
+
+/**
+ * @brief Deactivate General MIDI mode on a MIDI player
+ *
+ * @param player The MIDI player to take out of General MIDI mode
+ */
+void midiGmOff(midiPlayer_t* player);
+
+/**
  * @brief Tun off all notes which are currently on, as though midiNoteOff() were called
  * for each note. This respects the sustain pedal.
  *
@@ -669,7 +790,7 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program);
  * When set, all notes that are currently on will be sustained until the pedal is unset, as well as
  * all notes that are played after the pedal is set.
  *
- * This is a convenience method for midiControlChange(player, channel, CONTROL_HOLD (64), val ? 127:0)
+ * This is a convenience method for midiControlChange(player, channel, MCC_HOLD_PEDAL (64), val ? 127:0)
  *
  * @param player The MIDI player
  * @param channel The MIDI channel to set the hold status for
@@ -697,7 +818,27 @@ void midiSustenuto(midiPlayer_t* player, uint8_t channel, uint8_t val);
  * @param control The control number to set
  * @param val The control value, from 0-127 whose meaning depends on the control number
  */
-void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, uint8_t val);
+void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t control, uint8_t val);
+
+/**
+ * @brief Get the value of a MIDI control
+ *
+ * @param player The MIDI player
+ * @param channel The channel to retrieve the control from
+ * @param control The MIDI control number of the control
+ * @return uint8_t The value of the specified control, or 0 if the specified controller is not implemented
+ */
+uint8_t midiGetControlValue(midiPlayer_t* player, uint8_t channel, midiControl_t control);
+
+/**
+ * @brief Get the combined value of two MIDI control registers
+ *
+ * @param player The MIDI player
+ * @param channel The channel to retrieve the control from
+ * @param control The MIDI control number of either of the two controls that make up the value
+ * @return uint16_t The value of the specified control, or 0 if the specified controller is not implemented
+ */
+uint16_t midiGetControlValue14bit(midiPlayer_t* player, uint8_t channel, midiControl_t control);
 
 /**
  * @brief Set the pitch wheel value on a given MIDI channel
@@ -749,6 +890,10 @@ void midiPause(midiPlayer_t* player, bool pause);
  * @param ticks The absolute number of MIDI ticks to seek to.
  */
 void midiSeek(midiPlayer_t* player, uint32_t ticks);
+
+//==============================================================================
+// Global MIDI Player Functions
+//==============================================================================
 
 /**
  * @brief Initialize the system-wide MIDI players for both BGM and SFX
