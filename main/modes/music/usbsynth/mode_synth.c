@@ -20,6 +20,7 @@
 #include "midiPlayer.h"
 #include "midiFileParser.h"
 #include "midiUsb.h"
+#include "hashMap.h"
 
 //==============================================================================
 // Defines
@@ -152,6 +153,8 @@ typedef struct
         CTRL_CC_LSB,
         /// @brief Control value with only a single 7-bit value, no MSB/LSB
         CTRL_7BIT,
+        /// @brief Control with no actual data, only a message
+        CTRL_NO_DATA,
         /// @brief Not a defined MIDI controller, reserved for future use
         CTRL_UNDEFINED,
     } type;
@@ -267,6 +270,8 @@ typedef struct
     char channelInstrumentLabels[16][64];
     uint8_t menuSelectedChannel;
 
+    hashMap_t controllerMap;
+
     synthConfig_t synthConfig;
 
     int64_t marqueeTimer;
@@ -291,6 +296,7 @@ static void synthSetFile(const char* filename);
 static void synthHandleButton(const buttonEvt_t evt);
 static void handleButtonTimer(int64_t* timer, int64_t interval, int64_t elapsedUs, buttonBit_t button);
 static void synthHandleInput(int64_t elapsedUs);
+static bool synthIsControlSupported(const midiControllerDesc_t* control);
 
 static void drawCircleSweep(int x, int y, int r, int startAngle, int sweepDeg, paletteColor_t col);
 static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y, int16_t w, int16_t h);
@@ -590,10 +596,6 @@ static const char* channelLabels[] = {
     "Channel 16",
 };
 
-static const char* controllerLabels[] = {
-    "",
-};
-
 static midiControllerDesc_t controllerDefs[] = {
     {
         .control = 0,
@@ -785,7 +787,7 @@ static midiControllerDesc_t controllerDefs[] = {
     {
         .control = 72,
         .type = CTRL_7BIT,
-        .desc = "Sound Release Timen",
+        .desc = "Sound Release Time",
     },
     {
         .control = 73,
@@ -851,7 +853,7 @@ static midiControllerDesc_t controllerDefs[] = {
     {
         .control = 92,
         .type = CTRL_7BIT,
-        .desc = "Tremulo Level",
+        .desc = "Tremolo Level",
     },
     {
         .control = 93,
@@ -870,12 +872,12 @@ static midiControllerDesc_t controllerDefs[] = {
     },
     {
         .control = 96,
-        .type = CTRL_7BIT,
+        .type = CTRL_NO_DATA,
         .desc = "Data Button Increment",
     },
     {
         .control = 97,
-        .type = CTRL_7BIT,
+        .type = CTRL_NO_DATA,
         .desc = "Data Button Decrement",
     },
     {
@@ -901,43 +903,43 @@ static midiControllerDesc_t controllerDefs[] = {
     // No 102-119
     {
         .control = 120,
-        .type = CTRL_7BIT,
+        .type = CTRL_NO_DATA,
         .desc = "All Sound Off",
     },
     {
         .control = 121,
-        .type = CTRL_7BIT,
+        .type = CTRL_NO_DATA,
         .desc = "All Controllers Off",
     },
     {
         .control = 122,
-        .type = CTRL_7BIT,
-        .desc = "",
+        .type = CTRL_SWITCH,
+        .desc = "Local Keyboard",
     },
     {
         .control = 123,
-        .type = CTRL_7BIT,
-        .desc = "",
+        .type = CTRL_NO_DATA,
+        .desc = "All Notes Off",
     },
     {
         .control = 124,
-        .type = CTRL_7BIT,
-        .desc = "",
+        .type = CTRL_NO_DATA,
+        .desc = "Omni Mode Off",
     },
     {
         .control = 125,
-        .type = CTRL_7BIT,
-        .desc = "",
+        .type = CTRL_NO_DATA,
+        .desc = "Omni Mode On",
     },
     {
         .control = 126,
-        .type = CTRL_7BIT,
-        .desc = "",
+        .type = CTRL_NO_DATA,
+        .desc = "Monophonic Operation",
     },
     {
         .control = 127,
-        .type = CTRL_7BIT,
-        .desc = "",
+        .type = CTRL_NO_DATA,
+        .desc = "Polyphonic Operation",
     },
 };
 
@@ -998,7 +1000,7 @@ static const char* menuItemInstrument = "Instrument: ";
 static const char* menuItemChannels   = "Channel Setup";
 static const char* menuItemResetAll   = "Reset All Channels";
 static const char* menuItemReset      = "Reset";
-static const char* menuItemParameters = "Parameters";
+static const char* menuItemControls   = "Controllers";
 static const char* menuItemIgnore     = "Ignored: ";
 static const char* menuItemPercussion = "Percussion: ";
 
@@ -1106,6 +1108,11 @@ static const int32_t menuItemBankValues[] = {
     1,
 };
 
+static const int32_t menuItemControlSwitchValues[] = {
+    0,
+    127,
+};
+
 #define VOL_TO_HEADROOM(pct) ((pct) * 0x4000 / 100)
 
 static const int32_t menuItemHeadroomValues[] = {
@@ -1206,6 +1213,20 @@ static settingParam_t menuItemBankBounds = {
     .def = 0,
     .min = 0,
     .max = 1,
+    .key = NULL,
+};
+
+static settingParam_t menuItemControl14bitBounds = {
+    .def = 0,
+    .min = 0,
+    .max = 0x3FFF,
+    .key = NULL,
+};
+
+static settingParam_t menuItemControl7bitBounds = {
+    .def = 0,
+    .min = 0,
+    .max = 127,
     .key = NULL,
 };
 
@@ -1492,6 +1513,23 @@ static void synthExitMode(void)
     deinitWheelMenu(sd->wheelMenu);
     deinitMenuManiaRenderer(sd->renderer);
     deinitMenu(sd->menu);
+
+    // Clean up dynamic strings allocated for the controllers
+    hashIterator_t iter = {0};
+    while (hashIterate(&sd->controllerMap, &iter))
+    {
+        char* controllerKey = (char*)iter.key;
+        midiControllerDesc_t* controller = (midiControllerDesc_t*)iter.value;
+
+        hashIterRemove(&sd->controllerMap, &iter);
+
+        if (controllerKey != controller->desc)
+        {
+            free(controllerKey);
+        }
+    }
+
+    hashDeinit(&sd->controllerMap);
 
     unloadLyrics(&sd->karaoke);
     unloadMidiFile(&sd->midiFile);
@@ -1833,10 +1871,10 @@ static void synthApplyConfig(void)
     for (int i = 0; i < 16; i++)
     {
         uint16_t channelBit = (1 << i);
-        // This technically doesn't take effect properly until we call setProgram()!
         sd->midiPlayer.channels[i].percussion = (sd->synthConfig.percChannelMask & channelBit) ? true : false;
         sd->midiPlayer.channels[i].ignore = (sd->synthConfig.ignoreChannelMask & channelBit) ? true : false;
         sd->programs[i] = sd->synthConfig.programs[i] & 0x7F;
+        // This technically doesn't take effect properly until we call setProgram()!
         sd->midiPlayer.channels[i].bank = sd->synthConfig.banks[i];
         midiSetProgram(&sd->midiPlayer, i, sd->synthConfig.programs[i] & 0x7F);
     }
@@ -1849,21 +1887,21 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 {
     menu = startSubMenu(menu, menuItemChannels);
 
-    for (int i = 0; i < 16; i++)
+    for (int chIdx = 0; chIdx < 16; chIdx++)
     {
-        menu = startSubMenu(menu, channelLabels[i]);
-        addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds, (config->ignoreChannelMask & (1 << i)) ? 1 : 0);
-        addSettingsOptionsItemToMenu(menu, menuItemPercussion, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemPercussionBounds, (config->percChannelMask & (1 << i)) ? 1 : 0);
-        addSettingsOptionsItemToMenu(menu, menuItemBank, menuItemBankOptions, menuItemBankValues, ARRAY_SIZE(menuItemBankValues), &menuItemBankBounds, config->banks[i]);
+        menu = startSubMenu(menu, channelLabels[chIdx]);
+        addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds, (config->ignoreChannelMask & (1 << chIdx)) ? 1 : 0);
+        addSettingsOptionsItemToMenu(menu, menuItemPercussion, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemPercussionBounds, (config->percChannelMask & (1 << chIdx)) ? 1 : 0);
+        addSettingsOptionsItemToMenu(menu, menuItemBank, menuItemBankOptions, menuItemBankValues, ARRAY_SIZE(menuItemBankValues), &menuItemBankBounds, config->banks[chIdx]);
 
-        if (0 == (config->percChannelMask & (1 << i)))
+        if (0 == (config->percChannelMask & (1 << chIdx)))
         {
             // Instrument select submenu
-            char* nameBuffer = sd->channelInstrumentLabels[i];
+            char* nameBuffer = sd->channelInstrumentLabels[chIdx];
 
-            if (config->banks[i] == 0)
+            if (config->banks[chIdx] == 0)
             {
-                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, gmProgramNames[config->programs[i]]);
+                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, gmProgramNames[config->programs[chIdx]]);
                 menu = startSubMenu(menu, nameBuffer);
                 for (int category = 0; category < 16; category++)
                 {
@@ -1883,7 +1921,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
             }
             else
             {
-                uint8_t program = config->programs[i];
+                uint8_t program = config->programs[chIdx];
                 if (program >= ARRAY_SIZE(magfestProgramNames))
                 {
                     program = 0;
@@ -1891,13 +1929,80 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
                 snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, magfestProgramNames[program]);
                 menu = startSubMenu(menu, nameBuffer);
-                for (int i = 0; i < ARRAY_SIZE(magfestProgramNames); i++)
+                for (int instrument = 0; instrument < ARRAY_SIZE(magfestProgramNames); instrument++)
                 {
-                    addSingleItemToMenu(menu, magfestProgramNames[i]);
+                    addSingleItemToMenu(menu, magfestProgramNames[instrument]);
                 }
                 menu = endSubMenu(menu);
             }
         }
+
+        menu = startSubMenu(menu, menuItemControls);
+
+        hashInit(&sd->controllerMap, 256);
+
+        for (int ctrlIdx = 0; ctrlIdx < ARRAY_SIZE(controllerDefs); ctrlIdx++)
+        {
+            const midiControllerDesc_t* controller = &controllerDefs[ctrlIdx];
+            if (synthIsControlSupported(controller))
+            {
+                char* labelStr = controller->desc;
+
+                if (controller->type == CTRL_SWITCH)
+                {
+                    int labelStrSize = strlen(controller->desc) + 3;
+                    char* newStr = malloc(labelStrSize);
+                    if (newStr)
+                    {
+                        snprintf(newStr, labelStrSize, "%s: ", controller->desc);
+                        labelStr = newStr;
+                    }
+                }
+
+                hashPut(&sd->controllerMap, labelStr, controller);
+
+                switch (controller->type)
+                {
+                    case CTRL_SWITCH:
+                    {
+                        // Options menu item, on/off
+                        addSettingsOptionsItemToMenu(menu, labelStr, menuItemOffOnOptions, menuItemControlSwitchValues, ARRAY_SIZE(menuItemControlSwitchValues), &menuItemControl7bitBounds,
+                                                     midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control));
+                        break;
+                    }
+
+                    case CTRL_CC_MSB:
+                    {
+                        // Settings value item
+                        addSettingsItemToMenu(menu, labelStr, &menuItemControl14bitBounds, midiGetControlValue14bit(&sd->midiPlayer, chIdx, (midiControl_t)controller->control));
+                        break;
+                    }
+
+                    case CTRL_CC_LSB:
+                    {
+                        // Ignore because we'll handle the whole controller in CTRL_CC_MSB
+                        break;
+                    }
+
+                    case CTRL_7BIT:
+                    case CTRL_UNDEFINED:
+                    {
+                        // Settings value item, 0-127
+                        addSettingsItemToMenu(menu, labelStr, &menuItemControl7bitBounds, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control));
+                        break;
+                    }
+
+                    case CTRL_NO_DATA:
+                    {
+                        // Single menu item, A just triggers it
+                        addSingleItemToMenu(menu, labelStr);
+                        break;
+                    }
+                }
+            }
+        }
+
+        menu = endSubMenu(menu);
 
         addSingleItemToMenu(menu, menuItemReset);
 
@@ -2160,6 +2265,12 @@ static void drawSynthMode(void)
             int16_t x    = ((ch % 8) + 1) * (TFT_WIDTH - image->w * 8) / 9 + image->w * (ch % 8);
             int16_t imgY = (ch < 8) ? 30 : TFT_HEIGHT - 30 - 32;
             drawWsgSimple(image, x, imgY);
+
+            if (sd->midiPlayer.channels[ch].held)
+            {
+                col = c050;
+            }
+
             if (sd->playing[ch])
             {
                 drawRect(x, imgY, x + 32, imgY + 32, col);
@@ -3150,6 +3261,28 @@ static void synthHandleInput(int64_t elapsedUs)
     }
 }
 
+static bool synthIsControlSupported(const midiControllerDesc_t* control)
+{
+    switch (control->control)
+    {
+        case 0:  // Bank MSB
+        case 32: // Bank LSB
+        case 64: // Hold Pedal
+        case 66: // Sustenuto Pedal
+        case 72: // Release Time
+        case 73: // Attack Time
+        // TODO: case 91: // Effects (Reverb)
+        case 93: // Chorus level
+        case 120: // All sound off
+        case 121: // All controllers off
+        case 123: // All notes off
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 static paletteColor_t noteToColor(uint8_t note)
 {
     return noteColors[note % ARRAY_SIZE(noteColors)];
@@ -3607,7 +3740,44 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
     }
     else
     {
-        if (selected)
+        void* controllerItem = hashGet(&sd->controllerMap, label);
+        if (controllerItem)
+        {
+            const midiControllerDesc_t* desc = (const midiControllerDesc_t*)controllerItem;
+
+            if (desc->type == CTRL_NO_DATA)
+            {
+                if (selected)
+                {
+                    midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, 0);
+                }
+            }
+            else if (desc->type == CTRL_SWITCH)
+            {
+                midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, BOOL_TO_MIDI(value));
+            }
+            else if (desc->type == CTRL_CC_LSB || desc->type == CTRL_CC_LSB)
+            {
+                // Most of the MSB/LSB controllers are in the 0-63 range, with MSB in 0-15 and LSB in 32-47
+                uint8_t msbControl = desc->type & ~(1 << 5);
+                uint8_t lsbControl = desc->type | (1 << 5);
+
+                if (desc->control > 64)
+                {
+                    // There are a couple other MSB/LSB controllers, and those have an odd MSB and an even LSB
+                    msbControl = desc->type | 1;
+                    lsbControl = desc->type & ~1;
+                }
+
+                midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, msbControl, (value >> 7) & 0x7F);
+                midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, msbControl, value & 0x7F);
+            }
+            else if (desc->type == CTRL_7BIT)
+            {
+                midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, value & 0x7F);
+            }
+        }
+        else if (selected)
         {
             // Song items
             for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
