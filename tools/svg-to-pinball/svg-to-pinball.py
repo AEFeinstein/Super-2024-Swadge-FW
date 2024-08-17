@@ -273,7 +273,7 @@ def addLength(tableData: bytearray, array: int):
 
 def main():
     # Load the SVG
-    g: Group = SVG().parse('pinball.svg')
+    g: Group = SVG().parse('red-pinball.svg')
 
     lines: list[pbLine] = []
     lines.extend(extractPaths(g.objects['Walls'], LineType.JS_WALL, None))

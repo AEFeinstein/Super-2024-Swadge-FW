@@ -57,7 +57,7 @@ list_t* addToGroup(jsScene_t* scene, void* obj, uint8_t groupId)
 void jsSceneInit(jsScene_t* scene)
 {
     scene->gravity.x = 0;
-    scene->gravity.y = 90;
+    scene->gravity.y = 180;
     scene->dt        = 1 / 60.0f;
     scene->score     = 0;
     scene->paused    = true;
@@ -117,9 +117,9 @@ void jsSceneInit(jsScene_t* scene)
     // TODO load ball position from file
     // vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
     vecFl_t ballPositions[] = {
-        {.x = 57, .y = 28},
-        {.x = 79, .y = 28},
-        {.x = 100, .y = 28},
+        // {.x = 57, .y = 28},
+        // {.x = 79, .y = 28},
+        {.x = 280 - 9, .y = 400},
     };
 
     scene->numBalls = 0;
@@ -129,7 +129,7 @@ void jsSceneInit(jsScene_t* scene)
         ball->pos         = ballPositions[bIdx];
         ball->vel.x       = 0;
         ball->vel.y       = 0;
-        ball->radius      = 4.0f;
+        ball->radius      = 7.0f;
         ball->mass        = M_PI * 4.0f * 4.0f;
         ball->restitution = 0.2f;
     }
