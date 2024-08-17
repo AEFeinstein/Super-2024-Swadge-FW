@@ -78,7 +78,7 @@ typedef struct
     float impulse;
 } jsLauncher_t;
 
-#define MAX_NUM_LINES     128
+#define MAX_NUM_LINES     1024
 #define MAX_NUM_BALLS     128
 #define MAX_NUM_OBSTACLES 128
 #define MAX_NUM_FLIPPERS  128
