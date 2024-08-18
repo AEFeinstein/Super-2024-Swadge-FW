@@ -1464,13 +1464,19 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t cont
     {
         case MCC_BANK_MSB:
         {
-            player->channels[channel].bank = (val & 0x7F) << 7 | (player->channels[channel].bank & 0x7F);
+            uint16_t newBank = (val & 0x7F);
+            newBank <<= 7;
+            newBank |= (player->channels[channel].bank & 0x7F);
+            player->channels[channel].bank = newBank;//((val & 0x7F) << 7) | (player->channels[channel].bank & 0x7F);
             break;
         }
 
         case MCC_BANK_LSB:
         {
-            player->channels[channel].bank = (player->channels[channel].bank & 0x7F) << 7 | (val & 0x7F);
+            uint16_t newBank = (player->channels[channel].bank & 0x7F);
+            newBank <<= 7;
+            newBank |= (val & 0x5F);
+            player->channels[channel].bank = newBank;//((player->channels[channel].bank & 0x7F) << 7) | (val & 0x7F);
             break;
         }
 

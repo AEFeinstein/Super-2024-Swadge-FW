@@ -21,6 +21,7 @@
 #include "midiFileParser.h"
 #include "midiUsb.h"
 #include "hashMap.h"
+#include "midiData.h"
 
 //==============================================================================
 // Defines
@@ -162,6 +163,28 @@ typedef struct
     const char* desc;
 } midiControllerDesc_t;
 
+typedef struct
+{
+    enum {
+        SMT_PROGRAM,
+        SMT_CHANNEL,
+        SMT_CONTROLLER,
+    } type;
+
+    union {
+        struct {
+            uint8_t bank;
+            uint8_t program;
+        };
+        uint8_t channel;
+        const midiControllerDesc_t* controller;
+    };
+
+    const char* label;
+    bool dynamicLabel;
+
+} midiMenuItemInfo_t;
+
 /**
  * @brief For storing all synth config data in NVS
  */
@@ -178,7 +201,17 @@ typedef struct
 
     /// @brief Array of selected bank for each channel
     uint16_t banks[16];
+
+    /// @brief The number of set controls in any channel
+    uint8_t controlCounts;
 } synthConfig_t;
+
+typedef struct
+{
+    uint8_t control;
+    uint16_t chanMask;
+    uint8_t chanValues[16];
+} synthControlConfig_t;
 
 typedef struct
 {
@@ -270,9 +303,16 @@ typedef struct
     char channelInstrumentLabels[16][64];
     uint8_t menuSelectedChannel;
 
-    hashMap_t controllerMap;
+    hashMap_t menuMap;
+    // 2 Banks
+    // 128 + 6 (16) Programs
+    // 16 Channels
+    // <= 32 Controllers
+    midiMenuItemInfo_t itemInfos[2 + 128 + 16 + 16 + 32];
+    int itemInfoCount;
 
     synthConfig_t synthConfig;
+    list_t controllerSettings;
 
     int64_t marqueeTimer;
 } synthData_t;
@@ -288,6 +328,9 @@ static void synthDacCallback(uint8_t* samples, int16_t len);
 
 static void synthSetupPlayer(void);
 static void synthApplyConfig(void);
+static void synthSaveControl(uint8_t channel, uint8_t control, uint8_t value);
+static uint8_t synthGetControl(uint8_t channel, uint8_t control, uint8_t defaultValue);
+static uint16_t synthGetControl14bit(uint8_t channel, uint8_t control, uint16_t defValue);
 static void addChannelsMenu(menu_t* menu, const synthConfig_t* config);
 static void synthSetupMenu(void);
 static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile);
@@ -494,15 +537,6 @@ static const char* gmProgramNames[] = {
     "Gunshot",
 };
 
-static const char* magfestProgramNames[] = {
-    "Square Wave",
-    "Sine Wave",
-    "Triangle Wave",
-    "Sawtooth Wave",
-    "MAGFest Wave",
-    "Noise",
-};
-
 static const char* gmProgramCategoryNames[] = {
     "Piano",
     "Chromatic Percussion",
@@ -596,7 +630,7 @@ static const char* channelLabels[] = {
     "Channel 16",
 };
 
-static midiControllerDesc_t controllerDefs[] = {
+static const midiControllerDesc_t controllerDefs[] = {
     {
         .control = 0,
         .type = CTRL_CC_MSB,
@@ -1019,6 +1053,7 @@ static const char* const nvsKeyShufflePos = "synth_shufpos";
 static const char* const nvsKeyIgnoreChan = "synth_ignorech";
 static const char* const nvsKeyChanPerc   = "synth_chpercus";
 static const char* const nvsKeySynthConf  = "synth_confblob";
+static const char* const nvsKeySynthControlConf = "synth_ctrlconf";
 
 static const char* menuItemModeOptions[] = {
     "MIDI Streaming",
@@ -1239,6 +1274,13 @@ static const synthConfig_t defaultSynthConfig = {
         0, 0, 0, 0,
         0, 0, 0, 0,
     },
+    .banks = {
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+    },
+    .controlCounts = 0,
 };
 
 const char synthModeName[]          = "MIDI Player";
@@ -1392,6 +1434,32 @@ static void synthEnterMode(void)
         memcpy(&sd->synthConfig, &defaultSynthConfig, sizeof(synthConfig_t));
     }
 
+    if (sd->synthConfig.controlCounts)
+    {
+        size_t controlBlobLen;
+        if (readNvsBlob(nvsKeySynthControlConf, NULL, &controlBlobLen))
+        {
+            if (controlBlobLen == (sd->synthConfig.controlCounts * sizeof(synthControlConfig_t)))
+            {
+                synthControlConfig_t configs[sd->synthConfig.controlCounts];
+
+                // Expected size matches
+                if (readNvsBlob(nvsKeySynthControlConf, &configs, &controlBlobLen))
+                {
+                    for (int blobIdx = 0; blobIdx < sd->synthConfig.controlCounts; blobIdx++)
+                    {
+                        synthControlConfig_t* copy = (synthControlConfig_t*)malloc(sizeof(synthControlConfig_t));
+                        if (copy)
+                        {
+                            memcpy(copy, &configs[blobIdx], sizeof(synthControlConfig_t));
+                            push(&sd->controllerSettings, copy);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     if (sd->fileMode)
     {
         size_t savedNameLen;
@@ -1465,6 +1533,8 @@ static void synthEnterMode(void)
     // Use smol font for menu items, there might be a lot
     sd->renderer = initMenuManiaRenderer(NULL, NULL, &sd->font);
 
+    hashInit(&sd->menuMap, 512);
+
     synthSetupMenu();
     setupShuffle(sd->customFiles.length);
     synthSetupPlayer();
@@ -1516,20 +1586,21 @@ static void synthExitMode(void)
 
     // Clean up dynamic strings allocated for the controllers
     hashIterator_t iter = {0};
-    while (hashIterate(&sd->controllerMap, &iter))
+    while (hashIterate(&sd->menuMap, &iter))
     {
         char* controllerKey = (char*)iter.key;
-        midiControllerDesc_t* controller = (midiControllerDesc_t*)iter.value;
+        midiMenuItemInfo_t* info = (midiMenuItemInfo_t*)iter.value;
 
-        hashIterRemove(&sd->controllerMap, &iter);
+        hashIterRemove(&sd->menuMap, &iter);
 
-        if (controllerKey != controller->desc)
+        if (info->dynamicLabel)
         {
-            free(controllerKey);
+            free(info->label);
+            info->label = NULL;
         }
     }
 
-    hashDeinit(&sd->controllerMap);
+    hashDeinit(&sd->menuMap);
 
     unloadLyrics(&sd->karaoke);
     unloadMidiFile(&sd->midiFile);
@@ -1540,6 +1611,12 @@ static void synthExitMode(void)
     {
         free(sd->filenameBuf);
         sd->filenameBuf = NULL;
+    }
+
+    synthControlConfig_t* control;
+    while (NULL != (control = pop(&sd->controllerSettings)))
+    {
+        free(control);
     }
 
     char* customFilename;
@@ -1879,16 +1956,150 @@ static void synthApplyConfig(void)
         midiSetProgram(&sd->midiPlayer, i, sd->synthConfig.programs[i] & 0x7F);
     }
 
+    int maxConfCount = sd->controllerSettings.length;
+    synthControlConfig_t configBlob[maxConfCount];
+    int confCount = 0;
+    for (node_t* controlNode = sd->controllerSettings.first; controlNode != NULL && confCount < maxConfCount; controlNode = controlNode->next)
+    {
+        synthControlConfig_t* inConf = (synthControlConfig_t*)controlNode->val;
+        if (inConf)
+        {
+            // Apply the controller
+            for (int chIdx = 0; chIdx < 16; chIdx++)
+            {
+                if (inConf->chanMask & (1 << chIdx))
+                {
+                    midiControlChange(&sd->midiPlayer, chIdx, (midiControl_t)inConf->control, inConf->chanValues[chIdx]);
+                }
+            }
+            memcpy(&configBlob[confCount++], inConf, sizeof(synthControlConfig_t));
+        }
+    }
+
+    if (confCount > 0)
+    {
+        writeNvsBlob(nvsKeySynthControlConf, configBlob, sizeof(synthControlConfig_t) * confCount);
+    }
+
+    sd->synthConfig.controlCounts = confCount;
+
     // Save to NVS
     writeNvsBlob(nvsKeySynthConf, &sd->synthConfig, sizeof(synthConfig_t));
+}
+
+static void synthSaveControl(uint8_t channel, uint8_t control, uint8_t value)
+{
+    for (node_t* controlNode = sd->controllerSettings.first;
+         controlNode != NULL;
+         controlNode = controlNode->next)
+    {
+        synthControlConfig_t* conf = (synthControlConfig_t*)controlNode->val;
+        if (conf && conf->control == control)
+        {
+            conf->chanMask |= (1 << channel);
+            conf->chanValues[channel] = value;
+            return;
+        }
+    }
+
+    // Not found, add one
+    synthControlConfig_t* conf = calloc(1, sizeof(synthControlConfig_t));
+    if (conf)
+    {
+        conf->control = control;
+        conf->chanMask = (1 << channel);
+        conf->chanValues[channel] = value;
+
+        push(&sd->controllerSettings, conf);
+    }
+}
+
+static uint8_t synthGetControl(uint8_t channel, uint8_t control, uint8_t defValue)
+{
+    for (node_t* controlNode = sd->controllerSettings.first;
+         controlNode != NULL;
+         controlNode = controlNode->next)
+    {
+        synthControlConfig_t* conf = (synthControlConfig_t*)controlNode->val;
+        if (conf && conf->control == control)
+        {
+            if (conf->chanMask & (1 << channel))
+            {
+                return conf->chanValues[channel];
+            }
+            else
+            {
+                return defValue;
+            }
+        }
+    }
+
+    // Not found
+    return defValue;
+}
+
+static uint16_t synthGetControl14bit(uint8_t channel, uint8_t control, uint16_t defValue)
+{
+    uint8_t msbControl = (uint8_t)control & ~(1 << 5);
+    uint8_t lsbControl = (uint8_t)control | (1 << 5);
+
+    if (control >= 64)
+    {
+        // There are a couple other MSB/LSB controllers, and those have an odd MSB and an even LSB
+        msbControl = (uint8_t)control | 1;
+        lsbControl = (uint8_t)control & ~1;
+    }
+
+    uint16_t result = synthGetControl(channel, msbControl, (defValue >> 7) & 0x7F);
+    result <<= 7;
+    result |= synthGetControl(channel, lsbControl, defValue & 0x7F);
+
+    return result;
 }
 
 static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 {
     menu = startSubMenu(menu, menuItemChannels);
 
+    // Pre-add the item infos for the programs
+    for (int gmProg = 0; gmProg < 128; gmProg++)
+    {
+        midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+
+        itemInfo->type = SMT_PROGRAM;
+        itemInfo->bank = 0;
+        itemInfo->program = gmProg;
+        itemInfo->label = gmProgramNames[gmProg];
+        itemInfo->dynamicLabel = false;
+
+        hashPut(&sd->menuMap, gmProgramNames[gmProg], itemInfo);
+    }
+
+    for (int magProg = 0; magProg < magfestTimbreCount; magProg++)
+    {
+        midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+
+        itemInfo->type = SMT_PROGRAM;
+        itemInfo->bank = 1;
+        itemInfo->program = magProg;
+        itemInfo->label = magfestTimbres[magProg]->name;
+        itemInfo->dynamicLabel = false;
+
+        hashPut(&sd->menuMap, itemInfo->label, itemInfo);
+    }
+
+    // Controllers are pretty complicated so just do those the first time with the rest of their logic
+    bool controllersSetUp = false;
+
     for (int chIdx = 0; chIdx < 16; chIdx++)
     {
+        midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+        itemInfo->type = SMT_CHANNEL;
+        itemInfo->channel = chIdx;
+        itemInfo->label = channelLabels[chIdx];
+        itemInfo->dynamicLabel = false;
+        hashPut(&sd->menuMap, channelLabels[chIdx], itemInfo);
+
         menu = startSubMenu(menu, channelLabels[chIdx]);
         addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds, (config->ignoreChannelMask & (1 << chIdx)) ? 1 : 0);
         addSettingsOptionsItemToMenu(menu, menuItemPercussion, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemPercussionBounds, (config->percChannelMask & (1 << chIdx)) ? 1 : 0);
@@ -1922,16 +2133,16 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
             else
             {
                 uint8_t program = config->programs[chIdx];
-                if (program >= ARRAY_SIZE(magfestProgramNames))
+                if (program >= magfestTimbreCount)
                 {
                     program = 0;
                 }
 
-                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, magfestProgramNames[program]);
+                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, magfestTimbres[program]->name);
                 menu = startSubMenu(menu, nameBuffer);
-                for (int instrument = 0; instrument < ARRAY_SIZE(magfestProgramNames); instrument++)
+                for (int instrument = 0; instrument < magfestTimbreCount; instrument++)
                 {
-                    addSingleItemToMenu(menu, magfestProgramNames[instrument]);
+                    addSingleItemToMenu(menu, magfestTimbres[instrument]->name);
                 }
                 menu = endSubMenu(menu);
             }
@@ -1939,14 +2150,13 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
         menu = startSubMenu(menu, menuItemControls);
 
-        hashInit(&sd->controllerMap, 256);
-
         for (int ctrlIdx = 0; ctrlIdx < ARRAY_SIZE(controllerDefs); ctrlIdx++)
         {
             const midiControllerDesc_t* controller = &controllerDefs[ctrlIdx];
             if (synthIsControlSupported(controller))
             {
                 char* labelStr = controller->desc;
+                bool dynamicLabel = false;
 
                 if (controller->type == CTRL_SWITCH)
                 {
@@ -1956,10 +2166,22 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                     {
                         snprintf(newStr, labelStrSize, "%s: ", controller->desc);
                         labelStr = newStr;
+                        dynamicLabel = true;
                     }
                 }
 
-                hashPut(&sd->controllerMap, labelStr, controller);
+                if (!controllersSetUp)
+                {
+                    midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+                    itemInfo->type = SMT_CONTROLLER;
+                    itemInfo->controller = controller;
+                    itemInfo->label = labelStr;
+                    itemInfo->dynamicLabel = dynamicLabel;
+
+                    // If the label IS dynamic, we don't actually change it without resetting the menu
+                    // So, don't worry about the hash key getting out of sync here
+                    hashPut(&sd->menuMap, labelStr, itemInfo);
+                }
 
                 switch (controller->type)
                 {
@@ -1967,14 +2189,14 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                     {
                         // Options menu item, on/off
                         addSettingsOptionsItemToMenu(menu, labelStr, menuItemOffOnOptions, menuItemControlSwitchValues, ARRAY_SIZE(menuItemControlSwitchValues), &menuItemControl7bitBounds,
-                                                     midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control));
+                                                     synthGetControl(chIdx, controller->control, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
                         break;
                     }
 
                     case CTRL_CC_MSB:
                     {
                         // Settings value item
-                        addSettingsItemToMenu(menu, labelStr, &menuItemControl14bitBounds, midiGetControlValue14bit(&sd->midiPlayer, chIdx, (midiControl_t)controller->control));
+                        addSettingsItemToMenu(menu, labelStr, &menuItemControl14bitBounds, synthGetControl14bit(chIdx, controller->control, midiGetControlValue14bit(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
                         break;
                     }
 
@@ -1988,7 +2210,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                     case CTRL_UNDEFINED:
                     {
                         // Settings value item, 0-127
-                        addSettingsItemToMenu(menu, labelStr, &menuItemControl7bitBounds, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control));
+                        addSettingsItemToMenu(menu, labelStr, &menuItemControl7bitBounds, synthGetControl(chIdx, controller->control, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
                         break;
                     }
 
@@ -2001,6 +2223,8 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                 }
             }
         }
+
+        controllersSetUp = true;
 
         menu = endSubMenu(menu);
 
@@ -2027,6 +2251,25 @@ static void synthSetupMenu(void)
         menuSavePosition(menuState, ARRAY_SIZE(menuState), sd->menu);
         deinitMenu(sd->menu);
         sd->menu = NULL;
+
+        // Clean up dynamic strings allocated for the controllers
+        hashIterator_t iter = {0};
+        while (hashIterate(&sd->menuMap, &iter))
+        {
+            char* controllerKey = (char*)iter.key;
+            midiMenuItemInfo_t* info = (midiMenuItemInfo_t*)iter.value;
+
+            hashIterRemove(&sd->menuMap, &iter);
+
+            if (info->dynamicLabel)
+            {
+                free(info->label);
+                info->label = NULL;
+                info->dynamicLabel = false;
+            }
+        }
+
+        sd->itemInfoCount = 0;
     }
 
     sd->menu = initMenu(synthModeName, synthMenuCb);
@@ -2176,7 +2419,6 @@ static void synthSetFile(const char* filename)
     // First: stop and reset the MIDI player
     midiPlayerReset(&sd->midiPlayer);
 
-    // TODO: make applyPlayerSettings() function instead
     synthSetupPlayer();
 
     // Next: Free any text that might reference the song file still
@@ -3007,6 +3249,7 @@ static void synthHandleButton(const buttonEvt_t evt)
                     {
                         // Restart song
                         midiSeek(&sd->midiPlayer, 0);
+                        synthApplyConfig();
                     }
                     else
                     {
@@ -3053,6 +3296,10 @@ static void synthHandleButton(const buttonEvt_t evt)
                         {
                             midiPause(&sd->midiPlayer, !sd->midiPlayer.paused);
                         }
+                    }
+                    else
+                    {
+                        synthApplyConfig();
                     }
                     break;
                 }
@@ -3678,6 +3925,14 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             {
                 sd->synthConfig.percChannelMask &= ~(1 << sd->menuSelectedChannel);
             }
+            for (node_t* node = sd->controllerSettings.first; node != NULL; node = node->next)
+            {
+                synthControlConfig_t* config = (synthControlConfig_t*)node->val;
+                if (config)
+                {
+                    config->chanMask &= ~(1 << sd->menuSelectedChannel);
+                }
+            }
             synthApplyConfig();
             sd->updateMenu = true;
         }
@@ -3687,6 +3942,11 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
         if (selected)
         {
             memcpy(&sd->synthConfig, &defaultSynthConfig, sizeof(synthConfig_t));
+            synthControlConfig_t* control;
+            while (NULL != (control = pop(&sd->controllerSettings)))
+            {
+                free(control);
+            }
             synthApplyConfig();
             sd->updateMenu = true;
         }
@@ -3699,86 +3959,90 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
         sd->midiPlayer.headroom = sd->headroom;
         writeNvs32(nvsKeyHeadroom, value);
     }
-    else if (channelLabels[0] <= label && label <= channelLabels[15])
-    {
-        // Channel items
-        for (int i = 0; i < 16; i++)
-        {
-            if (label == channelLabels[i])
-            {
-                sd->menuSelectedChannel = i;
-                break;
-            }
-        }
-    }
-    else if (selected && gmProgramNames[0] <= label && label <= gmProgramNames[127])
-    {
-        // Instrument items
-        for (int i = 0; i < 128; i++)
-        {
-            if (label == gmProgramNames[i])
-            {
-                sd->synthConfig.programs[sd->menuSelectedChannel] = i;
-                char* nameBuffer = sd->channelInstrumentLabels[sd->menuSelectedChannel];
-                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, label);
-                synthApplyConfig();
-            }
-        }
-    }
-    else if (selected && magfestProgramNames[0] <= label && label <= magfestProgramNames[ARRAY_SIZE(magfestProgramNames)-1])
-    {
-        for (int i = 0; i < ARRAY_SIZE(magfestProgramNames); i++)
-        {
-            if (label == magfestProgramNames[i])
-            {
-                sd->synthConfig.programs[sd->menuSelectedChannel] = i;
-                char* nameBuffer = sd->channelInstrumentLabels[sd->menuSelectedChannel];
-                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, label);
-                synthApplyConfig();
-            }
-        }
-    }
     else
     {
-        void* controllerItem = hashGet(&sd->controllerMap, label);
-        if (controllerItem)
+        // Mapped menu items
+        midiMenuItemInfo_t* itemInfo = (midiMenuItemInfo_t*)hashGet(&sd->menuMap, label);
+
+        if (itemInfo != NULL)
         {
-            const midiControllerDesc_t* desc = (const midiControllerDesc_t*)controllerItem;
-
-            if (desc->type == CTRL_NO_DATA)
+            printf("Found item from map for %s\n", label);
+            switch (itemInfo->type)
             {
-                if (selected)
+                case SMT_PROGRAM:
                 {
-                    midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, 0);
-                }
-            }
-            else if (desc->type == CTRL_SWITCH)
-            {
-                midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, BOOL_TO_MIDI(value));
-            }
-            else if (desc->type == CTRL_CC_LSB || desc->type == CTRL_CC_LSB)
-            {
-                // Most of the MSB/LSB controllers are in the 0-63 range, with MSB in 0-15 and LSB in 32-47
-                uint8_t msbControl = desc->type & ~(1 << 5);
-                uint8_t lsbControl = desc->type | (1 << 5);
-
-                if (desc->control > 64)
-                {
-                    // There are a couple other MSB/LSB controllers, and those have an odd MSB and an even LSB
-                    msbControl = desc->type | 1;
-                    lsbControl = desc->type & ~1;
+                    if (selected)
+                    {
+                        sd->synthConfig.banks[sd->menuSelectedChannel] = itemInfo->bank;
+                        sd->synthConfig.programs[sd->menuSelectedChannel] = itemInfo->program;
+                        char* nameBuffer = sd->channelInstrumentLabels[sd->menuSelectedChannel];
+                        snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, label);
+                        synthApplyConfig();
+                        sd->updateMenu = true;
+                    }
+                    break;
                 }
 
-                midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, msbControl, (value >> 7) & 0x7F);
-                midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, msbControl, value & 0x7F);
-            }
-            else if (desc->type == CTRL_7BIT)
-            {
-                midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, value & 0x7F);
+                case SMT_CHANNEL:
+                {
+                    sd->menuSelectedChannel = itemInfo->channel;
+                    break;
+                }
+
+                case SMT_CONTROLLER:
+                {
+                    const midiControllerDesc_t* desc = itemInfo->controller;
+                    bool saveControl = true;
+
+                    if (desc->type == CTRL_NO_DATA)
+                    {
+                        saveControl = false;
+                        if (selected)
+                        {
+                            midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, 0);
+                        }
+                    }
+                    else
+                    {
+                        if (desc->type == CTRL_SWITCH)
+                        {
+                            midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, BOOL_TO_MIDI(value));
+                        }
+                        else if (desc->type == CTRL_CC_LSB || desc->type == CTRL_CC_LSB)
+                        {
+                            // Most of the MSB/LSB controllers are in the 0-63 range, with MSB in 0-15 and LSB in 32-47
+                            uint8_t msbControl = desc->control & ~(1 << 5);
+                            uint8_t lsbControl = desc->control | (1 << 5);
+
+                            if (desc->control > 64)
+                            {
+                                // There are a couple other MSB/LSB controllers, and those have an odd MSB and an even LSB
+                                msbControl = desc->control | 1;
+                                lsbControl = desc->control & ~1;
+                            }
+
+                            printf("Setting controls %" PRIu8 " and %" PRIu8 " for control %" PRIu8 "\n", msbControl, lsbControl, (uint8_t)desc->control);
+
+                            midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, msbControl, (value >> 7) & 0x7F);
+                            midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, lsbControl, value & 0x7F);
+                        }
+                        else if (desc->type == CTRL_7BIT)
+                        {
+                            midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, value & 0x7F);
+                        }
+                    }
+
+                    if (saveControl)
+                    {
+                        synthSaveControl(sd->menuSelectedChannel, desc->control, value);
+                    }
+                    break;
+                }
             }
         }
         else if (selected)
         {
+            printf("No map item found for label %s\n", label);
             // Song items
             for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
             {
