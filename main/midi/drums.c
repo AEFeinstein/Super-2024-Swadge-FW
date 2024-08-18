@@ -533,6 +533,25 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
     }
     else if (LOW_BONGO == drum)
     {
+        // Colossus Roar
+        static bool colossusLoaded = false;
+        static uint8_t* colossusSample = NULL;
+        static size_t colossusLen = 0;
+        if (!colossusLoaded)
+        {
+            colossusSample = cnfsGetFile("colossus.bin", &colossusLen);
+            colossusLoaded = true;
+        }
+
+        if (idx / SAMPLE_FACTOR >= (colossusLen - 1))
+        {
+            *done = true;
+        }
+
+        return (int)colossusSample[idx / SAMPLE_FACTOR] - 128;
+    }
+    else if (SHORT_WHISTLE == drum)
+    {
         // MAG
         static bool magLoaded = false;
         static uint8_t* magSample = NULL;
@@ -552,7 +571,7 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
 
         return magSample[idx / SAMPLE_FACTOR];
     }
-    else if (MUTE_HIGH_CONGA == drum)
+    else if (LONG_WHISTLE == drum)
     {
         // FEST
         static bool festLoaded = false;
@@ -570,25 +589,6 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
         }
 
         return festSample[idx / SAMPLE_FACTOR];
-    }
-    else if (OPEN_HIGH_CONGA == drum)
-    {
-        // Colossus Roar
-        static bool colossusLoaded = false;
-        static uint8_t* colossusSample = NULL;
-        static size_t colossusLen = 0;
-        if (!colossusLoaded)
-        {
-            colossusSample = cnfsGetFile("colossus.bin", &colossusLen);
-            colossusLoaded = true;
-        }
-
-        if (idx / SAMPLE_FACTOR >= (colossusLen - 1))
-        {
-            *done = true;
-        }
-
-        return (int)colossusSample[idx / SAMPLE_FACTOR] - 128;
     }
     else
     {

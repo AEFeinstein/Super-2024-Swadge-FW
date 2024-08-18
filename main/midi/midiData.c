@@ -117,13 +117,73 @@ const midiTimbre_t magfestWaveTimbre = {
     .name = "MAGFest Wave",
 };
 
+const midiTimbre_t magstockWaveTimbre = {
+    .type = WAVETABLE,
+    .flags = TF_NONE,
+    .waveIndex = 1,
+    .waveFunc = magfestWaveTableFunc,
+    .envelope = {
+        .attackTime = MS_TO_SAMPLES(8),
+        // attack is .5(samples)
+        .attackTimeVel = -0x80,
+        .decayTime = MS_TO_SAMPLES(16),
+        .decayTimeVel = 0,
+        .sustainVol = 1,
+        .sustainVolVel = 0x200,
+        .releaseTime = MS_TO_SAMPLES(320),
+        // the higher the velocity the longer the release time
+        .releaseTimeVel = 0x800,
+    },
+    .effects = {
+        .chorus = 0,
+    },
+    .name = "MAGStock Wave",
+};
+
+const midiTimbre_t squareHitWaveTimbre = {
+    .type = WAVE_SHAPE,
+    .flags = TF_NONE,
+    .shape = SHAPE_SQUARE,
+    .envelope = {
+        .attackTime = 0,
+        .attackTimeVel = 0,
+        .decayTime = MS_TO_SAMPLES(125),
+        .decayTimeVel = 0,
+        .sustainVol = 0,
+        .sustainVolVel = 0,
+        .releaseTime = 0,
+        .releaseTimeVel = 0,
+    },
+    .name = "Square Hit",
+};
+
+const midiTimbre_t noiseHitTimbre = {
+    .type = WAVE_SHAPE,
+    .flags = TF_NONE,
+    .shape = SHAPE_NOISE,
+    .envelope = {
+        .attackTime = 0,
+        .attackTimeVel = 0,
+        .decayTime = MS_TO_SAMPLES(125),
+        .decayTimeVel = 0,
+        .sustainVol = 0,
+        .sustainVolVel = 0,
+        .releaseTime = 0,
+        .releaseTimeVel = 0,
+    },
+    .name = "Noise Hit",
+};
+
 const midiTimbre_t* magfestTimbres[] = {
     &squareWaveTimbre,
     &sineWaveTimbre,
     &triangleWaveTimbre,
     &sawtoothWaveTimbre,
     &magfestWaveTimbre,
+    &magstockWaveTimbre,
     &noiseTimbre,
+    &squareHitWaveTimbre,
+    &noiseHitTimbre,
 };
 
 const size_t magfestTimbreCount = ARRAY_SIZE(magfestTimbres);

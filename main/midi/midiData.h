@@ -4,8 +4,10 @@
 
 // Instruments
 extern const midiTimbre_t acousticGrandPianoTimbre;
-extern const midiTimbre_t magfestWaveTimbre;
+extern const midiTimbre_t* gmTimbres[];
+extern const size_t gmTimbreCount;
 
+extern const midiTimbre_t magfestWaveTimbre;
 extern const midiTimbre_t* magfestTimbres[];
 extern const size_t magfestTimbreCount;
 
