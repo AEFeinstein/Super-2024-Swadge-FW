@@ -246,8 +246,8 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                 }
 
                 voice->transitionTicksTotal = voice->transitionTicks = decayTime;
-                voice->targetVol = (uint8_t)(sustainVol & 0xFF);
-                pressureVol = sustainVol;
+                voice->targetVol = (uint8_t)(((voice->transitionStartVol * sustainVol) >> 8) & 0xFF);
+                pressureVol = voice->targetVol;
             }
             else if (states->decay & voiceBit)
             {
@@ -256,7 +256,7 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                 // Ok so we're going from DECAY to SUSTAIN, sustain lasts forever
                 // BUT - we only go to sustain IF the note is still ON (via key on, hold, or sustenuto)
                 // Otherwise, we skip straight to release
-                if ((voiceBit & (states->on | states->held | states->sustenuto)))
+                if ((voiceBit & (states->on | states->held | states->sustenuto)) && sustainVol)
                 {
                     // Go to sustain
                     states->sustain |= voiceBit;
@@ -274,7 +274,7 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
 
                     pressureVol = voice->transitionStartVol;
 
-                    voice->targetVol = (uint8_t)(sustainVol & 0xFF);
+                    voice->targetVol = (pressureVol * sustainVol) >> 8;
                     voice->transitionTicksTotal = UINT32_MAX;
                     voice->transitionTicks = UINT32_MAX;
 
@@ -995,6 +995,7 @@ void midiAllSoundOff(midiPlayer_t* player)
         midiChannel_t* chan = &player->channels[chanIdx];
         chan->allocedVoices = 0;
         chan->held          = false;
+        chan->sustenuto     = false;
     }
 }
 
