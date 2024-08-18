@@ -464,7 +464,8 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
         bool done = false;
         sum += voices[voiceIdx].timbre->percussion.playFunc(voices[voiceIdx].note, voices[voiceIdx].sampleTick++, &done,
                                                             voices[voiceIdx].percScratch,
-                                                            voices[voiceIdx].timbre->percussion.data);
+                                                            voices[voiceIdx].timbre->percussion.data)
+                * voices[voiceIdx].velocity / 127;
 
         if (done)
         {
@@ -511,6 +512,7 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
             }
 
             states->on &= ~(1 << voiceIdx);
+            player->channels[voices[voiceIdx].channel].allocedVoices &= ~(1 << voiceIdx);
             voices[voiceIdx].sampleTick = 0;
             memset(voices[voiceIdx].percScratch, 0, 4 * sizeof(uint32_t));
         }
