@@ -4008,7 +4008,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                         {
                             midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, BOOL_TO_MIDI(value));
                         }
-                        else if (desc->type == CTRL_CC_LSB || desc->type == CTRL_CC_LSB)
+                        else if (desc->type == CTRL_CC_LSB || desc->type == CTRL_CC_MSB)
                         {
                             // Most of the MSB/LSB controllers are in the 0-63 range, with MSB in 0-15 and LSB in 32-47
                             uint8_t msbControl = desc->control & ~(1 << 5);
