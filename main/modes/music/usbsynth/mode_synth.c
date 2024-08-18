@@ -2488,11 +2488,9 @@ static void drawSynthMode(void)
     {
         midiChannel_t* channel = &sd->midiPlayer.channels[ch];
         bool percussion        = channel->percussion;
-        sd->playing[ch]
-            = 0
-              != (channel->allocedVoices
-                  & (percussion ? (sd->midiPlayer.percVoiceStates.on | sd->midiPlayer.percVoiceStates.held | sd->midiPlayer.percVoiceStates.sustenuto)
-                                : (sd->midiPlayer.poolVoiceStates.on | sd->midiPlayer.poolVoiceStates.held | sd->midiPlayer.poolVoiceStates.sustenuto)));
+        voiceStates_t* states = (percussion ? &sd->midiPlayer.percVoiceStates : &sd->midiPlayer.poolVoiceStates);
+        sd->playing[ch] = (0 != (channel->allocedVoices & (states->on | states->held | states->sustenuto)));
+
         paletteColor_t col = sd->playing[ch] ? c555 : c222;
 
         if (sd->viewMode == VM_PRETTY)
@@ -2518,6 +2516,11 @@ static void drawSynthMode(void)
                 drawRect(x, imgY, x + 32, imgY + 32, col);
             }
 
+            if (sd->midiPlayer.channels[ch].sustenuto)
+            {
+                drawLine(x, imgY + 31, x + 31, imgY + 31, c500, 2);
+            }
+
             int16_t infoY = (ch < 8) ? (imgY + 32 + 2) : (imgY - 16 - 2);
             drawChannelInfo(&sd->midiPlayer, ch, x, infoY, 32, 16);
             drawPitchWheelRect(ch, x, infoY - 1, 32, 18);
@@ -2527,7 +2530,7 @@ static void drawSynthMode(void)
             const char* programName = percussion
                                           ? ((sd->localChannel == 9 && IS_DRUM(sd->startupNote))
                                                  ? gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]
-                                                 : "<Percussion>")
+                                                 : sd->midiPlayer.channels[ch].timbre.name)
                                           : gmProgramNames[sd->midiPlayer.channels[ch].program];
             if (sd->midiPlayer.channels[ch].bank != 0)
             {
@@ -3562,9 +3565,9 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
         int16_t x0       = x + ((chan->percussion ? voiceIdx : i++) * (BAR_WIDTH + BAR_SPACING));
         int16_t x1       = x0 + BAR_WIDTH;
 
-        if (voices[voiceIdx].oscillators[0].cVol > 0 || voices[voiceIdx].oscillators[0].tVol > 0)
+        if (chan->percussion || voices[voiceIdx].oscillators[0].cVol > 0 || voices[voiceIdx].oscillators[0].tVol > 0)
         {
-            int16_t barH = MAX((voices[voiceIdx].oscillators[0].cVol) * BAR_HEIGHT / 255, 1);
+            int16_t barH = MAX((chan->percussion ? (voices[voiceIdx].velocity << 1 | 1) : voices[voiceIdx].oscillators[0].cVol) * BAR_HEIGHT / 255, 1);
 
             fillDisplayArea(x0, y + (BAR_HEIGHT - barH), x1, y + BAR_HEIGHT, noteToColor(voices[voiceIdx].note));
         }
@@ -4020,8 +4023,6 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                                 msbControl = desc->control | 1;
                                 lsbControl = desc->control & ~1;
                             }
-
-                            printf("Setting controls %" PRIu8 " and %" PRIu8 " for control %" PRIu8 "\n", msbControl, lsbControl, (uint8_t)desc->control);
 
                             midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, msbControl, (value >> 7) & 0x7F);
                             midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, lsbControl, value & 0x7F);
