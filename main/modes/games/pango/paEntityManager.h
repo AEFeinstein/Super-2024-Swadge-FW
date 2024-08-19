@@ -32,8 +32,8 @@ struct paEntityManager_t
     uint8_t activeEntities;
 
     int16_t activeEnemies;
-    int16_t maxEnemies;
-    int16_t remainingEnemies;
+
+    paGameData_t* gameData;
 
     paEntity_t* viewEntity;
     paEntity_t* playerEntity;

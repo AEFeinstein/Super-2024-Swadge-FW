@@ -40,7 +40,7 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
     gameData->soundManager       = soundManager;
 }
 
-void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData)
+void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t levelIndex)
 {
     gameData->gameState          = 0;
     gameData->btnState           = 0;
@@ -60,6 +60,8 @@ void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData)
     gameData->initialHp          = 1;
     gameData->continuesUsed      = (gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer        = 0;
+
+    pa_setDifficultyLevel(gameData, levelIndex);
 
     pa_resetGameDataLeds(gameData);
 }
@@ -264,4 +266,10 @@ void pa_updateLedsGameClear(paGameData_t* gameData)
         }
     }
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}
+
+void pa_setDifficultyLevel(paGameData_t* gameData, uint16_t levelIndex){
+    gameData->remainingEnemies = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + TOTAL_ENEMIES_LOOKUP_OFFSET];
+    gameData->maxActiveEnemies = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET];
+    gameData->enemyInitialSpeed = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_INITIAL_SPEED_LOOKUP_OFFSET];
 }

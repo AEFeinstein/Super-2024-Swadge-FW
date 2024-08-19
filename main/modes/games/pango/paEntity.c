@@ -1434,7 +1434,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
        if(PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) == self->homeTileX && PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) == self->homeTileY){
             pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
             if(self->jumpPower == PA_TILE_SPAWN_BLOCK_0){
-                self->entityManager->remainingEnemies--;
+                self->entityManager->gameData->remainingEnemies--;
             }
         } else {
             self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)] = self->jumpPower;
@@ -2231,7 +2231,7 @@ void killEnemy(paEntity_t* target)
     target->updateFunction     = &updateEntityDead;
     target->entityManager->activeEnemies--;
 
-    if(target->entityManager->activeEnemies == 0 && target->entityManager->remainingEnemies == 0){
+    if(target->entityManager->activeEnemies == 0 && target->entityManager->gameData->remainingEnemies == 0){
         target->gameData->changeState = PA_ST_LEVEL_CLEAR;
         target->entityManager->playerEntity->spriteIndex = PA_SP_PLAYER_WIN;
         target->entityManager->playerEntity->updateFunction = &pa_updateDummy;

@@ -314,7 +314,7 @@ void updateGame(pango_t* self)
     detectGameStateChange(self);
     detectBgmChange(self);
 
-    self->gameData.coins = self->entityManager.remainingEnemies;
+    self->gameData.coins = self->gameData.remainingEnemies;
     drawPangoHud(&(self->radiostars), &(self->gameData));
 
     self->gameData.frameCount++;
@@ -455,7 +455,7 @@ void updateTitleScreen(pango_t* self)
                             self->gameData.level = 1;
                         }*/
 
-                        pa_initializeGameDataFromTitleScreen(&(self->gameData));
+                        pa_initializeGameDataFromTitleScreen(&(self->gameData), levelIndex);
                         self->entityManager.activeEnemies = 0;
                         pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
                         pa_generateMaze(&(pango->tilemap));
@@ -809,7 +809,7 @@ void changeStateGame(pango_t* self)
     entityManager->playerEntity->hp = self->gameData.initialHp;
 
     if(entityManager->activeEnemies == 0){
-        for(uint16_t i = 0; i<self->entityManager.maxEnemies; i++){
+        for(uint16_t i = 0; i<self->gameData.maxActiveEnemies; i++){
             pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
         }
     } else {
@@ -1110,9 +1110,11 @@ void updateLevelClear(pango_t* self)
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }
 
+                pa_setDifficultyLevel(&(pango->gameData), getLevelIndex(self->gameData.world,self->gameData.level));
                 pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
                 pa_generateMaze(&(pango->tilemap));
                 pa_placeEnemySpawns(&(pango->tilemap));
+
                 self->entityManager.activeEnemies = 0;
 
                 changeStateReadyScreen(self);

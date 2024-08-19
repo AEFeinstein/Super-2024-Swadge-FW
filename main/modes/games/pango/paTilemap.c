@@ -480,7 +480,7 @@ void pa_genMakePath(paTilemap_t* tilemap, uint32_t x, uint32_t y){
 }
 
 void pa_placeEnemySpawns(paTilemap_t* tilemap){
-    int16_t enemySpawnsToPlace = 8;
+    int16_t enemySpawnsToPlace = tilemap->entityManager->gameData->remainingEnemies;
     int16_t enemiesPlaced = 0;
     bool previouslyPlaced = false;
     int16_t iterations = 0;
@@ -508,5 +508,5 @@ void pa_placeEnemySpawns(paTilemap_t* tilemap){
         iterations++;
     }
 
-    tilemap->entityManager->remainingEnemies = enemiesPlaced;
+    tilemap->entityManager->gameData->remainingEnemies = enemiesPlaced;
 }

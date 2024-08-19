@@ -35,13 +35,14 @@ void pa_initializeEntityManager(paEntityManager_t* entityManager, paTilemap_t* t
 
     entityManager->activeEntities = 0;
     entityManager->tilemap        = tilemap;
+    entityManager->gameData       = gameData;
 
     // entityManager->viewEntity = pa_createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,
     // entityManager->tilemap->warps[0].y * 16);
     entityManager->playerEntity = entityManager->viewEntity;
 
-    entityManager->activeEnemies = 0;
-    entityManager->maxEnemies = 3;
+    //entityManager->activeEnemies = 0;
+    //entityManager->maxEnemies = 3;
 }
 
 void pa_loadSprites(paEntityManager_t* entityManager)
@@ -468,7 +469,7 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->scoreValue           = 100;
     entity->stateTimer           = -1;
     entity->tempStateTimer       = -1;
-    entity->baseSpeed = 1;
+    entity->baseSpeed = entityManager->gameData->enemyInitialSpeed;
 
     entity->type                 = PA_ENTITY_TEST;
     entity->spriteIndex          = PA_SP_ENEMY_SOUTH;
@@ -1561,7 +1562,7 @@ paEntity_t* createBgmStop(paEntityManager_t* entityManager, uint16_t x, uint16_t
 paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
     paEntity_t* newEnemy = NULL;
 
-    if(entityManager->remainingEnemies > 0 && entityManager->activeEnemies < entityManager->maxEnemies){
+    if(entityManager->gameData->remainingEnemies > 0 && entityManager->activeEnemies < entityManager->gameData->maxActiveEnemies){
         uint16_t iterations = 0;
         while(newEnemy == NULL && iterations < 2){
             for(uint16_t ty = 1; ty < 14; ty++){
@@ -1569,7 +1570,7 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
                    
                     uint8_t t = pa_getTile(entityManager->tilemap, tx, ty);
 
-                    if(t == PA_TILE_SPAWN_BLOCK_0 && (iterations > 0 || !(esp_random() % entityManager->remainingEnemies) )){
+                    if(t == PA_TILE_SPAWN_BLOCK_0 && (iterations > 0 || !(esp_random() % entityManager->gameData->remainingEnemies) )){
                         newEnemy = createTestObject(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
                         
                         if(newEnemy != NULL){
@@ -1578,7 +1579,7 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
                             newEnemy->stateTimer = 120;
                             pa_createBreakBlock(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
                             entityManager->activeEnemies++;
-                            entityManager->remainingEnemies--;
+                            entityManager->gameData->remainingEnemies--;
                             return newEnemy;
                         }
                     } 
