@@ -37,12 +37,16 @@
  */
 typedef enum
 {
-    NO_SCROLL      = 0,                             ///< TODO doc
-    SCROLL_VERT    = 1,                             ///< TODO doc
-    SCROLL_HORIZ   = 2,                             ///< TODO doc
-    SCROLL_REVERSE = 4,                             ///< TODO doc
-    SCROLL_VERT_R  = SCROLL_VERT | SCROLL_REVERSE,  ///< TODO doc
-    SCROLL_HORIZ_R = SCROLL_HORIZ | SCROLL_REVERSE, ///< TODO doc
+    NO_SCROLL      = 0,                             ///< Do not allow setting values to scroll with buttons
+    SCROLL_VERT    = 1,                             ///< Allow scrolling setting value with Up/Down D-Pad buttons
+    SCROLL_HORIZ   = 2,                             ///< Allow scrolling setting value with Let/Right D-Pad buttons
+    SCROLL_REVERSE = 4,                             ///< Flip the direction of scrolling
+    SCROLL_VERT_R  = SCROLL_VERT | SCROLL_REVERSE,  ///< Allow scrolling setting value with Up/Down, reversed
+    SCROLL_HORIZ_R = SCROLL_HORIZ | SCROLL_REVERSE, ///< Allow scrolling setting value with Up/Down, reversed
+    ZOOM_SUBMENU   = 8,                             ///< When zoomed to a settings item, display it as a submenu
+    ZOOM_GAUGE     = 16,                            ///< When zoomed to a settings item, display it as a gauge
+    ZOOM_CONVEYOR  = 32,                            ///< When zoomed to a settings item, display it as a rotating conveyor belt
+    MASK_ZOOM      = 56,                            ///< Mask for all zoom options
 } wheelScrollDir_t;
 
 /**
@@ -79,6 +83,7 @@ void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, cons
                           wheelScrollDir_t scrollDir);
 void wheelMenuSetItemColor(wheelMenuRenderer_t* renderer, const char* label, paletteColor_t selectedBg,
                            paletteColor_t unselectedBg);
+void wheelMenuSetItemTextIcon(wheelMenuRenderer_t* renderer, const char* label, const char* textIcon);
 menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t angle, uint16_t radius);
 menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, const buttonEvt_t* evt);
 menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer);
