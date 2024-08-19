@@ -550,16 +550,17 @@ int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* te
  * @param xOff  The x offset to draw the text at
  * @param yOff  The y offset to draw the text at
  * @param maxW  The maximum width of text to draw
+ * @param center If true, when text is not ellipsize it will be centered within the box
  * @return true
  * @return false
  */
 bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
-                       int16_t maxW)
+                       int16_t maxW, bool center)
 {
     uint16_t textW = textWidth(font, text);
     if (textW <= maxW)
     {
-        drawText(font, color, text, xOff, yOff);
+        drawText(font, color, text, xOff + (center ? ((maxW - textW) / 2) : 0), yOff);
         return false;
     }
     else

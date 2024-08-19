@@ -251,7 +251,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
     else
     {
         drawTextEllipsize(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y + 2,
-                          PARALLELOGRAM_WIDTH - PARALLELOGRAM_HEIGHT - 10);
+                          PARALLELOGRAM_WIDTH - PARALLELOGRAM_HEIGHT - 10, false);
     }
 
     // Draw the left arrow, if applicable
