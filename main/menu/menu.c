@@ -762,6 +762,11 @@ menu_t* menuSetCurrentOption(menu_t* menu, int32_t value)
         if (item->options)
         {
             item->currentOpt = CLAMP(value, 0, item->numOptions - 1);
+
+            if (item->settingVals)
+            {
+                item->currentSetting = item->settingVals[item->currentOpt];
+            }
         }
         else
         {
