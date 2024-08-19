@@ -366,6 +366,16 @@ static void toolsPostFrame(uint64_t frame)
     static bool setup     = false;
     static ge_GIF* gif    = NULL;
 
+    // Cumulative time of all GIF frames
+    static float gifTime = 0;
+    // Cumulative real time since first frame, from swadge perspective
+    static float realTime = 0;
+
+    // The time of the last GIF frame
+    static int64_t lastGifFrame   = 0;
+    static uint32_t skippedFrames = 0;
+    static uint32_t longFrames    = 0;
+
     if (recordScreen)
     {
         static const paletteColor_t* fb = NULL;
@@ -410,25 +420,68 @@ static void toolsPostFrame(uint64_t frame)
                 return;
             }
 
-            index = 0;
-            setup = true;
+            index         = 0;
+            gifTime       = 0;
+            realTime      = 0;
+            skippedFrames = 0;
+            longFrames    = 0;
+            lastGifFrame  = esp_timer_get_time();
+            setup         = true;
         }
 
-        // char filebuf[128];
-        // snprintf(filebuf, sizeof(filebuf), "%s/%06" PRIu64 ".png", fnbuf, index++);
-        memcpy(gif->frame, fb, TFT_WIDTH * TFT_HEIGHT);
-        makeTransparent(gif->frame);
-        ge_add_frame(gif, MAX(1, getFrameRateUs() / 10000));
+        int64_t frameNow       = esp_timer_get_time();
+        int64_t elapsedFrameUs = frameNow - lastGifFrame;
 
-        // Count frames
-        index++;
+        memcpy(gif->frame, fb, TFT_WIDTH * TFT_HEIGHT);
+
+        // Make the corners of the image transparent
+        makeTransparent(gif->frame);
+        float desiredFramerate = elapsedFrameUs / 10000.0;
+        uint16_t actualLength  = MAX(2, (int)(desiredFramerate));
+        // Cumulative time error, relative to the minimum frame time
+        // Use this to determine when to drop frames, as we cannot drop half a frame
+        float frameError = (gifTime - realTime) / ((float)actualLength * 10.0);
+        // Cumulative time error, relative to the minimum frame *STEP* time
+        // Use this to determine when a frame is too short, since we can always ADD a single step
+        float gifLengthError = (gifTime - realTime) / 10.0;
+
+        if (index != 0)
+        {
+            realTime += elapsedFrameUs / 1000;
+        }
+
+        if (frameError <= 0.5)
+        {
+            if (index != 0)
+            {
+                if (gifLengthError <= -1)
+                {
+                    actualLength += (uint16_t)(-gifLengthError);
+                    longFrames++;
+                }
+
+                gifTime += actualLength * 10.0;
+            }
+            ge_add_frame(gif, actualLength);
+
+            // Only update the last frame time when we actually emit a frame!
+            lastGifFrame = frameNow;
+
+            // Count frames
+            index++;
+        }
+        else
+        {
+            skippedFrames++;
+        }
     }
     else if (setup)
     {
         ge_close_gif(gif);
         gif = NULL;
 
-        printf("Done Recording! Wrote %" PRIu64 " frames to %s\n", index, recordingFilename);
+        printf("Done Recording! Wrote %" PRIu64 " frames to %s (dropped %" PRIu32 ", lengthened %" PRIu32 ")\n", index,
+               recordingFilename, skippedFrames, longFrames);
         setup = false;
     }
 }
