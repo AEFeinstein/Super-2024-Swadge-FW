@@ -723,7 +723,7 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
     }
     else if (item->label)
     {
-        if (item->label == mnuBackStr)
+        if (item->label == mnuBackStr && menu->parentMenu)
         {
             // If this is the back string, return the parent menu
             // Reset the current item when leaving a submenu
