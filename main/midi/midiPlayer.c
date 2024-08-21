@@ -1520,6 +1520,20 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t cont
             break;
         }
 
+        // Decay (75) (unassigned)
+        case MCC_SOUND_CONTROL_6:
+        {
+            player->channels[channel].timbre.envelope.decayTime = MS_TO_SAMPLES(10 * val);
+            break;
+        }
+
+        // Sustain (76) (unassigned)
+        case MCC_SOUND_CONTROL_7:
+        {
+            player->channels[channel].timbre.envelope.sustainVol = val;
+            break;
+        }
+
         // Chorus Level (93)
         case MCC_CHORUS_LEVEL:
         {
@@ -1584,6 +1598,14 @@ uint8_t midiGetControlValue(midiPlayer_t* player, uint8_t channel, midiControl_t
 
         case MCC_SOUND_ATTACK_TIME:
             return (player->channels[channel].timbre.envelope.attackTime * 1000 / 32768 / 10) & 0x7F;
+
+        // Decay (75) (unassigned)
+        case MCC_SOUND_CONTROL_6:
+            return (player->channels[channel].timbre.envelope.decayTime * 1000 / 32768 / 10) & 0x7F;
+
+        // Sustain (76) (unassigned)
+        case MCC_SOUND_CONTROL_7:
+            return player->channels[channel].timbre.envelope.sustainVol & 0x7F;
 
         case MCC_CHORUS_LEVEL:
             return player->channels[channel].timbre.effects.chorus & 0x7F;

@@ -288,7 +288,9 @@ typedef enum
     MCC_SOUND_RELEASE_TIME = 72,
     MCC_SOUND_ATTACK_TIME = 73,
     MCC_SOUND_BRIGHTNESS = 74,
+    // Decay
     MCC_SOUND_CONTROL_6 = 75,
+    // Sustain level
     MCC_SOUND_CONTROL_7 = 76,
     MCC_SOUND_CONTROL_8 = 77,
     MCC_SOUND_CONTROL_9 = 78,

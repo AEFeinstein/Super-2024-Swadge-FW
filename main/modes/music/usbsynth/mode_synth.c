@@ -873,12 +873,12 @@ static const midiControllerDesc_t controllerDefs[] = {
     {
         .control = 75,
         .type = CTRL_7BIT,
-        .desc = "Sound Control 6",
+        .desc = "Sound Decay Time",
     },
     {
         .control = 76,
         .type = CTRL_7BIT,
-        .desc = "Sound Control 7",
+        .desc = "Sound Sustain Level",
     },
     {
         .control = 77,
@@ -3816,6 +3816,8 @@ static bool synthIsControlSupported(const midiControllerDesc_t* control)
         case 66: // Sustenuto Pedal
         case 72: // Release Time
         case 73: // Attack Time
+        case 75: // Decay (unassigned)
+        case 76: // Sustain (unassigned)
         // TODO: case 91: // Effects (Reverb)
         case 93: // Chorus level
         case 120: // All sound off
