@@ -3829,12 +3829,12 @@ static void writeShortName(char* out, size_t n, const char* in)
 
     while (written < n - 1 && *cur)
     {
-        if (firstChar && isalnum(*cur))
+        if (firstChar && (('A' <= *cur && *cur <= 'Z') || ('a' <= *cur && *cur <= 'z') || ('0' <= *cur && *cur <= '9')))
         {
             out[written++] = *cur;
             firstChar = false;
         }
-        else if (!isalnum(*cur))
+        else if (!(('A' <= *cur && *cur <= 'Z') || ('a' <= *cur && *cur <= 'z') || ('0' <= *cur && *cur <= '9')))
         {
             firstChar = true;
         }

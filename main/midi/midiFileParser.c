@@ -1124,7 +1124,7 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
 
             written += writeVariableLength(out, max - written, event->meta.length);
 
-            switch (event->meta.type)
+            switch ((uint8_t)event->meta.type)
             {
                 case SEQUENCE_NUMBER:
                 {
