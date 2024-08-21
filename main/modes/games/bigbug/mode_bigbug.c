@@ -337,20 +337,20 @@ static void bb_DrawScene(void)
     bb_drawEntities(&bigbug->entityManager, &bigbug->camera);
 
     // Draw garbotnik
-    if(bigbug->garbotnikRotation.x < -1200.0){
+    if(bigbug->garbotnikRotation.x < -1400.0){
         drawWsgSimple(&bigbug->garbotnikWsg[0], garbotnikDrawPos.x, garbotnikDrawPos.y);
     }
-    else if(bigbug->garbotnikRotation.x < -300.0){
+    else if(bigbug->garbotnikRotation.x < -400.0){
         drawWsgSimple(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y);
     }
-    else if(bigbug->garbotnikRotation.x < 300.0){
+    else if(bigbug->garbotnikRotation.x < 400.0){
         drawWsgSimple(&bigbug->garbotnikWsg[2], garbotnikDrawPos.x, garbotnikDrawPos.y);
     }
-    else if(bigbug->garbotnikRotation.x < 1200.0){
+    else if(bigbug->garbotnikRotation.x < 1400.0){
         drawWsg(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y, true, false, 0);
     }
     else{
-        drawWsg(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y, true, false, 0);
+        drawWsg(&bigbug->garbotnikWsg[0], garbotnikDrawPos.x, garbotnikDrawPos.y, true, false, 0);
     }
     
 }
