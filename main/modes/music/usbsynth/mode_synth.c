@@ -1666,6 +1666,7 @@ static void synthExitMode(void)
     freeWsg(&sd->pitchImage);
     freeWsg(&sd->resetImage);
     freeWsg(&sd->ignoreImage);
+    freeWsg(&sd->enableImage);
 
     freeWsg(&sd->pauseIcon);
     freeWsg(&sd->playIcon);
