@@ -49,6 +49,13 @@ typedef enum
     MASK_ZOOM      = 56,                            ///< Mask for all zoom options
 } wheelScrollDir_t;
 
+typedef enum
+{
+    WM_SHAPE_DEFAULT = 0,
+    WM_SHAPE_ROUNDED_RECT = 1,
+    WM_SHAPE_SQUARE = 2,
+} wheelMenuShapeFlags_t;
+
 /**
  * @brief Renderer for a menu wheel
  */
@@ -73,6 +80,7 @@ typedef struct
     bool zoomed;                 ///< Whether or not a settings item is selected
     bool zoomBackSelected;       ///< Whether or not the center is selected while zoomed
     uint8_t zoomValue;           ///< The current selected option/value if zoomed
+    int64_t timer;               ///< The timer for animations
 } wheelMenuRenderer_t;
 
 wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, const rectangle_t* textBox);
@@ -84,6 +92,7 @@ void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, cons
 void wheelMenuSetItemColor(wheelMenuRenderer_t* renderer, const char* label, paletteColor_t selectedBg,
                            paletteColor_t unselectedBg);
 void wheelMenuSetItemTextIcon(wheelMenuRenderer_t* renderer, const char* label, const char* textIcon);
+void wheelMenuSetItemSize(wheelMenuRenderer_t* renderer, const char* label, int16_t w, int16_t h, wheelMenuShapeFlags_t shapeFlags);
 menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t angle, uint16_t radius);
 menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, const buttonEvt_t* evt);
 menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer);
