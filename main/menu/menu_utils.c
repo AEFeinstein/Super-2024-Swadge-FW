@@ -118,7 +118,7 @@ bool menuItemHasNext(const menuItem_t* item)
  */
 bool menuItemIsBack(const menuItem_t* item)
 {
-    return (mnuBackStr == item->label);
+    return item && (mnuBackStr == item->label);
 }
 
 /**
@@ -165,6 +165,11 @@ void menuSavePosition(const char** out, int len, const menu_t* menu)
     const char** curOut = (out + depth);
     do
     {
+        if (!curMenu->currentItem || !curMenu->currentItem->val)
+        {
+            break;
+        }
+
         menuItem_t* curItem = (menuItem_t*)curMenu->currentItem->val;
 
         *curOut-- = curItem->label;
