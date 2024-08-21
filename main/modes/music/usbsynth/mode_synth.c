@@ -16,6 +16,7 @@
 #include "textEntry.h"
 #include "macros.h"
 #include "cnfs_image.h"
+#include "ctype.h"
 
 #include "midiPlayer.h"
 #include "midiFileParser.h"
@@ -58,6 +59,8 @@ typedef enum
 
 typedef enum
 {
+    /// @brief Touchpad control wheel menu
+    TM_MENU,
     /// @brief Touchpad acts as pitch bend wheel
     TM_PITCH,
     /// @brief Touchpad scrubs through a song
@@ -182,6 +185,7 @@ typedef struct
 
     const char* label;
     bool dynamicLabel;
+    char shortLabel[4];
 
 } midiMenuItemInfo_t;
 
@@ -283,6 +287,13 @@ typedef struct
     wsg_t percussionImage;
     wsg_t magfestBankImage;
 
+    wsg_t pauseIcon, playIcon, playPauseIcon, ffwIcon, skipIcon, loopIcon, shuffleIcon, stopIcon;
+
+    // Tool wheel items
+    wsg_t fileImage, playerImage, channelSetupImage, uiImage, volumeImage,
+          buttonImage, touchImage, viewModeImage, usbModeImage, menuImage,
+          pitchImage, resetImage, ignoreImage, enableImage;
+
     uint32_t frameTimesIdx;
     uint64_t frameTimes[NUM_FRAME_TIMES];
 
@@ -298,6 +309,7 @@ typedef struct
     wheelMenuRenderer_t* wheelMenu;
     rectangle_t wheelTextArea;
     bool updateMenu;
+    bool forceResetMenu;
 
     // Custom persistent labels for all the channel instrument submenus
     char channelInstrumentLabels[16][64];
@@ -310,6 +322,10 @@ typedef struct
     // <= 32 Controllers
     midiMenuItemInfo_t itemInfos[2 + 128 + 16 + 16 + 32];
     int itemInfoCount;
+
+    // TODO can't use ARRAY_SIZE(menuItemViewOptions) here since it's not yet defined
+    // So just set it to 16 and if we add 6 more views we'll need to increase it
+    char menuViewShortnames[16][4];
 
     synthConfig_t synthConfig;
     list_t controllerSettings;
@@ -332,7 +348,7 @@ static void synthSaveControl(uint8_t channel, uint8_t control, uint8_t value);
 static uint8_t synthGetControl(uint8_t channel, uint8_t control, uint8_t defaultValue);
 static uint16_t synthGetControl14bit(uint8_t channel, uint8_t control, uint16_t defValue);
 static void addChannelsMenu(menu_t* menu, const synthConfig_t* config);
-static void synthSetupMenu(void);
+static void synthSetupMenu(bool forceReset);
 static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile);
 static void unloadLyrics(karaokeInfo_t* karInfo);
 static void synthSetFile(const char* filename);
@@ -340,10 +356,11 @@ static void synthHandleButton(const buttonEvt_t evt);
 static void handleButtonTimer(int64_t* timer, int64_t interval, int64_t elapsedUs, buttonBit_t button);
 static void synthHandleInput(int64_t elapsedUs);
 static bool synthIsControlSupported(const midiControllerDesc_t* control);
+static void writeShortName(char* out, size_t n, const char* in);
 
 static void drawCircleSweep(int x, int y, int r, int startAngle, int sweepDeg, paletteColor_t col);
 static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y, int16_t w, int16_t h);
-static void drawSynthMode(void);
+static void drawSynthMode(int64_t elapsedUs);
 static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16_t metX, int16_t metY, int16_t metR);
 static void drawMidiText(bool filter, uint32_t types);
 static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h);
@@ -630,6 +647,25 @@ static const char* channelLabels[] = {
     "Channel 16",
 };
 
+static const char* shortChannelLabels[] = {
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+};
+
 static const midiControllerDesc_t controllerDefs[] = {
     {
         .control = 0,
@@ -781,32 +817,32 @@ static const midiControllerDesc_t controllerDefs[] = {
     {
         .control = 64,
         .type = CTRL_SWITCH,
-        .desc = "Hold Pedal",
+        .desc = "Hold Pedal ",
     },
     {
         .control = 65,
         .type = CTRL_SWITCH,
-        .desc = "Portamento",
+        .desc = "Portamento ",
     },
     {
         .control = 66,
         .type = CTRL_SWITCH,
-        .desc = "Sustenuto Pedal",
+        .desc = "Sustenuto Pedal ",
     },
     {
         .control = 67,
         .type = CTRL_SWITCH,
-        .desc = "Soft Pedal",
+        .desc = "Soft Pedal ",
     },
     {
         .control = 68,
         .type = CTRL_SWITCH,
-        .desc = "Legato Pedal",
+        .desc = "Legato Pedal ",
     },
     {
         .control = 69,
         .type = CTRL_SWITCH,
-        .desc = "Hold 2 Pedal",
+        .desc = "Hold 2 Pedal ",
     },
     {
         .control = 70,
@@ -866,17 +902,17 @@ static const midiControllerDesc_t controllerDefs[] = {
     {
         .control = 81,
         .type = CTRL_SWITCH,
-        .desc = "General Purpose Button 2",
+        .desc = "General Purpose Button 2 ",
     },
     {
         .control = 82,
         .type = CTRL_SWITCH,
-        .desc = "General Purpose Button 3",
+        .desc = "General Purpose Button 3 ",
     },
     {
         .control = 83,
         .type = CTRL_SWITCH,
-        .desc = "General Purpose Button 4",
+        .desc = "General Purpose Button 4 ",
     },
     // No 84-90
     {
@@ -948,7 +984,7 @@ static const midiControllerDesc_t controllerDefs[] = {
     {
         .control = 122,
         .type = CTRL_SWITCH,
-        .desc = "Local Keyboard",
+        .desc = "Local Keyboard ",
     },
     {
         .control = 123,
@@ -1020,25 +1056,30 @@ static const paletteColor_t textColors[] = {
 };
 
 // Menu stuff
-static const char* menuItemPlayMode   = "MIDI Mode: ";
+static const char* menuItemPlayMode   = "Mode: ";
+
+static const char* menuItemPlayer     = "Player";
 static const char* menuItemSelectFile = "Select File...";
 static const char* menuItemCustomSong = "Enter Filename...";
-static const char* menuItemViewMode   = "View Mode: ";
-static const char* menuItemButtonMode = "Button Controls: ";
-static const char* menuItemTouchMode  = "Touchpad Controls: ";
 static const char* menuItemLoop       = "Loop: ";
 static const char* menuItemShuffle    = "Shuffle: ";
 static const char* menuItemAutoplay   = "Auto-play: ";
+static const char* menuItemHeadroom   = "Mix Volume: ";
+
+static const char* menuItemUi         = "Interface";
+static const char* menuItemViewMode   = "View Mode: ";
+static const char* menuItemButtonMode = "Button Controls: ";
+static const char* menuItemTouchMode  = "Touch Controls: ";
+
+static const char* menuItemChannels   = "Channel Setup";
+static const char* menuItemIgnore     = "Enabled: ";
 static const char* menuItemBank       = "Bank Select: ";
 static const char* menuItemInstrument = "Instrument: ";
-static const char* menuItemChannels   = "Channel Setup";
 static const char* menuItemResetAll   = "Reset All Channels";
 static const char* menuItemReset      = "Reset";
-static const char* menuItemControls   = "Controllers";
-static const char* menuItemIgnore     = "Ignored: ";
-static const char* menuItemPercussion = "Percussion: ";
 
-static const char* menuItemHeadroom   = "Mix Volume: ";
+static const char* menuItemControls   = "Controllers";
+static const char* menuItemPercussion = "Percussion: ";
 
 static const char* const nvsKeyMode       = "synth_playmode";
 static const char* const nvsKeyViewMode   = "synth_viewmode";
@@ -1056,8 +1097,8 @@ static const char* const nvsKeySynthConf  = "synth_confblob";
 static const char* const nvsKeySynthControlConf = "synth_ctrlconf";
 
 static const char* menuItemModeOptions[] = {
-    "MIDI Streaming",
-    "MIDI File",
+    "Streaming",
+    "File",
 };
 
 static const char* menuItemViewOptions[] = {
@@ -1071,6 +1112,7 @@ static const char* menuItemButtonOptions[] = {
 };
 
 static const char* menuItemTouchOptions[] = {
+    "Wheel Menu",
     "Pitch Bend",
     "Scrub",
 };
@@ -1078,6 +1120,11 @@ static const char* menuItemTouchOptions[] = {
 static const char* menuItemOffOnOptions[] = {
     "Off",
     "On",
+};
+
+static const char* menuItemYesNoOptions[] = {
+    "Yes",
+    "No",
 };
 
 static const char* menuItemNoYesOptions[] = {
@@ -1119,6 +1166,7 @@ static const int32_t menuItemButtonValues[] = {
 };
 
 static const int32_t menuItemTouchValues[] = {
+    (int32_t)TM_MENU,
     (int32_t)TM_PITCH,
     (int32_t)TM_SCRUB,
 };
@@ -1523,25 +1571,27 @@ static void synthEnterMode(void)
     }
 
     sd->wheelTextArea.pos.x  = 15;
-    sd->wheelTextArea.pos.y  = TFT_HEIGHT - sd->font.height * 2 - 2 - 15;
+    sd->wheelTextArea.pos.y  = TFT_HEIGHT - sd->betterFont.height - 2;
     sd->wheelTextArea.width  = TFT_WIDTH - 30;
-    sd->wheelTextArea.height = sd->font.height * 2 + 2;
-    sd->wheelMenu            = initWheelMenu(&sd->font, 90, &sd->wheelTextArea);
+    sd->wheelTextArea.height = sd->betterFont.height + 2;
 
     //synthSetupMenu();
 
     // Use smol font for menu items, there might be a lot
     sd->renderer = initMenuManiaRenderer(NULL, NULL, &sd->font);
+    sd->wheelMenu = initWheelMenu(&sd->betterFont, 90, &sd->wheelTextArea);
+    sd->wheelMenu->unselR = 16;
 
     hashInit(&sd->menuMap, 512);
 
-    synthSetupMenu();
+    synthSetupMenu(true);
     setupShuffle(sd->customFiles.length);
     synthSetupPlayer();
 
     sd->startupSeqComplete = true;
     sd->startupNote        = 60;
 
+    // GM Instrument Category Images
     loadWsg("piano.wsg", &sd->instrumentImages[0], true);
     loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], true);
     loadWsg("organ.wsg", &sd->instrumentImages[2], true);
@@ -1558,8 +1608,38 @@ static void synthEnterMode(void)
     loadWsg("ethnic.wsg", &sd->instrumentImages[13], true);
     loadWsg("percussive.wsg", &sd->instrumentImages[14], true);
     loadWsg("sound_effects.wsg", &sd->instrumentImages[15], true);
+
+    // Percussion channel image
     loadWsg("percussion.wsg", &sd->percussionImage, true);
+
+    // Custom bank image
     loadWsg("magfest_bank.wsg", &sd->magfestBankImage, true);
+
+    // Play/Pause/Etc Icons
+    loadWsg("pause.wsg", &sd->pauseIcon, true);
+    loadWsg("play.wsg", &sd->playIcon, true);
+    loadWsg("playpause.wsg", &sd->playPauseIcon, true);
+    loadWsg("fast_forward.wsg", &sd->ffwIcon, true);
+    loadWsg("skip.wsg", &sd->skipIcon, true);
+    loadWsg("loop.wsg", &sd->loopIcon, true);
+    loadWsg("shuffle.wsg", &sd->shuffleIcon, true);
+    loadWsg("stop.wsg", &sd->stopIcon, true);
+
+    // Images for Wheel Menu
+    loadWsg("open_song.wsg", &sd->fileImage, true);
+    loadWsg("player.wsg", &sd->playerImage, true);
+    loadWsg("channels.wsg", &sd->channelSetupImage, true);
+    loadWsg("interface.wsg", &sd->uiImage, true);
+    loadWsg("midi_volume.wsg", &sd->volumeImage, true);
+    loadWsg("button_a.wsg", &sd->buttonImage, true);
+    loadWsg("touchpad.wsg", &sd->touchImage, true);
+    loadWsg("view_mode.wsg", &sd->viewModeImage, true);
+    loadWsg("usb_mode.wsg", &sd->usbModeImage, true);
+    loadWsg("hamburger.wsg", &sd->menuImage, true);
+    loadWsg("pitch_wheel.wsg", &sd->pitchImage, true);
+    loadWsg("reset.wsg", &sd->resetImage, true);
+    loadWsg("ignore.wsg", &sd->ignoreImage, true);
+    loadWsg("enable.wsg", &sd->enableImage, true);
 
     // MAXIMUM SPEEEEED
     setFrameRateUs(0);
@@ -1572,6 +1652,29 @@ static void synthExitMode(void)
     {
         free(textInfo);
     }
+
+    freeWsg(&sd->fileImage);
+    freeWsg(&sd->playerImage);
+    freeWsg(&sd->channelSetupImage);
+    freeWsg(&sd->uiImage);
+    freeWsg(&sd->volumeImage);
+    freeWsg(&sd->buttonImage);
+    freeWsg(&sd->touchImage);
+    freeWsg(&sd->viewModeImage);
+    freeWsg(&sd->usbModeImage);
+    freeWsg(&sd->menuImage);
+    freeWsg(&sd->pitchImage);
+    freeWsg(&sd->resetImage);
+    freeWsg(&sd->ignoreImage);
+
+    freeWsg(&sd->pauseIcon);
+    freeWsg(&sd->playIcon);
+    freeWsg(&sd->playPauseIcon);
+    freeWsg(&sd->ffwIcon);
+    freeWsg(&sd->skipIcon);
+    freeWsg(&sd->loopIcon);
+    freeWsg(&sd->shuffleIcon);
+    freeWsg(&sd->stopIcon);
 
     freeWsg(&sd->magfestBankImage);
     freeWsg(&sd->percussionImage);
@@ -1597,6 +1700,7 @@ static void synthExitMode(void)
         {
             free(info->label);
             info->label = NULL;
+            info->dynamicLabel = false;
         }
     }
 
@@ -1666,64 +1770,60 @@ static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y,
         case MI_PLAY:
         {
             // Draw triangle
-            drawTriangleOutlined(x, y, x + w, y + h / 2, x, y + h, col, col);
+            drawWsgSimple(&sd->playIcon, x, y);
             break;
         }
         case MI_PAUSE:
         {
             // Two vertical bars
-            fillDisplayArea(x + (w / 8), y, x + (w / 4), y + h, col);
-            fillDisplayArea(x + w - (w / 4), y, x + w - (w / 8), y + h, col);
+            drawWsgSimple(&sd->pauseIcon, x, y);
             break;
         }
         case MI_STOP:
         {
             // Square
-            fillDisplayArea(x, y, x + w, y + h, col);
+            drawWsgSimple(&sd->stopIcon, x, y);
             break;
         }
         case MI_PLAYPAUSE:
         {
             // Vertical bar
-            fillDisplayArea(x + (w / 8), y, x + (w / 4), y + h, col);
             // Triangle
-            drawTriangleOutlined(x + w - (w / 4), y, x + w, y + h / 2, x + w - (w / 4), y + h, col, col);
+            drawWsgSimple(&sd->playPauseIcon, x, y);
             break;
         }
         case MI_FFW:
         {
             // Two triangles
-            fillDisplayArea(x + (w / 8), y, x + (w / 4), y + h, col);
+            drawWsgSimple(&sd->ffwIcon, x, y);
             // Two triangles (TODO)
             break;
         }
         case MI_REW:
         {
             // Reverse of FFW
+            drawWsg(&sd->ffwIcon, x, y, true, false, 0);
             break;
         }
         case MI_SKIP:
         {
             // Triangle left
-            drawTriangleOutlined(x, y, x + w - (w / 4), y + h / 2, x, y + h, col, col);
             // Vertical bar right
-            fillDisplayArea(x + w - (w / 8), y, x + w - (w / 4), y + h, col);
+            drawWsgSimple(&sd->skipIcon, x, y);
             break;
         }
         case MI_PREV:
         {
             // Vertical bar left
-            fillDisplayArea(x + (w / 8), y, x + (w / 4), y + h, col);
             // Trangle right (facing left)
-            drawTriangleOutlined(x, y + h / 2, x + w - (w / 4), y, x + w - (w / 4), y + h, col, col);
+            drawWsg(&sd->skipIcon, x, y, true, false, 0);
             break;
         }
         case MI_REPEAT:
         {
             // 3/4 of a circle, then we add an arrow at the end
-            drawCircleSweep(x + w / 2, y + h - h / 2, ((w < h) ? w : h) / 2, 45, 270, col);
             // Kinda funky but close
-            drawTriangleOutlined(x + w / 2 + w / 4, y + h / 4, x + w, y, x + w, y + h / 2, col, col);
+            drawWsgSimple(&sd->loopIcon, x, y);
 
             break;
         }
@@ -1735,7 +1835,7 @@ static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y,
                 \/
             ____/\___>
             */
-            int crossOffset = (w / 6);
+            /*int crossOffset = (w / 6);
             int cl          = x + (w / 2) - crossOffset;
             int cr          = x + (w / 2) + crossOffset;
             int yTop        = y + h / 8;
@@ -1746,7 +1846,8 @@ static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y,
             // drawLineFast(cl, yBot, cr, yTop, col);
             drawLine(cl, yBot, cr, yTop, col, 2);
             drawLineFast(cr, yBot, x + w, yBot, col);
-            drawLineFast(cr, yTop, x + w, yTop, col);
+            drawLineFast(cr, yTop, x + w, yTop, col);*/
+            drawWsgSimple(&sd->shuffleIcon, x, y);
             break;
         }
     }
@@ -1755,19 +1856,21 @@ static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y,
 static void synthMainLoop(int64_t elapsedUs)
 {
     sd->marqueeTimer += elapsedUs;
+    if (sd->updateMenu && !wheelMenuActive(sd->menu, sd->wheelMenu))
+    {
+        synthSetupMenu(sd->forceResetMenu);
+        sd->updateMenu = false;
+        sd->forceResetMenu = false;
+    }
+
     if (sd->screen == SS_MENU)
     {
-        if (sd->updateMenu)
-        {
-            synthSetupMenu();
-            sd->updateMenu = false;
-        }
         drawMenuMania(sd->menu, sd->renderer, elapsedUs);
     }
     else if (sd->screen == SS_FILE_SELECT)
     {
         fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, SYNTH_BG_COLOR);
-        drawSynthMode();
+        drawSynthMode(elapsedUs);
 
         if (!textEntryDraw(elapsedUs))
         {
@@ -1857,7 +1960,7 @@ static void synthMainLoop(int64_t elapsedUs)
             }
         }
 
-        drawSynthMode();
+        drawSynthMode(elapsedUs);
     }
 
     // Delete any expired texts -- but only every so often, to prevent it from being weird and jumpy
@@ -2059,7 +2162,11 @@ static uint16_t synthGetControl14bit(uint8_t channel, uint8_t control, uint16_t 
 
 static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 {
+    // TODO kinda a hack but I'm sure I'll remember to update it
+    int rotTopMenu = 3;
+
     menu = startSubMenu(menu, menuItemChannels);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemChannels, &sd->channelSetupImage, rotTopMenu++, NO_SCROLL);
 
     // Pre-add the item infos for the programs
     for (int gmProg = 0; gmProg < 128; gmProg++)
@@ -2071,8 +2178,19 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         itemInfo->program = gmProg;
         itemInfo->label = gmProgramNames[gmProg];
         itemInfo->dynamicLabel = false;
+        writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), itemInfo->label);
+        wheelMenuSetItemInfo(sd->wheelMenu, itemInfo->label, NULL, gmProg % 8, NO_SCROLL);
+        wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
+        wheelMenuSetItemSize(sd->wheelMenu, itemInfo->label, -1, -1, WM_SHAPE_ROUNDED_RECT);
 
         hashPut(&sd->menuMap, gmProgramNames[gmProg], itemInfo);
+    }
+
+    for (int gmCategory = 0; gmCategory < 16; gmCategory++)
+    {
+        wheelMenuSetItemInfo(sd->wheelMenu, gmProgramCategoryNames[gmCategory], &sd->instrumentImages[gmCategory], gmCategory, NO_SCROLL);
+        wheelMenuSetItemColor(sd->wheelMenu, gmProgramCategoryNames[gmCategory], c000, c333);
+        wheelMenuSetItemSize(sd->wheelMenu, gmProgramCategoryNames[gmCategory], -1, -1, WM_SHAPE_DEFAULT);
     }
 
     for (int magProg = 0; magProg < magfestTimbreCount; magProg++)
@@ -2084,12 +2202,17 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         itemInfo->program = magProg;
         itemInfo->label = magfestTimbres[magProg]->name;
         itemInfo->dynamicLabel = false;
+        writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), itemInfo->label);
+        wheelMenuSetItemInfo(sd->wheelMenu, itemInfo->label, NULL, magProg, NO_SCROLL);
+        wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
+        wheelMenuSetItemSize(sd->wheelMenu, itemInfo->label, -1, -1, WM_SHAPE_ROUNDED_RECT);
 
         hashPut(&sd->menuMap, itemInfo->label, itemInfo);
     }
 
     // Controllers are pretty complicated so just do those the first time with the rest of their logic
     bool controllersSetUp = false;
+    int totalControls = 0;
 
     for (int chIdx = 0; chIdx < 16; chIdx++)
     {
@@ -2101,7 +2224,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         hashPut(&sd->menuMap, channelLabels[chIdx], itemInfo);
 
         menu = startSubMenu(menu, channelLabels[chIdx]);
-        addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds, (config->ignoreChannelMask & (1 << chIdx)) ? 1 : 0);
+        wheelMenuSetItemInfo(sd->wheelMenu, channelLabels[chIdx], NULL, (16-chIdx) % 16, NO_SCROLL);
+        wheelMenuSetItemTextIcon(sd->wheelMenu, channelLabels[chIdx], shortChannelLabels[chIdx]);
+
+        addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemYesNoOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds, (config->ignoreChannelMask & (1 << chIdx)) ? 1 : 0);
         addSettingsOptionsItemToMenu(menu, menuItemPercussion, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemPercussionBounds, (config->percChannelMask & (1 << chIdx)) ? 1 : 0);
         addSettingsOptionsItemToMenu(menu, menuItemBank, menuItemBankOptions, menuItemBankValues, ARRAY_SIZE(menuItemBankValues), &menuItemBankBounds, config->banks[chIdx]);
 
@@ -2109,10 +2235,14 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         {
             // Instrument select submenu
             char* nameBuffer = sd->channelInstrumentLabels[chIdx];
+            wsg_t* chanInstrumentIcon = NULL;
 
             if (config->banks[chIdx] == 0)
             {
                 snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, gmProgramNames[config->programs[chIdx]]);
+                chanInstrumentIcon = &sd->instrumentImages[config->programs[chIdx] / 8];
+
+                // "Instrument: <name>" item
                 menu = startSubMenu(menu, nameBuffer);
                 for (int category = 0; category < 16; category++)
                 {
@@ -2138,14 +2268,21 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                     program = 0;
                 }
 
+                chanInstrumentIcon = &sd->magfestBankImage;
+
                 snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, magfestTimbres[program]->name);
+                // "Instrument: <name>" item
                 menu = startSubMenu(menu, nameBuffer);
+
                 for (int instrument = 0; instrument < magfestTimbreCount; instrument++)
                 {
                     addSingleItemToMenu(menu, magfestTimbres[instrument]->name);
                 }
                 menu = endSubMenu(menu);
             }
+
+            wheelMenuSetItemInfo(sd->wheelMenu, nameBuffer, chanInstrumentIcon, 4, NO_SCROLL);
+            wheelMenuSetItemSize(sd->wheelMenu, nameBuffer, -1, -1, WM_SHAPE_DEFAULT);
         }
 
         menu = startSubMenu(menu, menuItemControls);
@@ -2157,31 +2294,6 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
             {
                 char* labelStr = controller->desc;
                 bool dynamicLabel = false;
-
-                if (controller->type == CTRL_SWITCH)
-                {
-                    int labelStrSize = strlen(controller->desc) + 3;
-                    char* newStr = malloc(labelStrSize);
-                    if (newStr)
-                    {
-                        snprintf(newStr, labelStrSize, "%s: ", controller->desc);
-                        labelStr = newStr;
-                        dynamicLabel = true;
-                    }
-                }
-
-                if (!controllersSetUp)
-                {
-                    midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
-                    itemInfo->type = SMT_CONTROLLER;
-                    itemInfo->controller = controller;
-                    itemInfo->label = labelStr;
-                    itemInfo->dynamicLabel = dynamicLabel;
-
-                    // If the label IS dynamic, we don't actually change it without resetting the menu
-                    // So, don't worry about the hash key getting out of sync here
-                    hashPut(&sd->menuMap, labelStr, itemInfo);
-                }
 
                 switch (controller->type)
                 {
@@ -2221,6 +2333,24 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                         break;
                     }
                 }
+
+                if (!controllersSetUp || dynamicLabel)
+                {
+                    midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+                    itemInfo->type = SMT_CONTROLLER;
+                    itemInfo->controller = controller;
+                    itemInfo->label = labelStr;
+                    itemInfo->dynamicLabel = dynamicLabel;
+                    wheelMenuSetItemInfo(sd->wheelMenu, labelStr, NULL, totalControls++, NO_SCROLL);
+                    // Use rounded rectangle, stretched to fit
+                    wheelMenuSetItemSize(sd->wheelMenu, labelStr, -1, -1, WM_SHAPE_ROUNDED_RECT);
+                    writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), labelStr);
+                    wheelMenuSetItemTextIcon(sd->wheelMenu, labelStr, itemInfo->shortLabel);
+
+                    // If the label IS dynamic, we don't actually change it without resetting the menu
+                    // So, don't worry about the hash key getting out of sync here
+                    hashPut(&sd->menuMap, labelStr, itemInfo);
+                }
             }
         }
 
@@ -2234,20 +2364,49 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         menu = endSubMenu(menu);
     }
 
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemIgnore, (sd->synthConfig.ignoreChannelMask & (1 << sd->menuSelectedChannel)) ? &sd->ignoreImage : &sd->enableImage, 0, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[0], &sd->enableImage, 0, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[1], &sd->ignoreImage, 1, NO_SCROLL);
+
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[1], &sd->enableImage, 0, NO_SCROLL);
+
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemPercussion, &sd->percussionImage, 1, NO_SCROLL);
+    wheelMenuSetItemColor(sd->wheelMenu, menuItemPercussion, c000, c333);
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemPercussion, -1, -1, WM_SHAPE_DEFAULT);
+
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[1], &sd->enableImage, 0, NO_SCROLL);
+
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? NULL : &sd->magfestBankImage, 2, NO_SCROLL);
+    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? "GM" : NULL);
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemBank, -1, -1, WM_SHAPE_DEFAULT);
+
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[0], NULL, 0, NO_SCROLL);
+    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBankOptions[0], "GM");
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[0], -1, -1, WM_SHAPE_DEFAULT);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[1], &sd->magfestBankImage, 1, NO_SCROLL);
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[1], -1, -1, WM_SHAPE_DEFAULT);
+
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemControls, &sd->uiImage, 3, NO_SCROLL);
+
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemReset, &sd->resetImage, 5, NO_SCROLL);
+
     // End "Channels: " submenu
     menu = endSubMenu(menu);
 
     addSingleItemToMenu(menu, menuItemResetAll);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemResetAll, &sd->resetImage, rotTopMenu++, NO_SCROLL);
 }
 
-static void synthSetupMenu(void)
+static void synthSetupMenu(bool forceReset)
 {
     bool restore = false;
     const char* menuState[8] = {0};
 
     if (sd->menu != NULL)
     {
-        restore = true;
+        restore = !forceReset && !wheelMenuActive(sd->menu, sd->wheelMenu);
         menuSavePosition(menuState, ARRAY_SIZE(menuState), sd->menu);
         deinitMenu(sd->menu);
         sd->menu = NULL;
@@ -2272,35 +2431,99 @@ static void synthSetupMenu(void)
         sd->itemInfoCount = 0;
     }
 
-    sd->menu = initMenu(synthModeName, synthMenuCb);
+    sd->menu      = initMenu(synthModeName, synthMenuCb);
+
+    int rotTopMenu = 0;
     addSettingsOptionsItemToMenu(sd->menu, menuItemPlayMode, menuItemModeOptions, menuItemModeValues, 2,
                                  &menuItemModeBounds, sd->fileMode);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemPlayMode, (sd->fileMode ? &sd->fileImage : &sd->usbModeImage), rotTopMenu++, SCROLL_HORIZ);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemModeOptions[0], &sd->usbModeImage, 0, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemModeOptions[1], &sd->fileImage, 1, NO_SCROLL);
 
-    sd->menu = startSubMenu(sd->menu, menuItemSelectFile);
-    addSingleItemToMenu(sd->menu, menuItemCustomSong);
+    wheelMenuSetItemInfo(sd->wheelMenu, NULL, &sd->percussionImage, UINT8_MAX, NO_SCROLL);
 
-    for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
+    // Start "Player" Menu
+    sd->menu = startSubMenu(sd->menu, menuItemPlayer);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemPlayer, &sd->playerImage, rotTopMenu++, NO_SCROLL);
+
+    int rotPlayerMenu = 0;
+
+    if (sd->fileMode)
     {
-        addSingleItemToMenu(sd->menu, (char*)node->val);
+        // Start File list
+        sd->menu = startSubMenu(sd->menu, menuItemSelectFile);
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemSelectFile, &sd->fileImage, rotPlayerMenu++, NO_SCROLL);
+
+        addSingleItemToMenu(sd->menu, menuItemCustomSong);
+
+        for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
+        {
+            addSingleItemToMenu(sd->menu, (char*)node->val);
+        }
+
+        // End File list
+        sd->menu = endSubMenu(sd->menu);
     }
 
-    sd->menu = endSubMenu(sd->menu);
-
-    addSettingsOptionsItemToMenu(sd->menu, menuItemViewMode, menuItemViewOptions, menuItemViewValues,
-                                 ARRAY_SIZE(menuItemViewValues), &menuItemViewBounds, sd->viewMode);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemButtonMode, menuItemButtonOptions, menuItemButtonValues,
-                                 ARRAY_SIZE(menuItemButtonValues), &menuItemButtonBounds, sd->buttonMode);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemTouchMode, menuItemTouchOptions, menuItemTouchValues,
-                                 ARRAY_SIZE(menuItemTouchValues), &menuItemTouchBounds, sd->touchMode);
+    // Player Menu, continued
     addSettingsOptionsItemToMenu(sd->menu, menuItemLoop, menuItemOffOnOptions, menuItemLoopValues,
                                  ARRAY_SIZE(menuItemLoopValues), &menuItemLoopBounds, sd->loop);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemLoop, &sd->loopIcon, rotPlayerMenu++, SCROLL_HORIZ);
+
     addSettingsOptionsItemToMenu(sd->menu, menuItemShuffle, menuItemOffOnOptions, menuItemShuffleValues,
                                  ARRAY_SIZE(menuItemShuffleValues), &menuItemShuffleBounds, sd->shuffle);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemShuffle, &sd->shuffleIcon, rotPlayerMenu++, SCROLL_HORIZ);
+
     addSettingsOptionsItemToMenu(sd->menu, menuItemAutoplay, menuItemOffOnOptions, menuItemAutoplayValues,
                                  ARRAY_SIZE(menuItemAutoplayValues), &menuItemAutoplayBounds, sd->autoplay);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemAutoplay, &sd->playPauseIcon, rotPlayerMenu++, SCROLL_HORIZ);
+
     addSettingsOptionsItemToMenu(sd->menu, menuItemHeadroom, menuItemHeadroomOptions, menuItemHeadroomValues,
                                  ARRAY_SIZE(menuItemHeadroomValues), &menuItemHeadroomBounds, sd->headroom);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemHeadroom, &sd->volumeImage, rotPlayerMenu++, SCROLL_HORIZ_R | ZOOM_GAUGE);
+
+    // End Player Menu
+    sd->menu = endSubMenu(sd->menu);
+
+    // Start "Interface" Menu
+    sd->menu = startSubMenu(sd->menu, menuItemUi);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemUi, &sd->uiImage, rotTopMenu++, NO_SCROLL);
+
+    int rotUiMenu = 0;
+    addSettingsOptionsItemToMenu(sd->menu, menuItemViewMode, menuItemViewOptions, menuItemViewValues,
+                                 ARRAY_SIZE(menuItemViewValues), &menuItemViewBounds, sd->viewMode);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemViewMode, &sd->viewModeImage, rotUiMenu++, NO_SCROLL);
+    for (int vmNum = 0; vmNum < ARRAY_SIZE(menuItemViewOptions); vmNum++)
+    {
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemViewOptions[vmNum], NULL, vmNum, NO_SCROLL);
+        writeShortName(sd->menuViewShortnames[vmNum], sizeof(sd->menuViewShortnames[vmNum]), menuItemViewOptions[vmNum]);
+        wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemViewOptions[vmNum], sd->menuViewShortnames[vmNum]);
+    }
+
+    addSettingsOptionsItemToMenu(sd->menu, menuItemButtonMode, menuItemButtonOptions, menuItemButtonValues,
+                                 ARRAY_SIZE(menuItemButtonValues), &menuItemButtonBounds, sd->buttonMode);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemButtonMode, &sd->buttonImage, rotUiMenu++, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemButtonOptions[0], &sd->fileImage, 0, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemButtonOptions[1], &sd->playPauseIcon, 1, NO_SCROLL);
+
+    addSettingsOptionsItemToMenu(sd->menu, menuItemTouchMode, menuItemTouchOptions, menuItemTouchValues,
+                                 ARRAY_SIZE(menuItemTouchValues), &menuItemTouchBounds, sd->touchMode);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchMode, &sd->touchImage, rotUiMenu++, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchOptions[0], &sd->menuImage, 0, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchOptions[1], &sd->pitchImage, 1, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchOptions[2], &sd->skipIcon, 2, NO_SCROLL);
+
+
+    // End "Interface" Menu
+    sd->menu = endSubMenu(sd->menu);
+
+    // Add "Channel Setup" menu at top level
     addChannelsMenu(sd->menu, &sd->synthConfig);
+
+    addSingleItemToMenu(sd->menu, mnuBackStr);
+    wheelMenuSetItemInfo(sd->wheelMenu, mnuBackStr, NULL, UINT8_MAX, NO_SCROLL);
+    wheelMenuSetItemColor(sd->wheelMenu, mnuBackStr, c500, c300);
+    wheelMenuSetItemTextIcon(sd->wheelMenu, mnuBackStr, "x");
 
     if (restore)
     {
@@ -2467,7 +2690,7 @@ static void synthSetFile(const char* filename)
     }
 }
 
-static void drawSynthMode(void)
+static void drawSynthMode(int64_t elapsedUs)
 {
     if (sd->viewMode & VM_VIZ)
     {
@@ -2575,7 +2798,7 @@ static void drawSynthMode(void)
 
         drawMidiText(false, 0);
 
-#define ICON_SIZE (sd->font.height)
+#define ICON_SIZE (16)
 
         int16_t iconPosR = TFT_WIDTH / 2;
         int16_t iconPosL = iconPosR - ICON_SIZE - 1;
@@ -2638,7 +2861,7 @@ static void drawSynthMode(void)
     if (sd->viewMode & VM_TIMING)
     {
         midiTimeSignature_t* ts = &sd->karaoke.timeSignature;
-        if (!ts->midiClocksPerMetronomeTick || !ts->num32ndNotesPerBeat || !ts->numerator)
+        if (!ts->midiClocksPerMetronomeTick || !ts->num32ndNotesPerBeat || !ts->numerator || !sd->fileMode)
         {
             const char* noTimeMsg = "No Time Signature";
             drawText(&sd->font, c500, noTimeMsg, (TFT_WIDTH - textWidth(&sd->font, noTimeMsg)) / 2,
@@ -2721,6 +2944,23 @@ static void drawSynthMode(void)
             // Draw a mini metronome
             drawBeatsMetronome(true, 190, true, TFT_WIDTH / 2, TFT_HEIGHT - 25, 20);
         }
+    }
+
+    if (wheelMenuActive(sd->menu, sd->wheelMenu))
+    {
+        fillDisplayArea(sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y - 2,
+                        sd->wheelTextArea.pos.x + sd->wheelTextArea.width,
+                        sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2,
+                        c025);
+        drawTriangleOutlined(sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y - 2,
+                            sd->wheelTextArea.pos.x - sd->betterFont.height / 2, sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2,
+                            sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2,
+                            c025, c025);
+        drawTriangleOutlined(sd->wheelTextArea.pos.x + sd->wheelTextArea.width, sd->wheelTextArea.pos.y - 2,
+                            sd->wheelTextArea.pos.x + sd->wheelTextArea.width + sd->betterFont.height / 2, sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2,
+                            sd->wheelTextArea.pos.x + sd->wheelTextArea.width, sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2,
+                            c025, c025);
+        drawWheelMenu(sd->menu, sd->wheelMenu, elapsedUs);
     }
 }
 
@@ -3399,34 +3639,70 @@ static void handleButtonTimer(int64_t* timer, int64_t interval, int64_t elapsedU
 static void synthHandleInput(int64_t elapsedUs)
 {
     int32_t phi, r, intensity;
-    if (getTouchJoystick(&phi, &r, &intensity))
-    {
-        int32_t x, y;
-        getTouchCartesian(phi, r, &x, &y);
+    bool isWheelMenuActive = wheelMenuActive(sd->menu, sd->wheelMenu);
 
-        if (sd->touchMode == TM_PITCH)
+    if (isWheelMenuActive || sd->touchMode == TM_MENU)
+    {
+        if (sd->screen == SS_VIEW)
         {
-            uint16_t pitch = (0x3FFF * y) / 1023;
-            sd->localPitch = true;
-            if (pitch != sd->pitch)
+            if (getTouchJoystick(&phi, &r, &intensity))
             {
-                sd->pitch = pitch;
-                for (uint8_t ch = 0; ch < 16; ch++)
+                sd->menu = wheelMenuTouch(sd->menu, sd->wheelMenu, phi, r);
+            }
+            else
+            {
+                sd->menu = wheelMenuTouchRelease(sd->menu, sd->wheelMenu);
+            }
+
+            bool nowActive = wheelMenuActive(sd->menu, sd->wheelMenu);
+            if (nowActive && !isWheelMenuActive)
+            {
+                // Menu just became active, reset it?
+                sd->updateMenu = true;
+            }
+            else if (isWheelMenuActive && !nowActive)
+            {
+                sd->updateMenu = true;
+                sd->forceResetMenu = true;
+            }
+            isWheelMenuActive = nowActive;
+        }
+    }
+    else if (sd->touchMode == TM_PITCH)
+    {
+        if (getTouchJoystick(&phi, &r, &intensity))
+        {
+            int32_t x, y;
+            getTouchCartesian(phi, r, &x, &y);
+
+            if (sd->touchMode == TM_PITCH)
+            {
+                uint16_t pitch = (0x3FFF * y) / 1023;
+                sd->localPitch = true;
+                if (pitch != sd->pitch)
                 {
-                    midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
+                    sd->pitch = pitch;
+                    for (uint8_t ch = 0; ch < 16; ch++)
+                    {
+                        midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
+                    }
                 }
             }
         }
-    }
-    else if (sd->touchMode == TM_PITCH && sd->localPitch)
-    {
-        // Touchpad released after we set local pitch value
-        sd->localPitch = false;
-        sd->pitch      = 0x2000;
-        for (uint8_t ch = 0; ch < 16; ch++)
+        else if (sd->localPitch)
         {
-            midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
+            // Touchpad released after we set local pitch value
+            sd->localPitch = false;
+            sd->pitch      = 0x2000;
+            for (uint8_t ch = 0; ch < 16; ch++)
+            {
+                midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
+            }
         }
+    }
+    else if (sd->touchMode == TM_SCRUB)
+    {
+        // NYI
     }
 
     buttonEvt_t evt = {0};
@@ -3450,37 +3726,44 @@ static void synthHandleInput(int64_t elapsedUs)
         }
         else if (sd->startupSeqComplete)
         {
-            switch (sd->screen)
+            if (isWheelMenuActive)
             {
-                case SS_VIEW:
+                sd->menu = wheelMenuButton(sd->menu, sd->wheelMenu, &evt);
+            }
+            else
+            {
+                switch (sd->screen)
                 {
-                    if (evt.down && evt.button == PB_START)
+                    case SS_VIEW:
                     {
-                        sd->screen = SS_MENU;
-                        synthSetupMenu();
+                        if (evt.down && evt.button == PB_START)
+                        {
+                            sd->screen = SS_MENU;
+                            synthSetupMenu(false);
+                        }
+                        synthHandleButton(evt);
+                        break;
                     }
-                    synthHandleButton(evt);
-                    break;
-                }
 
-                case SS_MENU:
-                {
-                    if (evt.down && (evt.button == PB_START || (!sd->menu->parentMenu && evt.button == PB_B)))
+                    case SS_MENU:
                     {
-                        sd->screen = SS_VIEW;
+                        if (evt.down && (evt.button == PB_START || (!sd->menu->parentMenu && evt.button == PB_B)))
+                        {
+                            sd->screen = SS_VIEW;
+                        }
+                        else
+                        {
+                            sd->menu = menuButton(sd->menu, evt);
+                        }
+                        break;
                     }
-                    else
-                    {
-                        sd->menu = menuButton(sd->menu, evt);
-                    }
-                    break;
-                }
 
-                case SS_FILE_SELECT:
-                {
-                    if (evt.down)
+                    case SS_FILE_SELECT:
                     {
-                        textEntryInput(evt.down, evt.button);
+                        if (evt.down)
+                        {
+                            textEntryInput(evt.down, evt.button);
+                        }
                     }
                 }
             }
@@ -3515,8 +3798,6 @@ static bool synthIsControlSupported(const midiControllerDesc_t* control)
 {
     switch (control->control)
     {
-        case 0:  // Bank MSB
-        case 32: // Bank LSB
         case 64: // Hold Pedal
         case 66: // Sustenuto Pedal
         case 72: // Release Time
@@ -3531,6 +3812,29 @@ static bool synthIsControlSupported(const midiControllerDesc_t* control)
         default:
             return false;
     }
+}
+
+static void writeShortName(char* out, size_t n, const char* in)
+{
+    int written = 0;
+    const char* cur = in;
+    bool firstChar = true;
+
+    while (written < n - 1 && *cur)
+    {
+        if (firstChar && isalnum(*cur))
+        {
+            out[written++] = *cur;
+            firstChar = false;
+        }
+        else if (!isalnum(*cur))
+        {
+            firstChar = true;
+        }
+        cur++;
+    }
+
+    out[written] = '\0';
 }
 
 static paletteColor_t noteToColor(uint8_t note)
@@ -3725,9 +4029,28 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
 
 static void synthMenuCb(const char* label, bool selected, uint32_t value)
 {
-    if (label == menuItemPlayMode)
+    printf("synthMenuCb(%s, %s, %" PRIu32 ")\n", label, selected ? "true" : "false", value);
+    if (NULL == label)
     {
-        if (selected && value != sd->fileMode)
+        if (selected)
+        {
+            // Wheel Menu Closed! Reset the menu
+            sd->updateMenu = true;
+            //sd->forceResetMenu = true;
+        }
+    }
+    else if (label == mnuBackStr)
+    {
+        if (selected && !sd->menu->parentMenu)
+        {
+            sd->updateMenu = true;
+            sd->forceResetMenu = true;
+            sd->screen = SS_VIEW;
+        }
+    }
+    else if (label == menuItemPlayMode)
+    {
+        if (value != sd->fileMode)
         {
             if (value)
             {
