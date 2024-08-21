@@ -15,23 +15,23 @@ const midiTimbre_t acousticGrandPianoTimbre = {
     .envelope = {
         // TODO: Just realized I forgot how ADSR actually works halfway through writing everything else...
         // Pretty fast attack
-        .attackTime = MS_TO_SAMPLES(64),
+        .attackTime = 0,
         // Decrease attack time by 1ms for every 4 velocity value
-        .attackTimeVel = TO_FX_FRAC(-MS_TO_SAMPLES(1), 4),
+        .attackTimeVel = 0,
 
         // Take a good long-ish while to reach the sustain level
-        .decayTime = MS_TO_SAMPLES(75),
+        .decayTime = 0,
         // Take a bit longer the higher the velocity -- 25ms for every 16 velocity (so up to +200ms)
-        .decayTimeVel = TO_FX_FRAC(MS_TO_SAMPLES(25), 16),
+        .decayTimeVel = 0,
 
         // Sustain at 1 plus 75% of initial volume
-        .sustainVol = 1,
-        .sustainVolVel = TO_FX_FRAC(3, 4),
+        .sustainVol = 127,
+        .sustainVolVel = 0,
 
         // And a not-too-short release time
-        .releaseTime = MS_TO_SAMPLES(100),
+        .releaseTime = 0,
         // Plus some extra time if the note was very loud initially - up to double
-        .releaseTimeVel = MS_TO_SAMPLES(10) << 8, //TO_FX_FRAC(MS_TO_SAMPLES(150), 63),
+        .releaseTimeVel = 0,
         // Yup, I'm sure it will sound exactly like a grand piano now!
     },
     .effects = {
