@@ -337,16 +337,16 @@ static void bb_DrawScene(void)
     bb_drawEntities(&bigbug->entityManager, &bigbug->camera);
 
     // Draw garbotnik
-    if(bigbug->garbotnikRotation.x < -864.0){
+    if(bigbug->garbotnikRotation.x < -1200.0){
         drawWsgSimple(&bigbug->garbotnikWsg[0], garbotnikDrawPos.x, garbotnikDrawPos.y);
     }
-    else if(bigbug->garbotnikRotation.x < -288.0){
+    else if(bigbug->garbotnikRotation.x < -300.0){
         drawWsgSimple(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y);
     }
-    else if(bigbug->garbotnikRotation.x < 288.0){
+    else if(bigbug->garbotnikRotation.x < 300.0){
         drawWsgSimple(&bigbug->garbotnikWsg[2], garbotnikDrawPos.x, garbotnikDrawPos.y);
     }
-    else if(bigbug->garbotnikRotation.x < 864.0){
+    else if(bigbug->garbotnikRotation.x < 1200.0){
         drawWsg(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y, true, false, 0);
     }
     else{
@@ -488,7 +488,7 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
         bigbug->garbotnikRotation.x = 1440;
         bigbug->garbotnikRotation.y = 0;
     }
-    printf("rotation: %d\n",bigbug->garbotnikRotation.x);
+    // printf("rotation: %d\n",bigbug->garbotnikRotation.x);
 
     // Apply garbotnik's drag
     int32_t sqMagVel= sqMagVec2d(bigbug->garbotnikVel);
