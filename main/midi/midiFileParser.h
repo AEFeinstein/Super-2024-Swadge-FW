@@ -327,3 +327,13 @@ uint32_t midiNextEventTime(midiFileReader_t* reader);
  * @return false If there are no more events in this file or there was a fatal parse error
  */
 bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event);
+
+/**
+ * @brief Writes a MIDI event to a byte buffer
+ *
+ * @param out The byte array
+ * @param max The maximum number of bytes to write
+ * @param event The event to write
+ * @return int The number of bytes written
+ */
+int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event);

@@ -341,6 +341,7 @@ static void synthEnterMode(void);
 static void synthExitMode(void);
 static void synthMainLoop(int64_t elapsedUs);
 static void synthDacCallback(uint8_t* samples, int16_t len);
+static bool synthUsbMidiCbWrapper(midiEvent_t* event);
 
 static void synthSetupPlayer(void);
 static void synthApplyConfig(void);
@@ -2037,7 +2038,7 @@ static void synthSetupPlayer(void)
     }
     else
     {
-        sd->midiPlayer.streamingCallback = usbMidiCallback;
+        sd->midiPlayer.streamingCallback = synthUsbMidiCbWrapper;
         sd->midiPlayer.mode              = MIDI_STREAMING;
         midiPause(&sd->midiPlayer, false);
     }
@@ -3380,6 +3381,18 @@ static void synthDacCallback(uint8_t* samples, int16_t len)
         memcpy(sd->lastSamples, samples, MIN(len, VIZ_SAMPLE_COUNT));
         sd->sampleCount = MIN(len, VIZ_SAMPLE_COUNT);
     }
+}
+
+static bool synthUsbMidiCbWrapper(midiEvent_t* event)
+{
+    bool realResult = usbMidiCallback(event);
+
+    if (realResult && event->type == MIDI_EVENT)
+    {
+        midiWriteEvent(sd->lastPackets[event->midi.status & 0xF], 4, event);
+    }
+
+    return realResult;
 }
 
 static void synthHandleButton(const buttonEvt_t evt)
