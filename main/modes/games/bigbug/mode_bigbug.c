@@ -53,12 +53,13 @@ struct bb_t
     vec_t garbotnikVel;   ///< Garbotnik's velocity
     vec_t garbotnikAccel; ///< Garbotnik's acceleration
     vec_t previousPos;    ///< Garbotnik's position on the previous frame (for resolving collisions)
+    vec_t garbotnikRotation; ///<x is Yaw to left or right. Y is change to yaw over time. Tends towards left or right.
 
     rectangle_t camera;   ///< The camera
 
     bool isPaused;        ///< true if the game is paused, false if it is running
 
-    wsg_t garbotnikWsg;   ///< A graphic for garbotnik
+    wsg_t garbotnikWsg[3];   ///< A graphic for garbotnik.
 
     song_t bgm;  ///< Background music
     song_t hit1; ///< A sound effect
@@ -150,7 +151,9 @@ static void bb_EnterMode(void)
                             &(bigbug->soundManager));
     printf("e\n");
     // Load graphics
-    loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, true);
+    loadWsg("garbotnik-0.wsg", &bigbug->garbotnikWsg[0], true);
+    loadWsg("garbotnik-1.wsg", &bigbug->garbotnikWsg[1], true);
+    loadWsg("garbotnik-2.wsg", &bigbug->garbotnikWsg[2], true);
     printf("f\n");
 
     // Set the mode to game mode
@@ -334,7 +337,22 @@ static void bb_DrawScene(void)
     bb_drawEntities(&bigbug->entityManager, &bigbug->camera);
 
     // Draw garbotnik
-    drawWsgSimple(&bigbug->garbotnikWsg, garbotnikDrawPos.x, garbotnikDrawPos.y);
+    if(bigbug->garbotnikRotation.x < -864.0){
+        drawWsgSimple(&bigbug->garbotnikWsg[0], garbotnikDrawPos.x, garbotnikDrawPos.y);
+    }
+    else if(bigbug->garbotnikRotation.x < -288.0){
+        drawWsgSimple(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y);
+    }
+    else if(bigbug->garbotnikRotation.x < 288.0){
+        drawWsgSimple(&bigbug->garbotnikWsg[2], garbotnikDrawPos.x, garbotnikDrawPos.y);
+    }
+    else if(bigbug->garbotnikRotation.x < 864.0){
+        drawWsg(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y, true, false, 0);
+    }
+    else{
+        drawWsg(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y, true, false, 0);
+    }
+    
 }
 
 /**
@@ -387,6 +405,8 @@ static void bb_Reset(void){
     // Set garbotnik variables
     bigbug->garbotnikPos.x  = 128 << DECIMAL_BITS;
     bigbug->garbotnikPos.y  =  -(90 << DECIMAL_BITS);
+    bigbug->garbotnikRotation.x = 0 << DECIMAL_BITS;
+    bigbug->garbotnikRotation.y = 0 << DECIMAL_BITS;
 
     printf("The width is: %d\n", FIELD_WIDTH);
     printf("The height is: %d\n", FIELD_HEIGHT);
@@ -452,6 +472,24 @@ static void bb_UpdateTileSupport(void){
 
 static void bb_UpdatePhysics(int64_t elapsedUs)
 {
+    bigbug->garbotnikRotation.y += bigbug->garbotnikAccel.x;
+    if(bigbug->garbotnikRotation.x < 0){
+        bigbug->garbotnikRotation.y -=  5.0 * elapsedUs / 100000;
+    }
+    else{
+        bigbug->garbotnikRotation.y += 5.0  * elapsedUs / 100000;
+    }
+    bigbug->garbotnikRotation.x += bigbug->garbotnikRotation.y;
+    if(bigbug->garbotnikRotation.x < -1440){
+        bigbug->garbotnikRotation.x = -1440;
+        bigbug->garbotnikRotation.y = 0;
+    }
+    else if(bigbug->garbotnikRotation.x > 1440){
+        bigbug->garbotnikRotation.x = 1440;
+        bigbug->garbotnikRotation.y = 0;
+    }
+    printf("rotation: %d\n",bigbug->garbotnikRotation.x);
+
     // Apply garbotnik's drag
     int32_t sqMagVel= sqMagVec2d(bigbug->garbotnikVel);
     int32_t speed = sqrt(sqMagVel);
