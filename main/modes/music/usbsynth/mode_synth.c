@@ -63,8 +63,6 @@ typedef enum
     TM_MENU,
     /// @brief Touchpad acts as pitch bend wheel
     TM_PITCH,
-    /// @brief Touchpad scrubs through a song
-    TM_SCRUB,
 } synthTouchMode_t;
 
 typedef enum
@@ -1115,7 +1113,6 @@ static const char* menuItemButtonOptions[] = {
 static const char* menuItemTouchOptions[] = {
     "Wheel Menu",
     "Pitch Bend",
-    "Scrub",
 };
 
 static const char* menuItemOffOnOptions[] = {
@@ -1169,7 +1166,6 @@ static const int32_t menuItemButtonValues[] = {
 static const int32_t menuItemTouchValues[] = {
     (int32_t)TM_MENU,
     (int32_t)TM_PITCH,
-    (int32_t)TM_SCRUB,
 };
 
 static const int32_t menuItemLoopValues[] = {
@@ -1247,7 +1243,7 @@ static settingParam_t menuItemButtonBounds = {
 static settingParam_t menuItemTouchBounds = {
     .def = TM_PITCH,
     .min = TM_PITCH,
-    .max = TM_SCRUB,
+    .max = TM_MENU,
     .key = nvsKeyTouchMode,
 };
 
@@ -2513,7 +2509,6 @@ static void synthSetupMenu(bool forceReset)
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchMode, &sd->touchImage, rotUiMenu++, NO_SCROLL);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchOptions[0], &sd->menuImage, 0, NO_SCROLL);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchOptions[1], &sd->pitchImage, 1, NO_SCROLL);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchOptions[2], &sd->skipIcon, 2, NO_SCROLL);
 
 
     // End "Interface" Menu
@@ -3713,10 +3708,6 @@ static void synthHandleInput(int64_t elapsedUs)
                 midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
             }
         }
-    }
-    else if (sd->touchMode == TM_SCRUB)
-    {
-        // NYI
     }
 
     buttonEvt_t evt = {0};
