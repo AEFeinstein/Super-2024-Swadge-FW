@@ -858,27 +858,27 @@ static const midiControllerDesc_t controllerDefs[] = {
     {
         .control = 72,
         .type = CTRL_7BIT,
-        .desc = "Sound Release Time",
+        .desc = "Release Time",
     },
     {
         .control = 73,
         .type = CTRL_7BIT,
-        .desc = "Sound Attack Time",
+        .desc = "Attack Time",
     },
     {
         .control = 74,
         .type = CTRL_7BIT,
-        .desc = "Sound Brightness",
+        .desc = "Brightness",
     },
     {
         .control = 75,
         .type = CTRL_7BIT,
-        .desc = "Sound Decay Time",
+        .desc = "Decay Time",
     },
     {
         .control = 76,
         .type = CTRL_7BIT,
-        .desc = "Sound Sustain Level",
+        .desc = "Sustain Level",
     },
     {
         .control = 77,
