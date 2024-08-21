@@ -59,7 +59,7 @@ struct bb_t
 
     bool isPaused;        ///< true if the game is paused, false if it is running
 
-    wsg_t garbotnikWsg[3];   ///< A graphic for garbotnik.
+    wsg_t garbotnikWsg[3];   ///< An array of graphics for garbotnik.
 
     song_t bgm;  ///< Background music
     song_t hit1; ///< A sound effect
@@ -140,6 +140,7 @@ static void bb_EnterMode(void)
 {
     printf("a\n");
     bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+    
     printf("b\n");
 
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
@@ -327,7 +328,7 @@ static void bb_DrawScene(void)
         .x = (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 19,
         .y = (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 21
     };
-    bb_drawTileMap(&bigbug->tilemap, &bigbug->camera, &garbotnikDrawPos);
+    bb_drawTileMap(&bigbug->tilemap, &bigbug->camera, &garbotnikDrawPos, &bigbug->garbotnikRotation);
 
     // printf("garbotnikPos.y: %d\n", bigbug->garbotnikPos.y);
     // printf("garbotnik.radius: %d\n", bigbug->garbotnik.radius);
@@ -337,16 +338,16 @@ static void bb_DrawScene(void)
     bb_drawEntities(&bigbug->entityManager, &bigbug->camera);
 
     // Draw garbotnik
-    if(bigbug->garbotnikRotation.x < -1400.0){
+    if(bigbug->garbotnikRotation.x < -1400){
         drawWsgSimple(&bigbug->garbotnikWsg[0], garbotnikDrawPos.x, garbotnikDrawPos.y);
     }
-    else if(bigbug->garbotnikRotation.x < -400.0){
+    else if(bigbug->garbotnikRotation.x < -400){
         drawWsgSimple(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y);
     }
-    else if(bigbug->garbotnikRotation.x < 400.0){
+    else if(bigbug->garbotnikRotation.x < 400){
         drawWsgSimple(&bigbug->garbotnikWsg[2], garbotnikDrawPos.x, garbotnikDrawPos.y);
     }
-    else if(bigbug->garbotnikRotation.x < 1400.0){
+    else if(bigbug->garbotnikRotation.x < 1400){
         drawWsg(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y, true, false, 0);
     }
     else{
