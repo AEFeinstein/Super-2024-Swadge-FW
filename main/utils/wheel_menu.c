@@ -223,8 +223,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     }
     uint16_t anchorAngle = (360 + renderer->anchorAngle - (360 / ringItems / 2)) % 360;
 
-    #define wheelAspectRatio ((ringItems > 10) ? (TFT_WIDTH + 60) : TFT_WIDTH) / TFT_HEIGHT
-    if (ringItems > 10)
+    #define wheelAspectRatio ((ringItems >= 10) ? (TFT_WIDTH + 60) : TFT_WIDTH) / TFT_HEIGHT
+    if (ringItems >= 10)
     {
         inR += 15;
         outR += 15;
@@ -255,7 +255,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
                 if (curItem->currentOpt == optPos && !renderer->zoomBackSelected)
                 {
-                    drawInfos[curDraw].drawOrder = INT8_MAX;
+                    drawInfos[curDraw].drawOrder = -INT8_MAX;
                     drawInfos[curDraw].selected  = true;
                     drawInfos[curDraw].bgColor   = optInfo ? optInfo->selectedBg : renderer->selBgColor;
                 }
