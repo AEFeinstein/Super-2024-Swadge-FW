@@ -770,7 +770,11 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
             if (cur->currentOpt != selection)
             {
                 renderer->zoomValue = selection;
-                renderer->timer = 0;
+
+                if (menuItemHasOptions(cur))
+                {
+                    renderer->timer = 0;
+                }
                 return menuSetCurrentOption(menu, selection);
             }
         }
