@@ -4045,7 +4045,7 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
 
 static void synthMenuCb(const char* label, bool selected, uint32_t value)
 {
-    printf("synthMenuCb(%s, %s, %" PRIu32 ")\n", label, selected ? "true" : "false", value);
+    //printf("synthMenuCb(%s, %s, %" PRIu32 ")\n", label, selected ? "true" : "false", value);
     if (NULL == label)
     {
         if (selected)
@@ -4310,7 +4310,6 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
 
         if (itemInfo != NULL)
         {
-            printf("Found item from map for %s\n", label);
             switch (itemInfo->type)
             {
                 case SMT_PROGRAM:
@@ -4384,7 +4383,6 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (selected)
         {
-            printf("No map item found for label %s\n", label);
             // Song items
             for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
             {
