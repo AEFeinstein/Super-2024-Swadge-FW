@@ -4094,6 +4094,8 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
 
                 writeNvs32(nvsKeyMode, sd->fileMode);
             }
+
+            sd->updateMenu = true;
         }
     }
     else if (label == menuItemViewMode)
