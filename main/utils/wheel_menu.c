@@ -176,12 +176,13 @@ void wheelMenuSetItemTextIcon(wheelMenuRenderer_t* renderer, const char* label, 
  * @param h The height of the item, or a negative number for "fit to content"
  * @param shapeFlags Extra flags for configuring the shape of the item
  */
-void wheelMenuSetItemSize(wheelMenuRenderer_t* renderer, const char* label, int16_t w, int16_t h, wheelMenuShapeFlags_t shapeFlags)
+void wheelMenuSetItemSize(wheelMenuRenderer_t* renderer, const char* label, int16_t w, int16_t h,
+                          wheelMenuShapeFlags_t shapeFlags)
 {
     wheelItemInfo_t* info = findOrAddInfo(renderer, label);
 
-    info->width = w;
-    info->height = h;
+    info->width      = w;
+    info->height     = h;
     info->shapeFlags = shapeFlags;
 }
 
@@ -202,8 +203,10 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
     // If we haven't customized the back option to be around the ring, then we use the center
     // So, remove one from the ring items to compensate
-    bool missingItem = (menu->parentMenu || (!menu->parentMenu && menu->items->last && menu->items->last->val && ((menuItem_t*)menu->items->last->val)->label == mnuBackStr));
-    uint8_t ringItems    = menu->items->length - (missingItem ? 1 : 0);
+    bool missingItem  = (menu->parentMenu
+                        || (!menu->parentMenu && menu->items->last && menu->items->last->val
+                            && ((menuItem_t*)menu->items->last->val)->label == mnuBackStr));
+    uint8_t ringItems = menu->items->length - (missingItem ? 1 : 0);
 
     uint16_t unselR = renderer->unselR;
     uint16_t selR   = renderer->selR;
@@ -223,7 +226,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     }
     uint16_t anchorAngle = (360 + renderer->anchorAngle - (360 / ringItems / 2)) % 360;
 
-    #define wheelAspectRatio ((ringItems >= 10) ? (TFT_WIDTH + 60) : TFT_WIDTH) / TFT_HEIGHT
+#define wheelAspectRatio ((ringItems >= 10) ? (TFT_WIDTH + 60) : TFT_WIDTH) / TFT_HEIGHT
     if (ringItems >= 10)
     {
         inR += 15;
@@ -260,8 +263,11 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 {
                     // We want to draw the selected one last, and the farthest away one first
                     // So, order the items by how close they are to the selected one
-                                                // -((ringItems / 2) - MIN(abs(info->position - curPosition), ringItems - abs(info->position - curPosition)));
-                    drawInfos[curDraw].drawOrder = -((ringItems / 2) - MIN(abs(optPos - curItem->currentOpt), ringItems - abs(optPos - curItem->currentOpt)));
+                    // -((ringItems / 2) - MIN(abs(info->position - curPosition), ringItems - abs(info->position -
+                    // curPosition)));
+                    drawInfos[curDraw].drawOrder
+                        = -((ringItems / 2)
+                            - MIN(abs(optPos - curItem->currentOpt), ringItems - abs(optPos - curItem->currentOpt)));
                     drawInfos[curDraw].selected = false;
                     drawInfos[curDraw].bgColor  = optInfo ? optInfo->unselectedBg : renderer->unselBgColor;
                 }
@@ -275,14 +281,14 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 }
                 uint16_t itemSpokeR = alternate ? (((optPos % 2) == 1) ? (spokeR + inR) : (spokeR + outR)) : spokeR;
 
-                drawInfos[curDraw].x   = renderer->x + getCos1024(centerAngle) * itemSpokeR * wheelAspectRatio / 1024;
-                drawInfos[curDraw].y   = renderer->y - getSin1024(centerAngle) * itemSpokeR / 1024;
-                drawInfos[curDraw].wsg = optInfo ? optInfo->icon : NULL;
-                drawInfos[curDraw].text = optInfo ? optInfo->textIcon : NULL;
+                drawInfos[curDraw].x     = renderer->x + getCos1024(centerAngle) * itemSpokeR * wheelAspectRatio / 1024;
+                drawInfos[curDraw].y     = renderer->y - getSin1024(centerAngle) * itemSpokeR / 1024;
+                drawInfos[curDraw].wsg   = optInfo ? optInfo->icon : NULL;
+                drawInfos[curDraw].text  = optInfo ? optInfo->textIcon : NULL;
                 drawInfos[curDraw].shape = optInfo ? optInfo->shapeFlags : WM_SHAPE_DEFAULT;
-                drawInfos[curDraw].w = optInfo ? optInfo->width : 0;
-                drawInfos[curDraw].h = optInfo ? optInfo->height : 0;
-                drawInfos[curDraw].r = (optInfo && !optInfo->shapeFlags) ? optInfo->width : 0;
+                drawInfos[curDraw].w     = optInfo ? optInfo->width : 0;
+                drawInfos[curDraw].h     = optInfo ? optInfo->height : 0;
+                drawInfos[curDraw].r     = (optInfo && !optInfo->shapeFlags) ? optInfo->width : 0;
                 curDraw++;
             }
 
@@ -294,11 +300,11 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             // TODO: Confirm icon?
             drawInfos[curDraw].wsg     = NULL;
             drawInfos[curDraw].bgColor = renderer->zoomBackSelected ? renderer->selBgColor : renderer->unselBgColor;
-            drawInfos[curDraw].text = (backInfo && backInfo->textIcon) ? backInfo->textIcon : NULL;
-            drawInfos[curDraw].shape = backInfo ? backInfo->shapeFlags : WM_SHAPE_DEFAULT;
-            drawInfos[curDraw].w = backInfo ? backInfo->width : 0;
-            drawInfos[curDraw].h = backInfo ? backInfo->height : 0;
-            drawInfos[curDraw].r = (backInfo && !backInfo->shapeFlags) ? backInfo->width : 0;
+            drawInfos[curDraw].text    = (backInfo && backInfo->textIcon) ? backInfo->textIcon : NULL;
+            drawInfos[curDraw].shape   = backInfo ? backInfo->shapeFlags : WM_SHAPE_DEFAULT;
+            drawInfos[curDraw].w       = backInfo ? backInfo->width : 0;
+            drawInfos[curDraw].h       = backInfo ? backInfo->height : 0;
+            drawInfos[curDraw].r       = (backInfo && !backInfo->shapeFlags) ? backInfo->width : 0;
             curDraw++;
         }
         else if (menuItemIsSetting(curItem) || (zoomSetting == ZOOM_GAUGE))
@@ -312,10 +318,10 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 = ((curItem->currentSetting - curItem->minSetting) * 180) / (curItem->maxSetting - curItem->minSetting)
                   + 180;
             char tickLabel[16];
-            bool hasOptions = menuItemHasOptions(curItem);
+            bool hasOptions  = menuItemHasOptions(curItem);
             int nextOptIndex = 0;
 
-            uint16_t lastTickAngle = 360;
+            uint16_t lastTickAngle  = 360;
             rectangle_t lastTextBox = {0};
 
             // Draw tick marks
@@ -348,7 +354,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
                 drawLine(x0, y0, x1, y1, renderer->borderColor, 0);
 
-                if (hasOptions ? (nextOptIndex < curItem->numOptions && i == curItem->settingVals[nextOptIndex]) : (tickAngle > 5 + lastTickAngle || tickAngle < lastTickAngle - 5))
+                if (hasOptions ? (nextOptIndex < curItem->numOptions && i == curItem->settingVals[nextOptIndex])
+                               : (tickAngle > 5 + lastTickAngle || tickAngle < lastTickAngle - 5))
                 {
                     rectangle_t textBox = {
                         .pos = {
@@ -361,9 +368,10 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
                     if (!rectRectIntersection(textBox, lastTextBox, NULL))
                     {
-                        drawText(renderer->font, c000, hasOptions ? curItem->options[nextOptIndex] : tickLabel, textX, textY);
+                        drawText(renderer->font, c000, hasOptions ? curItem->options[nextOptIndex] : tickLabel, textX,
+                                 textY);
                         lastTickAngle = tickAngle;
-                        lastTextBox = textBox;
+                        lastTextBox   = textBox;
                     }
 
                     if (hasOptions)
@@ -419,17 +427,19 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                     uint16_t itemSpokeR
                         = alternate ? (((info->position % 2) == 1) ? spokeR + inR : spokeR + outR) : spokeR;
 
-                    drawInfos[curDraw].drawOrder = -((ringItems / 2) - MIN(abs(info->position - curPosition), ringItems - abs(info->position - curPosition)));
-                    drawInfos[curDraw].x         = renderer->x + getCos1024(centerAngle) * itemSpokeR * wheelAspectRatio / 1024;
-                    drawInfos[curDraw].y         = renderer->y - getSin1024(centerAngle) * itemSpokeR / 1024;
-                    drawInfos[curDraw].selected  = isCur;
-                    drawInfos[curDraw].wsg       = info->icon;
-                    drawInfos[curDraw].bgColor   = isCur ? info->selectedBg : info->unselectedBg;
-                    drawInfos[curDraw].text      = (info && info->textIcon) ? info->textIcon : NULL;
-                    drawInfos[curDraw].w         = info ? info->width : 0;
-                    drawInfos[curDraw].h         = info ? info->height : 0;
-                    drawInfos[curDraw].shape     = info ? info->shapeFlags : WM_SHAPE_DEFAULT;
-                    drawInfos[curDraw].r         = (info && !info->shapeFlags) ? info->width : 0;
+                    drawInfos[curDraw].drawOrder
+                        = -((ringItems / 2)
+                            - MIN(abs(info->position - curPosition), ringItems - abs(info->position - curPosition)));
+                    drawInfos[curDraw].x = renderer->x + getCos1024(centerAngle) * itemSpokeR * wheelAspectRatio / 1024;
+                    drawInfos[curDraw].y = renderer->y - getSin1024(centerAngle) * itemSpokeR / 1024;
+                    drawInfos[curDraw].selected = isCur;
+                    drawInfos[curDraw].wsg      = info->icon;
+                    drawInfos[curDraw].bgColor  = isCur ? info->selectedBg : info->unselectedBg;
+                    drawInfos[curDraw].text     = (info && info->textIcon) ? info->textIcon : NULL;
+                    drawInfos[curDraw].w        = info ? info->width : 0;
+                    drawInfos[curDraw].h        = info ? info->height : 0;
+                    drawInfos[curDraw].shape    = info ? info->shapeFlags : WM_SHAPE_DEFAULT;
+                    drawInfos[curDraw].r        = (info && !info->shapeFlags) ? info->width : 0;
                     curDraw++;
 
                     ESP_LOGD("Wheel", "drawOrder is %" PRIu8 " for %s", drawInfos[curDraw].drawOrder, item->label);
@@ -449,11 +459,11 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             drawInfos[curDraw].selected  = curBackOrNull;
             drawInfos[curDraw].wsg       = backInfo->icon;
             drawInfos[curDraw].bgColor   = curBackOrNull ? backInfo->selectedBg : backInfo->unselectedBg;
-            drawInfos[curDraw].text = (backInfo && backInfo->textIcon) ? backInfo->textIcon : NULL;
+            drawInfos[curDraw].text      = (backInfo && backInfo->textIcon) ? backInfo->textIcon : NULL;
             drawInfos[curDraw].w         = backInfo->width ? backInfo->width : 0;
             drawInfos[curDraw].h         = backInfo->height ? backInfo->height : 0;
             drawInfos[curDraw].shape     = backInfo ? backInfo->shapeFlags : WM_SHAPE_DEFAULT;
-            drawInfos[curDraw].r = 0;
+            drawInfos[curDraw].r         = 0;
             curDraw++;
         }
         else
@@ -466,7 +476,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             drawInfos[curDraw].bgColor   = (curBackOrNull) ? renderer->selBgColor : renderer->unselBgColor;
             drawInfos[curDraw].text      = NULL; //(curInfo && curInfo->textIcon) ? curInfo->textIcon : NULL;
             drawInfos[curDraw].shape     = WM_SHAPE_DEFAULT;
-            drawInfos[curDraw].r = 0;
+            drawInfos[curDraw].r         = 0;
             curDraw++;
         }
     }
@@ -480,11 +490,11 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     for (int i = 0; i < curDraw; i++)
     {
         wheelDrawInfo_t* info = &drawInfos[i];
-        int r = info->selected ? selR : unselR;
-        int w = r;
-        int h = r;
-        bool hasWsg = (NULL != info->wsg);
-        bool hasText = (NULL != info->text);
+        int r                 = info->selected ? selR : unselR;
+        int w                 = r;
+        int h                 = r;
+        bool hasWsg           = (NULL != info->wsg);
+        bool hasText          = (NULL != info->text);
 
 #define PAD_FILL 5
 
@@ -553,7 +563,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 break;
 
             case WM_SHAPE_ROUNDED_RECT:
-                drawRoundedRect(info->x - w / 2, info->y - h / 2 - 1, info->x + w / 2, info->y + h / 2, 6, info->bgColor, cTransparent);
+                drawRoundedRect(info->x - w / 2, info->y - h / 2 - 1, info->x + w / 2, info->y + h / 2, 6,
+                                info->bgColor, cTransparent);
                 break;
 
             case WM_SHAPE_DEFAULT:
@@ -575,11 +586,13 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         switch (info->shape)
         {
             case WM_SHAPE_SQUARE:
-                drawRect(info->x - w / 2, info->y - h / 2, info->x + w / 2 + 1, info->y + h / 2 + 1, renderer->borderColor);
+                drawRect(info->x - w / 2, info->y - h / 2, info->x + w / 2 + 1, info->y + h / 2 + 1,
+                         renderer->borderColor);
                 break;
 
             case WM_SHAPE_ROUNDED_RECT:
-                drawRoundedRect(info->x - w / 2, info->y - h / 2 - 1, info->x + w / 2, info->y + h / 2, 6, cTransparent, renderer->borderColor);
+                drawRoundedRect(info->x - w / 2, info->y - h / 2 - 1, info->x + w / 2, info->y + h / 2, 6, cTransparent,
+                                renderer->borderColor);
                 break;
 
             case WM_SHAPE_DEFAULT:
@@ -620,16 +633,15 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
             if (textW > renderer->textBox->width)
             {
-                drawTextMarquee(renderer->font, renderer->textColor, label,
-                        renderer->textBox->pos.x,
-                        renderer->textBox->pos.y + (renderer->textBox->height - renderer->font->height - 1) / 2,
-                        renderer->textBox->width, &renderer->timer);
+                drawTextMarquee(renderer->font, renderer->textColor, label, renderer->textBox->pos.x,
+                                renderer->textBox->pos.y + (renderer->textBox->height - renderer->font->height - 1) / 2,
+                                renderer->textBox->width, &renderer->timer);
             }
             else
             {
                 drawText(renderer->font, renderer->textColor, label,
-                        renderer->textBox->pos.x + (renderer->textBox->width - textW) / 2,
-                        renderer->textBox->pos.y + (renderer->textBox->height - renderer->font->height - 1) / 2);
+                         renderer->textBox->pos.x + (renderer->textBox->width - textW) / 2,
+                         renderer->textBox->pos.y + (renderer->textBox->height - renderer->font->height - 1) / 2);
             }
         }
     }
@@ -653,7 +665,7 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
     {
         if (renderer->zoomed)
         {
-            renderer->timer = 0;
+            renderer->timer            = 0;
             renderer->zoomBackSelected = true;
             return menu;
         }
@@ -673,7 +685,7 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
         {
             if (menu->currentItem)
             {
-                renderer->timer = 0;
+                renderer->timer   = 0;
                 menu->currentItem = NULL;
                 menu->cbFunc(NULL, false, 0);
             }
@@ -683,7 +695,9 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
 
     renderer->zoomBackSelected = false;
 
-    bool missingItem = (menu->parentMenu || (!menu->parentMenu && menu->items->last && menu->items->last->val && ((menuItem_t*)menu->items->last->val)->label == mnuBackStr));
+    bool missingItem = (menu->parentMenu
+                        || (!menu->parentMenu && menu->items->last && menu->items->last->val
+                            && ((menuItem_t*)menu->items->last->val)->label == mnuBackStr));
 
     if (renderer->zoomed && menu->currentItem)
     {
@@ -704,7 +718,7 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
         wheelItemInfo_t* info = findInfo(renderer, cur->label);
         if (menuItemHasOptions(cur) && (!info || (ZOOM_GAUGE != (info->scroll & MASK_ZOOM))))
         {
-            uint8_t ringItems    = cur->numOptions;
+            uint8_t ringItems = cur->numOptions;
             // For actual options values, with distinct items
             uint16_t anchorAngle = (360 + renderer->anchorAngle - (360 / ringItems / 2)) % 360;
             if ((angle % 360) < anchorAngle)
@@ -733,7 +747,7 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
                         if ((cur->currentOpt != optIndex || renderer->zoomValue != optIndex))
                         {
                             renderer->zoomValue = optIndex;
-                            renderer->timer = 0;
+                            renderer->timer     = 0;
                             return menuSetCurrentOption(menu, optIndex);
                         }
                         break;

@@ -497,7 +497,7 @@ int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint3
 }
 
 #define DONUT_SAMPLE_RATE_HZ 8192
-#define SAMPLE_FACTOR (DAC_SAMPLE_RATE_HZ / DONUT_SAMPLE_RATE_HZ)
+#define SAMPLE_FACTOR        (DAC_SAMPLE_RATE_HZ / DONUT_SAMPLE_RATE_HZ)
 
 // literally copied from the donut swadge
 // TODO: have these be an instrument in a separate bank or something
@@ -534,9 +534,9 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
     else if (LOW_BONGO == drum)
     {
         // Colossus Roar
-        static bool colossusLoaded = false;
+        static bool colossusLoaded           = false;
         static const uint8_t* colossusSample = NULL;
-        static size_t colossusLen = 0;
+        static size_t colossusLen            = 0;
         if (!colossusLoaded)
         {
             colossusSample = cnfsGetFile("colossus.bin", &colossusLen);
@@ -553,9 +553,9 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
     else if (SHORT_WHISTLE == drum)
     {
         // MAG
-        static bool magLoaded = false;
+        static bool magLoaded           = false;
         static const uint8_t* magSample = NULL;
-        static size_t magLen = 0;
+        static size_t magLen            = 0;
         if (!magLoaded)
         {
             // TODO: Use .raw instead of .bin, and try on-the-fly
@@ -574,9 +574,9 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
     else if (LONG_WHISTLE == drum)
     {
         // FEST
-        static bool festLoaded = false;
+        static bool festLoaded           = false;
         static const uint8_t* festSample = NULL;
-        static size_t festLen = 0;
+        static size_t festLen            = 0;
         if (!festLoaded)
         {
             festSample = cnfsGetFile("donut_fest.bin", &festLen);

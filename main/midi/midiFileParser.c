@@ -116,7 +116,7 @@ static int writeVariableLength(uint8_t* out, int max, uint32_t quantity)
 
     uint32_t reversed = (quantity & 0x7F);
 
-    while ( 0 != (quantity >>= 7))
+    while (0 != (quantity >>= 7))
     {
         reversed <<= 8;
         reversed |= ((quantity & 0x7F) | 0x80);
@@ -1279,7 +1279,6 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
                     }
                     break;
                 }
-
             }
             break;
         }

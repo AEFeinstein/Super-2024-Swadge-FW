@@ -261,20 +261,9 @@ const midiTimbre_t noriTimbre = {
 };
 
 const midiTimbre_t* magfestTimbres[] = {
-    &squareWaveTimbre,
-    &sineWaveTimbre,
-    &triangleWaveTimbre,
-    &sawtoothWaveTimbre,
-    &magfestWaveTimbre,
-    &magstockWaveTimbre,
-    &noiseTimbre,
-    &squareHitWaveTimbre,
-    &noiseHitTimbre,
-    &colossusTimbre,
-    &magTimbre,
-    &festTimbre,
-    &wilhelmTimbre,
-    &noriTimbre,
+    &squareWaveTimbre,   &sineWaveTimbre, &triangleWaveTimbre,  &sawtoothWaveTimbre, &magfestWaveTimbre,
+    &magstockWaveTimbre, &noiseTimbre,    &squareHitWaveTimbre, &noiseHitTimbre,     &colossusTimbre,
+    &magTimbre,          &festTimbre,     &wilhelmTimbre,       &noriTimbre,
 };
 
 const size_t magfestTimbreCount = ARRAY_SIZE(magfestTimbres);

@@ -173,7 +173,7 @@ void menuSavePosition(const char** out, int len, const menu_t* menu)
         menuItem_t* curItem = (menuItem_t*)curMenu->currentItem->val;
 
         *curOut-- = curItem->label;
-        curMenu = curMenu->parentMenu;
+        curMenu   = curMenu->parentMenu;
     } while (curOut >= out);
 }
 
@@ -197,7 +197,7 @@ menu_t* menuRestorePosition(const char** in, int len, menu_t* menu)
     }
 
     // Now navigate down
-    const char** curIn = in;
+    const char** curIn   = in;
     const char* toSelect = NULL;
     while (curIn < (in + len) && *curIn && curMenu)
     {

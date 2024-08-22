@@ -45,15 +45,15 @@ typedef enum
     SCROLL_HORIZ_R = SCROLL_HORIZ | SCROLL_REVERSE, ///< Allow scrolling setting value with Up/Down, reversed
     ZOOM_SUBMENU   = 8,                             ///< When zoomed to a settings item, display it as a submenu
     ZOOM_GAUGE     = 16,                            ///< When zoomed to a settings item, display it as a gauge
-    ZOOM_CONVEYOR  = 32,                            ///< When zoomed to a settings item, display it as a rotating conveyor belt
-    MASK_ZOOM      = 56,                            ///< Mask for all zoom options
+    ZOOM_CONVEYOR  = 32, ///< When zoomed to a settings item, display it as a rotating conveyor belt
+    MASK_ZOOM      = 56, ///< Mask for all zoom options
 } wheelScrollDir_t;
 
 typedef enum
 {
-    WM_SHAPE_DEFAULT = 0,
+    WM_SHAPE_DEFAULT      = 0,
     WM_SHAPE_ROUNDED_RECT = 1,
-    WM_SHAPE_SQUARE = 2,
+    WM_SHAPE_SQUARE       = 2,
 } wheelMenuShapeFlags_t;
 
 /**
@@ -92,7 +92,8 @@ void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, cons
 void wheelMenuSetItemColor(wheelMenuRenderer_t* renderer, const char* label, paletteColor_t selectedBg,
                            paletteColor_t unselectedBg);
 void wheelMenuSetItemTextIcon(wheelMenuRenderer_t* renderer, const char* label, const char* textIcon);
-void wheelMenuSetItemSize(wheelMenuRenderer_t* renderer, const char* label, int16_t w, int16_t h, wheelMenuShapeFlags_t shapeFlags);
+void wheelMenuSetItemSize(wheelMenuRenderer_t* renderer, const char* label, int16_t w, int16_t h,
+                          wheelMenuShapeFlags_t shapeFlags);
 menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t angle, uint16_t radius);
 menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, const buttonEvt_t* evt);
 menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer);

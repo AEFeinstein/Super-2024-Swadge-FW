@@ -497,15 +497,15 @@ void drawRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col)
     if (x0 > x1)
     {
         int tmp = x0;
-        x0 = x1;
-        x1 = tmp;
+        x0      = x1;
+        x1      = tmp;
     }
 
     if (y0 > y1)
     {
         int tmp = y0;
-        y0 = y1;
-        y1 = tmp;
+        y0      = y1;
+        y1      = tmp;
     }
 
     if (x0 < 0)
@@ -589,15 +589,15 @@ void drawRoundedRect(int x0, int y0, int x1, int y1, int r, paletteColor_t fillC
     if (x0 > x1)
     {
         int tmp = x0;
-        x0 = x1;
-        x1 = tmp;
+        x0      = x1;
+        x1      = tmp;
     }
 
     if (y0 > y1)
     {
         int tmp = y0;
-        y0 = y1;
-        y1 = tmp;
+        y0      = y1;
+        y1      = tmp;
     }
 
     if (fillColor != cTransparent)

@@ -236,40 +236,40 @@ typedef enum
  */
 typedef enum
 {
-    MCC_BANK_MSB = 0,
+    MCC_BANK_MSB             = 0,
     MCC_MODULATION_WHEEL_MSB = 1,
-    MCC_BREATH_MSB = 2,
+    MCC_BREATH_MSB           = 2,
 
-    MCC_FOOT_PEDAL_MSB = 4,
+    MCC_FOOT_PEDAL_MSB      = 4,
     MCC_PORTAMENTO_TIME_MSB = 5,
-    MCC_DATA_ENTRY_MSB = 6,
-    MCC_VOLUME_MSB = 7,
-    MCC_BALANCE_MSB = 8,
+    MCC_DATA_ENTRY_MSB      = 6,
+    MCC_VOLUME_MSB          = 7,
+    MCC_BALANCE_MSB         = 8,
 
-    MCC_PAN_MSB = 10,
+    MCC_PAN_MSB        = 10,
     MCC_EXPRESSION_MSB = 11,
-    MCC_EFFECT_1_MSB = 12,
-    MCC_EFFECT_2_MSB = 13,
+    MCC_EFFECT_1_MSB   = 12,
+    MCC_EFFECT_2_MSB   = 13,
 
     MCC_GP_SLIDER_1 = 16,
     MCC_GP_SLIDER_2 = 17,
     MCC_GP_SLIDER_3 = 18,
     MCC_GP_SLIDER_4 = 19,
 
-    MCC_BANK_LSB = 32,
+    MCC_BANK_LSB             = 32,
     MCC_MODULATION_WHEEL_LSB = 33,
-    MCC_BREATH_LSB = 34,
+    MCC_BREATH_LSB           = 34,
 
-    MCC_FOOT_PEDAL_LSB = 36,
+    MCC_FOOT_PEDAL_LSB      = 36,
     MCC_PORTAMENTO_TIME_LSB = 37,
-    MCC_DATA_ENTRY_LSB = 38,
-    MCC_VOLUME_LSB = 39,
-    MCC_BALANCE_LSB = 40,
+    MCC_DATA_ENTRY_LSB      = 38,
+    MCC_VOLUME_LSB          = 39,
+    MCC_BALANCE_LSB         = 40,
 
-    MCC_PAN_LSB = 42,
+    MCC_PAN_LSB        = 42,
     MCC_EXPRESSION_LSB = 43,
-    MCC_EFFECT_1_LSB = 44,
-    MCC_EFFECT_2_LSB = 45,
+    MCC_EFFECT_1_LSB   = 44,
+    MCC_EFFECT_2_LSB   = 45,
 
     //< Switch
     MCC_HOLD_PEDAL = 64,
@@ -282,18 +282,18 @@ typedef enum
     //< Switch
     MCC_LEGATO_PEDAL = 68,
     //< Switch
-    MCC_HOLD_2_PEDAL = 69,
-    MCC_SOUND_VARIATION = 70,
-    MCC_SOUND_TIMBRE = 71,
+    MCC_HOLD_2_PEDAL       = 69,
+    MCC_SOUND_VARIATION    = 70,
+    MCC_SOUND_TIMBRE       = 71,
     MCC_SOUND_RELEASE_TIME = 72,
-    MCC_SOUND_ATTACK_TIME = 73,
-    MCC_SOUND_BRIGHTNESS = 74,
+    MCC_SOUND_ATTACK_TIME  = 73,
+    MCC_SOUND_BRIGHTNESS   = 74,
     // Decay
     MCC_SOUND_CONTROL_6 = 75,
     // Sustain level
-    MCC_SOUND_CONTROL_7 = 76,
-    MCC_SOUND_CONTROL_8 = 77,
-    MCC_SOUND_CONTROL_9 = 78,
+    MCC_SOUND_CONTROL_7  = 76,
+    MCC_SOUND_CONTROL_8  = 77,
+    MCC_SOUND_CONTROL_9  = 78,
     MCC_SOUND_CONTROL_10 = 79,
     //< Switch
     MCC_GP_BUTTON_1 = 80,
@@ -304,17 +304,17 @@ typedef enum
     //< Switch
     MCC_GP_BUTTON_4 = 83,
 
-    MCC_EFFECTS_LEVEL = 91,
-    MCC_TREMOLO_LEVEL = 92,
-    MCC_CHORUS_LEVEL = 93,
-    MCC_DETUNE_LEVEL = 94,
-    MCC_PHASER_LEVEL = 95,
-    MCC_DATA_BUTTON_INC = 96,
-    MCC_DATA_BUTTON_DEC = 97,
+    MCC_EFFECTS_LEVEL            = 91,
+    MCC_TREMOLO_LEVEL            = 92,
+    MCC_CHORUS_LEVEL             = 93,
+    MCC_DETUNE_LEVEL             = 94,
+    MCC_PHASER_LEVEL             = 95,
+    MCC_DATA_BUTTON_INC          = 96,
+    MCC_DATA_BUTTON_DEC          = 97,
     MCC_NON_REGISTERED_PARAM_LSB = 98,
     MCC_NON_REGISTERED_PARAM_MSB = 99,
-    MCC_REGISTERED_PARAM_LSB = 100,
-    MCC_REGISTERED_PARAM_MSB = 101,
+    MCC_REGISTERED_PARAM_LSB     = 100,
+    MCC_REGISTERED_PARAM_MSB     = 101,
 
     //< No data
     MCC_ALL_SOUND_OFF = 120,
@@ -374,7 +374,6 @@ typedef struct
     // uint32_t loopEnd;
 
 } envelope_t;
-
 
 typedef struct
 {
@@ -437,8 +436,10 @@ typedef struct
             // This should just always be C4? (440 << 8)
             // uint32_t freq = (440 << 8);
 
-            union {
-                struct {
+            union
+            {
+                struct
+                {
                     /// @brief A pointer to this timbre's sample data
                     const uint8_t* data;
 
@@ -446,7 +447,8 @@ typedef struct
                     uint32_t count;
                 };
 
-                struct {
+                struct
+                {
                     /// @brief The name of the sample to load into data
                     const char* sampleName;
                 } config;
@@ -525,7 +527,8 @@ typedef struct
         /// @brief An array of scratch data for percussion functions to use
         uint32_t percScratch[4];
 
-        struct {
+        struct
+        {
             /// @brief The number of fractional samples remaining
             uint32_t sampleError;
 

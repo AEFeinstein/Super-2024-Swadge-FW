@@ -146,7 +146,8 @@ typedef struct
     /// @brief MIDI control number
     uint8_t control;
 
-    enum {
+    enum
+    {
         /// @brief On/off controller
         CTRL_SWITCH,
         /// @brief Coarse control value, 7 high bits of 14-bit value
@@ -166,14 +167,17 @@ typedef struct
 
 typedef struct
 {
-    enum {
+    enum
+    {
         SMT_PROGRAM,
         SMT_CHANNEL,
         SMT_CONTROLLER,
     } type;
 
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             uint8_t bank;
             uint8_t program;
         };
@@ -288,9 +292,8 @@ typedef struct
     wsg_t pauseIcon, playIcon, playPauseIcon, ffwIcon, skipIcon, loopIcon, shuffleIcon, stopIcon;
 
     // Tool wheel items
-    wsg_t fileImage, playerImage, channelSetupImage, uiImage, volumeImage,
-          buttonImage, touchImage, viewModeImage, usbModeImage, menuImage,
-          pitchImage, resetImage, ignoreImage, enableImage;
+    wsg_t fileImage, playerImage, channelSetupImage, uiImage, volumeImage, buttonImage, touchImage, viewModeImage,
+        usbModeImage, menuImage, pitchImage, resetImage, ignoreImage, enableImage;
 
     uint32_t frameTimesIdx;
     uint64_t frameTimes[NUM_FRAME_TIMES];
@@ -621,368 +624,354 @@ static const char* const gmDrumNames[] = {
 };
 
 static const char* const channelLabels[] = {
-    "Channel 1",
-    "Channel 2",
-    "Channel 3",
-    "Channel 4",
-    "Channel 5",
-    "Channel 6",
-    "Channel 7",
-    "Channel 8",
-    "Channel 9",
-    "Channel 10",
-    "Channel 11",
-    "Channel 12",
-    "Channel 13",
-    "Channel 14",
-    "Channel 15",
-    "Channel 16",
+    "Channel 1", "Channel 2",  "Channel 3",  "Channel 4",  "Channel 5",  "Channel 6",  "Channel 7",  "Channel 8",
+    "Channel 9", "Channel 10", "Channel 11", "Channel 12", "Channel 13", "Channel 14", "Channel 15", "Channel 16",
 };
 
 static const midiControllerDesc_t controllerDefs[] = {
     {
         .control = 0,
-        .type = CTRL_CC_MSB,
-        .desc = "Bank Select",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Bank Select",
     },
     {
         .control = 1,
-        .type = CTRL_CC_MSB,
-        .desc = "Modulation Wheel",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Modulation Wheel",
     },
     {
         .control = 2,
-        .type = CTRL_CC_MSB,
-        .desc = "Breath Controller",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Breath Controller",
     },
     // No 3
     {
         .control = 4,
-        .type = CTRL_CC_MSB,
-        .desc = "Foot Pedal",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Foot Pedal",
     },
     {
         .control = 5,
-        .type = CTRL_CC_MSB,
-        .desc = "Portamento Time",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Portamento Time",
     },
     {
         .control = 6,
-        .type = CTRL_CC_MSB,
-        .desc = "Data Entry",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Data Entry",
     },
     {
         .control = 7,
-        .type = CTRL_CC_MSB,
-        .desc = "Volume",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Volume",
     },
     {
         .control = 8,
-        .type = CTRL_CC_MSB,
-        .desc = "Balance",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Balance",
     },
     // No 9
     {
         .control = 10,
-        .type = CTRL_CC_MSB,
-        .desc = "Pan position",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Pan position",
     },
     {
         .control = 11,
-        .type = CTRL_CC_MSB,
-        .desc = "Expression",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Expression",
     },
     {
         .control = 12,
-        .type = CTRL_CC_MSB,
-        .desc = "Effect 1",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Effect 1",
     },
     {
         .control = 13,
-        .type = CTRL_CC_MSB,
-        .desc = "Effect 2",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Effect 2",
     },
     // No 14-15
     {
         .control = 16,
-        .type = CTRL_7BIT,
-        .desc = "General Purpose Slider 1",
+        .type    = CTRL_7BIT,
+        .desc    = "General Purpose Slider 1",
     },
     {
         .control = 17,
-        .type = CTRL_7BIT,
-        .desc = "General Purpose Slider 2",
+        .type    = CTRL_7BIT,
+        .desc    = "General Purpose Slider 2",
     },
     {
         .control = 18,
-        .type = CTRL_7BIT,
-        .desc = "General Purpose Slider 3",
+        .type    = CTRL_7BIT,
+        .desc    = "General Purpose Slider 3",
     },
     {
         .control = 19,
-        .type = CTRL_7BIT,
-        .desc = "General Purpose Slider 4",
+        .type    = CTRL_7BIT,
+        .desc    = "General Purpose Slider 4",
     },
     // No 20-31
     {
         .control = 32,
-        .type = CTRL_CC_LSB,
-        .desc = "Bank Select",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Bank Select",
     },
     {
         .control = 33,
-        .type = CTRL_CC_LSB,
-        .desc = "Modulation Wheel",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Modulation Wheel",
     },
     {
         .control = 34,
-        .type = CTRL_CC_LSB,
-        .desc = "Breath Controller",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Breath Controller",
     },
     // No 35
     {
         .control = 36,
-        .type = CTRL_CC_LSB,
-        .desc = "Foot Pedal",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Foot Pedal",
     },
     {
         .control = 37,
-        .type = CTRL_CC_LSB,
-        .desc = "Portamento Time",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Portamento Time",
     },
     {
         .control = 38,
-        .type = CTRL_CC_LSB,
-        .desc = "Data Entry",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Data Entry",
     },
     {
         .control = 39,
-        .type = CTRL_CC_LSB,
-        .desc = "Volume",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Volume",
     },
     {
         .control = 40,
-        .type = CTRL_CC_LSB,
-        .desc = "Balance",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Balance",
     },
     // No 41
     {
         .control = 42,
-        .type = CTRL_CC_LSB,
-        .desc = "Pan Position",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Pan Position",
     },
     {
         .control = 43,
-        .type = CTRL_CC_LSB,
-        .desc = "Expression",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Expression",
     },
     {
         .control = 44,
-        .type = CTRL_CC_LSB,
-        .desc = "Effect 1",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Effect 1",
     },
     {
         .control = 45,
-        .type = CTRL_CC_LSB,
-        .desc = "Effect 2",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Effect 2",
     },
     // No 46-63
     {
         .control = 64,
-        .type = CTRL_SWITCH,
-        .desc = "Hold Pedal ",
+        .type    = CTRL_SWITCH,
+        .desc    = "Hold Pedal ",
     },
     {
         .control = 65,
-        .type = CTRL_SWITCH,
-        .desc = "Portamento ",
+        .type    = CTRL_SWITCH,
+        .desc    = "Portamento ",
     },
     {
         .control = 66,
-        .type = CTRL_SWITCH,
-        .desc = "Sustenuto Pedal ",
+        .type    = CTRL_SWITCH,
+        .desc    = "Sustenuto Pedal ",
     },
     {
         .control = 67,
-        .type = CTRL_SWITCH,
-        .desc = "Soft Pedal ",
+        .type    = CTRL_SWITCH,
+        .desc    = "Soft Pedal ",
     },
     {
         .control = 68,
-        .type = CTRL_SWITCH,
-        .desc = "Legato Pedal ",
+        .type    = CTRL_SWITCH,
+        .desc    = "Legato Pedal ",
     },
     {
         .control = 69,
-        .type = CTRL_SWITCH,
-        .desc = "Hold 2 Pedal ",
+        .type    = CTRL_SWITCH,
+        .desc    = "Hold 2 Pedal ",
     },
     {
         .control = 70,
-        .type = CTRL_7BIT,
-        .desc = "Sound Variation",
+        .type    = CTRL_7BIT,
+        .desc    = "Sound Variation",
     },
     {
         .control = 71,
-        .type = CTRL_7BIT,
-        .desc = "Sound Timbre",
+        .type    = CTRL_7BIT,
+        .desc    = "Sound Timbre",
     },
     {
         .control = 72,
-        .type = CTRL_7BIT,
-        .desc = "Release Time",
+        .type    = CTRL_7BIT,
+        .desc    = "Release Time",
     },
     {
         .control = 73,
-        .type = CTRL_7BIT,
-        .desc = "Attack Time",
+        .type    = CTRL_7BIT,
+        .desc    = "Attack Time",
     },
     {
         .control = 74,
-        .type = CTRL_7BIT,
-        .desc = "Brightness",
+        .type    = CTRL_7BIT,
+        .desc    = "Brightness",
     },
     {
         .control = 75,
-        .type = CTRL_7BIT,
-        .desc = "Decay Time",
+        .type    = CTRL_7BIT,
+        .desc    = "Decay Time",
     },
     {
         .control = 76,
-        .type = CTRL_7BIT,
-        .desc = "Sustain Level",
+        .type    = CTRL_7BIT,
+        .desc    = "Sustain Level",
     },
     {
         .control = 77,
-        .type = CTRL_7BIT,
-        .desc = "Sound Control 8",
+        .type    = CTRL_7BIT,
+        .desc    = "Sound Control 8",
     },
     {
         .control = 78,
-        .type = CTRL_7BIT,
-        .desc = "Sound Control 9",
+        .type    = CTRL_7BIT,
+        .desc    = "Sound Control 9",
     },
     {
         .control = 79,
-        .type = CTRL_7BIT,
-        .desc = "Sound Control 10",
+        .type    = CTRL_7BIT,
+        .desc    = "Sound Control 10",
     },
     {
         .control = 80,
-        .type = CTRL_SWITCH,
-        .desc = "General Purpose Button 1",
+        .type    = CTRL_SWITCH,
+        .desc    = "General Purpose Button 1",
     },
     {
         .control = 81,
-        .type = CTRL_SWITCH,
-        .desc = "General Purpose Button 2 ",
+        .type    = CTRL_SWITCH,
+        .desc    = "General Purpose Button 2 ",
     },
     {
         .control = 82,
-        .type = CTRL_SWITCH,
-        .desc = "General Purpose Button 3 ",
+        .type    = CTRL_SWITCH,
+        .desc    = "General Purpose Button 3 ",
     },
     {
         .control = 83,
-        .type = CTRL_SWITCH,
-        .desc = "General Purpose Button 4 ",
+        .type    = CTRL_SWITCH,
+        .desc    = "General Purpose Button 4 ",
     },
     // No 84-90
     {
         .control = 91,
-        .type = CTRL_7BIT,
-        .desc = "Effects Level",
+        .type    = CTRL_7BIT,
+        .desc    = "Effects Level",
     },
     {
         .control = 92,
-        .type = CTRL_7BIT,
-        .desc = "Tremolo Level",
+        .type    = CTRL_7BIT,
+        .desc    = "Tremolo Level",
     },
     {
         .control = 93,
-        .type = CTRL_7BIT,
-        .desc = "Chorus Level",
+        .type    = CTRL_7BIT,
+        .desc    = "Chorus Level",
     },
     {
         .control = 94,
-        .type = CTRL_7BIT,
-        .desc = "Detune Level",
+        .type    = CTRL_7BIT,
+        .desc    = "Detune Level",
     },
     {
         .control = 95,
-        .type = CTRL_7BIT,
-        .desc = "Phaser Level",
+        .type    = CTRL_7BIT,
+        .desc    = "Phaser Level",
     },
     {
         .control = 96,
-        .type = CTRL_NO_DATA,
-        .desc = "Data Button Increment",
+        .type    = CTRL_NO_DATA,
+        .desc    = "Data Button Increment",
     },
     {
         .control = 97,
-        .type = CTRL_NO_DATA,
-        .desc = "Data Button Decrement",
+        .type    = CTRL_NO_DATA,
+        .desc    = "Data Button Decrement",
     },
     {
         .control = 98,
-        .type = CTRL_CC_LSB,
-        .desc = "Non-registered Parameter",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Non-registered Parameter",
     },
     {
         .control = 99,
-        .type = CTRL_CC_MSB,
-        .desc = "Non-registered Parameter",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Non-registered Parameter",
     },
     {
         .control = 100,
-        .type = CTRL_CC_LSB,
-        .desc = "Registered Parameter",
+        .type    = CTRL_CC_LSB,
+        .desc    = "Registered Parameter",
     },
     {
         .control = 101,
-        .type = CTRL_CC_MSB,
-        .desc = "Registered Parameter",
+        .type    = CTRL_CC_MSB,
+        .desc    = "Registered Parameter",
     },
     // No 102-119
     {
         .control = 120,
-        .type = CTRL_NO_DATA,
-        .desc = "All Sound Off",
+        .type    = CTRL_NO_DATA,
+        .desc    = "All Sound Off",
     },
     {
         .control = 121,
-        .type = CTRL_NO_DATA,
-        .desc = "All Controllers Off",
+        .type    = CTRL_NO_DATA,
+        .desc    = "All Controllers Off",
     },
     {
         .control = 122,
-        .type = CTRL_SWITCH,
-        .desc = "Local Keyboard ",
+        .type    = CTRL_SWITCH,
+        .desc    = "Local Keyboard ",
     },
     {
         .control = 123,
-        .type = CTRL_NO_DATA,
-        .desc = "All Notes Off",
+        .type    = CTRL_NO_DATA,
+        .desc    = "All Notes Off",
     },
     {
         .control = 124,
-        .type = CTRL_NO_DATA,
-        .desc = "Omni Mode Off",
+        .type    = CTRL_NO_DATA,
+        .desc    = "Omni Mode Off",
     },
     {
         .control = 125,
-        .type = CTRL_NO_DATA,
-        .desc = "Omni Mode On",
+        .type    = CTRL_NO_DATA,
+        .desc    = "Omni Mode On",
     },
     {
         .control = 126,
-        .type = CTRL_NO_DATA,
-        .desc = "Monophonic Operation",
+        .type    = CTRL_NO_DATA,
+        .desc    = "Monophonic Operation",
     },
     {
         .control = 127,
-        .type = CTRL_NO_DATA,
-        .desc = "Polyphonic Operation",
+        .type    = CTRL_NO_DATA,
+        .desc    = "Polyphonic Operation",
     },
 };
 
@@ -1029,7 +1018,7 @@ static const paletteColor_t textColors[] = {
 };
 
 // Menu stuff
-static const char* menuItemPlayMode   = "Mode: ";
+static const char* menuItemPlayMode = "Mode: ";
 
 static const char* menuItemPlayer     = "Player";
 static const char* menuItemSelectFile = "Select File...";
@@ -1055,19 +1044,19 @@ static const char* menuItemReset      = "Reset";
 static const char* menuItemControls   = "Controllers";
 static const char* menuItemPercussion = "Percussion: ";
 
-static const char* const nvsKeyMode       = "synth_playmode";
-static const char* const nvsKeyViewMode   = "synth_viewmode";
-static const char* const nvsKeyButtonMode = "synth_btnmode";
-static const char* const nvsKeyTouchMode  = "synth_touchmode";
-static const char* const nvsKeyLoop       = "synth_loop";
-static const char* const nvsKeyShuffle    = "synth_shuffle";
-static const char* const nvsKeyAutoplay   = "synth_autoplay";
-static const char* const nvsKeyLastSong   = "synth_lastsong";
-static const char* const nvsKeyHeadroom   = "synth_headdroom";
-static const char* const nvsKeyShufflePos = "synth_shufpos";
-static const char* const nvsKeyIgnoreChan = "synth_ignorech";
-static const char* const nvsKeyChanPerc   = "synth_chpercus";
-static const char* const nvsKeySynthConf  = "synth_confblob";
+static const char* const nvsKeyMode             = "synth_playmode";
+static const char* const nvsKeyViewMode         = "synth_viewmode";
+static const char* const nvsKeyButtonMode       = "synth_btnmode";
+static const char* const nvsKeyTouchMode        = "synth_touchmode";
+static const char* const nvsKeyLoop             = "synth_loop";
+static const char* const nvsKeyShuffle          = "synth_shuffle";
+static const char* const nvsKeyAutoplay         = "synth_autoplay";
+static const char* const nvsKeyLastSong         = "synth_lastsong";
+static const char* const nvsKeyHeadroom         = "synth_headdroom";
+static const char* const nvsKeyShufflePos       = "synth_shufpos";
+static const char* const nvsKeyIgnoreChan       = "synth_ignorech";
+static const char* const nvsKeyChanPerc         = "synth_chpercus";
+static const char* const nvsKeySynthConf        = "synth_confblob";
 static const char* const nvsKeySynthControlConf = "synth_ctrlconf";
 
 static const char* const menuItemModeOptions[] = {
@@ -1116,22 +1105,7 @@ static const char* const menuItemHeadroomOptions[] = {
 };
 
 static const char* const menuItemChannelsOptions[] = {
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",
 };
 
 static const int32_t menuItemModeValues[] = {
@@ -1214,22 +1188,7 @@ static const int32_t menuItemHeadroomValues[] = {
 };
 
 static const int32_t menuItemChannelsValues[] = {
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 };
 
 static settingParam_t menuItemModeBounds = {
@@ -1370,17 +1329,17 @@ swadgeMode_t synthMode = {
 };
 
 static const uint32_t lfsrTaps[] = {
-    0x3, // 2 bits
-    0x6, // 3 bits
-    0xC, // 4 bits
-    0x14, // 5 bits
-    0x30, // 6 bits
-    0x60, // 7 bits
-    0xB8, // 8 bits
-    0x110, // 9 bits
-    0x240, // 10 bits
-    0x500, // 11 bits
-    0xE08, // 12 bits
+    0x3,    // 2 bits
+    0x6,    // 3 bits
+    0xC,    // 4 bits
+    0x14,   // 5 bits
+    0x30,   // 6 bits
+    0x60,   // 7 bits
+    0xB8,   // 8 bits
+    0x110,  // 9 bits
+    0x240,  // 10 bits
+    0x500,  // 11 bits
+    0xE08,  // 12 bits
     0x1C80, // 13 bits
     0x3802, // 14 bits
     0x6000, // 15 bits
@@ -1483,7 +1442,9 @@ static void synthEnterMode(void)
         {
             if (configBlobLen < sizeof(synthConfig_t))
             {
-                ESP_LOGW("Synth", "Config blob length is shorter than expected, could be caused by update. filling rest with zeroes");
+                ESP_LOGW(
+                    "Synth",
+                    "Config blob length is shorter than expected, could be caused by update. filling rest with zeroes");
                 memset((((char*)&sd->synthConfig) + configBlobLen), 0, sizeof(synthConfig_t) - configBlobLen);
             }
 
@@ -1558,7 +1519,8 @@ static void synthEnterMode(void)
     for (const cnfsFileEntry* file = files; file < files + getCnfsNumFiles(); file++)
     {
         if ((strlen(file->name) > 4
-             && (!strcmp(&file->name[strlen(file->name) - 4], ".mid") || !strcmp(&file->name[strlen(file->name) - 4], ".kar")))
+             && (!strcmp(&file->name[strlen(file->name) - 4], ".mid")
+                 || !strcmp(&file->name[strlen(file->name) - 4], ".kar")))
             || (strlen(file->name) > 5 && !strcmp(&file->name[strlen(file->name) - 5], ".midi")))
         {
             // No longer strictly necessary with CNFS, but let's keep it how it was
@@ -1593,8 +1555,8 @@ static void synthEnterMode(void)
     //synthSetupMenu();
 
     // Use smol font for menu items, there might be a lot
-    sd->renderer = initMenuManiaRenderer(NULL, NULL, &sd->font);
-    sd->wheelMenu = initWheelMenu(&sd->betterFont, 90, &sd->wheelTextArea);
+    sd->renderer          = initMenuManiaRenderer(NULL, NULL, &sd->font);
+    sd->wheelMenu         = initWheelMenu(&sd->betterFont, 90, &sd->wheelTextArea);
     sd->wheelMenu->unselR = 16;
 
     hashInit(&sd->menuMap, 512);
@@ -1714,7 +1676,7 @@ static void synthExitMode(void)
         if (info->dynamicLabel)
         {
             free((char*)info->label);
-            info->label = NULL;
+            info->label        = NULL;
             info->dynamicLabel = false;
         }
     }
@@ -1847,7 +1809,7 @@ static void synthMainLoop(int64_t elapsedUs)
     if (sd->updateMenu && !wheelMenuActive(sd->menu, sd->wheelMenu))
     {
         synthSetupMenu(sd->forceResetMenu);
-        sd->updateMenu = false;
+        sd->updateMenu     = false;
         sd->forceResetMenu = false;
     }
 
@@ -2038,10 +2000,10 @@ static void synthApplyConfig(void)
 
     for (int i = 0; i < 16; i++)
     {
-        uint16_t channelBit = (1 << i);
+        uint16_t channelBit                   = (1 << i);
         sd->midiPlayer.channels[i].percussion = (sd->synthConfig.percChannelMask & channelBit) ? true : false;
-        sd->midiPlayer.channels[i].ignore = (sd->synthConfig.ignoreChannelMask & channelBit) ? true : false;
-        sd->programs[i] = sd->synthConfig.programs[i] & 0x7F;
+        sd->midiPlayer.channels[i].ignore     = (sd->synthConfig.ignoreChannelMask & channelBit) ? true : false;
+        sd->programs[i]                       = sd->synthConfig.programs[i] & 0x7F;
         // This technically doesn't take effect properly until we call setProgram()!
         sd->midiPlayer.channels[i].bank = sd->synthConfig.banks[i];
         midiSetProgram(&sd->midiPlayer, i, sd->synthConfig.programs[i] & 0x7F);
@@ -2050,7 +2012,8 @@ static void synthApplyConfig(void)
     int maxConfCount = sd->controllerSettings.length;
     synthControlConfig_t configBlob[maxConfCount];
     int confCount = 0;
-    for (node_t* controlNode = sd->controllerSettings.first; controlNode != NULL && confCount < maxConfCount; controlNode = controlNode->next)
+    for (node_t* controlNode = sd->controllerSettings.first; controlNode != NULL && confCount < maxConfCount;
+         controlNode         = controlNode->next)
     {
         synthControlConfig_t* inConf = (synthControlConfig_t*)controlNode->val;
         if (inConf)
@@ -2060,7 +2023,8 @@ static void synthApplyConfig(void)
             {
                 if (inConf->chanMask & (1 << chIdx))
                 {
-                    midiControlChange(&sd->midiPlayer, chIdx, (midiControl_t)inConf->control, inConf->chanValues[chIdx]);
+                    midiControlChange(&sd->midiPlayer, chIdx, (midiControl_t)inConf->control,
+                                      inConf->chanValues[chIdx]);
                 }
             }
             memcpy(&configBlob[confCount++], inConf, sizeof(synthControlConfig_t));
@@ -2080,9 +2044,7 @@ static void synthApplyConfig(void)
 
 static void synthSaveControl(uint8_t channel, uint8_t control, uint8_t value)
 {
-    for (node_t* controlNode = sd->controllerSettings.first;
-         controlNode != NULL;
-         controlNode = controlNode->next)
+    for (node_t* controlNode = sd->controllerSettings.first; controlNode != NULL; controlNode = controlNode->next)
     {
         synthControlConfig_t* conf = (synthControlConfig_t*)controlNode->val;
         if (conf && conf->control == control)
@@ -2097,8 +2059,8 @@ static void synthSaveControl(uint8_t channel, uint8_t control, uint8_t value)
     synthControlConfig_t* conf = calloc(1, sizeof(synthControlConfig_t));
     if (conf)
     {
-        conf->control = control;
-        conf->chanMask = (1 << channel);
+        conf->control             = control;
+        conf->chanMask            = (1 << channel);
         conf->chanValues[channel] = value;
 
         push(&sd->controllerSettings, conf);
@@ -2107,9 +2069,7 @@ static void synthSaveControl(uint8_t channel, uint8_t control, uint8_t value)
 
 static uint8_t synthGetControl(uint8_t channel, uint8_t control, uint8_t defValue)
 {
-    for (node_t* controlNode = sd->controllerSettings.first;
-         controlNode != NULL;
-         controlNode = controlNode->next)
+    for (node_t* controlNode = sd->controllerSettings.first; controlNode != NULL; controlNode = controlNode->next)
     {
         synthControlConfig_t* conf = (synthControlConfig_t*)controlNode->val;
         if (conf && conf->control == control)
@@ -2152,7 +2112,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 {
     // TODO kinda a hack but I'm sure I'll remember to update it
     int rotTopMenu = 3;
-    int rotChMenu = 0;
+    int rotChMenu  = 0;
 
     menu = startSubMenu(menu, menuItemChannels);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemChannels, &sd->channelSetupImage, rotTopMenu++, NO_SCROLL);
@@ -2162,10 +2122,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     {
         midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
 
-        itemInfo->type = SMT_PROGRAM;
-        itemInfo->bank = 0;
-        itemInfo->program = gmProg;
-        itemInfo->label = gmProgramNames[gmProg];
+        itemInfo->type         = SMT_PROGRAM;
+        itemInfo->bank         = 0;
+        itemInfo->program      = gmProg;
+        itemInfo->label        = gmProgramNames[gmProg];
         itemInfo->dynamicLabel = false;
         writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), itemInfo->label);
         wheelMenuSetItemInfo(sd->wheelMenu, itemInfo->label, NULL, gmProg % 8, NO_SCROLL);
@@ -2177,7 +2137,8 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
     for (int gmCategory = 0; gmCategory < 16; gmCategory++)
     {
-        wheelMenuSetItemInfo(sd->wheelMenu, gmProgramCategoryNames[gmCategory], &sd->instrumentImages[gmCategory], gmCategory, NO_SCROLL);
+        wheelMenuSetItemInfo(sd->wheelMenu, gmProgramCategoryNames[gmCategory], &sd->instrumentImages[gmCategory],
+                             gmCategory, NO_SCROLL);
         wheelMenuSetItemColor(sd->wheelMenu, gmProgramCategoryNames[gmCategory], c000, c333);
         wheelMenuSetItemSize(sd->wheelMenu, gmProgramCategoryNames[gmCategory], -1, -1, WM_SHAPE_DEFAULT);
     }
@@ -2186,10 +2147,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     {
         midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
 
-        itemInfo->type = SMT_PROGRAM;
-        itemInfo->bank = 1;
-        itemInfo->program = magProg;
-        itemInfo->label = magfestTimbres[magProg]->name;
+        itemInfo->type         = SMT_PROGRAM;
+        itemInfo->bank         = 1;
+        itemInfo->program      = magProg;
+        itemInfo->label        = magfestTimbres[magProg]->name;
         itemInfo->dynamicLabel = false;
         writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), itemInfo->label);
         wheelMenuSetItemInfo(sd->wheelMenu, itemInfo->label, NULL, magProg, NO_SCROLL);
@@ -2201,26 +2162,32 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
     // Controllers are pretty complicated so just do those the first time with the rest of their logic
     bool controllersSetUp = false;
-    int totalControls = 0;
+    int totalControls     = 0;
 
-    addSettingsOptionsItemToMenu(menu, menuItemSelectChan, menuItemChannelsOptions, menuItemChannelsValues, ARRAY_SIZE(menuItemChannelsValues), &menuItemChannelsBounds, sd->menuSelectedChannel);
+    addSettingsOptionsItemToMenu(menu, menuItemSelectChan, menuItemChannelsOptions, menuItemChannelsValues,
+                                 ARRAY_SIZE(menuItemChannelsValues), &menuItemChannelsBounds, sd->menuSelectedChannel);
     for (int chIdx = 0; chIdx < 16; chIdx++)
     {
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemChannelsOptions[chIdx], NULL, (16-chIdx) % 16, NO_SCROLL);
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemChannelsOptions[chIdx], NULL, (16 - chIdx) % 16, NO_SCROLL);
         wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemChannelsOptions[chIdx], menuItemChannelsOptions[chIdx]);
     }
 
-    int chIdx = sd->menuSelectedChannel;
+    int chIdx                    = sd->menuSelectedChannel;
     midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
-    itemInfo->type = SMT_CHANNEL;
-    itemInfo->channel = chIdx;
-    itemInfo->label = channelLabels[chIdx];
-    itemInfo->dynamicLabel = false;
+    itemInfo->type               = SMT_CHANNEL;
+    itemInfo->channel            = chIdx;
+    itemInfo->label              = channelLabels[chIdx];
+    itemInfo->dynamicLabel       = false;
     hashPut(&sd->menuMap, channelLabels[chIdx], itemInfo);
 
     // Ignore Item & Option Settings
-    addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemYesNoOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds, (config->ignoreChannelMask & (1 << chIdx)) ? 1 : 0);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemIgnore, (sd->synthConfig.ignoreChannelMask & (1 << sd->menuSelectedChannel)) ? &sd->ignoreImage : &sd->enableImage, rotChMenu++, NO_SCROLL);
+    addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemYesNoOptions, menuItemModeValues,
+                                 ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds,
+                                 (config->ignoreChannelMask & (1 << chIdx)) ? 1 : 0);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemIgnore,
+                         (sd->synthConfig.ignoreChannelMask & (1 << sd->menuSelectedChannel)) ? &sd->ignoreImage
+                                                                                              : &sd->enableImage,
+                         rotChMenu++, NO_SCROLL);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[0], &sd->enableImage, 0, NO_SCROLL);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[1], &sd->ignoreImage, 1, NO_SCROLL);
 
@@ -2232,15 +2199,21 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[1], &sd->enableImage, 0, NO_SCROLL);
 
     // Percussion Item & Option Settings
-    addSettingsOptionsItemToMenu(menu, menuItemPercussion, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemPercussionBounds, (config->percChannelMask & (1 << chIdx)) ? 1 : 0);
+    addSettingsOptionsItemToMenu(menu, menuItemPercussion, menuItemNoYesOptions, menuItemModeValues,
+                                 ARRAY_SIZE(menuItemModeValues), &menuItemPercussionBounds,
+                                 (config->percChannelMask & (1 << chIdx)) ? 1 : 0);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemPercussion, &sd->percussionImage, rotChMenu++, NO_SCROLL);
     wheelMenuSetItemColor(sd->wheelMenu, menuItemPercussion, c000, c333);
     wheelMenuSetItemSize(sd->wheelMenu, menuItemPercussion, -1, -1, WM_SHAPE_DEFAULT);
 
     // Bank Select Item & Option Settings
-    addSettingsOptionsItemToMenu(menu, menuItemBank, menuItemBankOptions, menuItemBankValues, ARRAY_SIZE(menuItemBankValues), &menuItemBankBounds, config->banks[chIdx]);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? NULL : &sd->magfestBankImage, rotChMenu++, NO_SCROLL);
-    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? "GM" : NULL);
+    addSettingsOptionsItemToMenu(menu, menuItemBank, menuItemBankOptions, menuItemBankValues,
+                                 ARRAY_SIZE(menuItemBankValues), &menuItemBankBounds, config->banks[chIdx]);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBank,
+                         (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? NULL : &sd->magfestBankImage,
+                         rotChMenu++, NO_SCROLL);
+    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBank,
+                             (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? "GM" : NULL);
     wheelMenuSetItemSize(sd->wheelMenu, menuItemBank, -1, -1, WM_SHAPE_DEFAULT);
     // "GM" bank Option
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[0], NULL, 0, NO_SCROLL);
@@ -2253,7 +2226,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     if (0 == (config->percChannelMask & (1 << chIdx)))
     {
         // Instrument select submenu
-        char* nameBuffer = sd->channelInstrumentLabels[chIdx];
+        char* nameBuffer          = sd->channelInstrumentLabels[chIdx];
         wsg_t* chanInstrumentIcon = NULL;
 
         if (config->banks[chIdx] == 0)
@@ -2314,22 +2287,30 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         if (synthIsControlSupported(controller))
         {
             const char* labelStr = controller->desc;
-            bool dynamicLabel = false;
+            bool dynamicLabel    = false;
 
             switch (controller->type)
             {
                 case CTRL_SWITCH:
                 {
                     // Options menu item, on/off
-                    addSettingsOptionsItemToMenu(menu, labelStr, menuItemOffOnOptions, menuItemControlSwitchValues, ARRAY_SIZE(menuItemControlSwitchValues), &menuItemControl7bitBounds,
-                                                    synthGetControl(chIdx, controller->control, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
+                    addSettingsOptionsItemToMenu(
+                        menu, labelStr, menuItemOffOnOptions, menuItemControlSwitchValues,
+                        ARRAY_SIZE(menuItemControlSwitchValues), &menuItemControl7bitBounds,
+                        synthGetControl(
+                            chIdx, controller->control,
+                            midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
                     break;
                 }
 
                 case CTRL_CC_MSB:
                 {
                     // Settings value item
-                    addSettingsItemToMenu(menu, labelStr, &menuItemControl14bitBounds, synthGetControl14bit(chIdx, controller->control, midiGetControlValue14bit(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
+                    addSettingsItemToMenu(
+                        menu, labelStr, &menuItemControl14bitBounds,
+                        synthGetControl14bit(
+                            chIdx, controller->control,
+                            midiGetControlValue14bit(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
                     break;
                 }
 
@@ -2343,7 +2324,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                 case CTRL_UNDEFINED:
                 {
                     // Settings value item, 0-127
-                    addSettingsItemToMenu(menu, labelStr, &menuItemControl7bitBounds, synthGetControl(chIdx, controller->control, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
+                    addSettingsItemToMenu(menu, labelStr, &menuItemControl7bitBounds,
+                                          synthGetControl(chIdx, controller->control,
+                                                          midiGetControlValue(&sd->midiPlayer, chIdx,
+                                                                              (midiControl_t)controller->control)));
                     break;
                 }
 
@@ -2357,10 +2341,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
             if (!controllersSetUp || dynamicLabel)
             {
-                itemInfo = &sd->itemInfos[sd->itemInfoCount++];
-                itemInfo->type = SMT_CONTROLLER;
-                itemInfo->controller = controller;
-                itemInfo->label = labelStr;
+                itemInfo               = &sd->itemInfos[sd->itemInfoCount++];
+                itemInfo->type         = SMT_CONTROLLER;
+                itemInfo->controller   = controller;
+                itemInfo->label        = labelStr;
                 itemInfo->dynamicLabel = dynamicLabel;
                 wheelMenuSetItemInfo(sd->wheelMenu, labelStr, NULL, totalControls++, NO_SCROLL);
                 // Use rounded rectangle, stretched to fit
@@ -2396,7 +2380,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
 static void synthSetupMenu(bool forceReset)
 {
-    bool restore = false;
+    bool restore             = false;
     const char* menuState[8] = {0};
 
     if (sd->menu != NULL)
@@ -2417,7 +2401,7 @@ static void synthSetupMenu(bool forceReset)
             if (info->dynamicLabel)
             {
                 free((char*)info->label);
-                info->label = NULL;
+                info->label        = NULL;
                 info->dynamicLabel = false;
             }
         }
@@ -2425,12 +2409,13 @@ static void synthSetupMenu(bool forceReset)
         sd->itemInfoCount = 0;
     }
 
-    sd->menu      = initMenu(synthModeName, synthMenuCb);
+    sd->menu = initMenu(synthModeName, synthMenuCb);
 
     int rotTopMenu = 0;
     addSettingsOptionsItemToMenu(sd->menu, menuItemPlayMode, menuItemModeOptions, menuItemModeValues, 2,
                                  &menuItemModeBounds, sd->fileMode);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemPlayMode, (sd->fileMode ? &sd->fileImage : &sd->usbModeImage), rotTopMenu++, SCROLL_HORIZ);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemPlayMode, (sd->fileMode ? &sd->fileImage : &sd->usbModeImage),
+                         rotTopMenu++, SCROLL_HORIZ);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemModeOptions[0], &sd->usbModeImage, 0, NO_SCROLL);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemModeOptions[1], &sd->fileImage, 1, NO_SCROLL);
 
@@ -2471,7 +2456,8 @@ static void synthSetupMenu(bool forceReset)
 
     addSettingsOptionsItemToMenu(sd->menu, menuItemHeadroom, menuItemHeadroomOptions, menuItemHeadroomValues,
                                  ARRAY_SIZE(menuItemHeadroomValues), &menuItemHeadroomBounds, sd->headroom);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemHeadroom, &sd->volumeImage, rotPlayerMenu++, SCROLL_HORIZ_R | ZOOM_GAUGE);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemHeadroom, &sd->volumeImage, rotPlayerMenu++,
+                         SCROLL_HORIZ_R | ZOOM_GAUGE);
 
     // End Player Menu
     sd->menu = endSubMenu(sd->menu);
@@ -2487,7 +2473,8 @@ static void synthSetupMenu(bool forceReset)
     for (int vmNum = 0; vmNum < ARRAY_SIZE(menuItemViewOptions); vmNum++)
     {
         wheelMenuSetItemInfo(sd->wheelMenu, menuItemViewOptions[vmNum], NULL, vmNum, NO_SCROLL);
-        writeShortName(sd->menuViewShortnames[vmNum], sizeof(sd->menuViewShortnames[vmNum]), menuItemViewOptions[vmNum]);
+        writeShortName(sd->menuViewShortnames[vmNum], sizeof(sd->menuViewShortnames[vmNum]),
+                       menuItemViewOptions[vmNum]);
         wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemViewOptions[vmNum], sd->menuViewShortnames[vmNum]);
     }
 
@@ -2502,7 +2489,6 @@ static void synthSetupMenu(bool forceReset)
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchMode, &sd->touchImage, rotUiMenu++, NO_SCROLL);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchOptions[0], &sd->menuImage, 0, NO_SCROLL);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemTouchOptions[1], &sd->pitchImage, 1, NO_SCROLL);
-
 
     // End "Interface" Menu
     sd->menu = endSubMenu(sd->menu);
@@ -2533,8 +2519,8 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
         uint32_t tempo          = 500000;
 
         midiTextInfo_t* lastInfo = NULL;
-        uint8_t textTrack = 0;
-        bool skipOtherTracks = false;
+        uint8_t textTrack        = 0;
+        bool skipOtherTracks     = false;
         midiEvent_t event;
 
         while (midiNextEvent(&reader, &event))
@@ -2553,9 +2539,11 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
 
                 if (!skipOtherTracks && lastInfo && textTrack != event.track)
                 {
-                    if (lastInfo->timestamp == event.absTime && !strncmp(lastInfo->text, event.meta.text, MIN(lastInfo->length, event.meta.length)))
+                    if (lastInfo->timestamp == event.absTime
+                        && !strncmp(lastInfo->text, event.meta.text, MIN(lastInfo->length, event.meta.length)))
                     {
-                        printf("Duplicated text events (%s) on channel %" PRIu8 " and %" PRIu8 "! Skipping.\n", event.meta.text, textTrack, event.track);
+                        printf("Duplicated text events (%s) on channel %" PRIu8 " and %" PRIu8 "! Skipping.\n",
+                               event.meta.text, textTrack, event.track);
                         skipOtherTracks = true;
                         continue;
                     }
@@ -2581,7 +2569,7 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
 
                     if (event.absTime != 0)
                     {
-                        lastInfo = info;
+                        lastInfo  = info;
                         textTrack = event.track;
                     }
                 }
@@ -2701,8 +2689,8 @@ static void drawSynthMode(int64_t elapsedUs)
     {
         midiChannel_t* channel = &sd->midiPlayer.channels[ch];
         bool percussion        = channel->percussion;
-        voiceStates_t* states = (percussion ? &sd->midiPlayer.percVoiceStates : &sd->midiPlayer.poolVoiceStates);
-        sd->playing[ch] = (0 != (channel->allocedVoices & (states->on | states->held | states->sustenuto)));
+        voiceStates_t* states  = (percussion ? &sd->midiPlayer.percVoiceStates : &sd->midiPlayer.poolVoiceStates);
+        sd->playing[ch]        = (0 != (channel->allocedVoices & (states->on | states->held | states->sustenuto)));
 
         paletteColor_t col = sd->playing[ch] ? c555 : c222;
 
@@ -2800,7 +2788,8 @@ static void drawSynthMode(int64_t elapsedUs)
             if (textW > TFT_WIDTH - (ICON_SIZE + 3) * 2 - 10)
             {
                 textX = ICON_SIZE + 3 + 5;
-                drawTextMarquee(&sd->font, c034, sd->filename, textX, TFT_HEIGHT - sd->font.height - 15, TFT_WIDTH - ICON_SIZE - 3 - 5, &sd->marqueeTimer);
+                drawTextMarquee(&sd->font, c034, sd->filename, textX, TFT_HEIGHT - sd->font.height - 15,
+                                TFT_WIDTH - ICON_SIZE - 3 - 5, &sd->marqueeTimer);
                 iconPosR = TFT_WIDTH - ICON_SIZE - 2 - 5;
                 iconPosL = 1;
             }
@@ -2910,7 +2899,7 @@ static void drawSynthMode(int64_t elapsedUs)
             snprintf(buffer, sizeof(buffer), "32nd Notes/Beat: %" PRIu8, ts->num32ndNotesPerBeat);
             drawText(&sd->font, c555, buffer, 18, 105);
 
-            int curBeat    = (tick / sd->midiFile.timeDivision);
+            int curBeat = (tick / sd->midiFile.timeDivision);
 
             snprintf(buffer, sizeof(buffer), "File Division: %" PRIu16 " ticks", sd->midiFile.timeDivision);
             drawText(&sd->font, c555, buffer, 18, 120);
@@ -2935,16 +2924,16 @@ static void drawSynthMode(int64_t elapsedUs)
     {
         fillDisplayArea(sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y - 2,
                         sd->wheelTextArea.pos.x + sd->wheelTextArea.width,
-                        sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2,
-                        c025);
+                        sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025);
         drawTriangleOutlined(sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y - 2,
-                            sd->wheelTextArea.pos.x - sd->betterFont.height / 2, sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2,
-                            sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2,
-                            c025, c025);
+                             sd->wheelTextArea.pos.x - sd->betterFont.height / 2,
+                             sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2, sd->wheelTextArea.pos.x,
+                             sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025, c025);
         drawTriangleOutlined(sd->wheelTextArea.pos.x + sd->wheelTextArea.width, sd->wheelTextArea.pos.y - 2,
-                            sd->wheelTextArea.pos.x + sd->wheelTextArea.width + sd->betterFont.height / 2, sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2,
-                            sd->wheelTextArea.pos.x + sd->wheelTextArea.width, sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2,
-                            c025, c025);
+                             sd->wheelTextArea.pos.x + sd->wheelTextArea.width + sd->betterFont.height / 2,
+                             sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2,
+                             sd->wheelTextArea.pos.x + sd->wheelTextArea.width,
+                             sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025, c025);
         drawWheelMenu(sd->menu, sd->wheelMenu, elapsedUs);
     }
 }
@@ -2953,7 +2942,8 @@ static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16
 {
     midiTimeSignature_t* ts = &sd->karaoke.timeSignature;
 
-    if (!sd->fileMode || !sd->midiFile.data || !ts->midiClocksPerMetronomeTick || !ts->num32ndNotesPerBeat || !ts->numerator)
+    if (!sd->fileMode || !sd->midiFile.data || !ts->midiClocksPerMetronomeTick || !ts->num32ndNotesPerBeat
+        || !ts->numerator)
     {
         return;
     }
@@ -3067,7 +3057,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     {
         midiTextInfo_t* curInfo  = curNode->val;
         midiTextInfo_t* nextInfo = curNode->next ? ((midiTextInfo_t*)curNode->next->val) : NULL;
-        int curLyricBar = curInfo->timestamp / ticksPerBar;
+        int curLyricBar          = curInfo->timestamp / ticksPerBar;
         // lyricLength used as the timer for text progress
         int lyricLength = noteLength;
 
@@ -3085,7 +3075,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
             if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages))
             {
                 textMessages[msgLen++] = '\n';
-                textMessages[msgLen] = '\0';
+                textMessages[msgLen]   = '\0';
             }
 
             // Draw entire lyric
@@ -3108,7 +3098,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
                 if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages))
                 {
                     textMessages[msgLen++] = '\n';
-                    textMessages[msgLen] = '\0';
+                    textMessages[msgLen]   = '\0';
                 }
 
                 // Draw this entire lyric
@@ -3134,7 +3124,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
                 if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages))
                 {
                     textMessages[msgLen++] = '\n';
-                    textMessages[msgLen] = '\0';
+                    textMessages[msgLen]   = '\0';
                 }
 
                 // Write the message into the buffer
@@ -3213,7 +3203,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
             if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages))
             {
                 textMessages[msgLen++] = '\n';
-                textMessages[msgLen] = '\0';
+                textMessages[msgLen]   = '\0';
             }
 
             msgLen
@@ -3239,7 +3229,8 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
         {
             int w = (TFT_WIDTH - 60) * (farLyric - now) / (farLyric - nearLyric);
             drawRect(30, TFT_HEIGHT - 40, TFT_WIDTH - 30, TFT_HEIGHT - 30, c550);
-            fillDisplayArea(30, TFT_HEIGHT - 40, 30 + CLAMP(TFT_WIDTH - 60 - w, 0, TFT_WIDTH - 60), TFT_HEIGHT - 30, c550);
+            fillDisplayArea(30, TFT_HEIGHT - 40, 30 + CLAMP(TFT_WIDTH - 60 - w, 0, TFT_WIDTH - 60), TFT_HEIGHT - 30,
+                            c550);
         }
 
         // Draw a fun thingy
@@ -3464,12 +3455,14 @@ static void synthHandleButton(const buttonEvt_t evt)
 
                     if (!sd->leftHeld)
                     {
-                        sd->leftHeld = true;
+                        sd->leftHeld      = true;
                         sd->leftHeldTimer = 500000;
                     }
                     else if (sd->fileMode && sd->midiPlayer.sampleCount > seekLeftAmt)
                     {
-                        midiSeek(&sd->midiPlayer, SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount - seekLeftAmt, sd->midiPlayer.tempo, sd->midiPlayer.reader.division));
+                        midiSeek(&sd->midiPlayer,
+                                 SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount - seekLeftAmt, sd->midiPlayer.tempo,
+                                                       sd->midiPlayer.reader.division));
                     }
                     else if (sd->fileMode && sd->midiPlayer.sampleCount > (DAC_SAMPLE_RATE_HZ / 2))
                     {
@@ -3486,17 +3479,18 @@ static void synthHandleButton(const buttonEvt_t evt)
 
                 case PB_RIGHT:
                 {
-
                     if (!sd->rightHeld)
                     {
-                        sd->rightHeld = true;
+                        sd->rightHeld      = true;
                         sd->rightHeldTimer = 500000;
                     }
                     else
                     {
                         // Seek Right
                         const uint32_t seekRightAmt = DAC_SAMPLE_RATE_HZ;
-                        midiSeek(&sd->midiPlayer, SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount + seekRightAmt, sd->midiPlayer.tempo, sd->midiPlayer.reader.division));
+                        midiSeek(&sd->midiPlayer,
+                                 SAMPLES_TO_MIDI_TICKS(sd->midiPlayer.sampleCount + seekRightAmt, sd->midiPlayer.tempo,
+                                                       sd->midiPlayer.reader.division));
                     }
                     break;
                 }
@@ -3585,7 +3579,7 @@ static void synthHandleButton(const buttonEvt_t evt)
                 }
 
                 // Stop seeking left
-                sd->leftHeld = false;
+                sd->leftHeld      = false;
                 sd->leftHeldTimer = 0;
             }
             else if (evt.button == PB_RIGHT)
@@ -3597,7 +3591,7 @@ static void synthHandleButton(const buttonEvt_t evt)
                 }
 
                 // Stop seeking right
-                sd->rightHeld = false;
+                sd->rightHeld      = false;
                 sd->rightHeldTimer = 0;
             }
         }
@@ -3645,7 +3639,7 @@ static void synthHandleInput(int64_t elapsedUs)
             }
             else if (isWheelMenuActive && !nowActive)
             {
-                sd->updateMenu = true;
+                sd->updateMenu     = true;
                 sd->forceResetMenu = true;
             }
             isWheelMenuActive = nowActive;
@@ -3784,7 +3778,7 @@ static bool synthIsControlSupported(const midiControllerDesc_t* control)
         case 75: // Decay (unassigned)
         case 76: // Sustain (unassigned)
         // TODO: case 91: // Effects (Reverb)
-        case 93: // Chorus level
+        case 93:  // Chorus level
         case 120: // All sound off
         case 121: // All controllers off
         case 123: // All notes off
@@ -3797,16 +3791,16 @@ static bool synthIsControlSupported(const midiControllerDesc_t* control)
 
 static void writeShortName(char* out, size_t n, const char* in)
 {
-    int written = 0;
+    int written     = 0;
     const char* cur = in;
-    bool firstChar = true;
+    bool firstChar  = true;
 
     while (written < n - 1 && *cur)
     {
         if (firstChar && (('A' <= *cur && *cur <= 'Z') || ('a' <= *cur && *cur <= 'z') || ('0' <= *cur && *cur <= '9')))
         {
             out[written++] = *cur;
-            firstChar = false;
+            firstChar      = false;
         }
         else if (!(('A' <= *cur && *cur <= 'Z') || ('a' <= *cur && *cur <= 'z') || ('0' <= *cur && *cur <= '9')))
         {
@@ -3826,9 +3820,9 @@ static paletteColor_t noteToColor(uint8_t note)
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
                             int16_t height)
 {
-    const midiChannel_t* chan   = &player->channels[chIdx];
-    const midiVoice_t* voices   = chan->percussion ? player->percVoices : player->poolVoices;
-    uint8_t voiceCount          = chan->percussion ? PERCUSSION_VOICES : __builtin_popcount(chan->allocedVoices);
+    const midiChannel_t* chan = &player->channels[chIdx];
+    const midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
+    uint8_t voiceCount        = chan->percussion ? PERCUSSION_VOICES : __builtin_popcount(chan->allocedVoices);
 
     // ok here's the plan
     // we're gonna draw a little bar graph for each voice
@@ -3851,7 +3845,10 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
 
         if (chan->percussion || voices[voiceIdx].oscillators[0].cVol > 0 || voices[voiceIdx].oscillators[0].tVol > 0)
         {
-            int16_t barH = MAX((chan->percussion ? (voices[voiceIdx].velocity << 1 | 1) : voices[voiceIdx].oscillators[0].cVol) * BAR_HEIGHT / 255, 1);
+            int16_t barH
+                = MAX((chan->percussion ? (voices[voiceIdx].velocity << 1 | 1) : voices[voiceIdx].oscillators[0].cVol)
+                          * BAR_HEIGHT / 255,
+                      1);
 
             fillDisplayArea(x0, y + (BAR_HEIGHT - barH), x1, y + BAR_HEIGHT, noteToColor(voices[voiceIdx].note));
         }
@@ -4009,23 +4006,23 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
 
 static void synthMenuCb(const char* label, bool selected, uint32_t value)
 {
-    //printf("synthMenuCb(%s, %s, %" PRIu32 ")\n", label, selected ? "true" : "false", value);
+    // printf("synthMenuCb(%s, %s, %" PRIu32 ")\n", label, selected ? "true" : "false", value);
     if (NULL == label)
     {
         if (selected)
         {
             // Wheel Menu Closed! Reset the menu
             sd->updateMenu = true;
-            //sd->forceResetMenu = true;
+            // sd->forceResetMenu = true;
         }
     }
     else if (label == mnuBackStr)
     {
         if (selected && !sd->menu->parentMenu)
         {
-            sd->updateMenu = true;
+            sd->updateMenu     = true;
             sd->forceResetMenu = true;
-            sd->screen = SS_VIEW;
+            sd->screen         = SS_VIEW;
         }
     }
     else if (label == menuItemPlayMode)
@@ -4210,7 +4207,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (value != sd->synthConfig.banks[sd->menuSelectedChannel])
         {
-            sd->synthConfig.banks[sd->menuSelectedChannel] = value;
+            sd->synthConfig.banks[sd->menuSelectedChannel]    = value;
             sd->synthConfig.programs[sd->menuSelectedChannel] = 0;
             synthApplyConfig();
 
@@ -4222,7 +4219,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (selected)
         {
-            sd->synthConfig.banks[sd->menuSelectedChannel] = 0;
+            sd->synthConfig.banks[sd->menuSelectedChannel]    = 0;
             sd->synthConfig.programs[sd->menuSelectedChannel] = 0;
             sd->synthConfig.ignoreChannelMask &= ~(1 << sd->menuSelectedChannel);
             if (sd->menuSelectedChannel == 9)
@@ -4268,7 +4265,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
     else if (label == menuItemSelectChan)
     {
         sd->menuSelectedChannel = value;
-        sd->updateMenu = true;
+        sd->updateMenu          = true;
     }
     else
     {
@@ -4283,7 +4280,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                 {
                     if (selected)
                     {
-                        sd->synthConfig.banks[sd->menuSelectedChannel] = itemInfo->bank;
+                        sd->synthConfig.banks[sd->menuSelectedChannel]    = itemInfo->bank;
                         sd->synthConfig.programs[sd->menuSelectedChannel] = itemInfo->program;
                         char* nameBuffer = sd->channelInstrumentLabels[sd->menuSelectedChannel];
                         snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, label);
@@ -4302,7 +4299,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                 case SMT_CONTROLLER:
                 {
                     const midiControllerDesc_t* desc = itemInfo->controller;
-                    bool saveControl = true;
+                    bool saveControl                 = true;
 
                     if (desc->type == CTRL_NO_DATA)
                     {
@@ -4316,7 +4313,8 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                     {
                         if (desc->type == CTRL_SWITCH)
                         {
-                            midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control, BOOL_TO_MIDI(value));
+                            midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, desc->control,
+                                              BOOL_TO_MIDI(value));
                         }
                         else if (desc->type == CTRL_CC_LSB || desc->type == CTRL_CC_MSB)
                         {
@@ -4326,12 +4324,14 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
 
                             if (desc->control > 64)
                             {
-                                // There are a couple other MSB/LSB controllers, and those have an odd MSB and an even LSB
+                                // There are a couple other MSB/LSB controllers, and those have an odd MSB and an even
+                                // LSB
                                 msbControl = desc->control | 1;
                                 lsbControl = desc->control & ~1;
                             }
 
-                            midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, msbControl, (value >> 7) & 0x7F);
+                            midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, msbControl,
+                                              (value >> 7) & 0x7F);
                             midiControlChange(&sd->midiPlayer, sd->menuSelectedChannel, lsbControl, value & 0x7F);
                         }
                         else if (desc->type == CTRL_7BIT)
@@ -4436,7 +4436,6 @@ static void prevSong(void)
                 {
                     if (node->prev && node->prev->val)
                     {
-
                         pickedSong = (const char*)node->prev->val;
                         synthSetFile(pickedSong);
                     }
@@ -4470,7 +4469,7 @@ static void nextSong(void)
     if (sd->shuffle)
     {
         // Get the number of bits needed for the current number of songs, minimumn 2
-        uint32_t pos = lfsrNext(&sd->shuffleState);
+        uint32_t pos   = lfsrNext(&sd->shuffleState);
         sd->shufflePos = (int32_t)pos;
         saveLfsr(&sd->shuffleState);
         writeNvs32(nvsKeyShufflePos, sd->shufflePos);
@@ -4502,10 +4501,8 @@ static void nextSong(void)
                 {
                     if (node->next && node->next->val)
                     {
-
                         pickedSong = (const char*)node->next->val;
                         synthSetFile(pickedSong);
-
                     }
                     else if (sd->loop && sd->customFiles.first)
                     {
@@ -4568,7 +4565,7 @@ static uint32_t flipToMsb(uint32_t val)
         return 0;
     }
 
-    uint8_t bits = 32 - __builtin_clz(val);
+    uint8_t bits    = 32 - __builtin_clz(val);
     uint32_t result = 1 << (bits - 1);
 
     for (int i = 0; i < bits - 1; i++)
@@ -4584,9 +4581,9 @@ static uint32_t flipToMsb(uint32_t val)
 
 static uint32_t bitRevert(uint32_t v, uint8_t bits)
 {
-    uint8_t i = 0;
+    uint8_t i    = 0;
     uint32_t lsb = 0;
-    uint32_t n = 0;
+    uint32_t n   = 0;
 
     for (i = 0; i < bits; i++)
     {
@@ -4602,26 +4599,27 @@ static uint32_t bitRevert(uint32_t v, uint8_t bits)
 static uint32_t lfsrNext(lfsrState_t* state)
 {
     uint16_t bits = 32 - __builtin_clz((state->range + 1) | 0x2);
-    uint16_t val = state->state & 0xFFFFu;
+    uint16_t val  = state->state & 0xFFFFu;
 
     if (state->reversed)
     {
         state->reversed = false;
-        val = bitRevert(state->state, bits);
+        val             = bitRevert(state->state, bits);
     }
 
-    do {
+    do
+    {
         uint16_t bit = 0;
         for (int bitc = 0; bitc < bits; bitc++)
         {
-            if (lfsrTaps[bits-2] & (1 << bitc))
+            if (lfsrTaps[bits - 2] & (1 << bitc))
             {
                 bit ^= (val >> (bits - bitc - 1));
             }
         }
 
         bit &= 1;
-        val = (val >> 1) | (bit << (bits-1));
+        val = (val >> 1) | (bit << (bits - 1));
     } while (val > state->range);
 
     state->state = val;
@@ -4632,16 +4630,17 @@ static uint32_t lfsrNext(lfsrState_t* state)
 static uint32_t lfsrPrev(lfsrState_t* state)
 {
     uint16_t bits = 32 - __builtin_clz((state->range + 1) | 0x2);
-    uint16_t val = state->state & 0xFFFFu;
-    uint32_t taps = flipToMsb(lfsrTaps[bits-2]);
+    uint16_t val  = state->state & 0xFFFFu;
+    uint32_t taps = flipToMsb(lfsrTaps[bits - 2]);
 
     if (!state->reversed)
     {
         state->reversed = true;
-        val = bitRevert(state->state, bits);
+        val             = bitRevert(state->state, bits);
     }
 
-    do {
+    do
+    {
         uint16_t bit = 0;
         for (int bitc = 0; bitc < bits; bitc++)
         {
@@ -4652,7 +4651,7 @@ static uint32_t lfsrPrev(lfsrState_t* state)
         }
 
         bit &= 1;
-        val = (val >> 1) | (bit << (bits-1));
+        val = (val >> 1) | (bit << (bits - 1));
     } while (bitRevert(val, bits) > state->range);
 
     state->state = val;

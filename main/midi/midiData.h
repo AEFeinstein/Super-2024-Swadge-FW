@@ -11,7 +11,7 @@ extern const midiTimbre_t magfestWaveTimbre;
 extern const midiTimbre_t* magfestTimbres[];
 extern const size_t magfestTimbreCount;
 
-//extern const midiTimbre_t gmInstruments[128];
+// extern const midiTimbre_t gmInstruments[128];
 
 // Drumkits
 extern const midiTimbre_t defaultDrumkitTimbre;
