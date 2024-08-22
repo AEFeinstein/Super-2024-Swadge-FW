@@ -6,6 +6,7 @@
 
 #include "macros.h"
 #include "hdw-dac.h"
+#include "midiNoteFreqs.h"
 
 const midiTimbre_t acousticGrandPianoTimbre = {
     .type = WAVETABLE,
@@ -174,6 +175,91 @@ const midiTimbre_t noiseHitTimbre = {
     .name = "Noise Hit",
 };
 
+const midiTimbre_t colossusTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        // Config will be replaced by .data and .count at load time
+        .config = {
+            .sampleName = "colossus.bin",
+        },
+        // Loop only once
+        .loop = 1,
+        //
+        .rate = 8192,
+        .baseNote = FREQ_C_SHARP_5,
+    },
+    .name = "Colossus Roar",
+};
+
+const midiTimbre_t magTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        // Config will be replaced by .data and .count at load time
+        .config = {
+            .sampleName = "donut_mag.bin",
+        },
+        // Loop only once
+        .loop = 1,
+        //
+        .rate = 8192,
+        .baseNote = FREQ_A4,
+    },
+    .name = "MAG",
+};
+
+const midiTimbre_t festTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        // Config will be replaced by .data and .count at load time
+        .config = {
+            .sampleName = "donut_fest.bin",
+        },
+        // Loop only once
+        .loop = 1,
+        //
+        .rate = 8192,
+        .baseNote = FREQ_A4,
+    },
+    .name = "FEST",
+};
+
+const midiTimbre_t wilhelmTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        // Config will be replaced by .data and .count at load time
+        .config = {
+            .sampleName = "wilhelm.bin",
+        },
+        // Loop only once
+        .loop = 0,
+        //
+        .rate = 8192,
+        .baseNote = FREQ_A4,
+    },
+    .name = "Wilhelm",
+};
+
+const midiTimbre_t noriTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        // Config will be replaced by .data and .count at load time
+        .config = {
+            .sampleName = "nori2.bin",
+        },
+        // Loop only once
+        .loop = 0,
+        //
+        .rate = 8192,
+        .baseNote = FREQ_A4,
+    },
+    .name = "Nori",
+};
+
 const midiTimbre_t* magfestTimbres[] = {
     &squareWaveTimbre,
     &sineWaveTimbre,
@@ -184,6 +270,11 @@ const midiTimbre_t* magfestTimbres[] = {
     &noiseTimbre,
     &squareHitWaveTimbre,
     &noiseHitTimbre,
+    &colossusTimbre,
+    &magTimbre,
+    &festTimbre,
+    &wilhelmTimbre,
+    &noriTimbre,
 };
 
 const size_t magfestTimbreCount = ARRAY_SIZE(magfestTimbres);

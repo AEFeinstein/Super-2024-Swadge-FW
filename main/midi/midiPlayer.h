@@ -437,15 +437,29 @@ typedef struct
             // This should just always be C4? (440 << 8)
             // uint32_t freq = (440 << 8);
 
-            /// @brief A pointer to this timbre's sample data
-            int8_t* data;
+            union {
+                struct {
+                    /// @brief A pointer to this timbre's sample data
+                    uint8_t* data;
 
-            /// @brief The length of the sample in bytes
-            uint32_t count;
+                    /// @brief The length of the sample in bytes
+                    uint32_t count;
+                };
 
-            /// @brief The sample rate divisor. Each audio sample will be played this many times.
-            /// The audio data's actual sample rate should be (32768 / rate)
-            uint8_t rate;
+                struct {
+                    /// @brief The name of the sample to load into data
+                    const char* sampleName;
+                } config;
+            };
+
+            /// @brief The sample rate.
+            uint32_t rate;
+
+            /// @brief The base frequency, at which the sample plays at normal speed
+            uq8_24 baseNote;
+
+            /// @brief 0 to loop forever, or the number of loops to play
+            uint32_t loop;
         } sample;
 
         struct
@@ -504,10 +518,21 @@ typedef struct
     /// @brief The synthesizer oscillators used to generate the sounds
     synthOscillator_t oscillators[OSC_PER_VOICE];
 
-    /// @brief An array of scratch data for percussion functions to use
     // TODO union this with the oscillators? They shouldn't both be used
     // But we need to make sure those oscillators don't get summed
-    uint32_t percScratch[4];
+    union
+    {
+        /// @brief An array of scratch data for percussion functions to use
+        uint32_t percScratch[4];
+
+        struct {
+            /// @brief The number of fractional samples remaining
+            uint32_t sampleError;
+
+            /// @brief The number of loops remaining
+            uint32_t sampleLoops;
+        };
+    };
 
     /// @brief A pointer to the timbre of this voice, which defines its musical characteristics
     const midiTimbre_t* timbre;

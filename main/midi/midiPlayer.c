@@ -12,6 +12,7 @@
 #include "esp_log.h"
 #include "drums.h"
 #include "macros.h"
+#include "cnfs.h"
 
 #define OSC_DITHER
 
@@ -66,6 +67,7 @@ static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount);
 static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
 static void midiStepVoice(midiChannel_t* channel, voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
 static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre);
+static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config);
 static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program);
 static int32_t midiSumPercussion(midiPlayer_t* player);
 static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event);
@@ -352,9 +354,12 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
         oscVol = VOICE_CUR_VOL(voice);
     }
 
-    for (int i = 0; i < OSC_PER_VOICE; i++)
+    if (voice->timbre->type != SAMPLE)
     {
-        swSynthSetVolume(&voice->oscillators[i], oscVol);
+        for (int i = 0; i < OSC_PER_VOICE; i++)
+        {
+            swSynthSetVolume(&voice->oscillators[i], oscVol);
+        }
     }
 }
 
@@ -392,9 +397,36 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
 
             case SAMPLE:
             {
-                // TODO: Sample support!
+                // Just reset the oscillators in case they were previously in-use
+                swSynthSetVolume(&voice->oscillators[oscIdx], 0);
                 break;
             }
+        }
+    }
+}
+
+/**
+ * @brief Initialize a MIDI timbre from the configured version
+ *
+ * @param dest The destination timbre to set up
+ * @param config The configured timbre to use as the template
+ */
+static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config)
+{
+    memcpy(dest, config, sizeof(midiTimbre_t));
+
+    if (config->type == SAMPLE)
+    {
+        // Sample-based timbres need to do a tiny bit of data loading
+        size_t sampleSize;
+        // TODO should sample.data just be a uint8_t instead? We probably need to convert it anyway
+        dest->sample.data = cnfsGetFile(config->sample.config.sampleName, &sampleSize);
+        dest->sample.count = (uint32_t)sampleSize;
+
+        if (!dest->sample.data)
+        {
+            ESP_LOGE("MIDI", "Failed to get data for sample '%s'!", config->sample.config.sampleName);
+            dest->sample.count = 0;
         }
     }
 }
@@ -515,6 +547,95 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
             player->channels[voices[voiceIdx].channel].allocedVoices &= ~(1 << voiceIdx);
             voices[voiceIdx].sampleTick = 0;
             memset(voices[voiceIdx].percScratch, 0, 4 * sizeof(uint32_t));
+        }
+    }
+
+    return sum;
+}
+
+static int32_t midiSumSamples(midiPlayer_t* player)
+{
+    voiceStates_t* states = &player->poolVoiceStates;
+    midiVoice_t* voices   = player->poolVoices;
+
+    int32_t sum = 0;
+
+    // Ignore the 'held' flag, this is percussion!
+    uint32_t playingVoices = states->on | states->held | states->sustenuto | states->attack | states->decay | states->sustain | states->release;
+    while (playingVoices != 0)
+    {
+        uint8_t voiceIdx = __builtin_ctz(playingVoices);
+        playingVoices &= ~(1 << voiceIdx);
+
+        if (voices[voiceIdx].timbre->type != SAMPLE)
+        {
+            // Only sample timbres past here!
+            continue;
+        }
+
+        // Same rate for now -- this is the number of times we need to output each source sample
+        // in order to maintain the desired speed/pitch ratio
+        uq24_8 sampleRateRatio = (1 << 8) * 32768 / voices[voiceIdx].timbre->sample.rate;
+        sampleRateRatio *= voices[voiceIdx].timbre->sample.baseNote;
+        sampleRateRatio /= bendPitchWheel(voices[voiceIdx].note, player->channels[voices[voiceIdx].channel].pitchBend);
+        // Assume C4 is the base note? A4? doesn't really matter
+        // Divide the desired note freq
+        //uq16_16 noteRatio = bendPitchWheel(voices[voiceIdx].note, player->channels[voices[voiceIdx].channel].pitchBend) / FREQ_A4;
+
+        bool done = false;
+        int32_t sample = (int)voices[voiceIdx].timbre->sample.data[voices[voiceIdx].sampleTick] - 128;
+
+        // TODO: Possibly change to 0x08000 for rounding at the half?
+        if (voices[voiceIdx].sampleError > 0x100)
+        {
+            voices[voiceIdx].sampleError -= 0x100;
+        }
+        else
+        {
+            do
+            {
+                // TODO this probably will not work if we go backwards
+                voices[voiceIdx].sampleTick++;
+                // We now need to omit (playRate / sampleDataRate) samples before continuing
+                voices[voiceIdx].sampleError += sampleRateRatio;// * noteRatio;
+                // And account for the sample we just played
+
+                if (voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.count)
+                {
+                    if (voices[voiceIdx].sampleLoops > 0)
+                    {
+                        voices[voiceIdx].sampleLoops--;
+
+                        if (!voices[voiceIdx].sampleLoops)
+                        {
+                            done = true;
+                            break;
+                        }
+                        else
+                        {
+                            voices[voiceIdx].sampleTick = 0;
+                        }
+                    }
+                    else
+                    {
+                        voices[voiceIdx].sampleTick = 0;
+                    }
+                }
+            } while (voices[voiceIdx].sampleError < 0x100);
+
+            voices[voiceIdx].sampleError -= 0x100;
+
+        }
+
+        sum += sample * voices[voiceIdx].velocity / 127;
+
+        if (done)
+        {
+            states->on &= ~(1 << voiceIdx);
+            player->channels[voices[voiceIdx].channel].allocedVoices &= ~(1 << voiceIdx);
+            voices[voiceIdx].sampleTick = 0;
+            voices[voiceIdx].sampleLoops = 0;
+            voices[voiceIdx].sampleError = 0;
         }
     }
 
@@ -867,6 +988,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
     // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
     int32_t sample = swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
     sample += midiSumPercussion(player);
+    sample += midiSumSamples(player);
 
     player->sampleCount++;
 
@@ -1010,7 +1132,7 @@ void midiResetChannelControllers(midiPlayer_t* player, uint8_t channel)
     chan->program   = 0;
     chan->held      = 0;
     chan->sustenuto = 0;
-    memcpy(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program), sizeof(midiTimbre_t));
+    initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program));
 }
 
 void midiGmOn(midiPlayer_t* player)
@@ -1024,7 +1146,7 @@ void midiGmOn(midiPlayer_t* player)
         // Channel 10 (index 9) is reserved for percussion.
         chan->percussion = (9 == chanIdx);
 
-        memcpy(&chan->timbre, getTimbreForProgram(chan->percussion, 0, chan->program), sizeof(midiTimbre_t));
+        initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, 0, chan->program));
     }
 }
 
@@ -1040,7 +1162,7 @@ void midiGmOff(midiPlayer_t* player)
         chan->percussion = (9 == chanIdx);
         chan->bank       = 1;
 
-        memcpy(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program), sizeof(midiTimbre_t));
+        initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program));
     }
 }
 
@@ -1222,10 +1344,16 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     // Ensure the selected voice will play with the right instrument
     setVoiceTimbre(voice, &chan->timbre);
 
-    if (chan->timbre.flags & TF_PERCUSSION)
+    if ((chan->timbre.flags & TF_PERCUSSION))
     {
         // Reset the percussion voice state
         voice->sampleTick = 0;
+    }
+    else if (chan->timbre.type == SAMPLE)
+    {
+        voice->sampleTick  = 0;
+        voice->sampleError = 0;
+        voice->sampleLoops = chan->timbre.sample.loop;
     }
     else
     {
@@ -1361,7 +1489,7 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
     // Dynamic voice allocation somehow makes this way simpler
     player->channels[channel].program = program;
 
-    memcpy(&player->channels[channel].timbre, getTimbreForProgram(player->channels[channel].percussion, player->channels[channel].bank, program), sizeof(midiTimbre_t));
+    initTimbre(&player->channels[channel].timbre, getTimbreForProgram(player->channels[channel].percussion, player->channels[channel].bank, program));
 
     // TODO: Actually define all the timbres individually instead of editing them like this
     // TODO: Remove hardcoded bank == 0 check
@@ -1640,25 +1768,28 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
     voiceStates_t* states = player->channels[channel].percussion ? &player->percVoiceStates : &player->poolVoiceStates;
     midiVoice_t* voices   = player->channels[channel].percussion ? player->percVoices : player->poolVoices;
 
-    // Find all the voices currently sounding for this channel and update their frequencies
-    uint32_t playingVoices = (VS_ANY(states) | states->held) & player->channels[channel].allocedVoices;
-
-    while (playingVoices != 0)
+    if (player->channels[channel].timbre.type != SAMPLE)
     {
-        uint8_t voiceIdx  = __builtin_ctz(playingVoices);
-        uint32_t voiceBit = (1 << voiceIdx);
+        // Find all the voices currently sounding for this channel and update their frequencies
+        uint32_t playingVoices = (VS_ANY(states) | states->held) & player->channels[channel].allocedVoices;
 
-        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
+        while (playingVoices != 0)
         {
-            // Apply the pitch bend to all this channel's oscillators
-            // TODO: If each voice has multiple oscillators, we would obviously
-            // want to be able to control them separately here.
-            // Maybe we only apply that for like, chorus?
-            swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[oscIdx], bendPitchWheel(voices[voiceIdx].note, value));
-        }
+            uint8_t voiceIdx  = __builtin_ctz(playingVoices);
+            uint32_t voiceBit = (1 << voiceIdx);
 
-        // Next!
-        playingVoices &= ~voiceBit;
+            for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
+            {
+                // Apply the pitch bend to all this channel's oscillators
+                // TODO: If each voice has multiple oscillators, we would obviously
+                // want to be able to control them separately here.
+                // Maybe we only apply that for like, chorus?
+                swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[oscIdx], bendPitchWheel(voices[voiceIdx].note, value));
+            }
+
+            // Next!
+            playingVoices &= ~voiceBit;
+        }
     }
 }
 
