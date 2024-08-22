@@ -2242,181 +2242,177 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemChannelsOptions[chIdx], menuItemChannelsOptions[chIdx]);
     }
 
-    bool chInstrumentMenuAdded = false;
-
     int chIdx = sd->menuSelectedChannel;
+    midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+    itemInfo->type = SMT_CHANNEL;
+    itemInfo->channel = chIdx;
+    itemInfo->label = channelLabels[chIdx];
+    itemInfo->dynamicLabel = false;
+    hashPut(&sd->menuMap, channelLabels[chIdx], itemInfo);
+
+    // Ignore Item & Option Settings
+    addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemYesNoOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds, (config->ignoreChannelMask & (1 << chIdx)) ? 1 : 0);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemIgnore, (sd->synthConfig.ignoreChannelMask & (1 << sd->menuSelectedChannel)) ? &sd->ignoreImage : &sd->enableImage, rotChMenu++, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[0], &sd->enableImage, 0, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[1], &sd->ignoreImage, 1, NO_SCROLL);
+
+    // And set up all other on/off options
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[1], &sd->enableImage, 0, NO_SCROLL);
+
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[1], &sd->enableImage, 0, NO_SCROLL);
+
+    // Percussion Item & Option Settings
+    addSettingsOptionsItemToMenu(menu, menuItemPercussion, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemPercussionBounds, (config->percChannelMask & (1 << chIdx)) ? 1 : 0);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemPercussion, &sd->percussionImage, rotChMenu++, NO_SCROLL);
+    wheelMenuSetItemColor(sd->wheelMenu, menuItemPercussion, c000, c333);
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemPercussion, -1, -1, WM_SHAPE_DEFAULT);
+
+    // Bank Select Item & Option Settings
+    addSettingsOptionsItemToMenu(menu, menuItemBank, menuItemBankOptions, menuItemBankValues, ARRAY_SIZE(menuItemBankValues), &menuItemBankBounds, config->banks[chIdx]);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? NULL : &sd->magfestBankImage, rotChMenu++, NO_SCROLL);
+    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? "GM" : NULL);
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemBank, -1, -1, WM_SHAPE_DEFAULT);
+    // "GM" bank Option
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[0], NULL, 0, NO_SCROLL);
+    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBankOptions[0], "GM");
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[0], -1, -1, WM_SHAPE_DEFAULT);
+    // "MAGFest" bank option
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[1], &sd->magfestBankImage, 1, NO_SCROLL);
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[1], -1, -1, WM_SHAPE_DEFAULT);
+
+    if (0 == (config->percChannelMask & (1 << chIdx)))
     {
-        midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
-        itemInfo->type = SMT_CHANNEL;
-        itemInfo->channel = chIdx;
-        itemInfo->label = channelLabels[chIdx];
-        itemInfo->dynamicLabel = false;
-        hashPut(&sd->menuMap, channelLabels[chIdx], itemInfo);
+        // Instrument select submenu
+        char* nameBuffer = sd->channelInstrumentLabels[chIdx];
+        wsg_t* chanInstrumentIcon = NULL;
 
-        // Ignore Item & Option Settings
-        addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemYesNoOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds, (config->ignoreChannelMask & (1 << chIdx)) ? 1 : 0);
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemIgnore, (sd->synthConfig.ignoreChannelMask & (1 << sd->menuSelectedChannel)) ? &sd->ignoreImage : &sd->enableImage, rotChMenu++, NO_SCROLL);
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[0], &sd->enableImage, 0, NO_SCROLL);
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[1], &sd->ignoreImage, 1, NO_SCROLL);
-
-        // And set up all other on/off options
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[1], &sd->enableImage, 0, NO_SCROLL);
-
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[1], &sd->enableImage, 0, NO_SCROLL);
-
-        // Percussion Item & Option Settings
-        addSettingsOptionsItemToMenu(menu, menuItemPercussion, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemPercussionBounds, (config->percChannelMask & (1 << chIdx)) ? 1 : 0);
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemPercussion, &sd->percussionImage, rotChMenu++, NO_SCROLL);
-        wheelMenuSetItemColor(sd->wheelMenu, menuItemPercussion, c000, c333);
-        wheelMenuSetItemSize(sd->wheelMenu, menuItemPercussion, -1, -1, WM_SHAPE_DEFAULT);
-
-        // Bank Select Item & Option Settings
-        addSettingsOptionsItemToMenu(menu, menuItemBank, menuItemBankOptions, menuItemBankValues, ARRAY_SIZE(menuItemBankValues), &menuItemBankBounds, config->banks[chIdx]);
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? NULL : &sd->magfestBankImage, rotChMenu++, NO_SCROLL);
-        wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? "GM" : NULL);
-        wheelMenuSetItemSize(sd->wheelMenu, menuItemBank, -1, -1, WM_SHAPE_DEFAULT);
-        // "GM" bank Option
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[0], NULL, 0, NO_SCROLL);
-        wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBankOptions[0], "GM");
-        wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[0], -1, -1, WM_SHAPE_DEFAULT);
-        // "MAGFest" bank option
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[1], &sd->magfestBankImage, 1, NO_SCROLL);
-        wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[1], -1, -1, WM_SHAPE_DEFAULT);
-
-        if (0 == (config->percChannelMask & (1 << chIdx)))
+        if (config->banks[chIdx] == 0)
         {
-            // Instrument select submenu
-            char* nameBuffer = sd->channelInstrumentLabels[chIdx];
-            wsg_t* chanInstrumentIcon = NULL;
+            snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, gmProgramNames[config->programs[chIdx]]);
+            chanInstrumentIcon = &sd->instrumentImages[config->programs[chIdx] / 8];
 
-            if (config->banks[chIdx] == 0)
+            // "Instrument: <name>" item
+            menu = startSubMenu(menu, nameBuffer);
+            for (int category = 0; category < 16; category++)
             {
-                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, gmProgramNames[config->programs[chIdx]]);
-                chanInstrumentIcon = &sd->instrumentImages[config->programs[chIdx] / 8];
-
-                // "Instrument: <name>" item
-                menu = startSubMenu(menu, nameBuffer);
-                for (int category = 0; category < 16; category++)
+                // Category select menu
+                menu = startSubMenu(menu, gmProgramCategoryNames[category]);
+                for (int instrument = 0; instrument < 8; instrument++)
                 {
-                    // Category select menu
-                    menu = startSubMenu(menu, gmProgramCategoryNames[category]);
-                    for (int instrument = 0; instrument < 8; instrument++)
-                    {
-                        // Instrument within category
-                        addSingleItemToMenu(menu, gmProgramNames[category * 8 + instrument]);
-                    }
-                    // End category sub-menu
-                    menu = endSubMenu(menu);
+                    // Instrument within category
+                    addSingleItemToMenu(menu, gmProgramNames[category * 8 + instrument]);
                 }
-
-                // End instruments submenu
-                menu = endSubMenu(menu);
-            }
-            else
-            {
-                uint8_t program = config->programs[chIdx];
-                if (program >= magfestTimbreCount)
-                {
-                    program = 0;
-                }
-
-                chanInstrumentIcon = &sd->magfestBankImage;
-
-                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, magfestTimbres[program]->name);
-                // "Instrument: <name>" item
-                menu = startSubMenu(menu, nameBuffer);
-
-                for (int instrument = 0; instrument < magfestTimbreCount; instrument++)
-                {
-                    addSingleItemToMenu(menu, magfestTimbres[instrument]->name);
-                }
+                // End category sub-menu
                 menu = endSubMenu(menu);
             }
 
-            wheelMenuSetItemInfo(sd->wheelMenu, nameBuffer, chanInstrumentIcon, rotChMenu++, NO_SCROLL);
-            wheelMenuSetItemSize(sd->wheelMenu, nameBuffer, -1, -1, WM_SHAPE_DEFAULT);
+            // End instruments submenu
+            menu = endSubMenu(menu);
         }
-
-        menu = startSubMenu(menu, menuItemControls);
-
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemControls, &sd->uiImage, rotChMenu++, NO_SCROLL);
-
-        for (int ctrlIdx = 0; ctrlIdx < ARRAY_SIZE(controllerDefs); ctrlIdx++)
+        else
         {
-            const midiControllerDesc_t* controller = &controllerDefs[ctrlIdx];
-            if (synthIsControlSupported(controller))
+            uint8_t program = config->programs[chIdx];
+            if (program >= magfestTimbreCount)
             {
-                char* labelStr = controller->desc;
-                bool dynamicLabel = false;
-
-                switch (controller->type)
-                {
-                    case CTRL_SWITCH:
-                    {
-                        // Options menu item, on/off
-                        addSettingsOptionsItemToMenu(menu, labelStr, menuItemOffOnOptions, menuItemControlSwitchValues, ARRAY_SIZE(menuItemControlSwitchValues), &menuItemControl7bitBounds,
-                                                     synthGetControl(chIdx, controller->control, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
-                        break;
-                    }
-
-                    case CTRL_CC_MSB:
-                    {
-                        // Settings value item
-                        addSettingsItemToMenu(menu, labelStr, &menuItemControl14bitBounds, synthGetControl14bit(chIdx, controller->control, midiGetControlValue14bit(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
-                        break;
-                    }
-
-                    case CTRL_CC_LSB:
-                    {
-                        // Ignore because we'll handle the whole controller in CTRL_CC_MSB
-                        break;
-                    }
-
-                    case CTRL_7BIT:
-                    case CTRL_UNDEFINED:
-                    {
-                        // Settings value item, 0-127
-                        addSettingsItemToMenu(menu, labelStr, &menuItemControl7bitBounds, synthGetControl(chIdx, controller->control, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
-                        break;
-                    }
-
-                    case CTRL_NO_DATA:
-                    {
-                        // Single menu item, A just triggers it
-                        addSingleItemToMenu(menu, labelStr);
-                        break;
-                    }
-                }
-
-                if (!controllersSetUp || dynamicLabel)
-                {
-                    midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
-                    itemInfo->type = SMT_CONTROLLER;
-                    itemInfo->controller = controller;
-                    itemInfo->label = labelStr;
-                    itemInfo->dynamicLabel = dynamicLabel;
-                    wheelMenuSetItemInfo(sd->wheelMenu, labelStr, NULL, totalControls++, NO_SCROLL);
-                    // Use rounded rectangle, stretched to fit
-                    wheelMenuSetItemSize(sd->wheelMenu, labelStr, -1, -1, WM_SHAPE_ROUNDED_RECT);
-                    writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), labelStr);
-                    wheelMenuSetItemTextIcon(sd->wheelMenu, labelStr, itemInfo->shortLabel);
-
-                    // If the label IS dynamic, we don't actually change it without resetting the menu
-                    // So, don't worry about the hash key getting out of sync here
-                    hashPut(&sd->menuMap, labelStr, itemInfo);
-                }
+                program = 0;
             }
+
+            chanInstrumentIcon = &sd->magfestBankImage;
+
+            snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, magfestTimbres[program]->name);
+            // "Instrument: <name>" item
+            menu = startSubMenu(menu, nameBuffer);
+
+            for (int instrument = 0; instrument < magfestTimbreCount; instrument++)
+            {
+                addSingleItemToMenu(menu, magfestTimbres[instrument]->name);
+            }
+            menu = endSubMenu(menu);
         }
 
-        controllersSetUp = true;
-
-        // End controls submenu
-        menu = endSubMenu(menu);
-
-        addSingleItemToMenu(menu, menuItemReset);
+        wheelMenuSetItemInfo(sd->wheelMenu, nameBuffer, chanInstrumentIcon, rotChMenu++, NO_SCROLL);
+        wheelMenuSetItemSize(sd->wheelMenu, nameBuffer, -1, -1, WM_SHAPE_DEFAULT);
     }
+
+    menu = startSubMenu(menu, menuItemControls);
+
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemControls, &sd->uiImage, rotChMenu++, NO_SCROLL);
+
+    for (int ctrlIdx = 0; ctrlIdx < ARRAY_SIZE(controllerDefs); ctrlIdx++)
+    {
+        const midiControllerDesc_t* controller = &controllerDefs[ctrlIdx];
+        if (synthIsControlSupported(controller))
+        {
+            char* labelStr = controller->desc;
+            bool dynamicLabel = false;
+
+            switch (controller->type)
+            {
+                case CTRL_SWITCH:
+                {
+                    // Options menu item, on/off
+                    addSettingsOptionsItemToMenu(menu, labelStr, menuItemOffOnOptions, menuItemControlSwitchValues, ARRAY_SIZE(menuItemControlSwitchValues), &menuItemControl7bitBounds,
+                                                    synthGetControl(chIdx, controller->control, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
+                    break;
+                }
+
+                case CTRL_CC_MSB:
+                {
+                    // Settings value item
+                    addSettingsItemToMenu(menu, labelStr, &menuItemControl14bitBounds, synthGetControl14bit(chIdx, controller->control, midiGetControlValue14bit(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
+                    break;
+                }
+
+                case CTRL_CC_LSB:
+                {
+                    // Ignore because we'll handle the whole controller in CTRL_CC_MSB
+                    break;
+                }
+
+                case CTRL_7BIT:
+                case CTRL_UNDEFINED:
+                {
+                    // Settings value item, 0-127
+                    addSettingsItemToMenu(menu, labelStr, &menuItemControl7bitBounds, synthGetControl(chIdx, controller->control, midiGetControlValue(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
+                    break;
+                }
+
+                case CTRL_NO_DATA:
+                {
+                    // Single menu item, A just triggers it
+                    addSingleItemToMenu(menu, labelStr);
+                    break;
+                }
+            }
+
+            if (!controllersSetUp || dynamicLabel)
+            {
+                midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+                itemInfo->type = SMT_CONTROLLER;
+                itemInfo->controller = controller;
+                itemInfo->label = labelStr;
+                itemInfo->dynamicLabel = dynamicLabel;
+                wheelMenuSetItemInfo(sd->wheelMenu, labelStr, NULL, totalControls++, NO_SCROLL);
+                // Use rounded rectangle, stretched to fit
+                wheelMenuSetItemSize(sd->wheelMenu, labelStr, -1, -1, WM_SHAPE_ROUNDED_RECT);
+                writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), labelStr);
+                wheelMenuSetItemTextIcon(sd->wheelMenu, labelStr, itemInfo->shortLabel);
+
+                // If the label IS dynamic, we don't actually change it without resetting the menu
+                // So, don't worry about the hash key getting out of sync here
+                hashPut(&sd->menuMap, labelStr, itemInfo);
+            }
+        }
+    }
+
+    controllersSetUp = true;
+
+    // End controls submenu
+    menu = endSubMenu(menu);
+
+    addSingleItemToMenu(menu, menuItemReset);
 
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemReset, &sd->resetImage, rotChMenu++, NO_SCROLL);
 
@@ -2479,21 +2475,19 @@ static void synthSetupMenu(bool forceReset)
 
     int rotPlayerMenu = 0;
 
+    // Start File list
+    sd->menu = startSubMenu(sd->menu, menuItemSelectFile);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemSelectFile, &sd->fileImage, rotPlayerMenu++, NO_SCROLL);
+
+    addSingleItemToMenu(sd->menu, menuItemCustomSong);
+
+    for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
     {
-        // Start File list
-        sd->menu = startSubMenu(sd->menu, menuItemSelectFile);
-        wheelMenuSetItemInfo(sd->wheelMenu, menuItemSelectFile, &sd->fileImage, rotPlayerMenu++, NO_SCROLL);
-
-        addSingleItemToMenu(sd->menu, menuItemCustomSong);
-
-        for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
-        {
-            addSingleItemToMenu(sd->menu, (char*)node->val);
-        }
-
-        // End File list
-        sd->menu = endSubMenu(sd->menu);
+        addSingleItemToMenu(sd->menu, (char*)node->val);
     }
+
+    // End File list
+    sd->menu = endSubMenu(sd->menu);
 
     // Player Menu, continued
     addSettingsOptionsItemToMenu(sd->menu, menuItemLoop, menuItemOffOnOptions, menuItemLoopValues,
