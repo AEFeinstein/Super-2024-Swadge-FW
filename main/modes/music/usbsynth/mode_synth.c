@@ -391,7 +391,7 @@ static uint32_t lfsrCur(const lfsrState_t* state);
 
 static const char readyStr[] = "Ready!";
 
-static const char* gmProgramNames[] = {
+static const char* const gmProgramNames[] = {
     // Piano:
     "Acoustic Grand Piano",
     "Bright Acoustic Piano",
@@ -553,7 +553,7 @@ static const char* gmProgramNames[] = {
     "Gunshot",
 };
 
-static const char* gmProgramCategoryNames[] = {
+static const char* const gmProgramCategoryNames[] = {
     "Piano",
     "Chromatic Percussion",
     "Organ",
@@ -572,7 +572,7 @@ static const char* gmProgramCategoryNames[] = {
     "Sound Effects",
 };
 
-static const char* gmDrumNames[] = {
+static const char* const gmDrumNames[] = {
     "Acoustic/Low Bass",
     "Electric/High Bass",
     "Side Stick",
@@ -622,12 +622,7 @@ static const char* gmDrumNames[] = {
     "Open Triangle",
 };
 
-static const char* bankNames[] = {
-    "General MIDI",
-    "MAGFest",
-};
-
-static const char* channelLabels[] = {
+static const char* const channelLabels[] = {
     "Channel 1",
     "Channel 2",
     "Channel 3",
@@ -644,25 +639,6 @@ static const char* channelLabels[] = {
     "Channel 14",
     "Channel 15",
     "Channel 16",
-};
-
-static const char* shortChannelLabels[] = {
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
 };
 
 static const midiControllerDesc_t controllerDefs[] = {
@@ -1071,6 +1047,7 @@ static const char* menuItemButtonMode = "Button Controls: ";
 static const char* menuItemTouchMode  = "Touch Controls: ";
 
 static const char* menuItemChannels   = "Channel Setup";
+static const char* menuItemSelectChan = "Channel: ";
 static const char* menuItemIgnore     = "Enabled: ";
 static const char* menuItemBank       = "Bank Select: ";
 static const char* menuItemInstrument = "Instrument: ";
@@ -1095,49 +1072,68 @@ static const char* const nvsKeyChanPerc   = "synth_chpercus";
 static const char* const nvsKeySynthConf  = "synth_confblob";
 static const char* const nvsKeySynthControlConf = "synth_ctrlconf";
 
-static const char* menuItemModeOptions[] = {
+static const char* const menuItemModeOptions[] = {
     "Streaming",
     "File",
 };
 
-static const char* menuItemViewOptions[] = {
+static const char* const menuItemViewOptions[] = {
     "Pretty", "Visualizer", "Lyrics",         "Lyrics+Visualizer", "Waveform",
     "Table",  "Packets",    "Waveform+Table", "Waveform+Packets",  "Timing",
 };
 
-static const char* menuItemButtonOptions[] = {
+static const char* const menuItemButtonOptions[] = {
     "Play Note",
     "Playback",
 };
 
-static const char* menuItemTouchOptions[] = {
+static const char* const menuItemTouchOptions[] = {
     "Wheel Menu",
     "Pitch Bend",
 };
 
-static const char* menuItemOffOnOptions[] = {
+static const char* const menuItemOffOnOptions[] = {
     "Off",
     "On",
 };
 
-static const char* menuItemYesNoOptions[] = {
+static const char* const menuItemYesNoOptions[] = {
     "Yes",
     "No",
 };
 
-static const char* menuItemNoYesOptions[] = {
+static const char* const menuItemNoYesOptions[] = {
     "No",
     "Yes",
 };
 
-static const char* menuItemBankOptions[] = {
+static const char* const menuItemBankOptions[] = {
     "General MIDI",
     "MAGFest",
 };
 
-static const char* menuItemHeadroomOptions[] = {
+static const char* const menuItemHeadroomOptions[] = {
     "0%",  "5%",  "10%", "15%", "20%", "25%", "30% (Default)", "35%", "40%", "45%",  "50%",
     "55%", "60%", "65%", "70%", "75%", "80%", "85%",           "90%", "95%", "100%",
+};
+
+static const char* const menuItemChannelsOptions[] = {
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
 };
 
 static const int32_t menuItemModeValues[] = {
@@ -1217,6 +1213,25 @@ static const int32_t menuItemHeadroomValues[] = {
     VOL_TO_HEADROOM(180),
     VOL_TO_HEADROOM(190),
     VOL_TO_HEADROOM(200),
+};
+
+static const int32_t menuItemChannelsValues[] = {
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
 };
 
 static settingParam_t menuItemModeBounds = {
@@ -1307,6 +1322,13 @@ static settingParam_t menuItemControl7bitBounds = {
     .def = 0,
     .min = 0,
     .max = 127,
+    .key = NULL,
+};
+
+static settingParam_t menuItemChannelsBounds = {
+    .def = 0,
+    .min = 0,
+    .max = 15,
     .key = NULL,
 };
 
@@ -1581,13 +1603,6 @@ static void synthEnterMode(void)
 
     hashInit(&sd->menuMap, 512);
 
-    synthSetupMenu(true);
-    setupShuffle(sd->customFiles.length);
-    synthSetupPlayer();
-
-    sd->startupSeqComplete = true;
-    sd->startupNote        = 60;
-
     // GM Instrument Category Images
     loadWsg("piano.wsg", &sd->instrumentImages[0], true);
     loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], true);
@@ -1637,6 +1652,13 @@ static void synthEnterMode(void)
     loadWsg("reset.wsg", &sd->resetImage, true);
     loadWsg("ignore.wsg", &sd->ignoreImage, true);
     loadWsg("enable.wsg", &sd->enableImage, true);
+
+    synthSetupMenu(true);
+    setupShuffle(sd->customFiles.length);
+    synthSetupPlayer();
+
+    sd->startupSeqComplete = true;
+    sd->startupNote        = 60;
 
     // MAXIMUM SPEEEEED
     setFrameRateUs(0);
@@ -2162,6 +2184,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 {
     // TODO kinda a hack but I'm sure I'll remember to update it
     int rotTopMenu = 3;
+    int rotChMenu = 0;
 
     menu = startSubMenu(menu, menuItemChannels);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemChannels, &sd->channelSetupImage, rotTopMenu++, NO_SCROLL);
@@ -2212,7 +2235,16 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     bool controllersSetUp = false;
     int totalControls = 0;
 
+    addSettingsOptionsItemToMenu(menu, menuItemSelectChan, menuItemChannelsOptions, menuItemChannelsValues, ARRAY_SIZE(menuItemChannelsValues), &menuItemChannelsBounds, sd->menuSelectedChannel);
     for (int chIdx = 0; chIdx < 16; chIdx++)
+    {
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemChannelsOptions[chIdx], NULL, (16-chIdx) % 16, NO_SCROLL);
+        wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemChannelsOptions[chIdx], menuItemChannelsOptions[chIdx]);
+    }
+
+    bool chInstrumentMenuAdded = false;
+
+    int chIdx = sd->menuSelectedChannel;
     {
         midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
         itemInfo->type = SMT_CHANNEL;
@@ -2221,13 +2253,37 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         itemInfo->dynamicLabel = false;
         hashPut(&sd->menuMap, channelLabels[chIdx], itemInfo);
 
-        menu = startSubMenu(menu, channelLabels[chIdx]);
-        wheelMenuSetItemInfo(sd->wheelMenu, channelLabels[chIdx], NULL, (16-chIdx) % 16, NO_SCROLL);
-        wheelMenuSetItemTextIcon(sd->wheelMenu, channelLabels[chIdx], shortChannelLabels[chIdx]);
-
+        // Ignore Item & Option Settings
         addSettingsOptionsItemToMenu(menu, menuItemIgnore, menuItemYesNoOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemIgnoreBounds, (config->ignoreChannelMask & (1 << chIdx)) ? 1 : 0);
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemIgnore, (sd->synthConfig.ignoreChannelMask & (1 << sd->menuSelectedChannel)) ? &sd->ignoreImage : &sd->enableImage, rotChMenu++, NO_SCROLL);
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[0], &sd->enableImage, 0, NO_SCROLL);
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[1], &sd->ignoreImage, 1, NO_SCROLL);
+
+        // And set up all other on/off options
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[1], &sd->enableImage, 0, NO_SCROLL);
+
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[1], &sd->enableImage, 0, NO_SCROLL);
+
+        // Percussion Item & Option Settings
         addSettingsOptionsItemToMenu(menu, menuItemPercussion, menuItemNoYesOptions, menuItemModeValues, ARRAY_SIZE(menuItemModeValues), &menuItemPercussionBounds, (config->percChannelMask & (1 << chIdx)) ? 1 : 0);
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemPercussion, &sd->percussionImage, rotChMenu++, NO_SCROLL);
+        wheelMenuSetItemColor(sd->wheelMenu, menuItemPercussion, c000, c333);
+        wheelMenuSetItemSize(sd->wheelMenu, menuItemPercussion, -1, -1, WM_SHAPE_DEFAULT);
+
+        // Bank Select Item & Option Settings
         addSettingsOptionsItemToMenu(menu, menuItemBank, menuItemBankOptions, menuItemBankValues, ARRAY_SIZE(menuItemBankValues), &menuItemBankBounds, config->banks[chIdx]);
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? NULL : &sd->magfestBankImage, rotChMenu++, NO_SCROLL);
+        wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? "GM" : NULL);
+        wheelMenuSetItemSize(sd->wheelMenu, menuItemBank, -1, -1, WM_SHAPE_DEFAULT);
+        // "GM" bank Option
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[0], NULL, 0, NO_SCROLL);
+        wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBankOptions[0], "GM");
+        wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[0], -1, -1, WM_SHAPE_DEFAULT);
+        // "MAGFest" bank option
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[1], &sd->magfestBankImage, 1, NO_SCROLL);
+        wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[1], -1, -1, WM_SHAPE_DEFAULT);
 
         if (0 == (config->percChannelMask & (1 << chIdx)))
         {
@@ -2279,11 +2335,13 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                 menu = endSubMenu(menu);
             }
 
-            wheelMenuSetItemInfo(sd->wheelMenu, nameBuffer, chanInstrumentIcon, 4, NO_SCROLL);
+            wheelMenuSetItemInfo(sd->wheelMenu, nameBuffer, chanInstrumentIcon, rotChMenu++, NO_SCROLL);
             wheelMenuSetItemSize(sd->wheelMenu, nameBuffer, -1, -1, WM_SHAPE_DEFAULT);
         }
 
         menu = startSubMenu(menu, menuItemControls);
+
+        wheelMenuSetItemInfo(sd->wheelMenu, menuItemControls, &sd->uiImage, rotChMenu++, NO_SCROLL);
 
         for (int ctrlIdx = 0; ctrlIdx < ARRAY_SIZE(controllerDefs); ctrlIdx++)
         {
@@ -2354,41 +2412,16 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
         controllersSetUp = true;
 
+        // End controls submenu
         menu = endSubMenu(menu);
 
         addSingleItemToMenu(menu, menuItemReset);
-
-        // End channel submenu
-        menu = endSubMenu(menu);
     }
 
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemIgnore, (sd->synthConfig.ignoreChannelMask & (1 << sd->menuSelectedChannel)) ? &sd->ignoreImage : &sd->enableImage, 0, NO_SCROLL);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[0], &sd->enableImage, 0, NO_SCROLL);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemYesNoOptions[1], &sd->ignoreImage, 1, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemReset, &sd->resetImage, rotChMenu++, NO_SCROLL);
 
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemOffOnOptions[1], &sd->enableImage, 0, NO_SCROLL);
-
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemPercussion, &sd->percussionImage, 1, NO_SCROLL);
-    wheelMenuSetItemColor(sd->wheelMenu, menuItemPercussion, c000, c333);
-    wheelMenuSetItemSize(sd->wheelMenu, menuItemPercussion, -1, -1, WM_SHAPE_DEFAULT);
-
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[0], &sd->ignoreImage, 1, NO_SCROLL);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemNoYesOptions[1], &sd->enableImage, 0, NO_SCROLL);
-
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? NULL : &sd->magfestBankImage, 2, NO_SCROLL);
-    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBank, (sd->synthConfig.banks[sd->menuSelectedChannel & 0xF] == 0) ? "GM" : NULL);
-    wheelMenuSetItemSize(sd->wheelMenu, menuItemBank, -1, -1, WM_SHAPE_DEFAULT);
-
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[0], NULL, 0, NO_SCROLL);
-    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemBankOptions[0], "GM");
-    wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[0], -1, -1, WM_SHAPE_DEFAULT);
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[1], &sd->magfestBankImage, 1, NO_SCROLL);
-    wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[1], -1, -1, WM_SHAPE_DEFAULT);
-
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemControls, &sd->uiImage, 3, NO_SCROLL);
-
-    wheelMenuSetItemInfo(sd->wheelMenu, menuItemReset, &sd->resetImage, 5, NO_SCROLL);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemSelectChan, NULL, rotChMenu++, NO_SCROLL | ZOOM_SUBMENU);
+    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemSelectChan, menuItemChannelsOptions[sd->menuSelectedChannel]);
 
     // End "Channels: " submenu
     menu = endSubMenu(menu);
@@ -2446,7 +2479,6 @@ static void synthSetupMenu(bool forceReset)
 
     int rotPlayerMenu = 0;
 
-    if (sd->fileMode)
     {
         // Start File list
         sd->menu = startSubMenu(sd->menu, menuItemSelectFile);
@@ -4293,6 +4325,11 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
         sd->headroom            = value;
         sd->midiPlayer.headroom = sd->headroom;
         writeNvs32(nvsKeyHeadroom, value);
+    }
+    else if (label == menuItemSelectChan)
+    {
+        sd->menuSelectedChannel = value;
+        sd->updateMenu = true;
     }
     else
     {
