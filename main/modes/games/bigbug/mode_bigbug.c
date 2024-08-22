@@ -325,8 +325,8 @@ static void bb_ControlGarbotnik(int64_t elapsedUs)
 static void bb_DrawScene(void)
 {
     vec_t garbotnikDrawPos = {
-        .x = (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 19,
-        .y = (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 21
+        .x = (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 18,
+        .y = (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 17
     };
     bb_drawTileMap(&bigbug->tilemap, &bigbug->camera, &garbotnikDrawPos, &bigbug->garbotnikRotation);
 
@@ -591,10 +591,10 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 /////////////////////
 
                 //crumble test
-                // uint32_t* val = calloc(2,sizeof(uint32_t));
-                // val[0] = 5;
-                // val[1] = 3;
-                // push(bigbug->gameData.unsupported, (void*)val);
+                uint32_t* val = calloc(2,sizeof(uint32_t));
+                val[0] = 5;
+                val[1] = 3;
+                push(bigbug->gameData.unsupported, (void*)val);
 
                 //Update the dirt by decrementing it.
                 bigbug->tilemap.fgTiles[best_i][best_j] -= 1;
