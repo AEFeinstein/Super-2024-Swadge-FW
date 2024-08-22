@@ -253,7 +253,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 wheelItemInfo_t* optInfo = findInfo(renderer, curItem->options[i]);
                 uint8_t optPos           = (optInfo && optInfo->position != UINT8_MAX) ? optInfo->position : i;
 
-                if (curItem->currentOpt == optPos && !renderer->zoomBackSelected)
+                if (curItem->currentOpt == i && !renderer->zoomBackSelected)
                 {
                     drawInfos[curDraw].drawOrder = -INT8_MAX;
                     drawInfos[curDraw].selected  = true;
@@ -347,18 +347,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
                 textX += (getCos1024(tickAngle) - 1024) * textLen / 2048;
                 textY -= (getSin1024(tickAngle) + 1024) * renderer->font->height / 2048;
-
-                /*if ((tickAngle < 2 || tickAngle > 358) || (tickAngle > 88 && tickAngle < 92))
-                {
-                    // Vertical center
-                    textY -= renderer->font->height / 2;
-                }
-                else if (tickAngle < 180)
-                {
-                    // Justify upwards
-                    textY -= renderer->font->height;
-                }*/
-                // Otherwise this is fine
 
                 ESP_LOGD("Wheel", "tick loc: (%" PRIu16 ", %" PRIu16 ") ->  (%" PRIu16 ", %" PRIu16 ")", x0, y0, x1,
                          y1);
