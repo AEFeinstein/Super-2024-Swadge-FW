@@ -40,7 +40,9 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
  * @param xOff  The x offset to draw the char at
  * @param yOff  The y offset to draw the char at
  * @param xMin  The left edge of the text bounds
- * @param xMax  The
+ * @param yMin  The top edge of the text bounds
+ * @param xMax  The right edge of the text bounds
+ * @param yMax  The bottom edge of the text bounds
  */
 void drawCharBounds(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin,
                     int16_t yMin, int16_t xMax, int16_t yMax)
@@ -168,6 +170,10 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
  * @param text  The text to draw to the display
  * @param xOff  The x offset to draw the text at
  * @param yOff  The y offset to draw the text at
+ * @param xMin  The left edge of the text bounds
+ * @param yMin  The top edge of the text bounds
+ * @param xMax  The right edge of the text bounds
+ * @param yMax  The bottom edge of the text bounds
  * @return The x offset at the end of the drawn string
  */
 int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
