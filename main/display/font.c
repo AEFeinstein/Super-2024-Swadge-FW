@@ -599,7 +599,7 @@ bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* tex
  * @param segmentCount The number of segments to divide the text into
  * @return int16_t The x-offset at the end of the text
  */
-int16_t drawTextMulticolored(const font_t* font, const char* text, int16_t xOff, int16_t yOff, paletteColor_t* colors,
+int16_t drawTextMulticolored(const font_t* font, const char* text, int16_t xOff, int16_t yOff, const paletteColor_t* colors,
                              uint32_t colorCount, uint32_t segmentCount)
 {
     int16_t w      = textWidth(font, text);

@@ -122,18 +122,6 @@ static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount)
     }
 }
 
-
-    #define CUR_STATE_STR ( \
-        (states->attack & voiceBit) ? "ATK" : ( \
-            (states->decay & voiceBit) ? "DEC" : ( \
-                (states->sustain & voiceBit) ? "SUS" : ( \
-                    (states->release & voiceBit) ? "REL" : ( \
-                        (states->on & voiceBit) ? "ON " : "OFF" \
-                    ) \
-                ) \
-            ) \
-    ))
-
 /**
  * @brief Release a note and transition it to the release state if it has one
  *
@@ -1757,7 +1745,7 @@ uint16_t midiGetControlValue14bit(midiPlayer_t* player, uint8_t channel, midiCon
 
     uint16_t result = midiGetControlValue(player, channel, (midiControl_t)msbControl) & 0x7f;
     result <<= 7;
-    result |= midiGetControlValue(player, channel, (midiControl_t)msbControl) & 0x7F;
+    result |= midiGetControlValue(player, channel, (midiControl_t)lsbControl) & 0x7F;
     return result;
 }
 

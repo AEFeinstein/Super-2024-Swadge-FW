@@ -535,7 +535,7 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
     {
         // Colossus Roar
         static bool colossusLoaded = false;
-        static uint8_t* colossusSample = NULL;
+        static const uint8_t* colossusSample = NULL;
         static size_t colossusLen = 0;
         if (!colossusLoaded)
         {
@@ -554,7 +554,7 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
     {
         // MAG
         static bool magLoaded = false;
-        static uint8_t* magSample = NULL;
+        static const uint8_t* magSample = NULL;
         static size_t magLen = 0;
         if (!magLoaded)
         {
@@ -575,7 +575,7 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
     {
         // FEST
         static bool festLoaded = false;
-        static uint8_t* festSample = NULL;
+        static const uint8_t* festSample = NULL;
         static size_t festLen = 0;
         if (!festLoaded)
         {

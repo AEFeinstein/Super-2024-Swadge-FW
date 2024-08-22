@@ -188,7 +188,7 @@ void menuSavePosition(const char** out, int len, const menu_t* menu)
  */
 menu_t* menuRestorePosition(const char** in, int len, menu_t* menu)
 {
-    const menu_t* curMenu = menu;
+    menu_t* curMenu = menu;
 
     // Go to the start of the menu first
     while (curMenu->parentMenu)

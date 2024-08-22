@@ -1162,7 +1162,7 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
                     const char* strCur = event->meta.text;
                     while (written < max && strCur < (event->meta.text + event->meta.length))
                     {
-                        out[written++] = *(uint8_t*)(strCur++);
+                        out[written++] = *(const uint8_t*)(strCur++);
                     }
                     break;
                 }

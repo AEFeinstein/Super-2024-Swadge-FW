@@ -440,7 +440,7 @@ typedef struct
             union {
                 struct {
                     /// @brief A pointer to this timbre's sample data
-                    uint8_t* data;
+                    const uint8_t* data;
 
                     /// @brief The length of the sample in bytes
                     uint32_t count;

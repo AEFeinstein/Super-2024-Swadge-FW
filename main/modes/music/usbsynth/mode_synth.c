@@ -357,7 +357,6 @@ static void synthHandleInput(int64_t elapsedUs);
 static bool synthIsControlSupported(const midiControllerDesc_t* control);
 static void writeShortName(char* out, size_t n, const char* in);
 
-static void drawCircleSweep(int x, int y, int r, int startAngle, int sweepDeg, paletteColor_t col);
 static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y, int16_t w, int16_t h);
 static void drawSynthMode(int64_t elapsedUs);
 static void drawBeatsMetronome(bool beats, int16_t beatsY, bool metronome, int16_t metX, int16_t metY, int16_t metR);
@@ -376,7 +375,6 @@ static void setupShuffle(int numSongs);
 static void prevSong(void);
 static void nextSong(void);
 
-static uint32_t setupLfsr(lfsrState_t* state, uint32_t range);
 static void loadLfsr(lfsrState_t* state);
 static void saveLfsr(const lfsrState_t* state);
 static uint32_t flipToMsb(uint32_t val);
@@ -1568,8 +1566,6 @@ static void synthEnterMode(void)
             if (copyStr)
             {
                 // Insert the file into the list in a sorted manner
-                bool added = false;
-
                 node_t* last = NULL;
                 node_t* node = sd->customFiles.first;
 
@@ -1711,14 +1707,13 @@ static void synthExitMode(void)
     hashIterator_t iter = {0};
     while (hashIterate(&sd->menuMap, &iter))
     {
-        char* controllerKey = (char*)iter.key;
         midiMenuItemInfo_t* info = (midiMenuItemInfo_t*)iter.value;
 
         hashIterRemove(&sd->menuMap, &iter);
 
         if (info->dynamicLabel)
         {
-            free(info->label);
+            free((char*)info->label);
             info->label = NULL;
             info->dynamicLabel = false;
         }
@@ -1754,33 +1749,6 @@ static void synthExitMode(void)
     freeFont(&sd->font);
     free(sd);
     sd = NULL;
-}
-
-static void drawCircleSweep(int x, int y, int r, int startAngle, int sweepDeg, paletteColor_t col)
-{
-    // This is gonna be much slower than doing it the way e.g. drawCircleQuadrants does
-    // But... oh well
-    int lastX  = -1;
-    int lastY  = -1;
-    bool first = true;
-
-    for (int theta = startAngle + 1; theta != startAngle + sweepDeg; theta++)
-    {
-        int cx = x + getCos1024(theta % 360) * r / 1024;
-        int cy = y - getSin1024(theta % 360) * r / 1024;
-
-        if (!first)
-        {
-            drawLineFast(lastX, lastY, cx, cy, col);
-        }
-        else
-        {
-            first = false;
-        }
-
-        lastX = cx;
-        lastY = cy;
-    }
 }
 
 static void drawIcon(musicIcon_t icon, paletteColor_t col, int16_t x, int16_t y, int16_t w, int16_t h)
@@ -2345,7 +2313,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         const midiControllerDesc_t* controller = &controllerDefs[ctrlIdx];
         if (synthIsControlSupported(controller))
         {
-            char* labelStr = controller->desc;
+            const char* labelStr = controller->desc;
             bool dynamicLabel = false;
 
             switch (controller->type)
@@ -2389,7 +2357,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
             if (!controllersSetUp || dynamicLabel)
             {
-                midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+                itemInfo = &sd->itemInfos[sd->itemInfoCount++];
                 itemInfo->type = SMT_CONTROLLER;
                 itemInfo->controller = controller;
                 itemInfo->label = labelStr;
@@ -2442,14 +2410,13 @@ static void synthSetupMenu(bool forceReset)
         hashIterator_t iter = {0};
         while (hashIterate(&sd->menuMap, &iter))
         {
-            char* controllerKey = (char*)iter.key;
             midiMenuItemInfo_t* info = (midiMenuItemInfo_t*)iter.value;
 
             hashIterRemove(&sd->menuMap, &iter);
 
             if (info->dynamicLabel)
             {
-                free(info->label);
+                free((char*)info->label);
                 info->label = NULL;
                 info->dynamicLabel = false;
             }
@@ -2930,9 +2897,6 @@ static void drawSynthMode(int64_t elapsedUs)
             // So using the last value, we can determine how many notes we "care about"
             // This is not necessarily quarter notes but song notes
             uint32_t dispNotesPerBar = ts->numerator * ts->num32ndNotesPerBeat / 8;
-            // The actual number of MIDI ticks in a single bar
-            // TODO this is not correct?
-            uint32_t ticksPerBar = ts->numerator;
 
             snprintf(buffer, sizeof(buffer), "Signature: %" PRIu8 "/%d", ts->numerator, 1 << ts->denominator);
             drawText(&sd->font, c555, buffer, 18, 60);
@@ -2946,8 +2910,6 @@ static void drawSynthMode(int64_t elapsedUs)
             snprintf(buffer, sizeof(buffer), "32nd Notes/Beat: %" PRIu8, ts->num32ndNotesPerBeat);
             drawText(&sd->font, c555, buffer, 18, 105);
 
-            int curMeasure = (tick / ts->midiClocksPerMetronomeTick); // * div;
-            int curNote    = (tick / ts->midiClocksPerMetronomeTick) % (ts->num32ndNotesPerBeat / 8);
             int curBeat    = (tick / sd->midiFile.timeDivision);
 
             snprintf(buffer, sizeof(buffer), "File Division: %" PRIu16 " ticks", sd->midiFile.timeDivision);
@@ -3054,23 +3016,15 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     char textMessages[1024];
     textMessages[0] = '\0';
 
-    paletteColor_t midiTextColor = c550;
-    bool colorSet                = false;
-
     uint32_t now          = ticks;
     uint32_t curBeat      = (now / sd->midiFile.timeDivision);
     uint32_t notesPerBar  = karInfo->timeSignature.numerator * karInfo->timeSignature.num32ndNotesPerBeat / 8;
     uint32_t ticksPerBeat = sd->midiFile.timeDivision * (karInfo->timeSignature.num32ndNotesPerBeat) / 8;
     uint32_t ticksPerBar  = notesPerBar * ticksPerBeat;
-    uint32_t noteProgress = now % (ticksPerBeat);
 
     uint32_t noteLength    = ticksPerBeat;
     uint32_t barStartTime  = (now / ticksPerBar) * ticksPerBar;
     uint32_t noteStartTime = curBeat * sd->midiFile.timeDivision;
-
-    // printf("%d ticks per beat\n", ticksPerBeat);
-
-    int curStage = 0;
 
     // Timer for very long pauses
     bool drawBar       = true;
@@ -3081,9 +3035,6 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
     int32_t oldCutoff = barStartTime - ticksPerBar + 1;
     // And also any lyrics that are part of the next 3 bars (which includes the current one)
     int32_t newCutoff = barStartTime + ticksPerBar * 3 - 1;
-
-    int32_t curCutoff      = noteStartTime - noteLength / 4;
-    int32_t curAfterCutoff = noteStartTime + noteLength / 2;
 
     // TODO we should just draw a bar of lyrics, then
     const int16_t startX = 10;
@@ -3146,9 +3097,6 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
         }
         else if (curInfo->timestamp < now)
         {
-            // Lyric is in the past
-            bool drawNoteProgress = false;
-
             // Lyrics are on screen currently, so no need to draw big progress bar
             drawBar = false;
 
@@ -3880,7 +3828,6 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
 {
     const midiChannel_t* chan   = &player->channels[chIdx];
     const midiVoice_t* voices   = chan->percussion ? player->percVoices : player->poolVoices;
-    const voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
     uint8_t voiceCount          = chan->percussion ? PERCUSSION_VOICES : __builtin_popcount(chan->allocedVoices);
 
     // ok here's the plan
@@ -4312,9 +4259,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             sd->updateMenu = true;
         }
     }
-    else if (label == menuItemHeadroom
-             || (menuItemHeadroomOptions <= label
-                 && label <= (menuItemHeadroomOptions + ARRAY_SIZE(menuItemHeadroomOptions))))
+    else if (label == menuItemHeadroom)
     {
         sd->headroom            = value;
         sd->midiPlayer.headroom = sd->headroom;
@@ -4613,15 +4558,6 @@ static void loadLfsr(lfsrState_t* state)
         nvsRead = (int32_t)(state->range - 1);
     }
     state->state = (uint32_t)nvsRead;
-}
-
-static uint32_t setupLfsr(lfsrState_t* state, uint32_t range)
-{
-    state->state = range - 1;
-    state->range = range;
-    state->reversed = false;
-
-    return lfsrNext(state);
 }
 
 static uint32_t flipToMsb(uint32_t val)

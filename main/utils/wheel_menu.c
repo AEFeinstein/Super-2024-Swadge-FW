@@ -244,9 +244,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         }
         else if ((menuItemHasOptions(curItem) || (zoomSetting == ZOOM_SUBMENU)) && (zoomSetting != ZOOM_GAUGE))
         {
-            wheelItemInfo_t* curOptInfo = findInfo(renderer, curItem->options[curItem->currentOpt]);
-            uint8_t curOptPos = (curOptInfo && curOptInfo->position != UINT8_MAX) ? curOptInfo->position : curItem->currentOpt;
-
             ringItems = curItem->numOptions;
             for (int i = 0; i < curItem->numOptions; i++)
             {
@@ -319,8 +316,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             int nextOptIndex = 0;
 
             uint16_t lastTickAngle = 360;
-            uint16_t lastTextX = UINT16_MAX;
-            uint16_t lastTextY = UINT16_MAX;
             rectangle_t lastTextBox = {0};
 
             // Draw tick marks
