@@ -168,7 +168,7 @@ void wheelMenuSetItemTextIcon(wheelMenuRenderer_t* renderer, const char* label, 
 }
 
 /**
- * @brief Set specific dimensions for a
+ * @brief Set specific dimensions for a menu item
  *
  * @param renderer The whee lmenu renderer
  * @param label The label of the item to configure dimensions for
@@ -823,12 +823,14 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
 }
 
 /**
- * @brief TODO doc
+ * @brief Handle a button press, used for when a setting or option menu item can be scrolled.
  *
- * @param menu
- * @param renderer
- * @param evt
- * @return menu_t*
+ * The direction of the scroll depends on the wheelScrollDir_t value passed to wheelMenuSetItemInfo()
+ *
+ * @param menu The menu to accept the button
+ * @param renderer The wheel menu renderer
+ * @param evt The button event to be handled
+ * @return menu_t* The new top-level menu after handling the button press
  */
 menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, const buttonEvt_t* evt)
 {
