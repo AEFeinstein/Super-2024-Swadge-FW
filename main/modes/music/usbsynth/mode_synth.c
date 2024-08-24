@@ -330,7 +330,7 @@ typedef struct
     synthConfig_t synthConfig;
     list_t controllerSettings;
 
-    int64_t marqueeTimer;
+    int32_t marqueeTimer;
 } synthData_t;
 
 //==============================================================================

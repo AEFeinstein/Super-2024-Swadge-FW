@@ -521,7 +521,7 @@ void makeOutlineFont(font_t* srcFont, font_t* dstFont, bool spiRam)
  * @return The x offset at the end of the drawn string
  */
 int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
-                        int16_t xMax, int64_t* timer)
+                        int16_t xMax, int32_t* timer)
 {
 // Marquee speed in microseconds per pixel
 #define MARQUEE_SPEED 40000

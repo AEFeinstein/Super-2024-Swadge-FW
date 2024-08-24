@@ -80,7 +80,7 @@ typedef struct
     bool zoomed;                 ///< Whether or not a settings item is selected
     bool zoomBackSelected;       ///< Whether or not the center is selected while zoomed
     uint8_t zoomValue;           ///< The current selected option/value if zoomed
-    int64_t timer;               ///< The timer for animations
+    int32_t timer;               ///< The timer for animations
 } wheelMenuRenderer_t;
 
 wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, const rectangle_t* textBox);

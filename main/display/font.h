@@ -84,7 +84,7 @@ uint16_t textWordWrapHeight(const font_t* font, const char* text, int16_t width,
 
 void makeOutlineFont(font_t* srcFont, font_t* dstFont, bool spiRam);
 int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
-                        int16_t xMax, int64_t* timer);
+                        int16_t xMax, int32_t* timer);
 bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
                        int16_t maxW, bool center);
 

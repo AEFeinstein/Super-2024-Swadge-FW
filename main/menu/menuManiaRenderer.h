@@ -82,7 +82,7 @@ typedef struct
     int16_t selectedBounceIdx;    ///< The index to the bounce offset for the selected item
     int32_t selectedBounceTimer;  ///< The timer to bounce the offset for the selected item
     int32_t selectedValue;        ///< The option index or setting value to tell when it changes
-    int64_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
+    int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
 } menuManiaRenderer_t;
 
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
