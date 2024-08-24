@@ -244,7 +244,6 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
 
             if (!json)
             {
-                fclose(nvsFile);
                 return false;
             }
 

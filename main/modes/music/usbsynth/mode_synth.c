@@ -186,7 +186,6 @@ typedef struct
     };
 
     const char* label;
-    bool dynamicLabel;
     char shortLabel[4];
 
 } midiMenuItemInfo_t;
@@ -1552,8 +1551,6 @@ static void synthEnterMode(void)
     sd->wheelTextArea.width  = TFT_WIDTH - 30;
     sd->wheelTextArea.height = sd->betterFont.height + 2;
 
-    //synthSetupMenu();
-
     // Use smol font for menu items, there might be a lot
     sd->renderer          = initMenuManiaRenderer(NULL, NULL, &sd->font);
     sd->wheelMenu         = initWheelMenu(&sd->betterFont, 90, &sd->wheelTextArea);
@@ -1669,16 +1666,7 @@ static void synthExitMode(void)
     hashIterator_t iter = {0};
     while (hashIterate(&sd->menuMap, &iter))
     {
-        midiMenuItemInfo_t* info = (midiMenuItemInfo_t*)iter.value;
-
         hashIterRemove(&sd->menuMap, &iter);
-
-        if (info->dynamicLabel)
-        {
-            free((char*)info->label);
-            info->label        = NULL;
-            info->dynamicLabel = false;
-        }
     }
 
     hashDeinit(&sd->menuMap);
@@ -2122,11 +2110,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     {
         midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
 
-        itemInfo->type         = SMT_PROGRAM;
-        itemInfo->bank         = 0;
-        itemInfo->program      = gmProg;
-        itemInfo->label        = gmProgramNames[gmProg];
-        itemInfo->dynamicLabel = false;
+        itemInfo->type    = SMT_PROGRAM;
+        itemInfo->bank    = 0;
+        itemInfo->program = gmProg;
+        itemInfo->label   = gmProgramNames[gmProg];
         writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), itemInfo->label);
         wheelMenuSetItemInfo(sd->wheelMenu, itemInfo->label, NULL, gmProg % 8, NO_SCROLL);
         wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
@@ -2147,11 +2134,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     {
         midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
 
-        itemInfo->type         = SMT_PROGRAM;
-        itemInfo->bank         = 1;
-        itemInfo->program      = magProg;
-        itemInfo->label        = magfestTimbres[magProg]->name;
-        itemInfo->dynamicLabel = false;
+        itemInfo->type    = SMT_PROGRAM;
+        itemInfo->bank    = 1;
+        itemInfo->program = magProg;
+        itemInfo->label   = magfestTimbres[magProg]->name;
         writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), itemInfo->label);
         wheelMenuSetItemInfo(sd->wheelMenu, itemInfo->label, NULL, magProg, NO_SCROLL);
         wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
@@ -2161,8 +2147,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     }
 
     // Controllers are pretty complicated so just do those the first time with the rest of their logic
-    bool controllersSetUp = false;
-    int totalControls     = 0;
+    int totalControls = 0;
 
     addSettingsOptionsItemToMenu(menu, menuItemSelectChan, menuItemChannelsOptions, menuItemChannelsValues,
                                  ARRAY_SIZE(menuItemChannelsValues), &menuItemChannelsBounds, sd->menuSelectedChannel);
@@ -2177,7 +2162,6 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     itemInfo->type               = SMT_CHANNEL;
     itemInfo->channel            = chIdx;
     itemInfo->label              = channelLabels[chIdx];
-    itemInfo->dynamicLabel       = false;
     hashPut(&sd->menuMap, channelLabels[chIdx], itemInfo);
 
     // Ignore Item & Option Settings
@@ -2286,16 +2270,13 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         const midiControllerDesc_t* controller = &controllerDefs[ctrlIdx];
         if (synthIsControlSupported(controller))
         {
-            const char* labelStr = controller->desc;
-            bool dynamicLabel    = false;
-
             switch (controller->type)
             {
                 case CTRL_SWITCH:
                 {
                     // Options menu item, on/off
                     addSettingsOptionsItemToMenu(
-                        menu, labelStr, menuItemOffOnOptions, menuItemControlSwitchValues,
+                        menu, controller->desc, menuItemOffOnOptions, menuItemControlSwitchValues,
                         ARRAY_SIZE(menuItemControlSwitchValues), &menuItemControl7bitBounds,
                         synthGetControl(
                             chIdx, controller->control,
@@ -2307,7 +2288,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                 {
                     // Settings value item
                     addSettingsItemToMenu(
-                        menu, labelStr, &menuItemControl14bitBounds,
+                        menu, controller->desc, &menuItemControl14bitBounds,
                         synthGetControl14bit(
                             chIdx, controller->control,
                             midiGetControlValue14bit(&sd->midiPlayer, chIdx, (midiControl_t)controller->control)));
@@ -2324,7 +2305,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                 case CTRL_UNDEFINED:
                 {
                     // Settings value item, 0-127
-                    addSettingsItemToMenu(menu, labelStr, &menuItemControl7bitBounds,
+                    addSettingsItemToMenu(menu, controller->desc, &menuItemControl7bitBounds,
                                           synthGetControl(chIdx, controller->control,
                                                           midiGetControlValue(&sd->midiPlayer, chIdx,
                                                                               (midiControl_t)controller->control)));
@@ -2334,32 +2315,26 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
                 case CTRL_NO_DATA:
                 {
                     // Single menu item, A just triggers it
-                    addSingleItemToMenu(menu, labelStr);
+                    addSingleItemToMenu(menu, controller->desc);
                     break;
                 }
             }
 
-            if (!controllersSetUp || dynamicLabel)
-            {
-                itemInfo               = &sd->itemInfos[sd->itemInfoCount++];
-                itemInfo->type         = SMT_CONTROLLER;
-                itemInfo->controller   = controller;
-                itemInfo->label        = labelStr;
-                itemInfo->dynamicLabel = dynamicLabel;
-                wheelMenuSetItemInfo(sd->wheelMenu, labelStr, NULL, totalControls++, NO_SCROLL);
-                // Use rounded rectangle, stretched to fit
-                wheelMenuSetItemSize(sd->wheelMenu, labelStr, -1, -1, WM_SHAPE_ROUNDED_RECT);
-                writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), labelStr);
-                wheelMenuSetItemTextIcon(sd->wheelMenu, labelStr, itemInfo->shortLabel);
+            itemInfo             = &sd->itemInfos[sd->itemInfoCount++];
+            itemInfo->type       = SMT_CONTROLLER;
+            itemInfo->controller = controller;
+            itemInfo->label      = controller->desc;
+            wheelMenuSetItemInfo(sd->wheelMenu, controller->desc, NULL, totalControls++, NO_SCROLL);
+            // Use rounded rectangle, stretched to fit
+            wheelMenuSetItemSize(sd->wheelMenu, controller->desc, -1, -1, WM_SHAPE_ROUNDED_RECT);
+            writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), controller->desc);
+            wheelMenuSetItemTextIcon(sd->wheelMenu, controller->desc, itemInfo->shortLabel);
 
-                // If the label IS dynamic, we don't actually change it without resetting the menu
-                // So, don't worry about the hash key getting out of sync here
-                hashPut(&sd->menuMap, labelStr, itemInfo);
-            }
+            // If the label IS dynamic, we don't actually change it without resetting the menu
+            // So, don't worry about the hash key getting out of sync here
+            hashPut(&sd->menuMap, controller->desc, itemInfo);
         }
     }
-
-    controllersSetUp = true;
 
     // End controls submenu
     menu = endSubMenu(menu);
@@ -2394,16 +2369,7 @@ static void synthSetupMenu(bool forceReset)
         hashIterator_t iter = {0};
         while (hashIterate(&sd->menuMap, &iter))
         {
-            midiMenuItemInfo_t* info = (midiMenuItemInfo_t*)iter.value;
-
             hashIterRemove(&sd->menuMap, &iter);
-
-            if (info->dynamicLabel)
-            {
-                free((char*)info->label);
-                info->label        = NULL;
-                info->dynamicLabel = false;
-            }
         }
 
         sd->itemInfoCount = 0;
@@ -3072,7 +3038,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
             // Lyric is older than 1 note
 
             // Add a newline between measures, for files without KAR-style formatting
-            if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages))
+            if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages) - 1)
             {
                 textMessages[msgLen++] = '\n';
                 textMessages[msgLen]   = '\0';
@@ -3095,7 +3061,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
                 // NEXT lyric is also in the past
 
                 // Add a newline between measures, for files without KAR-style formatting
-                if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages))
+                if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages) - 1)
                 {
                     textMessages[msgLen++] = '\n';
                     textMessages[msgLen]   = '\0';
@@ -3121,7 +3087,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
                 FLUSH();
 
                 // Add a newline between measures, for files without KAR-style formatting
-                if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages))
+                if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages) - 1)
                 {
                     textMessages[msgLen++] = '\n';
                     textMessages[msgLen]   = '\0';
@@ -3200,7 +3166,7 @@ static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo)
             // Note is less than (3 bars - 1 tick) in the future
 
             // Add a newline between measures, for files without KAR-style formatting
-            if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages))
+            if (!karInfo->karFormat && lastLyricBar != curLyricBar && msgLen < sizeof(textMessages) - 1)
             {
                 textMessages[msgLen++] = '\n';
                 textMessages[msgLen]   = '\0';

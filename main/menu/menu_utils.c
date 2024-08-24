@@ -159,7 +159,7 @@ void menuSavePosition(const char** out, int len, const menu_t* menu)
     // Zero out the rest of the array if we won't be setting it
     if (depth + 1 < len)
     {
-        memset(out + depth + 1, 0, sizeof(out) * (len - depth - 1));
+        memset(out + depth + 1, 0, sizeof(char*) * (len - depth - 1));
     }
 
     const char** curOut = (out + depth);

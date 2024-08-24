@@ -152,9 +152,10 @@ static int16_t linearAttackExpDecay(uint32_t tick, uint32_t attackTime, uint32_t
     }
     else if ((tick - attackTime) / halfLife < 32)
     {
-        // The condition is to make sure we don't do  (1<<32) which is UB
+        // The condition is to make sure we don't do (1<<32) which is UB
         // And (n / UINT32_MAX)) is 0 for all reasonable inputs
-        return 256 * attackLevel / (1 << ((tick - attackTime) / halfLife)) / 256;
+        // And (1<<31) is UB for signed values, so make sure it's unsigned!
+        return 256 * attackLevel / (1u << ((tick - attackTime) / halfLife)) / 256;
     }
     else
     {
