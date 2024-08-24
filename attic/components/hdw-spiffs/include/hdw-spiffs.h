@@ -72,5 +72,6 @@
 bool initSpiffs(void);
 bool deinitSpiffs(void);
 uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam);
+int spiffsListFiles(char* out, size_t outsize, void** handle);
 
 #endif

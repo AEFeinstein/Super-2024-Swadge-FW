@@ -232,3 +232,18 @@ are `azerty`, `dvorak`, or `colemak`.
 ### Stuck in Factory Test Mode
 If the emulator opens to the factory test mode instead of either the main menu or the tutorial mode, this
 is because it is unable to write to the `nvs.json` file in the current directory.
+
+
+## MIDI Instructions
+
+The Swadge Emulator includes MIDI support, which simulates the USB-MIDI behavior of the real Swadge
+using the system MIDI implementation. Note that MIDI implementation and behavior will vary between
+platforms.
+
+1. From the main menu, navigate down to "Music" and press the A button (L key)
+2. In the Music menu, navigate down to "MIDI Player" and press the A button again
+3. You should see the message "Ready!" at the top of the screen. This means the Swadge Emulator is
+   now listening for MIDI messages. It will connect to the first available MIDI source it detects,
+   or the first one that becomes available. You may need to restart the emulator after connecting
+   a new device.
+4. Press the Pause button (O key) to open or close the menu.
