@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include <esp_random.h>
+#include <esp_random_emu.h>
 #include "ext_replay.h"
 #include "esp_timer.h"
 

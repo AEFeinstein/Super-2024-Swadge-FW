@@ -76,11 +76,13 @@ typedef struct
     int16_t currentLed;     ///< The current LED being excited
     bool ledsOn;            ///< true to use the LEDs, false to keep them off
 
-    menuItem_t* selectedItem;    ///< Reference to the selected item to tell when it changes
-    int16_t selectedShadowIdx;   ///< The index to the color offset for the selected drop shadow
-    int32_t selectedShadowTimer; ///< The timer to change the color for the selected drop shadow
-    int16_t selectedBounceIdx;   ///< The index to the bounce offset for the selected item
-    int32_t selectedBounceTimer; ///< The timer to bounce the offset for the selected item
+    menuItem_t* selectedItem;     ///< Reference to the selected item to tell when it changes
+    int16_t selectedShadowIdx;    ///< The index to the color offset for the selected drop shadow
+    int32_t selectedShadowTimer;  ///< The timer to change the color for the selected drop shadow
+    int16_t selectedBounceIdx;    ///< The index to the bounce offset for the selected item
+    int32_t selectedBounceTimer;  ///< The timer to bounce the offset for the selected item
+    int32_t selectedValue;        ///< The option index or setting value to tell when it changes
+    int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
 } menuManiaRenderer_t;
 
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);

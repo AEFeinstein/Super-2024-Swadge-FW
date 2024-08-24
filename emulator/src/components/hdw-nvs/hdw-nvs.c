@@ -83,8 +83,29 @@ bool initNvs(bool firstTry)
         char expanded[1024];
         expandPath(expanded, sizeof(expanded), *curFile);
 
+        bool existsAndValid = false;
+
+        if (0 == access(expanded, F_OK))
+        {
+            FILE* nvsFile = fopen(expanded, "rb");
+            if (NULL != nvsFile)
+            {
+                // Get the file size
+                fseek(nvsFile, 0L, SEEK_END);
+                size_t fsize = ftell(nvsFile);
+                fseek(nvsFile, 0L, SEEK_SET);
+
+                if (fsize >= 2)
+                {
+                    existsAndValid = true;
+                }
+
+                fclose(nvsFile);
+            }
+        }
+
         // Check if the json file exists
-        if (access(expanded, F_OK) != 0)
+        if (!existsAndValid)
         {
             // Create parent directories if necessary
             if (makeDirs(*curFile))
@@ -203,6 +224,12 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
         size_t fsize = ftell(nvsFile);
         fseek(nvsFile, 0L, SEEK_SET);
 
+        if (fsize == 0)
+        {
+            fclose(nvsFile);
+            return false;
+        }
+
         // Read the file
         char fbuf[fsize + 1];
         fbuf[fsize] = 0;
@@ -214,6 +241,11 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
             // Parse the JSON
             cJSON* json = cJSON_Parse(fbuf);
             cJSON* jsonIter;
+
+            if (!json)
+            {
+                return false;
+            }
 
             cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
 
