@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include "paGameData.h"
+#include "paTables.h"
 #include "paEntityManager.h"
 #include "esp_random.h"
 #include "hdw-btn.h"

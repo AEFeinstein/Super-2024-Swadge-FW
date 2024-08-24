@@ -8,34 +8,13 @@
 #include <stdint.h>
 #include "hdw-led.h"
 #include "pango_typedef.h"
-// #include "swadgeMode.h"
 #include "palette.h"
 #include "paSoundManager.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
-#define MASTER_DIFFICULTY_TABLE_LENGTH 6
 
-#define TOTAL_ENEMIES_LOOKUP_OFFSET 0
-#define MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET 1
-#define ENEMY_INITIAL_SPEED_LOOKUP_OFFSET 2
-#define MASTER_DIFFICULTY_TABLE_ROW_LENGTH 3
-
-static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DIFFICULTY_TABLE_ROW_LENGTH] = {
-
-//Notes:
-//-at any given time, at least 1 enemy should be always aggressive
-
-// Total    max          
-// enemies, active, speed
-         5,      2,    12,
-         5,      3,    12,
-         6,      3,    14,
-         6,      3,    14,
-         7,      3,    15,
-         7,      4,    10,
-};
 
 //==============================================================================
 // Structs
