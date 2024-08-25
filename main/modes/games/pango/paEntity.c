@@ -974,14 +974,6 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
     switch (other->type)
     {
         case PA_ENTITY_TEST:
-        case ENTITY_DUST_BUNNY:
-        case ENTITY_WASP:
-        case ENTITY_BUSH_2:
-        case ENTITY_BUSH_3:
-        case ENTITY_DUST_BUNNY_2:
-        case ENTITY_DUST_BUNNY_3:
-        case ENTITY_WASP_2:
-        case ENTITY_WASP_3:
         {
             other->xspeed = -other->xspeed;
 
@@ -1025,60 +1017,6 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
 
             break;
         }
-        case ENTITY_WARP:
-        {
-            // Execute warp
-            self->x = (self->tilemap->warps[other->jumpPower].x * PA_TILE_SIZE + PA_HALF_TILESIZE)
-                      << SUBPIXEL_RESOLUTION;
-            self->y = (self->tilemap->warps[other->jumpPower].y * PA_TILE_SIZE + PA_HALF_TILESIZE)
-                      << SUBPIXEL_RESOLUTION;
-            self->falling = true;
-            pa_viewFollowEntity(self->tilemap, self->entityManager->playerEntity);
-
-            pa_unlockScrolling(self->tilemap);
-            pa_deactivateAllEntities(self->entityManager, true);
-            self->tilemap->executeTileSpawnAll = true;
-            soundPlaySfx(&(self->soundManager->sndWarp), BZR_LEFT);
-            break;
-        }
-        case ENTITY_POWERUP:
-        {
-            self->hp++;
-            if (self->hp > 3)
-            {
-                self->hp = 3;
-            }
-            pa_scorePoints(self->gameData, 1000);
-            soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
-            pa_updateLedsHpMeter(self->entityManager, self->gameData);
-            pa_destroyEntity(other, false);
-            break;
-        }
-        case ENTITY_1UP:
-        {
-            self->gameData->lives++;
-            pa_scorePoints(self->gameData, 0);
-            soundPlaySfx(&(self->soundManager->snd1up), BZR_LEFT);
-            pa_destroyEntity(other, false);
-            break;
-        }
-        case ENTITY_CHECKPOINT:
-        {
-            if (!other->xDamping)
-            {
-                // Get tile above checkpoint
-                uint8_t aboveTile
-                    = self->tilemap->map[(other->homeTileY - 1) * self->tilemap->mapWidth + other->homeTileX];
-
-                /*if (aboveTile >= PA_TILE_WARP_0 && aboveTile <= PA_TILE_WARP_F)
-                {
-                    self->gameData->checkpoint = aboveTile - PA_TILE_WARP_0;
-                    other->xDamping            = 1;
-                    soundPlaySfx(&(self->soundManager->sndCheckpoint), BZR_LEFT);
-                }*/
-            }
-            break;
-        }
         case ENTITY_HIT_BLOCK:
         {
             if(self->x < other->x){
@@ -1108,16 +1046,6 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
     switch (other->type)
     {
         case PA_ENTITY_TEST:
-        case ENTITY_DUST_BUNNY:
-        case ENTITY_WASP:
-        case ENTITY_BUSH_2:
-        case ENTITY_BUSH_3:
-        case ENTITY_DUST_BUNNY_2:
-        case ENTITY_DUST_BUNNY_3:
-        case ENTITY_WASP_2:
-        case ENTITY_WASP_3:
-        case ENTITY_POWERUP:
-        case ENTITY_1UP:
             if ((self->xspeed > 0 && self->x < other->x) || (self->xspeed < 0 && self->x > other->x))
             {
                 self->xspeed               = -self->xspeed;
@@ -1136,14 +1064,6 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             pa_scorePoints(self->gameData, self->scoreValue);
             soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
             killEnemy(self);
-            break;
-        case ENTITY_WAVE_BALL:
-            self->xspeed = other->xspeed >> 1;
-            self->yspeed = -abs(other->xspeed >> 1);
-            pa_scorePoints(self->gameData, self->scoreValue);
-            soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
-            killEnemy(self);
-            pa_destroyEntity(other, false);
             break;
         default:
         {
