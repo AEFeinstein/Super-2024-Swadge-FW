@@ -1107,7 +1107,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
 
                 if (tileId == PA_TILE_BOUNCE_BLOCK)
                 {
-                    hitBlock->spriteIndex = SP_BOUNCE_BLOCK;
+                    hitBlock->spriteIndex = 0;
                 }
 
                 switch (direction)
