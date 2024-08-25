@@ -194,50 +194,15 @@ void dieWhenFallingOffScreen(paEntity_t* self);
 
 void pa_updateDummy(paEntity_t* self);
 
-void updateScrollLockLeft(paEntity_t* self);
-void updateScrollLockRight(paEntity_t* self);
-void updateScrollLockUp(paEntity_t* self);
-void updateScrollLockDown(paEntity_t* self);
-void updateScrollUnlock(paEntity_t* self);
-
 void updateEntityDead(paEntity_t* self);
-
-void updatePowerUp(paEntity_t* self);
-void update1up(paEntity_t* self);
-void updateWarp(paEntity_t* self);
-
-void updateDustBunny(paEntity_t* self);
-void updateDustBunnyL2(paEntity_t* self);
-void updateDustBunnyL3(paEntity_t* self);
-bool dustBunnyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-bool dustBunnyL2TileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-bool dustBunnyL3TileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-
-void updateWasp(paEntity_t* self);
-void updateWaspL2(paEntity_t* self);
-void updateWaspL3(paEntity_t* self);
-bool waspTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 
 void killEnemy(paEntity_t* target);
 
-void updateBgCol(paEntity_t* self);
-
 void turnAroundAtEdgeOfTileHandler(paEntity_t* self);
-
-void updateEnemyBushL3(paEntity_t* self);
-
-void updateCheckpoint(paEntity_t* self);
 
 void pa_playerOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 void pa_defaultOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 
-void updateBgmChange(paEntity_t* self);
-
-void updateWaveBall(paEntity_t* self);
-
-// bool waveBallTileCollisionHandler(paEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-void waveBallOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
-void powerUpCollisionHandler(paEntity_t* self, paEntity_t* other);
 void killPlayer(paEntity_t* self);
 
 void drawEntityTargetTile(paEntity_t* self);
