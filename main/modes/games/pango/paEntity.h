@@ -20,7 +20,7 @@
 typedef enum
 {
     ENTITY_PLAYER,
-    PA_ENTITY_TEST,
+    PA_ENTITY_CRABDOZER,
     PA_ENTITY_BREAK_BLOCK,
     PA_ENTITY_BLOCK_FRAGMENT,
     ENTITY_HIT_BLOCK,
@@ -136,7 +136,7 @@ void pa_initializeEntity(paEntity_t* self, paEntityManager_t* entityManager, paT
                          paGameData_t* gameData, paSoundManager_t* soundManager);
 
 void pa_updatePlayer(paEntity_t* self);
-void updateTestObject(paEntity_t* self);
+void updateCrabdozer(paEntity_t* self);
 void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t speed);
 void pa_enemyBreakBlock(paEntity_t* self, uint16_t newDirection, int16_t speed, uint8_t tx, uint8_t ty);
 void pa_animateEnemy(paEntity_t* self);

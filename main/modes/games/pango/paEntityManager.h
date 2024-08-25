@@ -55,7 +55,7 @@ paEntity_t* pa_findInactiveEntity(paEntityManager_t* entityManager);
 void pa_viewFollowEntity(paTilemap_t* tilemap, paEntity_t* entity);
 paEntity_t* pa_createEntity(paEntityManager_t* entityManager, uint8_t objectIndex, uint16_t x, uint16_t y);
 paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
-paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
+paEntity_t* createCrabdozer(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 void pa_freeEntityManager(paEntityManager_t* entityManager);
 paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager);

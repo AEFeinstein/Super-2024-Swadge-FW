@@ -287,8 +287,8 @@ paEntity_t* pa_createEntity(paEntityManager_t* entityManager, uint8_t objectInde
         case ENTITY_PLAYER:
             createdEntity = pa_createPlayer(entityManager, x, y);
             break;
-        case PA_ENTITY_TEST:
-            createdEntity = createTestObject(entityManager, x, y);
+        case PA_ENTITY_CRABDOZER:
+            createdEntity = createCrabdozer(entityManager, x, y);
             break;
         case ENTITY_HIT_BLOCK:
             createdEntity = createHitBlock(entityManager, x, y);
@@ -344,7 +344,7 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     return entity;
 }
 
-paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
+paEntity_t* createCrabdozer(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
     paEntity_t* entity = pa_findInactiveEntity(entityManager);
 
@@ -371,12 +371,12 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->tempStateTimer       = -1;
     entity->baseSpeed = entityManager->gameData->enemyInitialSpeed;
 
-    entity->type                 = PA_ENTITY_TEST;
+    entity->type                 = PA_ENTITY_CRABDOZER;
     entity->spriteIndex          = PA_SP_ENEMY_SOUTH;
     entity->facingDirection      = PA_DIRECTION_NONE;
     entity->state                = PA_EN_ST_NORMAL;
     entity->stateTimer           = 300 + (esp_random() % 600); //Min 5 seconds, max 15 seconds
-    entity->updateFunction       = &updateTestObject;
+    entity->updateFunction       = &updateCrabdozer;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
@@ -518,7 +518,7 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
                     uint8_t t = pa_getTile(entityManager->tilemap, tx, ty);
 
                     if(t == PA_TILE_SPAWN_BLOCK_0 && (iterations > 0 || !(esp_random() % entityManager->gameData->remainingEnemies) )){
-                        newEnemy = createTestObject(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+                        newEnemy = createCrabdozer(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
                         
                         if(newEnemy != NULL){
                             //pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);

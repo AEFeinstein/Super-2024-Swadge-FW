@@ -243,7 +243,7 @@ void pa_updatePlayer(paEntity_t* self)
     pa_detectEntityCollisions(self);
 }
 
-void updateTestObject(paEntity_t* self)
+void updateCrabdozer(paEntity_t* self)
 {
     switch(self->state){
         case PA_EN_ST_STUN: 
@@ -911,7 +911,7 @@ void animatePlayer(paEntity_t* self)
         {
             // Running
             self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
-            self->facingDirection = !self->spriteFlipHorizontal;
+            self->facingDirection = self->spriteFlipHorizontal ? PA_DIRECTION_WEST : PA_DIRECTION_EAST;
 
             if (self->gameData->frameCount % 7 == 0)
             {
@@ -973,7 +973,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
 {
     switch (other->type)
     {
-        case PA_ENTITY_TEST:
+        case PA_ENTITY_CRABDOZER:
         {
             other->xspeed = -other->xspeed;
 
@@ -1045,7 +1045,7 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
 {
     switch (other->type)
     {
-        case PA_ENTITY_TEST:
+        case PA_ENTITY_CRABDOZER:
             if ((self->xspeed > 0 && self->x < other->x) || (self->xspeed < 0 && self->x > other->x))
             {
                 self->xspeed               = -self->xspeed;

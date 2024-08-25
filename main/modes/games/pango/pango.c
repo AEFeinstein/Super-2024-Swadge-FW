@@ -819,7 +819,7 @@ void changeStateGame(pango_t* self)
                 continue;
             }
 
-            createTestObject(&(self->entityManager), (defaultEnemySpawnLocations[i*2] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8, (defaultEnemySpawnLocations[i*2+1] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
+            createCrabdozer(&(self->entityManager), (defaultEnemySpawnLocations[i*2] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8, (defaultEnemySpawnLocations[i*2+1] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
         }
 
     }
