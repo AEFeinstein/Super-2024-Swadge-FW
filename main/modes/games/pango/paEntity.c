@@ -468,7 +468,7 @@ void updateTestObject(paEntity_t* self)
                     break;
                 case PA_DIRECTION_NONE:
                 default:
-                    pa_enemyChangeDirection(self, 1 /*>> esp_random() % 3*/, self->baseSpeed);
+                    pa_enemyChangeDirection(self, 1 >> (esp_random() % 3), self->baseSpeed);
                     break;
                 case PA_DIRECTION_SOUTH:
                     if(vcof) {
