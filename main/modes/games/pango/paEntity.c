@@ -1079,145 +1079,9 @@ void pa_dummyCollisionHandler(paEntity_t* self, paEntity_t* other)
 
 bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
-    switch (tileId)
+    /*switch (tileId)
     {
-        case PA_TILE_CONTAINER_1:
-        case PA_TILE_BRICK_BLOCK:
-        case PA_TILE_INVISIBLE_CONTAINER:
-        case PA_TILE_BOUNCE_BLOCK:
-        {
-            paEntity_t* hitBlock
-                = pa_createEntity(self->entityManager, ENTITY_HIT_BLOCK, (tx * PA_TILE_SIZE) + PA_HALF_TILESIZE,
-                                  (ty * PA_TILE_SIZE) + PA_HALF_TILESIZE);
-
-            if (hitBlock != NULL)
-            {
-                pa_setTile(self->tilemap, tx, ty, PA_TILE_INVISIBLE_BLOCK);
-                hitBlock->homeTileX = tx;
-                hitBlock->homeTileY = ty;
-                hitBlock->jumpPower = tileId;
-                if (tileId == PA_TILE_BRICK_BLOCK)
-                {
-                    hitBlock->spriteIndex = 0;
-                    if (abs(self->xspeed) > 51 && self->yspeed <= 0)
-                    {
-                        hitBlock->yDamping = 1;
-                    }
-                }
-
-                if (tileId == PA_TILE_BOUNCE_BLOCK)
-                {
-                    hitBlock->spriteIndex = 0;
-                }
-
-                switch (direction)
-                {
-                    case 0:
-                        hitBlock->xspeed = -24;
-                        if (tileId == PA_TILE_BOUNCE_BLOCK)
-                        {
-                            self->xspeed = 48;
-                        }
-                        break;
-                    case 1:
-                        hitBlock->xspeed = 24;
-                        if (tileId == PA_TILE_BOUNCE_BLOCK)
-                        {
-                            self->xspeed = -48;
-                        }
-                        break;
-                    case 2:
-                        hitBlock->yspeed = -48;
-                        if (tileId == PA_TILE_BOUNCE_BLOCK)
-                        {
-                            self->yspeed = 48;
-                        }
-                        break;
-                    case 4:
-                        hitBlock->yspeed = (tileId == PA_TILE_BRICK_BLOCK) ? 16 : 24;
-                        if (tileId == PA_TILE_BOUNCE_BLOCK)
-                        {
-                            self->yspeed = -64;
-                            if (self->gameData->btnState & PB_A)
-                            {
-                                self->jumpPower = 80 + ((abs(self->xspeed) + 16) >> 3);
-                            }
-                        }
-                        break;
-                    default:
-                        break;
-                }
-
-                soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
-            }
-            break;
-        }
-        case PA_TILE_GOAL_100PTS:
-        {
-            if (direction == 4)
-            {
-                pa_scorePoints(self->gameData, 100);
-                soundStop(true);
-                soundPlaySfx(&(self->soundManager->sndLevelClearD), BZR_LEFT);
-                //self->spriteIndex           = SP_PLAYER_WIN;
-                self->updateFunction        = &pa_updateDummy;
-                self->gameData->changeState = PA_ST_LEVEL_CLEAR;
-            }
-            break;
-        }
-        case PA_TILE_GOAL_500PTS:
-        {
-            if (direction == 4)
-            {
-                pa_scorePoints(self->gameData, 500);
-                soundStop(true);
-                soundPlaySfx(&(self->soundManager->sndLevelClearC), BZR_LEFT);
-                //self->spriteIndex           = SP_PLAYER_WIN;
-                self->updateFunction        = &pa_updateDummy;
-                self->gameData->changeState = PA_ST_LEVEL_CLEAR;
-            }
-            break;
-        }
-        case PA_TILE_GOAL_1000PTS:
-        {
-            if (direction == 4)
-            {
-                pa_scorePoints(self->gameData, 1000);
-                soundStop(true);
-                soundPlaySfx(&(self->soundManager->sndLevelClearB), BZR_LEFT);
-                //self->spriteIndex           = SP_PLAYER_WIN;
-                self->updateFunction        = &pa_updateDummy;
-                self->gameData->changeState = PA_ST_LEVEL_CLEAR;
-            }
-            break;
-        }
-        case PA_TILE_GOAL_2000PTS:
-        {
-            if (direction == 4)
-            {
-                pa_scorePoints(self->gameData, 2000);
-                soundStop(true);
-                soundPlaySfx(&(self->soundManager->sndLevelClearA), BZR_LEFT);
-                //self->spriteIndex           = SP_PLAYER_WIN;
-                self->updateFunction        = &pa_updateDummy;
-                self->gameData->changeState = PA_ST_LEVEL_CLEAR;
-            }
-            break;
-        }
-        case PA_TILE_GOAL_5000PTS:
-        {
-            if (direction == 4)
-            {
-                pa_scorePoints(self->gameData, 5000);
-                soundStop(true);
-                soundPlaySfx(&(self->soundManager->sndLevelClearS), BZR_LEFT);
-                //self->spriteIndex           = SP_PLAYER_WIN;
-                self->updateFunction        = &pa_updateDummy;
-                self->gameData->changeState = PA_ST_LEVEL_CLEAR;
-            }
-            break;
-        }
-        /*case PA_TILE_COIN_1 ... PA_TILE_COIN_3:
+        case PA_TILE_COIN_1 ... PA_TILE_COIN_3:
         {
             pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
             addCoins(self->gameData, 1);
@@ -1229,12 +1093,12 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
             self->gravityEnabled = false;
             self->falling = false;
             break;
-        }*/
+        }
         default:
         {
             break;
         }
-    }
+    }*/
 
     if (pa_isSolid(tileId))
     {
@@ -1266,7 +1130,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
 
 bool pa_enemyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
-    switch (tileId)
+    /*switch (tileId)
     {
         case PA_TILE_BOUNCE_BLOCK:
         {
@@ -1309,7 +1173,7 @@ bool pa_enemyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, 
         {
             break;
         }
-    }
+    }*/
 
     if (pa_isSolid(tileId))
     {
@@ -1444,7 +1308,7 @@ void killEnemy(paEntity_t* target)
 
 void pa_playerOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
 {
-    switch (tileId)
+    /*switch (tileId)
     {
         case PA_TILE_COIN_1 ... PA_TILE_COIN_3:
         {
@@ -1476,7 +1340,7 @@ void pa_playerOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, u
         {
             self->yspeed = -32;
         }
-    }
+    }*/
 }
 
 void pa_defaultOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
