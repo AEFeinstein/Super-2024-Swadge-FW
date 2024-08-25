@@ -29,11 +29,11 @@ typedef enum
 
 typedef enum
 {
-    PA_DIRECTION_LEFT,
-    PA_DIRECTION_RIGHT,
-    PA_DIRECTION_UP,
+    PA_DIRECTION_WEST,
+    PA_DIRECTION_EAST,
+    PA_DIRECTION_NORTH,
     PA_DIRECTION_NONE,
-    PA_DIRECTION_DOWN
+    PA_DIRECTION_SOUTH
 } paCardinalDirection_t;
 
 typedef enum

@@ -48,7 +48,7 @@ void pa_initializeEntity(paEntity_t* self, paEntityManager_t* entityManager, paT
     self->fallOffTileHandler   = &defaultFallOffTileHandler;
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical   = false;
-    self->facingDirection = PA_DIRECTION_DOWN;
+    self->facingDirection = PA_DIRECTION_SOUTH;
     self->stateTimer = -1;
     self->tempStateTimer = -1;
     self->baseSpeed = 0;
@@ -150,19 +150,19 @@ void pa_updatePlayer(paEntity_t* self)
         */
 
             switch(self->facingDirection){
-                case PA_DIRECTION_LEFT:
+                case PA_DIRECTION_WEST:
                     self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) - 1;
                     self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
                     break;
-                case PA_DIRECTION_RIGHT:
+                case PA_DIRECTION_EAST:
                     self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) + 1;
                     self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
                     break;
-                case PA_DIRECTION_UP:
+                case PA_DIRECTION_NORTH:
                     self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
                     self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) - 1;
                     break;
-                case PA_DIRECTION_DOWN:
+                case PA_DIRECTION_SOUTH:
                 default:
                     self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
                     self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) + 1;
@@ -179,16 +179,16 @@ void pa_updatePlayer(paEntity_t* self)
                         pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
                         newHitBlock->jumpPower = t;
                         switch(self->facingDirection){
-                            case PA_DIRECTION_LEFT:
+                            case PA_DIRECTION_WEST:
                                 newHitBlock->xspeed = -64;
                                 break;
-                            case PA_DIRECTION_RIGHT:
+                            case PA_DIRECTION_EAST:
                                 newHitBlock->xspeed = 64;
                                 break;
-                            case PA_DIRECTION_UP:
+                            case PA_DIRECTION_NORTH:
                                 newHitBlock->yspeed = -64;
                                 break;
-                            case PA_DIRECTION_DOWN:
+                            case PA_DIRECTION_SOUTH:
                             default:
                                 newHitBlock->yspeed = 64;
                                 break;
@@ -201,16 +201,16 @@ void pa_updatePlayer(paEntity_t* self)
                 self->stateTimer = 8;
 
                 switch(self->facingDirection){
-                    case PA_DIRECTION_LEFT:
+                    case PA_DIRECTION_WEST:
                         self->spriteIndex = PA_SP_PLAYER_PUSH_SIDE_1;
                         break;
-                    case PA_DIRECTION_RIGHT:
+                    case PA_DIRECTION_EAST:
                         self->spriteIndex = PA_SP_PLAYER_PUSH_SIDE_1;
                         break;
-                    case PA_DIRECTION_UP:
+                    case PA_DIRECTION_NORTH:
                         self->spriteIndex = PA_SP_PLAYER_PUSH_NORTH_1;
                         break;
-                    case PA_DIRECTION_DOWN:
+                    case PA_DIRECTION_SOUTH:
                     default:
                         self->spriteIndex = PA_SP_PLAYER_PUSH_SOUTH_1;
                         break;
@@ -285,7 +285,7 @@ void updateTestObject(paEntity_t* self)
             bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE) ? esp_random() % 2 : false;
 
             switch(self->facingDirection){
-                case PA_DIRECTION_LEFT:
+                case PA_DIRECTION_WEST:
                     if(hcof) {
                         break;
                     }
@@ -300,52 +300,52 @@ void updateTestObject(paEntity_t* self)
 
                     if((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3)) {                        
                         if(doAgression && t2 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_UP, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
                         } else {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_UP, self->baseSpeed);
+                            pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
                         }
                         break;
                     } 
 
                     if((!t3 || doAgression) && distT3 < distT1) {                        
                         if(doAgression && t3 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_DOWN, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
                         } else {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, self->baseSpeed);
+                            pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
                         }
                         break;
                     }
 
                     if (t1) {
                         if(doAgression && t1 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_LEFT, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
                             break;
                         }
 
                         if((!t2 || doAgression) && (t3 || distT2 < distT3)){
                             if(doAgression && t2 == PA_TILE_BLOCK){
-                                pa_enemyBreakBlock(self, PA_DIRECTION_UP, self->baseSpeed >> 1, tx, ty);
+                                pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
                             } else {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_UP, self->baseSpeed);
+                                pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
                             }
                             break;
                         }
 
                         if(!t3 || doAgression){
                             if(doAgression && t3 == PA_TILE_BLOCK){
-                                pa_enemyBreakBlock(self, PA_DIRECTION_DOWN, self->baseSpeed >> 1, tx, ty);
+                                pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
                             } else {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, self->baseSpeed);
+                                pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
                             }
                             break;
                         }
 
-                        pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, self->baseSpeed);
+                        pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
                         break;
                     }
                     
                     break;
-                case PA_DIRECTION_RIGHT:
+                case PA_DIRECTION_EAST:
                     if(hcof) {
                         break;
                     }
@@ -361,51 +361,51 @@ void updateTestObject(paEntity_t* self)
                     if((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3)){
                         
                         if(doAgression && t2 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_UP, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
                         } else {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_UP, self->baseSpeed);
+                            pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
                         }
                         break;
                     } 
                     if ((!t3 || doAgression) && distT3 < distT1){
                         
                         if(doAgression && t3 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_DOWN, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
                         } else {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, self->baseSpeed);
+                            pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
                         }
                         break;
                     } 
                     if (t1){
                         if(doAgression && t1 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_RIGHT, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
                             break;
                         }
 
                         if((!t2 || doAgression) && (t3 || distT2 < distT3)) {
                             if(doAgression && t2 == PA_TILE_BLOCK){
-                                pa_enemyBreakBlock(self, PA_DIRECTION_UP, self->baseSpeed >> 1, tx, ty);
+                                pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
                             } else {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_UP, self->baseSpeed);
+                                pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
                             }
                             break;
                         }
 
                         if(!t3 || doAgression){
                             if(doAgression && t2 == PA_TILE_BLOCK){
-                                pa_enemyBreakBlock(self, PA_DIRECTION_DOWN, self->baseSpeed >> 1, tx, ty);
+                                pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
                             } else {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, self->baseSpeed);
+                                pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
                             }
                             break;
                         }
 
-                        pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, self->baseSpeed);
+                        pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
                         break;
                     }
                     
                     break;
-                case PA_DIRECTION_UP:
+                case PA_DIRECTION_NORTH:
                     if(vcof) {
                         break;
                     }
@@ -420,48 +420,48 @@ void updateTestObject(paEntity_t* self)
 
                     if((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3)){
                         if(doAgression && t2 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_LEFT, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
                         } else {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, self->baseSpeed);
+                            pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
                         }
                         break;
                     } 
 
                     if((!t3 || doAgression) && distT3 < distT1){
                         if(doAgression && t3 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_RIGHT, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
                         } else {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, self->baseSpeed);
+                            pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
                         }
                         break;
                     } 
 
                     if (t1){
                         if(doAgression && t1 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_UP, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
                             break;
                         }
 
                         if((!t2 || doAgression) && (t3 || distT2 < distT3)){
                             if(doAgression && t2 == PA_TILE_BLOCK){
-                                pa_enemyBreakBlock(self, PA_DIRECTION_LEFT, self->baseSpeed >> 1, tx, ty);
+                                pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
                             } else {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, self->baseSpeed);
+                                pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
                             }
                             break;
                         }
 
                         if(!t3 || doAgression){
                             if(doAgression && t3 == PA_TILE_BLOCK){
-                                pa_enemyBreakBlock(self, PA_DIRECTION_RIGHT, self->baseSpeed >> 1, tx, ty);
+                                pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
                             } else {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, self->baseSpeed);
+                                pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
                             }
                             
                             break;
                         }
 
-                        pa_enemyChangeDirection(self, PA_DIRECTION_DOWN, self->baseSpeed);
+                        pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
                         break;
                     }
 
@@ -470,7 +470,7 @@ void updateTestObject(paEntity_t* self)
                     pa_enemyChangeDirection(self, esp_random() % 5, self->baseSpeed);
                 default:
                     break;
-                case PA_DIRECTION_DOWN:
+                case PA_DIRECTION_SOUTH:
                     if(vcof) {
                         break;
                     }
@@ -485,47 +485,47 @@ void updateTestObject(paEntity_t* self)
 
                     if((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3)){ 
                         if(doAgression && t2 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_LEFT, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
                         } else {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, self->baseSpeed);
+                            pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
                         }
                         break;
                     } 
 
                     if((!t3 || doAgression) && distT3 < distT1){
                         if(doAgression && t3 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_RIGHT, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
                         } else {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, self->baseSpeed);
+                            pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
                         }
                         break;
                     } 
 
                     if (t1){
                         if(doAgression && t1 == PA_TILE_BLOCK){
-                            pa_enemyBreakBlock(self, PA_DIRECTION_DOWN, self->baseSpeed >> 1, tx, ty);
+                            pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
                             break;
                         }
 
                         if((!t2 || doAgression) && (t3 || distT2 < distT3)){
                             if(doAgression && t2 == PA_TILE_BLOCK){
-                                pa_enemyBreakBlock(self, PA_DIRECTION_LEFT, self->baseSpeed >> 1, tx, ty);
+                                pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
                             } else {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_LEFT, self->baseSpeed);
+                                pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
                             }
                             break;
                         }
 
                         if(!t3 || doAgression){
                             if(doAgression && t3 == PA_TILE_BLOCK){
-                                pa_enemyBreakBlock(self, PA_DIRECTION_RIGHT, self->baseSpeed >> 1, tx, ty);
+                                pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
                             } else {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_RIGHT, self->baseSpeed);
+                                pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
                             }
                             break;
                         }
 
-                        pa_enemyChangeDirection(self, PA_DIRECTION_UP, self->baseSpeed);
+                        pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
                         break;
                     }
 
@@ -548,16 +548,16 @@ void updateTestObject(paEntity_t* self)
             /*//Need to force a speed value because
             //tile collision will stop the enemy before we get here
             switch(self->facingDirection){
-                case PA_DIRECTION_LEFT:
+                case PA_DIRECTION_WEST:
                     self->xspeed = -8;
                     break;
-                case PA_DIRECTION_RIGHT:
+                case PA_DIRECTION_EAST:
                     self->xspeed = 8;
                     break;
-                case PA_DIRECTION_UP:
+                case PA_DIRECTION_NORTH:
                     self->yspeed = -8;
                     break;
-                case PA_DIRECTION_DOWN:
+                case PA_DIRECTION_SOUTH:
                     self->yspeed = 8;
                     break;
                 default:
@@ -586,15 +586,15 @@ void updateTestObject(paEntity_t* self)
 
 void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t speed){
     switch(newDirection){
-        case PA_DIRECTION_LEFT:
+        case PA_DIRECTION_WEST:
             self->yspeed = 0;
             self->xspeed = -speed;
             break;
-        case PA_DIRECTION_RIGHT:
+        case PA_DIRECTION_EAST:
             self->yspeed = 0;
             self->xspeed = speed;
             break;
-        case PA_DIRECTION_UP:
+        case PA_DIRECTION_NORTH:
             self->xspeed = 0;
             self->yspeed = -speed;
             break;
@@ -603,7 +603,7 @@ void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t sp
             self->xspeed = 0;
             self->yspeed = 0;
             break;
-        case PA_DIRECTION_DOWN:
+        case PA_DIRECTION_SOUTH:
             self->xspeed = 0;
             self->yspeed = speed;
             break;
@@ -614,19 +614,19 @@ void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t sp
 
 void pa_enemyBreakBlock(paEntity_t* self, uint16_t newDirection, int16_t speed, uint8_t tx, uint8_t ty){
     switch(newDirection){
-        case PA_DIRECTION_LEFT:
+        case PA_DIRECTION_WEST:
             pa_createBreakBlock(self->entityManager, ((tx-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
             break;
-        case PA_DIRECTION_RIGHT:
+        case PA_DIRECTION_EAST:
             pa_createBreakBlock(self->entityManager, ((tx+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, (ty << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
             break;
-        case PA_DIRECTION_UP:
+        case PA_DIRECTION_NORTH:
             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty-1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
             break;
         case PA_DIRECTION_NONE:
         default:
             break;
-        case PA_DIRECTION_DOWN:
+        case PA_DIRECTION_SOUTH:
             pa_createBreakBlock(self->entityManager, (tx << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE, ((ty+1) << SUBPIXEL_RESOLUTION) + PA_HALF_TILE_SIZE);
             break;
     }
@@ -663,7 +663,7 @@ void pa_animateEnemy(paEntity_t* self){
             {
                 self->spriteIndex = PA_SP_ENEMY_SOUTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
                 self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                self->facingDirection = PA_DIRECTION_DOWN;
+                self->facingDirection = PA_DIRECTION_SOUTH;
             }
         }
     }
@@ -673,7 +673,7 @@ void pa_animateEnemy(paEntity_t* self){
             {
                 self->spriteIndex = PA_SP_ENEMY_NORTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
                 self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                self->facingDirection = PA_DIRECTION_UP;
+                self->facingDirection = PA_DIRECTION_NORTH;
             }
         }
     }
@@ -925,7 +925,7 @@ void animatePlayer(paEntity_t* self)
     }
     else if (self->yspeed > 0){
         if ((self->gameData->btnState & PB_DOWN) && self->yspeed > 0){
-            self->facingDirection = PA_DIRECTION_DOWN;
+            self->facingDirection = PA_DIRECTION_SOUTH;
 
             if (self->gameData->frameCount % 7 == 0)
             {
@@ -936,7 +936,7 @@ void animatePlayer(paEntity_t* self)
     }
      else if (self->yspeed < 0){
         if ((self->gameData->btnState & PB_UP) && self->yspeed < 0){
-            self->facingDirection = PA_DIRECTION_UP;
+            self->facingDirection = PA_DIRECTION_NORTH;
 
             if (self->gameData->frameCount % 7 == 0)
             {
