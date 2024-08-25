@@ -467,8 +467,8 @@ void updateTestObject(paEntity_t* self)
 
                     break;
                 case PA_DIRECTION_NONE:
-                    pa_enemyChangeDirection(self, esp_random() % 5, self->baseSpeed);
                 default:
+                    pa_enemyChangeDirection(self, 1 /*>> esp_random() % 3*/, self->baseSpeed);
                     break;
                 case PA_DIRECTION_SOUTH:
                     if(vcof) {
@@ -609,7 +609,7 @@ void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t sp
             break;
     }
 
-    self->facingDirection = speed;
+    self->facingDirection = newDirection;
 }
 
 void pa_enemyBreakBlock(paEntity_t* self, uint16_t newDirection, int16_t speed, uint8_t tx, uint8_t ty){
@@ -649,7 +649,7 @@ void pa_animateEnemy(paEntity_t* self){
             if (self->gameData->frameCount % 5 == 0)
             {
                 self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
-                self->facingDirection = !self->spriteFlipHorizontal;
+                self->facingDirection = self->spriteFlipHorizontal ? PA_DIRECTION_WEST : PA_DIRECTION_EAST;
             }
         }
         else
