@@ -1,5 +1,5 @@
-#ifndef PLATFORMER_COMMON_TYPEDEF_INCLUDED
-#define PLATFORMER_COMMON_TYPEDEF_INCLUDED
+#ifndef PANGO_COMMON_TYPEDEF_INCLUDED
+#define PANGO_COMMON_TYPEDEF_INCLUDED
 
 typedef struct pango_t pango_t;
 typedef struct paEntityManager_t paEntityManager_t;
