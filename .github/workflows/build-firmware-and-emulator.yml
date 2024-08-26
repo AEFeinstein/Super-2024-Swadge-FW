@@ -179,6 +179,24 @@ jobs:
           version.txt
           tools/pyFlashGui/pyFlashGui.py
 
+  Create-Snapshot-Release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create release for latest artifacts
+      if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
+      uses: ncipollo/release-action@v1
+      with:
+        # Allow the release to be updated, since it's not a "final" release
+        prerelease: true
+        allowUpdates: true
+        replacesArtifacts: true
+        artifacts: "${{ env.FIRMWARE_ARTIFACT }},${{ env.EMULATOR_ARTIFACT }}-*"
+        commit: main
+        tag: snapshot
+        name: Snapshot
+        body: |
+          # Latest Development Snapshot
+
   Post-Slack-Message:
     runs-on: windows-latest
     needs: Build-Firmware-And-Emulator
