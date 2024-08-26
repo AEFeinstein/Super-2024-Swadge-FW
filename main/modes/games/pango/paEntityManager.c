@@ -209,6 +209,8 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
             currentEntity->active = true;
         }
     }
+
+    entityManager->activeEntities = 0;
 }
 
 void pa_drawEntities(paEntityManager_t* entityManager)
@@ -369,6 +371,7 @@ paEntity_t* createCrabdozer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->scoreValue           = 100;
     entity->stateTimer           = -1;
     entity->tempStateTimer       = -1;
+    entity->stateFlag            = false;
     entity->baseSpeed = entityManager->gameData->enemyInitialSpeed;
 
     entity->type                 = PA_ENTITY_CRABDOZER;
@@ -524,6 +527,11 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
                             //pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
                             newEnemy->state = PA_EN_ST_STUN;
                             newEnemy->stateTimer = 120;
+                            if(entityManager->activeEnemies == 0 || entityManager->gameData->remainingEnemies == 1){
+                                //The first and last enemies are permanently angry
+                                newEnemy->stateFlag = true;
+                            }
+
                             pa_createBreakBlock(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
                             entityManager->activeEnemies++;
                             entityManager->gameData->remainingEnemies--;

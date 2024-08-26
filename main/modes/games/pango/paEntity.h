@@ -116,6 +116,7 @@ struct paEntity_t
     uint8_t targetTileX;
     uint8_t targetTileY;
     uint16_t state;
+    bool stateFlag;
     int16_t stateTimer;
     int16_t tempStateTimer;
     int16_t baseSpeed;

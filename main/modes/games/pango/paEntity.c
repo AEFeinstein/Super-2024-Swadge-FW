@@ -52,6 +52,7 @@ void pa_initializeEntity(paEntity_t* self, paEntityManager_t* entityManager, paT
     self->stateTimer = -1;
     self->tempStateTimer = -1;
     self->baseSpeed = 0;
+    self->stateFlag = false;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -249,9 +250,15 @@ void updateCrabdozer(paEntity_t* self)
         case PA_EN_ST_STUN: 
             self->stateTimer--;
             if(self->stateTimer < 0){
-                self->state = PA_EN_ST_NORMAL;
                 self->facingDirection = PA_DIRECTION_NONE;
-                self->stateTimer = (300 + esp_random() % 600); //Min 5 seconds, max 15 seconds
+                
+                if(self->stateFlag){
+                    self->state = PA_EN_ST_AGGRESSIVE;
+                    self->stateTimer = 32767; //effectively always aggressive
+                } else {
+                    self->state = PA_EN_ST_NORMAL;
+                    self->stateTimer = (300 + esp_random() % 600); //Min 5 seconds, max 15 seconds
+                }     
             } else {
                 if (self->gameData->frameCount % ((self->stateTimer >> 1)+1) == 0)
                 {

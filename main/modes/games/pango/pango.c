@@ -813,13 +813,20 @@ void changeStateGame(pango_t* self)
             pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
         }
     } else {
+        uint16_t randomAggroEnemy = esp_random() % self->gameData.maxActiveEnemies;
+
         for(uint16_t i = 0; i<entityManager->activeEnemies; i++){
             if(i >= DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH){
                 entityManager->activeEnemies--;
                 continue;
             }
 
-            createCrabdozer(&(self->entityManager), (defaultEnemySpawnLocations[i*2] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8, (defaultEnemySpawnLocations[i*2+1] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
+            paEntity_t* newEnemy =  createCrabdozer(&(self->entityManager), (defaultEnemySpawnLocations[i*2] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8, (defaultEnemySpawnLocations[i*2+1] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
+            if(newEnemy != NULL && i == randomAggroEnemy){
+                newEnemy->stateFlag = true;
+                newEnemy->state = PA_EN_ST_STUN;
+                newEnemy->stateTimer = 1;
+            }
         }
 
     }
