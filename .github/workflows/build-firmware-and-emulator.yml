@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - midi-synth-platform-midi
   pull_request:
     branches:
       - main
@@ -31,14 +32,14 @@ jobs:
             family: osx
             emulator: true
             firmware: false
-            emu_binary: swadge_emulator
+            emu_binary: SwadgeEmulator.zip
             idf_install: ~/.espressif
           - os: osx-intel
             runner: macos-13
             family: osx
             emulator: true
             firmware: false
-            emu_binary: swadge_emulator
+            emu_binary: SwadgeEmulator.zip
             idf_install: ~/.espressif
           - os: linux
             runner: ubuntu-latest
@@ -73,7 +74,8 @@ jobs:
     - name: Install homebrew packages
       if: matrix.family == 'osx'
       run: |
-        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake graphviz
+        # Not installing graphviz here because we don't actually build the docs and brew has trouble with its dependnencies
+        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake dylibbundler
 
     - name: Install apt packages
       if: matrix.family == 'linux'
@@ -91,6 +93,12 @@ jobs:
       if: matrix.emulator && matrix.family != 'windows'
       run: |
         make -j3
+
+    - name: Build OSX Bundle
+      if: matrix.emulator && matrix.family == 'osx'
+      run: |
+        make SwadgeEmulator.app
+        zip -r SwadgeEmulator.zip SwadgeEmulator.app
 
     #### Generic Emulator Upload
     - name: Upload Emulator Binary

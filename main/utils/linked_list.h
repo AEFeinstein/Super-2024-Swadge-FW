@@ -95,6 +95,8 @@ void* pop(list_t* list);
 void unshift(list_t* list, void* val);
 void* shift(list_t* list);
 bool addIdx(list_t* list, void* val, uint16_t index);
+void addBefore(list_t* list, void* val, node_t* entry);
+void addAfter(list_t* list, void* val, node_t* entry);
 void* removeIdx(list_t* list, uint16_t index);
 void* removeEntry(list_t* list, node_t* entry);
 void clear(list_t* list);

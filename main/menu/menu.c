@@ -723,7 +723,7 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
     }
     else if (item->label)
     {
-        if (item->label == mnuBackStr)
+        if (item->label == mnuBackStr && menu->parentMenu)
         {
             // If this is the back string, return the parent menu
             // Reset the current item when leaving a submenu
@@ -762,6 +762,11 @@ menu_t* menuSetCurrentOption(menu_t* menu, int32_t value)
         if (item->options)
         {
             item->currentOpt = CLAMP(value, 0, item->numOptions - 1);
+
+            if (item->settingVals)
+            {
+                item->currentSetting = item->settingVals[item->currentOpt];
+            }
         }
         else
         {

@@ -8,7 +8,7 @@
 int stringcmp(const void* a, const void* b);
 
 #define MAX_FILES 8192
-#define PATH_MAX  4096
+#define CNFS_PATH_MAX  4096
 
 int stringcmp(const void* a, const void* b)
 {
@@ -34,8 +34,8 @@ int main(int argc, char** argv)
 
     char* filelist[MAX_FILES];
 
-    char tfolder[PATH_MAX];
-    snprintf(tfolder, PATH_MAX, "%s", argv[1]);
+    char tfolder[CNFS_PATH_MAX];
+    snprintf(tfolder, CNFS_PATH_MAX, "%s", argv[1]);
 
     struct dirent* dp;
     DIR* dir = opendir(tfolder);
@@ -61,8 +61,8 @@ int main(int argc, char** argv)
     for (int fno = 0; fno < numfiles_in; fno++)
     {
         char* fname_in = filelist[fno];
-        char fname[PATH_MAX];
-        snprintf(fname, PATH_MAX, "%s/%s", argv[1], fname_in);
+        char fname[CNFS_PATH_MAX];
+        snprintf(fname, CNFS_PATH_MAX, "%s/%s", argv[1], fname_in);
 
         FILE* f = fopen(fname, "rb");
         if (!f)

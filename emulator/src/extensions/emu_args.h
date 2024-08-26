@@ -21,11 +21,15 @@
 
 typedef struct
 {
+    float fakeFps;
+    bool fakeTime;
+
     bool fullscreen;
     bool hideLeds;
 
     bool fuzz;
     bool fuzzButtons;
+    bool fuzzTime;
     bool fuzzTouch;
     bool fuzzMotion;
 
@@ -61,6 +65,15 @@ typedef struct
 
     /// @brief Name of the file to replay inputs from
     const char* replayFile;
+
+    /// @brief A value to use to manually seed the random number generator
+    uint32_t seed;
+
+    /// @brief Whether to display an FPS counter
+    bool showFps;
+
+    /// @brief Whether VSync is enabled
+    bool vsync;
 } emuArgs_t;
 
 //==============================================================================
