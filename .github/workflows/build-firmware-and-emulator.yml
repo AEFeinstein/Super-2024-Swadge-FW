@@ -181,6 +181,8 @@ jobs:
 
   Create-Snapshot-Release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - name: Create release for latest artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
