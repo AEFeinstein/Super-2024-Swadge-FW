@@ -181,6 +181,7 @@ jobs:
 
   Create-Snapshot-Release:
     runs-on: ubuntu-latest
+    needs: Build-Firmware-And-Emulator
     permissions:
       contents: write
     steps:
