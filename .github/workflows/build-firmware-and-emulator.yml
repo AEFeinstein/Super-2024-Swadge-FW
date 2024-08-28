@@ -188,7 +188,7 @@ jobs:
         prerelease: true
         allowUpdates: true
         replacesArtifacts: true
-        artifacts: "${{ env.FIRMWARE_ARTIFACT }},${{ env.EMULATOR_ARTIFACT }}-*"
+        artifacts: "${{ env.FIRMWARE_ARTIFACT }}/*,${{ env.EMULATOR_ARTIFACT }}-*/*"
         commit: main
         tag: snapshot
         name: Snapshot
