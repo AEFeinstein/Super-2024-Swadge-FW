@@ -84,7 +84,7 @@ CFLAGS = \
 	-fdata-sections \
 	-gdwarf-4 \
 	-ggdb \
-	-O2 \
+	-O2	\
 	-fno-jump-tables \
 	-finline-functions \
 	-std=gnu17

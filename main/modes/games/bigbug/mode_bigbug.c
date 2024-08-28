@@ -86,6 +86,7 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
 static void bb_DacCb(uint8_t *samples, int16_t len);
 
 //big bug logic
+static void bb_LoadScreenDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void bb_ControlGarbotnik(int64_t elapsedUs);
 static void bb_DrawScene(void);
 static void bb_GameLoop(int64_t elapsedUs);
@@ -138,8 +139,20 @@ bb_t* bigbug = NULL;
 
 static void bb_EnterMode(void)
 {
+    // Force draw a loading screen
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
+    
+
     printf("a\n");
     bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+
+    // Load font
+    loadFont("ibm_vga8.font", &bigbug->font, false);
+
+    const char loadingStr[] = "Loading...";
+    int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
+    drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
+    drawDisplayTft(NULL);
     
     printf("b\n");
 
@@ -161,8 +174,7 @@ static void bb_EnterMode(void)
     bigbug->screen = BIGBUG_GAME;
     printf("g\n");
 
-    // Load font
-    loadFont("ibm_vga8.font", &bigbug->font, false);
+    
     printf("h\n");
 
     bb_Reset();
@@ -206,7 +218,7 @@ static void bb_AudioCallback(uint16_t* samples, uint32_t sampleCnt)
 {
     // Fill this in
 }
- 
+
 static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     //accelIntegrate(); only needed if using accelerometer for something
@@ -546,8 +558,8 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
         vec_t tilePos = {best_i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE, best_j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
         //AABB-AABB collision detection begins here
         //https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-        if(bigbug->garbotnikPos.x + 240 > tilePos.x - BITSHIFT_HALF_TILE &&
-           bigbug->garbotnikPos.x - 240 < tilePos.x + BITSHIFT_HALF_TILE &&
+        if(bigbug->garbotnikPos.x + 192 > tilePos.x - BITSHIFT_HALF_TILE &&
+           bigbug->garbotnikPos.x - 192 < tilePos.x + BITSHIFT_HALF_TILE &&
            bigbug->garbotnikPos.y + 192 > tilePos.y - BITSHIFT_HALF_TILE &&
            bigbug->garbotnikPos.y - 192 < tilePos.y + BITSHIFT_HALF_TILE)
         {
@@ -562,12 +574,12 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 if(normal.x > 0){
                     normal.x = 1;
                     normal.y = 0;
-                    bigbug->garbotnikPos.x = tilePos.x + 240 + BITSHIFT_HALF_TILE;
+                    bigbug->garbotnikPos.x = tilePos.x + 192 + BITSHIFT_HALF_TILE;
                 }
                 else{
                     normal.x = -1;
                     normal.y = 0;
-                    bigbug->garbotnikPos.x = tilePos.x - 240 - BITSHIFT_HALF_TILE;
+                    bigbug->garbotnikPos.x = tilePos.x - 192 - BITSHIFT_HALF_TILE;
                 }
                 
             }
@@ -583,6 +595,8 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                     bigbug->garbotnikPos.y = tilePos.y - 192 - BITSHIFT_HALF_TILE;
                 }
             }
+            
+            
             //printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
             if(dotVec2d(bigbug->garbotnikVel, normal) < -95)//velocity angle is opposing garbage normal vector. Tweak number for different threshold.
             {
@@ -620,21 +634,21 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 /////////////////////////////////
                 //check neighbors for stability//
                 /////////////////////////////////
-                for(uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
-                {
-                    uint32_t check_x = best_i + bigbug->gameData.neighbors[neighborIdx][0];
-                    uint32_t check_y = best_j + bigbug->gameData.neighbors[neighborIdx][1];
-                    //Check if neighbor is in bounds of map (also not on left, right, or bottom, perimiter) and if it is dirt.
-                    if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y < TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
-                    {
-                        uint32_t* val = calloc(3, sizeof(uint32_t));
-                        val[0] = check_x;
-                        val[1] = check_y;
-                        val[2] = 1; //1 is for foreground. 0 is midground.
-                    }
-                }
-
-                
+                // for(uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
+                // {
+                //     uint32_t check_x = best_i + bigbug->gameData.neighbors[neighborIdx][0];
+                //     uint32_t check_y = best_j + bigbug->gameData.neighbors[neighborIdx][1];
+                //     //Check if neighbor is in bounds of map (also not on left, right, or bottom, perimiter) and if it is dirt.
+                //     if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y < TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
+                //     {
+                //         uint32_t* val = calloc(4, sizeof(uint32_t));
+                //         val[0] = check_x;
+                //         val[1] = check_y;
+                //         val[2] = 1; //1 is for foreground. 0 is midground.
+                //         val[3] = 0; //f value used in pathfinding.
+                //         push(bigbug->gameData.pleaseCheck, (void*)val);
+                //     }
+                // }
             }
         }
     }
