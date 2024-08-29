@@ -185,7 +185,14 @@ jobs:
     - name: Testing
       run: |
         find .
-        unzip -l SwadgeEmulator.zip
+
+    - name: Rename artifacts
+      run: |
+        mv ${{ env.EMULATOR_ARTIFACT }}-osx-arm/SwadgeEmulator.zip SwadgeEmulator-osx-arm.zip
+        mv ${{ env.EMULATOR_ARTIFACT }}-osx-intel/SwadgeEmulator.zip SwadgeEmulator-osx-intel.zip
+        mv ${{ env.EMULATOR_ARTIFACT }}-linux/swadge_emulator SwadgeEmulator-linux
+        #mv ${{ env.EMULATOR_ARTIFACT }}-windows/SwadgeEmulator.exe SwadgeEmulator-windows.exe
+        find .
 
     - name: Create release for latest artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
@@ -195,7 +202,7 @@ jobs:
         prerelease: true
         allowUpdates: true
         replacesArtifacts: true
-        artifacts: "${{ env.FIRMWARE_ARTIFACT }}/*,${{ env.EMULATOR_ARTIFACT }}-*/*"
+        artifacts: "${{ env.FIRMWARE_ARTIFACT }}/*,SwadgeEmulator-*"
         commit: main
         tag: snapshot
         name: Snapshot
