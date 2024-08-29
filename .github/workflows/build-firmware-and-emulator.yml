@@ -119,17 +119,6 @@ jobs:
         name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}
         pattern: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-*
         delete-merged: true
-    
-    - name: Add emulator artifact to release
-      if: matrix.emulator
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os}}-*
-        file_glob: true
-        prerelease: true
-        overwrite: true
-        tag: snapshot
 
     ## Firmware
     - name: Restore IDF Cache
@@ -181,16 +170,36 @@ jobs:
           build/partition_table/partition-table.bin
           version.txt
           tools/pyFlashGui/pyFlashGui.py
-    
-    - name: Add firmware artifact to release
-      if: matrix.firmware
-      uses: svenstaro/upload-release-action@v2
+
+  Create-Snapshot-Release:
+    runs-on: ubuntu-latest
+    needs: Build-Firmware-And-Emulator
+    permissions:
+      contents: write
+    steps:
+    - name: Download all previous build artifacts
+      uses: actions/download-artifact@v4
       with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ env.FIRMWARE_ARTIFACT }}
+        merge-multiple: true
+    
+    - name: Testing
+      run: |
+        find .
+
+    - name: Create release for latest artifacts
+      if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
+      uses: ncipollo/release-action@v1
+      with:
+        # Allow the release to be updated, since it's not a "final" release
         prerelease: true
-        overwrite: true
+        allowUpdates: true
+        replacesArtifacts: true
+        artifacts: "${{ env.FIRMWARE_ARTIFACT }}/*,${{ env.EMULATOR_ARTIFACT }}-*/*"
+        commit: main
         tag: snapshot
+        name: Snapshot
+        body: |
+          # Latest Development Snapshot
 
   Post-Slack-Message:
     runs-on: windows-latest
