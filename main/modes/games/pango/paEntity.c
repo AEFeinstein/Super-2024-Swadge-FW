@@ -252,10 +252,11 @@ void updateCrabdozer(paEntity_t* self)
             if(self->stateTimer < 0){
                 self->facingDirection = PA_DIRECTION_NONE;
                 
-                if(self->stateFlag){
+                /*if(self->stateFlag){
                     self->state = PA_EN_ST_AGGRESSIVE;
                     self->stateTimer = 32767; //effectively always aggressive
-                } else {
+                    self->entityManager->aggroEnemies++;
+                } else*/ {
                     self->state = PA_EN_ST_NORMAL;
                     self->stateTimer = (300 + esp_random() % 600); //Min 5 seconds, max 15 seconds
                 }     
@@ -272,8 +273,14 @@ void updateCrabdozer(paEntity_t* self)
         case PA_EN_ST_NORMAL:
         case PA_EN_ST_AGGRESSIVE: {
             self->stateTimer--;
-            if(self->stateTimer < 0){
-                self->state = (self->state == PA_EN_ST_NORMAL) ? PA_EN_ST_AGGRESSIVE : PA_EN_ST_NORMAL;
+            if(self->stateTimer < 0 || self->entityManager->aggroEnemies < self->gameData->minAggroEnemies){
+                if(self->state == PA_EN_ST_NORMAL){
+                    self->state = PA_EN_ST_AGGRESSIVE;
+                    self->entityManager->aggroEnemies++;
+                } else if (self->state == PA_EN_ST_AGGRESSIVE && (self->entityManager->aggroEnemies > self->gameData->minAggroEnemies)){
+                    self->state = PA_EN_ST_NORMAL;
+                    self->entityManager->aggroEnemies--;
+                }
                 self->stateTimer = (300 + esp_random() % 600); //Min 5 seconds, max 15 seconds
             }
 
@@ -1304,7 +1311,11 @@ void killEnemy(paEntity_t* target)
     target->type               = ENTITY_DEAD;
     target->spriteFlipVertical = true;
     target->updateFunction     = &updateEntityDead;
+    
     target->entityManager->activeEnemies--;
+    if(target->state == PA_EN_ST_AGGRESSIVE){
+        target->entityManager->aggroEnemies--;
+    }
 
     if(target->entityManager->activeEnemies == 0 && target->entityManager->gameData->remainingEnemies == 0){
         target->gameData->changeState = PA_ST_LEVEL_CLEAR;

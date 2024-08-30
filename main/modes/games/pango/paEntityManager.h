@@ -32,6 +32,7 @@ struct paEntityManager_t
     uint8_t activeEntities;
 
     int16_t activeEnemies;
+    int16_t aggroEnemies;
 
     paGameData_t* gameData;
 

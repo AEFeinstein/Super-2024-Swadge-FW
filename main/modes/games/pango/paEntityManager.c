@@ -211,6 +211,7 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
     }
 
     entityManager->activeEntities = 0;
+    entityManager->aggroEnemies = 0;
 }
 
 void pa_drawEntities(paEntityManager_t* entityManager)

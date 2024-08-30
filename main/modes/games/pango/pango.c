@@ -314,7 +314,8 @@ void updateGame(pango_t* self)
     detectGameStateChange(self);
     detectBgmChange(self);
 
-    self->gameData.coins = self->gameData.remainingEnemies;
+    //self->gameData.coins = self->gameData.remainingEnemies;
+    self->gameData.coins = self->entityManager.aggroEnemies;
     drawPangoHud(&(self->radiostars), &(self->gameData));
 
     self->gameData.frameCount++;
@@ -363,7 +364,7 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     }
 
     drawText(font, c553, livesStr, 56, 2);
-    //drawText(font, c553, coinStr, 160, 224);
+    drawText(font, c553, coinStr, 160, 224);
     drawText(font, c553, scoreStr, 112, 2);
     drawText(font, c553, levelStr, 24, 224);
     drawText(font, (gameData->countdown > 30) ? c553 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 212, 224);

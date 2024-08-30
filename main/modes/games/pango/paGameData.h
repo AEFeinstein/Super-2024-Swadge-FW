@@ -62,6 +62,7 @@ typedef struct
     int16_t maxActiveEnemies;
     int16_t remainingEnemies;
     int16_t enemyInitialSpeed;
+    int16_t minAggroEnemies;
 
     paSoundManager_t* soundManager;
 } paGameData_t;
