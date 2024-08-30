@@ -274,4 +274,5 @@ void pa_setDifficultyLevel(paGameData_t* gameData, uint16_t levelIndex){
     gameData->maxActiveEnemies = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET];
     gameData->enemyInitialSpeed = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_INITIAL_SPEED_LOOKUP_OFFSET];
     gameData->minAggroEnemies = 1;
+    gameData->maxAggroEnemies = 1;
 }

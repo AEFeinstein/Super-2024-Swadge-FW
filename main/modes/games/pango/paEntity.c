@@ -274,10 +274,10 @@ void updateCrabdozer(paEntity_t* self)
         case PA_EN_ST_AGGRESSIVE: {
             self->stateTimer--;
             if(self->stateTimer < 0 || self->entityManager->aggroEnemies < self->gameData->minAggroEnemies){
-                if(self->state == PA_EN_ST_NORMAL){
+                if(self->state == PA_EN_ST_NORMAL && (self->entityManager->aggroEnemies < self->gameData->maxAggroEnemies)){
                     self->state = PA_EN_ST_AGGRESSIVE;
                     self->entityManager->aggroEnemies++;
-                } else if (self->state == PA_EN_ST_AGGRESSIVE && (self->entityManager->aggroEnemies > self->gameData->minAggroEnemies)){
+                } else if (self->state == PA_EN_ST_AGGRESSIVE){
                     self->state = PA_EN_ST_NORMAL;
                     self->entityManager->aggroEnemies--;
                 }
