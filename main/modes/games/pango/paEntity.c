@@ -281,7 +281,7 @@ void updateCrabdozer(paEntity_t* self)
                     self->state = PA_EN_ST_NORMAL;
                     self->entityManager->aggroEnemies--;
                 }
-                self->stateTimer = (300 + esp_random() % 600); //Min 5 seconds, max 15 seconds
+                self->stateTimer = (300 + esp_random() % 300); //Min 5 seconds, max 10 seconds
             }
 
             uint8_t tx = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
@@ -296,7 +296,7 @@ void updateCrabdozer(paEntity_t* self)
             int16_t hcof = (((self->x >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
             int16_t vcof = (((self->y >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
 
-            bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE) ? esp_random() % 2 : false;
+            bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE) /*? esp_random() % 2 : false*/;
 
             switch(self->facingDirection){
                 case PA_DIRECTION_WEST:
