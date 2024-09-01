@@ -47,11 +47,8 @@ static const int16_t masterDifficulty2[MASTER_DIFFICULTY2_TABLE_LENGTH * MASTER_
 
 static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DIFFICULTY_TABLE_ROW_LENGTH] = {
 
-//Notes:
-//-at any given time, at least 1 enemy should be always aggressive
-
-// Total    max          
-// enemies, active, speed
+// Total    max           min    max
+// enemies, active, speed aggro, aggro,
          5,      2,    12,
          5,      3,    12,
          6,      3,    13,
@@ -67,7 +64,8 @@ static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DI
          9,      3,    16,
          8,      3,    17,
         10,      4,    14,
-        12,      1,    18,             
+        12,      1,    18, 
+                    
 };
 
 #endif
