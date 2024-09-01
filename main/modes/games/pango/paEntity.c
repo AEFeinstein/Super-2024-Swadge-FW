@@ -277,9 +277,11 @@ void updateCrabdozer(paEntity_t* self)
                 if(self->state == PA_EN_ST_NORMAL && (self->entityManager->aggroEnemies < self->gameData->maxAggroEnemies)){
                     self->state = PA_EN_ST_AGGRESSIVE;
                     self->entityManager->aggroEnemies++;
+                    self->baseSpeed+=2;
                 } else if (self->state == PA_EN_ST_AGGRESSIVE){
                     self->state = PA_EN_ST_NORMAL;
                     self->entityManager->aggroEnemies--;
+                    self->baseSpeed-=2;
                 }
                 self->stateTimer = (300 + esp_random() % 300); //Min 5 seconds, max 10 seconds
             }
