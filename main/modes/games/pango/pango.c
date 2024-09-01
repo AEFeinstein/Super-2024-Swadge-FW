@@ -233,7 +233,7 @@ void pangoEnterMode(void)
         pango->easterEgg = true;
     }
 
-    loadFont("eightbit_atari_grube2.font", &pango->radiostars, false);
+    loadFont("pango-fw.font", &pango->radiostars, false);
 
     pa_initializeTileMap(&(pango->tilemap));
     pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
