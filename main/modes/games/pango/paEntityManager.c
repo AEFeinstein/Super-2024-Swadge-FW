@@ -528,10 +528,10 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
                             //pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
                             newEnemy->state = PA_EN_ST_STUN;
                             newEnemy->stateTimer = 120;
-                            if(entityManager->activeEnemies == 0 || entityManager->gameData->remainingEnemies == 1){
+                            /*if(entityManager->activeEnemies == 0 || entityManager->gameData->remainingEnemies == 1){
                                 //The first and last enemies are permanently angry
                                 newEnemy->stateFlag = true;
-                            }
+                            }*/
 
                             pa_createBreakBlock(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
                             entityManager->activeEnemies++;
