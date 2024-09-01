@@ -700,7 +700,7 @@ void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
                 drawText(font, c555, "Exit to Menu", 48, 192);
             }
 
-            drawText(font, c555, "->", 32, 128 + pango->menuSelection * 16);
+            drawText(font, c555, "->", 24, 128 + pango->menuSelection * 16);
 
             break;
         }
