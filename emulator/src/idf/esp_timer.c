@@ -9,6 +9,7 @@
 
 #include "esp_timer.h"
 #include "esp_log.h"
+#include "esp_timer_emu.h"
 
 //==============================================================================
 // Variables

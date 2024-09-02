@@ -5,12 +5,14 @@
 
 #include "waveTables.h"
 #include "midiNoteFreqs.h"
+#include "midiData.h"
 #include "midiUtil.h"
 #include "hdw-dac.h"
 #include "fp_math.h"
 #include "esp_log.h"
 #include "drums.h"
 #include "macros.h"
+#include "cnfs.h"
 
 #define OSC_DITHER
 
@@ -35,10 +37,16 @@ static const uint8_t oscDither[] = {
 /// @brief Convert the sample count to MIDI ticks
 #define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
 
-/// @brief Calculate the number of DAC samples in the given number of milliseconds
-#define MS_TO_TICKS(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
+/// @brief Convert a number of MIDI ticks to the offset of the first sample of the
+#define TICKS_TO_SAMPLES(ticks, tempo, div) ((ticks) * DAC_SAMPLE_RATE_HZ / (1000000) * (tempo) / (div))
 
 #define VS_ANY(statePtr) ((statePtr)->on)
+
+#define VOICE_CUR_VOL(voice)                                                                     \
+    (/*(uint8_t)*/ ((voice)->transitionStartVol                                                  \
+                    + ((int)(voice)->targetVol - (int)(voice)->transitionStartVol)               \
+                          * ((int)(voice)->transitionTicksTotal - (int)(voice)->transitionTicks) \
+                          / (int)(voice)->transitionTicksTotal))
 
 // Values for the percussion special states bitmap
 #define SHIFT_HI_HAT   (0)
@@ -60,45 +68,17 @@ static bool globalPlayerInit                          = false;
 static midiPlayer_t globalPlayers[NUM_GLOBAL_PLAYERS] = {0};
 
 static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount);
+static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
+static void midiStepVoice(midiChannel_t* channel, voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
 static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre);
-static void midiGmOn(midiPlayer_t* player);
+static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config);
+static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program);
 static int32_t midiSumPercussion(midiPlayer_t* player);
 static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event);
 static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex);
 static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event);
 static void handleEvent(midiPlayer_t* player, const midiEvent_t* event);
-
-static const midiTimbre_t defaultDrumkitTimbre = {
-    .type = NOISE,
-    .flags = TF_PERCUSSION,
-    .percussion = {
-        .playFunc = defaultDrumkitFunc,
-        // TODO: Define the data and put it here!
-        .data = NULL,
-    },
-    .envelope = { 0 },
-    .name = "Swadge Drums 0",
-};
-
-static const midiTimbre_t acousticGrandPianoTimbre = {
-    .type = WAVETABLE,
-    .flags = TF_NONE,
-    .waveIndex = 0,
-    .envelope = {
-        // TODO: Just realized I forgot how ADSR actually works halfway through writing everything else...
-        // So go make sure the rest of everything makes sense, maybe rename everything to {a,d,r}Time and {s}Level for clarity
-        // Pretty fast attack
-        .attack = MS_TO_TICKS(24),
-        // Take a good long while to reach the sustain level
-        .decay = MS_TO_TICKS(750),
-        // Sustain at about 75% of initial volume
-        .sustain = 192,
-        // And a not-too-short release time
-        .release = MS_TO_TICKS(100),
-        // Yup, I'm sure it will sound exactly like a grand piano now!
-    },
-    .name = "Acoustic Grand Piano",
-};
+static void midiSongEnd(midiPlayer_t* player);
 
 // Check for the first unused note, then try to steal one in order of less to more bad, and return INT32_MAX if none are
 // available
@@ -115,9 +95,8 @@ static const midiTimbre_t acousticGrandPianoTimbre = {
  */
 static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount)
 {
-    uint32_t allStates
-        = VS_ANY(states)
-          | states->held; // states->attack | states->decay | states->release | states->sustain | states->held;
+    uint32_t allStates = VS_ANY(states) | states->held | states->attack | states->decay | states->release
+                         | states->sustain | states->sustenuto;
 
     // Set up a bitflag which has a 1 set for every voice that is NOT being used
     //                         /- flip the bits so a 1 represents an unused voice and a 0 represents an in-use voice
@@ -132,9 +111,247 @@ static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount)
     }
     else
     {
+        // No unused voices!
+        // Try a different approach, treat notes in release state as not in use to hopefully steal one of those
+        allStates &= ~states->release;
+        unusedVoices = (~allStates) & (0xFFFFFFFFu >> (32 - voiceCount));
+        if (unusedVoices != 0)
+        {
+            return __builtin_ctz(unusedVoices);
+        }
+
         // Gotta steal a note, so steal the first one
-        // TODO: This could be done more intelligently, but we have plenty of voices
         return 0;
+    }
+}
+
+/**
+ * @brief Release a note and transition it to the release state if it has one
+ *
+ * @param states The voice state bitmap
+ * @param voiceIdx The index of this voice in the bitmap
+ * @param voice A pointer to the actual voice which is used to determine the transition
+ * @return true if the note should be deallocated
+ * @return false if the note is still playing and should remain allocated
+ */
+static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice)
+{
+    uint32_t voiceBit = 1 << voiceIdx;
+    uint32_t mask     = UINT32_MAX & ~voiceBit;
+
+    uint8_t oscVol       = 0;
+    uint32_t releaseTime = voice->timbre->envelope.releaseTime
+                           + ((voice->timbre->envelope.releaseTimeVel * (int8_t)voice->velocity) >> 8);
+    uint32_t sustainVol
+        = voice->timbre->envelope.sustainVol + ((voice->timbre->envelope.sustainVolVel * (int)voice->velocity) >> 8);
+
+    // We don't care what state the note is in, as long as it's not already in the release state
+    if ((0 == (states->release & voiceBit)) && releaseTime)
+    {
+        // Release time will take some
+        states->release |= voiceBit;
+        // start the transition at the current calculated volume
+        if (states->sustain & voiceBit)
+        {
+            voice->transitionStartVol = sustainVol;
+        }
+        else if (voice->transitionTicksTotal)
+        {
+            voice->transitionStartVol = VOICE_CUR_VOL(voice);
+        }
+        else
+        {
+            voice->transitionStartVol = voice->velocity << 1 | 1;
+        }
+
+        voice->transitionTicksTotal = voice->transitionTicks = releaseTime;
+        voice->targetVol                                     = 0;
+
+        // Calculate the rate at which the volume will adjust based on the state transition length
+        oscVol = voice->transitionStartVol; // VOICE_CUR_VOL(voice);
+    }
+    else if (releaseTime)
+    {
+        // Already in release... ok, just get the current volume then
+        oscVol = VOICE_CUR_VOL(voice);
+    }
+    else
+    {
+        // No release time, just end it immediately
+        oscVol                      = 0;
+        voice->transitionTicksTotal = voice->transitionTicks = UINT32_MAX;
+        voice->targetVol                                     = 0;
+    }
+
+    // Unconditionally unset the voice for all states
+    states->on &= mask;
+    states->attack &= mask;
+    states->decay &= mask;
+    states->sustain &= mask;
+
+    for (uint8_t i = 0; i < OSC_PER_VOICE; i++)
+    {
+        swSynthSetVolume(&voice->oscillators[i], oscVol);
+
+        // add up the actual current oscillator volume
+    }
+
+    if (0 == releaseTime)
+    {
+        // If there's no volume on any oscillator, then the note is done playing
+        states->release &= mask;
+        return true;
+    }
+
+    return false;
+}
+
+void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice)
+{
+    uint32_t voiceBit    = 1 << voiceIdx;
+    uint32_t pressureVol = voice->velocity << 1 | 1;
+
+    // While we're in the sustain state, don't bother checking for transitions
+    if (voice->transitionTicks != UINT32_MAX)
+    {
+        while (!voice->transitionTicks)
+        {
+            uint32_t sustainVol = CLAMP(voice->timbre->envelope.sustainVol
+                                            + ((voice->timbre->envelope.sustainVolVel * (int)voice->velocity) >> 8),
+                                        0, 255);
+
+            if (states->attack & voiceBit)
+            {
+                // Current state: ATTACK --> DECAY
+                states->attack &= ~voiceBit;
+                states->decay |= voiceBit;
+
+                uint32_t decayTime = voice->timbre->envelope.decayTime
+                                     + ((voice->timbre->envelope.attackTimeVel * (int)voice->velocity) >> 8);
+
+                if (voice->transitionTicksTotal)
+                {
+                    // Attack time is > 0
+                    voice->transitionStartVol = VOICE_CUR_VOL(voice);
+                }
+                else
+                {
+                    // Attack time == 0, so we go straight to the attack target
+                    voice->transitionStartVol = voice->targetVol;
+                }
+
+                voice->transitionTicksTotal = voice->transitionTicks = decayTime;
+                voice->targetVol = (uint8_t)(((voice->transitionStartVol * sustainVol) >> 8) & 0xFF);
+                pressureVol      = voice->targetVol;
+            }
+            else if (states->decay & voiceBit)
+            {
+                states->decay &= ~voiceBit;
+
+                // Ok so we're going from DECAY to SUSTAIN, sustain lasts forever
+                // BUT - we only go to sustain IF the note is still ON (via key on, hold, or sustenuto)
+                // Otherwise, we skip straight to release
+                if ((voiceBit & (states->on | states->held | states->sustenuto)) && sustainVol)
+                {
+                    // Go to sustain
+                    states->sustain |= voiceBit;
+
+                    // Sustain lasts forever! As long as the note is on/held/sustenuto'd
+                    if (voice->transitionTicksTotal)
+                    {
+                        voice->transitionStartVol = VOICE_CUR_VOL(voice);
+                    }
+                    else
+                    {
+                        voice->transitionStartVol = voice->targetVol;
+                    }
+
+                    pressureVol = voice->transitionStartVol;
+
+                    voice->targetVol            = (pressureVol * sustainVol) >> 8;
+                    voice->transitionTicksTotal = UINT32_MAX;
+                    voice->transitionTicks      = UINT32_MAX;
+
+                    // No need to set the transition times or volume, it was done already
+
+                    // Break because the loop doesn't check for UINT32_MAX, just 0
+                    break;
+                }
+                else
+                {
+                    // Go to release!
+                    states->release |= voiceBit;
+
+                    // Calculate how long the release fadeout will take
+                    uint32_t releaseTime = voice->timbre->envelope.releaseTime
+                                           + ((voice->timbre->envelope.releaseTimeVel * (int8_t)voice->velocity) >> 8);
+
+                    // Save the start volume to current volume and the target to 0
+                    if (voice->transitionTicksTotal)
+                    {
+                        voice->transitionStartVol = VOICE_CUR_VOL(voice);
+                    }
+                    else
+                    {
+                        voice->transitionStartVol = voice->targetVol;
+                    }
+
+                    pressureVol      = voice->transitionStartVol;
+                    voice->targetVol = 0;
+
+                    // Set the transition length accordingly
+                    voice->transitionTicksTotal = voice->transitionTicks = releaseTime;
+                }
+            }
+            else if (states->release & voiceBit)
+            {
+                // Transition from RELEASE to OFF
+                states->release &= ~voiceBit;
+                states->on &= ~voiceBit;
+                channels[voice->channel].allocedVoices &= ~voiceBit;
+
+                pressureVol               = 0;
+                voice->transitionStartVol = VOICE_CUR_VOL(voice);
+                voice->targetVol          = 0;
+
+                voice->transitionTicksTotal = UINT32_MAX;
+                voice->transitionTicks      = UINT32_MAX;
+                // Note's done, don't need to check again
+                break;
+            }
+            else
+            {
+                voice->transitionTicksTotal = voice->transitionTicks = UINT32_MAX;
+                voice->targetVol                                     = 0;
+                break;
+            }
+        }
+
+        voice->transitionTicks--;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // By defualt, use the pressure volume for the oscillator
+    uint8_t oscVol = pressureVol;
+
+    // TODO: I think the logic here might cause something worse:TM: than clipping?
+
+    // Make sure we're in a transitionable state and wouldn't do a divide-by-zero to interpolate the target volume
+    if (voice->transitionTicksTotal != UINT32_MAX)
+    {
+        // Calculate the rate at which the volume will adjust based on the state transition length
+        oscVol = VOICE_CUR_VOL(voice);
+    }
+
+    if (voice->timbre->type != SAMPLE)
+    {
+        for (int i = 0; i < OSC_PER_VOICE; i++)
+        {
+            swSynthSetVolume(&voice->oscillators[i], oscVol);
+        }
     }
 }
 
@@ -153,7 +370,9 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
         {
             case WAVETABLE:
             {
-                swSynthSetWaveFunc(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uintptr_t)timbre->waveIndex));
+                swSynthSetWaveFunc(&voice->oscillators[oscIdx], timbre->waveFunc,
+                                   (void*)((uintptr_t)timbre->waveIndex));
+                voice->oscillators[oscIdx].chorus = (timbre->effects.chorus) >> 3;
                 break;
             }
 
@@ -163,9 +382,16 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
                 break;
             }
 
+            case WAVE_SHAPE:
+            {
+                swSynthSetShape(&voice->oscillators[oscIdx], timbre->shape);
+                break;
+            }
+
             case SAMPLE:
             {
-                // TODO: Sample support!
+                // Just reset the oscillators in case they were previously in-use
+                swSynthSetVolume(&voice->oscillators[oscIdx], 0);
                 break;
             }
         }
@@ -173,51 +399,69 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
 }
 
 /**
- * @brief Activate General MIDI mode for a MIDI player
+ * @brief Initialize a MIDI timbre from the configured version
  *
- * @param player The MIDI player to set to General MIDI mode
+ * @param dest The destination timbre to set up
+ * @param config The configured timbre to use as the template
  */
-static void midiGmOn(midiPlayer_t* player)
+static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config)
 {
-    for (int voiceIdx = 0; voiceIdx < POOL_VOICE_COUNT + PERCUSSION_VOICES; voiceIdx++)
-    {
-        bool percussion = voiceIdx >= POOL_VOICE_COUNT;
-        midiVoice_t* voice
-            = percussion ? (&player->percVoices[voiceIdx - POOL_VOICE_COUNT]) : (&player->poolVoices[voiceIdx]);
-        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-        {
-            swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uint32_t)0), 0, 0);
-#ifdef OSC_DITHER
-            voice->oscillators[oscIdx].accumulator.bytes[3]
-                = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
-#endif
-            player->allOscillators[player->oscillatorCount++] = &voice->oscillators[oscIdx];
-        }
+    memcpy(dest, config, sizeof(midiTimbre_t));
 
-        voice->timbre = percussion ? &defaultDrumkitTimbre : &acousticGrandPianoTimbre;
+    if (config->type == SAMPLE)
+    {
+        // Sample-based timbres need to do a tiny bit of data loading
+        size_t sampleSize;
+        // TODO should sample.data just be a uint8_t instead? We probably need to convert it anyway
+        dest->sample.data  = cnfsGetFile(config->sample.config.sampleName, &sampleSize);
+        dest->sample.count = (uint32_t)sampleSize;
+
+        if (!dest->sample.data)
+        {
+            ESP_LOGE("MIDI", "Failed to get data for sample '%s'!", config->sample.config.sampleName);
+            dest->sample.count = 0;
+        }
     }
+}
 
-    for (uint8_t chanIdx = 0; chanIdx < MIDI_CHANNEL_COUNT; chanIdx++)
+/**
+ * @brief Return a pointer to the base timbre for the given bank and program definition
+ *
+ * @param bank The bank to select the instrument from, from 0 to 127 with 0 being the GM instruments
+ * @param program The program number, from 0 to 127
+ * @return const midiTimbre_t*
+ */
+static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program)
+{
+    if (percussion)
     {
-        midiChannel_t* chan = &player->channels[chanIdx];
-
-        chan->volume    = UINT14_MAX;
-        chan->pitchBend = 0x2000;
-        chan->program   = 0;
-
-        if (chanIdx == 9)
+        switch (bank)
         {
-            // Channel 10 is reserved for percussion.
-            chan->percussion = true;
+            case 1:
+                return &donutDrumkitTimbre;
 
-            // TODO: Should we just have a pointer instead? That will work great as long as we don't need to modify the
-            // timbre in-place (which MIDI does technically allow)
-            memcpy(&chan->timbre, &defaultDrumkitTimbre, sizeof(midiTimbre_t));
+            case 0:
+            default:
+                return &defaultDrumkitTimbre;
         }
-        else
+    }
+    else
+    {
+        switch (bank)
         {
-            chan->percussion = false;
-            memcpy(&chan->timbre, &acousticGrandPianoTimbre, sizeof(midiTimbre_t));
+            case 1:
+            {
+                if (program < magfestTimbreCount)
+                {
+                    return magfestTimbres[program];
+                }
+
+                return &magfestWaveTimbre;
+            }
+
+            case 0:
+            default:
+                return &acousticGrandPianoTimbre;
         }
     }
 }
@@ -245,7 +489,8 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
         bool done = false;
         sum += voices[voiceIdx].timbre->percussion.playFunc(voices[voiceIdx].note, voices[voiceIdx].sampleTick++, &done,
                                                             voices[voiceIdx].percScratch,
-                                                            voices[voiceIdx].timbre->percussion.data);
+                                                            voices[voiceIdx].timbre->percussion.data)
+               * voices[voiceIdx].velocity / 127;
 
         if (done)
         {
@@ -292,8 +537,97 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
             }
 
             states->on &= ~(1 << voiceIdx);
+            player->channels[voices[voiceIdx].channel].allocedVoices &= ~(1 << voiceIdx);
             voices[voiceIdx].sampleTick = 0;
             memset(voices[voiceIdx].percScratch, 0, 4 * sizeof(uint32_t));
+        }
+    }
+
+    return sum;
+}
+
+static int32_t midiSumSamples(midiPlayer_t* player)
+{
+    voiceStates_t* states = &player->poolVoiceStates;
+    midiVoice_t* voices   = player->poolVoices;
+
+    int32_t sum = 0;
+
+    // Ignore the 'held' flag, this is percussion!
+    uint32_t playingVoices = states->on | states->held | states->sustenuto | states->attack | states->decay
+                             | states->sustain | states->release;
+    while (playingVoices != 0)
+    {
+        uint8_t voiceIdx = __builtin_ctz(playingVoices);
+        playingVoices &= ~(1 << voiceIdx);
+
+        if (voices[voiceIdx].timbre->type != SAMPLE)
+        {
+            // Only sample timbres past here!
+            continue;
+        }
+
+        // Same rate for now -- this is the number of times we need to output each source sample
+        // in order to maintain the desired speed/pitch ratio
+        uq24_8 sampleRateRatio = (1 << 8) * 32768 / voices[voiceIdx].timbre->sample.rate;
+        sampleRateRatio *= voices[voiceIdx].timbre->sample.baseNote;
+        sampleRateRatio /= bendPitchWheel(voices[voiceIdx].note, player->channels[voices[voiceIdx].channel].pitchBend);
+        // Assume C4 is the base note? A4? doesn't really matter
+        // Divide the desired note freq
+
+        bool done      = false;
+        int32_t sample = (int)voices[voiceIdx].timbre->sample.data[voices[voiceIdx].sampleTick] - 128;
+
+        // TODO: Possibly change to 0x08000 for rounding at the half?
+        if (voices[voiceIdx].sampleError > 0x100)
+        {
+            voices[voiceIdx].sampleError -= 0x100;
+        }
+        else
+        {
+            do
+            {
+                // TODO this probably will not work if we go backwards
+                voices[voiceIdx].sampleTick++;
+                // We now need to omit (playRate / sampleDataRate) samples before continuing
+                voices[voiceIdx].sampleError += sampleRateRatio;
+                // And account for the sample we just played
+
+                if (voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.count)
+                {
+                    if (voices[voiceIdx].sampleLoops > 0)
+                    {
+                        voices[voiceIdx].sampleLoops--;
+
+                        if (!voices[voiceIdx].sampleLoops)
+                        {
+                            done = true;
+                            break;
+                        }
+                        else
+                        {
+                            voices[voiceIdx].sampleTick = 0;
+                        }
+                    }
+                    else
+                    {
+                        voices[voiceIdx].sampleTick = 0;
+                    }
+                }
+            } while (voices[voiceIdx].sampleError < 0x100);
+
+            voices[voiceIdx].sampleError -= 0x100;
+        }
+
+        sum += sample * voices[voiceIdx].velocity / 127;
+
+        if (done)
+        {
+            states->on &= ~(1 << voiceIdx);
+            player->channels[voices[voiceIdx].channel].allocedVoices &= ~(1 << voiceIdx);
+            voices[voiceIdx].sampleTick  = 0;
+            voices[voiceIdx].sampleLoops = 0;
+            voices[voiceIdx].sampleError = 0;
         }
     }
 
@@ -313,6 +647,11 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
         // Normal status message
         uint8_t channel = event->status & 0x0F;
         uint8_t cmd     = (event->status >> 4) & 0x0F;
+
+        if (player->channels[channel].ignore)
+        {
+            return;
+        }
 
         switch (cmd)
         {
@@ -336,40 +675,19 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
 
             // AfterTouch
             case 0xA:
+            {
+                uint8_t midiKey  = event->data[0];
+                uint8_t velocity = event->data[1];
+                midiAfterTouch(player, channel, midiKey, velocity);
                 break;
+            }
 
             // Control change
             case 0xB:
             {
-                uint8_t controlId  = event->data[0];
-                uint8_t controlVal = event->data[1];
-                switch (controlId)
-                {
-                    // Sustain
-                    case 0x40:
-                    {
-                        midiSustain(player, channel, controlVal);
-                        break;
-                    }
-
-                    // All sounds off (120)
-                    case 0x78:
-                    {
-                        midiAllSoundOff(player);
-                        break;
-                    }
-
-                    // All notes off (123)
-                    case 0x7B:
-                    {
-                        midiAllNotesOff(player, channel);
-                        break;
-                    }
-
-                    default:
-                        break;
-                }
-
+                midiControl_t controlId = (midiControl_t)event->data[0];
+                uint8_t controlVal      = event->data[1];
+                midiControlChange(player, channel, controlId, controlVal);
                 break;
             }
 
@@ -383,6 +701,7 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
 
             // Channel Pressure
             case 0xD:
+                // Maybe we don't need to implement this actually? Sounds like it's more of a keyboard event
                 break;
 
             // Pitch bend
@@ -520,21 +839,62 @@ static void handleEvent(midiPlayer_t* player, const midiEvent_t* event)
     }
 }
 
+static void midiSongEnd(midiPlayer_t* player)
+{
+    for (uint8_t ch = 0; ch < MIDI_CHANNEL_COUNT; ch++)
+    {
+        midiAllNotesOff(player, 0);
+    }
+
+    if (player->loop && player->mode == MIDI_FILE && player->reader.file)
+    {
+        resetMidiParser(&player->reader);
+        player->sampleCount = 0;
+        player->paused      = false;
+    }
+    else
+    {
+        player->paused = true;
+    }
+
+    if (player->songFinishedCallback)
+    {
+        player->songFinishedCallback();
+    }
+}
+
 void midiPlayerInit(midiPlayer_t* player)
 {
     // Zero out EVERYTHING
     memset(player, 0, sizeof(midiPlayer_t));
 
+    // Initialize the oscillators and count them
+    for (int voiceIdx = 0; voiceIdx < POOL_VOICE_COUNT + PERCUSSION_VOICES; voiceIdx++)
+    {
+        bool percussion = voiceIdx >= POOL_VOICE_COUNT;
+        midiVoice_t* voice
+            = percussion ? (&player->percVoices[voiceIdx - POOL_VOICE_COUNT]) : (&player->poolVoices[voiceIdx]);
+        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
+        {
+            swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uint32_t)0), 0, 0);
+#ifdef OSC_DITHER
+            voice->oscillators[oscIdx].accumulator.bytes[3]
+                = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
+#endif
+            player->allOscillators[player->oscillatorCount++] = &voice->oscillators[oscIdx];
+        }
+
+        voice->timbre = percussion ? &defaultDrumkitTimbre : &acousticGrandPianoTimbre;
+    }
+
     // Set up the values which must be non-zero
     midiPlayerReset(player);
-
-    // Initialize all the instruments
-    midiGmOn(player);
 }
 
 void midiPlayerReset(midiPlayer_t* player)
 {
     midiAllSoundOff(player);
+    midiGmOn(player);
 
     // We need the tempo to not be zero, so set it to the default of 120BPM until we get a tempo event
     // 120 BPM == 500,000 microseconds per quarter note
@@ -547,6 +907,7 @@ void midiPlayerReset(midiPlayer_t* player)
     player->clipped        = 0;
     player->eventAvailable = false;
     player->volume         = UINT14_MAX;
+    player->headroom       = MIDI_DEF_HEADROOM;
 
     deinitMidiParser(&player->reader);
     player->paused = true;
@@ -578,25 +939,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         else
         {
             ESP_LOGI("MIDI", "Done playing file!");
-            for (uint8_t ch = 0; ch < MIDI_CHANNEL_COUNT; ch++)
-            {
-                midiAllNotesOff(player, 0);
-            }
-
-            if (player->songFinishedCallback)
-            {
-                player->songFinishedCallback();
-            }
-
-            if (player->loop && player->mode == MIDI_FILE && player->reader.file)
-            {
-                resetMidiParser(&player->reader);
-                player->sampleCount = 0;
-            }
-            else
-            {
-                player->mode = MIDI_STREAMING;
-            }
+            midiSongEnd(player);
         }
 
         // Use a while loop since we may need to handle multiple events at the exact same time
@@ -623,10 +966,23 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         }
     }
 
+    // Handle ADSR transitions, etc. for all voices
+    uint32_t activeVoices
+        = player->poolVoiceStates.on | player->poolVoiceStates.held | player->poolVoiceStates.sustenuto
+          | player->poolVoiceStates.release; // player->poolVoiceStates.attack | player->poolVoiceStates.decay |
+                                             // player->poolVoiceStates.sustain | player->poolVoiceStates.release;
+    while (0 != activeVoices)
+    {
+        uint8_t voiceIdx = __builtin_ctz(activeVoices);
+        midiStepVoice(player->channels, &player->poolVoiceStates, voiceIdx, &player->poolVoices[voiceIdx]);
+        activeVoices &= ~(1 << voiceIdx);
+    }
+
     // TODO: Sample support
     // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
     int32_t sample = swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
     sample += midiSumPercussion(player);
+    sample += midiSumSamples(player);
 
     player->sampleCount++;
 
@@ -639,13 +995,19 @@ int32_t midiPlayerStep(midiPlayer_t* player)
 
 void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
 {
+    if (player->seeking)
+    {
+        memset(samples, 128, len);
+        return;
+    }
+
     for (int16_t n = 0; n < len; n++)
     {
         // Step the state forward by one sample and return the next sample sum
         int32_t sample = midiPlayerStep(player);
 
         // Multiply the sample by 0.3 to provide some headroom for stacking samples
-        sample *= 0x4ccd;
+        sample *= player->headroom;
         sample >>= 16;
 
         if (sample < -128)
@@ -672,11 +1034,16 @@ void midiPlayerFillBufferMulti(midiPlayer_t* players, uint8_t playerCount, uint8
         int32_t sample = 0;
         for (int i = 0; i < playerCount; i++)
         {
-            sample += midiPlayerStep(&players[i]);
+            if (players[i].seeking)
+            {
+                continue;
+            }
+
+            // Apply the player's headroom to its sample sum
+            sample += (midiPlayerStep(&players[i]) * players[i].headroom);
         }
 
-        // Multiply the sample by 0.3 to provide some headroom for stacking samples
-        sample *= 0x4ccd;
+        // Shift right by 16 to account for the headroom application
         sample >>= 16;
 
         // TODO: Can't keep track of clipping here... does it matter?
@@ -713,6 +1080,11 @@ void midiAllSoundOff(midiPlayer_t* player)
         player->poolVoices[voiceIdx].transitionTicks = 0;
         player->poolVoices[voiceIdx].targetVol       = 0;
         player->poolVoiceStates.held                 = 0;
+        player->poolVoiceStates.sustenuto            = 0;
+        player->poolVoiceStates.attack               = 0;
+        player->poolVoiceStates.decay                = 0;
+        player->poolVoiceStates.sustain              = 0;
+        player->poolVoiceStates.release              = 0;
         player->poolVoiceStates.on                   = 0;
         // TODO: Handle samplers
         for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
@@ -741,6 +1113,50 @@ void midiAllSoundOff(midiPlayer_t* player)
         midiChannel_t* chan = &player->channels[chanIdx];
         chan->allocedVoices = 0;
         chan->held          = false;
+        chan->sustenuto     = false;
+    }
+}
+
+void midiResetChannelControllers(midiPlayer_t* player, uint8_t channel)
+{
+    midiChannel_t* chan = &player->channels[channel];
+    midiSustain(player, channel, MIDI_FALSE);
+    chan->volume    = UINT14_MAX;
+    chan->pitchBend = PITCH_BEND_CENTER;
+    chan->program   = 0;
+    chan->held      = 0;
+    chan->sustenuto = 0;
+    initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program));
+}
+
+void midiGmOn(midiPlayer_t* player)
+{
+    for (uint8_t chanIdx = 0; chanIdx < MIDI_CHANNEL_COUNT; chanIdx++)
+    {
+        midiChannel_t* chan = &player->channels[chanIdx];
+
+        midiResetChannelControllers(player, chanIdx);
+
+        // Channel 10 (index 9) is reserved for percussion.
+        chan->percussion = (9 == chanIdx);
+
+        initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, 0, chan->program));
+    }
+}
+
+void midiGmOff(midiPlayer_t* player)
+{
+    for (uint8_t chanIdx = 0; chanIdx < MIDI_CHANNEL_COUNT; chanIdx++)
+    {
+        midiChannel_t* chan = &player->channels[chanIdx];
+
+        midiResetChannelControllers(player, chanIdx);
+
+        // Channel 10 (index 9) is reserved for percussion.
+        chan->percussion = (9 == chanIdx);
+        chan->bank       = 1;
+
+        initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program));
     }
 }
 
@@ -888,29 +1304,121 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
     uint32_t voiceBit = (1 << voiceIdx);
 
+    bool stolen = 0
+                  != (voiceBit
+                      & (states->on | states->held | states->sustenuto | states->attack | states->decay
+                         | states->sustain | states->release));
+
+    // Not good -- we need to figure out who was using this voice before, and clear it
+    // This is necessary to fix stuck notes, but doesn't take care of everything
+    if (stolen)
+    {
+        uint8_t stolenChannel = voices[voiceIdx].channel;
+        if (player->channels[stolenChannel].percussion == chan->percussion
+            && (player->channels[stolenChannel].allocedVoices & voiceBit))
+        {
+            player->channels[stolenChannel].allocedVoices &= ~voiceBit;
+            // Unnecessary but I'll keep it here for clarity, and the compiler can get rid of it
+            states->on &= ~voiceBit;
+            states->held &= ~voiceBit;
+            states->sustenuto &= ~voiceBit;
+            states->attack &= ~voiceBit;
+            states->decay &= ~voiceBit;
+            states->sustain &= ~voiceBit;
+            states->release &= ~voiceBit;
+        }
+    }
+
+    midiVoice_t* voice = &voices[voiceIdx];
+
     chan->allocedVoices |= voiceBit;
     states->on |= voiceBit;
-    voices[voiceIdx].note = note;
+    voice->note     = note;
+    voice->channel  = chanId;
+    voice->velocity = velocity;
 
     // TODO: Add a note -> voice map in the channel?
-    uint8_t targetVol          = velocity << 1 | 1;
-    voices[voiceIdx].targetVol = targetVol;
 
-    if (chan->timbre.flags & TF_PERCUSSION)
+    // Ensure the selected voice will play with the right instrument
+    setVoiceTimbre(voice, &chan->timbre);
+
+    if ((chan->timbre.flags & TF_PERCUSSION))
     {
         // Reset the percussion voice state
-        voices[voiceIdx].sampleTick = 0;
+        voice->sampleTick = 0;
+    }
+    else if (chan->timbre.type == SAMPLE)
+    {
+        voice->sampleTick  = 0;
+        voice->sampleError = 0;
+        voice->sampleLoops = chan->timbre.sample.loop;
     }
     else
     {
-        // Ensure the selected voice will play with the right instrument
-        if (voices[voiceIdx].timbre != &chan->timbre)
+        // The volume based on the note velocity, used for the attack volume
+        uint8_t pressureVol = velocity << 1 | 1;
+        uint32_t attackTime
+            = chan->timbre.envelope.attackTime + ((chan->timbre.envelope.attackTimeVel * (int8_t)velocity) >> 8);
+
+        voice->transitionTicks = voice->transitionTicksTotal = attackTime;
+        states->attack |= voiceBit;
+        voice->transitionStartVol = 0;
+        voice->targetVol          = pressureVol;
+
+        // StepVoice() will take care of everything else
+
+        swSynthSetVolume(&voice->oscillators[0], attackTime ? 0 : pressureVol);
+        swSynthSetFreqPrecise(&voice->oscillators[0], bendPitchWheel(note, chan->pitchBend));
+    }
+}
+
+void midiAfterTouch(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t velocity)
+{
+    midiChannel_t* chan = &player->channels[channel];
+
+    if (chan->percussion)
+    {
+        // I don't believe in percussion aftertouch
+        return;
+    }
+
+    voiceStates_t* states = &player->poolVoiceStates;
+    midiVoice_t* voices   = player->poolVoices;
+
+    uint32_t playingVoices = VS_ANY(states) & chan->allocedVoices;
+
+    // Find the channel playing this note
+    while (playingVoices != 0)
+    {
+        uint8_t voiceIdx   = __builtin_ctz(playingVoices);
+        uint32_t voiceBit  = (1 << voiceIdx);
+        midiVoice_t* voice = &voices[voiceIdx];
+
+        if (voices[voiceIdx].note == note)
         {
-            setVoiceTimbre(&voices[voiceIdx], &chan->timbre);
+            uint8_t pressureVol = velocity << 1 | 1;
+            // This is the one we want!
+            voice->velocity = velocity;
+
+            uint32_t sustainVol = voice->timbre->envelope.sustainVol
+                                  + ((voice->timbre->envelope.sustainVolVel * (int8_t)voice->velocity) >> 8);
+
+            if (states->attack & voiceBit)
+            {
+                // Attack state, set using pressure velocity
+                voice->targetVol = pressureVol;
+            }
+            else if ((states->decay | states->sustain) & voiceBit)
+            {
+                //  Decay or sustain state, set using new sustain velocity
+                voice->targetVol = sustainVol;
+            }
+
+            return;
         }
 
-        swSynthSetVolume(&voices[voiceIdx].oscillators[0], targetVol);
-        swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[0], bendPitchWheel(note, chan->pitchBend));
+        // Move on to the next voice
+        playingVoices &= ~voiceBit;
     }
 }
 
@@ -921,7 +1429,26 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
     midiVoice_t* voices   = chan->percussion ? player->percVoices : player->poolVoices;
 
     // check the bitmaps to see if there's any note to release
-    uint32_t playingVoices = (VS_ANY(&player->poolVoiceStates) | player->poolVoiceStates.held) & chan->allocedVoices;
+    uint32_t playingVoices = VS_ANY(states) & chan->allocedVoices;
+
+    if (chan->percussion)
+    {
+        switch (note)
+        {
+            case SHORT_WHISTLE:
+            case LONG_WHISTLE:
+            case SHORT_GUIRO:
+            case LONG_GUIRO:
+                if (chan->bank != 0)
+                {
+                    return;
+                }
+                break;
+
+            default:
+                return;
+        }
+    }
 
     // Find the channel playing this note
     while (playingVoices != 0)
@@ -935,17 +1462,17 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
 
             // Unset the on-ness of this note
             states->on &= ~voiceBit;
-            chan->allocedVoices &= ~voiceBit;
+
             if (chan->held)
             {
                 states->held |= voiceBit;
             }
-            else
+            else if (!chan->sustenuto || 0 == (states->sustenuto & voiceBit))
             {
-                voices[voiceIdx].targetVol = 0;
-                for (uint8_t i = 0; i < OSC_PER_VOICE; i++)
+                if (releaseNote(states, voiceIdx, &voices[voiceIdx]))
                 {
-                    swSynthSetVolume(&voices[voiceIdx].oscillators[i], 0);
+                    // Do not deallocate the voice until it actually finishes playing
+                    chan->allocedVoices &= ~voiceBit;
                 }
             }
 
@@ -961,9 +1488,17 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
 {
     // Dynamic voice allocation somehow makes this way simpler
     player->channels[channel].program = program;
+
+    initTimbre(&player->channels[channel].timbre,
+               getTimbreForProgram(player->channels[channel].percussion, player->channels[channel].bank, program));
+
     // TODO: Actually define all the timbres individually instead of editing them like this
-    // It's fine for now because envelopes, etc. aren't fully implemented so the only difference is the wave index
-    player->channels[channel].timbre.waveIndex = program;
+    // TODO: Remove hardcoded bank == 0 check
+    if (player->channels[channel].timbre.type == WAVETABLE && player->channels[channel].bank == 0)
+    {
+        // It's fine for now because envelopes, etc. aren't fully implemented so the only difference is the wave index
+        player->channels[channel].timbre.waveIndex = program;
+    }
 }
 
 void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
@@ -978,18 +1513,20 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
         if (newIsHold)
         {
             // Just set the held state for all the currently on notes.
-            voiceStates->held |= voiceStates->on;
+            voiceStates->held |= chan->allocedVoices & voiceStates->on;
         }
         else
         {
             // for now what we do is just, if the note is held and not on, turn it off
             // if the note is on, just unset held
             // We should cancel all the notes which are not currently being held
-            uint32_t notesToCancel = voiceStates->held & ~(voiceStates->on);
+            uint32_t notesToCancel = chan->allocedVoices & voiceStates->held & ~(voiceStates->on);
 
             // unset the hold flag for all
             // TODO: Isn't this going to always be 0?
             uint32_t newHold = (voiceStates->held & ~notesToCancel);
+
+            // TODO Don't do it like this! Use releaseNote()
 
             while (notesToCancel != 0)
             {
@@ -999,9 +1536,9 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
                 // unset the note's bit and move on to the next one
                 notesToCancel &= ~voiceBit;
 
-                for (uint8_t i = 0; i < OSC_PER_VOICE; i++)
+                if (releaseNote(voiceStates, voiceIdx, &voices[voiceIdx]))
                 {
-                    swSynthSetVolume(&voices[voiceIdx].oscillators[i], 0);
+                    chan->allocedVoices &= ~voiceBit;
                 }
             }
 
@@ -1011,12 +1548,219 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
     }
 }
 
-void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, uint8_t val)
+void midiSustenuto(midiPlayer_t* player, uint8_t channel, uint8_t val)
 {
-    // MIDI spec says control changes stop the channel
-    // TODO: Implement some controls
-    midiAllNotesOff(player, channel);
-    // TODO maybe some sort of resetChannel() function?
+    midiChannel_t* chan = &player->channels[channel];
+    bool newIsSust      = MIDI_TO_BOOL(val);
+
+    if (chan->sustenuto != newIsSust)
+    {
+        voiceStates_t* voiceStates = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
+        midiVoice_t* voices        = chan->percussion ? player->percVoices : player->poolVoices;
+
+        if (newIsSust)
+        {
+            // Just set the sustenuto state for all the currently on notes.
+            voiceStates->sustenuto |= (voiceStates->on & chan->allocedVoices);
+        }
+        else
+        {
+            // If the note is in the sustenuto state and the note is not held on by the key or sustain pedal,
+            // then we cancel it.
+            uint32_t notesToCancel
+                = chan->allocedVoices & voiceStates->sustenuto & ~(voiceStates->on | voiceStates->held);
+
+            // Unset all the sustenuto bits
+            voiceStates->sustenuto &= ~chan->allocedVoices;
+
+            while (notesToCancel != 0)
+            {
+                uint8_t voiceIdx  = __builtin_ctz(notesToCancel);
+                uint32_t voiceBit = (1 << voiceIdx);
+
+                if (releaseNote(voiceStates, voiceIdx, &voices[voiceIdx]))
+                {
+                    chan->allocedVoices &= ~voiceBit;
+                }
+
+                // unset the note's bit and move on to the next one
+                notesToCancel &= ~voiceBit;
+            }
+        }
+        chan->sustenuto = newIsSust;
+    }
+}
+
+void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t control, uint8_t val)
+{
+    switch (control)
+    {
+        case MCC_BANK_MSB:
+        {
+            uint16_t newBank = (val & 0x7F);
+            newBank <<= 7;
+            newBank |= (player->channels[channel].bank & 0x7F);
+            player->channels[channel].bank = newBank;
+            break;
+        }
+
+        case MCC_BANK_LSB:
+        {
+            uint16_t newBank = (player->channels[channel].bank >> 7) & 0x7F;
+            newBank <<= 7;
+            newBank |= (val & 0x7F);
+            player->channels[channel].bank = newBank;
+            break;
+        }
+
+        case MCC_VOLUME_MSB:
+        {
+            player->channels[channel].volume = ((val & 0x7F) << 7) | (player->channels[channel].volume & 0x7F);
+            break;
+        }
+
+        // Sustain (64)
+        case MCC_HOLD_PEDAL:
+        {
+            midiSustain(player, channel, val);
+            break;
+        }
+
+        // Sustenuto (66)
+        case MCC_SUSTENUTO_PEDAL:
+        {
+            midiSustenuto(player, channel, val);
+            break;
+        }
+
+        // Sound Release Time (72)
+        case MCC_SOUND_RELEASE_TIME:
+        {
+            // Set the release time in 10ms increments!
+            // That gives us a range of 0ms to 1.270s... is that enough?
+            player->channels[channel].timbre.envelope.releaseTime = MS_TO_SAMPLES(10 * val);
+            break;
+        }
+
+        // Sound Attack Time (73)
+        case MCC_SOUND_ATTACK_TIME:
+        {
+            // Also sest attack with 10ms increments
+            player->channels[channel].timbre.envelope.attackTime = MS_TO_SAMPLES(10 * val);
+            break;
+        }
+
+        // Decay (75) (unassigned)
+        case MCC_SOUND_CONTROL_6:
+        {
+            player->channels[channel].timbre.envelope.decayTime = MS_TO_SAMPLES(10 * val);
+            break;
+        }
+
+        // Sustain (76) (unassigned)
+        case MCC_SOUND_CONTROL_7:
+        {
+            player->channels[channel].timbre.envelope.sustainVol = val;
+            break;
+        }
+
+        // Chorus Level (93)
+        case MCC_CHORUS_LEVEL:
+        {
+            // Set chorus (within reason, up to 16... which is kinda ridiculous anyway)
+            player->channels[channel].timbre.effects.chorus = MIN(val, 16);
+            break;
+        }
+
+        // All sounds off (120)
+        case MCC_ALL_SOUND_OFF:
+        {
+            midiAllSoundOff(player);
+            break;
+        }
+
+        // All controllers off (121)
+        case MCC_ALL_CONTROLS_OFF:
+        {
+            midiResetChannelControllers(player, channel);
+            break;
+        }
+
+        // All notes off (123)
+        case MCC_ALL_NOTE_OFF:
+        {
+            midiAllNotesOff(player, channel);
+            break;
+        }
+
+        default:
+        {
+            static uint32_t state[4] = {0};
+            uint8_t ctlNum           = (uint8_t)control;
+            if (!(state[ctlNum / 32] & (1 << (ctlNum % 32))))
+            {
+                ESP_LOGI("MIDI", "Ignoring unknown/unsupported controller: %" PRIu8, ctlNum);
+                state[ctlNum / 32] |= (1 << (ctlNum % 32));
+            }
+            return;
+        }
+    }
+}
+
+uint8_t midiGetControlValue(midiPlayer_t* player, uint8_t channel, midiControl_t control)
+{
+    switch (control)
+    {
+        case MCC_BANK_MSB:
+            return (player->channels[channel].bank >> 7) & 0x7F;
+
+        case MCC_BANK_LSB:
+            return (player->channels[channel].bank & 0x7F);
+
+        case MCC_HOLD_PEDAL:
+            return BOOL_TO_MIDI(player->channels[channel].held);
+
+        case MCC_SUSTENUTO_PEDAL:
+            return BOOL_TO_MIDI(player->channels[channel].held);
+
+        case MCC_SOUND_RELEASE_TIME:
+            return (player->channels[channel].timbre.envelope.releaseTime * 1000 / 32768 / 10) & 0x7F;
+
+        case MCC_SOUND_ATTACK_TIME:
+            return (player->channels[channel].timbre.envelope.attackTime * 1000 / 32768 / 10) & 0x7F;
+
+        // Decay (75) (unassigned)
+        case MCC_SOUND_CONTROL_6:
+            return (player->channels[channel].timbre.envelope.decayTime * 1000 / 32768 / 10) & 0x7F;
+
+        // Sustain (76) (unassigned)
+        case MCC_SOUND_CONTROL_7:
+            return player->channels[channel].timbre.envelope.sustainVol & 0x7F;
+
+        case MCC_CHORUS_LEVEL:
+            return player->channels[channel].timbre.effects.chorus & 0x7F;
+
+        default:
+            return 0;
+    }
+}
+
+uint16_t midiGetControlValue14bit(midiPlayer_t* player, uint8_t channel, midiControl_t control)
+{
+    uint8_t msbControl = (uint8_t)control & ~(1 << 5);
+    uint8_t lsbControl = (uint8_t)control | (1 << 5);
+
+    if (control >= 64)
+    {
+        // There are a couple other MSB/LSB controllers, and those have an odd MSB and an even LSB
+        msbControl = (uint8_t)control | 1;
+        lsbControl = (uint8_t)control & ~1;
+    }
+
+    uint16_t result = midiGetControlValue(player, channel, (midiControl_t)msbControl) & 0x7f;
+    result <<= 7;
+    result |= midiGetControlValue(player, channel, (midiControl_t)lsbControl) & 0x7F;
+    return result;
 }
 
 void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
@@ -1026,25 +1770,29 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
     voiceStates_t* states = player->channels[channel].percussion ? &player->percVoiceStates : &player->poolVoiceStates;
     midiVoice_t* voices   = player->channels[channel].percussion ? player->percVoices : player->poolVoices;
 
-    // Find all the voices currently sounding for this channel and update their frequencies
-    uint32_t playingVoices = (VS_ANY(states) | states->held) & player->channels[channel].allocedVoices;
-
-    while (playingVoices != 0)
+    if (player->channels[channel].timbre.type != SAMPLE)
     {
-        uint8_t voiceIdx  = __builtin_ctz(playingVoices);
-        uint32_t voiceBit = (1 << voiceIdx);
+        // Find all the voices currently sounding for this channel and update their frequencies
+        uint32_t playingVoices = (VS_ANY(states) | states->held) & player->channels[channel].allocedVoices;
 
-        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
+        while (playingVoices != 0)
         {
-            // Apply the pitch bend to all this channel's oscillators
-            // TODO: If each voice has multiple oscillators, we would obviously
-            // want to be able to control them separately here.
-            // Maybe we only apply that for like, chorus?
-            swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[oscIdx], bendPitchWheel(voices[voiceIdx].note, value));
-        }
+            uint8_t voiceIdx  = __builtin_ctz(playingVoices);
+            uint32_t voiceBit = (1 << voiceIdx);
 
-        // Next!
-        playingVoices &= ~voiceBit;
+            for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
+            {
+                // Apply the pitch bend to all this channel's oscillators
+                // TODO: If each voice has multiple oscillators, we would obviously
+                // want to be able to control them separately here.
+                // Maybe we only apply that for like, chorus?
+                swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[oscIdx],
+                                      bendPitchWheel(voices[voiceIdx].note, value));
+            }
+
+            // Next!
+            playingVoices &= ~voiceBit;
+        }
     }
 }
 
@@ -1056,7 +1804,7 @@ void midiSetTempo(midiPlayer_t* player, uint32_t tempo)
     player->sampleCount = player->sampleCount * tempo / oldTempo;
 }
 
-void midiSetFile(midiPlayer_t* player, midiFile_t* song)
+void midiSetFile(midiPlayer_t* player, const midiFile_t* song)
 {
     player->mode = MIDI_FILE;
     if (player->reader.states == NULL)
@@ -1078,6 +1826,89 @@ void midiSetFile(midiPlayer_t* player, midiFile_t* song)
 void midiPause(midiPlayer_t* player, bool pause)
 {
     player->paused = pause;
+}
+
+void midiSeek(midiPlayer_t* player, uint32_t ticks)
+{
+    bool paused  = player->paused;
+    bool stopped = false;
+
+    if (player->mode == MIDI_FILE && player->reader.file)
+    {
+        const midiFile_t* loadedFile = player->reader.file;
+        midiTextCallback_t textCb    = player->textMessageCallback;
+        songFinishedCbFn endCb       = player->songFinishedCallback;
+        player->textMessageCallback  = NULL;
+        player->songFinishedCallback = NULL;
+        bool loop                    = player->loop;
+
+        if (SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) > ticks)
+        {
+            // We have to go back
+            midiPlayerReset(player);
+            midiSetFile(player, loadedFile);
+        }
+
+        // Set the seeking flag so that the DAC won't get any output
+        player->seeking = true;
+
+        // Unpause the player otherwise nothing will happen
+        midiPause(player, false);
+        player->loop = false;
+
+        // Okay, new strategy:
+        // We work in ticks here to preserve precision
+        // Calculate the current tick, use that to skip through events
+        // Once the tick is up-to-date, update the sample count
+        // Done!
+
+        ESP_LOGD("MIDI", "Seeking to %" PRIu32 "\n", ticks);
+
+        uint32_t curTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
+        ESP_LOGD("MIDI", "Current tick is %" PRIu32 "\n", curTick);
+
+        while (curTick < ticks)
+        {
+            if (!player->eventAvailable)
+            {
+                player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
+            }
+
+            if (!player->eventAvailable || player->pendingEvent.absTime > ticks)
+            {
+                ESP_LOGD("MIDI", "No more events between start and end time\n");
+                curTick = ticks;
+                break;
+            }
+
+            curTick = player->pendingEvent.absTime;
+            ESP_LOGD("MIDI", "Next event is at tick %" PRIu32 "\n", curTick);
+            player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
+            handleEvent(player, &player->pendingEvent);
+            player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
+        }
+
+        player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
+
+        stopped = !player->eventAvailable
+                  && !(player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent));
+        if (stopped)
+        {
+            midiSongEnd(player);
+
+            if (endCb)
+            {
+                endCb();
+            }
+        }
+
+        player->songFinishedCallback = endCb;
+        player->textMessageCallback  = textCb;
+        player->loop                 = loop;
+        player->seeking              = false;
+    }
+
+    midiPause(player, paused || stopped);
 }
 
 //==============================================================================
