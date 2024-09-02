@@ -9,21 +9,17 @@
  */
 uint32_t readCircleFromFile(uint8_t* tableData, jsScene_t* scene)
 {
-    jsObstacle_t* obstacle = &scene->obstacles[scene->numObstacles++];
+    jsCircle_t* circle = &scene->circles[scene->numCircles++];
 
-    uint32_t dIdx     = 0;
-    obstacle->id      = readInt16(tableData, &dIdx);
-    obstacle->group   = addToGroup(scene, obstacle, readInt8(tableData, &dIdx));
-    obstacle->pos.x   = readInt16(tableData, &dIdx);
-    obstacle->pos.y   = readInt16(tableData, &dIdx);
-    obstacle->radius  = readInt8(tableData, &dIdx);
-    obstacle->pushVel = readInt8(tableData, &dIdx);
-
-    // ball->radius      = radius;
-    // ball->mass        = mass;
-    // ball->pos         = pos;
-    // ball->vel         = vel;
-    // ball->restitution = restitution;
+    uint32_t dIdx   = 0;
+    circle->id      = readInt16(tableData, &dIdx);
+    circle->groupId = readInt8(tableData, &dIdx);
+    circle->group   = addToGroup(scene, circle, circle->groupId);
+    circle->pos.x   = readInt16(tableData, &dIdx);
+    circle->pos.y   = readInt16(tableData, &dIdx);
+    circle->radius  = readInt8(tableData, &dIdx);
+    circle->type    = readInt8(tableData, &dIdx);
+    circle->pushVel = readInt8(tableData, &dIdx);
 
     return dIdx;
 }

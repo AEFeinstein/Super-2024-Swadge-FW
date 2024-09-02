@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "geometryFl.h"
 
 #include "pinball_rectangle.h"
@@ -14,7 +15,8 @@ uint32_t readRectangleFromFile(uint8_t* tableData, jsScene_t* scene)
     uint32_t dIdx          = 0;
     jsLauncher_t* launcher = &scene->launchers[scene->numLaunchers++];
     launcher->id           = readInt16(tableData, &dIdx);
-    launcher->group        = addToGroup(scene, launcher, readInt8(tableData, &dIdx));
+    launcher->groupId      = readInt8(tableData, &dIdx);
+    launcher->group        = addToGroup(scene, launcher, launcher->groupId);
     launcher->pos.x        = readInt16(tableData, &dIdx);
     launcher->pos.y        = readInt16(tableData, &dIdx);
     launcher->width        = readInt16(tableData, &dIdx);
@@ -36,9 +38,13 @@ void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBall
 {
     if (launcher->buttonHeld)
     {
-        launcher->impulse += (200.0f * dt);
+        launcher->impulse += (dt / 3);
+        if (launcher->impulse > 0.99f)
+        {
+            launcher->impulse = 0.99f;
+        }
     }
-    else
+    else if (launcher->impulse)
     {
         rectangleFl_t r = {.pos = launcher->pos, .width = launcher->width, .height = launcher->height};
         // If touching a ball, transfer to a ball
@@ -47,7 +53,8 @@ void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBall
             circleFl_t b = {.pos = balls[bIdx].pos, .radius = balls[bIdx].radius};
             if (circleRectFlIntersection(b, r, NULL))
             {
-                balls[bIdx].vel.y -= launcher->impulse;
+                balls[bIdx].vel.y = (-600 * launcher->impulse);
+                printf("Launch at %f\n", balls[bIdx].vel.y);
             }
         }
         launcher->impulse = 0;

@@ -77,12 +77,7 @@ static void pinEnterMode(void)
  */
 static void pinExitMode(void)
 {
-    // Free the rest of the state
-    for (int32_t gIdx = 0; gIdx < pinball->scene.numGroups; gIdx++)
-    {
-        clear(&pinball->scene.groups[gIdx]);
-    }
-    free(pinball->scene.groups);
+    jsSceneDestroy(&pinball->scene);
     free(pinball);
 }
 
@@ -99,6 +94,7 @@ static void pinMainLoop(int64_t elapsedUs)
     {
         if (evt.down && PB_START == evt.button)
         {
+            jsSceneDestroy(&pinball->scene);
             jsSceneInit(&pinball->scene);
         }
         else

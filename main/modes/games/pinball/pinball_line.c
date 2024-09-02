@@ -15,7 +15,8 @@ int32_t readLineFromFile(uint8_t* tableData, jsScene_t* scene)
     jsLine_t* line = &scene->lines[scene->numLines++];
     uint32_t dIdx  = 0;
     line->id       = readInt16(tableData, &dIdx);
-    line->group    = addToGroup(scene, line, readInt8(tableData, &dIdx));
+    line->groupId  = readInt8(tableData, &dIdx);
+    line->group    = addToGroup(scene, line, line->groupId);
     line->p1.x     = readInt16(tableData, &dIdx);
     line->p1.y     = readInt16(tableData, &dIdx);
     line->p2.x     = readInt16(tableData, &dIdx);
@@ -40,6 +41,10 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
     {
         case JS_WALL:
         {
+            if (!line->isUp)
+            {
+                return;
+            }
             color = c555;
             break;
         }

@@ -36,6 +36,9 @@ class LineType(Enum):
     JS_STANDUP_TARGET = 3
     JS_SPINNER = 4
 
+class CircleType(Enum):
+    JS_BUMPER = 0
+    JS_ROLLOVER = 1
 
 class pbPoint:
     def __init__(self, p: Point = None, x: int = 0, y: int = 0) -> None:
@@ -95,9 +98,10 @@ class pbLine:
 
 
 class pbCircle:
-    def __init__(self, pos: pbPoint, radius: int, pushVel: int, gId: str, id: str) -> None:
+    def __init__(self, pos: pbPoint, radius: int, type: CircleType, pushVel: int, gId: str, id: str) -> None:
         self.position = pos
         self.radius = int(radius)
+        self.type = type.value
         self.gId: int = getIntGroupId(gId)
         self.id: int = getIntId(id)
         self.pushVel = int(pushVel)
@@ -109,6 +113,7 @@ class pbCircle:
         b = bytearray([(self.id >> 8), self.id, self.gId])
         b.extend(self.position.toBytes())
         b.append(self.radius)
+        b.append(self.type)
         b.append(self.pushVel)
         # print(' '.join(['%02X' % x for x in b]))
         return b
@@ -153,7 +158,7 @@ class pbFlipper:
         return b
 
 
-def extractCircles(gs: list, gId: str) -> list[pbCircle]:
+def extractCircles(gs: list, type: CircleType, gId: str) -> list[pbCircle]:
     """Recursively extract all circles from this list of SVG things
 
     Args:
@@ -166,9 +171,9 @@ def extractCircles(gs: list, gId: str) -> list[pbCircle]:
     for g in gs:
         if isinstance(g, Circle):
             circles.append(pbCircle(pbPoint(x=g.cx, y=g.cy),
-                           (g.rx + g.ry) / 2, 120, gId, g.id))
+                           (g.rx + g.ry) / 2, type, 120, gId, g.id))
         elif isinstance(g, Group):
-            circles.extend(extractCircles(g, g.id))
+            circles.extend(extractCircles(g, type, g.id))
         else:
             print('Found ' + str(type(g)) + ' when extracting Circles')
     return circles
@@ -273,7 +278,7 @@ def addLength(tableData: bytearray, array: int):
 
 def main():
     # Load the SVG
-    g: Group = SVG().parse('red-pinball.svg')
+    g: Group = SVG().parse('pinball.svg')
 
     lines: list[pbLine] = []
     lines.extend(extractPaths(g.objects['Walls'], LineType.JS_WALL, None))
@@ -284,8 +289,11 @@ def main():
     lines.extend(extractPaths(
         g.objects['Standup_Targets'], LineType.JS_STANDUP_TARGET, None))
 
-    circles = extractCircles(g.objects['Bumpers'], None)
-    rectangles = extractRectangles(g.objects['Launchers'], None)
+    circles: list[pbCircle] = []
+    circles.extend(extractCircles(g.objects['Rollovers'], CircleType.JS_ROLLOVER, None))
+    circles.extend(extractCircles(g.objects['Bumpers'], CircleType.JS_BUMPER, None))
+
+    launchers = extractRectangles(g.objects['Launchers'], None)
     flippers = extractFlippers(g.objects['Flippers'], None)
 
     tableData: bytearray = bytearray()
@@ -299,9 +307,9 @@ def main():
     for circle in circles:
         tableData.extend(circle.toBytes())
 
-    addLength(tableData, rectangles)
-    for rectangle in rectangles:
-        tableData.extend(rectangle.toBytes())
+    addLength(tableData, launchers)
+    for launcher in launchers:
+        tableData.extend(launcher.toBytes())
 
     addLength(tableData, flippers)
     for flipper in flippers:

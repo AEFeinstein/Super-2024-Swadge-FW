@@ -1,5 +1,7 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "heatshrink_helper.h"
 
 #include "pinball_game.h"
@@ -91,8 +93,23 @@ void jsSceneInit(jsScene_t* scene)
         }
     }
 
+    // Launch tube door is group 1
+    node_t* wallNode = scene->groups[1].first;
+    while (wallNode)
+    {
+        // Lower the door for launch
+        ((jsLine_t*)wallNode->val)->isSolid = false;
+        ((jsLine_t*)wallNode->val)->isUp    = false;
+        wallNode                            = wallNode->next;
+    }
+    // Mark the door as open
+    scene->launchTubeClosed = false;
+
+    // Clear loop history
+    memset(scene->loopHistory, 0, sizeof(scene->loopHistory));
+
     uint16_t circlesInFile = readInt16(tableData, &dIdx);
-    scene->numObstacles    = 0;
+    scene->numCircles      = 0;
     for (uint16_t cIdx = 0; cIdx < circlesInFile; cIdx++)
     {
         dIdx += readCircleFromFile(&tableData[dIdx], scene);
@@ -117,9 +134,8 @@ void jsSceneInit(jsScene_t* scene)
     // TODO load ball position from file
     // vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
     vecFl_t ballPositions[] = {
-        // {.x = 57, .y = 28},
-        // {.x = 79, .y = 28},
-        {.x = 280 - 9, .y = 400},
+        // {.x = 191, .y = 221},
+        {.x = 292, .y = 400},
     };
 
     scene->numBalls = 0;
@@ -129,13 +145,32 @@ void jsSceneInit(jsScene_t* scene)
         ball->pos         = ballPositions[bIdx];
         ball->vel.x       = 0;
         ball->vel.y       = 0;
-        ball->radius      = 7.0f;
+        ball->radius      = PINBALL_RADIUS;
         ball->mass        = M_PI * 4.0f * 4.0f;
         ball->restitution = 0.2f;
     }
 
     scene->cameraOffset.x = 0;
     scene->cameraOffset.y = 0;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param scene
+ */
+void jsSceneDestroy(jsScene_t* scene)
+{
+    if (scene->groups)
+    {
+        // Free the rest of the state
+        for (int32_t gIdx = 0; gIdx < scene->numGroups; gIdx++)
+        {
+            clear(&scene->groups[gIdx]);
+        }
+        free(scene->groups);
+        scene->groups = NULL;
+    }
 }
 
 // ------------------------ user interaction ---------------------------

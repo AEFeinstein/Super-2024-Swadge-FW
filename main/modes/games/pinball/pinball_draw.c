@@ -15,11 +15,13 @@
 void jsAdjustCamera(jsScene_t* scene)
 {
     // Find the ball lowest on the table
+    float lowestBallX = 0;
     float lowestBallY = 0;
     for (int32_t bIdx = 0; bIdx < scene->numBalls; bIdx++)
     {
         if (scene->balls[bIdx].pos.y > lowestBallY)
         {
+            lowestBallX = scene->balls[bIdx].pos.x;
             lowestBallY = scene->balls[bIdx].pos.y;
         }
     }
@@ -48,6 +50,17 @@ void jsAdjustCamera(jsScene_t* scene)
             scene->cameraOffset.y -= (PIN_CAMERA_BOUND_UPPER - lowestBallY);
         }
     }
+
+    // Pan in the X direction to view the launch tube
+    int16_t xEnd = lowestBallX + PINBALL_RADIUS + 40;
+    if (xEnd > TFT_WIDTH)
+    {
+        scene->cameraOffset.x = xEnd - TFT_WIDTH;
+    }
+    else
+    {
+        scene->cameraOffset.x = 0;
+    }
 }
 
 /**
@@ -72,12 +85,15 @@ void jsSceneDraw(jsScene_t* scene)
         drawCircleFilled(pos->x - scene->cameraOffset.x, pos->y - scene->cameraOffset.y, scene->balls[i].radius, c500);
     }
 
-    // obstacles
-    for (int32_t i = 0; i < scene->numObstacles; i++)
+    // circles
+    for (int32_t i = 0; i < scene->numCircles; i++)
     {
-        vecFl_t* pos = &scene->obstacles[i].pos;
-        drawCircleFilled(pos->x - scene->cameraOffset.x, pos->y - scene->cameraOffset.y, scene->obstacles[i].radius,
-                         c131);
+        if (JS_BUMPER == scene->circles[i].type)
+        {
+            vecFl_t* pos = &scene->circles[i].pos;
+            drawCircleFilled(pos->x - scene->cameraOffset.x, pos->y - scene->cameraOffset.y, scene->circles[i].radius,
+                             c131);
+        }
     }
 
     // flippers
@@ -90,10 +106,11 @@ void jsSceneDraw(jsScene_t* scene)
     for (int32_t i = 0; i < scene->numLaunchers; i++)
     {
         jsLauncher_t* l = &scene->launchers[i];
+        int compression = l->height * l->impulse;
         vec_t offsetPos = {
             .x = l->pos.x - scene->cameraOffset.x,
-            .y = l->pos.y - scene->cameraOffset.y,
+            .y = l->pos.y + compression - scene->cameraOffset.y,
         };
-        drawRect(offsetPos.x, offsetPos.y, offsetPos.x + l->width, offsetPos.y + l->height, c330);
+        drawRect(offsetPos.x, offsetPos.y, offsetPos.x + l->width, offsetPos.y + l->height - compression, c330);
     }
 }

@@ -24,7 +24,7 @@ uint32_t readFlipperFromFile(uint8_t* tableData, jsScene_t* scene)
     flipper->facingRight = readInt8(tableData, &dIdx) != 0;
 
     flipper->maxRotation     = 1.0f;
-    flipper->restAngle       = 0.5f;
+    flipper->restAngle       = 0.523599f; // 30 degrees
     flipper->angularVelocity = 20.0f;
 
     if (!flipper->facingRight)

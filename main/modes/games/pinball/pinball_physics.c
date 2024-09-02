@@ -1,12 +1,16 @@
+#include <stdio.h>
+#include <string.h>
 #include "pinball_line.h"
 #include "pinball_circle.h"
 #include "pinball_rectangle.h"
 #include "pinball_flipper.h"
+#include "pinball_physics.h"
 
 static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2);
-static void handleBallObstacleCollision(jsScene_t* scene, jsBall_t* ball, jsObstacle_t* obstacle);
+static void handleBallCircleCollision(jsScene_t* scene, jsBall_t* ball, jsCircle_t* circle);
 static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper);
 static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines);
+static void handleBallLauncherCollision(jsLauncher_t* launcher, jsBall_t* ball, float dt);
 
 /**
  * @brief TODO doc
@@ -20,28 +24,33 @@ void jsSimulate(jsScene_t* scene)
         jsFlipperSimulate(&scene->flippers[i], scene->dt);
     }
 
-    for (int32_t i = 0; i < scene->numBalls; i++)
+    for (int32_t bIdx = 0; bIdx < scene->numBalls; bIdx++)
     {
-        jsBall_t* ball = &scene->balls[i];
+        jsBall_t* ball = &scene->balls[bIdx];
         jsBallSimulate(ball, scene->dt, scene->gravity);
 
-        for (int32_t j = i + 1; j < scene->numBalls; j++)
+        for (int32_t bIdx2 = bIdx + 1; bIdx2 < scene->numBalls; bIdx2++)
         {
-            jsBall_t* ball2 = &scene->balls[j];
+            jsBall_t* ball2 = &scene->balls[bIdx2];
             handleBallBallCollision(ball, ball2);
         }
 
-        for (int32_t j = 0; j < scene->numObstacles; j++)
+        for (int32_t cIdx = 0; cIdx < scene->numCircles; cIdx++)
         {
-            handleBallObstacleCollision(scene, ball, &scene->obstacles[j]);
+            handleBallCircleCollision(scene, ball, &scene->circles[cIdx]);
         }
 
-        for (int32_t j = 0; j < scene->numFlippers; j++)
+        for (int32_t fIdx = 0; fIdx < scene->numFlippers; fIdx++)
         {
-            handleBallFlipperCollision(ball, &scene->flippers[j]);
+            handleBallFlipperCollision(ball, &scene->flippers[fIdx]);
         }
 
         handleBallLineCollision(ball, scene->lines, scene->numLines);
+
+        for (int32_t lIdx = 0; lIdx < scene->numLaunchers; lIdx++)
+        {
+            handleBallLauncherCollision(&scene->launchers[lIdx], ball, scene->dt);
+        }
     }
 
     for (int32_t i = 0; i < scene->numLaunchers; i++)
@@ -121,27 +130,69 @@ static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2)
  *
  * @param scene
  * @param ball
- * @param obstacle
+ * @param circle
  */
-static void handleBallObstacleCollision(jsScene_t* scene, jsBall_t* ball, jsObstacle_t* obstacle)
+static void handleBallCircleCollision(jsScene_t* scene, jsBall_t* ball, jsCircle_t* circle)
 {
-    vecFl_t dir = subVecFl2d(ball->pos, obstacle->pos);
+    vecFl_t dir = subVecFl2d(ball->pos, circle->pos);
     float d     = magVecFl2d(dir);
-    if (d == 0.0 || d > (ball->radius + obstacle->radius))
+    if (d == 0.0 || d > (ball->radius + circle->radius))
     {
+        if (circle->id == scene->touchedLoopId)
+        {
+            scene->touchedLoopId = PIN_INVALID_ID;
+        }
         return;
     }
 
-    // Normalize the direction
-    dir = divVecFl2d(dir, d);
+    if (JS_BUMPER == circle->type)
+    {
+        // Normalize the direction
+        dir = divVecFl2d(dir, d);
 
-    // Move ball backwards to not clip
-    float corr = ball->radius + obstacle->radius - d;
-    ball->pos  = addVecFl2d(ball->pos, mulVecFl2d(dir, corr));
+        // Move ball backwards to not clip
+        float corr = ball->radius + circle->radius - d;
+        ball->pos  = addVecFl2d(ball->pos, mulVecFl2d(dir, corr));
 
-    // Adjust the velocity
-    float v   = dotVecFl2d(ball->vel, dir);
-    ball->vel = addVecFl2d(ball->vel, mulVecFl2d(dir, obstacle->pushVel - v));
+        // Adjust the velocity
+        float v   = dotVecFl2d(ball->vel, dir);
+        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(dir, circle->pushVel - v));
+    }
+    else if (JS_ROLLOVER == circle->type)
+    {
+        if (circle->id != scene->touchedLoopId)
+        {
+            scene->touchedLoopId = circle->id;
+
+            memmove(&scene->loopHistory[1], &scene->loopHistory[0],
+                    sizeof(scene->loopHistory) - sizeof(scene->loopHistory[0]));
+            scene->loopHistory[0] = circle->id;
+
+            if (1 == scene->loopHistory[0] && 2 == scene->loopHistory[1] && 3 == scene->loopHistory[2])
+            {
+                printf("Loop Counter Clockwise\n");
+            }
+            else if (3 == scene->loopHistory[0] && 2 == scene->loopHistory[1] && 1 == scene->loopHistory[2])
+            {
+                printf("Loop Clockwise\n");
+            }
+        }
+        // Group two rollovers should close the launch tube
+        if (2 == circle->groupId)
+        {
+            if (false == scene->launchTubeClosed)
+            {
+                scene->launchTubeClosed = true;
+                node_t* wNode           = scene->groups[1].first;
+                while (wNode)
+                {
+                    ((jsLine_t*)wNode->val)->isSolid = true;
+                    ((jsLine_t*)wNode->val)->isUp    = true;
+                    wNode                            = wNode->next;
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -273,6 +324,7 @@ static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t num
         if (!someLineUp)
         {
             // Reset them
+            // TODO start a timer for this? Make sure a ball isn't touching the line before resetting?
             node = group->first;
             while (NULL != node)
             {
@@ -280,6 +332,35 @@ static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t num
                 ((jsLine_t*)node->val)->isUp    = true;
                 ((jsLine_t*)node->val)->isSolid = true;
                 node                            = node->next;
+            }
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param launcher
+ * @param balls
+ * @param dt
+ */
+static void handleBallLauncherCollision(jsLauncher_t* launcher, jsBall_t* ball, float dt)
+{
+    if (ball->vel.y >= 0)
+    {
+        // Get the compressed Y level
+        float posY = launcher->pos.y + (launcher->impulse * launcher->height);
+
+        // Check Y
+        if ((ball->pos.y + ball->radius > posY) && (ball->pos.y - ball->radius < posY))
+        {
+            // Check X
+            if ((ball->pos.x > launcher->pos.x) && (ball->pos.x < launcher->pos.x + launcher->width))
+            {
+                // Collision, set the position to be slightly touching
+                ball->pos.y = posY - ball->radius + 0.1f;
+                // Bounce a little
+                ball->vel = mulVecFl2d(ball->vel, -0.3f);
             }
         }
     }
