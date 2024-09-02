@@ -6,9 +6,14 @@
 //==============================================================================
 // Functions
 //==============================================================================
+uint32_t fCost(bb_node_t* node){
+    return node->gCost + node->hCost;
+}
+
+
 //Returns True if there is a way to the perimeter
-//start[0]=x;start[1]=y;start[2]=z;start[3]=f
-bool pathfindToPerimeter(uint32_t* start)
+//start[0]=x;start[1]=y;start[2]=z
+bool pathfindToPerimeter(bb_node_t* start)
 {
     //1. initialize the open list
     list_t* open   = calloc(1, sizeof(list_t));
@@ -16,19 +21,23 @@ bool pathfindToPerimeter(uint32_t* start)
     list_t* closed = calloc(1, sizeof(list_t));
     //put the starting node on the open list (you can leave its f at zero)
     push(open, (void*)start);
-    uint32_t least_f   = 0;
-    uint32_t least_idx = 0;
+
     //3. while the open list is not empty
     while(open->first != NULL){
         //a) find the node with the least f on the open list, call it "q"
-
+        uint16_t least_f   = 0;
+        uint8_t least_idx = 0;
         node_t* currentNode = open->first;
         currentNode = currentNode->next;
-        uint32_t cur_idx  = 1;
+        uint8_t cur_idx  = 1;
         while (currentNode != NULL)
         {
-            if(((uint32_t*)currentNode->val)[3] < least_f){
-                least_f = ((uint32_t*)currentNode->val)[3];
+            if(fCost(&currentNode->next) < ){
+
+            }
+
+            if(((uint16_t*)currentNode->val)[3] < least_f){
+                least_f = ((uint16_t*)currentNode->val)[3];
                 least_idx = cur_idx;
             }
             currentNode = currentNode->next;
