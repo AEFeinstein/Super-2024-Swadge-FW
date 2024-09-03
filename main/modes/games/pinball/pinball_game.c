@@ -11,6 +11,7 @@
 #include "pinball_rectangle.h"
 #include "pinball_flipper.h"
 #include "pinball_triangle.h"
+#include "pinball_point.h"
 
 /**
  * @brief TODO doc
@@ -137,27 +138,28 @@ void jsSceneInit(jsScene_t* scene)
         dIdx += readTriangleFromFile(&tableData[dIdx], scene);
     }
 
-    free(tableData);
-
-    // TODO load ball position from file
-    // vecFl_t pos  = {.x = 274.0f, .y = 234.0f};
-    vecFl_t ballPositions[] = {
-        // {.x = 191, .y = 221},
-        {.x = 292, .y = 400},
-    };
-
-    scene->numBalls = 0;
-    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(ballPositions); bIdx++)
+    uint16_t pointsInFile = readInt16(tableData, &dIdx);
+    scene->numPoints      = 0;
+    scene->numBalls       = 0;
+    for (uint16_t pIdx = 0; pIdx < pointsInFile; pIdx++)
     {
-        jsBall_t* ball    = &scene->balls[scene->numBalls++];
-        ball->pos         = ballPositions[bIdx];
-        ball->vel.x       = 0;
-        ball->vel.y       = 0;
-        ball->radius      = PINBALL_RADIUS;
-        ball->mass        = M_PI * 4.0f * 4.0f;
-        ball->restitution = 0.2f;
+        dIdx += readPointFromFile(&tableData[dIdx], scene);
+
+        if (JS_BALL_SPAWN == scene->points[pIdx].type)
+        {
+            jsBall_t* ball    = &scene->balls[scene->numBalls++];
+            ball->pos         = scene->points[pIdx].pos;
+            ball->vel.x       = 0;
+            ball->vel.y       = 0;
+            ball->radius      = PINBALL_RADIUS;
+            ball->mass        = M_PI * 4.0f * 4.0f;
+            ball->restitution = 0.2f;
+        }
     }
 
+    free(tableData);
+
+    // Reset the camera
     scene->cameraOffset.x = 0;
     scene->cameraOffset.y = 0;
 }

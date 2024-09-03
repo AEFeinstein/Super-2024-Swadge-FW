@@ -42,7 +42,12 @@ class CircleType(Enum):
     JS_ROLLOVER = 1
 
 
-class pbPoint:
+class PointType(Enum):
+    JS_BALL_SPAWN = 0
+    JS_ITEM_SPAWN = 1
+
+
+class xyPoint:
     def __init__(self, p: Point = None, x: int = 0, y: int = 0) -> None:
         if p is not None:
             self.x: int = int(p.x)
@@ -60,9 +65,23 @@ class pbPoint:
         return self.x == other.x and self.y == other.y
 
 
+class pbPoint:
+    def __init__(self, pos: xyPoint, type: LineType, gId: str, id: str) -> None:
+        self.pos = pos
+        self.type: int = type.value
+        self.gId: int = getIntGroupId(gId)
+        self.id: int = getIntId(id)
+
+    def toBytes(self) -> bytearray:
+        b = bytearray([(self.id >> 8), self.id, self.gId])
+        b.extend(self.pos.toBytes())
+        b.append(self.type)
+        return b
+
+
 class pbLine:
     def __init__(
-        self, p1: pbPoint, p2: pbPoint, type: LineType, gId: str, id: str
+        self, p1: xyPoint, p2: xyPoint, type: LineType, gId: str, id: str
     ) -> None:
         self.p1 = p1
         self.p2 = p2
@@ -114,7 +133,7 @@ class pbLine:
 class pbCircle:
     def __init__(
         self,
-        pos: pbPoint,
+        pos: xyPoint,
         radius: int,
         type: CircleType,
         pushVel: int,
@@ -146,7 +165,7 @@ class pbCircle:
 
 
 class pbRectangle:
-    def __init__(self, position: pbPoint, size: pbPoint, gId: str, id: str) -> None:
+    def __init__(self, position: xyPoint, size: xyPoint, gId: str, id: str) -> None:
         self.position = position
         self.size = size
         self.gId: int = getIntGroupId(gId)
@@ -169,7 +188,7 @@ class pbRectangle:
 
 
 class pbTriangle:
-    def __init__(self, vertices: list[pbPoint], gId: str, id: str) -> None:
+    def __init__(self, vertices: list[xyPoint], gId: str, id: str) -> None:
         self.vertices = vertices
         self.gId: int = getIntGroupId(gId)
         self.id: int = getIntId(id)
@@ -183,7 +202,7 @@ class pbTriangle:
 
 class pbFlipper:
     def __init__(
-        self, pivot: pbPoint, radius: int, length: int, facingRight: bool
+        self, pivot: xyPoint, radius: int, length: int, facingRight: bool
     ) -> None:
         self.pivot = pivot
         self.radius = int(radius)
@@ -226,7 +245,7 @@ def extractCircles(gs: list, type: CircleType, gId: str) -> list[pbCircle]:
         if isinstance(g, Circle):
             circles.append(
                 pbCircle(
-                    pbPoint(x=g.cx, y=g.cy), (g.rx + g.ry) / 2, type, 120, gId, g.id
+                    xyPoint(x=g.cx, y=g.cy), (g.rx + g.ry) / 2, type, 120, gId, g.id
                 )
             )
         elif isinstance(g, Group):
@@ -234,6 +253,26 @@ def extractCircles(gs: list, type: CircleType, gId: str) -> list[pbCircle]:
         else:
             print("Found " + str(type(g)) + " when extracting Circles")
     return circles
+
+
+def extractPoints(gs: list, type: PointType, gId: str) -> list[pbPoint]:
+    """Recursively extract all points from this list of SVG things
+
+    Args:
+        gs (list): A list that contains Group and Point
+
+    Returns:
+        list[str]: A list of C strings for the points
+    """
+    points = []
+    for g in gs:
+        if isinstance(g, Circle):
+            points.append(pbPoint(xyPoint(x=g.cx, y=g.cy), type, gId, g.id))
+        elif isinstance(g, Group):
+            points.extend(extractPoints(g, type, g.id))
+        else:
+            print("Found " + str(type(g)) + " when extracting Points")
+    return points
 
 
 def extractRectangles(gs: list, gId: str) -> list[pbRectangle]:
@@ -250,7 +289,7 @@ def extractRectangles(gs: list, gId: str) -> list[pbRectangle]:
         if isinstance(g, Rect):
             rectangles.append(
                 pbRectangle(
-                    pbPoint(x=g.x, y=g.y), pbPoint(x=g.width, y=g.height), gId, g.id
+                    xyPoint(x=g.x, y=g.y), xyPoint(x=g.width, y=g.height), gId, g.id
                 )
             )
         elif isinstance(g, Group):
@@ -278,7 +317,7 @@ def extractPaths(gs: list, lineType: LineType, gId: str) -> list[pbLine]:
                 if lastPoint is not None and lastPoint != point:
                     lines.append(
                         pbLine(
-                            pbPoint(p=lastPoint), pbPoint(p=point), lineType, gId, g.id
+                            xyPoint(p=lastPoint), xyPoint(p=point), lineType, gId, g.id
                         )
                     )
                 lastPoint = point
@@ -304,7 +343,7 @@ def extractTriangles(gs: list, gId: str) -> list[pbTriangle]:
         if isinstance(g, Path):
             point: Point
             for point in g.as_points():
-                pbp = pbPoint(p=point)
+                pbp = xyPoint(p=point)
 
                 if 3 == len(vertices) and pbp == vertices[0]:
                     # Save the triangle
@@ -358,7 +397,7 @@ def extractFlippers(gs: list, gId: str) -> list[pbFlipper]:
 
         lines.append(
             pbFlipper(
-                pbPoint(x=pivot.cx, y=pivot.cy), pivot.rx, flipperLen, facingRight
+                xyPoint(x=pivot.cx, y=pivot.cy), pivot.rx, flipperLen, facingRight
             )
         )
 
@@ -388,6 +427,10 @@ def main():
     circles.extend(extractCircles(g.objects["Rollovers"], CircleType.JS_ROLLOVER, None))
     circles.extend(extractCircles(g.objects["Bumpers"], CircleType.JS_BUMPER, None))
 
+    points: list[pbPoint] = []
+    points.extend(extractPoints(g.objects["Ball_Spawn"], PointType.JS_BALL_SPAWN, None))
+    points.extend(extractPoints(g.objects["Item_Spawn"], PointType.JS_ITEM_SPAWN, None))
+
     launchers = extractRectangles(g.objects["Launchers"], None)
     flippers = extractFlippers(g.objects["Flippers"], None)
     triangles = extractTriangles(g.objects["Indicators"], None)
@@ -414,6 +457,10 @@ def main():
     addLength(tableData, triangles)
     for triangle in triangles:
         tableData.extend(triangle.toBytes())
+
+    addLength(tableData, points)
+    for point in points:
+        tableData.extend(point.toBytes())
 
     with open("table.bin", "wb") as outFile:
         outFile.write(tableData)

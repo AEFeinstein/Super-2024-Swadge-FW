@@ -27,6 +27,21 @@ typedef enum
     JS_ROLLOVER
 } jsCircleType_t;
 
+typedef enum
+{
+    JS_BALL_SPAWN,
+    JS_ITEM_SPAWN,
+} jsPointType_t;
+
+typedef struct
+{
+    uint16_t id;
+    uint8_t groupId;
+    list_t* group;
+    jsPointType_t type;
+    vecFl_t pos;
+} jsPoint_t;
+
 typedef struct
 {
     uint16_t id;
@@ -109,6 +124,7 @@ typedef struct
 #define MAX_NUM_FLIPPERS  128
 #define MAX_NUM_LAUNCHERS 128
 #define MAX_NUM_TRIANGLES 128
+#define MAX_NUM_POINTS    128
 
 typedef struct
 {
@@ -130,6 +146,8 @@ typedef struct
     int32_t numLaunchers;
     jsTriangle_t triangles[MAX_NUM_TRIANGLES];
     int32_t numTriangles;
+    jsPoint_t points[MAX_NUM_POINTS];
+    int32_t numPoints;
     vec_t cameraOffset;
     vecFl_t tableDim;
     bool launchTubeClosed;
