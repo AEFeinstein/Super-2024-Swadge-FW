@@ -83,6 +83,19 @@ typedef struct
     uint16_t id;
     uint8_t groupId;
     list_t* group;
+    vecFl_t p1;
+    vecFl_t p2;
+    vecFl_t p3;
+    bool isBlinking;
+    bool isOn;
+    float blinkTimer;
+} jsTriangle_t;
+
+typedef struct
+{
+    uint16_t id;
+    uint8_t groupId;
+    list_t* group;
     vecFl_t pos;
     float width;
     float height;
@@ -95,6 +108,7 @@ typedef struct
 #define MAX_NUM_CIRCLES   128
 #define MAX_NUM_FLIPPERS  128
 #define MAX_NUM_LAUNCHERS 128
+#define MAX_NUM_TRIANGLES 128
 
 typedef struct
 {
@@ -114,6 +128,8 @@ typedef struct
     int32_t numFlippers;
     jsLauncher_t launchers[MAX_NUM_LAUNCHERS];
     int32_t numLaunchers;
+    jsTriangle_t triangles[MAX_NUM_TRIANGLES];
+    int32_t numTriangles;
     vec_t cameraOffset;
     vecFl_t tableDim;
     bool launchTubeClosed;

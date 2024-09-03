@@ -10,6 +10,7 @@
 #include "pinball_circle.h"
 #include "pinball_rectangle.h"
 #include "pinball_flipper.h"
+#include "pinball_triangle.h"
 
 /**
  * @brief TODO doc
@@ -127,6 +128,13 @@ void jsSceneInit(jsScene_t* scene)
     for (uint16_t fIdx = 0; fIdx < flippersInFile; fIdx++)
     {
         dIdx += readFlipperFromFile(&tableData[dIdx], scene);
+    }
+
+    uint16_t trianglesInFile = readInt16(tableData, &dIdx);
+    scene->numTriangles      = 0;
+    for (uint16_t tIdx = 0; tIdx < trianglesInFile; tIdx++)
+    {
+        dIdx += readTriangleFromFile(&tableData[dIdx], scene);
     }
 
     free(tableData);

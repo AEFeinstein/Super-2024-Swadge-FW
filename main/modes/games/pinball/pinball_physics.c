@@ -4,6 +4,7 @@
 #include "pinball_circle.h"
 #include "pinball_rectangle.h"
 #include "pinball_flipper.h"
+#include "pinball_triangle.h"
 #include "pinball_physics.h"
 
 static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2);
@@ -57,6 +58,8 @@ void jsSimulate(jsScene_t* scene)
     {
         jsLauncherSimulate(&scene->launchers[i], scene->balls, scene->numBalls, scene->dt);
     }
+
+    jsBlinkTriangles(scene, scene->dt);
 }
 
 /**

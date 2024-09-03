@@ -72,6 +72,16 @@ void jsSceneDraw(jsScene_t* scene)
 {
     clearPxTft();
 
+    // Triangle indicators
+    for (int32_t i = 0; i < scene->numTriangles; i++)
+    {
+        jsTriangle_t* tri = &scene->triangles[i];
+        drawTriangleOutlined(tri->p1.x - scene->cameraOffset.x, tri->p1.y - scene->cameraOffset.y, //
+                             tri->p2.x - scene->cameraOffset.x, tri->p2.y - scene->cameraOffset.y, //
+                             tri->p3.x - scene->cameraOffset.x, tri->p3.y - scene->cameraOffset.y, //
+                             tri->isOn ? c550 : cTransparent, c220);
+    }
+
     // Lines
     for (int32_t i = 0; i < scene->numLines; i++)
     {
