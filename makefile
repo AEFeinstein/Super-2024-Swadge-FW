@@ -314,7 +314,7 @@ assets:
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 
 # To build the main file, you have to compile the objects
-$(EXECUTABLE): $(OBJECTS)
+$(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBRARY_FLAGS) -o $@
 
 # This compiles each c file into an o file
