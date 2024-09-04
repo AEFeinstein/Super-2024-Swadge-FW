@@ -35,6 +35,7 @@ class LineType(Enum):
     JS_DROP_TARGET = 2
     JS_STANDUP_TARGET = 3
     JS_SPINNER = 4
+    JS_SCOOP = 5
 
 
 class CircleType(Enum):
@@ -108,6 +109,10 @@ class pbLine:
                 pass
             case LineType.JS_SPINNER:
                 self.isSolid = False
+                self.pushVel = 0
+                pass
+            case LineType.JS_SCOOP:
+                self.isSolid = True
                 self.pushVel = 0
                 pass
 
@@ -417,6 +422,7 @@ def main():
 
     lines: list[pbLine] = []
     lines.extend(extractPaths(g.objects["Walls"], LineType.JS_WALL, None))
+    lines.extend(extractPaths(g.objects["Scoops"], LineType.JS_SCOOP, None))
     lines.extend(extractPaths(g.objects["Slingshots"], LineType.JS_SLINGSHOT, None))
     lines.extend(extractPaths(g.objects["Drop_Targets"], LineType.JS_DROP_TARGET, None))
     lines.extend(

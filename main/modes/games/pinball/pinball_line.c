@@ -75,6 +75,11 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
             color = c123;
             break;
         }
+        case JS_SCOOP:
+        {
+            color = c202;
+            break;
+        }
     }
 
     drawLine(line->p1.x - cameraOffset->x, line->p1.y - cameraOffset->y, line->p2.x - cameraOffset->x,

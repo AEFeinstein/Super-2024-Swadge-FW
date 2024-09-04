@@ -19,6 +19,7 @@ typedef enum
     JS_DROP_TARGET,
     JS_STANDUP_TARGET,
     JS_SPINNER,
+    JS_SCOOP,
 } jsLineType_t;
 
 typedef enum
