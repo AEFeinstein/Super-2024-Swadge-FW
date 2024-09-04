@@ -36,3 +36,17 @@ void jsBallSimulate(jsBall_t* ball, float dt, vecFl_t gravity)
     ball->vel = addVecFl2d(ball->vel, mulVecFl2d(gravity, dt));
     ball->pos = addVecFl2d(ball->pos, mulVecFl2d(ball->vel, dt));
 }
+
+/**
+ * @brief TODO
+ *
+ * @param circle
+ * @param elapsedUs
+ */
+void jsCircleTimer(jsCircle_t* circle, int32_t elapsedUs)
+{
+    if (circle->litTimer > 0)
+    {
+        circle->litTimer -= elapsedUs;
+    }
+}

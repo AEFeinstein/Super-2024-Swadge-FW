@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hdw-btn.h"
+#include "macros.h"
 #include "pinball_typedef.h"
 
 uint8_t readInt8(uint8_t* data, uint32_t* idx);

@@ -102,7 +102,7 @@ void jsSceneDraw(jsScene_t* scene)
         {
             vecFl_t* pos = &scene->circles[i].pos;
             drawCircleFilled(pos->x - scene->cameraOffset.x, pos->y - scene->cameraOffset.y, scene->circles[i].radius,
-                             c131);
+                             (scene->circles[i].litTimer > 0) ? c252 : c131);
         }
     }
 

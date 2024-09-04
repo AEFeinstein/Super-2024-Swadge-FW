@@ -31,24 +31,15 @@ uint32_t readTriangleFromFile(uint8_t* tableData, jsScene_t* scene)
 }
 
 /**
- * @brief TODO
+ * @brief
  *
- * @param scene
- * @param dt
+ * @param tri
+ * @param elapsedUs
  */
-void jsBlinkTriangles(jsScene_t* scene, float dt)
+void jsTriangleTimer(jsTriangle_t* tri, int32_t elapsedUs)
 {
-    for (int32_t tIdx = 0; tIdx < scene->numTriangles; tIdx++)
+    if (tri->isBlinking)
     {
-        jsTriangle_t* tri = &scene->triangles[tIdx];
-        if (tri->isBlinking)
-        {
-            tri->blinkTimer += dt;
-            while (tri->blinkTimer > 0.33f)
-            {
-                tri->blinkTimer -= 0.33f;
-                tri->isOn = !tri->isOn;
-            }
-        }
+        RUN_TIMER_EVERY(tri->blinkTimer, 333333, elapsedUs, tri->isOn = !tri->isOn;);
     }
 }

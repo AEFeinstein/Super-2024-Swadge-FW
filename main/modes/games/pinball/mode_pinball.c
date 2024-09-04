@@ -103,7 +103,7 @@ static void pinMainLoop(int64_t elapsedUs)
         }
     }
 
-    jsSimulate(&pinball->scene);
+    jsSimulate(&pinball->scene, elapsedUs);
     jsAdjustCamera(&pinball->scene);
     jsSceneDraw(&pinball->scene);
 }

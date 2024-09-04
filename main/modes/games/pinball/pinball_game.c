@@ -62,7 +62,6 @@ void jsSceneInit(jsScene_t* scene)
 {
     scene->gravity.x = 0;
     scene->gravity.y = 180;
-    scene->dt        = 1 / 60.0f;
     scene->score     = 0;
     scene->paused    = true;
 

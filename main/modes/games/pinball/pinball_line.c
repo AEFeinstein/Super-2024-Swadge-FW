@@ -50,7 +50,7 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
         }
         case JS_SLINGSHOT:
         {
-            color = c500;
+            color = line->litTimer > 0 ? c500 : c300;
             break;
         }
         case JS_DROP_TARGET:
@@ -67,7 +67,7 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
         }
         case JS_STANDUP_TARGET:
         {
-            color = c004;
+            color = line->litTimer > 0 ? c004 : c002;
             break;
         }
         case JS_SPINNER:
@@ -84,4 +84,18 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
 
     drawLine(line->p1.x - cameraOffset->x, line->p1.y - cameraOffset->y, line->p2.x - cameraOffset->x,
              line->p2.y - cameraOffset->y, color, 0);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param line
+ * @param elapsedUs
+ */
+void jsLineTimer(jsLine_t* line, int32_t elapsedUs)
+{
+    if (line->litTimer > 0)
+    {
+        line->litTimer -= elapsedUs;
+    }
 }

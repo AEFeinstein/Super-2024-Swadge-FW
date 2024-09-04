@@ -14,21 +14,29 @@ static jsLineType_t handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int
 static void handleBallLauncherCollision(jsLauncher_t* launcher, jsBall_t* ball, float dt);
 
 /**
- * @brief TODO doc
+ * @brief TODO
  *
  * @param scene
+ * @param elapsedUs
  */
-void jsSimulate(jsScene_t* scene)
+void jsSimulate(jsScene_t* scene, int32_t elapsedUs)
 {
+    float elapsedUsFl = elapsedUs / 1000000.0f;
+
     for (int32_t i = 0; i < scene->numFlippers; i++)
     {
-        jsFlipperSimulate(&scene->flippers[i], scene->dt);
+        jsFlipperSimulate(&scene->flippers[i], elapsedUsFl);
+    }
+
+    for (int32_t i = 0; i < scene->numLaunchers; i++)
+    {
+        jsLauncherSimulate(&scene->launchers[i], scene->balls, scene->numBalls, elapsedUsFl);
     }
 
     for (int32_t bIdx = 0; bIdx < scene->numBalls; bIdx++)
     {
         jsBall_t* ball = &scene->balls[bIdx];
-        jsBallSimulate(ball, scene->dt, scene->gravity);
+        jsBallSimulate(ball, elapsedUsFl, scene->gravity);
 
         for (int32_t bIdx2 = bIdx + 1; bIdx2 < scene->numBalls; bIdx2++)
         {
@@ -79,16 +87,24 @@ void jsSimulate(jsScene_t* scene)
 
         for (int32_t lIdx = 0; lIdx < scene->numLaunchers; lIdx++)
         {
-            handleBallLauncherCollision(&scene->launchers[lIdx], ball, scene->dt);
+            handleBallLauncherCollision(&scene->launchers[lIdx], ball, elapsedUs);
         }
     }
 
-    for (int32_t i = 0; i < scene->numLaunchers; i++)
+    for (int32_t cIdx = 0; cIdx < scene->numCircles; cIdx++)
     {
-        jsLauncherSimulate(&scene->launchers[i], scene->balls, scene->numBalls, scene->dt);
+        jsCircleTimer(&scene->circles[cIdx], elapsedUs);
     }
 
-    jsBlinkTriangles(scene, scene->dt);
+    for (int32_t tIdx = 0; tIdx < scene->numTriangles; tIdx++)
+    {
+        jsTriangleTimer(&scene->triangles[tIdx], elapsedUs);
+    }
+
+    for (int32_t lIdx = 0; lIdx < scene->numLines; lIdx++)
+    {
+        jsLineTimer(&scene->lines[lIdx], elapsedUs);
+    }
 }
 
 /**
@@ -189,6 +205,8 @@ static void handleBallCircleCollision(jsScene_t* scene, jsBall_t* ball, jsCircle
         // Adjust the velocity
         float v   = dotVecFl2d(ball->vel, dir);
         ball->vel = addVecFl2d(ball->vel, mulVecFl2d(dir, circle->pushVel - v));
+
+        circle->litTimer = 250000;
     }
     else if (JS_ROLLOVER == circle->type)
     {
@@ -366,6 +384,14 @@ static jsLineType_t handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int
                 node                            = node->next;
             }
         }
+    }
+    else if (JS_STANDUP_TARGET == line->type)
+    {
+        line->litTimer = 250000;
+    }
+    else if (JS_SLINGSHOT == line->type)
+    {
+        line->litTimer = 250000;
     }
     return line->type;
 }

@@ -4,4 +4,4 @@
 #include "pinball_game.h"
 
 uint32_t readTriangleFromFile(uint8_t* tableData, jsScene_t* scene);
-void jsBlinkTriangles(jsScene_t* scene, float dt);
+void jsTriangleTimer(jsTriangle_t* tri, int32_t elapsedUs);

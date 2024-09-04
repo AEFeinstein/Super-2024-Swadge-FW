@@ -54,6 +54,7 @@ typedef struct
     float pushVel;
     bool isSolid;
     bool isUp;
+    int32_t litTimer;
 } jsLine_t;
 
 typedef struct
@@ -92,6 +93,7 @@ typedef struct
     vecFl_t pos;
     jsCircleType_t type;
     float pushVel;
+    int32_t litTimer;
 } jsCircle_t;
 
 typedef struct
@@ -104,7 +106,7 @@ typedef struct
     vecFl_t p3;
     bool isBlinking;
     bool isOn;
-    float blinkTimer;
+    int32_t blinkTimer;
 } jsTriangle_t;
 
 typedef struct
@@ -130,7 +132,6 @@ typedef struct
 typedef struct
 {
     vecFl_t gravity;
-    float dt;
     int32_t score;
     bool paused;
     int32_t numGroups;
