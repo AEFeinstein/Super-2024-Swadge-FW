@@ -48,6 +48,7 @@ typedef enum
     PA_EN_ST_STUN,
     PA_EN_ST_NORMAL,
     PA_EN_ST_AGGRESSIVE,
+    PA_EN_ST_RUNAWAY,
     PA_EN_ST_BREAK_BLOCK,
 } paEnemyState_t;
 

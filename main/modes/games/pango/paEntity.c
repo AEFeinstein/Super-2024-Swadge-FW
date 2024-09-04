@@ -271,19 +271,35 @@ void updateCrabdozer(paEntity_t* self)
             pa_detectEntityCollisions(self);
             break;
         case PA_EN_ST_NORMAL:
-        case PA_EN_ST_AGGRESSIVE: {
+        case PA_EN_ST_AGGRESSIVE: 
+        case PA_EN_ST_RUNAWAY: {
+            
             self->stateTimer--;
             if(self->stateTimer < 0 || self->entityManager->aggroEnemies < self->gameData->minAggroEnemies){
-                if(self->state == PA_EN_ST_NORMAL && (self->entityManager->aggroEnemies < self->gameData->maxAggroEnemies)){
+                if(self->state == PA_EN_ST_RUNAWAY){
+                    killEnemy(self);
+                    break;
+                } else if(self->state == PA_EN_ST_NORMAL && (self->entityManager->aggroEnemies < self->gameData->maxAggroEnemies)){
                     self->state = PA_EN_ST_AGGRESSIVE;
                     self->entityManager->aggroEnemies++;
                     self->baseSpeed+=2;
+                    self->stateTimer = (300 + esp_random() % 300); //Min 5 seconds, max 10 seconds
                 } else if (self->state == PA_EN_ST_AGGRESSIVE){
                     self->state = PA_EN_ST_NORMAL;
                     self->entityManager->aggroEnemies--;
                     self->baseSpeed-=2;
+                    self->stateTimer = (300 + esp_random() % 300); //Min 5 seconds, max 10 seconds
                 }
-                self->stateTimer = (300 + esp_random() % 300); //Min 5 seconds, max 10 seconds
+            }
+
+            if(self->state != PA_EN_ST_RUNAWAY && self->entityManager->activeEnemies == 1 && self->gameData->remainingEnemies == 0){
+                self->state = PA_EN_ST_RUNAWAY;
+                self->entityManager->aggroEnemies = 1;
+                self->baseSpeed=20;
+                self->stateTimer = 480; //8 seconds
+
+                self->targetTileX = (esp_random() % 2) ? 1 : 15;
+                self->targetTileY = (esp_random() % 2) ? 1 : 13;
             }
 
             uint8_t tx = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
@@ -292,8 +308,10 @@ void updateCrabdozer(paEntity_t* self)
             uint8_t t1, t2, t3 = 0;
             uint8_t distT1, distT2, distT3;
 
-            self->targetTileX = PA_TO_TILECOORDS(self->entityManager->playerEntity->x >> SUBPIXEL_RESOLUTION);
-            self->targetTileY = PA_TO_TILECOORDS(self->entityManager->playerEntity->y >> SUBPIXEL_RESOLUTION);
+            if(self->state != PA_EN_ST_RUNAWAY) {
+                self->targetTileX = PA_TO_TILECOORDS(self->entityManager->playerEntity->x >> SUBPIXEL_RESOLUTION);
+                self->targetTileY = PA_TO_TILECOORDS(self->entityManager->playerEntity->y >> SUBPIXEL_RESOLUTION);
+            }
 
             int16_t hcof = (((self->x >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
             int16_t vcof = (((self->y >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
