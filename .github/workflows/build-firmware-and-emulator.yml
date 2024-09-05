@@ -142,13 +142,13 @@ jobs:
     - name: Set up the IDF
       if: steps.cache-esp-idf.outputs.cache-hit != 'true' && matrix.firmware && matrix.family == 'windows'
       run: |
-        git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
+        git clone -b v5.3.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
         ${{ runner.temp }}/esp-idf/install.ps1
 
     - name: Set up the IDF
       if: steps.cache-esp-idf.outputs.cache-hit != 'true' && matrix.firmware && matrix.family != 'windows'
       run: |
-        git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
+        git clone -b v5.3.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
         ${{ runner.temp }}/esp-idf/install.sh
 
     - name: Compile the firmware
