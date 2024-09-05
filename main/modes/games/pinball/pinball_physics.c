@@ -10,7 +10,7 @@
 static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2);
 static void handleBallCircleCollision(jsScene_t* scene, jsBall_t* ball, jsCircle_t* circle);
 static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper);
-static jsLineType_t handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines);
+static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines);
 static void handleBallLauncherCollision(jsLauncher_t* launcher, jsBall_t* ball, float dt);
 
 /**
@@ -36,7 +36,7 @@ void jsSimulate(jsScene_t* scene, int32_t elapsedUs)
     for (int32_t bIdx = 0; bIdx < scene->numBalls; bIdx++)
     {
         jsBall_t* ball = &scene->balls[bIdx];
-        jsBallSimulate(ball, elapsedUsFl, scene->gravity);
+        jsBallSimulate(ball, elapsedUs, elapsedUsFl, scene);
 
         for (int32_t bIdx2 = bIdx + 1; bIdx2 < scene->numBalls; bIdx2++)
         {
@@ -55,35 +55,7 @@ void jsSimulate(jsScene_t* scene, int32_t elapsedUs)
         }
 
         // If the ball was scooped
-        if (JS_SCOOP == handleBallLineCollision(ball, scene->lines, scene->numLines))
-        {
-            // TODO count scoops
-
-            // Reset the velocity
-            ball->vel.x = 0;
-            ball->vel.y = 0;
-
-            // Respawn in the launch tube
-            for (int32_t pIdx = 0; pIdx < scene->numPoints; pIdx++)
-            {
-                jsPoint_t* point = &scene->points[pIdx];
-                if (JS_BALL_SPAWN == point->type)
-                {
-                    ball->pos = point->pos;
-                    break;
-                }
-            }
-
-            // Open the launch tube
-            scene->launchTubeClosed = false;
-            node_t* wNode           = scene->groups[1].first;
-            while (wNode)
-            {
-                ((jsLine_t*)wNode->val)->isSolid = false;
-                ((jsLine_t*)wNode->val)->isUp    = false;
-                wNode                            = wNode->next;
-            }
-        }
+        handleBallLineCollision(ball, scene->lines, scene->numLines);
 
         for (int32_t lIdx = 0; lIdx < scene->numLaunchers; lIdx++)
         {
@@ -103,7 +75,7 @@ void jsSimulate(jsScene_t* scene, int32_t elapsedUs)
 
     for (int32_t lIdx = 0; lIdx < scene->numLines; lIdx++)
     {
-        jsLineTimer(&scene->lines[lIdx], elapsedUs);
+        jsLineTimer(&scene->lines[lIdx], elapsedUs, scene);
     }
 }
 
@@ -281,13 +253,36 @@ static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper)
 }
 
 /**
+ * @brief TODO
+ * 
+ * @param ball 
+ * @param line 
+ * @return true 
+ * @return false 
+ */
+bool ballLineIntersection(jsBall_t* ball, jsLine_t* line)
+{
+    // Get the line segment from the list of walls
+    vecFl_t a = line->p1;
+    vecFl_t b = line->p2;
+    // Get the closest point on the segment to the center of the ball
+    vecFl_t c = closestPointOnSegment(ball->pos, a, b);
+    // Find the distance between the center of the ball and the closest point on the line
+    vecFl_t d  = subVecFl2d(ball->pos, c);
+    float dist = magVecFl2d(d);
+    // If the distance is less than the radius, and the distance is less
+    // than the minimum distance, its the best collision
+    return (dist < ball->radius);
+}
+
+/**
  * @brief TODO doc
  *
  * @param ball
  * @param lines
  * @param numLines
  */
-static jsLineType_t handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines)
+static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines)
 {
     // find closest segment;
     vecFl_t ballToClosest;
@@ -325,7 +320,7 @@ static jsLineType_t handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int
     // Check if there were any collisions
     if (NULL == line)
     {
-        return -1;
+        return;
     }
 
     // push out to not clip
@@ -350,50 +345,63 @@ static jsLineType_t handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int
         ball->vel  = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, vNew - v));
     }
 
-    if (JS_DROP_TARGET == line->type)
+    switch (line->type)
     {
-        line->isUp    = false;
-        line->isSolid = false;
-
-        // Check if all targets in the group are hit
-        bool someLineUp = false;
-        list_t* group   = line->group;
-        node_t* node    = group->first;
-        while (NULL != node)
+        default:
+        case JS_WALL:
+        case JS_SPINNER:
         {
-            jsLine_t* groupLine = node->val;
-            if (groupLine->isUp)
-            {
-                someLineUp = true;
-                break;
-            }
-            node = node->next;
+            break;
         }
-
-        // If all lines are down
-        if (!someLineUp)
+        case JS_SLINGSHOT:
+        case JS_STANDUP_TARGET:
         {
-            // Reset them
-            // TODO start a timer for this? Make sure a ball isn't touching the line before resetting?
-            node = group->first;
+            line->litTimer = 250000;
+            break;
+        }
+        case JS_DROP_TARGET:
+        {
+            line->isUp    = false;
+            line->isSolid = false;
+
+            // Check if all targets in the group are hit
+            bool someLineUp = false;
+            list_t* group   = line->group;
+            node_t* node    = group->first;
             while (NULL != node)
             {
-                // TODO delay this by some time?
-                ((jsLine_t*)node->val)->isUp    = true;
-                ((jsLine_t*)node->val)->isSolid = true;
-                node                            = node->next;
+                jsLine_t* groupLine = node->val;
+                if (groupLine->isUp)
+                {
+                    someLineUp = true;
+                    break;
+                }
+                node = node->next;
             }
+
+            // If all lines are down
+            if (!someLineUp)
+            {
+                // Reset them
+                // TODO start a timer for this? Make sure a ball isn't touching the line before resetting?
+                node = group->first;
+                while (NULL != node)
+                {
+                    // Start a timer to reset the target
+                    ((jsLine_t*)node->val)->resetTimer = 3000000;
+                    node                               = node->next;
+                }
+            }
+            break;
+        }
+        case JS_SCOOP:
+        {
+            // TODO count scoops
+
+            ball->scoopTimer = 2000000;
+            break;
         }
     }
-    else if (JS_STANDUP_TARGET == line->type)
-    {
-        line->litTimer = 250000;
-    }
-    else if (JS_SLINGSHOT == line->type)
-    {
-        line->litTimer = 250000;
-    }
-    return line->type;
 }
 
 /**

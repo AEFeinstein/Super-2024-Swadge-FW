@@ -2,6 +2,7 @@
 #include "palette.h"
 
 #include "pinball_line.h"
+#include "pinball_physics.h"
 
 /**
  * @brief TODO doc
@@ -92,10 +93,46 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
  * @param line
  * @param elapsedUs
  */
-void jsLineTimer(jsLine_t* line, int32_t elapsedUs)
+void jsLineTimer(jsLine_t* line, int32_t elapsedUs, jsScene_t* scene)
 {
+    // Decrement the lit timer
     if (line->litTimer > 0)
     {
         line->litTimer -= elapsedUs;
+    }
+
+    // Decrement the reset timer
+    if (line->resetTimer > 0)
+    {
+        line->resetTimer -= elapsedUs;
+
+        if (line->resetTimer <= 0)
+        {
+            // Make sure the line isn't intersecting a ball before popping up
+            bool intersecting = false;
+            for (int32_t bIdx = 0; bIdx < scene->numBalls; bIdx++)
+            {
+                jsBall_t* ball = &scene->balls[bIdx];
+
+                if (ballLineIntersection(ball, line))
+                {
+                    intersecting = true;
+                    break;
+                }
+            }
+
+            // If there are no intersections
+            if (!intersecting)
+            {
+                // Raise the target
+                line->isSolid = true;
+                line->isUp    = true;
+            }
+            else
+            {
+                // Try next frame
+                line->resetTimer = 1;
+            }
+        }
     }
 }

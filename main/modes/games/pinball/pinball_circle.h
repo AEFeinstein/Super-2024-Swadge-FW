@@ -6,5 +6,5 @@
 #define PINBALL_RADIUS 8
 
 uint32_t readCircleFromFile(uint8_t* tableData, jsScene_t* scene);
-void jsBallSimulate(jsBall_t* ball, float dt, vecFl_t gravity);
+void jsBallSimulate(jsBall_t* ball, int32_t elapsedUs, float dt, jsScene_t* scene);
 void jsCircleTimer(jsCircle_t* circle, int32_t elapsedUs);

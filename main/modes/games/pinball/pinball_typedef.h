@@ -55,6 +55,7 @@ typedef struct
     bool isSolid;
     bool isUp;
     int32_t litTimer;
+    int32_t resetTimer;
 } jsLine_t;
 
 typedef struct
@@ -82,6 +83,7 @@ typedef struct
     float restitution;
     vecFl_t pos;
     vecFl_t vel;
+    int32_t scoopTimer;
 } jsBall_t;
 
 typedef struct

@@ -1,4 +1,5 @@
 #include "pinball_circle.h"
+#include "pinball_rectangle.h"
 
 /**
  * @brief TODO doc
@@ -29,12 +30,47 @@ uint32_t readCircleFromFile(uint8_t* tableData, jsScene_t* scene)
  *
  * @param ball
  * @param dt
- * @param gravity
+ * @param scene
  */
-void jsBallSimulate(jsBall_t* ball, float dt, vecFl_t gravity)
+void jsBallSimulate(jsBall_t* ball, int32_t elapsedUs, float dt, jsScene_t* scene)
 {
-    ball->vel = addVecFl2d(ball->vel, mulVecFl2d(gravity, dt));
-    ball->pos = addVecFl2d(ball->pos, mulVecFl2d(ball->vel, dt));
+    if (ball->scoopTimer <= 0)
+    {
+        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(scene->gravity, dt));
+        ball->pos = addVecFl2d(ball->pos, mulVecFl2d(ball->vel, dt));
+    }
+    else
+    {
+        ball->scoopTimer -= elapsedUs;
+
+        if (ball->scoopTimer <= 0)
+        {
+            // Respawn in the launch tube
+            for (int32_t pIdx = 0; pIdx < scene->numPoints; pIdx++)
+            {
+                jsPoint_t* point = &scene->points[pIdx];
+                if (JS_BALL_SPAWN == point->type)
+                {
+                    ball->pos = point->pos;
+                    break;
+                }
+            }
+
+            // Open the launch tube
+            scene->launchTubeClosed = false;
+            node_t* wNode           = scene->groups[1].first;
+            while (wNode)
+            {
+                ((jsLine_t*)wNode->val)->isSolid = false;
+                ((jsLine_t*)wNode->val)->isUp    = false;
+                wNode                            = wNode->next;
+            }
+
+            // Give the ball initial velocity
+            ball->vel.x = 0;
+            ball->vel.y = MAX_LAUNCHER_VELOCITY;
+        }
+    }
 }
 
 /**

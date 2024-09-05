@@ -91,8 +91,13 @@ void jsSceneDraw(jsScene_t* scene)
     // balls
     for (int32_t i = 0; i < scene->numBalls; i++)
     {
-        vecFl_t* pos = &scene->balls[i].pos;
-        drawCircleFilled(pos->x - scene->cameraOffset.x, pos->y - scene->cameraOffset.y, scene->balls[i].radius, c500);
+        // Don't draw when scooped
+        if (scene->balls[i].scoopTimer <= 0)
+        {
+            vecFl_t* pos = &scene->balls[i].pos;
+            drawCircleFilled(pos->x - scene->cameraOffset.x, pos->y - scene->cameraOffset.y, scene->balls[i].radius,
+                             c500);
+        }
     }
 
     // circles

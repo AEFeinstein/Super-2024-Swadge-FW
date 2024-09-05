@@ -53,7 +53,7 @@ void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBall
             circleFl_t b = {.pos = balls[bIdx].pos, .radius = balls[bIdx].radius};
             if (circleRectFlIntersection(b, r, NULL))
             {
-                balls[bIdx].vel.y = (-600 * launcher->impulse);
+                balls[bIdx].vel.y = (MAX_LAUNCHER_VELOCITY * launcher->impulse);
                 printf("Launch at %f\n", balls[bIdx].vel.y);
             }
         }
