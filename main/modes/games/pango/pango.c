@@ -32,6 +32,7 @@
 #include <inttypes.h>
 #include "mainMenu.h"
 #include "fill.h"
+#include "paTables.h"
 
 //==============================================================================
 // Constants
@@ -53,21 +54,6 @@ static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
 
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
-
-
-#define DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH 8
-#define DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH 2
-static const uint8_t defaultEnemySpawnLocations[DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH * DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH] = {
-    1,1,
-    15,1,
-    1,13,
-    15,13,
-    9,1,
-    15,7,
-    9,13,
-    1,7//,
-    //3,1
-};
 
 //==============================================================================
 // Functions Prototypes
@@ -816,19 +802,40 @@ void changeStateGame(pango_t* self)
     } else {
         //uint16_t randomAggroEnemy = esp_random() % self->gameData.maxActiveEnemies;
 
+        int16_t skippedEnemyRespawnCount = 0;
+
         for(uint16_t i = 0; i<entityManager->activeEnemies; i++){
             if(i >= DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH){
-                entityManager->activeEnemies--;
+                skippedEnemyRespawnCount++;
                 continue;
             }
 
-            paEntity_t* newEnemy =  createCrabdozer(&(self->entityManager), (defaultEnemySpawnLocations[i*2] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8, (defaultEnemySpawnLocations[i*2+1] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
+            uint8_t spawnTx = defaultEnemySpawnLocations[i*DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH+DEFAULT_ENEMY_SPAWN_LOCATION_TX_LOOKUP_OFFSET];
+            uint8_t spawnTy = defaultEnemySpawnLocations[i*DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH+DEFAULT_ENEMY_SPAWN_LOCATION_TY_LOOKUP_OFFSET];
+            uint8_t tileAtSpawn = pa_getTile(&(self->tilemap), spawnTx, spawnTy);
+            
+            switch(tileAtSpawn){
+                default:
+                    break;
+                case PA_TILE_BLOCK:
+                    pa_setTile(&(self->tilemap), spawnTx, spawnTy, PA_TILE_EMPTY);
+                    break;
+                case PA_TILE_SPAWN_BLOCK_0:
+                    skippedEnemyRespawnCount++;
+                    continue;
+                    break;
+            }
+            
+            paEntity_t* newEnemy =  createCrabdozer(&(self->entityManager), (spawnTx << PA_TILE_SIZE_IN_POWERS_OF_2) + 8, (spawnTy << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
+            
             /*if(newEnemy != NULL && i == randomAggroEnemy){
                 newEnemy->stateFlag = true;
                 newEnemy->state = PA_EN_ST_STUN;
                 newEnemy->stateTimer = 1;
             }*/
         }
+
+        entityManager->activeEnemies -= skippedEnemyRespawnCount;
 
     }
 

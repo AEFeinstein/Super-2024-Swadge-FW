@@ -200,8 +200,12 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
         currentEntity->active = false;
 
         //clear out invisible block tiles that are placed for every Break Block object
-        if(currentEntity->type == PA_ENTITY_BREAK_BLOCK){
-            pa_setTile(currentEntity->tilemap, PA_TO_TILECOORDS(currentEntity->x >> SUBPIXEL_RESOLUTION), PA_TO_TILECOORDS(currentEntity->y >> SUBPIXEL_RESOLUTION), PA_TILE_EMPTY);            
+        //if(currentEntity->type == PA_ENTITY_BREAK_BLOCK){
+        //    pa_setTile(currentEntity->tilemap, PA_TO_TILECOORDS(currentEntity->x >> SUBPIXEL_RESOLUTION), PA_TO_TILECOORDS(currentEntity->y >> SUBPIXEL_RESOLUTION), PA_TILE_EMPTY);            
+        //}
+
+        if(currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->jumpPower == PA_TILE_SPAWN_BLOCK_0){
+            entityManager->gameData->remainingEnemies--;
         }
 
         if (excludePlayer && currentEntity == entityManager->playerEntity)

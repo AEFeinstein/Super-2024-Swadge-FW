@@ -927,10 +927,10 @@ void despawnWhenOffscreen(paEntity_t* self)
 
 void pa_destroyEntity(paEntity_t* self, bool respawn)
 {
-    if (respawn && !(self->homeTileX == 0 && self->homeTileY == 0))
+    /*if (respawn && !(self->homeTileX == 0 && self->homeTileY == 0))
     {
         self->tilemap->map[self->homeTileY * self->tilemap->mapWidth + self->homeTileX] = self->type + 128;
-    }
+    }*/
 
     // self->entityManager->activeEntities--;
     self->active = false;

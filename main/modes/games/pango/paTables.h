@@ -10,6 +10,37 @@
 // Look Up Tables
 //==============================================================================
 
+#define DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH 20
+
+#define DEFAULT_ENEMY_SPAWN_LOCATION_TX_LOOKUP_OFFSET 0
+#define DEFAULT_ENEMY_SPAWN_LOCATION_TY_LOOKUP_OFFSET 1
+#define DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH 2
+
+static const uint8_t defaultEnemySpawnLocations[DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH * DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH] = {
+
+// tx,ty
+    1,1,
+    15,1,
+    1,13,
+    15,13,
+    8,1,
+    15,7,
+    8,13,
+    1,7,
+    4,1,
+    12,1,
+    15,4,
+    15,10,
+    12,13,
+    4,13,
+    1,10,
+    1,4,
+    6,1,
+    10,1,
+    6,13,
+    10,13
+};
+
 /*#define MASTER_DIFFICULTY2_TABLE_LENGTH 6
 
 #define TOTAL_ENEMIES_LOOKUP_OFFSET 0
@@ -64,8 +95,7 @@ static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DI
          9,      3,    16,
          8,      3,    17,
         10,      4,    14,
-        12,      1,    18, 
-                    
+        12,      1,    18,     
 };
 
 #endif
