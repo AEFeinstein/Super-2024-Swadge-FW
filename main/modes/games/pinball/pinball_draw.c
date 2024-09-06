@@ -14,16 +14,26 @@
  */
 void jsAdjustCamera(jsScene_t* scene)
 {
+    // No balls? No camera adjustment!
+    if (0 == scene->balls.length)
+    {
+        return;
+    }
+
     // Find the ball lowest on the table
     float lowestBallX = 0;
     float lowestBallY = 0;
-    for (int32_t bIdx = 0; bIdx < scene->numBalls; bIdx++)
+
+    node_t* ballNode = scene->balls.first;
+    while (ballNode)
     {
-        if (scene->balls[bIdx].pos.y > lowestBallY)
+        jsBall_t* ball = ballNode->val;
+        if (ball->pos.y > lowestBallY)
         {
-            lowestBallX = scene->balls[bIdx].pos.x;
-            lowestBallY = scene->balls[bIdx].pos.y;
+            lowestBallX = ball->pos.x;
+            lowestBallY = ball->pos.y;
         }
+        ballNode = ballNode->next;
     }
 
     // Adjust the lowest ball's position to screen coordinates
@@ -89,15 +99,19 @@ void jsSceneDraw(jsScene_t* scene)
     }
 
     // balls
-    for (int32_t i = 0; i < scene->numBalls; i++)
+    node_t* bNode = scene->balls.first;
+    while (bNode)
     {
+        jsBall_t* ball = bNode->val;
+
         // Don't draw when scooped
-        if (scene->balls[i].scoopTimer <= 0)
+        if (ball->scoopTimer <= 0)
         {
-            vecFl_t* pos = &scene->balls[i].pos;
-            drawCircleFilled(pos->x - scene->cameraOffset.x, pos->y - scene->cameraOffset.y, scene->balls[i].radius,
-                             c500);
+            vecFl_t* pos = &ball->pos;
+            drawCircleFilled(pos->x - scene->cameraOffset.x, pos->y - scene->cameraOffset.y, ball->radius, c500);
         }
+
+        bNode = bNode->next;
     }
 
     // circles

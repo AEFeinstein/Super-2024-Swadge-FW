@@ -20,6 +20,7 @@ typedef enum
     JS_STANDUP_TARGET,
     JS_SPINNER,
     JS_SCOOP,
+    JS_BALL_LOST,
 } jsLineType_t;
 
 typedef enum
@@ -124,7 +125,6 @@ typedef struct
 } jsLauncher_t;
 
 #define MAX_NUM_LINES     1024
-#define MAX_NUM_BALLS     128
 #define MAX_NUM_CIRCLES   128
 #define MAX_NUM_FLIPPERS  128
 #define MAX_NUM_LAUNCHERS 128
@@ -140,8 +140,7 @@ typedef struct
     list_t* groups;
     jsLine_t lines[MAX_NUM_LINES];
     int32_t numLines;
-    jsBall_t balls[MAX_NUM_BALLS];
-    int32_t numBalls;
+    list_t balls;
     jsCircle_t circles[MAX_NUM_CIRCLES];
     int32_t numCircles;
     jsFlipper_t flippers[MAX_NUM_FLIPPERS];

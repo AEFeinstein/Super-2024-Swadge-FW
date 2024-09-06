@@ -41,6 +41,7 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
     switch (line->type)
     {
         case JS_WALL:
+        case JS_BALL_LOST:
         {
             if (!line->isUp)
             {
@@ -110,15 +111,17 @@ void jsLineTimer(jsLine_t* line, int32_t elapsedUs, jsScene_t* scene)
         {
             // Make sure the line isn't intersecting a ball before popping up
             bool intersecting = false;
-            for (int32_t bIdx = 0; bIdx < scene->numBalls; bIdx++)
-            {
-                jsBall_t* ball = &scene->balls[bIdx];
 
+            node_t* bNode = scene->balls.first;
+            while (bNode)
+            {
+                jsBall_t* ball = bNode->val;
                 if (ballLineIntersection(ball, line))
                 {
                     intersecting = true;
                     break;
                 }
+                bNode = bNode->next;
             }
 
             // If there are no intersections

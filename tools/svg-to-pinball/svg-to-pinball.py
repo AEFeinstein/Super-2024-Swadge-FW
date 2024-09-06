@@ -36,6 +36,7 @@ class LineType(Enum):
     JS_STANDUP_TARGET = 3
     JS_SPINNER = 4
     JS_SCOOP = 5
+    JS_BALL_LOST = 6
 
 
 class CircleType(Enum):
@@ -112,6 +113,10 @@ class pbLine:
                 self.pushVel = 0
                 pass
             case LineType.JS_SCOOP:
+                self.isSolid = True
+                self.pushVel = 0
+                pass
+            case LineType.JS_BALL_LOST:
                 self.isSolid = True
                 self.pushVel = 0
                 pass
@@ -428,6 +433,7 @@ def main():
     lines.extend(
         extractPaths(g.objects["Standup_Targets"], LineType.JS_STANDUP_TARGET, None)
     )
+    lines.extend(extractPaths(g.objects["Ball_Lost"], LineType.JS_BALL_LOST, None))
 
     circles: list[pbCircle] = []
     circles.extend(extractCircles(g.objects["Rollovers"], CircleType.JS_ROLLOVER, None))

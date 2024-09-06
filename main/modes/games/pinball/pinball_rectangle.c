@@ -31,10 +31,9 @@ uint32_t readRectangleFromFile(uint8_t* tableData, jsScene_t* scene)
  *
  * @param launcher
  * @param balls
- * @param numBalls
  * @param dt
  */
-void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBalls, float dt)
+void jsLauncherSimulate(jsLauncher_t* launcher, list_t* balls, float dt)
 {
     if (launcher->buttonHeld)
     {
@@ -48,15 +47,19 @@ void jsLauncherSimulate(jsLauncher_t* launcher, jsBall_t* balls, int32_t numBall
     {
         rectangleFl_t r = {.pos = launcher->pos, .width = launcher->width, .height = launcher->height};
         // If touching a ball, transfer to a ball
-        for (int32_t bIdx = 0; bIdx < numBalls; bIdx++)
+        node_t* bNode = balls->first;
+        while (bNode)
         {
-            circleFl_t b = {.pos = balls[bIdx].pos, .radius = balls[bIdx].radius};
+            jsBall_t* ball = bNode->val;
+            circleFl_t b   = {.pos = ball->pos, .radius = ball->radius};
             if (circleRectFlIntersection(b, r, NULL))
             {
-                balls[bIdx].vel.y = (MAX_LAUNCHER_VELOCITY * launcher->impulse);
-                printf("Launch at %f\n", balls[bIdx].vel.y);
+                ball->vel.y = (MAX_LAUNCHER_VELOCITY * launcher->impulse);
             }
+
+            bNode = bNode->next;
         }
+
         launcher->impulse = 0;
     }
 }

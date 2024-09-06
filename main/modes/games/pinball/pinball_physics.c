@@ -10,7 +10,7 @@
 static void handleBallBallCollision(jsBall_t* ball1, jsBall_t* ball2);
 static void handleBallCircleCollision(jsScene_t* scene, jsBall_t* ball, jsCircle_t* circle);
 static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper);
-static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines);
+static bool handleBallLineCollision(jsBall_t* ball, jsScene_t* scene);
 static void handleBallLauncherCollision(jsLauncher_t* launcher, jsBall_t* ball, float dt);
 
 /**
@@ -30,18 +30,22 @@ void jsSimulate(jsScene_t* scene, int32_t elapsedUs)
 
     for (int32_t i = 0; i < scene->numLaunchers; i++)
     {
-        jsLauncherSimulate(&scene->launchers[i], scene->balls, scene->numBalls, elapsedUsFl);
+        jsLauncherSimulate(&scene->launchers[i], &scene->balls, elapsedUsFl);
     }
 
-    for (int32_t bIdx = 0; bIdx < scene->numBalls; bIdx++)
+    node_t* bNode = scene->balls.first;
+    while (bNode)
     {
-        jsBall_t* ball = &scene->balls[bIdx];
+        jsBall_t* ball = bNode->val;
+
         jsBallSimulate(ball, elapsedUs, elapsedUsFl, scene);
 
-        for (int32_t bIdx2 = bIdx + 1; bIdx2 < scene->numBalls; bIdx2++)
+        node_t* bNode2 = bNode->next;
+        while (bNode2)
         {
-            jsBall_t* ball2 = &scene->balls[bIdx2];
+            jsBall_t* ball2 = bNode2->val;
             handleBallBallCollision(ball, ball2);
+            bNode2 = bNode2->next;
         }
 
         for (int32_t cIdx = 0; cIdx < scene->numCircles; cIdx++)
@@ -54,12 +58,24 @@ void jsSimulate(jsScene_t* scene, int32_t elapsedUs)
             handleBallFlipperCollision(ball, &scene->flippers[fIdx]);
         }
 
-        // If the ball was scooped
-        handleBallLineCollision(ball, scene->lines, scene->numLines);
-
         for (int32_t lIdx = 0; lIdx < scene->numLaunchers; lIdx++)
         {
             handleBallLauncherCollision(&scene->launchers[lIdx], ball, elapsedUs);
+        }
+
+        // Collide ball with lines
+        if (handleBallLineCollision(ball, scene))
+        {
+            // Iterate to the next ball node
+            bNode = bNode->next;
+
+            // Then remove the ball
+            jsRemoveBall(ball, scene);
+        }
+        else
+        {
+            // Iterate to the next ball
+            bNode = bNode->next;
         }
     }
 
@@ -254,11 +270,11 @@ static void handleBallFlipperCollision(jsBall_t* ball, jsFlipper_t* flipper)
 
 /**
  * @brief TODO
- * 
- * @param ball 
- * @param line 
- * @return true 
- * @return false 
+ *
+ * @param ball
+ * @param line
+ * @return true
+ * @return false
  */
 bool ballLineIntersection(jsBall_t* ball, jsLine_t* line)
 {
@@ -280,25 +296,27 @@ bool ballLineIntersection(jsBall_t* ball, jsLine_t* line)
  *
  * @param ball
  * @param lines
- * @param numLines
+ * @param true if the ball should be deleted, false if not
  */
-static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t numLines)
+static bool handleBallLineCollision(jsBall_t* ball, jsScene_t* scene)
 {
     // find closest segment;
     vecFl_t ballToClosest;
     vecFl_t ab;
     vecFl_t normal;
-    float minDist  = FLT_MAX;
-    jsLine_t* line = NULL;
+    float minDist   = FLT_MAX;
+    jsLine_t* cLine = NULL;
 
     // For each segment of the wall
-    for (int32_t i = 0; i < numLines; i++)
+    for (int32_t i = 0; i < scene->numLines; i++)
     {
-        if (lines[i].isSolid)
+        jsLine_t* line = &scene->lines[i];
+
+        if (line->isSolid)
         {
             // Get the line segment from the list of walls
-            vecFl_t a = lines[i].p1;
-            vecFl_t b = lines[i].p2;
+            vecFl_t a = line->p1;
+            vecFl_t b = line->p2;
             // Get the closest point on the segment to the center of the ball
             vecFl_t c = closestPointOnSegment(ball->pos, a, b);
             // Find the distance between the center of the ball and the closest point on the line
@@ -312,15 +330,15 @@ static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t num
                 ballToClosest = d;
                 ab            = subVecFl2d(b, a);
                 normal        = perpendicularVecFl2d(ab);
-                line          = &lines[i];
+                cLine         = line;
             }
         }
     }
 
     // Check if there were any collisions
-    if (NULL == line)
+    if (NULL == cLine)
     {
-        return;
+        return false;
     }
 
     // push out to not clip
@@ -333,10 +351,10 @@ static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t num
     ball->pos     = addVecFl2d(ball->pos, mulVecFl2d(ballToClosest, ball->radius - minDist)); // TODO epsilon here?
 
     float v = dotVecFl2d(ball->vel, ballToClosest);
-    if (line->pushVel)
+    if (cLine->pushVel)
     {
         // Adjust the velocity
-        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, line->pushVel - v));
+        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, cLine->pushVel - v));
     }
     else
     {
@@ -345,7 +363,7 @@ static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t num
         ball->vel  = addVecFl2d(ball->vel, mulVecFl2d(ballToClosest, vNew - v));
     }
 
-    switch (line->type)
+    switch (cLine->type)
     {
         default:
         case JS_WALL:
@@ -356,17 +374,17 @@ static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t num
         case JS_SLINGSHOT:
         case JS_STANDUP_TARGET:
         {
-            line->litTimer = 250000;
+            cLine->litTimer = 250000;
             break;
         }
         case JS_DROP_TARGET:
         {
-            line->isUp    = false;
-            line->isSolid = false;
+            cLine->isUp    = false;
+            cLine->isSolid = false;
 
             // Check if all targets in the group are hit
             bool someLineUp = false;
-            list_t* group   = line->group;
+            list_t* group   = cLine->group;
             node_t* node    = group->first;
             while (NULL != node)
             {
@@ -397,11 +415,15 @@ static void handleBallLineCollision(jsBall_t* ball, jsLine_t* lines, int32_t num
         case JS_SCOOP:
         {
             // TODO count scoops
-
             ball->scoopTimer = 2000000;
             break;
         }
+        case JS_BALL_LOST:
+        {
+            return true;
+        }
     }
+    return false;
 }
 
 /**

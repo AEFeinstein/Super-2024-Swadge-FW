@@ -11,3 +11,4 @@ list_t* addToGroup(jsScene_t* scene, void* obj, uint8_t groupId);
 void jsSceneInit(jsScene_t* scene);
 void jsSceneDestroy(jsScene_t* scene);
 void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event);
+void jsRemoveBall(jsBall_t* ball, jsScene_t* scene);

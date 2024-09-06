@@ -139,20 +139,21 @@ void jsSceneInit(jsScene_t* scene)
 
     uint16_t pointsInFile = readInt16(tableData, &dIdx);
     scene->numPoints      = 0;
-    scene->numBalls       = 0;
+    clear(&scene->balls);
     for (uint16_t pIdx = 0; pIdx < pointsInFile; pIdx++)
     {
         dIdx += readPointFromFile(&tableData[dIdx], scene);
 
         if (JS_BALL_SPAWN == scene->points[pIdx].type)
         {
-            jsBall_t* ball    = &scene->balls[scene->numBalls++];
+            jsBall_t* ball    = calloc(1, sizeof(jsBall_t));
             ball->pos         = scene->points[pIdx].pos;
             ball->vel.x       = 0;
             ball->vel.y       = 0;
             ball->radius      = PINBALL_RADIUS;
             ball->mass        = M_PI * 4.0f * 4.0f;
             ball->restitution = 0.2f;
+            push(&scene->balls, ball);
         }
     }
 
@@ -263,5 +264,28 @@ void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event)
                 break;
             }
         }
+    }
+}
+
+/**
+ * @brief
+ *
+ * @param ball
+ * @param scene
+ */
+void jsRemoveBall(jsBall_t* ball, jsScene_t* scene)
+{
+    node_t* bNode = scene->balls.first;
+    while (bNode)
+    {
+        if (ball == bNode->val)
+        {
+            free(bNode->val);
+            removeEntry(&scene->balls, bNode);
+            // TODO Check save timer, decrement balls, show bonus, etc.
+            // TODO set up for next ball
+            return;
+        }
+        bNode = bNode->next;
     }
 }
