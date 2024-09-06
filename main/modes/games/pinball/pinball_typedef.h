@@ -53,7 +53,6 @@ typedef struct
     vecFl_t p1;
     vecFl_t p2;
     float pushVel;
-    bool isSolid;
     bool isUp;
     int32_t litTimer;
     int32_t resetTimer;
@@ -156,4 +155,7 @@ typedef struct
     bool launchTubeClosed;
     uint16_t touchedLoopId;
     uint16_t loopHistory[3];
+    int32_t saveTimer;
+    int32_t scoopCount;
+    int32_t ballCount;
 } jsScene_t;

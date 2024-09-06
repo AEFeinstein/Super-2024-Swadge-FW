@@ -224,9 +224,8 @@ static void handleBallCircleCollision(jsScene_t* scene, jsBall_t* ball, jsCircle
                 node_t* wNode           = scene->groups[1].first;
                 while (wNode)
                 {
-                    ((jsLine_t*)wNode->val)->isSolid = true;
-                    ((jsLine_t*)wNode->val)->isUp    = true;
-                    wNode                            = wNode->next;
+                    ((jsLine_t*)wNode->val)->isUp = true;
+                    wNode                         = wNode->next;
                 }
             }
         }
@@ -312,7 +311,7 @@ static bool handleBallLineCollision(jsBall_t* ball, jsScene_t* scene)
     {
         jsLine_t* line = &scene->lines[i];
 
-        if (line->isSolid)
+        if (line->isUp)
         {
             // Get the line segment from the list of walls
             vecFl_t a = line->p1;
@@ -379,8 +378,7 @@ static bool handleBallLineCollision(jsBall_t* ball, jsScene_t* scene)
         }
         case JS_DROP_TARGET:
         {
-            cLine->isUp    = false;
-            cLine->isSolid = false;
+            cLine->isUp = false;
 
             // Check if all targets in the group are hit
             bool someLineUp = false;
@@ -414,7 +412,13 @@ static bool handleBallLineCollision(jsBall_t* ball, jsScene_t* scene)
         }
         case JS_SCOOP:
         {
-            // TODO count scoops
+            // Count the scoop
+            scene->scoopCount++;
+            printf("Ball %d locked\n", scene->scoopCount);
+            if (3 == scene->scoopCount)
+            {
+                printf("Multiball!!!\n");
+            }
             ball->scoopTimer = 2000000;
             break;
         }

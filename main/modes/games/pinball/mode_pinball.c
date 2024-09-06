@@ -17,6 +17,7 @@
 typedef struct
 {
     jsScene_t scene;
+    font_t ibm;
 } pinball_t;
 
 //==============================================================================
@@ -68,7 +69,10 @@ static void pinEnterMode(void)
     // Allocate all the memory
     pinball = calloc(sizeof(pinball_t), 1);
 
+    loadFont("ibm_vga8.font", &pinball->ibm, false);
+
     jsSceneInit(&pinball->scene);
+    jsStartBall(&pinball->scene);
 }
 
 /**
@@ -77,6 +81,7 @@ static void pinEnterMode(void)
  */
 static void pinExitMode(void)
 {
+    freeFont(&pinball->ibm);
     jsSceneDestroy(&pinball->scene);
     free(pinball);
 }
@@ -104,8 +109,9 @@ static void pinMainLoop(int64_t elapsedUs)
     }
 
     jsSimulate(&pinball->scene, elapsedUs);
+    jsGameTimers(&pinball->scene, elapsedUs);
     jsAdjustCamera(&pinball->scene);
-    jsSceneDraw(&pinball->scene);
+    jsSceneDraw(&pinball->scene, &pinball->ibm);
 }
 
 /**

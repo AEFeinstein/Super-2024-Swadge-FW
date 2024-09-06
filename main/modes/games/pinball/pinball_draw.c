@@ -78,9 +78,17 @@ void jsAdjustCamera(jsScene_t* scene)
  *
  * @param scene
  */
-void jsSceneDraw(jsScene_t* scene)
+void jsSceneDraw(jsScene_t* scene, font_t* font)
 {
     clearPxTft();
+
+    // Draw an indicator for the ball save
+    if (scene->saveTimer > 0)
+    {
+        const char text[] = "SAVE";
+        int16_t tWidth    = textWidth(font, text);
+        drawText(font, c555, text, ((280 - tWidth) / 2) - scene->cameraOffset.x, 400 - scene->cameraOffset.y);
+    }
 
     // Triangle indicators
     for (int32_t i = 0; i < scene->numTriangles; i++)

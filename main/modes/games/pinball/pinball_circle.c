@@ -61,9 +61,8 @@ void jsBallSimulate(jsBall_t* ball, int32_t elapsedUs, float dt, jsScene_t* scen
             node_t* wNode           = scene->groups[1].first;
             while (wNode)
             {
-                ((jsLine_t*)wNode->val)->isSolid = false;
-                ((jsLine_t*)wNode->val)->isUp    = false;
-                wNode                            = wNode->next;
+                ((jsLine_t*)wNode->val)->isUp = false;
+                wNode                         = wNode->next;
             }
 
             // Give the ball initial velocity

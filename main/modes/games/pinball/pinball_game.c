@@ -99,9 +99,8 @@ void jsSceneInit(jsScene_t* scene)
     while (wallNode)
     {
         // Lower the door for launch
-        ((jsLine_t*)wallNode->val)->isSolid = false;
-        ((jsLine_t*)wallNode->val)->isUp    = false;
-        wallNode                            = wallNode->next;
+        ((jsLine_t*)wallNode->val)->isUp = false;
+        wallNode                         = wallNode->next;
     }
     // Mark the door as open
     scene->launchTubeClosed = false;
@@ -139,11 +138,42 @@ void jsSceneInit(jsScene_t* scene)
 
     uint16_t pointsInFile = readInt16(tableData, &dIdx);
     scene->numPoints      = 0;
-    clear(&scene->balls);
     for (uint16_t pIdx = 0; pIdx < pointsInFile; pIdx++)
     {
         dIdx += readPointFromFile(&tableData[dIdx], scene);
+    }
 
+    free(tableData);
+
+    // Reset the camera
+    scene->cameraOffset.x = 0;
+    scene->cameraOffset.y = 0;
+
+    scene->ballCount = 3;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param scene
+ */
+void jsStartBall(jsScene_t* scene)
+{
+    // Start a 15s timer to save the ball
+    scene->saveTimer = 15000000;
+
+    // Open the launch tube
+    scene->launchTubeClosed = false;
+    node_t* wNode           = scene->groups[1].first;
+    while (wNode)
+    {
+        ((jsLine_t*)wNode->val)->isUp = false;
+        wNode                         = wNode->next;
+    }
+
+    clear(&scene->balls);
+    for (uint16_t pIdx = 0; pIdx < scene->numPoints; pIdx++)
+    {
         if (JS_BALL_SPAWN == scene->points[pIdx].type)
         {
             jsBall_t* ball    = calloc(1, sizeof(jsBall_t));
@@ -154,14 +184,9 @@ void jsSceneInit(jsScene_t* scene)
             ball->mass        = M_PI * 4.0f * 4.0f;
             ball->restitution = 0.2f;
             push(&scene->balls, ball);
+            return;
         }
     }
-
-    free(tableData);
-
-    // Reset the camera
-    scene->cameraOffset.x = 0;
-    scene->cameraOffset.y = 0;
 }
 
 /**
@@ -275,17 +300,61 @@ void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event)
  */
 void jsRemoveBall(jsBall_t* ball, jsScene_t* scene)
 {
-    node_t* bNode = scene->balls.first;
-    while (bNode)
+    // If the save timer is running
+    if (scene->saveTimer > 0)
     {
-        if (ball == bNode->val)
+        // Save the ball by scooping it back
+        printf("Ball saved\n");
+        ball->scoopTimer = 2000000;
+    }
+    else
+    {
+        // Find the ball in the list
+        node_t* bNode = scene->balls.first;
+        while (bNode)
         {
-            free(bNode->val);
-            removeEntry(&scene->balls, bNode);
-            // TODO Check save timer, decrement balls, show bonus, etc.
-            // TODO set up for next ball
-            return;
+            if (ball == bNode->val)
+            {
+                // Remove the ball from the list
+                free(bNode->val);
+                removeEntry(&scene->balls, bNode);
+                break;
+            }
+            bNode = bNode->next;
         }
-        bNode = bNode->next;
+
+        // If there are no active balls left
+        if (0 == scene->balls.length)
+        {
+            // Decrement the overall ball count
+            scene->ballCount--;
+
+            // If there are balls left
+            if (0 < scene->ballCount)
+            {
+                printf("Ball lost\n");
+                // TODO show bonus set up for next ball, etc.
+                jsStartBall(scene);
+            }
+            else
+            {
+                // No balls left
+                printf("Game over\n");
+            }
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param scene
+ * @param elapsedUs
+ */
+void jsGameTimers(jsScene_t* scene, int32_t elapsedUs)
+{
+    if (scene->saveTimer > 0)
+    {
+        scene->saveTimer -= elapsedUs;
     }
 }

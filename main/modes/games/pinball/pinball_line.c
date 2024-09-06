@@ -24,8 +24,7 @@ int32_t readLineFromFile(uint8_t* tableData, jsScene_t* scene)
     line->p2.y     = readInt16(tableData, &dIdx);
     line->type     = readInt8(tableData, &dIdx);
     line->pushVel  = readInt8(tableData, &dIdx);
-    line->isSolid  = readInt8(tableData, &dIdx);
-    line->isUp     = true;
+    line->isUp     = readInt8(tableData, &dIdx);
 
     return dIdx;
 }
@@ -128,8 +127,7 @@ void jsLineTimer(jsLine_t* line, int32_t elapsedUs, jsScene_t* scene)
             if (!intersecting)
             {
                 // Raise the target
-                line->isSolid = true;
-                line->isUp    = true;
+                line->isUp = true;
             }
             else
             {

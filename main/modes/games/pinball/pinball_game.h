@@ -12,3 +12,5 @@ void jsSceneInit(jsScene_t* scene);
 void jsSceneDestroy(jsScene_t* scene);
 void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event);
 void jsRemoveBall(jsBall_t* ball, jsScene_t* scene);
+void jsStartBall(jsScene_t* scene);
+void jsGameTimers(jsScene_t* scene, int32_t elapsedUs);
