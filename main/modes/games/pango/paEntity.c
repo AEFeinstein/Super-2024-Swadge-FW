@@ -1288,7 +1288,6 @@ void pa_updateBreakBlock(paEntity_t* self)
         self->spriteIndex++;
 
         if(self->spriteIndex > PA_SP_BREAK_BLOCK_3){
-            pa_setTile(self->tilemap, PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION), PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION), PA_TILE_EMPTY);
             pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
             pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
             pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);

@@ -422,7 +422,7 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
 
-    pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_INVISIBLE_BLOCK);
+    pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
 
     return entity;
 }
