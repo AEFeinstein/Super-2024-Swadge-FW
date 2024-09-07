@@ -198,10 +198,6 @@ jobs:
       with:
         merge-multiple: false
 
-    - name: Testing
-      run: |
-        find .
-
     - name: Rename artifacts
       run: |
         for os in osx-arm osx-intel linux windows ; do
