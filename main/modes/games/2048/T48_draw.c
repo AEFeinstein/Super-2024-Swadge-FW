@@ -122,7 +122,7 @@ static void t48DrawTileOnGrid(t48_t* t48, wsg_t* img, int8_t row, int8_t col, in
  *
  * @param t48 Main Game Object
  */
-static void t48DrawCellState(t48_t* t48)
+static void t48DrawTiles(t48_t* t48)
 {
     if (t48->globalAnim <= T48_MAX_SEQ)
     {
@@ -130,13 +130,13 @@ static void t48DrawCellState(t48_t* t48)
     }
     else
     {
-        //t48ResetCellState(t48);
+        //FIXME: t48ResetCellState(t48);
     }
 
     // New tiles
 
     // Moving tiles
-    // t48DrawSlidingTiles(t48);
+    // FIXME: t48DrawSlidingTiles(t48);
 
     // Static tiles
     for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
@@ -160,9 +160,6 @@ static void t48DrawCellState(t48_t* t48)
                 break;
         }
     }
-
-    //TEST
-
 }
 
 void t48Draw(t48_t* t48)
@@ -188,7 +185,7 @@ void t48Draw(t48_t* t48)
     drawText(&t48->font, c555, t48->scoreStr, T48_SIDE_MARGIN, 4);
 
     // Draw Tiles
-    t48DrawCellState(t48);
+    t48DrawTiles(t48);
 
     // Draw sparkles
 }

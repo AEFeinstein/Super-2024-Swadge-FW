@@ -64,7 +64,7 @@
 #define T48_TOP_MARGIN  20
 #define T48_TILE_COUNT  16
 #define T48_MAX_MERGES  8
-#define T48_MAX_SEQ     8
+#define T48_MAX_SEQ     16
 
 // High score
 #define T48_HS_COUNT  5
@@ -162,10 +162,11 @@ typedef struct
 
     // Animations
     int8_t globalAnim;
+
+    // OLD
     // t48SlidingTile_t slidingTiles[12]; // Max amount of sliding tiles
     // t48CellState_t cellState[T48_BOARD_SIZE];
     // t48Cell_t prevBoard[T48_BOARD_SIZE];
-    // 
 
     // LEDs
     led_t leds[CONFIG_NUM_LEDS];
