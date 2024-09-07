@@ -292,6 +292,10 @@ ifeq ($(ENABLE_GCOV),true)
 endif
 endif
 
+ifeq ($(HOST_OS),Windows)
+	LIBRARY_FLAGS += -Wl,-Bstatic -lpthread
+endif
+
 ################################################################################
 # Build Filenames
 ################################################################################
