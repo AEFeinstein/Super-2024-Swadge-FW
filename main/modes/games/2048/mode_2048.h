@@ -71,6 +71,7 @@
 #define T48_MAX_SEQ       16 // Frames per animation. Less is faster.
 #define T48_SPARKLE_COUNT 8
 #define T48_SPARKLE_SIZE  16
+#define T48_MAX_MOVES     12
 #define T48_MAX_MERGES    8
 
 // High score
@@ -126,17 +127,6 @@ typedef struct
 
 typedef struct
 {
-    wsg_t image;
-    t48Cell_t gridStart;
-    t48Cell_t gridEnd;
-    int8_t speed;
-    uint8_t sequence;
-    bool horizontal;
-    int32_t value;
-} t48SlidingTile_t;
-
-typedef struct
-{
     wsg_t img;
     int16_t x;
     int16_t y;
@@ -144,6 +134,22 @@ typedef struct
     int16_t ySpd;
     bool active;
 } t48Sparkles_t;
+
+typedef struct 
+{
+    int8_t src[T48_GRID_SIZE];
+    int8_t dest[T48_GRID_SIZE];
+    uint32_t startVals[T48_GRID_SIZE];
+    uint32_t endVals[T48_GRID_SIZE];
+    t48Cell_t slice[T48_GRID_SIZE];
+} t48SliceData_t;
+
+typedef struct
+{
+    wsg_t image;
+    t48Cell_t start;
+    t48Cell_t end;
+} t48MovingTile_t;
 
 typedef struct
 {
@@ -167,6 +173,7 @@ typedef struct
 
     // Game state
     t48Cell_t board[T48_BOARD_SIZE];
+    t48SliceData_t sliceData;
     int32_t score;
     int32_t highScore[T48_HS_COUNT];
     bool newHS;
@@ -175,12 +182,12 @@ typedef struct
     char scoreStr[16];
     bool alreadyWon;
     t48DisplayState_t ds;
-    t48Cell_t slice[T48_GRID_SIZE];
 
     // Animations
     int8_t globalAnim;
-    bool sparkled;
     t48Sparkles_t sparks[T48_MAX_SPARKLES];
+    t48MovingTile_t mvTiles[T48_MAX_MOVES];
+    t48Cell_t dest[T48_GRID_SIZE];
 
     // OLD
     // t48SlidingTile_t slidingTiles[12]; // Max amount of sliding tiles

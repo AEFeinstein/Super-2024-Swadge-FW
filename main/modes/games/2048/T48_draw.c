@@ -208,7 +208,6 @@ static void t48DrawTiles(t48_t* t48)
                     t48InitSparkles(t48, sparkleIdx++, t48->board[i].x, t48->board[i].y,
                                     t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
                 }
-                
                 break;
             case MOVED:
             case NEW:
@@ -220,21 +219,6 @@ static void t48DrawTiles(t48_t* t48)
                 break;
             default:
                 break;
-        }
-    }
-    // Sparkles
-    for (int i = 0; i < T48_MAX_SPARKLES; i++)
-    {
-        if (t48->sparks[i].y >= (TFT_HEIGHT + T48_SPARKLE_SIZE))
-        {
-            t48->sparks[i].active = false;
-        }
-        if (t48->sparks[i].active)
-        {
-            t48->sparks[i].ySpd += 1;
-            t48->sparks[i].y += t48->sparks[i].ySpd;
-            t48->sparks[i].x += t48->sparks[i].xSpd;
-            drawWsgSimple(&t48->sparks[i].img, t48->sparks[i].x, t48->sparks[i].y);
         }
     }
 }
@@ -265,4 +249,18 @@ void t48Draw(t48_t* t48)
     t48DrawTiles(t48);
 
     // Draw sparkles
+    for (int i = 0; i < T48_MAX_SPARKLES; i++)
+    {
+        if (t48->sparks[i].y >= (TFT_HEIGHT + T48_SPARKLE_SIZE))
+        {
+            t48->sparks[i].active = false;
+        }
+        if (t48->sparks[i].active)
+        {
+            t48->sparks[i].ySpd += 1;
+            t48->sparks[i].y += t48->sparks[i].ySpd;
+            t48->sparks[i].x += t48->sparks[i].xSpd;
+            drawWsgSimple(&t48->sparks[i].img, t48->sparks[i].x, t48->sparks[i].y);
+        }
+    }
 }

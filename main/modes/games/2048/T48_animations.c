@@ -4,9 +4,9 @@
  * @brief Animation controller for 2048
  * @version 1.0.0
  * @date 2024-09-07
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #include "T48_animations.h"
 
@@ -14,7 +14,6 @@ void t48ResetAnim(t48_t* t48)
 {
     // Reset animation timer
     t48->globalAnim = 0;
-    t48->sparkled = false;
     for (int i = 0; i < T48_BOARD_SIZE; i++)
     {
         t48->board[i].state = STATIC;
@@ -24,19 +23,21 @@ void t48ResetAnim(t48_t* t48)
 void t48InitSparkles(t48_t* t48, int8_t idx, int8_t x, int8_t y, wsg_t spr)
 {
     // Side to side speed
-    int8_t sideSpeed = esp_random() % 17;
+    int8_t sideSpeed      = esp_random() % 17;
     t48->sparks[idx].xSpd = sideSpeed - 9; // Centers the direction
     // Initial vertical speed
     t48->sparks[idx].ySpd = -10;
     // Convert cell coords to pixel space
-    uint16_t x_cell_offset = x * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_SIDE_MARGIN + T48_LINE_WEIGHT + T48_CELL_SIZE / 2;
-    uint16_t y_cell_offset = y * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_TOP_MARGIN + T48_LINE_WEIGHT + T48_CELL_SIZE / 2;
-    t48->sparks[idx].x = x_cell_offset;
-    t48->sparks[idx].y = y_cell_offset;
+    t48->sparks[idx].x = x * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_SIDE_MARGIN + T48_LINE_WEIGHT + T48_CELL_SIZE / 2;
+    t48->sparks[idx].y = y * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_TOP_MARGIN + T48_LINE_WEIGHT + T48_CELL_SIZE / 2;
     // Set image
     t48->sparks[idx].img = spr;
     // set active
     t48->sparks[idx].active = true;
+}
+
+void t48InitMovingTiles(t48_t* t48)
+{
 }
 
 /* void t48ResetCellState(t48_t* t48)

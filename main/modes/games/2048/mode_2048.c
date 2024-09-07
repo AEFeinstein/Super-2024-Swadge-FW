@@ -229,13 +229,10 @@ static void t48MainLoop(int64_t elapsedUs)
                     soundPlaySfx(&t48->click, MIDI_SFX);
                     t48StartGame(t48);
                     t48->ds = GAME;
-                    for (int i = 0; i < T48_BOARD_SIZE; i++)
-                    {
-                        if (true)
-                        {
-                            t48->board[i].val = 2;
-                        }
-                    }
+                    t48->board[0].val = 2;
+                    t48->board[0].val = 0;
+                    t48->board[0].val = 2;
+                    t48->board[0].val = 4;
                 }
             }
             // Draw
