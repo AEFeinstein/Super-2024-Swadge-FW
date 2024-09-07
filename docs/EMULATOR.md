@@ -5,15 +5,14 @@ environment setup instructions, see [Configuring a Development Environment](#set
 
 ## Installing
 
-To install the emulator, go to the project's [releases page](https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases)
-and download the appropriate `...-emulator.zip` for your operating system. Windows, Linux, and
+To install the emulator, go to the project's [releases page](https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases/tags/snapshot)
+and download the appropriate `SwadgeEmulator-<os-type>.zip` for your operating system. Windows, Linux, and
 Mac (both Intel and ARM) are supported. Then, follow the instructions for your platform below.
 
 ### Windows
 
 The Windows version of the emulator does not require any other software to operate. Simply extract the
-`.zip` file anywhere you like and double-click on `swadge_emulator.exe`. Note that the
-`libwinpthread-1.dll` file included with the emulator download should be kept in the same folder.
+`.zip` file anywhere you like and double-click on `swadge_emulator.exe`.
 
 ### Linux
 
