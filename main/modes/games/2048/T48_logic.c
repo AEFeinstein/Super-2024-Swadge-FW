@@ -59,11 +59,11 @@ void t48MergeSlice(t48_t* t48, Slice_t slice[], bool* updated)
         {
             for (int8_t j = 0; j < T48_BOARD_SIZE; j++)
             {
-                /* if (slice[i + 1].cell.x == t48->cellState[j].end.x && slice[i + 1].cell.y == t48->cellState[j].end.y)
+                if (slice[i + 1].cell.x == t48->cellState[j].end.x && slice[i + 1].cell.y == t48->cellState[j].end.y)
                 {
                     t48->cellState[j].end.x = slice[i].cell.x;
                     t48->cellState[j].end.y = slice[i].cell.y;
-                } */
+                }
             }
             *updated = true;
             slice[i].sliceVal *= 2;
@@ -78,12 +78,6 @@ void t48MergeSlice(t48_t* t48, Slice_t slice[], bool* updated)
         }
     }
 }
-
-// NOTE: All these seem to be backwards.
-// All other systems use row, column, but these seem to require column, row which is mirrors the movements along the
-// top left to bottom right diagonal.
-// I have left the odd behavior here as it's simple to remap keys to different functions rather than compensate in the
-// visual code.
 
 void t48SlideDown(t48_t* t48)
 {
@@ -370,8 +364,8 @@ void t48ConvertCellState(t48_t* t48)
 void t48SetSlidingTile(t48_t* t48, int8_t idx, t48CellCoors_t start, t48CellCoors_t end, int32_t value)
 {
     t48->slidingTiles[idx].value  = value;
-    t48->slidingTiles[idx].grid.x = start.x;
-    t48->slidingTiles[idx].grid.y = start.y;
+    t48->slidingTiles[idx].gridStart.x = start.x;
+    t48->slidingTiles[idx].gridStart.y = start.y;
     t48->slidingTiles[idx].speed
         = (end.x - start.x + end.y - start.y) * (T48_CELL_SIZE + T48_LINE_WEIGHT) / T48_MAX_SEQ;
     t48->slidingTiles[idx].horizontal = (end.x != start.x);

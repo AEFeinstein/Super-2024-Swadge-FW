@@ -64,7 +64,7 @@
 #define T48_TOP_MARGIN  20
 #define T48_TILE_COUNT  16
 #define T48_MAX_MERGES  8
-#define T48_MAX_SEQ     16
+#define T48_MAX_SEQ     50
 
 // High score
 #define T48_HS_COUNT  5
@@ -126,8 +126,8 @@ typedef struct
 typedef struct
 {
     wsg_t image;
-    t48CellCoors_t grid;
-    int8_t gridEnd;
+    t48CellCoors_t gridStart;
+    t48CellCoors_t gridEnd;
     int8_t speed;
     uint8_t sequence;
     bool horizontal;
@@ -172,7 +172,7 @@ typedef struct
     bool textEntryDone;
     t48DisplayState_t ds;
     uint8_t hue;
-    t48SlidingTile_t slidingTiles[8]; // Max amount of sliding tiles
+    t48SlidingTile_t slidingTiles[12]; // Max amount of sliding tiles
     t48CellState_t cellState[T48_BOARD_SIZE];
     int8_t globalAnim;
 

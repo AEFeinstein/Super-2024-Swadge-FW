@@ -212,10 +212,13 @@ static void t48MainLoop(int64_t elapsedUs)
                     soundPlaySfx(&t48->click, MIDI_SFX);
                     t48StartGame(t48);
                     t48->ds = GAME;
-                    /* for (int i = 0; i < T48_BOARD_SIZE; i++)
+                    for (int i = 0; i < T48_BOARD_SIZE; i++)
                     {
-                        t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] = 2;
-                    } */
+                        if (i % 4 == 2 || i%4 == 0)
+                        {
+                            t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] = 2;
+                        }
+                    }
                 }
             }
             // Draw

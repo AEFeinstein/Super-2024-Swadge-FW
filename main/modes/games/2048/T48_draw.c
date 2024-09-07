@@ -12,32 +12,12 @@
 #include "T48_draw.h"
 #include "T48_logic.h"
 
-void t48Draw(t48_t* t48)
-{
-    // Blank
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
-    // Draw grid lines
-    for (uint8_t i = 0; i < T48_GRID_SIZE + 1; i++)
-    {
-        int16_t left = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
-        fillDisplayArea(T48_SIDE_MARGIN + left, T48_TOP_MARGIN, T48_SIDE_MARGIN + left + T48_LINE_WEIGHT, TFT_HEIGHT,
-                        c111);
-        int16_t top = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
-        fillDisplayArea(T48_SIDE_MARGIN, top + T48_TOP_MARGIN, TFT_WIDTH - T48_SIDE_MARGIN,
-                        top + T48_TOP_MARGIN + T48_LINE_WEIGHT, c111);
-    }
-
-    // Score
-    static char textBuffer[32];
-    snprintf(textBuffer, sizeof(textBuffer) - 1, "Score: %" PRIu32, t48->score);
-    strcpy(t48->scoreStr, textBuffer);
-    drawText(&t48->font, c555, t48->scoreStr, T48_SIDE_MARGIN, 4);
-
-    // Draw Tiles
-    t48DrawCellState(t48);
-}
-
+/**
+ * @brief Get the Color for a specific value
+ *
+ * @param val Value that requires a color for its square
+ * @return uint8_t Color of the value's square
+ */
 static uint8_t getTileSprIndex(uint32_t val)
 {
     switch (val)
@@ -81,6 +61,17 @@ static uint8_t getTileSprIndex(uint32_t val)
     }
 }
 
+/**
+ * @brief Draws the given tile onto the grid in the indicated position
+ * 
+ * @param t48 Main Game Object
+ * @param img wsg to draw
+ * @param row Row coordinate
+ * @param col Column coordinate
+ * @param xOff Offset of x coord
+ * @param yOff Offset of y coord
+ * @param val Value of the block
+ */
 static void t48DrawTileOnGrid(t48_t* t48, wsg_t* img, int8_t row, int8_t col, int16_t xOff, int16_t yOff, int32_t val)
 {
     // Bail if 0
@@ -98,54 +89,11 @@ static void t48DrawTileOnGrid(t48_t* t48, wsg_t* img, int8_t row, int8_t col, in
              y_cell_offset - 4 + T48_CELL_SIZE / 2);
 }
 
-static void t48DrawCellState(t48_t* t48)
-{
-    if (t48->globalAnim <= T48_MAX_SEQ)
-    {
-        t48->globalAnim++;
-    }
-    else
-    {
-        t48ResetCellState(t48);
-    }
-
-    // TODO: Ordering of the drawing
-
-    t48DrawSlidingTiles(t48);
-    for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
-    {
-        int8_t row = i / T48_GRID_SIZE;
-        int8_t col = i % T48_GRID_SIZE;
-        switch (t48->cellState[i].state)
-        {
-            case STATIC:
-
-                t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
-                                  t48->boardArr[row][col]); // FIXME: Convert to CellState vars
-                break;
-            case MOVED:
-                if (t48->globalAnim > T48_MAX_SEQ)
-                {
-                    t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
-                                      t48->boardArr[row][col]); // FIXME: Convert to CellState vars
-                }
-                break;
-            case MERGED:
-                // FIXME: Draw new sprite once the gems combine
-                if (t48->globalAnim > T48_MAX_SEQ)
-                {
-                    t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
-                                      t48->boardArr[row][col]); // FIXME: Convert to CellState vars
-                }
-                break;
-            case NEW:
-                break;
-            default:
-                break;
-        }
-    }
-}
-
+/**
+ * @brief 
+ * 
+ * @param t48 Main Game Object
+ */
 static void t48DrawSlidingTiles(t48_t* t48)
 {
     for (int8_t idx = 0; idx < T48_MAX_MERGES; idx++)
@@ -163,8 +111,84 @@ static void t48DrawSlidingTiles(t48_t* t48)
                 yVal = t48->globalAnim * t48->slidingTiles[idx].speed;
             }
             t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->slidingTiles[idx].value)],
-                              t48->slidingTiles[idx].grid.x, t48->slidingTiles[idx].grid.y, xVal, yVal,
+                              t48->slidingTiles[idx].gridStart.x, t48->slidingTiles[idx].gridStart.y, xVal, yVal,
                               t48->slidingTiles[idx].value);
         }
     }
+}
+
+/**
+ * @brief 
+ * 
+ * @param t48 Main Game Object
+ */
+static void t48DrawCellState(t48_t* t48)
+{
+    if (t48->globalAnim <= T48_MAX_SEQ)
+    {
+        t48->globalAnim++;
+    }
+    else
+    {
+        t48ResetCellState(t48);
+    }
+
+    // New tiles
+
+    // Moving tiles
+    t48DrawSlidingTiles(t48);
+    
+    // Static tiles
+    for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
+    {
+        int8_t row = i / T48_GRID_SIZE;
+        int8_t col = i % T48_GRID_SIZE;
+        switch (t48->cellState[i].state)
+        {
+            case STATIC:
+
+                t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
+                                  t48->boardArr[row][col]); // FIXME: Convert to CellState vars
+                break;
+            case MOVED:
+            case MERGED:
+            case NEW:
+                if (t48->globalAnim > T48_MAX_SEQ)
+                {
+                    t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
+                                      t48->boardArr[row][col]); // FIXME: Convert to CellState vars
+                }
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void t48Draw(t48_t* t48)
+{
+    // Blank
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+
+    // Draw grid lines
+    for (uint8_t i = 0; i < T48_GRID_SIZE + 1; i++)
+    {
+        int16_t left = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
+        fillDisplayArea(T48_SIDE_MARGIN + left, T48_TOP_MARGIN, T48_SIDE_MARGIN + left + T48_LINE_WEIGHT, TFT_HEIGHT,
+                        c111);
+        int16_t top = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
+        fillDisplayArea(T48_SIDE_MARGIN, top + T48_TOP_MARGIN, TFT_WIDTH - T48_SIDE_MARGIN,
+                        top + T48_TOP_MARGIN + T48_LINE_WEIGHT, c111);
+    }
+
+    // Score
+    static char textBuffer[32];
+    snprintf(textBuffer, sizeof(textBuffer) - 1, "Score: %" PRIu32, t48->score);
+    strcpy(t48->scoreStr, textBuffer);
+    drawText(&t48->font, c555, t48->scoreStr, T48_SIDE_MARGIN, 4);
+
+    // Draw Tiles
+    t48DrawCellState(t48);
+
+    // Draw sparkles
 }
