@@ -211,7 +211,7 @@ DEFINES_LIST = \
 	CONFIG_NUM_LEDS=8 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
-	IDF_VER="v5.2.1" \
+	IDF_VER="v5.3.1" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
 	CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
@@ -290,6 +290,10 @@ LIBRARY_FLAGS += \
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
+endif
+
+ifeq ($(HOST_OS),Windows)
+	LIBRARY_FLAGS += -Wl,-Bstatic -lpthread
 endif
 
 ################################################################################

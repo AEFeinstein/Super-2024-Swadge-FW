@@ -3,11 +3,11 @@
  * \section mic_design Design Philosophy
  *
  * The microphone uses the <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/peripherals/adc_continuous.html">Analog
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32s2/api-reference/peripherals/adc_continuous.html">Analog
  * to Digital Converter (ADC) Continuous Mode Driver</a>.
  *
  * The microphone code is based on the <a
- * href="https://github.com/espressif/esp-idf/tree/v5.2.1/examples/peripherals/adc/continuous_read">ADC DMA
+ * href="https://github.com/espressif/esp-idf/tree/v5.3.1/examples/peripherals/adc/continuous_read">ADC DMA
  * Example</a>.
  *
  * The microphone is continuously sampled at 8KHz.
