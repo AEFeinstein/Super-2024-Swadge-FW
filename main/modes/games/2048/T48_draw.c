@@ -158,7 +158,7 @@ static void t48DrawSlidingTiles(t48_t* t48)
                 yVal = t48->globalAnim * t48->mvTiles[idx].speed;
             }
             t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->mvTiles[idx].start.val)],
-                              t48->mvTiles[idx].start.y, t48->mvTiles[idx].start.x, xVal, yVal,
+                              t48->mvTiles[idx].start.x, t48->mvTiles[idx].start.y, xVal, yVal,
                               t48->mvTiles[idx].start.val);
         }
     }
@@ -183,7 +183,8 @@ static void t48DrawTiles(t48_t* t48)
     // New tiles
 
     // Moving tiles
-    t48DrawSlidingTiles(t48);
+    if (t48->globalAnim < T48_MAX_SEQ)
+        t48DrawSlidingTiles(t48);
 
     // Static tiles
     int8_t sparkleIdx = 0;

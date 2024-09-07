@@ -213,7 +213,7 @@ static void t48MainLoop(int64_t elapsedUs)
     // Play BGM if it's not playing
     if (!t48->bgmIsPlaying)
     {
-        //soundPlayBgmCb(&t48->bgm, MIDI_BGM, t48BgmCb);
+        soundPlayBgmCb(&t48->bgm, MIDI_BGM, t48BgmCb);
         t48->bgmIsPlaying = true;
     }
     // Get inputs
@@ -229,10 +229,10 @@ static void t48MainLoop(int64_t elapsedUs)
                     soundPlaySfx(&t48->click, MIDI_SFX);
                     t48StartGame(t48);
                     t48->ds = GAME;
-                    t48->board[0].val = 2;
-                    t48->board[0].val = 0;
-                    t48->board[0].val = 2;
-                    t48->board[0].val = 4;
+                    /* t48->board[0].val = 2;
+                    t48->board[1].val = 0;
+                    t48->board[2].val = 2;
+                    t48->board[3].val = 4; */
                 }
             }
             // Draw

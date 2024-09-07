@@ -102,6 +102,8 @@ static void t48MergeSlice(t48_t* t48, bool* updated)
 
 void t48SlideDown(t48_t* t48)
 {
+    // Reset animation timer
+    t48->globalAnim = 0;
     t48ResetAnim(t48);
     bool updated = false;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
@@ -138,6 +140,9 @@ void t48SlideDown(t48_t* t48)
 
 void t48SlideUp(t48_t* t48)
 {
+    // Reset animation timer
+    t48->globalAnim = 0;
+    t48->tileIdx = 0;
     t48ResetAnim(t48);
     bool updated = false;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
@@ -149,6 +154,7 @@ void t48SlideUp(t48_t* t48)
             t48->sliceData.dest[i]        = i;
             t48->sliceData.startVals[i]   = 0;
             t48->sliceData.endVals[i]     = 0;
+            t48->sliceData.lockedCoord = row;
             // Math
             t48->sliceData.slice[i].val   = 0;
             t48->sliceData.slice[i].x     = -1;
@@ -176,7 +182,7 @@ void t48SlideUp(t48_t* t48)
             }
         }
         t48MergeSlice(t48, &updated);
-        t48InitMovingTiles(t48);
+        t48InitMovingTilesVert(t48);
         for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
             t48->board[(row * 4) + col].val   = t48->sliceData.slice[i].val;
@@ -188,6 +194,8 @@ void t48SlideUp(t48_t* t48)
 
 void t48SlideRight(t48_t* t48)
 {
+    // Reset animation timer
+    t48->globalAnim = 0;
     t48ResetAnim(t48);
     bool updated = false;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
@@ -224,6 +232,8 @@ void t48SlideRight(t48_t* t48)
 
 void t48SlideLeft(t48_t* t48)
 {
+    // Reset animation timer
+    t48->globalAnim = 0;
     t48ResetAnim(t48);
     bool updated = false;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)

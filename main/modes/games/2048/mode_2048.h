@@ -68,10 +68,10 @@
 #define T48_MAX_SPARKLES 24
 
 // Animations
-#define T48_MAX_SEQ       16 // Frames per animation. Less is faster.
+#define T48_MAX_SEQ       50 // Frames per animation. Less is faster.
 #define T48_SPARKLE_COUNT 8
 #define T48_SPARKLE_SIZE  16
-#define T48_MAX_MOVES     12
+#define T48_MAX_MOVES     16
 #define T48_MAX_MERGES    8
 
 // High score
@@ -135,11 +135,12 @@ typedef struct
     bool active;
 } t48Sparkles_t;
 
-typedef struct 
+typedef struct
 {
-    //TODO: Remove redundancies
+    // TODO: Remove redundancies
     int8_t src[T48_GRID_SIZE];
     int8_t dest[T48_GRID_SIZE];
+    int8_t lockedCoord;
     uint32_t startVals[T48_GRID_SIZE];
     uint32_t endVals[T48_GRID_SIZE];
     t48Cell_t slice[T48_GRID_SIZE];
@@ -147,10 +148,9 @@ typedef struct
 
 typedef struct
 {
-    //wsg_t img;
+    // wsg_t img;
     t48Cell_t start;
     t48Cell_t end;
-    int16_t progress;
     int16_t speed;
 } t48MovingTile_t;
 
@@ -190,6 +190,7 @@ typedef struct
     int8_t globalAnim;
     t48Sparkles_t sparks[T48_MAX_SPARKLES];
     t48MovingTile_t mvTiles[T48_MAX_MOVES];
+    int8_t tileIdx;
 
     // OLD
     // t48SlidingTile_t slidingTiles[12]; // Max amount of sliding tiles
