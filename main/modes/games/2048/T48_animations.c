@@ -10,6 +10,14 @@
  */
 #include "T48_animations.h"
 
+static void t48StartTileMoving(t48_t* t48, int8_t idx, t48Cell_t* start, t48Cell_t* end)
+{
+    t48->mvTiles[idx].start = *start;
+    t48->mvTiles[idx].end = *end;
+    t48->mvTiles[idx].progress = 0;
+    t48->mvTiles[idx].speed = (end->x - start->x + end->y - start->y) * (T48_CELL_SIZE + T48_LINE_WEIGHT) / T48_MAX_SEQ;
+}
+
 void t48ResetAnim(t48_t* t48)
 {
     // Reset animation timer
@@ -38,6 +46,22 @@ void t48InitSparkles(t48_t* t48, int8_t idx, int8_t x, int8_t y, wsg_t spr)
 
 void t48InitMovingTiles(t48_t* t48)
 {
+    for (int i = 0; i < T48_GRID_SIZE; i++)
+    {
+        if (t48->sliceData.src[i] == t48->sliceData.dest[i] || t48->sliceData.src[i] == -1)
+        {
+            // Static
+            continue;
+        }
+        // FIXME: Convert 1d coords to 2d coords
+        t48Cell_t start, end;
+        start.val = 4;
+        start.x = 0;
+        start.y = 3;
+        end.x = 0;
+        end.y = 0;
+        t48StartTileMoving(t48, 0, &start, &end);
+    }
 }
 
 /* void t48ResetCellState(t48_t* t48)

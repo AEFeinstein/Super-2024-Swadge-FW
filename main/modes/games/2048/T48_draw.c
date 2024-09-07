@@ -137,32 +137,32 @@ static void t48DrawTileOnGrid(t48_t* t48, wsg_t* img, int8_t row, int8_t col, in
 }
 
 /**
- * @brief
+ * @brief Draws the sliding tiles according to the offset
  *
  * @param t48 Main Game Object
  */
-/* static void t48DrawSlidingTiles(t48_t* t48)
+static void t48DrawSlidingTiles(t48_t* t48)
 {
-    for (int8_t idx = 0; idx < T48_MAX_MERGES; idx++)
+    for (int8_t idx = 0; idx < T48_MAX_MOVES; idx++)
     {
-        if (t48->slidingTiles[idx].value != 0)
+        if (t48->mvTiles[idx].start.val != 0)
         {
             int16_t xVal = 0;
             int16_t yVal = 0;
-            if (t48->slidingTiles[idx].horizontal)
+            if (t48->mvTiles[idx].start.x == t48->mvTiles[idx].end.x) // If moving horizontally
             {
-                xVal = t48->globalAnim * t48->slidingTiles[idx].speed;
+                xVal = t48->globalAnim * t48->mvTiles[idx].speed;
             }
             else
             {
-                yVal = t48->globalAnim * t48->slidingTiles[idx].speed;
+                yVal = t48->globalAnim * t48->mvTiles[idx].speed;
             }
-            t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->slidingTiles[idx].value)],
-                              t48->slidingTiles[idx].gridStart.x, t48->slidingTiles[idx].gridStart.y, xVal, yVal,
-                              t48->slidingTiles[idx].value);
+            t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->mvTiles[idx].start.val)],
+                              t48->mvTiles[idx].start.y, t48->mvTiles[idx].start.x, xVal, yVal,
+                              t48->mvTiles[idx].start.val);
         }
     }
-} */
+}
 
 /**
  * @brief
@@ -183,7 +183,7 @@ static void t48DrawTiles(t48_t* t48)
     // New tiles
 
     // Moving tiles
-    // FIXME: t48DrawSlidingTiles(t48);
+    t48DrawSlidingTiles(t48);
 
     // Static tiles
     int8_t sparkleIdx = 0;

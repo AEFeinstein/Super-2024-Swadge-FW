@@ -90,7 +90,6 @@ static void t48MergeSlice(t48_t* t48, bool* updated)
             // Move if merged
             for (uint8_t j = i + 1; j < T48_GRID_SIZE - 1; j++)
             {
-                t48->sliceData.dest[j] = t48->sliceData.dest[j + 1];
                 t48->sliceData.endVals[j] = t48->sliceData.endVals[j + 1];
                 t48->sliceData.slice[j].val = t48->sliceData.slice[j + 1].val;
             }
@@ -177,6 +176,7 @@ void t48SlideUp(t48_t* t48)
             }
         }
         t48MergeSlice(t48, &updated);
+        t48InitMovingTiles(t48);
         for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
             t48->board[(row * 4) + col].val   = t48->sliceData.slice[i].val;

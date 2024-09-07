@@ -137,6 +137,7 @@ typedef struct
 
 typedef struct 
 {
+    //TODO: Remove redundancies
     int8_t src[T48_GRID_SIZE];
     int8_t dest[T48_GRID_SIZE];
     uint32_t startVals[T48_GRID_SIZE];
@@ -146,9 +147,11 @@ typedef struct
 
 typedef struct
 {
-    wsg_t image;
+    //wsg_t img;
     t48Cell_t start;
     t48Cell_t end;
+    int16_t progress;
+    int16_t speed;
 } t48MovingTile_t;
 
 typedef struct
@@ -187,7 +190,6 @@ typedef struct
     int8_t globalAnim;
     t48Sparkles_t sparks[T48_MAX_SPARKLES];
     t48MovingTile_t mvTiles[T48_MAX_MOVES];
-    t48Cell_t dest[T48_GRID_SIZE];
 
     // OLD
     // t48SlidingTile_t slidingTiles[12]; // Max amount of sliding tiles
