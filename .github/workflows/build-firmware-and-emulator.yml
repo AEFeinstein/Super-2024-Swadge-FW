@@ -24,21 +24,27 @@ jobs:
             family: osx
             emulator: true
             firmware: false
-            emu_binary: SwadgeEmulator.zip
+            emu_artifacts: |
+              SwadgeEmulator.app
+              version.txt
             idf_install: ~/.espressif
           - os: osx-intel
             runner: macos-13
             family: osx
             emulator: true
             firmware: false
-            emu_binary: SwadgeEmulator.zip
+            emu_artifacts: |
+              SwadgeEmulator.app
+              version.txt
             idf_install: ~/.espressif
           - os: linux
             runner: ubuntu-latest
             family: linux
             emulator: true
             firmware: false
-            emu_binary: swadge_emulator
+            emu_artifacts: |
+              swadge_emulator
+              version.txt
             idf_install: ~/.espressif
 
     runs-on: ${{ matrix.runner }}
@@ -73,52 +79,6 @@ jobs:
       if: matrix.family == 'linux'
       run: |
         sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
-
-    #### Platform-specific Emulator Builds
-    - name: Compile the Emulator
-      if: matrix.emulator && matrix.family == 'windows'
-      run: |
-        $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
-        make -j2
-
-    - name: Compile the Emulator
-      if: matrix.emulator && matrix.family != 'windows'
-      run: |
-        make -j3
-
-    - name: Build OSX Bundle
-      if: matrix.emulator && matrix.family == 'osx'
-      run: |
-        make SwadgeEmulator.app
-        zip -r SwadgeEmulator.zip SwadgeEmulator.app
-
-    #### Generic Emulator Upload
-    - name: Upload Emulator Binary
-      if: matrix.emulator
-      uses: actions/upload-artifact@v4.3.3
-      with:
-        name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-exe
-        path: |
-          ${{ matrix.emu_binary }}
-          version.txt
-
-    ## Platform-specific Emulator Uploads
-    - name: Upload Emulator DLL
-      if: matrix.emulator && matrix.family == 'windows'
-      uses: actions/upload-artifact@v4.3.3
-      with:
-        name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-dll
-        path: |
-          C:\msys64\mingw64\bin\libwinpthread-1.dll
-
-    # Merge all emulator artifacts for each OS into one
-    - name: Merge Emulator Artifacts
-      if: matrix.emulator
-      uses: actions/upload-artifact/merge@v4.3.3
-      with:
-        name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}
-        pattern: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}-*
-        delete-merged: true
 
     ## Firmware
     - name: Restore IDF Cache
@@ -170,6 +130,36 @@ jobs:
           build/partition_table/partition-table.bin
           version.txt
           tools/pyFlashGui/pyFlashGui.py
+
+    #### Platform-specific Emulator Builds
+    - name: Compile the Emulator
+      if: matrix.emulator && matrix.family == 'windows'
+      run: |
+        $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
+        make -j2
+
+    - name: Compile the Emulator
+      if: matrix.emulator && matrix.family != 'windows'
+      run: |
+        make -j3
+
+    - name: Build OSX Bundle
+      if: matrix.emulator && matrix.family == 'osx'
+      run: |
+        make SwadgeEmulator.app
+
+    - name: Create Emulator zip
+      if: matrix.emulator
+      run: |
+        zip -r SwadgeEmulator.zip ${{ join(matrix.emu_artifacts) }}
+
+    #### Generic Emulator Upload
+    - name: Upload Emulator Binary
+      if: matrix.emulator
+      uses: actions/upload-artifact@v4.3.3
+      with:
+        name: SwadgeEmulator-${{ matrix.os }}
+        path: SwadgeEmulator.zip
 
   Create-Snapshot-Release:
     runs-on: ubuntu-latest
