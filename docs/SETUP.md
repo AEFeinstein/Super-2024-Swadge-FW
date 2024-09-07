@@ -195,7 +195,6 @@ cd ~/esp/esp-idf/
 # Update the IDF with git
 git fetch --prune
 git checkout tags/v5.3.1
-git pull
 git submodule update --init --recursive
 
 # Install updated tools and python environment
