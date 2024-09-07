@@ -233,6 +233,18 @@ If the emulator opens to the factory test mode instead of either the main menu o
 is because it is unable to write to the `nvs.json` file in the current directory.
 
 
+## Simulated ESPNOW Networking
+
+The Swadge Emulator is capable of simulating the wireless ESPNOW connection between two swadges. This
+functionality is enabled automatically by simply running two swadge emulator programs at the same time.
+For best results, you should start each Swadge Emulator from a different directory, to avoid potential
+corruption caused by two instances attempting to save data to the same `nvs.json` file at the same time.
+
+**Note**: This functionality only supports local connections between two Swadge Emulators running on the
+same machine. Networking between Swadge Emulators running on different machines is not supported at this
+time.
+
+
 ## MIDI Instructions
 
 The Swadge Emulator includes MIDI support, which simulates the USB-MIDI behavior of the real Swadge
