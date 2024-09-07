@@ -63,7 +63,7 @@ void jsSceneInit(jsScene_t* scene)
     scene->gravity.x = 0;
     scene->gravity.y = 180;
     scene->score     = 0;
-    scene->paused    = true;
+    scene->paused    = false;
 
     uint32_t decompressedSize = 0;
     uint8_t* tableData        = (uint8_t*)readHeatshrinkFile("pinball.raw", &decompressedSize, true);
@@ -74,6 +74,7 @@ void jsSceneInit(jsScene_t* scene)
     scene->groups    = (list_t*)calloc(scene->numGroups, sizeof(list_t));
 
     uint16_t linesInFile = readInt16(tableData, &dIdx);
+    scene->lines         = calloc(linesInFile, sizeof(jsLine_t));
     scene->numLines      = 0;
     for (uint16_t lIdx = 0; lIdx < linesInFile; lIdx++)
     {
@@ -94,21 +95,8 @@ void jsSceneInit(jsScene_t* scene)
         }
     }
 
-    // Launch tube door is group 1
-    node_t* wallNode = scene->groups[1].first;
-    while (wallNode)
-    {
-        // Lower the door for launch
-        ((jsLine_t*)wallNode->val)->isUp = false;
-        wallNode                         = wallNode->next;
-    }
-    // Mark the door as open
-    scene->launchTubeClosed = false;
-
-    // Clear loop history
-    memset(scene->loopHistory, 0, sizeof(scene->loopHistory));
-
     uint16_t circlesInFile = readInt16(tableData, &dIdx);
+    scene->circles         = calloc(circlesInFile, sizeof(jsCircle_t));
     scene->numCircles      = 0;
     for (uint16_t cIdx = 0; cIdx < circlesInFile; cIdx++)
     {
@@ -116,6 +104,7 @@ void jsSceneInit(jsScene_t* scene)
     }
 
     uint16_t rectanglesInFile = readInt16(tableData, &dIdx);
+    scene->launchers          = calloc(1, sizeof(jsLauncher_t));
     scene->numLaunchers       = 0;
     for (uint16_t rIdx = 0; rIdx < rectanglesInFile; rIdx++)
     {
@@ -123,6 +112,7 @@ void jsSceneInit(jsScene_t* scene)
     }
 
     uint16_t flippersInFile = readInt16(tableData, &dIdx);
+    scene->flippers         = calloc(flippersInFile, sizeof(jsFlipper_t));
     scene->numFlippers      = 0;
     for (uint16_t fIdx = 0; fIdx < flippersInFile; fIdx++)
     {
@@ -130,6 +120,7 @@ void jsSceneInit(jsScene_t* scene)
     }
 
     uint16_t trianglesInFile = readInt16(tableData, &dIdx);
+    scene->triangles         = calloc(trianglesInFile, sizeof(jsTriangle_t));
     scene->numTriangles      = 0;
     for (uint16_t tIdx = 0; tIdx < trianglesInFile; tIdx++)
     {
@@ -137,6 +128,7 @@ void jsSceneInit(jsScene_t* scene)
     }
 
     uint16_t pointsInFile = readInt16(tableData, &dIdx);
+    scene->points         = calloc(pointsInFile, sizeof(jsPoint_t));
     scene->numPoints      = 0;
     for (uint16_t pIdx = 0; pIdx < pointsInFile; pIdx++)
     {
@@ -149,6 +141,7 @@ void jsSceneInit(jsScene_t* scene)
     scene->cameraOffset.x = 0;
     scene->cameraOffset.y = 0;
 
+    // Start with three balls
     scene->ballCount = 3;
 }
 
@@ -159,6 +152,9 @@ void jsSceneInit(jsScene_t* scene)
  */
 void jsStartBall(jsScene_t* scene)
 {
+    // Clear loop history
+    memset(scene->loopHistory, 0, sizeof(scene->loopHistory));
+
     // Start a 15s timer to save the ball
     scene->saveTimer = 15000000;
 
@@ -199,6 +195,21 @@ void jsSceneDestroy(jsScene_t* scene)
     if (scene->groups)
     {
         // Free the rest of the state
+        free(scene->lines);
+        free(scene->circles);
+        free(scene->launchers);
+        free(scene->flippers);
+        free(scene->triangles);
+        free(scene->points);
+
+        node_t* bNode = scene->balls.first;
+        while (bNode)
+        {
+            free(bNode->val);
+            bNode = bNode->next;
+        }
+        clear(&scene->balls);
+
         for (int32_t gIdx = 0; gIdx < scene->numGroups; gIdx++)
         {
             clear(&scene->groups[gIdx]);
@@ -300,6 +311,9 @@ void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event)
  */
 void jsRemoveBall(jsBall_t* ball, jsScene_t* scene)
 {
+    // Clear loop history
+    memset(scene->loopHistory, 0, sizeof(scene->loopHistory));
+
     // If the save timer is running
     if (scene->saveTimer > 0)
     {

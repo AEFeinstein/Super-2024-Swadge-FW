@@ -123,13 +123,6 @@ typedef struct
     float impulse;
 } jsLauncher_t;
 
-#define MAX_NUM_LINES     1024
-#define MAX_NUM_CIRCLES   128
-#define MAX_NUM_FLIPPERS  128
-#define MAX_NUM_LAUNCHERS 128
-#define MAX_NUM_TRIANGLES 128
-#define MAX_NUM_POINTS    128
-
 typedef struct
 {
     vecFl_t gravity;
@@ -137,18 +130,18 @@ typedef struct
     bool paused;
     int32_t numGroups;
     list_t* groups;
-    jsLine_t lines[MAX_NUM_LINES];
+    jsLine_t* lines;
     int32_t numLines;
     list_t balls;
-    jsCircle_t circles[MAX_NUM_CIRCLES];
+    jsCircle_t* circles;
     int32_t numCircles;
-    jsFlipper_t flippers[MAX_NUM_FLIPPERS];
+    jsFlipper_t* flippers;
     int32_t numFlippers;
-    jsLauncher_t launchers[MAX_NUM_LAUNCHERS];
+    jsLauncher_t* launchers;
     int32_t numLaunchers;
-    jsTriangle_t triangles[MAX_NUM_TRIANGLES];
+    jsTriangle_t* triangles;
     int32_t numTriangles;
-    jsPoint_t points[MAX_NUM_POINTS];
+    jsPoint_t* points;
     int32_t numPoints;
     vec_t cameraOffset;
     vecFl_t tableDim;
