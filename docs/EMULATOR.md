@@ -12,12 +12,17 @@ Mac (both Intel and ARM) are supported. Then, follow the instructions for your p
 ### Windows
 
 The Windows version of the emulator does not require any other software to operate. Simply extract the
-`.zip` file anywhere you like and double-click on `swadge_emulator.exe`.
+`.zip` file anywhere you like and double-click on `swadge_emulator.exe`. The first time you open the
+application, you may be warned about running applications from the internet and will need to click
+"Run" to continue. You might also be prompted by the Windows firewall when starting certain Swadge modes.
+This is only required if you wish to run two emulators at the same time using the simulated ESPNOW
+wireless connection.
 
 ### Linux
 
-After extracting the `.zip` file, you may need to mark the `swadge_emulator` binary as executable,
-which can be done with the command `chmod +x swadge_emulator`.
+The Linux version of the emulator does not require any other software to operate. Simply extract the
+`.zip` file anywhere you like and run the `swadge_emulator` program, either by opening it from your
+file browser or by running `./swadge_emulator` from the command-line.
 
 ### Mac
 
