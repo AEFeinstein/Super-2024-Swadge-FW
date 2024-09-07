@@ -194,11 +194,13 @@ jobs:
       contents: write
     steps:
     - name: Download all previous build artifacts
+      if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
       uses: actions/download-artifact@v4
       with:
         merge-multiple: false
 
     - name: Rename artifacts
+      if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
       run: |
         for os in osx-arm osx-intel linux windows ; do
         mv ${{ env.EMULATOR_ARTIFACT }}-${os}/SwadgeEmulator.zip SwadgeEmulator-${os}.zip
