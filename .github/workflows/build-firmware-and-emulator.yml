@@ -173,9 +173,7 @@ jobs:
     - name: Copy libwinpthread DLL
       if: matrix.emulator && matrix.family == 'windows'
       run: |
-        echo "${{ steps.install-msys64.outputs.msys2-location }}"
-        find ${{ steps.install-msys64.outputs.msys2-location }} -iname '*.dll'
-        cp ${{ steps.install-msys64.outputs.msys2-location }}\bin\libwinpthread-1.dll libwinpthread-1.dll
+        cp C:\msys64\bin\libwinpthread-1.dll libwinpthread-1.dll
 
     - name: Create Emulator zip
       if: matrix.emulator && matrix.family != 'windows'
