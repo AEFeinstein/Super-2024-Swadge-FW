@@ -170,10 +170,14 @@ jobs:
         make SwadgeEmulator.app
 
     - name: Create Emulator zip
-      if: matrix.emulator
+      if: matrix.emulator && matrix.family != 'windows'
       run: |
-        find .
         zip -r SwadgeEmulator.zip ${{ join(matrix.emu_artifacts, ' ') }}
+
+    - name: Create Emulator zip with 7zip
+      if: matrix.emulator && matrix.family == 'windows'
+      run: |
+        7z a -tzip SwadgeEmulator.zip ${{ join(matrix.emu_artifacts, ' ') }} -r
 
     #### Generic Emulator Upload
     - name: Upload Emulator Binary
