@@ -4,6 +4,7 @@
 
 #include "hdw-usb.h"
 #include "emu_main.h"
+#include "midi_device.h"
 
 //==============================================================================
 // Functions
@@ -27,7 +28,7 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
  */
 void deinitUsb(void)
 {
-    WARN_UNIMPLEMENTED();
+    midid_reset(0);
 }
 
 /**

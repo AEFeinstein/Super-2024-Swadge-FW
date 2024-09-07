@@ -9,8 +9,9 @@
  *
  * @param endH Where the keyboard ends
  * @param elapsedUs How many ms have elapsed since last time function was called
+ * @return int16_t Top of textbox for next element
  */
-static void _drawStr(int16_t endH, int64_t elapsedUs);
+static int16_t _drawStr(int16_t endH, int64_t elapsedUs);
 
 /**
  * @brief Draws the cursor at the end of the line
@@ -90,6 +91,13 @@ static int _drawEnter(int16_t x, int16_t y, uint8_t color);
  */
 static void _drawTypeMode(void);
 
+/**
+ * @brief Draws the text prompt as long as it exists.
+ *
+ * @param hPos Top edge of the previous textbox
+ */
+static void _drawPrompt(int16_t hPos);
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -102,6 +110,7 @@ static keyModifier_t keyMod;
 static int8_t selX;
 static int8_t selY;
 static char selChar;
+static char promptString[32];
 
 // Graphical
 bgMode_t backgroundMode;
@@ -156,10 +165,11 @@ void textEntryInit(font_t* useFont, int max_len, char* buffer)
     multi        = false;
     selX         = 1;
     selY         = 1;
-    keyMod       = NO_SHIFT;
+    keyMod       = SHIFT;
     texString[0] = 0;
     cursorTimer  = 0;
     cursorToggle = true;
+    strcpy(promptString, "");
 
     // Initialize default colors and BG mode
     backgroundMode = COLOR_BG;
@@ -196,10 +206,8 @@ bool textEntryDraw(int64_t elapsedUs)
     }
     // Draw an indicator for the current key modifier
     _drawTypeMode();
-    // Draw the keyboard
-    int16_t keyboardH = _drawKeyboard();
-    // Draw the currently typed string
-    _drawStr(keyboardH, elapsedUs);
+    // Draw the rest of the owl
+    _drawPrompt(_drawStr(_drawKeyboard(), elapsedUs));
     return true;
 }
 
@@ -234,7 +242,11 @@ bool textEntryInput(uint8_t down, uint8_t button)
                 }
                 case KEY_SHIFT:
                 {
-                    if (SHIFT == keyMod)
+                    if (keyMod == SHIFT)
+                    {
+                        keyMod = PROPER_NOUN;
+                    }
+                    else if (keyMod == PROPER_NOUN)
                     {
                         keyMod = NO_SHIFT;
                     }
@@ -326,7 +338,7 @@ bool textEntryInput(uint8_t down, uint8_t button)
         }
         case PB_SELECT:
         {
-            // Rotate the keyMod from NO_SHIFT -> SHIFT -> CAPS LOCK, and back
+            // Rotate the keyMod from NO_SHIFT -> SHIFT -> PROPER_NOUN -> CAPS LOCK, and back
             if (NO_SHIFT == keyMod)
             {
                 keyMod = SHIFT;
@@ -334,6 +346,10 @@ bool textEntryInput(uint8_t down, uint8_t button)
             else if (SHIFT == keyMod)
             {
                 keyMod = CAPS_LOCK;
+            }
+            else if (CAPS_LOCK == keyMod)
+            {
+                keyMod = PROPER_NOUN;
             }
             else
             {
@@ -442,9 +458,34 @@ void textEntrySoftReset()
     keyMod = NO_SHIFT;
 }
 
+void textEntrySetPrompt(char* prompt)
+{
+    strcpy(promptString, prompt);
+}
+
+void textEntrySetCapMode()
+{
+    keyMod = CAPS_LOCK;
+}
+
+void textEntrySetNoShiftMode()
+{
+    keyMod = NO_SHIFT;
+}
+
+void textEntrySetShiftMode()
+{
+    keyMod = SHIFT;
+}
+
+void textEntrySetNounMode()
+{
+    keyMod = PROPER_NOUN;
+}
+
 // Drawing code
 
-static void _drawStr(int16_t endH, int64_t eUs)
+static int16_t _drawStr(int16_t endH, int64_t eUs)
 {
     if (multi)
     {
@@ -458,6 +499,7 @@ static void _drawStr(int16_t endH, int64_t eUs)
                             endY + SHADOWBOX_MARGIN, shadowboxColor);
         }
         drawTextWordWrap(activeFont, textColor, texString, &startX, &startY, endX, endY);
+        return startY - SHADOWBOX_MARGIN;
     }
     else
     {
@@ -471,6 +513,7 @@ static void _drawStr(int16_t endH, int64_t eUs)
         int16_t textLen = textWidth(activeFont, texString) + activeFont->chars[0].width;
         int16_t endPos  = drawText(activeFont, textColor, texString, (TFT_WIDTH - textLen) / 2, hStart);
         _drawCursor(eUs, endPos, hStart);
+        return hStart - SHADOWBOX_MARGIN;
     }
 }
 
@@ -502,7 +545,16 @@ static int16_t _drawKeyboard()
     int col = 0;
     int row = 0;
     char c;
-    const char* s = (keyMod == NO_SHIFT) ? keyboard_lower : keyboard_upper;
+    int stringLen = strlen(texString);
+    const char* s;
+    if (keyMod == NO_SHIFT || (keyMod == PROPER_NOUN && !(texString[stringLen - 1] == KEY_SPACE || stringLen == 0)))
+    {
+        s = keyboard_lower;
+    }
+    else
+    {
+        s = keyboard_upper;
+    }
     while ((c = *s))
     {
         // EOL character hit, move to the next row
@@ -531,7 +583,14 @@ static int16_t _drawKeyboard()
                     }
                     break;
                 case KEY_SHIFT:
-                    _drawShift(posX, posY, textColor);
+                    if (keyMod == PROPER_NOUN)
+                    {
+                        _drawShift(posX, posY, emphasisColor);
+                    }
+                    else
+                    {
+                        _drawShift(posX, posY, textColor);
+                    }
                     break;
                 case KEY_BACKSPACE:
                     _drawBackspace(posX, posY, textColor);
@@ -546,9 +605,14 @@ static int16_t _drawKeyboard()
                     width = _drawEnter(posX, posY, textColor);
                     break;
                 default:
+                {
                     // Just draw the char
-                    char sts[] = {c, 0};
+                    char sts[2];
+                    sts[0] = c;
+                    sts[1] = '\0';
                     drawText(activeFont, textColor, sts, posX, posY);
+                    break;
+                }
             }
             if (col == selX && row == selY)
             {
@@ -662,6 +726,8 @@ static void _drawTypeMode()
             useLine = true;
             text    = "Typing: Caps";
             break;
+        case PROPER_NOUN:
+            text = "Typing: Proper Noun";
         default:
             break;
     }
@@ -678,5 +744,37 @@ static void _drawTypeMode()
     {
         drawLineFast((TFT_WIDTH - width) / 2 + typingWidth, TFT_HEIGHT - 2, (TFT_WIDTH - width) / 2 + width,
                      TFT_HEIGHT - 2, emphasisColor);
+    }
+}
+
+static void _drawPrompt(int16_t hPos)
+{
+    // Abort if the string doesn't contain text
+    if (strlen(promptString) <= 1)
+    {
+        return;
+    }
+    // If using multilines, place prompt higher and to the side to keep it out of the corner.
+    if (multi)
+    {
+        int16_t width = textWidth(activeFont, promptString);
+        if (useShadowboxes)
+        {
+            fillDisplayArea(CORNER_MARGIN, 0, CORNER_MARGIN + width + (2 * SHADOWBOX_MARGIN),
+                            activeFont->height + (2 * SHADOWBOX_MARGIN), shadowboxColor);
+        }
+        drawText(activeFont, emphasisColor, promptString, CORNER_MARGIN + SHADOWBOX_MARGIN, SHADOWBOX_MARGIN);
+    }
+    else
+    {
+        int16_t width = textWidth(activeFont, promptString);
+        if (useShadowboxes)
+        {
+            fillDisplayArea((TFT_WIDTH - width) / 2 - SHADOWBOX_MARGIN,
+                            hPos - (activeFont->height + (3 * SHADOWBOX_MARGIN)),
+                            (TFT_WIDTH + width) / 2 + (2 * SHADOWBOX_MARGIN), hPos - SHADOWBOX_MARGIN, shadowboxColor);
+        }
+        drawText(activeFont, emphasisColor, promptString, (TFT_WIDTH - width) / 2,
+                 hPos - (activeFont->height + (2 * SHADOWBOX_MARGIN)));
     }
 }

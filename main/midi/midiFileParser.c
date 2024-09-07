@@ -5,6 +5,7 @@
 #include "midiFileParser.h"
 #include "midiPlayer.h"
 #include "heatshrink_helper.h"
+#include "cnfs.h"
 
 #include <esp_log.h>
 #include <esp_heap_caps.h>
@@ -57,6 +58,7 @@ typedef struct
 //==============================================================================
 
 static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* out);
+static int writeVariableLength(uint8_t* out, int max, uint32_t length);
 static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track);
 static bool parseMidiHeader(midiFile_t* file);
 static void readFirstEvents(midiFileReader_t* reader);
@@ -98,6 +100,43 @@ static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* ou
     *out = val;
 
     return read;
+}
+
+/**
+ * @brief Write a variable length quantity to a byte buffer
+ *
+ * @param out The buffer to write the quantity to
+ * @param max The maximum number of bytes to write
+ * @param length The quanity to write
+ * @return int
+ */
+static int writeVariableLength(uint8_t* out, int max, uint32_t quantity)
+{
+    int written = 0;
+
+    uint32_t reversed = (quantity & 0x7F);
+
+    while (0 != (quantity >>= 7))
+    {
+        reversed <<= 8;
+        reversed |= ((quantity & 0x7F) | 0x80);
+    }
+
+    while (written < max)
+    {
+        out[written++] = reversed & 0x7F;
+
+        if (reversed & 0x80)
+        {
+            reversed >>= 8;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return written;
 }
 
 #define TRK_REMAIN() (track->track->length - (track->cur - track->track->data))
@@ -193,7 +232,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
             track->nextEvent.midi.status = status;
 
             // This message has two data bytes
-            // The rest of the events have 2 data bytes
+            // The rest of the events have 1 data byte
             if (TRK_REMAIN() < 2)
             {
                 ERR();
@@ -454,6 +493,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 
                     case PROPRIETARY:
                     {
+                        track->nextEvent.meta.type = PROPRIETARY;
                         track->nextEvent.meta.data = track->cur;
                         break;
                     }
@@ -746,7 +786,45 @@ static void readFirstEvents(midiFileReader_t* reader)
 bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 {
     uint32_t size;
-    uint8_t* data = readHeatshrinkFile(name, &size, spiRam);
+    size_t raw_size;
+    uint8_t* data = cnfsReadFile(name, &raw_size, spiRam);
+
+    if (NULL != data)
+    {
+        if (raw_size < sizeof(midiHeader) || memcmp(data, midiHeader, sizeof(midiHeader)))
+        {
+            // This is not a MIDI file! Try to decompress
+            if (heatshrinkDecompress(NULL, &size, data, (uint32_t)raw_size))
+            {
+                // Size was read successfully, allocate the non-compressed buffer
+                uint8_t* decompressed = heap_caps_malloc(size, spiRam ? MALLOC_CAP_SPIRAM : 0);
+                if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
+                {
+                    // Success, free the raw data
+                    free(data);
+                    data = decompressed;
+                }
+                else
+                {
+                    free(decompressed);
+                    free(data);
+                    return false;
+                }
+            }
+            else
+            {
+                ESP_LOGE("MIDIFileParser", "Song %s could not be decompressed!", name);
+                free(data);
+                return false;
+            }
+        }
+        else
+        {
+            ESP_LOGI("MIDIFileParser", "Song %s is loaded uncompressed", name);
+            size = (uint32_t)raw_size;
+        }
+    }
+
     if (data != NULL)
     {
         ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", name, size);
@@ -975,4 +1053,263 @@ void globalMidiRestore(void* data)
     // Do not free any of the individual save state data, since it's now just the real data
     // Just free the container
     free(data);
+}
+
+int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
+{
+    int written = 0;
+    switch (event->type)
+    {
+        case MIDI_EVENT:
+        {
+            switch (event->midi.status & 0xF0)
+            {
+                // Two-byte statuses
+                case 0x80: // Note OFF
+                case 0x90: // Note ON
+                case 0xA0: // AfterTouch
+                case 0xB0: // Control Change
+                case 0xE0: // Pitch bend
+                {
+                    if (max > 0)
+                    {
+                        out[written++] = event->midi.status;
+                        if (max > 1)
+                        {
+                            out[written++] = event->midi.data[0];
+
+                            if (max > 2)
+                            {
+                                out[written++] = event->midi.data[1];
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                // One-byte statuses
+                case 0xC0: // Program Select
+                case 0xD0: // Channel Pressure
+                {
+                    if (max > 0)
+                    {
+                        out[written++] = event->midi.status;
+
+                        if (max > 1)
+                        {
+                            out[written++] = event->midi.data[0];
+                        }
+                    }
+                    break;
+                }
+
+                default:
+                    // No other valid status bytes
+                    break;
+            }
+            break;
+        }
+
+        case META_EVENT:
+        {
+            if (written < max)
+            {
+                out[written++] = 0xFF;
+            }
+
+            if (written < max)
+            {
+                out[written++] = event->meta.type;
+            }
+
+            written += writeVariableLength(out, max - written, event->meta.length);
+
+            switch ((uint8_t)event->meta.type)
+            {
+                case SEQUENCE_NUMBER:
+                {
+                    if (event->meta.length > 0)
+                    {
+                        if (written < max)
+                        {
+                            out[written++] = (event->meta.sequenceNumber >> 8) & 0xFF;
+                            if (written < max)
+                            {
+                                out[written++] = (event->meta.sequenceNumber & 0xFF);
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                // Text Events
+                case TEXT:
+                case COPYRIGHT:
+                case SEQUENCE_OR_TRACK_NAME:
+                case INSTRUMENT_NAME:
+                case LYRIC:
+                case MARKER:
+                case CUE_POINT:
+                case 0x08:
+                case 0x09:
+                case 0x0A:
+                case 0x0B:
+                case 0x0C:
+                case 0x0D:
+                case 0x0E:
+                case 0x0F:
+                {
+                    const char* strCur = event->meta.text;
+                    while (written < max && strCur < (event->meta.text + event->meta.length))
+                    {
+                        out[written++] = *(const uint8_t*)(strCur++);
+                    }
+                    break;
+                }
+
+                case CHANNEL_PREFIX:
+                case PORT_PREFIX:
+                {
+                    if (written < max)
+                    {
+                        out[written++] = event->meta.prefix;
+                    }
+                    break;
+                }
+
+                case END_OF_TRACK:
+                {
+                    // Nothing to do, this event has no data
+                    break;
+                }
+
+                case TEMPO:
+                {
+                    if (written < max)
+                    {
+                        out[written++] = (event->meta.tempo >> 16) & 0xFF;
+
+                        if (written < max)
+                        {
+                            out[written++] = (event->meta.tempo >> 8) & 0xFF;
+
+                            if (written < max)
+                            {
+                                out[written++] = (event->meta.tempo & 0xFF);
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                case SMPTE_OFFSET:
+                {
+                    if (written < max)
+                    {
+                        out[written++] = event->meta.startTime.hour;
+                        if (written < max)
+                        {
+                            out[written++] = event->meta.startTime.min;
+                            if (written < max)
+                            {
+                                out[written++] = event->meta.startTime.sec;
+                                if (written < max)
+                                {
+                                    out[written++] = event->meta.startTime.frame;
+                                    if (written < max)
+                                    {
+                                        out[written++] = event->meta.startTime.frameHundredths;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                case TIME_SIGNATURE:
+                {
+                    if (written < max)
+                    {
+                        out[written++] = event->meta.timeSignature.numerator;
+                        if (written < max)
+                        {
+                            out[written++] = event->meta.timeSignature.denominator;
+                            if (written < max)
+                            {
+                                out[written++] = event->meta.timeSignature.midiClocksPerMetronomeTick;
+                                if (written < max)
+                                {
+                                    out[written++] = event->meta.timeSignature.num32ndNotesPerBeat;
+                                }
+                            }
+                        }
+                    }
+
+                    break;
+                }
+
+                case KEY_SIGNATURE:
+                {
+                    if (written < max)
+                    {
+                        if (event->meta.keySignature.flats)
+                        {
+                            out[written++] = (uint8_t)(-event->meta.keySignature.flats);
+                        }
+                        else if (event->meta.keySignature.sharps)
+                        {
+                            out[written++] = event->meta.keySignature.sharps;
+                        }
+                        else
+                        {
+                            out[written++] = 0;
+                        }
+                    }
+                    break;
+                }
+
+                case PROPRIETARY:
+                default:
+                {
+                    const uint8_t* dataCur = event->meta.data;
+                    while (written < max && dataCur < (event->meta.data + event->meta.length))
+                    {
+                        out[written++] = *dataCur++;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+
+        case SYSEX_EVENT:
+        {
+            if (written < max)
+            {
+                if (event->sysex.prefix)
+                {
+                    out[written++] = event->sysex.prefix;
+                }
+                else
+                {
+                    out[written++] = 0xF0;
+                }
+            }
+
+            const uint8_t* data = event->sysex.data;
+            while (written < max && data < event->sysex.data + event->sysex.length)
+            {
+                out[written++] = *data++;
+            }
+
+            if (written < max)
+            {
+                out[written++] = 0xF7;
+            }
+            break;
+        }
+    }
+
+    return written;
 }

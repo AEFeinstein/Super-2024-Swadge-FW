@@ -42,7 +42,7 @@ The continuous integration for this project runs on a Windows instance. This mea
     
     You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. When it's all set up, it should look something like this:
     
-    ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
+    <img src="./win_path.png">
 
 6. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
 Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe
@@ -65,6 +65,7 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     * `dnf`:
         ```bash
         sudo dnf group install "C Development Tools and Libraries" "Development Tools"
+        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan cppcheck python3 python3-pip python3-virtualenv cmake libusb1-devel lcov gdb graphviz git doxygen clang clang-tools-extra libasan-static libubsan-static
         sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz git
         ```
 2. Install `doxygen` separately from their website (https://www.doxygen.nl/download.html). Note that the version used in this project is currently 1.10.0 and the version in many package managers is less than that. You will need to extract the binary somewhere and add it to your `PATH` variable. For example, GitHub Actions installs `doxygen` like this:

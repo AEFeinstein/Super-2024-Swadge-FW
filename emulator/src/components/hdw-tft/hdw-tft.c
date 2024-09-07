@@ -77,6 +77,7 @@ static const uint32_t paletteColorsEmu[216] = {
 // Variables
 //==============================================================================
 
+static paletteColor_t* lastBuffer    = NULL;
 static paletteColor_t* frameBuffer   = NULL;
 static uint32_t* scaledBitmapDisplay = NULL;
 static int bitmapWidth               = 0;
@@ -118,6 +119,11 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
         frameBuffer = calloc(TFT_WIDTH * TFT_HEIGHT, sizeof(paletteColor_t));
     }
 
+    if (NULL == lastBuffer)
+    {
+        lastBuffer = calloc(TFT_WIDTH * TFT_HEIGHT, sizeof(paletteColor_t));
+    }
+
     // This may be setup by the emulator already
     if (NULL == scaledBitmapDisplay)
     {
@@ -138,6 +144,12 @@ void deinitTFT(void)
     {
         free(frameBuffer);
         frameBuffer = NULL;
+    }
+
+    if (lastBuffer)
+    {
+        free(lastBuffer);
+        lastBuffer = NULL;
     }
 
     if (scaledBitmapDisplay)
@@ -246,6 +258,9 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
         clearPxTft();
     }
 
+    // Save the framebuffer before it gets cleared by background drawing callbacks
+    memcpy(lastBuffer, frameBuffer, TFT_WIDTH * TFT_HEIGHT);
+
     /* Copy the current framebuffer to memory that won't be modified by the
      * Swadge mode. rawdraw will use this non-changing bitmap to draw
      */
@@ -350,4 +365,9 @@ uint32_t* getDisplayBitmap(uint16_t* width, uint16_t* height)
     *width  = (bitmapWidth * displayMult);
     *height = (bitmapHeight * displayMult);
     return scaledBitmapDisplay;
+}
+
+const paletteColor_t* getLastTftBitmap(void)
+{
+    return lastBuffer;
 }

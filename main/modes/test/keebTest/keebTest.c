@@ -2,7 +2,7 @@
  * @file keebTest.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A mode designed to test keyboard variations in rapid succession
- * @version 1.0
+ * @version 1.1
  * @date 2024-07-06
  *
  * @copyright Copyright (c) 2024
@@ -100,6 +100,8 @@ static const char teMenuEnter[]        = "Enter Style";
 static const char teMenuCaps[]         = "Caps Style";
 static const char teMenuMulti[]        = "Multiline";
 static const char teMenuCount[]        = "Char Count";
+static const char teMenuPrompt[]       = "Sample Prompt";
+static const char teMenuTypingMode[]   = "Mode: ";
 static const char teMenuReset[]        = "Reset String";
 static const char teMenuResetHard[]    = "Reset TextEntry";
 
@@ -111,19 +113,17 @@ static const char colorSettingLabel4[] = "Color: ";    // Shadowboxes
 static const int32_t colorSettingsValues[]
     = {c000, c500, c050, c005, c550, c505, c055, c555, c111, c222, c444, c433, c303};
 
-static const char* const colorSettingsOptions[] = {
-    "Black", "Red",       "Green",       "Blue",       "Yellow", "Magenta", "Cyan",
-    "White", "Dark gray", "Medium Gray", "Light Gray", "Pink",   "Purple",
-};
+static const char* const colorSettingsOptions[]
+    = {"Black", "Red",      "Green",    "Blue",     "Yellow", "Magenta", "Cyan",
+       "White", "Dk. gray", "Md. Gray", "Lt. Gray", "Pink",   "Purple"};
 
 static const int32_t fontSettingsValues[] = {0, 1, 2, 3};
 
-static const char* const fontSettingsOptions[] = {
-    "vga_ibm8",
-    "radiostars",
-    "rodin",
-    "righteous",
-};
+static const char* const fontSettingsOptions[] = {"vga_ibm8", "radiostars", "rodin", "righteous"};
+
+static const int32_t typingModeSettingsValues[] = {0, 1, 2, 3};
+
+static const char* const typingModeSettingsOptions[] = {"lower", "Shift", "CAPS", "P. Noun"};
 
 //==============================================================================
 // Variables
@@ -191,6 +191,9 @@ static void keebEnterMode(void)
     addSingleItemToMenu(kbTest->menu, teMenuCaps);
     addSingleItemToMenu(kbTest->menu, teMenuMulti);
     addSingleItemToMenu(kbTest->menu, teMenuCount);
+    addSingleItemToMenu(kbTest->menu, teMenuPrompt);
+    addSettingsOptionsItemToMenu(kbTest->menu, teMenuTypingMode, typingModeSettingsOptions, typingModeSettingsValues,
+                                 ARRAY_SIZE(typingModeSettingsValues), getScreensaverTimeSettingBounds(), 1);
     addSingleItemToMenu(kbTest->menu, teMenuReset);
     addSingleItemToMenu(kbTest->menu, teMenuResetHard);
 
@@ -228,6 +231,7 @@ static void keebExitMode(void)
 static void keebMainLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt = {0};
+    bool drawlines  = true;
     switch (kbTest->currState)
     {
         case MENU:
@@ -238,14 +242,16 @@ static void keebMainLoop(int64_t elapsedUs)
             drawMenuMania(kbTest->menu, kbTest->renderer, elapsedUs);
             break;
         case TYPING:
-            drawIncidentalBG();
             while (checkButtonQueueWrapper(&evt))
             {
                 if (!textEntryInput(evt.down, evt.button))
                 {
                     kbTest->currState = DISPLAYING;
+                    drawlines         = false;
                 }
             }
+            if (drawlines)
+                drawIncidentalBG();
             textEntryDraw(elapsedUs);
             if (kbTest->count)
             {
@@ -305,9 +311,27 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
             textEntrySetNewEnterStyle(kbTest->enter);
             textEntrySetNewCapsStyle(kbTest->caps);
             textEntrySetMultiline(kbTest->multi);
+            textEntrySetPrompt(kbTest->prompt);
             if (kbTest->reset)
             {
                 strcpy(kbTest->typedText, "");
+            }
+            switch (kbTest->typingMode)
+            {
+                case 0:
+                    textEntrySetNoShiftMode();
+                    break;
+                case 1:
+                    textEntrySetShiftMode();
+                    break;
+                case 2:
+                    textEntrySetCapMode();
+                    break;
+                case 3:
+                    textEntrySetNounMode();
+                    break;
+                default:
+                    break;
             }
             // Switch state
             kbTest->currState = TYPING;
@@ -387,6 +411,19 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
                 setWarning(500, "Character count disabled");
             }
         }
+        else if (label == teMenuPrompt)
+        {
+            if (strlen(kbTest->prompt) > 1)
+            {
+                strcpy(kbTest->prompt, "");
+                setWarning(500, "Disabled text prompt");
+            }
+            else
+            {
+                strcpy(kbTest->prompt, "Text Prompt!");
+                setWarning(500, "Enabled sample text prompt");
+            }
+        }
         else if (label == teMenuReset)
         {
             kbTest->reset = !kbTest->reset;
@@ -425,6 +462,10 @@ static void kbMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         kbTest->shadowColor = settingVal;
     }
+    if (label == teMenuTypingMode)
+    {
+        kbTest->typingMode = settingVal;
+    }
 }
 
 static void reset()
@@ -433,13 +474,15 @@ static void reset()
     kbTest->bckgrnd     = COLOR_BG;
     kbTest->bgColor     = c000;
     kbTest->textColor   = c555;
-    kbTest->empColor    = c555;
+    kbTest->empColor    = c500;
     kbTest->shadow      = true;
     kbTest->shadowColor = c111;
     kbTest->enter       = false;
     kbTest->caps        = false;
     kbTest->multi       = false;
+    kbTest->typingMode  = 1;
     strcpy(kbTest->typedText, "");
+    strcpy(kbTest->prompt, "");
     textEntryInit(&kbTest->fnt[0], MAX_TEXT_LEN, kbTest->typedText);
 }
 

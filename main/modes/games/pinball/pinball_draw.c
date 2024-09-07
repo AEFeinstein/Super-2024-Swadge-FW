@@ -116,7 +116,8 @@ void drawPinLine(pbLine_t* line)
  */
 // void drawPinRect(pbRect_t* rect)
 // {
-//     drawRect(rect->r.pos.x, rect->r.pos.y, rect->r.pos.x + rect->r.width, rect->r.pos.y + rect->r.height, rect->color);
+//     drawRect(rect->r.pos.x, rect->r.pos.y, rect->r.pos.x + rect->r.width, rect->r.pos.y + rect->r.height,
+//     rect->color);
 // }
 
 /**
