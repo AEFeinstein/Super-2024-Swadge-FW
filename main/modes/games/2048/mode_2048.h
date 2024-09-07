@@ -57,14 +57,21 @@
 #define T48_GRID_SIZE  4
 #define T48_BOARD_SIZE (T48_GRID_SIZE * T48_GRID_SIZE)
 
-// Graphics
+// Pixel counts
 #define T48_CELL_SIZE   50
 #define T48_LINE_WEIGHT 4
 #define T48_SIDE_MARGIN 30
 #define T48_TOP_MARGIN  20
-#define T48_TILE_COUNT  16
-#define T48_MAX_MERGES  8
-#define T48_MAX_SEQ     16
+
+// Sprite counts
+#define T48_TILE_COUNT   16
+#define T48_MAX_SPARKLES 24
+
+// Animations
+#define T48_MAX_SEQ       16 // Frames per animation. Less is faster.
+#define T48_SPARKLE_COUNT 8
+#define T48_SPARKLE_SIZE  16
+#define T48_MAX_MERGES    8
 
 // High score
 #define T48_HS_COUNT  5
@@ -130,6 +137,16 @@ typedef struct
 
 typedef struct
 {
+    wsg_t img;
+    int16_t x;
+    int16_t y;
+    int16_t xSpd;
+    int16_t ySpd;
+    bool active;
+} t48Sparkles_t;
+
+typedef struct
+{
     wsg_t image;
     int16_t pos[2];
     uint8_t spd;
@@ -144,7 +161,7 @@ typedef struct
     font_t titleFontOutline;
     wsg_t tiles[T48_TILE_COUNT];
     // wsg_t newTileStates[T48_NEW_COUNT];
-    // wsg_t sparkleSprites[T48_SPARKLE_COUNT]
+    wsg_t sparkleSprites[T48_SPARKLE_COUNT];
     midiFile_t bgm;
     midiFile_t click;
 
@@ -162,6 +179,8 @@ typedef struct
 
     // Animations
     int8_t globalAnim;
+    bool sparkled;
+    t48Sparkles_t sparks[T48_MAX_SPARKLES];
 
     // OLD
     // t48SlidingTile_t slidingTiles[12]; // Max amount of sliding tiles

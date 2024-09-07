@@ -14,6 +14,8 @@
 
 void t48ResetAnim(t48_t* t48);
 
+void t48InitSparkles(t48_t* t48, int8_t idx, int8_t x, int8_t y, wsg_t spr);
+
 /* void t48ResetCellState(t48_t* t48);
 
 void t48SetCellState(t48_t* t48, int8_t idx, t48CellStateEnum_t st, int8_t startX, int8_t startY, int8_t endX,

@@ -16,9 +16,9 @@
  * @brief Get the Color for a specific value
  *
  * @param val Value that requires a color for its square
- * @return uint8_t Color of the value's square
+ * @return uint8_t sprite index
  */
-static uint8_t getTileSprIndex(uint32_t val)
+static uint8_t getTileSprIdx(uint32_t val)
 {
     switch (val)
     {
@@ -58,6 +58,53 @@ static uint8_t getTileSprIndex(uint32_t val)
             return 0; // Probably never seen
         default:
             return 0;
+    }
+}
+
+/**
+ * @brief Get the Sparkle sprite index
+ *
+ * @param val Value to obtain index for
+ * @return uint8_t sprite index
+ */
+static uint8_t getSparkleSprIdx(uint32_t val)
+{
+    switch (val)
+    {
+        case 4:
+            return 4;
+        case 8:
+            return 1;
+        case 16:
+            return 6;
+        case 32:
+            return 0;
+        case 64:
+            return 7;
+        case 128:
+            return 0;
+        case 256:
+            return 3;
+        case 512:
+            return 4;
+        case 1024:
+            return 4;
+        case 2048:
+            return 7;
+        case 4096:
+            return 5;
+        case 8192:
+            return 6;
+        case 16384:
+            return 6;
+        case 32768:
+            return 2;
+        case 65535:
+            return 2;
+        case 131072:
+            return 1; // Probably never seen
+        default:
+            return 3;
     }
 }
 
@@ -130,7 +177,7 @@ static void t48DrawTiles(t48_t* t48)
     }
     else
     {
-        //FIXME: t48ResetCellState(t48);
+        t48ResetAnim(t48);
     }
 
     // New tiles
@@ -139,25 +186,55 @@ static void t48DrawTiles(t48_t* t48)
     // FIXME: t48DrawSlidingTiles(t48);
 
     // Static tiles
+    int8_t sparkleIdx = 0;
     for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
         switch (t48->board[i].state)
         {
             case STATIC:
-                t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->board[i].val)], t48->board[i].x, t48->board[i].y,
+                t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->board[i].val)], t48->board[i].x, t48->board[i].y,
                                   0, 0, t48->board[i].val);
                 break;
-            case MOVED:
             case MERGED:
+                if (t48->globalAnim > T48_MAX_SEQ)
+                {
+                    t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->board[i].val)], t48->board[i].x,
+                                      t48->board[i].y, 0, 0, t48->board[i].val);
+                    // Spawn sparkles
+                    t48InitSparkles(t48, sparkleIdx++, t48->board[i].x, t48->board[i].y,
+                                    t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
+                    t48InitSparkles(t48, sparkleIdx++, t48->board[i].x, t48->board[i].y,
+                                    t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
+                    t48InitSparkles(t48, sparkleIdx++, t48->board[i].x, t48->board[i].y,
+                                    t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
+                }
+                
+                break;
+            case MOVED:
             case NEW:
                 if (t48->globalAnim > T48_MAX_SEQ)
                 {
-                    t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->board[i].val)], t48->board[i].x,
+                    t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->board[i].val)], t48->board[i].x,
                                       t48->board[i].y, 0, 0, t48->board[i].val);
                 }
                 break;
             default:
                 break;
+        }
+    }
+    // Sparkles
+    for (int i = 0; i < T48_MAX_SPARKLES; i++)
+    {
+        if (t48->sparks[i].y >= (TFT_HEIGHT + T48_SPARKLE_SIZE))
+        {
+            t48->sparks[i].active = false;
+        }
+        if (t48->sparks[i].active)
+        {
+            t48->sparks[i].ySpd += 1;
+            t48->sparks[i].y += t48->sparks[i].ySpd;
+            t48->sparks[i].x += t48->sparks[i].xSpd;
+            drawWsgSimple(&t48->sparks[i].img, t48->sparks[i].x, t48->sparks[i].y);
         }
     }
 }

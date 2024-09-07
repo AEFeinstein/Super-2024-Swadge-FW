@@ -103,7 +103,14 @@ static void t48EnterMode(void)
     loadWsg("Tile-Red-Square.wsg", &t48->tiles[13], true);
     loadWsg("Tile-Yellow-Diamond.wsg", &t48->tiles[14], true);
     loadWsg("Tile-Yellow-Octo.wsg", &t48->tiles[15], true);
-    // TODO: Add new sprites
+    loadWsg("Sparkle_Blue.wsg", &t48->sparkleSprites[0], true);
+    loadWsg("Sparkle_Cyan.wsg", &t48->sparkleSprites[1], true);
+    loadWsg("Sparkle_Green.wsg", &t48->sparkleSprites[2], true);
+    loadWsg("Sparkle_Orange.wsg", &t48->sparkleSprites[3], true);
+    loadWsg("Sparkle_Pink.wsg", &t48->sparkleSprites[4], true);
+    loadWsg("Sparkle_Purple.wsg", &t48->sparkleSprites[5], true);
+    loadWsg("Sparkle_Red.wsg", &t48->sparkleSprites[6], true);
+    loadWsg("Sparkle_Yellow.wsg", &t48->sparkleSprites[7], true);
 
     // Load sounds
     loadMidiFile("Follinesque.mid", &t48->bgm, true);
@@ -183,7 +190,10 @@ static void t48ExitMode(void)
     freeFont(&t48->titleFont);
     freeFont(&t48->font);
 
-    // TODO: Free new sprites
+    for (uint8_t i = 0; i < T48_SPARKLE_COUNT; i++)
+    {
+        freeWsg(&t48->sparkleSprites[i]);
+    }
     for (uint8_t i = 0; i < T48_TILE_COUNT; i++)
     {
         freeWsg(&t48->tiles[i]);
@@ -221,7 +231,7 @@ static void t48MainLoop(int64_t elapsedUs)
                     t48->ds = GAME;
                     for (int i = 0; i < T48_BOARD_SIZE; i++)
                     {
-                        if (i % 4 == 2 || i%4 == 0)
+                        if (true)
                         {
                             t48->board[i].val = 2;
                         }
