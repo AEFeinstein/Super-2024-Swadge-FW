@@ -184,7 +184,7 @@ jobs:
       if: matrix.emulator
       uses: actions/upload-artifact@v4.3.3
       with:
-        name: SwadgeEmulator-${{ matrix.os }}
+        name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}
         path: SwadgeEmulator.zip
 
   Create-Snapshot-Release:
@@ -204,11 +204,9 @@ jobs:
 
     - name: Rename artifacts
       run: |
-        mv ${{ env.EMULATOR_ARTIFACT }}-osx-arm/SwadgeEmulator.zip SwadgeEmulator-osx-arm.zip
-        mv ${{ env.EMULATOR_ARTIFACT }}-osx-intel/SwadgeEmulator.zip SwadgeEmulator-osx-intel.zip
-        mv ${{ env.EMULATOR_ARTIFACT }}-linux/swadge_emulator SwadgeEmulator-linux
-        #mv ${{ env.EMULATOR_ARTIFACT }}-windows/SwadgeEmulator.exe SwadgeEmulator-windows.exe
-        find .
+        for os in osx-arm osx-intel linux windows ; do
+        mv ${{ env.EMULATOR_ARTIFACT }}-${os}/SwadgeEmulator.zip SwadgeEmulator-${os}.zip
+        done
 
     - name: Create release for latest artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
