@@ -41,6 +41,7 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
     {
         case JS_WALL:
         case JS_BALL_LOST:
+        case JS_LAUNCH_DOOR:
         {
             if (!line->isUp)
             {

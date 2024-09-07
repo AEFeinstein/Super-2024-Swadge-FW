@@ -207,28 +207,22 @@ static void handleBallCircleCollision(jsScene_t* scene, jsBall_t* ball, jsCircle
                     sizeof(scene->loopHistory) - sizeof(scene->loopHistory[0]));
             scene->loopHistory[0] = circle->id;
 
-            if (1 == scene->loopHistory[0] && 2 == scene->loopHistory[1] && 3 == scene->loopHistory[2])
+            if (scene->loopHistory[0] + 1 == scene->loopHistory[1]
+                && scene->loopHistory[1] + 1 == scene->loopHistory[2])
             {
                 printf("Loop Counter Clockwise\n");
             }
-            else if (3 == scene->loopHistory[0] && 2 == scene->loopHistory[1] && 1 == scene->loopHistory[2])
+            else if (scene->loopHistory[2] + 1 == scene->loopHistory[1]
+                     && scene->loopHistory[1] + 1 == scene->loopHistory[0])
             {
                 printf("Loop Clockwise\n");
             }
         }
         // Group two rollovers should close the launch tube
-        if (2 == circle->groupId)
+        // TODO hardcoding a group ID is gross
+        if (5 == circle->groupId)
         {
-            if (false == scene->launchTubeClosed)
-            {
-                scene->launchTubeClosed = true;
-                node_t* wNode           = scene->groups[1].first;
-                while (wNode)
-                {
-                    ((jsLine_t*)wNode->val)->isUp = true;
-                    wNode                         = wNode->next;
-                }
-            }
+            jsOpenLaunchTube(scene, false);
         }
     }
 }
@@ -368,6 +362,7 @@ static bool handleBallLineCollision(jsBall_t* ball, jsScene_t* scene)
         default:
         case JS_WALL:
         case JS_SPINNER:
+        case JS_LAUNCH_DOOR:
         {
             break;
         }

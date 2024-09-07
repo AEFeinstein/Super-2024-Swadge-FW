@@ -21,6 +21,7 @@ typedef enum
     JS_SPINNER,
     JS_SCOOP,
     JS_BALL_LOST,
+    JS_LAUNCH_DOOR,
 } jsLineType_t;
 
 typedef enum

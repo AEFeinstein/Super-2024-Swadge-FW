@@ -169,13 +169,7 @@ void jsStartBall(jsScene_t* scene)
     scene->saveTimer = 15000000;
 
     // Open the launch tube
-    scene->launchTubeClosed = false;
-    node_t* wNode           = scene->groups[1].first;
-    while (wNode)
-    {
-        ((jsLine_t*)wNode->val)->isUp = false;
-        wNode                         = wNode->next;
-    }
+    jsOpenLaunchTube(scene, true);
 
     clear(&scene->balls);
     for (uint16_t pIdx = 0; pIdx < scene->numPoints; pIdx++)
@@ -380,5 +374,28 @@ void jsGameTimers(jsScene_t* scene, int32_t elapsedUs)
     if (scene->saveTimer > 0)
     {
         scene->saveTimer -= elapsedUs;
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param scene
+ * @param open
+ */
+void jsOpenLaunchTube(jsScene_t* scene, bool open)
+{
+    if (open != scene->launchTubeClosed)
+    {
+        scene->launchTubeClosed = open;
+
+        for (int32_t lIdx = 0; lIdx < scene->numLines; lIdx++)
+        {
+            jsLine_t* line = &scene->lines[lIdx];
+            if (JS_LAUNCH_DOOR == line->type)
+            {
+                line->isUp = !open;
+            }
+        }
     }
 }

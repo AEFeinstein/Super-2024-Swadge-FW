@@ -37,6 +37,7 @@ class LineType(Enum):
     JS_SPINNER = 4
     JS_SCOOP = 5
     JS_BALL_LOST = 6
+    JS_LAUNCH_DOOR = 7
 
 
 class CircleType(Enum):
@@ -75,7 +76,7 @@ class pbPoint:
         self.id: int = getIntId(id)
 
     def toBytes(self) -> bytearray:
-        b = bytearray([(self.id >> 8), self.id, self.gId])
+        b = bytearray([(self.id >> 8), self.id & 0xFF, self.gId])
         b.extend(self.pos.toBytes())
         b.append(self.type)
         return b
@@ -120,6 +121,9 @@ class pbLine:
                 self.isSolid = True
                 self.pushVel = 0
                 pass
+            case LineType.JS_LAUNCH_DOOR:
+                self.isSolid = False
+                self.pushVel = 0
 
     def __str__(self) -> str:
         return "{.p1 = {.x = %d, .y = %d}, .p2 = {.x = %d, .y = %d}}," % (
@@ -130,7 +134,7 @@ class pbLine:
         )
 
     def toBytes(self) -> bytearray:
-        b = bytearray([(self.id >> 8), self.id, self.gId])
+        b = bytearray([(self.id >> 8), self.id & 0xFF, self.gId])
         b.extend(self.p1.toBytes())
         b.extend(self.p2.toBytes())
         b.append(self.type)
@@ -165,7 +169,7 @@ class pbCircle:
         )
 
     def toBytes(self) -> bytearray:
-        b = bytearray([(self.id >> 8), self.id, self.gId])
+        b = bytearray([(self.id >> 8), self.id & 0xFF, self.gId])
         b.extend(self.position.toBytes())
         b.append(self.radius)
         b.append(self.type)
@@ -190,7 +194,7 @@ class pbRectangle:
         )
 
     def toBytes(self) -> bytearray:
-        b = bytearray([(self.id >> 8), self.id, self.gId])
+        b = bytearray([(self.id >> 8), self.id & 0xFF, self.gId])
         b.extend(self.position.toBytes())
         b.extend(self.size.toBytes())
         # print(' '.join(['%02X' % x for x in b]))
@@ -204,7 +208,7 @@ class pbTriangle:
         self.id: int = getIntId(id)
 
     def toBytes(self) -> bytearray:
-        b = bytearray([(self.id >> 8), self.id, self.gId])
+        b = bytearray([(self.id >> 8), self.id & 0xFF, self.gId])
         for point in self.vertices:
             b.extend(point.toBytes())
         return b
@@ -426,26 +430,27 @@ def main():
     g: Group = SVG().parse("pinball.svg")
 
     lines: list[pbLine] = []
-    lines.extend(extractPaths(g.objects["Walls"], LineType.JS_WALL, None))
-    lines.extend(extractPaths(g.objects["Scoops"], LineType.JS_SCOOP, None))
-    lines.extend(extractPaths(g.objects["Slingshots"], LineType.JS_SLINGSHOT, None))
-    lines.extend(extractPaths(g.objects["Drop_Targets"], LineType.JS_DROP_TARGET, None))
+    lines.extend(extractPaths(g.objects["350_Walls"], LineType.JS_WALL, None))
+    lines.extend(extractPaths(g.objects["300_Scoops"], LineType.JS_SCOOP, None))
+    lines.extend(extractPaths(g.objects["250_Slingshots"], LineType.JS_SLINGSHOT, None))
+    lines.extend(extractPaths(g.objects["200_Drop_Targets"], LineType.JS_DROP_TARGET, None))
     lines.extend(
-        extractPaths(g.objects["Standup_Targets"], LineType.JS_STANDUP_TARGET, None)
+        extractPaths(g.objects["150_Standup_Targets"], LineType.JS_STANDUP_TARGET, None)
     )
-    lines.extend(extractPaths(g.objects["Ball_Lost"], LineType.JS_BALL_LOST, None))
+    lines.extend(extractPaths(g.objects["400_Ball_Lost"], LineType.JS_BALL_LOST, None))
+    lines.extend(extractPaths(g.objects["650_Launch_Door"], LineType.JS_LAUNCH_DOOR, None))
 
     circles: list[pbCircle] = []
-    circles.extend(extractCircles(g.objects["Rollovers"], CircleType.JS_ROLLOVER, None))
-    circles.extend(extractCircles(g.objects["Bumpers"], CircleType.JS_BUMPER, None))
+    circles.extend(extractCircles(g.objects["450_Rollovers"], CircleType.JS_ROLLOVER, None))
+    circles.extend(extractCircles(g.objects["500_Bumpers"], CircleType.JS_BUMPER, None))
 
     points: list[pbPoint] = []
-    points.extend(extractPoints(g.objects["Ball_Spawn"], PointType.JS_BALL_SPAWN, None))
-    points.extend(extractPoints(g.objects["Item_Spawn"], PointType.JS_ITEM_SPAWN, None))
+    points.extend(extractPoints(g.objects["050_Ball_Spawn"], PointType.JS_BALL_SPAWN, None))
+    points.extend(extractPoints(g.objects["100_Item_Spawn"], PointType.JS_ITEM_SPAWN, None))
 
-    launchers = extractRectangles(g.objects["Launchers"], None)
-    flippers = extractFlippers(g.objects["Flippers"], None)
-    triangles = extractTriangles(g.objects["Indicators"], None)
+    launchers = extractRectangles(g.objects["600_Launchers"], None)
+    flippers = extractFlippers(g.objects["550_Flippers"], None)
+    triangles = extractTriangles(g.objects["000_Indicators"], None)
 
     tableData: bytearray = bytearray()
     tableData.append(max(groups))

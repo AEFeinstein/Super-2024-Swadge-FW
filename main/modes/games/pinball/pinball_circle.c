@@ -56,14 +56,7 @@ void jsBallSimulate(jsBall_t* ball, int32_t elapsedUs, float dt, jsScene_t* scen
                 }
             }
 
-            // Open the launch tube
-            scene->launchTubeClosed = false;
-            node_t* wNode           = scene->groups[1].first;
-            while (wNode)
-            {
-                ((jsLine_t*)wNode->val)->isUp = false;
-                wNode                         = wNode->next;
-            }
+            jsOpenLaunchTube(scene, true);
 
             // Give the ball initial velocity
             ball->vel.x = 0;
