@@ -139,6 +139,7 @@ jobs:
 
     #### Platform-specific Emulator Builds
     - name: Install msys64 packages
+      id: install-msys64
       if: matrix.emulator && matrix.family == 'windows'
       uses: msys2/setup-msys2@v2
       with:
@@ -172,7 +173,8 @@ jobs:
     - name: Copy libwinpthread DLL
       if: matrix.emulator && matrix.family == 'windows'
       run: |
-        cp C:\msys64\mingw64\bin\libwinpthread-1.dll libwinpthread-1.dll
+        echo "${{ steps.install-msys64.outputs.msys2-location }}"
+        cp ${{ steps.install-msys64.outputs.msys2-location }}\bin\libwinpthread-1.dll libwinpthread-1.dll
 
     - name: Create Emulator zip
       if: matrix.emulator && matrix.family != 'windows'
