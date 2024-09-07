@@ -212,6 +212,10 @@ jobs:
         for os in osx-arm osx-intel linux windows ; do
         mv ${{ env.EMULATOR_ARTIFACT }}-${os}/SwadgeEmulator.zip SwadgeEmulator-${os}.zip
         done
+        mkdir firmware-zip
+        find ${{ env.FIRMWARE_ARTIFACT }}/ -type f -exec mv {} firmware-zip/ \;
+        cd firmware-zip
+        zip ../${{ env.FIRMWARE_ARTIFACT }}.zip *
 
     - name: Create release for latest artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
@@ -221,7 +225,7 @@ jobs:
         prerelease: true
         allowUpdates: true
         replacesArtifacts: true
-        artifacts: "${{ env.FIRMWARE_ARTIFACT }}/*,SwadgeEmulator-*"
+        artifacts: "${{ env.FIRMWARE_ARTIFACT }}.zip,SwadgeEmulator-*"
         commit: main
         tag: snapshot
         name: Snapshot
