@@ -172,6 +172,7 @@ jobs:
     - name: Create Emulator zip
       if: matrix.emulator
       run: |
+        find .
         zip -r SwadgeEmulator.zip ${{ join(matrix.emu_artifacts) }}
 
     #### Generic Emulator Upload
