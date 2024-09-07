@@ -174,7 +174,7 @@ jobs:
       if: matrix.emulator && matrix.family == 'windows'
       run: |
         cd C:\msys64
-        dir /s | findstr /i libwinpthread-1.dll
+        dir /A-D /S /B
         cp C:\msys64\bin\libwinpthread-1.dll libwinpthread-1.dll
 
     - name: Create Emulator zip
