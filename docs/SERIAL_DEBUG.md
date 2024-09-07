@@ -40,7 +40,7 @@ I (781) cpu_start: Project name:     swadge2024
 I (786) cpu_start: App version:      v1.1.0-336-g6580f8a0
 I (791) cpu_start: Compile time:     Jul 17 2024 17:56:51
 I (796) cpu_start: ELF file SHA256:  a0f9cb97d9158df6...
-I (801) cpu_start: ESP-IDF:          v5.2.1
+I (801) cpu_start: ESP-IDF:          v5.3.1
 I (805) cpu_start: Min chip rev:     v0.0
 I (809) cpu_start: Max chip rev:     v1.99 
 I (813) cpu_start: Chip rev:         v1.0
