@@ -44,7 +44,7 @@ void t48BoardUpdate(t48_t* t48, bool wasUpdated, t48Direction_t dir);
  * @return true If a merge occurred
  * @return false if no merge occurred
  */
-void t48MergeSlice(t48_t* t48, Slice_t* slice, bool* updated);
+void t48MergeSlice(t48_t* t48, bool* updated);
 
 /**
  * @brief Slide blocks down if possible
@@ -108,11 +108,11 @@ bool t48CheckOver(t48_t* t48);
  */
 void t48SortHighScores(t48_t* t48);
 
-void t48ResetCellState(t48_t* t48);
+/* void t48ResetCellState(t48_t* t48);
 
 void t48SetCellState(t48_t* t48, int8_t idx, t48CellStateEnum_t st, int8_t startX, int8_t startY, int8_t endX,
                      int8_t endY, int32_t value);
 
-void t48ConvertCellState(t48_t* t48);
+void t48UpdateCells(t48_t* t48);
 
-void t48SetSlidingTile(t48_t* t48, int8_t idx, t48CellCoors_t start, t48CellCoors_t end, int32_t value);
+void t48SetSlidingTile(t48_t* t48, int8_t idx, t48Cell_t start, t48Cell_t end, int32_t value); */

@@ -17,17 +17,17 @@ int8_t t48SetRandCell(t48_t* t48)
     do
     {
         cell = esp_random() % T48_BOARD_SIZE;
-    } while (t48->boardArr[cell / T48_GRID_SIZE][cell % T48_GRID_SIZE] != 0);
+    } while (t48->board[cell].val != 0);
     int8_t rand = esp_random() % 10;
     if (rand == 0)
     {
-        t48->boardArr[cell / T48_GRID_SIZE][cell % T48_GRID_SIZE] = 4; // 10%
+        t48->board[cell].val = 4; // 10%
     }
     else
     {
-        t48->boardArr[cell / T48_GRID_SIZE][cell % T48_GRID_SIZE] = 2; // 90%
+        t48->board[cell].val = 2; // 90%
     }
-    t48->cellState[cell].state = STATIC;
+    t48->board[cell].state = NEW;
     return cell;
 }
 
@@ -38,7 +38,7 @@ void t48BoardUpdate(t48_t* t48, bool wasUpdated, t48Direction_t dir)
         t48SetRandCell(t48);
         led_t col = t48GetLEDColors(t48);
         t48LightLEDs(t48, dir, col);
-        t48ConvertCellState(t48);
+        //t48UpdateCells(t48);
     }
     else
     {
@@ -47,64 +47,62 @@ void t48BoardUpdate(t48_t* t48, bool wasUpdated, t48Direction_t dir)
     }
 }
 
-void t48MergeSlice(t48_t* t48, Slice_t slice[], bool* updated)
+void t48MergeSlice(t48_t* t48, bool* updated)
 {
     for (uint8_t i = 0; i < T48_GRID_SIZE - 1; i++)
     {
-        if (slice[i].sliceVal == 0)
+        if (t48->slice[i].val == 0)
         {
             continue;
         }
-        if (slice[i].sliceVal == slice[i + 1].sliceVal)
+        if (t48->slice[i].val == t48->slice[i + 1].val)
         {
-            for (int8_t j = 0; j < T48_BOARD_SIZE; j++)
-            {
-                if (slice[i + 1].cell.x == t48->cellState[j].end.x && slice[i + 1].cell.y == t48->cellState[j].end.y)
-                {
-                    t48->cellState[j].end.x = slice[i].cell.x;
-                    t48->cellState[j].end.y = slice[i].cell.y;
-                }
-            }
             *updated = true;
-            slice[i].sliceVal *= 2;
-            t48->score += slice[i].sliceVal;
+            t48->slice[i].val *= 2;
+            t48->score += t48->slice[i].val;
             // Move if merged
             for (uint8_t j = i + 1; j < T48_GRID_SIZE - 1; j++)
             {
-                slice[j].sliceVal = slice[j + 1].sliceVal;
+                t48->slice[j].val = t48->slice[j + 1].val;
             }
             // Add a 0 to end if merged
-            slice[T48_GRID_SIZE - 1].sliceVal = 0;
+            t48->slice[T48_GRID_SIZE - 1].val = 0;
         }
     }
 }
 
 void t48SlideDown(t48_t* t48)
 {
-    t48ResetCellState(t48);
+    //t48ResetCellState(t48);
     bool updated = false;
-    int8_t idx   = 0;
+    //int8_t idx   = 0;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
-        Slice_t slice[T48_GRID_SIZE] = {0};
+        //FIXME: move to reset function
+        for (int i = 0; i < T48_GRID_SIZE; i++)
+        {
+            t48->slice[i].val = 0;
+            t48->slice[i].x = -1;
+            t48->slice[i].y = -1;
+        }
         for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
         {
-            if (t48->boardArr[row][col] != 0)
+            if (t48->board[(row * 4) + col].val != 0)
             {
-                t48SetCellState(t48, idx++, MOVING, row, col, row, T48_GRID_SIZE - 1 - i, t48->boardArr[row][col]);
-                slice[i].cell.x     = row;
-                slice[i].cell.y     = col;
-                slice[i++].sliceVal = t48->boardArr[row][col];
+                //t48SetCellState(t48, idx++, MOVING, row, col, row, T48_GRID_SIZE - 1 - i, t48->board[(row * 4) + col].val);
+                t48->slice[i].x     = row;
+                t48->slice[i].y     = col;
+                t48->slice[i++].val = t48->board[(row * 4) + col].val;
                 if (col != (T48_GRID_SIZE - i))
                 {
                     updated = true;
                 }
             }
         }
-        t48MergeSlice(t48, slice, &updated);
+        t48MergeSlice(t48, &updated);
         for (int8_t col = T48_GRID_SIZE - 1, i = 0; col >= 0; col--)
         {
-            t48->boardArr[row][col] = slice[i++].sliceVal;
+            t48->board[(row * 4) + col].val = t48->slice[i++].val;
         }
     }
     t48BoardUpdate(t48, updated, DOWN);
@@ -112,30 +110,35 @@ void t48SlideDown(t48_t* t48)
 
 void t48SlideUp(t48_t* t48)
 {
-    t48ResetCellState(t48);
+    //t48ResetCellState(t48);
     bool updated = false;
-    int8_t idx   = 0;
+    //int8_t idx   = 0;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
     {
-        Slice_t slice[T48_GRID_SIZE] = {0};
+        for (int i = 0; i < T48_GRID_SIZE; i++)
+        {
+            t48->slice[i].val = 0;
+            t48->slice[i].x = -1;
+            t48->slice[i].y = -1;
+        }
         for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
-            if (t48->boardArr[row][col] != 0)
+            if (t48->board[(row * 4) + col].val != 0)
             {
                 if (col != i)
                 {
                     updated = true;
                 }
-                t48SetCellState(t48, idx++, MOVING, row, col, row, i, t48->boardArr[row][col]);
-                slice[i].cell.x     = row;
-                slice[i].cell.y     = col;
-                slice[i++].sliceVal = t48->boardArr[row][col];
+                //t48SetCellState(t48, idx++, MOVING, row, col, row, i, t48->board[(row * 4) + col].val);
+                t48->slice[i].x     = row;
+                t48->slice[i].y     = col;
+                t48->slice[i++].val = t48->board[(row * 4) + col].val;
             }
         }
-        t48MergeSlice(t48, slice, &updated);
+        t48MergeSlice(t48, &updated);
         for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
-            t48->boardArr[row][col] = slice[i++].sliceVal;
+            t48->board[(row * 4) + col].val = t48->slice[i++].val;
         }
     }
     t48BoardUpdate(t48, updated, UP);
@@ -143,30 +146,35 @@ void t48SlideUp(t48_t* t48)
 
 void t48SlideRight(t48_t* t48)
 {
-    t48ResetCellState(t48);
+    //t48ResetCellState(t48);
     bool updated = false;
-    int8_t idx   = 0;
+    //int8_t idx   = 0;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
-        Slice_t slice[T48_GRID_SIZE] = {0};
+        for (int i = 0; i < T48_GRID_SIZE; i++)
+        {
+            t48->slice[i].val = 0;
+            t48->slice[i].x = -1;
+            t48->slice[i].y = -1;
+        }
         for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
         {
-            if (t48->boardArr[row][col] != 0)
+            if (t48->board[(row * 4) + col].val != 0)
             {
-                t48SetCellState(t48, idx++, MOVING, row, col, T48_GRID_SIZE - 1 - i, col, t48->boardArr[row][col]);
-                slice[i].cell.x     = row;
-                slice[i].cell.y     = col;
-                slice[i++].sliceVal = t48->boardArr[row][col];
+                //t48SetCellState(t48, idx++, MOVING, row, col, T48_GRID_SIZE - 1 - i, col, t48->board[(row * 4) + col].val);
+                t48->slice[i].x     = row;
+                t48->slice[i].y     = col;
+                t48->slice[i++].val = t48->board[(row * 4) + col].val;
                 if (row != (T48_GRID_SIZE - i))
                 {
                     updated = true;
                 }
             }
         }
-        t48MergeSlice(t48, slice, &updated);
+        t48MergeSlice(t48, &updated);
         for (int8_t row = T48_GRID_SIZE - 1, i = 0; row >= 0; row--)
         {
-            t48->boardArr[row][col] = slice[i++].sliceVal;
+            t48->board[(row * 4) + col].val = t48->slice[i++].val;
         }
     }
     t48BoardUpdate(t48, updated, RIGHT);
@@ -174,30 +182,35 @@ void t48SlideRight(t48_t* t48)
 
 void t48SlideLeft(t48_t* t48)
 {
-    t48ResetCellState(t48);
+    //t48ResetCellState(t48);
     bool updated = false;
-    int8_t idx   = 0;
+    //int8_t idx   = 0;
     for (uint8_t col = 0; col < T48_GRID_SIZE; col++)
     {
-        Slice_t slice[T48_GRID_SIZE] = {0};
+        for (int i = 0; i < T48_GRID_SIZE; i++)
+        {
+            t48->slice[i].val = 0;
+            t48->slice[i].x = -1;
+            t48->slice[i].y = -1;
+        }
         for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
         {
-            if (t48->boardArr[row][col] != 0)
+            if (t48->board[(row * 4) + col].val != 0)
             {
                 if (row != i)
                 {
                     updated = true;
                 }
-                t48SetCellState(t48, idx++, MOVING, row, col, i, col, t48->boardArr[row][col]);
-                slice[i].cell.x     = row;
-                slice[i].cell.y     = col;
-                slice[i++].sliceVal = t48->boardArr[row][col];
+                //t48SetCellState(t48, idx++, MOVING, row, col, i, col, t48->board[(row * 4) + col].val);
+                t48->slice[i].x     = row;
+                t48->slice[i].y     = col;
+                t48->slice[i++].val = t48->board[(row * 4) + col].val;
             }
         }
-        t48MergeSlice(t48, slice, &updated);
+        t48MergeSlice(t48, &updated);
         for (int8_t row = 0, i = 0; row <= T48_GRID_SIZE - 1; row++)
         {
-            t48->boardArr[row][col] = slice[i++].sliceVal;
+            t48->board[(row * 4) + col].val = t48->slice[i++].val;
         }
     }
     t48BoardUpdate(t48, updated, LEFT);
@@ -208,9 +221,9 @@ void t48StartGame(t48_t* t48)
     // clear the board
     for (uint8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] = 0;
+        t48->board[i].val = 0;
     }
-    t48ResetCellState(t48);
+    //t48ResetCellState(t48);
     t48->alreadyWon = false;
     t48->score      = 0;
     // Get random places to start
@@ -226,7 +239,7 @@ bool t48CheckWin(t48_t* t48)
     }
     for (uint8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        if (t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] == 2048)
+        if (t48->board[i].val == 2048)
         {
             t48->alreadyWon = true;
             return true;
@@ -240,7 +253,7 @@ bool t48CheckOver(t48_t* t48)
     // Check if any cells are open
     for (uint8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        if (t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] == 0)
+        if (t48->board[i].val == 0)
         {
             return false;
         }
@@ -250,7 +263,7 @@ bool t48CheckOver(t48_t* t48)
     {
         for (uint8_t col = 0; col < T48_GRID_SIZE - 1; col++)
         { // -1 to account for comparison
-            if (t48->boardArr[row][col] == t48->boardArr[row + 1][col])
+            if (t48->board[(row * 4) + col].val == t48->board[((row + 1) * 4) + col].val)
             {
                 return false;
             }
@@ -261,7 +274,7 @@ bool t48CheckOver(t48_t* t48)
     { // -1 to account for comparison
         for (uint8_t col = 0; col < T48_GRID_SIZE - 1; col++)
         {
-            if (t48->boardArr[row][col] == t48->boardArr[row][col + 1])
+            if (t48->board[(row * 4) + col].val == t48->board[(row * 4) + col + 1].val)
             {
                 return false;
             }
@@ -306,16 +319,15 @@ void t48SortHighScores(t48_t* t48)
     }
 }
 
-void t48ResetCellState(t48_t* t48)
+
+
+
+
+/* void t48ResetCellState(t48_t* t48)
 {
     for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        t48->cellState[i].incoming.x = 0;
-        t48->cellState[i].incoming.y = 0;
-        t48->cellState[i].end.x      = 0;
-        t48->cellState[i].end.y      = 0;
-        t48->cellState[i].state      = STATIC;
-        t48->cellState[i].value      = 0;
+        t48->board[i].state      = STATIC;
     }
     for (int8_t i = 0; i < T48_MAX_MERGES; i++)
     {
@@ -328,26 +340,26 @@ void t48ResetCellState(t48_t* t48)
 void t48SetCellState(t48_t* t48, int8_t idx, t48CellStateEnum_t st, int8_t startX, int8_t startY, int8_t endX,
                      int8_t endY, int32_t value)
 {
-    t48->cellState[idx].incoming.x = startX;
-    t48->cellState[idx].incoming.y = startY;
-    t48->cellState[idx].end.x      = endX;
-    t48->cellState[idx].end.y      = endY;
-    t48->cellState[idx].state      = st;
-    t48->cellState[idx].value      = value;
+    t48->prevBoard[idx].x = startX;
+    t48->prevBoard[idx].y = startY;
+    t48->board[idx].x      = endX;
+    t48->board[idx].y      = endY;
+    t48->board[idx].state      = st;
+    t48->board[idx].val      = value;
 }
 
-void t48ConvertCellState(t48_t* t48)
+void t48UpdateCells(t48_t* t48)
 {
     int8_t idx      = 0;
     t48->globalAnim = 0;
-    for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
+    for (int8_t i = 0; i < 12; i++)
     {
-        switch (t48->cellState[i].state)
+        switch (t48->board[i].state)
         {
             case MOVING:
-                t48SetSlidingTile(t48, idx++, t48->cellState[i].incoming, t48->cellState[i].end,
-                                  t48->cellState[i].value);
-                t48->cellState[t48->cellState[i].end.x * T48_GRID_SIZE + t48->cellState[i].end.y].state = MOVED;
+                t48SetSlidingTile(t48, idx++, t48->prevBoard[i], t48->board[i],
+                                  t48->board[i].val);
+                t48->board[t48->board[i].x * T48_GRID_SIZE + t48->board[i].y].state = MOVED;
                 break;
             case MERGED:
                 // FIXME: Move this to where the final cell is merged
@@ -361,7 +373,7 @@ void t48ConvertCellState(t48_t* t48)
     }
 }
 
-void t48SetSlidingTile(t48_t* t48, int8_t idx, t48CellCoors_t start, t48CellCoors_t end, int32_t value)
+void t48SetSlidingTile(t48_t* t48, int8_t idx, t48Cell_t start, t48Cell_t end, int32_t value)
 {
     t48->slidingTiles[idx].value  = value;
     t48->slidingTiles[idx].gridStart.x = start.x;
@@ -369,4 +381,4 @@ void t48SetSlidingTile(t48_t* t48, int8_t idx, t48CellCoors_t start, t48CellCoor
     t48->slidingTiles[idx].speed
         = (end.x - start.x + end.y - start.y) * (T48_CELL_SIZE + T48_LINE_WEIGHT) / T48_MAX_SEQ;
     t48->slidingTiles[idx].horizontal = (end.x != start.x);
-}
+} */

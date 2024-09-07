@@ -55,7 +55,7 @@
 
 // Game
 #define T48_GRID_SIZE  4
-#define T48_BOARD_SIZE 16
+#define T48_BOARD_SIZE (T48_GRID_SIZE * T48_GRID_SIZE)
 
 // Graphics
 #define T48_CELL_SIZE   50
@@ -64,7 +64,7 @@
 #define T48_TOP_MARGIN  20
 #define T48_TILE_COUNT  16
 #define T48_MAX_MERGES  8
-#define T48_MAX_SEQ     50
+#define T48_MAX_SEQ     8
 
 // High score
 #define T48_HS_COUNT  5
@@ -111,23 +111,17 @@ typedef enum
 
 typedef struct
 {
-    wsg_t image;
-    int16_t pos[2];
-    uint8_t spd;
-    int8_t dir;
-} t48FallingBlock_t;
-
-typedef struct
-{
     int8_t x;
     int8_t y;
-} t48CellCoors_t;
+    uint32_t val;
+    t48CellStateEnum_t state;
+} t48Cell_t;
 
 typedef struct
 {
     wsg_t image;
-    t48CellCoors_t gridStart;
-    t48CellCoors_t gridEnd;
+    t48Cell_t gridStart;
+    t48Cell_t gridEnd;
     int8_t speed;
     uint8_t sequence;
     bool horizontal;
@@ -136,17 +130,11 @@ typedef struct
 
 typedef struct
 {
-    t48CellCoors_t incoming;
-    t48CellCoors_t end;
-    t48CellStateEnum_t state;
-    int32_t value;
-} t48CellState_t;
-
-typedef struct
-{
-    uint32_t sliceVal;
-    t48CellCoors_t cell;
-} Slice_t;
+    wsg_t image;
+    int16_t pos[2];
+    uint8_t spd;
+    int8_t dir;
+} t48FallingBlock_t; // Struct for start screen falling blocks
 
 typedef struct
 {
@@ -155,11 +143,13 @@ typedef struct
     font_t titleFont;
     font_t titleFontOutline;
     wsg_t tiles[T48_TILE_COUNT];
+    // wsg_t newTileStates[T48_NEW_COUNT];
+    // wsg_t sparkleSprites[T48_SPARKLE_COUNT]
     midiFile_t bgm;
     midiFile_t click;
 
     // Game state
-    int32_t boardArr[T48_GRID_SIZE][T48_GRID_SIZE]; // Row, Col
+    t48Cell_t board[T48_BOARD_SIZE];
     int32_t score;
     int32_t highScore[T48_HS_COUNT];
     bool newHS;
@@ -167,14 +157,15 @@ typedef struct
     // Display
     char scoreStr[16];
     bool alreadyWon;
-    char playerInitials[4];
-    char hsInitials[T48_HS_COUNT][4];
-    bool textEntryDone;
     t48DisplayState_t ds;
-    uint8_t hue;
-    t48SlidingTile_t slidingTiles[12]; // Max amount of sliding tiles
-    t48CellState_t cellState[T48_BOARD_SIZE];
+    t48Cell_t slice[T48_GRID_SIZE];
+
+    // Animations
     int8_t globalAnim;
+    // t48SlidingTile_t slidingTiles[12]; // Max amount of sliding tiles
+    // t48CellState_t cellState[T48_BOARD_SIZE];
+    // t48Cell_t prevBoard[T48_BOARD_SIZE];
+    // 
 
     // LEDs
     led_t leds[CONFIG_NUM_LEDS];
@@ -182,10 +173,16 @@ typedef struct
     // Audio
     bool bgmIsPlaying;
 
-    // Start screen
+    // High Score
+    char playerInitials[4];
+    char hsInitials[T48_HS_COUNT][4];
+    bool textEntryDone;
+
+    // Menus
     t48FallingBlock_t fb[T48_TILE_COUNT];
     bool startScrInitialized;
     int16_t timer;
+    uint8_t hue;
 } t48_t;
 
 //==============================================================================

@@ -116,7 +116,7 @@ static void t48EnterMode(void)
     textEntrySetNewCapsStyle(true);
     textEntrySetNewEnterStyle(true);
 
-    // Init Game
+    // Init High scores
     for (int8_t i = 0; i < T48_HS_COUNT; i++)
     {
         if (!readNvs32(highScoreKey[i], &t48->highScore[i]))
@@ -167,6 +167,13 @@ static void t48EnterMode(void)
             writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], len);
         }
     }
+    
+    // Init game
+    for (int i = 0; i < T48_BOARD_SIZE; i++)
+    {
+        t48->board[i].x = i/4;
+        t48->board[i].y = i%4;
+    }
     t48->ds = GAMESTART;
 }
 
@@ -196,7 +203,7 @@ static void t48MainLoop(int64_t elapsedUs)
     // Play BGM if it's not playing
     if (!t48->bgmIsPlaying)
     {
-        soundPlayBgmCb(&t48->bgm, MIDI_BGM, t48BgmCb);
+        //soundPlayBgmCb(&t48->bgm, MIDI_BGM, t48BgmCb);
         t48->bgmIsPlaying = true;
     }
     // Get inputs
@@ -216,7 +223,7 @@ static void t48MainLoop(int64_t elapsedUs)
                     {
                         if (i % 4 == 2 || i%4 == 0)
                         {
-                            t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE] = 2;
+                            t48->board[i].val = 2;
                         }
                     }
                 }

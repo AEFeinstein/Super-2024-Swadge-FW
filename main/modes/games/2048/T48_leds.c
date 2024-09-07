@@ -109,9 +109,9 @@ led_t t48GetLEDColors(t48_t* t48)
     uint32_t maxVal = 0;
     for (uint8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        if (maxVal < t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE])
+        if (maxVal < t48->board[i].val)
         {
-            maxVal = t48->boardArr[i / T48_GRID_SIZE][i % T48_GRID_SIZE];
+            maxVal = t48->board[i].val;
         }
     }
     led_t col = {0};

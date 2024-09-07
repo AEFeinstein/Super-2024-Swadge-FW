@@ -63,7 +63,7 @@ static uint8_t getTileSprIndex(uint32_t val)
 
 /**
  * @brief Draws the given tile onto the grid in the indicated position
- * 
+ *
  * @param t48 Main Game Object
  * @param img wsg to draw
  * @param row Row coordinate
@@ -90,11 +90,11 @@ static void t48DrawTileOnGrid(t48_t* t48, wsg_t* img, int8_t row, int8_t col, in
 }
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param t48 Main Game Object
  */
-static void t48DrawSlidingTiles(t48_t* t48)
+/* static void t48DrawSlidingTiles(t48_t* t48)
 {
     for (int8_t idx = 0; idx < T48_MAX_MERGES; idx++)
     {
@@ -115,11 +115,11 @@ static void t48DrawSlidingTiles(t48_t* t48)
                               t48->slidingTiles[idx].value);
         }
     }
-}
+} */
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param t48 Main Game Object
  */
 static void t48DrawCellState(t48_t* t48)
@@ -130,39 +130,39 @@ static void t48DrawCellState(t48_t* t48)
     }
     else
     {
-        t48ResetCellState(t48);
+        //t48ResetCellState(t48);
     }
 
     // New tiles
 
     // Moving tiles
-    t48DrawSlidingTiles(t48);
-    
+    // t48DrawSlidingTiles(t48);
+
     // Static tiles
     for (int8_t i = 0; i < T48_BOARD_SIZE; i++)
     {
-        int8_t row = i / T48_GRID_SIZE;
-        int8_t col = i % T48_GRID_SIZE;
-        switch (t48->cellState[i].state)
+        switch (t48->board[i].state)
         {
             case STATIC:
-
-                t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
-                                  t48->boardArr[row][col]); // FIXME: Convert to CellState vars
+                t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->board[i].val)], t48->board[i].x, t48->board[i].y,
+                                  0, 0, t48->board[i].val);
                 break;
             case MOVED:
             case MERGED:
             case NEW:
                 if (t48->globalAnim > T48_MAX_SEQ)
                 {
-                    t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->boardArr[row][col])], row, col, 0, 0,
-                                      t48->boardArr[row][col]); // FIXME: Convert to CellState vars
+                    t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIndex(t48->board[i].val)], t48->board[i].x,
+                                      t48->board[i].y, 0, 0, t48->board[i].val);
                 }
                 break;
             default:
                 break;
         }
     }
+
+    //TEST
+
 }
 
 void t48Draw(t48_t* t48)
