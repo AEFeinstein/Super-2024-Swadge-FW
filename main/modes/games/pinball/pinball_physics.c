@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 #include "pinball_line.h"
 #include "pinball_circle.h"
 #include "pinball_rectangle.h"
@@ -414,7 +415,7 @@ static bool handleBallLineCollision(jsBall_t* ball, jsScene_t* scene)
         {
             // Count the scoop
             scene->scoopCount++;
-            printf("Ball %d locked\n", scene->scoopCount);
+            printf("Ball %" PRId32 " locked\n", scene->scoopCount);
             if (3 == scene->scoopCount)
             {
                 printf("Multiball!!!\n");

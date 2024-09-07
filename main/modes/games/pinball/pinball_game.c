@@ -155,6 +155,16 @@ void jsStartBall(jsScene_t* scene)
     // Clear loop history
     memset(scene->loopHistory, 0, sizeof(scene->loopHistory));
 
+    // Reset targets
+    for (uint16_t lIdx = 0; lIdx < scene->numLines; lIdx++)
+    {
+        jsLine_t* line = &scene->lines[lIdx];
+        if (JS_DROP_TARGET == line->type)
+        {
+            line->isUp = true;
+        }
+    }
+
     // Start a 15s timer to save the ball
     scene->saveTimer = 15000000;
 
