@@ -232,7 +232,9 @@ jobs:
     needs: Build-Firmware-And-Emulator
     steps:
     - name: Post to a Slack channel
-      if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      if: ((github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')) && ${{ env.SLACK_BOT_TOKEN != '' }}
       id: slack
       uses: slackapi/slack-github-action@v1.26.0
       with:
@@ -242,5 +244,3 @@ jobs:
         channel-id: 'C6FNXU6KX'
         # For posting a simple plain text message
         slack-message: "*Build Result*: ${{ job.status }}\n*Author*: ${{ github.event.head_commit.author.username }}\n*Head Commit Message*:\n```\n${{ github.event.head_commit.message }}\n```\n*Comparison*: ${{ github.event.compare }}\n*Artifacts*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-      env:
-        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
