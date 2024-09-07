@@ -27,7 +27,7 @@ jobs:
             emu_artifacts:
               - swadge_emulator.exe
               - version.txt
-              - C:\msys64\mingw64\bin\libwinpthread-1.dll
+              - libwinpthread-1.dll
             # TODO: What variable can we use to not hardcode this???
             idf_install: C:\Users\runneradmin\.espressif
           - os: osx-arm
@@ -168,6 +168,11 @@ jobs:
       if: matrix.emulator && matrix.family == 'osx'
       run: |
         make SwadgeEmulator.app
+
+    - name: Copy libwinpthread DLL
+      if: matrix.emulator && matrix.family == 'windows'
+      run: |
+        cp C:\msys64\mingw64\bin\libwinpthread-1.dll libwinpthread-1.dll
 
     - name: Create Emulator zip
       if: matrix.emulator && matrix.family != 'windows'
