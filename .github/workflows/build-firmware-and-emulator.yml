@@ -75,21 +75,6 @@ jobs:
         printf "Commit: https://github.com/AEFeinstein/Super-2024-Swadge-FW/commit/$(git rev-parse HEAD) \nBuilt on ${{ matrix.os }} at: $(date)" >> version.txt
 
     #### Platform-specific Dependencies
-    - name: Install msys64 packages
-      if: matrix.family == 'windows'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        location: C:\msys64
-        install: >-
-          base-devel
-          gcc
-          gdb
-          zip
-          mingw-w64-x86_64-graphviz
-          mingw-w64-x86_64-cppcheck
-          doxygen
-
     - name: Install homebrew packages
       if: matrix.family == 'osx'
       run: |
@@ -153,6 +138,21 @@ jobs:
           tools/pyFlashGui/pyFlashGui.py
 
     #### Platform-specific Emulator Builds
+    - name: Install msys64 packages
+      if: matrix.emulator && matrix.family == 'windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        location: C:\msys64
+        install: >-
+          base-devel
+          gcc
+          gdb
+          zip
+          mingw-w64-x86_64-graphviz
+          mingw-w64-x86_64-cppcheck
+          doxygen
+
     - name: Compile the Emulator
       if: matrix.emulator && matrix.family == 'windows'
       run: |
