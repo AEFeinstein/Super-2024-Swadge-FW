@@ -17,8 +17,19 @@ jobs:
   Build-Firmware-And-Emulator:
     strategy:
       matrix:
-        os: [ osx-arm, osx-intel, linux ]
+        os: [ windows, osx-arm, osx-intel, linux ]
         include:
+          - os: windows
+            runner: windows-latest
+            family: windows
+            emulator: true
+            firmware: true
+            emu_artifacts: |
+              swadge_emulator.exe
+              version.txt
+              C:\msys64\mingw64\bin\libwinpthread-1.dll
+            # TODO: What variable can we use to not hardcode this???
+            idf_install: C:\Users\runneradmin\.espressif
           - os: osx-arm
             runner: macos-latest
             family: osx
