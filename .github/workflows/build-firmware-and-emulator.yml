@@ -24,10 +24,10 @@ jobs:
             family: windows
             emulator: true
             firmware: true
-            emu_artifacts: |
-              swadge_emulator.exe
-              version.txt
-              C:\msys64\mingw64\bin\libwinpthread-1.dll
+            emu_artifacts:
+              - swadge_emulator.exe
+              - version.txt
+              - C:\msys64\mingw64\bin\libwinpthread-1.dll
             # TODO: What variable can we use to not hardcode this???
             idf_install: C:\Users\runneradmin\.espressif
           - os: osx-arm
@@ -35,27 +35,27 @@ jobs:
             family: osx
             emulator: true
             firmware: false
-            emu_artifacts: |
-              SwadgeEmulator.app
-              version.txt
+            emu_artifacts:
+              - SwadgeEmulator.app
+              - version.txt
             idf_install: ~/.espressif
           - os: osx-intel
             runner: macos-13
             family: osx
             emulator: true
             firmware: false
-            emu_artifacts: |
-              SwadgeEmulator.app
-              version.txt
+            emu_artifacts:
+              - SwadgeEmulator.app
+              - version.txt
             idf_install: ~/.espressif
           - os: linux
             runner: ubuntu-latest
             family: linux
             emulator: true
             firmware: false
-            emu_artifacts: |
-              swadge_emulator
-              version.txt
+            emu_artifacts:
+              - swadge_emulator
+              - version.txt
             idf_install: ~/.espressif
 
     runs-on: ${{ matrix.runner }}
@@ -173,7 +173,7 @@ jobs:
       if: matrix.emulator
       run: |
         find .
-        zip -r SwadgeEmulator.zip ${{ join(matrix.emu_artifacts) }}
+        zip -r SwadgeEmulator.zip ${{ join(matrix.emu_artifacts, ' ') }}
 
     #### Generic Emulator Upload
     - name: Upload Emulator Binary
