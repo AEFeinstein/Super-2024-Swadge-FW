@@ -4,31 +4,28 @@
 
 - [ ] Refactor into multiple files
     - [x] mode_cGrove.h: Only critical initalization logic and main game loop
-    - [x] cGrove_Online.h: Online functionality
-    - [ ] cGrove_Grove.h: Main grove functionality
-    - [ ] cGrove_Fight.h: Fighting game
-    - [ ] cGrove_Perform.h: Musical performance
-    - [ ] cGrove_Race.h: Race game
-    - [ ] cGrove_Chowa.h: Chowa functionality
-    - [x] cGrove_Helpers.h: Helper functions
-    - [x] cGrove_Types.h: All common structs, defines and enums
-    - [ ] prettyKeyboard.h: Text entry
+    - [ ] cGrove_Online.h: Online functionality
+    - [x] cg_Garden.h: Main grove functionality
+    - [ ] cg_Fight.h: Fighting game
+    - [ ] cg_Perform.h: Musical performance
+    - [ ] cg_Race.h: Race game
+    - [ ] cg_Chowa.h: Chowa functionality
+    - [x] prettyKeyboard.h: Text entry
 - [x] Create github "issue" for project
-- [ ] Create doxygen comments for all functions
 
 ## Menu
 
 ### Functionality
-- [ ] Text entry system
-    - [ ] Use old text entry to make a nice looking keyboard
+- [x] Text entry system
+    - [x] Use old text entry to make a nice looking keyboard
 - [ ] Notifications of changed values
 - [ ] Inventory viewer
 - [ ] Online
-    - [x] Profile viewer
-        - [x] Show username/pronouns/mood
+    - [ ] Profile viewer
+        - [ ] Show username/mood
         - [ ] Show Chowa/Accomplisments/Stats
     - [ ] Set sharable Chowa
-    - [x] See recently downloaded profiles
+    - [ ] See recently downloaded profiles
     - [ ] Turn on/off online features
 
 ### Assets

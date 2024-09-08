@@ -1,24 +1,20 @@
-#ifndef _CGROVE_MODE_H_
-#define _CGROVE_MODE_H_
+/**
+ * @file mode_cGrove.h
+ * @author Jeremy Stintzcum (Jeremy.Stintzcum@gmail.com)
+ * @brief A small game similar to the chao garden from the Sonic seres by SEGA
+ * @version 0.1
+ * @date 2024-09-07
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+#pragma once
 
 // Includes
-//==============================================================================
 #include "swadge2024.h"
-#include "cGrove_Types.h"
-#include "cGrove_Online.h"
-
-// Function Prototypes
-//==============================================================================
-static void cGroveMainLoop(int64_t);
-static void cGroveExitMode(void);
-static void cGroveEnterMode(void);
-static void cGroveInitMenu(void);
-static void cGroveMenuCB(const char*, bool, uint32_t);
-static void cGroveBackgroundDrawCallback(int16_t, int16_t, int16_t, int16_t, int16_t, int16_t);
-static void cGroveNotification(char*);
-static void cGroveNotificationSetup(char*);
+#include "cg_Types.h"
+#include "cg_Garden.h"
 
 // Make Swadgemode available
 extern swadgeMode_t cGroveMode;
-
-#endif
