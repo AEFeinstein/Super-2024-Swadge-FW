@@ -456,15 +456,15 @@ def main():
     tableData.append(max(groups))
 
     addLength(tableData, lines)
-    for line in lines:
+    for line in sorted(lines, key=lambda x: x.id):
         tableData.extend(line.toBytes())
 
     addLength(tableData, circles)
-    for circle in circles:
+    for circle in sorted(circles, key=lambda x: x.id):
         tableData.extend(circle.toBytes())
 
     addLength(tableData, launchers)
-    for launcher in launchers:
+    for launcher in sorted(launchers, key=lambda x: x.id):
         tableData.extend(launcher.toBytes())
 
     addLength(tableData, flippers)
@@ -472,11 +472,11 @@ def main():
         tableData.extend(flipper.toBytes())
 
     addLength(tableData, triangles)
-    for triangle in triangles:
+    for triangle in sorted(triangles, key=lambda x: x.id):
         tableData.extend(triangle.toBytes())
 
     addLength(tableData, points)
-    for point in points:
+    for point in sorted(points, key=lambda x: x.id):
         tableData.extend(point.toBytes())
 
     with open("table.bin", "wb") as outFile:

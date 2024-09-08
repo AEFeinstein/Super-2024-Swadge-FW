@@ -190,6 +190,57 @@ void jsStartBall(jsScene_t* scene)
 }
 
 /**
+ * @brief
+ *
+ * @param scene
+ */
+void jsStartMultiball(jsScene_t* scene)
+{
+    // Don't start multiball if there are already three balls
+    if (3 == scene->balls.length)
+    {
+        return;
+    }
+
+    // Ignore the first spawn point (tube)
+    bool ignoreFirst = true;
+
+    // For each point
+    for (uint16_t pIdx = 0; pIdx < scene->numPoints; pIdx++)
+    {
+        // If this is a spawn point
+        if (JS_BALL_SPAWN == scene->points[pIdx].type)
+        {
+            // Ignore the first
+            if (ignoreFirst)
+            {
+                ignoreFirst = false;
+            }
+            else
+            {
+                // Spawn a ball here
+                // TODO check if space is empty first
+                jsBall_t* ball    = calloc(1, sizeof(jsBall_t));
+                ball->pos         = scene->points[pIdx].pos;
+                ball->vel.x       = 0;
+                ball->vel.y       = 0;
+                ball->radius      = PINBALL_RADIUS;
+                ball->mass        = M_PI * 4.0f * 4.0f;
+                ball->restitution = 0.2f;
+                push(&scene->balls, ball);
+                printf("BALL PUSHED B\n");
+
+                // All balls spawned
+                if (3 == scene->balls.length)
+                {
+                    return;
+                }
+            }
+        }
+    }
+}
+
+/**
  * @brief TODO
  *
  * @param scene
@@ -319,7 +370,7 @@ void jsRemoveBall(jsBall_t* ball, jsScene_t* scene)
     memset(scene->loopHistory, 0, sizeof(scene->loopHistory));
 
     // If the save timer is running
-    if (scene->saveTimer > 0)
+    if (scene->saveTimer > 0 && 1 == scene->balls.length)
     {
         // Save the ball by scooping it back
         printf("Ball saved\n");

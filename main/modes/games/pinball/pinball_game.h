@@ -15,3 +15,4 @@ void jsRemoveBall(jsBall_t* ball, jsScene_t* scene);
 void jsStartBall(jsScene_t* scene);
 void jsGameTimers(jsScene_t* scene, int32_t elapsedUs);
 void jsOpenLaunchTube(jsScene_t* scene, bool open);
+void jsStartMultiball(jsScene_t* scene);

@@ -414,6 +414,7 @@ static bool handleBallLineCollision(jsBall_t* ball, jsScene_t* scene)
             if (3 == scene->scoopCount)
             {
                 printf("Multiball!!!\n");
+                jsStartMultiball(scene);
             }
             ball->scoopTimer = 2000000;
             break;
