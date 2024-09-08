@@ -46,16 +46,3 @@ void t48DrawWinScreen(t48_t* t48);
  * @param t48 Main Game Object
  */
 void t48DrawConfirm(t48_t* t48);
-
-//==============================================================================
-// Variables
-//==============================================================================
-
-static const char pressKey[]   = "Press any key to play";
-static const char pressAB[]    = "Press A or B to reset the game";
-static const char youWin[]     = "You got 2048!";
-static const char continueAB[] = "Press A or B to continue";
-static const char highScore[]  = "You got a high score!";
-static const char paused[]     = "Paused!";
-static const char pausedA[]    = "Press A to continue playing";
-static const char pausedB[]    = "Press B to abandon game";

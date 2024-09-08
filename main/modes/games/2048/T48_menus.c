@@ -4,12 +4,25 @@
  * @brief Menu screens for 2048
  * @version 1.0.0
  * @date 2024-08-16
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #include "T48_menus.h"
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+static const char pressKey[]   = "Press any key to play";
+static const char pressAB[]    = "Press A or B to reset the game";
+static const char youWin[]     = "You got 2048!";
+static const char continueAB[] = "Press A or B to continue";
+static const char highScore[]  = "You got a high score!";
+static const char paused[]     = "Paused!";
+static const char pausedA[]    = "Press A to continue playing";
+static const char pausedB[]    = "Press B to abandon game";
 
 void t48StartScreen(t48_t* t48, paletteColor_t color)
 {
@@ -22,7 +35,7 @@ void t48StartScreen(t48_t* t48, paletteColor_t color)
         // Set random x and y coordinates for all blocks
         for (uint8_t i = 0; i < T48_TILE_COUNT; i++)
         {
-            t48->fb[i].image  = t48->tiles[i];
+            t48->fb[i].image  = &t48->tiles[i];
             t48->fb[i].pos[0] = (esp_random() % (TFT_WIDTH + (2 * T48_CELL_SIZE))) - T48_CELL_SIZE;
             t48->fb[i].pos[1] = (esp_random() % (TFT_HEIGHT + (2 * T48_CELL_SIZE))) - T48_CELL_SIZE;
             t48->fb[i].spd    = (esp_random() % 2) + 1;
@@ -50,7 +63,7 @@ void t48StartScreen(t48_t* t48, paletteColor_t color)
             t48->fb[i].pos[0] = (esp_random() % (TFT_WIDTH - T48_CELL_SIZE));
         }
         // Draw block
-        drawWsgSimple(&t48->fb[i].image, t48->fb[i].pos[0], t48->fb[i].pos[1]);
+        drawWsgSimple(t48->fb[i].image, t48->fb[i].pos[0], t48->fb[i].pos[1]);
     }
 
     // Title
@@ -63,7 +76,7 @@ void t48StartScreen(t48_t* t48, paletteColor_t color)
     static char textBuffer[20];
     snprintf(textBuffer, sizeof(textBuffer) - 1, "High score: %" PRIu32, t48->highScore[0]);
     drawText(&t48->font, c444, textBuffer, (TFT_WIDTH - textWidth(&t48->font, textBuffer)) / 2, TFT_HEIGHT - 32);
-    
+
     // Press any key...
     drawText(&t48->font, c555, pressKey, (TFT_WIDTH - textWidth(&t48->font, pressKey)) / 2, TFT_HEIGHT - 64);
 }

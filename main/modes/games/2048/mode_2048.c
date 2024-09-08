@@ -50,6 +50,15 @@ static void t48BgmCb(void);
 // Variables
 //==============================================================================
 
+const char modeName[] = "2048";
+
+const char highScoreKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
+    "t48HighScore0", "t48HighScore1", "t48HighScore2", "t48HighScore3", "t48HighScore4",
+};
+const char highScoreInitialsKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
+    "t48HSInitial0", "t48HSInitial1", "t48HSInitial2", "t48HSInitial3", "t48HSInitial4",
+};
+
 swadgeMode_t t48Mode = {
     .modeName                 = modeName,
     .wifiMode                 = NO_WIFI,
@@ -174,12 +183,12 @@ static void t48EnterMode(void)
             writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], len);
         }
     }
-    
+
     // Init game
     for (int i = 0; i < T48_BOARD_SIZE; i++)
     {
-        t48->board[i].x = i/4;
-        t48->board[i].y = i%4;
+        t48->board[i].x = i / 4;
+        t48->board[i].y = i % 4;
     }
     t48->ds = GAMESTART;
 }
@@ -243,32 +252,42 @@ static void t48MainLoop(int64_t elapsedUs)
             // Input
             while (checkButtonQueueWrapper(&evt))
             {
-                // Move blocks down, up, right or left
-                if (evt.down && evt.button & PB_DOWN)
+                if (evt.down)
                 {
-                    soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48SlideDown(t48);
-                }
-                else if (evt.down && evt.button & PB_UP)
-                {
-                    soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48SlideUp(t48);
-                }
-                else if (evt.down && evt.button & PB_LEFT)
-                {
-                    soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48SlideLeft(t48);
-                }
-                else if (evt.down && evt.button & PB_RIGHT)
-                {
-                    soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48SlideRight(t48);
-                }
-                // Restart game if you hit start
-                else if (evt.down && evt.button & PB_START)
-                {
-                    soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48->ds = CONFIRM;
+                    switch (evt.button)
+                    {
+                        case PB_DOWN:
+                        {
+                            soundPlaySfx(&t48->click, MIDI_SFX);
+                            t48SlideDown(t48);
+                            break;
+                        }
+                        case PB_UP:
+                        {
+                            soundPlaySfx(&t48->click, MIDI_SFX);
+                            t48SlideUp(t48);
+                            break;
+                        }
+                        case PB_LEFT:
+                        {
+                            soundPlaySfx(&t48->click, MIDI_SFX);
+                            t48SlideLeft(t48);
+                            break;
+                        }
+                        case PB_RIGHT:
+                        {
+                            soundPlaySfx(&t48->click, MIDI_SFX);
+                            t48SlideRight(t48);
+                            break;
+                        }
+                        case PB_START:
+                        {
+                            // Restart game if you hit start
+                            soundPlaySfx(&t48->click, MIDI_SFX);
+                            t48->ds = CONFIRM;
+                            break;
+                        }
+                    }
                 }
             }
             // Check game is done or "done"

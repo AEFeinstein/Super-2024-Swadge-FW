@@ -157,9 +157,8 @@ static void t48DrawSlidingTiles(t48_t* t48)
             {
                 yVal = t48->globalAnim * t48->mvTiles[idx].speed;
             }
-            t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->mvTiles[idx].start.val)],
-                              t48->mvTiles[idx].start.x, t48->mvTiles[idx].start.y, xVal, yVal,
-                              t48->mvTiles[idx].start.val);
+            t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->mvTiles[idx].start.val)], t48->mvTiles[idx].start.x,
+                              t48->mvTiles[idx].start.y, xVal, yVal, t48->mvTiles[idx].start.val);
         }
     }
 }
@@ -184,7 +183,9 @@ static void t48DrawTiles(t48_t* t48)
 
     // Moving tiles
     if (t48->globalAnim < T48_MAX_SEQ)
+    {
         t48DrawSlidingTiles(t48);
+    }
 
     // Static tiles
     int8_t sparkleIdx = 0;
@@ -193,33 +194,41 @@ static void t48DrawTiles(t48_t* t48)
         switch (t48->board[i].state)
         {
             case STATIC:
+            {
                 t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->board[i].val)], t48->board[i].x, t48->board[i].y,
                                   0, 0, t48->board[i].val);
                 break;
+            }
             case MERGED:
+            {
                 if (t48->globalAnim > T48_MAX_SEQ)
                 {
                     t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->board[i].val)], t48->board[i].x,
                                       t48->board[i].y, 0, 0, t48->board[i].val);
                     // Spawn sparkles
                     t48InitSparkles(t48, sparkleIdx++, t48->board[i].x, t48->board[i].y,
-                                    t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
+                                    &t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
                     t48InitSparkles(t48, sparkleIdx++, t48->board[i].x, t48->board[i].y,
-                                    t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
+                                    &t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
                     t48InitSparkles(t48, sparkleIdx++, t48->board[i].x, t48->board[i].y,
-                                    t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
+                                    &t48->sparkleSprites[getSparkleSprIdx(t48->board[i].val)]);
                 }
                 break;
+            }
             case MOVED:
             case NEW:
+            {
                 if (t48->globalAnim > T48_MAX_SEQ)
                 {
                     t48DrawTileOnGrid(t48, &t48->tiles[getTileSprIdx(t48->board[i].val)], t48->board[i].x,
                                       t48->board[i].y, 0, 0, t48->board[i].val);
                 }
                 break;
+            }
             default:
+            {
                 break;
+            }
         }
     }
 }
@@ -261,7 +270,7 @@ void t48Draw(t48_t* t48)
             t48->sparks[i].ySpd += 1;
             t48->sparks[i].y += t48->sparks[i].ySpd;
             t48->sparks[i].x += t48->sparks[i].xSpd;
-            drawWsgSimple(&t48->sparks[i].img, t48->sparks[i].x, t48->sparks[i].y);
+            drawWsgSimple(t48->sparks[i].img, t48->sparks[i].x, t48->sparks[i].y);
         }
     }
 }

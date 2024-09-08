@@ -78,7 +78,7 @@ static void t48MergeSlice(t48_t* t48, bool* updated)
         {
             *updated = true;
             // Animate
-            t48->sliceData.dest[i + 1] = i; 
+            t48->sliceData.dest[i + 1] = i;
             t48->sliceData.endVals[i] *= 2;
             t48->sliceData.endVals[i + 1] = 0;
 
@@ -90,7 +90,7 @@ static void t48MergeSlice(t48_t* t48, bool* updated)
             // Move if merged
             for (uint8_t j = i + 1; j < T48_GRID_SIZE - 1; j++)
             {
-                t48->sliceData.endVals[j] = t48->sliceData.endVals[j + 1];
+                t48->sliceData.endVals[j]   = t48->sliceData.endVals[j + 1];
                 t48->sliceData.slice[j].val = t48->sliceData.slice[j + 1].val;
             }
             // Add a 0 to end if merged
@@ -142,7 +142,6 @@ void t48SlideUp(t48_t* t48)
 {
     // Reset animation timer
     t48->globalAnim = 0;
-    t48->tileIdx = 0;
     t48ResetAnim(t48);
     bool updated = false;
     for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
@@ -150,11 +149,11 @@ void t48SlideUp(t48_t* t48)
         for (int i = 0; i < T48_GRID_SIZE; i++)
         {
             // Animation
-            t48->sliceData.src[i]         = -1;
-            t48->sliceData.dest[i]        = i;
-            t48->sliceData.startVals[i]   = 0;
-            t48->sliceData.endVals[i]     = 0;
-            t48->sliceData.lockedCoord = row;
+            t48->sliceData.src[i]       = -1;
+            t48->sliceData.dest[i]      = i;
+            t48->sliceData.startVals[i] = 0;
+            t48->sliceData.endVals[i]   = 0;
+            t48->sliceData.lockedCoord  = row;
             // Math
             t48->sliceData.slice[i].val   = 0;
             t48->sliceData.slice[i].x     = -1;
@@ -163,12 +162,12 @@ void t48SlideUp(t48_t* t48)
         }
         for (int8_t col = 0, i = 0; col <= T48_GRID_SIZE - 1; col++)
         {
-            t48->sliceData.src[i] = col;
+            t48->sliceData.src[i]         = col;
             t48->sliceData.startVals[col] = t48->board[(row * 4) + col].val;
             if (t48->board[(row * 4) + col].val != 0)
             {
                 // Animation slice code
-                t48->sliceData.dest[i] = i;
+                t48->sliceData.dest[i]    = i;
                 t48->sliceData.endVals[i] = t48->board[(row * 4) + col].val;
 
                 // Main slice code

@@ -25,7 +25,7 @@ void t48ResetAnim(t48_t* t48)
     }
 }
 
-void t48InitSparkles(t48_t* t48, int8_t idx, int8_t x, int8_t y, wsg_t spr)
+void t48InitSparkles(t48_t* t48, int8_t idx, int8_t x, int8_t y, wsg_t* spr)
 {
     // Side to side speed
     int8_t sideSpeed      = esp_random() % 17;
@@ -48,18 +48,18 @@ void t48InitMovingTilesVert(t48_t* t48)
         if (t48->sliceData.src[i] == -1 || t48->sliceData.startVals[i] == 0)
         {
             // Static
+            continue;
         }
         // FIXME: Need better glue logic between the math and the shuffly bits.
-        t48Cell_t start, end;
-        start.val                        = t48->sliceData.startVals[i];
-        start.x                          = t48->sliceData.src[i];
-        start.y                          = t48->sliceData.lockedCoord;
-        end.x                            = i;
-        end.y                            = t48->sliceData.lockedCoord;
-        t48->mvTiles[t48->tileIdx].start = start;
-        t48->mvTiles[t48->tileIdx].end   = end;
-        t48->mvTiles[t48->tileIdx++].speed
-            = (end.x - start.x) * (T48_CELL_SIZE + T48_LINE_WEIGHT) / T48_MAX_SEQ;
+        t48Cell_t* start = &t48->mvTiles[i].start;
+        start->val       = t48->sliceData.startVals[i];
+        start->x         = t48->sliceData.src[i];
+        start->y         = t48->sliceData.lockedCoord;
 
+        t48Cell_t* end = &t48->mvTiles[i].end;
+        end->x         = i;
+        end->y         = t48->sliceData.lockedCoord;
+
+        t48->mvTiles[i].speed = (end->x - start->x) * (T48_CELL_SIZE + T48_LINE_WEIGHT) / T48_MAX_SEQ;
     }
 }

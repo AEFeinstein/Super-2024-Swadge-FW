@@ -127,7 +127,7 @@ typedef struct
 
 typedef struct
 {
-    wsg_t img;
+    wsg_t* img;
     int16_t x;
     int16_t y;
     int16_t xSpd;
@@ -156,7 +156,7 @@ typedef struct
 
 typedef struct
 {
-    wsg_t image;
+    wsg_t* image;
     int16_t pos[2];
     uint8_t spd;
     int8_t dir;
@@ -190,7 +190,6 @@ typedef struct
     int8_t globalAnim;
     t48Sparkles_t sparks[T48_MAX_SPARKLES];
     t48MovingTile_t mvTiles[T48_MAX_MOVES];
-    int8_t tileIdx;
 
     // OLD
     // t48SlidingTile_t slidingTiles[12]; // Max amount of sliding tiles
@@ -219,13 +218,9 @@ typedef struct
 // Variables
 //==============================================================================
 
-static const char modeName[] = "2048";
-
-static const char highScoreKey[T48_HS_COUNT][T48_HS_KEYLEN]
-    = {"t48HighScore0", "t48HighScore1", "t48HighScore2", "t48HighScore3", "t48HighScore4"};
-static const char highScoreInitialsKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
-    "t48HSInitial0", "t48HSInitial1", "t48HSInitial2", "t48HSInitial3", "t48HSInitial4",
-};
+extern const char modeName[];
+extern const char highScoreKey[T48_HS_COUNT][T48_HS_KEYLEN];
+extern const char highScoreInitialsKey[T48_HS_COUNT][T48_HS_KEYLEN];
 
 //==============================================================================
 // Extern variables
