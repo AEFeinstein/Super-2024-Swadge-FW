@@ -327,7 +327,7 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
     ESP_ERROR_CHECK(touch_pad_filter_set_config(&filter_info));
     ESP_ERROR_CHECK(touch_pad_filter_enable());
     ESP_LOGD("TOUCH", "touch pad filter init");
-    ESP_ERROR_CHECK(touch_pad_timeout_set(true, SOC_TOUCH_PAD_THRESHOLD_MAX));
+    ESP_ERROR_CHECK(touch_pad_timeout_set(true, TOUCH_PAD_THRESHOLD_MAX));
 
     /* Enable interrupts, but not TOUCH_PAD_INTR_MASK_SCAN_DONE */
     ESP_ERROR_CHECK(

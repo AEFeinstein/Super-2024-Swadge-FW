@@ -6,7 +6,7 @@
 //==============================================================================
 // Functions
 //==============================================================================
-uint32_t fCost(bb_node_t* node){
+uint16_t fCost(bb_node_t* node){
     return node->gCost + node->hCost;
 }
 
@@ -32,9 +32,9 @@ bool pathfindToPerimeter(bb_node_t* start)
         uint8_t cur_idx  = 1;
         while (currentNode != NULL)
         {
-            if(fCost(&currentNode->next) < ){
+            // if(fCost(&currentNode->next) < ){
 
-            }
+            // }
 
             if(((uint16_t*)currentNode->val)[3] < least_f){
                 least_f = ((uint16_t*)currentNode->val)[3];

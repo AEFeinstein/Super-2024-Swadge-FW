@@ -1,5 +1,5 @@
-#ifndef _TILEMAP_BIGBUG_H_
-#define _TILEMAP_BIGBUG_H_
+#ifndef _PATHFINDING_BIGBUG_H_
+#define _PATHFINDING_BIGBUG_H_
 
 //==============================================================================
 // Includes
@@ -10,14 +10,14 @@
 //==============================================================================
 // Structs
 //==============================================================================
-struct bb_node_t
+typedef struct 
 {
     uint8_t x;
     uint8_t y;
     bool     z;//true for foreground false for midground
     uint16_t gCost;
     uint16_t hCost;
-};
+}bb_node_t;
 
 //==============================================================================
 // Prototypes
