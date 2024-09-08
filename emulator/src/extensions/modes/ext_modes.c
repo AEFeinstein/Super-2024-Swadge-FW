@@ -26,12 +26,13 @@
 #include "keebTest.h"
 #include "mainMenu.h"
 #include "modeTimer.h"
+#include "mode_2048.h"
 #include "mode_credits.h"
 #include "mode_pinball.h"
 #include "mode_synth.h"
-#include "ultimateTTT.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "ultimateTTT.h"
 
 //==============================================================================
 // Defines
@@ -70,9 +71,10 @@ static swadgeMode_t* allSwadgeModes[] = {
     &modeCredits,
     &pinballMode,
     &synthMode,
-    &tttMode,
+    &t48Mode,
     &timerMode,
     &touchTestMode,
+    &tttMode,
     &tunernomeMode,
 };
 // clang-format on
