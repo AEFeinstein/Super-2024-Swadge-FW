@@ -12,6 +12,7 @@
 #include "cg_Garden.h"
 #include "cg_Field.h"
 #include "cg_GardenItems.h"
+#include "cg_Chowa.h"
 
 //==============================================================================
 // Static functions
@@ -19,7 +20,7 @@
 
 /**
  * @brief Draws the hand at the appropriate position
- * 
+ *
  * @param cg Game object
  */
 static void _cgDrawHand(cGrove_t* cg)
@@ -29,23 +30,41 @@ static void _cgDrawHand(cGrove_t* cg)
 
 /**
  * @brief Attempts to grab objects. Due to total amount being limited, no need to optimize
- * 
+ *
  * @param cg Game Object
  */
 static void _cgAttemptGrab(cGrove_t* cg)
 {
     vec_t collVec;
+    cg->garden.heldItem = NULL;
     // Check if over a Chowa
-    
+    for (int8_t c = 0; c < CG_MAX_CHOWA; c++)
+    {
+        if (cg->chowa[c].active)
+        {
+            rectangle_t translated = {.pos = subVec2d(cg->chowa[c].aabb.pos, cg->garden.field.cam.aabb.pos),
+                                      .height = cg->chowa[c].aabb.height,
+                                      .width  = cg->chowa[c].aabb.width};
+            if (rectRectIntersection(cg->garden.cursorAABB, translated, &collVec))
+            {
+                cg->garden.holdingChowa = true;
+                cg->garden.heldChowa    = &cg->chowa[c];
+                cg->chowa[c].mood       = CG_WORRIED;
+            }
+        }
+    }
     // Check if over an item
-    for (int item = 0; item < CG_FIELD_ITEM_LIMIT; item++)
+    for (int8_t item = 0; item < CG_FIELD_ITEM_LIMIT; item++)
     {
         if (cg->garden.items[item].active)
         {
-            if(rectRectIntersection(cg->garden.field.cam.aabb, cg->garden.items[item].aabb, &collVec))
+            rectangle_t translated = {.pos = subVec2d(cg->garden.items[item].aabb.pos, cg->garden.field.cam.aabb.pos),
+                                      .height = cg->garden.items[item].aabb.height,
+                                      .width  = cg->garden.items[item].aabb.width};
+            if (rectRectIntersection(cg->garden.cursorAABB, translated, &collVec))
             {
-                cg->holding = true;
-                cg->heldItem = &cg->garden.items[item];
+                cg->garden.holdingItem = true;
+                cg->garden.heldItem    = &cg->garden.items[item];
             }
         }
     }
@@ -53,11 +72,12 @@ static void _cgAttemptGrab(cGrove_t* cg)
 
 /**
  * @brief Input handling for garden
- * 
+ *
  * @param cg Game Object
  */
 static void _cgHandleInputGarden(cGrove_t* cg)
 {
+    buttonEvt_t evt;
     // Touch pad for the hands
     if (cg->touch)
     {
@@ -69,13 +89,32 @@ static void _cgHandleInputGarden(cGrove_t* cg)
             {
                 printf("touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32 "\n", phi, r, intensity);
                 // Move hand
-                // FIXME: cosine function overflows? Ditching until I can discuss
+                cg->garden.cursorAABB.pos.x += (getCos1024(phi) * speed) / 1024;
+                cg->garden.cursorAABB.pos.y -= (getSin1024(phi) * speed) / 1024;
+            }
+        }
+        while (checkButtonQueueWrapper(&evt))
+        {
+            if (evt.button & PB_A && evt.down)
+            {
+                if (cg->garden.holdingItem || cg->garden.holdingChowa)
+                {
+                    cg->garden.holdingItem  = false;
+                    cg->garden.holdingChowa = false;
+                }
+                else
+                {
+                    _cgAttemptGrab(cg);
+                }
+            }
+            if (evt.button & PB_B && evt.down)
+            {
+                // TODO: Pet Chowa
             }
         }
     }
     else
     {
-        buttonEvt_t evt;
         while (checkButtonQueueWrapper(&evt))
         {
             if (evt.button & PB_RIGHT)
@@ -96,20 +135,22 @@ static void _cgHandleInputGarden(cGrove_t* cg)
             }
             if (evt.button & PB_A && evt.down)
             {
-                if (cg->holding)
+                if (cg->garden.holdingItem || cg->garden.holdingChowa)
                 {
-                    cg->holding = false;
-                } else {
+                    cg->garden.holdingItem  = false;
+                    cg->garden.holdingChowa = false;
+                }
+                else
+                {
                     _cgAttemptGrab(cg);
                 }
             }
             if (evt.button & PB_B && evt.down)
             {
-                //TODO: Pet Chowa
+                // TODO: Pet Chowa
             }
         }
     }
-
     // Check if out of bounds
     if (cg->garden.cursorAABB.pos.x < CG_FIELD_BOUNDARY)
     {
@@ -144,6 +185,8 @@ void cgInitGarden(cGrove_t* cg)
     cg->garden.cursorAABB.width  = 32;
     cg->garden.cursorAABB.pos.x  = 32;
     cg->garden.cursorAABB.pos.y  = 32;
+    cg->garden.holdingChowa      = false;
+    cg->garden.holdingItem       = false;
 
     // Initialize the items
     vec_t pos;
@@ -161,9 +204,13 @@ void cgRunGarden(cGrove_t* cg)
     _cgHandleInputGarden(cg);
 
     // Garden Logic
-    if (cg->holding)
+    if (cg->garden.holdingItem)
     {
-        cg->heldItem->aabb.pos = addVec2d(cg->garden.cursorAABB.pos, cg->garden.field.cam.aabb.pos);
+        cg->garden.heldItem->aabb.pos = addVec2d(cg->garden.cursorAABB.pos, cg->garden.field.cam.aabb.pos);
+    }
+    if (cg->garden.holdingChowa)
+    {
+        cg->garden.heldChowa->aabb.pos = addVec2d(cg->garden.cursorAABB.pos, cg->garden.field.cam.aabb.pos);
     }
 
     // TODO: Chowa AI
@@ -171,11 +218,11 @@ void cgRunGarden(cGrove_t* cg)
     // - Chase ball
     // - struggle in grip
 
-    // Draw 
+    // Draw
     // Field
     cgDrawField(cg);
     // Items
-    for (int item = 0; item < CG_FIELD_ITEM_LIMIT; item++)
+    for (int8_t item = 0; item < CG_FIELD_ITEM_LIMIT; item++)
     {
         if (cg->garden.items[item].active)
         {
@@ -183,8 +230,14 @@ void cgRunGarden(cGrove_t* cg)
         }
     }
     // Chowa
-    // TODO: Draw chowa
-
+    vec_t cam = {.x = -cg->garden.field.cam.aabb.pos.x, .y = -cg->garden.field.cam.aabb.pos.y};
+    for (int8_t c = 0; c < CG_FIELD_ITEM_LIMIT; c++)
+    {
+        if (cg->chowa[c].active)
+        {
+            cgDrawChowa(cg, c, cam);
+        }
+    }
     // Hand
     _cgDrawHand(cg);
 }

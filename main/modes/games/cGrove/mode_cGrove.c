@@ -11,6 +11,9 @@
 
 // Includes
 #include "mode_cGrove.h"
+#include "cg_Types.h"
+#include "cg_Garden.h"
+#include "cg_Chowa.h"
 
 //==============================================================================
 // Consts
@@ -59,24 +62,46 @@ static void cGroveEnterMode(void)
     grove = calloc(1, sizeof(cGrove_t));
 
     // Load a font
-    loadFont("logbook.font", &grove->menuFont, false);
+    loadFont("ibm_vga8.font", &grove->menuFont, false);
 
     // Load images
+    // Static objects
     loadWsg("cgBigBoulder.wsg", &grove->gardenSpr[0], true);
+    // Cursors
     loadWsg("cgHandCursor.wsg", &grove->cursors[0], true);
+    // Items
     loadWsg("cgBall.wsg", &grove->items[0], true);
+    // Chowa expressions
+    loadWsg("cgChowaNeutral.wsg", &grove->chowaExpressions[CG_NEUTRAL], true);
+    loadWsg("cgChowaHappy.wsg", &grove->chowaExpressions[CG_HAPPY], true);
+    loadWsg("cgChowaWorried.wsg", &grove->chowaExpressions[CG_WORRIED], true);
 
     // Init
     cgInitGarden(grove);
-    paletteColor_t col[CG_CHOWA_COLORS] = {c030, c020, c020, c010, c400, c004};
+    paletteColor_t col[CG_CHOWA_COLORS] = {c300, c200, c300, c300, c300, c200};
     cgInitChowa(grove, 0, col);
 }
 
 static void cGroveExitMode(void)
 {
     // WSGs
-    freeWsg(&grove->cursors[0]);
-    freeWsg(&grove->gardenSpr[0]);
+    for (int8_t i = 0; i < CG_CHOWA_EXPRESSION_COUNT; i++)
+    {
+        freeWsg(&grove->chowaExpressions[i]);
+    }
+    for (int8_t i = 0; i < CG_GARDEN_CURSORS; i++)
+    {
+        freeWsg(&grove->cursors[i]);
+    }
+    for (int8_t i = 0; i < CG_GARDEN_ITEMS_COUNT; i++)
+    {
+        freeWsg(&grove->items[i]);
+    }
+    for (int8_t i = 0; i < CG_GARDEN_STATIC_OBJECTS; i++)
+    {
+        freeWsg(&grove->gardenSpr[i]);
+    }
+    
     //Fonts
     freeFont(&grove->menuFont); 
     // Main
@@ -86,8 +111,7 @@ static void cGroveExitMode(void)
 static void cGroveMainLoop(int64_t elapsedUs) 
 {
     fillDisplayArea(0, 0, 280, 240, c111);
-    vec_t v = {.x = 124, .y = 88};
-    cgDrawChowa(grove, 0, v);
+    
     //grove
-    //cgRunGarden(grove);
+    cgRunGarden(grove);
 }

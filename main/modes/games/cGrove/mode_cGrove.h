@@ -13,9 +13,6 @@
 
 // Includes
 #include "swadge2024.h"
-#include "cg_Types.h"
-#include "cg_Garden.h"
-#include "cg_Chowa.h"
 
 // Make Swadgemode available
 extern swadgeMode_t cGroveMode;

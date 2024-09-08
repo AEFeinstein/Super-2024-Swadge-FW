@@ -17,14 +17,58 @@
 // Defines
 //==============================================================================
 
+// Asset COunts
+#define CG_CHOWA_EXPRESSION_COUNT 3
+#define CG_GARDEN_ITEMS_COUNT 1
+#define CG_GARDEN_STATIC_OBJECTS 1
+#define CG_GARDEN_CURSORS 1
+
 // Grove
 #define CG_OBJ_COUNT 64
 #define CG_FIELD_BOUNDARY 32
 #define CG_FIELD_ITEM_LIMIT 10
 
+// Field
+#define CG_FIELD_HEIGHT 750
+#define CG_FIELD_WIDTH 750
+
 // Chowa
 #define CG_CHOWA_COLORS 6
-#define CG_MAX_CHOWA 5
+#define CG_MAX_CHOWA 10
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+// Chowa =======================================================================
+
+typedef enum
+{
+    CG_NEUTRAL,
+    CG_HAPPY,
+    CG_WORRIED,
+    CG_SAD,
+    CG_ANGRY,
+    CG_CONFUSED,
+    CG_SURPRISED,
+    CG_SICK,
+} cgMoodEnum_t;
+
+typedef enum
+{
+    CHOWA_STATIC,
+    CHOWA_WANDER,
+    CHOWA_CHASE,
+    CHOWA_HELD,
+} cgChowaGardenState_t;
+
+/* typedef enum
+{
+    FACING_UP,
+    FACING_LEFT,
+    FACING_DOWN,
+    FACING_RIGHT
+} cgFacingEnum; */
 
 //==============================================================================
 // Structs
@@ -58,14 +102,6 @@ typedef struct
     bool active;
 } cgGardenItem_t;
 
-// cg_Garden.h ================================================================
-typedef struct 
-{
-    cgField_t field;
-    cgGardenItem_t items[CG_FIELD_ITEM_LIMIT];
-    rectangle_t cursorAABB;
-} cgGarden_t;
-
 // cg_Chowa.h ==================================================================
 typedef struct
 {
@@ -82,8 +118,31 @@ typedef struct
     paletteColor_t colors[CG_CHOWA_COLORS];
     rectangle_t aabb;
     cgChowaBody_t body;
-    bool facingLeft;
+    cgMoodEnum_t mood;
+    bool active;
+
+    // Garden
+    bool holdingItem;
+    cgGardenItem_t* heldItem;
+    cgChowaGardenState_t gState;
+    vec_t targetPos;
+    int32_t waitTimer;
 } cgChowa_t;
+
+// cg_Garden.h ================================================================
+typedef struct 
+{
+    // Objects
+    cgField_t field;
+    cgGardenItem_t items[CG_FIELD_ITEM_LIMIT];
+
+    // Cursor
+    rectangle_t cursorAABB;
+    bool holdingItem;
+    cgGardenItem_t* heldItem;
+    bool holdingChowa;
+    cgChowa_t* heldChowa;
+} cgGarden_t;
 
 // mode_cGrove.h ==============================================================
 typedef struct
@@ -93,9 +152,10 @@ typedef struct
     // Fonts
     font_t menuFont;
     // Sprites
-    wsg_t gardenSpr[1];
-    wsg_t cursors[1];
-    wsg_t items[1];
+    wsg_t gardenSpr[CG_GARDEN_STATIC_OBJECTS];
+    wsg_t cursors[CG_GARDEN_CURSORS];
+    wsg_t items[CG_GARDEN_ITEMS_COUNT];
+    wsg_t chowaExpressions[CG_CHOWA_EXPRESSION_COUNT];
 
     // Structs
     // ========================================================================
@@ -103,10 +163,6 @@ typedef struct
 
     // Settings
     bool touch; // If using the touch pad for controls
-
-    // Garden vars
-    bool holding;
-    cgGardenItem_t* heldItem;
 
     // Chowa
     cgChowa_t chowa[CG_MAX_CHOWA];

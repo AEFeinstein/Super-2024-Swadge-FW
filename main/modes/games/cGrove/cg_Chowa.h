@@ -12,7 +12,6 @@
 
 // Includes
 #include "mode_cGrove.h"
-#include "cg_Types.h"
 
 //==============================================================================
 // Function declarations
