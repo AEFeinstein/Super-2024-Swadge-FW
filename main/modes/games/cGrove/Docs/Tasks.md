@@ -12,6 +12,7 @@
     - [ ] cg_Chowa.h: Chowa functionality
     - [x] prettyKeyboard.h: Text entry
 - [x] Create github "issue" for project
+- [ ] Save data
 
 ## Menu
 

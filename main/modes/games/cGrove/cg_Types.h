@@ -22,6 +22,10 @@
 #define CG_FIELD_BOUNDARY 32
 #define CG_FIELD_ITEM_LIMIT 10
 
+// Chowa
+#define CG_CHOWA_COLORS 6
+#define CG_MAX_CHOWA 5
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -62,6 +66,25 @@ typedef struct
     rectangle_t cursorAABB;
 } cgGarden_t;
 
+// cg_Chowa.h ==================================================================
+typedef struct
+{
+    vec_t headOffset;
+    vec_t bodyOffset;
+    vec_t limbRestPos[4];
+    int8_t headSize;
+    int8_t bodySize;
+    int8_t limbSize[4];
+} cgChowaBody_t;
+
+typedef struct 
+{
+    paletteColor_t colors[CG_CHOWA_COLORS];
+    rectangle_t aabb;
+    cgChowaBody_t body;
+    bool facingLeft;
+} cgChowa_t;
+
 // mode_cGrove.h ==============================================================
 typedef struct
 {
@@ -83,6 +106,9 @@ typedef struct
 
     // Garden vars
     bool holding;
-    cgGardenObject_t* heldItem;
-    // TODO: Chowa
+    cgGardenItem_t* heldItem;
+
+    // Chowa
+    cgChowa_t chowa[CG_MAX_CHOWA];
+    // TODO: Guest Chowa
 } cGrove_t;

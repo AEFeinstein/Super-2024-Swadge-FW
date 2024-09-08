@@ -68,6 +68,8 @@ static void cGroveEnterMode(void)
 
     // Init
     cgInitGarden(grove);
+    paletteColor_t col[CG_CHOWA_COLORS] = {c030, c020, c020, c010, c400, c004};
+    cgInitChowa(grove, 0, col);
 }
 
 static void cGroveExitMode(void)
@@ -83,6 +85,9 @@ static void cGroveExitMode(void)
 
 static void cGroveMainLoop(int64_t elapsedUs) 
 {
+    fillDisplayArea(0, 0, 280, 240, c111);
+    vec_t v = {.x = 124, .y = 88};
+    cgDrawChowa(grove, 0, v);
     //grove
-    cgRunGarden(grove);
+    //cgRunGarden(grove);
 }
