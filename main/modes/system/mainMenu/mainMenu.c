@@ -17,6 +17,7 @@
 #include "mode_credits.h"
 #include "mode_pinball.h"
 #include "mode_bigbug.h"
+#include "ultimateTTT.h"
 #include "touchTest.h"
 #include "tunernome.h"
 
@@ -145,6 +146,7 @@ static void mainMenuEnterMode(void)
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
@@ -191,7 +193,10 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuManiaRenderer(&mainMenu->font_righteous, &mainMenu->font_rodin);
+    mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+
+    // Make it smooth
+    setFrameRateUs(1000000 / 60);
 }
 
 /**
@@ -342,6 +347,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pinballMode.modeName)
         {
             switchToSwadgeMode(&pinballMode);
+        }
+        else if (label == tttMode.modeName)
+        {
+            switchToSwadgeMode(&tttMode);
         }
         else if (label == timerMode.modeName)
         {
