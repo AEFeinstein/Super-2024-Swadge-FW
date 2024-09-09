@@ -1,7 +1,5 @@
-import tkinter as tk
 import math
 from itertools import groupby
-from tkinter import filedialog
 from xml.dom.minidom import parse,parseString
 import os
 
