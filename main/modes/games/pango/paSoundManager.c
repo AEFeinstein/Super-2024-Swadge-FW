@@ -33,8 +33,8 @@ void pa_initializeSoundManager(paSoundManager_t* self)
     loadMidiFile("sndCoin.mid", &self->sndCoin, false);
     loadMidiFile("sndDie.mid", &self->sndDie, false);
     loadMidiFile("bgmGameOver.mid", &self->bgmGameOver, false);
-    loadMidiFile("sndHit.mid", &self->sndHit, false);
-    loadMidiFile("sndHurt.mid", &self->sndHurt, false);
+    loadMidiFile("sndBlockStop.mid", &self->sndHit, false);
+    loadMidiFile("sndSquish.mid", &self->sndHurt, false);
     loadMidiFile("sndJump1.mid", &self->sndJump1, false);
     loadMidiFile("sndJump2.mid", &self->sndJump2, false);
     loadMidiFile("sndJump3.mid", &self->sndJump3, false);
@@ -49,10 +49,12 @@ void pa_initializeSoundManager(paSoundManager_t* self)
     loadMidiFile("sndOutOfTime.mid", &self->sndOuttaTime, false);
     loadMidiFile("sndPause.mid", &self->sndPause, false);
     loadMidiFile("sndPowerUp.mid", &self->sndPowerUp, false);
-    loadMidiFile("sndSquish.mid", &self->sndSquish, false);
+    loadMidiFile("sndSlide.mid", &self->sndSquish, false);
     //loadMidiFile("sndTally.mid", &self->sndTally, false);
     loadMidiFile("sndWarp.mid", &self->sndWarp, false);
     loadMidiFile("sndWaveBall.mid", &self->sndWaveBall, false);
+
+    loadMidiFile("sndSpawn.mid", &self->sndSpawn, false);
 }
 
 void pa_freeSoundManager(paSoundManager_t* self)
@@ -90,4 +92,6 @@ void pa_freeSoundManager(paSoundManager_t* self)
     unloadMidiFile(&self->sndTally);
     unloadMidiFile(&self->sndWarp);
     unloadMidiFile(&self->sndWaveBall);
+
+    unloadMidiFile(&self->sndSpawn);
 }

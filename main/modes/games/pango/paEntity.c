@@ -1096,7 +1096,7 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             self->xspeed = other->xspeed * 2;
             self->yspeed = other->yspeed * 2;
             pa_scorePoints(self->gameData, self->scoreValue);
-            soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager->sndHurt), 2);
             killEnemy(self);
             break;
         default:
@@ -1246,7 +1246,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
 {
     if (pa_isSolid(tileId))
     {
-        soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
+        soundPlaySfx(&(self->soundManager->sndHit), 1);
         pa_destroyEntity(self, false);
        
        if(PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) == self->homeTileX && PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) == self->homeTileY){

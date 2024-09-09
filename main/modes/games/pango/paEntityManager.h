@@ -13,7 +13,7 @@
 #include "paGameData.h"
 #include "hdw-tft.h"
 #include "paSprite.h"
-// #include "soundManager.h"
+#include "paSoundManager.h"
 
 //==============================================================================
 // Constants
@@ -40,6 +40,8 @@ struct paEntityManager_t
     paEntity_t* playerEntity;
 
     paTilemap_t* tilemap;
+
+    paSoundManager_t* soundManager;
 };
 
 //==============================================================================

@@ -9,6 +9,7 @@
 #include "paEntityManager.h"
 #include "esp_random.h"
 #include "palette.h"
+#include "soundFuncs.h"
 
 #include "cnfs.h"
 #include "fs_wsg.h"
@@ -36,6 +37,7 @@ void pa_initializeEntityManager(paEntityManager_t* entityManager, paTilemap_t* t
     entityManager->activeEntities = 0;
     entityManager->tilemap        = tilemap;
     entityManager->gameData       = gameData;
+    entityManager->soundManager   = soundManager;
 
     // entityManager->viewEntity = pa_createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,
     // entityManager->tilemap->warps[0].y * 16);
@@ -537,7 +539,11 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
                                 newEnemy->stateFlag = true;
                             }*/
 
-                            pa_createBreakBlock(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+                            paEntity_t* newBreakBlock = pa_createBreakBlock(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+                            if(newBreakBlock != NULL){
+                                soundPlaySfx(&(entityManager->soundManager->sndSpawn), 3);
+                            }
+                            
                             entityManager->activeEnemies++;
                             entityManager->gameData->remainingEnemies--;
                             return newEnemy;

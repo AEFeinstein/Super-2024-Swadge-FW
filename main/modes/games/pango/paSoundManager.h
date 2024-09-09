@@ -52,6 +52,8 @@ typedef struct
     midiFile_t bgmNameEntry;
     midiFile_t bgmGameOver;
     midiFile_t sndOuttaTime;
+
+    midiFile_t sndSpawn;
 } paSoundManager_t;
 
 //==============================================================================
