@@ -28,7 +28,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
 {
     // Read WSG from file
     size_t sz;
-    uint8_t* buf = cnfsGetFile(fname, &sz);
+    const uint8_t* buf = cnfsGetFile(fname, &sz);
     if (NULL == buf)
     {
         ESP_LOGE("WSG", "Failed to read %s", fname);
@@ -288,4 +288,86 @@ heatshrink_error:
     }
 
     return 0;
+}
+
+/**
+ * @brief Get the size of and decompress heatshrink data
+ *
+ * @param dest
+ * @param destSize
+ * @param source
+ * @param sourceSize
+ * @return true
+ * @return false
+ */
+bool heatshrinkDecompress(uint8_t* dest, uint32_t* destSize, const uint8_t* source, uint32_t sourceSize)
+{
+    // This is a multi-step process...
+    // 1. Call with NULL dest and non-null destSize -- this will set *destSize to the actual size
+    // 2. Call again with non-null dest of at least (*destSize) bytes, and also the same destSize
+    // -- It should be possible to pass both a non-null destSize and non-null dest, as long as it's big enough
+    bool sizeRead = false;
+
+    // Can't decompress if the heatshrnk header doesn't even fit
+    if (sourceSize < 4)
+    {
+        return false;
+    }
+
+    // Write the destSize
+    if (destSize)
+    {
+        (*destSize) = (source[0] << 24) | (source[1] << 16) | (source[2] << 8) | (source[3]);
+        sizeRead    = true;
+    }
+
+    // Write the actual data
+    if (dest)
+    {
+        // Create the decoder
+        size_t copied           = 0;
+        heatshrink_decoder* hsd = heatshrink_decoder_alloc(256, 8, 4);
+        heatshrink_decoder_reset(hsd);
+
+        // The decompressed filesize is four bytes, so start after that
+        uint32_t inputIdx  = 4;
+        uint32_t outputIdx = 0;
+        // Decode the file in chunks
+        while (inputIdx < sourceSize)
+        {
+            // Decode some data
+            copied = 0;
+            heatshrink_decoder_sink(hsd, &source[inputIdx], sourceSize - inputIdx, &copied);
+            inputIdx += copied;
+
+            if (copied == 0)
+            {
+                ESP_LOGE("WSG", "Failed to decompress heatshrink buffer -- fault on decode");
+                heatshrink_decoder_finish(hsd);
+                heatshrink_decoder_free(hsd);
+                return false;
+            }
+
+            // Save it to the output array
+            copied = 0;
+            heatshrink_decoder_poll(hsd, &dest[outputIdx], (*destSize) - outputIdx, &copied);
+            outputIdx += copied;
+        }
+
+        // Note that it's all done
+        heatshrink_decoder_finish(hsd);
+
+        // Flush any final output
+        copied = 0;
+        heatshrink_decoder_poll(hsd, &dest[outputIdx], (*destSize) - outputIdx, &copied);
+        outputIdx += copied;
+
+        // All done decoding
+        heatshrink_decoder_finish(hsd);
+        heatshrink_decoder_free(hsd);
+
+        return true;
+    }
+
+    return sizeRead;
 }

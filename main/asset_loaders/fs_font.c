@@ -34,7 +34,7 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
     size_t bufIdx = 0;
     uint8_t chIdx = 0;
     size_t sz;
-    uint8_t* buf = cnfsGetFile(name, &sz);
+    const uint8_t* buf = cnfsGetFile(name, &sz);
     if (NULL == buf)
     {
         ESP_LOGE("FONT", "Failed to read %s", name);

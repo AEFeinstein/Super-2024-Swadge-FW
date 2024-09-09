@@ -135,6 +135,21 @@ typedef struct
 } midiStatusEvent_t;
 
 /**
+ * @brief Data for a MIDI time signature definition
+ */
+typedef struct
+{
+    /// @brief The numerator of the time signature
+    uint8_t numerator;
+    /// @brief The power of two of the time signature denominator (e.g. 2 for 4/4, 3 for 4/8)
+    uint8_t denominator;
+    /// @brief The number of MIDI clocks per metronome tick
+    uint8_t midiClocksPerMetronomeTick;
+    /// @brief Number of 32nd notes per 24 MIDI clocks (= 1 beat)
+    uint8_t num32ndNotesPerBeat;
+} midiTimeSignature_t;
+
+/**
  * @brief Contains information for a non-MIDI meta-event from a MIDI file
  */
 typedef struct
@@ -174,17 +189,7 @@ typedef struct
         } startTime;
 
         /// @brief Contains time signature data, when type is ::TIME_SIGNATURE
-        struct
-        {
-            /// @brief The numerator of the time signature
-            uint8_t numerator;
-            /// @brief The power of two of the time signature denominator (e.g. 2 for 4/4, 3 for 4/8)
-            uint8_t denominator;
-            /// @brief The number of MIDI clocks per metronome tick
-            uint8_t midiClocksPerMetronomeTick;
-            /// @brief Number of 32nd notes per 24 MIDI clocks (= 1 beat)
-            uint8_t num32ndNotesPerBeat;
-        } timeSignature;
+        midiTimeSignature_t timeSignature;
 
         /// @brief Contains key signature data, when type is ::KEY_SIGNATURE
         /// @note At most one of \c flats or \c sharps will contain a nonzero value.
@@ -322,3 +327,13 @@ uint32_t midiNextEventTime(midiFileReader_t* reader);
  * @return false If there are no more events in this file or there was a fatal parse error
  */
 bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event);
+
+/**
+ * @brief Writes a MIDI event to a byte buffer
+ *
+ * @param out The byte array
+ * @param max The maximum number of bytes to write
+ * @param event The event to write
+ * @return int The number of bytes written
+ */
+int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event);

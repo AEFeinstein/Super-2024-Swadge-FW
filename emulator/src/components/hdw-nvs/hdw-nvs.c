@@ -10,21 +10,28 @@
 #include <string.h>
 #include <dirent.h>
 #include <math.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 #include "hdw-nvs.h"
 #include "cJSON.h"
 #include "emu_main.h"
+#include "emu_utils.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
 
-#define NVS_JSON_FILE "nvs.json"
+#define NVS_JSON_FILE (*nvsFileName)
 
 // This comes from partitions.csv, and must be changed in both places simultaneously
 #define NVS_PARTITION_SIZE   0x6000
 #define NVS_ENTRY_BYTES      32
 #define NVS_OVERHEAD_ENTRIES 12
+
+#ifdef EMU_WINDOWS
+    #include <direct.h>
+#endif
 
 //==============================================================================
 // Function Prototypes
@@ -33,6 +40,28 @@
 static char* blobToStr(const void* value, size_t length);
 static int hexCharToInt(char c);
 static void strToBlob(char* str, void* outBlob, size_t blobLen);
+static FILE* openNvsFile(const char* mode);
+
+//==============================================================================
+// Constants
+//==============================================================================
+
+static const char defaultNvsValue[] = "{\"storage\":{\"test\":1}}";
+
+// Define backup files for if the current directory isn't writable
+static const char* defaultNvsFiles[] = {
+    "nvs.json",
+#if defined(EMU_MACOS)
+    "~/Library/Preferences/org.magfest.SwadgeEmulator/nvs.json",
+#elif defined(EMU_LINUX)
+    "~/.swadge_emulator_nvs.json",
+#endif
+};
+
+//==============================================================================
+// Variables
+//==============================================================================
+static const char** nvsFileName = defaultNvsFiles;
 
 //==============================================================================
 // Functions
@@ -47,36 +76,71 @@ static void strToBlob(char* str, void* outBlob, size_t blobLen);
  */
 bool initNvs(bool firstTry)
 {
-    // Check if the json file exists
-    if (access(NVS_JSON_FILE, F_OK) != 0)
+    const char** curFile;
+    for (curFile = defaultNvsFiles; curFile < (defaultNvsFiles + (sizeof(defaultNvsFiles) / sizeof(*defaultNvsFiles)));
+         curFile++)
     {
-        FILE* nvsFile = fopen(NVS_JSON_FILE, "wb");
-        if (NULL != nvsFile)
+        char expanded[1024];
+        expandPath(expanded, sizeof(expanded), *curFile);
+
+        bool existsAndValid = false;
+
+        if (0 == access(expanded, F_OK))
         {
-            if (1 == fwrite("{}", sizeof("{}"), 1, nvsFile))
+            FILE* nvsFile = fopen(expanded, "rb");
+            if (NULL != nvsFile)
             {
-                // Wrote successfully
+                // Get the file size
+                fseek(nvsFile, 0L, SEEK_END);
+                size_t fsize = ftell(nvsFile);
+                fseek(nvsFile, 0L, SEEK_SET);
+
+                if (fsize >= 2)
+                {
+                    existsAndValid = true;
+                }
+
                 fclose(nvsFile);
-                return true;
             }
-            else
+        }
+
+        // Check if the json file exists
+        if (!existsAndValid)
+        {
+            // Create parent directories if necessary
+            if (makeDirs(*curFile))
             {
-                // Failed to write
-                fclose(nvsFile);
-                return false;
+                FILE* nvsFile = fopen(expanded, "wb");
+                if (NULL != nvsFile)
+                {
+                    if (1 == fwrite(defaultNvsValue, sizeof(defaultNvsValue), 1, nvsFile))
+                    {
+                        // Wrote successfully
+                        fclose(nvsFile);
+                        nvsFileName = curFile;
+                        printf("Using NVS file %s\n", *nvsFileName);
+                        return true;
+                    }
+                    else
+                    {
+                        // Failed to write
+                        fclose(nvsFile);
+                    }
+                }
             }
         }
         else
         {
-            // Couldn't open file
-            return false;
+            // File exists
+            nvsFileName = curFile;
+            printf("Using NVS file %s\n", *nvsFileName);
+            return true;
         }
+
+        printf("Could not load NVS file %s\n", *curFile);
     }
-    else
-    {
-        // File exists
-        return true;
-    }
+
+    return false;
 }
 
 /**
@@ -152,13 +216,19 @@ bool writeNvs32(const char* key, int32_t val)
 bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
 {
     // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    FILE* nvsFile = openNvsFile("rb");
     if (NULL != nvsFile)
     {
         // Get the file size
         fseek(nvsFile, 0L, SEEK_END);
         size_t fsize = ftell(nvsFile);
         fseek(nvsFile, 0L, SEEK_SET);
+
+        if (fsize == 0)
+        {
+            fclose(nvsFile);
+            return false;
+        }
 
         // Read the file
         char fbuf[fsize + 1];
@@ -171,6 +241,11 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
             // Parse the JSON
             cJSON* json = cJSON_Parse(fbuf);
             cJSON* jsonIter;
+
+            if (!json)
+            {
+                return false;
+            }
 
             cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
 
@@ -215,7 +290,7 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
 bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
 {
     // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    FILE* nvsFile = openNvsFile("rb");
     if (NULL != nvsFile)
     {
         // Get the file size
@@ -265,7 +340,7 @@ bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
             }
 
             // Write the new JSON back to the file
-            FILE* nvsFileW = fopen(NVS_JSON_FILE, "wb");
+            FILE* nvsFileW = openNvsFile("wb");
             if (NULL != nvsFileW)
             {
                 char* jsonStr = cJSON_Print(json);
@@ -311,7 +386,7 @@ bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
 bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_value, size_t* length)
 {
     // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    FILE* nvsFile = openNvsFile("rb");
     if (NULL != nvsFile)
     {
         // Get the file size
@@ -386,7 +461,7 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
 bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* value, size_t length)
 {
     // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    FILE* nvsFile = openNvsFile("rb");
     if (NULL != nvsFile)
     {
         // Get the file size
@@ -438,7 +513,7 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
             }
 
             // Write the new JSON back to the file
-            FILE* nvsFileW = fopen(NVS_JSON_FILE, "wb");
+            FILE* nvsFileW = openNvsFile("wb");
             if (NULL != nvsFileW)
             {
                 char* jsonStr = cJSON_Print(json);
@@ -519,7 +594,7 @@ bool eraseNvsKey(const char* key)
 bool eraseNamespaceNvsKey(const char* namespace, const char* key)
 {
     // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    FILE* nvsFile = openNvsFile("rb");
     if (NULL != nvsFile)
     {
         // Get the file size
@@ -562,7 +637,7 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
             }
 
             // Write the new JSON back to the file
-            FILE* nvsFileW = fopen(NVS_JSON_FILE, "wb");
+            FILE* nvsFileW = openNvsFile("wb");
             if (NULL != nvsFileW)
             {
                 char* jsonStr = cJSON_Print(json);
@@ -603,7 +678,7 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
 bool readNvsStats(nvs_stats_t* outStats)
 {
     // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    FILE* nvsFile = openNvsFile("rb");
     if (NULL != nvsFile)
     {
         // Get the file size
@@ -708,7 +783,7 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
                                 size_t* numEntryInfos)
 {
     // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    FILE* nvsFile = openNvsFile("rb");
     if (NULL != nvsFile)
     {
         // Get the file size
@@ -843,7 +918,7 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos
 bool nvsNamespaceInUse(const char* namespace)
 {
     // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    FILE* nvsFile = openNvsFile("rb");
 
     if (NULL != nvsFile)
     {
@@ -945,4 +1020,12 @@ static void strToBlob(char* str, void* outBlob, size_t blobLen)
             outBlob8[i] = 0;
         }
     }
+}
+
+static FILE* openNvsFile(const char* mode)
+{
+    char buffer[1024];
+    expandPath(buffer, sizeof(buffer), NVS_JSON_FILE);
+
+    return fopen(buffer, mode);
 }

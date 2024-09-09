@@ -24,6 +24,9 @@
  *
  * \section start Where to Start
  *
+ * If you just want to run the Swadge emulator without setting up a development environment, see the \ref emulator
+ * for an installation guide and usage instructions.
+ *
  * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
  * pages to read from here.
  *
@@ -148,7 +151,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
  * Datasheet</a>
@@ -758,6 +761,16 @@ void openQuickSettings(void)
 void setFrameRateUs(uint32_t newFrameRateUs)
 {
     frameRateUs = newFrameRateUs;
+}
+
+/**
+ * @brief Get the current framerate, in microseconds
+ *
+ * @return uint32_t The time between frame draws, in microseconds
+ */
+uint32_t getFrameRateUs(void)
+{
+    return frameRateUs;
 }
 
 /**

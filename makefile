@@ -41,6 +41,14 @@ ifeq (, $(shell which $(CLANG_FORMAT)))
 	CLANG_FORMAT:=clang-format-17
 endif
 
+ifeq ($(HOST_OS),Linux)
+	ifneq (,$(shell getent group plugdev))
+		UDEV_GROUP:=plugdev
+	else
+		UDEV_GROUP:=$(USER)
+	endif
+endif
+
 ################################################################################
 # Source Files
 ################################################################################
@@ -106,7 +114,8 @@ else
 # Required for OpenGL and some other libraries
 CFLAGS += \
 	-I/opt/X11/include \
-	-I/opt/homebrew/include
+	-I/opt/homebrew/include \
+	-mmacosx-version-min=10.0
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -202,7 +211,7 @@ DEFINES_LIST = \
 	CONFIG_NUM_LEDS=8 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
-	IDF_VER="v5.2.1" \
+	IDF_VER="v5.3.1" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
 	CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
@@ -248,7 +257,7 @@ ifeq ($(HOST_OS),Darwin)
 endif
 
 # These are directories to look for library files in
-LIB_DIRS = 
+LIB_DIRS =
 
 # On MacOS we need to ensure that X11 is added for OpenGL and some others
 ifeq ($(HOST_OS),Darwin)
@@ -266,6 +275,9 @@ LIBRARY_FLAGS += \
 	-static-libstdc++
 else
 LIBRARY_FLAGS += \
+    -framework Foundation \
+	-framework CoreFoundation \
+	-framework CoreMIDI \
 	-framework AudioToolbox
 endif
 
@@ -275,10 +287,13 @@ LIBRARY_FLAGS += \
 	-fsanitize=bounds-strict \
 	-fno-omit-frame-pointer \
 	-static-libasan
-
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
+endif
+
+ifeq ($(HOST_OS),Windows)
+	LIBRARY_FLAGS += -Wl,-Bstatic -lpthread
 endif
 
 ################################################################################
@@ -293,16 +308,14 @@ EXECUTABLE = swadge_emulator
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) print-%
+.PHONY: all assets bundle clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) print-%
 
 # Build the executable
 all: $(EXECUTABLE)
 
 assets:
-	$(MAKE) -C ./tools/spiffs_file_preprocessor/
-	./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets/ -o ./spiffs_image/
-
-
+	$(MAKE) -C ./tools/assets_preprocessor/
+	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
@@ -325,6 +338,34 @@ $(CNFS_FILE):
 	
 
 
+
+bundle: SwadgeEmulator.app
+
+SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns emulator/resources/Info.plist
+	rm -rf SwadgeEmulator.app
+	mkdir -p SwadgeEmulator.app/Contents/{MacOS,Resources,libs}
+	cat emulator/resources/Info.plist | sed "s/##GIT_HASH##/$(GIT_HASH)/" > SwadgeEmulator.app/Contents/Info.plist
+	echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
+	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
+	vtool -set-build-version macos 10.0 10.0 -replace -output SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator $(EXECUTABLE)
+	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator -d ./SwadgeEmulator.app/Contents/libs/
+
+
+build/SwadgeEmulator.icns: emulator/resources/icon.png
+	rm -rf build/SwadgeEmulator.iconset
+	mkdir -p build/SwadgeEmulator.iconset
+	sips -z 16 16     $< --out build/SwadgeEmulator.iconset/icon_16x16.png
+	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_16x16@2x.png
+	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_32x32.png
+	sips -z 64 64     $< --out build/SwadgeEmulator.iconset/icon_32x32@2x.png
+	sips -z 128 128   $< --out build/SwadgeEmulator.iconset/icon_128x128.png
+	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_128x128@2x.png
+	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_256x256.png
+	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_256x256@2x.png
+	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_512x512.png
+	sips -z 1024 1024 $< --out build/SwadgeEmulator.iconset/icon_512x512@2x.png
+	iconutil -c icns -o build/SwadgeEmulator.icns build/SwadgeEmulator.iconset
+	rm -r build/SwadgeEmulator.iconset
 
 # This cleans emulator files
 clean:
@@ -379,17 +420,30 @@ usbflash :
 	tools/reflash_and_monitor.bat
 else
 usbflash :
+	# In case we are already in the bootloader...
+	($(MAKE) -C tools/bootload_reboot_stub reboot)||(true)
+	# Command reboot out of game into bootloader.
 	$(MAKE) -C tools/reboot_into_bootloader
-	sleep 1.2
 	idf.py flash
 	sleep 1.2
 	$(MAKE) -C tools/bootload_reboot_stub reboot
-	sleep 2.5
 	$(MAKE) -C tools/swadgeterm monitor
 endif
 
 monitor :
 	$(MAKE) -C tools/swadgeterm monitor
+
+/etc/udev/rules.d/99-swadge.rules :
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\"\n" $(UDEV_GROUP) > /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
+	sudo cp -a /tmp/99-swadge.rules /etc/udev/rules.d/99-swadge.rules
+
+installudev : /etc/udev/rules.d/99-swadge.rules
+	getent group plugdev >/dev/null && sudo usermod -aG plugdev $(USER) || true
+	sudo udevadm control --reload
+	sudo udevadm trigger
 
 ################################################################################
 # cppcheck targets
