@@ -14,7 +14,7 @@
 //==============================================================================
 
 static const char* const BB_LEVEL_BGMS[] = {"brkBgmSkill.sng",  "brkBgmPixel.sng",  "brkBgmCrazy.sng",
-                                         "brkBgmFinale.sng", "brkHighScore.sng", "brkBgmTitle.sng"};
+                                            "brkBgmFinale.sng", "brkHighScore.sng", "brkBgmTitle.sng"};
 
 typedef enum
 {
