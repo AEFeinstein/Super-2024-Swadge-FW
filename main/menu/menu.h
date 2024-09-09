@@ -33,7 +33,6 @@
  * These button presses should not be handled elsewhere simultaneously.
  *
  * Menus are drawn with a renderer, such as menuManiaRenderer.h.
- * Menus are drawn with a renderer, such as menuManiaRenderer.h.
  *
  * \section menu_example Example
  *
