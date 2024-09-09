@@ -14,50 +14,50 @@
 
 typedef enum
 {
-    JS_WALL,
-    JS_SLINGSHOT,
-    JS_DROP_TARGET,
-    JS_STANDUP_TARGET,
-    JS_SPINNER,
-    JS_SCOOP,
-    JS_BALL_LOST,
-    JS_LAUNCH_DOOR,
-} jsLineType_t;
+    PB_WALL,
+    PB_SLINGSHOT,
+    PB_DROP_TARGET,
+    PB_STANDUP_TARGET,
+    PB_SPINNER,
+    PB_SCOOP,
+    PB_BALL_LOST,
+    PB_LAUNCH_DOOR,
+} pbLineType_t;
 
 typedef enum
 {
-    JS_BUMPER,
-    JS_ROLLOVER
-} jsCircleType_t;
+    PB_BUMPER,
+    PB_ROLLOVER
+} pbCircleType_t;
 
 typedef enum
 {
-    JS_BALL_SPAWN,
-    JS_ITEM_SPAWN,
-} jsPointType_t;
+    PB_BALL_SPAWN,
+    PB_ITEM_SPAWN,
+} pbPointType_t;
 
 typedef struct
 {
     uint16_t id;
     uint8_t groupId;
     list_t* group;
-    jsPointType_t type;
+    pbPointType_t type;
     vecFl_t pos;
-} jsPoint_t;
+} pbPoint_t;
 
 typedef struct
 {
     uint16_t id;
     uint8_t groupId;
     list_t* group;
-    jsLineType_t type;
+    pbLineType_t type;
     vecFl_t p1;
     vecFl_t p2;
     float pushVel;
     bool isUp;
     int32_t litTimer;
     int32_t resetTimer;
-} jsLine_t;
+} pbLine_t;
 
 typedef struct
 {
@@ -74,7 +74,7 @@ typedef struct
     float currentAngularVelocity;
     bool buttonHeld;
     bool facingRight;
-} jsFlipper_t;
+} pbFlipper_t;
 
 // TODO merge these
 typedef struct
@@ -85,7 +85,7 @@ typedef struct
     vecFl_t pos;
     vecFl_t vel;
     int32_t scoopTimer;
-} jsBall_t;
+} pbBall_t;
 
 typedef struct
 {
@@ -94,10 +94,10 @@ typedef struct
     list_t* group;
     float radius;
     vecFl_t pos;
-    jsCircleType_t type;
+    pbCircleType_t type;
     float pushVel;
     int32_t litTimer;
-} jsCircle_t;
+} pbCircle_t;
 
 typedef struct
 {
@@ -110,7 +110,7 @@ typedef struct
     bool isBlinking;
     bool isOn;
     int32_t blinkTimer;
-} jsTriangle_t;
+} pbTriangle_t;
 
 typedef struct
 {
@@ -122,7 +122,7 @@ typedef struct
     float height;
     bool buttonHeld;
     float impulse;
-} jsLauncher_t;
+} pbLauncher_t;
 
 typedef struct
 {
@@ -131,18 +131,18 @@ typedef struct
     bool paused;
     int32_t numGroups;
     list_t* groups;
-    jsLine_t* lines;
+    pbLine_t* lines;
     int32_t numLines;
     list_t balls;
-    jsCircle_t* circles;
+    pbCircle_t* circles;
     int32_t numCircles;
-    jsFlipper_t* flippers;
+    pbFlipper_t* flippers;
     int32_t numFlippers;
-    jsLauncher_t* launchers;
+    pbLauncher_t* launchers;
     int32_t numLaunchers;
-    jsTriangle_t* triangles;
+    pbTriangle_t* triangles;
     int32_t numTriangles;
-    jsPoint_t* points;
+    pbPoint_t* points;
     int32_t numPoints;
     vec_t cameraOffset;
     vecFl_t tableDim;
@@ -152,4 +152,4 @@ typedef struct
     int32_t saveTimer;
     int32_t scoopCount;
     int32_t ballCount;
-} jsScene_t;
+} pbScene_t;

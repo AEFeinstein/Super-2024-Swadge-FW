@@ -2,5 +2,5 @@
 
 #include "pinball_typedef.h"
 
-void jsSimulate(jsScene_t* scene, int32_t elapsedUs);
-bool ballLineIntersection(jsBall_t* ball, jsLine_t* line);
+void pbSimulate(pbScene_t* scene, int32_t elapsedUs);
+bool ballLineIntersection(pbBall_t* ball, pbLine_t* line);

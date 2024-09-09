@@ -10,9 +10,9 @@
  * @param scene
  * @return int32_t
  */
-int32_t readPointFromFile(uint8_t* tableData, jsScene_t* scene)
+int32_t readPointFromFile(uint8_t* tableData, pbScene_t* scene)
 {
-    jsPoint_t* point = &scene->points[scene->numPoints++];
+    pbPoint_t* point = &scene->points[scene->numPoints++];
     uint32_t dIdx    = 0;
     point->id        = readInt16(tableData, &dIdx);
     point->groupId   = readInt8(tableData, &dIdx);

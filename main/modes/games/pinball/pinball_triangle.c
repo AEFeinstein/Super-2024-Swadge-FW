@@ -8,9 +8,9 @@
  * @param scene
  * @return uint32_t
  */
-uint32_t readTriangleFromFile(uint8_t* tableData, jsScene_t* scene)
+uint32_t readTriangleFromFile(uint8_t* tableData, pbScene_t* scene)
 {
-    jsTriangle_t* triangle = &scene->triangles[scene->numTriangles++];
+    pbTriangle_t* triangle = &scene->triangles[scene->numTriangles++];
 
     uint32_t dIdx     = 0;
     triangle->id      = readInt16(tableData, &dIdx);
@@ -36,7 +36,7 @@ uint32_t readTriangleFromFile(uint8_t* tableData, jsScene_t* scene)
  * @param tri
  * @param elapsedUs
  */
-void jsTriangleTimer(jsTriangle_t* tri, int32_t elapsedUs)
+void pbTriangleTimer(pbTriangle_t* tri, int32_t elapsedUs)
 {
     if (tri->isBlinking)
     {

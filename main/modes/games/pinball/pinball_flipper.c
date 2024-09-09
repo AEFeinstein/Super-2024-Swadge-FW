@@ -12,9 +12,9 @@
  * @param scene
  * @return uint32_t
  */
-uint32_t readFlipperFromFile(uint8_t* tableData, jsScene_t* scene)
+uint32_t readFlipperFromFile(uint8_t* tableData, pbScene_t* scene)
 {
-    jsFlipper_t* flipper = &scene->flippers[scene->numFlippers++];
+    pbFlipper_t* flipper = &scene->flippers[scene->numFlippers++];
     uint32_t dIdx        = 0;
 
     flipper->pos.x       = readInt16(tableData, &dIdx);
@@ -49,7 +49,7 @@ uint32_t readFlipperFromFile(uint8_t* tableData, jsScene_t* scene)
  * @param flipper
  * @param dt
  */
-void jsFlipperSimulate(jsFlipper_t* flipper, float dt)
+void pbFlipperSimulate(pbFlipper_t* flipper, float dt)
 {
     float prevRotation = flipper->rotation;
 
@@ -78,7 +78,7 @@ void jsFlipperSimulate(jsFlipper_t* flipper, float dt)
  * @param flipper
  * @return vecFl_t
  */
-vecFl_t jsFlipperGetTip(jsFlipper_t* flipper)
+vecFl_t pbFlipperGetTip(pbFlipper_t* flipper)
 {
     float angle = flipper->restAngle + flipper->sign * flipper->rotation;
     vecFl_t dir = {.x = cosf(angle), .y = sinf(angle)};
@@ -90,14 +90,14 @@ vecFl_t jsFlipperGetTip(jsFlipper_t* flipper)
  *
  * @param flipper
  */
-void pinballDrawFlipper(jsFlipper_t* flipper, vec_t* cameraOffset)
+void pinballDrawFlipper(pbFlipper_t* flipper, vec_t* cameraOffset)
 {
     vecFl_t pos = {
         .x = flipper->pos.x - cameraOffset->x,
         .y = flipper->pos.y - cameraOffset->y,
     };
     drawCircleFilled(pos.x, pos.y, flipper->radius, c115);
-    vecFl_t tip = jsFlipperGetTip(flipper);
+    vecFl_t tip = pbFlipperGetTip(flipper);
     tip.x -= cameraOffset->x;
     tip.y -= cameraOffset->y;
     drawCircleFilled(tip.x, tip.y, flipper->radius, c115);

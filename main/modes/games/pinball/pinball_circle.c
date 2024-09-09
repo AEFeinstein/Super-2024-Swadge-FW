@@ -8,9 +8,9 @@
  * @param scene
  * @return uint32_t
  */
-uint32_t readCircleFromFile(uint8_t* tableData, jsScene_t* scene)
+uint32_t readCircleFromFile(uint8_t* tableData, pbScene_t* scene)
 {
-    jsCircle_t* circle = &scene->circles[scene->numCircles++];
+    pbCircle_t* circle = &scene->circles[scene->numCircles++];
 
     uint32_t dIdx   = 0;
     circle->id      = readInt16(tableData, &dIdx);
@@ -32,7 +32,7 @@ uint32_t readCircleFromFile(uint8_t* tableData, jsScene_t* scene)
  * @param dt
  * @param scene
  */
-void jsBallSimulate(jsBall_t* ball, int32_t elapsedUs, float dt, jsScene_t* scene)
+void pbBallSimulate(pbBall_t* ball, int32_t elapsedUs, float dt, pbScene_t* scene)
 {
     if (ball->scoopTimer <= 0)
     {
@@ -48,15 +48,15 @@ void jsBallSimulate(jsBall_t* ball, int32_t elapsedUs, float dt, jsScene_t* scen
             // Respawn in the launch tube
             for (int32_t pIdx = 0; pIdx < scene->numPoints; pIdx++)
             {
-                jsPoint_t* point = &scene->points[pIdx];
-                if (JS_BALL_SPAWN == point->type)
+                pbPoint_t* point = &scene->points[pIdx];
+                if (PB_BALL_SPAWN == point->type)
                 {
                     ball->pos = point->pos;
                     break;
                 }
             }
 
-            jsOpenLaunchTube(scene, true);
+            pbOpenLaunchTube(scene, true);
 
             // Give the ball initial velocity
             ball->vel.x = 0;
@@ -71,7 +71,7 @@ void jsBallSimulate(jsBall_t* ball, int32_t elapsedUs, float dt, jsScene_t* scen
  * @param circle
  * @param elapsedUs
  */
-void jsCircleTimer(jsCircle_t* circle, int32_t elapsedUs)
+void pbCircleTimer(pbCircle_t* circle, int32_t elapsedUs)
 {
     if (circle->litTimer > 0)
     {

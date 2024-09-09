@@ -10,10 +10,10 @@
  * @param scene
  * @return uint32_t
  */
-uint32_t readRectangleFromFile(uint8_t* tableData, jsScene_t* scene)
+uint32_t readRectangleFromFile(uint8_t* tableData, pbScene_t* scene)
 {
     uint32_t dIdx          = 0;
-    jsLauncher_t* launcher = &scene->launchers[scene->numLaunchers++];
+    pbLauncher_t* launcher = &scene->launchers[scene->numLaunchers++];
     launcher->id           = readInt16(tableData, &dIdx);
     launcher->groupId      = readInt8(tableData, &dIdx);
     launcher->group        = addToGroup(scene, launcher, launcher->groupId);
@@ -33,7 +33,7 @@ uint32_t readRectangleFromFile(uint8_t* tableData, jsScene_t* scene)
  * @param balls
  * @param dt
  */
-void jsLauncherSimulate(jsLauncher_t* launcher, list_t* balls, float dt)
+void pbLauncherSimulate(pbLauncher_t* launcher, list_t* balls, float dt)
 {
     if (launcher->buttonHeld)
     {
@@ -50,7 +50,7 @@ void jsLauncherSimulate(jsLauncher_t* launcher, list_t* balls, float dt)
         node_t* bNode = balls->first;
         while (bNode)
         {
-            jsBall_t* ball = bNode->val;
+            pbBall_t* ball = bNode->val;
             circleFl_t b   = {.pos = ball->pos, .radius = ball->radius};
             if (circleRectFlIntersection(b, r, NULL))
             {

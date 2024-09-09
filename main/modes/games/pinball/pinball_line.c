@@ -11,9 +11,9 @@
  * @param scene
  * @return int32_t
  */
-int32_t readLineFromFile(uint8_t* tableData, jsScene_t* scene)
+int32_t readLineFromFile(uint8_t* tableData, pbScene_t* scene)
 {
-    jsLine_t* line = &scene->lines[scene->numLines++];
+    pbLine_t* line = &scene->lines[scene->numLines++];
     uint32_t dIdx  = 0;
     line->id       = readInt16(tableData, &dIdx);
     line->groupId  = readInt8(tableData, &dIdx);
@@ -34,14 +34,14 @@ int32_t readLineFromFile(uint8_t* tableData, jsScene_t* scene)
  *
  * @param line
  */
-void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
+void pinballDrawLine(pbLine_t* line, vec_t* cameraOffset)
 {
     paletteColor_t color = c555;
     switch (line->type)
     {
-        case JS_WALL:
-        case JS_BALL_LOST:
-        case JS_LAUNCH_DOOR:
+        case PB_WALL:
+        case PB_BALL_LOST:
+        case PB_LAUNCH_DOOR:
         {
             if (!line->isUp)
             {
@@ -50,12 +50,12 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
             color = c555;
             break;
         }
-        case JS_SLINGSHOT:
+        case PB_SLINGSHOT:
         {
             color = line->litTimer > 0 ? c500 : c300;
             break;
         }
-        case JS_DROP_TARGET:
+        case PB_DROP_TARGET:
         {
             if (line->isUp)
             {
@@ -67,17 +67,17 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
             }
             break;
         }
-        case JS_STANDUP_TARGET:
+        case PB_STANDUP_TARGET:
         {
             color = line->litTimer > 0 ? c004 : c002;
             break;
         }
-        case JS_SPINNER:
+        case PB_SPINNER:
         {
             color = c123;
             break;
         }
-        case JS_SCOOP:
+        case PB_SCOOP:
         {
             color = c202;
             break;
@@ -94,7 +94,7 @@ void pinballDrawLine(jsLine_t* line, vec_t* cameraOffset)
  * @param line
  * @param elapsedUs
  */
-void jsLineTimer(jsLine_t* line, int32_t elapsedUs, jsScene_t* scene)
+void pbLineTimer(pbLine_t* line, int32_t elapsedUs, pbScene_t* scene)
 {
     // Decrement the lit timer
     if (line->litTimer > 0)
@@ -115,7 +115,7 @@ void jsLineTimer(jsLine_t* line, int32_t elapsedUs, jsScene_t* scene)
             node_t* bNode = scene->balls.first;
             while (bNode)
             {
-                jsBall_t* ball = bNode->val;
+                pbBall_t* ball = bNode->val;
                 if (ballLineIntersection(ball, line))
                 {
                     intersecting = true;

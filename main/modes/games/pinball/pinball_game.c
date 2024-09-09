@@ -47,7 +47,7 @@ uint16_t readInt16(uint8_t* data, uint32_t* idx)
  * @param groupId
  * @return list_t*
  */
-list_t* addToGroup(jsScene_t* scene, void* obj, uint8_t groupId)
+list_t* addToGroup(pbScene_t* scene, void* obj, uint8_t groupId)
 {
     push(&scene->groups[groupId], obj);
     return &scene->groups[groupId];
@@ -58,7 +58,7 @@ list_t* addToGroup(jsScene_t* scene, void* obj, uint8_t groupId)
  *
  * @param scene
  */
-void jsSceneInit(jsScene_t* scene)
+void pbSceneInit(pbScene_t* scene)
 {
     scene->gravity.x = 0;
     scene->gravity.y = 180;
@@ -74,12 +74,12 @@ void jsSceneInit(jsScene_t* scene)
     scene->groups    = (list_t*)calloc(scene->numGroups, sizeof(list_t));
 
     uint16_t linesInFile = readInt16(tableData, &dIdx);
-    scene->lines         = calloc(linesInFile, sizeof(jsLine_t));
+    scene->lines         = calloc(linesInFile, sizeof(pbLine_t));
     scene->numLines      = 0;
     for (uint16_t lIdx = 0; lIdx < linesInFile; lIdx++)
     {
         dIdx += readLineFromFile(&tableData[dIdx], scene);
-        jsLine_t* newLine = &scene->lines[scene->numLines - 1];
+        pbLine_t* newLine = &scene->lines[scene->numLines - 1];
 
         // Record the table dimension
         float maxX = MAX(newLine->p1.x, newLine->p2.x);
@@ -96,7 +96,7 @@ void jsSceneInit(jsScene_t* scene)
     }
 
     uint16_t circlesInFile = readInt16(tableData, &dIdx);
-    scene->circles         = calloc(circlesInFile, sizeof(jsCircle_t));
+    scene->circles         = calloc(circlesInFile, sizeof(pbCircle_t));
     scene->numCircles      = 0;
     for (uint16_t cIdx = 0; cIdx < circlesInFile; cIdx++)
     {
@@ -104,7 +104,7 @@ void jsSceneInit(jsScene_t* scene)
     }
 
     uint16_t rectanglesInFile = readInt16(tableData, &dIdx);
-    scene->launchers          = calloc(1, sizeof(jsLauncher_t));
+    scene->launchers          = calloc(1, sizeof(pbLauncher_t));
     scene->numLaunchers       = 0;
     for (uint16_t rIdx = 0; rIdx < rectanglesInFile; rIdx++)
     {
@@ -112,7 +112,7 @@ void jsSceneInit(jsScene_t* scene)
     }
 
     uint16_t flippersInFile = readInt16(tableData, &dIdx);
-    scene->flippers         = calloc(flippersInFile, sizeof(jsFlipper_t));
+    scene->flippers         = calloc(flippersInFile, sizeof(pbFlipper_t));
     scene->numFlippers      = 0;
     for (uint16_t fIdx = 0; fIdx < flippersInFile; fIdx++)
     {
@@ -120,7 +120,7 @@ void jsSceneInit(jsScene_t* scene)
     }
 
     uint16_t trianglesInFile = readInt16(tableData, &dIdx);
-    scene->triangles         = calloc(trianglesInFile, sizeof(jsTriangle_t));
+    scene->triangles         = calloc(trianglesInFile, sizeof(pbTriangle_t));
     scene->numTriangles      = 0;
     for (uint16_t tIdx = 0; tIdx < trianglesInFile; tIdx++)
     {
@@ -128,7 +128,7 @@ void jsSceneInit(jsScene_t* scene)
     }
 
     uint16_t pointsInFile = readInt16(tableData, &dIdx);
-    scene->points         = calloc(pointsInFile, sizeof(jsPoint_t));
+    scene->points         = calloc(pointsInFile, sizeof(pbPoint_t));
     scene->numPoints      = 0;
     for (uint16_t pIdx = 0; pIdx < pointsInFile; pIdx++)
     {
@@ -150,7 +150,7 @@ void jsSceneInit(jsScene_t* scene)
  *
  * @param scene
  */
-void jsStartBall(jsScene_t* scene)
+void pbStartBall(pbScene_t* scene)
 {
     // Clear loop history
     memset(scene->loopHistory, 0, sizeof(scene->loopHistory));
@@ -158,8 +158,8 @@ void jsStartBall(jsScene_t* scene)
     // Reset targets
     for (uint16_t lIdx = 0; lIdx < scene->numLines; lIdx++)
     {
-        jsLine_t* line = &scene->lines[lIdx];
-        if (JS_DROP_TARGET == line->type)
+        pbLine_t* line = &scene->lines[lIdx];
+        if (PB_DROP_TARGET == line->type)
         {
             line->isUp = true;
         }
@@ -169,14 +169,14 @@ void jsStartBall(jsScene_t* scene)
     scene->saveTimer = 15000000;
 
     // Open the launch tube
-    jsOpenLaunchTube(scene, true);
+    pbOpenLaunchTube(scene, true);
 
     clear(&scene->balls);
     for (uint16_t pIdx = 0; pIdx < scene->numPoints; pIdx++)
     {
-        if (JS_BALL_SPAWN == scene->points[pIdx].type)
+        if (PB_BALL_SPAWN == scene->points[pIdx].type)
         {
-            jsBall_t* ball    = calloc(1, sizeof(jsBall_t));
+            pbBall_t* ball    = calloc(1, sizeof(pbBall_t));
             ball->pos         = scene->points[pIdx].pos;
             ball->vel.x       = 0;
             ball->vel.y       = 0;
@@ -194,7 +194,7 @@ void jsStartBall(jsScene_t* scene)
  *
  * @param scene
  */
-void jsStartMultiball(jsScene_t* scene)
+void pbStartMultiball(pbScene_t* scene)
 {
     // Don't start multiball if there are already three balls
     if (3 == scene->balls.length)
@@ -209,7 +209,7 @@ void jsStartMultiball(jsScene_t* scene)
     for (uint16_t pIdx = 0; pIdx < scene->numPoints; pIdx++)
     {
         // If this is a spawn point
-        if (JS_BALL_SPAWN == scene->points[pIdx].type)
+        if (PB_BALL_SPAWN == scene->points[pIdx].type)
         {
             // Ignore the first
             if (ignoreFirst)
@@ -220,7 +220,7 @@ void jsStartMultiball(jsScene_t* scene)
             {
                 // Spawn a ball here
                 // TODO check if space is empty first
-                jsBall_t* ball    = calloc(1, sizeof(jsBall_t));
+                pbBall_t* ball    = calloc(1, sizeof(pbBall_t));
                 ball->pos         = scene->points[pIdx].pos;
                 ball->vel.x       = 0;
                 ball->vel.y       = 0;
@@ -245,7 +245,7 @@ void jsStartMultiball(jsScene_t* scene)
  *
  * @param scene
  */
-void jsSceneDestroy(jsScene_t* scene)
+void pbSceneDestroy(pbScene_t* scene)
 {
     if (scene->groups)
     {
@@ -282,7 +282,7 @@ void jsSceneDestroy(jsScene_t* scene)
  * @param scene
  * @param event
  */
-void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event)
+void pbButtonPressed(pbScene_t* scene, buttonEvt_t* event)
 {
     if (event->down)
     {
@@ -364,7 +364,7 @@ void jsButtonPressed(jsScene_t* scene, buttonEvt_t* event)
  * @param ball
  * @param scene
  */
-void jsRemoveBall(jsBall_t* ball, jsScene_t* scene)
+void pbRemoveBall(pbBall_t* ball, pbScene_t* scene)
 {
     // Clear loop history
     memset(scene->loopHistory, 0, sizeof(scene->loopHistory));
@@ -403,7 +403,7 @@ void jsRemoveBall(jsBall_t* ball, jsScene_t* scene)
             {
                 printf("Ball lost\n");
                 // TODO show bonus set up for next ball, etc.
-                jsStartBall(scene);
+                pbStartBall(scene);
             }
             else
             {
@@ -420,7 +420,7 @@ void jsRemoveBall(jsBall_t* ball, jsScene_t* scene)
  * @param scene
  * @param elapsedUs
  */
-void jsGameTimers(jsScene_t* scene, int32_t elapsedUs)
+void pbGameTimers(pbScene_t* scene, int32_t elapsedUs)
 {
     if (scene->saveTimer > 0)
     {
@@ -434,7 +434,7 @@ void jsGameTimers(jsScene_t* scene, int32_t elapsedUs)
  * @param scene
  * @param open
  */
-void jsOpenLaunchTube(jsScene_t* scene, bool open)
+void pbOpenLaunchTube(pbScene_t* scene, bool open)
 {
     if (open != scene->launchTubeClosed)
     {
@@ -442,8 +442,8 @@ void jsOpenLaunchTube(jsScene_t* scene, bool open)
 
         for (int32_t lIdx = 0; lIdx < scene->numLines; lIdx++)
         {
-            jsLine_t* line = &scene->lines[lIdx];
-            if (JS_LAUNCH_DOOR == line->type)
+            pbLine_t* line = &scene->lines[lIdx];
+            if (PB_LAUNCH_DOOR == line->type)
             {
                 line->isUp = !open;
             }

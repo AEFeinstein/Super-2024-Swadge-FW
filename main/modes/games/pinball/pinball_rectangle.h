@@ -5,5 +5,5 @@
 
 #define MAX_LAUNCHER_VELOCITY -600
 
-uint32_t readRectangleFromFile(uint8_t* tableData, jsScene_t* scene);
-void jsLauncherSimulate(jsLauncher_t* launcher, list_t* balls, float dt);
+uint32_t readRectangleFromFile(uint8_t* tableData, pbScene_t* scene);
+void pbLauncherSimulate(pbLauncher_t* launcher, list_t* balls, float dt);

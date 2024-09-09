@@ -16,7 +16,7 @@
 
 typedef struct
 {
-    jsScene_t scene;
+    pbScene_t scene;
     font_t ibm;
 } pinball_t;
 
@@ -71,8 +71,8 @@ static void pinEnterMode(void)
 
     loadFont("ibm_vga8.font", &pinball->ibm, false);
 
-    jsSceneInit(&pinball->scene);
-    jsStartBall(&pinball->scene);
+    pbSceneInit(&pinball->scene);
+    pbStartBall(&pinball->scene);
 }
 
 /**
@@ -82,7 +82,7 @@ static void pinEnterMode(void)
 static void pinExitMode(void)
 {
     freeFont(&pinball->ibm);
-    jsSceneDestroy(&pinball->scene);
+    pbSceneDestroy(&pinball->scene);
     free(pinball);
 }
 
@@ -99,19 +99,19 @@ static void pinMainLoop(int64_t elapsedUs)
     {
         if (evt.down && PB_START == evt.button)
         {
-            jsSceneDestroy(&pinball->scene);
-            jsSceneInit(&pinball->scene);
+            pbSceneDestroy(&pinball->scene);
+            pbSceneInit(&pinball->scene);
         }
         else
         {
-            jsButtonPressed(&pinball->scene, &evt);
+            pbButtonPressed(&pinball->scene, &evt);
         }
     }
 
-    jsSimulate(&pinball->scene, elapsedUs);
-    jsGameTimers(&pinball->scene, elapsedUs);
-    jsAdjustCamera(&pinball->scene);
-    jsSceneDraw(&pinball->scene, &pinball->ibm);
+    pbSimulate(&pinball->scene, elapsedUs);
+    pbGameTimers(&pinball->scene, elapsedUs);
+    pbAdjustCamera(&pinball->scene);
+    pbSceneDraw(&pinball->scene, &pinball->ibm);
 }
 
 /**

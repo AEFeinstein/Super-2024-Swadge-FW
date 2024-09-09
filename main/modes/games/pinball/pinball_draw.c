@@ -12,7 +12,7 @@
  *
  * @param scene
  */
-void jsAdjustCamera(jsScene_t* scene)
+void pbAdjustCamera(pbScene_t* scene)
 {
     // No balls? No camera adjustment!
     if (0 == scene->balls.length)
@@ -27,7 +27,7 @@ void jsAdjustCamera(jsScene_t* scene)
     node_t* ballNode = scene->balls.first;
     while (ballNode)
     {
-        jsBall_t* ball = ballNode->val;
+        pbBall_t* ball = ballNode->val;
         if (ball->pos.y > lowestBallY)
         {
             lowestBallX = ball->pos.x;
@@ -78,7 +78,7 @@ void jsAdjustCamera(jsScene_t* scene)
  *
  * @param scene
  */
-void jsSceneDraw(jsScene_t* scene, font_t* font)
+void pbSceneDraw(pbScene_t* scene, font_t* font)
 {
     clearPxTft();
 
@@ -93,7 +93,7 @@ void jsSceneDraw(jsScene_t* scene, font_t* font)
     // Triangle indicators
     for (int32_t i = 0; i < scene->numTriangles; i++)
     {
-        jsTriangle_t* tri = &scene->triangles[i];
+        pbTriangle_t* tri = &scene->triangles[i];
         drawTriangleOutlined(tri->p1.x - scene->cameraOffset.x, tri->p1.y - scene->cameraOffset.y, //
                              tri->p2.x - scene->cameraOffset.x, tri->p2.y - scene->cameraOffset.y, //
                              tri->p3.x - scene->cameraOffset.x, tri->p3.y - scene->cameraOffset.y, //
@@ -110,7 +110,7 @@ void jsSceneDraw(jsScene_t* scene, font_t* font)
     node_t* bNode = scene->balls.first;
     while (bNode)
     {
-        jsBall_t* ball = bNode->val;
+        pbBall_t* ball = bNode->val;
 
         // Don't draw when scooped
         if (ball->scoopTimer <= 0)
@@ -125,7 +125,7 @@ void jsSceneDraw(jsScene_t* scene, font_t* font)
     // circles
     for (int32_t i = 0; i < scene->numCircles; i++)
     {
-        if (JS_BUMPER == scene->circles[i].type)
+        if (PB_BUMPER == scene->circles[i].type)
         {
             vecFl_t* pos = &scene->circles[i].pos;
             drawCircleFilled(pos->x - scene->cameraOffset.x, pos->y - scene->cameraOffset.y, scene->circles[i].radius,
@@ -142,7 +142,7 @@ void jsSceneDraw(jsScene_t* scene, font_t* font)
     // launchers
     for (int32_t i = 0; i < scene->numLaunchers; i++)
     {
-        jsLauncher_t* l = &scene->launchers[i];
+        pbLauncher_t* l = &scene->launchers[i];
         int compression = l->height * l->impulse;
         vec_t offsetPos = {
             .x = l->pos.x - scene->cameraOffset.x,
