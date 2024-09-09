@@ -763,8 +763,17 @@ void updateReadyScreen(pango_t* self)
 void drawReadyScreen(font_t* font, paGameData_t* gameData)
 {
     drawPangoHud(font, gameData);
-    int16_t xOff = (TFT_WIDTH - textWidth(font, str_get_ready)) / 2;
-    drawText(font, c555, str_get_ready, xOff, 128);
+
+    //int16_t xOff = (TFT_WIDTH - textWidth(font, "str_get_ready")) >> 1;
+    drawText(font, c555, "Ready?", 80, 96);
+
+    if(gameData->frameCount > 60){
+        drawText(font, c555, "Set...", 112, 128);
+    }
+
+    if(gameData->frameCount > 120){
+        drawText(font, c555, "PANGO!", 128, 160);
+    }
 
     /*if (getLevelIndex(gameData->world, gameData->level) == 0)
     {
