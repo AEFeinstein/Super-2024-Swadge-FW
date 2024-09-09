@@ -352,8 +352,8 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     drawText(font, c553, livesStr, 56, 2);
     //drawText(font, c553, coinStr, 160, 224);
     drawText(font, c553, scoreStr, 112, 2);
-    drawText(font, c553, levelStr, 24, 224);
-    drawText(font, (gameData->countdown > 30) ? c553 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 208, 224);
+    drawText(font, c553, levelStr, 32, 226);
+    drawText(font, (gameData->countdown > 30) ? c553 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 200, 226);
 
     if (gameData->comboTimer == 0)
     {
@@ -1155,7 +1155,8 @@ void updateLevelClear(pango_t* self)
 void drawLevelClear(font_t* font, paGameData_t* gameData)
 {
     drawPangoHud(font, gameData);
-    drawText(font, c555, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done)) / 2, 128);
+    drawText(font, c000, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done) + 1) >> 1, 129);
+    drawText(font, c553, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done)) >> 1, 128);
 }
 
 void changeStateGameClear(pango_t* self)
@@ -1521,7 +1522,8 @@ void updatePause(pango_t* self)
 
 void drawPause(font_t* font)
 {
-    drawText(font, c555, str_pause, (TFT_WIDTH - textWidth(font, str_pause)) / 2, 128);
+    drawText(font, c000, str_pause, (TFT_WIDTH - textWidth(font, str_pause) + 2) >> 1, 129);
+    drawText(font, c553, str_pause, (TFT_WIDTH - textWidth(font, str_pause)) >> 1, 128);
 }
 
 uint16_t getLevelIndex(uint8_t world, uint8_t level)
