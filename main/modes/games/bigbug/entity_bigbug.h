@@ -16,8 +16,8 @@
 // Enums
 //==============================================================================
 
-
-typedef enum{
+typedef enum
+{
     ONESHOT_ANIMATION,
     PHYSICS_SPRITE,
     PHYSICS_ANIMATION
@@ -30,10 +30,9 @@ typedef enum{
 typedef void (*bb_updateFunction_t)(struct bb_entity_t* self);
 typedef void (*bb_collisionHandler_t)(struct bb_entity_t* self, struct bb_entity_t* other);
 typedef bool (*bb_tileCollisionHandler_t)(struct bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
-                                       uint8_t direction);
+                                          uint8_t direction);
 typedef void (*bb_fallOffTileHandler_t)(struct bb_entity_t* self);
 typedef void (*bb_overlapTileHandler_t)(struct bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
-
 
 struct bb_entity_t
 {
@@ -52,7 +51,7 @@ struct bb_entity_t
     bool spriteFlipVertical;
     int16_t spriteRotateAngle;
 
-    uint8_t spriteIndex;//see bb_spriteDef_t in typedef_bigbug.h
+    uint8_t spriteIndex; // see bb_spriteDef_t in typedef_bigbug.h
     uint8_t currentFrame;
     uint8_t animationTimer;
     uint8_t animationFPS;
@@ -70,7 +69,7 @@ struct bb_entity_t
 // Prototypes
 //==============================================================================
 void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData,
-                      bb_soundManager_t* soundManager);
+                         bb_soundManager_t* soundManager);
 
 void bb_destroyEntity(bb_entity_t* self, bool respawn);
 

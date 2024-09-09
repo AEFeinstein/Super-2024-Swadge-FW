@@ -22,15 +22,15 @@
 // Functions
 //==============================================================================
 void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData,
-                      bb_soundManager_t* soundManager)
+                         bb_soundManager_t* soundManager)
 {
-    self->active                           = false;
-    self->gameData                         = gameData;
-    self->soundManager                     = soundManager;
-    self->entityManager                    = entityManager;
-    self->spriteFlipHorizontal             = false;
-    self->spriteFlipVertical               = false;
-    self->spriteRotateAngle                = 0;
+    self->active               = false;
+    self->gameData             = gameData;
+    self->soundManager         = soundManager;
+    self->entityManager        = entityManager;
+    self->spriteFlipHorizontal = false;
+    self->spriteFlipVertical   = false;
+    self->spriteRotateAngle    = 0;
 }
 
 void bb_destroyEntity(bb_entity_t* self, bool respawn)

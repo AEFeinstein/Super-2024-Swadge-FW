@@ -12,7 +12,7 @@
 #include "palette.h"
 
 #include "hdw-spiffs.h"
-#include "spiffs_wsg.h"
+#include "fs_wsg.h"
 
 //==============================================================================
 // Constants
@@ -22,7 +22,8 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData, bb_soundManager_t* soundManager)
+void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData,
+                                bb_soundManager_t* soundManager)
 {
     bb_loadSprites(entityManager);
     entityManager->entities = calloc(MAX_ENTITIES, sizeof(bb_entity_t));
@@ -41,35 +42,36 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames)
 {
     bb_sprite_t* sprite = malloc(sizeof(bb_sprite_t));
-    sprite->numFrames = num_frames;
-    sprite->frames = malloc(sizeof(wsg_t) * num_frames);
-    for(uint8_t i = 0; i < num_frames; i++)
+    sprite->numFrames   = num_frames;
+    sprite->frames      = malloc(sizeof(wsg_t) * num_frames);
+    for (uint8_t i = 0; i < num_frames; i++)
     {
-        char wsg_name[strlen(name) + 7];//7 extra characters makes room for up to a 2 digit number + ".wsg" + null terminator ('\0')
+        char wsg_name[strlen(name) + 7]; // 7 extra characters makes room for up to a 2 digit number + ".wsg" + null
+                                         // terminator ('\0')
         snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, i);
         loadWsg(wsg_name, &sprite->frames[i], true);
     }
-    
+
     return sprite;
 }
 
 void bb_loadSprites(bb_entityManager_t* entityManager)
 {
-    bb_sprite_t* sprite = bb_loadSprite("crumble", 24);
-    sprite->originX = 48;
-    sprite->originY = 43;
+    bb_sprite_t* sprite                  = bb_loadSprite("crumble", 24);
+    sprite->originX                      = 48;
+    sprite->originY                      = 43;
     entityManager->sprites[CRUMBLE_ANIM] = *sprite;
-    printf("numFrames %d\n",entityManager->sprites[CRUMBLE_ANIM].numFrames);
-    //free(sprite);
+    printf("numFrames %d\n", entityManager->sprites[CRUMBLE_ANIM].numFrames);
+    // free(sprite);
 
     // entityManager->sprites[CRUMBLE_ANIMATION] = calloc(1, sizeof(list_t));
-    
+
     // for(uint8_t i = 1; i < 25; i++)//24 frames
     // {
     //     bb_sprite_t* sprite = malloc(sizeof(bb_sprite_t));
     //     sprite->originX = 0;
     //     sprite->originY = 0;
-        
+
     //     //Code to cast an int to a string.
     //     uint8_t length = snprintf(NULL, 0, "%d", i);
     //     char* str = malloc(length+1);
@@ -102,7 +104,8 @@ void bb_updateEntities(bb_entityManager_t* entityManager)
     }
 }
 
-void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer, bool excludePersistent, bool respawn)
+void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer, bool excludePersistent,
+                              bool respawn)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -126,31 +129,40 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t currentEntity = entityManager->entities[i];
-        
+
         if (currentEntity.active)
         {
-            //printf("x: %d y: %d\n", (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x, (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y);
-            //printf("idx %d\n",currentEntity.spriteIndex);
-            //printf("numFrames %d\n",entityManager->sprites[currentEntity.spriteIndex].numFrames);
-            //printf("wsg %p\n",&entityManager->sprites[currentEntity.spriteIndex].frames[0]);
-            // drawWsg(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentFrame],
-            //         (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
-            //         (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
-            //         currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
-            //         currentEntity.spriteRotateAngle);
+            // printf("x: %d y: %d\n", (currentEntity.x >> SUBPIXEL_RESOLUTION) -
+            // entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x, (currentEntity.y >>
+            // SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y);
+            // printf("idx %d\n",currentEntity.spriteIndex);
+            // printf("numFrames %d\n",entityManager->sprites[currentEntity.spriteIndex].numFrames);
+            // printf("wsg %p\n",&entityManager->sprites[currentEntity.spriteIndex].frames[0]);
+            //  drawWsg(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentFrame],
+            //          (currentEntity.x >> SUBPIXEL_RESOLUTION) -
+            //          entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x, (currentEntity.y >>
+            //          SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY -
+            //          camera->pos.y, currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
+            //          currentEntity.spriteRotateAngle);
 
             drawWsgSimpleScaled(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentFrame],
-                                    (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
-                                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
-                                    1, 1);
+                                (currentEntity.x >> SUBPIXEL_RESOLUTION)
+                                    - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
+                                (currentEntity.y >> SUBPIXEL_RESOLUTION)
+                                    - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
+                                1, 1);
 
-            //Will put this kind of stuff in its own animation tracker function later...
+            // Will put this kind of stuff in its own animation tracker function later...
             entityManager->entities[i].currentFrame += 1;
-            if (entityManager->entities[i].currentFrame >= entityManager->sprites[entityManager->entities[i].spriteIndex].numFrames){
-                if (entityManager->entities[i].type == ONESHOT_ANIMATION){
+            if (entityManager->entities[i].currentFrame
+                >= entityManager->sprites[entityManager->entities[i].spriteIndex].numFrames)
+            {
+                if (entityManager->entities[i].type == ONESHOT_ANIMATION)
+                {
                     entityManager->entities[i].active = false;
                 }
-                else{
+                else
+                {
                     entityManager->entities[i].currentFrame = 0;
                 }
             }
@@ -187,7 +199,8 @@ void bb_viewFollowEntity(bb_entity_t* entity)
     int16_t moveViewByY = (entity->y > 63616) ? 0 : (entity->y) >> SUBPIXEL_RESOLUTION;
 }
 
-bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, uint8_t spriteIndex, uint32_t x, uint32_t y)
+bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, uint8_t spriteIndex, uint32_t x,
+                             uint32_t y)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
@@ -201,9 +214,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, ui
         return NULL;
     }
 
-    entity->active     = true;
-    entity->x          = x << SUBPIXEL_RESOLUTION;
-    entity->y          = y << SUBPIXEL_RESOLUTION;
+    entity->active = true;
+    entity->x      = x << SUBPIXEL_RESOLUTION;
+    entity->y      = y << SUBPIXEL_RESOLUTION;
 
     entity->xspeed               = 0;
     entity->yspeed               = 0;
@@ -211,14 +224,14 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, ui
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
 
-    entity->type                 = type;
-    entity->spriteIndex          = spriteIndex;
+    entity->type        = type;
+    entity->spriteIndex = spriteIndex;
 
     entity->currentFrame = 0;
-    //entity->collisionHandler     = &dummyCollisionHandler;
-    //entity->tileCollisionHandler = &ballTileCollisionHandler;
+    // entity->collisionHandler     = &dummyCollisionHandler;
+    // entity->tileCollisionHandler = &ballTileCollisionHandler;
 
-    //entity->gameData->ballsInPlay++;
+    // entity->gameData->ballsInPlay++;
 
     switch (spriteIndex)
     {

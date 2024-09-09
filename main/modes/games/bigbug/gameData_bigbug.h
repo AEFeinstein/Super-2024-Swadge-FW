@@ -37,8 +37,6 @@ typedef struct
 
     uint8_t harpoons;
 
-
-
     led_t leds[CONFIG_NUM_LEDS];
 
     paletteColor_t bgColor;
@@ -52,11 +50,11 @@ typedef struct
 
     bb_soundManager_t* soundManager;
 
-    int8_t neighbors[4][2];//a handy table of left, up, right, and down offsets
+    int8_t neighbors[4][2]; // a handy table of left, up, right, and down offsets
 
-    list_t* pleaseCheck;//a list of tiles to check if they are supported.
-    list_t* unsupported;//a list of tiles that flood-fill crumble.
-    
+    list_t* pleaseCheck; // a list of tiles to check if they are supported.
+    list_t* unsupported; // a list of tiles that flood-fill crumble.
+
 } bb_gameData_t;
 
 //==============================================================================
