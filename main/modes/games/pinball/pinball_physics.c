@@ -366,8 +366,12 @@ static bool handleBallLineCollision(pbBall_t* ball, pbScene_t* scene)
         {
             break;
         }
-        case PB_SLINGSHOT:
         case PB_STANDUP_TARGET:
+        {
+            pbSetState(scene, PBS_GAME_EVENT);
+        }
+        // Fall through
+        case PB_SLINGSHOT:
         {
             cLine->litTimer = 250000;
             break;

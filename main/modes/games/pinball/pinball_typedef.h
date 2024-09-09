@@ -14,6 +14,15 @@
 
 typedef enum
 {
+    PBS_WAIT_TO_LAUNCH,
+    PBS_GAME_NO_EVENT,
+    PBS_GAME_EVENT,
+    PBS_BALL_OVER,
+    PBS_GAME_OVER,
+} pbGameState_t;
+
+typedef enum
+{
     PB_WALL,
     PB_SLINGSHOT,
     PB_DROP_TARGET,
@@ -152,4 +161,5 @@ typedef struct
     int32_t saveTimer;
     int32_t scoopCount;
     int32_t ballCount;
+    pbGameState_t state;
 } pbScene_t;

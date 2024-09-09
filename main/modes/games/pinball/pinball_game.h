@@ -16,3 +16,4 @@ void pbStartBall(pbScene_t* scene);
 void pbGameTimers(pbScene_t* scene, int32_t elapsedUs);
 void pbOpenLaunchTube(pbScene_t* scene, bool open);
 void pbStartMultiball(pbScene_t* scene);
+void pbSetState(pbScene_t* scene, pbGameState_t state);

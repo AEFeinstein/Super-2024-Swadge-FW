@@ -152,6 +152,9 @@ void pbSceneInit(pbScene_t* scene)
  */
 void pbStartBall(pbScene_t* scene)
 {
+    // Set the state
+    pbSetState(scene, PBS_WAIT_TO_LAUNCH);
+
     // Clear loop history
     memset(scene->loopHistory, 0, sizeof(scene->loopHistory));
 
@@ -164,9 +167,6 @@ void pbStartBall(pbScene_t* scene)
             line->isUp = true;
         }
     }
-
-    // Start a 15s timer to save the ball
-    scene->saveTimer = 15000000;
 
     // Open the launch tube
     pbOpenLaunchTube(scene, true);
@@ -228,7 +228,6 @@ void pbStartMultiball(pbScene_t* scene)
                 ball->mass        = M_PI * 4.0f * 4.0f;
                 ball->restitution = 0.2f;
                 push(&scene->balls, ball);
-                printf("BALL PUSHED B\n");
 
                 // All balls spawned
                 if (3 == scene->balls.length)
@@ -373,7 +372,7 @@ void pbRemoveBall(pbBall_t* ball, pbScene_t* scene)
     if (scene->saveTimer > 0 && 1 == scene->balls.length)
     {
         // Save the ball by scooping it back
-        printf("Ball saved\n");
+        printf("Ball Saved\n");
         ball->scoopTimer = 2000000;
     }
     else
@@ -401,14 +400,14 @@ void pbRemoveBall(pbBall_t* ball, pbScene_t* scene)
             // If there are balls left
             if (0 < scene->ballCount)
             {
-                printf("Ball lost\n");
+                pbSetState(scene, PBS_BALL_OVER);
                 // TODO show bonus set up for next ball, etc.
                 pbStartBall(scene);
             }
             else
             {
                 // No balls left
-                printf("Game over\n");
+                pbSetState(scene, PBS_GAME_OVER);
             }
         }
     }
@@ -440,12 +439,61 @@ void pbOpenLaunchTube(pbScene_t* scene, bool open)
     {
         scene->launchTubeClosed = open;
 
+        if (!open)
+        {
+            // Start a 15s timer to save the ball when the door closes
+            scene->saveTimer = 15000000;
+            pbSetState(scene, PBS_GAME_NO_EVENT);
+        }
+
         for (int32_t lIdx = 0; lIdx < scene->numLines; lIdx++)
         {
             pbLine_t* line = &scene->lines[lIdx];
             if (PB_LAUNCH_DOOR == line->type)
             {
                 line->isUp = !open;
+            }
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param scene
+ * @param state
+ */
+void pbSetState(pbScene_t* scene, pbGameState_t state)
+{
+    if (scene->state != state)
+    {
+        scene->state = state;
+        switch (state)
+        {
+            case PBS_WAIT_TO_LAUNCH:
+            {
+                printf("Ball Start\n");
+                break;
+            }
+            case PBS_GAME_NO_EVENT:
+            {
+                printf("Event Finished\n");
+                break;
+            }
+            case PBS_GAME_EVENT:
+            {
+                printf("Event Started\n");
+                break;
+            }
+            case PBS_BALL_OVER:
+            {
+                printf("Ball Lost\n");
+                break;
+            }
+            case PBS_GAME_OVER:
+            {
+                printf("Game Over\n");
+                break;
             }
         }
     }
