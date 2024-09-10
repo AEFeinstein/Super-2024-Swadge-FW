@@ -86,3 +86,5 @@ tools/font_maker/*.TTF
 tools/font_maker/*.ttf
 
 *.DS_Store
+dependencies.lock
+sdkconfig
