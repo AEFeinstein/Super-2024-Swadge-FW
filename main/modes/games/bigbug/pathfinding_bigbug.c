@@ -71,5 +71,8 @@ bool pathfindToPerimeter(bb_node_t* start)
         // e) push q on the closed list
 
     } // end (while loop)
+
+    free(open);
+    free(closed);
     return false;
 }

@@ -62,7 +62,7 @@ typedef struct
 //==============================================================================
 void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundManager);
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData);
-void bb_updateLedsHpMeter(bb_entityManager_t* entityManager, bb_gameData_t* gameData);
+void bb_updateLeds(bb_entityManager_t* entityManager, bb_gameData_t* gameData);
 void bb_resetGameDataLeds(bb_gameData_t* gameData);
 void bb_updateTouchInput(bb_gameData_t* gameData);
 

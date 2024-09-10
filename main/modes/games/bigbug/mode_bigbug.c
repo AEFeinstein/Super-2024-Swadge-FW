@@ -82,10 +82,9 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 static void bb_EspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void bb_EspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
-static void bb_DacCb(uint8_t* samples, int16_t len);
 
 // big bug logic
-static void bb_LoadScreenDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+// static void bb_LoadScreenDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void bb_ControlGarbotnik(int64_t elapsedUs);
 static void bb_DrawScene(void);
 static void bb_GameLoop(int64_t elapsedUs);
@@ -240,11 +239,6 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
 {
     // Fill this in
     return 0;
-}
-
-static void bb_DacCb(uint8_t* samples, int16_t len)
-{
-    // Fill this in
 }
 
 //==============================================================================

@@ -192,8 +192,8 @@ bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
 
 void bb_viewFollowEntity(bb_entity_t* entity)
 {
-    int16_t moveViewByX = (entity->x) >> SUBPIXEL_RESOLUTION;
-    int16_t moveViewByY = (entity->y > 63616) ? 0 : (entity->y) >> SUBPIXEL_RESOLUTION;
+    // int16_t moveViewByX = (entity->x) >> SUBPIXEL_RESOLUTION;
+    // int16_t moveViewByY = (entity->y > 63616) ? 0 : (entity->y) >> SUBPIXEL_RESOLUTION;
 }
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, uint8_t spriteIndex, uint32_t x,
