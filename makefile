@@ -97,7 +97,7 @@ CFLAGS = \
 	-fdata-sections \
 	-gdwarf-4 \
 	-ggdb \
-	-O2 \
+	-O2	\
 	-fno-jump-tables \
 	-finline-functions \
 	-std=gnu17
@@ -190,6 +190,9 @@ GIT_HASH  = \"$(shell git rev-parse --short=7 HEAD)\"
 
 # Used by the ESP SDK
 DEFINES_LIST = \
+	CONFIG_ESP_SYSTEM_PANIC=y\
+	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
+	CONFIG_DEBUG_OUTPUT_USB=y\
 	CONFIG_IDF_TARGET_ESP32S2=y \
 	SOC_RMT_CHANNELS_PER_GROUP=4 \
 	SOC_TOUCH_SENSOR_NUM=15 \
