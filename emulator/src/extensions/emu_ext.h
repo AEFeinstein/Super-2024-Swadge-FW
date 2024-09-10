@@ -14,8 +14,8 @@
  * which may be described in each callback function's documentation, these functions are free
  * to make use of any exposed emulator state and functionality to enhance the swadge emulation.
  * These extension may even render to the screen using ::emuExtension_t::fnRenderCb and the drawing
- * functionality in \c "rawdraw_sf.h". If \c paneLocation, \c minPaneW, and \c minPaneH are all
- * non-zero, the extension will be assigned a dedicated pane where it can draw anything.
+ * functionality in \c "rawdraw_sf.h". The extension can call requestPane(), usually from \c fnInitCb,
+ * and a dedicated pane will be assigned where the extension can draw anything.
  *
  * In order for the callback to be loaded by the emulator, the callback must be added to the list
  * in \c emu_ext.c and any command-line arguments required must be added to \c emu_args.c.
@@ -38,9 +38,6 @@
  *
  * const emuExtension_t exampleExt = {
  *     .name            = "Example",
- *     .paneLocation    = PANE_BOTTOM,
- *     .minPaneW        = 50,
- *     .minPaneH        = 50,
  *     .fnInitCb        = exampleExtInit,
  *     .fnPreFrameCb    = exampleExtPreFrame,
  *     .fnPostFrameCb   = exampleExtPostFrame,
@@ -126,6 +123,8 @@ typedef struct
     uint32_t paneH; ///< Height of the pane
     uint32_t paneX; ///< X offset of the pane
     uint32_t paneY; ///< Y offset of the pane
+    bool visible;   ///< Whether or not the pane is visible
+    int id;
 } emuPane_t;
 
 /**
@@ -151,24 +150,6 @@ typedef struct
      *
      */
     const char* name;
-
-    /**
-     * @brief The location for this callback's pane, or 0 for none
-     *
-     */
-    paneLocation_t paneLocation;
-
-    /**
-     * @brief The minimum wuidth in pixels for this extension's pane, or 0 for none
-     *
-     */
-    uint32_t minPaneW;
-
-    /**
-     * @brief The minimum height in pixels for this extension's pane, or 0 for none
-     *
-     */
-    uint32_t minPaneH;
 
     /**
      * @brief Function to be called once upon startup with the parsed command-line args
@@ -256,10 +237,11 @@ void initExtensions(emuArgs_t* args);
 void deinitExtensions(void);
 bool enableExtension(const char* name);
 bool disableExtension(const char* name);
-void calculatePaneMinimums(emuPaneMinimum_t* paneInfos);
+bool calculatePaneMinimums(emuPaneMinimum_t* paneInfos);
 void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, emuPane_t* screenPane,
                  uint8_t* screenMult);
-void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH);
+int requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH);
+void setPaneVisibility(const emuExtension_t* ext, int paneId, bool visible);
 
 void doExtPreFrameCb(uint64_t frame);
 void doExtPostFrameCb(uint64_t frame);

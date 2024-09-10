@@ -180,7 +180,6 @@
 #include "hdw-led.h"
 #include "hdw-mic.h"
 #include "hdw-nvs.h"
-#include "hdw-spiffs.h"
 #include "hdw-temperature.h"
 #include "hdw-tft.h"
 #include "hdw-usb.h"
@@ -196,10 +195,11 @@
 #include "menuManiaRenderer.h"
 
 // Asset loaders
-#include "spiffs_wsg.h"
-#include "spiffs_font.h"
-#include "spiffs_txt.h"
-#include "spiffs_json.h"
+#include "cnfs.h"
+#include "fs_wsg.h"
+#include "fs_font.h"
+#include "fs_txt.h"
+#include "fs_json.h"
 
 // Connection interface
 #include "p2pConnection.h"
@@ -354,5 +354,6 @@ void deinitSystem(void);
 
 void openQuickSettings(void);
 void setFrameRateUs(uint32_t newFrameRateUs);
+uint32_t getFrameRateUs(void);
 
 #endif

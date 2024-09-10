@@ -304,7 +304,12 @@ do_retry:
     // Enable access
     LSM6DSLSet(LSM6DSL_FUNC_CFG_ACCESS, 0x20);
     LSM6DSLSet(LSM6DSL_CTRL3_C, 0x81); // Force reset
-    esp_rom_delay_us(100);
+
+    // Found out we have to delay here.
+    // 1000us = not long enough
+    // 1100us = long enough
+    // 1200us = be safe.
+    esp_rom_delay_us(1200);
     LSM6DSLSet(LSM6DSL_CTRL3_C, 0x44); // unforce reset
 
     uint8_t who = 0xaa;

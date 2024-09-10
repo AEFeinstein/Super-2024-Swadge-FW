@@ -8,6 +8,7 @@
 #include <rom/rtc.h>
 #include <soc/rtc_cntl_reg.h>
 #include <esp_log.h>
+#include <driver/uart.h>
 
 #include "tinyusb.h"
 
@@ -84,6 +85,11 @@ static int advanced_usb_write_log(void* cookie __attribute__((unused)), const ch
         advanced_usb_printf_head                             = next;
         next                                                 = (advanced_usb_printf_head + 1) % AUPB_SIZE;
     }
+
+    // Write out to UART as well.
+    // This currently crashes
+    // uart_write_bytes(0, (const char*)data, size);
+
     return size;
 }
 
