@@ -504,7 +504,7 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
                 cJSON_ReplaceItemInObject(jsonNs, key, jsonVal);
             }
             else
-            {ahh every
+            {
                 cJSON_AddItemToObject(jsonNs, key, jsonVal);
             }
 
@@ -633,7 +633,7 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
             }
 
             // Write the new JSON back to the file
-            FILE* nvsFileW = openNvsFile("wb");ahh every
+            FILE* nvsFileW = openNvsFile("wb");
             if (NULL != nvsFileW)
             {
                 char* jsonStr = cJSON_Print(json);
@@ -746,7 +746,7 @@ bool readNvsStats(nvs_stats_t* outStats)
                                 break;
                             }
                         }
-                    }ahh every
+                    }
                 }
             }
 
