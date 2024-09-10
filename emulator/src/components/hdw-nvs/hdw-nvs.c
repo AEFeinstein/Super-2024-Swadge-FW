@@ -29,10 +29,6 @@
 #define NVS_ENTRY_BYTES      32
 #define NVS_OVERHEAD_ENTRIES 12
 
-#ifdef EMU_WINDOWS
-    #include <direct.h>
-#endif
-
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -508,7 +504,7 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
                 cJSON_ReplaceItemInObject(jsonNs, key, jsonVal);
             }
             else
-            {
+            {ahh every
                 cJSON_AddItemToObject(jsonNs, key, jsonVal);
             }
 
@@ -637,7 +633,7 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
             }
 
             // Write the new JSON back to the file
-            FILE* nvsFileW = openNvsFile("wb");
+            FILE* nvsFileW = openNvsFile("wb");ahh every
             if (NULL != nvsFileW)
             {
                 char* jsonStr = cJSON_Print(json);
@@ -750,7 +746,7 @@ bool readNvsStats(nvs_stats_t* outStats)
                                 break;
                             }
                         }
-                    }
+                    }ahh every
                 }
             }
 
