@@ -21,11 +21,14 @@
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
+#include "introMode.h"
 #include "jukebox.h"
+#include "keebTest.h"
 #include "mainMenu.h"
 #include "modeTimer.h"
 #include "mode_credits.h"
 #include "mode_pinball.h"
+#include "mode_synth.h"
 #include "ultimateTTT.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -60,10 +63,13 @@ static swadgeMode_t* allSwadgeModes[] = {
     &danceMode,
     &factoryTestMode,
     &gamepadMode,
+    &introMode,
     &jukeboxMode,
+    &keebTestMode,
     &mainMenuMode,
     &modeCredits,
     &pinballMode,
+    &synthMode,
     &tttMode,
     &timerMode,
     &touchTestMode,

@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <math.h>
 #include "geometry.h"
 #include "macros.h"
 
@@ -408,4 +409,43 @@ bool rectLineIntersection(rectangle_t rect, line_t line, vec_t* collisionVec)
 
     // No intersections
     return false;
+}
+
+/**
+ * @brief Initialize an arrow pointing from base to tip
+ *
+ * @param base The point of the base of the arrow
+ * @param tip The point of the tip of the arrow
+ * @param wingLen The length of the wings of the arrowhead
+ * @return The initialized arrow
+ */
+arrow_t initArrow(vec_t base, vec_t tip, int32_t wingLen)
+{
+    arrow_t arrow = {
+        .base = base,
+        .tip  = tip,
+    };
+
+    // Find the magnitude of the shaft
+    int32_t mag = sqrtf(sqMagVec2d(subVec2d(base, tip))) + 0.5f;
+
+    // Not a valid arrow
+    if (0 == mag)
+    {
+        return arrow;
+    }
+
+    // Create and scale the wings
+    arrow.wing1 = divVec2d(mulVec2d(subVec2d(base, tip), wingLen), mag);
+    arrow.wing2 = arrow.wing1;
+
+    // Rotate the wings
+    arrow.wing1 = rotateVec2d(arrow.wing1, -45);
+    arrow.wing2 = rotateVec2d(arrow.wing2, 45);
+
+    // Translate the wings to align with the tip
+    arrow.wing1 = addVec2d(arrow.wing1, tip);
+    arrow.wing2 = addVec2d(arrow.wing2, tip);
+
+    return arrow;
 }

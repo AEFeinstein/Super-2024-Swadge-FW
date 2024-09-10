@@ -1862,7 +1862,7 @@ CONFIG_TINYUSB_DESC_SERIAL_STRING="123456"
 #
 # Musical Instrument Digital Interface (MIDI)
 #
-CONFIG_TINYUSB_MIDI_COUNT=0
+CONFIG_TINYUSB_MIDI_COUNT=1
 # end of Musical Instrument Digital Interface (MIDI)
 
 #

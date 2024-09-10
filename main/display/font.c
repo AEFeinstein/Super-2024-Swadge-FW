@@ -150,7 +150,7 @@ int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int
     while (*text >= ' ')
     {
         // Only draw if the char is on the screen
-        if (xOff + font->chars[(*text) - ' '].width >= 0)
+        if ((xOff + font->chars[(*text) - ' '].width >= 0) && (xOff < TFT_WIDTH))
         {
             // Draw char
             drawChar(color, font->height, &font->chars[(*text) - ' '], xOff, yOff);

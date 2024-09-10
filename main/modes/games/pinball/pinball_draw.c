@@ -10,7 +10,7 @@
 
 static void drawPinCircle(pbCircle_t* c);
 static void drawPinLine(pbLine_t* l);
-static void drawPinRect(pbRect_t* r);
+// static void drawPinRect(pbRect_t* r);
 static void drawPinFlipper(pbFlipper_t* f);
 
 //==============================================================================
@@ -114,10 +114,10 @@ void drawPinLine(pbLine_t* line)
  *
  * @param r The rectangle to draw
  */
-void drawPinRect(pbRect_t* rect)
-{
-    drawRect(rect->r.pos.x, rect->r.pos.y, rect->r.pos.x + rect->r.width, rect->r.pos.y + rect->r.height, rect->color);
-}
+// void drawPinRect(pbRect_t* rect)
+// {
+//     drawRect(rect->r.pos.x, rect->r.pos.y, rect->r.pos.x + rect->r.width, rect->r.pos.y + rect->r.height, rect->color);
+// }
 
 /**
  * @brief Draw a pinball flipper

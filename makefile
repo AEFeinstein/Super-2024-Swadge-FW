@@ -4,12 +4,15 @@
 # What OS we're compiling on
 ################################################################################
 
+IS_WSL := 0
 ifeq ($(OS),Windows_NT)
     HOST_OS = Windows
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
         HOST_OS = Linux
+		# Check if this is WSL. 0 for not WSL, 1 for WSL
+	    IS_WSL := $(shell uname -a | grep -i WSL | wc -l)
     else ifeq ($(UNAME_S),Darwin)
         HOST_OS = Darwin
     endif
@@ -199,6 +202,11 @@ DEFINES_LIST = \
 	CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
 	CONFIG_SOUND_OUTPUT_SPEAKER=y
 
+# If this is not WSL, use OpenGL for rawdraw
+ifeq ($(IS_WSL),0)
+	DEFINES_LIST += CNFGOGL
+endif
+
 # Extra defines
 DEFINES_LIST += \
 	GIT_SHA1=${GIT_HASH} \
@@ -304,7 +312,10 @@ clean:
 # This cleans everything
 fullclean: clean
 	idf.py fullclean
+	git clean -dfX
+	git clean -df
 	git clean -fX
+	git clean -f
 	$(MAKE) -C ./tools/sandbox_test clean
 	$(MAKE) -C ./tools/hidapi_test clean
 	$(MAKE) -C ./tools/bootload_reboot_stub clean
