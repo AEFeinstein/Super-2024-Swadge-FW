@@ -5,7 +5,7 @@ environment setup instructions, see [Configuring a Development Environment](#set
 
 ## Installing
 
-To install the emulator, go to the project's [releases page](https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases/tags/snapshot)
+To install the emulator, go to the project's [releases page](https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases/tag/snapshot)
 and download the appropriate `SwadgeEmulator-<os-type>.zip` for your operating system. Windows, Linux, and
 Mac (both Intel and ARM) are supported. Then, follow the instructions for your platform below.
 
