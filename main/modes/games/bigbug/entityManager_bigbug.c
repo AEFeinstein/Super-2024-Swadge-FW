@@ -11,7 +11,6 @@
 #include "esp_random.h"
 #include "palette.h"
 
-#include "hdw-spiffs.h"
 #include "fs_wsg.h"
 
 //==============================================================================

@@ -7,7 +7,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <spiffs_song.h>
+
+#include "midiFileParser.h"
 
 //==============================================================================
 // Constants
@@ -33,19 +34,19 @@ typedef enum
 
 typedef struct
 {
-    song_t hit1;
-    song_t hit2;
-    song_t hit3;
-    song_t launch;
-    song_t die;
-    song_t tally;
-    song_t dropBomb;
-    song_t detonate;
-    song_t snd1up;
-    song_t getReady;
-    song_t levelClear;
-    song_t gameOver;
-    song_t levelBgm;
+    midiFile_t hit1;
+    midiFile_t hit2;
+    midiFile_t hit3;
+    midiFile_t launch;
+    midiFile_t die;
+    midiFile_t tally;
+    midiFile_t dropBomb;
+    midiFile_t detonate;
+    midiFile_t snd1up;
+    midiFile_t getReady;
+    midiFile_t levelClear;
+    midiFile_t gameOver;
+    midiFile_t levelBgm;
     uint16_t currentBgmIndex;
 } bb_soundManager_t;
 

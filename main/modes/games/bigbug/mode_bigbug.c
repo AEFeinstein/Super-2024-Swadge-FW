@@ -61,8 +61,8 @@ struct bb_t
 
     wsg_t garbotnikWsg[3]; ///< An array of graphics for garbotnik.
 
-    song_t bgm;  ///< Background music
-    song_t hit1; ///< A sound effect
+    midiFile_t bgm;  ///< Background music
+    midiFile_t hit1; ///< A sound effect
 
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
