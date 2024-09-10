@@ -42,7 +42,7 @@ struct bb_entityManager_t
 //==============================================================================
 void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData,
                                 bb_soundManager_t* soundManager);
-bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames);
+bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, bb_sprite_t* sprite);
 void bb_loadSprites(bb_entityManager_t* entityManager);
 void bb_updateEntities(bb_entityManager_t* entityManager);
 void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer, bool excludePersistent,

@@ -174,6 +174,8 @@ static void bb_EnterMode(void)
 
 static void bb_ExitMode(void)
 {
+    // Free entity manager
+    bb_freeEntityManager(&bigbug->entityManager);
     // Free font
     freeFont(&bigbug->font);
 }

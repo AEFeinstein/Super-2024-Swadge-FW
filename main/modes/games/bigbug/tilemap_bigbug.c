@@ -58,6 +58,7 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
             }
         }
     }
+    freeWsg(&levelWsg);
 }
 
 void bb_loadWsgs(bb_tilemap_t* tilemap)

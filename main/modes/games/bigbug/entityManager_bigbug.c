@@ -38,11 +38,10 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
     // entityManager->tilemap->warps[0].y * 16); entityManager->playerEntity = entityManager->viewEntity;
 }
 
-bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames)
+bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, bb_sprite_t* sprite)
 {
-    bb_sprite_t* sprite = malloc(sizeof(bb_sprite_t));
-    sprite->numFrames   = num_frames;
-    sprite->frames      = malloc(sizeof(wsg_t) * num_frames);
+    sprite->numFrames = num_frames;
+    sprite->frames    = malloc(sizeof(wsg_t) * num_frames);
     for (uint8_t i = 0; i < num_frames; i++)
     {
         char wsg_name[strlen(name) + 7]; // 7 extra characters makes room for up to a 2 digit number + ".wsg" + null
@@ -56,10 +55,9 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames)
 
 void bb_loadSprites(bb_entityManager_t* entityManager)
 {
-    bb_sprite_t* sprite                  = bb_loadSprite("crumble", 24);
-    sprite->originX                      = 48;
-    sprite->originY                      = 43;
-    entityManager->sprites[CRUMBLE_ANIM] = *sprite;
+    bb_sprite_t* sprite = bb_loadSprite("crumble", 24, &entityManager->sprites[CRUMBLE_ANIM]);
+    sprite->originX     = 48;
+    sprite->originY     = 43;
     printf("numFrames %d\n", entityManager->sprites[CRUMBLE_ANIM].numFrames);
     // free(sprite);
 
@@ -250,6 +248,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, ui
 
 void bb_freeEntityManager(bb_entityManager_t* self)
 {
+    for (uint8_t i = 0; i < NUM_SPRITES; i++)
+    {
+        for (uint8_t f = 0; f < self->sprites[i].numFrames; f++)
+        {
+            freeWsg(&self->sprites[i].frames[f]);
+        }
+    }
     free(self->entities);
-    free(self->sprites);
 }
