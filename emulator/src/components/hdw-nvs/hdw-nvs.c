@@ -29,10 +29,6 @@
 #define NVS_ENTRY_BYTES      32
 #define NVS_OVERHEAD_ENTRIES 12
 
-#ifdef EMU_WINDOWS
-    #include <direct.h>
-#endif
-
 //==============================================================================
 // Function Prototypes
 //==============================================================================
