@@ -97,7 +97,7 @@ CFLAGS = \
 	-fdata-sections \
 	-gdwarf-4 \
 	-ggdb \
-	-O2 \
+	-O2	\
 	-fno-jump-tables \
 	-finline-functions \
 	-std=gnu17
@@ -190,6 +190,9 @@ GIT_HASH  = \"$(shell git rev-parse --short=7 HEAD)\"
 
 # Used by the ESP SDK
 DEFINES_LIST = \
+	CONFIG_ESP_SYSTEM_PANIC=y\
+	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
+	CONFIG_DEBUG_OUTPUT_USB=y\
 	CONFIG_IDF_TARGET_ESP32S2=y \
 	SOC_RMT_CHANNELS_PER_GROUP=4 \
 	SOC_TOUCH_SENSOR_NUM=15 \
@@ -211,7 +214,7 @@ DEFINES_LIST = \
 	CONFIG_NUM_LEDS=8 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
-	IDF_VER="v5.2.1" \
+	IDF_VER="v5.3.1" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
 	CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
@@ -290,6 +293,10 @@ LIBRARY_FLAGS += \
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
+endif
+
+ifeq ($(HOST_OS),Windows)
+	LIBRARY_FLAGS += -Wl,-Bstatic -lpthread
 endif
 
 ################################################################################

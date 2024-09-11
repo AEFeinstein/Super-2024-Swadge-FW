@@ -3,6 +3,7 @@
 #include "hdw-dac.h"
 #include "midiNoteFreqs.h"
 #include "midiUtil.h"
+#include "cnfs.h"
 
 #define FREQ_HZ(whole)     (((whole) & 0xFFFFu) << 16)
 #define FREQ_HZ_FRAC(flhz) ((((uint32_t)(flhz)) << 16) | ((uint32_t)(((flhz) - ((float)((uint32_t)(flhz)))) * 65536.0)))
@@ -151,9 +152,10 @@ static int16_t linearAttackExpDecay(uint32_t tick, uint32_t attackTime, uint32_t
     }
     else if ((tick - attackTime) / halfLife < 32)
     {
-        // The condition is to make sure we don't do  (1<<32) which is UB
+        // The condition is to make sure we don't do (1<<32) which is UB
         // And (n / UINT32_MAX)) is 0 for all reasonable inputs
-        return 256 * attackLevel / (1 << ((tick - attackTime) / halfLife)) / 256;
+        // And (1<<31) is UB for signed values, so make sure it's unsigned!
+        return 256 * attackLevel / (1u << ((tick - attackTime) / halfLife)) / 256;
     }
     else
     {
@@ -495,6 +497,9 @@ int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint3
     return 0;
 }
 
+#define DONUT_SAMPLE_RATE_HZ 8192
+#define SAMPLE_FACTOR        (DAC_SAMPLE_RATE_HZ / DONUT_SAMPLE_RATE_HZ)
+
 // literally copied from the donut swadge
 // TODO: have these be an instrument in a separate bank or something
 static const uint8_t kit0_speed[] = {23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11};
@@ -526,6 +531,65 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
         fades  = kit1_fade;
         drops  = kit1_drop;
         offset = drum - HIGH_MID_TOM;
+    }
+    else if (LOW_BONGO == drum)
+    {
+        // Colossus Roar
+        static bool colossusLoaded           = false;
+        static const uint8_t* colossusSample = NULL;
+        static size_t colossusLen            = 0;
+        if (!colossusLoaded)
+        {
+            colossusSample = cnfsGetFile("colossus.bin", &colossusLen);
+            colossusLoaded = true;
+        }
+
+        if (idx / SAMPLE_FACTOR >= (colossusLen - 1))
+        {
+            *done = true;
+        }
+
+        return (int)colossusSample[idx / SAMPLE_FACTOR] - 128;
+    }
+    else if (SHORT_WHISTLE == drum)
+    {
+        // MAG
+        static bool magLoaded           = false;
+        static const uint8_t* magSample = NULL;
+        static size_t magLen            = 0;
+        if (!magLoaded)
+        {
+            // TODO: Use .raw instead of .bin, and try on-the-fly
+            magSample = cnfsGetFile("donut_mag.bin", &magLen);
+            magLoaded = true;
+        }
+
+        // Set done to true on or after the last sample
+        if (idx / SAMPLE_FACTOR >= (magLen - 1))
+        {
+            *done = true;
+        }
+
+        return magSample[idx / SAMPLE_FACTOR];
+    }
+    else if (LONG_WHISTLE == drum)
+    {
+        // FEST
+        static bool festLoaded           = false;
+        static const uint8_t* festSample = NULL;
+        static size_t festLen            = 0;
+        if (!festLoaded)
+        {
+            festSample = cnfsGetFile("donut_fest.bin", &festLen);
+            festLoaded = true;
+        }
+
+        if (idx / SAMPLE_FACTOR >= (festLen - 1))
+        {
+            *done = true;
+        }
+
+        return festSample[idx / SAMPLE_FACTOR];
     }
     else
     {

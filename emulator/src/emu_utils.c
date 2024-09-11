@@ -12,7 +12,7 @@
 #include <inttypes.h>
 
 #if defined(EMU_WINDOWS)
-    #include <direct.h>
+    #include <windows.h>
     #define SUPPORT_LINKS 0
 #else
     #define SUPPORT_LINKS 1
@@ -27,7 +27,7 @@
 int makeDir(const char* path)
 {
 #if defined(EMU_WINDOWS)
-    return _mkdir(path);
+    return CreateDirectory(path, NULL);
 #else
     return mkdir(path, 0777);
 #endif
@@ -82,6 +82,7 @@ bool makeDirs(const char* path)
                     // Ugh. Whatever.
                     char tmp[1024];
                     strncpy(tmp, buffer, sizeof(tmp));
+                    tmp[sizeof(tmp) - 1] = '\0';
                     readlink(tmp, buffer, sizeof(buffer) - strlen(buffer) - 1);
                     // printf("Symbolic Link: %s --> %s\n", tmp, buffer);
                 }

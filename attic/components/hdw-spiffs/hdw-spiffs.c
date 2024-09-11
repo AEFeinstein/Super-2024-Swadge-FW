@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include <esp_err.h>
 #include <esp_spiffs.h>
@@ -127,4 +129,53 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     }
 #endif
     return output;
+}
+
+int spiffsListFiles(char* out, size_t outsize, void** handle)
+{
+    DIR* dir = NULL;
+    if (!handle)
+    {
+        return 0;
+    }
+
+    if (*handle)
+    {
+        dir = (DIR*)*handle;
+    }
+    else
+    {
+        dir = opendir("/spiffs");
+        if (!dir)
+        {
+            return 0;
+        }
+
+        *handle = dir;
+    }
+
+    if (!dir)
+    {
+        return 0;
+    }
+
+    struct dirent* entry = readdir(dir);
+    if (entry)
+    {
+        if (outsize < strlen(entry->d_name) + 1)
+        {
+            return -1;
+        }
+
+        strncpy(out, entry->d_name, outsize);
+        out[outsize - 1] = '\0';
+        return strlen(entry->d_name);
+    }
+    else
+    {
+        // No more entries
+        closedir(dir);
+        *handle = NULL;
+        return 0;
+    }
 }

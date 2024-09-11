@@ -736,6 +736,7 @@ void startScreenRecording(const char* name)
         else
         {
             strncpy(recordingFilename, name, sizeof(recordingFilename));
+            recordingFilename[sizeof(recordingFilename) - 1] = '\0';
         }
     }
     else

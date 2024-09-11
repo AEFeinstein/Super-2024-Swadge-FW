@@ -5,20 +5,24 @@ environment setup instructions, see [Configuring a Development Environment](#set
 
 ## Installing
 
-To install the emulator, go to the project's [releases page](https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases)
-and download the appropriate `...-emulator.zip` for your operating system. Windows, Linux, and
+To install the emulator, go to the project's [releases page](https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases/tag/snapshot)
+and download the appropriate `SwadgeEmulator-<os-type>.zip` for your operating system. Windows, Linux, and
 Mac (both Intel and ARM) are supported. Then, follow the instructions for your platform below.
 
 ### Windows
 
 The Windows version of the emulator does not require any other software to operate. Simply extract the
-`.zip` file anywhere you like and double-click on `swadge_emulator.exe`. Note that the
-`libwinpthread-1.dll` file included with the emulator download should be kept in the same folder.
+`.zip` file anywhere you like and double-click on `swadge_emulator.exe`. The first time you open the
+application, you may be warned about running applications from the internet and will need to click
+"Run" to continue. You might also be prompted by the Windows firewall when starting certain Swadge modes.
+This is only required if you wish to run two emulators at the same time using the simulated ESPNOW
+wireless connection.
 
 ### Linux
 
-After extracting the `.zip` file, you may need to mark the `swadge_emulator` binary as executable,
-which can be done with the command `chmod +x swadge_emulator`.
+The Linux version of the emulator does not require any other software to operate. Simply extract the
+`.zip` file anywhere you like and run the `swadge_emulator` program, either by opening it from your
+file browser or by running `./swadge_emulator` from the command-line.
 
 ### Mac
 
@@ -232,3 +236,30 @@ are `azerty`, `dvorak`, or `colemak`.
 ### Stuck in Factory Test Mode
 If the emulator opens to the factory test mode instead of either the main menu or the tutorial mode, this
 is because it is unable to write to the `nvs.json` file in the current directory.
+
+
+## Simulated ESPNOW Networking
+
+The Swadge Emulator is capable of simulating the wireless ESPNOW connection between two swadges. This
+functionality is enabled automatically by simply running two swadge emulator programs at the same time.
+For best results, you should start each Swadge Emulator from a different directory, to avoid potential
+corruption caused by two instances attempting to save data to the same `nvs.json` file at the same time.
+
+**Note**: This functionality only supports local connections between two Swadge Emulators running on the
+same machine. Networking between Swadge Emulators running on different machines is not supported at this
+time.
+
+
+## MIDI Instructions
+
+The Swadge Emulator includes MIDI support, which simulates the USB-MIDI behavior of the real Swadge
+using the system MIDI implementation. Note that MIDI implementation and behavior will vary between
+platforms.
+
+1. From the main menu, navigate down to "Music" and press the A button (L key)
+2. In the Music menu, navigate down to "MIDI Player" and press the A button again
+3. You should see the message "Ready!" at the top of the screen. This means the Swadge Emulator is
+   now listening for MIDI messages. It will connect to the first available MIDI source it detects,
+   or the first one that becomes available. You may need to restart the emulator after connecting
+   a new device.
+4. Press the Pause button (O key) to open or close the menu.
