@@ -9,11 +9,7 @@
  *
  */
 #include "mode_2048.h"
-
-#include "T48_leds.h"
-#include "T48_logic.h"
-#include "T48_menus.h"
-#include "T48_draw.h"
+#include "2048_game.h"
 
 //==============================================================================
 // Function Prototypes
@@ -40,24 +36,11 @@ static void t48ExitMode(void);
  */
 static void t48MainLoop(int64_t elapsedUs);
 
-/**
- * @brief Restart audio when song ends
- *
- */
-static void t48BgmCb(void);
-
 //==============================================================================
 // Variables
 //==============================================================================
 
 const char modeName[] = "2048";
-
-const char highScoreKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
-    "t48HighScore0", "t48HighScore1", "t48HighScore2", "t48HighScore3", "t48HighScore4",
-};
-const char highScoreInitialsKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
-    "t48HSInitial0", "t48HSInitial1", "t48HSInitial2", "t48HSInitial3", "t48HSInitial4",
-};
 
 swadgeMode_t t48Mode = {
     .modeName                 = modeName,
@@ -125,72 +108,7 @@ static void t48EnterMode(void)
     loadMidiFile("Follinesque.mid", &t48->bgm, true);
     loadMidiFile("sndBounce.mid", &t48->click, true);
 
-    // Init Text Entry
-    textEntryInit(&t48->font, 4, t48->playerInitials);
-    textEntrySetBGColor(c001);
-    textEntrySetEmphasisColor(c500);
-    textEntrySetNewCapsStyle(true);
-    textEntrySetNewEnterStyle(true);
-
-    // Init High scores
-    for (int8_t i = 0; i < T48_HS_COUNT; i++)
-    {
-        if (!readNvs32(highScoreKey[i], &t48->highScore[i]))
-        {
-            switch (i)
-            {
-                case 0:
-                    t48->highScore[i] = 100000;
-                    break;
-                case 1:
-                    t48->highScore[i] = 50000;
-                    break;
-                case 2:
-                    t48->highScore[i] = 25000;
-                    break;
-                case 3:
-                    t48->highScore[i] = 10000;
-                    break;
-                case 4:
-                    t48->highScore[i] = 5000;
-                    break;
-            }
-            writeNvs32(highScoreKey[i], t48->highScore[i]);
-        }
-        size_t len = 4;
-        if (!readNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], &len))
-        {
-            static char buff[5];
-            switch (i)
-            {
-                case 0:
-                    strcpy(buff, "JW");
-                    break;
-                case 1:
-                    strcpy(buff, "Pan");
-                    break;
-                case 2:
-                    strcpy(buff, "Pix");
-                    break;
-                case 3:
-                    strcpy(buff, "Poe");
-                    break;
-                case 4:
-                    strcpy(buff, "DRG");
-                    break;
-            }
-            strcpy(t48->hsInitials[i], buff);
-            writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], len);
-        }
-    }
-
-    // Init game
-    for (int i = 0; i < T48_BOARD_SIZE; i++)
-    {
-        t48->board[i].x = i / 4;
-        t48->board[i].y = i % 4;
-    }
-    t48->ds = GAMESTART;
+    t48_gameInit(t48);
 }
 
 static void t48ExitMode(void)
@@ -217,167 +135,15 @@ static void t48ExitMode(void)
 
 static void t48MainLoop(int64_t elapsedUs)
 {
-    // Dim LEDs
-    t48DimLEDs(t48);
-    // Play BGM if it's not playing
-    if (!t48->bgmIsPlaying)
-    {
-        soundPlayBgmCb(&t48->bgm, MIDI_BGM, t48BgmCb);
-        t48->bgmIsPlaying = true;
-    }
     // Get inputs
     buttonEvt_t evt;
-    switch (t48->ds)
+    while (checkButtonQueueWrapper(&evt))
     {
-        case GAMESTART:
-            // Check any button is pressed
-            while (checkButtonQueueWrapper(&evt))
-            {
-                if (evt.down)
-                {
-                    soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48StartGame(t48);
-                    t48->ds = GAME;
-                    /* t48->board[0].val = 2;
-                    t48->board[1].val = 0;
-                    t48->board[2].val = 2;
-                    t48->board[3].val = 4; */
-                }
-            }
-            // Draw
-            t48StartScreen(t48, t48Rainbow(t48));
-            t48RandLEDs(t48);
-            break;
-        case GAME:
-            // Input
-            while (checkButtonQueueWrapper(&evt))
-            {
-                if (evt.down)
-                {
-                    switch (evt.button)
-                    {
-                        case PB_DOWN:
-                        {
-                            soundPlaySfx(&t48->click, MIDI_SFX);
-                            t48SlideDown(t48);
-                            break;
-                        }
-                        case PB_UP:
-                        {
-                            soundPlaySfx(&t48->click, MIDI_SFX);
-                            t48SlideUp(t48);
-                            break;
-                        }
-                        case PB_LEFT:
-                        {
-                            soundPlaySfx(&t48->click, MIDI_SFX);
-                            t48SlideLeft(t48);
-                            break;
-                        }
-                        case PB_RIGHT:
-                        {
-                            soundPlaySfx(&t48->click, MIDI_SFX);
-                            t48SlideRight(t48);
-                            break;
-                        }
-                        case PB_START:
-                        {
-                            // Restart game if you hit start
-                            soundPlaySfx(&t48->click, MIDI_SFX);
-                            t48->ds = CONFIRM;
-                            break;
-                        }
-                    }
-                }
-            }
-            // Check game is done or "done"
-            if (t48CheckWin(t48))
-            {
-                t48->ds = WIN;
-            }
-            if (t48CheckOver(t48))
-            {
-                for (int8_t i = 0; i < T48_HS_COUNT; i++)
-                {
-                    if (t48->highScore[i] <= t48->score)
-                    {
-                        t48->newHS = true;
-                    }
-                }
-                if (t48->newHS)
-                {
-                    t48->ds = WRITE;
-                }
-                else
-                {
-                    t48->ds = GAMEOVER;
-                }
-            }
-            // Draw
-            t48Draw(t48);
-            break;
-        case GAMEOVER:
-            // Check any button is pressed
-            while (checkButtonQueueWrapper(&evt))
-            {
-                if (evt.down && (evt.button & PB_A || evt.button & PB_B))
-                {
-                    soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48->ds = GAMESTART;
-                }
-            }
-            // Draw
-            t48DrawGameOverScreen(t48, t48->score, t48Rainbow(t48));
-            t48RandLEDs(t48);
-            break;
-        case WIN:
-            // Check any button is pressed
-            while (checkButtonQueueWrapper(&evt))
-            {
-                if (evt.down && (evt.button & PB_A || evt.button & PB_B))
-                {
-                    soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48->ds = GAME;
-                }
-            }
-            // Draw
-            t48DrawWinScreen(t48);
-            break;
-        case CONFIRM:
-            // Input
-            while (checkButtonQueueWrapper(&evt))
-            {
-                if (evt.down && evt.button & PB_B)
-                {
-                    t48->ds = GAMESTART;
-                }
-                else if (evt.down && evt.button & PB_A)
-                {
-                    t48->ds = GAME;
-                }
-            }
-            t48DrawConfirm(t48);
-            t48RandLEDs(t48);
-            break;
-        case WRITE:
-            while (checkButtonQueueWrapper(&evt))
-            {
-                t48->textEntryDone = !textEntryInput(evt.down, evt.button);
-            }
-            if (t48->textEntryDone)
-            {
-                t48SortHighScores(t48);
-                textEntrySoftReset();
-                t48->ds = GAMEOVER;
-            }
-            textEntryDraw(elapsedUs);
-            break;
-        default:
-            break;
+        if (evt.down)
+        {
+            t48_gameInput(t48, evt.button);
+        }
     }
-}
 
-static void t48BgmCb()
-{
-    t48->bgmIsPlaying = false;
+    t48_gameDraw(t48, elapsedUs);
 }
