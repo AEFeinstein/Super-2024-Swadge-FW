@@ -142,7 +142,7 @@ static void bb_EnterMode(void)
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
 
-    const char loadingStr[] = "Loading...\n(40 seconds)";
+    const char loadingStr[] = "Loading...";
     int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
     drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
     drawDisplayTft(NULL);

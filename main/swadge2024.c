@@ -283,7 +283,7 @@ void app_main(void)
     }
 
     // Check for prior crash info and install crash wrapper
-    checkAndInstallCrashwrap();
+    // checkAndInstallCrashwrap();
 
     // Init timers
     esp_timer_init();
