@@ -11,7 +11,10 @@
             "problemMatcher": [
                 "$gcc"
             ],
-            "group": "build"
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "clean emulator",
