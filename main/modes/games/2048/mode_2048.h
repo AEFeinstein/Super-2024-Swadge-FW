@@ -24,22 +24,10 @@
 // Defines
 //==============================================================================
 
-// Swadge
-#define T48_US_PER_FRAME 16667
-
-// Sprite counts
-#define T48_TILE_COUNT   16
-#define T48_MAX_SPARKLES 24
-
 // Animations
-#define T48_SPARKLE_COUNT 8
-
-#define T48_GRID_SIZE      4
-#define T48_TILES_PER_CELL 2
-
-//==============================================================================
-// Enums
-//==============================================================================
+#define T48_GRID_SIZE         4
+#define T48_TILES_PER_CELL    2
+#define T48_SPARKLES_PER_CELL 32
 
 //==============================================================================
 // Structs
@@ -47,34 +35,43 @@
 
 typedef struct
 {
-    uint32_t value;
-    int32_t xOffset;
-    int32_t xOffsetTarget;
-    int32_t yOffset;
-    int32_t yOffsetTarget;
+    uint32_t value;  ///< The current value for the tile being drawn
+    int32_t xOffset; ///< The X offset from the cell for this tile
+    int32_t yOffset; ///< The Y offset from the cell for this tile
 } t48drawnTile_t;
 
 typedef struct
 {
-    int32_t value;
-    t48drawnTile_t drawnTiles[T48_TILES_PER_CELL];
+    wsg_t* img;   ///< A pointer to an image of a sparkle
+    int16_t x;    ///< The sparkle's X coordinate (screen space)
+    int16_t y;    ///< The sparkle's Y coordinate (screen space)
+    int16_t xSpd; ///< The number of X pixels to move per-frame
+    int16_t ySpd; ///< The number of Y pixels to move per-frame
+    bool active;  ///< True if the spark is being animated and drawn
+} t48Sparkle_t;
+
+typedef struct
+{
+    int32_t value;                                 ///< This cell's current value
+    t48drawnTile_t drawnTiles[T48_TILES_PER_CELL]; ///< All the tiles being drawn for this cell
+    t48Sparkle_t sparkles[T48_SPARKLES_PER_CELL];  ///< All the sparkles being drawn for this cell
 } t48cell_t;
 
 typedef struct
 {
     // Assets
-    font_t font;
-    font_t titleFont;
-    font_t titleFontOutline;
-    wsg_t tiles[T48_TILE_COUNT];
-    wsg_t sparkleSprites[T48_SPARKLE_COUNT];
-    midiFile_t bgm;
-    midiFile_t click;
+    font_t font;             ///< Font used for tile values
+    font_t titleFont;        ///< Font used for the title
+    font_t titleFontOutline; ///< Font used for the title outline
+    wsg_t* tiles;            ///< A list of tile sprites
+    wsg_t* sparkleSprites;   ///< A list of sparkle sprites
+    midiFile_t bgm;          ///< The background music
+    midiFile_t click;        ///< The click sound
 
     // Game state
-    t48cell_t board[T48_GRID_SIZE][T48_GRID_SIZE];
-    int32_t score;
-    bool acceptGameInput;
+    t48cell_t board[T48_GRID_SIZE][T48_GRID_SIZE]; ///< The board with cells, tiles, and sparkles
+    int32_t score;                                 ///< The current score
+    bool acceptGameInput;                          ///< true if the game accepts input, false if it is animating
 } t48_t;
 
 //==============================================================================

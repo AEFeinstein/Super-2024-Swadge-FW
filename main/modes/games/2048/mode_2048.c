@@ -15,25 +15,8 @@
 // Function Prototypes
 //==============================================================================
 
-// Swadge functions
-
-/**
- * @brief Mode setup
- *
- */
 static void t48EnterMode(void);
-
-/**
- * @brief Mode teardown
- *
- */
 static void t48ExitMode(void);
-
-/**
- * @brief Main loop of the code
- *
- * @param elapsedUs
- */
 static void t48MainLoop(int64_t elapsedUs);
 
 //==============================================================================
@@ -61,16 +44,30 @@ swadgeMode_t t48Mode = {
 
 t48_t* t48;
 
+static const char* tileSpriteNames[] = {
+    "Tile-Blue-Diamond.wsg", "Tile-Blue-Square.wsg",  "Tile-Cyan-Legs.wsg",      "Tile-Green-Diamond.wsg",
+    "Tile-Green-Octo.wsg",   "Tile-Green-Square.wsg", "Tile-Mauve-Legs.wsg",     "Tile-Orange-Legs.wsg",
+    "Tile-Pink-Diamond.wsg", "Tile-Pink-Octo.wsg",    "Tile-Pink-Square.wsg",    "Tile-Purple-Legs.wsg",
+    "Tile-Red-Octo.wsg",     "Tile-Red-Square.wsg",   "Tile-Yellow-Diamond.wsg", "Tile-Yellow-Octo.wsg",
+};
+
+static const char* sparkleSpriteNames[] = {
+    "Sparkle_Blue.wsg", "Sparkle_Cyan.wsg",   "Sparkle_Green.wsg", "Sparkle_Orange.wsg",
+    "Sparkle_Pink.wsg", "Sparkle_Purple.wsg", "Sparkle_Red.wsg",   "Sparkle_Yellow.wsg",
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
 
-// Swadge functions
-
+/**
+ * @brief Enter 2048 mode and set everything up
+ */
 static void t48EnterMode(void)
 {
+    setFrameRateUs(16667); // 60 FPS
+
     // Init Mode & resources
-    setFrameRateUs(T48_US_PER_FRAME);
     t48 = calloc(sizeof(t48_t), 1);
 
     // Load fonts
@@ -79,52 +76,48 @@ static void t48EnterMode(void)
     makeOutlineFont(&t48->titleFont, &t48->titleFontOutline, false);
 
     // Load images
-    loadWsg("Tile-Blue-Diamond.wsg", &t48->tiles[0], true);
-    loadWsg("Tile-Blue-Square.wsg", &t48->tiles[1], true);
-    loadWsg("Tile-Cyan-Legs.wsg", &t48->tiles[2], true);
-    loadWsg("Tile-Green-Diamond.wsg", &t48->tiles[3], true);
-    loadWsg("Tile-Green-Octo.wsg", &t48->tiles[4], true);
-    loadWsg("Tile-Green-Square.wsg", &t48->tiles[5], true);
-    loadWsg("Tile-Mauve-Legs.wsg", &t48->tiles[6], true);
-    loadWsg("Tile-Orange-Legs.wsg", &t48->tiles[7], true);
-    loadWsg("Tile-Pink-Diamond.wsg", &t48->tiles[8], true);
-    loadWsg("Tile-Pink-Octo.wsg", &t48->tiles[9], true);
-    loadWsg("Tile-Pink-Square.wsg", &t48->tiles[10], true);
-    loadWsg("Tile-Purple-Legs.wsg", &t48->tiles[11], true);
-    loadWsg("Tile-Red-Octo.wsg", &t48->tiles[12], true);
-    loadWsg("Tile-Red-Square.wsg", &t48->tiles[13], true);
-    loadWsg("Tile-Yellow-Diamond.wsg", &t48->tiles[14], true);
-    loadWsg("Tile-Yellow-Octo.wsg", &t48->tiles[15], true);
-    loadWsg("Sparkle_Blue.wsg", &t48->sparkleSprites[0], true);
-    loadWsg("Sparkle_Cyan.wsg", &t48->sparkleSprites[1], true);
-    loadWsg("Sparkle_Green.wsg", &t48->sparkleSprites[2], true);
-    loadWsg("Sparkle_Orange.wsg", &t48->sparkleSprites[3], true);
-    loadWsg("Sparkle_Pink.wsg", &t48->sparkleSprites[4], true);
-    loadWsg("Sparkle_Purple.wsg", &t48->sparkleSprites[5], true);
-    loadWsg("Sparkle_Red.wsg", &t48->sparkleSprites[6], true);
-    loadWsg("Sparkle_Yellow.wsg", &t48->sparkleSprites[7], true);
+    t48->tiles = calloc(ARRAY_SIZE(tileSpriteNames), sizeof(wsg_t));
+    for (int32_t tIdx = 0; tIdx < ARRAY_SIZE(tileSpriteNames); tIdx++)
+    {
+        loadWsg(tileSpriteNames[tIdx], &t48->tiles[tIdx], true);
+    }
+
+    t48->sparkleSprites = calloc(ARRAY_SIZE(sparkleSpriteNames), sizeof(wsg_t));
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(sparkleSpriteNames); sIdx++)
+    {
+        loadWsg(sparkleSpriteNames[sIdx], &t48->sparkleSprites[sIdx], true);
+    }
 
     // Load sounds
     loadMidiFile("Follinesque.mid", &t48->bgm, true);
     loadMidiFile("sndBounce.mid", &t48->click, true);
 
+    // Initialize the game
     t48_gameInit(t48);
+
+    // TODO reimplement main & high score menus
 }
 
+/**
+ * @brief Exit 2048 mode and free all resources
+ */
 static void t48ExitMode(void)
 {
     freeFont(&t48->titleFontOutline);
     freeFont(&t48->titleFont);
     freeFont(&t48->font);
 
-    for (uint8_t i = 0; i < T48_SPARKLE_COUNT; i++)
+    for (uint8_t i = 0; i < ARRAY_SIZE(sparkleSpriteNames); i++)
     {
         freeWsg(&t48->sparkleSprites[i]);
     }
-    for (uint8_t i = 0; i < T48_TILE_COUNT; i++)
+    free(t48->sparkleSprites);
+
+    for (uint8_t i = 0; i < ARRAY_SIZE(tileSpriteNames); i++)
     {
         freeWsg(&t48->tiles[i]);
     }
+    free(t48->tiles);
 
     soundStop(true);
     unloadMidiFile(&t48->bgm);
@@ -133,6 +126,11 @@ static void t48ExitMode(void)
     free(t48);
 }
 
+/**
+ * @brief The main game loop, responsible for input handling, game logic, and animation
+ *
+ * @param elapsedUs The time since this was last called, for animation
+ */
 static void t48MainLoop(int64_t elapsedUs)
 {
     // Get inputs
@@ -141,9 +139,11 @@ static void t48MainLoop(int64_t elapsedUs)
     {
         if (evt.down)
         {
+            // Process inputs
             t48_gameInput(t48, evt.button);
         }
     }
 
-    t48_gameDraw(t48, elapsedUs);
+    // Loop the game
+    t48_gameLoop(t48, elapsedUs);
 }
