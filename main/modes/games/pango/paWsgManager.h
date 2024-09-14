@@ -140,5 +140,7 @@ void pa_initializeTiles(paWsgManager_t* tiles);
 void pa_remapWsgToSprite(paWsgManager_t* self, uint16_t spriteIndex, uint16_t wsgIndex);
 void pa_remapWsgToTile(paWsgManager_t* self, uint16_t tileIndex, uint16_t wsgIndex);
 
+void pa_remapPlayerCharacter(paWsgManager_t* self, uint16_t newBaseIndex);
+
 
 #endif
