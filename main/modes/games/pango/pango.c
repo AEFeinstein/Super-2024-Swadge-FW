@@ -224,6 +224,7 @@ void pangoEnterMode(void)
     loadFont("pango-fw.font", &pango->radiostars, false);
 
     pa_initializeWsgManager(&(pango->wsgManager));
+    pa_remapPlayerCharacter(&(pango->wsgManager), PA_WSG_PO_SOUTH);
 
     pa_initializeTileMap(&(pango->tilemap), &(pango->wsgManager));
     pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
