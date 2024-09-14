@@ -24,7 +24,7 @@
 // Functions
 //==============================================================================
 
-void pa_initializeTileMap(paTilemap_t* tilemap)
+void pa_initializeTileMap(paTilemap_t* tilemap, paWsgManager_t* wsgManager)
 {
     tilemap->mapOffsetX = 0;
     tilemap->mapOffsetY = 0;
@@ -36,7 +36,7 @@ void pa_initializeTileMap(paTilemap_t* tilemap)
     tilemap->animationFrame = 0;
     tilemap->animationTimer = 23;
 
-    pa_loadTiles(tilemap);
+    tilemap->wsgManager = wsgManager;    
 }
 
 void pa_drawTileMap(paTilemap_t* tilemap)
@@ -88,12 +88,12 @@ void pa_drawTileMap(paTilemap_t* tilemap)
                 {
                     // drawWsgSimpleFast(&tilemap->tiles[tile - 32], x * PA_TILE_SIZE - tilemap->mapOffsetX, y *
                     // PA_TILE_SIZE - tilemap->mapOffsetY);
-                    drawWsgSimple(&tilemap->tiles[tile - 1], x * PA_TILE_SIZE - tilemap->mapOffsetX,
+                    drawWsgSimple(tilemap->wsgManager->tiles[tile - 1], x * PA_TILE_SIZE - tilemap->mapOffsetX,
                                   y * PA_TILE_SIZE - tilemap->mapOffsetY);
                 }
                 else
                 {
-                    drawWsgTile(&tilemap->tiles[tile - 1], x * PA_TILE_SIZE - tilemap->mapOffsetX,
+                    drawWsgTile(tilemap->wsgManager->tiles[tile - 1], x * PA_TILE_SIZE - tilemap->mapOffsetX,
                                 y * PA_TILE_SIZE - tilemap->mapOffsetY);
                 }
             }
@@ -191,91 +191,6 @@ bool pa_loadMapFromFile(paTilemap_t* tilemap, const char* name)
 
     free(buf);
 
-    return true;
-}
-
-bool pa_loadTiles(paTilemap_t* tilemap)
-{
-    // tiles 0 is invisible
-    // remember to subtract 1 from tile index before drawing tile
-    loadWsg("pa-tile-001.wsg", &tilemap->tiles[0], false);
-    loadWsg("pa-tile-002.wsg", &tilemap->tiles[1], false);
-    loadWsg("pa-tile-003.wsg", &tilemap->tiles[2], false);
-    loadWsg("pa-tile-004.wsg", &tilemap->tiles[3], false);
-    loadWsg("pa-tile-005.wsg", &tilemap->tiles[4], false);
-    loadWsg("pa-tile-006.wsg", &tilemap->tiles[5], false);
-    loadWsg("pa-tile-007.wsg", &tilemap->tiles[6], false);
-    loadWsg("pa-tile-008.wsg", &tilemap->tiles[7], false);
-    loadWsg("pa-tile-009.wsg", &tilemap->tiles[8], false);
-    loadWsg("pa-tile-010.wsg", &tilemap->tiles[9], false);
-    loadWsg("pa-tile-011.wsg", &tilemap->tiles[10], false);
-    loadWsg("pa-tile-012.wsg", &tilemap->tiles[11], false);
-    loadWsg("pa-tile-013.wsg", &tilemap->tiles[12], false);
-    loadWsg("pa-tile-014.wsg", &tilemap->tiles[13], false);
-    loadWsg("pa-tile-015.wsg", &tilemap->tiles[14], false);
-
-    /*
-    tilemap->tiles[15] = tilemap->tiles[0];
-    tilemap->tiles[16] = tilemap->tiles[0];
-    tilemap->tiles[17] = tilemap->tiles[0];
-    tilemap->tiles[18] = tilemap->tiles[0];
-    tilemap->tiles[19] = tilemap->tiles[0];
-    tilemap->tiles[20] = tilemap->tiles[0];
-    tilemap->tiles[21] = tilemap->tiles[0];
-    tilemap->tiles[22] = tilemap->tiles[0];
-    tilemap->tiles[23] = tilemap->tiles[0];
-    tilemap->tiles[24] = tilemap->tiles[0];
-    tilemap->tiles[25] = tilemap->tiles[0];
-    tilemap->tiles[26] = tilemap->tiles[0];
-
-    loadWsg("tile059.wsg", &tilemap->tiles[27], false);
-    loadWsg("tile060.wsg", &tilemap->tiles[28], false);
-    loadWsg("tile061.wsg", &tilemap->tiles[29], false);
-    loadWsg("tile062.wsg", &tilemap->tiles[30], false);
-    loadWsg("tile063.wsg", &tilemap->tiles[31], false);
-    loadWsg("tile064.wsg", &tilemap->tiles[32], false);
-    loadWsg("tile065.wsg", &tilemap->tiles[33], false);
-    loadWsg("tile066.wsg", &tilemap->tiles[34], false);
-    loadWsg("tile067.wsg", &tilemap->tiles[35], false);
-    loadWsg("tile068.wsg", &tilemap->tiles[36], false);
-    loadWsg("tile069.wsg", &tilemap->tiles[37], false);
-    loadWsg("tile070.wsg", &tilemap->tiles[38], false);
-
-    tilemap->tiles[39] = tilemap->tiles[0];
-    tilemap->tiles[40] = tilemap->tiles[0];
-    tilemap->tiles[41] = tilemap->tiles[0];
-    tilemap->tiles[42] = tilemap->tiles[0];
-    tilemap->tiles[43] = tilemap->tiles[0];
-    tilemap->tiles[44] = tilemap->tiles[0];
-    tilemap->tiles[45] = tilemap->tiles[0];
-    tilemap->tiles[46] = tilemap->tiles[0];
-    tilemap->tiles[47] = tilemap->tiles[0];
-
-    loadWsg("tile080.wsg", &tilemap->tiles[48], false);
-    loadWsg("tile081.wsg", &tilemap->tiles[49], false);
-    loadWsg("tile082.wsg", &tilemap->tiles[50], false);
-    loadWsg("tile083.wsg", &tilemap->tiles[51], false);
-    loadWsg("tile084.wsg", &tilemap->tiles[52], false);
-    loadWsg("tile085.wsg", &tilemap->tiles[53], false);
-    loadWsg("tile086.wsg", &tilemap->tiles[54], false);
-    loadWsg("tile087.wsg", &tilemap->tiles[55], false);
-    loadWsg("tile088.wsg", &tilemap->tiles[56], false);
-    loadWsg("tile089.wsg", &tilemap->tiles[57], false);
-    loadWsg("tile090.wsg", &tilemap->tiles[58], false);
-    loadWsg("tile091.wsg", &tilemap->tiles[59], false);
-    loadWsg("tile092.wsg", &tilemap->tiles[60], false);
-    loadWsg("tile093.wsg", &tilemap->tiles[61], false);
-    loadWsg("tile094.wsg", &tilemap->tiles[62], false);
-    loadWsg("tile095.wsg", &tilemap->tiles[63], false);
-    loadWsg("tile096.wsg", &tilemap->tiles[64], false);
-    loadWsg("tile097.wsg", &tilemap->tiles[65], false);
-    loadWsg("tile098.wsg", &tilemap->tiles[66], false);
-    loadWsg("tile099.wsg", &tilemap->tiles[67], false);
-    loadWsg("tile100.wsg", &tilemap->tiles[68], false);
-    loadWsg("tile101.wsg", &tilemap->tiles[69], false);
-    loadWsg("tile102.wsg", &tilemap->tiles[70], false);
-    loadWsg("tile103.wsg", &tilemap->tiles[71], false);
-*/
     return true;
 }
 
@@ -378,24 +293,6 @@ bool pa_needsTransparency(uint8_t tileId)
 void pa_freeTilemap(paTilemap_t* tilemap)
 {
     free(tilemap->map);
-    for (uint8_t i = 0; i < PA_TILE_SET_SIZE; i++)
-    {
-        switch (i)
-        {
-            // Skip all placeholder tiles, since they reuse other tiles
-            //(see pa_loadTiles)
-            /*case 10 ... 26:
-            case 39 ... 47:
-            {
-                break;
-            }*/
-            default:
-            {
-                freeWsg(&tilemap->tiles[i]);
-                break;
-            }
-        }
-    }
 }
 
 void pa_generateMaze(paTilemap_t* tilemap)

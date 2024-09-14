@@ -12,7 +12,7 @@
 //==============================================================================
 typedef struct
 {
-    wsg_t wsg;
+    wsg_t* wsg;
     int16_t originX;
     int16_t originY;
 } paSprite_t;

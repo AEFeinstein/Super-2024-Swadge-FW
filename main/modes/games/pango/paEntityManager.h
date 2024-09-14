@@ -14,6 +14,7 @@
 #include "hdw-tft.h"
 #include "paSprite.h"
 #include "paSoundManager.h"
+#include "paWsgManager.h"
 
 //==============================================================================
 // Constants
@@ -27,7 +28,6 @@
 
 struct paEntityManager_t
 {
-    paSprite_t sprites[SPRITESET_SIZE];
     paEntity_t* entities;
     uint8_t activeEntities;
 
@@ -39,6 +39,7 @@ struct paEntityManager_t
     paEntity_t* viewEntity;
     paEntity_t* playerEntity;
 
+    paWsgManager_t* wsgManager;
     paTilemap_t* tilemap;
 
     paSoundManager_t* soundManager;
@@ -47,9 +48,8 @@ struct paEntityManager_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void pa_initializeEntityManager(paEntityManager_t* entityManager, paTilemap_t* tilemap, paGameData_t* gameData,
+void pa_initializeEntityManager(paEntityManager_t* entityManager, paWsgManager_t* wsgManager, paTilemap_t* tilemap, paGameData_t* gameData,
                                 paSoundManager_t* soundManager);
-void pa_loadSprites(paEntityManager_t* entityManager);
 void pa_updateEntities(paEntityManager_t* entityManager);
 void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlayer);
 void pa_drawEntities(paEntityManager_t* entityManager);

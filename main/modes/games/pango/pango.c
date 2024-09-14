@@ -20,6 +20,7 @@
 #include "esp_random.h"
 
 #include "pango_typedef.h"
+#include "paWsgManager.h"
 #include "paTilemap.h"
 #include "paGameData.h"
 #include "paEntityManager.h"
@@ -72,6 +73,7 @@ struct pango_t
 {
     font_t radiostars;
 
+    paWsgManager_t wsgManager;
     paTilemap_t tilemap;
     paEntityManager_t entityManager;
     paGameData_t gameData;
@@ -221,7 +223,9 @@ void pangoEnterMode(void)
 
     loadFont("pango-fw.font", &pango->radiostars, false);
 
-    pa_initializeTileMap(&(pango->tilemap));
+    pa_initializeWsgManager(&(pango->wsgManager));
+
+    pa_initializeTileMap(&(pango->tilemap), &(pango->wsgManager));
     pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
     pa_generateMaze(&(pango->tilemap));
     pango->tilemap.mapOffsetX = -4;
@@ -229,7 +233,7 @@ void pangoEnterMode(void)
     pa_initializeSoundManager(&(pango->soundManager));
 
     pa_initializeGameData(&(pango->gameData), &(pango->soundManager));
-    pa_initializeEntityManager(&(pango->entityManager), &(pango->tilemap), &(pango->gameData),
+    pa_initializeEntityManager(&(pango->entityManager), &(pango->wsgManager), &(pango->tilemap), &(pango->gameData),
                                &(pango->soundManager));
 
     pango->tilemap.entityManager    = &(pango->entityManager);
@@ -247,6 +251,7 @@ void pangoEnterMode(void)
 void pangoExitMode(void)
 {
     freeFont(&pango->radiostars);
+    pa_freeWsgManager(&(pango->wsgManager));
     pa_freeTilemap(&(pango->tilemap));
     pa_freeSoundManager(&(pango->soundManager));
     pa_freeEntityManager(&(pango->entityManager));

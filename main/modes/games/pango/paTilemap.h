@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "wsg.h"
+#include "paWsgManager.h"
 #include "macros.h"
 #include "pango_typedef.h"
 #include "paEntityManager.h"
@@ -60,7 +61,7 @@ typedef struct
 } pa_warp_t;
 struct paTilemap_t
 {
-    wsg_t tiles[PA_TILE_SET_SIZE];
+    paWsgManager_t* wsgManager;
 
     uint8_t* map;
     uint8_t mapWidth;
@@ -90,12 +91,11 @@ struct paTilemap_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void pa_initializeTileMap(paTilemap_t* tilemap);
+void pa_initializeTileMap(paTilemap_t* tilemap, paWsgManager_t* wsgManager);
 void pa_drawTileMap(paTilemap_t* tilemap);
 void pa_scrollTileMap(paTilemap_t* tilemap, int16_t x, int16_t y);
 void pa_drawTile(paTilemap_t* tilemap, uint8_t tileId, int16_t x, int16_t y);
 bool pa_loadMapFromFile(paTilemap_t* tilemap, const char* name);
-bool pa_loadTiles(paTilemap_t* tilemap);
 void pa_tileSpawnEntity(paTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
 uint8_t pa_getTile(paTilemap_t* tilemap, uint8_t tx, uint8_t ty);
 void pa_setTile(paTilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
