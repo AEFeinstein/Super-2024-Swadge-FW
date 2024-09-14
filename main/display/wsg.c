@@ -347,18 +347,15 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
     int dWidth                   = TFT_WIDTH;
     int dHeight                  = TFT_HEIGHT;
     int wWidth                   = wsg->w;
-    int xMax                     = CLAMP(xOff + wWidth * yScale, 0, dWidth);
+    int xMax                     = CLAMP(xOff + wWidth * xScale, 0, dWidth);
     int yMax                     = CLAMP(yOff + wsg->h * yScale, 0, dHeight);
     const paletteColor_t* linein = wsg->px;
 
     int x1;
     int y1;
 
-    int ix = 0;
-    int iy = 0;
-
     // Draw each pixel, scaled
-    for (int y = yOff; y < yMax; y += yScale, iy++)
+    for (int y = yOff, iy = 0; y < yMax && iy < wsg->h; y += yScale, iy++)
     {
         if (y >= TFT_HEIGHT)
         {
@@ -374,8 +371,7 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
             continue;
         }
 
-        ix = 0;
-        for (int x = xOff; x < xMax; x += xScale, ix++)
+        for (int x = xOff, ix = 0; x < xMax && ix < wsg->w; x += xScale, ix++)
         {
             if (x >= TFT_WIDTH)
             {
