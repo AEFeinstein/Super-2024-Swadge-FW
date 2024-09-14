@@ -772,7 +772,7 @@ void drawReadyScreen(font_t* font, paGameData_t* gameData)
     }
 
     if(gameData->frameCount > 120){
-        drawText(font, c555, "PANGO!", 128, 160);
+        drawText(font, c555, "PANGO!", 144, 160);
     }
 
     /*if (getLevelIndex(gameData->world, gameData->level) == 0)
