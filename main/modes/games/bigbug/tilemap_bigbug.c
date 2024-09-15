@@ -247,8 +247,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     // 8 01xx xxxx
                     // 12 00xx xxxx
                     // 16 11xx 0xxx
-                    vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + tilemap->headlampWsg.w,
-                                    tilePos.y - 8 - garbotnikDrawPos->y + tilemap->headlampWsg.h};
+                    vec_t lookup = {tilePos.x + 8 - (garbotnikDrawPos->x + 18) + tilemap->headlampWsg.w,
+                                    tilePos.y + 8 - (garbotnikDrawPos->y + 17) + tilemap->headlampWsg.h};
+                    // vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + 16 + tilemap->headlampWsg.w / 2,
+                    //                 tilePos.y + 8 - garbotnikDrawPos->y + 17 + tilemap->headlampWsg.h / 2};
+                    // printf("lookup: %d\n",lookup.x);
                     lookup       = divVec2d(lookup, 2);
                     brightness   = 5 - j / 5;
                     if (brightness < 0)
@@ -259,7 +262,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     if (garbotnikRotation->x < -720)
                     {
                         int32_t r = 0;
-                        lookup.x += 16; // Shift lookup texture left for red channel
+                        lookup.x += 20; // Shift lookup texture left for red channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -268,7 +271,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             r = (rgbCol >> 16) & 0xFF;
                         }
                         int32_t g = 0;
-                        lookup.x += 40; // Shift lookup texture left again for green channel.
+                        lookup.x += 36; // Shift lookup texture left again for green channel.
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
                             uint32_t rgbCol
@@ -283,8 +286,17 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
                     else if (garbotnikRotation->x > 720)
                     {
+                        int32_t b = 0;
+                        lookup.x -= 20; // Shift lookup texture right for blue channel.
+                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
+                        {
+                            uint32_t rgbCol
+                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                            b = rgbCol & 0xFF;
+                        }
+
                         int32_t g = 0;
-                        lookup.x -= 56; // Shift lookup texture right for green channel
+                        lookup.x -= 36; // Shift lookup texture right for green channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -292,19 +304,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        int32_t b = 0;
-                        lookup.x += 40; // Shift lookup texture left for blue channel.
-                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
-                        {
-                            uint32_t rgbCol
-                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                            b = rgbCol & 0xFF;
-                        }
+                        
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
-                        lookup.x += 15;
+                        lookup.x += 56;
                     }
                     if (brightness > 5)
                     {
@@ -351,7 +356,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     if (garbotnikRotation->x < -720)
                     {
                         int32_t r = 0;
-                        lookup.x += 16; // Shift lookup texture left for red channel
+                        lookup.x += 20; // Shift lookup texture left for red channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -360,7 +365,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             r = (rgbCol >> 16) & 0xFF;
                         }
                         int32_t g = 0;
-                        lookup.x += 40; // Shift lookup texture left again for green channel.
+                        lookup.x += 36; // Shift lookup texture left again for green channel.
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
                             uint32_t rgbCol
@@ -375,8 +380,17 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
                     else if (garbotnikRotation->x > 720)
                     {
+                        int32_t b = 0;
+                        lookup.x -= 20; // Shift lookup texture right for blue channel.
+                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
+                        {
+                            uint32_t rgbCol
+                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                            b = rgbCol & 0xFF;
+                        }
+
                         int32_t g = 0;
-                        lookup.x -= 56; // Shift lookup texture right for green channel
+                        lookup.x -= 36; // Shift lookup texture right for green channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -384,19 +398,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        int32_t b = 0;
-                        lookup.x += 40; // Shift lookup texture left for blue channel.
-                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
-                        {
-                            uint32_t rgbCol
-                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                            b = rgbCol & 0xFF;
-                        }
+                        
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
-                        lookup.x += 15;
+                        lookup.x += 56;
                     }
                     if (brightness > 5)
                     {
@@ -447,7 +454,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     if (garbotnikRotation->x < -720)
                     {
                         int32_t r = 0;
-                        lookup.x += 16; // Shift lookup texture left for red channel
+                        lookup.x += 20; // Shift lookup texture left for red channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -456,7 +463,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             r = (rgbCol >> 16) & 0xFF;
                         }
                         int32_t g = 0;
-                        lookup.x += 40; // Shift lookup texture left again for green channel.
+                        lookup.x += 36; // Shift lookup texture left again for green channel.
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
                             uint32_t rgbCol
@@ -471,8 +478,17 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
                     else if (garbotnikRotation->x > 720)
                     {
+                        int32_t b = 0;
+                        lookup.x -= 20; // Shift lookup texture right for blue channel.
+                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
+                        {
+                            uint32_t rgbCol
+                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                            b = rgbCol & 0xFF;
+                        }
+
                         int32_t g = 0;
-                        lookup.x -= 56; // Shift lookup texture right for green channel
+                        lookup.x -= 36; // Shift lookup texture right for green channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -480,19 +496,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        int32_t b = 0;
-                        lookup.x += 40; // Shift lookup texture left for blue channel.
-                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
-                        {
-                            uint32_t rgbCol
-                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                            b = rgbCol & 0xFF;
-                        }
+                        
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
-                        lookup.x += 15;
+                        lookup.x += 56;
                     }
                     if (brightness > 5)
                     {
@@ -542,7 +551,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     if (garbotnikRotation->x < -720)
                     {
                         int32_t r = 0;
-                        lookup.x += 16; // Shift lookup texture left for red channel
+                        lookup.x += 20; // Shift lookup texture left for red channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -551,7 +560,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             r = (rgbCol >> 16) & 0xFF;
                         }
                         int32_t g = 0;
-                        lookup.x += 40; // Shift lookup texture left again for green channel.
+                        lookup.x += 36; // Shift lookup texture left again for green channel.
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
                             uint32_t rgbCol
@@ -566,8 +575,17 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
                     else if (garbotnikRotation->x > 720)
                     {
+                        int32_t b = 0;
+                        lookup.x -= 20; // Shift lookup texture right for blue channel.
+                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
+                        {
+                            uint32_t rgbCol
+                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                            b = rgbCol & 0xFF;
+                        }
+
                         int32_t g = 0;
-                        lookup.x -= 56; // Shift lookup texture right for green channel
+                        lookup.x -= 36; // Shift lookup texture right for green channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -575,19 +593,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        int32_t b = 0;
-                        lookup.x += 40; // Shift lookup texture left for blue channel.
-                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
-                        {
-                            uint32_t rgbCol
-                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                            b = rgbCol & 0xFF;
-                        }
+                        
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
-                        lookup.x += 15;
+                        lookup.x += 56;
                     }
                     if (brightness > 5)
                     {
@@ -656,14 +667,14 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                    : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
                                                                      : (tilemap->fgTiles[i + 1][j + 1]) > 0);
 
-                    vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + tilemap->headlampWsg.w,
-                                    tilePos.y - 8 - garbotnikDrawPos->y + tilemap->headlampWsg.h};
+                    vec_t lookup = {tilePos.x + 8 - (garbotnikDrawPos->x + 18) + tilemap->headlampWsg.w,
+                                    tilePos.y + 8 - (garbotnikDrawPos->y + 17) + tilemap->headlampWsg.h};
                     lookup       = divVec2d(lookup, 2);
                     brightness   = 0;
                     if (garbotnikRotation->x < -720)
                     {
                         int32_t r = 0;
-                        lookup.x += 16; // Shift lookup texture left for red channel
+                        lookup.x += 20; // Shift lookup texture left for red channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -672,7 +683,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             r = (rgbCol >> 16) & 0xFF;
                         }
                         int32_t g = 0;
-                        lookup.x += 40; // Shift lookup texture left again for green channel.
+                        lookup.x += 36; // Shift lookup texture left again for green channel.
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
                             uint32_t rgbCol
@@ -711,8 +722,16 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
                     else
                     {
+                        int32_t b = 0;
+                        lookup.x -= 20; // Shift lookup texture left for blue channel.
+                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
+                        {
+                            uint32_t rgbCol
+                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                            b = rgbCol & 0xFF;
+                        }
                         int32_t g = 0;
-                        lookup.x -= 56; // Shift lookup texture right for green channel
+                        lookup.x -= 36; // Shift lookup texture left for green channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -720,19 +739,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        int32_t b = 0;
-                        lookup.x += 40; // Shift lookup texture left for blue channel.
-                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
-                        {
-                            uint32_t rgbCol
-                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                            b = rgbCol & 0xFF;
-                        }
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
-                        lookup.x += 15;
+                        lookup.x += 56;
                     }
                     // printf("red: %d\n", red);
 
@@ -805,12 +816,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         drawWsgSimple(&(*wsgForegroundArrayPtr)[39], tilePos.x, tilePos.y);
                     }
 
-                    lookup.x += 8;
                     brightness = 0;
                     if (garbotnikRotation->x < -720)
                     {
                         int32_t r = 0;
-                        lookup.x += 16; // Shift lookup texture left for red channel
+                        lookup.x += 20; // Shift lookup texture left for red channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -819,7 +829,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             r = (rgbCol >> 16) & 0xFF;
                         }
                         int32_t g = 0;
-                        lookup.x += 40; // Shift lookup texture left again for green channel.
+                        lookup.x += 36; // Shift lookup texture left again for green channel.
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
                             uint32_t rgbCol
@@ -858,8 +868,16 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
                     else
                     {
+                        int32_t b = 0;
+                        lookup.x -= 20; // Shift lookup texture left for blue channel.
+                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
+                        {
+                            uint32_t rgbCol
+                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                            b = rgbCol & 0xFF;
+                        }
                         int32_t g = 0;
-                        lookup.x -= 56; // Shift lookup texture right for green channel
+                        lookup.x -= 36; // Shift lookup texture right for green channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -867,19 +885,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        int32_t b = 0;
-                        lookup.x += 40; // Shift lookup texture left for blue channel.
-                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
-                        {
-                            uint32_t rgbCol
-                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                            b = rgbCol & 0xFF;
-                        }
+                        
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
-                        lookup.x += 15;
+                        lookup.x += 56;
                     }
                     // Top Right             V
                     // L00D ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
@@ -955,13 +966,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         drawWsgSimple(&(*wsgForegroundArrayPtr)[39], tilePos.x + HALF_TILE, tilePos.y);
                     }
 
-                    lookup.x -= 8;
-                    lookup.y += 8;
+                    lookup.x += 8;
                     brightness = 0;
                     if (garbotnikRotation->x < -720)
                     {
                         int32_t r = 0;
-                        lookup.x += 16; // Shift lookup texture left for red channel
+                        lookup.x += 20; // Shift lookup texture left for red channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -970,7 +980,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             r = (rgbCol >> 16) & 0xFF;
                         }
                         int32_t g = 0;
-                        lookup.x += 40; // Shift lookup texture left again for green channel.
+                        lookup.x += 36; // Shift lookup texture left again for green channel.
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
                             uint32_t rgbCol
@@ -1009,8 +1019,16 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
                     else
                     {
+                        int32_t b = 0;
+                        lookup.x -= 20; // Shift lookup texture right for blue channel.
+                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
+                        {
+                            uint32_t rgbCol
+                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                            b = rgbCol & 0xFF;
+                        }
                         int32_t g = 0;
-                        lookup.x -= 56; // Shift lookup texture right for green channel
+                        lookup.x -= 36; // Shift lookup texture right for green channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -1018,19 +1036,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        int32_t b = 0;
-                        lookup.x += 40; // Shift lookup texture left for blue channel.
-                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
-                        {
-                            uint32_t rgbCol
-                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                            b = rgbCol & 0xFF;
-                        }
+                        
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
-                        lookup.x += 15;
+                        lookup.x += 56;
                     }
                     // Bottom Left                   V
                     // 0UR0 ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
@@ -1048,7 +1059,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         // 0UR0 ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
                         drawWsgSimple(&(*wsgForegroundArrayPtr)[40 * brightness + 2], tilePos.x, tilePos.y + HALF_TILE);
                     }
-                    else if ((num & 0b11110010) == 0b01100010)
+                    else if ((num & 0b11110110) == 0b10010010)
                     {
                         // 0110 ..1.   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
                         drawWsgSimple(&(*wsgForegroundArrayPtr)[40 * brightness + 6], tilePos.x, tilePos.y + HALF_TILE);
@@ -1107,13 +1118,14 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         drawWsgSimple(&(*wsgForegroundArrayPtr)[39], tilePos.x, tilePos.y + HALF_TILE);
                     }
 
-                    lookup.x += 8;
+                    lookup.x -= 8;
+                    lookup.y += 8;
                     brightness = 0;
                     // if within bounds of the headlamp texture...
                     if (garbotnikRotation->x < -720)
                     {
                         int32_t r = 0;
-                        lookup.x += 16; // Shift lookup texture left for red channel
+                        lookup.x += 20; // Shift lookup texture left for red channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -1122,7 +1134,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             r = (rgbCol >> 16) & 0xFF;
                         }
                         int32_t g = 0;
-                        lookup.x += 40; // Shift lookup texture left again for green channel.
+                        lookup.x += 36; // Shift lookup texture left again for green channel.
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
                             uint32_t rgbCol
@@ -1161,8 +1173,16 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
                     else
                     {
+                        int32_t b = 0;
+                        lookup.x -= 20; // Shift lookup texture right for blue channel.
+                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
+                        {
+                            uint32_t rgbCol
+                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
+                            b = rgbCol & 0xFF;
+                        }
                         int32_t g = 0;
-                        lookup.x -= 56; // Shift lookup texture right for green channel
+                        lookup.x -= 36; // Shift lookup texture right for green channel
                         // if within bounds of the headlamp texture...
                         if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
                         {
@@ -1170,19 +1190,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        int32_t b = 0;
-                        lookup.x += 40; // Shift lookup texture left for blue channel.
-                        if (lookup.x > 0 && lookup.x < 121 && lookup.y > 0 && lookup.y < 106)
-                        {
-                            uint32_t rgbCol
-                                = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
-                            b = rgbCol & 0xFF;
-                        }
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
-                        lookup.x += 15;
+                        lookup.x += 56;
                     }
                     // Bottom Right                          V
                     if ((num & 0b00110000) == 0b00000000)

@@ -55,10 +55,15 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, bb_sprite_t* s
 
 void bb_loadSprites(bb_entityManager_t* entityManager)
 {
-    bb_sprite_t* sprite = bb_loadSprite("crumble", 24, &entityManager->sprites[CRUMBLE_ANIM]);
-    sprite->originX     = 48;
-    sprite->originY     = 43;
-    printf("numFrames %d\n", entityManager->sprites[CRUMBLE_ANIM].numFrames);
+    bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 24, &entityManager->sprites[CRUMBLE_ANIM]);
+    crumbleSprite->originX     = 48;
+    crumbleSprite->originY     = 43;
+    printf("crumble numFrames %d\n", entityManager->sprites[CRUMBLE_ANIM].numFrames);
+
+    bb_sprite_t* bumpSprite    = bb_loadSprite("hit", 7, &entityManager->sprites[BUMP_ANIM]);
+    bumpSprite->originX        = 75;
+    bumpSprite->originY        = 75;
+    printf("bump numFrames %d\n", entityManager->sprites[BUMP_ANIM].numFrames);
     // free(sprite);
 
     // entityManager->sprites[CRUMBLE_ANIMATION] = calloc(1, sizeof(list_t));
@@ -142,6 +147,8 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             //          camera->pos.y, currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
             //          currentEntity.spriteRotateAngle);
 
+            // printf("hey %d\n", currentEntity.spriteIndex);
+
             drawWsgSimpleScaled(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentFrame],
                                 (currentEntity.x >> SUBPIXEL_RESOLUTION)
                                     - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
@@ -157,6 +164,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                 if (entityManager->entities[i].type == ONESHOT_ANIMATION)
                 {
                     entityManager->entities[i].active = false;
+                    entityManager->activeEntities -= 1;
                 }
                 else
                 {
@@ -201,6 +209,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, ui
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
+        printf("OH NO!\n");
         return NULL;
     }
 
@@ -208,6 +217,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, ui
 
     if (entity == NULL)
     {
+        printf("OH CRAP\n");
         return NULL;
     }
 
@@ -230,13 +240,13 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, ui
 
     // entity->gameData->ballsInPlay++;
 
-    switch (spriteIndex)
-    {
-        case CRUMBLE_ANIM:
+    // switch (spriteIndex)
+    // {
+    //     case CRUMBLE_ANIM:
 
-        default:
-            entity = NULL;
-    }
+    //     default:
+    //         entity = NULL;
+    // }
 
     if (entity != NULL)
     {

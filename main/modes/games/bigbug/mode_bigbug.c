@@ -633,6 +633,7 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 bigbug->tilemap.fgTiles[best_i][best_j] -= 1;
 
                 // Create a crumble animation
+                printf("foo\n");
                 bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM, tilePos.x >> DECIMAL_BITS,
                                 tilePos.y >> DECIMAL_BITS);
 

@@ -20,7 +20,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 32
-#define NUM_SPRITES  1 // The number of bb_sprite_t
+#define NUM_SPRITES  2 // The number of bb_sprite_t
 
 //==============================================================================
 // Structs
