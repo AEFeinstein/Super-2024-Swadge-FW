@@ -268,10 +268,10 @@ static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsed
                 tile->xOffset -= pxPerFrame;
                 animationInProgress = true;
             }
-            else
+            else if (tile->xOffset)
             {
-                animationInProgress = tile->xOffset ? true : false;
                 tile->xOffset       = 0;
+                animationInProgress = true;
             }
 
             // Move tile towards target Y
@@ -285,10 +285,10 @@ static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsed
                 tile->yOffset -= pxPerFrame;
                 animationInProgress = true;
             }
-            else
+            else if (tile->yOffset)
             {
-                animationInProgress = tile->yOffset ? true : false;
                 tile->yOffset       = 0;
+                animationInProgress = true;
             }
 
             // Draw the sprite first
