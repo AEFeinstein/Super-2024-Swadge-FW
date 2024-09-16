@@ -440,16 +440,32 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
         case PB_LEFT:
         case PB_RIGHT:
         {
-            if (t48->acceptGameInput)
+            // If input isn't being accepted
+            if (!t48->acceptGameInput)
             {
-                // Start sliding tiles
-                if (t48_slideTiles(t48, button))
+                // Warp everything to final destination
+                for (int32_t x = 0; x < T48_GRID_SIZE; x++)
                 {
-                    // Don't accept input until the slide is done
-                    t48->acceptGameInput = false;
-                    // Play a click
-                    soundPlaySfx(&t48->click, MIDI_SFX);
+                    for (int32_t y = 0; y < T48_GRID_SIZE; y++)
+                    {
+                        for (int32_t t = 0; t < T48_TILES_PER_CELL; t++)
+                        {
+                            t48->board[x][y].drawnTiles[t].xOffset = 0;
+                            t48->board[x][y].drawnTiles[t].yOffset = 0;
+                        }
+                    }
                 }
+                // Run the game loop once to update state based on the warped destination
+                t48_gameLoop(t48, 0);
+            }
+
+            // Start sliding tiles
+            if (t48_slideTiles(t48, button))
+            {
+                // Don't accept input until the slide is done
+                t48->acceptGameInput = false;
+                // Play a click
+                soundPlaySfx(&t48->click, MIDI_SFX);
             }
             break;
         }
