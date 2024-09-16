@@ -415,8 +415,8 @@ static void t48InitSparkles(t48_t* t48, int32_t x, int32_t y, wsg_t* spr)
         sparkle->ySpd = -8 - (esp_random() % 8);
 
         // Convert cell coords to pixel space
-        sparkle->x = x * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_SIDE_MARGIN + T48_LINE_WEIGHT + T48_CELL_SIZE / 2;
-        sparkle->y = y * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_TOP_MARGIN + T48_LINE_WEIGHT + T48_CELL_SIZE / 2;
+        sparkle->x = t48_horz_offset(x) + T48_CELL_SIZE / 2;
+        sparkle->y = t48_vert_offset(y) + T48_CELL_SIZE / 2;
 
         // Set image
         sparkle->img = spr;
