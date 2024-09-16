@@ -513,10 +513,16 @@ bool t48_slideTiles(t48_t* t48, buttonBit_t direction)
             }
         }
 
-        // Now slide the slice
+        // Clear out merged flags
+        for (int32_t x = 0; x < T48_GRID_SIZE; x++)
+        {
+            for (int32_t y = 0; y < T48_GRID_SIZE; y++)
+            {
+                t48->board[x][y].merged = false;
+            }
+        }
 
-        // Allow one merge per slice
-        bool sliceMerger = false;
+        // Now slide the slice
 
         // Check sources to slide from front to back
         for (int32_t src = 1; src < T48_GRID_SIZE; src++)
@@ -538,11 +544,11 @@ bool t48_slideTiles(t48_t* t48, buttonBit_t direction)
                     // Free to slide here, then keep checking
                     validDest = dest;
                 }
-                else if (!sliceMerger && (slice[src]->value == slice[dest]->value))
+                else if (!slice[dest]->merged && (slice[src]->value == slice[dest]->value))
                 {
                     // Slide and merge here
-                    sliceMerger = true;
-                    validDest   = dest;
+                    slice[dest]->merged = true;
+                    validDest           = dest;
                     // Merge here, so break
                     break;
                 }

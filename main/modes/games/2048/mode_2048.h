@@ -55,6 +55,7 @@ typedef struct
     int32_t value;                                 ///< This cell's current value
     t48drawnTile_t drawnTiles[T48_TILES_PER_CELL]; ///< All the tiles being drawn for this cell
     t48Sparkle_t sparkles[T48_SPARKLES_PER_CELL];  ///< All the sparkles being drawn for this cell
+    bool merged;                                   ///< TODO
 } t48cell_t;
 
 typedef struct
