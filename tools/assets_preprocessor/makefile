@@ -154,7 +154,7 @@ clean:
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 
 format:
-	clang-format -i -style=file $(SOURCES_TO_FORMAT)
+	clang-format-17 -i -style=file $(SOURCES_TO_FORMAT)
 
 ################################################################################
 # Makefile Debugging
