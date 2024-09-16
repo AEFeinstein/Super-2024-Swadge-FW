@@ -162,9 +162,13 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
                 // Movement is done
                 if (cell->drawnTiles[0].value)
                 {
-                    // There are two values that need to get merged. Init some sparkles
-                    t48InitSparkles(t48, x, y, &t48->sparkleSprites[sparkleIndices[31 - __builtin_clz(cell->value)]]);
-
+                    // If this is a real loop, not after a warp
+                    if (0 != elapsedUs)
+                    {
+                        // There are two values that need to get merged. Init some sparkles
+                        t48InitSparkles(t48, x, y,
+                                        &t48->sparkleSprites[sparkleIndices[31 - __builtin_clz(cell->value)]]);
+                    }
                     // Tally score
                     t48->score += cell->value;
                 }
@@ -448,10 +452,17 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
                 {
                     for (int32_t y = 0; y < T48_GRID_SIZE; y++)
                     {
+                        // Warp all drawn tiles
                         for (int32_t t = 0; t < T48_TILES_PER_CELL; t++)
                         {
                             t48->board[x][y].drawnTiles[t].xOffset = 0;
                             t48->board[x][y].drawnTiles[t].yOffset = 0;
+                        }
+
+                        // Kill all sparkles
+                        for (int32_t t = 0; t < T48_SPARKLES_PER_CELL; t++)
+                        {
+                            t48->board[x][y].sparkles[t].active = false;
                         }
                     }
                 }
