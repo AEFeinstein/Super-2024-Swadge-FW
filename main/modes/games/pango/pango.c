@@ -68,7 +68,7 @@ void pangoMainLoop(int64_t elapsedUs);
 // Structs
 //==============================================================================
 
-typedef void (*gameUpdateFuncton_t)(pango_t* self);
+typedef void (*pa_gameUpdateFuncton_t)(pango_t* self, int64_t elapsedUs);
 struct pango_t
 {
     font_t radiostars;
@@ -93,7 +93,11 @@ struct pango_t
     pangoUnlockables_t unlockables;
     bool easterEgg;
 
-    gameUpdateFuncton_t update;
+    pa_gameUpdateFuncton_t update;
+    
+    menuManiaRenderer_t* menuRenderer;
+    menu_t* menu;
+    menuItem_t* levelSelectMenuItem;
 };
 
 //==============================================================================
@@ -101,41 +105,43 @@ struct pango_t
 //==============================================================================
 void drawPangoHud(font_t* font, paGameData_t* gameData);
 void drawPangoTitleScreen(font_t* font, paGameData_t* gameData);
+void pangoBuildMainMenu(pango_t* self);
+static void pangoUpdateMainMenu(pango_t* self, int64_t elapsedUs);
 void changeStateReadyScreen(pango_t* self);
-void updateReadyScreen(pango_t* self);
+void updateReadyScreen(pango_t* self, int64_t elapsedUs);
 void drawReadyScreen(font_t* font, paGameData_t* gameData);
 void changeStateGame(pango_t* self);
 void detectGameStateChange(pango_t* self);
 void detectBgmChange(pango_t* self);
 void changeStateDead(pango_t* self);
-void updateDead(pango_t* self);
+void updateDead(pango_t* self, int64_t elapsedUs);
 void changeStateGameOver(pango_t* self);
-void updateGameOver(pango_t* self);
+void updateGameOver(pango_t* self, int64_t elapsedUs);
 void drawGameOver(font_t* font, paGameData_t* gameData);
 void changeStateTitleScreen(pango_t* self);
 void changeStateLevelClear(pango_t* self);
-void updateLevelClear(pango_t* self);
+void updateLevelClear(pango_t* self, int64_t elapsedUs);
 void drawLevelClear(font_t* font, paGameData_t* gameData);
 void changeStateGameClear(pango_t* self);
-void updateGameClear(pango_t* self);
+void updateGameClear(pango_t* self, int64_t elapsedUs);
 void drawGameClear(font_t* font, paGameData_t* gameData);
-void initializePangoHighScores(pango_t* self);
+void pangoInitializeHighScores(pango_t* self);
 void loadPangoHighScores(pango_t* self);
-void savePangoHighScores(pango_t* self);
-void initializePangoUnlockables(pango_t* self);
+void pangoSaveHighScores(pango_t* self);
+void pangoInitializeUnlockables(pango_t* self);
 void loadPangoUnlockables(pango_t* self);
-void savePangoUnlockables(pango_t* self);
+void pangoSaveUnlockables(pango_t* self);
 void drawPangoHighScores(font_t* font, pangoHighScores_t* highScores, paGameData_t* gameData);
 uint8_t getHighScoreRank(pangoHighScores_t* highScores, uint32_t newScore);
 void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore, char newInitials[], uint8_t rank);
 void changeStateNameEntry(pango_t* self);
-void updateNameEntry(pango_t* self);
+void updateNameEntry(pango_t* self, int64_t elapsedUs);
 void drawNameEntry(font_t* font, paGameData_t* gameData, uint8_t currentInitial);
-void changeStateShowHighScores(pango_t* self);
-void updateShowHighScores(pango_t* self);
+void pangoChangeStateShowHighScores(pango_t* self);
+void updateShowHighScores(pango_t* self, int64_t elapsedUs);
 void drawShowHighScores(font_t* font, uint8_t menuState);
 void changeStatePause(pango_t* self);
-void updatePause(pango_t* self);
+void updatePause(pango_t* self, int64_t elapsedUs);
 void drawPause(font_t* font);
 uint16_t getLevelIndex(uint8_t world, uint8_t level);
 
@@ -183,13 +189,22 @@ led_t platLeds[CONFIG_NUM_LEDS];
 static const char str_get_ready[]    = "Get Ready!";
 static const char str_time_up[]      = "-Time Up!-";
 static const char str_game_over[]    = "Game Over";
-static const char str_well_done[]    = "Well done!";
+static const char str_well_done[]    = "Nice Clear!";
 static const char str_congrats[]     = "Congratulations!";
 static const char str_initials[]     = "Enter your initials!";
 static const char str_hbd[]          = "Happy Birthday, Evelyn!";
 static const char str_registrated[]  = "Your name registrated.";
 static const char str_do_your_best[] = "Do your best!";
 static const char str_pause[]        = "-Pause-";
+
+static const char pangoMenuNewGame[]       = "New Game";
+static const char pangoMenuContinue[]      = "Continue - Lv";
+static const char pangoMenuCharacter[]     = "Character";
+static const char pangoMenuHighScores[]    = "High Scores";
+static const char pangoMenuResetScores[]   = "Reset Scores";
+static const char pangoMenuResetProgress[] = "Reset Progress";
+static const char pangoMenuExit[]          = "Exit";
+static const char pangoMenuSaveAndExit[]   = "Save & Exit";
 
 static const char KEY_SCORES[]  = "pf_scores";
 static const char KEY_UNLOCKS[] = "pf_unlocks";
@@ -222,9 +237,9 @@ void pangoEnterMode(void)
     }
 
     loadFont("pango-fw.font", &pango->radiostars, false);
+    pango->menuRenderer = initMenuManiaRenderer(&pango->radiostars,&pango->radiostars,&pango->radiostars);
 
     pa_initializeWsgManager(&(pango->wsgManager));
-    pa_remapPlayerCharacter(&(pango->wsgManager), PA_WSG_PO_SOUTH);
 
     pa_initializeTileMap(&(pango->tilemap), &(pango->wsgManager));
     pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
@@ -242,7 +257,8 @@ void pangoEnterMode(void)
 
     setFrameRateUs(16666);
 
-    pango->update = &updateTitleScreen;
+    pango->menu = NULL;
+    changeStateTitleScreen(pango);
 }
 
 /**
@@ -251,12 +267,97 @@ void pangoEnterMode(void)
  */
 void pangoExitMode(void)
 {
+    // deinitMenu can't set menu pointer to NULL,
+    // so this is the only way to know that the menu has not been previously freed.
+    if (pango->update == &pangoUpdateMainMenu)
+    {
+        // Deinitialize the menu.
+        // This will also free the "level select" menu item.
+        deinitMenu(pango->menu);
+    }
+    deinitMenuManiaRenderer(pango->menuRenderer);
+    
     freeFont(&pango->radiostars);
     pa_freeWsgManager(&(pango->wsgManager));
     pa_freeTilemap(&(pango->tilemap));
     pa_freeSoundManager(&(pango->soundManager));
     pa_freeEntityManager(&(pango->entityManager));
     free(pango);
+}
+
+/**
+ * @brief This callback function is called when an item is selected from the menu
+ *
+ * @param label The item that was selected from the menu
+ * @param selected True if the item was selected with the A button, false if this is a multi-item which scrolled to
+ * @param settingVal The value of the setting, if the menu item is a settings item
+ */
+static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
+{
+    if (selected)
+    {
+        if (label == pangoMenuNewGame)
+        {
+            pango->gameData.world = 1;
+            pango->gameData.level = 1;
+            pango->entityManager.activeEnemies = 0;
+            pa_initializeGameDataFromTitleScreen(&(pango->gameData), 0);
+            pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+            pa_generateMaze(&(pango->tilemap));
+            pa_placeEnemySpawns(&(pango->tilemap));
+
+            changeStateReadyScreen(pango);
+            deinitMenu(pango->menu);
+        }
+        else if (label == pangoMenuContinue)
+        {
+            pango->gameData.world = 1;
+            pango->gameData.level = settingVal;
+            pa_initializeGameDataFromTitleScreen(&(pango->gameData), settingVal);
+            pango->entityManager.activeEnemies = 0;
+            pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+            pa_generateMaze(&(pango->tilemap));
+            pa_placeEnemySpawns(&(pango->tilemap));
+
+            changeStateReadyScreen(pango);
+            deinitMenu(pango->menu);
+        }
+        else if (label == pangoMenuCharacter)
+        {
+            pa_remapPlayerCharacter(&(pango->wsgManager), 16 * settingVal);
+            soundPlaySfx(&(pango->soundManager.sndMenuConfirm), BZR_STEREO);
+        }
+        else if (label == pangoMenuHighScores)
+        {
+            pangoChangeStateShowHighScores(pango);
+            pango->gameData.btnState = 0;
+            deinitMenu(pango->menu);
+        }
+        else if (label == pangoMenuResetScores)
+        {
+            pangoInitializeHighScores(pango);
+            //soundPlaySfx(&(pango->soundManager.detonate), BZR_STEREO);
+        }
+        else if (label == pangoMenuResetProgress)
+        {
+            pangoInitializeUnlockables(pango);
+            //soundPlaySfx(&(pango->soundManager.die), BZR_STEREO);
+        }
+        else if (label == pangoMenuSaveAndExit)
+        {
+            pangoSaveHighScores(pango);
+            pangoSaveUnlockables(pango);
+            switchToSwadgeMode(&mainMenuMode);
+        }
+        else if (label == pangoMenuExit)
+        {
+            switchToSwadgeMode(&mainMenuMode);
+        }
+    }
+    else
+    {
+        //soundPlaySfx(&(pango->soundManager.hit3), BZR_STEREO);
+    }
 }
 
 /**
@@ -273,25 +374,81 @@ void pangoMainLoop(int64_t elapsedUs)
         // Save the button state
         pango->btnState          = evt.state;
         pango->gameData.btnState = evt.state;
+
+        if (pango->update == &pangoUpdateMainMenu)
+        {
+            // Pass button events to the menu
+            pango->menu = menuButton(pango->menu, evt);
+        }
     }
 
-    pango->update(pango);
+    pango->update(pango, elapsedUs);
 
     pango->prevBtnState          = pango->btnState;
     pango->gameData.prevBtnState = pango->prevBtnState;
 }
 
-/**
- * @brief TODO
- *
- * @param opt
- */
-// void pangoCb(const char *opt)
-// {
-//     ESP_LOGI("MNU", "%s", opt);
-// }
+void pangoChangeStateMainMenu(pango_t* self)
+{
+    self->gameData.frameCount = 0;
+    self->update              = &pangoUpdateMainMenu;
+    pangoBuildMainMenu(pango);
+}
 
-void updateGame(pango_t* self)
+void pangoBuildMainMenu(pango_t* self)
+{
+    // Initialize the menu
+    pango->menu = initMenu(pangoName, pangoMenuCb);
+    addSingleItemToMenu(pango->menu, pangoMenuNewGame);
+
+    /*
+        Manually allocate and build "level select" menu item
+        because the max setting will have to change as levels are unlocked
+    */
+    if (pango->unlockables.maxLevelIndexUnlocked > 1 || pango->gameData.debugMode)
+    {
+        pango->levelSelectMenuItem             = calloc(1, sizeof(menuItem_t));
+        pango->levelSelectMenuItem->label      = pangoMenuContinue;
+        pango->levelSelectMenuItem->minSetting = 1;
+        pango->levelSelectMenuItem->maxSetting
+            = (pango->gameData.debugMode) ? NUM_LEVELS - 1 : pango->unlockables.maxLevelIndexUnlocked;
+        pango->levelSelectMenuItem->currentSetting
+            = (pango->gameData.level == 1) ? pango->levelSelectMenuItem->maxSetting : pango->gameData.level;
+        pango->levelSelectMenuItem->options = NULL;
+        pango->levelSelectMenuItem->subMenu = NULL;
+
+        push(pango->menu->items, pango->levelSelectMenuItem);
+    }
+
+    settingParam_t characterSettingBounds = {
+        .def = 0,
+        .min = 0,
+        .max = 3,
+        .key = NULL,
+    };
+    addSettingsItemToMenu(pango->menu, pangoMenuCharacter, &characterSettingBounds, 0);
+
+    addSingleItemToMenu(pango->menu, pangoMenuHighScores);
+
+    if (pango->gameData.debugMode)
+    {
+        addSingleItemToMenu(pango->menu, pangoMenuResetProgress);
+        addSingleItemToMenu(pango->menu, pangoMenuResetScores);
+        addSingleItemToMenu(pango->menu, pangoMenuSaveAndExit);
+    }
+    else
+    {
+        addSingleItemToMenu(pango->menu, pangoMenuExit);
+    }
+}
+
+static void pangoUpdateMainMenu(pango_t* self, int64_t elapsedUs)
+{
+    // Draw the menu
+    drawMenuMania(pango->menu, pango->menuRenderer, elapsedUs);
+}
+
+void updateGame(pango_t* self, int64_t elapsedUs)
 {
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
@@ -371,15 +528,57 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
              scoreStr, 190, 2);
 }
 
-void updateTitleScreen(pango_t* self)
+void updateTitleScreen(pango_t* self, int64_t elapsedUs)
 {
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
     self->gameData.frameCount++;
 
+    if (self->gameData.frameCount > 600)
+    {
+        // resetGameDataLeds(&(self->gameData));
+        pango->menuSelection = 0;
+        pangoChangeStateShowHighScores(self);
+
+        return;
+    }
+
+    if ((self->gameData.btnState & cheatCode[pango->menuSelection])
+        && !(self->gameData.prevBtnState & cheatCode[pango->menuSelection]))
+    {
+        pango->menuSelection++;
+
+        if (pango->menuSelection > 8)
+        {
+            pango->menuSelection      = 0;
+            pango->menuState          = 1;
+            pango->gameData.debugMode = true;
+            //soundPlaySfx(&(pango->soundManager.levelClear), BZR_STEREO);
+        }
+        else
+        {
+            //soundPlaySfx(&(pango->soundManager.hit3), BZR_STEREO);
+        }
+    }
+
+    if ((((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))
+         || ((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))))
+    {
+        self->gameData.btnState = 0;
+        pango->menuSelection = 0;
+
+        if (!pango->gameData.debugMode)
+        {
+            //soundPlaySfx(&(pango->soundManager.launch), BZR_STEREO);
+        }
+
+        pangoChangeStateMainMenu(self);
+        return;
+    }
+
     // Handle inputs
-    switch (pango->menuState)
+    /*switch (pango->menuState)
     {
         case 0:
         {
@@ -443,10 +642,10 @@ void updateTitleScreen(pango_t* self)
                             break;
                         }
 
-                        /*if(self->menuSelection == 0){
-                            self->gameData.world = 1;
-                            self->gameData.level = 1;
-                        }*/
+                        //if(self->menuSelection == 0){
+                       //    self->gameData.world = 1;
+                       //     self->gameData.level = 1;
+                       // }
 
                         pa_initializeGameDataFromTitleScreen(&(self->gameData), levelIndex);
                         self->entityManager.activeEnemies = 0;
@@ -462,7 +661,7 @@ void updateTitleScreen(pango_t* self)
                         if (self->gameData.debugMode)
                         {
                             // Reset Progress
-                            initializePangoUnlockables(self);
+                            pangoInitializeUnlockables(self);
                             soundPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
                         }
                         else
@@ -481,7 +680,7 @@ void updateTitleScreen(pango_t* self)
                         if (self->gameData.debugMode)
                         {
                             // Reset High Scores
-                            initializePangoHighScores(self);
+                            pangoInitializeHighScores(self);
                             soundPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
                         }
                         else
@@ -498,8 +697,8 @@ void updateTitleScreen(pango_t* self)
                         if (self->gameData.debugMode)
                         {
                             // Save & Quit
-                            savePangoHighScores(self);
-                            savePangoUnlockables(self);
+                            pangoSaveHighScores(self);
+                            pangoSaveUnlockables(self);
                             soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
                             switchToSwadgeMode(&mainMenuMode);
                         }
@@ -622,7 +821,7 @@ void updateTitleScreen(pango_t* self)
             pango->menuState = 0;
             soundPlaySfx(&(pango->soundManager.sndMenuDeny), BZR_STEREO);
             break;
-    }
+    }*/
 
     //pa_scrollTileMap(&(pango->tilemap), 1, 0);
     //if (self->tilemap.mapOffsetX >= self->tilemap.maxMapOffsetX && self->gameData.frameCount > 58)
@@ -751,7 +950,7 @@ void changeStateReadyScreen(pango_t* self)
     self->update = &updateReadyScreen;
 }
 
-void updateReadyScreen(pango_t* self)
+void updateReadyScreen(pango_t* self, int64_t elapsedUs)
 {
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
@@ -964,7 +1163,7 @@ void changeStateDead(pango_t* self)
     self->update = &updateDead;
 }
 
-void updateDead(pango_t* self)
+void updateDead(pango_t* self, int64_t elapsedUs)
 {
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
@@ -994,7 +1193,7 @@ void updateDead(pango_t* self)
     }
 }
 
-void updateGameOver(pango_t* self)
+void updateGameOver(pango_t* self, int64_t elapsedUs)
 {
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
@@ -1016,7 +1215,7 @@ void updateGameOver(pango_t* self)
 
         if (!self->gameData.debugMode)
         {
-            savePangoUnlockables(self);
+            pangoSaveUnlockables(self);
         }
 
         changeStateNameEntry(self);
@@ -1043,6 +1242,7 @@ void drawGameOver(font_t* font, paGameData_t* gameData)
 void changeStateTitleScreen(pango_t* self)
 {
     self->gameData.frameCount = 0;
+    self->gameData.gameState = PA_ST_TITLE_SCREEN;
     self->update              = &updateTitleScreen;
 }
 
@@ -1057,7 +1257,7 @@ void changeStateLevelClear(pango_t* self)
     self->update = &updateLevelClear;
 }
 
-void updateLevelClear(pango_t* self)
+void updateLevelClear(pango_t* self, int64_t elapsedUs)
 {
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
@@ -1152,7 +1352,7 @@ void updateLevelClear(pango_t* self)
 
             if (!self->gameData.debugMode)
             {
-                savePangoUnlockables(self);
+                pangoSaveUnlockables(self);
             }
 
             return;
@@ -1182,7 +1382,7 @@ void changeStateGameClear(pango_t* self)
     soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
 }
 
-void updateGameClear(pango_t* self)
+void updateGameClear(pango_t* self, int64_t elapsedUs)
 {
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
@@ -1253,7 +1453,7 @@ void drawGameClear(font_t* font, paGameData_t* gameData)
     */
 }
 
-void initializePangoHighScores(pango_t* self)
+void pangoInitializeHighScores(pango_t* self)
 {
     self->highScores.scores[0] = 100000;
     self->highScores.scores[1] = 80000;
@@ -1276,17 +1476,17 @@ void loadPangoHighScores(pango_t* self)
     if (false == readNvsBlob(KEY_SCORES, &(self->highScores), &(size)))
     {
         // Value didn't exist, so write the default
-        initializePangoHighScores(self);
+        pangoInitializeHighScores(self);
     }
 }
 
-void savePangoHighScores(pango_t* self)
+void pangoSaveHighScores(pango_t* self)
 {
     size_t size = sizeof(pangoHighScores_t);
     writeNvsBlob(KEY_SCORES, &(self->highScores), size);
 }
 
-void initializePangoUnlockables(pango_t* self)
+void pangoInitializeUnlockables(pango_t* self)
 {
     self->unlockables.maxLevelIndexUnlocked = 0;
     self->unlockables.gameCleared           = false;
@@ -1303,11 +1503,11 @@ void loadPangoUnlockables(pango_t* self)
     if (false == readNvsBlob(KEY_UNLOCKS, &(self->unlockables), &(size)))
     {
         // Value didn't exist, so write the default
-        initializePangoUnlockables(self);
+        pangoInitializeHighScores(self);
     }
 }
 
-void savePangoUnlockables(pango_t* self)
+void pangoSaveUnlockables(pango_t* self)
 {
     size_t size = sizeof(pangoUnlockables_t);
     writeNvsBlob(KEY_UNLOCKS, &(self->unlockables), size);
@@ -1374,7 +1574,7 @@ void changeStateNameEntry(pango_t* self)
     {
         self->menuSelection = 0;
         self->gameData.rank = NUM_PLATFORMER_HIGH_SCORES;
-        changeStateShowHighScores(self);
+        pangoChangeStateShowHighScores(self);
         return;
     }
 
@@ -1383,7 +1583,7 @@ void changeStateNameEntry(pango_t* self)
     self->update        = &updateNameEntry;
 }
 
-void updateNameEntry(pango_t* self)
+void updateNameEntry(pango_t* self, int64_t elapsedUs)
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
@@ -1434,8 +1634,8 @@ void updateNameEntry(pango_t* self)
         {
             insertScoreIntoHighScores(&(self->highScores), self->gameData.score, self->gameData.initials,
                                       self->gameData.rank);
-            savePangoHighScores(self);
-            changeStateShowHighScores(self);
+            pangoSaveHighScores(self);
+            pangoChangeStateShowHighScores(self);
             soundPlaySfx(&(self->soundManager.sndPowerUp), BZR_STEREO);
         }
         else
@@ -1466,13 +1666,13 @@ void drawNameEntry(font_t* font, paGameData_t* gameData, uint8_t currentInitial)
     }
 }
 
-void changeStateShowHighScores(pango_t* self)
+void pangoChangeStateShowHighScores(pango_t* self)
 {
     self->gameData.frameCount = 0;
     self->update              = &updateShowHighScores;
 }
 
-void updateShowHighScores(pango_t* self)
+void updateShowHighScores(pango_t* self, int64_t elapsedUs)
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
@@ -1519,7 +1719,7 @@ void changeStatePause(pango_t* self)
     self->update = &updatePause;
 }
 
-void updatePause(pango_t* self)
+void updatePause(pango_t* self, int64_t elapsedUs)
 {
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {

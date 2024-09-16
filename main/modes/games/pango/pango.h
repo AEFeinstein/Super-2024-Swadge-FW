@@ -39,8 +39,8 @@ typedef struct
 // Prototypes
 //==============================================================================
 
-void updateGame(pango_t* pango);
-void updateTitleScreen(pango_t* pango);
+void updateGame(pango_t* pango, int64_t elapsedUs);
+void updateTitleScreen(pango_t* pango, int64_t elapsedUs);
 
 extern swadgeMode_t pangoMode;
 
