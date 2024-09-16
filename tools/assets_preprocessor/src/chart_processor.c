@@ -43,6 +43,10 @@ void process_chart(const char* infile, const char* outdir)
 
         if (outFile)
         {
+            uint8_t* tmpSpace = malloc(1024 * 1024);
+            uint32_t tmpIdx = 0;
+            uint32_t noteCount = 0;
+
             char line[512]        = {0};
             char sectionName[512] = {0};
             while (NULL != fgets(line, sizeof(line), fp))
@@ -72,28 +76,40 @@ void process_chart(const char* infile, const char* outdir)
                 }
                 else if (strstr(line, "}"))
                 {
+                    if(CS_NOTES == section)
+                    {
+                        fputc((noteCount >> 8) & 0xFF, outFile);
+                        fputc((noteCount >> 0) & 0xFF, outFile);
+                        noteCount = 0;
+                        fwrite(tmpSpace, tmpIdx, 1, outFile);
+                        tmpIdx = 0;
+                    }
                     inSection = false;
                 }
                 else if (inSection && (CS_NOTES == section) && //
                          sscanf(line, "%d = N %d %d", &tick, &note, &length))
                 {
-                    fputc((tick >> 24) & 0xFF, outFile);
-                    fputc((tick >> 16) & 0xFF, outFile);
-                    fputc((tick >> 8) & 0xFF, outFile);
-                    fputc((tick >> 0) & 0xFF, outFile);
+                    noteCount++;
+
+                    tmpSpace[tmpIdx++] = (tick >> 24) & 0xFF;
+                    tmpSpace[tmpIdx++] = (tick >> 16) & 0xFF;
+                    tmpSpace[tmpIdx++] = (tick >> 8) & 0xFF;
+                    tmpSpace[tmpIdx++] = (tick >> 0) & 0xFF;
 
                     if (length)
                     {
-                        fputc(note & 0x80, outFile);
-                        fputc((length >> 8) & 0xFF, outFile);
-                        fputc((length >> 0) & 0xFF, outFile);
+                        tmpSpace[tmpIdx++] = note | 0x80;
+
+                        tmpSpace[tmpIdx++] = (length >> 8) & 0xFF;
+                        tmpSpace[tmpIdx++] = (length >> 0) & 0xFF;
                     }
                     else
                     {
-                        fputc(note, outFile);
+                        tmpSpace[tmpIdx++] = note;
                     }
                 }
             }
+            free(tmpSpace);
             fclose(outFile);
         }
         fclose(fp);
