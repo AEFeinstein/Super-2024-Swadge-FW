@@ -2,12 +2,17 @@
  * @file mode_2048.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 1.1.4
+ * @version 1.5.0
  * @date 2024-06-28
  *
  * @copyright Copyright (c) 2024
  *
  */
+
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "mode_2048.h"
 #include "2048_game.h"
 
