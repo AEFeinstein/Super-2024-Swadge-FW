@@ -18,16 +18,19 @@
 // Function Prototypes
 //==============================================================================
 
-static int32_t t48_horz_offset(int32_t col);
-static int32_t t48_vert_offset(int32_t row);
-static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsedUs);
+// Game
+static bool t48_setRandomCell(t48_t* t48, int32_t value);
+static bool t48_slideTiles(t48_t* t48, buttonBit_t direction);
 
+// Drawing
+static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsedUs);
 static void t48_initSparkles(t48_t* t48, int32_t x, int32_t y, wsg_t* spr);
 static bool t48_drawSparkles(t48cell_t* cell, uint32_t elapsedUs);
-static void FisherYatesShuffle(int32_t* array, int32_t size);
 
-static bool t48_slideTiles(t48_t* t48, buttonBit_t direction);
-static bool t48_setRandomCell(t48_t* t48, int32_t value);
+// Helpers
+static int32_t t48_horz_offset(int32_t col);
+static int32_t t48_vert_offset(int32_t row);
+static void FisherYatesShuffle(int32_t* array, int32_t size);
 
 //==============================================================================
 // Const Variables
@@ -72,43 +75,6 @@ void t48_gameInit(t48_t* t48)
     soundPlayBgm(&t48->bgm, MIDI_BGM);
 
     // TODO setup and illuminate LEDs
-}
-
-/**
- * @brief Set a random cell to the given value
- *
- * @param t48 The game data to set a cell in
- * @param value The value to set the cell to
- * @return true if the value was set, false if there are no empty cells
- */
-bool t48_setRandomCell(t48_t* t48, int32_t value)
-{
-    int32_t emptyCells[T48_GRID_SIZE * T48_GRID_SIZE];
-    int32_t numEmptyCells = 0;
-
-    // Get a list of empty cells
-    for (int32_t id = 0; id < T48_GRID_SIZE * T48_GRID_SIZE; id++)
-    {
-        t48cell_t* cell = &t48->board[id / T48_GRID_SIZE][id % T48_GRID_SIZE];
-        if (0 == cell->value)
-        {
-            emptyCells[numEmptyCells++] = id;
-        }
-    }
-
-    // Cant set a random cell if there are no empty spots
-    if (0 == numEmptyCells)
-    {
-        return false;
-    }
-
-    // Fill in one of the random cells
-    int32_t id                = emptyCells[esp_random() % numEmptyCells];
-    t48cell_t* cell           = &t48->board[id / T48_GRID_SIZE][id % T48_GRID_SIZE];
-    cell->value               = value;
-    cell->drawnTiles[0].value = value;
-    cell->drawnTiles[1].value = 0;
-    return true;
 }
 
 /**
@@ -214,226 +180,6 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
 }
 
 /**
- * @brief Get the horizontal pixel offset for a column on the board
- *
- * @param col The column index
- * @return The pixel offset for this column
- */
-static int32_t t48_horz_offset(int32_t col)
-{
-    return col * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_SIDE_MARGIN + T48_LINE_WEIGHT;
-}
-
-/**
- * @brief Get the horizontal pixel offset for a row on the board
- *
- * @param row The row index
- * @return The pixel offset for this row
- */
-static int32_t t48_vert_offset(int32_t row)
-{
-    return row * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_TOP_MARGIN + T48_LINE_WEIGHT;
-}
-
-/**
- * @brief Draw all of a cell's tiles
- *
- * @param t48 The game state to draw tiles from
- * @param x The X index of the cell on the board
- * @param y The Y index of the cell on the board
- * @param elapsedUs The time since this was last called, for animation
- * @return true if animation is in progress, false if it isn't
- */
-static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsedUs)
-{
-    // Get a reference to the cell
-    t48cell_t* cell = &t48->board[x][y];
-
-    // Check if animation is in progress
-    bool animationInProgress = false;
-
-    // For each tile to draw on this cell (may be multiple in motion)
-    for (int t = 0; t < T48_TILES_PER_CELL; t++)
-    {
-        // Get a reference to the tile
-        t48drawnTile_t* tile = &cell->drawnTiles[t];
-
-        // If there is something to draw
-        if (tile->value)
-        {
-            // TODO make this animation microsecond based
-
-            int32_t pxPerFrame = 8;
-
-            // Move tile towards target X
-            if (tile->xOffset <= -pxPerFrame)
-            {
-                tile->xOffset += pxPerFrame;
-                animationInProgress = true;
-            }
-            else if (tile->xOffset >= pxPerFrame)
-            {
-                tile->xOffset -= pxPerFrame;
-                animationInProgress = true;
-            }
-            else if (tile->xOffset)
-            {
-                tile->xOffset       = 0;
-                animationInProgress = true;
-            }
-
-            // Move tile towards target Y
-            if (tile->yOffset <= -pxPerFrame)
-            {
-                tile->yOffset += pxPerFrame;
-                animationInProgress = true;
-            }
-            else if (tile->yOffset >= pxPerFrame)
-            {
-                tile->yOffset -= pxPerFrame;
-                animationInProgress = true;
-            }
-            else if (tile->yOffset)
-            {
-                tile->yOffset       = 0;
-                animationInProgress = true;
-            }
-
-            // Draw the sprite first
-            uint16_t x_offset = t48_horz_offset(x) + tile->xOffset;
-            uint16_t y_offset = t48_vert_offset(y) + tile->yOffset;
-            wsg_t* tileWsg    = &t48->tiles[tileIndices[31 - __builtin_clz(tile->value)]];
-            drawWsgSimple(tileWsg, x_offset, y_offset);
-
-            // Draw the text on top
-            static char buffer[16];
-            snprintf(buffer, sizeof(buffer) - 1, "%" PRIu32, tile->value);
-            uint16_t tWidth = textWidth(&t48->font, buffer);
-            drawText(&t48->font, c555, buffer,                //
-                     x_offset + (T48_CELL_SIZE - tWidth) / 2, //
-                     y_offset + (T48_CELL_SIZE - t48->font.height) / 2);
-        }
-    }
-    return animationInProgress;
-}
-
-/**
- * @brief Draw a cell's sparkles
- *
- * @param cell The cell to draw sparkles for
- * @param elapsedUs The time since this was last called, for animation
- * @return true if animation is in progress, false if it isn't
- */
-bool t48_drawSparkles(t48cell_t* cell, uint32_t elapsedUs)
-{
-    bool animating = false;
-
-    // Draw all this cell's sparkles
-    for (int32_t sIdx = 0; sIdx < T48_SPARKLES_PER_CELL; sIdx++)
-    {
-        // Get a reference to the sparkle
-        t48Sparkle_t* sparkle = &cell->sparkles[sIdx];
-
-        // If the sparkle is active
-        if (sparkle->active)
-        {
-            // Deactivate it if it's offscreen
-            if ((sparkle->y >= TFT_HEIGHT) || (sparkle->x + sparkle->img->w < 0) || (sparkle->x >= TFT_WIDTH))
-            {
-                sparkle->active = false;
-            }
-            else
-            {
-                // Otherwise move and draw it
-                // TODO adjust animation to be microsecond-based
-                sparkle->ySpd += 1;
-                sparkle->y += sparkle->ySpd;
-                sparkle->x += sparkle->xSpd;
-                drawWsgSimple(sparkle->img, sparkle->x, sparkle->y);
-                animating = true;
-            }
-        }
-    }
-    return animating;
-}
-
-/**
- * @brief Shuffle the items in an array
- *
- * See https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
- *
- * @param array The array to shuffle
- * @param size The number of elements in the array to shuffle
- */
-static void FisherYatesShuffle(int32_t* array, int32_t size)
-{
-    int32_t n, k, temp;
-
-    // Iterate through the array in reverse order
-    for (n = size - 1; n > 0; n--)
-    {
-        // Generate a random index 'k' between 0 and n (inclusive)
-        k = esp_random() % (n + 1);
-
-        // Swap the elements at indices 'n' and 'k'
-        temp     = array[n];
-        array[n] = array[k];
-        array[k] = temp;
-    }
-}
-
-/**
- * @brief Initialize sparkles for a cell
- *
- * @param t48 The game data to initialize sparkles in
- * @param x The X index of the cell on the board
- * @param y The Y index of the cell on the board
- * @param spr The sprite to use as a sparkle
- */
-static void t48_initSparkles(t48_t* t48, int32_t x, int32_t y, wsg_t* spr)
-{
-    // If there are any active sparkles already, return
-    for (int32_t sIdx = 0; sIdx < T48_SPARKLES_PER_CELL; sIdx++)
-    {
-        t48Sparkle_t* sparkle = &t48->board[x][y].sparkles[sIdx];
-        if (sparkle->active)
-        {
-            return;
-        }
-    }
-
-    // Create an array of possible directions. This ensures no random duplicates.
-    int32_t directions[T48_SPARKLES_PER_CELL * 2];
-    for (int i = 0; i < ARRAY_SIZE(directions); i++)
-    {
-        directions[i] = i - (ARRAY_SIZE(directions) / 2);
-    }
-    // Shuffle the directions
-    FisherYatesShuffle(directions, ARRAY_SIZE(directions));
-
-    // For each sparkle
-    for (int32_t sIdx = 0; sIdx < T48_SPARKLES_PER_CELL; sIdx++)
-    {
-        // Get a reference
-        t48Sparkle_t* sparkle = &t48->board[x][y].sparkles[sIdx];
-
-        // Set speed
-        sparkle->xSpd = directions[sIdx];
-        sparkle->ySpd = -8 - (esp_random() % 8);
-
-        // Convert cell coords to pixel space
-        sparkle->x = t48_horz_offset(x) + T48_CELL_SIZE / 2;
-        sparkle->y = t48_vert_offset(y) + T48_CELL_SIZE / 2;
-
-        // Set image
-        sparkle->img = spr;
-
-        // set active
-        sparkle->active = true;
-    }
-}
-
-/**
  * @brief Process game input
  *
  * @param t48 The game state
@@ -496,13 +242,50 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
 }
 
 /**
+ * @brief Set a random cell to the given value
+ *
+ * @param t48 The game data to set a cell in
+ * @param value The value to set the cell to
+ * @return true if the value was set, false if there are no empty cells
+ */
+static bool t48_setRandomCell(t48_t* t48, int32_t value)
+{
+    int32_t emptyCells[T48_GRID_SIZE * T48_GRID_SIZE];
+    int32_t numEmptyCells = 0;
+
+    // Get a list of empty cells
+    for (int32_t id = 0; id < T48_GRID_SIZE * T48_GRID_SIZE; id++)
+    {
+        t48cell_t* cell = &t48->board[id / T48_GRID_SIZE][id % T48_GRID_SIZE];
+        if (0 == cell->value)
+        {
+            emptyCells[numEmptyCells++] = id;
+        }
+    }
+
+    // Cant set a random cell if there are no empty spots
+    if (0 == numEmptyCells)
+    {
+        return false;
+    }
+
+    // Fill in one of the random cells
+    int32_t id                = emptyCells[esp_random() % numEmptyCells];
+    t48cell_t* cell           = &t48->board[id / T48_GRID_SIZE][id % T48_GRID_SIZE];
+    cell->value               = value;
+    cell->drawnTiles[0].value = value;
+    cell->drawnTiles[1].value = 0;
+    return true;
+}
+
+/**
  * @brief Slide the tiles in the game, setting up animations and such
  *
  * @param t48 The game state to slide
  * @param direction The direction to slide
  * @return true if something moved, false if nothing moved
  */
-bool t48_slideTiles(t48_t* t48, buttonBit_t direction)
+static bool t48_slideTiles(t48_t* t48, buttonBit_t direction)
 {
     // Check if any tile moved
     bool tileMoved = false;
@@ -652,4 +435,224 @@ bool t48_slideTiles(t48_t* t48, buttonBit_t direction)
     }
 
     return tileMoved;
+}
+
+/**
+ * @brief Draw all of a cell's tiles
+ *
+ * @param t48 The game state to draw tiles from
+ * @param x The X index of the cell on the board
+ * @param y The Y index of the cell on the board
+ * @param elapsedUs The time since this was last called, for animation
+ * @return true if animation is in progress, false if it isn't
+ */
+static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsedUs)
+{
+    // Get a reference to the cell
+    t48cell_t* cell = &t48->board[x][y];
+
+    // Check if animation is in progress
+    bool animationInProgress = false;
+
+    // For each tile to draw on this cell (may be multiple in motion)
+    for (int t = 0; t < T48_TILES_PER_CELL; t++)
+    {
+        // Get a reference to the tile
+        t48drawnTile_t* tile = &cell->drawnTiles[t];
+
+        // If there is something to draw
+        if (tile->value)
+        {
+            // TODO make this animation microsecond based
+
+            int32_t pxPerFrame = 8;
+
+            // Move tile towards target X
+            if (tile->xOffset <= -pxPerFrame)
+            {
+                tile->xOffset += pxPerFrame;
+                animationInProgress = true;
+            }
+            else if (tile->xOffset >= pxPerFrame)
+            {
+                tile->xOffset -= pxPerFrame;
+                animationInProgress = true;
+            }
+            else if (tile->xOffset)
+            {
+                tile->xOffset       = 0;
+                animationInProgress = true;
+            }
+
+            // Move tile towards target Y
+            if (tile->yOffset <= -pxPerFrame)
+            {
+                tile->yOffset += pxPerFrame;
+                animationInProgress = true;
+            }
+            else if (tile->yOffset >= pxPerFrame)
+            {
+                tile->yOffset -= pxPerFrame;
+                animationInProgress = true;
+            }
+            else if (tile->yOffset)
+            {
+                tile->yOffset       = 0;
+                animationInProgress = true;
+            }
+
+            // Draw the sprite first
+            uint16_t x_offset = t48_horz_offset(x) + tile->xOffset;
+            uint16_t y_offset = t48_vert_offset(y) + tile->yOffset;
+            wsg_t* tileWsg    = &t48->tiles[tileIndices[31 - __builtin_clz(tile->value)]];
+            drawWsgSimple(tileWsg, x_offset, y_offset);
+
+            // Draw the text on top
+            static char buffer[16];
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRIu32, tile->value);
+            uint16_t tWidth = textWidth(&t48->font, buffer);
+            drawText(&t48->font, c555, buffer,                //
+                     x_offset + (T48_CELL_SIZE - tWidth) / 2, //
+                     y_offset + (T48_CELL_SIZE - t48->font.height) / 2);
+        }
+    }
+    return animationInProgress;
+}
+
+/**
+ * @brief Initialize sparkles for a cell
+ *
+ * @param t48 The game data to initialize sparkles in
+ * @param x The X index of the cell on the board
+ * @param y The Y index of the cell on the board
+ * @param spr The sprite to use as a sparkle
+ */
+static void t48_initSparkles(t48_t* t48, int32_t x, int32_t y, wsg_t* spr)
+{
+    // If there are any active sparkles already, return
+    for (int32_t sIdx = 0; sIdx < T48_SPARKLES_PER_CELL; sIdx++)
+    {
+        t48Sparkle_t* sparkle = &t48->board[x][y].sparkles[sIdx];
+        if (sparkle->active)
+        {
+            return;
+        }
+    }
+
+    // Create an array of possible directions. This ensures no random duplicates.
+    int32_t directions[T48_SPARKLES_PER_CELL * 2];
+    for (int i = 0; i < ARRAY_SIZE(directions); i++)
+    {
+        directions[i] = i - (ARRAY_SIZE(directions) / 2);
+    }
+    // Shuffle the directions
+    FisherYatesShuffle(directions, ARRAY_SIZE(directions));
+
+    // For each sparkle
+    for (int32_t sIdx = 0; sIdx < T48_SPARKLES_PER_CELL; sIdx++)
+    {
+        // Get a reference
+        t48Sparkle_t* sparkle = &t48->board[x][y].sparkles[sIdx];
+
+        // Set speed
+        sparkle->xSpd = directions[sIdx];
+        sparkle->ySpd = -8 - (esp_random() % 8);
+
+        // Convert cell coords to pixel space
+        sparkle->x = t48_horz_offset(x) + T48_CELL_SIZE / 2;
+        sparkle->y = t48_vert_offset(y) + T48_CELL_SIZE / 2;
+
+        // Set image
+        sparkle->img = spr;
+
+        // set active
+        sparkle->active = true;
+    }
+}
+
+/**
+ * @brief Draw a cell's sparkles
+ *
+ * @param cell The cell to draw sparkles for
+ * @param elapsedUs The time since this was last called, for animation
+ * @return true if animation is in progress, false if it isn't
+ */
+static bool t48_drawSparkles(t48cell_t* cell, uint32_t elapsedUs)
+{
+    bool animating = false;
+
+    // Draw all this cell's sparkles
+    for (int32_t sIdx = 0; sIdx < T48_SPARKLES_PER_CELL; sIdx++)
+    {
+        // Get a reference to the sparkle
+        t48Sparkle_t* sparkle = &cell->sparkles[sIdx];
+
+        // If the sparkle is active
+        if (sparkle->active)
+        {
+            // Deactivate it if it's offscreen
+            if ((sparkle->y >= TFT_HEIGHT) || (sparkle->x + sparkle->img->w < 0) || (sparkle->x >= TFT_WIDTH))
+            {
+                sparkle->active = false;
+            }
+            else
+            {
+                // Otherwise move and draw it
+                // TODO adjust animation to be microsecond-based
+                sparkle->ySpd += 1;
+                sparkle->y += sparkle->ySpd;
+                sparkle->x += sparkle->xSpd;
+                drawWsgSimple(sparkle->img, sparkle->x, sparkle->y);
+                animating = true;
+            }
+        }
+    }
+    return animating;
+}
+
+/**
+ * @brief Get the horizontal pixel offset for a column on the board
+ *
+ * @param col The column index
+ * @return The pixel offset for this column
+ */
+static int32_t t48_horz_offset(int32_t col)
+{
+    return col * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_SIDE_MARGIN + T48_LINE_WEIGHT;
+}
+
+/**
+ * @brief Get the horizontal pixel offset for a row on the board
+ *
+ * @param row The row index
+ * @return The pixel offset for this row
+ */
+static int32_t t48_vert_offset(int32_t row)
+{
+    return row * (T48_CELL_SIZE + T48_LINE_WEIGHT) + T48_TOP_MARGIN + T48_LINE_WEIGHT;
+}
+
+/**
+ * @brief Shuffle the items in an array
+ *
+ * See https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+ *
+ * @param array The array to shuffle
+ * @param size The number of elements in the array to shuffle
+ */
+static void FisherYatesShuffle(int32_t* array, int32_t size)
+{
+    int32_t n, k, temp;
+
+    // Iterate through the array in reverse order
+    for (n = size - 1; n > 0; n--)
+    {
+        // Generate a random index 'k' between 0 and n (inclusive)
+        k = esp_random() % (n + 1);
+
+        // Swap the elements at indices 'n' and 'k'
+        temp     = array[n];
+        array[n] = array[k];
+        array[k] = temp;
+    }
 }
