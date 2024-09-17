@@ -68,6 +68,7 @@ typedef struct
 //==============================================================================
 
 static bool handleArgument(const char* optName, const char* arg, int optVal);
+static bool handlePositionalArgument(const char* val);
 static void printHelp(const char* progName);
 static void printUsage(const char* progName);
 static const optDoc_t* findOptDoc(char shortOpt, const char* longOpt);
@@ -414,6 +415,11 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
 
     // It's OK if an arg is unhandled, as it may just be a flag set automatically
     return true;
+}
+
+static bool handlePositionalArgument(const char* val)
+{
+    return false;
 }
 
 /**
@@ -841,8 +847,21 @@ bool emuParseArgs(int argc, char** argv)
 
         if (optVal < 0)
         {
-            // No more options
-            break;
+            // Not an option
+            if (optind < argc)
+            {
+                // ...but there are still arguments, so this is a positional arg
+                if (!handlePositionalArgument(argv[optind]))
+                {
+                    printf("Unknown argument '%s'\n", argv[optind]);
+                    return false;
+                }
+            }
+            else
+            {
+                // No more options
+                break;
+            }
         }
         else if (optVal == '?')
         {
