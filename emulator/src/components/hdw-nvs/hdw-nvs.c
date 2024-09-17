@@ -39,7 +39,8 @@ typedef struct
     char key[36];
     uint32_t size;
     bool isBlob;
-    union {
+    union
+    {
         void* blob;
         int32_t int32;
     };
@@ -434,7 +435,7 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
         else
         {
             size_t injectedLength = emuGetInjectedBlobLength(namespace, key);
-            *length = injectedLength;
+            *length               = injectedLength;
         }
         return true;
     }
@@ -1098,9 +1099,9 @@ void emuInjectNvsBlob(const char* namespace, const char* key, size_t length, con
         emuNvsInjectedData_t* data = (emuNvsInjectedData_t*)alloc;
 
         snprintf(data->key, sizeof(data->key), "%s:%s", namespace, key);
-        data->size = (uint32_t)length;
+        data->size   = (uint32_t)length;
         data->isBlob = true;
-        data->blob = ((char*)alloc) + sizeof(emuNvsInjectedData_t);
+        data->blob   = ((char*)alloc) + sizeof(emuNvsInjectedData_t);
         memcpy(data->blob, blob, length);
 
         hashPut(&nvsInjectedData, data->key, alloc);
@@ -1121,9 +1122,9 @@ void emuInjectNvs32(const char* namespace, const char* key, int32_t value)
         emuNvsInjectedData_t* data = (emuNvsInjectedData_t*)alloc;
 
         snprintf(data->key, sizeof(data->key), "%s:%s", namespace, key);
-        data->size = 4;
+        data->size   = 4;
         data->isBlob = false;
-        data->int32 = value;
+        data->int32  = value;
 
         hashPut(&nvsInjectedData, data->key, alloc);
     }

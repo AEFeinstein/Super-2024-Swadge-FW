@@ -8,9 +8,9 @@
 
 #include "esp_heap_caps.h"
 
-static char* cnfsInjectedFilename = NULL;
+static char* cnfsInjectedFilename   = NULL;
 static int32_t cnfsInjectedFileSize = 0;
-static void* cnfsInjectedFileData = NULL;
+static void* cnfsInjectedFileData   = NULL;
 
 const uint8_t* __real_cnfsGetFile(const char* fname, size_t* flen);
 
@@ -36,7 +36,7 @@ bool emuCnfsInjectFile(const char* name, const char* filePath)
                 }
             }
         }
-        
+
         fclose(dataFile);
         return false;
     }
@@ -77,7 +77,8 @@ const uint8_t* __wrap_cnfsGetFile(const char* fname, size_t* flen)
     }
 }
 
-// Hack needed because we can't actually wrap the call that cnfsReadFile() makes to cnfsGetFile() because of compiler shenanigans
+// Hack needed because we can't actually wrap the call that cnfsReadFile() makes to cnfsGetFile() because of compiler
+// shenanigans
 uint8_t* __wrap_cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 {
     const uint8_t* fptr = __wrap_cnfsGetFile(fname, outsize);
