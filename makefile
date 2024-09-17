@@ -271,7 +271,8 @@ endif
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
 	-ggdb \
 	-Wl,--wrap=cnfsGetFile \
-	-Wl,--wrap=cnfsReadFile
+	-Wl,--wrap=cnfsReadFile \
+	-Wl,--wrap=deinitCnfs
 
 # Incompatible flags for clang on MacOS
 ifneq ($(HOST_OS),Darwin)

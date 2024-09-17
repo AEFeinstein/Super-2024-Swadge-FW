@@ -13,6 +13,7 @@ static int32_t cnfsInjectedFileSize = 0;
 static void* cnfsInjectedFileData   = NULL;
 
 const uint8_t* __real_cnfsGetFile(const char* fname, size_t* flen);
+bool __real_deinitCnfs(void);
 
 bool emuCnfsInjectFile(const char* name, const char* filePath)
 {
@@ -54,7 +55,7 @@ void emuCnfsInjectFileData(const char* name, size_t length, void* data)
     cnfsInjectedFileData = data;
 }
 
-/*bool __wrap_deinitCnfs(void)
+bool __wrap_deinitCnfs(void)
 {
     free(cnfsInjectedFilename);
     free(cnfsInjectedFileData);
@@ -62,7 +63,9 @@ void emuCnfsInjectFileData(const char* name, size_t length, void* data)
     cnfsInjectedFileSize = 0;
     cnfsInjectedFilename = NULL;
     cnfsInjectedFileData = NULL;
-}*/
+
+    return __real_deinitCnfs();
+}
 
 const uint8_t* __wrap_cnfsGetFile(const char* fname, size_t* flen)
 {
