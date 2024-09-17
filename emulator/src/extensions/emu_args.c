@@ -419,6 +419,16 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
 
 static bool handlePositionalArgument(const char* val)
 {
+    if (val)
+    {
+        if ((strlen(val) > 4 && (!strcmp(&val[strlen(val) - 4], ".mid") || !strcmp(&val[strlen(val) - 4], ".kar")))
+            || (strlen(val) > 5 && !strcmp(&val[strlen(val) - 5], ".midi")))
+        {
+            emulatorArgs.midiFile = val;
+            return true;
+        }
+    }
+
     return false;
 }
 
