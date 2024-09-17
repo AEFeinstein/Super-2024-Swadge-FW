@@ -47,6 +47,10 @@ static void FisherYatesShuffle(int32_t* array, int32_t size);
 // Const Variables
 //==============================================================================
 
+static const char paused[]     = "Paused!";
+static const char pausedA[]    = "Press A to continue playing";
+static const char pausedB[]    = "Press B to abandon game";
+
 static const int32_t tileIndices[] = {
     5, 8, 2, 12, 0, 15, 1, 7, 10, 9, 14, 11, 6, 13, 4, 3, 0, 1, 5, 5, 5, 3, 3, 3, 3,
 };
@@ -80,12 +84,6 @@ void t48_gameInit(t48_t* t48)
 
     // Accept input
     t48->acceptGameInput = true;
-
-    // Play some music
-    // TODO get BGM to loop
-    soundPlayBgm(&t48->bgm, MIDI_BGM);
-
-    // TODO setup and illuminate LEDs
 }
 
 /**
@@ -96,6 +94,18 @@ void t48_gameInit(t48_t* t48)
  */
 void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
 {
+    if (t48->paused)
+    {
+        // Draw pause screen
+        fillDisplayArea(64, 75, TFT_WIDTH - 64, 100, c100);
+        drawText(&t48->titleFont, c555, paused, (TFT_WIDTH - textWidth(&t48->titleFont, paused)) / 2, 80);
+        fillDisplayArea(32, 110, TFT_WIDTH - 32, 130, c100);
+        drawText(&t48->font, c555, pausedA, (TFT_WIDTH - textWidth(&t48->font, pausedA)) / 2, 115);
+        fillDisplayArea(32, 135, TFT_WIDTH - 32, 155, c100);
+        drawText(&t48->font, c555, pausedB, (TFT_WIDTH - textWidth(&t48->font, pausedB)) / 2, 140);
+        return; // Bail instead of drawing the rest of the game
+    }
+
     // Blank the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
@@ -205,6 +215,12 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
         case PB_LEFT:
         case PB_RIGHT:
         {
+            // If the game is paused
+            if (t48->paused)
+            {
+                break;
+            }
+            
             // If input isn't being accepted
             if (!t48->acceptGameInput)
             {
@@ -241,11 +257,25 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
             }
             break;
         }
-        default:
         case PB_A:
+        {
+            t48->paused = false;
+            break;
+        }
         case PB_B:
+        {
+            if (t48->paused)
+            {
+                t48->state = T48_START_SCREEN;
+            }
+            break;
+        }
         case PB_START:
+        {
+            t48->paused = !t48->paused;
+        }
         case PB_SELECT:
+        default:
         {
             break;
         }

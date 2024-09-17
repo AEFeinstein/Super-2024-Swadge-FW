@@ -15,6 +15,7 @@
 
 #include "mode_2048.h"
 #include "2048_game.h"
+#include "2048_menus.h"
 
 //==============================================================================
 // Function Prototypes
@@ -98,6 +99,8 @@ static void t48EnterMode(void)
     loadMidiFile("sndBounce.mid", &t48->click, true);
 
     // Initialize the game
+    // FIXME: Got ot start mode first
+    t48->state = T48_IN_GAME;
     t48_gameInit(t48);
 
     // TODO reimplement main & high score menus
@@ -138,17 +141,36 @@ static void t48ExitMode(void)
  */
 static void t48MainLoop(int64_t elapsedUs)
 {
-    // Get inputs
     buttonEvt_t evt;
-    while (checkButtonQueueWrapper(&evt))
+    switch (t48->state)
     {
-        if (evt.down)
+        case T48_IN_GAME:
         {
-            // Process inputs
-            t48_gameInput(t48, evt.button);
+            // Get inputs
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    // Process inputs
+                    t48_gameInput(t48, evt.button);
+                }
+            }
+
+            // Loop the game
+            t48_gameLoop(t48, elapsedUs);
+            break;
+        }
+        case T48_START_SCREEN:
+        {
+            // TODO: handle start screen
+        }
+        case T48_END_SCREEN:
+        {
+            // TODO: High score screen
+        }
+        default:
+        {
+            break;
         }
     }
-
-    // Loop the game
-    t48_gameLoop(t48, elapsedUs);
 }

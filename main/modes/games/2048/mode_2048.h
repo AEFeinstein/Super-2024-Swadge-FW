@@ -28,6 +28,17 @@
 #define T48_SPARKLES_PER_CELL 32
 
 //==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    T48_IN_GAME,
+    T48_START_SCREEN,
+    T48_END_SCREEN,
+} t48ModeStateEnum_t;
+
+//==============================================================================
 // Structs
 //==============================================================================
 
@@ -67,13 +78,12 @@ typedef struct
     midiFile_t bgm;          ///< The background music
     midiFile_t click;        ///< The click sound
 
-    // High Score
-    
-
     // Game state
     t48cell_t board[T48_GRID_SIZE][T48_GRID_SIZE]; ///< The board with cells, tiles, and sparkles
     int32_t score;                                 ///< The current score
     bool acceptGameInput;                          ///< true if the game accepts input, false if it is animating
+    bool paused;                                   ///< If the game is paused
+    t48ModeStateEnum_t state;                      ///< Where in the game sequence we are
 } t48_t;
 
 //==============================================================================
