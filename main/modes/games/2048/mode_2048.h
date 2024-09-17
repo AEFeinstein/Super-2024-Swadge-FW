@@ -67,6 +67,9 @@ typedef struct
     midiFile_t bgm;          ///< The background music
     midiFile_t click;        ///< The click sound
 
+    // High Score
+    
+
     // Game state
     t48cell_t board[T48_GRID_SIZE][T48_GRID_SIZE]; ///< The board with cells, tiles, and sparkles
     int32_t score;                                 ///< The current score

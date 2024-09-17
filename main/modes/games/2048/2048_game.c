@@ -22,7 +22,7 @@ static int32_t t48_horz_offset(int32_t col);
 static int32_t t48_vert_offset(int32_t row);
 static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsedUs);
 
-static void t48InitSparkles(t48_t* t48, int32_t x, int32_t y, wsg_t* spr);
+static void t48_initSparkles(t48_t* t48, int32_t x, int32_t y, wsg_t* spr);
 static bool t48_drawSparkles(t48cell_t* cell, uint32_t elapsedUs);
 static void FisherYatesShuffle(int32_t* array, int32_t size);
 
@@ -32,6 +32,10 @@ static bool t48_setRandomCell(t48_t* t48, int32_t value);
 //==============================================================================
 // Const Variables
 //==============================================================================
+
+static const int32_t tileIndices[] = {
+    5, 8, 2, 12, 0, 15, 1, 7, 10, 9, 14, 11, 6, 13, 4, 3, 0, 1, 5, 5, 5, 3, 3, 3, 3,
+};
 
 static const int32_t sparkleIndices[] = {
     3, 3, 4, 1, 6, 0, 7, 0, 3, 4, 4, 7, 5, 6, 6, 2, 2, 1, 3, 3, 3, 3, 3, 3, 3,
@@ -166,7 +170,7 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
                     if (0 != elapsedUs)
                     {
                         // There are two values that need to get merged. Init some sparkles
-                        t48InitSparkles(t48, x, y,
+                        t48_initSparkles(t48, x, y,
                                         &t48->sparkleSprites[sparkleIndices[31 - __builtin_clz(cell->value)]]);
                     }
                     // Tally score
@@ -298,7 +302,7 @@ static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsed
             // Draw the sprite first
             uint16_t x_offset = t48_horz_offset(x) + tile->xOffset;
             uint16_t y_offset = t48_vert_offset(y) + tile->yOffset;
-            wsg_t* tileWsg    = &t48->tiles[31 - __builtin_clz(tile->value)];
+            wsg_t* tileWsg    = &t48->tiles[tileIndices[31 - __builtin_clz(tile->value)]];
             drawWsgSimple(tileWsg, x_offset, y_offset);
 
             // Draw the text on top
@@ -386,7 +390,7 @@ static void FisherYatesShuffle(int32_t* array, int32_t size)
  * @param y The Y index of the cell on the board
  * @param spr The sprite to use as a sparkle
  */
-static void t48InitSparkles(t48_t* t48, int32_t x, int32_t y, wsg_t* spr)
+static void t48_initSparkles(t48_t* t48, int32_t x, int32_t y, wsg_t* spr)
 {
     // If there are any active sparkles already, return
     for (int32_t sIdx = 0; sIdx < T48_SPARKLES_PER_CELL; sIdx++)
