@@ -115,38 +115,35 @@ static void ssrMainLoop(int64_t elapsedUs)
     int32_t travelTimeMs  = 2000;
     int32_t travelUsPerPx = (1000 * travelTimeMs) / (TFT_HEIGHT - HIT_BAR + (2 * ICON_RADIUS));
 
-    // If there are any notes left
-    if (ssr->cNote < ssr->numNotes)
+    // Get a reference to the player
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+
+    // Get the position of the song and when the next event is, in ms
+    int32_t songMs = SAMPLES_TO_MS(player->sampleCount);
+
+    // Check events until one hasn't happened yet or the song ends
+    while (ssr->cNote < ssr->numNotes)
     {
-        // Get a reference to the player
-        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        // When the next event occurs
+        int32_t nextEventMs = MIDI_TICKS_TO_MS(ssr->notes[ssr->cNote].tick, player->tempo, player->reader.division);
 
-        // Get the position of the song and when the next event is, in ms
-        int32_t songMs = SAMPLES_TO_MS(player->sampleCount);
-
-        // Check events until one hasn't happened yet
-        while (true)
+        // Check if the icon should be spawned now to reach the hit bar in time
+        if (songMs + travelTimeMs >= nextEventMs)
         {
-            // When the next event occurs
-            int32_t nextEventMs = MIDI_TICKS_TO_MS(ssr->notes[ssr->cNote].tick, player->tempo, player->reader.division);
+            // Spawn an icon
+            ssrNoteIcon_t* ni = calloc(1, sizeof(ssrNoteIcon_t));
+            ni->note          = ssr->notes[ssr->cNote].note;
+            ni->posY          = TFT_HEIGHT + (ICON_RADIUS * 2);
+            ni->timer         = 0;
+            push(&ssr->icons, ni);
 
-            // Check if the icon should be spawned now to reach the hit bar in time
-            if (songMs + travelTimeMs >= nextEventMs)
-            {
-                // Spawn an icon
-                ssrNoteIcon_t* ni = calloc(1, sizeof(ssrNoteIcon_t));
-                ni->note          = ssr->notes[ssr->cNote].note;
-                ni->posY          = TFT_HEIGHT + (ICON_RADIUS * 2);
-                ni->timer         = 0;
-                push(&ssr->icons, ni);
-
-                // Increment the track data
-                ssr->cNote++;
-            }
-            else
-            {
-                break;
-            }
+            // Increment the track data
+            ssr->cNote++;
+        }
+        else
+        {
+            // Nothing more to be spawned right now
+            break;
         }
     }
 
