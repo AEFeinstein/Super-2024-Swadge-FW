@@ -137,6 +137,7 @@ static const char argHeadless[]    = "headless";
 static const char argHideLeds[]    = "hide-leds";
 static const char argKeymap[]      = "keymap";
 static const char argLock[]        = "lock";
+static const char argMidiFile[]    = "midi-file";
 static const char argMode[]        = "mode";
 static const char argModeSwitch[]  = "mode-switch";
 static const char argModeList[]    = "modes-list";
@@ -167,6 +168,7 @@ static const struct option options[] =
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
     { argKeymap,      required_argument, NULL,                             'k'  },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
+    { argMidiFile,    required_argument, NULL,                             0    },
     { argMode,        required_argument, NULL,                             'm'  },
     { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
     { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
@@ -198,6 +200,7 @@ static const optDoc_t argDocs[] =
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
     {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak"},
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
+    { 0,  argMidiFile,    "FILE",  "Open and immediately play a MIDI file" },
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
     { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
@@ -312,6 +315,10 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
             emulatorArgs.keymap = arg;
         }
         return true;
+    }
+    else if (argMidiFile == optName)
+    {
+        emulatorArgs.midiFile = arg;
     }
     else if (argMode == optName)
     {

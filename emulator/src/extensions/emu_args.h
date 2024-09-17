@@ -74,6 +74,10 @@ typedef struct
 
     /// @brief Whether VSync is enabled
     bool vsync;
+
+
+    // MIDI
+    const char* midiFile;
 } emuArgs_t;
 
 //==============================================================================

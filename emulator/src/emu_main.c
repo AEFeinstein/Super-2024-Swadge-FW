@@ -38,6 +38,11 @@
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
 
+#include "hdw-nvs.h"
+#include "hdw-nvs_emu.h"
+
+#include "emu_cnfs.h"
+
 #include "swadge2024.h"
 #include "macros.h"
 #include "trigonometry.h"
@@ -90,6 +95,7 @@
 #include "emu_ext.h"
 #include "emu_main.h"
 #include "ext_tools.h"
+#include "ext_modes.h"
 
 //==============================================================================
 // Defines
@@ -184,6 +190,23 @@ int main(int argc, char** argv)
     // Call any init callbacks we may have and pass them the parsed command-line arguments
     // We also determine which extensions are enabled here, which is important for laying out the window properly
     initExtensions(&emulatorArgs);
+
+    // TODO this should also be an extension?
+    if (emulatorArgs.midiFile)
+    {
+        printf("Opening MIDI file: %s\n", emulatorArgs.midiFile);
+        if (emuCnfsInjectFile(emulatorArgs.midiFile, emulatorArgs.midiFile))
+        {
+            emuInjectNvs32("storage", "synth_playmode", 1);
+            emuInjectNvsBlob("storage", "synth_lastsong", strlen(emulatorArgs.midiFile), emulatorArgs.midiFile);
+            emulatorSetSwadgeModeByName("MIDI");
+        }
+        else
+        {
+            printf("Could not read MIDI file!\n");
+            isRunning = false;
+        }
+    }
 
     if (!isRunning)
     {
