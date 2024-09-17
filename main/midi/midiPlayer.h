@@ -94,8 +94,15 @@
 /// @brief Convert the sample count to MIDI ticks
 #define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
 
+/// @brief Convert samples to milliseconds
+#define SAMPLES_TO_MS(samp) (((samp) * 1000) / DAC_SAMPLE_RATE_HZ)
+
 /// @brief Calculate the number of DAC samples in the given number of milliseconds
 #define MS_TO_SAMPLES(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
+
+/// @brief Convert MIDI ticks to milliseconds
+#define MIDI_TICKS_TO_MS(ticks, tempo, div) \
+    (int64_t)((int64_t)((int64_t)(ticks) * (int64_t)(tempo)) / (int64_t)((int64_t)1000 * (int64_t)(div)))
 
 /// @brief Callback function used to provide feedback when a song finishes playing
 typedef void (*songFinishedCbFn)(void);

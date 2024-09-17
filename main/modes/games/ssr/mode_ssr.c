@@ -2,6 +2,9 @@
 #include "menu.h"
 #include "mode_ssr.h"
 
+#define HIT_BAR     16
+#define ICON_RADIUS 8
+
 typedef struct
 {
     int32_t tick;
@@ -11,14 +14,26 @@ typedef struct
 
 typedef struct
 {
+    int32_t note;
+    int32_t timer;
+    int32_t posY;
+} ssrNoteIcon_t;
+
+typedef struct
+{
+    // Font
     font_t ibm;
+
+    // Song being played
     midiFile_t credits;
+
+    // Track data
+    int32_t numNotes;
     ssrNote_t* notes;
-    int32_t tDiv;
-    int32_t tempo;
     int32_t cNote;
-    int32_t tElapsedMs;
-    int32_t draw;
+
+    // Drawing data
+    list_t icons;
 } ssrVars_t;
 
 ssrVars_t* ssr;
@@ -56,20 +71,19 @@ swadgeMode_t ssrMode = {
  */
 static void ssrEnterMode(void)
 {
+    // 60FPS please
+    setFrameRateUs(16667);
+
     ssr = calloc(1, sizeof(ssrVars_t));
     loadFont("ibm_vga8.font", &ssr->ibm, false);
 
-    size_t sz      = 0;
+    size_t sz            = 0;
     const uint8_t* notes = cnfsGetFile("credits.cch", &sz);
     loadTrackData(ssr, notes, sz);
 
     loadMidiFile("credits.mid", &ssr->credits, false);
 
     globalMidiPlayerPlaySongCb(&ssr->credits, MIDI_BGM, NULL);
-
-    ssr->tDiv  = ssr->credits.timeDivision;
-    ssr->tempo = globalMidiPlayerGet(MIDI_BGM)->tempo;
-    printf("%d @ %d\n", ssr->tDiv, ssr->tempo);
 }
 
 /**
@@ -79,6 +93,11 @@ static void ssrExitMode(void)
 {
     unloadMidiFile(&ssr->credits);
     free(ssr->notes);
+    void* val;
+    while ((val = pop(&ssr->icons)))
+    {
+        free(val);
+    }
     freeFont(&ssr->ibm);
     free(ssr);
 }
@@ -92,40 +111,102 @@ static void ssrExitMode(void)
  */
 static void ssrMainLoop(int64_t elapsedUs)
 {
-    // What a hack!
-    // ssr->tDiv  = ssr->credits.timeDivision;
-    // ssr->tempo = globalMidiPlayerGet(MIDI_BGM). / 1000;
+    // This doesn't need to be calculated per-loop...
+    int32_t travelTimeMs  = 2000;
+    int32_t travelUsPerPx = (1000 * travelTimeMs) / (TFT_HEIGHT - HIT_BAR + (2 * ICON_RADIUS));
 
-
-    ssr->tElapsedMs += (elapsedUs / 1000);
-
-    // int nextMs = (ssr->notes[ssr->cNote].tick * ssr->tempo) / (ssr->tDiv);
-    // if (ssr->tElapsedMs >= nextMs)
-    // {
-    //     ssr->draw = ssr->notes[ssr->cNote].note;
-    //     printf("Note %d (%d, %d)\n", ssr->notes[ssr->cNote].note, nextMs, ssr->tElapsedMs);
-    //     ssr->cNote++;
-    // }
-
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    int ticks = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
-    int nextTick = ssr->notes[ssr->cNote].tick;
-    if (ticks >= nextTick)
+    // If there are any notes left
+    if (ssr->cNote < ssr->numNotes)
     {
-        ssr->draw = ssr->notes[ssr->cNote].note;
-        // printf("Note %d (%d, %d)\n", ssr->notes[ssr->cNote].note, nextMs, ssr->tElapsedMs);
-        ssr->cNote++;
+        // Get a reference to the player
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+
+        // Get the position of the song and when the next event is, in ms
+        int32_t songMs = SAMPLES_TO_MS(player->sampleCount);
+
+        // Check events until one hasn't happened yet
+        while (true)
+        {
+            // When the next event occurs
+            int32_t nextEventMs = MIDI_TICKS_TO_MS(ssr->notes[ssr->cNote].tick, player->tempo, player->reader.division);
+
+            // Check if the icon should be spawned now to reach the hit bar in time
+            if (songMs + travelTimeMs >= nextEventMs)
+            {
+                // Spawn an icon
+                ssrNoteIcon_t* ni = calloc(1, sizeof(ssrNoteIcon_t));
+                ni->note          = ssr->notes[ssr->cNote].note;
+                ni->posY          = TFT_HEIGHT + (ICON_RADIUS * 2);
+                ni->timer         = 0;
+                push(&ssr->icons, ni);
+
+                // Increment the track data
+                ssr->cNote++;
+            }
+            else
+            {
+                break;
+            }
+        }
     }
 
+    // Clear the display
     clearPxTft();
 
-    paletteColor_t colors[] = {c020, c400, c550, c004, c420};
-    // for(int i = 0; i < 5; i++)
-    // {
-    //     fillDisplayArea(i * (TFT_WIDTH / 5), 0, (i + 1) * (TFT_WIDTH / 5), TFT_HEIGHT, colors[i]);
-    // }
+    // Draw the target area
+    drawLineFast(0, HIT_BAR, TFT_WIDTH - 1, HIT_BAR, c555);
+    for (int32_t i = 0; i < 5; i++)
+    {
+        int32_t xOffset = ((i * TFT_WIDTH) / 5) + (TFT_WIDTH / 10);
+        drawCircle(xOffset, HIT_BAR, ICON_RADIUS + 2, c555);
+    }
 
-    fillDisplayArea(ssr->draw * (TFT_WIDTH / 5), 0, (ssr->draw + 1) * (TFT_WIDTH / 5), TFT_HEIGHT, colors[ssr->draw]);
+    // Draw all the icons
+    node_t* iconNode = ssr->icons.first;
+    while (iconNode)
+    {
+        // Draw the icon
+        ssrNoteIcon_t* icon     = iconNode->val;
+        int32_t xOffset         = ((icon->note * TFT_WIDTH) / 5) + (TFT_WIDTH / 10);
+        paletteColor_t colors[] = {c020, c400, c550, c004, c420};
+        drawCircleFilled(xOffset, icon->posY, ICON_RADIUS, colors[icon->note]);
+
+        // Highlight the target if the timing is good enough
+        if (HIT_BAR - 4 <= icon->posY && icon->posY <= HIT_BAR + 4)
+        {
+            drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[icon->note]);
+        }
+
+        // Track if this icon gets removed
+        bool removed = false;
+
+        // Run this icon's timer
+        icon->timer += elapsedUs;
+        while (icon->timer >= travelUsPerPx)
+        {
+            icon->timer -= travelUsPerPx;
+            icon->posY--;
+
+            // If it's off screen
+            if (icon->posY < -ICON_RADIUS)
+            {
+                // Remove this icon
+                node_t* nodeToRemove = iconNode;
+                iconNode             = iconNode->next;
+                free(nodeToRemove->val);
+                removeEntry(&ssr->icons, nodeToRemove);
+                removed = true;
+                break;
+            }
+        }
+
+        // If this icon wasn't removed
+        if (!removed)
+        {
+            // Iterate to the next
+            iconNode = iconNode->next;
+        }
+    }
 
     // Process button events
     buttonEvt_t evt = {0};
@@ -133,8 +214,6 @@ static void ssrMainLoop(int64_t elapsedUs)
     {
         ; // DO SOMETHING
     }
-
-    // ssr->credits.tracks
 
     // Check for analog touch
     // int32_t centerVal, intensityVal;
@@ -202,13 +281,13 @@ static void ssrBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  */
 static void loadTrackData(ssrVars_t* ssrv, const uint8_t* data, size_t size)
 {
-    uint32_t dIdx     = 0;
-    uint16_t numNotes = (data[dIdx++] << 8);
-    numNotes |= (data[dIdx++]);
+    uint32_t dIdx  = 0;
+    ssrv->numNotes = (data[dIdx++] << 8);
+    ssrv->numNotes |= (data[dIdx++]);
 
-    ssrv->notes = calloc(numNotes, sizeof(ssrNote_t));
+    ssrv->notes = calloc(ssrv->numNotes, sizeof(ssrNote_t));
 
-    for (int32_t nIdx = 0; nIdx < numNotes; nIdx++)
+    for (int32_t nIdx = 0; nIdx < ssrv->numNotes; nIdx++)
     {
         ssrv->notes[nIdx].tick = (data[dIdx + 0] << 24) | //
                                  (data[dIdx + 1] << 16) | //
@@ -220,13 +299,10 @@ static void loadTrackData(ssrVars_t* ssrv, const uint8_t* data, size_t size)
 
         if (0x80 & ssrv->notes[nIdx].note)
         {
-            printf("HOLD!\n");
             ssrv->notes[nIdx].note &= 0x7F;
             ssrv->notes[nIdx].hold = (data[dIdx + 0] << 8) | //
                                      (data[dIdx + 1] << 0);
             dIdx += 2;
         }
-
-        printf("%d %d %d\n", ssrv->notes[nIdx].tick, ssrv->notes[nIdx].note, ssrv->notes[nIdx].hold);
     }
 }
