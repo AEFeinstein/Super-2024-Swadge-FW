@@ -127,7 +127,7 @@ static void t48EnterMode(void)
 
     // Initialize the game
     // FIXME: Got to start mode first
-    t48->state = T48_HS_SCREEN;
+    t48->state = T48_START_SCREEN;
 
     // FIXME: Reinitialize the game when appropriate
     t48_gameInit(t48);
@@ -199,18 +199,17 @@ static void t48MainLoop(int64_t elapsedUs)
         case T48_START_SCREEN:
         {
             // Check any button is pressed
-            /* while (checkButtonQueueWrapper(&evt))
+            while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down)
                 {
                     soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48StartGame(t48);
-                    t48->ds = GAME;
+                    t48_gameInit(t48);
+                    t48->state = T48_IN_GAME;
                 }
             }
             // Draw
-            t48StartScreen(t48, t48Rainbow(t48));
-            t48RandLEDs(t48); */
+            t48_drawStartScreen(t48, c555);
             break;
         }
         case T48_WIN_SCREEN:
@@ -264,7 +263,7 @@ static void t48MainLoop(int64_t elapsedUs)
 
             // Draw the final score screen
             // FIXME: Color is static
-            t48DrawGameOverScreen(t48, t48->score, c555);
+            t48_drawGameOverScreen(t48, t48->score, c555);
             break;
         }
         default:

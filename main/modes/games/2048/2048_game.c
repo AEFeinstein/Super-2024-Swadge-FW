@@ -79,24 +79,18 @@ void t48_gameInit(t48_t* t48)
     t48->score = 0;
 
     // Test code
-    int32_t testval = 2;
-    for (int i = 0; i < 16; i++)
-    {
-        t48->board[i / 4][i % 4].value               = testval;
-        t48->board[i / 4][i % 4].drawnTiles[0].value = testval;
-        testval                                      = testval << 1;
-    }
+    /* adw */
 
     /* t48->board[0][1].value               = 1024;
     t48->board[0][2].value               = 1024;
     t48->board[0][2].drawnTiles[0].value = 1024;
     t48->board[0][1].drawnTiles[0].value = 1024; */
 
-    /* // Set two cells randomly
+    // Set two cells randomly
     for (int32_t i = 0; i < 2; i++)
     {
         t48_setRandomCell(t48, 2);
-    } */
+    }
 
     // Accept input
     t48->acceptGameInput = true;
@@ -203,6 +197,11 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
     // When the animation is done
     if (!t48->acceptGameInput && !animationInProgress)
     {
+        // Spawn a random tile, 10% chance of 4, 90% chance of 2
+        // FIXME: add value as soon as the math starts, and do some animations
+        // See https://play2048.co/index.js, addRandomTile()
+        t48_setRandomCell(t48, (esp_random() % 10 == 0) ? 4 : 2);
+        
         // Check if game has been won
         if (!t48->alreadyWon && t48_checkWin(t48))
         {
@@ -215,11 +214,6 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
         {
             t48->state = T48_END_SCREEN;
         }
-
-        // Spawn a random tile, 10% chance of 4, 90% chance of 2
-        // FIXME: add value as soon as the math starts, and do some animations
-        // See https://play2048.co/index.js, addRandomTile()
-        t48_setRandomCell(t48, (esp_random() % 10 == 0) ? 4 : 2);
 
         // Accept input again
         t48->acceptGameInput = true;
@@ -293,6 +287,7 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
             if (t48->paused)
             {
                 t48->state = T48_START_SCREEN;
+                t48->paused = false;
             }
             break;
         }

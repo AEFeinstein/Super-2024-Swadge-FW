@@ -13,4 +13,6 @@
 
 #include "mode_2048.h"
 
-void t48DrawGameOverScreen(t48_t* t48, int64_t score, paletteColor_t pc);
+void t48_initStartScreen(t48_t* t48);
+void t48_drawStartScreen(t48_t* t48, paletteColor_t color);
+void t48_drawGameOverScreen(t48_t* t48, int64_t score, paletteColor_t pc);
