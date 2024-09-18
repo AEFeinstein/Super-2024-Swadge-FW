@@ -32,7 +32,7 @@ static void* cnfsInjectedFileData   = NULL;
 // Functions
 //==============================================================================
 
-bool __wrap_initCnfs(void)
+bool initCnfs(void)
 {
     /* Get local references from cnfs_data.c */
     cnfsData     = getCnfsImage();
@@ -85,7 +85,7 @@ void emuCnfsInjectFileData(const char* name, size_t length, void* data)
     cnfsInjectedFileData = data;
 }
 
-bool __wrap_deinitCnfs(void)
+bool deinitCnfs(void)
 {
     free(cnfsInjectedFilename);
     free(cnfsInjectedFileData);
@@ -97,7 +97,7 @@ bool __wrap_deinitCnfs(void)
     return true;
 }
 
-const uint8_t* __wrap_cnfsGetFile(const char* fname, size_t* flen)
+const uint8_t* cnfsGetFile(const char* fname, size_t* flen)
 {
     if (cnfsInjectedFilename && !strcmp(cnfsInjectedFilename, fname))
     {
@@ -138,9 +138,9 @@ const uint8_t* __wrap_cnfsGetFile(const char* fname, size_t* flen)
 
 // Hack needed because we can't actually wrap the call that cnfsReadFile() makes to cnfsGetFile() because of compiler
 // shenanigans
-uint8_t* __wrap_cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
+uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 {
-    const uint8_t* fptr = __wrap_cnfsGetFile(fname, outsize);
+    const uint8_t* fptr = cnfsGetFile(fname, outsize);
 
     if (!fptr)
     {

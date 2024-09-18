@@ -66,6 +66,7 @@ SRC_FILES = $(CNFS_FILE)
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 # This is all the source files combined and deduplicated
 SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES))
+SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
 
 # The emulator doesn't build components, but there is a target for formatting them
 ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
@@ -275,18 +276,13 @@ LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
 ifneq ($(HOST_OS),Darwin)
 LIBRARY_FLAGS += \
 	-static-libgcc \
-	-static-libstdc++ \
-	-Wl,--wrap=cnfsGetFile,--wrap=cnfsReadFile,--wrap=initCnfs,--wrap=deinitCnfs
+	-static-libstdc++
 else
 LIBRARY_FLAGS += \
     -framework Foundation \
 	-framework CoreFoundation \
 	-framework CoreMIDI \
-	-framework AudioToolbox \
-	-Wl,-alias,cnfsGetFile,__wrap_cnfsGetFile \
-	-Wl,-alias,cnfsReadFile,__wrap_cnfsReadFile \
-	-Wl,-alias,initCnfs,__wrap_initCnfs \
-	-Wl,-alias,deinitCnfs,__wrap_deinitCnfs
+	-framework AudioToolbox
 endif
 
 ifeq ($(HOST_OS),Linux)
