@@ -29,7 +29,7 @@ static void t48MainLoop(int64_t elapsedUs);
 // Const Variables
 //==============================================================================
 
-const char modeName[] = "2048";
+const char modeName[]          = "2048";
 static const char youWin[]     = "You got 2048!";
 static const char continueAB[] = "Press A or B to continue";
 
@@ -113,7 +113,7 @@ static void t48EnterMode(void)
 
     // Play some music
     // TODO get BGM to loop
-    //soundPlayBgm(&t48->bgm, MIDI_BGM);
+    // soundPlayBgm(&t48->bgm, MIDI_BGM);
 
     // TODO setup and illuminate LEDs
 }
@@ -188,11 +188,13 @@ static void t48MainLoop(int64_t elapsedUs)
             }
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
             drawText(&t48->titleFont, c055, youWin, (TFT_WIDTH - textWidth(&t48->titleFont, youWin)) / 2, 48);
-            drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) / 2, TFT_HEIGHT - 64);
+            drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) / 2,
+                     TFT_HEIGHT - 64);
         }
         case T48_END_SCREEN:
         {
-            // TODO: High score screen
+            fillDisplayArea(0, 0, 120, 120, c040);
+            break;
         }
         default:
         {

@@ -4,9 +4,9 @@
  * @brief Core of 2048 mode
  * @version 1.0.0
  * @date 2024-09-17
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 //==============================================================================
@@ -33,6 +33,7 @@
 static bool t48_setRandomCell(t48_t* t48, int32_t value);
 static bool t48_slideTiles(t48_t* t48, buttonBit_t direction);
 static bool t48_checkWin(t48_t* t48);
+static bool t48_checkOver(t48_t* t48);
 
 // Drawing
 static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsedUs);
@@ -48,12 +49,12 @@ static void FisherYatesShuffle(int32_t* array, int32_t size);
 // Const Variables
 //==============================================================================
 
-static const char paused[]     = "Paused!";
-static const char pausedA[]    = "Press A to continue playing";
-static const char pausedB[]    = "Press B to abandon game";
+static const char paused[]  = "Paused!";
+static const char pausedA[] = "Press A to continue playing";
+static const char pausedB[] = "Press B to abandon game";
 
 static const int32_t tileIndices[] = {
-    5, 8, 2, 12, 0, 15, 1, 7, 10, 9, 14, 11, 6, 13, 4, 3, 0, 1, 5, 5, 5, 3, 3, 3, 3,
+    0, 8, 2, 12, 5, 9, 14, 10, 7, 15, 1, 3, 6, 13, 4, 11, 0, 8, 0, 0, 0, 0, 0, 0, 0,
 };
 
 static const int32_t sparkleIndices[] = {
@@ -78,16 +79,24 @@ void t48_gameInit(t48_t* t48)
     t48->score = 0;
 
     // Test code
-    t48->board[0][1].value               = 1024;
+    int32_t testval = 2;
+    for (int i = 0; i < 16; i++)
+    {
+        t48->board[i / 4][i % 4].value               = testval;
+        t48->board[i / 4][i % 4].drawnTiles[0].value = testval;
+        testval                                      = testval << 1;
+    }
+
+    /* t48->board[0][1].value               = 1024;
     t48->board[0][2].value               = 1024;
     t48->board[0][2].drawnTiles[0].value = 1024;
-    t48->board[0][1].drawnTiles[0].value = 1024;
+    t48->board[0][1].drawnTiles[0].value = 1024; */
 
-    // Set two cells randomly
+    /* // Set two cells randomly
     for (int32_t i = 0; i < 2; i++)
     {
         t48_setRandomCell(t48, 2);
-    }
+    } */
 
     // Accept input
     t48->acceptGameInput = true;
@@ -165,7 +174,7 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
                     {
                         // There are two values that need to get merged. Init some sparkles
                         t48_initSparkles(t48, x, y,
-                                        &t48->sparkleSprites[sparkleIndices[31 - __builtin_clz(cell->value)]]);
+                                         &t48->sparkleSprites[sparkleIndices[31 - __builtin_clz(cell->value)]]);
                     }
                     // Tally score
                     t48->score += cell->value;
@@ -194,17 +203,24 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
     // When the animation is done
     if (!t48->acceptGameInput && !animationInProgress)
     {
-        // Spawn a random tile, 10% chance of 4, 90% chance of 2
-        // See https://play2048.co/index.js, addRandomTile()
-        t48_setRandomCell(t48, (esp_random() % 10 == 0) ? 4 : 2);
-
+        // Check if game has been won
         if (!t48->alreadyWon && t48_checkWin(t48))
         {
-            t48->state = T48_WIN_SCREEN;
+            t48->state      = T48_WIN_SCREEN;
             t48->alreadyWon = true;
         }
-        // TODO check for loss condition (no valid moves)
-        // TODO tally high score
+
+        // Check for loss condition (no valid moves)
+        if (t48_checkOver(t48))
+        {
+            t48->state = T48_END_SCREEN;
+            // TODO tally high score
+        }
+
+        // Spawn a random tile, 10% chance of 4, 90% chance of 2
+        // FIXME: add value as soon as the math starts, and do some animations
+        // See https://play2048.co/index.js, addRandomTile()
+        t48_setRandomCell(t48, (esp_random() % 10 == 0) ? 4 : 2);
 
         // Accept input again
         t48->acceptGameInput = true;
@@ -231,7 +247,7 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
             {
                 break;
             }
-            
+
             // If input isn't being accepted
             if (!t48->acceptGameInput)
             {
@@ -491,22 +507,65 @@ static bool t48_slideTiles(t48_t* t48, buttonBit_t direction)
 
 /**
  * @brief Checks if any of the cells have reached 2048
- * 
+ *
  * @param t48 Game data
  * @return true if a cell is 2048
  * @return false otherwise
  */
 static bool t48_checkWin(t48_t* t48)
 {
-    bool won  = false;
+    bool won = false;
     for (int32_t id = 0; id < T48_GRID_SIZE * T48_GRID_SIZE; id++)
     {
-        if (t48->board[id/T48_GRID_SIZE][id%T48_GRID_SIZE].value == 2048)
+        if (t48->board[id / T48_GRID_SIZE][id % T48_GRID_SIZE].value == 2048)
         {
             won = true;
         }
     }
     return won;
+}
+
+/**
+ * @brief Checks if any valid moves are left
+ *
+ * @param t48 game data
+ * @return true if the game no longer has viable moves
+ * @return false otherwise
+ */
+static bool t48_checkOver(t48_t* t48)
+{
+    // Check if any cells are open
+    for (int32_t id = 0; id < T48_GRID_SIZE * T48_GRID_SIZE; id++)
+    {
+        if (t48->board[id / T48_GRID_SIZE][id % T48_GRID_SIZE].value == 0)
+        {
+            return false;
+        }
+    }
+    // Check if any two consecutive block match vertically
+    for (uint8_t row = 0; row < T48_GRID_SIZE; row++)
+    {
+        for (uint8_t col = 0; col < T48_GRID_SIZE - 1; col++)
+        { // -1 to account for comparison
+            if (t48->board[row][col].value == t48->board[row][col + 1].value)
+            {
+                return false;
+            }
+        }
+    }
+    // Check if any two consecutive block match horizontally
+    for (uint8_t row = 0; row < T48_GRID_SIZE - 1; row++)
+    { // -1 to account for comparison
+        for (uint8_t col = 0; col < T48_GRID_SIZE - 1; col++)
+        {
+            if (t48->board[row][col].value == t48->board[row + 1][col].value)
+            {
+                return false;
+            }
+        }
+    }
+    // Game is over
+    return true;
 }
 
 /**
