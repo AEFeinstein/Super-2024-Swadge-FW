@@ -48,6 +48,7 @@ typedef struct
 
     // Drawing data
     list_t icons;
+    buttonBit_t btnState;
 } ssrVars_t;
 
 //==============================================================================
@@ -85,6 +86,35 @@ swadgeMode_t ssrMode = {
 };
 
 ssrVars_t* ssr;
+
+static const paletteColor_t colors[] = {c020, c400, c550, c004, c420};
+
+static const int32_t btnMap[][2] = {
+    {
+        PB_LEFT,
+        0,
+    },
+    {
+        PB_DOWN,
+        1,
+    },
+    {
+        PB_UP,
+        2,
+    },
+    {
+        PB_RIGHT,
+        3,
+    },
+    {
+        PB_B,
+        4,
+    },
+    {
+        PB_A,
+        5,
+    },
+};
 
 //==============================================================================
 // Functions
@@ -152,6 +182,39 @@ static void ssrExitMode(void)
  */
 static void ssrMainLoop(int64_t elapsedUs)
 {
+    // Process button events
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        ssr->btnState = evt.state;
+        for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(btnMap); bIdx++)
+        {
+            if (evt.button & btnMap[bIdx][0])
+            {
+                printf("%d %s\n", btnMap[bIdx][1], evt.down ? "Down" : "Up");
+            }
+        }
+
+        // if (evt.down)
+        // {
+        //     switch (evt.button)
+        //     {
+        //         case PB_UP:
+        //         case PB_DOWN:
+        //         case PB_LEFT:
+        //         case PB_RIGHT:
+        //         case PB_A:
+        //         case PB_B:
+        //         case PB_START:
+        //         case PB_SELECT:
+        //         default:
+        //         {
+        //             break;
+        //         }
+        //     }
+        // }
+    }
+
     // Run a lead-in timer to allow notes to spawn before the song starts playing
     if (ssr->leadInUs > 0)
     {
@@ -220,16 +283,16 @@ static void ssrMainLoop(int64_t elapsedUs)
     while (iconNode)
     {
         // Draw the icon
-        ssrNoteIcon_t* icon     = iconNode->val;
-        int32_t xOffset         = ((icon->note * TFT_WIDTH) / 5) + (TFT_WIDTH / 10);
-        paletteColor_t colors[] = {c020, c400, c550, c004, c420};
+        ssrNoteIcon_t* icon = iconNode->val;
+        int32_t xOffset     = ((icon->note * TFT_WIDTH) / 5) + (TFT_WIDTH / 10);
         drawCircleFilled(xOffset, icon->posY, ICON_RADIUS, colors[icon->note]);
+        // TODO figure out how to draw holds
 
         // Highlight the target if the timing is good enough
-        if (HIT_BAR - 4 <= icon->posY && icon->posY <= HIT_BAR + 4)
-        {
-            drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[icon->note]);
-        }
+        // if (HIT_BAR - 4 <= icon->posY && icon->posY <= HIT_BAR + 4)
+        // {
+        //     drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[icon->note]);
+        // }
 
         // Track if this icon gets removed
         bool removed = false;
@@ -262,11 +325,14 @@ static void ssrMainLoop(int64_t elapsedUs)
         }
     }
 
-    // Process button events
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
+    // Draw indicators that the button is pressed
+    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(btnMap); bIdx++)
     {
-        ; // DO SOMETHING
+        if (ssr->btnState & btnMap[bIdx][0])
+        {
+            int32_t xOffset = ((bIdx * TFT_WIDTH) / 5) + (TFT_WIDTH / 10);
+            drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[bIdx]);
+        }
     }
 
     // Check for analog touch
@@ -354,6 +420,8 @@ static void ssrLoadTrackData(ssrVars_t* ssrv, const uint8_t* data, size_t size)
         if (0x80 & ssrv->notes[nIdx].note)
         {
             ssrv->notes[nIdx].note &= 0x7F;
+
+            // TODO figure out how to draw holds
             ssrv->notes[nIdx].hold = (data[dIdx + 0] << 8) | //
                                      (data[dIdx + 1] << 0);
             dIdx += 2;
