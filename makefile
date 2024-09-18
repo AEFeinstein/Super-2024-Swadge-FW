@@ -283,10 +283,10 @@ LIBRARY_FLAGS += \
 	-framework CoreFoundation \
 	-framework CoreMIDI \
 	-framework AudioToolbox \
-	-Wl,-alias,__wrap_cnfsGetFile,cnfsGetFile \
-	-Wl,-alias,__wrap_cnfsReadFile,cnfsReadFile \
-	-Wl,-alias,__wrap_initCnfs,initCnfs \
-	-Wl,-alias,__wrap_deinitCnfs,deinitCnfs
+	-Wl,-alias,cnfsGetFile,__wrap_cnfsGetFile \
+	-Wl,-alias,cnfsReadFile,__wrap_cnfsReadFile \
+	-Wl,-alias,initCnfs,__wrap_initCnfs \
+	-Wl,-alias,deinitCnfs,__wrap_deinitCnfs
 endif
 
 ifeq ($(HOST_OS),Linux)
