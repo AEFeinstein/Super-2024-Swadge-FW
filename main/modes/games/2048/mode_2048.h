@@ -86,6 +86,9 @@ typedef struct
     bool paused;                                   ///< If the game is paused
     bool alreadyWon;                               ///< If the win screen has already displayed
     t48ModeStateEnum_t state;                      ///< Where in the game sequence we are
+
+    // Audio
+    bool bgmIsPlaying;
 } t48_t;
 
 //==============================================================================

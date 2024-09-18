@@ -24,6 +24,7 @@
 static void t48EnterMode(void);
 static void t48ExitMode(void);
 static void t48MainLoop(int64_t elapsedUs);
+static void t48BgmCb(void);
 
 //==============================================================================
 // Const Variables
@@ -111,10 +112,6 @@ static void t48EnterMode(void)
 
     // TODO reimplement main & high score menus
 
-    // Play some music
-    // TODO get BGM to loop
-    // soundPlayBgm(&t48->bgm, MIDI_BGM);
-
     // TODO setup and illuminate LEDs
 }
 
@@ -153,6 +150,14 @@ static void t48ExitMode(void)
  */
 static void t48MainLoop(int64_t elapsedUs)
 {
+    // Play BGM if it's not playing
+    if (!t48->bgmIsPlaying)
+    {
+        soundPlayBgmCb(&t48->bgm, MIDI_BGM, t48BgmCb);
+        t48->bgmIsPlaying = true;
+    }
+
+    // Handle inputs
     buttonEvt_t evt;
     switch (t48->state)
     {
@@ -201,4 +206,13 @@ static void t48MainLoop(int64_t elapsedUs)
             break;
         }
     }
+}
+
+/**
+ * @brief Restarts teh BGM once the track ends
+ *
+ */
+static void t48BgmCb()
+{
+    t48->bgmIsPlaying = false;
 }
