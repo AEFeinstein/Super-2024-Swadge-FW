@@ -46,6 +46,10 @@ static int32_t t48_horz_offset(int32_t col);
 static int32_t t48_vert_offset(int32_t row);
 static void FisherYatesShuffle(int32_t* array, int32_t size);
 
+// LEDs
+static void t48_lightLEDs(t48_t* t48, bool tileMoved, buttonBit_t direction);
+static led_t t48_getLEDColor(t48_t* t48);
+
 //==============================================================================
 // Const Variables
 //==============================================================================
@@ -80,7 +84,13 @@ void t48_gameInit(t48_t* t48)
     t48->score = 0;
 
     // Test code
-    /* adw */
+    /* int test = 2;
+    for (int32_t i = 0; i < 15; i++)
+    {
+        t48->board[i / 4][i % 4].value               = test;
+        t48->board[i / 4][i % 4].drawnTiles[0].value = test;
+        test = test << 1;
+    } */
 
     /* t48->board[0][1].value               = 1024;
     t48->board[0][2].value               = 1024;
@@ -515,6 +525,9 @@ static bool t48_slideTiles(t48_t* t48, buttonBit_t direction)
         }
     }
 
+    // Light LEDs
+    t48_lightLEDs(t48, tileMoved, direction);
+
     return tileMoved;
 }
 
@@ -855,5 +868,159 @@ static void FisherYatesShuffle(int32_t* array, int32_t size)
         temp     = array[n];
         array[n] = array[k];
         array[k] = temp;
+    }
+}
+
+/**
+ * @brief Illuminates the LEDs in the directions that the player pressed
+ * 
+ * @param t48 Game data
+ * @param tileMoved If the tile moved or bounced
+ * @param direction Direction tiles moved in
+ */
+static void t48_lightLEDs(t48_t* t48, bool tileMoved, buttonBit_t direction)
+{
+    if (tileMoved)
+    {
+        // Illuminate LEDS based on direction and value
+        led_t led = t48_getLEDColor(t48);
+        switch (direction)
+        {
+            case PB_LEFT:
+            {
+                // LED 3 and 4
+                t48->leds[3] = led;
+                t48->leds[4] = led;
+                break;
+            }
+            case PB_RIGHT:
+            {
+                // LED 0 and 1
+                t48->leds[0] = led;
+                t48->leds[1] = led;
+                break;
+            }
+            case PB_UP:
+            {
+                // LEDs 1, 2, 3
+                t48->leds[1] = led;
+                t48->leds[2] = led;
+                t48->leds[3] = led;
+                break;
+            }
+            case PB_DOWN:
+            {
+                // LEDs 4 and 0
+                t48->leds[0] = led;
+                t48->leds[4] = led;
+                break;
+            }
+        }
+    }
+    else 
+    {
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            led_t led = {.r = 128, .b = 128, .g = 128};
+            t48->leds[i] = led;
+        }
+    }
+}
+
+/**
+ * @brief Gets the correct LED color
+ * 
+ * @param t48 Game data
+ * @return led_t The led object containing the colors to lo0ad into the LEDs
+ */
+static led_t t48_getLEDColor(t48_t* t48)
+{
+    // Get the largest value available
+    int32_t value = 0;
+    for (int32_t i = 0; i < T48_GRID_SIZE * T48_GRID_SIZE; i++)
+    {
+        if (t48->board[i / T48_GRID_SIZE][i % T48_GRID_SIZE].value > value)
+        {
+            value = t48->board[i / T48_GRID_SIZE][i % T48_GRID_SIZE].value;
+        }
+    }
+    led_t col = {0};
+    switch (value)
+    {
+        case 4:
+        {
+            // Cyan
+            col.g = 255;
+            col.b = 255;
+            return col;
+        }
+        case 8:
+        case 8192:
+        {
+            // Red
+            col.r = 255;
+            return col;
+        }
+        case 16:
+        case 2048:
+        case 16384:
+        {
+            // Green
+            col.g = 128;
+            return col;
+        }
+        case 2:
+        case 32:
+        case 128:
+        case 131072:
+        {
+            // Pink
+            col.r = 200;
+            col.g = 150;
+            col.b = 150;
+            return col;
+        }
+        case 64:
+        case 512:
+        {
+            // Yellow
+            col.r = 128;
+            col.g = 128;
+            return col;
+        }
+        case 256:
+        {
+            // Orange
+            col.r = 255;
+            col.g = 165;
+            return col;
+        }
+        case 1024:
+        case 65536:
+        {
+            // Blue
+            col.b = 255;
+            return col;
+        }
+        case 4096:
+        {
+            // Dark Pink
+            col.r = 255;
+            col.g = 64;
+            col.b = 64;
+            return col;
+        }
+        case 32768:
+        {
+            // Purple
+            col.r = 200;
+            col.b = 200;
+            return col;
+        }
+        default:
+            col.r = 255;
+            col.g = 128;
+            col.b = 128;
+            return col;
     }
 }
