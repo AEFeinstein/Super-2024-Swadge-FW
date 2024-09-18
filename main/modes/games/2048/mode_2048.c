@@ -50,6 +50,12 @@ static const char* sparkleSpriteNames[] = {
     "Sparkle_Pink.wsg", "Sparkle_Purple.wsg", "Sparkle_Red.wsg",   "Sparkle_Yellow.wsg",
 };
 
+static const char* newSparkleSprNames[] = {
+    "New_Dot.wsg",
+    "New_Small_Star.wsg",
+    "New_Med_Star.wsg",
+};
+
 const char highScoreKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
     "t48HighScore0", "t48HighScore1", "t48HighScore2", "t48HighScore3", "t48HighScore4",
 };
@@ -111,6 +117,12 @@ static void t48EnterMode(void)
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(sparkleSpriteNames); sIdx++)
     {
         loadWsg(sparkleSpriteNames[sIdx], &t48->sparkleSprites[sIdx], true);
+    }
+
+    t48->newSparkles = calloc(ARRAY_SIZE(newSparkleSprNames), sizeof(wsg_t));
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(newSparkleSprNames); sIdx++)
+    {
+        loadWsg(newSparkleSprNames[sIdx], &t48->newSparkles[sIdx], true);
     }
 
     // Load sounds

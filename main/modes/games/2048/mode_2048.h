@@ -27,6 +27,9 @@
 #define T48_TILES_PER_CELL    2
 #define T48_SPARKLES_PER_CELL 32
 
+// Animation
+#define T48_NEW_SPARKLE_SEQ 33333
+
 // High Scores
 #define T48_HS_COUNT  5
 #define T48_HS_KEYLEN 14
@@ -70,8 +73,16 @@ typedef struct
     int32_t value;                                 ///< This cell's current value
     t48drawnTile_t drawnTiles[T48_TILES_PER_CELL]; ///< All the tiles being drawn for this cell
     t48Sparkle_t sparkles[T48_SPARKLES_PER_CELL];  ///< All the sparkles being drawn for this cell
-    bool merged;                                   ///< TODO
+    bool merged;                                   ///< If tile was merged
 } t48cell_t;
+
+typedef struct
+{
+    vec_t pos;         ///< x and y coordinates of the new tile
+    int32_t spawnTime; ///< Time since the object was created
+    bool active;       ///< If the new tile should be drawing anything
+    int8_t sequence;   ///< Current position in the sequence
+} t48newTile_t;
 
 typedef struct
 {
@@ -81,6 +92,7 @@ typedef struct
     font_t titleFontOutline; ///< Font used for the title outline
     wsg_t* tiles;            ///< A list of tile sprites
     wsg_t* sparkleSprites;   ///< A list of sparkle sprites
+    wsg_t* newSparkles;      ///< New sparkles for a new tile
     midiFile_t bgm;          ///< The background music
     midiFile_t click;        ///< The click sound
 
@@ -103,6 +115,10 @@ typedef struct
 
     // Start screen
     uint8_t hue; ///< Color of the title text
+    // TODO: New splash screen
+
+    // Animations
+    t48newTile_t nTile; ///< New tile animation data
 } t48_t;
 
 //==============================================================================

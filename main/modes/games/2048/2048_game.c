@@ -39,6 +39,7 @@ static bool t48_checkOver(t48_t* t48);
 static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsedUs);
 static void t48_initSparkles(t48_t* t48, int32_t x, int32_t y, wsg_t* spr);
 static bool t48_drawSparkles(t48cell_t* cell, uint32_t elapsedUs);
+static void t48_drawNewTile(t48_t* t48, uint32_t elapsedUs);
 
 // Helpers
 static int32_t t48_horz_offset(int32_t col);
@@ -145,13 +146,26 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
     // Check if anything is animating
     bool animationInProgress = false;
 
-    // Draw Tiles third
+    // Draw new tile third
+    if (t48->nTile.active)
+    {
+        // t48_drawNewTile(t48, elapsedUs);
+        t48_drawNewTile(t48, elapsedUs);
+    }
+
+    // Draw Tiles fourth
     for (int32_t x = 0; x < T48_GRID_SIZE; x++)
     {
         for (int32_t y = 0; y < T48_GRID_SIZE; y++)
         {
             // Get a reference to the cell
             t48cell_t* cell = &t48->board[x][y];
+
+            // If tile just spawned, don't draw until done animating
+            if (t48->nTile.active && (t48->nTile.pos.x == x && t48->nTile.pos.y == y))
+            {
+                continue;
+            }
 
             // Draw the tile(s) for this cell
             if (t48_drawCellTiles(t48, x, y, elapsedUs))
@@ -181,7 +195,7 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
         }
     }
 
-    // Draw sparkles fourth
+    // Draw sparkles fifth
     for (int32_t x = 0; x < T48_GRID_SIZE; x++)
     {
         for (int32_t y = 0; y < T48_GRID_SIZE; y++)
@@ -197,11 +211,6 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
     // When the animation is done
     if (!t48->acceptGameInput && !animationInProgress)
     {
-        // Spawn a random tile, 10% chance of 4, 90% chance of 2
-        // FIXME: add value as soon as the math starts, and do some animations
-        // See https://play2048.co/index.js, addRandomTile()
-        t48_setRandomCell(t48, (esp_random() % 10 == 0) ? 4 : 2);
-
         // Check if game has been won
         if (!t48->alreadyWon && t48_checkWin(t48))
         {
@@ -270,6 +279,9 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
             // Start sliding tiles
             if (t48_slideTiles(t48, button))
             {
+                // Spawn a random tile, 10% chance of 4, 90% chance of 2
+                // See https://play2048.co/index.js, addRandomTile()
+                t48_setRandomCell(t48, (esp_random() % 10 == 0) ? 4 : 2);
                 // Don't accept input until the slide is done
                 t48->acceptGameInput = false;
                 // Play a click
@@ -337,6 +349,13 @@ static bool t48_setRandomCell(t48_t* t48, int32_t value)
     cell->value               = value;
     cell->drawnTiles[0].value = value;
     cell->drawnTiles[1].value = 0;
+
+    // Set newTile for animation
+    vec_t newPos         = {.x = id / T48_GRID_SIZE, .y = id % T48_GRID_SIZE};
+    t48->nTile.pos       = newPos;
+    t48->nTile.active    = true;
+    t48->nTile.spawnTime = 0;
+    t48->nTile.sequence  = 0;
     return true;
 }
 
@@ -642,6 +661,63 @@ static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsed
         }
     }
     return animationInProgress;
+}
+
+/**
+ * @brief Draws a flash of light to indicate teh new tile's spawn location
+ *
+ * @param t48 Game Data
+ * @param elapsedUs Time since last frame
+ */
+static void t48_drawNewTile(t48_t* t48, uint32_t elapsedUs)
+{
+    // Add US
+    t48->nTile.spawnTime += elapsedUs;
+
+    if (t48->nTile.spawnTime >= T48_NEW_SPARKLE_SEQ)
+    {
+        t48->nTile.sequence++;
+        t48->nTile.spawnTime -= T48_NEW_SPARKLE_SEQ;
+    }
+
+    switch (t48->nTile.sequence)
+    {
+        case 0:
+        case 10:
+        {
+            drawWsgSimple(&t48->newSparkles[0],              //
+                          t48_horz_offset(t48->nTile.pos.x), //
+                          t48_vert_offset(t48->nTile.pos.y));
+            break;
+        }
+        case 1:
+        case 9:
+        {
+            drawWsgSimple(&t48->newSparkles[1],              //
+                          t48_horz_offset(t48->nTile.pos.x), //
+                          t48_vert_offset(t48->nTile.pos.y));
+            break;
+        }
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        {
+            drawWsgSimple(&t48->newSparkles[2],              //
+                          t48_horz_offset(t48->nTile.pos.x), //
+                          t48_vert_offset(t48->nTile.pos.y));
+            break;
+        }
+        default:
+        {
+            // If no longer inside animation sequence, deactivate
+            t48->nTile.active = false;
+            break;
+        }
+    }
 }
 
 /**
