@@ -1,9 +1,22 @@
-#include "limits.h"
-#include "menu.h"
+//==============================================================================
+// Defines
+//==============================================================================
+
 #include "mode_ssr.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
 
 #define HIT_BAR     16
 #define ICON_RADIUS 8
+
+#define TRAVEL_TIME_US   2000000
+#define TRAVEL_US_PER_PX ((TRAVEL_TIME_US) / (TFT_HEIGHT - HIT_BAR + (2 * ICON_RADIUS)))
+
+//==============================================================================
+// Structs
+//==============================================================================
 
 typedef struct
 {
@@ -26,6 +39,7 @@ typedef struct
 
     // Song being played
     midiFile_t credits;
+    int32_t leadInUs;
 
     // Track data
     int32_t numNotes;
@@ -36,15 +50,20 @@ typedef struct
     list_t icons;
 } ssrVars_t;
 
-ssrVars_t* ssr;
+//==============================================================================
+// Function Declarations
+//==============================================================================
 
 static void ssrEnterMode(void);
 static void ssrExitMode(void);
 static void ssrMainLoop(int64_t elapsedUs);
 static void ssrBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void loadTrackData(ssrVars_t* ssr, const uint8_t* data, size_t size);
-
+static void ssrLoadTrackData(ssrVars_t* ssr, const uint8_t* data, size_t size);
 // static void ssrMenuCb(const char*, bool selected, uint32_t settingVal);
+
+//==============================================================================
+// Variables
+//==============================================================================
 
 static const char ssrName[] = "Swadge Swadge Rebellion";
 
@@ -65,6 +84,12 @@ swadgeMode_t ssrMode = {
     .fnAdvancedUSB            = NULL,
 };
 
+ssrVars_t* ssr;
+
+//==============================================================================
+// Functions
+//==============================================================================
+
 /**
  * This function is called when this mode is started. It should initialize
  * variables and start the mode.
@@ -74,16 +99,23 @@ static void ssrEnterMode(void)
     // 60FPS please
     setFrameRateUs(16667);
 
+    // Allocate mode memory
     ssr = calloc(1, sizeof(ssrVars_t));
+
+    // Load a font
     loadFont("ibm_vga8.font", &ssr->ibm, false);
 
-    size_t sz            = 0;
-    const uint8_t* notes = cnfsGetFile("credits.cch", &sz);
-    loadTrackData(ssr, notes, sz);
+    // Load the track data
+    size_t sz = 0;
+    ssrLoadTrackData(ssr, cnfsGetFile("credits.cch", &sz), sz);
 
+    // Load the MIDI file
     loadMidiFile("credits.mid", &ssr->credits, false);
+    globalMidiPlayerPlaySong(&ssr->credits, MIDI_BGM);
+    globalMidiPlayerPauseAll();
 
-    globalMidiPlayerPlaySongCb(&ssr->credits, MIDI_BGM, NULL);
+    // Set the lead-in timer
+    ssr->leadInUs = TRAVEL_TIME_US;
 }
 
 /**
@@ -91,14 +123,23 @@ static void ssrEnterMode(void)
  */
 static void ssrExitMode(void)
 {
+    // Free MIDI data
     unloadMidiFile(&ssr->credits);
+
+    // Free track data
     free(ssr->notes);
+
+    // Free UI data
     void* val;
     while ((val = pop(&ssr->icons)))
     {
         free(val);
     }
+
+    // Free the font
     freeFont(&ssr->ibm);
+
+    // Free mode memory
     free(ssr);
 }
 
@@ -111,24 +152,40 @@ static void ssrExitMode(void)
  */
 static void ssrMainLoop(int64_t elapsedUs)
 {
-    // This doesn't need to be calculated per-loop...
-    int32_t travelTimeMs  = 2000;
-    int32_t travelUsPerPx = (1000 * travelTimeMs) / (TFT_HEIGHT - HIT_BAR + (2 * ICON_RADIUS));
+    // Run a lead-in timer to allow notes to spawn before the song starts playing
+    if (ssr->leadInUs > 0)
+    {
+        ssr->leadInUs -= elapsedUs;
+
+        if (ssr->leadInUs <= 0)
+        {
+            globalMidiPlayerResumeAll();
+            ssr->leadInUs = 0;
+        }
+    }
 
     // Get a reference to the player
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
 
     // Get the position of the song and when the next event is, in ms
-    int32_t songMs = SAMPLES_TO_MS(player->sampleCount);
+    int32_t songUs;
+    if (ssr->leadInUs > 0)
+    {
+        songUs = -ssr->leadInUs;
+    }
+    else
+    {
+        songUs = SAMPLES_TO_US(player->sampleCount);
+    }
 
     // Check events until one hasn't happened yet or the song ends
     while (ssr->cNote < ssr->numNotes)
     {
         // When the next event occurs
-        int32_t nextEventMs = MIDI_TICKS_TO_MS(ssr->notes[ssr->cNote].tick, player->tempo, player->reader.division);
+        int32_t nextEventUs = MIDI_TICKS_TO_US(ssr->notes[ssr->cNote].tick, player->tempo, player->reader.division);
 
         // Check if the icon should be spawned now to reach the hit bar in time
-        if (songMs + travelTimeMs >= nextEventMs)
+        if (songUs + TRAVEL_TIME_US >= nextEventUs)
         {
             // Spawn an icon
             ssrNoteIcon_t* ni = calloc(1, sizeof(ssrNoteIcon_t));
@@ -179,9 +236,9 @@ static void ssrMainLoop(int64_t elapsedUs)
 
         // Run this icon's timer
         icon->timer += elapsedUs;
-        while (icon->timer >= travelUsPerPx)
+        while (icon->timer >= TRAVEL_US_PER_PX)
         {
-            icon->timer -= travelUsPerPx;
+            icon->timer -= TRAVEL_US_PER_PX;
             icon->posY--;
 
             // If it's off screen
@@ -276,7 +333,7 @@ static void ssrBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param data
  * @param size
  */
-static void loadTrackData(ssrVars_t* ssrv, const uint8_t* data, size_t size)
+static void ssrLoadTrackData(ssrVars_t* ssrv, const uint8_t* data, size_t size)
 {
     uint32_t dIdx  = 0;
     ssrv->numNotes = (data[dIdx++] << 8);
