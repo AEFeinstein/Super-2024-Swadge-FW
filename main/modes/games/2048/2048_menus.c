@@ -35,15 +35,13 @@ static const char pressAB[]   = "Press A or B to reset the game";
  */
 void t48_initStartScreen(t48_t* t48)
 {
-    // Set random x and y coordinates for all blocks
-    /* for (uint8_t i = 0; i < T48_TILE_COUNT; i++)
+    for (uint8_t i = 0; i < T48_START_SCREEN_BLOCKS; i++)
     {
-        t48->fb[i].image  = &t48->tiles[i];
-        t48->fb[i].pos[0] = (esp_random() % (TFT_WIDTH + (2 * T48_CELL_SIZE))) - T48_CELL_SIZE;
-        t48->fb[i].pos[1] = (esp_random() % (TFT_HEIGHT + (2 * T48_CELL_SIZE))) - T48_CELL_SIZE;
-        t48->fb[i].spd    = (esp_random() % 2) + 1;
-        t48->fb[i].dir    = (esp_random() % 3) - 1; // -1 for left, 0 for down, 1 for right
-    } */
+        t48->ssBlocks[i].pos.x   = esp_random() % (TFT_WIDTH - 50);  // -50 because tile width
+        t48->ssBlocks[i].pos.y   = esp_random() % (TFT_HEIGHT - 50); // +25 to re-center
+        t48->ssBlocks[i].speed.x = -5 + (esp_random() % 11);         // -7 to center
+        t48->ssBlocks[i].speed.y = -5 + (esp_random() % 11);         // 13 to get entire range
+    }
 }
 
 /**
@@ -59,28 +57,33 @@ void t48_drawStartScreen(t48_t* t48, paletteColor_t color)
 
     // Draw random blocks
 
-    /* for (uint8_t i = 0; i < T48_TILE_COUNT; i++)
+    for (uint8_t i = 0; i < T48_START_SCREEN_BLOCKS; i++)
     {
-        // Move block
-        t48->fb[i].pos[1] += t48->fb[i].spd;
-        t48->fb[i].pos[0] += t48->fb[i].spd * t48->fb[i].dir;
-        // Wrap block if outside visual area
-        if (t48->fb[i].pos[0] >= TFT_WIDTH + T48_CELL_SIZE)
-        { // Wraps from right to left
-            t48->fb[i].pos[0] = -T48_CELL_SIZE;
+        // Move
+        t48->ssBlocks[i].pos.x += t48->ssBlocks[i].speed.x;
+        t48->ssBlocks[i].pos.y += t48->ssBlocks[i].speed.y;
+
+        // Update coordinates if out of bounds
+        if (t48->ssBlocks[i].pos.x < -50)
+        {
+            t48->ssBlocks[i].pos.x = TFT_WIDTH;
         }
-        if (t48->fb[i].pos[0] <= -T48_CELL_SIZE)
-        { // Wraps from left to right
-            t48->fb[i].pos[0] = TFT_WIDTH + T48_CELL_SIZE;
+        else if (t48->ssBlocks[i].pos.x > TFT_WIDTH)
+        {
+            t48->ssBlocks[i].pos.x = -50;
         }
-        if (t48->fb[i].pos[1] >= TFT_HEIGHT + T48_CELL_SIZE)
-        { // Wraps from bottom ot top
-            t48->fb[i].pos[1] = -T48_CELL_SIZE;
-            t48->fb[i].pos[0] = (esp_random() % (TFT_WIDTH - T48_CELL_SIZE));
+        if (t48->ssBlocks[i].pos.y < -50)
+        {
+            t48->ssBlocks[i].pos.y = TFT_HEIGHT;
         }
-        // Draw block
-        drawWsgSimple(t48->fb[i].image, t48->fb[i].pos[0], t48->fb[i].pos[1]);
-    } */
+        else if (t48->ssBlocks[i].pos.y > TFT_HEIGHT)
+        {
+            t48->ssBlocks[i].pos.y = -50;
+        }
+
+        // Draw
+        drawWsgSimple(&t48->tiles[i], t48->ssBlocks[i].pos.x, t48->ssBlocks[i].pos.y);
+    }
 
     // Title
     drawText(&t48->titleFont, color, mode, (TFT_WIDTH - textWidth(&t48->titleFont, mode)) / 2, TFT_HEIGHT / 2 - 12);

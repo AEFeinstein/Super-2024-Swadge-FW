@@ -28,7 +28,8 @@
 #define T48_SPARKLES_PER_CELL 32
 
 // Animation
-#define T48_NEW_SPARKLE_SEQ 33333
+#define T48_NEW_SPARKLE_SEQ     33333
+#define T48_START_SCREEN_BLOCKS 16
 
 // High Scores
 #define T48_HS_COUNT  5
@@ -36,7 +37,7 @@
 
 // LEDs
 #define T48_FADE_SPEED 66666
-#define T48_NEXT_LED 100000
+#define T48_NEXT_LED   100000
 
 //==============================================================================
 // Enums
@@ -90,6 +91,13 @@ typedef struct
 
 typedef struct
 {
+    vec_t pos;
+    vec_t speed;
+    int8_t idx;
+} t48StartScreenBlocks_t;
+
+typedef struct
+{
     // Assets
     font_t font;             ///< Font used for tile values
     font_t titleFont;        ///< Font used for the title
@@ -119,10 +127,10 @@ typedef struct
 
     // Start screen
     uint8_t hue; ///< Color of the title text
-    // TODO: New splash screen
 
     // Animations
-    t48newTile_t nTile; ///< New tile animation data
+    t48newTile_t nTile;                                       ///< New tile animation data
+    t48StartScreenBlocks_t ssBlocks[T48_START_SCREEN_BLOCKS]; ///< Start screen falling blocks
 
     // LEDs
     led_t leds[CONFIG_NUM_LEDS];
