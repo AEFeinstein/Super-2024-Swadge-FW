@@ -458,7 +458,7 @@ static void t48_fadeLEDs(int32_t elapsedUs)
 
 /**
  * @brief Chase LEDs around the swadge
- * 
+ *
  * @param elapseUs Time since last update
  */
 static void t48_chaseLEDs(int32_t elapseUs)
@@ -468,7 +468,7 @@ static void t48_chaseLEDs(int32_t elapseUs)
     {
         t48->nextLedTimer = 0;
         t48->currLED++;
-        if (t48->currLED > CONFIG_NUM_LEDS-1)
+        if (t48->currLED > CONFIG_NUM_LEDS - 1)
         {
             t48->currLED = 0;
         }
@@ -478,7 +478,7 @@ static void t48_chaseLEDs(int32_t elapseUs)
 
 /**
  * @brief Generates a random LED color
- * 
+ *
  * @return led_t Led object to set array to
  */
 led_t t48_randColor()
