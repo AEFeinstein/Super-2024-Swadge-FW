@@ -31,5 +31,30 @@
         <key>DISPLAY</key>
         <string>:0</string>
     </dict>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>midi</string>
+                <string>mid</string>
+                <string>kar</string>
+            </array>
+            <key>CFBundleTypeIconFile</key>
+            <string>SwadgeEmulator.icns</string>
+            <key>CFBundleTypeNames</key>
+            <string>MIDI File</string>
+            <key>CFBundleTypeOSTypes</key>
+            <array>
+                <string>Midi</string>
+            </array>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.midi-audio</string>
+            </array>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+        </dict>
+    </array>
 </dict>
 </plist>
