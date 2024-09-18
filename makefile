@@ -270,9 +270,7 @@ endif
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
 	-ggdb \
-	-Wl,--wrap=cnfsGetFile \
-	-Wl,--wrap=cnfsReadFile \
-	-Wl,--wrap=deinitCnfs
+	-Wl,--wrap=cnfsGetFile,--wrap=cnfsReadFile,--wrap=deinitCnfs
 
 # Incompatible flags for clang on MacOS
 ifneq ($(HOST_OS),Darwin)
