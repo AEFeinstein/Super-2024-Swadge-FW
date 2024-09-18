@@ -915,6 +915,10 @@ static void t48_lightLEDs(t48_t* t48, bool tileMoved, buttonBit_t direction)
                 t48->leds[4] = led;
                 break;
             }
+            default:
+            {
+                break;
+            }
         }
     }
     else
