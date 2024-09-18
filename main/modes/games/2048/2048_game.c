@@ -201,7 +201,7 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
         // FIXME: add value as soon as the math starts, and do some animations
         // See https://play2048.co/index.js, addRandomTile()
         t48_setRandomCell(t48, (esp_random() % 10 == 0) ? 4 : 2);
-        
+
         // Check if game has been won
         if (!t48->alreadyWon && t48_checkWin(t48))
         {
@@ -286,7 +286,7 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
         {
             if (t48->paused)
             {
-                t48->state = T48_START_SCREEN;
+                t48->state  = T48_START_SCREEN;
                 t48->paused = false;
             }
             break;

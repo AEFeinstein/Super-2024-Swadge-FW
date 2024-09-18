@@ -100,6 +100,9 @@ typedef struct
     char hsInitials[T48_HS_COUNT][4]; ///< Contains all the high score initials
     bool textEntryDone;               ///< Tested when checking if text entry is finished
     int32_t highScore[T48_HS_COUNT];  ///< Array of high scores
+
+    // Start screen
+    uint8_t hue; ///< Color of the title text
 } t48_t;
 
 //==============================================================================

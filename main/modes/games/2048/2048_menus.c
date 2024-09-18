@@ -19,7 +19,7 @@
 // Const Variables
 //==============================================================================
 
-const char mode[]         = "2048";
+const char mode[]             = "2048";
 static const char pressKey[]  = "Press any key to play";
 static const char highScore[] = "You got a high score!";
 static const char pressAB[]   = "Press A or B to reset the game";
@@ -47,10 +47,10 @@ void t48_initStartScreen(t48_t* t48)
 }
 
 /**
- * @brief Draws the
+ * @brief Draws the Start screen
  *
- * @param t48
- * @param color
+ * @param t48 Game data
+ * @param color Color of the title text
  */
 void t48_drawStartScreen(t48_t* t48, paletteColor_t color)
 {
@@ -83,8 +83,7 @@ void t48_drawStartScreen(t48_t* t48, paletteColor_t color)
     } */
 
     // Title
-    drawText(&t48->titleFont, color, mode, (TFT_WIDTH - textWidth(&t48->titleFont, mode)) / 2,
-             TFT_HEIGHT / 2 - 12);
+    drawText(&t48->titleFont, color, mode, (TFT_WIDTH - textWidth(&t48->titleFont, mode)) / 2, TFT_HEIGHT / 2 - 12);
     drawText(&t48->titleFontOutline, c555, mode, (TFT_WIDTH - textWidth(&t48->titleFont, mode)) / 2,
              TFT_HEIGHT / 2 - 12);
 
@@ -106,7 +105,7 @@ void t48_drawStartScreen(t48_t* t48, paletteColor_t color)
  */
 void t48_drawGameOverScreen(t48_t* t48, int64_t score, paletteColor_t pc)
 {
-    // CLear display
+    // Clear display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     // Draw player score

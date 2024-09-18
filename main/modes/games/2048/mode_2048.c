@@ -28,6 +28,7 @@ static void t48MainLoop(int64_t elapsedUs);
 static void t48BgmCb(void);
 static void t48InitHighScores(void);
 static void t48SortHighScores(void);
+static paletteColor_t t48_generateRainbow(void);
 
 //==============================================================================
 // Const Variables
@@ -52,6 +53,7 @@ static const char* sparkleSpriteNames[] = {
 const char highScoreKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
     "t48HighScore0", "t48HighScore1", "t48HighScore2", "t48HighScore3", "t48HighScore4",
 };
+
 const char highScoreInitialsKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
     "t48HSInitial0", "t48HSInitial1", "t48HSInitial2", "t48HSInitial3", "t48HSInitial4",
 };
@@ -126,11 +128,9 @@ static void t48EnterMode(void)
     t48InitHighScores();
 
     // Initialize the game
-    // FIXME: Got to start mode first
     t48->state = T48_START_SCREEN;
+    t48_initStartScreen(t48);
 
-    // FIXME: Reinitialize the game when appropriate
-    t48_gameInit(t48);
     // TODO setup and illuminate LEDs
 }
 
@@ -209,7 +209,7 @@ static void t48MainLoop(int64_t elapsedUs)
                 }
             }
             // Draw
-            t48_drawStartScreen(t48, c555);
+            t48_drawStartScreen(t48, t48_generateRainbow());
             break;
         }
         case T48_WIN_SCREEN:
@@ -262,8 +262,7 @@ static void t48MainLoop(int64_t elapsedUs)
             }
 
             // Draw the final score screen
-            // FIXME: Color is static
-            t48_drawGameOverScreen(t48, t48->score, c555);
+            t48_drawGameOverScreen(t48, t48->score, t48_generateRainbow());
             break;
         }
         default:
@@ -379,4 +378,17 @@ static void t48SortHighScores()
         writeNvs32(highScoreKey[i], t48->highScore[i]);
         writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], 4);
     }
+}
+
+/**
+ * @brief Generates a rainbow color in sequence
+ *
+ * @return paletteColor_t
+ */
+static paletteColor_t t48_generateRainbow()
+{
+    uint8_t hue = t48->hue++;
+    uint8_t sat = 255;
+    uint8_t val = 255;
+    return paletteHsvToHex(hue, sat, val);
 }
