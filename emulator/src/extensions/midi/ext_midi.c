@@ -158,7 +158,6 @@ static void processEvents(const char** out)
         {
             printf("Event successfully set midiPathBuffer\n");
             *out = midiPathBuffer;
-            break;
         }
     }
 
