@@ -81,6 +81,7 @@ Emulates a swadge
      --hide-leds             Don't draw simulated LEDs next to the display
  -k, --keymap=LAYOUT         Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak
  -l, --lock                  Lock the emulator in the start mode
+     --midi-file=FILE        Open and immediately play a MIDI file
  -m, --mode=MODE             Start the emulator in the swadge mode MODE instead of the main menu
      --mode-switch[=TIME]    Enable or set the timer to switch modes automatically
      --modes-list            Print out a list of all possible values for MODE
@@ -222,6 +223,8 @@ inputs to ensure that slight differences in frame timing do not cause inconsiste
 modes. The mode can still be changed automatically by `--mode-switch`, the console, and by a `SetMode'
 command when replaying recorded inputs.
 
+`--midi-file`: Loads and plays a local MIDI or KAR file using the MIDI Player mode.
+
 `--seed`: Sets a specific seed to the pseudorandom number generator. This is useful when trying to reproduce
 behavior that relies on `esp_random()`. If the seed is not set, a time-based one will be used. Note that a seed
 from one system will not necessarily produce the same output if it is used on a different system.
@@ -251,6 +254,10 @@ time.
 
 
 ## MIDI Instructions
+
+MIDI Files (`.mid`, `.midi`, and `.kar`) can be played in directly by passing the name of
+the MIDI file as a command-line argument to the Swadge Emulator. On Windows, you should also be able
+to drag a MIDI file on top of `SwadgeEmulator.exe` to play it.
 
 The Swadge Emulator includes MIDI support, which simulates the USB-MIDI behavior of the real Swadge
 using the system MIDI implementation. Note that MIDI implementation and behavior will vary between
