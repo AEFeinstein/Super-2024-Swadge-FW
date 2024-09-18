@@ -873,7 +873,7 @@ static void FisherYatesShuffle(int32_t* array, int32_t size)
 
 /**
  * @brief Illuminates the LEDs in the directions that the player pressed
- * 
+ *
  * @param t48 Game data
  * @param tileMoved If the tile moved or bounced
  * @param direction Direction tiles moved in
@@ -917,11 +917,11 @@ static void t48_lightLEDs(t48_t* t48, bool tileMoved, buttonBit_t direction)
             }
         }
     }
-    else 
+    else
     {
         for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            led_t led = {.r = 128, .b = 128, .g = 128};
+            led_t led    = {.r = 128, .b = 128, .g = 128};
             t48->leds[i] = led;
         }
     }
@@ -929,7 +929,7 @@ static void t48_lightLEDs(t48_t* t48, bool tileMoved, buttonBit_t direction)
 
 /**
  * @brief Gets the correct LED color
- * 
+ *
  * @param t48 Game data
  * @return led_t The led object containing the colors to lo0ad into the LEDs
  */

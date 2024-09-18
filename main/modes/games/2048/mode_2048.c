@@ -310,23 +310,22 @@ static void t48InitHighScores()
     {
         if (!readNvs32(highScoreKey[i], &t48->highScore[i]))
         {
-            // FIXME: Make scores more realistic
             switch (i)
             {
                 case 0:
-                    t48->highScore[i] = 100000;
+                    t48->highScore[i] = 96880;
                     break;
                 case 1:
-                    t48->highScore[i] = 50000;
+                    t48->highScore[i] = 69224;
                     break;
                 case 2:
-                    t48->highScore[i] = 25000;
+                    t48->highScore[i] = 24244;
                     break;
                 case 3:
-                    t48->highScore[i] = 10000;
+                    t48->highScore[i] = 11020;
                     break;
                 case 4:
-                    t48->highScore[i] = 5000;
+                    t48->highScore[i] = 5176;
                     break;
             }
             writeNvs32(highScoreKey[i], t48->highScore[i]);
