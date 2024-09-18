@@ -16,6 +16,7 @@
 #include "mode_2048.h"
 #include "2048_game.h"
 #include "2048_menus.h"
+#include "textEntry.h"
 
 //==============================================================================
 // Function Prototypes
@@ -25,6 +26,8 @@ static void t48EnterMode(void);
 static void t48ExitMode(void);
 static void t48MainLoop(int64_t elapsedUs);
 static void t48BgmCb(void);
+static void t48InitHighScores(void);
+static void t48SortHighScores(void);
 
 //==============================================================================
 // Const Variables
@@ -44,6 +47,13 @@ static const char* tileSpriteNames[] = {
 static const char* sparkleSpriteNames[] = {
     "Sparkle_Blue.wsg", "Sparkle_Cyan.wsg",   "Sparkle_Green.wsg", "Sparkle_Orange.wsg",
     "Sparkle_Pink.wsg", "Sparkle_Purple.wsg", "Sparkle_Red.wsg",   "Sparkle_Yellow.wsg",
+};
+
+const char highScoreKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
+    "t48HighScore0", "t48HighScore1", "t48HighScore2", "t48HighScore3", "t48HighScore4",
+};
+const char highScoreInitialsKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
+    "t48HSInitial0", "t48HSInitial1", "t48HSInitial2", "t48HSInitial3", "t48HSInitial4",
 };
 
 //==============================================================================
@@ -105,13 +115,22 @@ static void t48EnterMode(void)
     loadMidiFile("Follinesque.mid", &t48->bgm, true);
     loadMidiFile("sndBounce.mid", &t48->click, true);
 
+    // Init Text Entry
+    textEntryInit(&t48->font, 4, t48->playerInitials);
+    textEntrySetBGColor(c001);
+    textEntrySetEmphasisColor(c500);
+    textEntrySetNewCapsStyle(true);
+    textEntrySetNewEnterStyle(true);
+
+    // Initialize the scores
+    t48InitHighScores();
+
     // Initialize the game
-    // FIXME: Got ot start mode first
-    t48->state = T48_IN_GAME;
+    // FIXME: Got to start mode first
+    t48->state = T48_HS_SCREEN;
+
+    // FIXME: Reinitialize the game when appropriate
     t48_gameInit(t48);
-
-    // TODO reimplement main & high score menus
-
     // TODO setup and illuminate LEDs
 }
 
@@ -179,7 +198,20 @@ static void t48MainLoop(int64_t elapsedUs)
         }
         case T48_START_SCREEN:
         {
-            // TODO: handle start screen
+            // Check any button is pressed
+            /* while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    soundPlaySfx(&t48->click, MIDI_SFX);
+                    t48StartGame(t48);
+                    t48->ds = GAME;
+                }
+            }
+            // Draw
+            t48StartScreen(t48, t48Rainbow(t48));
+            t48RandLEDs(t48); */
+            break;
         }
         case T48_WIN_SCREEN:
         {
@@ -195,10 +227,44 @@ static void t48MainLoop(int64_t elapsedUs)
             drawText(&t48->titleFont, c055, youWin, (TFT_WIDTH - textWidth(&t48->titleFont, youWin)) / 2, 48);
             drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) / 2,
                      TFT_HEIGHT - 64);
+            break;
+        }
+        case T48_HS_SCREEN:
+        {
+            // Handle input in text entry object
+            while (checkButtonQueueWrapper(&evt))
+            {
+                t48->textEntryDone = !textEntryInput(evt.down, evt.button);
+            }
+
+            // If the text entry is done, sort the scores, reset the text entry object,
+            // and display the final screen
+            if (t48->textEntryDone)
+            {
+                t48SortHighScores();
+                textEntrySoftReset();
+                t48->state = T48_END_SCREEN;
+            }
+
+            // Draw text entry
+            textEntryDraw(elapsedUs);
+            break;
         }
         case T48_END_SCREEN:
         {
-            fillDisplayArea(0, 0, 120, 120, c040);
+            // Check any button is pressed
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && (evt.button & PB_A || evt.button & PB_B))
+                {
+                    soundPlaySfx(&t48->click, MIDI_SFX);
+                    t48->state = T48_START_SCREEN;
+                }
+            }
+
+            // Draw the final score screen
+            // FIXME: Color is static
+            t48DrawGameOverScreen(t48, t48->score, c555);
             break;
         }
         default:
@@ -215,4 +281,103 @@ static void t48MainLoop(int64_t elapsedUs)
 static void t48BgmCb()
 {
     t48->bgmIsPlaying = false;
+}
+
+/**
+ * @brief Initializes the high scores based either from NVS or predetermined scores to beat
+ *
+ */
+static void t48InitHighScores()
+{
+    // Init High scores
+    for (int8_t i = 0; i < T48_HS_COUNT; i++)
+    {
+        if (!readNvs32(highScoreKey[i], &t48->highScore[i]))
+        {
+            // FIXME: Make scores more realistic
+            switch (i)
+            {
+                case 0:
+                    t48->highScore[i] = 100000;
+                    break;
+                case 1:
+                    t48->highScore[i] = 50000;
+                    break;
+                case 2:
+                    t48->highScore[i] = 25000;
+                    break;
+                case 3:
+                    t48->highScore[i] = 10000;
+                    break;
+                case 4:
+                    t48->highScore[i] = 5000;
+                    break;
+            }
+            writeNvs32(highScoreKey[i], t48->highScore[i]);
+        }
+        size_t len = 4;
+        if (!readNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], &len))
+        {
+            static char buff[5];
+            switch (i)
+            {
+                case 0:
+                    strcpy(buff, "JW");
+                    break;
+                case 1:
+                    strcpy(buff, "Pan");
+                    break;
+                case 2:
+                    strcpy(buff, "Pix");
+                    break;
+                case 3:
+                    strcpy(buff, "Poe");
+                    break;
+                case 4:
+                    strcpy(buff, "DrG");
+                    break;
+            }
+            strcpy(t48->hsInitials[i], buff);
+            writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], len);
+        }
+    }
+}
+
+/**
+ * @brief Sorts the high scores and saves them to the NVM at the end of a game
+ *
+ */
+static void t48SortHighScores()
+{
+    // 5th place needs to compare to the score
+    if (t48->highScore[T48_HS_COUNT - 1] < t48->score)
+    {
+        t48->highScore[T48_HS_COUNT - 1] = t48->score;
+        strcpy(t48->hsInitials[T48_HS_COUNT - 1], t48->playerInitials);
+    }
+    else
+    {
+        // Scores *should* be sorted already. Save cycles.
+        return;
+    }
+    for (int8_t i = T48_HS_COUNT - 2; i >= 0; i--)
+    {
+        if (t48->highScore[i] < t48->highScore[i + 1])
+        {
+            // Swap
+            int32_t swap          = t48->highScore[i];
+            t48->highScore[i]     = t48->highScore[i + 1];
+            t48->highScore[i + 1] = swap;
+            char swapI[4];
+            strcpy(swapI, t48->hsInitials[i]);
+            strcpy(t48->hsInitials[i], t48->hsInitials[i + 1]);
+            strcpy(t48->hsInitials[i + 1], swapI);
+        }
+    }
+    // Save out the new scores
+    for (int8_t i = 0; i < T48_HS_COUNT; i++)
+    {
+        writeNvs32(highScoreKey[i], t48->highScore[i]);
+        writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], 4);
+    }
 }

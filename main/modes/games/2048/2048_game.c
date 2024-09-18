@@ -214,7 +214,6 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
         if (t48_checkOver(t48))
         {
             t48->state = T48_END_SCREEN;
-            // TODO tally high score
         }
 
         // Spawn a random tile, 10% chance of 4, 90% chance of 2

@@ -27,6 +27,10 @@
 #define T48_TILES_PER_CELL    2
 #define T48_SPARKLES_PER_CELL 32
 
+// High Scores
+#define T48_HS_COUNT  5
+#define T48_HS_KEYLEN 14
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -36,6 +40,7 @@ typedef enum
     T48_IN_GAME,
     T48_START_SCREEN,
     T48_WIN_SCREEN,
+    T48_HS_SCREEN,
     T48_END_SCREEN,
 } t48ModeStateEnum_t;
 
@@ -88,7 +93,13 @@ typedef struct
     t48ModeStateEnum_t state;                      ///< Where in the game sequence we are
 
     // Audio
-    bool bgmIsPlaying;
+    bool bgmIsPlaying; ///< Allows the BGM to restart
+
+    // High Score
+    char playerInitials[4];           ///< Contains the play initials
+    char hsInitials[T48_HS_COUNT][4]; ///< Contains all the high score initials
+    bool textEntryDone;               ///< Tested when checking if text entry is finished
+    int32_t highScore[T48_HS_COUNT];  ///< Array of high scores
 } t48_t;
 
 //==============================================================================
