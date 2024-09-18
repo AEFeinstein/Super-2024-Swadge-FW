@@ -29,7 +29,8 @@ typedef struct
 {
     int32_t note;
     int32_t timer;
-    int32_t posY;
+    int32_t headPosY;
+    int32_t tailPosY;
 } ssrNoteIcon_t;
 
 typedef struct
@@ -253,8 +254,28 @@ static void ssrMainLoop(int64_t elapsedUs)
             // Spawn an icon
             ssrNoteIcon_t* ni = calloc(1, sizeof(ssrNoteIcon_t));
             ni->note          = ssr->notes[ssr->cNote].note;
-            ni->posY          = TFT_HEIGHT + (ICON_RADIUS * 2);
-            ni->timer         = 0;
+            ni->headPosY      = TFT_HEIGHT + (ICON_RADIUS * 2);
+
+            // If this is a hold note
+            if (ssr->notes[ssr->cNote].hold)
+            {
+                // Figure out at what microsecond the tail ends
+                int32_t tailUs = MIDI_TICKS_TO_US(ssr->notes[ssr->cNote].hold, player->tempo, player->reader.division);
+                // Convert the time to a number of pixels
+                int32_t tailPx = tailUs / TRAVEL_US_PER_PX;
+                // Add the length pixels to the head to get the tail
+                ni->tailPosY = ni->headPosY + tailPx;
+            }
+            else
+            {
+                // No tail
+                ni->tailPosY = -1;
+            }
+
+            // Start the timer at zero
+            ni->timer = 0;
+
+            // Push into the list of icons
             push(&ssr->icons, ni);
 
             // Increment the track data
@@ -285,8 +306,13 @@ static void ssrMainLoop(int64_t elapsedUs)
         // Draw the icon
         ssrNoteIcon_t* icon = iconNode->val;
         int32_t xOffset     = ((icon->note * TFT_WIDTH) / 5) + (TFT_WIDTH / 10);
-        drawCircleFilled(xOffset, icon->posY, ICON_RADIUS, colors[icon->note]);
-        // TODO figure out how to draw holds
+        drawCircleFilled(xOffset, icon->headPosY, ICON_RADIUS, colors[icon->note]);
+        // If there is a tail
+        if (icon->tailPosY >= 0)
+        {
+            // Draw the tail
+            fillDisplayArea(xOffset - 2, icon->headPosY, xOffset + 3, icon->tailPosY, colors[icon->note]);
+        }
 
         // Highlight the target if the timing is good enough
         // if (HIT_BAR - 4 <= icon->posY && icon->posY <= HIT_BAR + 4)
@@ -302,10 +328,16 @@ static void ssrMainLoop(int64_t elapsedUs)
         while (icon->timer >= TRAVEL_US_PER_PX)
         {
             icon->timer -= TRAVEL_US_PER_PX;
-            icon->posY--;
+
+            // Move the whole icon up
+            icon->headPosY--;
+            if (icon->tailPosY >= 0)
+            {
+                icon->tailPosY--;
+            }
 
             // If it's off screen
-            if (icon->posY < -ICON_RADIUS)
+            if (icon->headPosY < -ICON_RADIUS && (icon->tailPosY < 0))
             {
                 // Remove this icon
                 node_t* nodeToRemove = iconNode;
@@ -421,7 +453,7 @@ static void ssrLoadTrackData(ssrVars_t* ssrv, const uint8_t* data, size_t size)
         {
             ssrv->notes[nIdx].note &= 0x7F;
 
-            // TODO figure out how to draw holds
+            // Use the hold time to see when this note ends
             ssrv->notes[nIdx].hold = (data[dIdx + 0] << 8) | //
                                      (data[dIdx + 1] << 0);
             dIdx += 2;
