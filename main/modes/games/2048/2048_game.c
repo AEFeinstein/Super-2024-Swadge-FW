@@ -32,6 +32,7 @@
 // Game
 static bool t48_setRandomCell(t48_t* t48, int32_t value);
 static bool t48_slideTiles(t48_t* t48, buttonBit_t direction);
+static bool t48_checkWin(t48_t* t48);
 
 // Drawing
 static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsedUs);
@@ -75,6 +76,12 @@ void t48_gameInit(t48_t* t48)
 
     // Reset the score
     t48->score = 0;
+
+    // Test code
+    t48->board[0][1].value               = 1024;
+    t48->board[0][2].value               = 1024;
+    t48->board[0][2].drawnTiles[0].value = 1024;
+    t48->board[0][1].drawnTiles[0].value = 1024;
 
     // Set two cells randomly
     for (int32_t i = 0; i < 2; i++)
@@ -191,7 +198,11 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
         // See https://play2048.co/index.js, addRandomTile()
         t48_setRandomCell(t48, (esp_random() % 10 == 0) ? 4 : 2);
 
-        // TODO check for win condition (2048 tile)
+        if (!t48->alreadyWon && t48_checkWin(t48))
+        {
+            t48->state = T48_WIN_SCREEN;
+            t48->alreadyWon = true;
+        }
         // TODO check for loss condition (no valid moves)
         // TODO tally high score
 
@@ -476,6 +487,26 @@ static bool t48_slideTiles(t48_t* t48, buttonBit_t direction)
     }
 
     return tileMoved;
+}
+
+/**
+ * @brief Checks if any of the cells have reached 2048
+ * 
+ * @param t48 Game data
+ * @return true if a cell is 2048
+ * @return false otherwise
+ */
+static bool t48_checkWin(t48_t* t48)
+{
+    bool won  = false;
+    for (int32_t id = 0; id < T48_GRID_SIZE * T48_GRID_SIZE; id++)
+    {
+        if (t48->board[id/T48_GRID_SIZE][id%T48_GRID_SIZE].value == 2048)
+        {
+            won = true;
+        }
+    }
+    return won;
 }
 
 /**

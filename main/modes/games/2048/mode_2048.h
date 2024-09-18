@@ -35,6 +35,7 @@ typedef enum
 {
     T48_IN_GAME,
     T48_START_SCREEN,
+    T48_WIN_SCREEN,
     T48_END_SCREEN,
 } t48ModeStateEnum_t;
 
@@ -83,6 +84,7 @@ typedef struct
     int32_t score;                                 ///< The current score
     bool acceptGameInput;                          ///< true if the game accepts input, false if it is animating
     bool paused;                                   ///< If the game is paused
+    bool alreadyWon;                               ///< If the win screen has already displayed
     t48ModeStateEnum_t state;                      ///< Where in the game sequence we are
 } t48_t;
 

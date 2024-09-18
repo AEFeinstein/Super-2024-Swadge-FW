@@ -26,10 +26,28 @@ static void t48ExitMode(void);
 static void t48MainLoop(int64_t elapsedUs);
 
 //==============================================================================
-// Variables
+// Const Variables
 //==============================================================================
 
 const char modeName[] = "2048";
+static const char youWin[]     = "You got 2048!";
+static const char continueAB[] = "Press A or B to continue";
+
+static const char* tileSpriteNames[] = {
+    "Tile-Blue-Diamond.wsg", "Tile-Blue-Square.wsg",  "Tile-Cyan-Legs.wsg",      "Tile-Green-Diamond.wsg",
+    "Tile-Green-Octo.wsg",   "Tile-Green-Square.wsg", "Tile-Mauve-Legs.wsg",     "Tile-Orange-Legs.wsg",
+    "Tile-Pink-Diamond.wsg", "Tile-Pink-Octo.wsg",    "Tile-Pink-Square.wsg",    "Tile-Purple-Legs.wsg",
+    "Tile-Red-Octo.wsg",     "Tile-Red-Square.wsg",   "Tile-Yellow-Diamond.wsg", "Tile-Yellow-Octo.wsg",
+};
+
+static const char* sparkleSpriteNames[] = {
+    "Sparkle_Blue.wsg", "Sparkle_Cyan.wsg",   "Sparkle_Green.wsg", "Sparkle_Orange.wsg",
+    "Sparkle_Pink.wsg", "Sparkle_Purple.wsg", "Sparkle_Red.wsg",   "Sparkle_Yellow.wsg",
+};
+
+//==============================================================================
+// Variables
+//==============================================================================
 
 swadgeMode_t t48Mode = {
     .modeName                 = modeName,
@@ -49,18 +67,6 @@ swadgeMode_t t48Mode = {
 };
 
 t48_t* t48;
-
-static const char* tileSpriteNames[] = {
-    "Tile-Blue-Diamond.wsg", "Tile-Blue-Square.wsg",  "Tile-Cyan-Legs.wsg",      "Tile-Green-Diamond.wsg",
-    "Tile-Green-Octo.wsg",   "Tile-Green-Square.wsg", "Tile-Mauve-Legs.wsg",     "Tile-Orange-Legs.wsg",
-    "Tile-Pink-Diamond.wsg", "Tile-Pink-Octo.wsg",    "Tile-Pink-Square.wsg",    "Tile-Purple-Legs.wsg",
-    "Tile-Red-Octo.wsg",     "Tile-Red-Square.wsg",   "Tile-Yellow-Diamond.wsg", "Tile-Yellow-Octo.wsg",
-};
-
-static const char* sparkleSpriteNames[] = {
-    "Sparkle_Blue.wsg", "Sparkle_Cyan.wsg",   "Sparkle_Green.wsg", "Sparkle_Orange.wsg",
-    "Sparkle_Pink.wsg", "Sparkle_Purple.wsg", "Sparkle_Red.wsg",   "Sparkle_Yellow.wsg",
-};
 
 //==============================================================================
 // Functions
@@ -104,6 +110,12 @@ static void t48EnterMode(void)
     t48_gameInit(t48);
 
     // TODO reimplement main & high score menus
+
+    // Play some music
+    // TODO get BGM to loop
+    //soundPlayBgm(&t48->bgm, MIDI_BGM);
+
+    // TODO setup and illuminate LEDs
 }
 
 /**
@@ -163,6 +175,20 @@ static void t48MainLoop(int64_t elapsedUs)
         case T48_START_SCREEN:
         {
             // TODO: handle start screen
+        }
+        case T48_WIN_SCREEN:
+        {
+            // Get inputs
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && (evt.button & PB_A || evt.button & PB_B))
+                {
+                    t48->state = T48_IN_GAME;
+                }
+            }
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            drawText(&t48->titleFont, c055, youWin, (TFT_WIDTH - textWidth(&t48->titleFont, youWin)) / 2, 48);
+            drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) / 2, TFT_HEIGHT - 64);
         }
         case T48_END_SCREEN:
         {
