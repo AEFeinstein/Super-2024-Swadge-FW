@@ -269,20 +269,23 @@ endif
 
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
-	-ggdb \
-	-Wl,--wrap=cnfsGetFile,--wrap=cnfsReadFile,--wrap=deinitCnfs
+	-ggdb
 
 # Incompatible flags for clang on MacOS
 ifneq ($(HOST_OS),Darwin)
 LIBRARY_FLAGS += \
 	-static-libgcc \
-	-static-libstdc++
+	-static-libstdc++ \
+	-Wl,--wrap=cnfsGetFile,--wrap=cnfsReadFile,--wrap=deinitCnfs
 else
 LIBRARY_FLAGS += \
     -framework Foundation \
 	-framework CoreFoundation \
 	-framework CoreMIDI \
-	-framework AudioToolbox
+	-framework AudioToolbox \
+	-Wl,-alias,__wrap_cnfsGetFile,cnfsGetFile \
+	-Wl,-alias,__wrap_cnfsReadFile,cnfsReadFile \
+	-Wl,-alias,__wrap_deinitCnfs,deinitCnfs
 endif
 
 ifeq ($(HOST_OS),Linux)
