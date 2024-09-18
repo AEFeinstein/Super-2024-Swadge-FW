@@ -25,7 +25,7 @@ static bool midiInitCb(emuArgs_t* emuArgs);
 static void processEvents(const char** out);
 
 #ifdef EMU_MACOS
-static OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, int32_t handlerRef);
+static OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef);
 #endif
 
 //==============================================================================
@@ -82,7 +82,7 @@ static bool midiInitCb(emuArgs_t* emuArgs)
 }
 
 #ifdef EMU_MACOS
-static OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, int32_t handlerRef)
+static OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef)
 {
     AEDescList docList;
     OSErr result = AEGetParamDesc(event, keyDirectObject, typeAEList, &docList);
