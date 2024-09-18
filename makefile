@@ -276,7 +276,7 @@ ifneq ($(HOST_OS),Darwin)
 LIBRARY_FLAGS += \
 	-static-libgcc \
 	-static-libstdc++ \
-	-Wl,--wrap=cnfsGetFile,--wrap=cnfsReadFile,--wrap=deinitCnfs
+	-Wl,--wrap=cnfsGetFile,--wrap=cnfsReadFile,--wrap=initCnfs,--wrap=deinitCnfs
 else
 LIBRARY_FLAGS += \
     -framework Foundation \
@@ -285,6 +285,7 @@ LIBRARY_FLAGS += \
 	-framework AudioToolbox \
 	-Wl,-alias,__wrap_cnfsGetFile,cnfsGetFile \
 	-Wl,-alias,__wrap_cnfsReadFile,cnfsReadFile \
+	-Wl,-alias,__wrap_initCnfs,initCnfs \
 	-Wl,-alias,__wrap_deinitCnfs,deinitCnfs
 endif
 

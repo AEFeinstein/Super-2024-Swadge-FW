@@ -7,13 +7,43 @@
 #include <string.h>
 
 #include "esp_heap_caps.h"
+#include "esp_log.h"
+#include "cnfs_image.h"
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+// Original CNFS Variables
+static const uint8_t* cnfsData;
+static int32_t cnfsDataSz;
+
+static const cnfsFileEntry* cnfsFiles;
+static int32_t cnfsNumFiles;
+
+// Extended CNFS Variables
 
 static char* cnfsInjectedFilename   = NULL;
 static int32_t cnfsInjectedFileSize = 0;
 static void* cnfsInjectedFileData   = NULL;
 
-const uint8_t* __real_cnfsGetFile(const char* fname, size_t* flen);
-bool __real_deinitCnfs(void);
+
+//==============================================================================
+// Functions
+//==============================================================================
+
+bool __wrap_initCnfs(void)
+{
+    /* Get local references from cnfs_data.c */
+    cnfsData     = getCnfsImage();
+    cnfsDataSz   = getCnfsSize();
+    cnfsFiles    = getCnfsFiles();
+    cnfsNumFiles = getCnfsNumFiles();
+
+    /* Debug print */
+    ESP_LOGI("CNFS", "Size: %" PRIu32 ", Files: %" PRIu32, cnfsDataSz, cnfsNumFiles);
+    return (0 != cnfsDataSz) && (0 != cnfsNumFiles);
+}
 
 bool emuCnfsInjectFile(const char* name, const char* filePath)
 {
@@ -64,7 +94,7 @@ bool __wrap_deinitCnfs(void)
     cnfsInjectedFilename = NULL;
     cnfsInjectedFileData = NULL;
 
-    return __real_deinitCnfs();
+    return true;
 }
 
 const uint8_t* __wrap_cnfsGetFile(const char* fname, size_t* flen)
@@ -76,7 +106,33 @@ const uint8_t* __wrap_cnfsGetFile(const char* fname, size_t* flen)
     }
     else
     {
-        return __real_cnfsGetFile(fname, flen);
+        // Real implementation - copied from cnfs.c
+        int low  = 0;
+        int high = cnfsNumFiles - 1;
+        int mid  = (low + high) / 2;
+
+        // Binary search the file list, since it's sorted.
+        while (low <= high)
+        {
+            const cnfsFileEntry* e = cnfsFiles + mid;
+            int sc                 = strcmp(e->name, fname);
+            if (sc < 0)
+            {
+                low = mid + 1;
+            }
+            else if (sc == 0)
+            {
+                *flen = e->len;
+                return &cnfsData[e->offset];
+            }
+            else
+            {
+                high = mid - 1;
+            }
+            mid = (low + high) / 2;
+        }
+        ESP_LOGE("CNFS", "Failed to open %s", fname);
+        return 0;
     }
 }
 
