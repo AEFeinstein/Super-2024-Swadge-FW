@@ -134,7 +134,7 @@ static void processEvents(const char** out)
     memset(midiPathBuffer, 0, sizeof(midiPathBuffer));
 
     // Install handler
-    OSErr result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handleOpenDocumentEvent, false);
+    OSErr result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handleOpenDocumentEvent, 0, false);
 
     if (result != noErr)
     {
