@@ -29,6 +29,9 @@ static void t48BgmCb(void);
 static void t48InitHighScores(void);
 static void t48SortHighScores(void);
 static paletteColor_t t48_generateRainbow(void);
+static void t48_fadeLEDs(int32_t elapsedUs);
+static void t48_chaseLEDs(int32_t elapseUs);
+static led_t t48_randColor(void);
 
 //==============================================================================
 // Const Variables
@@ -142,8 +145,6 @@ static void t48EnterMode(void)
     // Initialize the game
     t48->state = T48_START_SCREEN;
     t48_initStartScreen(t48);
-
-    // TODO setup and illuminate LEDs
 }
 
 /**
@@ -181,6 +182,9 @@ static void t48ExitMode(void)
  */
 static void t48MainLoop(int64_t elapsedUs)
 {
+    // Dim LEDs
+    t48_fadeLEDs(elapsedUs);
+
     // Play BGM if it's not playing
     if (!t48->bgmIsPlaying)
     {
@@ -222,6 +226,7 @@ static void t48MainLoop(int64_t elapsedUs)
             }
             // Draw
             t48_drawStartScreen(t48, t48_generateRainbow());
+            t48_chaseLEDs(elapsedUs);
             break;
         }
         case T48_WIN_SCREEN:
@@ -275,6 +280,7 @@ static void t48MainLoop(int64_t elapsedUs)
 
             // Draw the final score screen
             t48_drawGameOverScreen(t48, t48->score, t48_generateRainbow());
+            t48_chaseLEDs(elapsedUs);
             break;
         }
         default:
@@ -403,4 +409,84 @@ static paletteColor_t t48_generateRainbow()
     uint8_t sat = 255;
     uint8_t val = 255;
     return paletteHsvToHex(hue, sat, val);
+}
+
+/**
+ * @brief Dims the LEDs uniformly over time
+ *
+ * @param t48 Game data
+ * @param elapsedUs Time since last frame
+ */
+static void t48_fadeLEDs(int32_t elapsedUs)
+{
+    t48->fadeTimer += elapsedUs;
+    while (t48->fadeTimer >= T48_FADE_SPEED)
+    {
+        t48->fadeTimer -= T48_FADE_SPEED;
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            // Red
+            if (t48->leds[i].r < 6)
+            {
+                t48->leds[i].r = 0;
+            }
+            else
+            {
+                t48->leds[i].r -= 6;
+            }
+            // Green
+            if (t48->leds[i].g < 6)
+            {
+                t48->leds[i].g = 0;
+            }
+            else
+            {
+                t48->leds[i].g -= 6;
+            }
+            // Blue
+            if (t48->leds[i].b < 6)
+            {
+                t48->leds[i].b = 0;
+            }
+            else
+            {
+                t48->leds[i].b -= 6;
+            }
+        }
+    }
+    setLeds(t48->leds, CONFIG_NUM_LEDS);
+}
+
+/**
+ * @brief Chase LEDs around the swadge
+ * 
+ * @param elapseUs Time since last update
+ */
+static void t48_chaseLEDs(int32_t elapseUs)
+{
+    t48->nextLedTimer += elapseUs;
+    if (t48->nextLedTimer >= T48_NEXT_LED)
+    {
+        t48->nextLedTimer = 0;
+        t48->currLED++;
+        if (t48->currLED > CONFIG_NUM_LEDS-1)
+        {
+            t48->currLED = 0;
+        }
+        t48->leds[t48->currLED] = t48_randColor();
+    }
+}
+
+/**
+ * @brief Generates a random LED color
+ * 
+ * @return led_t Led object to set array to
+ */
+led_t t48_randColor()
+{
+    led_t col = {0};
+    col.r     = 128 + (esp_random() % 127);
+    col.g     = 128 + (esp_random() % 127);
+    col.b     = 128 + (esp_random() % 127);
+    return col;
 }

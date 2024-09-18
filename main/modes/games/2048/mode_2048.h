@@ -34,6 +34,10 @@
 #define T48_HS_COUNT  5
 #define T48_HS_KEYLEN 14
 
+// LEDs
+#define T48_FADE_SPEED 66666
+#define T48_NEXT_LED 100000
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -119,6 +123,12 @@ typedef struct
 
     // Animations
     t48newTile_t nTile; ///< New tile animation data
+
+    // LEDs
+    led_t leds[CONFIG_NUM_LEDS];
+    int32_t fadeTimer;
+    int32_t nextLedTimer;
+    uint8_t currLED;
 } t48_t;
 
 //==============================================================================
