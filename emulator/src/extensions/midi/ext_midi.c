@@ -118,7 +118,7 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
 
         if (result != noErr)
         {
-            printf("Error getting event doc index %d\n", i);
+            printf("Error getting event doc index %ld\n", i);
             return result;
         }
 
