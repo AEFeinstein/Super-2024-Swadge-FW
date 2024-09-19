@@ -68,6 +68,7 @@ typedef struct
 //==============================================================================
 
 static bool handleArgument(const char* optName, const char* arg, int optVal);
+static bool handlePositionalArgument(const char* val);
 static void printHelp(const char* progName);
 static void printUsage(const char* progName);
 static const optDoc_t* findOptDoc(char shortOpt, const char* longOpt);
@@ -137,6 +138,7 @@ static const char argHeadless[]    = "headless";
 static const char argHideLeds[]    = "hide-leds";
 static const char argKeymap[]      = "keymap";
 static const char argLock[]        = "lock";
+static const char argMidiFile[]    = "midi-file";
 static const char argMode[]        = "mode";
 static const char argModeSwitch[]  = "mode-switch";
 static const char argModeList[]    = "modes-list";
@@ -167,6 +169,7 @@ static const struct option options[] =
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
     { argKeymap,      required_argument, NULL,                             'k'  },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
+    { argMidiFile,    required_argument, NULL,                             0    },
     { argMode,        required_argument, NULL,                             'm'  },
     { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
     { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
@@ -198,6 +201,7 @@ static const optDoc_t argDocs[] =
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
     {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak"},
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
+    { 0,  argMidiFile,    "FILE",  "Open and immediately play a MIDI file" },
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
     { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
@@ -313,6 +317,10 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
         }
         return true;
     }
+    else if (argMidiFile == optName)
+    {
+        emulatorArgs.midiFile = arg;
+    }
     else if (argMode == optName)
     {
         emulatorArgs.startMode = arg;
@@ -407,6 +415,21 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
 
     // It's OK if an arg is unhandled, as it may just be a flag set automatically
     return true;
+}
+
+static bool handlePositionalArgument(const char* val)
+{
+    if (val)
+    {
+        if ((strlen(val) > 4 && (!strcmp(&val[strlen(val) - 4], ".mid") || !strcmp(&val[strlen(val) - 4], ".kar")))
+            || (strlen(val) > 5 && !strcmp(&val[strlen(val) - 5], ".midi")))
+        {
+            emulatorArgs.midiFile = val;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -834,8 +857,21 @@ bool emuParseArgs(int argc, char** argv)
 
         if (optVal < 0)
         {
-            // No more options
-            break;
+            // Not an option
+            if (optind < argc)
+            {
+                // ...but there are still arguments, so this is a positional arg
+                if (!handlePositionalArgument(argv[optind]))
+                {
+                    printf("Unknown argument '%s'\n", argv[optind]);
+                    return false;
+                }
+            }
+            else
+            {
+                // No more options
+                break;
+            }
         }
         else if (optVal == '?')
         {

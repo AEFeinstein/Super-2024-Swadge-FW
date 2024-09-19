@@ -66,6 +66,7 @@ SRC_FILES = $(CNFS_FILE)
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 # This is all the source files combined and deduplicated
 SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES))
+SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
 
 # The emulator doesn't build components, but there is a target for formatting them
 ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
@@ -97,7 +98,7 @@ CFLAGS = \
 	-fdata-sections \
 	-gdwarf-4 \
 	-ggdb \
-	-O2 \
+	-O2	\
 	-fno-jump-tables \
 	-finline-functions \
 	-std=gnu17
@@ -190,6 +191,9 @@ GIT_HASH  = \"$(shell git rev-parse --short=7 HEAD)\"
 
 # Used by the ESP SDK
 DEFINES_LIST = \
+	CONFIG_ESP_SYSTEM_PANIC=y\
+	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
+	CONFIG_DEBUG_OUTPUT_USB=y\
 	CONFIG_IDF_TARGET_ESP32S2=y \
 	SOC_RMT_CHANNELS_PER_GROUP=4 \
 	SOC_TOUCH_SENSOR_NUM=15 \
@@ -290,6 +294,10 @@ LIBRARY_FLAGS += \
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
+endif
+
+ifeq ($(HOST_OS),Windows)
+	LIBRARY_FLAGS += -Wl,-Bstatic -lpthread
 endif
 
 ################################################################################
