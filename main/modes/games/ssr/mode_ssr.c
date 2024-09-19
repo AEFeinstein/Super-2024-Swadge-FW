@@ -31,6 +31,7 @@ typedef struct
     int32_t timer;
     int32_t headPosY;
     int32_t tailPosY;
+    bool held;
 } ssrNoteIcon_t;
 
 typedef struct
@@ -62,6 +63,9 @@ static void ssrMainLoop(int64_t elapsedUs);
 static void ssrBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void ssrLoadTrackData(ssrVars_t* ssr, const uint8_t* data, size_t size);
 // static void ssrMenuCb(const char*, bool selected, uint32_t settingVal);
+static uint32_t btnToNote(buttonBit_t btn);
+static void ssrRunTimers(ssrVars_t* ssrv, uint32_t elapsedUs);
+static void ssrDrawGame(ssrVars_t* ssrv);
 
 //==============================================================================
 // Variables
@@ -88,34 +92,8 @@ swadgeMode_t ssrMode = {
 
 ssrVars_t* ssr;
 
-static const paletteColor_t colors[] = {c020, c400, c550, c004, c420};
-
-static const int32_t btnMap[][2] = {
-    {
-        PB_LEFT,
-        0,
-    },
-    {
-        PB_DOWN,
-        1,
-    },
-    {
-        PB_UP,
-        2,
-    },
-    {
-        PB_RIGHT,
-        3,
-    },
-    {
-        PB_B,
-        4,
-    },
-    {
-        PB_A,
-        5,
-    },
-};
+static const paletteColor_t colors[] = {c020, c400, c550, c004, c420, c222};
+static const buttonBit_t noteToBtn[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
 
 //==============================================================================
 // Functions
@@ -188,32 +166,87 @@ static void ssrMainLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         ssr->btnState = evt.state;
-        for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(btnMap); bIdx++)
+
+        if (evt.down)
         {
-            if (evt.button & btnMap[bIdx][0])
+            // Iterate through all currently shown icons
+            node_t* iconNode = ssr->icons.first;
+            while (iconNode)
             {
-                printf("%d %s\n", btnMap[bIdx][1], evt.down ? "Down" : "Up");
+                ssrNoteIcon_t* icon = iconNode->val;
+
+                // If the icon matches the button
+                if (icon->note == btnToNote(evt.button))
+                {
+                    // Find how off the timing is
+                    int32_t pxOff = ABS(HIT_BAR - icon->headPosY);
+                    int32_t usOff = pxOff * TRAVEL_US_PER_PX;
+                    printf("%" PRId32 " us off\n", usOff);
+
+                    // Check if this button hit a note
+                    bool iconHit = false;
+
+                    // Classify the time off
+                    if (usOff < 21500)
+                    {
+                        printf("  Fantastic\n");
+                        iconHit = true;
+                    }
+                    else if (usOff < 43000)
+                    {
+                        printf("  Marvelous\n");
+                        iconHit = true;
+                    }
+                    else if (usOff < 102000)
+                    {
+                        printf("  Great\n");
+                        iconHit = true;
+                    }
+                    else if (usOff < 135000)
+                    {
+                        printf("  Decent\n");
+                        iconHit = true;
+                    }
+                    else if (usOff < 180000)
+                    {
+                        printf("  Way Off\n");
+                        iconHit = true;
+                    }
+                    else
+                    {
+                        printf("  MISS\n");
+                    }
+
+                    // If it was close enough to hit
+                    if (iconHit)
+                    {
+                        if (icon->tailPosY >= 0)
+                        {
+                            // There is a tail, don't remove the note yet
+                            icon->headPosY = HIT_BAR;
+                            icon->held     = true;
+                        }
+                        else
+                        {
+                            // No tail, remove the icon
+                            node_t* nextNode = iconNode->next;
+                            removeEntry(&ssr->icons, iconNode);
+                            iconNode = nextNode;
+                        }
+                    }
+
+                    // the button was matched to an icon, break the loop
+                    break;
+                }
+
+                // Iterate to the next icon
+                iconNode = iconNode->next;
             }
         }
-
-        // if (evt.down)
-        // {
-        //     switch (evt.button)
-        //     {
-        //         case PB_UP:
-        //         case PB_DOWN:
-        //         case PB_LEFT:
-        //         case PB_RIGHT:
-        //         case PB_A:
-        //         case PB_B:
-        //         case PB_START:
-        //         case PB_SELECT:
-        //         default:
-        //         {
-        //             break;
-        //         }
-        //     }
-        // }
+        else
+        {
+            // TODO handle ups when holding tails
+        }
     }
 
     // Run a lead-in timer to allow notes to spawn before the song starts playing
@@ -288,84 +321,8 @@ static void ssrMainLoop(int64_t elapsedUs)
         }
     }
 
-    // Clear the display
-    clearPxTft();
-
-    // Draw the target area
-    drawLineFast(0, HIT_BAR, TFT_WIDTH - 1, HIT_BAR, c555);
-    for (int32_t i = 0; i < 5; i++)
-    {
-        int32_t xOffset = ((i * TFT_WIDTH) / 5) + (TFT_WIDTH / 10);
-        drawCircle(xOffset, HIT_BAR, ICON_RADIUS + 2, c555);
-    }
-
-    // Draw all the icons
-    node_t* iconNode = ssr->icons.first;
-    while (iconNode)
-    {
-        // Draw the icon
-        ssrNoteIcon_t* icon = iconNode->val;
-        int32_t xOffset     = ((icon->note * TFT_WIDTH) / 5) + (TFT_WIDTH / 10);
-        drawCircleFilled(xOffset, icon->headPosY, ICON_RADIUS, colors[icon->note]);
-        // If there is a tail
-        if (icon->tailPosY >= 0)
-        {
-            // Draw the tail
-            fillDisplayArea(xOffset - 2, icon->headPosY, xOffset + 3, icon->tailPosY, colors[icon->note]);
-        }
-
-        // Highlight the target if the timing is good enough
-        // if (HIT_BAR - 4 <= icon->posY && icon->posY <= HIT_BAR + 4)
-        // {
-        //     drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[icon->note]);
-        // }
-
-        // Track if this icon gets removed
-        bool removed = false;
-
-        // Run this icon's timer
-        icon->timer += elapsedUs;
-        while (icon->timer >= TRAVEL_US_PER_PX)
-        {
-            icon->timer -= TRAVEL_US_PER_PX;
-
-            // Move the whole icon up
-            icon->headPosY--;
-            if (icon->tailPosY >= 0)
-            {
-                icon->tailPosY--;
-            }
-
-            // If it's off screen
-            if (icon->headPosY < -ICON_RADIUS && (icon->tailPosY < 0))
-            {
-                // Remove this icon
-                node_t* nodeToRemove = iconNode;
-                iconNode             = iconNode->next;
-                free(nodeToRemove->val);
-                removeEntry(&ssr->icons, nodeToRemove);
-                removed = true;
-                break;
-            }
-        }
-
-        // If this icon wasn't removed
-        if (!removed)
-        {
-            // Iterate to the next
-            iconNode = iconNode->next;
-        }
-    }
-
-    // Draw indicators that the button is pressed
-    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(btnMap); bIdx++)
-    {
-        if (ssr->btnState & btnMap[bIdx][0])
-        {
-            int32_t xOffset = ((bIdx * TFT_WIDTH) / 5) + (TFT_WIDTH / 10);
-            drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[bIdx]);
-        }
-    }
+    ssrRunTimers(ssr, elapsedUs);
+    ssrDrawGame(ssr);
 
     // Check for analog touch
     // int32_t centerVal, intensityVal;
@@ -391,6 +348,140 @@ static void ssrMainLoop(int64_t elapsedUs)
     //     leds[i].b = (255 * ((i + 6) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
     // }
     setLeds(leds, CONFIG_NUM_LEDS);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ssrv
+ * @param elapsedUs
+ */
+static void ssrRunTimers(ssrVars_t* ssrv, uint32_t elapsedUs)
+{
+    // Track if an icon was removed
+    bool removed = false;
+
+    // Run all the icon timers
+    node_t* iconNode = ssrv->icons.first;
+    while (iconNode)
+    {
+        // Get a reference
+        ssrNoteIcon_t* icon = iconNode->val;
+
+        // Run this icon's timer
+        icon->timer += elapsedUs;
+        while (icon->timer >= TRAVEL_US_PER_PX)
+        {
+            icon->timer -= TRAVEL_US_PER_PX;
+
+            bool shouldRemove = false;
+
+            // Move the whole icon up
+            if (!icon->held)
+            {
+                icon->headPosY--;
+                if (icon->tailPosY >= 0)
+                {
+                    icon->tailPosY--;
+                }
+
+                // If it's off screen
+                if (icon->headPosY < -ICON_RADIUS && (icon->tailPosY < 0))
+                {
+                    // Mark it for removal
+                    shouldRemove = true;
+                }
+            }
+            else // The icon is being held
+            {
+                // Only move the tail position
+                if (icon->tailPosY >= HIT_BAR)
+                {
+                    icon->tailPosY--;
+                }
+
+                // If the tail finished
+                if (icon->tailPosY < HIT_BAR)
+                {
+                    // Mark it for removal
+                    shouldRemove = true;
+                }
+            }
+
+            // If the icon should be removed
+            if (shouldRemove)
+            {
+                // Remove this icon
+                free(iconNode->val);
+                removeEntry(&ssrv->icons, iconNode);
+
+                // Stop the while timer loop
+                removed = true;
+                break;
+            }
+        }
+
+        // If an icon was removed
+        if (removed)
+        {
+            // Stop iterating through notes
+            break;
+        }
+        else
+        {
+            // Iterate to the next
+            iconNode = iconNode->next;
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ssrv
+ */
+static void ssrDrawGame(ssrVars_t* ssrv)
+{
+    // Clear the display
+    clearPxTft();
+
+    // Draw the target area
+    drawLineFast(0, HIT_BAR, TFT_WIDTH - 1, HIT_BAR, c555);
+    for (int32_t i = 0; i < ARRAY_SIZE(noteToBtn); i++)
+    {
+        int32_t xOffset = ((i * TFT_WIDTH) / ARRAY_SIZE(noteToBtn)) + (TFT_WIDTH / 10);
+        drawCircle(xOffset, HIT_BAR, ICON_RADIUS + 2, c555);
+    }
+
+    // Draw all the icons
+    node_t* iconNode = ssrv->icons.first;
+    while (iconNode)
+    {
+        // Draw the icon
+        ssrNoteIcon_t* icon = iconNode->val;
+        int32_t xOffset     = ((icon->note * TFT_WIDTH) / ARRAY_SIZE(noteToBtn)) + (TFT_WIDTH / 10);
+        drawCircleFilled(xOffset, icon->headPosY, ICON_RADIUS, colors[icon->note]);
+
+        // If there is a tail
+        if (icon->tailPosY >= 0)
+        {
+            // Draw the tail
+            fillDisplayArea(xOffset - 2, icon->headPosY, xOffset + 3, icon->tailPosY, colors[icon->note]);
+        }
+
+        // Iterate
+        iconNode = iconNode->next;
+    }
+
+    // Draw indicators that the button is pressed
+    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(noteToBtn); bIdx++)
+    {
+        if (ssrv->btnState & noteToBtn[bIdx])
+        {
+            int32_t xOffset = ((bIdx * TFT_WIDTH) / ARRAY_SIZE(noteToBtn)) + (TFT_WIDTH / 10);
+            drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[bIdx]);
+        }
+    }
 }
 
 /**
@@ -457,6 +548,47 @@ static void ssrLoadTrackData(ssrVars_t* ssrv, const uint8_t* data, size_t size)
             ssrv->notes[nIdx].hold = (data[dIdx + 0] << 8) | //
                                      (data[dIdx + 1] << 0);
             dIdx += 2;
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param btn
+ * @return uint32_t
+ */
+static uint32_t btnToNote(buttonBit_t btn)
+{
+    switch (btn)
+    {
+        case PB_LEFT:
+        {
+            return 0;
+        }
+        case PB_DOWN:
+        {
+            return 1;
+        }
+        case PB_UP:
+        {
+            return 2;
+        }
+        case PB_RIGHT:
+        {
+            return 3;
+        }
+        case PB_B:
+        {
+            return 4;
+        }
+        case PB_A:
+        {
+            return 5;
+        }
+        default:
+        {
+            return -1;
         }
     }
 }
