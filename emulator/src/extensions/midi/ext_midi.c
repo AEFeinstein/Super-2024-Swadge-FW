@@ -129,7 +129,7 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
             CFStringRef docStringRef = CFURLCopyFileSystemPath(docUrlRef, kCFURLPOSIXPathStyle);
             if (docStringRef != NULL)
             {
-                if (CFStringGetFileSystemRepresentation(docStringRef, midiPathBuffer, sizeof(midiPathBuffer))
+                if (CFStringGetFileSystemRepresentation(docStringRef, midiPathBuffer, sizeof(midiPathBuffer)))
                 {
                     printf("Successfully handled event?\n");
                 }
