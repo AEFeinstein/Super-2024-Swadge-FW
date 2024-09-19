@@ -133,10 +133,10 @@ typedef struct
     t48StartScreenBlocks_t ssBlocks[T48_START_SCREEN_BLOCKS]; ///< Start screen falling blocks
 
     // LEDs
-    led_t leds[CONFIG_NUM_LEDS];
-    int32_t fadeTimer;
-    int32_t nextLedTimer;
-    uint8_t currLED;
+    led_t leds[CONFIG_NUM_LEDS]; ///< LEDs to set
+    int32_t fadeTimer;           ///< Timer between fades
+    int32_t nextLedTimer;        ///< Timer before the next LED illuminates
+    uint8_t currLED;             ///< Index of the led for the chase mode
 } t48_t;
 
 //==============================================================================

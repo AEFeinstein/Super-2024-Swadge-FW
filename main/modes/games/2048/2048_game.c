@@ -221,7 +221,7 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
             {
                 t48->state = T48_HS_SCREEN;
             }
-            else 
+            else
             {
                 t48->state = T48_END_SCREEN;
             }
