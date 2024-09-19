@@ -1,9 +1,9 @@
 # Chowa Grove
 A small pet simulator for Swadge 2025. 
 
-The game is a small one-screen game that allows you to raise a pet Chowa (final name TBD) that you can put into competitions, hang out with friends, dress up, and more!
+The game is a small one-screen game that allows you to raise a pet Chowa that you can put into competitions, hang out with friends, dress up, and more!
 
-Compare to Chao garden for SA2
+Compare to Chao garden for SA2.
 
 ## What is a Chowa?
 A small, defenseless creature that needs your help to become... something. A fighter, maybe? A speed demon? A Singer? It's up to you to help them reach their full potential. 
@@ -15,6 +15,8 @@ Raise them well, as the evil Dr. Garbotnik is also raising his own Chowa, and he
 Be sure to take care of your Chowa or they might run away to a better home.
 
 Each Swadge can have up to 5 Chowa at once.
+
+Chowa may get along with others based on a complicated formual I have yet to dream up. Probably along the following lines: `Cha1 * Cha2 * Mood1 * Mood2 * Similar skills + personality modifiers`
 
 ### Numbers
 
@@ -130,8 +132,14 @@ Player actions:
 - Dodge: When preparing, influence Chowa to dodge. Does less damage if preparing to dodge
 - Forfeit: Any time, give up. Ask multiple times.
 
-### Singing
-Play a song/a portion of a song and make a random sequence of button presses.
+### Performance
+Have a small dance-off against a fellow Chowa. Plays like Simon, use arrow keys in an ever increasing pattern. Have a cap on max moves by difficulty. Player is guiding Chowa to do the routine, so sometimes the Chowa will mess up.
+
+There's a global timer, and once a sequnce is input, a new sequence will spawn.
+
+Score is based on number of completed sequnces. Stats adjust how likelt Chowa is to follow directions.
+
+Sequnces can use all four arrow keys and A and B.
 
 Sequence:
 - Song starts, score is set to 0
@@ -183,7 +191,7 @@ Chowa Stats:
 ## Other features
 
 ### Online functionality
-- Player ID (Name/Emotion tag/pronouns)
+- Player ID (Name/Emotion tag/Fav food from list)
 - Competitions
 
 ### Text entry
@@ -197,8 +205,8 @@ Chowa Stats:
 	- Poe
 	- Pango
 	- Garbotnik
-	- Selected from previous games (+random Chowa) gplord provided charcters, need to discuss
-- Chowa (All poses) (Assumes palette swap)
+	- Selected from previous games (+random Chowa) 
+- Chowa (All poses)
 	- Standing
 	- Walking
 	- Running
@@ -256,11 +264,5 @@ Borrow as much from other projects as possible. Combine race and fight music? If
 - Buying things (Cha-ching)
 
 ### Font
-- Menu font (Use Sonic font? Ask gpLord)
+- Menu font
 - Compact font for in Grove
-
-## Notes
-- Maybe no palette swapping. If not, use abstract shapes and position them?
-- LEDs will change colors based on competition
-- Need to add CHowa compatability based on Charisma or other matching stats
-- Swadge 2023 has text_entry.h/.c which is probably easier to use than making it from scratch
