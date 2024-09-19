@@ -169,6 +169,12 @@ static void t48ExitMode(void)
     }
     free(t48->tiles);
 
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(newSparkleSprNames); sIdx++)
+    {
+        freeWsg(&t48->newSparkles[sIdx]);
+    }
+    free(t48->newSparkles);
+
     soundStop(true);
     unloadMidiFile(&t48->bgm);
     unloadMidiFile(&t48->click);
@@ -226,7 +232,7 @@ static void t48MainLoop(int64_t elapsedUs)
                 }
             }
             // Draw
-            t48_drawStartScreen(t48, t48_generateRainbow());
+            t48_drawStartScreen(t48, t48_generateRainbow(), elapsedUs);
             t48_chaseLEDs(elapsedUs);
             break;
         }
@@ -292,7 +298,7 @@ static void t48MainLoop(int64_t elapsedUs)
 }
 
 /**
- * @brief Restarts teh BGM once the track ends
+ * @brief Restarts the BGM once the track ends
  *
  */
 static void t48BgmCb()

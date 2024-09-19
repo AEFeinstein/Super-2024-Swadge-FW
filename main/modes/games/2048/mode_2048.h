@@ -92,8 +92,9 @@ typedef struct
 typedef struct
 {
     vec_t pos;
+    vec_t timer;
     vec_t speed;
-    int8_t idx;
+    vec_t dir;
 } t48StartScreenBlocks_t;
 
 typedef struct

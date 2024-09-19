@@ -37,10 +37,14 @@ void t48_initStartScreen(t48_t* t48)
 {
     for (uint8_t i = 0; i < T48_START_SCREEN_BLOCKS; i++)
     {
-        t48->ssBlocks[i].pos.x   = esp_random() % (TFT_WIDTH - 50);  // -50 because tile width
-        t48->ssBlocks[i].pos.y   = esp_random() % (TFT_HEIGHT - 50); // +25 to re-center
-        t48->ssBlocks[i].speed.x = -5 + (esp_random() % 11);         // -7 to center
-        t48->ssBlocks[i].speed.y = -5 + (esp_random() % 11);         // 13 to get entire range
+        t48->ssBlocks[i].pos.x = esp_random() % (TFT_WIDTH - 50);  // -50 because tile width
+        t48->ssBlocks[i].pos.y = esp_random() % (TFT_HEIGHT - 50); // +25 to re-center
+
+        t48->ssBlocks[i].speed.x = (16667 / 4) + (esp_random() % 32000);
+        t48->ssBlocks[i].dir.x   = (esp_random() % 2) ? -1 : 1;
+
+        t48->ssBlocks[i].speed.y = (16667 / 4) + (esp_random() % 32000);
+        t48->ssBlocks[i].dir.y   = (esp_random() % 2) ? -1 : 1;
     }
 }
 
@@ -49,40 +53,53 @@ void t48_initStartScreen(t48_t* t48)
  *
  * @param t48 Game data
  * @param color Color of the title text
+ * @param elapsedUs Time elapsed since last call
  */
-void t48_drawStartScreen(t48_t* t48, paletteColor_t color)
+void t48_drawStartScreen(t48_t* t48, paletteColor_t color, int32_t elapsedUs)
 {
     // Blank
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     // Draw random blocks
-
     for (uint8_t i = 0; i < T48_START_SCREEN_BLOCKS; i++)
     {
+        t48StartScreenBlocks_t* block = &t48->ssBlocks[i];
+
         // Move
-        t48->ssBlocks[i].pos.x += t48->ssBlocks[i].speed.x;
-        t48->ssBlocks[i].pos.y += t48->ssBlocks[i].speed.y;
+        block->timer.x += elapsedUs;
+        while (block->timer.x >= block->speed.x)
+        {
+            block->timer.x -= block->speed.x;
+            block->pos.x += (block->dir.x);
+        }
+
+        block->timer.y += elapsedUs;
+        while (block->timer.y >= block->speed.y)
+        {
+            block->timer.y -= block->speed.y;
+            block->pos.y += (block->dir.y);
+        }
 
         // Update coordinates if out of bounds
-        if (t48->ssBlocks[i].pos.x < -50)
+        if (block->pos.x < -50)
         {
-            t48->ssBlocks[i].pos.x = TFT_WIDTH;
+            block->pos.x = TFT_WIDTH;
         }
-        else if (t48->ssBlocks[i].pos.x > TFT_WIDTH)
+        else if (block->pos.x > TFT_WIDTH)
         {
-            t48->ssBlocks[i].pos.x = -50;
+            block->pos.x = -50;
         }
-        if (t48->ssBlocks[i].pos.y < -50)
+        if (block->pos.y < -50)
         {
-            t48->ssBlocks[i].pos.y = TFT_HEIGHT;
+            block->pos.y = TFT_HEIGHT;
         }
-        else if (t48->ssBlocks[i].pos.y > TFT_HEIGHT)
+        else if (block->pos.y > TFT_HEIGHT)
         {
-            t48->ssBlocks[i].pos.y = -50;
+            block->pos.y = -50;
         }
 
         // Draw
-        drawWsgSimple(&t48->tiles[i], t48->ssBlocks[i].pos.x, t48->ssBlocks[i].pos.y);
+        drawWsgSimple(&t48->tiles[i], block->pos.x, block->pos.y);
     }
 
     // Title

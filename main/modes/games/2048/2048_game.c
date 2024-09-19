@@ -1,6 +1,7 @@
 /**
  * @file 2048_game.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
+ * @author Adam Feinstein (gelakinetic@gmail.com)
  * @brief Core of 2048 mode
  * @version 1.0.0
  * @date 2024-09-17
@@ -145,7 +146,6 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
     // Draw new tile third
     if (t48->nTile.active)
     {
-        // t48_drawNewTile(t48, elapsedUs);
         t48_drawNewTile(t48, elapsedUs);
     }
 
@@ -410,17 +410,13 @@ static bool t48_slideTiles(t48_t* t48, buttonBit_t direction)
             }
         }
 
-        // Clear out merged flags
-        for (int32_t x = 0; x < T48_GRID_SIZE; x++)
+        // Clear out merged flags in this slice
+        for (int32_t idx = 0; idx < T48_GRID_SIZE; idx++)
         {
-            for (int32_t y = 0; y < T48_GRID_SIZE; y++)
-            {
-                t48->board[x][y].merged = false;
-            }
+            slice[idx]->merged = false;
         }
 
         // Now slide the slice
-
         // Check sources to slide from front to back
         for (int32_t src = 1; src < T48_GRID_SIZE; src++)
         {
@@ -670,7 +666,7 @@ static bool t48_drawCellTiles(t48_t* t48, int32_t x, int32_t y, uint32_t elapsed
 }
 
 /**
- * @brief Draws a flash of light to indicate teh new tile's spawn location
+ * @brief Draws a flash of light to indicate the new tile's spawn location
  *
  * @param t48 Game Data
  * @param elapsedUs Time since last frame
@@ -805,7 +801,7 @@ static bool t48_drawSparkles(t48cell_t* cell, uint32_t elapsedUs)
             else
             {
                 // Otherwise move and draw it
-                // TODO adjust animation to be microsecond-based
+                // TODO make this animation microsecond based
                 sparkle->ySpd += 1;
                 sparkle->y += sparkle->ySpd;
                 sparkle->x += sparkle->xSpd;
@@ -849,18 +845,16 @@ static int32_t t48_vert_offset(int32_t row)
  */
 static void FisherYatesShuffle(int32_t* array, int32_t size)
 {
-    int32_t n, k, temp;
-
     // Iterate through the array in reverse order
-    for (n = size - 1; n > 0; n--)
+    for (int32_t n = size - 1; n > 0; n--)
     {
         // Generate a random index 'k' between 0 and n (inclusive)
-        k = esp_random() % (n + 1);
+        int32_t k = esp_random() % (n + 1);
 
         // Swap the elements at indices 'n' and 'k'
-        temp     = array[n];
-        array[n] = array[k];
-        array[k] = temp;
+        int32_t temp = array[n];
+        array[n]     = array[k];
+        array[k]     = temp;
     }
 }
 
@@ -928,7 +922,7 @@ static void t48_lightLEDs(t48_t* t48, bool tileMoved, buttonBit_t direction)
  * @brief Gets the correct LED color
  *
  * @param t48 Game data
- * @return led_t The led object containing the colors to lo0ad into the LEDs
+ * @return led_t The led object containing the colors to load into the LEDs
  */
 static led_t t48_getLEDColor(t48_t* t48)
 {
