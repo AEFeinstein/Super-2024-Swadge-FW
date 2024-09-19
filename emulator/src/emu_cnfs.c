@@ -27,7 +27,6 @@ static char* cnfsInjectedFilename   = NULL;
 static int32_t cnfsInjectedFileSize = 0;
 static void* cnfsInjectedFileData   = NULL;
 
-
 //==============================================================================
 // Functions
 //==============================================================================
