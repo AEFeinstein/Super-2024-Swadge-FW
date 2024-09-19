@@ -2,4 +2,4 @@
 
 #include <swadge2024.h>
 
-extern swadgeMode_t ssrMode;
+extern swadgeMode_t swadgeHeroMode;

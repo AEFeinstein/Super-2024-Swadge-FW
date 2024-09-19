@@ -2,7 +2,7 @@
 // Defines
 //==============================================================================
 
-#include "mode_ssr.h"
+#include "mode_swadgeHero.h"
 
 //==============================================================================
 // Defines
@@ -23,7 +23,7 @@ typedef struct
     int32_t tick;
     int32_t note;
     int32_t hold;
-} ssrNote_t;
+} shNote_t;
 
 typedef struct
 {
@@ -32,7 +32,7 @@ typedef struct
     int32_t headPosY;
     int32_t tailPosY;
     bool held;
-} ssrNoteIcon_t;
+} shNoteIcon_t;
 
 typedef struct
 {
@@ -45,52 +45,52 @@ typedef struct
 
     // Track data
     int32_t numNotes;
-    ssrNote_t* notes;
+    shNote_t* notes;
     int32_t cNote;
 
     // Drawing data
     list_t icons;
     buttonBit_t btnState;
-} ssrVars_t;
+} shVars_t;
 
 //==============================================================================
 // Function Declarations
 //==============================================================================
 
-static void ssrEnterMode(void);
-static void ssrExitMode(void);
-static void ssrMainLoop(int64_t elapsedUs);
-static void ssrBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void ssrLoadTrackData(ssrVars_t* ssr, const uint8_t* data, size_t size);
-// static void ssrMenuCb(const char*, bool selected, uint32_t settingVal);
+static void shEnterMode(void);
+static void shExitMode(void);
+static void shMainLoop(int64_t elapsedUs);
+static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void shLoadTrackData(shVars_t* sh, const uint8_t* data, size_t size);
+// static void shMenuCb(const char*, bool selected, uint32_t settingVal);
 static uint32_t btnToNote(buttonBit_t btn);
-static void ssrRunTimers(ssrVars_t* ssrv, uint32_t elapsedUs);
-static void ssrDrawGame(ssrVars_t* ssrv);
+static void shRunTimers(shVars_t* shv, uint32_t elapsedUs);
+static void shDrawGame(shVars_t* shv);
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-static const char ssrName[] = "Swadge Swadge Rebellion";
+static const char shName[] = "Swadge Hero";
 
-swadgeMode_t ssrMode = {
-    .modeName                 = ssrName,
+swadgeMode_t swadgeHeroMode = {
+    .modeName                 = shName,
     .wifiMode                 = ESP_NOW,
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = false,
     .overrideSelectBtn        = false,
-    .fnEnterMode              = ssrEnterMode,
-    .fnExitMode               = ssrExitMode,
-    .fnMainLoop               = ssrMainLoop,
+    .fnEnterMode              = shEnterMode,
+    .fnExitMode               = shExitMode,
+    .fnMainLoop               = shMainLoop,
     .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = ssrBackgroundDrawCallback,
+    .fnBackgroundDrawCallback = shBackgroundDrawCallback,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
 };
 
-ssrVars_t* ssr;
+shVars_t* sh;
 
 static const paletteColor_t colors[] = {c020, c400, c550, c004, c420, c222};
 static const buttonBit_t noteToBtn[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
@@ -103,53 +103,53 @@ static const buttonBit_t noteToBtn[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B,
  * This function is called when this mode is started. It should initialize
  * variables and start the mode.
  */
-static void ssrEnterMode(void)
+static void shEnterMode(void)
 {
     // 60FPS please
     setFrameRateUs(16667);
 
     // Allocate mode memory
-    ssr = calloc(1, sizeof(ssrVars_t));
+    sh = calloc(1, sizeof(shVars_t));
 
     // Load a font
-    loadFont("ibm_vga8.font", &ssr->ibm, false);
+    loadFont("ibm_vga8.font", &sh->ibm, false);
 
     // Load the track data
     size_t sz = 0;
-    ssrLoadTrackData(ssr, cnfsGetFile("credits.cch", &sz), sz);
+    shLoadTrackData(sh, cnfsGetFile("credits.cch", &sz), sz);
 
     // Load the MIDI file
-    loadMidiFile("credits.mid", &ssr->credits, false);
-    globalMidiPlayerPlaySong(&ssr->credits, MIDI_BGM);
+    loadMidiFile("credits.mid", &sh->credits, false);
+    globalMidiPlayerPlaySong(&sh->credits, MIDI_BGM);
     globalMidiPlayerPauseAll();
 
     // Set the lead-in timer
-    ssr->leadInUs = TRAVEL_TIME_US;
+    sh->leadInUs = TRAVEL_TIME_US;
 }
 
 /**
  * This function is called when the mode is exited. It should free any allocated memory.
  */
-static void ssrExitMode(void)
+static void shExitMode(void)
 {
     // Free MIDI data
-    unloadMidiFile(&ssr->credits);
+    unloadMidiFile(&sh->credits);
 
     // Free track data
-    free(ssr->notes);
+    free(sh->notes);
 
     // Free UI data
     void* val;
-    while ((val = pop(&ssr->icons)))
+    while ((val = pop(&sh->icons)))
     {
         free(val);
     }
 
     // Free the font
-    freeFont(&ssr->ibm);
+    freeFont(&sh->ibm);
 
     // Free mode memory
-    free(ssr);
+    free(sh);
 }
 
 /**
@@ -159,21 +159,21 @@ static void ssrExitMode(void)
  * @param elapsedUs The time elapsed since the last time this function was called. Use this value to determine when
  * it's time to do things
  */
-static void ssrMainLoop(int64_t elapsedUs)
+static void shMainLoop(int64_t elapsedUs)
 {
     // Process button events
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        ssr->btnState = evt.state;
+        sh->btnState = evt.state;
 
         if (evt.down)
         {
             // Iterate through all currently shown icons
-            node_t* iconNode = ssr->icons.first;
+            node_t* iconNode = sh->icons.first;
             while (iconNode)
             {
-                ssrNoteIcon_t* icon = iconNode->val;
+                shNoteIcon_t* icon = iconNode->val;
 
                 // If the icon matches the button
                 if (icon->note == btnToNote(evt.button))
@@ -230,7 +230,7 @@ static void ssrMainLoop(int64_t elapsedUs)
                         {
                             // No tail, remove the icon
                             node_t* nextNode = iconNode->next;
-                            removeEntry(&ssr->icons, iconNode);
+                            removeEntry(&sh->icons, iconNode);
                             iconNode = nextNode;
                         }
                     }
@@ -250,14 +250,14 @@ static void ssrMainLoop(int64_t elapsedUs)
     }
 
     // Run a lead-in timer to allow notes to spawn before the song starts playing
-    if (ssr->leadInUs > 0)
+    if (sh->leadInUs > 0)
     {
-        ssr->leadInUs -= elapsedUs;
+        sh->leadInUs -= elapsedUs;
 
-        if (ssr->leadInUs <= 0)
+        if (sh->leadInUs <= 0)
         {
             globalMidiPlayerResumeAll();
-            ssr->leadInUs = 0;
+            sh->leadInUs = 0;
         }
     }
 
@@ -266,9 +266,9 @@ static void ssrMainLoop(int64_t elapsedUs)
 
     // Get the position of the song and when the next event is, in ms
     int32_t songUs;
-    if (ssr->leadInUs > 0)
+    if (sh->leadInUs > 0)
     {
-        songUs = -ssr->leadInUs;
+        songUs = -sh->leadInUs;
     }
     else
     {
@@ -276,24 +276,24 @@ static void ssrMainLoop(int64_t elapsedUs)
     }
 
     // Check events until one hasn't happened yet or the song ends
-    while (ssr->cNote < ssr->numNotes)
+    while (sh->cNote < sh->numNotes)
     {
         // When the next event occurs
-        int32_t nextEventUs = MIDI_TICKS_TO_US(ssr->notes[ssr->cNote].tick, player->tempo, player->reader.division);
+        int32_t nextEventUs = MIDI_TICKS_TO_US(sh->notes[sh->cNote].tick, player->tempo, player->reader.division);
 
         // Check if the icon should be spawned now to reach the hit bar in time
         if (songUs + TRAVEL_TIME_US >= nextEventUs)
         {
             // Spawn an icon
-            ssrNoteIcon_t* ni = calloc(1, sizeof(ssrNoteIcon_t));
-            ni->note          = ssr->notes[ssr->cNote].note;
+            shNoteIcon_t* ni = calloc(1, sizeof(shNoteIcon_t));
+            ni->note          = sh->notes[sh->cNote].note;
             ni->headPosY      = TFT_HEIGHT + (ICON_RADIUS * 2);
 
             // If this is a hold note
-            if (ssr->notes[ssr->cNote].hold)
+            if (sh->notes[sh->cNote].hold)
             {
                 // Figure out at what microsecond the tail ends
-                int32_t tailUs = MIDI_TICKS_TO_US(ssr->notes[ssr->cNote].hold, player->tempo, player->reader.division);
+                int32_t tailUs = MIDI_TICKS_TO_US(sh->notes[sh->cNote].hold, player->tempo, player->reader.division);
                 // Convert the time to a number of pixels
                 int32_t tailPx = tailUs / TRAVEL_US_PER_PX;
                 // Add the length pixels to the head to get the tail
@@ -309,10 +309,10 @@ static void ssrMainLoop(int64_t elapsedUs)
             ni->timer = 0;
 
             // Push into the list of icons
-            push(&ssr->icons, ni);
+            push(&sh->icons, ni);
 
             // Increment the track data
-            ssr->cNote++;
+            sh->cNote++;
         }
         else
         {
@@ -321,8 +321,8 @@ static void ssrMainLoop(int64_t elapsedUs)
         }
     }
 
-    ssrRunTimers(ssr, elapsedUs);
-    ssrDrawGame(ssr);
+    shRunTimers(sh, elapsedUs);
+    shDrawGame(sh);
 
     // Check for analog touch
     // int32_t centerVal, intensityVal;
@@ -353,20 +353,20 @@ static void ssrMainLoop(int64_t elapsedUs)
 /**
  * @brief TODO
  *
- * @param ssrv
+ * @param shv
  * @param elapsedUs
  */
-static void ssrRunTimers(ssrVars_t* ssrv, uint32_t elapsedUs)
+static void shRunTimers(shVars_t* shv, uint32_t elapsedUs)
 {
     // Track if an icon was removed
     bool removed = false;
 
     // Run all the icon timers
-    node_t* iconNode = ssrv->icons.first;
+    node_t* iconNode = shv->icons.first;
     while (iconNode)
     {
         // Get a reference
-        ssrNoteIcon_t* icon = iconNode->val;
+        shNoteIcon_t* icon = iconNode->val;
 
         // Run this icon's timer
         icon->timer += elapsedUs;
@@ -413,7 +413,7 @@ static void ssrRunTimers(ssrVars_t* ssrv, uint32_t elapsedUs)
             {
                 // Remove this icon
                 free(iconNode->val);
-                removeEntry(&ssrv->icons, iconNode);
+                removeEntry(&shv->icons, iconNode);
 
                 // Stop the while timer loop
                 removed = true;
@@ -438,9 +438,9 @@ static void ssrRunTimers(ssrVars_t* ssrv, uint32_t elapsedUs)
 /**
  * @brief TODO
  *
- * @param ssrv
+ * @param shv
  */
-static void ssrDrawGame(ssrVars_t* ssrv)
+static void shDrawGame(shVars_t* shv)
 {
     // Clear the display
     clearPxTft();
@@ -454,11 +454,11 @@ static void ssrDrawGame(ssrVars_t* ssrv)
     }
 
     // Draw all the icons
-    node_t* iconNode = ssrv->icons.first;
+    node_t* iconNode = shv->icons.first;
     while (iconNode)
     {
         // Draw the icon
-        ssrNoteIcon_t* icon = iconNode->val;
+        shNoteIcon_t* icon = iconNode->val;
         int32_t xOffset     = ((icon->note * TFT_WIDTH) / ARRAY_SIZE(noteToBtn)) + (TFT_WIDTH / 10);
         drawCircleFilled(xOffset, icon->headPosY, ICON_RADIUS, colors[icon->note]);
 
@@ -476,7 +476,7 @@ static void ssrDrawGame(ssrVars_t* ssrv)
     // Draw indicators that the button is pressed
     for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(noteToBtn); bIdx++)
     {
-        if (ssrv->btnState & noteToBtn[bIdx])
+        if (shv->btnState & noteToBtn[bIdx])
         {
             int32_t xOffset = ((bIdx * TFT_WIDTH) / ARRAY_SIZE(noteToBtn)) + (TFT_WIDTH / 10);
             drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[bIdx]);
@@ -495,7 +495,7 @@ static void ssrDrawGame(ssrVars_t* ssrv)
  * @param up update number
  * @param numUp update number denominator
  */
-static void ssrBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     // fillDisplayArea(x, y, x + w, y + h, c555);
 }
@@ -507,7 +507,7 @@ static void ssrBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
  */
-// static void ssrMenuCb(const char* label, bool selected, uint32_t settingVal)
+// static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
 // {
 //     printf("%s %s\n", label, selected ? "selected" : "scrolled to");
 
@@ -522,30 +522,30 @@ static void ssrBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param data
  * @param size
  */
-static void ssrLoadTrackData(ssrVars_t* ssrv, const uint8_t* data, size_t size)
+static void shLoadTrackData(shVars_t* shv, const uint8_t* data, size_t size)
 {
     uint32_t dIdx  = 0;
-    ssrv->numNotes = (data[dIdx++] << 8);
-    ssrv->numNotes |= (data[dIdx++]);
+    shv->numNotes = (data[dIdx++] << 8);
+    shv->numNotes |= (data[dIdx++]);
 
-    ssrv->notes = calloc(ssrv->numNotes, sizeof(ssrNote_t));
+    shv->notes = calloc(shv->numNotes, sizeof(shNote_t));
 
-    for (int32_t nIdx = 0; nIdx < ssrv->numNotes; nIdx++)
+    for (int32_t nIdx = 0; nIdx < shv->numNotes; nIdx++)
     {
-        ssrv->notes[nIdx].tick = (data[dIdx + 0] << 24) | //
+        shv->notes[nIdx].tick = (data[dIdx + 0] << 24) | //
                                  (data[dIdx + 1] << 16) | //
                                  (data[dIdx + 2] << 8) |  //
                                  (data[dIdx + 3] << 0);
         dIdx += 4;
 
-        ssrv->notes[nIdx].note = data[dIdx++];
+        shv->notes[nIdx].note = data[dIdx++];
 
-        if (0x80 & ssrv->notes[nIdx].note)
+        if (0x80 & shv->notes[nIdx].note)
         {
-            ssrv->notes[nIdx].note &= 0x7F;
+            shv->notes[nIdx].note &= 0x7F;
 
             // Use the hold time to see when this note ends
-            ssrv->notes[nIdx].hold = (data[dIdx + 0] << 8) | //
+            shv->notes[nIdx].hold = (data[dIdx + 0] << 8) | //
                                      (data[dIdx + 1] << 0);
             dIdx += 2;
         }

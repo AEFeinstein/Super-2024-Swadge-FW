@@ -17,7 +17,7 @@
 #include "modeTimer.h"
 #include "mode_credits.h"
 #include "mode_bigbug.h"
-#include "mode_ssr.h"
+#include "mode_swadgeHero.h"
 #include "mode_synth.h"
 #include "ultimateTTT.h"
 #include "touchTest.h"
@@ -151,7 +151,7 @@ static void mainMenuEnterMode(void)
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
-    addSingleItemToMenu(mainMenu->menu, ssrMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
     addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
@@ -364,9 +364,9 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&tttMode);
         }
-        else if (label == ssrMode.modeName)
+        else if (label == swadgeHeroMode.modeName)
         {
-            switchToSwadgeMode(&ssrMode);
+            switchToSwadgeMode(&swadgeHeroMode);
         }
         else if (label == timerMode.modeName)
         {
