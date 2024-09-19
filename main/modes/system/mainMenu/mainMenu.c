@@ -16,7 +16,6 @@
 #include "mainMenu.h"
 #include "modeTimer.h"
 #include "mode_credits.h"
-#include "mode_pinball.h"
 #include "mode_bigbug.h"
 #include "mode_ssr.h"
 #include "mode_synth.h"
@@ -154,7 +153,6 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, ssrMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
     addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
@@ -361,10 +359,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == bigbugMode.modeName)
         {
             switchToSwadgeMode(&bigbugMode);
-        }
-        else if (label == pinballMode.modeName)
-        {
-            switchToSwadgeMode(&pinballMode);
         }
         else if (label == tttMode.modeName)
         {
