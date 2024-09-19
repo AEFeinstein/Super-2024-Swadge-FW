@@ -83,20 +83,6 @@ void t48_gameInit(t48_t* t48)
     // Reset the score
     t48->score = 0;
 
-    // Test code
-    /* int test = 2;
-    for (int32_t i = 0; i < 15; i++)
-    {
-        t48->board[i / 4][i % 4].value               = test;
-        t48->board[i / 4][i % 4].drawnTiles[0].value = test;
-        test = test << 1;
-    } */
-
-    /* t48->board[0][1].value               = 1024;
-    t48->board[0][2].value               = 1024;
-    t48->board[0][2].drawnTiles[0].value = 1024;
-    t48->board[0][1].drawnTiles[0].value = 1024; */
-
     // Set two cells randomly
     for (int32_t i = 0; i < 2; i++)
     {
@@ -231,7 +217,14 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
         // Check for loss condition (no valid moves)
         if (t48_checkOver(t48))
         {
-            t48->state = T48_END_SCREEN;
+            if (t48->score > t48->highScore[4])
+            {
+                t48->state = T48_HS_SCREEN;
+            }
+            else 
+            {
+                t48->state = T48_END_SCREEN;
+            }
         }
 
         // Accept input again

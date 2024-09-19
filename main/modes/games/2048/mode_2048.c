@@ -138,6 +138,7 @@ static void t48EnterMode(void)
     textEntrySetEmphasisColor(c500);
     textEntrySetNewCapsStyle(true);
     textEntrySetNewEnterStyle(true);
+    textEntrySetCapMode();
 
     // Initialize the scores
     t48InitHighScores();
