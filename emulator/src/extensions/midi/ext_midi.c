@@ -84,6 +84,12 @@ static bool midiInitCb(emuArgs_t* emuArgs)
 #ifdef EMU_MACOS
 static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef)
 {
+    if (((FourCharCode)handlerRef) != 'odoc')
+    {
+        printf("Ignoring event, not 'odoc'\n");
+        return noErr;
+    }
+
     AEDescList docList;
     OSErr result = AEGetParamDesc(event, keyDirectObject, typeAEList, &docList);
 
@@ -99,33 +105,43 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
         return result;
     }
 
-    if (docCount > 0)
+    char buffer[2048];
+
+    // Yup, it's zero-indexed. Weird.
+    for (long i = 1; i <= docCount; i++)
     {
         AEKeyword keyword;
         DescType docType;
-        FSRef docRef;
         Size docSize;
-        result = AEGetNthPtr(&docList, 0, typeFSRef, &keyword, &docType, &docRef, sizeof(docRef), &docSize);
+
+        result = AEGetNthPtr(&docList, i, typeFileURL, &keyword, &docType, &docRef, sizeof(docRef), &docSize);
 
         if (result != noErr)
         {
+            printf("Error getting event doc index %d\n", )
             return result;
         }
 
-        CFURLRef docUrlRef = CFURLCreateFromFSRef(NULL, &docRef);
-        CFStringRef docStringRef = CFURLCopyFileSystemPath(docUrlRef, kCFURLPOSIXPathStyle);
-        CFRelease(docUrlRef);
+        CFURLRef docUrlRef = CFURLCreateWithBytes(NULL, (UInt8*)buffer, docSize, kCFStringEncodingUTF8, NULL);
 
-        if (CFStringGetCString(docUrlRef, midiPathBuffer, sizeof(midiPathBuffer)), kCFStringEncodingASCII)
+        if (docUrlRef != NULL)
         {
-            printf("Event handled?\n");
+            CFStringRef docStringRef = CFURLCopyFileSystemPath(docUrlRef, kCFURLPOSIXPathStyle);
+            if (docStringRef != NULL)
+            {
+                if (CFStringGetFileSystemRepresentation(docStringRef, midiPathBuffer, sizeof(midiPathBuffer), kCFStringEncodingASCII, NULL))
+                {
+                    printf("Successfully handled event?\n");
+                }
+                CFRelease(docStringRef);
+            }
+            CFRelease(docUrlRef);
         }
-        // Necessary?
-        //CFRelease(docStringRef);
     }
 
     return AEDisposeDesc(&docList);
 }
+
 #endif
 
 static void processEvents(const char** out)
@@ -134,31 +150,50 @@ static void processEvents(const char** out)
     memset(midiPathBuffer, 0, sizeof(midiPathBuffer));
 
     // Install handler
-    OSErr result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handleOpenDocumentEvent, 0, false);
+    AEEventHandlerUPP handler = NewAEEventHandlerUPP(handleOpenDocumentEvent);
+    OSStatus result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handler, 0, false);
 
     if (result != noErr)
     {
         printf("Failed to install OpenDocument handler\n");
+        DisposeAEEventHandlerUPP(handler);
         return;
     }
-
     // Handler successfully installed, now check for events
 
-    EventRecord event;
+    EventRef eventRef;
     // Half a second timeout
-    uint32_t timeout = 30;
+    EventTimeout timeout = 0.5;
+    const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
 
-    if (WaitNextEvent(highLevelEventMask, &event, timeout, NULL))
+    result = ReceiveNextEvent(1, eventTypes, &event, timeout, kEventRemoveFromQueue, &eventRef);
+
+    if (result == eventLoopTimedOutErr)
+    {
+        printf("No event received after timeout\n");
+    }
+    else if (result == noErr)
     {
         printf("Got an event!\n");
-        AEProcessAppleEvent(&event);
-
-        // Our event handler should set up midiPathBuffer here
-        if (*midiPathBuffer)
+        result = SnedEventToEventTarget(eventRef, GetEventDispatcherTarget());
+        ReleaseEvent(eventRef);
+        if (result == noErr)
         {
-            printf("Event successfully set midiPathBuffer\n");
-            *out = midiPathBuffer;
+            // Our event handler should set up midiPathBuffer here
+            if (*midiPathBuffer)
+            {
+                printf("Event successfully set midiPathBuffer\n");
+                *out = midiPathBuffer;
+            }
         }
+        else
+        {
+            printf("Error in SendEventToEventTarget()\n");
+        }
+    }
+    else
+    {
+        printf("Error in ReceiveNextEvent()\n");
     }
 
     result = AERemoveEventHandler(kCoreEventClass, kAEOpenDocuments, handleOpenDocumentEvent, false);
