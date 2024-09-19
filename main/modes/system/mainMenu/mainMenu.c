@@ -16,7 +16,6 @@
 #include "mainMenu.h"
 #include "modeTimer.h"
 #include "mode_credits.h"
-#include "mode_pinball.h"
 #include "mode_synth.h"
 #include "ultimateTTT.h"
 #include "touchTest.h"
@@ -150,7 +149,6 @@ static void mainMenuEnterMode(void)
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
@@ -351,10 +349,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == modeCredits.modeName)
         {
             switchToSwadgeMode(&modeCredits);
-        }
-        else if (label == pinballMode.modeName)
-        {
-            switchToSwadgeMode(&pinballMode);
         }
         else if (label == tttMode.modeName)
         {
