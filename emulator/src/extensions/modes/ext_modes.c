@@ -29,6 +29,7 @@
 #include "mode_2048.h"
 #include "mode_bigbug.h"
 #include "mode_credits.h"
+#include "mode_ssr.h"
 #include "mode_synth.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -70,6 +71,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &keebTestMode,
     &mainMenuMode,
     &modeCredits,
+    &ssrMode,
     &synthMode,
     &t48Mode,
     &timerMode,
