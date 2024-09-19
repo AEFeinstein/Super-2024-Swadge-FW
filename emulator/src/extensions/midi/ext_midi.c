@@ -114,11 +114,11 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
         DescType docType;
         Size docSize;
 
-        result = AEGetNthPtr(&docList, i, typeFileURL, &keyword, &docType, &docRef, sizeof(docRef), &docSize);
+        result = AEGetNthPtr(&docList, i, typeFileURL, &keyword, &docType, &buffer, sizeof(buffer), &docSize);
 
         if (result != noErr)
         {
-            printf("Error getting event doc index %d\n", )
+            printf("Error getting event doc index %d\n", i);
             return result;
         }
 
@@ -129,7 +129,7 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
             CFStringRef docStringRef = CFURLCopyFileSystemPath(docUrlRef, kCFURLPOSIXPathStyle);
             if (docStringRef != NULL)
             {
-                if (CFStringGetFileSystemRepresentation(docStringRef, midiPathBuffer, sizeof(midiPathBuffer), kCFStringEncodingASCII, NULL))
+                if (CFStringGetFileSystemRepresentation(docStringRef, midiPathBuffer, sizeof(midiPathBuffer))
                 {
                     printf("Successfully handled event?\n");
                 }
@@ -166,7 +166,7 @@ static void processEvents(const char** out)
     EventTimeout timeout = 0.5;
     const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
 
-    result = ReceiveNextEvent(1, eventTypes, &event, timeout, kEventRemoveFromQueue, &eventRef);
+    result = ReceiveNextEvent(1, eventTypes, timeout, kEventRemoveFromQueue, &eventRef);
 
     if (result == eventLoopTimedOutErr)
     {
@@ -175,7 +175,7 @@ static void processEvents(const char** out)
     else if (result == noErr)
     {
         printf("Got an event!\n");
-        result = SnedEventToEventTarget(eventRef, GetEventDispatcherTarget());
+        result = SendEventToEventTarget(eventRef, GetEventDispatcherTarget());
         ReleaseEvent(eventRef);
         if (result == noErr)
         {
