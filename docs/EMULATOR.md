@@ -270,3 +270,5 @@ platforms.
    or the first one that becomes available. You may need to restart the emulator after connecting
    a new device.
 4. Press the Pause button (O key) to open or close the menu.
+
+For details on the Swadge's MIDI support you can use for composing, see the [MIDI Specifications page](#MIDI).
