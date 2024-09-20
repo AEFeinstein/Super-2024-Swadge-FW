@@ -71,6 +71,6 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
 void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff);
 void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff);
 void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, paletteColor_t* paletteMap, bool flipLR, bool flipUD, int16_t rotateDeg);
-int8_t* wsgConstructPalette(wsgPaletteColor_t* wsgPC);
+void wsgConstructPalette(wsgPaletteColor_t* wsgPC, uint8_t* outArr);
 
 #endif

@@ -673,16 +673,12 @@ void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, paletteColor_t
  * @param wsgPC 
  * @return int8_t* 
  */
-int8_t* wsgConstructPalette(wsgPaletteColor_t* wsgPC)
+void wsgConstructPalette(wsgPaletteColor_t* wsgPC, uint8_t* outArr)
 {
-    // Build array
-    // FIXME: Hardcoded to 216 colors
-    static int8_t colorMap[216];
-
     // Set all the regular colors
     for (int32_t i = 0; i < 216; i++)
     {
-        colorMap[i] = i;
+        outArr[i] = i;
     }
 
     // Get length of the array
@@ -691,11 +687,8 @@ int8_t* wsgConstructPalette(wsgPaletteColor_t* wsgPC)
     // Set new colors
     for (int32_t i = 0; i < len; i++)
     {
-        colorMap[wsgPC[i].replacedColor] = wsgPC[i].newColor;
+        outArr[wsgPC[i].replacedColor] = wsgPC[i].newColor;
     }
-
-    // Return map
-    return colorMap;
 }
 
 
