@@ -20,6 +20,14 @@
 
 typedef struct
 {
+    char* midi;
+    char* easy;
+    char* med;
+    char* hard;
+} shSong_t;
+
+typedef struct
+{
     int32_t tick;
     int32_t note;
     int32_t hold;
@@ -47,6 +55,7 @@ typedef struct
     int32_t numNotes;
     shNote_t* notes;
     int32_t cNote;
+    int32_t numTracks;
 
     // Drawing data
     list_t icons;
@@ -61,7 +70,7 @@ static void shEnterMode(void);
 static void shExitMode(void);
 static void shMainLoop(int64_t elapsedUs);
 static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void shLoadTrackData(shVars_t* sh, const uint8_t* data, size_t size);
+static uint32_t shLoadTrackData(shVars_t* shv, const uint8_t* data, size_t size);
 // static void shMenuCb(const char*, bool selected, uint32_t settingVal);
 static uint32_t btnToNote(buttonBit_t btn);
 static void shRunTimers(shVars_t* shv, uint32_t elapsedUs);
@@ -95,6 +104,15 @@ shVars_t* sh;
 static const paletteColor_t colors[] = {c020, c400, c550, c004, c420, c222};
 static const buttonBit_t noteToBtn[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
 
+static const shSong_t shSongList[] = {
+    {
+        .midi = "credits.mid",
+        .easy = "credits_e.cch",
+        .med  = "credits_m.cch",
+        .hard = "credits_h.cch",
+    },
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -116,10 +134,10 @@ static void shEnterMode(void)
 
     // Load the track data
     size_t sz = 0;
-    shLoadTrackData(sh, cnfsGetFile("credits.cch", &sz), sz);
+    sh->numTracks = 1 + shLoadTrackData(sh, cnfsGetFile(shSongList[0].hard, &sz), sz);
 
     // Load the MIDI file
-    loadMidiFile("credits.mid", &sh->credits, false);
+    loadMidiFile(shSongList[0].midi, &sh->credits, false);
     globalMidiPlayerPlaySong(&sh->credits, MIDI_BGM);
     globalMidiPlayerPauseAll();
 
@@ -286,8 +304,8 @@ static void shMainLoop(int64_t elapsedUs)
         {
             // Spawn an icon
             shNoteIcon_t* ni = calloc(1, sizeof(shNoteIcon_t));
-            ni->note          = sh->notes[sh->cNote].note;
-            ni->headPosY      = TFT_HEIGHT + (ICON_RADIUS * 2);
+            ni->note         = sh->notes[sh->cNote].note;
+            ni->headPosY     = TFT_HEIGHT + (ICON_RADIUS * 2);
 
             // If this is a hold note
             if (sh->notes[sh->cNote].hold)
@@ -447,9 +465,9 @@ static void shDrawGame(shVars_t* shv)
 
     // Draw the target area
     drawLineFast(0, HIT_BAR, TFT_WIDTH - 1, HIT_BAR, c555);
-    for (int32_t i = 0; i < ARRAY_SIZE(noteToBtn); i++)
+    for (int32_t i = 0; i < shv->numTracks; i++)
     {
-        int32_t xOffset = ((i * TFT_WIDTH) / ARRAY_SIZE(noteToBtn)) + (TFT_WIDTH / 10);
+        int32_t xOffset = ((i * TFT_WIDTH) / shv->numTracks) + (TFT_WIDTH / (2 * shv->numTracks));
         drawCircle(xOffset, HIT_BAR, ICON_RADIUS + 2, c555);
     }
 
@@ -459,7 +477,7 @@ static void shDrawGame(shVars_t* shv)
     {
         // Draw the icon
         shNoteIcon_t* icon = iconNode->val;
-        int32_t xOffset     = ((icon->note * TFT_WIDTH) / ARRAY_SIZE(noteToBtn)) + (TFT_WIDTH / 10);
+        int32_t xOffset    = ((icon->note * TFT_WIDTH) / shv->numTracks) + (TFT_WIDTH / (2 * shv->numTracks));
         drawCircleFilled(xOffset, icon->headPosY, ICON_RADIUS, colors[icon->note]);
 
         // If there is a tail
@@ -474,11 +492,11 @@ static void shDrawGame(shVars_t* shv)
     }
 
     // Draw indicators that the button is pressed
-    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(noteToBtn); bIdx++)
+    for (int32_t bIdx = 0; bIdx < shv->numTracks; bIdx++)
     {
         if (shv->btnState & noteToBtn[bIdx])
         {
-            int32_t xOffset = ((bIdx * TFT_WIDTH) / ARRAY_SIZE(noteToBtn)) + (TFT_WIDTH / 10);
+            int32_t xOffset = ((bIdx * TFT_WIDTH) / shv->numTracks) + (TFT_WIDTH / (2 * shv->numTracks));
             drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[bIdx]);
         }
     }
@@ -518,13 +536,16 @@ static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
 
 /**
  * @brief TODO
- *
- * @param data
- * @param size
+ * 
+ * @param shv 
+ * @param data 
+ * @param size 
+ * @return uint32_t 
  */
-static void shLoadTrackData(shVars_t* shv, const uint8_t* data, size_t size)
+static uint32_t shLoadTrackData(shVars_t* shv, const uint8_t* data, size_t size)
 {
-    uint32_t dIdx  = 0;
+    uint32_t maxTrack = 0;
+    uint32_t dIdx = 0;
     shv->numNotes = (data[dIdx++] << 8);
     shv->numNotes |= (data[dIdx++]);
 
@@ -533,12 +554,17 @@ static void shLoadTrackData(shVars_t* shv, const uint8_t* data, size_t size)
     for (int32_t nIdx = 0; nIdx < shv->numNotes; nIdx++)
     {
         shv->notes[nIdx].tick = (data[dIdx + 0] << 24) | //
-                                 (data[dIdx + 1] << 16) | //
-                                 (data[dIdx + 2] << 8) |  //
-                                 (data[dIdx + 3] << 0);
+                                (data[dIdx + 1] << 16) | //
+                                (data[dIdx + 2] << 8) |  //
+                                (data[dIdx + 3] << 0);
         dIdx += 4;
 
         shv->notes[nIdx].note = data[dIdx++];
+
+        if((shv->notes[nIdx].note & 0x7F) > maxTrack)
+        {
+            maxTrack = shv->notes[nIdx].note & 0x7F;
+        }
 
         if (0x80 & shv->notes[nIdx].note)
         {
@@ -546,10 +572,12 @@ static void shLoadTrackData(shVars_t* shv, const uint8_t* data, size_t size)
 
             // Use the hold time to see when this note ends
             shv->notes[nIdx].hold = (data[dIdx + 0] << 8) | //
-                                     (data[dIdx + 1] << 0);
+                                    (data[dIdx + 1] << 0);
             dIdx += 2;
         }
     }
+
+    return maxTrack;
 }
 
 /**
