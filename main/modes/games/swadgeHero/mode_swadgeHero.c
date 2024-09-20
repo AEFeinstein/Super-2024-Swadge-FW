@@ -1,66 +1,10 @@
 //==============================================================================
-// Defines
+// Includes
 //==============================================================================
 
 #include "mode_swadgeHero.h"
-
-//==============================================================================
-// Defines
-//==============================================================================
-
-#define HIT_BAR     16
-#define ICON_RADIUS 8
-
-#define TRAVEL_TIME_US   2000000
-#define TRAVEL_US_PER_PX ((TRAVEL_TIME_US) / (TFT_HEIGHT - HIT_BAR + (2 * ICON_RADIUS)))
-
-//==============================================================================
-// Structs
-//==============================================================================
-
-typedef struct
-{
-    char* midi;
-    char* easy;
-    char* med;
-    char* hard;
-} shSong_t;
-
-typedef struct
-{
-    int32_t tick;
-    int32_t note;
-    int32_t hold;
-} shNote_t;
-
-typedef struct
-{
-    int32_t note;
-    int32_t timer;
-    int32_t headPosY;
-    int32_t tailPosY;
-    bool held;
-} shNoteIcon_t;
-
-typedef struct
-{
-    // Font
-    font_t ibm;
-
-    // Song being played
-    midiFile_t credits;
-    int32_t leadInUs;
-
-    // Track data
-    int32_t numNotes;
-    shNote_t* notes;
-    int32_t cNote;
-    int32_t numTracks;
-
-    // Drawing data
-    list_t icons;
-    buttonBit_t btnState;
-} shVars_t;
+#include "swadgeHero_game.h"
+#include "swadgeHero_menu.h"
 
 //==============================================================================
 // Function Declarations
@@ -70,17 +14,16 @@ static void shEnterMode(void);
 static void shExitMode(void);
 static void shMainLoop(int64_t elapsedUs);
 static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static uint32_t shLoadTrackData(shVars_t* shv, const uint8_t* data, size_t size);
-// static void shMenuCb(const char*, bool selected, uint32_t settingVal);
-static uint32_t btnToNote(buttonBit_t btn);
-static void shRunTimers(shVars_t* shv, uint32_t elapsedUs);
-static void shDrawGame(shVars_t* shv);
+
+//==============================================================================
+// Const Variables
+//==============================================================================
+
+static const char shName[] = "Swadge Hero";
 
 //==============================================================================
 // Variables
 //==============================================================================
-
-static const char shName[] = "Swadge Hero";
 
 swadgeMode_t swadgeHeroMode = {
     .modeName                 = shName,
@@ -99,23 +42,21 @@ swadgeMode_t swadgeHeroMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-shVars_t* sh;
-
-static const paletteColor_t colors[] = {c020, c400, c550, c004, c420, c222};
-static const buttonBit_t noteToBtn[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
-
-static const shSong_t shSongList[] = {
-    {
-        .midi = "credits.mid",
-        .easy = "credits_e.cch",
-        .med  = "credits_m.cch",
-        .hard = "credits_h.cch",
-    },
-};
+shVars_t* shv;
 
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * @brief TODO
+ *
+ * @return
+ */
+shVars_t* getShVars(void)
+{
+    return shv;
+}
 
 /**
  * This function is called when this mode is started. It should initialize
@@ -127,22 +68,15 @@ static void shEnterMode(void)
     setFrameRateUs(16667);
 
     // Allocate mode memory
-    sh = calloc(1, sizeof(shVars_t));
+    shv = calloc(1, sizeof(shVars_t));
 
     // Load a font
-    loadFont("ibm_vga8.font", &sh->ibm, false);
+    loadFont("ibm_vga8.font", &shv->ibm, false);
+    loadFont("righteous_150.font", &shv->righteous, false);
+    loadFont("rodin_eb.font", &shv->rodin, false);
 
-    // Load the track data
-    size_t sz = 0;
-    sh->numTracks = 1 + shLoadTrackData(sh, cnfsGetFile(shSongList[0].hard, &sz), sz);
-
-    // Load the MIDI file
-    loadMidiFile(shSongList[0].midi, &sh->credits, false);
-    globalMidiPlayerPlaySong(&sh->credits, MIDI_BGM);
-    globalMidiPlayerPauseAll();
-
-    // Set the lead-in timer
-    sh->leadInUs = TRAVEL_TIME_US;
+    // Show initial menu
+    shChangeScreen(shv, SH_MENU);
 }
 
 /**
@@ -150,24 +84,16 @@ static void shEnterMode(void)
  */
 static void shExitMode(void)
 {
-    // Free MIDI data
-    unloadMidiFile(&sh->credits);
+    // Free the screen
+    shChangeScreen(shv, SH_NONE);
 
-    // Free track data
-    free(sh->notes);
-
-    // Free UI data
-    void* val;
-    while ((val = pop(&sh->icons)))
-    {
-        free(val);
-    }
-
-    // Free the font
-    freeFont(&sh->ibm);
+    // Free the fonts
+    freeFont(&shv->ibm);
+    freeFont(&shv->rodin);
+    freeFont(&shv->righteous);
 
     // Free mode memory
-    free(sh);
+    free(shv);
 }
 
 /**
@@ -183,321 +109,48 @@ static void shMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        sh->btnState = evt.state;
-
-        if (evt.down)
+        switch (shv->screen)
         {
-            // Iterate through all currently shown icons
-            node_t* iconNode = sh->icons.first;
-            while (iconNode)
+            case SH_GAME:
             {
-                shNoteIcon_t* icon = iconNode->val;
-
-                // If the icon matches the button
-                if (icon->note == btnToNote(evt.button))
-                {
-                    // Find how off the timing is
-                    int32_t pxOff = ABS(HIT_BAR - icon->headPosY);
-                    int32_t usOff = pxOff * TRAVEL_US_PER_PX;
-                    printf("%" PRId32 " us off\n", usOff);
-
-                    // Check if this button hit a note
-                    bool iconHit = false;
-
-                    // Classify the time off
-                    if (usOff < 21500)
-                    {
-                        printf("  Fantastic\n");
-                        iconHit = true;
-                    }
-                    else if (usOff < 43000)
-                    {
-                        printf("  Marvelous\n");
-                        iconHit = true;
-                    }
-                    else if (usOff < 102000)
-                    {
-                        printf("  Great\n");
-                        iconHit = true;
-                    }
-                    else if (usOff < 135000)
-                    {
-                        printf("  Decent\n");
-                        iconHit = true;
-                    }
-                    else if (usOff < 180000)
-                    {
-                        printf("  Way Off\n");
-                        iconHit = true;
-                    }
-                    else
-                    {
-                        printf("  MISS\n");
-                    }
-
-                    // If it was close enough to hit
-                    if (iconHit)
-                    {
-                        if (icon->tailPosY >= 0)
-                        {
-                            // There is a tail, don't remove the note yet
-                            icon->headPosY = HIT_BAR;
-                            icon->held     = true;
-                        }
-                        else
-                        {
-                            // No tail, remove the icon
-                            node_t* nextNode = iconNode->next;
-                            removeEntry(&sh->icons, iconNode);
-                            iconNode = nextNode;
-                        }
-                    }
-
-                    // the button was matched to an icon, break the loop
-                    break;
-                }
-
-                // Iterate to the next icon
-                iconNode = iconNode->next;
+                shGameInput(shv, &evt);
+                break;
             }
-        }
-        else
-        {
-            // TODO handle ups when holding tails
-        }
-    }
-
-    // Run a lead-in timer to allow notes to spawn before the song starts playing
-    if (sh->leadInUs > 0)
-    {
-        sh->leadInUs -= elapsedUs;
-
-        if (sh->leadInUs <= 0)
-        {
-            globalMidiPlayerResumeAll();
-            sh->leadInUs = 0;
-        }
-    }
-
-    // Get a reference to the player
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-
-    // Get the position of the song and when the next event is, in ms
-    int32_t songUs;
-    if (sh->leadInUs > 0)
-    {
-        songUs = -sh->leadInUs;
-    }
-    else
-    {
-        songUs = SAMPLES_TO_US(player->sampleCount);
-    }
-
-    // Check events until one hasn't happened yet or the song ends
-    while (sh->cNote < sh->numNotes)
-    {
-        // When the next event occurs
-        int32_t nextEventUs = MIDI_TICKS_TO_US(sh->notes[sh->cNote].tick, player->tempo, player->reader.division);
-
-        // Check if the icon should be spawned now to reach the hit bar in time
-        if (songUs + TRAVEL_TIME_US >= nextEventUs)
-        {
-            // Spawn an icon
-            shNoteIcon_t* ni = calloc(1, sizeof(shNoteIcon_t));
-            ni->note         = sh->notes[sh->cNote].note;
-            ni->headPosY     = TFT_HEIGHT + (ICON_RADIUS * 2);
-
-            // If this is a hold note
-            if (sh->notes[sh->cNote].hold)
+            case SH_MENU:
             {
-                // Figure out at what microsecond the tail ends
-                int32_t tailUs = MIDI_TICKS_TO_US(sh->notes[sh->cNote].hold, player->tempo, player->reader.division);
-                // Convert the time to a number of pixels
-                int32_t tailPx = tailUs / TRAVEL_US_PER_PX;
-                // Add the length pixels to the head to get the tail
-                ni->tailPosY = ni->headPosY + tailPx;
+                shMenuInput(shv, &evt);
+                break;
             }
-            else
+            case SH_GAME_END:
+            case SH_HIGH_SCORES:
+            case SH_NONE:
+            default:
             {
-                // No tail
-                ni->tailPosY = -1;
-            }
-
-            // Start the timer at zero
-            ni->timer = 0;
-
-            // Push into the list of icons
-            push(&sh->icons, ni);
-
-            // Increment the track data
-            sh->cNote++;
-        }
-        else
-        {
-            // Nothing more to be spawned right now
-            break;
-        }
-    }
-
-    shRunTimers(sh, elapsedUs);
-    shDrawGame(sh);
-
-    // Check for analog touch
-    // int32_t centerVal, intensityVal;
-    // if (getTouchCentroid(&centerVal, &intensityVal))
-    // {
-    //     printf("touch center: %" PRId32 ", intensity: %" PRId32 "\n", centerVal, intensityVal);
-    // }
-    // else
-    // {
-    //     printf("no touch\n");
-    // }
-
-    // // Get the acceleration
-    // int16_t a_x, a_y, a_z;
-    // accelGetAccelVec(&a_x, &a_y, &a_z);
-
-    // Set LEDs
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-    // for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
-    // {
-    //     leds[i].r = (255 * ((i + 0) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    //     leds[i].g = (255 * ((i + 3) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    //     leds[i].b = (255 * ((i + 6) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    // }
-    setLeds(leds, CONFIG_NUM_LEDS);
-}
-
-/**
- * @brief TODO
- *
- * @param shv
- * @param elapsedUs
- */
-static void shRunTimers(shVars_t* shv, uint32_t elapsedUs)
-{
-    // Track if an icon was removed
-    bool removed = false;
-
-    // Run all the icon timers
-    node_t* iconNode = shv->icons.first;
-    while (iconNode)
-    {
-        // Get a reference
-        shNoteIcon_t* icon = iconNode->val;
-
-        // Run this icon's timer
-        icon->timer += elapsedUs;
-        while (icon->timer >= TRAVEL_US_PER_PX)
-        {
-            icon->timer -= TRAVEL_US_PER_PX;
-
-            bool shouldRemove = false;
-
-            // Move the whole icon up
-            if (!icon->held)
-            {
-                icon->headPosY--;
-                if (icon->tailPosY >= 0)
-                {
-                    icon->tailPosY--;
-                }
-
-                // If it's off screen
-                if (icon->headPosY < -ICON_RADIUS && (icon->tailPosY < 0))
-                {
-                    // Mark it for removal
-                    shouldRemove = true;
-                }
-            }
-            else // The icon is being held
-            {
-                // Only move the tail position
-                if (icon->tailPosY >= HIT_BAR)
-                {
-                    icon->tailPosY--;
-                }
-
-                // If the tail finished
-                if (icon->tailPosY < HIT_BAR)
-                {
-                    // Mark it for removal
-                    shouldRemove = true;
-                }
-            }
-
-            // If the icon should be removed
-            if (shouldRemove)
-            {
-                // Remove this icon
-                free(iconNode->val);
-                removeEntry(&shv->icons, iconNode);
-
-                // Stop the while timer loop
-                removed = true;
                 break;
             }
         }
+    }
 
-        // If an icon was removed
-        if (removed)
+    // Run logic and outputs
+    switch (shv->screen)
+    {
+        case SH_GAME:
         {
-            // Stop iterating through notes
+            shRunTimers(shv, elapsedUs);
+            shDrawGame(shv);
             break;
         }
-        else
+        case SH_MENU:
         {
-            // Iterate to the next
-            iconNode = iconNode->next;
+            shMenuDraw(shv, elapsedUs);
+            break;
         }
-    }
-}
-
-/**
- * @brief TODO
- *
- * @param shv
- */
-static void shDrawGame(shVars_t* shv)
-{
-    // Clear the display
-    clearPxTft();
-
-    // Draw the target area
-    drawLineFast(0, HIT_BAR, TFT_WIDTH - 1, HIT_BAR, c555);
-    for (int32_t i = 0; i < shv->numTracks; i++)
-    {
-        int32_t xOffset = ((i * TFT_WIDTH) / shv->numTracks) + (TFT_WIDTH / (2 * shv->numTracks));
-        drawCircle(xOffset, HIT_BAR, ICON_RADIUS + 2, c555);
-    }
-
-    // Draw all the icons
-    node_t* iconNode = shv->icons.first;
-    while (iconNode)
-    {
-        // Draw the icon
-        shNoteIcon_t* icon = iconNode->val;
-        int32_t xOffset    = ((icon->note * TFT_WIDTH) / shv->numTracks) + (TFT_WIDTH / (2 * shv->numTracks));
-        drawCircleFilled(xOffset, icon->headPosY, ICON_RADIUS, colors[icon->note]);
-
-        // If there is a tail
-        if (icon->tailPosY >= 0)
+        case SH_GAME_END:
+        case SH_HIGH_SCORES:
+        case SH_NONE:
+        default:
         {
-            // Draw the tail
-            fillDisplayArea(xOffset - 2, icon->headPosY, xOffset + 3, icon->tailPosY, colors[icon->note]);
-        }
-
-        // Iterate
-        iconNode = iconNode->next;
-    }
-
-    // Draw indicators that the button is pressed
-    for (int32_t bIdx = 0; bIdx < shv->numTracks; bIdx++)
-    {
-        if (shv->btnState & noteToBtn[bIdx])
-        {
-            int32_t xOffset = ((bIdx * TFT_WIDTH) / shv->numTracks) + (TFT_WIDTH / (2 * shv->numTracks));
-            drawCircleOutline(xOffset, HIT_BAR, ICON_RADIUS + 8, 4, colors[bIdx]);
+            break;
         }
     }
 }
@@ -519,104 +172,88 @@ static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
 }
 
 /**
- * @brief Callback for when menu items are selected
- *
- * @param label The menu item that was selected or moved to
- * @param selected true if the item was selected, false if it was moved to
- * @param settingVal The value of the setting, if the menu item is a settings item
- */
-// static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
-// {
-//     printf("%s %s\n", label, selected ? "selected" : "scrolled to");
-
-//     if (selected)
-//     {
-//     }
-// }
-
-/**
  * @brief TODO
- * 
- * @param shv 
- * @param data 
- * @param size 
- * @return uint32_t 
+ *
+ * @param sh
+ * @param newScreen
  */
-static uint32_t shLoadTrackData(shVars_t* shv, const uint8_t* data, size_t size)
+void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
 {
-    uint32_t maxTrack = 0;
-    uint32_t dIdx = 0;
-    shv->numNotes = (data[dIdx++] << 8);
-    shv->numNotes |= (data[dIdx++]);
-
-    shv->notes = calloc(shv->numNotes, sizeof(shNote_t));
-
-    for (int32_t nIdx = 0; nIdx < shv->numNotes; nIdx++)
+    // Cleanup
+    switch (sh->screen)
     {
-        shv->notes[nIdx].tick = (data[dIdx + 0] << 24) | //
-                                (data[dIdx + 1] << 16) | //
-                                (data[dIdx + 2] << 8) |  //
-                                (data[dIdx + 3] << 0);
-        dIdx += 4;
-
-        shv->notes[nIdx].note = data[dIdx++];
-
-        if((shv->notes[nIdx].note & 0x7F) > maxTrack)
+        case SH_MENU:
         {
-            maxTrack = shv->notes[nIdx].note & 0x7F;
+            shTeardownMenu(shv);
+            break;
         }
-
-        if (0x80 & shv->notes[nIdx].note)
+        case SH_GAME:
         {
-            shv->notes[nIdx].note &= 0x7F;
+            // Free MIDI data
+            unloadMidiFile(&shv->midiSong);
 
-            // Use the hold time to see when this note ends
-            shv->notes[nIdx].hold = (data[dIdx + 0] << 8) | //
-                                    (data[dIdx + 1] << 0);
-            dIdx += 2;
+            // Free chart data
+            free(shv->chartNotes);
+
+            // Free UI data
+            void* val;
+            while ((val = pop(&shv->gameNotes)))
+            {
+                free(val);
+            }
+            break;
+        }
+        case SH_GAME_END:
+        case SH_HIGH_SCORES:
+        case SH_NONE:
+        default:
+        {
+            break;
         }
     }
 
-    return maxTrack;
-}
+    sh->screen = newScreen;
 
-/**
- * @brief TODO
- *
- * @param btn
- * @return uint32_t
- */
-static uint32_t btnToNote(buttonBit_t btn)
-{
-    switch (btn)
+    // Setup
+    switch (sh->screen)
     {
-        case PB_LEFT:
+        case SH_GAME:
         {
-            return 0;
+            // Load the chart data
+            const char* chartFile;
+            switch (sh->difficulty)
+            {
+                default:
+                case SH_EASY:
+                {
+                    chartFile = sh->menuSong->easy;
+                    break;
+                }
+                case SH_MEDIUM:
+                {
+                    chartFile = sh->menuSong->med;
+                    break;
+                }
+                case SH_HARD:
+                {
+                    chartFile = sh->menuSong->hard;
+                    break;
+                }
+            }
+            shLoadSong(sh, sh->menuSong->midi, chartFile);
+            break;
         }
-        case PB_DOWN:
+        case SH_MENU:
         {
-            return 1;
+            shSetupMenu(shv);
+            break;
         }
-        case PB_UP:
-        {
-            return 2;
-        }
-        case PB_RIGHT:
-        {
-            return 3;
-        }
-        case PB_B:
-        {
-            return 4;
-        }
-        case PB_A:
-        {
-            return 5;
-        }
+        case SH_GAME_END:
+        case SH_HIGH_SCORES:
+        case SH_NONE:
         default:
         {
-            return -1;
+            break;
         }
     }
 }
