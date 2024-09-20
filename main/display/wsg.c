@@ -25,7 +25,7 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
  * then reflection over Y axis, then reflection over X axis, then translation
  *
  * @param x The x coordinate of the pixel location to transform
- * @param y The y coordinate of the pixel location to trasform
+ * @param y The y coordinate of the pixel location to transform
  * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
  * @param width  The width of the image
  * @param height The height of the image
@@ -253,7 +253,7 @@ void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool fli
             uint32_t dstY = srcY + yOff;
 
             // It is too complicated to detect both directions and backoff correctly, so we just do this here.
-            // It does slow things down a "tiny" bit.  People in the future could optimze out this check.
+            // It does slow things down a "tiny" bit.  People in the future could optimize out this check.
             if (dstY >= TFT_HEIGHT)
             {
                 continue;

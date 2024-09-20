@@ -24,6 +24,9 @@
  * the WSG is not rotated or flipped.
  * - drawWsgTile(): Draw a WSG to the display without transparency. Any transparent pixels will be an indeterminate
  * color. This is the fastest option, and best for background tiles or images.
+ * - drawWsgSimpleScaled():  Draw a WSG to the display with transparency at a specified scale. Scales are integer
+ * values, so 2x, 3x, 4x... are the valid options.
+ * - drawWsgSimpleHalf(): Draw a WSG to the display with transparency at half the original resolution.
  *
  * \section wsg_example Example
  *
