@@ -1,9 +1,9 @@
 /**
- * @file cg_chowa.h
+ * @file cg_spar.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
- * @brief Pet behavior and appearance
+ * @brief Provides the sparring implementation for Chowa Grove
  * @version 0.1
- * @date 2024-09-08
+ * @date 2024-09-19
  * 
  * @copyright Copyright (c) 2024
  * 
@@ -17,5 +17,9 @@
 #include "cg_Typedef.h"
 
 //==============================================================================
-// Function declarations
+// Functions
 //==============================================================================
+
+void cg_initSpar(cGrove_t* cg);
+void cg_deInitSpar(cGrove_t* cg);
+void cg_runSpar(cGrove_t* cg, int32_t elapsedUs);

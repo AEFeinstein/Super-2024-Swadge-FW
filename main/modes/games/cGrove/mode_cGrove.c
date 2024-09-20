@@ -9,11 +9,13 @@
  * 
  */
 
+//==============================================================================
 // Includes
+//==============================================================================
+
 #include "mode_cGrove.h"
-#include "cg_Types.h"
-#include "cg_Garden.h"
 #include "cg_Chowa.h"
+#include "cg_Garden.h"
 
 //==============================================================================
 // Consts
@@ -78,8 +80,6 @@ static void cGroveEnterMode(void)
 
     // Init
     cgInitGarden(grove);
-    paletteColor_t col[CG_CHOWA_COLORS] = {c300, c200, c300, c300, c300, c200};
-    cgInitChowa(grove, 0, col);
 }
 
 static void cGroveExitMode(void)

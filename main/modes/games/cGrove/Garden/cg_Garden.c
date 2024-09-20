@@ -9,10 +9,13 @@
  *
  */
 
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "cg_Garden.h"
 #include "cg_Field.h"
-#include "cg_GardenItems.h"
-#include "cg_Chowa.h"
+#include "cg_Items.h"
 
 //==============================================================================
 // Static functions
@@ -230,12 +233,12 @@ void cgRunGarden(cGrove_t* cg)
         }
     }
     // Chowa
-    vec_t cam = {.x = -cg->garden.field.cam.aabb.pos.x, .y = -cg->garden.field.cam.aabb.pos.y};
+    //vec_t cam = {.x = -cg->garden.field.cam.aabb.pos.x, .y = -cg->garden.field.cam.aabb.pos.y};
     for (int8_t c = 0; c < CG_FIELD_ITEM_LIMIT; c++)
     {
         if (cg->chowa[c].active)
         {
-            cgDrawChowa(cg, c, cam);
+            //cgDrawChowa(cg, c, cam);
         }
     }
     // Hand

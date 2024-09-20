@@ -1,9 +1,9 @@
 /**
- * @file cg_chowa.h
+ * @file cg_sparDraw.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
- * @brief Pet behavior and appearance
+ * @brief Draws the Chowa Garden Spar
  * @version 0.1
- * @date 2024-09-08
+ * @date 2024-09-19
  * 
  * @copyright Copyright (c) 2024
  * 
@@ -17,5 +17,7 @@
 #include "cg_Typedef.h"
 
 //==============================================================================
-// Function declarations
+// Functions
 //==============================================================================
+
+void cg_drawSpar(cGrove_t* cg);

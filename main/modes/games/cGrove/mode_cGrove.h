@@ -11,8 +11,11 @@
 
 #pragma once
 
+//==============================================================================
 // Includes
-#include "swadge2024.h"
+//==============================================================================
+
+#include "cg_Typedef.h"
 
 // Make Swadgemode available
 extern swadgeMode_t cGroveMode;
