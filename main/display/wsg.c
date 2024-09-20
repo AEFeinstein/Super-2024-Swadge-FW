@@ -495,3 +495,207 @@ void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
         pxWsg += wWidth;
     }
 }
+
+/**
+ * @brief Draw a WSG to the display
+ *
+ * @param wsg  The WSG to draw to the display
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to draw the WSG at
+ * @param paletteMap The array pf colors to convert
+ * @param flipLR true to flip the image across the Y axis
+ * @param flipUD true to flip the image across the X axis
+ * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
+ */
+void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, paletteColor_t* paletteMap, bool flipLR, bool flipUD, int16_t rotateDeg)
+{
+    //  This function has been micro optimized by cnlohr on 2022-09-08, using gcc version 8.4.0 (crosstool-NG
+    //  esp-2021r2-patch3)
+
+    if (NULL == wsg->px)
+    {
+        return;
+    }
+
+    if (rotateDeg)
+    {
+        SETUP_FOR_TURBO();
+        uint32_t wsgw = wsg->w;
+        uint32_t wsgh = wsg->h;
+        for (int32_t srcY = 0; srcY < wsgh; srcY++)
+        {
+            int32_t usey = srcY;
+
+            // Reflect over X axis?
+            if (flipUD)
+            {
+                usey = wsg->h - 1 - usey;
+            }
+
+            const paletteColor_t* linein = &wsg->px[usey * wsgw];
+
+            // Reflect over Y axis?
+            uint32_t readX    = 0;
+            uint32_t advanceX = 1;
+            if (flipLR)
+            {
+                readX    = wsgw - 1;
+                advanceX = -1;
+            }
+
+            int32_t localX = 0;
+            for (int32_t srcX = 0; srcX != wsgw; srcX++)
+            {
+                // Draw if not transparent
+                uint8_t color = linein[readX];
+                if (cTransparent != color)
+                {
+                    uint16_t tx = localX;
+                    uint16_t ty = srcY;
+
+                    rotatePixel((int16_t*)&tx, (int16_t*)&ty, rotateDeg, wsgw, wsgh);
+                    tx += xOff;
+                    ty += yOff;
+                    TURBO_SET_PIXEL_BOUNDS(tx, ty, color);
+                }
+                localX++;
+                readX += advanceX;
+            }
+        }
+    }
+    else
+    {
+        // Draw the image's pixels (no rotation or transformation)
+        uint32_t w         = TFT_WIDTH;
+        paletteColor_t* px = getPxTftFramebuffer();
+
+        uint16_t wsgw = wsg->w;
+        uint16_t wsgh = wsg->h;
+
+        int32_t xstart = 0;
+        int16_t xend   = wsgw;
+        int32_t xinc   = 1;
+
+        // Reflect over Y axis?
+        if (flipLR)
+        {
+            xstart = wsgw - 1;
+            xend   = -1;
+            xinc   = -1;
+        }
+
+        if (xOff < 0)
+        {
+            if (xinc > 0)
+            {
+                xstart -= xOff;
+                if (xstart >= xend)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                xstart += xOff;
+                if (xend >= xstart)
+                {
+                    return;
+                }
+            }
+            xOff = 0;
+        }
+
+        if (xOff + wsgw > w)
+        {
+            int32_t peelBack = (xOff + wsgw) - w;
+            if (xinc > 0)
+            {
+                xend -= peelBack;
+                if (xstart >= xend)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                xend += peelBack;
+                if (xend >= xstart)
+                {
+                    return;
+                }
+            }
+        }
+
+        for (int16_t srcY = 0; srcY < wsgh; srcY++)
+        {
+            int32_t usey = srcY;
+
+            // Reflect over X axis?
+            if (flipUD)
+            {
+                usey = wsgh - 1 - usey;
+            }
+
+            const paletteColor_t* linein = &wsg->px[usey * wsgw];
+
+            // Transform this pixel's draw location as necessary
+            uint32_t dstY = srcY + yOff;
+
+            // It is too complicated to detect both directions and backoff correctly, so we just do this here.
+            // It does slow things down a "tiny" bit.  People in the future could optimize out this check.
+            if (dstY >= TFT_HEIGHT)
+            {
+                continue;
+            }
+
+            int32_t lineOffset = dstY * w;
+            int32_t dstx       = xOff + lineOffset;
+
+            for (int32_t srcX = xstart; srcX != xend; srcX += xinc)
+            {
+                // Get colors from remap
+                uint8_t color = paletteMap[linein[srcX]];
+
+                // Draw if not transparent
+                if (cTransparent != color)
+                {
+                    px[dstx] = color;
+                }
+                dstx++;
+            }
+        }
+    }
+}
+
+/**
+ * @brief 
+ * 
+ * @param wsgPC 
+ * @return int8_t* 
+ */
+int8_t* wsgConstructPalette(wsgPaletteColor_t* wsgPC)
+{
+    // Build array
+    // FIXME: Hardcoded to 216 colors
+    static int8_t colorMap[216];
+
+    // Set all the regular colors
+    for (int32_t i = 0; i < 216; i++)
+    {
+        colorMap[i] = i;
+    }
+
+    // Get length of the array
+    int len = sizeof(*wsgPC)/sizeof(wsgPC[0]);
+
+    // Set new colors
+    for (int32_t i = 0; i < len; i++)
+    {
+        colorMap[wsgPC[i].replacedColor] = wsgPC[i].newColor;
+    }
+
+    // Return map
+    return colorMap;
+}
+
+
