@@ -540,11 +540,17 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 
                 // TODO: Move this to the streaming parser
                 // We'll need to read at least one more byte
-                if (!TRK_REMAIN()) { ERR(); }
+                if (!TRK_REMAIN())
+                {
+                    ERR();
+                }
                 uint16_t manufacturer = *(track->cur++);
                 if (!manufacturer)
                 {
-                    if (TRK_REMAIN() < 2) { ERR(); }
+                    if (TRK_REMAIN() < 2)
+                    {
+                        ERR();
+                    }
                     // A manufacturer ID of 0 means the ID is actually in the next 2 bytes
                     manufacturer = *(track->cur++);
                     manufacturer <<= 7;

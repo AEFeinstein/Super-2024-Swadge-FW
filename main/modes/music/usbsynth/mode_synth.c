@@ -1514,7 +1514,8 @@ static void synthEnterMode(void)
                 {
                     for (int blobIdx = 0; blobIdx < sd->synthConfig.controlCounts; blobIdx++)
                     {
-                        synthControlConfig_t* copy = (synthControlConfig_t*)heap_caps_malloc(sizeof(synthControlConfig_t), MALLOC_CAP_SPIRAM);
+                        synthControlConfig_t* copy
+                            = (synthControlConfig_t*)heap_caps_malloc(sizeof(synthControlConfig_t), MALLOC_CAP_SPIRAM);
                         if (copy)
                         {
                             memcpy(copy, &configs[blobIdx], sizeof(synthControlConfig_t));
@@ -2402,7 +2403,8 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     addSingleItemToMenu(menu, menuItemResetAll);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemResetAll, &sd->resetImage, rotTopMenu++, NO_SCROLL);
 
-    addSettingsOptionsItemToMenu(menu, menuItemGm, menuItemOffOnOptions, menuItemGmValues, ARRAY_SIZE(menuItemGmValues), &menuItemGmBounds, sd->gmMode);
+    addSettingsOptionsItemToMenu(menu, menuItemGm, menuItemOffOnOptions, menuItemGmValues, ARRAY_SIZE(menuItemGmValues),
+                                 &menuItemGmBounds, sd->gmMode);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemGm, NULL, rotTopMenu++, SCROLL_HORIZ_R);
     wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemGm, "GM");
 }

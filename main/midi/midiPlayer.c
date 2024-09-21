@@ -15,7 +15,7 @@
 #include "cnfs.h"
 
 // Uncomment to enable logging SysEx commands in detail
-//#define DEBUG_SYSEX 1
+// #define DEBUG_SYSEX 1
 
 #define OSC_DITHER
 
@@ -835,7 +835,6 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
     // GM Disable (02)
     // GM2 Enable (03)
     // GM Disable (00) (incorrect but I bet people are doing it because teragonaudio says to)
-    //0000    7e 7f 09 02 f7 
     uint8_t mfrLen = 1;
 
 #ifdef DEBUG_SYSEX
@@ -843,7 +842,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
 #endif
 
     const uint8_t* end = sysex->data + sysex->length;
-    
+
     // Determine the length of the manufacturer ID so we know how many bytes to skip for the real data
     if (sysex->manufacturerId & (1 << 15))
     {
@@ -891,7 +890,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
     switch (sysex->manufacturerId)
     {
         case MMFR_EDUCATIONAL_USE:
-        break;
+            break;
 
         case MMFR_UNIVERSAL_NON_REAL_TIME:
         case MMFR_UNIVERSAL_REAL_TIME:
@@ -899,7 +898,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
             bool realTime = (sysex->manufacturerId == MMFR_UNIVERSAL_REAL_TIME);
 
             // Universal SysEx messages have 127 "channel" values, with 0x7F meaning "Disregard Channel"
-            uint8_t sysexChannel = *dataPtr++;
+            // uint8_t sysexChannel = *dataPtr++;
 
             if (dataPtr >= end)
             {
@@ -930,7 +929,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
                     case 0x2:
                     // Notation Information
                     case 0x3:
-                    break;
+                        break;
 
                     // Device Control
                     case 0x4:
@@ -945,7 +944,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
 
                             // Master Balance
                             case 2:
-                            break;
+                                break;
 
                             // Master Fine Tuning
                             case 3:
@@ -961,7 +960,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
 
                             case 5:
                             default:
-                            break;
+                                break;
                         }
 
                         break;
@@ -984,7 +983,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
                     // Mobile Phone Control Message
                     case 0xC:
                     default:
-                    break;
+                        break;
                 }
             }
             else
@@ -1010,7 +1009,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
                     case 0x7:
                     // MIDI Tuning Standard
                     case 0x8:
-                    break;
+                        break;
 
                     // General MIDI
                     case 0x9:
@@ -1020,8 +1019,10 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
                             case 0:
                             {
                                 // NOTE: This value is NOT defined by the MIDI spec
-                                // However, some resources incorrectly claim that a value of `0` for sub-ID 2 is the value for a "GM Off" event (with `1` being "GM On"),
-                                // even though a value of `2` is specified for `GM Off`, so it is possible that a `0` value will be sent with the intent to disable GM.
+                                // However, some resources incorrectly claim that a value of `0` for sub-ID 2 is the
+                                // value for a "GM Off" event (with `1` being "GM On"), even though a value of `2` is
+                                // specified for `GM Off`, so it is possible that a `0` value will be sent with the
+                                // intent to disable GM.
                                 midiGmOff(player);
                                 break;
                             }
@@ -1043,8 +1044,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
                             // General MIDI 2 On (Unsupported)
                             case 3:
                             default:
-                            break;
-
+                                break;
                         }
                         break;
                     }
@@ -1068,7 +1068,7 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
                     // ACK
                     case 0x7F:
                     default:
-                    break;
+                        break;
                 }
             }
 
@@ -1427,7 +1427,7 @@ void midiGmOff(midiPlayer_t* player)
         // Also enable percussion on channel 11 (index 10) with an alternate drum kit
         chan->percussion = (9 == chanIdx || 10 == chanIdx);
         // Set bank 1 (MAGFest sounds) for everything except the first drumkit on 10
-        chan->bank       = (9 == chanIdx) ? 0 : 1;
+        chan->bank = (9 == chanIdx) ? 0 : 1;
 
         switch (chanIdx)
         {

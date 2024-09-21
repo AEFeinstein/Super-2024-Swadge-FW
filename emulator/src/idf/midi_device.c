@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 // Un-comment to enable printing all received MIDI packets
-//#define DEBUG_MIDI_PACKETS
+// #define DEBUG_MIDI_PACKETS
 
 static uint8_t runningStatus                   = 0;
 static struct platform_midi_driver* midiDriver = NULL;
