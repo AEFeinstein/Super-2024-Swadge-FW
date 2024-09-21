@@ -8,8 +8,9 @@ commands are simply ignored and the rest of the file will play normally.
 
 ## Basics
 
-The Swadge's 8-bit audio synthesizer supports up to 16 MIDI channels, with channel 10 reserved for
-percussion (the drum kit).
+The Swadge's 8-bit audio synthesizer supports up to 16 MIDI channels, with channels 10 and 11 reserved for
+percussion (the drum kit). By default, channel 1 through 9 are configured to use the [MAGFest instruments](#MAGPrograms)
+in order.
 
 ## Features
 
@@ -28,9 +29,9 @@ keyboard than the high-fidelity samples you might hear from a modern soft synthe
 #### GM-Compatible Drum Kit
 The Bank 0 Drum Kit is a set of custom drum sounds that follows the standard General MIDI note-to-drum mappings, which can be found
 on [Wikipedia](https://en.wikipedia.org/wiki/General_MIDI#Percussion) and is commonly supported by MIDI devices and software. Note
-that some drum sounds may be incomplete or not yet supported.
+that some drum sounds may be incomplete or not yet supported. This drum kit is available on MIDI Channel 10.
 
-### MAGFest Instruments (Bank 1)
+### MAGFest Instruments (Bank 1) {#MAGPrograms}
 These instruments are mainly basic wave shapes, with some extra goodies thrown in.
 
 | Program# | Name            |
@@ -47,6 +48,7 @@ These instruments are mainly basic wave shapes, with some extra goodies thrown i
 
 #### Donut Swadge Drum Kit
 The Bank 1 Drum Kit includes a range of noise-based drum sounds originally featured on the [King Donut Swadge](https://swadge.com/donut/).
+By default, this drum kit is available on MIDI Channel 11.
 
 | Note     | Note Number | Description       |
 | -------- | ----------- | ----------------- |
