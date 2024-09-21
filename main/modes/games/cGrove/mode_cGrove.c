@@ -78,7 +78,7 @@ static void cGroveEnterMode(void)
     loadWsg("cgChowaNeutral.wsg", &grove->chowaExpressions[CG_NEUTRAL], true);
     loadWsg("cgChowaHappy.wsg", &grove->chowaExpressions[CG_HAPPY], true);
     loadWsg("cgChowaWorried.wsg", &grove->chowaExpressions[CG_WORRIED], true);
-
+    
     // Init
     // FIXME: Load and unload when switching to and from a mode 
     cgInitGarden(grove);
@@ -88,7 +88,7 @@ static void cGroveEnterMode(void)
 }
 
 static void cGroveExitMode(void)
-{
+{    
     // Unload sub modes
     cg_deInitSpar(grove);
 

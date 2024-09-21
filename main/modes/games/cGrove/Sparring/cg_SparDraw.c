@@ -4,9 +4,9 @@
  * @brief Draws the Chowa Garden Spar
  * @version 0.1
  * @date 2024-09-19
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 //==============================================================================
@@ -18,6 +18,9 @@
 //==============================================================================
 // Const Strings
 //==============================================================================
+
+static const char sparSplashScreen[]       = "Chowa Sparring";
+static const char sparSplashScreenPrompt[] = "Press any button to continue!";
 
 //==============================================================================
 // Function Declarations
@@ -47,10 +50,21 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
 {
     // Draw dojo
     cg_drawSparField(cg);
+    cg_drawSparBGObject(cg, elapsedUs);
 
     // Draw title text
+    // Get the text offset
+    int16_t xOff = (TFT_WIDTH - textWidth(&cg->spar.sparTitleFont, sparSplashScreen)) / 2;
+    int16_t yOff = TFT_HEIGHT / 2;
 
+    // drawText(&t48->titleFont, color, mode, (TFT_WIDTH - textWidth(&t48->titleFont, mode)) / 2, TFT_HEIGHT / 2 - 12);
+    drawText(&cg->spar.sparTitleFont, c555, sparSplashScreen, xOff, yOff);
+    drawText(&cg->spar.sparTitleFontOutline, c000, sparSplashScreen, xOff, yOff);
+
+    xOff = 32;
+    yOff = TFT_HEIGHT - 32;
     // Draw "Press A to continue" prompt
+    drawTextWordWrap(&cg->spar.sparRegFont, c000, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
 }
 
 static void cg_drawSparField(cGrove_t* cg)
@@ -61,7 +75,10 @@ static void cg_drawSparField(cGrove_t* cg)
 
 static void cg_drawSparBGObject(cGrove_t* cg, int64_t elapsedUs)
 {
-    
+    for (int32_t i = 0; i < 2; i++)
+    {
+        drawWsgSimple(&cg->spar.dojoBGItems[i], 32 * (i + 1), 32 * (i + 1));
+    }
 }
 
 static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)

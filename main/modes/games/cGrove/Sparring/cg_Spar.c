@@ -28,10 +28,10 @@ static void sparMenuCb(const char* label, bool selected, uint32_t settingVal);
 
 static const char sparMenuName[] = "Chowa Sparring!";
 
-static const char* sparMenuNames[] = {"Schedule Match", "View records", "Tutorial", "Settings", "Back to Main Menu"};
+static const char* sparMenuNames[] = {"Schedule Match", "View records", "Tutorial", "Settings", "Main Menu"};
 
 static const char* sparDojoSprites[] = {
-    "Dojo_Gong.wsg", "Dojo_PunchingBag.wsg"
+    "Dojo_Gong.wsg", "Dojo_PunchingBag.wsg",
 };
 
 //==============================================================================
@@ -45,13 +45,18 @@ static const char* sparDojoSprites[] = {
  */
 void cg_initSpar(cGrove_t* cg)
 {
-    // Load assets
+    // WSGs
     loadWsg("DojoBG.wsg", &cg->spar.dojoBG, true);
     cg->spar.dojoBGItems = calloc(ARRAY_SIZE(sparDojoSprites), sizeof(wsg_t));
     for (int32_t idx = 0; idx < ARRAY_SIZE(sparDojoSprites); idx++)
     {
-        loadWsg(sparDojoSprites[idx], &cg->spar.dojoBGItems, true);
-    }
+        loadWsg(sparDojoSprites[idx], &cg->spar.dojoBGItems[idx], true);
+    } 
+
+    // Fonts
+    loadFont("righteous_150.font", &cg->spar.sparTitleFont, true);
+    loadFont("eightbit_atari_grube2.font", &cg->spar.sparRegFont, true);
+    makeOutlineFont(&cg->spar.sparTitleFont, &cg->spar.sparTitleFontOutline, true);
 
     // Init menu
     cg->spar.sparMenu = initMenu(sparMenuName, sparMenuCb);
@@ -80,12 +85,16 @@ void cg_deInitSpar(cGrove_t* cg)
     //TODO: New renderer
     deinitMenuManiaRenderer(cg->spar.renderer);
 
+    // Fonts
+    freeFont(&cg->spar.sparTitleFont);
+    freeFont(&cg->spar.sparTitleFontOutline);
+    freeFont(&cg->spar.sparRegFont);
+
     // Free assets
     freeWsg(&cg->spar.dojoBG);
-    for (uint8_t idx = 0; idx < ARRAY_SIZE(sparDojoSprites); idx++)
+    for (uint8_t i = 0; i < ARRAY_SIZE(sparDojoSprites); i++)
     {
-        // FIXME: Seg faults... somehow
-        freeWsg(&cg->spar.dojoBGItems[idx]);
+        freeWsg(&cg->spar.dojoBGItems[i]);
     }
     free(cg->spar.dojoBGItems);
 }
@@ -124,18 +133,23 @@ void cg_runSpar(cGrove_t* cg, int64_t elapsedUs)
             }
             // TODO: new renderer
             drawMenuMania(cg->spar.sparMenu, cg->spar.renderer, elapsedUs);
+            break;
         }
         case CG_SPAR_SCHEDULE:
         {
+            break;
         }
         case CG_SPAR_MATCH:
         {
+            break;
         }
         case CG_SPAR_BATTLE_RECORD:
         {
+            break;
         }
         case CG_SPAR_TUTORIAL:
         {
+            break;
         }
         default:
         {
@@ -155,9 +169,6 @@ void cg_runSpar(cGrove_t* cg, int64_t elapsedUs)
     //   - B: Encourage them to stand up
     // - Start: pause
     // Tutorial is available when paused
-
-    // Draw
-    cg_drawSpar(cg, elapsedUs);
 }
 
 static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)

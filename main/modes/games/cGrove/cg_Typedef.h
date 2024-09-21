@@ -237,7 +237,7 @@ typedef struct
     //   - Cheer noises
 
     // Sprites
-    wsg_t* dojoBG;      ///< Dojo Background image
+    wsg_t dojoBG;       ///< Dojo Background image
     wsg_t* dojoBGItems; ///< Dojo BG items
     // UI Sprites
     // - Punch icon
@@ -245,9 +245,13 @@ typedef struct
     // NPC sprites
 
     // Fonts
+    font_t sparTitleFont;        ///< Font used for larger text
+    font_t sparTitleFontOutline; ///< Outline for title font
+    font_t sparRegFont;          ///< Regular text
 
     // Spar
     cgSparState_t state; ///< Active state
+    int64_t timer; ///< Timer used for lo
 
     // Menu
     menu_t* sparMenu;              ///< Menu object
@@ -291,6 +295,7 @@ typedef struct
     // Fonts
     font_t menuFont;
     // Sprites
+    // TODO: move into garden
     wsg_t gardenSpr[CG_GARDEN_STATIC_OBJECTS];
     wsg_t cursors[CG_GARDEN_CURSORS];
     wsg_t items[CG_GARDEN_ITEMS_COUNT];
