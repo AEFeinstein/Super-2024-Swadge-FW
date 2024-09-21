@@ -48,6 +48,26 @@ static const uint8_t oscDither[] = {
                           * ((int)(voice)->transitionTicksTotal - (int)(voice)->transitionTicks) \
                           / (int)(voice)->transitionTicksTotal))
 
+/// @brief Set only the MSB of a 14-bit value
+#define SET_MSB(target, val)                   \
+    do                                         \
+    {                                          \
+        uint16_t new14bitVal = ((val) & 0x7F); \
+        new14bitVal <<= 7;                     \
+        new14bitVal |= ((target) & 0x7F);      \
+        (target) = new14bitVal;                \
+    } while (0)
+
+/// @brief Set only the LSB of a 14-bit value
+#define SET_LSB(target, val)                           \
+    do                                                 \
+    {                                                  \
+        uint16_t new14bitVal = ((target) >> 7) & 0x7F; \
+        new14bitVal <<= 7;                             \
+        new14bitVal |= ((val) & 0x7F);                 \
+        (target) = new14bitVal;                        \
+    } while (0)
+
 // Values for the percussion special states bitmap
 #define SHIFT_HI_HAT   (0)
 #define SHIFT_WHISTLE  (6)
@@ -1121,11 +1141,14 @@ void midiResetChannelControllers(midiPlayer_t* player, uint8_t channel)
 {
     midiChannel_t* chan = &player->channels[channel];
     midiSustain(player, channel, MIDI_FALSE);
-    chan->volume    = UINT14_MAX;
-    chan->pitchBend = PITCH_BEND_CENTER;
-    chan->program   = 0;
-    chan->held      = 0;
-    chan->sustenuto = 0;
+    chan->volume              = UINT14_MAX;
+    chan->pitchBend           = PITCH_BEND_CENTER;
+    chan->registeredParameter = true;
+    // Set selected RPN to "RPN Reset" which means none currently selected
+    chan->selectedParameter = UINT14_MAX;
+    chan->program           = 0;
+    chan->held              = 0;
+    chan->sustenuto         = 0;
     initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program));
 }
 
@@ -1597,19 +1620,35 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t cont
     {
         case MCC_BANK_MSB:
         {
-            uint16_t newBank = (val & 0x7F);
-            newBank <<= 7;
-            newBank |= (player->channels[channel].bank & 0x7F);
-            player->channels[channel].bank = newBank;
+            SET_MSB(player->channels[channel].bank, val);
             break;
         }
 
         case MCC_BANK_LSB:
         {
-            uint16_t newBank = (player->channels[channel].bank >> 7) & 0x7F;
-            newBank <<= 7;
-            newBank |= (val & 0x7F);
-            player->channels[channel].bank = newBank;
+            SET_LSB(player->channels[channel].bank, val);
+            break;
+        }
+
+        // Data Entry MSB (6)
+        case MCC_DATA_ENTRY_MSB:
+        {
+            uint16_t curVal = midiGetParameterValue(player, channel, player->channels[channel].registeredParameter,
+                                                    player->channels[channel].selectedParameter);
+            SET_MSB(curVal, val);
+            midiSetParameter(player, channel, player->channels[channel].registeredParameter,
+                             player->channels[channel].selectedParameter, curVal);
+            break;
+        }
+
+        // Data Entry LSB (38)
+        case MCC_DATA_ENTRY_LSB:
+        {
+            uint16_t curVal = midiGetParameterValue(player, channel, player->channels[channel].registeredParameter,
+                                                    player->channels[channel].selectedParameter);
+            SET_LSB(curVal, val);
+            midiSetParameter(player, channel, player->channels[channel].registeredParameter,
+                             player->channels[channel].selectedParameter, curVal);
             break;
         }
 
@@ -1669,6 +1708,56 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t cont
         {
             // Set chorus (within reason, up to 16... which is kinda ridiculous anyway)
             player->channels[channel].timbre.effects.chorus = MIN(val, 16);
+            break;
+        }
+
+        // Data Button Increment (96)
+        case MCC_DATA_BUTTON_INC:
+        // Data Button Decrement (97)
+        case MCC_DATA_BUTTON_DEC:
+        {
+            bool inc       = (control == MCC_DATA_BUTTON_INC);
+            uint16_t param = player->channels[channel].selectedParameter;
+            uint16_t curVal
+                = midiGetParameterValue(player, channel, player->channels[channel].registeredParameter, param);
+
+            // Prevent rollover
+            if ((inc && curVal < UINT14_MAX) || (!inc && curVal > 0))
+            {
+                midiSetParameter(player, channel, player->channels[channel].registeredParameter, param, curVal);
+            }
+            break;
+        }
+
+        // Non-registered Parameter Number LSB (98)
+        case MCC_NON_REGISTERED_PARAM_LSB:
+        {
+            player->channels[channel].registeredParameter = false;
+            SET_LSB(player->channels[channel].selectedParameter, val);
+            break;
+        }
+
+        // Non-registered Parameter NUmber MSB (99)
+        case MCC_NON_REGISTERED_PARAM_MSB:
+        {
+            player->channels[channel].registeredParameter = false;
+            SET_MSB(player->channels[channel].selectedParameter, val);
+            break;
+        }
+
+        // Registered Parameter Number LSB (100)
+        case MCC_REGISTERED_PARAM_LSB:
+        {
+            player->channels[channel].registeredParameter = true;
+            SET_LSB(player->channels[channel].selectedParameter, val);
+            break;
+        }
+
+        // Registered Parameter Number MSB (101)
+        case MCC_REGISTERED_PARAM_MSB:
+        {
+            player->channels[channel].registeredParameter = true;
+            SET_MSB(player->channels[channel].selectedParameter, val);
             break;
         }
 
@@ -1761,6 +1850,94 @@ uint16_t midiGetControlValue14bit(midiPlayer_t* player, uint8_t channel, midiCon
     result <<= 7;
     result |= midiGetControlValue(player, channel, (midiControl_t)lsbControl) & 0x7F;
     return result;
+}
+
+void midiSetParameter(midiPlayer_t* player, uint8_t channel, bool registeredParam, uint16_t param, uint16_t value)
+{
+    if (registeredParam)
+    {
+        switch (param)
+        {
+            // Pitch Bend Range
+            case 0x0000:
+            {
+                // Not supported (yet?)
+                break;
+            }
+
+            // Master Fine Tuning
+            case 0x0001:
+            {
+                // Not supported
+                break;
+            }
+
+            // Master Coarse Tuning
+            case 0x0002:
+            {
+                // Not supported
+                break;
+            }
+
+            // "Not Set"
+            case 0x3FFF:
+            default:
+            {
+                // No action necessary
+                break;
+            }
+        }
+    }
+    else
+    {
+        switch (param)
+        {
+            case 10:
+            {
+                // Set Percussion
+                if ((value != 0) != player->channels[channel].percussion)
+                {
+                    player->channels[channel].percussion = (value != 0);
+                    // Necessary to actually configure the channel for its new percussion state
+                    midiSetProgram(player, channel, player->channels[channel].program);
+                }
+                break;
+            }
+
+            default:
+            {
+                // Ignore all others
+                break;
+            }
+        }
+    }
+}
+
+uint16_t midiGetParameterValue(midiPlayer_t* player, uint8_t channel, bool registered, uint16_t param)
+{
+    if (registered)
+    {
+        switch (param)
+        {
+            default:
+                return 0;
+        }
+    }
+    else
+    {
+        switch (param)
+        {
+            case 10:
+            {
+                return player->channels[channel].percussion ? 1 : 0;
+            }
+
+            default:
+            {
+                return 0;
+            }
+        }
+    }
 }
 
 void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
