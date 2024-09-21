@@ -17,6 +17,7 @@
 #include "cJSON.h"
 #include "emu_main.h"
 #include "emu_utils.h"
+#include "hashMap.h"
 
 //==============================================================================
 // Defines
@@ -30,6 +31,22 @@
 #define NVS_OVERHEAD_ENTRIES 12
 
 //==============================================================================
+// Structs
+//==============================================================================
+
+typedef struct
+{
+    char key[36];
+    uint32_t size;
+    bool isBlob;
+    union
+    {
+        void* blob;
+        int32_t int32;
+    };
+} emuNvsInjectedData_t;
+
+//==============================================================================
 // Function Prototypes
 //==============================================================================
 
@@ -37,6 +54,9 @@ static char* blobToStr(const void* value, size_t length);
 static int hexCharToInt(char c);
 static void strToBlob(char* str, void* outBlob, size_t blobLen);
 static FILE* openNvsFile(const char* mode);
+static size_t emuGetInjectedBlobLength(const char* namespace, const char* key);
+static void* emuGetInjectedBlob(const char* namespace, const char* key);
+static bool emuGetInjected32(const char* namespace, const char* key, int32_t* out);
 
 //==============================================================================
 // Constants
@@ -58,6 +78,8 @@ static const char* defaultNvsFiles[] = {
 // Variables
 //==============================================================================
 static const char** nvsFileName = defaultNvsFiles;
+static bool nvsInjectedDataInit = false;
+static hashMap_t nvsInjectedData;
 
 //==============================================================================
 // Functions
@@ -72,6 +94,12 @@ static const char** nvsFileName = defaultNvsFiles;
  */
 bool initNvs(bool firstTry)
 {
+    if (!nvsInjectedDataInit)
+    {
+        hashInit(&nvsInjectedData, 16);
+        nvsInjectedDataInit = true;
+    }
+
     const char** curFile;
     for (curFile = defaultNvsFiles; curFile < (defaultNvsFiles + (sizeof(defaultNvsFiles) / sizeof(*defaultNvsFiles)));
          curFile++)
@@ -146,6 +174,17 @@ bool initNvs(bool firstTry)
  */
 bool deinitNvs(void)
 {
+    if (nvsInjectedDataInit)
+    {
+        hashIterator_t iter = {0};
+        while (hashIterate(&nvsInjectedData, &iter))
+        {
+            free(iter.value);
+            hashIterRemove(&nvsInjectedData, &iter);
+        }
+        hashDeinit(&nvsInjectedData);
+        nvsInjectedDataInit = false;
+    }
     return true; // Nothing to do
 }
 
@@ -211,6 +250,11 @@ bool writeNvs32(const char* key, int32_t val)
  */
 bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
 {
+    if (emuGetInjected32(namespace, key, outVal))
+    {
+        return true;
+    }
+
     // Open the file
     FILE* nvsFile = openNvsFile("rb");
     if (NULL != nvsFile)
@@ -381,6 +425,21 @@ bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
  */
 bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_value, size_t* length)
 {
+    void* resultData = emuGetInjectedBlob(namespace, key);
+    if (resultData != NULL)
+    {
+        if (out_value != NULL)
+        {
+            memcpy(out_value, resultData, *length);
+        }
+        else
+        {
+            size_t injectedLength = emuGetInjectedBlobLength(namespace, key);
+            *length               = injectedLength;
+        }
+        return true;
+    }
+
     // Open the file
     FILE* nvsFile = openNvsFile("rb");
     if (NULL != nvsFile)
@@ -1024,4 +1083,115 @@ static FILE* openNvsFile(const char* mode)
     expandPath(buffer, sizeof(buffer), NVS_JSON_FILE);
 
     return fopen(buffer, mode);
+}
+
+void emuInjectNvsBlob(const char* namespace, const char* key, size_t length, const void* blob)
+{
+    if (!nvsInjectedDataInit)
+    {
+        hashInit(&nvsInjectedData, 16);
+        nvsInjectedDataInit = true;
+    }
+
+    void* alloc = malloc(sizeof(emuNvsInjectedData_t) + length);
+    if (alloc != NULL)
+    {
+        emuNvsInjectedData_t* data = (emuNvsInjectedData_t*)alloc;
+
+        snprintf(data->key, sizeof(data->key), "%s:%s", namespace, key);
+        data->size   = (uint32_t)length;
+        data->isBlob = true;
+        data->blob   = ((char*)alloc) + sizeof(emuNvsInjectedData_t);
+        memcpy(data->blob, blob, length);
+
+        hashPut(&nvsInjectedData, data->key, alloc);
+    }
+}
+
+void emuInjectNvs32(const char* namespace, const char* key, int32_t value)
+{
+    if (!nvsInjectedDataInit)
+    {
+        hashInit(&nvsInjectedData, 16);
+        nvsInjectedDataInit = true;
+    }
+
+    void* alloc = malloc(sizeof(emuNvsInjectedData_t));
+    if (alloc != NULL)
+    {
+        emuNvsInjectedData_t* data = (emuNvsInjectedData_t*)alloc;
+
+        snprintf(data->key, sizeof(data->key), "%s:%s", namespace, key);
+        data->size   = 4;
+        data->isBlob = false;
+        data->int32  = value;
+
+        hashPut(&nvsInjectedData, data->key, alloc);
+    }
+}
+
+static size_t emuGetInjectedBlobLength(const char* namespace, const char* key)
+{
+    if (!nvsInjectedDataInit)
+    {
+        return 0;
+    }
+
+    char fullkey[36];
+    snprintf(fullkey, sizeof(fullkey), "%s:%s", namespace, key);
+    void* found = hashGet(&nvsInjectedData, fullkey);
+
+    if (found != NULL)
+    {
+        return ((emuNvsInjectedData_t*)found)->size;
+    }
+
+    return 0;
+}
+
+static void* emuGetInjectedBlob(const char* namespace, const char* key)
+{
+    if (!nvsInjectedDataInit)
+    {
+        return NULL;
+    }
+
+    char fullkey[36];
+    snprintf(fullkey, sizeof(fullkey), "%s:%s", namespace, key);
+    void* found = hashGet(&nvsInjectedData, fullkey);
+
+    if (found != NULL)
+    {
+        emuNvsInjectedData_t* data = (emuNvsInjectedData_t*)found;
+        if (data->isBlob)
+        {
+            return data->blob;
+        }
+    }
+
+    return NULL;
+}
+
+static bool emuGetInjected32(const char* namespace, const char* key, int32_t* out)
+{
+    if (!nvsInjectedDataInit)
+    {
+        return false;
+    }
+
+    char fullkey[36];
+    snprintf(fullkey, sizeof(fullkey), "%s:%s", namespace, key);
+    void* found = hashGet(&nvsInjectedData, fullkey);
+
+    if (found != NULL)
+    {
+        emuNvsInjectedData_t* data = (emuNvsInjectedData_t*)found;
+        if (!data->isBlob)
+        {
+            *out = data->int32;
+            return true;
+        }
+    }
+
+    return false;
 }

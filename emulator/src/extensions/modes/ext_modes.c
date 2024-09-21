@@ -26,9 +26,9 @@
 #include "keebTest.h"
 #include "mainMenu.h"
 #include "modeTimer.h"
+#include "mode_2048.h"
 #include "mode_bigbug.h"
 #include "mode_credits.h"
-#include "mode_pinball.h"
 #include "mode_synth.h"
 #include "ultimateTTT.h"
 #include "pango.h"
@@ -72,10 +72,10 @@ static swadgeMode_t* allSwadgeModes[] = {
     &keebTestMode,
     &mainMenuMode,
     &modeCredits,
-    &pinballMode,
     &synthMode,
     &tttMode,
     &pangoMode,
+    &t48Mode,
     &timerMode,
     &touchTestMode,
     &tttMode,

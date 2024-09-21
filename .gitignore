@@ -91,3 +91,5 @@ tools/font_maker/*.ttf
 main/utils/cnfs_image.c
 main/utils/cnfs_image.h
 tools/cnfs/cnfs_gen
+
+_old/*
