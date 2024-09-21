@@ -17,7 +17,7 @@
  *
  * \section wsg_usage Usage
  *
- * There are three ways to draw a WSG to the display each with varying complexity and speed
+ * There are five ways to draw a WSG to the display each with varying complexity and speed
  * - drawWsg(): Draw a WSG to the display with transparency, rotation, and flipping over horizontal or vertical axes.
  * This is the slowest option.
  * - drawWsgSimple(): Draw a WSG to the display with transparency. This is the medium speed option and should be used if
