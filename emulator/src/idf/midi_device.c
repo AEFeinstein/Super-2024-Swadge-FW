@@ -25,6 +25,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// Un-comment to enable printing all received MIDI packets
+//#define DEBUG_MIDI_PACKETS
+
 static uint8_t runningStatus                   = 0;
 static struct platform_midi_driver* midiDriver = NULL;
 
@@ -66,12 +69,14 @@ bool tud_midi_n_packet_read(uint8_t itf, uint8_t packet[4])
     int read = midiDriver ? platform_midi_read(midiDriver, real_packet, sizeof(real_packet)) : 0;
     if (read > 0)
     {
+#ifdef DEBUG_MIDI_PACKETS
         printf("Packet: ");
         for (int i = 0; i < read; i++)
         {
             printf("%hhx, ", real_packet[i]);
         }
         printf("\n");
+#endif
 
         // Normally start reading after the status byte
         int dataOffset = 1;
