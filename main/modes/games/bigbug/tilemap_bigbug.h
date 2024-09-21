@@ -47,6 +47,7 @@ typedef struct
 void bb_initializeTileMap(bb_tilemap_t* tilemap);
 void bb_loadWsgs(bb_tilemap_t* tilemap);
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikPos, vec_t* garbotnikRotation);
+void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera);
 void bb_DrawForegroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, uint32_t i,
                                  uint32_t j);
 void bb_DrawMidgroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, uint32_t i,

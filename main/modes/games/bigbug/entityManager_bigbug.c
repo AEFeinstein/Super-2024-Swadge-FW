@@ -61,8 +61,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     printf("crumble numFrames %d\n", entityManager->sprites[CRUMBLE_ANIM].numFrames);
 
     bb_sprite_t* bumpSprite    = bb_loadSprite("hit", 7, &entityManager->sprites[BUMP_ANIM]);
-    bumpSprite->originX        = 75;
-    bumpSprite->originY        = 75;
+    bumpSprite->originX        = 37;
+    bumpSprite->originY        = 37;
     printf("bump numFrames %d\n", entityManager->sprites[BUMP_ANIM].numFrames);
     // free(sprite);
 

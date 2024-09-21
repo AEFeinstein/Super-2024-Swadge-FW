@@ -328,6 +328,7 @@ static void bb_DrawScene(void)
     vec_t garbotnikDrawPos = {.x = (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 18,
                               .y = (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 17};
     bb_drawTileMap(&bigbug->tilemap, &bigbug->camera, &garbotnikDrawPos, &bigbug->garbotnikRotation);
+    bb_drawSolidGround(&bigbug->tilemap, &bigbug->camera);
 
     // printf("garbotnikPos.y: %d\n", bigbug->garbotnikPos.y);
     // printf("garbotnik.radius: %d\n", bigbug->garbotnik.radius);
@@ -632,10 +633,23 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 // Update the dirt by decrementing it.
                 bigbug->tilemap.fgTiles[best_i][best_j] -= 1;
 
-                // Create a crumble animation
-                printf("foo\n");
-                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM, tilePos.x >> DECIMAL_BITS,
-                                tilePos.y >> DECIMAL_BITS);
+                if(bigbug->tilemap.fgTiles[best_i][best_j] == 0 ||
+                    bigbug->tilemap.fgTiles[best_i][best_j] == 1 ||
+                    bigbug->tilemap.fgTiles[best_i][best_j] == 4){
+                    // Create a crumble animation
+                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM,
+                                    tilePos.x >> DECIMAL_BITS,
+                                    tilePos.y >> DECIMAL_BITS);
+                }
+                else{
+                    // Create a crumble animation
+                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, BUMP_ANIM,
+                                    ((bigbug->garbotnikPos.x + tilePos.x)/2) >> DECIMAL_BITS,
+                                    ((bigbug->garbotnikPos.y + tilePos.y)/2) >> DECIMAL_BITS);
+                }
+
+
+                
 
                 ///////////////////////////////
                 // Mirror garbotnik's velocity//
