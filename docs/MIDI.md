@@ -14,7 +14,7 @@ percussion (the drum kit).
 ## Features
 
 * 24-voice polyphony shared between non-percussion channels
-* 8 additional voices reserved for percussion only channel (channel 10)
+* 8 additional voices reserved for percussion only channel (channels 10/11 by default)
 * Pitch bend
 * AfterTouch
 
@@ -25,10 +25,10 @@ For the list of General MIDI instruments available, see [Wikipedia](https://en.w
 Note that the sound produced for these instruments is a wavetable rather than full-length samples, so they sound more like a retro
 keyboard than the high-fidelity samples you might hear from a modern soft synthesizer.
 
-#### Drum Kit
-The Bank 0 Drum Kit follows the key mapping of the General MIDI program sounds, which can be found
-on [Wikipedia](https://en.wikipedia.org/wiki/General_MIDI#Percussion). Note that some drum sounds may be incomplete or
-not yet supported.
+#### GM-Compatible Drum Kit
+The Bank 0 Drum Kit is a set of custom drum sounds that follows the standard General MIDI note-to-drum mappings, which can be found
+on [Wikipedia](https://en.wikipedia.org/wiki/General_MIDI#Percussion) and is commonly supported by MIDI devices and software. Note
+that some drum sounds may be incomplete or not yet supported.
 
 ### MAGFest Instruments (Bank 1)
 These instruments are mainly basic wave shapes, with some extra goodies thrown in.
@@ -45,7 +45,7 @@ These instruments are mainly basic wave shapes, with some extra goodies thrown i
 |        7 | Square Wave Hit |
 |        8 | Noise Hit       |
 
-#### Drum Kit
+#### Donut Swadge Drum Kit
 The Bank 1 Drum Kit includes a range of noise-based drum sounds originally featured on the [King Donut Swadge](https://swadge.com/donut/).
 
 | Note     | Note Number | Description       |
@@ -86,6 +86,15 @@ fine and coarse adjustment knobs on a real audio device, but some editing softwa
 These parameters can be changed by first using the `Non-registered Parameter` controller to select a specific parameter, then
 using the `Data Entry` or `Data Button` controllers to actually change the parameter's value.
 
-| MIDI NRPN# | Name       | Value Range     | Description                                                               |
-| ---------- | ---------- | --------------- | ------------------------------------------------------------------------- |
-| 10         | Percussion | 0 (off), 1 (on) | Sets whether this channel plays a drum kit instead of a normal instrument |
+| MIDI NRPN# | Name       | Value Range     | Description                                                                |
+| ---------- | ---------- | --------------- | -------------------------------------------------------------------------- |
+| 10         | Percussion | 0 (off), 1 (on) | Sets whether this channel plays a drum kit instead of a pitched instrument |
+
+## MIDI System-Exclusive (SysEx) Parameters
+
+The Swadge does not currently support any SysEx commands of its own, but it does support the following Universal SysEx commands.
+
+| Name       | Data (Hex)                   | Description |
+| ---------- | ---------------------------- | ----------- |
+| GM Enable  | <pre>F0 7E 7F 09 01 F7</pre> | Enables General MIDI Mode. All channels are fully reset, and set to use Bank 0, Program 0 ("Acoustic Grand Piano"), and Channel 10 only set to Percussion mode. |
+| GM Disable | <pre>F0 7E 7F 09 00 F7</pre> | Disables General MIDI Mode. All channels are fully reset, and set to use Bank 1. Channels 1 through 9 are set to use Programs 0 through 8, respectively. Channel 10 is set to Percussion mode, and set to Bank 0 (General MIDI Compatible Drum kit). Channel 11 is set to Percussion mode, and set to Bank 1 (Donut Swadge Drum kit). Channels 12 through 16 **are currently** set to Bank 0, Program 0 ("Acoustic Grand Piano"), but **note** that this may change in the future and is not a guarantee. |
