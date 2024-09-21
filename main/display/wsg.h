@@ -48,6 +48,7 @@
 
 #include <stdint.h>
 #include <palette.h>
+#include <stdbool.h>
 
 /**
  * @brief A sprite using paletteColor_t colors that can be drawn to the display
@@ -59,22 +60,10 @@ typedef struct
     uint16_t h;         ///< The height of the image
 } wsg_t;
 
-typedef struct
-{
-    paletteColor_t replacedColors[217];
-    paletteColor_t newColors[217];
-} wsgPalette_t;
-
 void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, int16_t rotateDeg);
 void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff);
 void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale);
 void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff);
 void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff);
-
-// Palette
-void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, bool flipLR, bool flipUD, int16_t rotateDeg);
-void wsgPaletteReset(wsgPalette_t* palette);
-void wsgPaletteGenerate(wsgPalette_t* palette);
-void wsgPaletteSet(wsgPalette_t* palette, paletteColor_t replaced, paletteColor_t new);
 
 #endif
