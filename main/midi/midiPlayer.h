@@ -892,7 +892,7 @@ uint16_t midiGetControlValue14bit(midiPlayer_t* player, uint8_t channel, midiCon
  * @param player The MIDI player
  * @param channel The channel to set the parameter on
  * @param registered true if param refers to a registered parameter number and false if it refers to a non-registered
- * parameter
+ * @param param The registered or non-registered MIDI parameter to set the value of
  * @param value The 14-bit value to set the parameter to
  */
 void midiSetParameter(midiPlayer_t* player, uint8_t channel, bool registered, uint16_t param, uint16_t value);
@@ -903,7 +903,7 @@ void midiSetParameter(midiPlayer_t* player, uint8_t channel, bool registered, ui
  * @param player The MIDI player
  * @param channel The channel to retrieve the parameter from
  * @param registered true if param refers to a registered parameter number and false if it refers to a non-registered
- * parameter
+ * @param param The registered or non-registered MIDI parameter number to retrieve the value for
  * @return The current 14-bit value of the given registered or non-registered parameter, or 0 if the parameter is
  * unsupported
  */
