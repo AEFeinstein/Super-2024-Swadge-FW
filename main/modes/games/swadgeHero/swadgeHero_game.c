@@ -65,7 +65,7 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
     }
 
     // Load the MIDI file
-    loadMidiFile(midi, &sh->midiSong, false);
+    loadMidiFile(midi, &sh->midiSong, true);
     globalMidiPlayerPlaySong(&sh->midiSong, MIDI_BGM);
     globalMidiPlayerPauseAll();
 
@@ -88,7 +88,7 @@ uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
     sh->numChartNotes = (data[dIdx++] << 8);
     sh->numChartNotes |= (data[dIdx++]);
 
-    sh->chartNotes = calloc(sh->numChartNotes, sizeof(shChartNote_t));
+    sh->chartNotes = heap_caps_calloc(sh->numChartNotes, sizeof(shChartNote_t), MALLOC_CAP_SPIRAM);
 
     for (int32_t nIdx = 0; nIdx < sh->numChartNotes; nIdx++)
     {
@@ -164,7 +164,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         if (songUs + TRAVEL_TIME_US >= nextEventUs)
         {
             // Spawn an game note
-            shGameNote_t* ni = calloc(1, sizeof(shGameNote_t));
+            shGameNote_t* ni = heap_caps_calloc(1, sizeof(shGameNote_t), MALLOC_CAP_SPIRAM);
             ni->note         = sh->chartNotes[sh->currentChartNote].note;
             ni->headPosY     = TFT_HEIGHT + (GAME_NOTE_RADIUS * 2);
 
@@ -309,7 +309,8 @@ void shDrawGame(shVars_t* sh)
         if (gameNote->tailPosY >= 0)
         {
             // Draw the tail
-            fillDisplayArea(xOffset - 2, gameNote->headPosY, xOffset + 3, gameNote->tailPosY, sh->colors[gameNote->note]);
+            fillDisplayArea(xOffset - 2, gameNote->headPosY, xOffset + 3, gameNote->tailPosY,
+                            sh->colors[gameNote->note]);
         }
 
         // Iterate
