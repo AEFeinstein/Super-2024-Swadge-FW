@@ -48,13 +48,13 @@ These instruments are mainly basic wave shapes, with some extra goodies thrown i
 #### Drum Kit
 The Bank 1 Drum Kit includes a range of noise-based drum sounds originally featured on the [King Donut Swadge](https://swadge.com/donut/).
 
-| Note      | Note Number | Description       |
-| --------- | ----------- | ----------------- |
-| B1 to B2  | 35 to 47    | Donut Drum Kit #1 |
-| C2 to C4  | 48 to 60    | Donut Drum Kit #2 |
-| C&sharp;4 | 61          | WOAAAGGHHH        |
-| D4        | 72          | Donut "MAG"       |
-| D&sharp;4 | 73          | Donut "Fest"      |
+| Note     | Note Number | Description       |
+| -------- | ----------- | ----------------- |
+| B1 to B2 | 35 to 47    | Donut Drum Kit #1 |
+| C2 to C4 | 48 to 60    | Donut Drum Kit #2 |
+| C♯4      | 61          | WOAAAGGHHH        |
+| D4       | 72          | Donut "MAG"       |
+| D♯4      | 73          | Donut "Fest"      |
 
 
 ## MIDI Continuous Controllers
@@ -66,11 +66,11 @@ fine and coarse adjustment knobs on a real audio device, but some editing softwa
 
 | MIDI CC# | Name            | Value Range             | Description | Notes |
 | -------- | --------------- | ----------------------- | ----------- | ----- |
-| 0, 32    | Bank Select     | 0-1                     | Selects the instrument bank used. | Only Fine adjustment (32) is used, Coarse (0) is ignored
-| 7, 39    | Channel Volume  | 0-127                   | Sets volume level for only this channel | Only Coarse adjustment (7) is used, Fine (39) is ignored
-| 64       | Hold Pedal      | 0-63 (off), 64-127 (on) | When the hold pedal is enabled, all notes that are currently playing are sustained until the hold pedal is released, as well as any notes that begin playing while the hold pedal is already down.
-| 66       | Sustenuto Pedal | 0-63 (off), 64-127 (on) | When the sustenuto pedal is enabled, only the notes that are currently playing are sustained until the sustenuto pedal is released. Notes that begin playing while the sustenuto pedal is already down are not affected.
-| 72       | Release Time    | 0-127                   | Set the length of time (in 10ms increments) it will take for a note to fade out and stop playing after it is released.
-| 73       | Attack Time     | 0-127                   | Set the length of time (in 10ms increments) it will take for a note to reach its maximum volume after it starts playing.
-| 75       | Decay Time      | 0-127                   | Set the length of time (in 10ms increments) it will take for a note to fade from its maximum volume to its sustain volume.
-| 76       | Sustain Level   | 0-127                   | Set the volume level the note will reach at the end of the decay time, and will be maintained as long as the note is held on.
+| 0, 32    | Bank Select     | 0-1                     | Selects the instrument bank used. | Only Fine adjustment (32) is used, Coarse (0) is ignored |
+| 7, 39    | Channel Volume  | 0-127                   | Sets volume level for only this channel | Only Coarse adjustment (7) is used, Fine (39) is ignored |
+| 64       | Hold Pedal      | 0-63 (off), 64-127 (on) | When the hold pedal is enabled, all notes that are currently playing are sustained until the hold pedal is released, as well as any notes that begin playing while the hold pedal is already down. | |
+| 66       | Sustenuto Pedal | 0-63 (off), 64-127 (on) | When the sustenuto pedal is enabled, only the notes that are currently playing are sustained until the sustenuto pedal is released. Notes that begin playing while the sustenuto pedal is already down are not affected. | |
+| 72       | Release Time    | 0-127                   | Set the length of time (in 10ms increments) it will take for a note to fade out and stop playing after it is released. | |
+| 73       | Attack Time     | 0-127                   | Set the length of time (in 10ms increments) it will take for a note to reach its maximum volume after it starts playing. | |
+| 75       | Decay Time      | 0-127                   | Set the length of time (in 10ms increments) it will take for a note to fade from its maximum volume to its sustain volume. | |
+| 76       | Sustain Level   | 0-127                   | Set the volume level the note will reach at the end of the decay time, and will be maintained as long as the note is held on. | |
