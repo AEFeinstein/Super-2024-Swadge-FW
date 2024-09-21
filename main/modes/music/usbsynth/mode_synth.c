@@ -18,6 +18,8 @@
 #include "cnfs_image.h"
 #include "ctype.h"
 
+#include <esp_heap_caps.h>
+
 #include "midiPlayer.h"
 #include "midiFileParser.h"
 #include "midiUsb.h"
@@ -1384,7 +1386,7 @@ static synthData_t* sd;
 
 static void synthEnterMode(void)
 {
-    sd = calloc(1, sizeof(synthData_t));
+    sd = heap_caps_calloc(1, sizeof(synthData_t), MALLOC_CAP_SPIRAM);
     loadFont("ibm_vga8.font", &sd->font, true);
     loadFont("sonic.font", &sd->betterFont, true);
     makeOutlineFont(&sd->betterFont, &sd->betterOutline, true);
@@ -1512,7 +1514,7 @@ static void synthEnterMode(void)
                 {
                     for (int blobIdx = 0; blobIdx < sd->synthConfig.controlCounts; blobIdx++)
                     {
-                        synthControlConfig_t* copy = (synthControlConfig_t*)malloc(sizeof(synthControlConfig_t));
+                        synthControlConfig_t* copy = (synthControlConfig_t*)heap_caps_malloc(sizeof(synthControlConfig_t), MALLOC_CAP_SPIRAM);
                         if (copy)
                         {
                             memcpy(copy, &configs[blobIdx], sizeof(synthControlConfig_t));
@@ -1529,7 +1531,7 @@ static void synthEnterMode(void)
         size_t savedNameLen;
         if (readNvsBlob(nvsKeyLastSong, NULL, &savedNameLen))
         {
-            sd->filenameBuf = malloc(savedNameLen < 128 ? 128 : savedNameLen + 1);
+            sd->filenameBuf = heap_caps_malloc(savedNameLen < 128 ? 128 : savedNameLen + 1, MALLOC_CAP_SPIRAM);
 
             if (readNvsBlob(nvsKeyLastSong, sd->filenameBuf, &savedNameLen))
             {
@@ -2092,7 +2094,7 @@ static void synthSaveControl(uint8_t channel, uint8_t control, uint8_t value)
     }
 
     // Not found, add one
-    synthControlConfig_t* conf = calloc(1, sizeof(synthControlConfig_t));
+    synthControlConfig_t* conf = heap_caps_calloc(1, sizeof(synthControlConfig_t), MALLOC_CAP_SPIRAM);
     if (conf)
     {
         conf->control             = control;
@@ -2573,7 +2575,7 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
 
                 // TODO we could save a couple bytes if we parsed the file an additional time to check how many events
                 // there are in total...
-                midiTextInfo_t* info = (midiTextInfo_t*)malloc(sizeof(midiTextInfo_t));
+                midiTextInfo_t* info = (midiTextInfo_t*)heap_caps_malloc(sizeof(midiTextInfo_t), MALLOC_CAP_SPIRAM);
 
                 if (info)
                 {
@@ -4008,7 +4010,7 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
         return;
     }
 
-    midiTextInfo_t* info = (midiTextInfo_t*)malloc(sizeof(midiTextInfo_t));
+    midiTextInfo_t* info = (midiTextInfo_t*)heap_caps_malloc(sizeof(midiTextInfo_t), MALLOC_CAP_SPIRAM);
 
     if (info)
     {
@@ -4176,7 +4178,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             sd->screen = SS_FILE_SELECT;
             if (!sd->filenameBuf)
             {
-                sd->filenameBuf = calloc(1, 128);
+                sd->filenameBuf = heap_caps_calloc(1, 128, MALLOC_CAP_SPIRAM);
             }
 
             if (!sd->filenameBuf)
