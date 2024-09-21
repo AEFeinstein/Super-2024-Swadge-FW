@@ -78,6 +78,9 @@ typedef struct
     int32_t numChartNotes;
     shChartNote_t* chartNotes;
     int32_t currentChartNote;
+    paletteColor_t const* colors;
+    buttonBit_t const* noteToBtn;
+    int32_t const* btnToNote;
 
     // Drawing data
     list_t gameNotes;

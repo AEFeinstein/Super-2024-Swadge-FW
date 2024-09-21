@@ -17,14 +17,17 @@
 // Const Variables
 //==============================================================================
 
-static const paletteColor_t colors[] = {c020, c400, c550, c004, c420, c222};
-static const buttonBit_t noteToBtn[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
+static const paletteColor_t colors_e[] = {c020, c004, c420, c222};
+static const buttonBit_t noteToBtn_e[] = {PB_LEFT, PB_RIGHT, PB_B, PB_A};
+static const int32_t btnToNote_e[]     = {-1, -1, 0, 1, 3, 2};
 
-//==============================================================================
-// Function Declarations
-//==============================================================================
+static const paletteColor_t colors_m[] = {c020, c400, c550, c004, c420, c222};
+static const buttonBit_t noteToBtn_m[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
+static const int32_t btnToNote_m[]     = {2, 1, 0, 3, 5, 4};
 
-static uint32_t btnToNote(buttonBit_t btn);
+static const paletteColor_t colors_h[] = {c020, c400, c550, c004, c420, c222};
+static const buttonBit_t noteToBtn_h[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
+static const int32_t btnToNote_h[]     = {2, 1, 0, 3, 5, 4};
 
 //==============================================================================
 // Functions
@@ -41,6 +44,25 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
 {
     size_t sz    = 0;
     sh->numFrets = 1 + shLoadChartData(sh, cnfsGetFile(chart, &sz), sz);
+
+    if (6 == sh->numFrets)
+    {
+        sh->btnToNote = btnToNote_h;
+        sh->noteToBtn = noteToBtn_h;
+        sh->colors    = colors_h;
+    }
+    else if (5 == sh->numFrets)
+    {
+        sh->btnToNote = btnToNote_m;
+        sh->noteToBtn = noteToBtn_m;
+        sh->colors    = colors_m;
+    }
+    else if (4 == sh->numFrets)
+    {
+        sh->btnToNote = btnToNote_e;
+        sh->noteToBtn = noteToBtn_e;
+        sh->colors    = colors_e;
+    }
 
     // Load the MIDI file
     loadMidiFile(midi, &sh->midiSong, false);
@@ -281,13 +303,13 @@ void shDrawGame(shVars_t* sh)
         // Draw the game note
         shGameNote_t* gameNote = gameNoteNode->val;
         int32_t xOffset        = ((gameNote->note * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
-        drawCircleFilled(xOffset, gameNote->headPosY, GAME_NOTE_RADIUS, colors[gameNote->note]);
+        drawCircleFilled(xOffset, gameNote->headPosY, GAME_NOTE_RADIUS, sh->colors[gameNote->note]);
 
         // If there is a tail
         if (gameNote->tailPosY >= 0)
         {
             // Draw the tail
-            fillDisplayArea(xOffset - 2, gameNote->headPosY, xOffset + 3, gameNote->tailPosY, colors[gameNote->note]);
+            fillDisplayArea(xOffset - 2, gameNote->headPosY, xOffset + 3, gameNote->tailPosY, sh->colors[gameNote->note]);
         }
 
         // Iterate
@@ -297,10 +319,10 @@ void shDrawGame(shVars_t* sh)
     // Draw indicators that the button is pressed
     for (int32_t bIdx = 0; bIdx < sh->numFrets; bIdx++)
     {
-        if (sh->btnState & noteToBtn[bIdx])
+        if (sh->btnState & sh->noteToBtn[bIdx])
         {
             int32_t xOffset = ((bIdx * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
-            drawCircleOutline(xOffset, HIT_BAR, GAME_NOTE_RADIUS + 8, 4, colors[bIdx]);
+            drawCircleOutline(xOffset, HIT_BAR, GAME_NOTE_RADIUS + 8, 4, sh->colors[bIdx]);
         }
     }
 
@@ -334,7 +356,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
             shGameNote_t* gameNote = gameNoteNode->val;
 
             // If the game note matches the button
-            if (gameNote->note == btnToNote(evt->button))
+            if (gameNote->note == sh->btnToNote[31 - __builtin_clz(evt->button)])
             {
                 // Find how off the timing is
                 int32_t pxOff = ABS(HIT_BAR - gameNote->headPosY);
@@ -388,6 +410,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                     {
                         // No tail, remove the game note
                         node_t* nextNode = gameNoteNode->next;
+                        free(gameNoteNode->val);
                         removeEntry(&sh->gameNotes, gameNoteNode);
                         gameNoteNode = nextNode;
                     }
@@ -420,45 +443,4 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     // // Get the acceleration
     // int16_t a_x, a_y, a_z;
     // accelGetAccelVec(&a_x, &a_y, &a_z);
-}
-
-/**
- * @brief TODO
- *
- * @param btn
- * @return uint32_t
- */
-static uint32_t btnToNote(buttonBit_t btn)
-{
-    switch (btn)
-    {
-        case PB_LEFT:
-        {
-            return 0;
-        }
-        case PB_DOWN:
-        {
-            return 1;
-        }
-        case PB_UP:
-        {
-            return 2;
-        }
-        case PB_RIGHT:
-        {
-            return 3;
-        }
-        case PB_B:
-        {
-            return 4;
-        }
-        case PB_A:
-        {
-            return 5;
-        }
-        default:
-        {
-            return -1;
-        }
-    }
 }
