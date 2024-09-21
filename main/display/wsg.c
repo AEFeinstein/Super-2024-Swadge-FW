@@ -11,12 +11,6 @@
 #include "wsg.h"
 
 //==============================================================================
-// Function Prototypes
-//==============================================================================
-
-static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height);
-
-//==============================================================================
 // Functions
 //==============================================================================
 
@@ -30,7 +24,7 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
  * @param width  The width of the image
  * @param height The height of the image
  */
-static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height)
+void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)

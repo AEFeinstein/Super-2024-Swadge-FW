@@ -1,85 +1,37 @@
+/**
+ * @file wsgPalette.c
+ * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
+ * @brief Provides palette swap functionality for Swadge
+ * @version 1.0.0
+ * @date 2024-09-20
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "wsgPalette.h"
 #include "hdw-tft.h"
 #include "trigonometry.h"
 
+//==============================================================================
+// Functions
+//==============================================================================
+
 /**
- * Transform a pixel's coordinates by rotation around the sprite's center point,
- * then reflection over Y axis, then reflection over X axis, then translation
+ * @brief Draw a WSG to the display utilizing a palette
  *
- * @param x The x coordinate of the pixel location to transform
- * @param y The y coordinate of the pixel location to transform
+ * @param wsg  The WSG to draw to the display
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to draw the WSG at
+ * @param palette The new palette used to translate the colors
+ * @param flipLR true to flip the image across the Y axis
+ * @param flipUD true to flip the image across the X axis
  * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
- * @param width  The width of the image
- * @param height The height of the image
  */
-static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height)
-{
-    //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
-    //  esp-2021r2-patch3)
-
-    int32_t wx = *x;
-    int32_t wy = *y;
-    // First rotate the sprite around the sprite's center point
-
-    // This solves the aliasing problem, but because of tan() it's only safe
-    // to rotate by 0 to 90 degrees. So rotate by a multiple of 90 degrees
-    // first, which doesn't need trig, then rotate the rest with shears
-    // See http://datagenetics.com/blog/august32013/index.html
-    // See https://graphicsinterface.org/wp-content/uploads/gi1986-15.pdf
-
-    int32_t tx = -(width / 2);
-    int32_t ty = -(height / 2);
-
-    // Center around (0, 0)
-    wx += tx;
-    wy += ty;
-
-    // First rotate to the nearest 90 degree boundary, which is trivial
-    if (rotateDeg >= 270)
-    {
-        // (x, y) -> (y, -x)
-        int16_t tmp = wx;
-        wx          = wy;
-        wy          = 2 * tx - tmp + width - 1;
-        rotateDeg -= 270;
-    }
-    else if (rotateDeg >= 180)
-    {
-        // (x, y) -> (-x, -y)
-        wx = 2 * tx - wx + width - 1;
-        wy = 2 * ty - wy + height - 1;
-        rotateDeg -= 180;
-    }
-    else if (rotateDeg >= 90)
-    {
-        // (x, y) -> (-y, x)
-        int16_t tmp = wx;
-        wx          = 2 * ty - wy + height - 1;
-        wy          = tmp;
-        rotateDeg -= 90;
-    }
-    // Now that it's rotated to a 90 degree boundary, find out how much more
-    // there is to rotate by shearing
-
-    // If there's any more to rotate, apply three shear matrices in order
-    if (0 < rotateDeg && rotateDeg < 90)
-    {
-        // 1st shear
-        wx = wx - ((wy * tan1024[rotateDeg / 2]) + 512) / 1024;
-        // 2nd shear
-        wy = ((wx * sin1024[rotateDeg]) + 512) / 1024 + wy;
-        // 3rd shear
-        wx = wx - ((wy * tan1024[rotateDeg / 2]) + 512) / 1024;
-    }
-
-    // Return pixel to original position
-    wx -= tx;
-    wy -= ty;
-
-    *x = wx;
-    *y = wy;
-}
-
 void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, bool flipLR, bool flipUD, int16_t rotateDeg)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-08, using gcc version 8.4.0 (crosstool-NG
@@ -227,7 +179,7 @@ void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* 
             for (int32_t srcX = xstart; srcX != xend; srcX += xinc)
             {
                 // Get colors from remap
-                uint8_t color = palette->replacedColors[linein[srcX]];
+                uint8_t color = palette->newColors[linein[srcX]];
 
                 // Draw if not transparent
                 if (cTransparent != color)
@@ -240,25 +192,27 @@ void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* 
     }
 }
 
+/**
+ * @brief Resets the palette to initial state
+ * 
+ * @param palette Array of colors
+ */
 void wsgPaletteReset(wsgPalette_t* palette)
 {
     // Reset the palette
     for (int32_t i = 0; i < 217; i++)
     {
         palette->newColors[i] = i;
-        palette->replacedColors[i] = i;
     }
 }
 
-void wsgPaletteGenerate(wsgPalette_t* palette)
-{
-    // Set new colors
-    for (int32_t i = 0; i < 217; i++)
-    {
-        palette->replacedColors[i] = palette->newColors[i];
-    }
-}
-
+/**
+ * @brief Sets a single color to the provided palette
+ * 
+ * @param palette Array of colors
+ * @param replacedColor Color to be replaced
+ * @param newColor Color that will replace the previous
+ */
 void wsgPaletteSet(wsgPalette_t* palette, paletteColor_t replacedColor, paletteColor_t newColor)
 {
     palette->newColors[replacedColor] = newColor;
