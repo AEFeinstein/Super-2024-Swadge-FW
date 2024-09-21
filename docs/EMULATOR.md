@@ -22,7 +22,16 @@ wireless connection.
 
 The Linux version of the emulator does not require any other software to operate. Simply extract the
 `.zip` file anywhere you like and run the `swadge_emulator` program, either by opening it from your
-file browser or by running `./swadge_emulator` from the command-line.
+file browser or by running `./swadge_emulator` from the command-line. The Linux emulator includes a
+script, `install.sh`, which can be run to install the Swadge Emulator as a desktop application, which
+will allow you to open the emulator directly from many desktop environments, and to asssociate the
+emulator with MIDI files using the "Open with..." option in your file browser. If you do not want these
+features, there is no need to run the script. You will need to run this script again if you download a
+new version of the emulator. By default, the installation script will install to `~/.local`, but you
+can specify an alternate installation root such as `/usr/local` by passing it as an argument to
+the `install.sh` script:
+
+    ./install.sh /usr/local
 
 ### Mac
 
