@@ -266,7 +266,9 @@ time.
 
 MIDI Files (`.mid`, `.midi`, and `.kar`) can be played in directly by passing the name of
 the MIDI file as a command-line argument to the Swadge Emulator. On Windows, you should also be able
-to drag a MIDI file on top of `SwadgeEmulator.exe` to play it.
+to drag a MIDI file on top of `SwadgeEmulator.exe` to play it. On Linux, you should be able to open
+MIDI files with the emulator using your file browser's "Open with..." option after running the included
+install script.
 
 The Swadge Emulator includes MIDI support, which simulates the USB-MIDI behavior of the real Swadge
 using the system MIDI implementation. Note that MIDI implementation and behavior will vary between
