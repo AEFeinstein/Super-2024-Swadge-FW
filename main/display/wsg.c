@@ -497,7 +497,7 @@ void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
 }
 
 
-void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t palette, bool flipLR, bool flipUD, int16_t rotateDeg)
+void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, bool flipLR, bool flipUD, int16_t rotateDeg)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-08, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -644,7 +644,7 @@ void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t p
             for (int32_t srcX = xstart; srcX != xend; srcX += xinc)
             {
                 // Get colors from remap
-                uint8_t color = palette.replacedColors[linein[srcX]];
+                uint8_t color = palette->replacedColors[linein[srcX]];
 
                 // Draw if not transparent
                 if (cTransparent != color)

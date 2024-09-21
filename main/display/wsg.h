@@ -72,7 +72,7 @@ void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff);
 void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff);
 
 // Palette
-void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t palette, bool flipLR, bool flipUD, int16_t rotateDeg);
+void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, bool flipLR, bool flipUD, int16_t rotateDeg);
 void wsgPaletteReset(wsgPalette_t* palette);
 void wsgPaletteGenerate(wsgPalette_t* palette);
 void wsgPaletteSet(wsgPalette_t* palette, paletteColor_t replaced, paletteColor_t new);
