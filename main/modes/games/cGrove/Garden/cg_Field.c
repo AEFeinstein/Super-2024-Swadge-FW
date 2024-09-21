@@ -109,7 +109,7 @@ void cgDrawField(cGrove_t* cg)
     
     // Draw static objects
     vec_t temp;
-    for (int8_t obj = 0; obj < CG_OBJ_COUNT; obj++)
+    for (int8_t obj = 0; obj < CG_FIELD_OBJ_COUNT; obj++)
     {
         if (rectRectIntersection(*camAABB, cg->garden.field.staticObjects[obj].aabb, &temp))
             _cgDrawObject(cg, obj);

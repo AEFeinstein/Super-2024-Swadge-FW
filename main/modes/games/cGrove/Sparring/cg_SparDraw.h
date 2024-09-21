@@ -20,4 +20,5 @@
 // Functions
 //==============================================================================
 
-void cg_drawSpar(cGrove_t* cg);
+void cg_drawSpar(cGrove_t* cg, int64_t elapsedUs);
+void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs);

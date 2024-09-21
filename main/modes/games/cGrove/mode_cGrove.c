@@ -16,6 +16,7 @@
 #include "mode_cGrove.h"
 #include "cg_Chowa.h"
 #include "cg_Garden.h"
+#include "cg_Spar.h"
 
 //==============================================================================
 // Consts
@@ -79,11 +80,18 @@ static void cGroveEnterMode(void)
     loadWsg("cgChowaWorried.wsg", &grove->chowaExpressions[CG_WORRIED], true);
 
     // Init
+    // FIXME: Load and unload when switching to and from a mode 
     cgInitGarden(grove);
+    cg_initSpar(grove);
+
+    grove->state = CG_SPAR;
 }
 
 static void cGroveExitMode(void)
 {
+    // Unload sub modes
+    cg_deInitSpar(grove);
+
     // WSGs
     for (int8_t i = 0; i < CG_CHOWA_EXPRESSION_COUNT; i++)
     {
@@ -110,8 +118,36 @@ static void cGroveExitMode(void)
 
 static void cGroveMainLoop(int64_t elapsedUs) 
 {
-    fillDisplayArea(0, 0, 280, 240, c111);
-    
-    //grove
-    cgRunGarden(grove);
+    switch (grove->state)
+    {
+        case CG_MAIN_MENU:
+        {
+            // Menu
+            break;
+        }
+        case CG_GROVE:
+        {
+            // Grove
+            break;
+        }
+        case CG_SPAR:
+        {
+            cg_runSpar(grove, elapsedUs);
+            break;
+        }
+        case CG_RACE:
+        {
+            // Race
+            break;
+        }
+        case CG_PERFORMANCE:
+        {
+            // Performance
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 }
