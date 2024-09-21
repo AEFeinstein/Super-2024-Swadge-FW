@@ -9,7 +9,9 @@
 #include "font.h"
 #include "menu.h"
 #include "palette.h"
-#include "esp_log.h"
+
+#include <esp_log.h>
+#include <esp_heap_caps.h>
 
 #include <stdint.h>
 #include <inttypes.h>
@@ -109,7 +111,7 @@ static const quickSettingsItemInfo_t* getInfoForLabel(menuQuickSettingsRenderer_
  */
 menuQuickSettingsRenderer_t* initMenuQuickSettingsRenderer(font_t* font)
 {
-    menuQuickSettingsRenderer_t* renderer = calloc(1, sizeof(menuQuickSettingsRenderer_t));
+    menuQuickSettingsRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuQuickSettingsRenderer_t), MALLOC_CAP_SPIRAM);
 
     renderer->font = font;
     return renderer;
@@ -243,7 +245,7 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
 void quickSettingsRendererCustomizeOption(menuQuickSettingsRenderer_t* renderer, const char* label, const wsg_t* onWsg,
                                           const wsg_t* offWsg, const char* maxLabel, const char* minLabel)
 {
-    quickSettingsItemInfo_t* info = calloc(1, sizeof(quickSettingsItemInfo_t));
+    quickSettingsItemInfo_t* info = heap_caps_calloc(1, sizeof(quickSettingsItemInfo_t), MALLOC_CAP_SPIRAM);
 
     info->label    = label;
     info->onWsg    = onWsg;
