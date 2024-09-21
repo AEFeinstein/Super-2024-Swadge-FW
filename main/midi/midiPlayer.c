@@ -14,6 +14,9 @@
 #include "macros.h"
 #include "cnfs.h"
 
+// Uncomment to enable logging SysEx commands in detail
+//#define DEBUG_SYSEX 1
+
 #define OSC_DITHER
 
 //==============================================================================
@@ -827,6 +830,251 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
     // Actually we can assign a non-registered control to R, G, and B
     // I think there's enough for every LED too assuming there's still like, 7 or so
     // AND: if possible have a sysex command (hmm) that sets all the LEDs to individual values at once
+
+    // GM Enable (01)
+    // GM Disable (02)
+    // GM2 Enable (03)
+    // GM Disable (00) (incorrect but I bet people are doing it because teragonaudio says to)
+    //0000    7e 7f 09 02 f7 
+    uint8_t mfrLen = 1;
+
+#ifdef DEBUG_SYSEX
+    uint8_t mfrHex[3] = {0, 0, 0};
+#endif
+
+    const uint8_t* end = sysex->data + sysex->length;
+    
+    // Determine the length of the manufacturer ID so we know how many bytes to skip for the real data
+    if (sysex->manufacturerId & (1 << 15))
+    {
+        // This is a 1-byte manufacturer ID
+        mfrLen = 1;
+#ifdef DEBUG_SYSEX
+        mfrHex[0] = sysex->manufacturerId & ~(1 << 15);
+#endif
+    }
+    else
+    {
+        // This is a 3-byte manufacturer ID
+        mfrLen = 3;
+#ifdef DEBUG_SYSEX
+        mfrHex[1] = (sysex->manufacturerId >> 7) & 0x7F;
+        mfrHex[2] = (sysex->manufacturerId & 0x7F);
+#endif
+    }
+
+    const uint8_t* dataPtr = sysex->data + mfrLen;
+
+#ifdef DEBUG_SYSEX
+    printf("Got SysEx event length=%" PRIu32 ":\n", sysex->length);
+    printf("Manufacturer: ");
+
+    for (int i = 0; i < mfrLen; i++)
+    {
+        printf("%02" PRIx8 " ", mfrHex[i]);
+    }
+    printf("\n");
+
+    for (uint32_t i = 0; i < sysex->length; i++)
+    {
+        if (i % 8 == 0)
+        {
+            printf("\n%04" PRIx32 "    ", i);
+        }
+
+        printf("%02" PRIx8 " ", sysex->data[i]);
+    }
+
+    printf("\n");
+#endif
+
+    switch (sysex->manufacturerId)
+    {
+        case MMFR_EDUCATIONAL_USE:
+        break;
+
+        case MMFR_UNIVERSAL_NON_REAL_TIME:
+        case MMFR_UNIVERSAL_REAL_TIME:
+        {
+            bool realTime = (sysex->manufacturerId == MMFR_UNIVERSAL_REAL_TIME);
+
+            // Universal SysEx messages have 127 "channel" values, with 0x7F meaning "Disregard Channel"
+            uint8_t sysexChannel = *dataPtr++;
+
+            if (dataPtr >= end)
+            {
+                // Err
+                return;
+            }
+
+            uint8_t subId = *dataPtr++;
+
+            if (dataPtr >= end)
+            {
+                // Err
+                return;
+            }
+
+            uint8_t subId2 = *dataPtr++;
+
+            if (realTime)
+            {
+                // Real Time Universal SysEx
+                switch (subId)
+                {
+                    // 0: UNUSED
+                    case 0x0:
+                    // MIDI Time Code
+                    case 0x1:
+                    // MIDI Show Control
+                    case 0x2:
+                    // Notation Information
+                    case 0x3:
+                    break;
+
+                    // Device Control
+                    case 0x4:
+                    {
+                        switch (subId2)
+                        {
+                            // Master Volume
+                            case 1:
+                            {
+                                break;
+                            }
+
+                            // Master Balance
+                            case 2:
+                            break;
+
+                            // Master Fine Tuning
+                            case 3:
+                            {
+                                break;
+                            }
+
+                            // Master Coarse Tuning
+                            case 4:
+                            {
+                                break;
+                            }
+
+                            case 5:
+                            default:
+                            break;
+                        }
+
+                        break;
+                    }
+
+                    // Real Time MTC Cueing
+                    case 0x5:
+                    // MIDI Machine Control Commands
+                    case 0x6:
+                    // MIDI Machine Control Responses
+                    case 0x7:
+                    // MIDI Tuning Standard (Real Time)
+                    case 0x8:
+                    // Controller Destination Setting
+                    case 0x9:
+                    // Key-based Instrument Control
+                    case 0xA:
+                    // Scalable Polyphony MIDI MIP Message
+                    case 0xB:
+                    // Mobile Phone Control Message
+                    case 0xC:
+                    default:
+                    break;
+                }
+            }
+            else
+            {
+                // Non-Real Time Universal SysEx
+                switch (subId)
+                {
+                    // 0: UNUSED
+                    case 0x0:
+                    // Sample Dump
+                    case 0x1:
+                    // Sample Data Packet
+                    case 0x2:
+                    // Sample Dump Request
+                    case 0x3:
+                    // MIDI Time Code
+                    case 0x4:
+                    // Sample Dump Extensions
+                    case 0x5:
+                    // General Information
+                    case 0x6:
+                    // File Dump
+                    case 0x7:
+                    // MIDI Tuning Standard
+                    case 0x8:
+                    break;
+
+                    // General MIDI
+                    case 0x9:
+                    {
+                        switch (subId2)
+                        {
+                            case 0:
+                            {
+                                // NOTE: This value is NOT defined by the MIDI spec
+                                // However, some resources incorrectly claim that a value of `0` for sub-ID 2 is the value for a "GM Off" event (with `1` being "GM On"),
+                                // even though a value of `2` is specified for `GM Off`, so it is possible that a `0` value will be sent with the intent to disable GM.
+                                midiGmOff(player);
+                                break;
+                            }
+
+                            // General MIDI 1 On
+                            case 1:
+                            {
+                                midiGmOn(player);
+                                break;
+                            }
+
+                            // General MIDI Off
+                            case 2:
+                            {
+                                midiGmOff(player);
+                                break;
+                            }
+
+                            // General MIDI 2 On (Unsupported)
+                            case 3:
+                            default:
+                            break;
+
+                        }
+                        break;
+                    }
+
+                    // Downloadable Sounds
+                    case 0xA:
+                    // File Reference Message
+                    case 0xB:
+                    // MIDI Visual Control
+                    case 0xC:
+                    // MIDI Capability Inquiry
+                    case 0xD:
+                    // End of File
+                    case 0x7B:
+                    // Wait
+                    case 0x7C:
+                    // Cancel
+                    case 0x7D:
+                    // NAK
+                    case 0x7E:
+                    // ACK
+                    case 0x7F:
+                    default:
+                    break;
+                }
+            }
+
+            break;
+        }
+    }
 }
 
 /**
@@ -1176,8 +1424,44 @@ void midiGmOff(midiPlayer_t* player)
         midiResetChannelControllers(player, chanIdx);
 
         // Channel 10 (index 9) is reserved for percussion.
-        chan->percussion = (9 == chanIdx);
-        chan->bank       = 1;
+        // Also enable percussion on channel 11 (index 10) with an alternate drum kit
+        chan->percussion = (9 == chanIdx || 10 == chanIdx);
+        // Set bank 1 (MAGFest sounds) for everything except the first drumkit on 10
+        chan->bank       = (9 == chanIdx) ? 0 : 1;
+
+        switch (chanIdx)
+        {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            {
+                chan->program = chanIdx;
+                break;
+            }
+
+            case 9:
+            case 10:
+            {
+                chan->program = 0;
+                break;
+            }
+
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            {
+                chan->program = 0;
+                break;
+            }
+        }
 
         initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program));
     }
@@ -1737,7 +2021,7 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t cont
             break;
         }
 
-        // Non-registered Parameter NUmber MSB (99)
+        // Non-registered Parameter Number MSB (99)
         case MCC_NON_REGISTERED_PARAM_MSB:
         {
             player->channels[channel].registeredParameter = false;

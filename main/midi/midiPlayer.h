@@ -334,6 +334,16 @@ typedef enum
     MCC_POLY_OPERATION = 127,
 } midiControl_t;
 
+/**
+ * @brief Values that can be directly compared against midiSysexEvent_t::manufacturerId
+ */
+typedef enum
+{
+    MMFR_EDUCATIONAL_USE         = 0x807D,
+    MMFR_UNIVERSAL_NON_REAL_TIME = 0x807E,
+    MMFR_UNIVERSAL_REAL_TIME     = 0x807F,
+} midiManufacturerId_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
