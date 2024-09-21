@@ -90,7 +90,7 @@ static void cGroveEnterMode(void)
 static void cGroveExitMode(void)
 {    
     // Unload sub modes
-    cg_deInitSpar(grove);
+    cg_deInitSpar();
 
     // WSGs
     for (int8_t i = 0; i < CG_CHOWA_EXPRESSION_COUNT; i++)
@@ -123,6 +123,8 @@ static void cGroveMainLoop(int64_t elapsedUs)
         case CG_MAIN_MENU:
         {
             // Menu
+            printf("LMAO");
+            grove->state = CG_SPAR;
             break;
         }
         case CG_GROVE:
@@ -132,7 +134,7 @@ static void cGroveMainLoop(int64_t elapsedUs)
         }
         case CG_SPAR:
         {
-            cg_runSpar(grove, elapsedUs);
+            cg_runSpar(elapsedUs);
             break;
         }
         case CG_RACE:

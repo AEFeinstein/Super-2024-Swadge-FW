@@ -31,8 +31,15 @@ static const char sparMenuName[] = "Chowa Sparring!";
 static const char* sparMenuNames[] = {"Schedule Match", "View records", "Tutorial", "Settings", "Main Menu"};
 
 static const char* sparDojoSprites[] = {
-    "Dojo_Gong.wsg", "Dojo_PunchingBag.wsg",
+    "Dojo_Gong.wsg",
+    "Dojo_PunchingBag.wsg",
 };
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+cGrove_t* cg;
 
 //==============================================================================
 // Functions
@@ -40,18 +47,19 @@ static const char* sparDojoSprites[] = {
 
 /**
  * @brief Initialize the spar
- * 
+ *
  * @param cg Game data
  */
-void cg_initSpar(cGrove_t* cg)
+void cg_initSpar(cGrove_t* grove)
 {
+    cg = grove;
     // WSGs
     loadWsg("DojoBG.wsg", &cg->spar.dojoBG, true);
     cg->spar.dojoBGItems = calloc(ARRAY_SIZE(sparDojoSprites), sizeof(wsg_t));
     for (int32_t idx = 0; idx < ARRAY_SIZE(sparDojoSprites); idx++)
     {
         loadWsg(sparDojoSprites[idx], &cg->spar.dojoBGItems[idx], true);
-    } 
+    }
 
     // Fonts
     loadFont("righteous_150.font", &cg->spar.sparTitleFont, true);
@@ -75,14 +83,14 @@ void cg_initSpar(cGrove_t* cg)
 
 /**
  * @brief Deinit Spar
- * 
+ *
  * @param cg Game data
  */
-void cg_deInitSpar(cGrove_t* cg)
+void cg_deInitSpar()
 {
     // Free the menu
     deinitMenu(cg->spar.sparMenu);
-    //TODO: New renderer
+    // TODO: New renderer
     deinitMenuManiaRenderer(cg->spar.renderer);
 
     // Fonts
@@ -101,11 +109,11 @@ void cg_deInitSpar(cGrove_t* cg)
 
 /**
  * @brief Runs the spar game mode
- * 
+ *
  * @param cg Game data
  * @param elapsedUs Time between this frame and the last
  */
-void cg_runSpar(cGrove_t* cg, int64_t elapsedUs)
+void cg_runSpar(int64_t elapsedUs)
 {
     // State
     buttonEvt_t evt = {0};
@@ -145,6 +153,27 @@ void cg_runSpar(cGrove_t* cg, int64_t elapsedUs)
         }
         case CG_SPAR_BATTLE_RECORD:
         {
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    // FIXME: Scroll through records
+                    switch (evt.button)
+                    {
+                        case PB_B:
+                        {
+                            cg->spar.state = CG_SPAR_MENU;
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            // Draw
+            cg_drawSparRecord(cg);
             break;
         }
         case CG_SPAR_TUTORIAL:
@@ -173,6 +202,39 @@ void cg_runSpar(cGrove_t* cg, int64_t elapsedUs)
 
 static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    // TODO: Implement menu
+    if (selected)
+    {
+        if (label == sparMenuNames[0])
+        {
+            // Go to match setup
+            cg->spar.state = CG_SPAR_SCHEDULE;
+        }
+        else if (label == sparMenuNames[1])
+        {
+            // View records
+            cg->spar.state = CG_SPAR_BATTLE_RECORD;
+        }
+        else if (label == sparMenuNames[2])
+        {
+            // Tutorial
+            cg->spar.state = CG_SPAR_TUTORIAL;
+        }
+        else if (label == sparMenuNames[3])
+        {
+            // Settings
+        }
+        else if (label == sparMenuNames[4])
+        {
+            // Go to main menu
+            // TODO: see if I can load and unload without crashing
+            cg->state      = CG_MAIN_MENU;
+            cg->spar.state = CG_SPAR_SPLASH;
+        }
+        else
+        {
+            // Something went wrong
+        }
+    }
+    // FIXME: Remove once menu works
     printf("%s %s, setting=%d\n", label, selected ? "selected" : "scrolled to", settingVal);
 }

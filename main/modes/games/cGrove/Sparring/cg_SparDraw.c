@@ -67,6 +67,12 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
     drawTextWordWrap(&cg->spar.sparRegFont, c000, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
 }
 
+void cg_drawSparRecord(cGrove_t* cg)
+{
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    // 
+}
+
 static void cg_drawSparField(cGrove_t* cg)
 {
     // Draw dojo

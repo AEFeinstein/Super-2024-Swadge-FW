@@ -198,6 +198,13 @@ typedef struct
 // Enums ===============================
 typedef enum
 {
+    CG_SPAR_PLAYER1,
+    CG_SPAR_PLAYER2,
+    CG_SPAR_DRAW,
+} cgSparBattleResult_t;
+
+typedef enum
+{
     CG_SPAR_SPLASH,
     CG_SPAR_MENU,
     CG_SPAR_SCHEDULE,
@@ -214,6 +221,13 @@ typedef struct
     vec_t pos;      ///< Position on screen
     vec_t speed;    ///< Speed
 } cgSparBGObject_t;
+
+typedef struct
+{
+    cgChowa_t* participants[6];     ///< Up to 6 Chowa participate
+    cgSparBattleResult_t result[3]; ///< Results opf all three matches
+    int32_t matchTime[3];           ///< Time needed for each match
+} cgSparBattleRecord_t;
 
 typedef struct
 {
@@ -251,7 +265,7 @@ typedef struct
 
     // Spar
     cgSparState_t state; ///< Active state
-    int64_t timer; ///< Timer used for lo
+    int64_t timer;       ///< Timer used for lo
 
     // Menu
     menu_t* sparMenu;              ///< Menu object

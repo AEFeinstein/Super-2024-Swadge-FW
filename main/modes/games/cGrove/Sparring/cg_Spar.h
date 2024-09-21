@@ -21,5 +21,5 @@
 //==============================================================================
 
 void cg_initSpar(cGrove_t* cg);
-void cg_deInitSpar(cGrove_t* cg);
-void cg_runSpar(cGrove_t* cg, int64_t elapsedUs);
+void cg_deInitSpar(void);
+void cg_runSpar(int64_t elapsedUs);
