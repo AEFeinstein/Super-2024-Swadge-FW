@@ -74,3 +74,18 @@ fine and coarse adjustment knobs on a real audio device, but some editing softwa
 | 73       | Attack Time     | 0-127                   | Set the length of time (in 10ms increments) it will take for a note to reach its maximum volume after it starts playing. | |
 | 75       | Decay Time      | 0-127                   | Set the length of time (in 10ms increments) it will take for a note to fade from its maximum volume to its sustain volume. | |
 | 76       | Sustain Level   | 0-127                   | Set the volume level the note will reach at the end of the decay time, and will be maintained as long as the note is held on. | |
+| 6, 38    | Data Entry      | 0-16383                 | Set the value of the registered or non-registered parameter that was selected previously using the `Registered Parameter` or `Non-registered Parameter` controllers. | |
+| 96       | Data Button Increment | 0 (not used)      | Increments the value of the registered or non-registered parameter by one | |
+| 97       | Data Button Decrement | 0 (not used)      | Decrements the value of the registered or non-registered parameter by one | |
+| 98, 99   | Non-registered Parameter | 0-16383        | Selects a non-registered parameter to be changed with the `Data Entry`or `Data Button` controllers. | |
+| 101, 100 | Registered Parameter | 0-16383            | Selects a registered parameter value to be changed with the `Data Entry` or `Data Button` controllers. | |
+
+
+## MIDI Non-registered Parameters
+
+These parameters can be changed by first using the `Non-registered Parameter` controller to select a specific parameter, then
+using the `Data Entry` or `Data Button` controllers to actually change the parameter's value.
+
+| MIDI NRPN# | Name       | Value Range     | Description                                                               |
+| ---------- | ---------- | --------------- | ------------------------------------------------------------------------- |
+| 10         | Percussion | 0 (off), 1 (on) | Sets whether this channel plays a drum kit instead of a normal instrument |
