@@ -496,18 +496,8 @@ void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
     }
 }
 
-/**
- * @brief Draw a WSG to the display
- *
- * @param wsg  The WSG to draw to the display
- * @param xOff The x offset to draw the WSG at
- * @param yOff The y offset to draw the WSG at
- * @param paletteMap The array pf colors to convert
- * @param flipLR true to flip the image across the Y axis
- * @param flipUD true to flip the image across the X axis
- * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
- */
-void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, paletteColor_t* paletteMap, bool flipLR, bool flipUD, int16_t rotateDeg)
+
+void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t palette, bool flipLR, bool flipUD, int16_t rotateDeg)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-08, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -654,7 +644,7 @@ void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, paletteColor_t
             for (int32_t srcX = xstart; srcX != xend; srcX += xinc)
             {
                 // Get colors from remap
-                uint8_t color = paletteMap[linein[srcX]];
+                uint8_t color = palette.replacedColors[linein[srcX]];
 
                 // Draw if not transparent
                 if (cTransparent != color)
@@ -667,28 +657,26 @@ void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, paletteColor_t
     }
 }
 
-/**
- * @brief 
- * 
- * @param wsgPC 
- * @return int8_t* 
- */
-void wsgConstructPalette(wsgPaletteColor_t* wsgPC, uint8_t* outArr)
+void wsgPaletteReset(wsgPalette_t* palette)
 {
-    // Set all the regular colors
-    for (int32_t i = 0; i < 216; i++)
+    // Reset the palette
+    for (int32_t i = 0; i < 217; i++)
     {
-        outArr[i] = i;
-    }
-
-    // Get length of the array
-    int len = sizeof(*wsgPC)/sizeof(wsgPC[0]);
-
-    // Set new colors
-    for (int32_t i = 0; i < len; i++)
-    {
-        outArr[wsgPC[i].replacedColor] = wsgPC[i].newColor;
+        palette->newColors[i] = i;
+        palette->replacedColors[i] = i;
     }
 }
 
+void wsgPaletteGenerate(wsgPalette_t* palette)
+{
+    // Set new colors
+    for (int32_t i = 0; i < 217; i++)
+    {
+        palette->replacedColors[i] = palette->newColors[i];
+    }
+}
 
+void wsgPaletteSet(wsgPalette_t* palette, paletteColor_t replaced, paletteColor_t new)
+{
+    palette->newColors[replaced] = new;
+}
