@@ -70,7 +70,19 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
 void cg_drawSparRecord(cGrove_t* cg)
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-    // 
+    // Draw Match title
+
+    // Draw player names 
+
+    // Draw a result
+    // - Chowa names
+    // - Chow sprites
+    // - Round
+    // - VS label
+    // - Round length
+    // - Result
+    
+    // Draw record number and arrows
 }
 
 static void cg_drawSparField(cGrove_t* cg)
@@ -81,6 +93,7 @@ static void cg_drawSparField(cGrove_t* cg)
 
 static void cg_drawSparBGObject(cGrove_t* cg, int64_t elapsedUs)
 {
+    // FIXME: DO bounce thing
     for (int32_t i = 0; i < 2; i++)
     {
         drawWsgSimple(&cg->spar.dojoBGItems[i], 32 * (i + 1), 32 * (i + 1));

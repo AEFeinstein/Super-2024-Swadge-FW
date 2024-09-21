@@ -123,7 +123,6 @@ static void cGroveMainLoop(int64_t elapsedUs)
         case CG_MAIN_MENU:
         {
             // Menu
-            printf("LMAO");
             grove->state = CG_SPAR;
             break;
         }

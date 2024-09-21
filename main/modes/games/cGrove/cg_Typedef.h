@@ -108,6 +108,7 @@ typedef struct
     bool active; ///< If Chowa slot is being used. Only set to true if data has been set.
 
     // Base data
+    char name[17];
     int8_t age;                ///< Current age of the Chowa
     int8_t maxAge;             ///< Maximum Chowa age. 4 hours of in game time
     int8_t PlayerAffinity;     ///< How much Chowa likes the player
@@ -136,13 +137,40 @@ typedef struct
 typedef struct
 {
     // Name
-    char name[16];
+    char name[17];
     // Icon
     wsg_t* icon;
     // Text for competitions
     // Chowa
     cgChowa_t chowa[3];
 } cgNPC_t;
+
+//==============================================================================
+// Submode generics
+//==============================================================================
+
+// Defines =============================
+#define CG_MAX_STR_LEN 17
+
+// Enums ===============================
+typedef enum
+{
+    CG_SPAR_PLAYER1,
+    CG_SPAR_PLAYER2,
+    CG_SPAR_DRAW,
+} cgResult_t;
+
+// Structs ==============================
+typedef struct
+{
+    char matchTitle[CG_MAX_STR_LEN];     ///< Title of the match
+    char playerNames[2][CG_MAX_STR_LEN]; ///< Player names
+    char chowaNames[6][CG_MAX_STR_LEN];  ///< Up to 6 Chowa participate
+    cgColorType_t colorType[6];          ///< Type of Chowa
+    // wsgPalette palettes[6]; ///< Colors of the Chowa for drawing
+    cgResult_t result[3]; ///< Results opf all three matches
+    int16_t timer[3];     ///< Time per round in seconds
+} cgRecord_t;
 
 //==============================================================================
 // Garden
@@ -193,15 +221,9 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_SPAR_BG_ITEMS 2
+#define CG_SPAR_MAX_RECORDS 10
 
 // Enums ===============================
-typedef enum
-{
-    CG_SPAR_PLAYER1,
-    CG_SPAR_PLAYER2,
-    CG_SPAR_DRAW,
-} cgSparBattleResult_t;
 
 typedef enum
 {
@@ -224,13 +246,6 @@ typedef struct
 
 typedef struct
 {
-    cgChowa_t* participants[6];     ///< Up to 6 Chowa participate
-    cgSparBattleResult_t result[3]; ///< Results opf all three matches
-    int32_t matchTime[3];           ///< Time needed for each match
-} cgSparBattleRecord_t;
-
-typedef struct
-{
     cgChowa_t* participants; ///< Chowa data
     uint8_t stamina[2];      ///< Stamina of both Chowa for stamina bars
     int8_t round;            ///< The round of the fight
@@ -250,10 +265,11 @@ typedef struct
     //   - Countdown noises
     //   - Cheer noises
 
-    // Sprites
+    // BG Sprites
     wsg_t dojoBG;       ///< Dojo Background image
     wsg_t* dojoBGItems; ///< Dojo BG items
     // UI Sprites
+    wsg_t arrow;
     // - Punch icon
     // - Kick icon
     // NPC sprites
@@ -273,6 +289,11 @@ typedef struct
 
     // Match
     cgMatch_t match; ///< Match object
+
+    // Battle Record
+    cgRecord_t sparRecord[CG_SPAR_MAX_RECORDS]; ///< List of battle records
+    int8_t recordSelect;                        ///< Which record is currently active
+    int8_t roundSelect;                         ///< Which round of the record is currently selected
 
     // Input
 

@@ -77,6 +77,9 @@ void cg_initSpar(cGrove_t* grove)
     // TODO: New renderer
     cg->spar.renderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
+    // Initialize battle record
+    sparLoadBattleRecords();
+
     // Load the splash screen
     cg->spar.state = CG_SPAR_SPLASH;
 }
@@ -160,6 +163,43 @@ void cg_runSpar(int64_t elapsedUs)
                     // FIXME: Scroll through records
                     switch (evt.button)
                     {
+                        case PB_RIGHT:
+                        {
+                            cg->spar.recordSelect++;
+                            if (cg->spar.recordSelect >= CG_SPAR_MAX_RECORDS)
+                            {
+                                cg->spar.recordSelect = 0;
+                            }
+                            break;
+                        }
+                        case PB_LEFT:
+                        {
+                            cg->spar.recordSelect--;
+                            if (cg->spar.recordSelect < 0)
+                            {
+                                cg->spar.recordSelect = CG_SPAR_MAX_RECORDS;
+                            }
+                            break;
+                        }
+                        case PB_UP:
+                        {
+                            cg->spar.roundSelect++;
+                            if (cg->spar.recordSelect >= 3)
+                            {
+                                cg->spar.recordSelect = 0;
+                            }
+                            break;
+                        }
+                        case PB_DOWN:
+                        {
+                            cg->spar.recordSelect--;
+                            if (cg->spar.recordSelect < 0)
+                            {
+                                cg->spar.recordSelect = 3;
+                            }
+                            break;
+                        }
+                        case PB_A:
                         case PB_B:
                         {
                             cg->spar.state = CG_SPAR_MENU;
@@ -235,6 +275,9 @@ static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
             // Something went wrong
         }
     }
-    // FIXME: Remove once menu works
-    printf("%s %s, setting=%d\n", label, selected ? "selected" : "scrolled to", settingVal);
+}
+
+static void sparLoadBattleRecords()
+{
+    // FIXME: Load from disk
 }
