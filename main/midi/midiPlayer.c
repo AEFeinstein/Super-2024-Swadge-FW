@@ -1162,7 +1162,7 @@ void midiPlayerInit(midiPlayer_t* player)
 void midiPlayerReset(midiPlayer_t* player)
 {
     midiAllSoundOff(player);
-    midiGmOn(player);
+    midiGmOff(player);
 
     // We need the tempo to not be zero, so set it to the default of 120BPM until we get a tempo event
     // 120 BPM == 500,000 microseconds per quarter note
