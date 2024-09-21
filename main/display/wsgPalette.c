@@ -254,7 +254,8 @@ void drawWsgPaletteSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalet
  * @param xScale The amount to scale the image horizontally
  * @param yScale The amount to scale the image vertically
  */
-void drawWsgPaletteSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, int16_t xScale, int16_t yScale)
+void drawWsgPaletteSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, int16_t xScale,
+                                int16_t yScale)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -393,7 +394,8 @@ void wsgPaletteSet(wsgPalette_t* palette, paletteColor_t replacedColor, paletteC
     palette->newColors[replacedColor] = newColor;
 }
 
-void wsgPaletteSetGroup(wsgPalette_t* palette, paletteColor_t* replacedColors, paletteColor_t* newColors, uint8_t arrSize)
+void wsgPaletteSetGroup(wsgPalette_t* palette, paletteColor_t* replacedColors, paletteColor_t* newColors,
+                        uint8_t arrSize)
 {
     for (int32_t i = 0; i < arrSize; i++)
     {
