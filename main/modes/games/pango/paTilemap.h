@@ -108,5 +108,4 @@ bool pa_genPathContinue(paTilemap_t* tilemap, uint32_t x, uint32_t y);
 void pa_genMakePath(paTilemap_t* tilemap, uint32_t x, uint32_t y);
 void pa_placeEnemySpawns(paTilemap_t* tilemap);
 
-
 #endif

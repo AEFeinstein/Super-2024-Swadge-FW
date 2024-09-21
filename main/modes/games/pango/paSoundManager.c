@@ -11,24 +11,24 @@
 void pa_initializeSoundManager(paSoundManager_t* self)
 {
     loadMidiFile("bgmCastle.mid", &self->bgmCastle, false);
-    //self->bgmCastle.shouldLoop = true;
+    // self->bgmCastle.shouldLoop = true;
 
     loadMidiFile("bgmDeMAGio.mid", &self->bgmDemagio, false);
-    //self->bgmDemagio.shouldLoop = true;
+    // self->bgmDemagio.shouldLoop = true;
 
     loadMidiFile("bgmGameStart.mid", &self->bgmGameStart, false);
     loadMidiFile("bgmIntro.mid", &self->bgmIntro, false);
     loadMidiFile("bgmNameEntry.mid", &self->bgmNameEntry, false);
-    //self->bgmNameEntry.shouldLoop = true;
+    // self->bgmNameEntry.shouldLoop = true;
 
     loadMidiFile("bgmSmooth.mid", &self->bgmSmooth, false);
-    //self->bgmSmooth.shouldLoop = true;
+    // self->bgmSmooth.shouldLoop = true;
 
     loadMidiFile("bgmUnderground.mid", &self->bgmUnderground, false);
-    //self->bgmUnderground.shouldLoop = true;
+    // self->bgmUnderground.shouldLoop = true;
 
     loadMidiFile("snd1up.mid", &self->snd1up, false);
-    //loadMidiFile("sndBreak.mid", &self->sndBreak, false);
+    // loadMidiFile("sndBreak.mid", &self->sndBreak, false);
     loadMidiFile("sndCheckpoint.mid", &self->sndCheckpoint, false);
     loadMidiFile("sndCoin.mid", &self->sndCoin, false);
     loadMidiFile("sndDie.mid", &self->sndDie, false);
@@ -50,7 +50,7 @@ void pa_initializeSoundManager(paSoundManager_t* self)
     loadMidiFile("sndPause.mid", &self->sndPause, false);
     loadMidiFile("sndPowerUp.mid", &self->sndPowerUp, false);
     loadMidiFile("sndSlide.mid", &self->sndSquish, false);
-    //loadMidiFile("sndTally.mid", &self->sndTally, false);
+    // loadMidiFile("sndTally.mid", &self->sndTally, false);
     loadMidiFile("sndWarp.mid", &self->sndWarp, false);
     loadMidiFile("sndWaveBall.mid", &self->sndWaveBall, false);
 

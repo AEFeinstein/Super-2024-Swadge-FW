@@ -14,32 +14,15 @@
 
 #define DEFAULT_ENEMY_SPAWN_LOCATION_TX_LOOKUP_OFFSET 0
 #define DEFAULT_ENEMY_SPAWN_LOCATION_TY_LOOKUP_OFFSET 1
-#define DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH 2
+#define DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH       2
 
-static const uint8_t defaultEnemySpawnLocations[DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH * DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH] = {
+static const uint8_t
+    defaultEnemySpawnLocations[DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH * DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH]
+    = {
 
-// tx,ty
-    1,1,
-    15,1,
-    1,13,
-    15,13,
-    8,1,
-    15,7,
-    8,13,
-    1,7,
-    4,1,
-    12,1,
-    15,4,
-    15,10,
-    12,13,
-    4,13,
-    1,10,
-    1,4,
-    6,1,
-    10,1,
-    6,13,
-    10,13
-};
+        // tx,ty
+        1,  1, 15, 1,  1,  13, 15, 13, 8, 1,  15, 7, 8, 13, 1,  7, 4, 1,  12, 1,
+        15, 4, 15, 10, 12, 13, 4,  13, 1, 10, 1,  4, 6, 1,  10, 1, 6, 13, 10, 13};
 
 /*#define MASTER_DIFFICULTY2_TABLE_LENGTH 6
 
@@ -68,34 +51,19 @@ static const int16_t masterDifficulty2[MASTER_DIFFICULTY2_TABLE_LENGTH * MASTER_
          7,      4,       4,         0,          1,      8,    10,
 };*/
 
-
 #define MASTER_DIFFICULTY_TABLE_LENGTH 16
 
-#define TOTAL_ENEMIES_LOOKUP_OFFSET 0
-#define MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET 1
-#define ENEMY_INITIAL_SPEED_LOOKUP_OFFSET 2
+#define TOTAL_ENEMIES_LOOKUP_OFFSET        0
+#define MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET   1
+#define ENEMY_INITIAL_SPEED_LOOKUP_OFFSET  2
 #define MASTER_DIFFICULTY_TABLE_ROW_LENGTH 3
 
 static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DIFFICULTY_TABLE_ROW_LENGTH] = {
 
-// Total    max           min    max
-// enemies, active, speed aggro, aggro,
-         5,      2,    12,
-         5,      3,    12,
-         6,      3,    13,
-         7,      4,    10,
-         8,      3,    13,
-         8,      3,    14,
-         8,      3,    15,
-         7,      2,    16,
-         8,      3,    15,
-         8,      3,    16,
-         9,      3,    16,
-         8,      4,    12,
-         9,      3,    16,
-         8,      3,    17,
-        10,      4,    14,
-        12,      1,    18,     
+    // Total    max           min    max
+    // enemies, active, speed aggro, aggro,
+    5, 2, 12, 5, 3, 12, 6, 3, 13, 7, 4, 10, 8, 3, 13, 8, 3, 14, 8,  3, 15, 7,  2, 16,
+    8, 3, 15, 8, 3, 16, 9, 3, 16, 8, 4, 12, 9, 3, 16, 8, 3, 17, 10, 4, 14, 12, 1, 18,
 };
 
 #endif

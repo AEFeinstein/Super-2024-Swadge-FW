@@ -48,8 +48,8 @@ struct paEntityManager_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void pa_initializeEntityManager(paEntityManager_t* entityManager, paWsgManager_t* wsgManager, paTilemap_t* tilemap, paGameData_t* gameData,
-                                paSoundManager_t* soundManager);
+void pa_initializeEntityManager(paEntityManager_t* entityManager, paWsgManager_t* wsgManager, paTilemap_t* tilemap,
+                                paGameData_t* gameData, paSoundManager_t* soundManager);
 void pa_updateEntities(paEntityManager_t* entityManager);
 void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlayer);
 void pa_drawEntities(paEntityManager_t* entityManager);

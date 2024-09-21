@@ -269,10 +269,14 @@ void pa_updateLedsGameClear(paGameData_t* gameData)
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void pa_setDifficultyLevel(paGameData_t* gameData, uint16_t levelIndex){
-    gameData->remainingEnemies = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + TOTAL_ENEMIES_LOOKUP_OFFSET];
-    gameData->maxActiveEnemies = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET];
-    gameData->enemyInitialSpeed = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_INITIAL_SPEED_LOOKUP_OFFSET];
+void pa_setDifficultyLevel(paGameData_t* gameData, uint16_t levelIndex)
+{
+    gameData->remainingEnemies
+        = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + TOTAL_ENEMIES_LOOKUP_OFFSET];
+    gameData->maxActiveEnemies
+        = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET];
+    gameData->enemyInitialSpeed
+        = masterDifficulty[(levelIndex * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_INITIAL_SPEED_LOOKUP_OFFSET];
     gameData->minAggroEnemies = 1;
     gameData->maxAggroEnemies = 1;
 }

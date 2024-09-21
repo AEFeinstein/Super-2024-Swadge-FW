@@ -36,7 +36,7 @@ void pa_initializeTileMap(paTilemap_t* tilemap, paWsgManager_t* wsgManager)
     tilemap->animationFrame = 0;
     tilemap->animationTimer = 23;
 
-    tilemap->wsgManager = wsgManager;    
+    tilemap->wsgManager = wsgManager;
 }
 
 void pa_drawTileMap(paTilemap_t* tilemap)
@@ -67,7 +67,7 @@ void pa_drawTileMap(paTilemap_t* tilemap)
             {
                 continue;
             }
-            
+
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
 
             if (tile < PA_TILE_WALL_0 || tile == PA_TILE_INVISIBLE_BLOCK)
@@ -214,7 +214,7 @@ uint8_t pa_getTile(paTilemap_t* tilemap, uint8_t tx, uint8_t ty)
 
     if (/*ty < 0 ||*/ ty >= tilemap->mapHeight)
     {
-        //ty = 0;
+        // ty = 0;
         return 0;
     }
 
@@ -301,10 +301,13 @@ void pa_generateMaze(paTilemap_t* tilemap)
     int32_t ty = 13;
     pa_setTile(tilemap, tx, ty, PA_TILE_EMPTY);
 
-    while(ty > 1){
+    while (ty > 1)
+    {
         tx = 1;
-        while(tx < 15){
-            if(!pa_getTile(tilemap, tx, ty) && !pa_genPathContinue(tilemap, tx, ty)){
+        while (tx < 15)
+        {
+            if (!pa_getTile(tilemap, tx, ty) && !pa_genPathContinue(tilemap, tx, ty))
+            {
                 pa_genMakePath(tilemap, tx, ty);
             }
             tx += 2;
@@ -313,91 +316,108 @@ void pa_generateMaze(paTilemap_t* tilemap)
     }
 }
 
-bool pa_genPathContinue(paTilemap_t* tilemap, uint32_t x, uint32_t y){
-    if(pa_getTile(tilemap, x, y-2)) {
+bool pa_genPathContinue(paTilemap_t* tilemap, uint32_t x, uint32_t y)
+{
+    if (pa_getTile(tilemap, x, y - 2))
+    {
         return false;
     }
-    if(pa_getTile(tilemap, x, y+2)) {
+    if (pa_getTile(tilemap, x, y + 2))
+    {
         return false;
     }
-    if(pa_getTile(tilemap, x+2, y)) {
+    if (pa_getTile(tilemap, x + 2, y))
+    {
         return false;
     }
-    if(pa_getTile(tilemap, x-2, y)) {
+    if (pa_getTile(tilemap, x - 2, y))
+    {
         return false;
     }
 
     return true;
 }
 
-void pa_genMakePath(paTilemap_t* tilemap, uint32_t x, uint32_t y){
-    bool done = 0;
+void pa_genMakePath(paTilemap_t* tilemap, uint32_t x, uint32_t y)
+{
+    bool done   = 0;
     uint32_t nx = x;
     uint32_t ny = y;
 
-    while(!done){
+    while (!done)
+    {
         uint32_t r = esp_random() % 4;
-        
-        switch(r){
+
+        switch (r)
+        {
             case 0:
-                if(pa_getTile(tilemap, nx, ny-2)) {
-                    pa_setTile(tilemap, nx, ny-1, 0);
-                    pa_setTile(tilemap, nx, ny-2, 0);
-                    ny-=2;
+                if (pa_getTile(tilemap, nx, ny - 2))
+                {
+                    pa_setTile(tilemap, nx, ny - 1, 0);
+                    pa_setTile(tilemap, nx, ny - 2, 0);
+                    ny -= 2;
                 }
                 break;
             case 1:
-                if(pa_getTile(tilemap, nx, ny+2)) {
-                    pa_setTile(tilemap, nx, ny+1, 0);
-                    pa_setTile(tilemap, nx, ny+2, 0);
-                    ny+=2;
+                if (pa_getTile(tilemap, nx, ny + 2))
+                {
+                    pa_setTile(tilemap, nx, ny + 1, 0);
+                    pa_setTile(tilemap, nx, ny + 2, 0);
+                    ny += 2;
                 }
                 break;
             case 2:
-                if(pa_getTile(tilemap, nx-2, ny)) {
-                    pa_setTile(tilemap, nx-1, ny, 0);
-                    pa_setTile(tilemap, nx-2, ny, 0);
-                    nx-=2;
+                if (pa_getTile(tilemap, nx - 2, ny))
+                {
+                    pa_setTile(tilemap, nx - 1, ny, 0);
+                    pa_setTile(tilemap, nx - 2, ny, 0);
+                    nx -= 2;
                 }
                 break;
             case 3:
-                if(pa_getTile(tilemap, nx+2, ny)) {
-                    pa_setTile(tilemap, nx+1, ny, 0);
-                    pa_setTile(tilemap, nx+2, ny, 0);
-                    nx+=2;
+                if (pa_getTile(tilemap, nx + 2, ny))
+                {
+                    pa_setTile(tilemap, nx + 1, ny, 0);
+                    pa_setTile(tilemap, nx + 2, ny, 0);
+                    nx += 2;
                 }
                 break;
-
-            
         }
 
         done = pa_genPathContinue(tilemap, nx, ny);
     }
-
 }
 
-void pa_placeEnemySpawns(paTilemap_t* tilemap){
+void pa_placeEnemySpawns(paTilemap_t* tilemap)
+{
     int16_t enemySpawnsToPlace = tilemap->entityManager->gameData->remainingEnemies;
-    int16_t enemiesPlaced = 0;
-    bool previouslyPlaced = false;
-    int16_t iterations = 0;
+    int16_t enemiesPlaced      = 0;
+    bool previouslyPlaced      = false;
+    int16_t iterations         = 0;
 
-    //Place enemy spawn blocks
-    while(enemySpawnsToPlace > 0 && iterations < 16){
-        for(uint16_t ty = 1; ty < 13; ty++){
-            for(uint16_t tx = 1; tx < 15; tx++){
-                if(enemySpawnsToPlace <= 0) {
+    // Place enemy spawn blocks
+    while (enemySpawnsToPlace > 0 && iterations < 16)
+    {
+        for (uint16_t ty = 1; ty < 13; ty++)
+        {
+            for (uint16_t tx = 1; tx < 15; tx++)
+            {
+                if (enemySpawnsToPlace <= 0)
+                {
                     break;
                 }
 
                 uint8_t t = pa_getTile(tilemap, tx, ty);
 
-                if(t == PA_TILE_BLOCK && !previouslyPlaced && !(esp_random() % 15) ){
+                if (t == PA_TILE_BLOCK && !previouslyPlaced && !(esp_random() % 15))
+                {
                     pa_setTile(tilemap, tx, ty, PA_TILE_SPAWN_BLOCK_0);
                     enemySpawnsToPlace--;
                     enemiesPlaced++;
                     previouslyPlaced = true;
-                } else {
+                }
+                else
+                {
                     previouslyPlaced = false;
                 }
             }

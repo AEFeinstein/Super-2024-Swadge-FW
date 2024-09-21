@@ -13,14 +13,15 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define PA_WSGS_SIZE 93
+#define PA_WSGS_SIZE      93
 #define PA_SPRITESET_SIZE 32
-#define PA_TILE_SET_SIZE 15
+#define PA_TILE_SET_SIZE  15
 
 //==============================================================================
 // Enums
 //==============================================================================
-typedef enum {
+typedef enum
+{
     PA_WSG_PANGO_SOUTH,
     PA_WSG_PANGO_WALK_SOUTH,
     PA_WSG_PANGO_NORTH,
@@ -85,8 +86,8 @@ typedef enum {
     PA_WSG_GIRL_HURT,
     PA_WSG_GIRL_WIN,
     PA_WSG_GIRL_ICON,
-    //PA_WSG_BLOCK,
-    //PA_WSG_BONUS_BLOCK,
+    // PA_WSG_BLOCK,
+    // PA_WSG_BONUS_BLOCK,
     PA_WSG_ENEMY_SOUTH,
     PA_WSG_ENEMY_NORTH,
     PA_WSG_ENEMY_SIDE_1,
@@ -121,7 +122,8 @@ typedef enum {
 //==============================================================================
 // Structs
 //==============================================================================
-typedef struct {
+typedef struct
+{
     wsg_t wsgs[PA_WSGS_SIZE];
     paSprite_t sprites[PA_SPRITESET_SIZE];
     wsg_t* tiles[PA_TILE_SET_SIZE];
@@ -141,6 +143,5 @@ void pa_remapWsgToSprite(paWsgManager_t* self, uint16_t spriteIndex, uint16_t ws
 void pa_remapWsgToTile(paWsgManager_t* self, uint16_t tileIndex, uint16_t wsgIndex);
 
 void pa_remapPlayerCharacter(paWsgManager_t* self, uint16_t newBaseIndex);
-
 
 #endif

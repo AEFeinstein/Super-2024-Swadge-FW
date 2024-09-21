@@ -94,7 +94,7 @@ struct pango_t
     bool easterEgg;
 
     pa_gameUpdateFuncton_t update;
-    
+
     menuManiaRenderer_t* menuRenderer;
     menu_t* menu;
     menuItem_t* levelSelectMenuItem;
@@ -152,17 +152,17 @@ uint16_t getLevelIndex(uint8_t world, uint8_t level);
 pango_t* pango = NULL;
 
 swadgeMode_t pangoMode = {.modeName                 = pangoName,
-                               .wifiMode                 = NO_WIFI,
-                               .overrideUsb              = false,
-                               .usesAccelerometer        = false,
-                               .usesThermometer          = false,
-                               .fnEnterMode              = pangoEnterMode,
-                               .fnExitMode               = pangoExitMode,
-                               .fnMainLoop               = pangoMainLoop,
-                               .fnAudioCallback          = NULL,
-                               .fnBackgroundDrawCallback = NULL,
-                               .fnEspNowRecvCb           = NULL,
-                               .fnEspNowSendCb           = NULL};
+                          .wifiMode                 = NO_WIFI,
+                          .overrideUsb              = false,
+                          .usesAccelerometer        = false,
+                          .usesThermometer          = false,
+                          .fnEnterMode              = pangoEnterMode,
+                          .fnExitMode               = pangoExitMode,
+                          .fnMainLoop               = pangoMainLoop,
+                          .fnAudioCallback          = NULL,
+                          .fnBackgroundDrawCallback = NULL,
+                          .fnEspNowRecvCb           = NULL,
+                          .fnEspNowSendCb           = NULL};
 
 #define NUM_LEVELS 16
 
@@ -237,7 +237,7 @@ void pangoEnterMode(void)
     }
 
     loadFont("pango-fw.font", &pango->radiostars, false);
-    pango->menuRenderer = initMenuManiaRenderer(&pango->radiostars,&pango->radiostars,&pango->radiostars);
+    pango->menuRenderer = initMenuManiaRenderer(&pango->radiostars, &pango->radiostars, &pango->radiostars);
 
     pa_initializeWsgManager(&(pango->wsgManager));
 
@@ -276,7 +276,7 @@ void pangoExitMode(void)
         deinitMenu(pango->menu);
     }
     deinitMenuManiaRenderer(pango->menuRenderer);
-    
+
     freeFont(&pango->radiostars);
     pa_freeWsgManager(&(pango->wsgManager));
     pa_freeTilemap(&(pango->tilemap));
@@ -298,8 +298,8 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         if (label == pangoMenuNewGame)
         {
-            pango->gameData.world = 1;
-            pango->gameData.level = 1;
+            pango->gameData.world              = 1;
+            pango->gameData.level              = 1;
             pango->entityManager.activeEnemies = 0;
             pa_initializeGameDataFromTitleScreen(&(pango->gameData), 0);
             pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
@@ -336,12 +336,12 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pangoMenuResetScores)
         {
             pangoInitializeHighScores(pango);
-            //soundPlaySfx(&(pango->soundManager.detonate), BZR_STEREO);
+            // soundPlaySfx(&(pango->soundManager.detonate), BZR_STEREO);
         }
         else if (label == pangoMenuResetProgress)
         {
             pangoInitializeUnlockables(pango);
-            //soundPlaySfx(&(pango->soundManager.die), BZR_STEREO);
+            // soundPlaySfx(&(pango->soundManager.die), BZR_STEREO);
         }
         else if (label == pangoMenuSaveAndExit)
         {
@@ -356,7 +356,7 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
     }
     else
     {
-        //soundPlaySfx(&(pango->soundManager.hit3), BZR_STEREO);
+        // soundPlaySfx(&(pango->soundManager.hit3), BZR_STEREO);
     }
 }
 
@@ -458,12 +458,12 @@ void updateGame(pango_t* self, int64_t elapsedUs)
     pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
 
-    //drawEntityTargetTile(self->entityManager.playerEntity);
+    // drawEntityTargetTile(self->entityManager.playerEntity);
 
     detectGameStateChange(self);
     detectBgmChange(self);
 
-    //self->gameData.coins = self->gameData.remainingEnemies;
+    // self->gameData.coins = self->gameData.remainingEnemies;
     self->gameData.coins = self->entityManager.aggroEnemies;
     drawPangoHud(&(self->radiostars), &(self->gameData));
 
@@ -513,7 +513,7 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     }
 
     drawText(font, c553, livesStr, 56, 2);
-    //drawText(font, c553, coinStr, 160, 224);
+    // drawText(font, c553, coinStr, 160, 224);
     drawText(font, c553, scoreStr, 112, 2);
     drawText(font, c553, levelStr, 32, 226);
     drawText(font, (gameData->countdown > 30) ? c553 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 200, 226);
@@ -523,9 +523,9 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
         return;
     }
 
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 /*" (x%d)"*/, gameData->comboScore/*, gameData->combo*/);
-    drawText(font, (gameData->comboTimer < 60) ? c030 : greenColors[(pango->gameData.frameCount >> 3) % 4],
-             scoreStr, 190, 2);
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 /*" (x%d)"*/, gameData->comboScore /*, gameData->combo*/);
+    drawText(font, (gameData->comboTimer < 60) ? c030 : greenColors[(pango->gameData.frameCount >> 3) % 4], scoreStr,
+             190, 2);
 }
 
 void updateTitleScreen(pango_t* self, int64_t elapsedUs)
@@ -554,11 +554,11 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
             pango->menuSelection      = 0;
             pango->menuState          = 1;
             pango->gameData.debugMode = true;
-            //soundPlaySfx(&(pango->soundManager.levelClear), BZR_STEREO);
+            // soundPlaySfx(&(pango->soundManager.levelClear), BZR_STEREO);
         }
         else
         {
-            //soundPlaySfx(&(pango->soundManager.hit3), BZR_STEREO);
+            // soundPlaySfx(&(pango->soundManager.hit3), BZR_STEREO);
         }
     }
 
@@ -566,11 +566,11 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
          || ((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))))
     {
         self->gameData.btnState = 0;
-        pango->menuSelection = 0;
+        pango->menuSelection    = 0;
 
         if (!pango->gameData.debugMode)
         {
-            //soundPlaySfx(&(pango->soundManager.launch), BZR_STEREO);
+            // soundPlaySfx(&(pango->soundManager.launch), BZR_STEREO);
         }
 
         pangoChangeStateMainMenu(self);
@@ -823,11 +823,11 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
             break;
     }*/
 
-    //pa_scrollTileMap(&(pango->tilemap), 1, 0);
-    //if (self->tilemap.mapOffsetX >= self->tilemap.maxMapOffsetX && self->gameData.frameCount > 58)
+    // pa_scrollTileMap(&(pango->tilemap), 1, 0);
+    // if (self->tilemap.mapOffsetX >= self->tilemap.maxMapOffsetX && self->gameData.frameCount > 58)
     //{
-    //    self->tilemap.mapOffsetX = 0;
-    //}
+    //     self->tilemap.mapOffsetX = 0;
+    // }
 
     drawPangoTitleScreen(&(self->radiostars), &(self->gameData));
 
@@ -847,7 +847,7 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
 
 void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
 {
-    //pa_drawTileMap(&(pango->tilemap));
+    // pa_drawTileMap(&(pango->tilemap));
 
     drawText(font, c555, "P A N G O", 96, 32);
 
@@ -923,9 +923,8 @@ void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
                 drawText(font, purpleColors[(gameData->frameCount >> 3) % 4], "Beat within 25 min!", 48, 144);
             }
 
-            if (pango->unlockables.gameCleared && pango->unlockables.oneCreditCleared
-                && pango->unlockables.bigScore && pango->unlockables.biggerScore
-                && pango->unlockables.fastTime)
+            if (pango->unlockables.gameCleared && pango->unlockables.oneCreditCleared && pango->unlockables.bigScore
+                && pango->unlockables.biggerScore && pango->unlockables.fastTime)
             {
                 drawText(font, rgbColors[(gameData->frameCount >> 3) % 4], "100% 100% 100%", 48, 160);
             }
@@ -969,14 +968,16 @@ void drawReadyScreen(font_t* font, paGameData_t* gameData)
 {
     drawPangoHud(font, gameData);
 
-    //int16_t xOff = (TFT_WIDTH - textWidth(font, "str_get_ready")) >> 1;
+    // int16_t xOff = (TFT_WIDTH - textWidth(font, "str_get_ready")) >> 1;
     drawText(font, c555, "Ready?", 80, 96);
 
-    if(gameData->frameCount > 60){
+    if (gameData->frameCount > 60)
+    {
         drawText(font, c555, "Set...", 112, 128);
     }
 
-    if(gameData->frameCount > 120){
+    if (gameData->frameCount > 120)
+    {
         drawText(font, c555, "PANGO!", 144, 160);
     }
 
@@ -1003,32 +1004,40 @@ void changeStateGame(pango_t* self)
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
 
     paEntityManager_t* entityManager = &(self->entityManager);
-    entityManager->viewEntity
-        = pa_createPlayer(entityManager, (9 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
-                          (7 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
-    entityManager->playerEntity     = entityManager->viewEntity;
+    entityManager->viewEntity   = pa_createPlayer(entityManager, (9 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                                                  (7 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+    entityManager->playerEntity = entityManager->viewEntity;
     entityManager->playerEntity->hp = self->gameData.initialHp;
 
-    if(entityManager->activeEnemies == 0){
-        for(uint16_t i = 0; i<self->gameData.maxActiveEnemies; i++){
+    if (entityManager->activeEnemies == 0)
+    {
+        for (uint16_t i = 0; i < self->gameData.maxActiveEnemies; i++)
+        {
             pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
         }
-    } else {
-        //uint16_t randomAggroEnemy = esp_random() % self->gameData.maxActiveEnemies;
+    }
+    else
+    {
+        // uint16_t randomAggroEnemy = esp_random() % self->gameData.maxActiveEnemies;
 
         int16_t skippedEnemyRespawnCount = 0;
 
-        for(uint16_t i = 0; i<entityManager->activeEnemies; i++){
-            if(i >= DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH){
+        for (uint16_t i = 0; i < entityManager->activeEnemies; i++)
+        {
+            if (i >= DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH)
+            {
                 skippedEnemyRespawnCount++;
                 continue;
             }
 
-            uint8_t spawnTx = defaultEnemySpawnLocations[i*DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH+DEFAULT_ENEMY_SPAWN_LOCATION_TX_LOOKUP_OFFSET];
-            uint8_t spawnTy = defaultEnemySpawnLocations[i*DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH+DEFAULT_ENEMY_SPAWN_LOCATION_TY_LOOKUP_OFFSET];
+            uint8_t spawnTx     = defaultEnemySpawnLocations[i * DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH
+                                                         + DEFAULT_ENEMY_SPAWN_LOCATION_TX_LOOKUP_OFFSET];
+            uint8_t spawnTy     = defaultEnemySpawnLocations[i * DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH
+                                                         + DEFAULT_ENEMY_SPAWN_LOCATION_TY_LOOKUP_OFFSET];
             uint8_t tileAtSpawn = pa_getTile(&(self->tilemap), spawnTx, spawnTy);
-            
-            switch(tileAtSpawn){
+
+            switch (tileAtSpawn)
+            {
                 default:
                     break;
                 case PA_TILE_BLOCK:
@@ -1039,9 +1048,10 @@ void changeStateGame(pango_t* self)
                     continue;
                     break;
             }
-            
-            paEntity_t* newEnemy =  createCrabdozer(&(self->entityManager), (spawnTx << PA_TILE_SIZE_IN_POWERS_OF_2) + 8, (spawnTy << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
-            
+
+            paEntity_t* newEnemy = createCrabdozer(&(self->entityManager), (spawnTx << PA_TILE_SIZE_IN_POWERS_OF_2) + 8,
+                                                   (spawnTy << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
+
             /*if(newEnemy != NULL && i == randomAggroEnemy){
                 newEnemy->stateFlag = true;
                 newEnemy->state = PA_EN_ST_STUN;
@@ -1050,12 +1060,9 @@ void changeStateGame(pango_t* self)
         }
 
         entityManager->activeEnemies -= skippedEnemyRespawnCount;
-
     }
 
-
-    
-    //pa_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
+    // pa_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
 
     pa_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
 
@@ -1242,7 +1249,7 @@ void drawGameOver(font_t* font, paGameData_t* gameData)
 void changeStateTitleScreen(pango_t* self)
 {
     self->gameData.frameCount = 0;
-    self->gameData.gameState = PA_ST_TITLE_SCREEN;
+    self->gameData.gameState  = PA_ST_TITLE_SCREEN;
     self->update              = &updateTitleScreen;
 }
 
@@ -1340,7 +1347,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }
 
-                pa_setDifficultyLevel(&(pango->gameData), getLevelIndex(self->gameData.world,self->gameData.level));
+                pa_setDifficultyLevel(&(pango->gameData), getLevelIndex(self->gameData.world, self->gameData.level));
                 pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
                 pa_generateMaze(&(pango->tilemap));
                 pa_placeEnemySpawns(&(pango->tilemap));

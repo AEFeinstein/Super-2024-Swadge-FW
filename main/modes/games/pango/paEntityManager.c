@@ -23,11 +23,11 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void pa_initializeEntityManager(paEntityManager_t* entityManager, paWsgManager_t* wsgManager, paTilemap_t* tilemap, paGameData_t* gameData,
-                                paSoundManager_t* soundManager)
+void pa_initializeEntityManager(paEntityManager_t* entityManager, paWsgManager_t* wsgManager, paTilemap_t* tilemap,
+                                paGameData_t* gameData, paSoundManager_t* soundManager)
 {
     entityManager->wsgManager = wsgManager;
-    entityManager->entities = calloc(MAX_ENTITIES, sizeof(paEntity_t));
+    entityManager->entities   = calloc(MAX_ENTITIES, sizeof(paEntity_t));
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -43,8 +43,8 @@ void pa_initializeEntityManager(paEntityManager_t* entityManager, paWsgManager_t
     // entityManager->tilemap->warps[0].y * 16);
     entityManager->playerEntity = entityManager->viewEntity;
 
-    //entityManager->activeEnemies = 0;
-    //entityManager->maxEnemies = 3;
+    // entityManager->activeEnemies = 0;
+    // entityManager->maxEnemies = 3;
 }
 
 void pa_updateEntities(paEntityManager_t* entityManager)
@@ -68,14 +68,16 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         paEntity_t* currentEntity = &(entityManager->entities[i]);
-        currentEntity->active = false;
+        currentEntity->active     = false;
 
-        //clear out invisible block tiles that are placed for every Break Block object
-        //if(currentEntity->type == PA_ENTITY_BREAK_BLOCK){
-        //    pa_setTile(currentEntity->tilemap, PA_TO_TILECOORDS(currentEntity->x >> SUBPIXEL_RESOLUTION), PA_TO_TILECOORDS(currentEntity->y >> SUBPIXEL_RESOLUTION), PA_TILE_EMPTY);            
-        //}
+        // clear out invisible block tiles that are placed for every Break Block object
+        // if(currentEntity->type == PA_ENTITY_BREAK_BLOCK){
+        //     pa_setTile(currentEntity->tilemap, PA_TO_TILECOORDS(currentEntity->x >> SUBPIXEL_RESOLUTION),
+        //     PA_TO_TILECOORDS(currentEntity->y >> SUBPIXEL_RESOLUTION), PA_TILE_EMPTY);
+        // }
 
-        if(currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->jumpPower == PA_TILE_SPAWN_BLOCK_0){
+        if (currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->jumpPower == PA_TILE_SPAWN_BLOCK_0)
+        {
             entityManager->gameData->remainingEnemies--;
         }
 
@@ -86,7 +88,7 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
     }
 
     entityManager->activeEntities = 0;
-    entityManager->aggroEnemies = 0;
+    entityManager->aggroEnemies   = 0;
 }
 
 void pa_drawEntities(paEntityManager_t* entityManager)
@@ -98,12 +100,12 @@ void pa_drawEntities(paEntityManager_t* entityManager)
         if (currentEntity.active && currentEntity.visible)
         {
             drawWsg(entityManager->wsgManager->sprites[currentEntity.spriteIndex].wsg,
-                    (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->wsgManager->sprites[currentEntity.spriteIndex].originX
+                    (currentEntity.x >> SUBPIXEL_RESOLUTION)
+                        - entityManager->wsgManager->sprites[currentEntity.spriteIndex].originX
                         - entityManager->tilemap->mapOffsetX,
                     (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->tilemap->mapOffsetY
                         - entityManager->wsgManager->sprites[currentEntity.spriteIndex].originY,
-                    currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
-                    0);
+                    currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical, 0);
         }
     }
 }
@@ -209,8 +211,8 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->spriteFlipVertical = false;
     entity->hp                 = 1;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
-    entity->state = PA_PL_ST_NORMAL;
-    entity->stateTimer = -1;
+    entity->state              = PA_PL_ST_NORMAL;
+    entity->stateTimer         = -1;
 
     entity->type                 = ENTITY_PLAYER;
     entity->spriteIndex          = PA_SP_PLAYER_SOUTH;
@@ -248,13 +250,13 @@ paEntity_t* createCrabdozer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->stateTimer           = -1;
     entity->tempStateTimer       = -1;
     entity->stateFlag            = false;
-    entity->baseSpeed = entityManager->gameData->enemyInitialSpeed;
+    entity->baseSpeed            = entityManager->gameData->enemyInitialSpeed;
 
     entity->type                 = PA_ENTITY_CRABDOZER;
     entity->spriteIndex          = PA_SP_ENEMY_SOUTH;
     entity->facingDirection      = PA_DIRECTION_NONE;
     entity->state                = PA_EN_ST_NORMAL;
-    entity->stateTimer           = 300 + (esp_random() % 600); //Min 5 seconds, max 15 seconds
+    entity->stateTimer           = 300 + (esp_random() % 600); // Min 5 seconds, max 15 seconds
     entity->updateFunction       = &updateCrabdozer;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
@@ -316,8 +318,8 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->x       = x << SUBPIXEL_RESOLUTION;
     entity->y       = y << SUBPIXEL_RESOLUTION;
 
-    entity->xspeed               = -64 +(esp_random() % 128);
-    entity->yspeed               = -64 +(esp_random() % 128);
+    entity->xspeed               = -64 + (esp_random() % 128);
+    entity->yspeed               = -64 + (esp_random() % 128);
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
@@ -347,10 +349,10 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
         return NULL;
     }
 
-    entity->active  = true;
-    entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->active    = true;
+    entity->visible   = true;
+    entity->x         = x << SUBPIXEL_RESOLUTION;
+    entity->y         = y << SUBPIXEL_RESOLUTION;
     entity->homeTileX = PA_TO_TILECOORDS(x);
     entity->homeTileY = PA_TO_TILECOORDS(y);
 
@@ -381,39 +383,52 @@ void pa_freeEntityManager(paEntityManager_t* self)
     free(self->entities);
 }
 
-paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
+paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager)
+{
     paEntity_t* newEnemy = NULL;
 
-    if(entityManager->gameData->remainingEnemies > 0 && entityManager->activeEnemies < entityManager->gameData->maxActiveEnemies){
+    if (entityManager->gameData->remainingEnemies > 0
+        && entityManager->activeEnemies < entityManager->gameData->maxActiveEnemies)
+    {
         uint16_t iterations = 0;
-        while(newEnemy == NULL && iterations < 2){
-            for(uint16_t ty = 1; ty < 14; ty++){
-                for(uint16_t tx = 1; tx < 16; tx++){
-                   
+        while (newEnemy == NULL && iterations < 2)
+        {
+            for (uint16_t ty = 1; ty < 14; ty++)
+            {
+                for (uint16_t tx = 1; tx < 16; tx++)
+                {
                     uint8_t t = pa_getTile(entityManager->tilemap, tx, ty);
 
-                    if(t == PA_TILE_SPAWN_BLOCK_0 && (iterations > 0 || !(esp_random() % entityManager->gameData->remainingEnemies) )){
-                        newEnemy = createCrabdozer(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
-                        
-                        if(newEnemy != NULL){
-                            //pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
-                            newEnemy->state = PA_EN_ST_STUN;
+                    if (t == PA_TILE_SPAWN_BLOCK_0
+                        && (iterations > 0 || !(esp_random() % entityManager->gameData->remainingEnemies)))
+                    {
+                        newEnemy
+                            = createCrabdozer(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                                              (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+
+                        if (newEnemy != NULL)
+                        {
+                            // pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
+                            newEnemy->state      = PA_EN_ST_STUN;
                             newEnemy->stateTimer = 120;
                             /*if(entityManager->activeEnemies == 0 || entityManager->gameData->remainingEnemies == 1){
                                 //The first and last enemies are permanently angry
                                 newEnemy->stateFlag = true;
                             }*/
 
-                            paEntity_t* newBreakBlock = pa_createBreakBlock(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
-                            if(newBreakBlock != NULL){
+                            paEntity_t* newBreakBlock = pa_createBreakBlock(
+                                entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                                (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+                            if (newBreakBlock != NULL)
+                            {
                                 soundPlaySfx(&(entityManager->soundManager->sndSpawn), 3);
                             }
-                            
+
                             entityManager->activeEnemies++;
                             entityManager->gameData->remainingEnemies--;
                             return newEnemy;
                         }
-                    } 
+                    }
                 }
             }
             iterations++;
