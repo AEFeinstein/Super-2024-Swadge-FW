@@ -283,6 +283,7 @@ typedef struct
     lfsrState_t shuffleState;
     int32_t shufflePos;
     int32_t headroom;
+    bool gmMode;
 
     wsg_t instrumentImages[16];
     wsg_t percussionImage;
@@ -1038,6 +1039,7 @@ static const char* menuItemIgnore     = "Enabled: ";
 static const char* menuItemBank       = "Bank Select: ";
 static const char* menuItemInstrument = "Instrument: ";
 static const char* menuItemResetAll   = "Reset All Channels";
+static const char* menuItemGm         = "General MIDI: ";
 static const char* menuItemReset      = "Reset";
 
 static const char* menuItemControls   = "Controllers";
@@ -1057,6 +1059,7 @@ static const char* const nvsKeyIgnoreChan       = "synth_ignorech";
 static const char* const nvsKeyChanPerc         = "synth_chpercus";
 static const char* const nvsKeySynthConf        = "synth_confblob";
 static const char* const nvsKeySynthControlConf = "synth_ctrlconf";
+static const char* const nvsKeyGmEnabled        = "synth_gmmode";
 
 static const char* const menuItemModeOptions[] = {
     "Streaming",
@@ -1190,6 +1193,11 @@ static const int32_t menuItemChannelsValues[] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 };
 
+static const int32_t menuItemGmValues[] = {
+    0,
+    1,
+};
+
 static settingParam_t menuItemModeBounds = {
     .def = 0,
     .min = 0,
@@ -1288,6 +1296,13 @@ static settingParam_t menuItemChannelsBounds = {
     .key = NULL,
 };
 
+static settingParam_t menuItemGmBounds = {
+    .def = 0,
+    .min = 0,
+    .max = 1,
+    .key = nvsKeyGmEnabled,
+};
+
 static const synthConfig_t defaultSynthConfig = {
     .ignoreChannelMask = 0,
     .percChannelMask = 0x0200, // Channel 10 set only
@@ -1301,6 +1316,24 @@ static const synthConfig_t defaultSynthConfig = {
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
+        0, 0, 0, 0,
+    },
+    .controlCounts = 0,
+};
+
+static const synthConfig_t nonGmSynthConfig = {
+    .ignoreChannelMask = 0,
+    .percChannelMask = 0x0600, // Channel 10 and 11 set
+    .programs = {
+        0, 1, 2, 3,
+        4, 5, 6, 7,
+        8, 0, 0, 0,
+        0, 0, 0, 0,
+    },
+    .banks = {
+        1, 1, 1, 1,
+        1, 1, 1, 1,
+        1, 0, 1, 0,
         0, 0, 0, 0,
     },
     .controlCounts = 0,
@@ -1427,6 +1460,12 @@ static void synthEnterMode(void)
     }
     sd->headroom            = nvsRead;
     sd->midiPlayer.headroom = sd->headroom;
+
+    if (!readNvs32(nvsKeyGmEnabled, &nvsRead))
+    {
+        nvsRead = 0;
+    }
+    sd->gmMode = nvsRead ? true : false;
 
     bool useDefaultConfig = true;
     size_t configBlobLen;
@@ -1986,6 +2025,15 @@ static void synthApplyConfig(void)
 {
     sd->midiPlayer.headroom = sd->headroom;
 
+    if (sd->gmMode)
+    {
+        midiGmOn(&sd->midiPlayer);
+    }
+    else
+    {
+        midiGmOff(&sd->midiPlayer);
+    }
+
     for (int i = 0; i < 16; i++)
     {
         uint16_t channelBit                   = (1 << i);
@@ -2351,6 +2399,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
     addSingleItemToMenu(menu, menuItemResetAll);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemResetAll, &sd->resetImage, rotTopMenu++, NO_SCROLL);
+
+    addSettingsOptionsItemToMenu(menu, menuItemGm, menuItemOffOnOptions, menuItemGmValues, ARRAY_SIZE(menuItemGmValues), &menuItemGmBounds, sd->gmMode);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemGm, NULL, rotTopMenu++, SCROLL_HORIZ_R);
+    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemGm, "GM");
 }
 
 static void synthSetupMenu(bool forceReset)
@@ -4232,6 +4284,24 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
     {
         sd->menuSelectedChannel = value;
         sd->updateMenu          = true;
+    }
+    else if (label == menuItemGm)
+    {
+        if (value != sd->gmMode)
+        {
+            // Also reset all channels
+            memcpy(&sd->synthConfig, (value ? &defaultSynthConfig : &nonGmSynthConfig), sizeof(synthConfig_t));
+            synthControlConfig_t* control;
+            while (NULL != (control = pop(&sd->controllerSettings)))
+            {
+                free(control);
+            }
+
+            sd->gmMode = value;
+            writeNvs32(nvsKeyGmEnabled, value);
+            synthApplyConfig();
+            sd->updateMenu = true;
+        }
     }
     else
     {
