@@ -45,8 +45,6 @@ static void doOpenCb(const char* path)
 
 int main(int argc, char** argv)
 {
-    const char* argumentName = NULL;
-
 #ifdef LOG_FILE
     logFile = fopen(LOG_FILE, "a");
 #endif
@@ -54,14 +52,22 @@ int main(int argc, char** argv)
     LOG("\nStarting up\n");
 
     LOG("Installing event handler...\n");
-
     MacOpenFileHandler handler;
-    installMacOpenFileHandler(&handler, doOpenCb);
-    checkForEventsMacOpenFileHandler(&handler, 500);
-    uninstallMacOpenFileHandler(&handler);
-    
-    LOG("Done processing events\n");
-    LOG("Argument was: %s\n", argumentName ? argumentName : "NULL");
+
+    bool installed = installMacOpenFileHandler(&handler, doOpenCb);
+
+    if (installed)
+    {
+        LOG("OK!\n");
+        checkForEventsMacOpenFileHandler(&handler, 500);
+        uninstallMacOpenFileHandler(&handler);
+        LOG("Done processing events\n");
+    }
+    else
+    {
+        LOG("FAILED!");
+        return 1;
+    }
 
     return 0;
 }
