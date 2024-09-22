@@ -64,7 +64,7 @@ void sokoLoadLevelSolvedState(soko_abs_t* soko)
 {
     // todo: automatically split for >32, >64 levels using 2 loops.
 
-    int lvs = 0;
+    int32_t lvs = 0;
     readNvs32("sklv1", &lvs);
     // i<32...
     for (size_t i = 0; i < SOKO_LEVEL_COUNT; i++)
@@ -90,7 +90,7 @@ void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved)
 
     int section = levelIndex / 32;
     int index   = levelIndex;
-    int lvs     = 0;
+    int32_t lvs = 0;
 
     if (section == 0)
     {

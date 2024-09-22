@@ -335,7 +335,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
         {
             if (!strpbrk(storageStr, "\n\t\r ") && (strstr(storageStr, ".bin")))
             {
-                int tokLen = strlen(storageStr);
+                // int tokLen = strlen(storageStr);
                 // char* tempPtr = calloc((tokLen + 1), sizeof(char)); // Length plus null teminator
                 // strcpy(tempPtr,storageStr);
                 // stringPtrs[ind] = tempPtr;

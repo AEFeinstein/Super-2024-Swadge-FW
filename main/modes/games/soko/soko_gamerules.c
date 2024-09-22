@@ -614,7 +614,6 @@ sokoDirection_t sokoDirectionFromDelta(int dx, int dy)
 sokoVec_t sokoGridToPix(soko_abs_t* self, sokoVec_t grid) // Convert grid position to screen pixel position
 {
     sokoVec_t retVec;
-    SETUP_FOR_TURBO();
     uint16_t scale
         = self->currentLevel
               .levelScale; //@todo These should be in constants, but too lazy to change all references at the moment.
@@ -896,8 +895,9 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
         possibleSquares = self->currentLevel.height - emitVec.y;
     }
 
-    int tileCollFlag, entCollFlag, entCollInd; // ,
-    tileCollFlag = entCollFlag = entCollInd = 0;
+    // int tileCollFlag = 0;
+    int entCollFlag = 0;
+    int entCollInd  = 0;
 
     sokoCollision_t retVal;
     // printf("emitVec(%d,%d)",emitVec.x,emitVec.y);
@@ -909,7 +909,7 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
         // printf("|n:%d,posTile:(%d,%d):%d|",n,testPos.x,testPos.y,posTile);
         if (tileCollision[posTile])
         {
-            tileCollFlag = 1;
+            // tileCollFlag = 1;
             break;
         }
         for (int m = 0; m < entityCount; m++) // iterate over tiles/entities to check for laser collision. First pass
