@@ -178,6 +178,7 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko)
     }
     size_t size = sizeof(char) * (soko->currentLevel.entityCount) * 4;
     writeNvsBlob("sk_ents", entities, size);
+    free(entities);
 }
 // todo: there is no clean place to return to the main menu right now, so gotta write that function/flow so this can get
 // called.
@@ -199,6 +200,7 @@ void sokoLoadCurrentLevelEntities(soko_abs_t* soko)
         soko->currentLevel.entities[i].y      = entities[i * 4 + 2];
         soko->currentLevel.entities[i].facing = entities[i * 4 + 3];
     }
+    free(entities);
 }
 
 void sokoSaveEulerTiles(soko_abs_t* soko)
@@ -298,6 +300,10 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     printf("load bin level %d, %s\n", levelIndex, soko->levelNames[levelIndex]);
     soko->state = SKS_INIT;
     size_t fileSize;
+    if (soko->levelBinaryData)
+    {
+        free(soko->levelBinaryData);
+    }
     soko->levelBinaryData
         = cnfsReadFile(soko->levelNames[levelIndex], &fileSize, true); // Heap CAPS malloc/calloc allocation for SPI RAM
 
@@ -397,13 +403,11 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     {
                         self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_CRATE;
                     }
-                    self->currentLevel.entities[self->currentLevel.entityCount].x = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties
-                        = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->sticky = sticky;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->trail  = trail;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x                 = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y                 = objY;
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag          = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.sticky = sticky;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.trail  = trail;
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
@@ -414,19 +418,17 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     // targetX  = self->levelBinaryData[i + 4];
                     // targetY  = self->levelBinaryData[i + 5];
 
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_WARP;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties
-                        = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->crates = crates;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->hp     = hp;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX
+                    self->currentLevel.entities[self->currentLevel.entityCount].type              = SKE_WARP;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x                 = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y                 = objY;
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag          = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.crates = crates;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.hp     = hp;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
                         = malloc(sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetY
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetY
                         = malloc(sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetCount = 1;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = 1;
                     self->currentLevel.entityCount += 1;
                     i += 6;
                     break;
@@ -455,33 +457,31 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     sticky   = !!(flagByte & (0x1 << 3));
                     hp       = self->levelBinaryData[i + 3];
 
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_BUTTON;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties
-                        = malloc(sizeof(sokoEntityProperties_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].type     = SKE_BUTTON;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x        = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y        = objY;
                     self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
                         = malloc(sizeof(uint8_t) * hp);
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetY
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetY
                         = malloc(sizeof(uint8_t) * hp);
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetCount = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->crates      = crates;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->players     = players;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->inverted    = inverted;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->sticky      = sticky;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.crates      = crates;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.players     = players;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.inverted    = inverted;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.sticky      = sticky;
                     for (int j = 0; j < hp; j++)
                     {
-                        self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX[j]
+                        self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX[j]
                             = self->levelBinaryData[3 + 2 * j + 1];
-                        self->currentLevel.entities[self->currentLevel.entityCount].properties->targetY[j]
+                        self->currentLevel.entities[self->currentLevel.entityCount].properties.targetY[j]
                             = self->levelBinaryData[3 + 2 * (j + 1)];
                     }
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetCount = hp;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->players     = players;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->crates      = crates;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->inverted    = inverted;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->sticky      = sticky;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = hp;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.players     = players;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.crates      = crates;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.inverted    = inverted;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.sticky      = sticky;
                     self->currentLevel.entityCount += 1;
                     i += (4 + 2 * hp);
                     break;
@@ -491,19 +491,17 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                                                               // direction bits and P is player push
                     players = !!(flagByte & (0x1 < 1));
 
-                    self->currentLevel.entities[self->currentLevel.entityCount].type   = SKE_LASER_EMIT_UP;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x      = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y      = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].facing = direction;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties
-                        = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag            = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->players = players;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX
+                    self->currentLevel.entities[self->currentLevel.entityCount].type               = SKE_LASER_EMIT_UP;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x                  = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y                  = objY;
+                    self->currentLevel.entities[self->currentLevel.entityCount].facing             = direction;
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.players = players;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
                         = calloc(SOKO_MAX_ENTITY_COUNT, sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
                         = calloc(SOKO_MAX_ENTITY_COUNT, sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetCount = 0;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = 0;
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
@@ -532,14 +530,12 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     direction = !!(flagByte & (0x1 < 0));
                     players   = !!(flagByte & (0x1 < 1));
 
-                    self->currentLevel.entities[self->currentLevel.entityCount].type   = SKE_LASER_90;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x      = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y      = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].facing = direction;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties
-                        = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag            = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->players = players;
+                    self->currentLevel.entities[self->currentLevel.entityCount].type               = SKE_LASER_90;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x                  = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y                  = objY;
+                    self->currentLevel.entities[self->currentLevel.entityCount].facing             = direction;
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.players = players;
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
@@ -548,13 +544,11 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     inverted = !!(flagByte & (0x1 < 2));
                     players  = !!(flagByte & (0x1 < 1));
 
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_GHOST;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties
-                        = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag            = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->players = players;
+                    self->currentLevel.entities[self->currentLevel.entityCount].type               = SKE_GHOST;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x                  = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y                  = objY;
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties.players = players;
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;

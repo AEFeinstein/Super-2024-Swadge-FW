@@ -144,6 +144,7 @@ static void sokoExitMode(void)
     //  euler
     freeWsg(&soko->eulerTheme.crateWSG);
     freeWsg(&soko->eulerTheme.crateOnGoalWSG);
+    free(soko->levelBinaryData); // TODO is this the best place to free?
     // Free everything else
     free(soko);
 }

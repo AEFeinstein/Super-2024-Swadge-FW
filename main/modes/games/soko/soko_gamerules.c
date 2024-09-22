@@ -80,7 +80,10 @@ void sokoConfigGamemode(
 
         for (size_t i = 0; i < soko->portalCount; i++)
         {
-            soko->portals[i].levelCompleted = soko->levelSolved[soko->portals[i].index];
+            if (soko->portals[i].index < SOKO_LEVEL_COUNT)
+            {
+                soko->portals[i].levelCompleted = soko->levelSolved[soko->portals[i].index];
+            }
         }
     }
     else if (variant == SOKO_LASERBOUNCE)
@@ -318,7 +321,7 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
         }
 
         // todo: this is a hack, we should have separate absSokoTryMoveEntityInDirection functions.
-        if (self->currentLevel.gameMode == SOKO_EULER && entity->propFlag && entity->properties->trail)
+        if (self->currentLevel.gameMode == SOKO_EULER && entity->propFlag && entity->properties.trail)
         {
             if (self->currentLevel.tiles[entity->x + dx][entity->y + dy] == SKT_FLOOR)
             {
@@ -808,7 +811,7 @@ int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, soko
             }
             // printf("|");
         }
-        sokoEntityProperties_t* entProps = rootEmitter->properties;
+        sokoEntityProperties_t* entProps = &rootEmitter->properties;
         if (tileCollFlag)
         {
             entProps->targetX[entProps->targetCount] = testPos.x; // Pack target properties with every impacted
@@ -835,7 +838,7 @@ int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, soko
         }
         testPos = sokoAddCoord(testPos, projVec);
     }
-    retVal = self->currentLevel.entities[entCollInd].properties->targetCount;
+    retVal = self->currentLevel.entities[entCollInd].properties.targetCount;
     // printf("\n");
     // retVal.x           = testPos.x;
     // retVal.y           = testPos.y;

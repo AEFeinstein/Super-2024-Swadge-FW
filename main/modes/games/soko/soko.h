@@ -132,7 +132,7 @@ typedef struct
     uint16_t x;
     uint16_t y;
     sokoDirection_t facing;
-    sokoEntityProperties_t* properties;
+    sokoEntityProperties_t properties;
     bool propFlag;
 } sokoEntity_t;
 
