@@ -14,9 +14,11 @@
 #endif
 
 static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef);
+static OSStatus globalEventHandler(EventHandlerCallRef handler, EventRef event, void* data);
 static void processEvents(const char** out);
 
-static char pathBuffer[1024];
+char pathBuffer[1024];
+EventHandlerRef globalEventHandlerRef;
 FILE* logFile;
 
 int main(int argc, char** argv)
@@ -98,18 +100,37 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
     return AEDisposeDesc(&docList);
 }
 
+static OSStatus globalEventHandler(EventHandlerCallRef handler, EventRef event, void* data)
+{
+    LOG("globalEventHandler()!!!!!!\n");
+    return noErr;
+}
+
 static void processEvents(const char** out)
 {
     memset(pathBuffer, 0, sizeof(pathBuffer));
 
     // Install handler
-    AEEventHandlerUPP handler = NewAEEventHandlerUPP(handleOpenDocumentEvent);
-    OSStatus result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handler, 0, false);
+    AEEventHandlerUPP openDocHandler = NewAEEventHandlerUPP(handleOpenDocumentEvent);
+    OSStatus result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, openDocHandler, 0, false);
 
     if (result != noErr)
     {
         LOG("Failed to install OpenDocument handler\n");
-        DisposeAEEventHandlerUPP(handler);
+        DisposeAEEventHandlerUPP(openDocHandler);
+        return;
+    }
+
+    // Install the application-level handler
+    const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
+
+    EventHandlerUPP globalHandler = NewEventHandlerUPP(globalEventHandler);
+    result = InstallApplicationEventHandler(globalHandler, 1, eventTypes, NULL, &globalEventHandlerRef);
+
+    if (result != noErr)
+    {
+        LOG("Failed to install global event handler\n");
+        DisposeEventHandlerUPP(globalHandler);
         return;
     }
     // Handler successfully installed, now check for events
@@ -118,7 +139,6 @@ static void processEvents(const char** out)
     EventRef eventRef;
     // Half a second timeout
     EventTimeout timeout = 0.5;
-    const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
 
     result = ReceiveNextEvent(1, eventTypes, timeout, kEventRemoveFromQueue, &eventRef);
 
@@ -157,6 +177,8 @@ static void processEvents(const char** out)
         break;
     }
     } while (1);//result != eventNotHandledErr);
+
+    DisposeEventHandlerUPP(globalEventHandler);
 
     result = AERemoveEventHandler(kCoreEventClass, kAEOpenDocuments, handleOpenDocumentEvent, false);
     if (result != noErr)
