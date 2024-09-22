@@ -1,9 +1,12 @@
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
 #include <Carbon/Carbon.h>
+
+extern Boolean ConvertEventRefToEventRecord(EventRef, EventRecord*);
 
 #define LOG_FILE "/Users/dylwhich/events.log"
 
@@ -103,6 +106,46 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
 static OSStatus globalEventHandler(EventHandlerCallRef handler, EventRef event, void* data)
 {
     LOG("globalEventHandler()!!!!!!\n");
+
+    bool inQueue = IsEventInQueue(GetMainEventQueue(), event);
+
+    if (inQueue)
+    {
+        RetainEvent(event);
+        RemoveEventFromQueue(GetMainEventQueue(), event);
+    }
+
+    EventRecord record;
+    ConvertEventRefToEventRecord(event, &record);
+    char messageStr[5] =
+    {
+        (char)((record.message >> 24) & 0xff),
+        (char)((record.message >> 16) & 0xff),
+        (char)((record.message >> 8) & 0xff),
+        (char)((record.message) & 0xff),
+        0,
+    };
+    LOG("globalEventHandler() what=%hu, message=%s\n", record.what, messageStr);
+    OSStatus result = AEProcessAppleEvent(&record);
+
+    if (result == errAEEventNotHandled)
+    {
+        LOG("errAEEventNotHandled in globalEventHandler()\n");
+    }
+    else if (result != noErr)
+    {
+        LOG("globalEventHandler() AEProcessAppleEvent() returned ERROR: %d (%s)\n", result, strerror(result));
+    }
+    else
+    {
+        LOG("globalEventHandler() AEProcessAppleEvent() success!\n");
+    }
+
+    if (inQueue)
+    {
+        ReleaseEvent(event);
+    }
+
     return noErr;
 }
 
