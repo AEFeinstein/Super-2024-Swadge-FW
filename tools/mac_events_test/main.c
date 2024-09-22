@@ -16,13 +16,32 @@ extern Boolean ConvertEventRefToEventRecord(EventRef, EventRecord*);
 #define LOG printf
 #endif
 
+typedef void (*MacOpenFileCb)(const char* path);
+
+typedef struct
+{
+    EventHandlerUPP globalEventHandler;
+    AEEventHandlerUPP appleEventHandler;
+    MacOpenFileCb openFileCallback;
+    EventHandlerRef globalEventHandlerRef;
+} MacOpenFileHandler;
+
+bool installMacOpenFileHandler(MacOpenFileHandler* handlerRef, MacOpenFileCb callback);
+void checkForEventsMacOpenFileHandler(MacOpenFileHandler* handlerRef, uint32_t millis);
+void uninstallMacOpenFileHandler(MacOpenFileHandler* handlerRef);
+
 static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef);
 static OSStatus globalEventHandler(EventHandlerCallRef handler, EventRef event, void* data);
-static void processEvents(const char** out);
+static void doOpenCb(const char* path);
 
-char pathBuffer[1024];
-EventHandlerRef globalEventHandlerRef;
 FILE* logFile;
+
+const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
+
+static void doOpenCb(const char* path)
+{
+    LOG("Got file: %s\n", path);
+}
 
 int main(int argc, char** argv)
 {
@@ -32,24 +51,122 @@ int main(int argc, char** argv)
     logFile = fopen(LOG_FILE, "a");
 #endif
 
-    LOG("Starting up\n");
+    LOG("\nStarting up\n");
 
-    processEvents(&argumentName);
+    LOG("Installing event handler...\n");
 
+    MacOpenFileHandler handler;
+    installMacOpenFileHandler(&handler, doOpenCb);
+    checkForEventsMacOpenFileHandler(&handler, 500);
+    uninstallMacOpenFileHandler(&handler);
+    
     LOG("Done processing events\n");
     LOG("Argument was: %s\n", argumentName ? argumentName : "NULL");
 
     return 0;
 }
 
-static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef)
+bool installMacOpenFileHandler(MacOpenFileHandler* handlerRef, MacOpenFileCb callback)
+{
+    // Init handler
+    handlerRef->appleEventHandler = NULL;
+    handlerRef->globalEventHandler = NULL;
+    handlerRef->openFileCallback = callback;
+
+    // Install handler
+    handlerRef->appleEventHandler = NewAEEventHandlerUPP(handleOpenDocumentEvent);
+    OSStatus result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handlerRef->appleEventHandler, (SRefCon)handlerRef, false);
+
+    if (result != noErr)
+    {
+        LOG("Failed to install OpenDocument handler\n");
+        uninstallMacOpenFileHandler(handlerRef);
+        return false;
+    }
+
+    // Install the application-level handler
+    const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
+
+    handlerRef->globalEventHandler = NewEventHandlerUPP(globalEventHandler);
+    result = InstallApplicationEventHandler(handlerRef->globalEventHandler, 1, eventTypes, NULL, &handlerRef->globalEventHandlerRef);
+
+    if (result != noErr)
+    {
+        LOG("Failed to install global event handler\n");
+        uninstallMacOpenFileHandler(handlerRef);
+        return false;
+    }
+
+    // Handler successfully installed
+    return true;
+}
+
+// Runs the event loop and waits for up to the specified time
+// The callback will be called for any events that are recevied
+void checkForEventsMacOpenFileHandler(MacOpenFileHandler* handlerRef, uint32_t millis)
+{
+    EventTimeout timeout = millis / 1000.0;
+    while (1)
+    {
+        EventRef eventRef;
+
+        OSErr result = ReceiveNextEvent(1, eventTypes, timeout, kEventRemoveFromQueue, &eventRef);
+
+        if (result == eventLoopTimedOutErr)
+        {
+            LOG("No event received after timeout\n");
+            break;
+        }
+        else if (result == noErr)
+        {
+            LOG("Got an event!\n");
+            result = SendEventToEventTarget(eventRef, GetEventDispatcherTarget());
+            ReleaseEvent(eventRef);
+            if (result != noErr)
+            {
+                if (result == eventNotHandledErr)
+                {
+                    LOG("Got eventNotHandledErr from SendEventToEventTarget()\n");
+                }
+                else
+                {
+                    LOG("Error in SendEventToEventTarget(): %d %s\n", result, strerror(result));
+                    break;
+                }
+            }
+        }
+        else
+        {
+            LOG("Error in ReceiveNextEvent()\n");
+            break;
+        }
+    }
+}
+
+// Uninstalls and deletes
+void uninstallMacOpenFileHandler(MacOpenFileHandler* handlerRef)
+{
+    if (handlerRef != NULL)
+    {
+        if (handlerRef->appleEventHandler != NULL)
+        {
+            DisposeAEEventHandlerUPP(handlerRef->appleEventHandler);
+            handlerRef->appleEventHandler = NULL;
+        }
+
+        if (handlerRef->globalEventHandler != NULL)
+        {
+            DisposeEventHandlerUPP(handlerRef->globalEventHandler);
+            handlerRef->globalEventHandler = NULL;
+        }
+        handlerRef->openFileCallback = NULL;
+    }
+}
+
+static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRefArg)
 {
     LOG("Hey, handleOpenDocumentEvent() got called!\n");
-    if (((FourCharCode)handlerRef) != 'odoc')
-    {
-        LOG("Ignoring event, not 'odoc'\n");
-        return noErr;
-    }
+    MacOpenFileHandler* handlerRef = (MacOpenFileHandler*)handlerRefArg;
 
     AEDescList docList;
     OSErr result = AEGetParamDesc(event, keyDirectObject, typeAEList, &docList);
@@ -90,8 +207,10 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
             CFStringRef docStringRef = CFURLCopyFileSystemPath(docUrlRef, kCFURLPOSIXPathStyle);
             if (docStringRef != NULL)
             {
+                char pathBuffer[1024];
                 if (CFStringGetFileSystemRepresentation(docStringRef, pathBuffer, sizeof(pathBuffer)))
                 {
+                    handlerRef->openFileCallback(pathBuffer);
                     LOG("Successfully handled event?\n");
                 }
                 CFRelease(docStringRef);
@@ -149,84 +268,3 @@ static OSStatus globalEventHandler(EventHandlerCallRef handler, EventRef event, 
     return noErr;
 }
 
-static void processEvents(const char** out)
-{
-    memset(pathBuffer, 0, sizeof(pathBuffer));
-
-    // Install handler
-    AEEventHandlerUPP openDocHandler = NewAEEventHandlerUPP(handleOpenDocumentEvent);
-    OSStatus result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, openDocHandler, 0, false);
-
-    if (result != noErr)
-    {
-        LOG("Failed to install OpenDocument handler\n");
-        DisposeAEEventHandlerUPP(openDocHandler);
-        return;
-    }
-
-    // Install the application-level handler
-    const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
-
-    EventHandlerUPP globalHandler = NewEventHandlerUPP(globalEventHandler);
-    result = InstallApplicationEventHandler(globalHandler, 1, eventTypes, NULL, &globalEventHandlerRef);
-
-    if (result != noErr)
-    {
-        LOG("Failed to install global event handler\n");
-        DisposeEventHandlerUPP(globalHandler);
-        return;
-    }
-    // Handler successfully installed, now check for events
-
-    do {
-    EventRef eventRef;
-    // Half a second timeout
-    EventTimeout timeout = 0.5;
-
-    result = ReceiveNextEvent(1, eventTypes, timeout, kEventRemoveFromQueue, &eventRef);
-
-    if (result == eventLoopTimedOutErr)
-    {
-        LOG("No event received after timeout\n");
-        break;
-    }
-    else if (result == noErr)
-    {
-        LOG("Got an event!\n");
-        result = SendEventToEventTarget(eventRef, GetEventDispatcherTarget());
-        ReleaseEvent(eventRef);
-        if (result == noErr)
-        {
-            // Our event handler should set up pathBuffer here
-            if (*pathBuffer)
-            {
-                LOG("Event successfully set pathBuffer\n");
-                *out = pathBuffer;
-            }
-        }
-        else if (result == eventNotHandledErr)
-        {
-            LOG("Got eventNotHandledErr from SendEventToEventTarget()\n");
-        }
-        else
-        {
-            LOG("Error in SendEventToEventTarget(): %d %s\n", result, strerror(result));
-            break;
-        }
-    }
-    else
-    {
-        LOG("Error in ReceiveNextEvent()\n");
-        break;
-    }
-    } while (1);//result != eventNotHandledErr);
-
-    DisposeEventHandlerUPP(globalEventHandler);
-
-    result = AERemoveEventHandler(kCoreEventClass, kAEOpenDocuments, handleOpenDocumentEvent, false);
-    if (result != noErr)
-    {
-        LOG("Failed to uninstall OpenDocument handler\n");
-    }
-
-}
