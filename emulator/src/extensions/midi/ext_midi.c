@@ -13,8 +13,8 @@
 #include <stdint.h>
 
 #ifdef EMU_MACOS
-// Used to handle DocumentOpen event that OSX uses instead of Just Putting It In Argv
-#include <Carbon/Carbon.h>
+    // Used to handle DocumentOpen event that OSX uses instead of Just Putting It In Argv
+    #include <Carbon/Carbon.h>
 #endif
 
 //==============================================================================
@@ -76,7 +76,7 @@ static const char* midiFile = NULL;
 static const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
 
 static bool handlerInstalled = false;
-static bool emulatorStarted = false;
+static bool emulatorStarted  = false;
 static MacOpenFileHandler macOpenFileHandler;
 #endif
 
@@ -159,13 +159,14 @@ static void doFileOpenCb(const char* path)
 bool installMacOpenFileHandler(MacOpenFileHandler* handlerRef, MacOpenFileCb callback)
 {
     // Init handler
-    handlerRef->appleEventHandler = NULL;
+    handlerRef->appleEventHandler  = NULL;
     handlerRef->globalEventHandler = NULL;
-    handlerRef->openFileCallback = callback;
+    handlerRef->openFileCallback   = callback;
 
     // Install handler
     handlerRef->appleEventHandler = NewAEEventHandlerUPP(handleOpenDocumentEvent);
-    OSStatus result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handlerRef->appleEventHandler, (SRefCon)handlerRef, false);
+    OSStatus result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handlerRef->appleEventHandler,
+                                            (SRefCon)handlerRef, false);
 
     if (result != noErr)
     {
@@ -176,7 +177,8 @@ bool installMacOpenFileHandler(MacOpenFileHandler* handlerRef, MacOpenFileCb cal
 
     // Install the application-level handler
     handlerRef->globalEventHandler = NewEventHandlerUPP(globalEventHandler);
-    result = InstallApplicationEventHandler(handlerRef->globalEventHandler, 1, eventTypes, NULL, &handlerRef->globalEventHandlerRef);
+    result                         = InstallApplicationEventHandler(handlerRef->globalEventHandler, 1, eventTypes, NULL,
+                                                                    &handlerRef->globalEventHandlerRef);
 
     if (result != noErr)
     {
@@ -202,7 +204,7 @@ void checkForEventsMacOpenFileHandler(MacOpenFileHandler* handlerRef, uint32_t m
 
         if (result == eventLoopTimedOutErr)
         {
-            //printf("No event received after timeout\n");
+            // printf("No event received after timeout\n");
             break;
         }
         else if (result == noErr)
@@ -213,7 +215,7 @@ void checkForEventsMacOpenFileHandler(MacOpenFileHandler* handlerRef, uint32_t m
             {
                 if (result == eventNotHandledErr)
                 {
-                    //printf("Got eventNotHandledErr from SendEventToEventTarget()\n");
+                    // printf("Got eventNotHandledErr from SendEventToEventTarget()\n");
                 }
                 else
                 {
@@ -263,7 +265,7 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
     }
 
     long docCount = 0;
-    result = AECountItems(&docList, &docCount);
+    result        = AECountItems(&docList, &docCount);
     if (result != noErr)
     {
         return result;
@@ -318,8 +320,7 @@ static OSStatus globalEventHandler(EventHandlerCallRef handler, EventRef event, 
 
     EventRecord record;
     ConvertEventRefToEventRecord(event, &record);
-    char messageStr[5] =
-    {
+    char messageStr[5] = {
         (char)((record.message >> 24) & 0xff),
         (char)((record.message >> 16) & 0xff),
         (char)((record.message >> 8) & 0xff),
