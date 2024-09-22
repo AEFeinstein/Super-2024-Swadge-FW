@@ -1,0 +1,65 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "mockup.tmx",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "Pango map format (*.bin)",
+    "fileStates": {
+        "mockup.bin": {
+            "scale": 2.3914930555555554,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 144.47041742286754,
+                "y": 120.63593466424685
+            }
+        },
+        "mockup.tmx": {
+            "scale": 2.39,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 144.14225941422592,
+                "y": 120.2928870292887
+            }
+        },
+        "pa-tileset.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "preset.tmx": {
+            "scale": 2.39,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 144.14225941422592,
+                "y": 120.2928870292887
+            }
+        }
+    },
+    "last.exportedFilePath": "/Users/jvega/Development/Swadge/esp32/2025/Swadge-IDF-5.0/tools/pango_editor",
+    "last.imagePath": "/Users/jvega/Development/Swadge/esp32/2025/Swadge-IDF-5.0/tools/pango_editor",
+    "map.height": 15,
+    "map.lastUsedExportFilter": "Pango map format (*.bin)",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 18,
+    "openFiles": [
+        "pa-tileset.tsx",
+        "mockup.tmx",
+        "preset.tmx"
+    ],
+    "project": "pango.tiled-project",
+    "recentFiles": [
+        "pa-tileset.tsx",
+        "preset.tmx",
+        "mockup.tmx",
+        "mockup.bin"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}

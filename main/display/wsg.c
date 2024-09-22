@@ -11,12 +11,6 @@
 #include "wsg.h"
 
 //==============================================================================
-// Function Prototypes
-//==============================================================================
-
-static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height);
-
-//==============================================================================
 // Functions
 //==============================================================================
 
@@ -25,12 +19,12 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
  * then reflection over Y axis, then reflection over X axis, then translation
  *
  * @param x The x coordinate of the pixel location to transform
- * @param y The y coordinate of the pixel location to trasform
+ * @param y The y coordinate of the pixel location to transform
  * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
  * @param width  The width of the image
  * @param height The height of the image
  */
-static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height)
+void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -253,7 +247,7 @@ void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool fli
             uint32_t dstY = srcY + yOff;
 
             // It is too complicated to detect both directions and backoff correctly, so we just do this here.
-            // It does slow things down a "tiny" bit.  People in the future could optimze out this check.
+            // It does slow things down a "tiny" bit.  People in the future could optimize out this check.
             if (dstY >= TFT_HEIGHT)
             {
                 continue;
@@ -347,18 +341,15 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
     int dWidth                   = TFT_WIDTH;
     int dHeight                  = TFT_HEIGHT;
     int wWidth                   = wsg->w;
-    int xMax                     = CLAMP(xOff + wWidth * yScale, 0, dWidth);
+    int xMax                     = CLAMP(xOff + wWidth * xScale, 0, dWidth);
     int yMax                     = CLAMP(yOff + wsg->h * yScale, 0, dHeight);
     const paletteColor_t* linein = wsg->px;
 
     int x1;
     int y1;
 
-    int ix = 0;
-    int iy = 0;
-
     // Draw each pixel, scaled
-    for (int y = yOff; y < yMax; y += yScale, iy++)
+    for (int y = yOff, iy = 0; y < yMax && iy < wsg->h; y += yScale, iy++)
     {
         if (y >= TFT_HEIGHT)
         {
@@ -374,8 +365,7 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
             continue;
         }
 
-        ix = 0;
-        for (int x = xOff; x < xMax; x += xScale, ix++)
+        for (int x = xOff, ix = 0; x < xMax && ix < wsg->w; x += xScale, ix++)
         {
             if (x >= TFT_WIDTH)
             {

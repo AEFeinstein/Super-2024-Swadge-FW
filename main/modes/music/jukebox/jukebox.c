@@ -32,7 +32,6 @@
 #include "mainMenu.h"
 #include "modeTimer.h"
 #include "mode_credits.h"
-#include "mode_pinball.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "midiPlayer.h"
