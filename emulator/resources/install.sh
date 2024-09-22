@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
-set -x
+# Uncomment this to print all script lines
+# set -x
 
 if [ -e swadge_emulator ]; then
     BIN_SRC="swadge_emulator"
