@@ -39,6 +39,7 @@ int main(int argc, char** argv)
 
 static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef)
 {
+    LOG("Hey, handleOpenDocumentEvent() got called!\n");
     if (((FourCharCode)handlerRef) != 'odoc')
     {
         LOG("Ignoring event, not 'odoc'\n");
@@ -113,6 +114,7 @@ static void processEvents(const char** out)
     }
     // Handler successfully installed, now check for events
 
+    do {
     EventRef eventRef;
     // Half a second timeout
     EventTimeout timeout = 0.5;
@@ -123,6 +125,7 @@ static void processEvents(const char** out)
     if (result == eventLoopTimedOutErr)
     {
         LOG("No event received after timeout\n");
+        break;
     }
     else if (result == noErr)
     {
@@ -138,15 +141,22 @@ static void processEvents(const char** out)
                 *out = pathBuffer;
             }
         }
+        else if (result == eventNotHandledErr)
+        {
+            LOG("Got eventNotHandledErr from SendEventToEventTarget()\n");
+        }
         else
         {
-            LOG("Error in SendEventToEventTarget()\n");
+            LOG("Error in SendEventToEventTarget(): %d %s\n", result, strerror(result));
+            break;
         }
     }
     else
     {
         LOG("Error in ReceiveNextEvent()\n");
+        break;
     }
+    } while (1);//result != eventNotHandledErr);
 
     result = AERemoveEventHandler(kCoreEventClass, kAEOpenDocuments, handleOpenDocumentEvent, false);
     if (result != noErr)
