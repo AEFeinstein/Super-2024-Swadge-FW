@@ -70,18 +70,24 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
 void cg_drawSparRecord(cGrove_t* cg)
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    cgRecord_t* record = &cg->spar.sparRecord[cg->spar.recordSelect];
     // Draw Match title
+    drawText(&cg->spar.sparRegFont, c555, record->matchTitle,
+             (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2, 4);
 
-    // Draw player names 
+    // Player names + vs label
+    int16_t vsStart = (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, "VS")) / 2;
+    drawText(&cg->spar.sparRegFont, c333, "VS", vsStart, 20);
+    drawText(&cg->spar.sparRegFont, c433, record->playerNames[0], vsStart - (textWidth(&cg->spar.sparRegFont, record->playerNames[0]) + 16), 20);
+    drawText(&cg->spar.sparRegFont, c334, record->playerNames[1], vsStart + textWidth(&cg->spar.sparRegFont, "VS") + 16, 20);
 
-    // Draw a result
-    // - Chowa names
-    // - Chow sprites
-    // - Round
-    // - VS label
-    // - Round length
-    // - Result
-    
+    // Round number and arrows
+    char buffer[10];
+    snprintf(buffer, sizeof(buffer) - 1, "Round %d", cg->spar.roundSelect);
+    drawWsgSimple(&cg->spar.arrow, (TFT_WIDTH - cg->spar.arrow.w)/2, 36);
+    drawText(&cg->spar.sparRegFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2, 52);
+    drawWsg(&cg->spar.arrow, (TFT_WIDTH - cg->spar.arrow.w)/2, 72, false, true, 0);
+
     // Draw record number and arrows
 }
 

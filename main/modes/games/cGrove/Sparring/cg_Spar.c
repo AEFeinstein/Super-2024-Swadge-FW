@@ -21,6 +21,7 @@
 //==============================================================================
 
 static void sparMenuCb(const char* label, bool selected, uint32_t settingVal);
+static void sparLoadBattleRecords(void);
 
 //==============================================================================
 // Const variables
@@ -60,6 +61,7 @@ void cg_initSpar(cGrove_t* grove)
     {
         loadWsg(sparDojoSprites[idx], &cg->spar.dojoBGItems[idx], true);
     }
+    loadWsg("cg_Arrow.wsg", &cg->spar.arrow, true);
 
     // Fonts
     loadFont("righteous_150.font", &cg->spar.sparTitleFont, true);
@@ -102,6 +104,7 @@ void cg_deInitSpar()
     freeFont(&cg->spar.sparRegFont);
 
     // Free assets
+    freeWsg(&cg->spar.arrow);
     freeWsg(&cg->spar.dojoBG);
     for (uint8_t i = 0; i < ARRAY_SIZE(sparDojoSprites); i++)
     {
@@ -177,25 +180,25 @@ void cg_runSpar(int64_t elapsedUs)
                             cg->spar.recordSelect--;
                             if (cg->spar.recordSelect < 0)
                             {
-                                cg->spar.recordSelect = CG_SPAR_MAX_RECORDS;
+                                cg->spar.recordSelect = CG_SPAR_MAX_RECORDS - 1;
                             }
                             break;
                         }
                         case PB_UP:
                         {
                             cg->spar.roundSelect++;
-                            if (cg->spar.recordSelect >= 3)
+                            if (cg->spar.roundSelect >= 3)
                             {
-                                cg->spar.recordSelect = 0;
+                                cg->spar.roundSelect = 0;
                             }
                             break;
                         }
                         case PB_DOWN:
                         {
-                            cg->spar.recordSelect--;
-                            if (cg->spar.recordSelect < 0)
+                            cg->spar.roundSelect--;
+                            if (cg->spar.roundSelect < 0)
                             {
-                                cg->spar.recordSelect = 3;
+                                cg->spar.roundSelect = 3;
                             }
                             break;
                         }
@@ -280,4 +283,26 @@ static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
 static void sparLoadBattleRecords()
 {
     // FIXME: Load from disk
+    for (int32_t idx = 0; idx < CG_SPAR_MAX_RECORDS; idx++)
+    {
+        char buff[17];
+        snprintf(buff, sizeof(buff) - 1, "Match %d", idx);
+        strcpy(cg->spar.sparRecord[idx].matchTitle, buff);
+        for (int32_t i = 0; i < 2; i++)
+        {
+            snprintf(buff, sizeof(buff) - 1, "Player %d", i);
+            strcpy(cg->spar.sparRecord[idx].playerNames[i], buff);
+        }
+        for (int32_t i = 0; i < 6; i++)
+        {
+            snprintf(buff, sizeof(buff) - 1, "TestChowa%d", i);
+            strcpy(cg->spar.sparRecord[idx].chowaNames[i], buff);
+            cg->spar.sparRecord[idx].colorType[i] = i;
+        }
+        for (int32_t i = 0; i < 3; i++)
+        {
+            cg->spar.sparRecord[idx].result[i] = i;
+            cg->spar.sparRecord[idx].timer[i] = i * 50;
+        }
+    }
 }
