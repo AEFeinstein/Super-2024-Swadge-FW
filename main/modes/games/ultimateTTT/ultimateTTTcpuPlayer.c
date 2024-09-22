@@ -7,8 +7,13 @@
 #include "ultimateTTT.h"
 #include "ultimateTTTp2p.h"
 
-//#define TCPU_LOG ESP_LOGI
-#define TCPU_LOG ESP_LOGD
+#define DEBUG_TTT_CPU
+
+#ifdef DEBUG_TTT_CPU
+#define TCPU_LOG(...) ESP_LOGI("TTT", __VA_ARGS__)
+#else
+#define TCPU_LOG(...)
+#endif
 
 // 500ms delay so it's easier to see what's going on
 #define DELAY_TIME 500000
@@ -87,7 +92,7 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
 {
     if (ttt->game.cpu.state == TCPU_INACTIVE)
     {
-        TCPU_LOG("TTT", "Invactive.");
+        TCPU_LOG("Invactive.");
         return;
     }
 
@@ -102,8 +107,8 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
 
     if (ttt->game.cpu.state == TCPU_THINKING)
     {
-        TCPU_LOG("TTT", ">>>>>>>>>>>>>>>>>>>>");
-        TCPU_LOG("TTT", "Thinking...");
+        TCPU_LOG(">>>>>>>>>>>>>>>>>>>>");
+        TCPU_LOG("Thinking...");
         if (ttt->game.cursorMode == SELECT_SUBGAME)
         {
             tttCpuSelectSubgame(ttt);
@@ -114,34 +119,34 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
         }
         else
         {
-            TCPU_LOG("TTT", "CPU doesn't know what to do!");
+            TCPU_LOG("CPU doesn't know what to do!");
             switch (ttt->game.cursorMode)
             {
                 case NO_CURSOR:
-                TCPU_LOG("TTT", "cursorMode == NO_CURSOR");
+                TCPU_LOG("cursorMode == NO_CURSOR");
                 break;
 
                 case SELECT_SUBGAME:
-                TCPU_LOG("TTT", "cursorMode == SELECT_SUBGAME");
+                TCPU_LOG("cursorMode == SELECT_SUBGAME");
                 break;
 
                 case SELECT_CELL:
-                TCPU_LOG("TTT", "cursorMode == SELECT_CELL");
+                TCPU_LOG("cursorMode == SELECT_CELL");
                 break;
 
                 case SELECT_CELL_LOCKED:
-                TCPU_LOG("TTT", "cursorMode == SELECT_CELL_LOCKED");
+                TCPU_LOG("cursorMode == SELECT_CELL_LOCKED");
                 break;
             }
         }
     }
     else if (ttt->game.cpu.state == TCPU_MOVING)
     {
-        TCPU_LOG("TTT", "Moving...");
+        TCPU_LOG("Moving...");
 
         if (ttt->game.cursorMode == SELECT_SUBGAME)
         {
-            TCPU_LOG("TTT", "Moving to Subgame");
+            TCPU_LOG("Moving to Subgame");
             tttMsgMoveCursor_t payload;
             payload.type = MSG_MOVE_CURSOR;
             payload.cursorMode = SELECT_SUBGAME;
@@ -214,7 +219,7 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
         }
         else if (ttt->game.cursorMode == SELECT_CELL || ttt->game.cursorMode == SELECT_CELL_LOCKED)
         {
-            TCPU_LOG("TTT", "Moving to cell");
+            TCPU_LOG("Moving to cell");
             tttMsgMoveCursor_t payload;
             payload.type = MSG_MOVE_CURSOR;
             payload.cursor.x = ttt->game.cursor.x;
@@ -244,7 +249,7 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
                 {
                     if (!tttCursorIsValid(ttt, &ttt->game.cursor))
                     {
-                        printf("??????????????? cursor is not valid????????\n");
+                        TCPU_LOG("??????????????? cursor is not valid????????\n");
                     }
                     // The cursor is in the right place, select it!
                     tttMsgPlaceMarker_t placePayload;
@@ -266,7 +271,7 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
         }
         else
         {
-            TCPU_LOG("TTT", "Something else???");
+            TCPU_LOG("Something else???");
         }
     }
 }
@@ -280,7 +285,7 @@ static bool selectSubgame_easy(ultimateTTT_t* ttt, int *x, int *y)
     {
         if (TTT_NONE == ttt->game.subgames[idx % 3][idx / 3].winner)
         {
-            TCPU_LOG("TTT", "Sub-game %d, %d is a valid target", idx % 3, idx / 3);
+            TCPU_LOG("Sub-game %d, %d is a valid target", idx % 3, idx / 3);
             availableSubgames[availableCount++] = idx;
         }
     }
@@ -356,7 +361,7 @@ static void tttCpuSelectSubgame(ultimateTTT_t* ttt)
     if (result)
     {
 
-        TCPU_LOG("TTT", "Selecting subgame %d, %d", x, y);
+        TCPU_LOG("Selecting subgame %d, %d", x, y);
         ttt->game.cpu.destSubgame.x = x;
         ttt->game.cpu.destSubgame.y = y;
         ttt->game.cpu.state = TCPU_MOVING;
@@ -384,7 +389,7 @@ static bool selectCell_easy(ultimateTTT_t* ttt, int *x, int *y)
     {
         if (TTT_NONE == subgame->game[idx % 3][idx / 3])
         {
-            TCPU_LOG("TTT", "Cell %d, %d is a valid target", idx % 3, idx / 3);
+            TCPU_LOG("Cell %d, %d is a valid target", idx % 3, idx / 3);
             availableCells[availableCount++] = idx;
         }
     }
@@ -570,13 +575,13 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
     }
 
     // Just some debugging
-    printf("--------------------\n");
-    printf(" In subgame (%" PRIu32 ", %" PRIu32 "):\n", ttt->game.selectedSubgame.x, ttt->game.selectedSubgame.y);
-    printf("[-------] - Invalid move\n");
-    printf("[xx /.. ] - Our score for the current subgame if this cell is selected\n");
-    printf("[.. /xx ] - Opponent's score for subgame corresponding to this cell\n");
-    printf("[xx*/.. ] - Ideal subgame move\n");
-    printf("[.. /xx^] - Least favorable for opponent\n");
+    TCPU_LOG("--------------------\n");
+    TCPU_LOG(" In subgame (%" PRIu32 ", %" PRIu32 "):\n", ttt->game.selectedSubgame.x, ttt->game.selectedSubgame.y);
+    TCPU_LOG("[-------] - Invalid move\n");
+    TCPU_LOG("[xx /.. ] - Our score for the current subgame if this cell is selected\n");
+    TCPU_LOG("[.. /xx ] - Opponent's score for subgame corresponding to this cell\n");
+    TCPU_LOG("[xx*/.. ] - Ideal subgame move\n");
+    TCPU_LOG("[.. /xx^] - Least favorable for opponent\n");
 
     int16_t combinedScores[3][3];
     int16_t maxCombScore = INT16_MIN;
@@ -592,7 +597,7 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
                 combinedScores[ix][iy] = INT16_MIN;
 
                 // Not valid
-                printf("[----]   ");
+                TCPU_LOG("[----]   ");
                 continue;
             }
 
@@ -631,8 +636,8 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
                 maxCombY = iy;
             }
 
-            //printf("[%02" PRIu16 "%c/%02" PRIu16 "%c]   ", thisCellScore, playerFlag, score, oppFlag);
-            printf("[%02" PRId16 "%c%c]   ", ((int16_t)thisCellScore - (int16_t)score), playerFlag, oppFlag);
+            //TCPU_LOG("[%02" PRIu16 "%c/%02" PRIu16 "%c]   ", thisCellScore, playerFlag, score, oppFlag);
+            TCPU_LOG("[%02" PRId16 "%c%c]   ", ((int16_t)thisCellScore - (int16_t)score), playerFlag, oppFlag);
         }
 
         putchar('\n');
@@ -659,7 +664,7 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
 
 static void tttCpuSelectCell(ultimateTTT_t* ttt)
 {
-    TCPU_LOG("TTT", "CPU selecting next cell...");
+    TCPU_LOG("CPU selecting next cell...");
 
     int x, y;
     bool result = false;
@@ -680,7 +685,7 @@ static void tttCpuSelectCell(ultimateTTT_t* ttt)
 
     if (result)
     {
-        TCPU_LOG("TTT", "Selecting cell %d, %d", x, y);
+        TCPU_LOG("Selecting cell %d, %d", x, y);
         ttt->game.cpu.destCell.x = x;
         ttt->game.cpu.destCell.y = y;
         ttt->game.cpu.state = TCPU_MOVING;
@@ -816,9 +821,9 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 
     memcpy(simulation, subgame, sizeof(simulation));
 
-    //printf(">>> Moves to win game:\n");
+    //TCPU_LOG(">>> Moves to win game:\n");
     //printGame(subgame);
-    //printf("---\n");
+    //TCPU_LOG("---\n");
 
     uint16_t minMovesToWin = 5;
 
@@ -861,7 +866,7 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 
         simulation[DECODE_LOC_X(analysis)][DECODE_LOC_Y(analysis)] = player;
 
-        //printf("--> (%" PRIu16 ", %" PRIu16 ") - %s:\n", DECODE_LOC_X(analysis), DECODE_LOC_Y(analysis), getMoveName(DECODE_MOVE(analysis)));
+        //TCPU_LOG("--> (%" PRIu16 ", %" PRIu16 ") - %s:\n", DECODE_LOC_X(analysis), DECODE_LOC_Y(analysis), getMoveName(DECODE_MOVE(analysis)));
         //printGame(simulation);
 
         movesToWin++;
@@ -870,13 +875,13 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 
     if (result == player)
     {
-        //printf("%" PRIu16 " moves to win\n", movesToWin);
+        //TCPU_LOG("%" PRIu16 " moves to win\n", movesToWin);
         // Player won, return moves to win
         return movesToWin;
     }
     else
     {
-        //printf("Can't win, 3 moves to win\n");
+        //TCPU_LOG("Can't win, 3 moves to win\n");
         // This is a tie or a loss
         // 10 moves to win is basically infinite
         return 3;
@@ -1137,7 +1142,7 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
         }
     }
 
-    TCPU_LOG("TTT", "We should have picked a move already? Not sure this is possible");
+    TCPU_LOG("We should have picked a move already? Not sure this is possible");
     return 0;
 }
 
