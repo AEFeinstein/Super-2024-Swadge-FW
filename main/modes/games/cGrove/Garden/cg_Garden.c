@@ -45,7 +45,7 @@ static void _cgAttemptGrab(cGrove_t* cg)
     {
         if (cg->chowa[c].active)
         {
-            rectangle_t translated = {.pos = subVec2d(cg->chowa[c].aabb.pos, cg->garden.field.cam.aabb.pos),
+            rectangle_t translated = {.pos    = subVec2d(cg->chowa[c].aabb.pos, cg->garden.field.cam.aabb.pos),
                                       .height = cg->chowa[c].aabb.height,
                                       .width  = cg->chowa[c].aabb.width};
             if (rectRectIntersection(cg->garden.cursorAABB, translated, &collVec))
@@ -233,12 +233,12 @@ void cgRunGarden(cGrove_t* cg)
         }
     }
     // Chowa
-    //vec_t cam = {.x = -cg->garden.field.cam.aabb.pos.x, .y = -cg->garden.field.cam.aabb.pos.y};
+    // vec_t cam = {.x = -cg->garden.field.cam.aabb.pos.x, .y = -cg->garden.field.cam.aabb.pos.y};
     for (int8_t c = 0; c < CG_FIELD_ITEM_LIMIT; c++)
     {
         if (cg->chowa[c].active)
         {
-            //cgDrawChowa(cg, c, cam);
+            // cgDrawChowa(cg, c, cam);
         }
     }
     // Hand

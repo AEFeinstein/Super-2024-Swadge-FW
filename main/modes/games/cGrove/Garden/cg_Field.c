@@ -21,7 +21,7 @@
 
 /**
  * @brief Draws the background grass color.
- * 
+ *
  * @param grassColor Color of the grass. Possible to change for seasons?
  */
 static void _cgDrawLawn(paletteColor_t grassColor)
@@ -33,7 +33,7 @@ static void _cgDrawLawn(paletteColor_t grassColor)
 
 /**
  * @brief Initialized a static background object
- * 
+ *
  * @param cg Game Object
  * @param spr sprite of the object
  * @param x x coordinate
@@ -42,16 +42,16 @@ static void _cgDrawLawn(paletteColor_t grassColor)
  */
 static void _cgInitObject(cGrove_t* cg, wsg_t spr, int16_t x, int16_t y, int8_t idx)
 {
-    cg->garden.field.staticObjects[idx].spr        = spr;
-    cg->garden.field.staticObjects[idx].aabb.pos.x = x;
-    cg->garden.field.staticObjects[idx].aabb.pos.y = y;
+    cg->garden.field.staticObjects[idx].spr         = spr;
+    cg->garden.field.staticObjects[idx].aabb.pos.x  = x;
+    cg->garden.field.staticObjects[idx].aabb.pos.y  = y;
     cg->garden.field.staticObjects[idx].aabb.height = spr.h;
-    cg->garden.field.staticObjects[idx].aabb.width = spr.w;
+    cg->garden.field.staticObjects[idx].aabb.width  = spr.w;
 }
 
 /**
  * @brief Draws a background object
- * 
+ *
  * @param cg Game Object
  * @param obj index of object
  */
@@ -86,14 +86,16 @@ void cgMoveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange)
     if (cg->garden.field.cam.aabb.pos.x < 0)
     {
         cg->garden.field.cam.aabb.pos.x = 0;
-    } else if (cg->garden.field.cam.aabb.pos.x > CG_FIELD_WIDTH - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.width))
+    }
+    else if (cg->garden.field.cam.aabb.pos.x > CG_FIELD_WIDTH - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.width))
     {
         cg->garden.field.cam.aabb.pos.x = CG_FIELD_WIDTH - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.width);
     }
     if (cg->garden.field.cam.aabb.pos.y < 0)
     {
         cg->garden.field.cam.aabb.pos.y = 0;
-    } else if (cg->garden.field.cam.aabb.pos.y > CG_FIELD_HEIGHT - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.height))
+    }
+    else if (cg->garden.field.cam.aabb.pos.y > CG_FIELD_HEIGHT - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.height))
     {
         cg->garden.field.cam.aabb.pos.x = CG_FIELD_HEIGHT - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.height);
     }
@@ -106,7 +108,7 @@ void cgDrawField(cGrove_t* cg)
 
     // Draw pond
     // TODO: Make pond
-    
+
     // Draw static objects
     vec_t temp;
     for (int8_t obj = 0; obj < CG_FIELD_OBJ_COUNT; obj++)

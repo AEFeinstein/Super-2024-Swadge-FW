@@ -163,7 +163,6 @@ void cg_runSpar(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
-                    // FIXME: Scroll through records
                     switch (evt.button)
                     {
                         case PB_RIGHT:
@@ -302,7 +301,66 @@ static void sparLoadBattleRecords()
         for (int32_t i = 0; i < 3; i++)
         {
             cg->spar.sparRecord[idx].result[i] = i;
-            cg->spar.sparRecord[idx].timer[i] = (i + 1) * 50;
+            cg->spar.sparRecord[idx].timer[i]  = (i + 1) * 50;
         }
     }
 }
+
+/**
+ * @brief Initializes the high scores based either from NVS or predetermined scores to beat
+ *
+ */
+/* static void t48InitHighScores()
+{
+    // Init High scores
+    for (int8_t i = 0; i < T48_HS_COUNT; i++)
+    {
+        if (!readNvs32(highScoreKey[i], &t48->highScore[i]))
+        {
+            switch (i)
+            {
+                case 0:
+                    t48->highScore[i] = 96880;
+                    break;
+                case 1:
+                    t48->highScore[i] = 69224;
+                    break;
+                case 2:
+                    t48->highScore[i] = 24244;
+                    break;
+                case 3:
+                    t48->highScore[i] = 11020;
+                    break;
+                case 4:
+                    t48->highScore[i] = 5176;
+                    break;
+            }
+            writeNvs32(highScoreKey[i], t48->highScore[i]);
+        }
+        size_t len = 4;
+        if (!readNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], &len))
+        {
+            static char buff[5];
+            switch (i)
+            {
+                case 0:
+                    strcpy(buff, "JW");
+                    break;
+                case 1:
+                    strcpy(buff, "Pan");
+                    break;
+                case 2:
+                    strcpy(buff, "Pix");
+                    break;
+                case 3:
+                    strcpy(buff, "Poe");
+                    break;
+                case 4:
+                    strcpy(buff, "DrG");
+                    break;
+            }
+            strcpy(t48->hsInitials[i], buff);
+            writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], len);
+        }
+    }
+} */

@@ -35,7 +35,13 @@ static void cg_drawSparUI(cGrove_t* cg);
 // Functions
 //==============================================================================
 
-void cg_drawSpar(cGrove_t* cg, int64_t elapsedUs)
+/**
+ * @brief Draws the match
+ *
+ * @param cg Game data
+ * @param elapsedUs TIme since last frame
+ */
+void cg_drawMatch(cGrove_t* cg, int64_t elapsedUs)
 {
     // Draw dojo
     cg_drawSparField(cg);
@@ -46,6 +52,12 @@ void cg_drawSpar(cGrove_t* cg, int64_t elapsedUs)
     // Draw Chowa
 }
 
+/**
+ * @brief Draws the splash screen
+ *
+ * @param cg Game data
+ * @param elapsedUs Time since last frame
+ */
 void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
 {
     // Draw dojo
@@ -64,9 +76,23 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
     xOff = 32;
     yOff = TFT_HEIGHT - 32;
     // Draw "Press A to continue" prompt
-    drawTextWordWrap(&cg->spar.sparRegFont, c000, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
+    cg->spar.timer += elapsedUs;
+    if (cg->spar.timer >= 500000)
+    {
+        cg->spar.timer = 0;
+        cg->spar.toggle = !cg->spar.toggle;
+    }
+    if (cg->spar.toggle)
+    {
+        drawTextWordWrap(&cg->spar.sparRegFont, c000, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
+    }
 }
 
+/**
+ * @brief Draws the battle record
+ *
+ * @param cg Game data
+ */
 void cg_drawSparRecord(cGrove_t* cg)
 {
     // Background
@@ -81,8 +107,7 @@ void cg_drawSparRecord(cGrove_t* cg)
     drawWsg(&cg->spar.arrow,
             (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2 - (4 + cg->spar.arrow.w), 4, false,
             false, 270);
-    drawWsg(&cg->spar.arrow,
-            (TFT_WIDTH + textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2 + 4, 4, false,
+    drawWsg(&cg->spar.arrow, (TFT_WIDTH + textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2 + 4, 4, false,
             false, 90);
 
     // Player names + vs label
@@ -139,6 +164,15 @@ void cg_drawSparRecord(cGrove_t* cg)
     }
 }
 
+void cg_drawSparMatchSetup(cGrove_t cg)
+{
+}
+
+/**
+ * @brief Draws the background
+ *
+ * @param cg Game data
+ */
 static void cg_drawSparField(cGrove_t* cg)
 {
     // Draw dojo

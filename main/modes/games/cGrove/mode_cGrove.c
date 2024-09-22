@@ -4,9 +4,9 @@
  * @brief A small game similar to the chao garden from the Sonic seres by SEGA
  * @version 0.1
  * @date 2024-09-07
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 //==============================================================================
@@ -19,10 +19,16 @@
 #include "cg_Spar.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define CG_FRAMERATE 16667
+
+//==============================================================================
 // Consts
 //==============================================================================
 
-static const char cGroveTitle[] = "Chowa Grove";            // Game title
+static const char cGroveTitle[] = "Chowa Grove"; // Game title
 
 //==============================================================================
 // Function declarations
@@ -35,7 +41,7 @@ static void cGroveMainLoop(int64_t elapsedUs);
 //==============================================================================
 // Variables
 //==============================================================================
- swadgeMode_t cGroveMode = {
+swadgeMode_t cGroveMode = {
     .modeName                 = cGroveTitle,
     .wifiMode                 = ESP_NOW,
     .overrideUsb              = false,
@@ -63,6 +69,7 @@ static void cGroveEnterMode(void)
 {
     // Mode memory allocation
     grove = calloc(1, sizeof(cGrove_t));
+    setFrameRateUs(CG_FRAMERATE);
 
     // Load a font
     loadFont("ibm_vga8.font", &grove->menuFont, false);
@@ -78,9 +85,9 @@ static void cGroveEnterMode(void)
     loadWsg("cgChowaNeutral.wsg", &grove->chowaExpressions[CG_NEUTRAL], true);
     loadWsg("cgChowaHappy.wsg", &grove->chowaExpressions[CG_HAPPY], true);
     loadWsg("cgChowaWorried.wsg", &grove->chowaExpressions[CG_WORRIED], true);
-    
+
     // Init
-    // FIXME: Load and unload when switching to and from a mode 
+    // FIXME: Load and unload when switching to and from a mode
     cgInitGarden(grove);
     cg_initSpar(grove);
 
@@ -88,7 +95,7 @@ static void cGroveEnterMode(void)
 }
 
 static void cGroveExitMode(void)
-{    
+{
     // Unload sub modes
     cg_deInitSpar();
 
@@ -109,14 +116,14 @@ static void cGroveExitMode(void)
     {
         freeWsg(&grove->gardenSpr[i]);
     }
-    
-    //Fonts
-    freeFont(&grove->menuFont); 
+
+    // Fonts
+    freeFont(&grove->menuFont);
     // Main
     free(grove);
 }
 
-static void cGroveMainLoop(int64_t elapsedUs) 
+static void cGroveMainLoop(int64_t elapsedUs)
 {
     switch (grove->state)
     {

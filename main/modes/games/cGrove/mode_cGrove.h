@@ -4,9 +4,9 @@
  * @brief A small game similar to the chao garden from the Sonic seres by SEGA
  * @version 0.1
  * @date 2024-09-07
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #pragma once

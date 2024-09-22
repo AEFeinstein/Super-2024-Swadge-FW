@@ -4,9 +4,9 @@
  * @brief Draws the Chowa Garden Spar
  * @version 0.1
  * @date 2024-09-19
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 
@@ -20,6 +20,6 @@
 // Functions
 //==============================================================================
 
-void cg_drawSpar(cGrove_t* cg, int64_t elapsedUs);
+void cg_drawMatch(cGrove_t* cg, int64_t elapsedUs);
 void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs);
 void cg_drawSparRecord(cGrove_t* cg);

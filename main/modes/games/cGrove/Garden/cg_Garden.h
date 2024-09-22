@@ -4,9 +4,9 @@
  * @brief The main interation area with the Chowa
  * @version 0.1
  * @date 2024-09-07
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 
@@ -28,14 +28,14 @@
 
 /**
  * @brief Initialize the Garden mode
- * 
+ *
  * @param cg Game Object
  */
 void cgInitGarden(cGrove_t* cg);
 
 /**
  * @brief Main loop ofr Garden mode
- * 
+ *
  * @param cg Game Object
  */
 void cgRunGarden(cGrove_t* cg);

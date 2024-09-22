@@ -10,11 +10,11 @@
  */
 #pragma once
 
-//==============================================================================
-// Defines
-//==============================================================================
-
+// Includes ============================
 #include "swadge2024.h"
+
+// Defines =============================
+#define CG_MAX_STR_LEN 17
 
 //==============================================================================
 // Items
@@ -23,15 +23,16 @@
 // Structs ==============================
 typedef struct
 {
-    char name[16];
-    rectangle_t aabb;
-    wsg_t spr;
-    bool active;
+    char name[CG_MAX_STR_LEN]; ///< Name
+    rectangle_t aabb;          ///< Position and bounding box
+    wsg_t spr;                 ///< Spr for item
+    bool active;               ///< If item slot is being used
 } cgItem_t;
 
 typedef struct
 {
-    wsg_t* spr;
+    char name[CG_MAX_STR_LEN]; ///< Name
+    wsg_t* spr;                ///< Sprite
 } cgWearable_t;
 
 //==============================================================================
@@ -136,21 +137,15 @@ typedef struct
 
 typedef struct
 {
-    // Name
-    char name[17];
-    // Icon
-    wsg_t* icon;
+    char name[CG_MAX_STR_LEN]; ///< Name of the NPC
+    wsg_t* icon;               ///< Icons for dialogue
     // Text for competitions
-    // Chowa
-    cgChowa_t chowa[3];
+    cgChowa_t chowa[3]; ///< NPCs CHowa
 } cgNPC_t;
 
 //==============================================================================
 // Submode generics
 //==============================================================================
-
-// Defines =============================
-#define CG_MAX_STR_LEN 17
 
 // Enums ===============================
 typedef enum
@@ -185,35 +180,36 @@ typedef struct
 
 // TODO: Label and organize
 
+// Structs ==============================
 typedef struct
 {
-    rectangle_t aabb;
+    rectangle_t aabb; ///< Camera position and bounding box for draw calls
 } cgGardenCamera_t;
 
 typedef struct
 {
-    wsg_t spr;
-    rectangle_t aabb;
+    wsg_t spr;        ///< Sprite for object
+    rectangle_t aabb; ///< Position and collision box
 } cgGardenObject_t;
 
 typedef struct
 {
-    cgGardenObject_t staticObjects[CG_FIELD_OBJ_COUNT];
-    cgGardenCamera_t cam;
+    cgGardenObject_t staticObjects[CG_FIELD_OBJ_COUNT]; ///< Static objects littering the field
+    cgGardenCamera_t cam;                               ///< Camera
 } cgField_t;
 
 typedef struct
 {
     // Objects
-    cgField_t field;
-    cgItem_t items[CG_FIELD_ITEM_LIMIT];
+    cgField_t field;                     ///< Field object
+    cgItem_t items[CG_FIELD_ITEM_LIMIT]; ///< List of items in the garden
 
     // Cursor
-    rectangle_t cursorAABB;
-    bool holdingItem;
-    cgItem_t* heldItem;
-    bool holdingChowa;
-    cgChowa_t* heldChowa;
+    rectangle_t cursorAABB; ///< Cursor position and bounding box
+    bool holdingItem;       ///< If the player is holding an item
+    cgItem_t* heldItem;     ///< The held item
+    bool holdingChowa;      ///< If the pl;ayer is holding a Chowa
+    cgChowa_t* heldChowa;   ///< The held Chowa
 } cgGarden_t;
 
 //==============================================================================
@@ -246,10 +242,11 @@ typedef struct
 
 typedef struct
 {
-    cgChowa_t* participants; ///< Chowa data
-    uint8_t stamina[2];      ///< Stamina of both Chowa for stamina bars
-    int8_t round;            ///< The round of the fight
-    int16_t timer;           ///< Round timer
+    char matchName[CG_MAX_STR_LEN]; ///< Name of the current match
+    cgChowa_t* participants;        ///< Chowa data
+    uint8_t stamina[2];             ///< Stamina of both Chowa for stamina bars
+    int8_t round;                   ///< The round of the fight
+    int16_t timer;                  ///< Round timer
 } cgMatch_t;
 
 typedef struct
@@ -269,7 +266,7 @@ typedef struct
     wsg_t dojoBG;       ///< Dojo Background image
     wsg_t* dojoBGItems; ///< Dojo BG items
     // UI Sprites
-    wsg_t arrow;
+    wsg_t arrow; ///< Arrow sprite
     // - Punch icon
     // - Kick icon
     // NPC sprites
@@ -281,7 +278,8 @@ typedef struct
 
     // Spar
     cgSparState_t state; ///< Active state
-    int64_t timer;       ///< Timer used for lo
+    int64_t timer;       ///< Timer for animations
+    bool toggle;         ///< Toggles on timer
 
     // Menu
     menu_t* sparMenu;              ///< Menu object
@@ -328,24 +326,25 @@ typedef struct
     // Assets
     // ========================================================================
     // Fonts
-    font_t menuFont;
+    font_t menuFont; ///< Main font
     // Sprites
     // TODO: move into garden
+    // FIXME: DO the dynamic system
     wsg_t gardenSpr[CG_GARDEN_STATIC_OBJECTS];
     wsg_t cursors[CG_GARDEN_CURSORS];
     wsg_t items[CG_GARDEN_ITEMS_COUNT];
     wsg_t chowaExpressions[CG_CHOWA_EXPRESSION_COUNT];
 
     // Modes
-    cgGarden_t garden;
-    cgSpar_t spar;
+    cgGarden_t garden; ///< Garden data
+    cgSpar_t spar;     ///< Spar date
 
     // State
-    cgMainState_t state;
+    cgMainState_t state; ///< Main mode state
 
     // Settings
-    bool touch; // If using the touch pad for controls
+    bool touch; ///< Touch controls active
 
     // Chowa
-    cgChowa_t chowa[CG_MAX_CHOWA];
+    cgChowa_t chowa[CG_MAX_CHOWA]; ///< List of Chowa
 } cGrove_t;
