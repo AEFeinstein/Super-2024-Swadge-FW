@@ -436,12 +436,6 @@ static bool selectCell_medium(ultimateTTT_t* ttt, int *x, int *y)
     }
 }
 
-static bool selectCell_extrahard(ultimateTTT_t* ttt, int *x, int *y)
-{
-    // do the better algorithm here
-    return false;
-}
-
 static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
 {
     // For selecting the next move within a subgame, we would want to take into account the current subgame, but...
