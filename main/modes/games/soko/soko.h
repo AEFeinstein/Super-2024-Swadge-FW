@@ -24,8 +24,8 @@ typedef enum
 
 typedef enum
 {
-    SKBG_GRID = 0,
-    SKBG_BLACK = 1,
+    SKBG_GRID    = 0,
+    SKBG_BLACK   = 1,
     SKBG_FORREST = 2,
 } sokoBackground_t;
 
@@ -141,7 +141,7 @@ typedef struct sokoVec_s
     int16_t x;
     int16_t y;
 } sokoVec_t;
-typedef struct 
+typedef struct
 {
     uint16_t moveID;
     bool isEntity;
@@ -196,10 +196,10 @@ typedef struct soko_abs_s soko_abs_t;
 typedef struct soko_abs_s
 {
     // meta
-    menu_t* menu;                               ///< The menu structure
+    menu_t* menu;                           ///< The menu structure
     menuManiaRenderer_t* menuManiaRenderer; ///< Renderer for the menu
-    font_t ibm;                                 ///< The font used in the menu and game
-    sokoScreen_t screen;                        ///< The screen being displayed
+    font_t ibm;                             ///< The font used in the menu and game
+    sokoScreen_t screen;                    ///< The screen being displayed
 
     char* levelFileText;
     char* levelNames[SOKO_LEVEL_COUNT];
@@ -220,7 +220,7 @@ typedef struct soko_abs_s
     // level
     char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if
                                     ///< I need level names like picross.
-    //wsg_t levelWSG;                 ///< Current level
+    // wsg_t levelWSG;                 ///< Current level
     uint8_t* levelBinaryData;
 
     soko_portal_t portals[SOKO_MAX_PORTALS];
@@ -236,13 +236,13 @@ typedef struct soko_abs_s
     uint16_t currentLevelIndex;
     sokoLevel_t currentLevel;
 
-    //undo ring buffer
-    sokoUndoMove_t history[SOKO_UNDO_BUFFER_SIZE];//if >255, change index to uint16.
+    // undo ring buffer
+    sokoUndoMove_t history[SOKO_UNDO_BUFFER_SIZE]; // if >255, change index to uint16.
     uint8_t historyBufferTail;
     uint8_t historyCurrent;
     bool historyNewMove;
 
-    //todo: rename to 'isVictory'
+    // todo: rename to 'isVictory'
     bool allCratesOnGoal;
     uint16_t moveCount;
     uint16_t undoCount;
@@ -266,7 +266,7 @@ typedef struct soko_abs_s
 
     // Player Convenience Pointer
     sokoEntity_t* soko_player;
-    //overworld enter/exit data
+    // overworld enter/exit data
     uint16_t overworld_playerX;
     uint16_t overworld_playerY;
 

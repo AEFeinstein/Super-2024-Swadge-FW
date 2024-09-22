@@ -28,9 +28,10 @@ bool allCratesOnGoal(void);
 void eulerSokoTryPlayerMovement(soko_abs_t* self);
 bool eulerNoUnwalkedFloors(soko_abs_t* self);
 
-//lasers
+// lasers
 sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter);
-int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, sokoDirection_t emitterDir,sokoEntity_t* rootEmitter);
+int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, sokoDirection_t emitterDir,
+                            sokoEntity_t* rootEmitter);
 sokoDirection_t sokoRedirectDir(sokoDirection_t emitterDir, bool inverted);
 bool sokoLaserEntityCollision(sokoEntityType_t testEntity);
 bool sokoLaserTileCollision(sokoTile_t testTile);

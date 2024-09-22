@@ -358,7 +358,9 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pinballMode.modeName)
         {
             switchToSwadgeMode(&pinballMode);
-        }else if(label == sokoMode.modeName){
+        }
+        else if (label == sokoMode.modeName)
+        {
             switchToSwadgeMode(&sokoMode);
         }
         else if (label == tttMode.modeName)

@@ -25,7 +25,7 @@ void sokoConfigGamemode(
     soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
 {
     soko->currentTheme = &soko->sokoDefaultTheme;
-    soko->background = SKBG_GRID;
+    soko->background   = SKBG_GRID;
 
     if (variant == SOKO_CLASSIC) // standard gamemode. Check 'variant' variable
     {
@@ -47,15 +47,17 @@ void sokoConfigGamemode(
         soko->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
         soko->drawTilesFunc                    = absSokoDrawTiles;
         soko->isVictoryConditionFunc           = eulerNoUnwalkedFloors;
-        soko->currentTheme = &soko->eulerTheme;
-        soko->background = SKBG_BLACK;
+        soko->currentTheme                     = &soko->eulerTheme;
+        soko->background                       = SKBG_BLACK;
 
-        //Initialze spaces below the player and sticky.
+        // Initialze spaces below the player and sticky.
         for (size_t i = 0; i < soko->currentLevel.entityCount; i++)
         {
-            if(soko->currentLevel.entities[i].type == SKE_PLAYER
-                || soko->currentLevel.entities[i].type == SKE_STICKY_TRAIL_CRATE){
-                    soko->currentLevel.tiles[soko->currentLevel.entities[i].x][soko->currentLevel.entities[i].y] = SKT_FLOOR_WALKED;
+            if (soko->currentLevel.entities[i].type == SKE_PLAYER
+                || soko->currentLevel.entities[i].type == SKE_STICKY_TRAIL_CRATE)
+            {
+                soko->currentLevel.tiles[soko->currentLevel.entities[i].x][soko->currentLevel.entities[i].y]
+                    = SKT_FLOOR_WALKED;
             }
         }
     }
@@ -69,14 +71,15 @@ void sokoConfigGamemode(
         soko->drawTilesFunc                    = absSokoDrawTiles;
         soko->isVictoryConditionFunc           = overworldPortalEntered;
         soko->sokoGetTileFunc                  = absSokoGetTile;
-        soko->currentTheme = &soko->overworldTheme;
-        //set position to previous overworld positon when re-entering the overworld
-        //but like... not an infinite loop?
+        soko->currentTheme                     = &soko->overworldTheme;
+        // set position to previous overworld positon when re-entering the overworld
+        // but like... not an infinite loop?
         soko->soko_player->x = soko->overworld_playerX;
         soko->soko_player->y = soko->overworld_playerY;
-        soko->background = SKBG_FORREST;
+        soko->background     = SKBG_FORREST;
 
-        for (size_t i = 0; i < soko->portalCount; i++){
+        for (size_t i = 0; i < soko->portalCount; i++)
+        {
             soko->portals[i].levelCompleted = soko->levelSolved[soko->portals[i].index];
         }
     }
@@ -90,7 +93,9 @@ void sokoConfigGamemode(
         soko->drawTilesFunc                    = absSokoDrawTiles;
         soko->isVictoryConditionFunc           = absSokoAllCratesOnGoal;
         soko->sokoGetTileFunc                  = absSokoGetTile;
-    }else{
+    }
+    else
+    {
         printf("invalid gamemode.");
     }
 
@@ -137,8 +142,8 @@ void laserBounceSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
     int16_t tWidth;
     if (!self->allCratesOnGoal)
     {
-        //snprintf(buffer, buflen - 1, "%s%s", item->label, item->options[item->currentOpt]);
-        snprintf(str, sizeof(str) - 1, "%s",self->levelNames[self->currentLevelIndex]);
+        // snprintf(buffer, buflen - 1, "%s%s", item->label, item->options[item->currentOpt]);
+        snprintf(str, sizeof(str) - 1, "%s", self->levelNames[self->currentLevelIndex]);
         // Measure the width of the time string
         tWidth = textWidth(&self->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
@@ -162,8 +167,9 @@ void absSokoGameLoop(soko_abs_t* soko, int64_t elapsedUs)
         // logic
         soko->sokoTryPlayerMovementFunc(soko);
 
-        //undo check
-        if(soko->input.undo){
+        // undo check
+        if (soko->input.undo)
+        {
             sokoUndo(soko);
         }
 
@@ -197,7 +203,7 @@ void absSokoGameLoop(soko_abs_t* soko, int64_t elapsedUs)
     int16_t tWidth;
     if (!soko->allCratesOnGoal)
     {
-        snprintf(str, sizeof(str) - 1, "%s",soko->levelNames[soko->currentLevelIndex]);
+        snprintf(str, sizeof(str) - 1, "%s", soko->levelNames[soko->currentLevelIndex]);
         // Measure the width of the time string
         tWidth = textWidth(&soko->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
@@ -235,9 +241,10 @@ void absSokoTryPlayerMovement(soko_abs_t* soko)
     }
 
     bool b = soko->sokoTryMoveEntityInDirectionFunc(soko, soko->soko_player, soko->input.playerInputDeltaX,
-                                           soko->input.playerInputDeltaY, 0);
+                                                    soko->input.playerInputDeltaY, 0);
     sokoHistoryTurnOver(soko);
-    if(b){
+    if (b)
+    {
         soko->moveCount++;
     }
 }
@@ -274,7 +281,7 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
                 {
                     if (self->sokoTryMoveEntityInDirectionFunc(self, &self->currentLevel.entities[i], dx, dy, push + 1))
                     {
-                        sokoAddEntityMoveToHistory(self, entity,entity->x,entity->y,entity->facing);
+                        sokoAddEntityMoveToHistory(self, entity, entity->x, entity->y, entity->facing);
                         entity->x += dx;
                         entity->y += dy;
                         entity->facing = sokoDirectionFromDelta(dx, dy);
@@ -286,17 +293,20 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
                         return false;
                     }
                 }
-            }else if(self->currentLevel.entities[i].type == SKE_STICKY_TRAIL_CRATE){
-                    // previous
-                        //for euler. todo: make EulerTryMoveEntityInDirection instead of an if statement.
-                    if (self->currentLevel.entities[i].x == px && self->currentLevel.entities[i].y == py){
-                        if (self->sokoTryMoveEntityInDirectionFunc(self, &self->currentLevel.entities[i], dx, dy, push + 1))
-                        { 
-                            sokoAddEntityMoveToHistory(self,entity,entity->x,entity->y,entity->facing);
-                            entity->x += dx;
-                            entity->y += dy;
-                            entity->facing = sokoDirectionFromDelta(dx, dy);
-                            return true;
+            }
+            else if (self->currentLevel.entities[i].type == SKE_STICKY_TRAIL_CRATE)
+            {
+                // previous
+                // for euler. todo: make EulerTryMoveEntityInDirection instead of an if statement.
+                if (self->currentLevel.entities[i].x == px && self->currentLevel.entities[i].y == py)
+                {
+                    if (self->sokoTryMoveEntityInDirectionFunc(self, &self->currentLevel.entities[i], dx, dy, push + 1))
+                    {
+                        sokoAddEntityMoveToHistory(self, entity, entity->x, entity->y, entity->facing);
+                        entity->x += dx;
+                        entity->y += dy;
+                        entity->facing = sokoDirectionFromDelta(dx, dy);
+                        return true;
                     }
                     else
                     {
@@ -306,30 +316,31 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
                 }
             }
         }
-        
-        //todo: this is a hack, we should have separate absSokoTryMoveEntityInDirection functions.
-        if(self->currentLevel.gameMode==SOKO_EULER && entity->propFlag && entity->properties->trail){
-            if (self->currentLevel.tiles[entity->x+dx][entity->y+dy] == SKT_FLOOR)
+
+        // todo: this is a hack, we should have separate absSokoTryMoveEntityInDirection functions.
+        if (self->currentLevel.gameMode == SOKO_EULER && entity->propFlag && entity->properties->trail)
+        {
+            if (self->currentLevel.tiles[entity->x + dx][entity->y + dy] == SKT_FLOOR)
             {
-                sokoAddTileMoveToHistory(self,entity->x+dx,entity->y+dy,SKT_FLOOR);
-                self->currentLevel.tiles[entity->x+dx][entity->y+dy] = SKT_FLOOR_WALKED;
+                sokoAddTileMoveToHistory(self, entity->x + dx, entity->y + dy, SKT_FLOOR);
+                self->currentLevel.tiles[entity->x + dx][entity->y + dy] = SKT_FLOOR_WALKED;
             }
-    
+
             if (self->currentLevel.tiles[entity->x][entity->y] == SKT_FLOOR)
             {
-                sokoAddTileMoveToHistory(self, entity->x,entity->y,SKT_FLOOR);
+                sokoAddTileMoveToHistory(self, entity->x, entity->y, SKT_FLOOR);
                 self->currentLevel.tiles[entity->x][entity->y] = SKT_FLOOR_WALKED;
             }
         }
         // No wall in front of us and nothing to push, we can move.
-        //we assume the player never gets pushed for undo here, so if it's the player moving, thats a new move.
-        sokoAddEntityMoveToHistory(self,entity,entity->x,entity->y,entity->facing);
+        // we assume the player never gets pushed for undo here, so if it's the player moving, thats a new move.
+        sokoAddEntityMoveToHistory(self, entity, entity->x, entity->y, entity->facing);
         entity->x += dx;
         entity->y += dy;
         entity->facing = sokoDirectionFromDelta(dx, dy);
         return true;
     }
-     // all other floor types invalid. Be careful when we add tile types in different rule sets.
+    // all other floor types invalid. Be careful when we add tile types in different rule sets.
 
     return false;
 }
@@ -406,7 +417,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
 
     SETUP_FOR_TURBO();
 
-    //Tile Drawing (bg layer)
+    // Tile Drawing (bg layer)
     for (size_t x = screenMinX; x < screenMaxX; x++)
     {
         for (size_t y = screenMinY; y < screenMaxY; y++)
@@ -415,7 +426,8 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
             switch (level->tiles[x][y])
             {
                 case SKT_FLOOR:
-                    color = self->currentTheme->floorColor;;
+                    color = self->currentTheme->floorColor;
+                    ;
                     break;
                 case SKT_WALL:
                     color = self->currentTheme->wallColor;
@@ -430,14 +442,14 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                     color = cTransparent;
                     break;
                 case SKT_PORTAL:
-                    //todo: draw completed or not completed.
+                    // todo: draw completed or not completed.
                     color = c441;
-                    //color = self->currentTheme->floorColor;
+                    // color = self->currentTheme->floorColor;
                     break;
                 default:
                     break;
             }
-    
+
             // Draw a square.
             // none of this matters it's all getting replaced with drawwsg later.
             if (color != cTransparent)
@@ -451,34 +463,42 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                 }
             }
 
-            if(level->tiles[x][y] == SKT_GOAL){
-                drawWsg(&self->currentTheme->goalWSG, ox + x * scale,oy + y * scale, false, false, 0);
+            if (level->tiles[x][y] == SKT_GOAL)
+            {
+                drawWsg(&self->currentTheme->goalWSG, ox + x * scale, oy + y * scale, false, false, 0);
             }
-            
+
             // DEBUG_DRAW_COUNT++;
             //  draw outline around the square.
             //  drawRect(ox+x*s,oy+y*s,ox+x*s+s,oy+y*s+s,color);
         }
     }
-    
 
-    
-    //draw portal in overworld before entities.
-    //hypothetically, we can get rid of the overworld check, and there just won't be other portals? but there could be?        sprint("a\n");
-    if(self->currentLevel.gameMode == SOKO_OVERWORLD){ 
-        for (int i = 0; i < self->portalCount; i++){
-            if (self->portals[i].x >= screenMinX && self->portals[i].x <= screenMaxX && self->portals[i].y >= screenMinY && self->portals[i].y <= screenMaxY)
+    // draw portal in overworld before entities.
+    // hypothetically, we can get rid of the overworld check, and there just won't be other portals? but there could be?
+    // sprint("a\n");
+    if (self->currentLevel.gameMode == SOKO_OVERWORLD)
+    {
+        for (int i = 0; i < self->portalCount; i++)
+        {
+            if (self->portals[i].x >= screenMinX && self->portals[i].x <= screenMaxX && self->portals[i].y >= screenMinY
+                && self->portals[i].y <= screenMaxY)
             {
-                if(self->portals[i].levelCompleted){
-                    drawWsg(&self->currentTheme->portal_completeWSG, ox + self->portals[i].x * scale,oy + self->portals[i].y * scale, false, false, 0);
-                }else{
-                    drawWsg(&self->currentTheme->portal_incompleteWSG, ox + self->portals[i].x * scale,oy + self->portals[i].y * scale, false, false, 0);
-               }
+                if (self->portals[i].levelCompleted)
+                {
+                    drawWsg(&self->currentTheme->portal_completeWSG, ox + self->portals[i].x * scale,
+                            oy + self->portals[i].y * scale, false, false, 0);
+                }
+                else
+                {
+                    drawWsg(&self->currentTheme->portal_incompleteWSG, ox + self->portals[i].x * scale,
+                            oy + self->portals[i].y * scale, false, false, 0);
+                }
             }
         }
     }
 
-    //draw entities
+    // draw entities
     for (size_t i = 0; i < level->entityCount; i++)
     {
         // don't bother drawing off screen
@@ -511,12 +531,17 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
 
                     break;
                 case SKE_CRATE:
-                        if (self->currentLevel.tiles[self->currentLevel.entities[i].x][self->currentLevel.entities[i].y] == SKT_GOAL)
-                        {
-                            drawWsg(&self->currentTheme->crateOnGoalWSG, ox + level->entities[i].x * scale,oy + level->entities[i].y * scale, false, false, 0);
-                        }else{
-                            drawWsg(&self->currentTheme->crateWSG, ox + level->entities[i].x * scale,oy + level->entities[i].y * scale, false, false, 0);
-                        }
+                    if (self->currentLevel.tiles[self->currentLevel.entities[i].x][self->currentLevel.entities[i].y]
+                        == SKT_GOAL)
+                    {
+                        drawWsg(&self->currentTheme->crateOnGoalWSG, ox + level->entities[i].x * scale,
+                                oy + level->entities[i].y * scale, false, false, 0);
+                    }
+                    else
+                    {
+                        drawWsg(&self->currentTheme->crateWSG, ox + level->entities[i].x * scale,
+                                oy + level->entities[i].y * scale, false, false, 0);
+                    }
                     break;
                 case SKE_STICKY_CRATE:
                     drawWsg(&self->currentTheme->stickyCrateWSG, ox + level->entities[i].x * scale,
@@ -871,7 +896,7 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
         possibleSquares = self->currentLevel.height - emitVec.y;
     }
 
-    int tileCollFlag, entCollFlag, entCollInd;// ,
+    int tileCollFlag, entCollFlag, entCollInd; // ,
     tileCollFlag = entCollFlag = entCollInd = 0;
 
     sokoCollision_t retVal;
@@ -949,12 +974,12 @@ void eulerSokoTryPlayerMovement(soko_abs_t* self)
         // previous
         if (self->currentLevel.tiles[x][y] == SKT_FLOOR)
         {
-            sokoAddTileMoveToHistory(self,x,y,SKT_FLOOR);
+            sokoAddTileMoveToHistory(self, x, y, SKT_FLOOR);
             self->currentLevel.tiles[x][y] = SKT_FLOOR_WALKED;
         }
         if (self->currentLevel.tiles[self->soko_player->x][self->soko_player->y] == SKT_FLOOR)
         {
-            sokoAddTileMoveToHistory(self,self->soko_player->x,self->soko_player->y,SKT_FLOOR);
+            sokoAddTileMoveToHistory(self, self->soko_player->x, self->soko_player->y, SKT_FLOOR);
             self->currentLevel.tiles[self->soko_player->x][self->soko_player->y] = SKT_FLOOR_WALKED;
         }
 
@@ -1012,20 +1037,20 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
     {
         // logic
 
-        //by saving this before we move, we lag by one position. The final movement onto a portal doesn't get saved, as this loopin't entered again
-        //then we return to the position we were at before the last loop.
+        // by saving this before we move, we lag by one position. The final movement onto a portal doesn't get saved, as
+        // this loopin't entered again then we return to the position we were at before the last loop.
         self->overworld_playerX = self->soko_player->x;
         self->overworld_playerY = self->soko_player->y;
 
         self->sokoTryPlayerMovementFunc(self);
-        
+
         // victory status. stored separate from gamestate because of future gameplay ideas/remixes.
         // todo: rename 'allCrates' to isVictory or such.
         self->allCratesOnGoal = self->isVictoryConditionFunc(self);
         if (self->allCratesOnGoal)
         {
             self->state = SKS_VICTORY;
-            
+
             printf("Player at %d,%d\n", self->soko_player->x, self->soko_player->y);
             victoryDanceTimer = 0;
         }
@@ -1048,7 +1073,7 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
         }
 
         self->loadNewLevelIndex = targetWorldIndex;
-        self->loadNewLevelFlag  = false;//load saved data.
+        self->loadNewLevelFlag  = false; // load saved data.
         self->screen            = SOKO_LOADNEWLEVEL;
     }
 
@@ -1099,11 +1124,12 @@ void restartCurrentLevel(soko_abs_t* self)
 void exitToOverworld(soko_abs_t* soko)
 {
     printf("Exit to Overworld\n");
-    //save. todo: skip if victory.
-    if(soko->currentLevel.gameMode == SOKO_EULER){
-       // sokoSaveEulerTiles(soko);
+    // save. todo: skip if victory.
+    if (soko->currentLevel.gameMode == SOKO_EULER)
+    {
+        // sokoSaveEulerTiles(soko);
     }
-    //sokoSaveCurrentLevelEntities(soko);
+    // sokoSaveCurrentLevelEntities(soko);
 
     soko->loadNewLevelIndex = 0;
     soko->loadNewLevelFlag  = true;
