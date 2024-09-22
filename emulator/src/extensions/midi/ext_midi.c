@@ -73,6 +73,8 @@ static char midiPathBuffer[1024];
 static const char* midiFile = NULL;
 
 #ifdef EMU_MACOS
+static const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
+
 static bool handlerInstalled = false;
 static bool emulatorStarted = false;
 static MacOpenFileHandler macOpenFileHandler;
