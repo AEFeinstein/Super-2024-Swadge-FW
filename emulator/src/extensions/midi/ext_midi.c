@@ -144,7 +144,7 @@ static bool midiInjectFile(const char* path)
 #ifdef EMU_MACOS
 static void doFileOpenCb(const char* path)
 {
-    strncpy(midiPathBuffer, sizeof(midiPathBuffer), path);
+    strncpy(midiPathBuffer, path, sizeof(midiPathBuffer));
     midiFile = midiPathBuffer;
 
     if (emulatorStarted)
