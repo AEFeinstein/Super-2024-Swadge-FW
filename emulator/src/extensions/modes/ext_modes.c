@@ -25,13 +25,14 @@
 #include "jukebox.h"
 #include "keebTest.h"
 #include "mainMenu.h"
-#include "modeTimer.h"
 #include "mode_credits.h"
 #include "mode_pinball.h"
 #include "mode_synth.h"
-#include "ultimateTTT.h"
+#include "modeTimer.h"
+#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "ultimateTTT.h"
 
 //==============================================================================
 // Defines
@@ -69,10 +70,11 @@ static swadgeMode_t* allSwadgeModes[] = {
     &mainMenuMode,
     &modeCredits,
     &pinballMode,
+    &sokoMode,
     &synthMode,
-    &tttMode,
     &timerMode,
     &touchTestMode,
+    &tttMode,
     &tunernomeMode,
 };
 // clang-format on
