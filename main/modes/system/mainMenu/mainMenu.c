@@ -21,6 +21,7 @@
 #include "mode_synth.h"
 #include "ultimateTTT.h"
 #include "pango.h"
+#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "keebTest.h"
@@ -157,6 +158,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
@@ -361,6 +363,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == bigbugMode.modeName)
         {
             switchToSwadgeMode(&bigbugMode);
+        }
+        else if (label == sokoMode.modeName)
+        {
+            switchToSwadgeMode(&sokoMode);
         }
         else if (label == tttMode.modeName)
         {
