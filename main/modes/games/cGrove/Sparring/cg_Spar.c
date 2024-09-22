@@ -186,19 +186,19 @@ void cg_runSpar(int64_t elapsedUs)
                         }
                         case PB_UP:
                         {
-                            cg->spar.roundSelect++;
-                            if (cg->spar.roundSelect >= 3)
+                            cg->spar.roundSelect--;
+                            if (cg->spar.roundSelect < 0)
                             {
-                                cg->spar.roundSelect = 0;
+                                cg->spar.roundSelect = 2;
                             }
                             break;
                         }
                         case PB_DOWN:
                         {
-                            cg->spar.roundSelect--;
-                            if (cg->spar.roundSelect < 0)
+                            cg->spar.roundSelect++;
+                            if (cg->spar.roundSelect >= 3)
                             {
-                                cg->spar.roundSelect = 3;
+                                cg->spar.roundSelect = 0;
                             }
                             break;
                         }
@@ -285,7 +285,7 @@ static void sparLoadBattleRecords()
     // FIXME: Load from disk
     for (int32_t idx = 0; idx < CG_SPAR_MAX_RECORDS; idx++)
     {
-        char buff[17];
+        char buff[32];
         snprintf(buff, sizeof(buff) - 1, "Match %d", idx);
         strcpy(cg->spar.sparRecord[idx].matchTitle, buff);
         for (int32_t i = 0; i < 2; i++)
@@ -302,7 +302,7 @@ static void sparLoadBattleRecords()
         for (int32_t i = 0; i < 3; i++)
         {
             cg->spar.sparRecord[idx].result[i] = i;
-            cg->spar.sparRecord[idx].timer[i] = i * 50;
+            cg->spar.sparRecord[idx].timer[i] = (i + 1) * 50;
         }
     }
 }
