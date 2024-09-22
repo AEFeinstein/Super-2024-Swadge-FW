@@ -19,6 +19,7 @@
 #include "mode_bigbug.h"
 #include "mode_synth.h"
 #include "ultimateTTT.h"
+#include "pango.h"
 #include "mode_cGrove.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -152,6 +153,7 @@ static void mainMenuEnterMode(void)
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, cGroveMode.modeName);
     addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
@@ -363,6 +365,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == tttMode.modeName)
         {
             switchToSwadgeMode(&tttMode);
+        }
+        else if (label == pangoMode.modeName)
+        {
+            switchToSwadgeMode(&pangoMode);
         }
         else if (label == cGroveMode.modeName)
         {

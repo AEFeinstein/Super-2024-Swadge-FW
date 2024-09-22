@@ -55,6 +55,9 @@ jobs:
             emu_artifacts:
               - swadge_emulator
               - version.txt
+              - install.sh
+              - icon.png
+              - SwadgeEmulator.desktop
             idf_install: ~/.espressif
 
     runs-on: ${{ matrix.runner }}
@@ -168,6 +171,13 @@ jobs:
       if: matrix.emulator && matrix.family == 'osx'
       run: |
         make SwadgeEmulator.app
+
+    - name: Create Linux FreeDesktop files
+      if: matrix.emulator && matrix.family == 'linux'
+      run: |
+        cp emulator/resources/install.sh .
+        cp emulator/resources/icon.png .
+        cp emulator/resources/SwadgeEmulator.desktop .
 
     - name: Create Emulator zip
       if: matrix.emulator && matrix.family != 'windows'
