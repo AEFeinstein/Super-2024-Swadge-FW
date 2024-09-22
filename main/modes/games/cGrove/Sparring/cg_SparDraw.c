@@ -164,7 +164,18 @@ void cg_drawSparRecord(cGrove_t* cg)
     }
 }
 
-void cg_drawSparMatchSetup(cGrove_t cg)
+
+void cg_drawSparMatchSetup(cGrove_t* cg)
+{
+    // Provide options for Tournament, Single match, or online
+
+    // Secondary selection. chooses a specific tournament, match, or online.
+
+    // Allow a player to look at the tutorial
+
+}
+
+void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
 {
 }
 

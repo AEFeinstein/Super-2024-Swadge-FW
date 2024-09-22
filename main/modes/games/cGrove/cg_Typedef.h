@@ -12,6 +12,7 @@
 
 // Includes ============================
 #include "swadge2024.h"
+#include "wsgPalette.h"
 
 // Defines =============================
 #define CG_MAX_STR_LEN 17
@@ -120,7 +121,7 @@ typedef struct
     // Color data
     // Note: Palette must be initialized for all Chowa, regardless or the colors will be screwy
     cgColorType_t type; ///< Type of Chowa
-    // wsgPalette_t color; ///< If Normal type, color scheme
+    wsgPalette_t color; ///< If Normal type, color scheme
 
     // Garden
     rectangle_t aabb;            ///< Position and bounding box for grabbing
@@ -244,7 +245,8 @@ typedef struct
 {
     char matchName[CG_MAX_STR_LEN]; ///< Name of the current match
     cgChowa_t* participants;        ///< Chowa data
-    uint8_t stamina[2];             ///< Stamina of both Chowa for stamina bars
+    int16_t stamina[2];             ///< Stamina of both Chowa for stamina bars
+    int16_t readiness[2];           ///< How ready each CHowa is
     int8_t round;                   ///< The round of the fight
     int16_t timer;                  ///< Round timer
 } cgMatch_t;
@@ -343,7 +345,8 @@ typedef struct
     cgMainState_t state; ///< Main mode state
 
     // Settings
-    bool touch; ///< Touch controls active
+    bool touch;  ///< Touch controls active
+    bool online; ///< If online features are enabled
 
     // Chowa
     cgChowa_t chowa[CG_MAX_CHOWA]; ///< List of Chowa

@@ -151,10 +151,12 @@ void cg_runSpar(int64_t elapsedUs)
         }
         case CG_SPAR_SCHEDULE:
         {
+            cg_drawSparMatchSetup(cg);
             break;
         }
         case CG_SPAR_MATCH:
         {
+            cg_drawSparMatch(cg, elapsedUs);
             break;
         }
         case CG_SPAR_BATTLE_RECORD:
