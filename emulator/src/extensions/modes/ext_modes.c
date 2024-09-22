@@ -25,12 +25,11 @@
 #include "jukebox.h"
 #include "keebTest.h"
 #include "mainMenu.h"
-#include "modeTimer.h"
 #include "mode_2048.h"
 #include "mode_bigbug.h"
 #include "mode_credits.h"
 #include "mode_synth.h"
-#include "ultimateTTT.h"
+#include "modeTimer.h"
 #include "pango.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -72,9 +71,8 @@ static swadgeMode_t* allSwadgeModes[] = {
     &keebTestMode,
     &mainMenuMode,
     &modeCredits,
-    &synthMode,
-    &tttMode,
     &pangoMode,
+    &synthMode,
     &t48Mode,
     &timerMode,
     &touchTestMode,
