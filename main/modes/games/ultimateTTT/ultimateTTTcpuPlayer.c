@@ -46,6 +46,16 @@ typedef enum
 #define EMPTY_CORNER 3
 #define EMPTY_SIDE 2
 
+static const char strMoveWon[] = "Won";
+static const char strMoveWin[] = "Win";
+static const char strMoveBlock[] = "Block";
+static const char strMoveFork[] = "Fork";
+static const char strMoveBlockFork[] = "Block Fork";
+static const char strMoveCenter[] = "Center";
+static const char strMoveOppositeCenter[] = "Opposite Corner";
+static const char strMoveEmptyCorner[] = "Empty Corner";
+static const char strMoveEmptySide[] = "Empty Side";
+
 #define ENCODE_LOC(x, y) (((x) + (y) * 3) << 5)
 #define DECODE_LOC_X(r) (((r) >> 5) % 3)
 #define DECODE_LOC_Y(r) (((r) >> 5) / 3)
@@ -67,12 +77,14 @@ static rowCount_t checkRow(const tttPlayer_t game[3][3], int y, tttPlayer_t play
 static rowCount_t checkCol(const tttPlayer_t game[3][3], int x, tttPlayer_t player);
 static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t player);
 
+static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player);
 static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player, uint16_t filter);
 static void analyzeGame(ultimateTTT_t* ttt);
+static const char* getMoveName(uint16_t move);
+static void printGame(const tttPlayer_t subgame[3][3]);
 
 void tttCpuNextMove(ultimateTTT_t* ttt)
 {
-    TCPU_LOG("TTT", "tttCpuNextMove()");
     if (ttt->game.cpu.state == TCPU_INACTIVE)
     {
         TCPU_LOG("TTT", "Invactive.");
@@ -82,7 +94,6 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
     int64_t now = esp_timer_get_time();
     if (now < ttt->game.cpu.delayTime)
     {
-        TCPU_LOG("TTT", "Sleep...");
         return;
     }
 
@@ -231,6 +242,10 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
                 }
                 else
                 {
+                    if (!tttCursorIsValid(ttt, &ttt->game.cursor))
+                    {
+                        printf("??????????????? cursor is not valid????????\n");
+                    }
                     // The cursor is in the right place, select it!
                     tttMsgPlaceMarker_t placePayload;
                     placePayload.type = MSG_PLACE_MARKER;
@@ -396,20 +411,35 @@ static bool selectCell_medium(ultimateTTT_t* ttt, int *x, int *y)
             return false;
 
         case WIN:
+            putchar('-');
         case BLOCK:
+            putchar('-');
         case FORK:
+            putchar('-');
         case BLOCK_FORK:
+            putchar('-');
         case CENTER:
+            putchar('-');
         case OPPOSITE_CORNER:
+            putchar('-');
         case EMPTY_CORNER:
+            putchar('-');
         case EMPTY_SIDE:
+            putchar('-');
             *x = moveX;
             *y = moveY;
+            putchar('\n');
             return true;
 
         default:
             return false;
     }
+}
+
+static bool selectCell_extrahard(ultimateTTT_t* ttt, int *x, int *y)
+{
+    // do the better algorithm here
+    return false;
 }
 
 static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
@@ -424,6 +454,15 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
     // this cell against which one has the most favorable score for the opponent
     // Somehow those two priorities will need to be traded off -- probably should make that configurable.
 
+    /////////////
+    // Ok, so what we have here is pretty good. It actually strategizes!
+    // But it can be better. What it needs to do instead of the weird scoring that doesn't take into account easy winning...
+    // Is to score the cell we pick, we then go to the corresponding subgame, and try every cell for the opponent
+    // Then _that_ is what we score the result of, considering the worst possible one (highest score for opponent) of all that subgame's playable cells.
+    // And then we use new scoring too. So, winning the subgame should be like -100 (unless we don't care?) and winning the whole game should be like -1000
+    // On the other hand, getting to pick our next subgame should be like a +50? or maybe it just inherits the score of the best possible result of all subgames
+    // Should the 'next move' scoring be considered? Ok....
+
     // The score of the opponent's ideal next move in each subgame
     uint16_t opponentScore[3][3];
     uint16_t maxScore = 0;
@@ -434,6 +473,9 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
 
     uint16_t result = analyzeSubgame(subgame->game, TTT_P2, 0);
     uint16_t move = DECODE_MOVE(result);
+
+    uint16_t moveScore = 50 - 10 * (movesToWin(subgame->game, TTT_P2)) + move;
+
     int moveX = DECODE_LOC_X(result);
     int moveY = DECODE_LOC_Y(result);
 
@@ -472,7 +514,7 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
                 tempMetagame[ix][iy] = TTT_P2;
                 if (tttCheckWinner(tempMetagame) == TTT_P2)
                 {
-                    // This is a winning move, so immediately decide to move there
+                    // This is a game-winning move, so immediately decide to move there
                     *x = ix;
                     *y = iy;
                     return true;
@@ -498,19 +540,21 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
                 else
                 {
                     // Opponent is locked to this board, so use their score for the subgame
-                    opponentScore[ix][iy] = analyzeSubgame(tempSubgame, TTT_P1, 0);
+                    opponentScore[ix][iy] = DECODE_MOVE(analyzeSubgame(tempSubgame, TTT_P1, 0));
+                    opponentScore[ix][iy] += 50 - 10 * movesToWin(tempSubgame, TTT_P1);
                 }
             }
             else
             {
                 // Score the current state of that board as the opponent
-                opponentScore[ix][iy] = analyzeSubgame(oppSubgame->game, TTT_P1, 0);
+                opponentScore[ix][iy] = DECODE_MOVE(analyzeSubgame(oppSubgame->game, TTT_P1, 0));
+                opponentScore[ix][iy] += 50 - 10 * movesToWin(tempSubgame, TTT_P1);
             }
 
             // Update the max score, used as the value when the opponent can pick any subgame
-            if (opponentScore[ix][iy] != SCORE_MAX && DECODE_MOVE(opponentScore[ix][iy]) > maxScore)
+            if (opponentScore[ix][iy] != SCORE_MAX && opponentScore[ix][iy] > maxScore)
             {
-                maxScore = DECODE_MOVE(opponentScore[ix][iy]);
+                maxScore = opponentScore[ix][iy];
             }
         }
     }
@@ -522,9 +566,9 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
     {
         for (int iy = 0; iy < 3; iy++)
         {
-            if (subgame->game[ix][iy] == TTT_NONE && DECODE_MOVE(opponentScore[ix][iy]) < minOppScore)
+            if (subgame->game[ix][iy] == TTT_NONE && opponentScore[ix][iy] < minOppScore)
             {
-                minOppScore = DECODE_MOVE(opponentScore[ix][iy]);
+                minOppScore = opponentScore[ix][iy];
                 minOppX = ix;
                 minOppY = iy;
             }
@@ -534,44 +578,77 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
     // Just some debugging
     printf("--------------------\n");
     printf(" In subgame (%" PRIu32 ", %" PRIu32 "):\n", ttt->game.selectedSubgame.x, ttt->game.selectedSubgame.y);
-    printf("[---] - Invalid move\n");
-    printf("[xx ] - Opponent's score for corresponding subgame\n");
-    printf("[xx*] - Ideal subgame move\n");
-    printf("[xx^] - Least favorable for opponent\n");
-    for (int ix = 0; ix < 3; ix++)
+    printf("[-------] - Invalid move\n");
+    printf("[xx /.. ] - Our score for the current subgame if this cell is selected\n");
+    printf("[.. /xx ] - Opponent's score for subgame corresponding to this cell\n");
+    printf("[xx*/.. ] - Ideal subgame move\n");
+    printf("[.. /xx^] - Least favorable for opponent\n");
+
+    int16_t combinedScores[3][3];
+    int16_t maxCombScore = INT16_MIN;
+    int maxCombX = 0;
+    int maxCombY = 0;
+
+    for (int iy = 0; iy < 3; iy++)
     {
-        for (int iy = 0; iy < 3; iy++)
+        for (int ix = 0; ix < 3; ix++)
         {
             if (subgame->game[ix][iy] != TTT_NONE)
             {
+                combinedScores[ix][iy] = INT16_MIN;
+
                 // Not valid
-                printf("[---]   ");
+                printf("[----]   ");
                 continue;
             }
 
-            uint16_t score = DECODE_MOVE(opponentScore[ix][iy]);
+            tttPlayer_t simulation[3][3];
+            memcpy(simulation, subgame->game, sizeof(simulation));
+            simulation[ix][iy] = TTT_P2;
+
+            uint16_t thisCellAnalysis = analyzeSubgame(simulation, TTT_P2, 0);
+            uint16_t thisCellScore = DECODE_MOVE(thisCellAnalysis);
+            thisCellScore += 50 - 10 * movesToWin(simulation, TTT_P2);
+
+            uint16_t score = opponentScore[ix][iy];
             if (opponentScore[ix][iy] == SCORE_MAX)
             {
                 score = maxScore;
             }
 
-            char flag = ' ';
+            char oppFlag = ' ';
             if (ix == minOppX && iy == minOppY)
             {
-                flag = '^';
-            }
-            else if (ix == moveX && iy == moveY)
-            {
-                flag = '*';
+                oppFlag = '^';
             }
 
-            printf("[%02" PRIu16 "%c]   ", score, flag);
+            char playerFlag = ' ';
+            if (ix == moveX && iy == moveY)
+            {
+                playerFlag = '*';
+            }
+
+            combinedScores[ix][iy] = ((int16_t)thisCellScore - (int16_t)score);
+
+            if (combinedScores[ix][iy] > maxCombScore)
+            {
+                maxCombScore = combinedScores[ix][iy];
+                maxCombX = ix;
+                maxCombY = iy;
+            }
+
+            //printf("[%02" PRIu16 "%c/%02" PRIu16 "%c]   ", thisCellScore, playerFlag, score, oppFlag);
+            printf("[%02" PRId16 "%c%c]   ", ((int16_t)thisCellScore - (int16_t)score), playerFlag, oppFlag);
         }
 
         putchar('\n');
     }
 
-    if (minOppScore <= move)
+    *x = maxCombX;
+    *y = maxCombY;
+    return true;
+
+    /*if (minOppScore <= move)
     {
         *x = minOppX;
         *y = minOppY;
@@ -581,7 +658,7 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
         *x = moveX;
         *y = moveY;
     }
-    return true;
+    return true;*/
 
     //return selectCell_medium(ttt, x, y);
 }
@@ -732,6 +809,84 @@ static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t pla
     }
 
     return (rowCount_t)(playerCount | opponentCount << 2 | noneCount << 4);
+}
+
+// So naively scoring based on just the moves to make isn't enough
+// - Move hierarchy doesn't sufficiently capture the value of a move
+// - You have to think about not just how that move advances, but also how many moves away from winning we are
+static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
+{
+    uint16_t movesToWin = 0;
+    tttPlayer_t result = tttCheckWinner(subgame);
+    tttPlayer_t simulation[3][3];
+
+    memcpy(simulation, subgame, sizeof(simulation));
+
+    //printf(">>> Moves to win game:\n");
+    //printGame(subgame);
+    //printf("---\n");
+
+    uint16_t minMovesToWin = 5;
+
+    for (int y = 0; y < 3; y++)
+    {
+        rowCount_t rowCount = checkRow(subgame, y, player);
+        uint16_t movesNeeded = 3 - TO_PLAYERS(rowCount);
+        if (0 == TO_OPPONENTS(rowCount) && movesNeeded < minMovesToWin)
+        {
+            minMovesToWin = movesNeeded;
+        }
+    }
+
+    for (int x = 0; x < 3; x++)
+    {
+        rowCount_t rowCount = checkCol(subgame, x, player);
+        uint16_t movesNeeded = 3 - TO_PLAYERS(rowCount);
+        if (0 == TO_OPPONENTS(rowCount) && movesNeeded < minMovesToWin)
+        {
+            minMovesToWin = movesNeeded;
+        }
+    }
+
+    for (int n = 0; n < 2; n++)
+    {
+        rowCount_t rowCount = checkDiag(subgame, n, player);
+        uint16_t movesNeeded = 3 - TO_PLAYERS(rowCount);
+        if (0 == TO_OPPONENTS(rowCount) && movesNeeded < minMovesToWin)
+        {
+            minMovesToWin = movesNeeded;
+        }
+    }
+
+    return minMovesToWin;
+
+    // An already-won game will result in 0 movesToWin
+    while (result == TTT_NONE)
+    {
+        uint16_t analysis = analyzeSubgame(simulation, player, 0);
+
+        simulation[DECODE_LOC_X(analysis)][DECODE_LOC_Y(analysis)] = player;
+
+        //printf("--> (%" PRIu16 ", %" PRIu16 ") - %s:\n", DECODE_LOC_X(analysis), DECODE_LOC_Y(analysis), getMoveName(DECODE_MOVE(analysis)));
+        //printGame(simulation);
+
+        movesToWin++;
+        result = tttCheckWinner(simulation);
+    }
+
+    if (result == player)
+    {
+        //printf("%" PRIu16 " moves to win\n", movesToWin);
+        // Player won, return moves to win
+        return movesToWin;
+    }
+    else
+    {
+        //printf("Can't win, 3 moves to win\n");
+        // This is a tie or a loss
+        // 10 moves to win is basically infinite
+        return 3;
+    }
 }
 
 static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player, uint16_t filter)
@@ -998,4 +1153,61 @@ static void analyzeGame(ultimateTTT_t* ttt)
     uint16_t myScore[3][3];
 
 
+}
+
+static const char* getMoveName(uint16_t move)
+{
+    switch (move)
+    {
+        case WON:
+            return strMoveWon;
+        // Game to win
+        case WIN:
+            return strMoveWin;
+        case BLOCK:
+            return strMoveBlock;
+        case FORK:
+            return strMoveFork;
+        case BLOCK_FORK:
+            return strMoveBlockFork;
+        case CENTER:
+            return strMoveCenter;
+        case OPPOSITE_CORNER:
+            return strMoveOppositeCenter;
+        case EMPTY_CORNER:
+            return strMoveEmptyCorner;
+        case EMPTY_SIDE:
+            return strMoveEmptySide;
+        default:
+            return "?";
+
+    }
+}
+
+static void printGame(const tttPlayer_t subgame[3][3])
+{
+    for (int y = 0; y < 3; y++)
+    {
+        for (int x = 0; x < 3; x++)
+        {
+            switch (subgame[x][y])
+            {
+                case TTT_NONE:
+                    putchar('_');
+                break;
+
+                case TTT_P1:
+                    putchar('X');
+                break;
+
+                case TTT_P2:
+                    putchar('O');
+                break;
+            }
+
+            putchar(' ');
+        }
+
+        putchar('\n');
+    }
 }
