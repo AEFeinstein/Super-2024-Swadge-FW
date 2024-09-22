@@ -18,14 +18,40 @@
 #endif
 
 //==============================================================================
+// Types
+//==============================================================================
+
+#ifdef EMU_MACOS
+typedef void (*MacOpenFileCb)(const char* path);
+
+typedef struct
+{
+    EventHandlerUPP globalEventHandler;
+    AEEventHandlerUPP appleEventHandler;
+    EventHandlerRef globalEventHandlerRef;
+    MacOpenFileCb openFileCallback;
+} MacOpenFileHandler;
+#endif
+
+//==============================================================================
 // Function Prototypes
 //==============================================================================
 
 static bool midiInitCb(emuArgs_t* emuArgs);
-static void processEvents(const char** out);
+static void midiPreFrameCb(uint64_t frame);
+static bool midiInjectFile(const char* path);
 
 #ifdef EMU_MACOS
+// Exists but isn't declared in the headers
+extern Boolean ConvertEventRefToEventRecord(EventRef, EventRecord*);
+
+bool installMacOpenFileHandler(MacOpenFileHandler* handlerRef, MacOpenFileCb callback);
+void checkForEventsMacOpenFileHandler(MacOpenFileHandler* handlerRef, uint32_t millis);
+void uninstallMacOpenFileHandler(MacOpenFileHandler* handlerRef);
+
 static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef);
+static OSStatus globalEventHandler(EventHandlerCallRef handler, EventRef event, void* data);
+static void doFileOpenCb(const char* path);
 #endif
 
 //==============================================================================
@@ -35,7 +61,7 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
 emuExtension_t midiEmuExtension = {
     .name            = "midi",
     .fnInitCb        = midiInitCb,
-    .fnPreFrameCb    = NULL,
+    .fnPreFrameCb    = midiPreFrameCb,
     .fnPostFrameCb   = NULL,
     .fnKeyCb         = NULL,
     .fnMouseMoveCb   = NULL,
@@ -44,6 +70,13 @@ emuExtension_t midiEmuExtension = {
 };
 
 static char midiPathBuffer[1024];
+static const char* midiFile = NULL;
+
+#ifdef EMU_MACOS
+static bool handlerInstalled = false;
+static bool emulatorStarted = false;
+static MacOpenFileHandler macOpenFileHandler;
+#endif
 
 //==============================================================================
 // Functions
@@ -51,24 +84,22 @@ static char midiPathBuffer[1024];
 
 static bool midiInitCb(emuArgs_t* emuArgs)
 {
-    const char* midiFile = NULL;
     if (emuArgs->midiFile)
     {
         midiFile = emuArgs->midiFile;
     }
 
-    processEvents(&midiFile);
+#ifdef EMU_MACOS
+    handlerInstalled = installMacOpenFileHandler(&macOpenFileHandler, doOpenFileCb);
+    // Wait up to 100ms for an event at startup
+    checkForEventsMacOpenFileHandler(&macOpenFileHandler, 100);
+    emulatorStarted = true;
+#endif
 
     if (midiFile)
     {
         printf("Opening MIDI file: %s\n", midiFile);
-        if (emuCnfsInjectFile(midiFile, midiFile))
-        {
-            emuInjectNvs32("storage", "synth_playmode", 1);
-            emuInjectNvsBlob("storage", "synth_lastsong", strlen(midiFile), midiFile);
-            emulatorSetSwadgeModeByName(synthMode.modeName);
-        }
-        else
+        if (!midiInjectFile(midiFile))
         {
             printf("Could not read MIDI file!\n");
             emulatorQuit();
@@ -81,14 +112,147 @@ static bool midiInitCb(emuArgs_t* emuArgs)
     return false;
 }
 
-#ifdef EMU_MACOS
-static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef)
+void midiPreFrameCb(uint64_t frame)
 {
-    if (((FourCharCode)handlerRef) != 'odoc')
+#ifdef EMU_MACOS
+    if (handlerInstalled)
     {
-        printf("Ignoring event, not 'odoc'\n");
-        return noErr;
+        // Wait up to 5ms for an event, is that enough?
+        checkForEventsMacOpenFileHandler(&macOpenFileHandler, 5);
     }
+#endif
+}
+
+static bool midiInjectFile(const char* path)
+{
+    if (emuCnfsInjectFile(midiFile, midiFile))
+    {
+        emuInjectNvs32("storage", "synth_playmode", 1);
+        emuInjectNvsBlob("storage", "synth_lastsong", strlen(midiFile), midiFile);
+        emulatorSetSwadgeModeByName(synthMode.modeName);
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+#ifdef EMU_MACOS
+static void doFileOpenCb(const char* path)
+{
+    strncpy(midiPathBuffer, sizeof(midiPathBuffer), path);
+    midiFile = midiPathBuffer;
+
+    if (emulatorStarted)
+    {
+        if (!midiInjectFile(path))
+        {
+            printf("Error: could not read MIDI file %s!\n", path);
+        }
+    }
+}
+
+bool installMacOpenFileHandler(MacOpenFileHandler* handlerRef, MacOpenFileCb callback)
+{
+    // Init handler
+    handlerRef->appleEventHandler = NULL;
+    handlerRef->globalEventHandler = NULL;
+    handlerRef->openFileCallback = callback;
+
+    // Install handler
+    handlerRef->appleEventHandler = NewAEEventHandlerUPP(handleOpenDocumentEvent);
+    OSStatus result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handlerRef->appleEventHandler, (SRefCon)handlerRef, false);
+
+    if (result != noErr)
+    {
+        printf("Failed to install OpenDocument handler\n");
+        uninstallMacOpenFileHandler(handlerRef);
+        return false;
+    }
+
+    // Install the application-level handler
+    const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
+
+    handlerRef->globalEventHandler = NewEventHandlerUPP(globalEventHandler);
+    result = InstallApplicationEventHandler(handlerRef->globalEventHandler, 1, eventTypes, NULL, &handlerRef->globalEventHandlerRef);
+
+    if (result != noErr)
+    {
+        printf("Failed to install global event handler\n");
+        uninstallMacOpenFileHandler(handlerRef);
+        return false;
+    }
+
+    // Handler successfully installed
+    return true;
+}
+
+// Runs the event loop and waits for up to the specified time
+// The callback will be called for any events that are recevied
+void checkForEventsMacOpenFileHandler(MacOpenFileHandler* handlerRef, uint32_t millis)
+{
+    EventTimeout timeout = millis / 1000.0;
+    while (1)
+    {
+        EventRef eventRef;
+
+        OSErr result = ReceiveNextEvent(1, eventTypes, timeout, kEventRemoveFromQueue, &eventRef);
+
+        if (result == eventLoopTimedOutErr)
+        {
+            //printf("No event received after timeout\n");
+            break;
+        }
+        else if (result == noErr)
+        {
+            result = SendEventToEventTarget(eventRef, GetEventDispatcherTarget());
+            ReleaseEvent(eventRef);
+            if (result != noErr)
+            {
+                if (result == eventNotHandledErr)
+                {
+                    //printf("Got eventNotHandledErr from SendEventToEventTarget()\n");
+                }
+                else
+                {
+                    printf("Error in SendEventToEventTarget(): %d %s\n", result, strerror(result));
+                    break;
+                }
+            }
+        }
+        else
+        {
+            printf("Error in ReceiveNextEvent()\n");
+            break;
+        }
+    }
+}
+
+// Uninstalls and deletes
+void uninstallMacOpenFileHandler(MacOpenFileHandler* handlerRef)
+{
+    if (handlerRef != NULL)
+    {
+        if (handlerRef->appleEventHandler != NULL)
+        {
+            DisposeAEEventHandlerUPP(handlerRef->appleEventHandler);
+            handlerRef->appleEventHandler = NULL;
+        }
+
+        if (handlerRef->globalEventHandler != NULL)
+        {
+            DisposeEventHandlerUPP(handlerRef->globalEventHandler);
+            handlerRef->globalEventHandler = NULL;
+        }
+        handlerRef->openFileCallback = NULL;
+    }
+}
+
+static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRefArg)
+{
+    MacOpenFileHandler* handlerRef = (MacOpenFileHandler*)handlerRefArg;
 
     AEDescList docList;
     OSErr result = AEGetParamDesc(event, keyDirectObject, typeAEList, &docList);
@@ -118,7 +282,6 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
 
         if (result != noErr)
         {
-            printf("Error getting event doc index %ld\n", i);
             return result;
         }
 
@@ -129,9 +292,10 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
             CFStringRef docStringRef = CFURLCopyFileSystemPath(docUrlRef, kCFURLPOSIXPathStyle);
             if (docStringRef != NULL)
             {
-                if (CFStringGetFileSystemRepresentation(docStringRef, midiPathBuffer, sizeof(midiPathBuffer)))
+                char pathBuffer[1024];
+                if (CFStringGetFileSystemRepresentation(docStringRef, pathBuffer, sizeof(pathBuffer)))
                 {
-                    printf("Successfully handled event?\n");
+                    handlerRef->openFileCallback(pathBuffer);
                 }
                 CFRelease(docStringRef);
             }
@@ -142,65 +306,48 @@ static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent*
     return AEDisposeDesc(&docList);
 }
 
-#endif
-
-static void processEvents(const char** out)
+static OSStatus globalEventHandler(EventHandlerCallRef handler, EventRef event, void* data)
 {
-#ifdef EMU_MACOS
-    memset(midiPathBuffer, 0, sizeof(midiPathBuffer));
+    bool inQueue = IsEventInQueue(GetMainEventQueue(), event);
 
-    // Install handler
-    AEEventHandlerUPP handler = NewAEEventHandlerUPP(handleOpenDocumentEvent);
-    OSStatus result = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, handler, 0, false);
-
-    if (result != noErr)
+    if (inQueue)
     {
-        printf("Failed to install OpenDocument handler\n");
-        DisposeAEEventHandlerUPP(handler);
-        return;
+        RetainEvent(event);
+        RemoveEventFromQueue(GetMainEventQueue(), event);
     }
-    // Handler successfully installed, now check for events
 
-    EventRef eventRef;
-    // Half a second timeout
-    EventTimeout timeout = 0.5;
-    const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
-
-    result = ReceiveNextEvent(1, eventTypes, timeout, kEventRemoveFromQueue, &eventRef);
-
-    if (result == eventLoopTimedOutErr)
+    EventRecord record;
+    ConvertEventRefToEventRecord(event, &record);
+    char messageStr[5] =
     {
-        printf("No event received after timeout\n");
+        (char)((record.message >> 24) & 0xff),
+        (char)((record.message >> 16) & 0xff),
+        (char)((record.message >> 8) & 0xff),
+        (char)((record.message) & 0xff),
+        0,
+    };
+    printf("globalEventHandler() what=%hu, message=%s\n", record.what, messageStr);
+    OSStatus result = AEProcessAppleEvent(&record);
+
+    if (result == errAEEventNotHandled)
+    {
+        printf("errAEEventNotHandled in globalEventHandler()\n");
     }
-    else if (result == noErr)
+    else if (result != noErr)
     {
-        printf("Got an event!\n");
-        result = SendEventToEventTarget(eventRef, GetEventDispatcherTarget());
-        ReleaseEvent(eventRef);
-        if (result == noErr)
-        {
-            // Our event handler should set up midiPathBuffer here
-            if (*midiPathBuffer)
-            {
-                printf("Event successfully set midiPathBuffer\n");
-                *out = midiPathBuffer;
-            }
-        }
-        else
-        {
-            printf("Error in SendEventToEventTarget()\n");
-        }
+        printf("globalEventHandler() AEProcessAppleEvent() returned ERROR: %d (%s)\n", result, strerror(result));
     }
     else
     {
-        printf("Error in ReceiveNextEvent()\n");
+        printf("globalEventHandler() AEProcessAppleEvent() success!\n");
     }
 
-    result = AERemoveEventHandler(kCoreEventClass, kAEOpenDocuments, handleOpenDocumentEvent, false);
-    if (result != noErr)
+    if (inQueue)
     {
-        printf("Failed to uninstall OpenDocument handler\n");
+        ReleaseEvent(event);
     }
+
+    return noErr;
+}
 
 #endif
-}
