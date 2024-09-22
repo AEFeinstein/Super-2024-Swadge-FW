@@ -346,21 +346,21 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (tttDiffEasyStr == label)
         {
-            ttt->game.singlePlayer = true;
+            ttt->game.singlePlayer   = true;
             ttt->game.cpu.difficulty = TDIFF_EASY;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);
         }
         else if (tttDiffMediumStr == label)
         {
-            ttt->game.singlePlayer = true;
+            ttt->game.singlePlayer   = true;
             ttt->game.cpu.difficulty = TDIFF_MEDIUM;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);
         }
         else if (tttDiffHardStr == label)
         {
-            ttt->game.singlePlayer = true;
+            ttt->game.singlePlayer   = true;
             ttt->game.cpu.difficulty = TDIFF_HARD;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);

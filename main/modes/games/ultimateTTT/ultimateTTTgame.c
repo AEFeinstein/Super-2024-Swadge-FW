@@ -78,12 +78,12 @@ void tttBeginGame(ultimateTTT_t* ttt)
     ttt->showingInstructions = false;
 
     /// Clear any CPU data
-    ttt->game.cpu.state = TCPU_INACTIVE;
+    ttt->game.cpu.state         = TCPU_INACTIVE;
     ttt->game.cpu.destSubgame.x = 0;
     ttt->game.cpu.destSubgame.y = 0;
-    ttt->game.cpu.destCell.x = 0;
-    ttt->game.cpu.destCell.y = 0;
-    ttt->game.cpu.delayTime = 0;
+    ttt->game.cpu.destCell.x    = 0;
+    ttt->game.cpu.destCell.y    = 0;
+    ttt->game.cpu.delayTime     = 0;
 
     // Show the game UI
     tttShowUi(TUI_GAME);
@@ -100,13 +100,13 @@ void tttBeginGame(ultimateTTT_t* ttt)
 
         if (ttt->game.singlePlayer)
         {
-            ttt->game.state = TGS_PLACING_MARKER;
+            ttt->game.state     = TGS_PLACING_MARKER;
             ttt->game.cpu.state = TCPU_INACTIVE;
         }
     }
     else if (ttt->game.singlePlayer)
     {
-        ttt->game.state = TGS_WAITING;
+        ttt->game.state     = TGS_WAITING;
         ttt->game.cpu.state = TCPU_THINKING;
     }
     // If going second, wait to receive p1's marker before responding
@@ -470,7 +470,7 @@ void tttSendPlacedMarker(ultimateTTT_t* ttt)
 {
     if (ttt->game.singlePlayer)
     {
-        ttt->game.state = TGS_WAITING;
+        ttt->game.state     = TGS_WAITING;
         ttt->game.cpu.state = TCPU_THINKING;
     }
     else if (ttt->game.p2p.cnc.isConnected)

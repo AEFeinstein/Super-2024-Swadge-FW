@@ -11,9 +11,9 @@
 // #define DEBUG_TTT_CPU
 
 #ifdef DEBUG_TTT_CPU
-#define TCPU_LOG(...) ESP_LOGI("TTT", __VA_ARGS__)
+    #define TCPU_LOG(...) ESP_LOGI("TTT", __VA_ARGS__)
 #else
-#define TCPU_LOG(...)
+    #define TCPU_LOG(...)
 #endif
 
 // 500ms delay so it's easier to see what's going on
@@ -21,59 +21,59 @@
 
 typedef enum
 {
-    PLAYER_0 = 0x0,
-    PLAYER_1 = 0x1,
-    PLAYER_2 = 0x2,
-    PLAYER_3 = 0x3,
+    PLAYER_0   = 0x0,
+    PLAYER_1   = 0x1,
+    PLAYER_2   = 0x2,
+    PLAYER_3   = 0x3,
     OPPONENT_0 = 0x0,
     OPPONENT_1 = 0x4,
     OPPONENT_2 = 0x8,
     OPPORENT_3 = 0xC,
-    NONE_0 = 0x0,
-    NONE_1 = 0x10,
-    NONE_2 = 0x20,
-    NONE_3 = 0x30,
+    NONE_0     = 0x0,
+    NONE_1     = 0x10,
+    NONE_2     = 0x20,
+    NONE_3     = 0x30,
 } rowCount_t;
 
-#define TO_PLAYERS(n) ((n) & 0x3)
+#define TO_PLAYERS(n)   ((n) & 0x3)
 #define TO_OPPONENTS(n) (((n) & 0xC) >> 2)
-#define TO_NONES(n) (((n) & 0x30) >> 4)
+#define TO_NONES(n)     (((n) & 0x30) >> 4)
 
 // Define some scores for the game based on
 // Already-won game
 #define WON 20
 // Game to win
-#define WIN 9
-#define BLOCK 8
-#define FORK 7
-#define BLOCK_FORK 6
-#define CENTER 5
+#define WIN             9
+#define BLOCK           8
+#define FORK            7
+#define BLOCK_FORK      6
+#define CENTER          5
 #define OPPOSITE_CORNER 4
-#define EMPTY_CORNER 3
-#define EMPTY_SIDE 2
+#define EMPTY_CORNER    3
+#define EMPTY_SIDE      2
 
-static const char strMoveWon[] = "Won";
-static const char strMoveWin[] = "Win";
-static const char strMoveBlock[] = "Block";
-static const char strMoveFork[] = "Fork";
-static const char strMoveBlockFork[] = "Block Fork";
-static const char strMoveCenter[] = "Center";
+static const char strMoveWon[]            = "Won";
+static const char strMoveWin[]            = "Win";
+static const char strMoveBlock[]          = "Block";
+static const char strMoveFork[]           = "Fork";
+static const char strMoveBlockFork[]      = "Block Fork";
+static const char strMoveCenter[]         = "Center";
 static const char strMoveOppositeCenter[] = "Opposite Corner";
-static const char strMoveEmptyCorner[] = "Empty Corner";
-static const char strMoveEmptySide[] = "Empty Side";
+static const char strMoveEmptyCorner[]    = "Empty Corner";
+static const char strMoveEmptySide[]      = "Empty Side";
 
 #define ENCODE_LOC(x, y) (((x) + (y) * 3) << 5)
-#define DECODE_LOC_X(r) (((r) >> 5) % 3)
-#define DECODE_LOC_Y(r) (((r) >> 5) / 3)
-#define DECODE_MOVE(r) ((r) & 0x1F)
+#define DECODE_LOC_X(r)  (((r) >> 5) % 3)
+#define DECODE_LOC_Y(r)  (((r) >> 5) / 3)
+#define DECODE_MOVE(r)   ((r) & 0x1F)
 
-static bool selectSubgame_easy(ultimateTTT_t* ttt, int *x, int *y);
-static bool selectSubgame_medium(ultimateTTT_t* ttt, int *x, int *y);
-static bool selectSubgame_hard(ultimateTTT_t* ttt, int *x, int *y);
+static bool selectSubgame_easy(ultimateTTT_t* ttt, int* x, int* y);
+static bool selectSubgame_medium(ultimateTTT_t* ttt, int* x, int* y);
+static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y);
 
-static bool selectCell_easy(ultimateTTT_t* ttt, int *x, int *y);
-static bool selectCell_medium(ultimateTTT_t* ttt, int *x, int *y);
-static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y);
+static bool selectCell_easy(ultimateTTT_t* ttt, int* x, int* y);
+static bool selectCell_medium(ultimateTTT_t* ttt, int* x, int* y);
+static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y);
 
 static void tttCpuSelectSubgame(ultimateTTT_t* ttt);
 static void tttCpuSelectCell(ultimateTTT_t* ttt);
@@ -124,20 +124,20 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
             switch (ttt->game.cursorMode)
             {
                 case NO_CURSOR:
-                TCPU_LOG("cursorMode == NO_CURSOR");
-                break;
+                    TCPU_LOG("cursorMode == NO_CURSOR");
+                    break;
 
                 case SELECT_SUBGAME:
-                TCPU_LOG("cursorMode == SELECT_SUBGAME");
-                break;
+                    TCPU_LOG("cursorMode == SELECT_SUBGAME");
+                    break;
 
                 case SELECT_CELL:
-                TCPU_LOG("cursorMode == SELECT_CELL");
-                break;
+                    TCPU_LOG("cursorMode == SELECT_CELL");
+                    break;
 
                 case SELECT_CELL_LOCKED:
-                TCPU_LOG("cursorMode == SELECT_CELL_LOCKED");
-                break;
+                    TCPU_LOG("cursorMode == SELECT_CELL_LOCKED");
+                    break;
             }
         }
     }
@@ -149,14 +149,15 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
         {
             TCPU_LOG("Moving to Subgame");
             tttMsgMoveCursor_t payload;
-            payload.type = MSG_MOVE_CURSOR;
-            payload.cursorMode = SELECT_SUBGAME;
+            payload.type              = MSG_MOVE_CURSOR;
+            payload.cursorMode        = SELECT_SUBGAME;
             payload.selectedSubgame.x = ttt->game.selectedSubgame.x;
             payload.selectedSubgame.y = ttt->game.selectedSubgame.y;
-            payload.cursor.x = ttt->game.cursor.x;
-            payload.cursor.y = ttt->game.cursor.y;
+            payload.cursor.x          = ttt->game.cursor.x;
+            payload.cursor.y          = ttt->game.cursor.y;
 
-            do {
+            do
+            {
                 if (payload.cursor.x < ttt->game.cpu.destSubgame.x && payload.cursor.x < 2)
                 {
                     payload.cursor.x++;
@@ -179,8 +180,8 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
                     // We're in the right place already!
                     payload.cursorMode = SELECT_CELL;
                     // TODO don't select an invalid cell
-                    payload.cursor.x = 1;
-                    payload.cursor.y = 1;
+                    payload.cursor.x          = 1;
+                    payload.cursor.y          = 1;
                     payload.selectedSubgame.x = ttt->game.cpu.destSubgame.x;
                     payload.selectedSubgame.y = ttt->game.cpu.destSubgame.y;
                     tttReceiveCursor(ttt, &payload);
@@ -222,14 +223,15 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
         {
             TCPU_LOG("Moving to cell");
             tttMsgMoveCursor_t payload;
-            payload.type = MSG_MOVE_CURSOR;
-            payload.cursor.x = ttt->game.cursor.x;
-            payload.cursor.y = ttt->game.cursor.y;
-            payload.cursorMode = ttt->game.cursorMode;
+            payload.type              = MSG_MOVE_CURSOR;
+            payload.cursor.x          = ttt->game.cursor.x;
+            payload.cursor.y          = ttt->game.cursor.y;
+            payload.cursorMode        = ttt->game.cursorMode;
             payload.selectedSubgame.x = ttt->game.selectedSubgame.x;
             payload.selectedSubgame.y = ttt->game.selectedSubgame.y;
 
-            do {
+            do
+            {
                 if (payload.cursor.x < ttt->game.cpu.destCell.x && payload.cursor.x < 2)
                 {
                     payload.cursor.x++;
@@ -254,11 +256,11 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
                     }
                     // The cursor is in the right place, select it!
                     tttMsgPlaceMarker_t placePayload;
-                    placePayload.type = MSG_PLACE_MARKER;
+                    placePayload.type              = MSG_PLACE_MARKER;
                     placePayload.selectedSubgame.x = ttt->game.selectedSubgame.x;
                     placePayload.selectedSubgame.y = ttt->game.selectedSubgame.y;
-                    placePayload.selectedCell.x = ttt->game.cpu.destCell.x;
-                    placePayload.selectedCell.y = ttt->game.cpu.destCell.y;
+                    placePayload.selectedCell.x    = ttt->game.cpu.destCell.x;
+                    placePayload.selectedCell.y    = ttt->game.cpu.destCell.y;
 
                     ttt->game.cpu.state = TCPU_INACTIVE;
 
@@ -277,10 +279,10 @@ void tttCpuNextMove(ultimateTTT_t* ttt)
     }
 }
 
-static bool selectSubgame_easy(ultimateTTT_t* ttt, int *x, int *y)
+static bool selectSubgame_easy(ultimateTTT_t* ttt, int* x, int* y)
 {
     int availableSubgames[9] = {0};
-    int availableCount = 0;
+    int availableCount       = 0;
 
     for (int idx = 0; idx < 9; idx++)
     {
@@ -299,19 +301,22 @@ static bool selectSubgame_easy(ultimateTTT_t* ttt, int *x, int *y)
     return true;
 }
 
-static bool selectSubgame_medium(ultimateTTT_t* ttt, int *x, int *y)
+static bool selectSubgame_medium(ultimateTTT_t* ttt, int* x, int* y)
 {
     // Still just random
     return selectSubgame_easy(ttt, x, y);
 }
 
-static bool selectSubgame_hard(ultimateTTT_t* ttt, int *x, int *y)
+static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
 {
     // Eventually this will become the medium difficulty once I get the actual difficult AI working
     // Here's what to do:
-    // - Construct a 'subgame' to match the main board (which we can modify if needed to simulate stuff) and also to avoid rewriting the algorithm
-    // - Its board will have all the completed subgames marked with the winner, and the rest as NONE (TODO: how to handle a tie??? Just use the TIE player? Yeah probably)
-    // - We calculate the next possible move on that board, and then take a look at the board we'd need to win to get our marker there
+    // - Construct a 'subgame' to match the main board (which we can modify if needed to simulate stuff) and also to
+    // avoid rewriting the algorithm
+    // - Its board will have all the completed subgames marked with the winner, and the rest as NONE (TODO: how to
+    // handle a tie??? Just use the TIE player? Yeah probably)
+    // - We calculate the next possible move on that board, and then take a look at the board we'd need to win to get
+    // our marker there
     // - So... I guess we should take all the possible moves in that board, and then what...
     tttPlayer_t subgame[3][3];
     for (int x = 0; x < 3; x++)
@@ -323,9 +328,9 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int *x, int *y)
     }
 
     uint16_t mainResult = analyzeSubgame(subgame, TTT_P2, 0);
-    uint16_t mainMove = DECODE_MOVE(mainResult);
-    int mainX = DECODE_LOC_X(mainResult);
-    int mainY = DECODE_LOC_Y(mainResult);
+    uint16_t mainMove   = DECODE_MOVE(mainResult);
+    int mainX           = DECODE_LOC_X(mainResult);
+    int mainY           = DECODE_LOC_Y(mainResult);
 
     if (WON != mainMove && mainMove)
     {
@@ -347,42 +352,41 @@ static void tttCpuSelectSubgame(ultimateTTT_t* ttt)
     switch (ttt->game.cpu.difficulty)
     {
         case TDIFF_EASY:
-        result = selectSubgame_easy(ttt, &x, &y);
-        break;
+            result = selectSubgame_easy(ttt, &x, &y);
+            break;
 
         case TDIFF_MEDIUM:
-        result = selectSubgame_medium(ttt, &x, &y);
-        break;
+            result = selectSubgame_medium(ttt, &x, &y);
+            break;
 
         case TDIFF_HARD:
-        result = selectSubgame_hard(ttt, &x, &y);
-        break;
+            result = selectSubgame_hard(ttt, &x, &y);
+            break;
     }
 
     if (result)
     {
-
         TCPU_LOG("Selecting subgame %d, %d", x, y);
         ttt->game.cpu.destSubgame.x = x;
         ttt->game.cpu.destSubgame.y = y;
-        ttt->game.cpu.state = TCPU_MOVING;
+        ttt->game.cpu.state         = TCPU_MOVING;
 
         // Set the cursor up in this mode in order to move the state along
         tttMsgMoveCursor_t payload;
-        payload.type = MSG_MOVE_CURSOR;
-        payload.cursorMode = SELECT_SUBGAME;
+        payload.type              = MSG_MOVE_CURSOR;
+        payload.cursorMode        = SELECT_SUBGAME;
         payload.selectedSubgame.x = ttt->game.selectedSubgame.x;
         payload.selectedSubgame.y = ttt->game.selectedSubgame.y;
-        payload.cursor.x = ttt->game.cursor.x;
-        payload.cursor.y = ttt->game.cursor.y;
+        payload.cursor.x          = ttt->game.cursor.x;
+        payload.cursor.y          = ttt->game.cursor.y;
         tttReceiveCursor(ttt, &payload);
     }
 }
 
-static bool selectCell_easy(ultimateTTT_t* ttt, int *x, int *y)
+static bool selectCell_easy(ultimateTTT_t* ttt, int* x, int* y)
 {
     int availableCells[9] = {0};
-    int availableCount = 0;
+    int availableCount    = 0;
 
     // Pick a random cell!
     tttSubgame_t* subgame = &ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y];
@@ -402,14 +406,14 @@ static bool selectCell_easy(ultimateTTT_t* ttt, int *x, int *y)
     return true;
 }
 
-static bool selectCell_medium(ultimateTTT_t* ttt, int *x, int *y)
+static bool selectCell_medium(ultimateTTT_t* ttt, int* x, int* y)
 {
     // Medium plays perfectly within a subgame, but has no overall strategy and picks randomly when selecting a subgame
     tttSubgame_t* subgame = &ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y];
-    uint16_t result = analyzeSubgame(subgame->game, TTT_P2, 0);
-    uint16_t move = DECODE_MOVE(result);
-    int moveX = DECODE_LOC_X(result);
-    int moveY = DECODE_LOC_Y(result);
+    uint16_t result       = analyzeSubgame(subgame->game, TTT_P2, 0);
+    uint16_t move         = DECODE_MOVE(result);
+    int moveX             = DECODE_LOC_X(result);
+    int moveY             = DECODE_LOC_Y(result);
 
     switch (move)
     {
@@ -433,7 +437,7 @@ static bool selectCell_medium(ultimateTTT_t* ttt, int *x, int *y)
     }
 }
 
-static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
+static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
 {
     // For selecting the next move within a subgame, we would want to take into account the current subgame, but...
     // depending on the score of the next action, we have some freedom. Basically we don't need to worry _too_ much
@@ -447,12 +451,13 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
 
     /////////////
     // Ok, so what we have here is pretty good. It actually strategizes!
-    // But it can be better. What it needs to do instead of the weird scoring that doesn't take into account easy winning...
-    // Is to score the cell we pick, we then go to the corresponding subgame, and try every cell for the opponent
-    // Then _that_ is what we score the result of, considering the worst possible one (highest score for opponent) of all that subgame's playable cells.
-    // And then we use new scoring too. So, winning the subgame should be like -100 (unless we don't care?) and winning the whole game should be like -1000
-    // On the other hand, getting to pick our next subgame should be like a +50? or maybe it just inherits the score of the best possible result of all subgames
-    // Should the 'next move' scoring be considered? Ok....
+    // But it can be better. What it needs to do instead of the weird scoring that doesn't take into account easy
+    // winning... Is to score the cell we pick, we then go to the corresponding subgame, and try every cell for the
+    // opponent Then _that_ is what we score the result of, considering the worst possible one (highest score for
+    // opponent) of all that subgame's playable cells. And then we use new scoring too. So, winning the subgame should
+    // be like -100 (unless we don't care?) and winning the whole game should be like -1000 On the other hand, getting
+    // to pick our next subgame should be like a +50? or maybe it just inherits the score of the best possible result of
+    // all subgames Should the 'next move' scoring be considered? Ok....
 
     // The score of the opponent's ideal next move in each subgame
     uint16_t opponentScore[3][3];
@@ -463,7 +468,7 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
     tttSubgame_t* subgame = &ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y];
 
     uint16_t result = analyzeSubgame(subgame->game, TTT_P2, 0);
-    uint16_t move = DECODE_MOVE(result);
+    uint16_t move   = DECODE_MOVE(result);
 
     uint16_t moveScore = 50 - 10 * (movesToWin(subgame->game, TTT_P2)) + move;
 
@@ -550,8 +555,8 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
         }
     }
 
-    int minOppX = 0;
-    int minOppY = 0;
+    int minOppX          = 0;
+    int minOppY          = 0;
     uint16_t minOppScore = SCORE_MAX;
     for (int ix = 0; ix < 3; ix++)
     {
@@ -560,8 +565,8 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
             if (subgame->game[ix][iy] == TTT_NONE && opponentScore[ix][iy] < minOppScore)
             {
                 minOppScore = opponentScore[ix][iy];
-                minOppX = ix;
-                minOppY = iy;
+                minOppX     = ix;
+                minOppY     = iy;
             }
         }
     }
@@ -577,8 +582,8 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
 
     int16_t combinedScores[3][3];
     int16_t maxCombScore = INT16_MIN;
-    int maxCombX = 0;
-    int maxCombY = 0;
+    int maxCombX         = 0;
+    int maxCombY         = 0;
 
     for (int iy = 0; iy < 3; iy++)
     {
@@ -598,7 +603,7 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
             simulation[ix][iy] = TTT_P2;
 
             uint16_t thisCellAnalysis = analyzeSubgame(simulation, TTT_P2, 0);
-            uint16_t thisCellScore = DECODE_MOVE(thisCellAnalysis);
+            uint16_t thisCellScore    = DECODE_MOVE(thisCellAnalysis);
             thisCellScore += 50 - 10 * movesToWin(simulation, TTT_P2);
 
             uint16_t score = opponentScore[ix][iy];
@@ -624,11 +629,11 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
             if (combinedScores[ix][iy] > maxCombScore)
             {
                 maxCombScore = combinedScores[ix][iy];
-                maxCombX = ix;
-                maxCombY = iy;
+                maxCombX     = ix;
+                maxCombY     = iy;
             }
 
-            //TCPU_LOG("[%02" PRIu16 "%c/%02" PRIu16 "%c]   ", thisCellScore, playerFlag, score, oppFlag);
+            // TCPU_LOG("[%02" PRIu16 "%c/%02" PRIu16 "%c]   ", thisCellScore, playerFlag, score, oppFlag);
             TCPU_LOG("[%02" PRId16 "%c%c]   ", ((int16_t)thisCellScore - (int16_t)score), playerFlag, oppFlag);
         }
     }
@@ -647,16 +652,16 @@ static void tttCpuSelectCell(ultimateTTT_t* ttt)
     switch (ttt->game.cpu.difficulty)
     {
         case TDIFF_EASY:
-        result = selectCell_easy(ttt, &x, &y);
-        break;
+            result = selectCell_easy(ttt, &x, &y);
+            break;
 
         case TDIFF_MEDIUM:
-        result = selectCell_medium(ttt, &x, &y);
-        break;
+            result = selectCell_medium(ttt, &x, &y);
+            break;
 
         case TDIFF_HARD:
-        result = selectCell_hard(ttt, &x, &y);
-        break;
+            result = selectCell_hard(ttt, &x, &y);
+            break;
     }
 
     if (result)
@@ -664,7 +669,7 @@ static void tttCpuSelectCell(ultimateTTT_t* ttt)
         TCPU_LOG("Selecting cell %d, %d", x, y);
         ttt->game.cpu.destCell.x = x;
         ttt->game.cpu.destCell.y = y;
-        ttt->game.cpu.state = TCPU_MOVING;
+        ttt->game.cpu.state      = TCPU_MOVING;
     }
 }
 
@@ -699,14 +704,13 @@ static int hasDiagonal(int x, int y)
     }
 
     return 0;
-
 }
 
 static rowCount_t checkRow(const tttPlayer_t game[3][3], int y, tttPlayer_t player)
 {
-    int noneCount = 0;
-    int playerCount = 0;
-    int opponentCount = 0;
+    int noneCount           = 0;
+    int playerCount         = 0;
+    int opponentCount       = 0;
     tttPlayer_t otherPlayer = (player == TTT_P1) ? TTT_P2 : TTT_P1;
 
     for (int x = 0; x < 3; x++)
@@ -730,9 +734,9 @@ static rowCount_t checkRow(const tttPlayer_t game[3][3], int y, tttPlayer_t play
 
 static rowCount_t checkCol(const tttPlayer_t game[3][3], int x, tttPlayer_t player)
 {
-    int noneCount = 0;
-    int playerCount = 0;
-    int opponentCount = 0;
+    int noneCount           = 0;
+    int playerCount         = 0;
+    int opponentCount       = 0;
     tttPlayer_t otherPlayer = (player == TTT_P1) ? TTT_P2 : TTT_P1;
 
     for (int y = 0; y < 3; y++)
@@ -756,9 +760,9 @@ static rowCount_t checkCol(const tttPlayer_t game[3][3], int x, tttPlayer_t play
 
 static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t player)
 {
-    int noneCount = 0;
-    int playerCount = 0;
-    int opponentCount = 0;
+    int noneCount           = 0;
+    int playerCount         = 0;
+    int opponentCount       = 0;
     tttPlayer_t otherPlayer = (player == TTT_P1) ? TTT_P2 : TTT_P1;
 
     if (n == 1)
@@ -792,7 +796,7 @@ static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t pla
 static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 {
     uint16_t movesToWin = 0;
-    tttPlayer_t result = tttCheckWinner(subgame);
+    tttPlayer_t result  = tttCheckWinner(subgame);
     tttPlayer_t simulation[3][3];
 
     memcpy(simulation, subgame, sizeof(simulation));
@@ -807,7 +811,7 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 
     for (int y = 0; y < 3; y++)
     {
-        rowCount_t rowCount = checkRow(subgame, y, player);
+        rowCount_t rowCount  = checkRow(subgame, y, player);
         uint16_t movesNeeded = 3 - TO_PLAYERS(rowCount);
         if (0 == TO_OPPONENTS(rowCount) && movesNeeded < minMovesToWin)
         {
@@ -817,7 +821,7 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 
     for (int x = 0; x < 3; x++)
     {
-        rowCount_t rowCount = checkCol(subgame, x, player);
+        rowCount_t rowCount  = checkCol(subgame, x, player);
         uint16_t movesNeeded = 3 - TO_PLAYERS(rowCount);
         if (0 == TO_OPPONENTS(rowCount) && movesNeeded < minMovesToWin)
         {
@@ -827,7 +831,7 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 
     for (int n = 0; n < 2; n++)
     {
-        rowCount_t rowCount = checkDiag(subgame, n, player);
+        rowCount_t rowCount  = checkDiag(subgame, n, player);
         uint16_t movesNeeded = 3 - TO_PLAYERS(rowCount);
         if (0 == TO_OPPONENTS(rowCount) && movesNeeded < minMovesToWin)
         {
@@ -850,38 +854,38 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 
     if (result == player)
     {
-        //TCPU_LOG("%" PRIu16 " moves to win\n", movesToWin);
-        // Player won, return moves to win
+        // TCPU_LOG("%" PRIu16 " moves to win\n", movesToWin);
+        //  Player won, return moves to win
         return movesToWin;
     }
     else
     {
-        //TCPU_LOG("Can't win, 3 moves to win\n");
-        // This is a tie or a loss
-        // 10 moves to win is basically infinite
+        // TCPU_LOG("Can't win, 3 moves to win\n");
+        //  This is a tie or a loss
+        //  10 moves to win is basically infinite
         return 3;
     }
 }
 
 static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player, uint16_t filter)
 {
-/*
-1. Win: If you have two in a row, play the third to get three in a row.
-2. Block: If the opponent has two in a row, play the third to block them.
-3. Fork: Create an opportunity where you can win in two ways.
-4. Block Opponent's Fork:
-   - Option 1:
-       Create two in a row to force the opponent into defending, as long as it doesn't
-       result in them creating a fork or winning. For example, if "X" has a corner, "O"
-       has the center, and "X" has the opposite corner as well, "O" must not play a corner
-       in order to win. (Playing a corner in this scenario creates a fork for "X" to win.)
-   - Option 2:
-       If there is a configuration where the opponent can fork, block that fork.
-5. Center: Play the center.
-6. Opposite Corner: If the opponent is in the corner, play the opposite corner.
-7. Empty Corner: Play an empty corner.
-8. Empty Side: Play an empty side.
-*/
+    /*
+    1. Win: If you have two in a row, play the third to get three in a row.
+    2. Block: If the opponent has two in a row, play the third to block them.
+    3. Fork: Create an opportunity where you can win in two ways.
+    4. Block Opponent's Fork:
+       - Option 1:
+           Create two in a row to force the opponent into defending, as long as it doesn't
+           result in them creating a fork or winning. For example, if "X" has a corner, "O"
+           has the center, and "X" has the opposite corner as well, "O" must not play a corner
+           in order to win. (Playing a corner in this scenario creates a fork for "X" to win.)
+       - Option 2:
+           If there is a configuration where the opponent can fork, block that fork.
+    5. Center: Play the center.
+    6. Opposite Corner: If the opponent is in the corner, play the opposite corner.
+    7. Empty Corner: Play an empty corner.
+    8. Empty Side: Play an empty side.
+    */
 
 #define CHECK_FILTER(v) (!filter || (filter > (v)))
     tttPlayer_t otherPlayer = (player == TTT_P1) ? TTT_P2 : TTT_P1;
@@ -939,7 +943,7 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
         // Top-left to bottom-right diagonal
         for (int n = 0; n < 2; n++)
         {
-            counts = checkDiag(subgame, n + 1, player);
+            counts  = checkDiag(subgame, n + 1, player);
             int loc = (subgame[0][n ? 2 : 0] == TTT_NONE) ? 0 : ((subgame[1][1] == TTT_NONE) ? 1 : 2);
 
             if (CHECK_FILTER(WIN) && TO_PLAYERS(counts) == 2 && TO_NONES(counts) == 1)
@@ -973,7 +977,7 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
             cols[n] = checkCol(subgame, n, player);
             if (n > 0)
             {
-                diags[n-1] = checkDiag(subgame, n, player);
+                diags[n - 1] = checkDiag(subgame, n, player);
             }
         }
 
@@ -1081,9 +1085,9 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
         {
             int x = (n % 2) * 2;
             int y = (n / 2) * 2;
-            if (otherPlayer == subgame[x][y] && TTT_NONE == subgame[2-x][2-y])
+            if (otherPlayer == subgame[x][y] && TTT_NONE == subgame[2 - x][2 - y])
             {
-                return OPPOSITE_CORNER | ENCODE_LOC(2-x, 2-y);
+                return OPPOSITE_CORNER | ENCODE_LOC(2 - x, 2 - y);
             }
         }
     }
@@ -1125,8 +1129,6 @@ static void analyzeGame(ultimateTTT_t* ttt)
 {
     uint16_t opponentScore[3][3];
     uint16_t myScore[3][3];
-
-
 }
 
 static const char* getMoveName(uint16_t move)
@@ -1154,7 +1156,6 @@ static const char* getMoveName(uint16_t move)
             return strMoveEmptySide;
         default:
             return "?";
-
     }
 }
 
@@ -1171,15 +1172,15 @@ static void printGame(const tttPlayer_t subgame[3][3])
             {
                 case TTT_NONE:
                     *out++ = '_';
-                break;
+                    break;
 
                 case TTT_P1:
                     *out++ = 'X';
-                break;
+                    break;
 
                 case TTT_P2:
                     *out++ = 'O';
-                break;
+                    break;
             }
 
             *out++ = ' ';
