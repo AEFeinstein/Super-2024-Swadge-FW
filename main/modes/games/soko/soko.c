@@ -317,8 +317,8 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
     //  char* stringPtrs[30];
     //  memset(stringPtrs,0,30*sizeof(char*));
     char** stringPtrs = soko->levelNames;
-    memset(stringPtrs, 0, SOKO_LEVEL_COUNT * sizeof(char*));
-    memset(soko->levelIndices, 0, SOKO_LEVEL_COUNT * sizeof(int));
+    memset(stringPtrs, 0, sizeof(soko->levelNames));
+    memset(soko->levelIndices, 0, sizeof(soko->levelIndices));
     int intInd       = 0;
     int ind          = 0;
     char* storageStr = strtok(self->levelFileText, ":");
