@@ -113,8 +113,8 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
     }
     else
     {
-        renderer->titleFont          = titleFont;
-        renderer->titleFontAllocated = false;
+        renderer->titleFontOutline          = titleFont;
+        renderer->titleFontOutlineAllocated = false;
     }
 
     // Save or allocate menu font

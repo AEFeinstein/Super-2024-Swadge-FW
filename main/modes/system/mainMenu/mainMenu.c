@@ -16,12 +16,15 @@
 #include "mainMenu.h"
 #include "modeTimer.h"
 #include "mode_credits.h"
-#include "mode_pinball.h"
+#include "mode_bigbug.h"
 #include "mode_synth.h"
 #include "ultimateTTT.h"
+#include "pango.h"
+#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "keebTest.h"
+#include "mode_2048.h"
 
 #include "settingsManager.h"
 
@@ -150,7 +153,10 @@ static void mainMenuEnterMode(void)
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
+    addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
@@ -352,13 +358,21 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&modeCredits);
         }
-        else if (label == pinballMode.modeName)
+        else if (label == bigbugMode.modeName)
         {
-            switchToSwadgeMode(&pinballMode);
+            switchToSwadgeMode(&bigbugMode);
+        }
+        else if (label == sokoMode.modeName)
+        {
+            switchToSwadgeMode(&sokoMode);
         }
         else if (label == tttMode.modeName)
         {
             switchToSwadgeMode(&tttMode);
+        }
+        else if (label == pangoMode.modeName)
+        {
+            switchToSwadgeMode(&pangoMode);
         }
         else if (label == timerMode.modeName)
         {
@@ -375,6 +389,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == tunernomeMode.modeName)
         {
             switchToSwadgeMode(&tunernomeMode);
+        }
+        else if (label == t48Mode.modeName)
+        {
+            switchToSwadgeMode(&t48Mode);
         }
         else if (label == factoryResetName)
         {

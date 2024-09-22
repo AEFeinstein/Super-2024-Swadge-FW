@@ -14,6 +14,9 @@
 #include "macros.h"
 #include "cnfs.h"
 
+// Uncomment to enable logging SysEx commands in detail
+// #define DEBUG_SYSEX 1
+
 #define OSC_DITHER
 
 //==============================================================================
@@ -47,6 +50,26 @@ static const uint8_t oscDither[] = {
                     + ((int)(voice)->targetVol - (int)(voice)->transitionStartVol)               \
                           * ((int)(voice)->transitionTicksTotal - (int)(voice)->transitionTicks) \
                           / (int)(voice)->transitionTicksTotal))
+
+/// @brief Set only the MSB of a 14-bit value
+#define SET_MSB(target, val)                   \
+    do                                         \
+    {                                          \
+        uint16_t new14bitVal = ((val) & 0x7F); \
+        new14bitVal <<= 7;                     \
+        new14bitVal |= ((target) & 0x7F);      \
+        (target) = new14bitVal;                \
+    } while (0)
+
+/// @brief Set only the LSB of a 14-bit value
+#define SET_LSB(target, val)                           \
+    do                                                 \
+    {                                                  \
+        uint16_t new14bitVal = ((target) >> 7) & 0x7F; \
+        new14bitVal <<= 7;                             \
+        new14bitVal |= ((val) & 0x7F);                 \
+        (target) = new14bitVal;                        \
+    } while (0)
 
 // Values for the percussion special states bitmap
 #define SHIFT_HI_HAT   (0)
@@ -807,6 +830,251 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
     // Actually we can assign a non-registered control to R, G, and B
     // I think there's enough for every LED too assuming there's still like, 7 or so
     // AND: if possible have a sysex command (hmm) that sets all the LEDs to individual values at once
+
+    // GM Enable (01)
+    // GM Disable (02)
+    // GM2 Enable (03)
+    // GM Disable (00) (incorrect but I bet people are doing it because teragonaudio says to)
+    uint8_t mfrLen = 1;
+
+#ifdef DEBUG_SYSEX
+    uint8_t mfrHex[3] = {0, 0, 0};
+#endif
+
+    const uint8_t* end = sysex->data + sysex->length;
+
+    // Determine the length of the manufacturer ID so we know how many bytes to skip for the real data
+    if (sysex->manufacturerId & (1 << 15))
+    {
+        // This is a 1-byte manufacturer ID
+        mfrLen = 1;
+#ifdef DEBUG_SYSEX
+        mfrHex[0] = sysex->manufacturerId & ~(1 << 15);
+#endif
+    }
+    else
+    {
+        // This is a 3-byte manufacturer ID
+        mfrLen = 3;
+#ifdef DEBUG_SYSEX
+        mfrHex[1] = (sysex->manufacturerId >> 7) & 0x7F;
+        mfrHex[2] = (sysex->manufacturerId & 0x7F);
+#endif
+    }
+
+    const uint8_t* dataPtr = sysex->data + mfrLen;
+
+#ifdef DEBUG_SYSEX
+    printf("Got SysEx event length=%" PRIu32 ":\n", sysex->length);
+    printf("Manufacturer: ");
+
+    for (int i = 0; i < mfrLen; i++)
+    {
+        printf("%02" PRIx8 " ", mfrHex[i]);
+    }
+    printf("\n");
+
+    for (uint32_t i = 0; i < sysex->length; i++)
+    {
+        if (i % 8 == 0)
+        {
+            printf("\n%04" PRIx32 "    ", i);
+        }
+
+        printf("%02" PRIx8 " ", sysex->data[i]);
+    }
+
+    printf("\n");
+#endif
+
+    switch (sysex->manufacturerId)
+    {
+        case MMFR_EDUCATIONAL_USE:
+            break;
+
+        case MMFR_UNIVERSAL_NON_REAL_TIME:
+        case MMFR_UNIVERSAL_REAL_TIME:
+        {
+            bool realTime = (sysex->manufacturerId == MMFR_UNIVERSAL_REAL_TIME);
+
+            // Universal SysEx messages have 127 "channel" values, with 0x7F meaning "Disregard Channel"
+            // uint8_t sysexChannel = *dataPtr++;
+
+            if (dataPtr >= end)
+            {
+                // Err
+                return;
+            }
+
+            uint8_t subId = *dataPtr++;
+
+            if (dataPtr >= end)
+            {
+                // Err
+                return;
+            }
+
+            uint8_t subId2 = *dataPtr++;
+
+            if (realTime)
+            {
+                // Real Time Universal SysEx
+                switch (subId)
+                {
+                    // 0: UNUSED
+                    case 0x0:
+                    // MIDI Time Code
+                    case 0x1:
+                    // MIDI Show Control
+                    case 0x2:
+                    // Notation Information
+                    case 0x3:
+                        break;
+
+                    // Device Control
+                    case 0x4:
+                    {
+                        switch (subId2)
+                        {
+                            // Master Volume
+                            case 1:
+                            {
+                                break;
+                            }
+
+                            // Master Balance
+                            case 2:
+                                break;
+
+                            // Master Fine Tuning
+                            case 3:
+                            {
+                                break;
+                            }
+
+                            // Master Coarse Tuning
+                            case 4:
+                            {
+                                break;
+                            }
+
+                            case 5:
+                            default:
+                                break;
+                        }
+
+                        break;
+                    }
+
+                    // Real Time MTC Cueing
+                    case 0x5:
+                    // MIDI Machine Control Commands
+                    case 0x6:
+                    // MIDI Machine Control Responses
+                    case 0x7:
+                    // MIDI Tuning Standard (Real Time)
+                    case 0x8:
+                    // Controller Destination Setting
+                    case 0x9:
+                    // Key-based Instrument Control
+                    case 0xA:
+                    // Scalable Polyphony MIDI MIP Message
+                    case 0xB:
+                    // Mobile Phone Control Message
+                    case 0xC:
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                // Non-Real Time Universal SysEx
+                switch (subId)
+                {
+                    // 0: UNUSED
+                    case 0x0:
+                    // Sample Dump
+                    case 0x1:
+                    // Sample Data Packet
+                    case 0x2:
+                    // Sample Dump Request
+                    case 0x3:
+                    // MIDI Time Code
+                    case 0x4:
+                    // Sample Dump Extensions
+                    case 0x5:
+                    // General Information
+                    case 0x6:
+                    // File Dump
+                    case 0x7:
+                    // MIDI Tuning Standard
+                    case 0x8:
+                        break;
+
+                    // General MIDI
+                    case 0x9:
+                    {
+                        switch (subId2)
+                        {
+                            case 0:
+                            {
+                                // NOTE: This value is NOT defined by the MIDI spec
+                                // However, some resources incorrectly claim that a value of `0` for sub-ID 2 is the
+                                // value for a "GM Off" event (with `1` being "GM On"), even though a value of `2` is
+                                // specified for `GM Off`, so it is possible that a `0` value will be sent with the
+                                // intent to disable GM.
+                                midiGmOff(player);
+                                break;
+                            }
+
+                            // General MIDI 1 On
+                            case 1:
+                            {
+                                midiGmOn(player);
+                                break;
+                            }
+
+                            // General MIDI Off
+                            case 2:
+                            {
+                                midiGmOff(player);
+                                break;
+                            }
+
+                            // General MIDI 2 On (Unsupported)
+                            case 3:
+                            default:
+                                break;
+                        }
+                        break;
+                    }
+
+                    // Downloadable Sounds
+                    case 0xA:
+                    // File Reference Message
+                    case 0xB:
+                    // MIDI Visual Control
+                    case 0xC:
+                    // MIDI Capability Inquiry
+                    case 0xD:
+                    // End of File
+                    case 0x7B:
+                    // Wait
+                    case 0x7C:
+                    // Cancel
+                    case 0x7D:
+                    // NAK
+                    case 0x7E:
+                    // ACK
+                    case 0x7F:
+                    default:
+                        break;
+                }
+            }
+
+            break;
+        }
+    }
 }
 
 /**
@@ -894,7 +1162,7 @@ void midiPlayerInit(midiPlayer_t* player)
 void midiPlayerReset(midiPlayer_t* player)
 {
     midiAllSoundOff(player);
-    midiGmOn(player);
+    midiGmOff(player);
 
     // We need the tempo to not be zero, so set it to the default of 120BPM until we get a tempo event
     // 120 BPM == 500,000 microseconds per quarter note
@@ -1121,11 +1389,14 @@ void midiResetChannelControllers(midiPlayer_t* player, uint8_t channel)
 {
     midiChannel_t* chan = &player->channels[channel];
     midiSustain(player, channel, MIDI_FALSE);
-    chan->volume    = UINT14_MAX;
-    chan->pitchBend = PITCH_BEND_CENTER;
-    chan->program   = 0;
-    chan->held      = 0;
-    chan->sustenuto = 0;
+    chan->volume              = UINT14_MAX;
+    chan->pitchBend           = PITCH_BEND_CENTER;
+    chan->registeredParameter = true;
+    // Set selected RPN to "RPN Reset" which means none currently selected
+    chan->selectedParameter = UINT14_MAX;
+    chan->program           = 0;
+    chan->held              = 0;
+    chan->sustenuto         = 0;
     initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program));
 }
 
@@ -1153,8 +1424,44 @@ void midiGmOff(midiPlayer_t* player)
         midiResetChannelControllers(player, chanIdx);
 
         // Channel 10 (index 9) is reserved for percussion.
-        chan->percussion = (9 == chanIdx);
-        chan->bank       = 1;
+        // Also enable percussion on channel 11 (index 10) with an alternate drum kit
+        chan->percussion = (9 == chanIdx || 10 == chanIdx);
+        // Set bank 1 (MAGFest sounds) for everything except the first drumkit on 10
+        chan->bank = (9 == chanIdx) ? 0 : 1;
+
+        switch (chanIdx)
+        {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            {
+                chan->program = chanIdx;
+                break;
+            }
+
+            case 9:
+            case 10:
+            {
+                chan->program = 0;
+                break;
+            }
+
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            {
+                chan->program = 0;
+                break;
+            }
+        }
 
         initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, chan->bank, chan->program));
     }
@@ -1597,19 +1904,35 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t cont
     {
         case MCC_BANK_MSB:
         {
-            uint16_t newBank = (val & 0x7F);
-            newBank <<= 7;
-            newBank |= (player->channels[channel].bank & 0x7F);
-            player->channels[channel].bank = newBank;
+            SET_MSB(player->channels[channel].bank, val);
             break;
         }
 
         case MCC_BANK_LSB:
         {
-            uint16_t newBank = (player->channels[channel].bank >> 7) & 0x7F;
-            newBank <<= 7;
-            newBank |= (val & 0x7F);
-            player->channels[channel].bank = newBank;
+            SET_LSB(player->channels[channel].bank, val);
+            break;
+        }
+
+        // Data Entry MSB (6)
+        case MCC_DATA_ENTRY_MSB:
+        {
+            uint16_t curVal = midiGetParameterValue(player, channel, player->channels[channel].registeredParameter,
+                                                    player->channels[channel].selectedParameter);
+            SET_MSB(curVal, val);
+            midiSetParameter(player, channel, player->channels[channel].registeredParameter,
+                             player->channels[channel].selectedParameter, curVal);
+            break;
+        }
+
+        // Data Entry LSB (38)
+        case MCC_DATA_ENTRY_LSB:
+        {
+            uint16_t curVal = midiGetParameterValue(player, channel, player->channels[channel].registeredParameter,
+                                                    player->channels[channel].selectedParameter);
+            SET_LSB(curVal, val);
+            midiSetParameter(player, channel, player->channels[channel].registeredParameter,
+                             player->channels[channel].selectedParameter, curVal);
             break;
         }
 
@@ -1669,6 +1992,56 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t cont
         {
             // Set chorus (within reason, up to 16... which is kinda ridiculous anyway)
             player->channels[channel].timbre.effects.chorus = MIN(val, 16);
+            break;
+        }
+
+        // Data Button Increment (96)
+        case MCC_DATA_BUTTON_INC:
+        // Data Button Decrement (97)
+        case MCC_DATA_BUTTON_DEC:
+        {
+            bool inc       = (control == MCC_DATA_BUTTON_INC);
+            uint16_t param = player->channels[channel].selectedParameter;
+            uint16_t curVal
+                = midiGetParameterValue(player, channel, player->channels[channel].registeredParameter, param);
+
+            // Prevent rollover
+            if ((inc && curVal < UINT14_MAX) || (!inc && curVal > 0))
+            {
+                midiSetParameter(player, channel, player->channels[channel].registeredParameter, param, curVal);
+            }
+            break;
+        }
+
+        // Non-registered Parameter Number LSB (98)
+        case MCC_NON_REGISTERED_PARAM_LSB:
+        {
+            player->channels[channel].registeredParameter = false;
+            SET_LSB(player->channels[channel].selectedParameter, val);
+            break;
+        }
+
+        // Non-registered Parameter Number MSB (99)
+        case MCC_NON_REGISTERED_PARAM_MSB:
+        {
+            player->channels[channel].registeredParameter = false;
+            SET_MSB(player->channels[channel].selectedParameter, val);
+            break;
+        }
+
+        // Registered Parameter Number LSB (100)
+        case MCC_REGISTERED_PARAM_LSB:
+        {
+            player->channels[channel].registeredParameter = true;
+            SET_LSB(player->channels[channel].selectedParameter, val);
+            break;
+        }
+
+        // Registered Parameter Number MSB (101)
+        case MCC_REGISTERED_PARAM_MSB:
+        {
+            player->channels[channel].registeredParameter = true;
+            SET_MSB(player->channels[channel].selectedParameter, val);
             break;
         }
 
@@ -1761,6 +2134,94 @@ uint16_t midiGetControlValue14bit(midiPlayer_t* player, uint8_t channel, midiCon
     result <<= 7;
     result |= midiGetControlValue(player, channel, (midiControl_t)lsbControl) & 0x7F;
     return result;
+}
+
+void midiSetParameter(midiPlayer_t* player, uint8_t channel, bool registeredParam, uint16_t param, uint16_t value)
+{
+    if (registeredParam)
+    {
+        switch (param)
+        {
+            // Pitch Bend Range
+            case 0x0000:
+            {
+                // Not supported (yet?)
+                break;
+            }
+
+            // Master Fine Tuning
+            case 0x0001:
+            {
+                // Not supported
+                break;
+            }
+
+            // Master Coarse Tuning
+            case 0x0002:
+            {
+                // Not supported
+                break;
+            }
+
+            // "Not Set"
+            case 0x3FFF:
+            default:
+            {
+                // No action necessary
+                break;
+            }
+        }
+    }
+    else
+    {
+        switch (param)
+        {
+            case 10:
+            {
+                // Set Percussion
+                if ((value != 0) != player->channels[channel].percussion)
+                {
+                    player->channels[channel].percussion = (value != 0);
+                    // Necessary to actually configure the channel for its new percussion state
+                    midiSetProgram(player, channel, player->channels[channel].program);
+                }
+                break;
+            }
+
+            default:
+            {
+                // Ignore all others
+                break;
+            }
+        }
+    }
+}
+
+uint16_t midiGetParameterValue(midiPlayer_t* player, uint8_t channel, bool registered, uint16_t param)
+{
+    if (registered)
+    {
+        switch (param)
+        {
+            default:
+                return 0;
+        }
+    }
+    else
+    {
+        switch (param)
+        {
+            case 10:
+            {
+                return player->channels[channel].percussion ? 1 : 0;
+            }
+
+            default:
+            {
+                return 0;
+            }
+        }
+    }
 }
 
 void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)

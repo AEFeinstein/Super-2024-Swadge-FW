@@ -516,26 +516,6 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                 // A sysex event in a MIDI file is different from one in streaming mode (i.e. USB), because there is no
                 // length byte transmitted in streaming mode, so we need to check the manufacturer length there
 
-                // TODO: Move this to the streaming parser
-                /*
-                // We'll need to read at least one more byte
-                //if (!TRK_REMAIN()) { ERR(); }
-                uint16_t manufacturer = *(track->cur++);
-                if (!manufacturer)
-                {
-                    if (TRK_REMAIN() < 2) { ERR(); }
-                    // A manufacturer ID of 0 means the ID is actually in the next 2 bytes
-                    manufacturer = *(track->cur++);
-                    manufacturer <<= 7;
-                    manufacturer |= *(track->cur++);
-                }
-                else
-                {
-                    // Technically 0x00 0x00 0x41 is considered a different manufacturer from the single-byte value 0x41
-                    // So in that case just put a 1 in the 15th bit that's otherwise unused
-                    manufacturer |= (1 << 15);
-                }*/
-
                 uint32_t sysexLength;
                 read = readVariableLength(track->cur, TRK_REMAIN(), &sysexLength);
                 if (!read)
@@ -554,10 +534,38 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                 track->nextEvent.sysex.data   = track->cur;
                 // If the status is 0xF0, the 0xF0 should be prefixed to the data.
                 track->nextEvent.sysex.prefix = (status == 0xF0) ? 0xF0 : 0x00;
-                // TODO
-                track->nextEvent.sysex.manufacturerId = 0;
 
-                track->cur += sysexLength;
+                // Store the pointer to the end of data so we don't need to do math later
+                const uint8_t* sysexEnd = (track->cur + sysexLength);
+
+                // TODO: Move this to the streaming parser
+                // We'll need to read at least one more byte
+                if (!TRK_REMAIN())
+                {
+                    ERR();
+                }
+                uint16_t manufacturer = *(track->cur++);
+                if (!manufacturer)
+                {
+                    if (TRK_REMAIN() < 2)
+                    {
+                        ERR();
+                    }
+                    // A manufacturer ID of 0 means the ID is actually in the next 2 bytes
+                    manufacturer = *(track->cur++);
+                    manufacturer <<= 7;
+                    manufacturer |= *(track->cur++);
+                }
+                else
+                {
+                    // Technically 0x00 0x00 0x41 is considered a different manufacturer from the single-byte value 0x41
+                    // So in that case just put a 1 in the 15th bit that's otherwise unused
+                    manufacturer |= (1 << 15);
+                }
+
+                track->nextEvent.sysex.manufacturerId = manufacturer;
+
+                track->cur = sysexEnd;
             }
             else
             {
