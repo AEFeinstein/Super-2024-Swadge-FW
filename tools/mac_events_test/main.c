@@ -13,7 +13,7 @@
 #define LOG printf
 #endif
 
-static pascal OSErr handleOpenDocumentEvent(const AppleEvent* reply, SRefCon handlerRef);
+static pascal OSErr handleOpenDocumentEvent(const AppleEvent* event, AppleEvent* reply, SRefCon handlerRef);
 static void processEvents(const char** out);
 
 static char pathBuffer[1024];

@@ -57,7 +57,6 @@ CFLAGS = \
 
 # Required for OpenGL and some other libraries
 CFLAGS += \
-	-I/opt/homebrew/include \
 	-mmacosx-version-min=10.0
 
 # These are warning flags that the IDF uses
@@ -139,9 +138,9 @@ LIBS =
 LIB_DIRS =
 
 # On MacOS we need to ensure that X11 is added for OpenGL and some others
-ifeq ($(HOST_OS),Darwin)
-    LIB_DIRS = /opt/X11/lib /opt/homebrew/lib
-endif
+#ifeq ($(HOST_OS),Darwin)
+#    LIB_DIRS = /opt/X11/lib
+#endif
 
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
@@ -180,14 +179,14 @@ $(EXECUTABLE): $(OBJECTS)
 
 bundle: $(BUNDLE)
 
-$(BUNDLE): $(EXECUTABLE) build/SwadgeEmulator.icns emulator/resources/Info.plist
-	rm -rf SwadgeEmulator.app
-	mkdir -p SwadgeEmulator.app/Contents/{MacOS,Resources,libs}
-	cat emulator/resources/Info.plist | sed "s/##GIT_HASH##/$(GIT_HASH)/" > SwadgeEmulator.app/Contents/Info.plist
-	echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
-	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
-	vtool -set-build-version macos 10.0 10.0 -replace -output SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator $(EXECUTABLE)
-	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator -d ./SwadgeEmulator.app/Contents/libs/
+$(BUNDLE): $(EXECUTABLE) $(ICONS) Info.plist
+	rm -rf $(BUNDLE)
+	mkdir -p $(BUNDLE)/Contents/{MacOS,Resources,libs}
+	cp Info.plist $(BUNDLE)/Contents/Info.plist
+	echo "APPLTest" > $(BUNDLE)/Contents/PkgInfo
+	cp $(ICONS) $(BUNDLE)/Contents/Resources/
+	vtool -set-build-version macos 10.0 10.0 -replace -output $(BUNDLE)/Contents/MacOS/test $(EXECUTABLE)
+	dylibbundler -od -b -x ./$(BUNDLE)/Contents/MacOS/test -d ./$(BUNDLE)/Contents/libs/
 
 
 $(ICONS): ../../emulator/resources/icon.png
