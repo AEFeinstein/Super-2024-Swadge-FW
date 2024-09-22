@@ -92,7 +92,7 @@ static bool midiInitCb(emuArgs_t* emuArgs)
     }
 
 #ifdef EMU_MACOS
-    handlerInstalled = installMacOpenFileHandler(&macOpenFileHandler, doOpenFileCb);
+    handlerInstalled = installMacOpenFileHandler(&macOpenFileHandler, doFileOpenCb);
     // Wait up to 100ms for an event at startup
     checkForEventsMacOpenFileHandler(&macOpenFileHandler, 100);
     emulatorStarted = true;
