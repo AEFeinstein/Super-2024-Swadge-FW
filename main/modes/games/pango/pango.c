@@ -144,6 +144,7 @@ void changeStatePause(pango_t* self);
 void updatePause(pango_t* self, int64_t elapsedUs);
 void drawPause(font_t* font);
 uint16_t getLevelIndex(uint8_t world, uint8_t level);
+void pangoChangeStateMainMenu(pango_t* self);
 
 //==============================================================================
 // Variables
@@ -186,7 +187,9 @@ static const paLeveldef_t leveldef[17] = {{.filename = "level1-1.bin", .timeLimi
 
 led_t platLeds[CONFIG_NUM_LEDS];
 
-static const char str_get_ready[]    = "Get Ready!";
+static const char str_ready[]        = "Ready?";
+static const char str_set[]          = "Set...";
+static const char str_pango[]        = "PANGO!";
 static const char str_time_up[]      = "-Time Up!-";
 static const char str_game_over[]    = "Game Over";
 static const char str_well_done[]    = "Nice Clear!";
@@ -968,17 +971,16 @@ void drawReadyScreen(font_t* font, paGameData_t* gameData)
 {
     drawPangoHud(font, gameData);
 
-    // int16_t xOff = (TFT_WIDTH - textWidth(font, "str_get_ready")) >> 1;
-    drawText(font, c555, "Ready?", 80, 96);
+    drawText(font, c555, str_ready, 80, 96);
 
     if (gameData->frameCount > 60)
     {
-        drawText(font, c555, "Set...", 112, 128);
+        drawText(font, c555, str_set, 112, 128);
     }
 
     if (gameData->frameCount > 120)
     {
-        drawText(font, c555, "PANGO!", 144, 160);
+        drawText(font, c555, str_pango, 144, 160);
     }
 
     /*if (getLevelIndex(gameData->world, gameData->level) == 0)
@@ -1049,8 +1051,9 @@ void changeStateGame(pango_t* self)
                     break;
             }
 
-            paEntity_t* newEnemy = createCrabdozer(&(self->entityManager), (spawnTx << PA_TILE_SIZE_IN_POWERS_OF_2) + 8,
-                                                   (spawnTy << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
+            /*paEntity_t* newEnemy = */ createCrabdozer(&(self->entityManager),
+                                                        (spawnTx << PA_TILE_SIZE_IN_POWERS_OF_2) + 8,
+                                                        (spawnTy << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
 
             /*if(newEnemy != NULL && i == randomAggroEnemy){
                 newEnemy->stateFlag = true;
