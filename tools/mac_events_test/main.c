@@ -91,8 +91,6 @@ bool installMacOpenFileHandler(MacOpenFileHandler* handlerRef, MacOpenFileCb cal
     }
 
     // Install the application-level handler
-    const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
-
     handlerRef->globalEventHandler = NewEventHandlerUPP(globalEventHandler);
     result = InstallApplicationEventHandler(handlerRef->globalEventHandler, 1, eventTypes, NULL, &handlerRef->globalEventHandlerRef);
 
