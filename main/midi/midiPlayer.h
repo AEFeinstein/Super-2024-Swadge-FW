@@ -343,6 +343,16 @@ typedef enum
     MCC_POLY_OPERATION = 127,
 } midiControl_t;
 
+/**
+ * @brief Values that can be directly compared against midiSysexEvent_t::manufacturerId
+ */
+typedef enum
+{
+    MMFR_EDUCATIONAL_USE         = 0x807D,
+    MMFR_UNIVERSAL_NON_REAL_TIME = 0x807E,
+    MMFR_UNIVERSAL_REAL_TIME     = 0x807F,
+} midiManufacturerId_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -592,6 +602,12 @@ typedef struct
 
     /// @brief The ID of the program (timbre) set for this channel
     uint8_t program;
+
+    /// @brief Whether selectedParameter represents a registered or non-registered parameter
+    bool registeredParameter;
+
+    /// @brief The ID of the currently selected registered or non-registered parameter
+    uint16_t selectedParameter;
 
     /// @brief The actual current timbre definition which the program ID corresponds to
     midiTimbre_t timbre;
@@ -878,6 +894,29 @@ uint8_t midiGetControlValue(midiPlayer_t* player, uint8_t channel, midiControl_t
  * @return uint16_t The value of the specified control, or 0 if the specified controller is not implemented
  */
 uint16_t midiGetControlValue14bit(midiPlayer_t* player, uint8_t channel, midiControl_t control);
+
+/**
+ * @brief Set a registered or non-registered parameter value
+ *
+ * @param player The MIDI player
+ * @param channel The channel to set the parameter on
+ * @param registered true if param refers to a registered parameter number and false if it refers to a non-registered
+ * @param param The registered or non-registered MIDI parameter to set the value of
+ * @param value The 14-bit value to set the parameter to
+ */
+void midiSetParameter(midiPlayer_t* player, uint8_t channel, bool registered, uint16_t param, uint16_t value);
+
+/**
+ * @brief Get the value of a registered or non-registered parameter
+ *
+ * @param player The MIDI player
+ * @param channel The channel to retrieve the parameter from
+ * @param registered true if param refers to a registered parameter number and false if it refers to a non-registered
+ * @param param The registered or non-registered MIDI parameter number to retrieve the value for
+ * @return The current 14-bit value of the given registered or non-registered parameter, or 0 if the parameter is
+ * unsupported
+ */
+uint16_t midiGetParameterValue(midiPlayer_t* player, uint8_t channel, bool registered, uint16_t param);
 
 /**
  * @brief Set the pitch wheel value on a given MIDI channel

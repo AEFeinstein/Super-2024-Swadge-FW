@@ -20,6 +20,7 @@
 #include "mode_swadgeHero.h"
 #include "mode_synth.h"
 #include "ultimateTTT.h"
+#include "pango.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "keebTest.h"
@@ -153,6 +154,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
@@ -367,6 +369,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == swadgeHeroMode.modeName)
         {
             switchToSwadgeMode(&swadgeHeroMode);
+        }
+        else if (label == pangoMode.modeName)
+        {
+            switchToSwadgeMode(&pangoMode);
         }
         else if (label == timerMode.modeName)
         {
