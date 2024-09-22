@@ -207,7 +207,7 @@ $(ICONS): ../../emulator/resources/icon.png
 
 # This cleans emulator files
 clean:
-	-@rm -f $(OBJECTS) $(EXECUTABLE) $(ICONS) test.iconset $(BUNDLE)
+	-@rm -rf $(OBJECTS) $(EXECUTABLE) $(ICONS) test.iconset $(BUNDLE)
 
 
 ################################################################################
