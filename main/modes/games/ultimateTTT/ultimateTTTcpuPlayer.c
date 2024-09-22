@@ -7,7 +7,8 @@
 #include "ultimateTTT.h"
 #include "ultimateTTTp2p.h"
 
-#define DEBUG_TTT_CPU
+// Un-comment to print CPU "thoughts"
+// #define DEBUG_TTT_CPU
 
 #ifdef DEBUG_TTT_CPU
 #define TCPU_LOG(...) ESP_LOGI("TTT", __VA_ARGS__)
@@ -416,24 +417,15 @@ static bool selectCell_medium(ultimateTTT_t* ttt, int *x, int *y)
             return false;
 
         case WIN:
-            putchar('-');
         case BLOCK:
-            putchar('-');
         case FORK:
-            putchar('-');
         case BLOCK_FORK:
-            putchar('-');
         case CENTER:
-            putchar('-');
         case OPPOSITE_CORNER:
-            putchar('-');
         case EMPTY_CORNER:
-            putchar('-');
         case EMPTY_SIDE:
-            putchar('-');
             *x = moveX;
             *y = moveY;
-            putchar('\n');
             return true;
 
         default:
@@ -639,27 +631,11 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int *x, int *y)
             //TCPU_LOG("[%02" PRIu16 "%c/%02" PRIu16 "%c]   ", thisCellScore, playerFlag, score, oppFlag);
             TCPU_LOG("[%02" PRId16 "%c%c]   ", ((int16_t)thisCellScore - (int16_t)score), playerFlag, oppFlag);
         }
-
-        putchar('\n');
     }
 
     *x = maxCombX;
     *y = maxCombY;
     return true;
-
-    /*if (minOppScore <= move)
-    {
-        *x = minOppX;
-        *y = minOppY;
-    }
-    else
-    {
-        *x = moveX;
-        *y = moveY;
-    }
-    return true;*/
-
-    //return selectCell_medium(ttt, x, y);
 }
 
 static void tttCpuSelectCell(ultimateTTT_t* ttt)
@@ -821,9 +797,11 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 
     memcpy(simulation, subgame, sizeof(simulation));
 
-    //TCPU_LOG(">>> Moves to win game:\n");
-    //printGame(subgame);
-    //TCPU_LOG("---\n");
+#ifdef DEBUG_TTT_CPU
+    TCPU_LOG(">>> Moves to win game:\n");
+    printGame(subgame);
+    TCPU_LOG("---\n");
+#endif
 
     uint16_t minMovesToWin = 5;
 
@@ -865,9 +843,6 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
         uint16_t analysis = analyzeSubgame(simulation, player, 0);
 
         simulation[DECODE_LOC_X(analysis)][DECODE_LOC_Y(analysis)] = player;
-
-        //TCPU_LOG("--> (%" PRIu16 ", %" PRIu16 ") - %s:\n", DECODE_LOC_X(analysis), DECODE_LOC_Y(analysis), getMoveName(DECODE_MOVE(analysis)));
-        //printGame(simulation);
 
         movesToWin++;
         result = tttCheckWinner(simulation);
@@ -1185,6 +1160,9 @@ static const char* getMoveName(uint16_t move)
 
 static void printGame(const tttPlayer_t subgame[3][3])
 {
+    char buf[22];
+    char* out = buf;
+
     for (int y = 0; y < 3; y++)
     {
         for (int x = 0; x < 3; x++)
@@ -1192,21 +1170,23 @@ static void printGame(const tttPlayer_t subgame[3][3])
             switch (subgame[x][y])
             {
                 case TTT_NONE:
-                    putchar('_');
+                    *out++ = '_';
                 break;
 
                 case TTT_P1:
-                    putchar('X');
+                    *out++ = 'X';
                 break;
 
                 case TTT_P2:
-                    putchar('O');
+                    *out++ = 'O';
                 break;
             }
 
-            putchar(' ');
+            *out++ = ' ';
         }
 
-        putchar('\n');
+        *out++ = '\n';
     }
+    *out = '\0';
+    TCPU_LOG("%s", buf);
 }
