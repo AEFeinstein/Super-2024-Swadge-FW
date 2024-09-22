@@ -1,121 +1,44 @@
+/**
+ * @file wsgPalette.c
+ * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
+ * @brief Provides palette swap functionality for Swadge
+ * @version 1.0.0
+ * @date 2024-09-20
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
 
-#include <string.h>
-
+#include "wsgPalette.h"
 #include "hdw-tft.h"
-#include "macros.h"
 #include "trigonometry.h"
+#include "macros.h"
 #include "fill.h"
-#include "wsg.h"
 
 //==============================================================================
 // Functions
 //==============================================================================
 
 /**
- * Transform a pixel's coordinates by rotation around the sprite's center point,
- * then reflection over Y axis, then reflection over X axis, then translation
- *
- * @param x The x coordinate of the pixel location to transform
- * @param y The y coordinate of the pixel location to transform
- * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
- * @param width  The width of the image
- * @param height The height of the image
- */
-void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height)
-{
-    //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
-    //  esp-2021r2-patch3)
-
-    int32_t wx = *x;
-    int32_t wy = *y;
-    // First rotate the sprite around the sprite's center point
-
-    // This solves the aliasing problem, but because of tan() it's only safe
-    // to rotate by 0 to 90 degrees. So rotate by a multiple of 90 degrees
-    // first, which doesn't need trig, then rotate the rest with shears
-    // See http://datagenetics.com/blog/august32013/index.html
-    // See https://graphicsinterface.org/wp-content/uploads/gi1986-15.pdf
-
-    int32_t tx = -(width / 2);
-    int32_t ty = -(height / 2);
-
-    // Center around (0, 0)
-    wx += tx;
-    wy += ty;
-
-    // First rotate to the nearest 90 degree boundary, which is trivial
-    if (rotateDeg >= 270)
-    {
-        // (x, y) -> (y, -x)
-        int16_t tmp = wx;
-        wx          = wy;
-        wy          = 2 * tx - tmp + width - 1;
-        rotateDeg -= 270;
-    }
-    else if (rotateDeg >= 180)
-    {
-        // (x, y) -> (-x, -y)
-        wx = 2 * tx - wx + width - 1;
-        wy = 2 * ty - wy + height - 1;
-        rotateDeg -= 180;
-    }
-    else if (rotateDeg >= 90)
-    {
-        // (x, y) -> (-y, x)
-        int16_t tmp = wx;
-        wx          = 2 * ty - wy + height - 1;
-        wy          = tmp;
-        rotateDeg -= 90;
-    }
-    // Now that it's rotated to a 90 degree boundary, find out how much more
-    // there is to rotate by shearing
-
-    // If there's any more to rotate, apply three shear matrices in order
-    if (0 < rotateDeg && rotateDeg < 90)
-    {
-        // 1st shear
-        wx = wx - ((wy * tan1024[rotateDeg / 2]) + 512) / 1024;
-        // 2nd shear
-        wy = ((wx * sin1024[rotateDeg]) + 512) / 1024 + wy;
-        // 3rd shear
-        wx = wx - ((wy * tan1024[rotateDeg / 2]) + 512) / 1024;
-    }
-
-    // Return pixel to original position
-    wx -= tx;
-    wy -= ty;
-
-    *x = wx;
-    *y = wy;
-}
-
-/**
- * @brief Draw a WSG to the display
+ * @brief Draw a WSG to the display utilizing a palette
  *
  * @param wsg  The WSG to draw to the display
  * @param xOff The x offset to draw the WSG at
  * @param yOff The y offset to draw the WSG at
+ * @param palette The new palette used to translate the colors
  * @param flipLR true to flip the image across the Y axis
  * @param flipUD true to flip the image across the X axis
  * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
  */
-void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, int16_t rotateDeg)
+void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, bool flipLR, bool flipUD,
+                    int16_t rotateDeg)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-08, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
-
-    /* Btw quick test code for second case is:
-    for( int mode = 0; mode < 8; mode++ )
-    {
-        drawWsgLocal( &example_sprite, 50+mode*20, (global_i%20)-10, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-        drawWsgLocal( &example_sprite, 50+mode*20, (global_i%20)+230, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-        drawWsgLocal( &example_sprite, (global_i%20)-10, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-        drawWsgLocal( &example_sprite, (global_i%20)+270, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-    }
-    */
 
     if (NULL == wsg->px)
     {
@@ -152,7 +75,7 @@ void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool fli
             for (int32_t srcX = 0; srcX != wsgw; srcX++)
             {
                 // Draw if not transparent
-                uint8_t color = linein[readX];
+                uint8_t color = palette->newColors[linein[srcX]];
                 if (cTransparent != color)
                 {
                     uint16_t tx = localX;
@@ -258,8 +181,10 @@ void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool fli
 
             for (int32_t srcX = xstart; srcX != xend; srcX += xinc)
             {
+                // Get colors from remap
+                uint8_t color = palette->newColors[linein[srcX]];
+
                 // Draw if not transparent
-                uint8_t color = linein[srcX];
                 if (cTransparent != color)
                 {
                     px[dstx] = color;
@@ -276,8 +201,9 @@ void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool fli
  * @param wsg  The WSG to draw to the display
  * @param xOff The x offset to draw the WSG at
  * @param yOff The y offset to draw the WSG at
+ * @param palette Color Map to use
  */
-void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
+void drawWsgPaletteSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -306,7 +232,7 @@ void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
     {
         for (int x = 0; x < numX; x++)
         {
-            int color = linein[x];
+            uint8_t color = palette->newColors[linein[x]];
             if (color != cTransparent)
             {
                 lineout[x] = color;
@@ -324,10 +250,12 @@ void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
  * @param wsg  The WSG to draw to the display
  * @param xOff The x offset to draw the WSG at
  * @param yOff The y offset to draw the WSG at
+ * @param palette Color Map to use
  * @param xScale The amount to scale the image horizontally
  * @param yScale The amount to scale the image vertically
  */
-void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale)
+void drawWsgPaletteSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, int16_t xScale,
+                                int16_t yScale)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -381,7 +309,7 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
                 continue;
             }
 
-            int color = linein[ix];
+            uint8_t color = palette->newColors[linein[ix]];
             if (color != cTransparent)
             {
                 fillDisplayArea(MAX(x, 0), MAX(y, 0), MIN(x1, dWidth), MIN(y1, dHeight), color);
@@ -397,8 +325,9 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
  * @param wsg  The WSG to draw to the display
  * @param xOff The x offset to draw the WSG at
  * @param yOff The y offset to draw the WSG at
+ * @param palette Color Map to use
  */
-void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
+void drawWsgPaletteSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -427,7 +356,7 @@ void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
     {
         for (int x = 0; x < numX; x++)
         {
-            int color = linein[x * 2];
+            uint8_t color = palette->newColors[linein[x * 2]];
             if (color != cTransparent)
             {
                 lineout[x] = color;
@@ -440,52 +369,36 @@ void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
 }
 
 /**
- * @brief Quickly copy a WSG to the display without flipping or rotation or transparency
+ * @brief Resets the palette to initial state
  *
- * If the source WSG does have transparency, an indeterminate color will be drawn to the TFT
- *
- * @param wsg  The WSG to draw to the display
- * @param xOff The x offset to draw the WSG at
- * @param yOff The y offset to draw the WSG at
+ * @param palette Color map to modify
  */
-void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
+void wsgPaletteReset(wsgPalette_t* palette)
 {
-    if (xOff > TFT_WIDTH)
+    // Reset the palette
+    for (int32_t i = 0; i < 217; i++)
     {
-        return;
+        palette->newColors[i] = i;
     }
+}
 
-    // Bound in the Y direction
-    int32_t yStart = (yOff < 0) ? 0 : yOff;
-    int32_t yEnd   = ((yOff + wsg->h) > TFT_HEIGHT) ? TFT_HEIGHT : (yOff + wsg->h);
+/**
+ * @brief Sets a single color to the provided palette
+ *
+ * @param palette Color map to modify
+ * @param replacedColor Color to be replaced
+ * @param newColor Color that will replace the previous
+ */
+void wsgPaletteSet(wsgPalette_t* palette, paletteColor_t replacedColor, paletteColor_t newColor)
+{
+    palette->newColors[replacedColor] = newColor;
+}
 
-    int wWidth                  = wsg->w;
-    int dWidth                  = TFT_WIDTH;
-    const paletteColor_t* pxWsg = &wsg->px[(yOff < 0) ? (wsg->h - (yEnd - yStart)) * wWidth : 0];
-    paletteColor_t* pxDisp      = &(getPxTftFramebuffer()[yStart * dWidth + xOff]);
-
-    // Bound in the X direction
-    int32_t copyLen = wsg->w;
-    if (xOff < 0)
+void wsgPaletteSetGroup(wsgPalette_t* palette, paletteColor_t* replacedColors, paletteColor_t* newColors,
+                        uint8_t arrSize)
+{
+    for (int32_t i = 0; i < arrSize; i++)
     {
-        copyLen += xOff;
-        pxDisp -= xOff;
-        pxWsg -= xOff;
-        xOff = 0;
-    }
-
-    if (xOff + copyLen > TFT_WIDTH)
-    {
-        copyLen = TFT_WIDTH - xOff;
-    }
-
-    // copy each row
-    for (int32_t y = yStart; y < yEnd; y++)
-    {
-        // Copy the row
-        // probably faster if we can guarantee copyLen is a multiple of 4
-        memcpy(pxDisp, pxWsg, copyLen);
-        pxDisp += dWidth;
-        pxWsg += wWidth;
+        wsgPaletteSet(palette, replacedColors[i], newColors[i]);
     }
 }
