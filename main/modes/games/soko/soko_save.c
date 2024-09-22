@@ -373,11 +373,13 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                                                   // byte so the post-increment moves to the next tile.
             {
                 case SKB_COMPRESS:
+                {
                     i += 2;
                     // we should not have dound this, we are inside of an object!
                     break; // Not yet implemented
+                }
                 case SKB_PLAYER:
-                    // moved gamemode to bit 3 of level data in header.
+                { // moved gamemode to bit 3 of level data in header.
                     // self->currentLevel.gameMode                                      = self->levelBinaryData[i + 2];
                     self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_PLAYER;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
@@ -387,7 +389,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entityCount += 1;
                     i += 2; // start, player, end.
                     break;
+                }
                 case SKB_CRATE:
+                {
                     flagByte = self->levelBinaryData[i + 2];
                     sticky   = !!(flagByte & (0x1 << 0));
                     trail    = !!(flagByte & (0x1 << 1));
@@ -411,7 +415,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
+                }
                 case SKB_WARPINTERNAL: //[type][flags][hp][destx][desty]
+                {
                     flagByte = self->levelBinaryData[i + 2];
                     crates   = !!(flagByte & (0x1 << 0));
                     hp       = self->levelBinaryData[i + 3];
@@ -432,13 +438,16 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entityCount += 1;
                     i += 6;
                     break;
+                }
                 case SKB_WARPINTERNALEXIT:
+                {
                     flagByte = self->levelBinaryData[i + 2];
 
-                    i += 2;            // No data or properties in this object.
-                    break;             // Can be used later on for verifying valid warps from save files.
+                    i += 2; // No data or properties in this object.
+                    break;  // Can be used later on for verifying valid warps from save files.
+                }
                 case SKB_WARPEXTERNAL: //[typep][flags][index]
-                    // todo implement extraction of index value and which values should be used for auto-indexed portals
+                { // todo implement extraction of index value and which values should be used for auto-indexed portals
                     self->currentLevel.tiles[objX][objY] = SKT_PORTAL;
                     flagByte                             = self->levelBinaryData[i + 2]; // destination
                     self->portals[self->portalCount].index
@@ -449,7 +458,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->portalCount += 1;
                     i += 3;
                     break;
+                }
                 case SKB_BUTTON: //[type][flag][numTargets][targetx][targety]...
+                {
                     flagByte = self->levelBinaryData[i + 2];
                     crates   = !!(flagByte & (0x1 << 0));
                     players  = !!(flagByte & (0x1 << 1));
@@ -485,7 +496,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entityCount += 1;
                     i += (4 + 2 * hp);
                     break;
+                }
                 case SKB_LASEREMITTER: //[type][flag]
+                {
                     flagByte  = self->levelBinaryData[i + 2];
                     direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is
                                                               // direction bits and P is player push
@@ -505,14 +518,18 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
+                }
                 case SKB_LASERRECEIVEROMNI:
+                {
                     self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_LASER_RECEIVE_OMNI;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
                     self->currentLevel.entityCount += 1;
                     i += 2;
                     break;
+                }
                 case SKB_LASERRECEIVER:
+                {
                     flagByte  = self->levelBinaryData[i + 2];
                     direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is
                                                               // direction bits and P is player push
@@ -525,7 +542,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
+                }
                 case SKB_LASER90ROTATE:
+                {
                     flagByte  = self->levelBinaryData[i + 2];
                     direction = !!(flagByte & (0x1 < 0));
                     players   = !!(flagByte & (0x1 < 1));
@@ -539,7 +558,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
+                }
                 case SKB_GHOSTBLOCK:
+                {
                     flagByte = self->levelBinaryData[i + 2];
                     inverted = !!(flagByte & (0x1 < 2));
                     players  = !!(flagByte & (0x1 < 1));
@@ -552,10 +573,14 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
+                }
                 case SKB_OBJEND:
+                {
                     i += 1;
                     break;
+                }
                 default: // Make the best of an undefined object type and try to skip it by finding its end byte
+                {
                     bool objEndFound          = false;
                     int undefinedObjectLength = 0;
                     while (!objEndFound)
@@ -568,6 +593,8 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     }
                     i += undefinedObjectLength; // Move to the completion byte of an undefined object type and hope it
                                                 // doesn't have two end bytes.
+                    break;
+                }
             }
         }
         else
@@ -579,24 +606,35 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
             switch (self->levelBinaryData[i]) // This is a bit easier to read than two arrays
             {
                 case SKB_EMPTY:
+                {
                     tileType = SKT_EMPTY;
                     break;
+                }
                 case SKB_WALL:
+                {
                     tileType = SKT_WALL;
                     break;
+                }
                 case SKB_FLOOR:
+                {
                     tileType = SKT_FLOOR;
                     break;
+                }
                 case SKB_NO_WALK:
+                {
                     tileType = SKT_FLOOR; //@todo Add No-Walk floors that can only accept crates or pass lasers
                     break;
+                }
                 case SKB_GOAL:
+                {
                     tileType                       = SKT_GOAL;
                     self->goals[self->goalCount].x = tileX;
                     self->goals[self->goalCount].y = tileY;
                     self->goalCount++;
                     break;
+                }
                 case SKB_COMPRESS:
+                {
                     tileType = prevTileType;
                     // decrement the next one
                     if (self->levelBinaryData[i + 1] > 1)
@@ -610,9 +648,12 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     }
 
                     break;
+                }
                 default:
+                {
                     tileType = SKT_EMPTY;
                     break;
+                }
             }
             self->currentLevel.tiles[tileX][tileY] = tileType;
             prevTileType                           = tileType;

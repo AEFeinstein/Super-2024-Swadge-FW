@@ -249,6 +249,7 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
     switch (soko->background)
     {
         case SKBG_GRID:
+        {
             for (int16_t yp = y; yp < y + h; yp++)
             {
                 for (int16_t xp = x; xp < x + w; xp++)
@@ -264,7 +265,9 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
                 }
             }
             break;
+        }
         case SKBG_BLACK:
+        {
             for (int16_t yp = y; yp < y + h; yp++)
             {
                 for (int16_t xp = x; xp < x + w; xp++)
@@ -273,8 +276,9 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
                 }
             }
             break;
+        }
         case SKBG_FORREST:
-
+        {
             for (int16_t yp = y; yp < y + h; yp += 8)
             {
                 for (int16_t xp = x; xp < x + w; xp += 8)
@@ -302,8 +306,11 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
                 }
             }
             break;
+        }
         default:
+        {
             break;
+        }
     }
 }
 // todo: move to soko_save

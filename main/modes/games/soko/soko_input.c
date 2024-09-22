@@ -123,20 +123,30 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
         switch (input->holdingDir)
         {
             case SKD_RIGHT:
+            {
                 input->playerInputDeltaX = 1;
                 break;
+            }
             case SKD_LEFT:
+            {
                 input->playerInputDeltaX = -1;
                 break;
+            }
             case SKD_UP:
+            {
                 input->playerInputDeltaY = -1;
                 break;
+            }
             case SKD_DOWN:
+            {
                 input->playerInputDeltaY = 1;
                 break;
+            }
             case SKD_NONE:
             default:
+            {
                 break;
+            }
         }
     }
     else

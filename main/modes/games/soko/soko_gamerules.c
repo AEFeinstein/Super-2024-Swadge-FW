@@ -429,28 +429,40 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
             switch (level->tiles[x][y])
             {
                 case SKT_FLOOR:
+                {
                     color = self->currentTheme->floorColor;
-                    ;
                     break;
+                }
                 case SKT_WALL:
+                {
                     color = self->currentTheme->wallColor;
                     break;
+                }
                 case SKT_GOAL:
+                {
                     color = self->currentTheme->floorColor;
                     break;
+                }
                 case SKT_FLOOR_WALKED:
+                {
                     color = self->currentTheme->altFloorColor;
                     break;
+                }
                 case SKT_EMPTY:
+                {
                     color = cTransparent;
                     break;
+                }
                 case SKT_PORTAL:
-                    // todo: draw completed or not completed.
+                { // todo: draw completed or not completed.
                     color = c441;
                     // color = self->currentTheme->floorColor;
                     break;
+                }
                 default:
+                {
                     break;
+                }
             }
 
             // Draw a square.
@@ -511,29 +523,40 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
             switch (level->entities[i].type)
             {
                 case SKE_PLAYER:
+                {
                     switch (level->entities[i].facing)
                     {
                         case SKD_UP:
+                        {
                             drawWsg(&self->currentTheme->playerUpWSG, ox + level->entities[i].x * scale,
                                     oy + level->entities[i].y * scale, false, false, 0);
                             break;
+                        }
                         case SKD_RIGHT:
+                        {
                             drawWsg(&self->currentTheme->playerRightWSG, ox + level->entities[i].x * scale,
                                     oy + level->entities[i].y * scale, false, false, 0);
                             break;
+                        }
                         case SKD_LEFT:
+                        {
                             drawWsg(&self->currentTheme->playerLeftWSG, ox + level->entities[i].x * scale,
                                     oy + level->entities[i].y * scale, false, false, 0);
                             break;
+                        }
                         case SKD_DOWN:
                         default:
+                        {
                             drawWsg(&self->currentTheme->playerDownWSG, ox + level->entities[i].x * scale,
                                     oy + level->entities[i].y * scale, false, false, 0);
                             break;
+                        }
                     }
 
                     break;
+                }
                 case SKE_CRATE:
+                {
                     if (self->currentLevel.tiles[self->currentLevel.entities[i].x][self->currentLevel.entities[i].y]
                         == SKT_GOAL)
                     {
@@ -546,17 +569,24 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                                 oy + level->entities[i].y * scale, false, false, 0);
                     }
                     break;
+                }
                 case SKE_STICKY_CRATE:
+                {
                     drawWsg(&self->currentTheme->stickyCrateWSG, ox + level->entities[i].x * scale,
                             oy + level->entities[i].y * scale, false, false, 0);
                     break;
+                }
                 case SKE_STICKY_TRAIL_CRATE:
+                {
                     drawWsg(&self->currentTheme->crateOnGoalWSG, ox + level->entities[i].x * scale,
                             oy + level->entities[i].y * scale, false, false, 0);
                     break;
+                }
                 case SKE_NONE:
                 default:
+                {
                     break;
+                }
             }
         }
     }
@@ -662,21 +692,37 @@ bool sokoLaserTileCollision(sokoTile_t testTile)
     switch (testTile)
     {
         case SKT_EMPTY:
+        {
             return false;
+        }
         case SKT_FLOOR:
+        {
             return false;
+        }
         case SKT_WALL:
+        {
             return true;
+        }
         case SKT_GOAL:
+        {
             return false;
+        }
         case SKT_PORTAL:
+        {
             return false;
+        }
         case SKT_FLOOR_WALKED:
+        {
             return false;
+        }
         case SKT_NO_WALK:
+        {
             return false;
+        }
         default:
+        {
             return false;
+        }
     }
 }
 
@@ -685,29 +731,53 @@ bool sokoLaserEntityCollision(sokoEntityType_t testEntity)
     switch (testEntity) // Anything that doesn't unconditionally pass should return true
     {
         case SKE_NONE:
+        {
             return false;
+        }
         case SKE_PLAYER:
+        {
             return false;
+        }
         case SKE_CRATE:
+        {
             return true;
+        }
         case SKE_LASER_90:
+        {
             return true;
+        }
         case SKE_STICKY_CRATE:
+        {
             return true;
+        }
         case SKE_WARP:
+        {
             return false;
+        }
         case SKE_BUTTON:
+        {
             return false;
+        }
         case SKE_LASER_EMIT_UP:
+        {
             return true;
+        }
         case SKE_LASER_RECEIVE_OMNI:
+        {
             return true;
+        }
         case SKE_LASER_RECEIVE:
+        {
             return true;
+        }
         case SKE_GHOST:
+        {
             return true;
+        }
         default:
+        {
             return false;
+        }
     }
 }
 
@@ -716,15 +786,25 @@ sokoDirection_t sokoRedirectDir(sokoDirection_t emitterDir, bool inverted)
     switch (emitterDir)
     {
         case SKD_UP:
+        {
             return inverted ? SKD_LEFT : SKD_RIGHT;
+        }
         case SKD_DOWN:
+        {
             return inverted ? SKD_RIGHT : SKD_LEFT;
+        }
         case SKD_RIGHT:
+        {
             return inverted ? SKD_DOWN : SKD_UP;
+        }
         case SKD_LEFT:
+        {
             return inverted ? SKD_UP : SKD_DOWN;
+        }
         default:
+        {
             return SKD_NONE;
+        }
     }
 }
 
@@ -737,21 +817,31 @@ int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, soko
     switch (dir)
     {
         case SKD_DOWN:
+        {
             projVec.y = 1;
             break;
+        }
         case SKD_UP:
+        {
             projVec.y = -1;
             break;
+        }
         case SKD_LEFT:
+        {
             projVec.x = -1;
             break;
+        }
         case SKD_RIGHT:
+        {
             projVec.x = 1;
             break;
+        }
         default:
+        {
             projVec.y = -1;
             break;
             // return base entity position
+        }
     }
 
     // Iterate over tiles in ray to edge of level
@@ -856,19 +946,28 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
     switch (dir)
     {
         case SKD_DOWN:
+        {
             projVec.y = 1;
             break;
+        }
         case SKD_UP:
+        {
             projVec.y = -1;
             break;
+        }
         case SKD_LEFT:
+        {
             projVec.x = -1;
             break;
+        }
         case SKD_RIGHT:
+        {
             projVec.x = 1;
             break;
+        }
         default:
-            // return base entity position
+        { // return base entity position
+        }
     }
 
     // Iterate over tiles in ray to edge of level
