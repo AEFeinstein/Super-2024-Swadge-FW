@@ -219,7 +219,6 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->updateFunction       = &pa_updatePlayer;
     entity->collisionHandler     = &pa_playerCollisionHandler;
     entity->tileCollisionHandler = &pa_playerTileCollisionHandler;
-    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_playerOverlapTileHandler;
     return entity;
 }
@@ -260,7 +259,6 @@ paEntity_t* createCrabdozer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->updateFunction       = &updateCrabdozer;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
-    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
 
     return entity;
@@ -296,7 +294,6 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->updateFunction       = &pa_updateBreakBlock;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
-    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
 
     pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
@@ -323,7 +320,7 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
-    entity->gravity              = 0;
+    entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
@@ -334,7 +331,6 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->updateFunction       = &pa_updateBlockFragment;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
-    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
 
     return entity;
