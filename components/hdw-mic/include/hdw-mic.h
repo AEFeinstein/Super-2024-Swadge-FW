@@ -72,7 +72,7 @@
 
 #include <stdint.h>
 
-#include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 
 //==============================================================================
 // Defines

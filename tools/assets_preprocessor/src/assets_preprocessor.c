@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "chart_processor.h"
 #include "image_processor.h"
 #include "font_processor.h"
 #include "json_processor.h"
@@ -23,9 +24,9 @@
  *
  */
 static const char* rawFileTypes[][2] = {
-    { "mid",  "mid"},
-    { "midi", "mid"},
-    { "raw", "raw"},
+    {"mid", "mid"},
+    {"midi", "mid"},
+    {"raw", "raw"},
 };
 
 const char* outDirName = NULL;
@@ -80,6 +81,10 @@ static int processFile(const char* fpath, const struct stat* st __attribute__((u
             else if (endsWith(fpath, ".png"))
             {
                 process_image(fpath, outDirName);
+            }
+            else if (endsWith(fpath, ".chart"))
+            {
+                process_chart(fpath, outDirName);
             }
             else if (endsWith(fpath, ".json"))
             {
@@ -176,13 +181,11 @@ int main(int argc, char** argv)
     struct stat st = {0};
     if (stat(outDirName, &st) == -1)
     {
-#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
-                     || defined(WIN32)       || defined(WIN64) \
-                     || defined(_WIN32)      || defined(_WIN64) \
-                     || defined(__WIN32__)   || defined(__TOS_WIN__) \
-                     || defined(_MSC_VER)
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) || defined(WIN32) || defined(WIN64) \
+    || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(_MSC_VER)
         mkdir(outDirName);
-#elif defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__CYGWIN__) || defined(__APPLE__)
+#elif defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__CYGWIN__) \
+    || defined(__APPLE__)
         mkdir(outDirName, 0777);
 #endif
     }

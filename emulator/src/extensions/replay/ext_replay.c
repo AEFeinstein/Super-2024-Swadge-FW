@@ -794,8 +794,13 @@ void startRecording(const char* filename)
             replayEntry_t modeEntry = {
                 .type     = SET_MODE,
                 .time     = 0,
-                .modeName = emulatorArgs.startMode,
+                .modeName = NULL,
             };
+
+            char* tmpStr = malloc(strlen(emulatorArgs.startMode) + 1);
+            strncpy(tmpStr, emulatorArgs.startMode, strlen(emulatorArgs.startMode) + 1);
+            modeEntry.modeName = tmpStr;
+
             writeEntry(&modeEntry);
         }
 

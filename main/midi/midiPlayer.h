@@ -94,8 +94,17 @@
 /// @brief Convert the sample count to MIDI ticks
 #define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
 
+/// @brief Convert samples to milliseconds
+#define SAMPLES_TO_MS(samp) (((samp) * 1000) / DAC_SAMPLE_RATE_HZ)
+
+/// @brief Convert samples to microseconds
+#define SAMPLES_TO_US(samp) (((samp) * 1000000) / DAC_SAMPLE_RATE_HZ)
+
 /// @brief Calculate the number of DAC samples in the given number of milliseconds
 #define MS_TO_SAMPLES(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
+
+/// @brief Convert MIDI ticks to microseconds
+#define MIDI_TICKS_TO_US(ticks, tempo, div) (int64_t)((int64_t)((int64_t)(ticks) * (int64_t)(tempo)) / ((int64_t)(div)))
 
 /// @brief Callback function used to provide feedback when a song finishes playing
 typedef void (*songFinishedCbFn)(void);
@@ -196,24 +205,24 @@ typedef enum
     LOW_AGOGO       = 68,
     CABASA          = 69,
     MARACAS         = 70,
-    /// @brief This note supersdes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
+    /// @brief This note supersedes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
     SHORT_WHISTLE = 71,
-    /// @brief This note supersdes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
+    /// @brief This note supersedes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
     LONG_WHISTLE = 72,
-    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    /// @brief This note supersedes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
     SHORT_GUIRO = 73,
-    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    /// @brief This note supersedes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
     LONG_GUIRO     = 74,
     CLAVES         = 75,
     HIGH_WOODBLOCK = 76,
     LOW_WOODBLOCK  = 77,
-    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    /// @brief This note supersedes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
     MUTE_CUICA = 78,
-    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    /// @brief This note supersedes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
     OPEN_CUICA = 79,
-    /// @brief This note supersdes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
+    /// @brief This note supersedes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
     MUTE_TRIANGLE = 80,
-    /// @brief This note supersdes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
+    /// @brief This note supersedes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
     OPEN_TRIANGLE = 81,
     // Roland GS Extensions
     /*SHAKER = 82,
@@ -486,7 +495,7 @@ typedef struct
         oscillatorShape_t shape;
     };
 
-    /// @brief The ASDR characterstics of this timbre
+    /// @brief The ASDR characteristics of this timbre
     envelope_t envelope;
 
     /// @brief Various effects applied to this timbre. May be ignored by percussion timbres
@@ -1016,13 +1025,13 @@ void globalMidiPlayerSetVolume(uint8_t trackType, int32_t volumeSetting);
 void globalMidiPlayerPauseAll(void);
 
 /**
- * @brief Resume all songs currently being played by the system-widi MIDI players
+ * @brief Resume all songs currently being played by the system-wide MIDI players
  *
  */
 void globalMidiPlayerResumeAll(void);
 
 /**
- * @brief Stop all songs currently bein gplayed by the system-widi MIDI players,
+ * @brief Stop all songs currently being played by the system-wide MIDI players,
  * optionally resetting their state to the beginning of the song
  *
  * @param reset if true, the players will be reset to the beginning of the song
