@@ -244,6 +244,8 @@ typedef struct
 {
     font_t smallFont;
     font_t bigFont;
+    font_t logoFont;
+    font_t logoFontOutline;
 
     // Holds all the internal tutorial state
     tutorialState_t tut;
@@ -300,6 +302,8 @@ static void introEnterMode(void)
 
     loadFont("ibm_vga8.font", &iv->smallFont, false);
     loadFont("righteous_150.font", &iv->bigFont, false);
+    loadFont("retro_logo.font", &iv->logoFont, false);
+    makeOutlineFont(&iv->logoFont, &iv->logoFontOutline, false);
 
     loadWsg("button_a.wsg", &iv->icon.button.a, false);
     loadWsg("button_b.wsg", &iv->icon.button.b, false);
@@ -382,6 +386,8 @@ static void introExitMode(void)
 
     freeFont(&iv->smallFont);
     freeFont(&iv->bigFont);
+    freeFont(&iv->logoFont);
+    freeFont(&iv->logoFontOutline);
 
     freeWsg(&iv->icon.button.a);
     freeWsg(&iv->icon.button.b);
@@ -424,11 +430,11 @@ static void introMainLoop(int64_t elapsedUs)
         int64_t titleTicksPerChar = ((animTime) / strlen(title));
         int64_t subTicksPerChar   = ((animTime) / strlen(sub));
 
-        int16_t titleWidth = textWidth(&iv->bigFont, title);
+        int16_t titleWidth = textWidth(&iv->logoFont, title);
         int16_t titleX     = (TFT_WIDTH - titleWidth) / 2;
         int16_t titleY     = (TFT_HEIGHT - iv->bigFont.height - iv->smallFont.height - 6) / 2;
 
-        int16_t subWidth = textWidth(&iv->bigFont, sub);
+        int16_t subWidth = textWidth(&iv->logoFont, sub);
         int16_t subX     = (TFT_WIDTH - subWidth) / 2;
         int16_t subY     = titleY + iv->bigFont.height + 5;
 
@@ -438,11 +444,11 @@ static void introMainLoop(int64_t elapsedUs)
         title[titleLen] = '\0';
         sub[subLen]     = '\0';
 
-        drawText(&iv->bigFont, c555, title, titleX, titleY);
-        drawText(&iv->bigFont, c000, title, titleX - 1, titleY + 1);
+        drawText(&iv->logoFont, c555, title, titleX, titleY);
+        drawText(&iv->logoFont, c000, title, titleX - 1, titleY + 1);
 
-        drawText(&iv->bigFont, c555, sub, subX, subY);
-        drawText(&iv->bigFont, c000, sub, subX - 1, subY + 1);
+        drawText(&iv->logoFont, c555, sub, subX, subY);
+        drawText(&iv->logoFont, c000, sub, subX - 1, subY + 1);
 
         timer += elapsedUs;
 
