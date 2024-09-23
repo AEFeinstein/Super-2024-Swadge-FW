@@ -24,7 +24,6 @@
 #include "paTilemap.h"
 #include "paGameData.h"
 #include "paEntityManager.h"
-#include "paLeveldef.h"
 
 #include "hdw-led.h"
 #include "palette.h"
@@ -166,24 +165,6 @@ swadgeMode_t pangoMode = {.modeName                 = pangoName,
                           .fnEspNowSendCb           = NULL};
 
 #define NUM_LEVELS 16
-
-static const paLeveldef_t leveldef[17] = {{.filename = "level1-1.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "dac01.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level1-3.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level1-4.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level2-1.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "dac03.bin", .timeLimit = 220, .checkpointTimeLimit = 90},
-                                          {.filename = "level2-3.bin", .timeLimit = 200, .checkpointTimeLimit = 90},
-                                          {.filename = "level2-4.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level3-1.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "dac02.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level3-3.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level3-4.bin", .timeLimit = 220, .checkpointTimeLimit = 110},
-                                          {.filename = "level4-1.bin", .timeLimit = 270, .checkpointTimeLimit = 90},
-                                          {.filename = "level4-2.bin", .timeLimit = 240, .checkpointTimeLimit = 90},
-                                          {.filename = "level4-3.bin", .timeLimit = 240, .checkpointTimeLimit = 90},
-                                          {.filename = "level4-4.bin", .timeLimit = 240, .checkpointTimeLimit = 90},
-                                          {.filename = "debug.bin", .timeLimit = 180, .checkpointTimeLimit = 90}};
 
 led_t platLeds[CONFIG_NUM_LEDS];
 
@@ -1003,7 +984,7 @@ void changeStateGame(pango_t* self)
     // pa_generateMaze(&(pango->tilemap));
     // pa_placeEnemySpawns(&(pango->tilemap));
 
-    self->gameData.countdown = leveldef[levelIndex].timeLimit;
+    self->gameData.countdown = 60;
 
     paEntityManager_t* entityManager = &(self->entityManager);
     entityManager->viewEntity   = pa_createPlayer(entityManager, (9 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
