@@ -182,12 +182,6 @@ bool pa_loadMapFromFile(paTilemap_t* tilemap, const char* name)
     tilemap->minMapOffsetY = 0;
     tilemap->maxMapOffsetY = height * PA_TILE_SIZE - PA_TILE_MAP_DISPLAY_HEIGHT_PIXELS;
 
-    /*for (uint16_t i = 0; i < 16; i++)
-    {
-        tilemap->warps[i].x = buf[2 + width * height + i * 2];
-        tilemap->warps[i].y = buf[2 + width * height + i * 2 + 1];
-    }*/
-
     free(buf);
 
     return true;
@@ -249,11 +243,6 @@ bool pa_isSolid(uint8_t tileId)
     }
 }
 
-// bool isInteractive(uint8_t tileId)
-// {
-//     return tileId > PA_TILE_INVISIBLE_BLOCK && tileId < PA_TILE_BG_GOAL_ZONE;
-// }
-
 void pa_unlockScrolling(paTilemap_t* tilemap)
 {
     tilemap->minMapOffsetX = 0;
@@ -265,6 +254,10 @@ void pa_unlockScrolling(paTilemap_t* tilemap)
 
 bool pa_needsTransparency(uint8_t tileId)
 {
+    //TODO
+    //Currently, all tiles need transparency.
+    //So get rid of this then?
+    
     switch (tileId)
     {
         /*case PA_TILE_BOUNCE_BLOCK:
