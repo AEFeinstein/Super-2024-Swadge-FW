@@ -332,10 +332,16 @@ $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 
 # To create the c file with assets, run these tools
 $(CNFS_FILE):
+# Sokoban .tmx to bin preprocessor
+	python ./tools/soko/soko_tmx_preprocessor.py ./assets/soko/ ./assets_image/
+	
 	$(MAKE) -C ./tools/assets_preprocessor/
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 	$(MAKE) -C ./tools/cnfs/
 	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+	
+
+
 
 bundle: SwadgeEmulator.app
 
