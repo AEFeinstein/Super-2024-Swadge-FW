@@ -303,7 +303,7 @@ void pa_animateTiles(paWsgManager_t* self)
         //Assumption: all animated tiles have 4 frames of animation
         self->globalTileAnimationFrame = ((self->globalTileAnimationFrame + 1) % 4);
 
-        pa_remapWsgToTile(self, PA_TILE_BLOCK, PA_WSG_BLOCK + self->globalTileAnimationFrame);
+        pa_remapWsgToTile(self, 9, PA_WSG_BLOCK + self->globalTileAnimationFrame);
 
         self->globalTileAnimationTimer = 23;
     }
