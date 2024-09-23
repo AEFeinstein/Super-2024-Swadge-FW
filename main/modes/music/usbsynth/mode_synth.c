@@ -18,6 +18,8 @@
 #include "cnfs_image.h"
 #include "ctype.h"
 
+#include <esp_heap_caps.h>
+
 #include "midiPlayer.h"
 #include "midiFileParser.h"
 #include "midiUsb.h"
@@ -283,6 +285,7 @@ typedef struct
     lfsrState_t shuffleState;
     int32_t shufflePos;
     int32_t headroom;
+    bool gmMode;
 
     wsg_t instrumentImages[16];
     wsg_t percussionImage;
@@ -1038,6 +1041,7 @@ static const char* menuItemIgnore     = "Enabled: ";
 static const char* menuItemBank       = "Bank Select: ";
 static const char* menuItemInstrument = "Instrument: ";
 static const char* menuItemResetAll   = "Reset All Channels";
+static const char* menuItemGm         = "General MIDI: ";
 static const char* menuItemReset      = "Reset";
 
 static const char* menuItemControls   = "Controllers";
@@ -1057,6 +1061,7 @@ static const char* const nvsKeyIgnoreChan       = "synth_ignorech";
 static const char* const nvsKeyChanPerc         = "synth_chpercus";
 static const char* const nvsKeySynthConf        = "synth_confblob";
 static const char* const nvsKeySynthControlConf = "synth_ctrlconf";
+static const char* const nvsKeyGmEnabled        = "synth_gmmode";
 
 static const char* const menuItemModeOptions[] = {
     "Streaming",
@@ -1190,6 +1195,11 @@ static const int32_t menuItemChannelsValues[] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 };
 
+static const int32_t menuItemGmValues[] = {
+    0,
+    1,
+};
+
 static settingParam_t menuItemModeBounds = {
     .def = 0,
     .min = 0,
@@ -1288,6 +1298,13 @@ static settingParam_t menuItemChannelsBounds = {
     .key = NULL,
 };
 
+static settingParam_t menuItemGmBounds = {
+    .def = 0,
+    .min = 0,
+    .max = 1,
+    .key = nvsKeyGmEnabled,
+};
+
 static const synthConfig_t defaultSynthConfig = {
     .ignoreChannelMask = 0,
     .percChannelMask = 0x0200, // Channel 10 set only
@@ -1301,6 +1318,24 @@ static const synthConfig_t defaultSynthConfig = {
         0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
+        0, 0, 0, 0,
+    },
+    .controlCounts = 0,
+};
+
+static const synthConfig_t nonGmSynthConfig = {
+    .ignoreChannelMask = 0,
+    .percChannelMask = 0x0600, // Channel 10 and 11 set
+    .programs = {
+        0, 1, 2, 3,
+        4, 5, 6, 7,
+        8, 0, 0, 0,
+        0, 0, 0, 0,
+    },
+    .banks = {
+        1, 1, 1, 1,
+        1, 1, 1, 1,
+        1, 0, 1, 0,
         0, 0, 0, 0,
     },
     .controlCounts = 0,
@@ -1351,7 +1386,7 @@ static synthData_t* sd;
 
 static void synthEnterMode(void)
 {
-    sd = calloc(1, sizeof(synthData_t));
+    sd = heap_caps_calloc(1, sizeof(synthData_t), MALLOC_CAP_SPIRAM);
     loadFont("ibm_vga8.font", &sd->font, true);
     loadFont("sonic.font", &sd->betterFont, true);
     makeOutlineFont(&sd->betterFont, &sd->betterOutline, true);
@@ -1428,6 +1463,12 @@ static void synthEnterMode(void)
     sd->headroom            = nvsRead;
     sd->midiPlayer.headroom = sd->headroom;
 
+    if (!readNvs32(nvsKeyGmEnabled, &nvsRead))
+    {
+        nvsRead = 0;
+    }
+    sd->gmMode = nvsRead ? true : false;
+
     bool useDefaultConfig = true;
     size_t configBlobLen;
     if (readNvsBlob(nvsKeySynthConf, NULL, &configBlobLen))
@@ -1473,7 +1514,8 @@ static void synthEnterMode(void)
                 {
                     for (int blobIdx = 0; blobIdx < sd->synthConfig.controlCounts; blobIdx++)
                     {
-                        synthControlConfig_t* copy = (synthControlConfig_t*)malloc(sizeof(synthControlConfig_t));
+                        synthControlConfig_t* copy
+                            = (synthControlConfig_t*)heap_caps_malloc(sizeof(synthControlConfig_t), MALLOC_CAP_SPIRAM);
                         if (copy)
                         {
                             memcpy(copy, &configs[blobIdx], sizeof(synthControlConfig_t));
@@ -1490,7 +1532,7 @@ static void synthEnterMode(void)
         size_t savedNameLen;
         if (readNvsBlob(nvsKeyLastSong, NULL, &savedNameLen))
         {
-            sd->filenameBuf = malloc(savedNameLen < 128 ? 128 : savedNameLen + 1);
+            sd->filenameBuf = heap_caps_malloc(savedNameLen < 128 ? 128 : savedNameLen + 1, MALLOC_CAP_SPIRAM);
 
             if (readNvsBlob(nvsKeyLastSong, sd->filenameBuf, &savedNameLen))
             {
@@ -1986,6 +2028,15 @@ static void synthApplyConfig(void)
 {
     sd->midiPlayer.headroom = sd->headroom;
 
+    if (sd->gmMode)
+    {
+        midiGmOn(&sd->midiPlayer);
+    }
+    else
+    {
+        midiGmOff(&sd->midiPlayer);
+    }
+
     for (int i = 0; i < 16; i++)
     {
         uint16_t channelBit                   = (1 << i);
@@ -2044,7 +2095,7 @@ static void synthSaveControl(uint8_t channel, uint8_t control, uint8_t value)
     }
 
     // Not found, add one
-    synthControlConfig_t* conf = calloc(1, sizeof(synthControlConfig_t));
+    synthControlConfig_t* conf = heap_caps_calloc(1, sizeof(synthControlConfig_t), MALLOC_CAP_SPIRAM);
     if (conf)
     {
         conf->control             = control;
@@ -2351,6 +2402,11 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
 
     addSingleItemToMenu(menu, menuItemResetAll);
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemResetAll, &sd->resetImage, rotTopMenu++, NO_SCROLL);
+
+    addSettingsOptionsItemToMenu(menu, menuItemGm, menuItemOffOnOptions, menuItemGmValues, ARRAY_SIZE(menuItemGmValues),
+                                 &menuItemGmBounds, sd->gmMode);
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemGm, NULL, rotTopMenu++, SCROLL_HORIZ_R);
+    wheelMenuSetItemTextIcon(sd->wheelMenu, menuItemGm, "GM");
 }
 
 static void synthSetupMenu(bool forceReset)
@@ -2521,7 +2577,7 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
 
                 // TODO we could save a couple bytes if we parsed the file an additional time to check how many events
                 // there are in total...
-                midiTextInfo_t* info = (midiTextInfo_t*)malloc(sizeof(midiTextInfo_t));
+                midiTextInfo_t* info = (midiTextInfo_t*)heap_caps_malloc(sizeof(midiTextInfo_t), MALLOC_CAP_SPIRAM);
 
                 if (info)
                 {
@@ -3956,7 +4012,7 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
         return;
     }
 
-    midiTextInfo_t* info = (midiTextInfo_t*)malloc(sizeof(midiTextInfo_t));
+    midiTextInfo_t* info = (midiTextInfo_t*)heap_caps_malloc(sizeof(midiTextInfo_t), MALLOC_CAP_SPIRAM);
 
     if (info)
     {
@@ -4124,7 +4180,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             sd->screen = SS_FILE_SELECT;
             if (!sd->filenameBuf)
             {
-                sd->filenameBuf = calloc(1, 128);
+                sd->filenameBuf = heap_caps_calloc(1, 128, MALLOC_CAP_SPIRAM);
             }
 
             if (!sd->filenameBuf)
@@ -4232,6 +4288,24 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
     {
         sd->menuSelectedChannel = value;
         sd->updateMenu          = true;
+    }
+    else if (label == menuItemGm)
+    {
+        if (value != sd->gmMode)
+        {
+            // Also reset all channels
+            memcpy(&sd->synthConfig, (value ? &defaultSynthConfig : &nonGmSynthConfig), sizeof(synthConfig_t));
+            synthControlConfig_t* control;
+            while (NULL != (control = pop(&sd->controllerSettings)))
+            {
+                free(control);
+            }
+
+            sd->gmMode = value;
+            writeNvs32(nvsKeyGmEnabled, value);
+            synthApplyConfig();
+            sd->updateMenu = true;
+        }
     }
     else
     {

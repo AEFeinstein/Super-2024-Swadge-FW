@@ -22,7 +22,16 @@ wireless connection.
 
 The Linux version of the emulator does not require any other software to operate. Simply extract the
 `.zip` file anywhere you like and run the `swadge_emulator` program, either by opening it from your
-file browser or by running `./swadge_emulator` from the command-line.
+file browser or by running `./swadge_emulator` from the command-line. The Linux emulator includes a
+script, `install.sh`, which can be run to install the Swadge Emulator as a desktop application, which
+will allow you to open the emulator directly from many desktop environments, and to asssociate the
+emulator with MIDI files using the "Open with..." option in your file browser. If you do not want these
+features, there is no need to run the script. You will need to run this script again if you download a
+new version of the emulator. By default, the installation script will install to `~/.local`, but you
+can specify an alternate installation root such as `/usr/local` by passing it as an argument to
+the `install.sh` script:
+
+    ./install.sh /usr/local
 
 ### Mac
 
@@ -81,6 +90,7 @@ Emulates a swadge
      --hide-leds             Don't draw simulated LEDs next to the display
  -k, --keymap=LAYOUT         Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak
  -l, --lock                  Lock the emulator in the start mode
+     --midi-file=FILE        Open and immediately play a MIDI file
  -m, --mode=MODE             Start the emulator in the swadge mode MODE instead of the main menu
      --mode-switch[=TIME]    Enable or set the timer to switch modes automatically
      --modes-list            Print out a list of all possible values for MODE
@@ -222,6 +232,8 @@ inputs to ensure that slight differences in frame timing do not cause inconsiste
 modes. The mode can still be changed automatically by `--mode-switch`, the console, and by a `SetMode'
 command when replaying recorded inputs.
 
+`--midi-file`: Loads and plays a local MIDI or KAR file using the MIDI Player mode.
+
 `--seed`: Sets a specific seed to the pseudorandom number generator. This is useful when trying to reproduce
 behavior that relies on `esp_random()`. If the seed is not set, a time-based one will be used. Note that a seed
 from one system will not necessarily produce the same output if it is used on a different system.
@@ -252,6 +264,12 @@ time.
 
 ## MIDI Instructions
 
+MIDI Files (`.mid`, `.midi`, and `.kar`) can be played in directly by passing the name of
+the MIDI file as a command-line argument to the Swadge Emulator. On Windows, you should also be able
+to drag a MIDI file on top of `SwadgeEmulator.exe` to play it. On Linux, you should be able to open
+MIDI files with the emulator using your file browser's "Open with..." option after running the included
+install script.
+
 The Swadge Emulator includes MIDI support, which simulates the USB-MIDI behavior of the real Swadge
 using the system MIDI implementation. Note that MIDI implementation and behavior will vary between
 platforms.
@@ -263,3 +281,5 @@ platforms.
    or the first one that becomes available. You may need to restart the emulator after connecting
    a new device.
 4. Press the Pause button (O key) to open or close the menu.
+
+For details on the Swadge's MIDI support you can use for composing, see the [MIDI Specifications page](#MIDI).

@@ -66,6 +66,7 @@ SRC_FILES = $(CNFS_FILE)
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 # This is all the source files combined and deduplicated
 SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES))
+SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
 
 # The emulator doesn't build components, but there is a target for formatting them
 ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
@@ -321,7 +322,7 @@ assets:
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 
 # To build the main file, you have to compile the objects
-$(EXECUTABLE): $(OBJECTS)
+$(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBRARY_FLAGS) -o $@
 
 # This compiles each c file into an o file
@@ -331,10 +332,16 @@ $(EXECUTABLE): $(OBJECTS)
 
 # To create the c file with assets, run these tools
 $(CNFS_FILE):
+# Sokoban .tmx to bin preprocessor
+	python ./tools/soko/soko_tmx_preprocessor.py ./assets/soko/ ./assets_image/
+	
 	$(MAKE) -C ./tools/assets_preprocessor/
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 	$(MAKE) -C ./tools/cnfs/
 	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+	
+
+
 
 bundle: SwadgeEmulator.app
 

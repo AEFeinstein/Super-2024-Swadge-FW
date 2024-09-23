@@ -27,6 +27,9 @@
  * If you just want to run the Swadge emulator without setting up a development environment, see the \ref emulator
  * for an installation guide and usage instructions.
  *
+ * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
+ * \ref emulator which you can use to listen to MIDI files.
+ *
  * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
  * pages to read from here.
  *
