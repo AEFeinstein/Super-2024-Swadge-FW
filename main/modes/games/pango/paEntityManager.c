@@ -76,7 +76,7 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
         //     PA_TO_TILECOORDS(currentEntity->y >> SUBPIXEL_RESOLUTION), PA_TILE_EMPTY);
         // }
 
-        if (currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->jumpPower == PA_TILE_SPAWN_BLOCK_0)
+        if (currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->state == PA_TILE_SPAWN_BLOCK_0)
         {
             entityManager->gameData->remainingEnemies--;
         }
@@ -207,7 +207,6 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->gravityEnabled     = false;
     entity->gravity            = 4;
     entity->falling            = false;
-    entity->jumpPower          = 0;
     entity->spriteFlipVertical = false;
     entity->hp                 = 1;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls

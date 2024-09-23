@@ -183,7 +183,7 @@ void pa_updatePlayer(paEntity_t* self)
                     if (newHitBlock != NULL)
                     {
                         pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
-                        newHitBlock->jumpPower = t;
+                        newHitBlock->state = t;
                         switch (self->facingDirection)
                         {
                             case PA_DIRECTION_WEST:
@@ -1152,7 +1152,6 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
                 {
                     self->xspeed              = 0;
                     self->yspeed              = 0;
-                    self->jumpPower           = 0;
                     self->invincibilityFrames = 120;
                     soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
                 }
@@ -1369,7 +1368,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
             && PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) == self->homeTileY)
         {
             pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-            if (self->jumpPower == PA_TILE_SPAWN_BLOCK_0)
+            if (self->state == PA_TILE_SPAWN_BLOCK_0)
             {
                 self->entityManager->gameData->remainingEnemies--;
             }
@@ -1378,7 +1377,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
         {
             self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth
                                + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)]
-                = self->jumpPower;
+                = self->state;
         }
 
         return true;

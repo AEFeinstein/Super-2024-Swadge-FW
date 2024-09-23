@@ -107,8 +107,6 @@ struct paEntity_t
     uint8_t homeTileX;
     uint8_t homeTileY;
 
-    int16_t jumpPower;
-
     bool visible;
     uint8_t hp;
     int8_t invincibilityFrames;
