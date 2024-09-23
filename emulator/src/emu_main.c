@@ -66,6 +66,7 @@
     #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
     #pragma GCC diagnostic ignored "-Wjump-misses-init"
     #pragma GCC diagnostic ignored "-Wundef"
+    #pragma GCC diagnostic ignored "-Wredundant-decls"
 #endif
 
 // Make it so we don't need to include any other C files in our build.
