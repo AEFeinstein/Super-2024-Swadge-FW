@@ -67,6 +67,9 @@
 //==============================================================================
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "driver/dac_continuous.h"
+#include "driver/gpio.h"
 
 //==============================================================================
 // Defines
@@ -94,8 +97,9 @@ typedef void (*fnDacCallback_t)(uint8_t* samples, int16_t len);
 // Function Declarations
 //==============================================================================
 
-void initDac(fnDacCallback_t cb);
+void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb);
 void deinitDac(void);
 void dacPoll(void);
 void dacStart(void);
 void dacStop(void);
+void setDacShutdown(bool shutdown);
