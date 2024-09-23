@@ -9,7 +9,6 @@
 
 #include "fs_wsg.h"
 #include "paTilemap.h"
-#include "paLeveldef.h"
 #include "esp_random.h"
 
 #include "cnfs.h"
