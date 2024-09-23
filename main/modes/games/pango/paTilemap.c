@@ -32,21 +32,11 @@ void pa_initializeTileMap(paTilemap_t* tilemap, paWsgManager_t* wsgManager)
     tilemap->executeTileSpawnColumn = -1;
     tilemap->executeTileSpawnRow    = -1;
 
-    tilemap->animationFrame = 0;
-    tilemap->animationTimer = 23;
-
     tilemap->wsgManager = wsgManager;
 }
 
 void pa_drawTileMap(paTilemap_t* tilemap)
 {
-    tilemap->animationTimer--;
-    if (tilemap->animationTimer < 0)
-    {
-        tilemap->animationFrame = ((tilemap->animationFrame + 1) % 3);
-        tilemap->animationTimer = 23;
-    }
-
     for (int32_t y = (tilemap->mapOffsetY >> PA_TILE_SIZE_IN_POWERS_OF_2);
          y < (tilemap->mapOffsetY >> PA_TILE_SIZE_IN_POWERS_OF_2) + PA_TILE_MAP_DISPLAY_HEIGHT_TILES; y++)
     {
@@ -72,12 +62,6 @@ void pa_drawTileMap(paTilemap_t* tilemap)
             if (tile < PA_TILE_WALL_0 || tile == PA_TILE_INVISIBLE_BLOCK)
             {
                 continue;
-            }
-
-            // Test animated tiles
-            if (tile == PA_TILE_SPAWN_BLOCK_0 || tile == PA_TILE_BONUS_BLOCK_0)
-            {
-                tile += tilemap->animationFrame;
             }
 
             // Draw only non-garbage tiles

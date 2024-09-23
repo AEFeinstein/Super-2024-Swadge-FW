@@ -439,6 +439,7 @@ void updateGame(pango_t* self, int64_t elapsedUs)
 
     pa_updateEntities(&(self->entityManager));
 
+    pa_animateTiles(&(self->wsgManager));
     pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
 

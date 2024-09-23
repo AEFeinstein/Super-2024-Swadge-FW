@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include "fs_wsg.h"
 #include "paWsgManager.h"
+#include "pango_typedef.h"
 
 //==============================================================================
 // Functions
@@ -291,5 +292,19 @@ void pa_remapPlayerCharacter(paWsgManager_t* self, uint16_t newBaseIndex)
     for (uint16_t i = 0; i < (PA_SP_PLAYER_ICON + 1); i++)
     {
         pa_remapWsgToSprite(self, i, newBaseIndex + i);
+    }
+}
+
+void pa_animateTiles(paWsgManager_t* self)
+{
+    self->globalTileAnimationTimer--;
+    if (self->globalTileAnimationTimer < 0)
+    {
+        //Assumption: all animated tiles have 4 frames of animation
+        self->globalTileAnimationFrame = ((self->globalTileAnimationFrame + 1) % 4);
+
+        pa_remapWsgToTile(self, PA_TILE_BLOCK, PA_WSG_BLOCK + self->globalTileAnimationFrame);
+
+        self->globalTileAnimationTimer = 23;
     }
 }

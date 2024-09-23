@@ -127,6 +127,9 @@ typedef struct
     wsg_t wsgs[PA_WSGS_SIZE];
     paSprite_t sprites[PA_SPRITESET_SIZE];
     wsg_t* tiles[PA_TILE_SET_SIZE];
+
+    uint8_t globalTileAnimationFrame;
+    int16_t globalTileAnimationTimer;
 } paWsgManager_t;
 
 //==============================================================================
@@ -143,5 +146,6 @@ void pa_remapWsgToSprite(paWsgManager_t* self, uint16_t spriteIndex, uint16_t ws
 void pa_remapWsgToTile(paWsgManager_t* self, uint16_t tileIndex, uint16_t wsgIndex);
 
 void pa_remapPlayerCharacter(paWsgManager_t* self, uint16_t newBaseIndex);
+void pa_animateTiles(paWsgManager_t* self);
 
 #endif
