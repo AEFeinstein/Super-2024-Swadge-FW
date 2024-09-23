@@ -64,7 +64,7 @@ typedef enum
 
 typedef void (*pa_updateFunction_t)(struct paEntity_t* self);
 typedef void (*pa_collisionHandler_t)(struct paEntity_t* self, struct paEntity_t* other);
-typedef bool (*PA_TILE_CollisionHandler_t)(struct paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
+typedef bool (*pa_tileCollisionHandler_t)(struct paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
                                            uint8_t direction);
 typedef void (*pa_fallOffTileHandler_t)(struct paEntity_t* self);
 typedef void (*pa_overlapTileHandler_t)(struct paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
@@ -126,7 +126,7 @@ struct paEntity_t
     paEntityManager_t* entityManager;
 
     pa_collisionHandler_t collisionHandler;
-    PA_TILE_CollisionHandler_t tileCollisionHandler;
+    pa_tileCollisionHandler_t tileCollisionHandler;
     pa_overlapTileHandler_t overlapTileHandler;
 };
 
