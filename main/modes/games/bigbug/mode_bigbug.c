@@ -151,11 +151,11 @@ static void bb_EnterMode(void)
     bb_initializeTileMap(&(bigbug->tilemap));
     bb_initializeEntityManager(&(bigbug->entityManager), &(bigbug->gameData), &(bigbug->soundManager));
 
-    bb_createEntity(&(bigbug->entityManager), LOOPING_ANIMATION, false, ROCKET_ANIM,
+    bb_createEntity(&(bigbug->entityManager), LOOPING_ANIMATION, false, ROCKET_ANIM, 3,
             (TILE_FIELD_WIDTH / 2) * 32,
             -130);
 
-    bb_createEntity(&(bigbug->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM,
+    bb_createEntity(&(bigbug->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
             (TILE_FIELD_WIDTH / 2) * 32,
             -130);
 
@@ -455,7 +455,8 @@ static void bb_UpdateTileSupport(void)
                 // set it to air
                 bigbug->tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] = 0;
                 // create a crumble animation
-                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, shiftedVal[0] * 32 + 16,
+                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                                shiftedVal[0] * 32 + 16,
                                 shiftedVal[1] * 32 + 16);
 
                 // queue neighbors for crumbling
@@ -637,13 +638,13 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                     bigbug->tilemap.fgTiles[best_i][best_j] == 1 ||
                     bigbug->tilemap.fgTiles[best_i][best_j] == 4){
                     // Create a crumble animation
-                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM,
+                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                                     tilePos.x >> DECIMAL_BITS,
                                     tilePos.y >> DECIMAL_BITS);
                 }
                 else{
                     // Create a crumble animation
-                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM,
+                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
                                     ((bigbug->garbotnikPos.x + tilePos.x)/2) >> DECIMAL_BITS,
                                     ((bigbug->garbotnikPos.y + tilePos.y)/2) >> DECIMAL_BITS);
                 }

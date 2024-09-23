@@ -167,7 +167,8 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 
             if(entityManager->entities[i].paused == false){
                 //increment the frame counter
-                entityManager->entities[i].currentFrame += 1;
+                entityManager->entities[i].animationTimer += 1;
+                entityManager->entities[i].currentFrame = entityManager->entities[i].animationTimer / entityManager->entities[i].framesPerFrame;
                 //if frame reached the end of the animation
                 if (entityManager->entities[i].currentFrame
                     >= entityManager->sprites[entityManager->entities[i].spriteIndex].numFrames)
@@ -182,6 +183,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     
                     case LOOPING_ANIMATION:
                         //reset the animation
+                        entityManager->entities[i].animationTimer = 0;
                         entityManager->entities[i].currentFrame = 0;
                         break;
 
@@ -223,8 +225,8 @@ void bb_viewFollowEntity(bb_entity_t* entity)
     // int16_t moveViewByY = (entity->y > 63616) ? 0 : (entity->y) >> SUBPIXEL_RESOLUTION;
 }
 
-bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused, bb_spriteDef_t spriteIndex, uint32_t x,
-                             uint32_t y)
+bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused, bb_spriteDef_t spriteIndex,
+                            uint8_t framesPerFrame, uint32_t x, uint32_t y)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
@@ -254,6 +256,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     entity->paused      = paused;
     entity->spriteIndex = spriteIndex;
 
+    entity->animationTimer = 0;
+    entity->framesPerFrame = framesPerFrame;
     entity->currentFrame = 0;
     // entity->collisionHandler     = &dummyCollisionHandler;
     // entity->tileCollisionHandler = &ballTileCollisionHandler;

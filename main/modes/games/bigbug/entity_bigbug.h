@@ -51,11 +51,12 @@ struct bb_entity_t
     bool spriteFlipVertical;
     int16_t spriteRotateAngle;
 
-    uint8_t spriteIndex; // see bb_spriteDef_t in typedef_bigbug.h
+    bb_spriteDef_t spriteIndex;
     bool paused;
+    
+    uint16_t animationTimer;
+    uint8_t framesPerFrame;
     uint8_t currentFrame;
-    uint8_t animationTimer;
-    uint8_t animationFPS;
 
     bb_gameData_t* gameData;
     bb_soundManager_t* soundManager;
