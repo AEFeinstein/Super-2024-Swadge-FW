@@ -151,10 +151,9 @@ static void bb_EnterMode(void)
     bb_initializeTileMap(&(bigbug->tilemap));
     bb_initializeEntityManager(&(bigbug->entityManager), &(bigbug->gameData), &(bigbug->soundManager));
 
-    bb_createEntity(&(bigbug->entityManager),
-            LOOPING_ANIMATION, true, ROCKET_ANIM,
-            (TILE_FIELD_WIDTH / 2) << DECIMAL_BITS,
-            -(90 << DECIMAL_BITS));
+    bb_createEntity(&(bigbug->entityManager), LOOPING_ANIMATION, false, ROCKET_ANIM,
+            (TILE_FIELD_WIDTH / 2) * 32,
+            -90);
 
 
     // Load graphics

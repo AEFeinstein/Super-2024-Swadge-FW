@@ -1273,7 +1273,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
 }
 
 void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera){
-    printf("Camera x,y: %d,%d\n", camera->pos.x, camera->pos.y);
+    // printf("Camera x,y: %d,%d\n", camera->pos.x, camera->pos.y);
     // drawWsgSimple(&tilemap->fore_h_Wsg[39], 0, 0);
     // drawWsgSimple(&tilemap->fore_h_Wsg[39], TFT_WIDTH, 0);
     // drawWsgSimpleScaled(&tilemap->fore_h_Wsg[39], 0, 160, 10, 2);

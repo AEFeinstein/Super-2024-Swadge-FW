@@ -60,17 +60,17 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     crumbleSprite->originY     = 43;
     printf("crumble numFrames %d\n", entityManager->sprites[CRUMBLE_ANIM].numFrames);
 
-    bb_sprite_t* bumpSprite    = bb_loadSprite("hit", 7, &entityManager->sprites[BUMP_ANIM]);
+    bb_sprite_t* bumpSprite    = bb_loadSprite("hit", 8, &entityManager->sprites[BUMP_ANIM]);
     bumpSprite->originX        = 37;
     bumpSprite->originY        = 37;
     printf("bump numFrames %d\n", entityManager->sprites[BUMP_ANIM].numFrames);
 
-    bb_sprite_t* rocketSprite    = bb_loadSprite("rocket", 34, &entityManager->sprites[ROCKET_ANIM]);
+    bb_sprite_t* rocketSprite    = bb_loadSprite("rocket", 35, &entityManager->sprites[ROCKET_ANIM]);
     rocketSprite->originX        = 32;
     rocketSprite->originY        = 28;
     printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
 
-    bb_sprite_t* flameSprite    = bb_loadSprite("flame", 24, &entityManager->sprites[FLAME_ANIM]);
+    bb_sprite_t* flameSprite    = bb_loadSprite("flame", 25, &entityManager->sprites[FLAME_ANIM]);
     flameSprite->originX        = 28;
     flameSprite->originY        = 69;
     printf("flame numFrames %d\n", entityManager->sprites[FLAME_ANIM].numFrames);
@@ -107,7 +107,6 @@ void bb_updateEntities(bb_entityManager_t* entityManager)
         if (entityManager->entities[i].active)
         {
             entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
-
             if (&(entityManager->entities[i]) == entityManager->viewEntity)
             {
                 bb_viewFollowEntity(&(entityManager->entities[i]));
@@ -252,6 +251,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     entity->spriteRotateAngle    = 0;
 
     entity->type        = type;
+    entity->paused      = paused;
     entity->spriteIndex = spriteIndex;
 
     entity->currentFrame = 0;
