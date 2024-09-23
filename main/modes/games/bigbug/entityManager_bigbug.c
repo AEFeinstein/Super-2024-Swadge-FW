@@ -70,7 +70,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     rocketSprite->originY        = 28;
     printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
 
-    bb_sprite_t* flameSprite    = bb_loadSprite("flame", 25, &entityManager->sprites[FLAME_ANIM]);
+    bb_sprite_t* flameSprite    = bb_loadSprite("flame", 24, &entityManager->sprites[FLAME_ANIM]);
     flameSprite->originX        = 28;
     flameSprite->originY        = 69;
     printf("flame numFrames %d\n", entityManager->sprites[FLAME_ANIM].numFrames);
