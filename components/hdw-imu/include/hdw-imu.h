@@ -46,6 +46,7 @@
 #include <stdint.h>
 
 #include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 #include <esp_err.h>
 
 #include "quaternions.h"

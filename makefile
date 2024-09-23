@@ -71,6 +71,8 @@ SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
 # The emulator doesn't build components, but there is a target for formatting them
 ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
 
+SUBMODULES = $(shell git config --file .gitmodules --name-only --get-regexp path | sed -nr 's/submodule.(.*).path/\1/p')
+
 ################################################################################
 # Includes
 ################################################################################
@@ -194,6 +196,7 @@ DEFINES_LIST = \
 	CONFIG_ESP_SYSTEM_PANIC=y\
 	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
 	CONFIG_DEBUG_OUTPUT_USB=y\
+	CONFIG_HARDWARE_GUNSHIP=y \
 	CONFIG_IDF_TARGET_ESP32S2=y \
 	SOC_RMT_CHANNELS_PER_GROUP=4 \
 	SOC_TOUCH_SENSOR_NUM=15 \
@@ -313,7 +316,7 @@ EXECUTABLE = swadge_emulator
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets bundle clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) print-%
+.PHONY: all assets bundle clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) update-submodules print-%
 
 # Build the executable
 all: $(EXECUTABLE)
@@ -484,6 +487,13 @@ gen-coverage:
 	lcov --capture --directory ./emulator/obj/ --output-file ./coverage.info
 	genhtml ./coverage.info --output-directory ./coverage
 	firefox ./coverage/index.html &
+
+update-submodules:
+	for submodule in $(SUBMODULES) ; do \
+		echo Updating $$submodule to latest ; \
+		git -C $$submodule fetch --prune ; \
+		git -C $$submodule checkout origin/HEAD ; \
+	done
 
 # Print any value from this makefile
 print-%  : ; @echo $* = $($*)

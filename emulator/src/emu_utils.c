@@ -83,7 +83,10 @@ bool makeDirs(const char* path)
                     char tmp[1024];
                     strncpy(tmp, buffer, sizeof(tmp));
                     tmp[sizeof(tmp) - 1] = '\0';
-                    readlink(tmp, buffer, sizeof(buffer) - strlen(buffer) - 1);
+                    if (-1 == readlink(tmp, buffer, sizeof(buffer) - strlen(buffer) - 1))
+                    {
+                        printf("readlink error: %s", strerror(errno));
+                    }
                     // printf("Symbolic Link: %s --> %s\n", tmp, buffer);
                 }
 #endif

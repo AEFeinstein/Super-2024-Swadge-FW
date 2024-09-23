@@ -14,6 +14,7 @@
 #include <errno.h>
 
 #include "hdw-nvs.h"
+#include "hdw-nvs_emu.h"
 #include "cJSON.h"
 #include "emu_main.h"
 #include "emu_utils.h"

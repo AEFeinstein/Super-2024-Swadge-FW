@@ -78,7 +78,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 #include <hal/spi_types.h>
 #include <driver/ledc.h>
 #include <esp_err.h>

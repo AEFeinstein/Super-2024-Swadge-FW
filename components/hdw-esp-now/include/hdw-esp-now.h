@@ -85,7 +85,7 @@
 
 #include <esp_now.h>
 #include <esp_err.h>
-#include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 #include <driver/uart.h>
 
 //==============================================================================
