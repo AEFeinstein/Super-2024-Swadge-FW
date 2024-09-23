@@ -153,7 +153,11 @@ static void bb_EnterMode(void)
 
     bb_createEntity(&(bigbug->entityManager), LOOPING_ANIMATION, false, ROCKET_ANIM,
             (TILE_FIELD_WIDTH / 2) * 32,
-            -90);
+            -130);
+
+    bb_createEntity(&(bigbug->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM,
+            (TILE_FIELD_WIDTH / 2) * 32,
+            -130);
 
 
     // Load graphics
