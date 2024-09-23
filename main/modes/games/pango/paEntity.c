@@ -45,7 +45,6 @@ void pa_initializeEntity(paEntity_t* self, paEntityManager_t* entityManager, paT
     self->gravity              = false;
     self->falling              = false;
     self->entityManager        = entityManager;
-    self->fallOffTileHandler   = &defaultFallOffTileHandler;
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical   = false;
     self->facingDirection      = PA_DIRECTION_SOUTH;
@@ -939,17 +938,6 @@ void pa_moveEntityWithTileCollisions(paEntity_t* self)
                     }
                 }
 
-                if (!self->falling)
-                {
-                    uint8_t newBelowTile = pa_getTile(self->tilemap, tx, ty + 1);
-
-                    if ((self->gravityEnabled
-                         && !pa_isSolid(
-                             newBelowTile)) /*(|| (!self->gravityEnabled && newBelowTile != PA_TILE_LADDER)*/)
-                    {
-                        self->fallOffTileHandler(self);
-                    }
-                }
             }
         }
     }

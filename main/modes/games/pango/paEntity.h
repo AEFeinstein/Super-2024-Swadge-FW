@@ -127,7 +127,6 @@ struct paEntity_t
 
     pa_collisionHandler_t collisionHandler;
     PA_TILE_CollisionHandler_t tileCollisionHandler;
-    pa_fallOffTileHandler_t fallOffTileHandler;
     pa_overlapTileHandler_t overlapTileHandler;
 };
 
