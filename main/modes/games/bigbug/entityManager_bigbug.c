@@ -64,6 +64,16 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bumpSprite->originX        = 37;
     bumpSprite->originY        = 37;
     printf("bump numFrames %d\n", entityManager->sprites[BUMP_ANIM].numFrames);
+
+    bb_sprite_t* rocketSprite    = bb_loadSprite("rocket", 34, &entityManager->sprites[ROCKET_ANIM]);
+    rocketSprite->originX        = 32;
+    rocketSprite->originY        = 28;
+    printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
+
+    bb_sprite_t* flameSprite    = bb_loadSprite("flame", 24, &entityManager->sprites[FLAME_ANIM]);
+    flameSprite->originX        = 28;
+    flameSprite->originY        = 69;
+    printf("flame numFrames %d\n", entityManager->sprites[FLAME_ANIM].numFrames);
     // free(sprite);
 
     // entityManager->sprites[CRUMBLE_ANIMATION] = calloc(1, sizeof(list_t));
@@ -156,19 +166,29 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                                     - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
                                 1, 1);
 
-            // Will put this kind of stuff in its own animation tracker function later...
-            entityManager->entities[i].currentFrame += 1;
-            if (entityManager->entities[i].currentFrame
-                >= entityManager->sprites[entityManager->entities[i].spriteIndex].numFrames)
-            {
-                if (entityManager->entities[i].type == ONESHOT_ANIMATION)
+            if(entityManager->entities[i].paused == false){
+                //increment the frame counter
+                entityManager->entities[i].currentFrame += 1;
+                //if frame reached the end of the animation
+                if (entityManager->entities[i].currentFrame
+                    >= entityManager->sprites[entityManager->entities[i].spriteIndex].numFrames)
                 {
-                    entityManager->entities[i].active = false;
-                    entityManager->activeEntities -= 1;
-                }
-                else
-                {
-                    entityManager->entities[i].currentFrame = 0;
+                    switch (entityManager->entities[i].type)
+                    {
+                    case ONESHOT_ANIMATION:
+                        //destroy the entity
+                        entityManager->entities[i].active = false;
+                        entityManager->activeEntities -= 1;
+                        break;
+                    
+                    case LOOPING_ANIMATION:
+                        //reset the animation
+                        entityManager->entities[i].currentFrame = 0;
+                        break;
+
+                    default:
+                        break;
+                    }
                 }
             }
         }
@@ -204,7 +224,7 @@ void bb_viewFollowEntity(bb_entity_t* entity)
     // int16_t moveViewByY = (entity->y > 63616) ? 0 : (entity->y) >> SUBPIXEL_RESOLUTION;
 }
 
-bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, uint8_t spriteIndex, uint32_t x,
+bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused, bb_spriteDef_t spriteIndex, uint32_t x,
                              uint32_t y)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)

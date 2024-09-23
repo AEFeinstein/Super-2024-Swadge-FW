@@ -136,7 +136,6 @@ static void bb_EnterMode(void)
     // Force draw a loading screen
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
-    printf("a\n");
     bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
 
     // Load font
@@ -147,28 +146,26 @@ static void bb_EnterMode(void)
     drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
     drawDisplayTft(NULL);
 
-    printf("b\n");
 
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
-    printf("c\n");
     bb_initializeTileMap(&(bigbug->tilemap));
-    printf("d\n");
     bb_initializeEntityManager(&(bigbug->entityManager), &(bigbug->gameData), &(bigbug->soundManager));
-    printf("e\n");
+
+    bb_createEntity(&(bigbug->entityManager),
+            LOOPING_ANIMATION, true, ROCKET_ANIM,
+            (TILE_FIELD_WIDTH / 2) << DECIMAL_BITS,
+            -(90 << DECIMAL_BITS));
+
+
     // Load graphics
     loadWsg("garbotnik-0.wsg", &bigbug->garbotnikWsg[0], true);
     loadWsg("garbotnik-1.wsg", &bigbug->garbotnikWsg[1], true);
     loadWsg("garbotnik-2.wsg", &bigbug->garbotnikWsg[2], true);
-    printf("f\n");
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
-    printf("g\n");
-
-    printf("h\n");
 
     bb_Reset();
-    printf("i\n");
 }
 
 static void bb_ExitMode(void)
@@ -455,11 +452,11 @@ static void bb_UpdateTileSupport(void)
                 // set it to air
                 bigbug->tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] = 0;
                 // create a crumble animation
-                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM, shiftedVal[0] * 32 + 16,
+                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, shiftedVal[0] * 32 + 16,
                                 shiftedVal[1] * 32 + 16);
 
                 // queue neighbors for crumbling
-                for (uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
+                for (uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)//neighborIdx 0 thru 3 is Left, Up, Right, Down
                 {
                     if ((int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] >= 0
                         && (int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] < TILE_FIELD_WIDTH
@@ -637,13 +634,13 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                     bigbug->tilemap.fgTiles[best_i][best_j] == 1 ||
                     bigbug->tilemap.fgTiles[best_i][best_j] == 4){
                     // Create a crumble animation
-                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM,
+                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM,
                                     tilePos.x >> DECIMAL_BITS,
                                     tilePos.y >> DECIMAL_BITS);
                 }
                 else{
                     // Create a crumble animation
-                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, BUMP_ANIM,
+                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM,
                                     ((bigbug->garbotnikPos.x + tilePos.x)/2) >> DECIMAL_BITS,
                                     ((bigbug->garbotnikPos.y + tilePos.y)/2) >> DECIMAL_BITS);
                 }

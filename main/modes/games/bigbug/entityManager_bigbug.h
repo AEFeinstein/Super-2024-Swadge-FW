@@ -20,7 +20,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 32
-#define NUM_SPRITES  2 // The number of bb_sprite_t
+#define NUM_SPRITES  4 // The number of bb_sprite_t
 
 //==============================================================================
 // Structs
@@ -51,7 +51,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera);
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager);
 
 void bb_viewFollowEntity(bb_entity_t* entity);
-bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, uint8_t spriteIndex, uint32_t x,
+bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused, bb_spriteDef_t spriteIndex, uint32_t x,
                              uint32_t y);
 
 void bb_freeEntityManager(bb_entityManager_t* entityManager);
