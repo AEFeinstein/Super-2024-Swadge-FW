@@ -8,6 +8,7 @@
 
 #include "esp_heap_caps.h"
 #include "esp_log.h"
+#include "cnfs.h"
 #include "cnfs_image.h"
 
 //==============================================================================

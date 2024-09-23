@@ -16,6 +16,7 @@
 //==============================================================================
 
 fnDacCallback_t dacCb = NULL;
+static bool shdn      = false;
 
 //==============================================================================
 // Functions
@@ -24,9 +25,11 @@ fnDacCallback_t dacCb = NULL;
 /**
  * @brief Initialize the DAC
  *
+ * @param channel
+ * @param shdn_gpio
  * @param cb
  */
-void initDac(fnDacCallback_t cb)
+void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 {
     // TODO
     dacCb = cb;
@@ -93,7 +96,14 @@ void dacHandleSoundOutput(short* out, int framesp, short numChannels)
                 // Copy the same sample to each channel
                 for (int j = 0; j < numChannels; j++)
                 {
-                    out[i * numChannels + j] = samp;
+                    if (shdn)
+                    {
+                        out[i * numChannels + j] = 0;
+                    }
+                    else
+                    {
+                        out[i * numChannels + j] = samp;
+                    }
                 }
             }
         }
@@ -103,4 +113,14 @@ void dacHandleSoundOutput(short* out, int framesp, short numChannels)
             memset(out, 0, sizeof(short) * 2 * framesp);
         }
     }
+}
+
+/**
+ * @brief Set the shutdown state of the DAC
+ *
+ * @param shutdown true to shut down the DAC, false to enable it
+ */
+void setDacShutdown(bool shutdown)
+{
+    shdn = shutdown;
 }
