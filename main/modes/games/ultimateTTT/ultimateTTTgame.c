@@ -223,37 +223,54 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
         cursorFunc_t cursorFunc          = NULL;
         cursorFunc_t cursorFuncSecondary = NULL;
 
+// A bunch of obnoxious macros, but basically they try to bump the cursor's movement in the secondary
+// axis from the edges, and tie-break movement from the middle with the movement direction.
+// This bump away from the edge means you're a lot less likely to wrap somewhere weird when there's
+// a more sensible free space nearby.
+#define CURSOR_DIR_X() ((ttt->game.cursorLastDir.x >= 0) ? incCursorX : decCursorX)
+#define CURSOR_DIR_Y() ((ttt->game.cursorLastDir.y >= 0) ? incCursorY : decCursorY)
+#define CHOOSE_CURSOR_X() \
+    ((ttt->game.cursor.x == 1) ? CURSOR_DIR_X() : ((ttt->game.cursor.x < 1) ? incCursorX : decCursorX))
+#define CHOOSE_CURSOR_Y() \
+    ((ttt->game.cursor.y == 1) ? CURSOR_DIR_Y() : ((ttt->game.cursor.y < 1) ? incCursorY : decCursorY))
+
         // Assign function pointers based on the button press
         switch (evt->button)
         {
             case PB_UP:
             {
                 cursorFunc                = decCursorY;
-                cursorFuncSecondary       = (ttt->game.cursorLastDir.x >= 0) ? incCursorX : decCursorX;
+                cursorFuncSecondary       = CHOOSE_CURSOR_X();
                 ttt->game.cursorLastDir.y = -1;
                 break;
             }
             case PB_DOWN:
             {
                 cursorFunc                = incCursorY;
-                cursorFuncSecondary       = (ttt->game.cursorLastDir.x >= 0) ? incCursorX : decCursorX;
+                cursorFuncSecondary       = CHOOSE_CURSOR_X();
                 ttt->game.cursorLastDir.y = 1;
                 break;
             }
             case PB_LEFT:
             {
                 cursorFunc                = decCursorX;
-                cursorFuncSecondary       = (ttt->game.cursorLastDir.y >= 0) ? incCursorY : decCursorY;
+                cursorFuncSecondary       = CHOOSE_CURSOR_Y();
                 ttt->game.cursorLastDir.x = -1;
                 break;
             }
             case PB_RIGHT:
             {
                 cursorFunc                = incCursorX;
-                cursorFuncSecondary       = (ttt->game.cursorLastDir.y >= 0) ? incCursorY : decCursorY;
+                cursorFuncSecondary       = CHOOSE_CURSOR_Y();
                 ttt->game.cursorLastDir.x = 1;
                 break;
             }
+
+#undef CURSOR_DIR_X
+#undef CURSOR_DIR_Y
+#undef CHOOSE_CURSOR_X
+#undef CHOOSE_CURSOR_Y
+
             case PB_A:
             {
                 // If a subgame is being selected
