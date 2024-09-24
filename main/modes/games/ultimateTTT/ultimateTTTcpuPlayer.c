@@ -85,9 +85,8 @@ static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t pla
 
 static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player);
 static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player, uint16_t filter);
-static void analyzeGame(ultimateTTT_t* ttt);
-static const char* getMoveName(uint16_t move);
-static void printGame(const tttPlayer_t subgame[3][3]);
+const char* getMoveName(uint16_t move);
+void printGame(const tttPlayer_t subgame[3][3]);
 
 void tttCpuNextMove(ultimateTTT_t* ttt)
 {
@@ -319,11 +318,11 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
     // our marker there
     // - So... I guess we should take all the possible moves in that board, and then what...
     tttPlayer_t subgame[3][3];
-    for (int x = 0; x < 3; x++)
+    for (int gx = 0; gx < 3; gx++)
     {
-        for (int y = 0; y < 3; y++)
+        for (int gy = 0; gy < 3; gy++)
         {
-            subgame[x][y] = ttt->game.subgames[x][y].winner;
+            subgame[gx][gy] = ttt->game.subgames[gx][gy].winner;
         }
     }
 
@@ -462,18 +461,9 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
     // The score of the opponent's ideal next move in each subgame
     uint16_t opponentScore[3][3];
     uint16_t maxScore = 0;
-#define SCORE_MIN 0x0000
 #define SCORE_MAX 0xFFFF
 
     tttSubgame_t* subgame = &ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y];
-
-    uint16_t result = analyzeSubgame(subgame->game, TTT_P2, 0);
-    uint16_t move   = DECODE_MOVE(result);
-
-    uint16_t moveScore = 50 - 10 * (movesToWin(subgame->game, TTT_P2)) + move;
-
-    int moveX = DECODE_LOC_X(result);
-    int moveY = DECODE_LOC_Y(result);
 
     for (int ix = 0; ix < 3; ix++)
     {
@@ -555,6 +545,7 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
         }
     }
 
+#ifdef DEBUG_TTT_CPU
     int minOppX          = 0;
     int minOppY          = 0;
     uint16_t minOppScore = SCORE_MAX;
@@ -570,6 +561,7 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
             }
         }
     }
+#endif
 
     // Just some debugging
     TCPU_LOG("--------------------\n");
@@ -612,6 +604,20 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
                 score = maxScore;
             }
 
+            combinedScores[ix][iy] = ((int16_t)thisCellScore - (int16_t)score);
+
+            if (combinedScores[ix][iy] > maxCombScore)
+            {
+                maxCombScore = combinedScores[ix][iy];
+                maxCombX     = ix;
+                maxCombY     = iy;
+            }
+
+#ifdef DEBUG_TTT_CPU
+            uint16_t result = analyzeSubgame(subgame->game, TTT_P2, 0);
+            int moveX       = DECODE_LOC_X(result);
+            int moveY       = DECODE_LOC_Y(result);
+
             char oppFlag = ' ';
             if (ix == minOppX && iy == minOppY)
             {
@@ -623,18 +629,9 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
             {
                 playerFlag = '*';
             }
-
-            combinedScores[ix][iy] = ((int16_t)thisCellScore - (int16_t)score);
-
-            if (combinedScores[ix][iy] > maxCombScore)
-            {
-                maxCombScore = combinedScores[ix][iy];
-                maxCombX     = ix;
-                maxCombY     = iy;
-            }
-
             // TCPU_LOG("[%02" PRIu16 "%c/%02" PRIu16 "%c]   ", thisCellScore, playerFlag, score, oppFlag);
             TCPU_LOG("[%02" PRId16 "%c%c]   ", ((int16_t)thisCellScore - (int16_t)score), playerFlag, oppFlag);
+#endif
         }
     }
 
@@ -1125,13 +1122,7 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
     return 0;
 }
 
-static void analyzeGame(ultimateTTT_t* ttt)
-{
-    uint16_t opponentScore[3][3];
-    uint16_t myScore[3][3];
-}
-
-static const char* getMoveName(uint16_t move)
+const char* getMoveName(uint16_t move)
 {
     switch (move)
     {
@@ -1159,7 +1150,7 @@ static const char* getMoveName(uint16_t move)
     }
 }
 
-static void printGame(const tttPlayer_t subgame[3][3])
+void printGame(const tttPlayer_t subgame[3][3])
 {
     char buf[22];
     char* out = buf;
