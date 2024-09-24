@@ -33,7 +33,7 @@ typedef struct{
     vec_t accel; //acceleration
 } bb_garbotnikData;
 
-typedef void (*bb_updateFunction_t)(struct bb_entity_t* self);
+typedef void (*bb_updateFunction_t)(struct bb_entity_t* self, struct bb_gameData_t* gameData);
 typedef void (*bb_collisionHandler_t)(struct bb_entity_t* self, struct bb_entity_t* other);
 typedef bool (*bb_tileCollisionHandler_t)(struct bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
                                           uint8_t direction);

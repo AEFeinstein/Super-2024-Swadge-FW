@@ -106,14 +106,14 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     // }
 }
 
-void bb_updateEntities(bb_entityManager_t* entityManager)
+void bb_updateEntities(bb_entityManager_t* entityManager, bb_gameData_t* gameData)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         if (entityManager->entities[i].active)
         {
             if(entityManager->entities[i].updateFunction != NULL){
-                entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
+                entityManager->entities[i].updateFunction(&(entityManager->entities[i]), gameData);
                 if (&(entityManager->entities[i]) == entityManager->viewEntity)
                 {
                     bb_viewFollowEntity(&(entityManager->entities[i]));

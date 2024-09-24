@@ -253,6 +253,7 @@ static void bb_ControlGarbotnik(int64_t elapsedUs)
     vec_t accel;
     accel.x = 0;
     accel.y = 0;
+    printf("btnState %d\n",bigbug->gameData.btnState);
     // Update garbotnik's velocity if a button is currently down
     switch (bigbug->gameData.btnState)
     {
@@ -372,6 +373,9 @@ static void bb_DrawScene(void)
  */
 static void bb_GameLoop(int64_t elapsedUs)
 {
+    // Save the elapsed time
+    bigbug->gameData.elapsedUs = elapsedUs;
+
     // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -380,6 +384,8 @@ static void bb_GameLoop(int64_t elapsedUs)
         // printf("state: %04X, button: %d, down: %s\n",
         // evt.state, evt.button, evt.down ? "down" : "up");
 
+        // Save the button state
+        bigbug->gameData.btnState = evt.state;
 
         // Check if the pause button was pressed
         if (evt.down && (PB_START == evt.button))
@@ -394,13 +400,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
-        // Save the elapsed time
-        bigbug->gameData.elapsedUs = elapsedUs;
-
-        // Save the button state
-        bigbug->gameData.btnState = evt.state;
-
-        bb_updateEntities(&(bigbug->entityManager));
+        bb_updateEntities(&(bigbug->entityManager), &(bigbug->gameData));
 
         // record the previous frame's position before any logic.
         bigbug->previousPos = bigbug->garbotnikPos;
