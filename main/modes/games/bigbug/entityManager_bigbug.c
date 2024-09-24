@@ -6,6 +6,7 @@
 #include <esp_log.h>
 #include <string.h>
 
+#include "gameData_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "entity_bigbug.h"
 
@@ -106,14 +107,14 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     // }
 }
 
-void bb_updateEntities(bb_entityManager_t* entityManager, bb_gameData_t* gameData)
+void bb_updateEntities(bb_entityManager_t* entityManager)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         if (entityManager->entities[i].active)
         {
             if(entityManager->entities[i].updateFunction != NULL){
-                entityManager->entities[i].updateFunction(&(entityManager->entities[i]), gameData);
+                entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
                 if (&(entityManager->entities[i]) == entityManager->viewEntity)
                 {
                     bb_viewFollowEntity(&(entityManager->entities[i]));

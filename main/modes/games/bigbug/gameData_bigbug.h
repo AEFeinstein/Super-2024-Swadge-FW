@@ -9,6 +9,8 @@
 #include <stdbool.h>
 #include "hdw-led.h"
 #include "typedef_bigbug.h"
+#include "entityManager_bigbug.h"
+#include "tilemap_bigbug.h"
 #include "palette.h"
 #include "linked_list.h"
 #include "soundManager_bigbug.h"
@@ -21,7 +23,7 @@
 // Structs
 //==============================================================================
 
-typedef struct
+struct bb_gameData_t
 {
     int32_t elapsedUs;
 
@@ -36,6 +38,8 @@ typedef struct
 
     uint8_t gameState;
     uint8_t changeState;
+
+    bb_entityManager_t entityManager;
 
     uint8_t harpoons;
 
@@ -52,12 +56,14 @@ typedef struct
 
     bb_soundManager_t* soundManager;
 
+    bb_tilemap_t tilemap;
+
     int8_t neighbors[4][2]; // a handy table of left, up, right, and down offsets
 
     list_t* pleaseCheck; // a list of tiles to check if they are supported.
     list_t* unsupported; // a list of tiles that flood-fill crumble.
 
-} bb_gameData_t;
+};
 
 //==============================================================================
 // Functions

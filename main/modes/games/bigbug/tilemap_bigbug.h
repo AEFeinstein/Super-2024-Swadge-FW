@@ -19,7 +19,7 @@
 //==============================================================================
 // Structs
 //==============================================================================
-typedef struct
+struct bb_tilemap_t
 {
     wsg_t headlampWsg; ///< Some data about lighting. Red channel is left facing. Green channel is center facing. Blue
                        ///< channel is right facing.
@@ -39,7 +39,7 @@ typedef struct
     int8_t fgTiles[TILE_FIELD_WIDTH]
                   [TILE_FIELD_HEIGHT]; ///< The array of foreground tiles. The number is the dirt's health. 0 is air.
     int8_t mgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of midground tiles.
-} bb_tilemap_t;
+};
 
 //==============================================================================
 // Prototypes

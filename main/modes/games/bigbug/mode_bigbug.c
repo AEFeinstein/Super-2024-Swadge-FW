@@ -45,8 +45,6 @@ struct bb_t
     bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
-    bb_tilemap_t tilemap;
-    bb_entityManager_t entityManager;
     bb_soundManager_t soundManager;
 
     vec_t garbotnikPos;      ///< Garbotnik (player character)
@@ -148,19 +146,19 @@ static void bb_EnterMode(void)
 
 
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
-    bb_initializeTileMap(&(bigbug->tilemap));
-    bb_initializeEntityManager(&(bigbug->entityManager), &(bigbug->gameData), &(bigbug->soundManager));
+    bb_initializeTileMap(&(bigbug->gameData.tilemap));
+    bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
 
-    bb_createEntity(&(bigbug->entityManager), LOOPING_ANIMATION, false, ROCKET_ANIM, 3,
+    bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, false, ROCKET_ANIM, 3,
             (TILE_FIELD_WIDTH / 2) * 32,
             -130);
 
-    bb_createEntity(&(bigbug->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
+    bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
             (TILE_FIELD_WIDTH / 2) * 32,
             -130);
 
     //Player
-    bb_createEntity(&(bigbug->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+    bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
             5 * 32 + 16,
             -110);
     // Load graphics
@@ -177,7 +175,7 @@ static void bb_EnterMode(void)
 static void bb_ExitMode(void)
 {
     // Free entity manager
-    bb_freeEntityManager(&bigbug->entityManager);
+    bb_freeEntityManager(&bigbug->gameData.entityManager);
     // Free font
     freeFont(&bigbug->font);
 }
@@ -253,7 +251,6 @@ static void bb_ControlGarbotnik(int64_t elapsedUs)
     vec_t accel;
     accel.x = 0;
     accel.y = 0;
-    printf("btnState %d\n",bigbug->gameData.btnState);
     // Update garbotnik's velocity if a button is currently down
     switch (bigbug->gameData.btnState)
     {
@@ -331,8 +328,8 @@ static void bb_DrawScene(void)
 {
     vec_t garbotnikDrawPos = {.x = (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 18,
                               .y = (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 17};
-    bb_drawTileMap(&bigbug->tilemap, &bigbug->camera, &garbotnikDrawPos, &bigbug->garbotnikRotation);
-    bb_drawSolidGround(&bigbug->tilemap, &bigbug->camera);
+    bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos, &bigbug->garbotnikRotation);
+    bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->camera);
 
     // printf("garbotnikPos.y: %d\n", bigbug->garbotnikPos.y);
     // printf("garbotnik.radius: %d\n", bigbug->garbotnik.radius);
@@ -340,7 +337,7 @@ static void bb_DrawScene(void)
     // printf("render y: %d\n", (bigbug->garbotnikPos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >>
     // DECIMAL_BITS);
 
-    bb_drawEntities(&bigbug->entityManager, &bigbug->camera);
+    bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->camera);
 
     // Draw garbotnik
     if (bigbug->garbotnikRotation.x < -1400)
@@ -400,7 +397,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
-        bb_updateEntities(&(bigbug->entityManager), &(bigbug->gameData));
+        bb_updateEntities(&(bigbug->gameData.entityManager));
 
         // record the previous frame's position before any logic.
         bigbug->previousPos = bigbug->garbotnikPos;
@@ -461,12 +458,12 @@ static void bb_UpdateTileSupport(void)
             // remove the first item from the list
             uint32_t* shiftedVal = shift(bigbug->gameData.unsupported);
             // check that it's still dirt, because a previous pass may have crumbled it.
-            if (bigbug->tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] > 0)
+            if (bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] > 0)
             {
                 // set it to air
-                bigbug->tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] = 0;
+                bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] = 0;
                 // create a crumble animation
-                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                                 shiftedVal[0] * 32 + 16,
                                 shiftedVal[1] * 32 + 16);
 
@@ -562,7 +559,7 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
         {
             if (i >= 0 && i < TILE_FIELD_WIDTH && j >= 0 && j < TILE_FIELD_HEIGHT)
             {
-                if (bigbug->tilemap.fgTiles[i][j] >= 1)
+                if (bigbug->gameData.tilemap.fgTiles[i][j] >= 1)
                 {
                     // Initial circle check for preselecting the closest dirt tile
                     int32_t sqDist = sqMagVec2d(
@@ -643,19 +640,19 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 //  push(bigbug->gameData.unsupported, (void*)val);
 
                 // Update the dirt by decrementing it.
-                bigbug->tilemap.fgTiles[best_i][best_j] -= 1;
+                bigbug->gameData.tilemap.fgTiles[best_i][best_j] -= 1;
 
-                if(bigbug->tilemap.fgTiles[best_i][best_j] == 0 ||
-                    bigbug->tilemap.fgTiles[best_i][best_j] == 1 ||
-                    bigbug->tilemap.fgTiles[best_i][best_j] == 4){
+                if(bigbug->gameData.tilemap.fgTiles[best_i][best_j] == 0 ||
+                    bigbug->gameData.tilemap.fgTiles[best_i][best_j] == 1 ||
+                    bigbug->gameData.tilemap.fgTiles[best_i][best_j] == 4){
                     // Create a crumble animation
-                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                    bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                                     tilePos.x >> DECIMAL_BITS,
                                     tilePos.y >> DECIMAL_BITS);
                 }
                 else{
                     // Create a crumble animation
-                    bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
+                    bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
                                     ((bigbug->garbotnikPos.x + tilePos.x)/2) >> DECIMAL_BITS,
                                     ((bigbug->garbotnikPos.y + tilePos.y)/2) >> DECIMAL_BITS);
                 }
@@ -691,7 +688,7 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 //     uint32_t check_y = best_j + bigbug->gameData.neighbors[neighborIdx][1];
                 //     //Check if neighbor is in bounds of map (also not on left, right, or bottom, perimiter) and if it
                 //     is dirt. if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y <
-                //     TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
+                //     TILE_FIELD_HEIGHT - 1 && bigbug->gameData.tilemap.fgTiles[check_x][check_y] > 0)
                 //     {
                 //         uint32_t* val = calloc(4, sizeof(uint32_t));
                 //         val[0] = check_x;
