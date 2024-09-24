@@ -254,7 +254,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     switch (spriteIndex)
     {
         case GARBOTNIK_FLYING:
-            bb_garbotnikData* data = malloc(sizeof(bb_garbotnikData));
+            bb_garbotnikData* data = calloc(1, sizeof(bb_garbotnikData));
             entity->data = data;
 
             entity->updateFunction = &bb_updateGarbotnikFlying;
