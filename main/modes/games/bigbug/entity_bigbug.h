@@ -42,16 +42,19 @@ struct bb_entity_t
 {
     bool active;
 
-    bb_animationType_t type;
     void* data;
     bb_updateFunction_t updateFunction;
 
+    uint32_t x;
+    uint32_t y;
+
+    bb_animationType_t type;
     bb_spriteDef_t spriteIndex;
     bool paused;
     
     uint16_t animationTimer;
-    uint8_t framesPerFrame;
-    uint8_t currentFrame;
+    uint8_t gameFramesPerAnimationFrame;
+    uint8_t currentAnimationFrame;
 
     bb_gameData_t* gameData;
     bb_soundManager_t* soundManager;

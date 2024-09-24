@@ -165,7 +165,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 
             // printf("hey %d\n", currentEntity.spriteIndex);
 
-            drawWsgSimpleScaled(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentFrame],
+            drawWsgSimpleScaled(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentAnimationFrame],
                                 (currentEntity.x >> SUBPIXEL_RESOLUTION)
                                     - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
                                 (currentEntity.y >> SUBPIXEL_RESOLUTION)
@@ -175,9 +175,9 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             if(entityManager->entities[i].paused == false){
                 //increment the frame counter
                 entityManager->entities[i].animationTimer += 1;
-                entityManager->entities[i].currentFrame = entityManager->entities[i].animationTimer / entityManager->entities[i].framesPerFrame;
+                entityManager->entities[i].currentAnimationFrame = entityManager->entities[i].animationTimer / entityManager->entities[i].gameFramesPerAnimationFrame;
                 //if frame reached the end of the animation
-                if (entityManager->entities[i].currentFrame
+                if (entityManager->entities[i].currentAnimationFrame
                     >= entityManager->sprites[entityManager->entities[i].spriteIndex].numFrames)
                 {
                     switch (entityManager->entities[i].type)
@@ -191,7 +191,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     case LOOPING_ANIMATION:
                         //reset the animation
                         entityManager->entities[i].animationTimer = 0;
-                        entityManager->entities[i].currentFrame = 0;
+                        entityManager->entities[i].currentAnimationFrame = 0;
                         break;
 
                     default:
@@ -233,7 +233,7 @@ void bb_viewFollowEntity(bb_entity_t* entity)
 }
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused, bb_spriteDef_t spriteIndex,
-                            uint8_t framesPerFrame, uint32_t x, uint32_t y)
+                            uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
@@ -253,19 +253,13 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     entity->x      = x << SUBPIXEL_RESOLUTION;
     entity->y      = y << SUBPIXEL_RESOLUTION;
 
-    entity->xspeed               = 0;
-    entity->yspeed               = 0;
-    entity->spriteFlipHorizontal = false;
-    entity->spriteFlipVertical   = false;
-    entity->spriteRotateAngle    = 0;
-
     entity->type        = type;
     entity->paused      = paused;
     entity->spriteIndex = spriteIndex;
 
     entity->animationTimer = 0;
-    entity->framesPerFrame = framesPerFrame;
-    entity->currentFrame = 0;
+    entity->gameFramesPerAnimationFrame = gameFramesPerAnimationFrame;
+    entity->currentAnimationFrame = 0;
     // entity->collisionHandler     = &dummyCollisionHandler;
     // entity->tileCollisionHandler = &ballTileCollisionHandler;
 
