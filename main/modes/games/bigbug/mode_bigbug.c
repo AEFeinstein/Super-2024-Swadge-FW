@@ -380,11 +380,6 @@ static void bb_GameLoop(int64_t elapsedUs)
         // printf("state: %04X, button: %d, down: %s\n",
         // evt.state, evt.button, evt.down ? "down" : "up");
 
-        // Save the elapsed time
-        bigbug->gameData.elapsedUs = elapsedUs;
-
-        // Save the button state
-        bigbug->gameData.btnState = evt.state;
 
         // Check if the pause button was pressed
         if (evt.down && (PB_START == evt.button))
@@ -394,9 +389,17 @@ static void bb_GameLoop(int64_t elapsedUs)
         }
     }
 
+    
+
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
+        // Save the elapsed time
+        bigbug->gameData.elapsedUs = elapsedUs;
+
+        // Save the button state
+        bigbug->gameData.btnState = evt.state;
+
         bb_updateEntities(&(bigbug->entityManager));
 
         // record the previous frame's position before any logic.
