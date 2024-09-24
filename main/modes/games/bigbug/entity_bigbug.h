@@ -11,6 +11,7 @@
 #include "sprite_bigbug.h"
 
 #include "linked_list.h"
+#include "vector2d.h"
 
 //==============================================================================
 // Enums
@@ -27,9 +28,9 @@ typedef enum
 // Structs
 //==============================================================================
 
-struct bb_garbotnikData{
-    uint8_t test;
-};
+typedef struct{
+    vec_t vel; //velocity
+} bb_garbotnikData;
 
 typedef void (*bb_updateFunction_t)(struct bb_entity_t* self);
 typedef void (*bb_collisionHandler_t)(struct bb_entity_t* self, struct bb_entity_t* other);
@@ -45,9 +46,8 @@ struct bb_entity_t
     void* data;
     bb_updateFunction_t updateFunction;
 
-    uint32_t x;
-    uint32_t y;
-
+    vec_t pos;
+    
     bb_animationType_t type;
     bb_spriteDef_t spriteIndex;
     bool paused;
@@ -72,6 +72,6 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
                          bb_soundManager_t* soundManager);
 
 void bb_destroyEntity(bb_entity_t* self, bool respawn);
-void bb_updatePlayer(bb_entity_t* self);
+void bb_updateGarbotnikFlying(bb_entity_t* self, bb_gameData_t* gameData);
 
 #endif

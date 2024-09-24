@@ -32,10 +32,13 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
 
 void bb_destroyEntity(bb_entity_t* self, bool respawn)
 {
+    if(self->data != NULL){
+        free(self->data);
+    }
     self->entityManager->activeEntities--;
     self->active = false;
 }
 
-void bb_updatePlayer(bb_entity_t* self){
-
+void bb_updateGarbotnikFlying(bb_entity_t* self, bb_gameData_t* gameData){
+    
 }

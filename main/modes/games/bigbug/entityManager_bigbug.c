@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "entityManager_bigbug.h"
+#include "entity_bigbug.h"
 
 #include "esp_random.h"
 #include "palette.h"
@@ -150,25 +151,12 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 
         if (currentEntity.active)
         {
-            // printf("x: %d y: %d\n", (currentEntity.x >> SUBPIXEL_RESOLUTION) -
-            // entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x, (currentEntity.y >>
-            // SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y);
-            // printf("idx %d\n",currentEntity.spriteIndex);
-            // printf("numFrames %d\n",entityManager->sprites[currentEntity.spriteIndex].numFrames);
-            // printf("wsg %p\n",&entityManager->sprites[currentEntity.spriteIndex].frames[0]);
-            //  drawWsg(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentFrame],
-            //          (currentEntity.x >> SUBPIXEL_RESOLUTION) -
-            //          entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x, (currentEntity.y >>
-            //          SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY -
-            //          camera->pos.y, currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
-            //          currentEntity.spriteRotateAngle);
-
             // printf("hey %d\n", currentEntity.spriteIndex);
 
             drawWsgSimpleScaled(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentAnimationFrame],
-                                (currentEntity.x >> SUBPIXEL_RESOLUTION)
+                                (currentEntity.pos.x >> SUBPIXEL_RESOLUTION)
                                     - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
-                                (currentEntity.y >> SUBPIXEL_RESOLUTION)
+                                (currentEntity.pos.y >> SUBPIXEL_RESOLUTION)
                                     - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
                                 1, 1);
 
@@ -184,8 +172,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     {
                     case ONESHOT_ANIMATION:
                         //destroy the entity
-                        entityManager->entities[i].active = false;
-                        entityManager->activeEntities -= 1;
+                        bb_destroyEntity(&entityManager->entities[i], false);
                         break;
                     
                     case LOOPING_ANIMATION:
@@ -250,8 +237,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     }
 
     entity->active = true;
-    entity->x      = x << SUBPIXEL_RESOLUTION;
-    entity->y      = y << SUBPIXEL_RESOLUTION;
+    entity->pos.x = x << SUBPIXEL_RESOLUTION,
+    entity->pos.y = y << SUBPIXEL_RESOLUTION;
 
     entity->type        = type;
     entity->paused      = paused;
@@ -263,15 +250,14 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     // entity->collisionHandler     = &dummyCollisionHandler;
     // entity->tileCollisionHandler = &ballTileCollisionHandler;
 
-    // entity->gameData->ballsInPlay++;
+    switch (spriteIndex)
+    {
+        case GARBOTNIK_FLYING:
+            bb_garbotnikData* data = malloc(sizeof(bb_garbotnikData));
+            entity->data = data;
 
-    // switch (spriteIndex)
-    // {
-    //     case CRUMBLE_ANIM:
-
-    //     default:
-    //         entity = NULL;
-    // }
+            entity->updateFunction = &bb_updateGarbotnikFlying;
+    }
 
     if (entity != NULL)
     {
@@ -283,6 +269,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
 void bb_freeEntityManager(bb_entityManager_t* self)
 {
+
+
     for (uint8_t i = 0; i < NUM_SPRITES; i++)
     {
         for (uint8_t f = 0; f < self->sprites[i].numFrames; f++)
