@@ -27,6 +27,10 @@ typedef enum
 // Structs
 //==============================================================================
 
+struct bb_garbotnikData{
+    uint8_t test;
+};
+
 typedef void (*bb_updateFunction_t)(struct bb_entity_t* self);
 typedef void (*bb_collisionHandler_t)(struct bb_entity_t* self, struct bb_entity_t* other);
 typedef bool (*bb_tileCollisionHandler_t)(struct bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
@@ -38,18 +42,9 @@ struct bb_entity_t
 {
     bool active;
 
-    uint8_t type;
+    bb_animationType_t type;
+    void* data;
     bb_updateFunction_t updateFunction;
-
-    uint32_t x;
-    uint32_t y;
-
-    int16_t xspeed;
-    int16_t yspeed;
-
-    bool spriteFlipHorizontal;
-    bool spriteFlipVertical;
-    int16_t spriteRotateAngle;
 
     bb_spriteDef_t spriteIndex;
     bool paused;
@@ -74,5 +69,6 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
                          bb_soundManager_t* soundManager);
 
 void bb_destroyEntity(bb_entity_t* self, bool respawn);
+void bb_updatePlayer(bb_entity_t* self);
 
 #endif

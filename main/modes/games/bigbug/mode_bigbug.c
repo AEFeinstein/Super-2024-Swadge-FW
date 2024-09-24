@@ -159,7 +159,10 @@ static void bb_EnterMode(void)
             (TILE_FIELD_WIDTH / 2) * 32,
             -130);
 
-
+    //Player
+    bb_createEntity(&(bigbug->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+            5 * 32 + 16,
+            -110);
     // Load graphics
     loadWsg("garbotnik-0.wsg", &bigbug->garbotnikWsg[0], true);
     loadWsg("garbotnik-1.wsg", &bigbug->garbotnikWsg[1], true);
@@ -391,6 +394,8 @@ static void bb_GameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
+        bb_updateEntities(&(bigbug->entityManager));
+
         // record the previous frame's position before any logic.
         bigbug->previousPos = bigbug->garbotnikPos;
         bb_UpdateTileSupport();

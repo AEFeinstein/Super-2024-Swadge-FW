@@ -38,3 +38,7 @@ void bb_destroyEntity(bb_entity_t* self, bool respawn)
     self->entityManager->activeEntities--;
     self->active = false;
 }
+
+void bb_updatePlayer(bb_entity_t* self){
+
+}

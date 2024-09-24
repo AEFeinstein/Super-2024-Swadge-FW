@@ -74,6 +74,11 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     flameSprite->originX        = 26;
     flameSprite->originY        = -66;
     printf("flame numFrames %d\n", entityManager->sprites[FLAME_ANIM].numFrames);
+
+    bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, &entityManager->sprites[GARBOTNIK_FLYING]);
+    garbotnikFlyingSprite->originX = 18;
+    garbotnikFlyingSprite->originY = 17;
+    printf("flame numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
     // free(sprite);
 
     // entityManager->sprites[CRUMBLE_ANIMATION] = calloc(1, sizeof(list_t));
@@ -106,10 +111,12 @@ void bb_updateEntities(bb_entityManager_t* entityManager)
     {
         if (entityManager->entities[i].active)
         {
-            entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
-            if (&(entityManager->entities[i]) == entityManager->viewEntity)
-            {
-                bb_viewFollowEntity(&(entityManager->entities[i]));
+            if(entityManager->entities[i].updateFunction != NULL){
+                entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
+                if (&(entityManager->entities[i]) == entityManager->viewEntity)
+                {
+                    bb_viewFollowEntity(&(entityManager->entities[i]));
+                }
             }
         }
     }

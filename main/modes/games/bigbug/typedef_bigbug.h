@@ -27,6 +27,7 @@ typedef enum
     BUMP_ANIM,   // A particle effect where you bump things
     ROCKET_ANIM, // A vehicle to enter and depart the level
     FLAME_ANIM,  //A particle effect at the bottom of the rocket
+    GARBOTNIK_FLYING, //Frames of garbotnik flying
     WILE,        // A metal ball that is thrown
     HARPOON,     // A harpoon you throw
     FLY,         // A bug that flies
