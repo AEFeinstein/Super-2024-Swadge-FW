@@ -174,6 +174,7 @@ static void bb_EnterMode(void)
 
 static void bb_ExitMode(void)
 {
+    bb_deactivateAllEntities(&bigbug->gameData.entityManager, false, false, false);
     // Free entity manager
     bb_freeEntityManager(&bigbug->gameData.entityManager);
     // Free font
