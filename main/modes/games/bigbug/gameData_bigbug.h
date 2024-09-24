@@ -23,6 +23,8 @@
 
 typedef struct
 {
+    int32_t elapsedUs;
+
     uint16_t btnState;
 
     int32_t touchPhi;

@@ -380,6 +380,9 @@ static void bb_GameLoop(int64_t elapsedUs)
         // printf("state: %04X, button: %d, down: %s\n",
         // evt.state, evt.button, evt.down ? "down" : "up");
 
+        // Save the elapsed time
+        bigbug->gameData.elapsedUs = elapsedUs;
+
         // Save the button state
         bigbug->gameData.btnState = evt.state;
 

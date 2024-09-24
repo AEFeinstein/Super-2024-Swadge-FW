@@ -29,7 +29,8 @@ typedef enum
 //==============================================================================
 
 typedef struct{
-    vec_t vel; //velocity
+    vec_t vel;   //velocity
+    vec_t accel; //acceleration
 } bb_garbotnikData;
 
 typedef void (*bb_updateFunction_t)(struct bb_entity_t* self);
