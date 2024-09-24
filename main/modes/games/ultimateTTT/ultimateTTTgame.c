@@ -5,6 +5,9 @@
 #include "ultimateTTTgame.h"
 #include "ultimateTTTcpuPlayer.h"
 
+#include <esp_log.h>
+#include <inttypes.h>
+
 //==============================================================================
 // Defines
 //==============================================================================
@@ -225,26 +228,30 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
         {
             case PB_UP:
             {
-                cursorFunc          = decCursorY;
-                cursorFuncSecondary = incCursorX;
+                cursorFunc                = decCursorY;
+                cursorFuncSecondary       = (ttt->game.cursorLastDir.x >= 0) ? incCursorX : decCursorX;
+                ttt->game.cursorLastDir.y = -1;
                 break;
             }
             case PB_DOWN:
             {
-                cursorFunc          = incCursorY;
-                cursorFuncSecondary = incCursorX;
+                cursorFunc                = incCursorY;
+                cursorFuncSecondary       = (ttt->game.cursorLastDir.x >= 0) ? incCursorX : decCursorX;
+                ttt->game.cursorLastDir.y = 1;
                 break;
             }
             case PB_LEFT:
             {
-                cursorFunc          = decCursorX;
-                cursorFuncSecondary = incCursorY;
+                cursorFunc                = decCursorX;
+                cursorFuncSecondary       = (ttt->game.cursorLastDir.y >= 0) ? incCursorY : decCursorY;
+                ttt->game.cursorLastDir.x = -1;
                 break;
             }
             case PB_RIGHT:
             {
-                cursorFunc          = incCursorX;
-                cursorFuncSecondary = incCursorY;
+                cursorFunc                = incCursorX;
+                cursorFuncSecondary       = (ttt->game.cursorLastDir.y >= 0) ? incCursorY : decCursorY;
+                ttt->game.cursorLastDir.x = 1;
                 break;
             }
             case PB_A:
@@ -324,39 +331,46 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
 
             // First check along the primary axis
             bool cursorIsSet = false;
-            for (int16_t a = 0; a < 2; a++)
-            {
-                cursorFunc(ttt);
-                if (tttCursorIsValid(ttt, &ttt->game.cursor))
-                {
-                    cursorIsSet = true;
-                    break;
-                }
-            }
 
-            // If the primary axis is filled
-            if (!cursorIsSet)
+            // Do 3 passes along the path of the cursor direction.
+            // Each pass will first check along the primary axis
+            // If the space is available, it will be selected.
+            // If the space is unavailable,
+            for (int16_t pass = 0; pass < 3; pass++)
             {
-                // Move back to where we started
-                cursorFunc(ttt);
+                ESP_LOGD("TTT", "Trying secondary axis");
 
                 // Move along the primary axis
                 for (int16_t b = 0; b < 3; b++)
                 {
                     cursorFunc(ttt);
 
-                    // Check perpendicular spaces
-                    for (int16_t a = 0; a < 3; a++)
+                    ESP_LOGD("TTT", "Checking secondary axis from %" PRId32 ", %" PRId32, ttt->game.cursor.x,
+                             ttt->game.cursor.y);
+
+                    if (tttCursorIsValid(ttt, &ttt->game.cursor))
                     {
+                        cursorIsSet = true;
+                        break;
+                    }
+
+                    // Check perpendicular spaces
+                    for (int16_t a = 0; a < 2; a++)
+                    {
+                        // Always move the cursor along the secondary axis, so that we can return to the original
+                        // position after the loop finishes
                         cursorFuncSecondary(ttt);
 
-                        // If it's valid
-                        if (tttCursorIsValid(ttt, &ttt->game.cursor))
+                        // But only check if the cursor is valid up to the psas number
+                        if (a <= pass && tttCursorIsValid(ttt, &ttt->game.cursor))
                         {
                             // Mark and break
                             cursorIsSet = true;
+                            ESP_LOGD("TTT", "%" PRId32 ", %" PRId32 " OK!", ttt->game.cursor.x, ttt->game.cursor.y);
                             break;
                         }
+
+                        ESP_LOGD("TTT", "%" PRId32 ", %" PRId32 " invalid", ttt->game.cursor.x, ttt->game.cursor.y);
                     }
 
                     // If the cursor is valid
@@ -364,6 +378,15 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                     {
                         break;
                     }
+
+                    // Move back to the original position for the next check on the primary axis
+                    cursorFuncSecondary(ttt);
+                    ESP_LOGD("TTT", "Trying next along primary axis...");
+                }
+
+                if (cursorIsSet)
+                {
+                    break;
                 }
             }
         }

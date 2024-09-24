@@ -117,6 +117,7 @@ typedef struct
     vec_t cursor;
     vec_t selectedSubgame;
     tttCursorMode_t cursorMode;
+    vec_t cursorLastDir;
     int32_t p1MarkerIdx;
     int32_t p2MarkerIdx;
     tttCpuData_t cpu;
