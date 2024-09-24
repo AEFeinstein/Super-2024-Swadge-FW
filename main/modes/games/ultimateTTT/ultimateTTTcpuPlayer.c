@@ -1172,6 +1172,10 @@ void printGame(const tttPlayer_t subgame[3][3])
                 case TTT_P2:
                     *out++ = 'O';
                     break;
+
+                case TTT_DRAW:
+                    *out++ = '?';
+                    break;
             }
 
             *out++ = ' ';
