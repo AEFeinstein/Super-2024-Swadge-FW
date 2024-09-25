@@ -398,7 +398,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
-        bb_updateEntities(&(bigbug->gameData.entityManager));
+        bb_updateEntities(&(bigbug->gameData.entityManager), &bigbug->camera);
 
         // record the previous frame's position before any logic.
         bigbug->previousPos = bigbug->garbotnikPos;
@@ -704,21 +704,21 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
     }
 
     // Update the camera's position to catch up to the player
-    if (((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x < -15)
-    {
-        bigbug->camera.pos.x = ((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) + 15;
-    }
-    else if (((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x > 15)
-    {
-        bigbug->camera.pos.x = ((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - 15;
-    }
+    // if (((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x < -15)
+    // {
+    //     bigbug->camera.pos.x = ((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) + 15;
+    // }
+    // else if (((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x > 15)
+    // {
+    //     bigbug->camera.pos.x = ((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - 15;
+    // }
 
-    if (((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - bigbug->camera.pos.y < -10)
-    {
-        bigbug->camera.pos.y = ((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) + 10;
-    }
-    else if (((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - bigbug->camera.pos.y > 10)
-    {
-        bigbug->camera.pos.y = ((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
-    }
+    // if (((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - bigbug->camera.pos.y < -10)
+    // {
+    //     bigbug->camera.pos.y = ((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) + 10;
+    // }
+    // else if (((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - bigbug->camera.pos.y > 10)
+    // {
+    //     bigbug->camera.pos.y = ((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
+    // }
 }

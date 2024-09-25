@@ -32,7 +32,7 @@ typedef struct{
 } bb_garbotnikData;
 
 typedef void (*bb_updateFunction_t)(struct bb_entity_t* self);
-typedef void (*bb_drawFunction_t)(struct bb_entity_t* self, struct bb_gameData_t* gameData);
+typedef void (*bb_drawFunction_t)(struct bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 typedef void (*bb_collisionHandler_t)(struct bb_entity_t* self, struct bb_entity_t* other);
 typedef bool (*bb_tileCollisionHandler_t)(struct bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
                                           uint8_t direction);
@@ -44,8 +44,8 @@ struct bb_entity_t
     bool active;
 
     void* data;
-    bb_updateFunction_t updateFunction;
-    bb_drawFunction_t drawFunction;
+    bb_updateFunction_t updateFunction;//Only set for entities that need update logic
+    bb_drawFunction_t drawFunction;//Only set for custom entities such as Garbotnik
 
     vec_t pos;
     
@@ -74,5 +74,6 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
 
 void bb_destroyEntity(bb_entity_t* self, bool respawn);
 void bb_updateGarbotnikFlying(bb_entity_t* self);
+void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 #endif

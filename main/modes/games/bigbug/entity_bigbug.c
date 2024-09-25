@@ -330,3 +330,50 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
     }
 
 }
+
+void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self){
+    // Draw garbotnik
+    if (((bb_garbotnikData*)self->data)->yaw.x < -1400)
+    {
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0],
+            (self->pos.x >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+            (self->pos.y >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    }
+    else if (((bb_garbotnikData*)self->data)->yaw.x < -400)
+    {
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[1],
+            (self->pos.x >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+            (self->pos.y >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    }
+    else if (((bb_garbotnikData*)self->data)->yaw.x < 400)
+    {
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[2],
+            (self->pos.x >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+            (self->pos.y >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    }
+    else if (((bb_garbotnikData*)self->data)->yaw.x < 1400)
+    {
+        drawWsg(&entityManager->sprites[self->spriteIndex].frames[1],
+            (self->pos.x >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+            (self->pos.y >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originY - camera->pos.y,
+            true, false, 0);
+    }
+    else
+    {
+        drawWsg(&entityManager->sprites[self->spriteIndex].frames[0],
+            (self->pos.x >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+            (self->pos.y >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originY - camera->pos.y,
+            true, false, 0);
+    }
+}
+

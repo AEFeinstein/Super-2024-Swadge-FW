@@ -107,7 +107,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     // }
 }
 
-void bb_updateEntities(bb_entityManager_t* entityManager)
+void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -115,10 +115,10 @@ void bb_updateEntities(bb_entityManager_t* entityManager)
         {
             if(entityManager->entities[i].updateFunction != NULL){
                 entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
-                if (&(entityManager->entities[i]) == entityManager->viewEntity)
-                {
-                    bb_viewFollowEntity(&(entityManager->entities[i]));
-                }
+            }
+            if (&(entityManager->entities[i]) == entityManager->viewEntity)
+            {
+                bb_viewFollowEntity(&(entityManager->entities[i]), camera);
             }
         }
     }
@@ -153,13 +153,17 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
         if (currentEntity.active)
         {
             // printf("hey %d\n", currentEntity.spriteIndex);
-
-            drawWsgSimpleScaled(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentAnimationFrame],
-                                (currentEntity.pos.x >> SUBPIXEL_RESOLUTION)
-                                    - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
-                                (currentEntity.pos.y >> SUBPIXEL_RESOLUTION)
-                                    - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
-                                1, 1);
+            if (currentEntity.drawFunction != NULL){
+                currentEntity.drawFunction(entityManager, camera, &currentEntity);
+            }
+            else{
+                drawWsgSimple(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentAnimationFrame],
+                    (currentEntity.pos.x >> SUBPIXEL_RESOLUTION)
+                        - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
+                    (currentEntity.pos.y >> SUBPIXEL_RESOLUTION)
+                        - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y);
+            }
+            
 
             if(entityManager->entities[i].paused == false){
                 //increment the frame counter
@@ -214,10 +218,26 @@ bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
     return &(entityManager->entities[entityIndex]);
 }
 
-void bb_viewFollowEntity(bb_entity_t* entity)
+void bb_viewFollowEntity(bb_entity_t* entity, rectangle_t* camera)
 {
-    // int16_t moveViewByX = (entity->x) >> SUBPIXEL_RESOLUTION;
-    // int16_t moveViewByY = (entity->y > 63616) ? 0 : (entity->y) >> SUBPIXEL_RESOLUTION;
+    // Update the camera's position to catch up to the player
+    if (((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - camera->pos.x < -15)
+    {
+        camera->pos.x = ((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) + 15;
+    }
+    else if (((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - camera->pos.x > 15)
+    {
+        camera->pos.x = ((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - 15;
+    }
+
+    if (((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - camera->pos.y < -10)
+    {
+        camera->pos.y = ((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) + 10;
+    }
+    else if (((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - camera->pos.y > 10)
+    {
+        camera->pos.y = ((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
+    }
 }
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused, bb_spriteDef_t spriteIndex,
@@ -258,6 +278,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->data = data;
 
             entity->updateFunction = &bb_updateGarbotnikFlying;
+            entity->drawFunction   = &bb_drawGarbotnikFlying;
+
+            entityManager->viewEntity = entity;
     }
 
     if (entity != NULL)
