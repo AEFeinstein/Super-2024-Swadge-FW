@@ -326,10 +326,11 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
         }
     }
 
-    uint16_t mainResult = analyzeSubgame(subgame, TTT_P2, 0);
-    uint16_t mainMove   = DECODE_MOVE(mainResult);
-    int mainX           = DECODE_LOC_X(mainResult);
-    int mainY           = DECODE_LOC_Y(mainResult);
+    tttPlayer_t cpuPlayer = (ttt->game.singlePlayerPlayOrder == GOING_FIRST) ? TTT_P2 : TTT_P1;
+    uint16_t mainResult   = analyzeSubgame(subgame, cpuPlayer, 0);
+    uint16_t mainMove     = DECODE_MOVE(mainResult);
+    int mainX             = DECODE_LOC_X(mainResult);
+    int mainY             = DECODE_LOC_Y(mainResult);
 
     if (WON != mainMove && mainMove)
     {
@@ -408,8 +409,9 @@ static bool selectCell_easy(ultimateTTT_t* ttt, int* x, int* y)
 static bool selectCell_medium(ultimateTTT_t* ttt, int* x, int* y)
 {
     // Medium plays perfectly within a subgame, but has no overall strategy and picks randomly when selecting a subgame
+    tttPlayer_t cpuPlayer = (ttt->game.singlePlayerPlayOrder == GOING_FIRST) ? TTT_P2 : TTT_P1;
     tttSubgame_t* subgame = &ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y];
-    uint16_t result       = analyzeSubgame(subgame->game, TTT_P2, 0);
+    uint16_t result       = analyzeSubgame(subgame->game, cpuPlayer, 0);
     uint16_t move         = DECODE_MOVE(result);
     int moveX             = DECODE_LOC_X(result);
     int moveY             = DECODE_LOC_Y(result);
@@ -463,7 +465,9 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
     uint16_t maxScore = 0;
 #define SCORE_MAX 0xFFFF
 
-    tttSubgame_t* subgame = &ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y];
+    tttPlayer_t cpuPlayer   = (ttt->game.singlePlayerPlayOrder == GOING_FIRST) ? TTT_P2 : TTT_P1;
+    tttPlayer_t otherPlayer = (cpuPlayer == TTT_P1) ? TTT_P2 : TTT_P1;
+    tttSubgame_t* subgame   = &ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y];
 
     for (int ix = 0; ix < 3; ix++)
     {
@@ -482,10 +486,10 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
             memcpy(tempSubgame, oppSubgame->game, sizeof(tempSubgame));
 
             // Place the marker we would have added it this turn
-            tempSubgame[ix][iy] = TTT_P2;
+            tempSubgame[ix][iy] = cpuPlayer;
 
             tttPlayer_t winner = tttCheckWinner(tempSubgame);
-            if (winner == TTT_P2)
+            if (winner == cpuPlayer)
             {
                 // Hey, making this move wins us the subgame!
                 // Check if that subgame wins us the whole game too!
@@ -497,8 +501,8 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
                         tempMetagame[jx][jy] = ttt->game.subgames[jx][jy].winner;
                     }
                 }
-                tempMetagame[ix][iy] = TTT_P2;
-                if (tttCheckWinner(tempMetagame) == TTT_P2)
+                tempMetagame[ix][iy] = cpuPlayer;
+                if (tttCheckWinner(tempMetagame) == cpuPlayer)
                 {
                     // This is a game-winning move, so immediately decide to move there
                     *x = ix;
@@ -526,15 +530,15 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
                 else
                 {
                     // Opponent is locked to this board, so use their score for the subgame
-                    opponentScore[ix][iy] = DECODE_MOVE(analyzeSubgame(tempSubgame, TTT_P1, 0));
-                    opponentScore[ix][iy] += 50 - 10 * movesToWin(tempSubgame, TTT_P1);
+                    opponentScore[ix][iy] = DECODE_MOVE(analyzeSubgame(tempSubgame, otherPlayer, 0));
+                    opponentScore[ix][iy] += 50 - 10 * movesToWin(tempSubgame, otherPlayer);
                 }
             }
             else
             {
                 // Score the current state of that board as the opponent
-                opponentScore[ix][iy] = DECODE_MOVE(analyzeSubgame(oppSubgame->game, TTT_P1, 0));
-                opponentScore[ix][iy] += 50 - 10 * movesToWin(tempSubgame, TTT_P1);
+                opponentScore[ix][iy] = DECODE_MOVE(analyzeSubgame(oppSubgame->game, otherPlayer, 0));
+                opponentScore[ix][iy] += 50 - 10 * movesToWin(tempSubgame, otherPlayer);
             }
 
             // Update the max score, used as the value when the opponent can pick any subgame
@@ -592,11 +596,11 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
 
             tttPlayer_t simulation[3][3];
             memcpy(simulation, subgame->game, sizeof(simulation));
-            simulation[ix][iy] = TTT_P2;
+            simulation[ix][iy] = cpuPlayer;
 
-            uint16_t thisCellAnalysis = analyzeSubgame(simulation, TTT_P2, 0);
+            uint16_t thisCellAnalysis = analyzeSubgame(simulation, cpuPlayer, 0);
             uint16_t thisCellScore    = DECODE_MOVE(thisCellAnalysis);
-            thisCellScore += 50 - 10 * movesToWin(simulation, TTT_P2);
+            thisCellScore += 50 - 10 * movesToWin(simulation, cpuPlayer);
 
             uint16_t score = opponentScore[ix][iy];
             if (opponentScore[ix][iy] == SCORE_MAX)
@@ -614,7 +618,7 @@ static bool selectCell_hard(ultimateTTT_t* ttt, int* x, int* y)
             }
 
 #ifdef DEBUG_TTT_CPU
-            uint16_t result = analyzeSubgame(subgame->game, TTT_P2, 0);
+            uint16_t result = analyzeSubgame(subgame->game, cpuPlayer, 0);
             int moveX       = DECODE_LOC_X(result);
             int moveY       = DECODE_LOC_Y(result);
 
