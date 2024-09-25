@@ -43,8 +43,10 @@ void bb_destroyEntity(bb_entity_t* self, bool respawn)
 }
 
 void bb_updateGarbotnikFlying(bb_entity_t* self){
+    bb_garbotnikData* gData = (bb_garbotnikData*)self->data;
+
     // record the previous frame's position before any logic.
-    ((bb_garbotnikData*)self->data)->previousPos = self->pos;
+    gData->previousPos = self->pos;
 
     vec_t accel = {.x = 0,
                    .y = 0};
@@ -116,32 +118,32 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
     // printf("offender: %d\n", (int32_t) elapsedUs / 100000);
     // printf("now   x: %d\n", mulVec2d(accel, elapsedUs) / 100000).x);
 
-    ((bb_garbotnikData*)self->data)->accel = divVec2d(mulVec2d(accel, self->gameData->elapsedUs), 100000);
+    gData->accel = divVec2d(mulVec2d(accel, self->gameData->elapsedUs), 100000);
 
     //physics
-    ((bb_garbotnikData*)self->data)->yaw.y += ((bb_garbotnikData*)self->data)->accel.x;
-    if (((bb_garbotnikData*)self->data)->yaw.x < 0)
+    gData->yaw.y += gData->accel.x;
+    if (gData->yaw.x < 0)
     {
-        ((bb_garbotnikData*)self->data)->yaw.y -= 5.0 * self->gameData->elapsedUs / 100000;
+        gData->yaw.y -= 5.0 * self->gameData->elapsedUs / 100000;
     }
     else
     {
-        ((bb_garbotnikData*)self->data)->yaw.y += 5.0 * self->gameData->elapsedUs / 100000;
+        gData->yaw.y += 5.0 * self->gameData->elapsedUs / 100000;
     }
-    ((bb_garbotnikData*)self->data)->yaw.x += ((bb_garbotnikData*)self->data)->yaw.y;
-    if (((bb_garbotnikData*)self->data)->yaw.x < -1440)
+    gData->yaw.x += gData->yaw.y;
+    if (gData->yaw.x < -1440)
     {
-        ((bb_garbotnikData*)self->data)->yaw.x = -1440;
-        ((bb_garbotnikData*)self->data)->yaw.y = 0;
+        gData->yaw.x = -1440;
+        gData->yaw.y = 0;
     }
-    else if (((bb_garbotnikData*)self->data)->yaw.x > 1440)
+    else if (gData->yaw.x > 1440)
     {
-        ((bb_garbotnikData*)self->data)->yaw.x = 1440;
-        ((bb_garbotnikData*)self->data)->yaw.y = 0;
+        gData->yaw.x = 1440;
+        gData->yaw.y = 0;
     }
 
     // Apply garbotnik's drag
-    int32_t sqMagVel = sqMagVec2d(((bb_garbotnikData*)self->data)->vel);
+    int32_t sqMagVel = sqMagVec2d(gData->vel);
     int32_t speed    = sqrt(sqMagVel);
     int32_t drag     = sqMagVel / 500; // smaller denominator for bigger drag.
 
@@ -157,19 +159,19 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
     // printf("drag: %d\n", drag);
     if (speed > 0)
     {
-        ((bb_garbotnikData*)self->data)->accel.x += (((bb_garbotnikData*)self->data)->vel.x / (double)speed) * -drag * self->gameData->elapsedUs / 100000;
-        ((bb_garbotnikData*)self->data)->accel.y += (((bb_garbotnikData*)self->data)->vel.y / (double)speed) * -drag * self->gameData->elapsedUs / 100000;
+        gData->accel.x += (gData->vel.x / (double)speed) * -drag * self->gameData->elapsedUs / 100000;
+        gData->accel.y += (gData->vel.y / (double)speed) * -drag * self->gameData->elapsedUs / 100000;
         // bigbug->garbotnikAccel = addVec2d(bigbug->garbotnikAccel, mulVec2d(divVec2d(bigbug->garbotnikVel, speed),
         // -drag * elapsedUs / 100000));
     }
 
     // Update garbotnik's velocity
-    ((bb_garbotnikData*)self->data)->vel.x += ((bb_garbotnikData*)self->data)->accel.x;
-    ((bb_garbotnikData*)self->data)->vel.y += ((bb_garbotnikData*)self->data)->accel.y;
+    gData->vel.x += gData->accel.x;
+    gData->vel.y += gData->accel.y;
 
     // Update garbotnik's position
-    self->pos.x += ((bb_garbotnikData*)self->data)->vel.x * self->gameData->elapsedUs / 100000;
-    self->pos.y += ((bb_garbotnikData*)self->data)->vel.y * self->gameData->elapsedUs / 100000;
+    self->pos.x += gData->vel.x * self->gameData->elapsedUs / 100000;
+    self->pos.y += gData->vel.y * self->gameData->elapsedUs / 100000;
 
     // Look up 4 nearest tiles for collision checks
     // a tile's width is 16 pixels << 4 = 512. half width is 256.
@@ -219,7 +221,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
             // Collision detected! //
             /////////////////////////
             // Resolve garbotnik's position somewhat based on his position previously.
-            vec_t normal = subVec2d(((bb_garbotnikData*)self->data)->previousPos, tilePos);
+            vec_t normal = subVec2d(gData->previousPos, tilePos);
             // Snap the previous frame offset to an orthogonal direction.
             if ((normal.x < 0 ? -normal.x : normal.x) > (normal.y < 0 ? -normal.y : normal.y))
             {
@@ -253,7 +255,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
             }
 
             // printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
-            if (dotVec2d(((bb_garbotnikData*)self->data)->vel, normal)
+            if (dotVec2d(gData->vel, normal)
                 < -95) // velocity angle is opposing garbage normal vector. Tweak number for different threshold.
             {
                 ///////////////////////
@@ -292,8 +294,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
                 ////////////////////////////////
                 // Reflect the velocity vector along the normal
                 // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-                printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(((bb_garbotnikData*)self->data)->vel));
-                int32_t bounceScalar = sqMagVec2d(((bb_garbotnikData*)self->data)->vel) / -11075 + 3;
+                printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(gData->vel));
+                int32_t bounceScalar = sqMagVec2d(gData->vel) / -11075 + 3;
                 if (bounceScalar > 3)
                 {
                     bounceScalar = 3;
@@ -302,8 +304,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
                 {
                     bounceScalar = 1;
                 }
-                ((bb_garbotnikData*)self->data)->vel = mulVec2d(
-                    subVec2d(((bb_garbotnikData*)self->data)->vel, mulVec2d(normal, (2 * dotVec2d(((bb_garbotnikData*)self->data)->vel, normal)))),
+                gData->vel = mulVec2d(
+                    subVec2d(gData->vel, mulVec2d(normal, (2 * dotVec2d(gData->vel, normal)))),
                     bounceScalar);
 
                 /////////////////////////////////
@@ -332,8 +334,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self){
+    bb_garbotnikData* gData = (bb_garbotnikData*)self->data;
+
     // Draw garbotnik
-    if (((bb_garbotnikData*)self->data)->yaw.x < -1400)
+    if (gData->yaw.x < -1400)
     {
         drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0],
             (self->pos.x >> DECIMAL_BITS)
@@ -341,7 +345,7 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
             (self->pos.y >> DECIMAL_BITS)
                     - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
     }
-    else if (((bb_garbotnikData*)self->data)->yaw.x < -400)
+    else if (gData->yaw.x < -400)
     {
         drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[1],
             (self->pos.x >> DECIMAL_BITS)
@@ -349,7 +353,7 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
             (self->pos.y >> DECIMAL_BITS)
                     - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
     }
-    else if (((bb_garbotnikData*)self->data)->yaw.x < 400)
+    else if (gData->yaw.x < 400)
     {
         drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[2],
             (self->pos.x >> DECIMAL_BITS)
@@ -357,7 +361,7 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
             (self->pos.y >> DECIMAL_BITS)
                     - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
     }
-    else if (((bb_garbotnikData*)self->data)->yaw.x < 1400)
+    else if (gData->yaw.x < 1400)
     {
         drawWsg(&entityManager->sprites[self->spriteIndex].frames[1],
             (self->pos.x >> DECIMAL_BITS)
