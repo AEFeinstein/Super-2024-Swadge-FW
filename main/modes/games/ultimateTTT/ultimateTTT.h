@@ -111,6 +111,7 @@ typedef struct
 typedef struct
 {
     bool singlePlayer;
+    playOrder_t singlePlayerPlayOrder;
     p2pInfo p2p;
     tttGameState_t state;
     tttSubgame_t subgames[3][3];

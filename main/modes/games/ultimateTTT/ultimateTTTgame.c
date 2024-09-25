@@ -92,6 +92,12 @@ void tttBeginGame(ultimateTTT_t* ttt)
     // Show the game UI
     tttShowUi(TUI_GAME);
 
+    // Randomly determine play order for single player
+    if (ttt->game.singlePlayer)
+    {
+        ttt->game.singlePlayerPlayOrder = (esp_random() % 2) ? GOING_FIRST : GOING_SECOND;
+    }
+
     // Set the cursor mode
 
     // If going first
@@ -849,7 +855,7 @@ static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt)
 {
     if (ttt->game.singlePlayer)
     {
-        return GOING_FIRST;
+        return ttt->game.singlePlayerPlayOrder;
     }
     else
     {
