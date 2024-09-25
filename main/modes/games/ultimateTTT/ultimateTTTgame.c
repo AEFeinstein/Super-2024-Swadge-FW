@@ -6,6 +6,7 @@
 #include "ultimateTTTcpuPlayer.h"
 
 #include <esp_log.h>
+#include <esp_random.h>
 #include <inttypes.h>
 
 //==============================================================================
@@ -105,13 +106,32 @@ void tttBeginGame(ultimateTTT_t* ttt)
         {
             ttt->game.state     = TGS_PLACING_MARKER;
             ttt->game.cpu.state = TCPU_INACTIVE;
+
+            // Randomize CPU marker to be not the players
+            ttt->game.p2MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
+            // While the markers match
+            while (ttt->game.p1MarkerIdx == ttt->game.p2MarkerIdx)
+            {
+                // Pick a new one
+                ttt->game.p2MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
+            }
         }
     }
     else if (ttt->game.singlePlayer)
     {
         ttt->game.state     = TGS_WAITING;
         ttt->game.cpu.state = TCPU_THINKING;
+
+        // Randomize CPU marker to be not the players
+        ttt->game.p1MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
+        // While the markers match
+        while (ttt->game.p1MarkerIdx == ttt->game.p2MarkerIdx)
+        {
+            // Pick a new one
+            ttt->game.p1MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
+        }
     }
+    printf("Indices %d %d\n", ttt->game.p1MarkerIdx, ttt->game.p2MarkerIdx);
     // If going second, wait to receive p1's marker before responding
 }
 
