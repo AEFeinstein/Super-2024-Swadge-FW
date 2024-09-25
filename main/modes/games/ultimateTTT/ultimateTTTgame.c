@@ -137,7 +137,6 @@ void tttBeginGame(ultimateTTT_t* ttt)
             ttt->game.p1MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
         }
     }
-    printf("Indices %d %d\n", ttt->game.p1MarkerIdx, ttt->game.p2MarkerIdx);
     // If going second, wait to receive p1's marker before responding
 }
 
