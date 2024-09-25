@@ -55,10 +55,7 @@ const char tttUnlockKey[]   = "ttt_unlock";
  * Marker names to load WSGs
  */
 const char* markerNames[NUM_UNLOCKABLE_MARKERS] = {
-    "x",
-    "o",
-    "sq",
-    "tri",
+    "x", "o", "sq", "tri", "banana", "dance", "hand", "hat", "hotdog", "lizard", "pixil", "spock", "swadgeman",
 };
 
 const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS] = {0, 0, 1, 3};
@@ -99,18 +96,16 @@ static void tttEnterMode(void)
     for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(markerNames); pIdx++)
     {
         char assetName[32];
-        snprintf(assetName, sizeof(assetName) - 1, "up**_%s.wsg", markerNames[pIdx]);
 
-        assetName[2] = 'b'; // blue
-        assetName[3] = 's'; // small
+        snprintf(assetName, sizeof(assetName) - 1, "%s_%c%c.wsg", markerNames[pIdx], 'b', 's');
+
         loadWsg(assetName, &ttt->markerWsg[pIdx].blue.small, true);
-        assetName[3] = 'l'; // large
+        snprintf(assetName, sizeof(assetName) - 1, "%s_%c%c.wsg", markerNames[pIdx], 'b', 'l');
         loadWsg(assetName, &ttt->markerWsg[pIdx].blue.large, true);
 
-        assetName[2] = 'r'; // red
-        assetName[3] = 's'; // small
+        snprintf(assetName, sizeof(assetName) - 1, "%s_%c%c.wsg", markerNames[pIdx], 'r', 's');
         loadWsg(assetName, &ttt->markerWsg[pIdx].red.small, true);
-        assetName[3] = 'l'; // large
+        snprintf(assetName, sizeof(assetName) - 1, "%s_%c%c.wsg", markerNames[pIdx], 'r', 'l');
         loadWsg(assetName, &ttt->markerWsg[pIdx].red.large, true);
     }
 

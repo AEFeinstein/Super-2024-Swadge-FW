@@ -6,7 +6,7 @@
 // Defines
 //==============================================================================
 
-#define NUM_UNLOCKABLE_MARKERS 4
+#define NUM_UNLOCKABLE_MARKERS 13
 
 #define ARROW_BLINK_PERIOD 1000000
 
