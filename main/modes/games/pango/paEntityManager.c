@@ -285,7 +285,7 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 0;
     entity->animationTimer       = 0;
     entity->type                 = PA_ENTITY_BREAK_BLOCK;
     entity->spriteIndex          = PA_SP_BREAK_BLOCK;

@@ -10,6 +10,7 @@
 #include "pango_typedef.h"
 #include "palette.h"
 #include "paSoundManager.h"
+#include "font.h"
 
 //==============================================================================
 // Constants
@@ -65,6 +66,8 @@ typedef struct
     int16_t maxAggroEnemies;
 
     paSoundManager_t* soundManager;
+
+    font_t scoreFont;
 } paGameData_t;
 
 //==============================================================================

@@ -112,7 +112,7 @@ void pa_scorePoints(paGameData_t* gameData, uint16_t points)
     gameData->score += comboPoints;
     gameData->comboScore = comboPoints;
 
-    gameData->comboTimer = (gameData->levelDeaths < 3) ? 240 : 1;
+    gameData->comboTimer = 60;
 }
 
 void addCoins(paGameData_t* gameData, uint8_t coins)

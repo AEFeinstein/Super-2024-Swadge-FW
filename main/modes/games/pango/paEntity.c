@@ -1367,11 +1367,19 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
         if (PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) == self->homeTileX
             && PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) == self->homeTileY)
         {
-            pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            paEntity_t* newEntity = pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+           
             if (self->state == PA_TILE_SPAWN_BLOCK_0)
             {
+                pa_scorePoints(self->gameData, 50);
                 self->entityManager->gameData->remainingEnemies--;
+
+                pa_executeSpawnBlockCombo(self, self->homeTileX+1, self->homeTileY);
+                pa_executeSpawnBlockCombo(self, self->homeTileX-1, self->homeTileY);
+                pa_executeSpawnBlockCombo(self, self->homeTileX, self->homeTileY+1);
+                pa_executeSpawnBlockCombo(self, self->homeTileX, self->homeTileY-1);
             }
+            
         }
         else
         {
@@ -1383,6 +1391,23 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
         return true;
     }
     return false;
+}
+
+void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty){
+    if(pa_getTile(self->tilemap, tx, ty) == PA_TILE_SPAWN_BLOCK_0){
+        paEntity_t* newEntity = pa_createBreakBlock(self->entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+        if(newEntity == NULL) {
+            pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
+        }
+        
+        pa_scorePoints(self->gameData, (self->gameData->combo > 2) ? 1000: 100);
+        self->entityManager->gameData->remainingEnemies--;
+        
+        pa_executeSpawnBlockCombo(self, tx+1, ty);
+        pa_executeSpawnBlockCombo(self, tx-1, ty);
+        pa_executeSpawnBlockCombo(self, tx, ty+1);
+        pa_executeSpawnBlockCombo(self, tx, ty-1);
+    }
 }
 
 void dieWhenFallingOffScreen(paEntity_t* self)
@@ -1418,6 +1443,12 @@ void pa_updateBreakBlock(paEntity_t* self)
             pa_destroyEntity(self, false);
         }
     }
+
+    /*if(self->scoreValue > 0){
+        char scoreStr[32];
+        snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32, self->scoreValue);
+        drawText(&(self->gameData->scoreFont), c050, scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+    }*/
 }
 
 void updateEntityDead(paEntity_t* self)

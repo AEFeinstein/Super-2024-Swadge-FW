@@ -233,6 +233,7 @@ void pangoEnterMode(void)
     pa_initializeSoundManager(&(pango->soundManager));
 
     pa_initializeGameData(&(pango->gameData), &(pango->soundManager));
+    loadFont("tiny_numbers.font", &(pango->gameData.scoreFont), false);
     pa_initializeEntityManager(&(pango->entityManager), &(pango->wsgManager), &(pango->tilemap), &(pango->gameData),
                                &(pango->soundManager));
 
