@@ -699,7 +699,7 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
                 for (int16_t mIdx = 0; mIdx < NUM_UNLOCKABLE_MARKERS; mIdx++)
                 {
                     // If the player got the required number of wins
-                    if (markersUnlockedAtWins[mIdx] == ttt->wins)
+                    if (0 != ttt->wins && markersUnlockedAtWins[mIdx] == ttt->wins)
                     {
                         // Unlock the next marker
                         ttt->numUnlockedMarkers++;
