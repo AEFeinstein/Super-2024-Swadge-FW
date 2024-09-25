@@ -281,6 +281,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->drawFunction   = &bb_drawGarbotnikFlying;
 
             entityManager->viewEntity = entity;
+            entityManager->playerEntity = entity;
     }
 
     if (entity != NULL)
