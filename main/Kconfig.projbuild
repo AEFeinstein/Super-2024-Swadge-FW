@@ -14,7 +14,7 @@ menu "Swadge Configuration"
 			help
 				Build for the Gunship Swadge (2024)
 		config HARDWARE_HOTDOG
-			bool "DEBUG_OUTPUT_UART"
+			bool "HARDWARE_HOTDOG"
 			help
 				Build for the Hotdog Swadge (2025)
 	endchoice
