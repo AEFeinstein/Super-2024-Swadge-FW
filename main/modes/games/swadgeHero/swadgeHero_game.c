@@ -11,8 +11,6 @@
 #define HIT_BAR          16
 #define GAME_NOTE_RADIUS 8
 
-#define TRAVEL_US_PER_PX ((TRAVEL_TIME_US) / (TFT_HEIGHT - HIT_BAR + (2 * GAME_NOTE_RADIUS)))
-
 //==============================================================================
 // Const Variables
 //==============================================================================
@@ -163,30 +161,35 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         // Check if the game note should be spawned now to reach the hit bar in time
         if (songUs + TRAVEL_TIME_US >= nextEventUs)
         {
+            // TODO math is getting weird somewhere, maybe use ms, not us?
+            printf("EVT: %d\n", nextEventUs);
+
             // Spawn an game note
             shGameNote_t* ni = heap_caps_calloc(1, sizeof(shGameNote_t), MALLOC_CAP_SPIRAM);
             ni->note         = sh->chartNotes[sh->currentChartNote].note;
-            ni->headPosY     = TFT_HEIGHT + (GAME_NOTE_RADIUS * 2);
+
+            // Start the game note offscreen
+            ni->headPosY = TFT_HEIGHT;
+
+            // Save when the note should be hit
+            ni->headTimeUs = nextEventUs;
 
             // If this is a hold note
             if (sh->chartNotes[sh->currentChartNote].hold)
             {
-                // Figure out at what microsecond the tail ends
-                int32_t tailUs = MIDI_TICKS_TO_US(sh->chartNotes[sh->currentChartNote].hold, player->tempo,
-                                                  player->reader.division);
-                // Convert the time to a number of pixels
-                int32_t tailPx = tailUs / TRAVEL_US_PER_PX;
-                // Add the length pixels to the head to get the tail
-                ni->tailPosY = ni->headPosY + tailPx;
+                // Start the tail offscreen too
+                ni->tailPosY = TFT_HEIGHT;
+
+                // Save when the tail ends
+                int32_t tailTick
+                    = sh->chartNotes[sh->currentChartNote].tick + sh->chartNotes[sh->currentChartNote].hold;
+                ni->tailTimeUs = MIDI_TICKS_TO_US(tailTick, player->tempo, player->reader.division);
             }
             else
             {
                 // No tail
                 ni->tailPosY = -1;
             }
-
-            // Start the timer at zero
-            ni->timer = 0;
 
             // Push into the list of game notes
             push(&sh->gameNotes, ni);
@@ -211,58 +214,69 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         // Get a reference
         shGameNote_t* gameNote = gameNoteNode->val;
 
-        // Run this game note's timer
-        gameNote->timer += elapsedUs;
-        while (gameNote->timer >= TRAVEL_US_PER_PX)
+        // Update note position
+        gameNote->headPosY = (((TFT_HEIGHT - HIT_BAR) * (gameNote->headTimeUs - songUs)) / TRAVEL_TIME_US) + HIT_BAR;
+        // Update tail position if there is a hold
+        if (-1 != gameNote->tailPosY)
         {
-            gameNote->timer -= TRAVEL_US_PER_PX;
-
-            bool shouldRemove = false;
-
-            // Move the whole game note up
-            if (!gameNote->held)
-            {
-                gameNote->headPosY--;
-                if (gameNote->tailPosY >= 0)
-                {
-                    gameNote->tailPosY--;
-                }
-
-                // If it's off screen
-                if (gameNote->headPosY < -GAME_NOTE_RADIUS && (gameNote->tailPosY < 0))
-                {
-                    // Mark it for removal
-                    shouldRemove = true;
-                }
-            }
-            else // The game note is being held
-            {
-                // Only move the tail position
-                if (gameNote->tailPosY >= HIT_BAR)
-                {
-                    gameNote->tailPosY--;
-                }
-
-                // If the tail finished
-                if (gameNote->tailPosY < HIT_BAR)
-                {
-                    // Mark it for removal
-                    shouldRemove = true;
-                }
-            }
-
-            // If the game note should be removed
-            if (shouldRemove)
-            {
-                // Remove this game note
-                free(gameNoteNode->val);
-                removeEntry(&sh->gameNotes, gameNoteNode);
-
-                // Stop the while timer loop
-                removed = true;
-                break;
-            }
+            gameNote->tailPosY
+                = (((TFT_HEIGHT - HIT_BAR) * (gameNote->tailTimeUs - songUs)) / TRAVEL_TIME_US) + HIT_BAR;
         }
+
+        // TODO remove note
+
+        // Run this game note's timer
+        // gameNote->timer += elapsedUs;
+        // while (gameNote->timer >= TRAVEL_US_PER_PX)
+        // {
+        //     gameNote->timer -= TRAVEL_US_PER_PX;
+
+        //     bool shouldRemove = false;
+
+        //     // Move the whole game note up
+        //     if (!gameNote->held)
+        //     {
+        //         gameNote->headPosY--;
+        //         if (gameNote->tailPosY >= 0)
+        //         {
+        //             gameNote->tailPosY--;
+        //         }
+
+        //         // If it's off screen
+        //         if (gameNote->headPosY < -GAME_NOTE_RADIUS && (gameNote->tailPosY < 0))
+        //         {
+        //             // Mark it for removal
+        //             shouldRemove = true;
+        //         }
+        //     }
+        //     else // The game note is being held
+        //     {
+        //         // Only move the tail position
+        //         if (gameNote->tailPosY >= HIT_BAR)
+        //         {
+        //             gameNote->tailPosY--;
+        //         }
+
+        //         // If the tail finished
+        //         if (gameNote->tailPosY < HIT_BAR)
+        //         {
+        //             // Mark it for removal
+        //             shouldRemove = true;
+        //         }
+        //     }
+
+        //     // If the game note should be removed
+        //     if (shouldRemove)
+        //     {
+        //         // Remove this game note
+        //         free(gameNoteNode->val);
+        //         removeEntry(&sh->gameNotes, gameNoteNode);
+
+        //         // Stop the while timer loop
+        //         removed = true;
+        //         break;
+        //     }
+        // }
 
         // If an game note was removed
         if (removed)
@@ -361,7 +375,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
             {
                 // Find how off the timing is
                 int32_t pxOff = ABS(HIT_BAR - gameNote->headPosY);
-                int32_t usOff = pxOff * TRAVEL_US_PER_PX;
+                int32_t usOff = 0; // TODO pxOff * TRAVEL_US_PER_PX;
                 printf("%" PRId32 " us off\n", usOff);
 
                 // Check if this button hit a note
@@ -437,8 +451,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     //     printf("touch center: %" PRId32 ", intensity: %" PRId32 "\n", centerVal, intensityVal);
     // }
     // else
-    // {
-    //     printf("no touch\n");
+    // {hold
     // }
 
     // // Get the acceleration

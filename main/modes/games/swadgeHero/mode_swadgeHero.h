@@ -50,7 +50,8 @@ typedef struct
 typedef struct
 {
     int32_t note;
-    int32_t timer;
+    int32_t headTimeUs;
+    int32_t tailTimeUs;
     int32_t headPosY;
     int32_t tailPosY;
     bool held;
