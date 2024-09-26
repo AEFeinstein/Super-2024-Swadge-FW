@@ -67,7 +67,7 @@ void bb_updateRocketLanding(bb_entity_t* self){
 
 void bb_updateHeavyFalling(bb_entity_t* self){
     bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
-    hfData->yVel += 4;
+    hfData->yVel += 6;
     self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
 }
 
