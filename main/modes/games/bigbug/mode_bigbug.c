@@ -16,7 +16,9 @@
 #include "entity_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "esp_heap_caps.h"
+#include "hdw-tft.h"
 #include <math.h>
+
 
 //==============================================================================
 // Defines
@@ -142,18 +144,15 @@ static void bb_EnterMode(void)
     bb_initializeTileMap(&(bigbug->gameData.tilemap));
     bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
 
-    bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, false, ROCKET_ANIM, 3,
-            (TILE_FIELD_WIDTH / 2) * 32,
-            -130);
-
-    bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
-            (TILE_FIELD_WIDTH / 2) * 32,
-            -130);
+    bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
+            (TILE_FIELD_WIDTH / 2) * 32 + 16,
+            -1000);
+    bigbug->camera.pos.x = ((TILE_FIELD_WIDTH / 2) * 32 +16) - TFT_WIDTH/2;
 
     //Player
-    bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
-            5 * 32 + 16,
-            -110);
+    // bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+    //         5 * 32 + 16,
+    //         -110);
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;

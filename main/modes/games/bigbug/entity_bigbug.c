@@ -42,6 +42,39 @@ void bb_destroyEntity(bb_entity_t* self, bool respawn)
     self->active = false;
 }
 
+void bb_updateRocketLanding(bb_entity_t* self){
+    bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
+
+    if(self->pos.y > -2600 && rData->flame == NULL){
+        rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
+        self->pos.x>>DECIMAL_BITS,
+        self->pos.y>>DECIMAL_BITS);
+    }
+
+    else if(rData->flame != NULL){
+        rData->yVel -= 5;
+        if(rData->yVel <= 0){
+            bb_destroyEntity(rData->flame, false);
+            free(self->data);
+            self->data = calloc(1,sizeof(bb_heavyFallingData_t));
+            self->updateFunction = bb_updateHeavyFalling;
+            self->gameData->entityManager.viewEntity = NULL;
+            return;
+        }
+    }
+    self->pos.y += rData->yVel * self->gameData->elapsedUs / 100000;
+}
+
+void bb_updateHeavyFalling(bb_entity_t* self){
+    bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
+    hfData->yVel += 4;
+    self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
+}
+
+void bb_updateFlame(bb_entity_t* self){
+    self->pos.y = self->gameData->entityManager.entities[0].pos.y;//It's nasty, but that is the rocket.
+}
+
 void bb_updateGarbotnikFlying(bb_entity_t* self){
     bb_garbotnikData* gData = (bb_garbotnikData*)self->data;
 

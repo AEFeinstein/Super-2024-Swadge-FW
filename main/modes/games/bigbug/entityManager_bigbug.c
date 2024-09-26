@@ -35,9 +35,6 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
     }
 
     entityManager->activeEntities = 0;
-
-    // entityManager->viewEntity = createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,
-    // entityManager->tilemap->warps[0].y * 16); entityManager->playerEntity = entityManager->viewEntity;
 }
 
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, bb_sprite_t* sprite)
@@ -69,42 +66,18 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* rocketSprite    = bb_loadSprite("rocket", 35, &entityManager->sprites[ROCKET_ANIM]);
     rocketSprite->originX        = 32;
-    rocketSprite->originY        = 28;
+    rocketSprite->originY        = 108;//80 off from Garbotnik
     printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
 
     bb_sprite_t* flameSprite    = bb_loadSprite("flame", 24, &entityManager->sprites[FLAME_ANIM]);
     flameSprite->originX        = 26;
-    flameSprite->originY        = -66;
+    flameSprite->originY        = 14;
     printf("flame numFrames %d\n", entityManager->sprites[FLAME_ANIM].numFrames);
 
     bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, &entityManager->sprites[GARBOTNIK_FLYING]);
     garbotnikFlyingSprite->originX = 18;
     garbotnikFlyingSprite->originY = 17;
     printf("flame numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
-    // free(sprite);
-
-    // entityManager->sprites[CRUMBLE_ANIMATION] = calloc(1, sizeof(list_t));
-
-    // for(uint8_t i = 1; i < 25; i++)//24 frames
-    // {
-    //     bb_sprite_t* sprite = malloc(sizeof(bb_sprite_t));
-    //     sprite->originX = 0;
-    //     sprite->originY = 0;
-
-    //     //Code to cast an int to a string.
-    //     uint8_t length = snprintf(NULL, 0, "%d", i);
-    //     char* str = malloc(length+1);
-    //     snprintf(str, length+1, "%d", i);
-
-    //     char name[13] = "crumble";
-    //     strcat(name, str);
-    //     free(str);
-    //     strcat(name, ".wsg");
-    //     loadWsg(name, &(sprite->wsg), true);//what I actually wanted to do 2 hours ago.
-
-    //     //push to tail
-    //     push(entityManager->sprites[CRUMBLE_ANIMATION], (void*)sprite);
-    // }
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
@@ -149,7 +122,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t currentEntity = entityManager->entities[i];
-
+        
         if (currentEntity.active)
         {
             // printf("hey %d\n", currentEntity.spriteIndex);
@@ -274,14 +247,28 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     switch (spriteIndex)
     {
         case GARBOTNIK_FLYING:
-            bb_garbotnikData* data = calloc(1, sizeof(bb_garbotnikData));
-            entity->data = data;
+            bb_garbotnikData* gData = calloc(1, sizeof(bb_garbotnikData));
+            entity->data = gData;
 
             entity->updateFunction = &bb_updateGarbotnikFlying;
             entity->drawFunction   = &bb_drawGarbotnikFlying;
 
+            //entityManager->viewEntity = entity;
+            entityManager->playerEntity = entity;
+            break;
+        case ROCKET_ANIM:
+            bb_rocketData_t* rData = calloc(1, sizeof(bb_rocketData_t));
+            rData->flame = NULL;
+            rData->yVel = 200;
+            entity->data = rData;
+
+            entity->updateFunction = &bb_updateRocketLanding;
             entityManager->viewEntity = entity;
             entityManager->playerEntity = entity;
+            break;
+        case FLAME_ANIM:
+            entity->updateFunction = &bb_updateFlame;
+            break;
     }
 
     if (entity != NULL)
