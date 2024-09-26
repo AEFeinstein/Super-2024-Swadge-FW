@@ -1279,6 +1279,167 @@ void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera){
     // drawWsgSimpleScaled(&tilemap->fore_h_Wsg[39], 0, 160, 10, 2);
 }
 
+bool bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent){
+    // Look up 4 nearest tiles for collision checks
+    // a tile's width is 16 pixels << 4 = 512. half width is 256.
+    int32_t xIdx = (ent->pos.x - BITSHIFT_HALF_TILE) / BITSHIFT_TILE_SIZE
+                   - (ent->pos.x < 0); // the x index
+    int32_t yIdx = (ent->pos.y - BITSHIFT_HALF_TILE) / BITSHIFT_TILE_SIZE
+                   - (ent->pos.y < 0); // the y index
+
+    int32_t best_i        = -1; // negative means no worthy candidates found.
+    int32_t best_j        = -1;
+    int32_t closestSqDist = 131072 + ent->cSquared; //((16<<4)^2+(16<<4)^2+entity's cSquared)if it's further than this, there's no way it's a collision.
+    for (int32_t i = xIdx; i <= xIdx + 1; i++)
+    {
+        for (int32_t j = yIdx; j <= yIdx + 1; j++)
+        {
+            if (i >= 0 && i < TILE_FIELD_WIDTH && j >= 0 && j < TILE_FIELD_HEIGHT)
+            {
+                if (self->gameData->tilemap.fgTiles[i][j] >= 1)
+                {
+                    // Initial circle check for preselecting the closest dirt tile
+                    int32_t sqDist = sqMagVec2d(
+                        subVec2d(self->pos, (vec_t){i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE,
+                                                    j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE}));
+                    if (sqDist < closestSqDist)
+                    {
+                        // Good candidate found!
+                        best_i        = i;
+                        best_j        = j;
+                        closestSqDist = sqDist;
+                    }
+                }
+            }
+        }
+    }
+    if (best_i > -1)
+    {
+        vec_t tilePos = {best_i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE,
+                         best_j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
+        // AABB-AABB collision detection begins here
+        // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
+        if (self->pos.x + 192 > tilePos.x - BITSHIFT_HALF_TILE
+            && self->pos.x - 192 < tilePos.x + BITSHIFT_HALF_TILE
+            && self->pos.y + 192 > tilePos.y - BITSHIFT_HALF_TILE
+            && self->pos.y - 192 < tilePos.y + BITSHIFT_HALF_TILE)
+        {
+            /////////////////////////
+            // Collision detected! //
+            /////////////////////////
+            // Resolve garbotnik's position somewhat based on his position previously.
+            vec_t normal = subVec2d(gData->previousPos, tilePos);
+            // Snap the previous frame offset to an orthogonal direction.
+            if ((normal.x < 0 ? -normal.x : normal.x) > (normal.y < 0 ? -normal.y : normal.y))
+            {
+                if (normal.x > 0)
+                {
+                    normal.x               = 1;
+                    normal.y               = 0;
+                    self->pos.x = tilePos.x + 192 + BITSHIFT_HALF_TILE;
+                }
+                else
+                {
+                    normal.x               = -1;
+                    normal.y               = 0;
+                    self->pos.x = tilePos.x - 192 - BITSHIFT_HALF_TILE;
+                }
+            }
+            else
+            {
+                if (normal.y > 0)
+                {
+                    normal.x               = 0;
+                    normal.y               = 1;
+                    self->pos.y = tilePos.y + 192 + BITSHIFT_HALF_TILE;
+                }
+                else
+                {
+                    normal.x               = 0;
+                    normal.y               = -1;
+                    self->pos.y = tilePos.y - 192 - BITSHIFT_HALF_TILE;
+                }
+            }
+
+            // printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
+            if (dotVec2d(gData->vel, normal)
+                < -95) // velocity angle is opposing garbage normal vector. Tweak number for different threshold.
+            {
+                ///////////////////////
+                // digging detected! //
+                ///////////////////////
+
+                // crumble test
+                //  uint32_t* val = calloc(2,sizeof(uint32_t));
+                //  val[0] = 5;
+                //  val[1] = 3;
+                //  push(self->gameData->unsupported, (void*)val);
+
+                // Update the dirt by decrementing it.
+                self->gameData->tilemap.fgTiles[best_i][best_j] -= 1;
+
+                if(self->gameData->tilemap.fgTiles[best_i][best_j] == 0 ||
+                    self->gameData->tilemap.fgTiles[best_i][best_j] == 1 ||
+                    self->gameData->tilemap.fgTiles[best_i][best_j] == 4){
+                    // Create a crumble animation
+                    bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                                    tilePos.x >> DECIMAL_BITS,
+                                    tilePos.y >> DECIMAL_BITS);
+                }
+                else{
+                    // Create a bump animation
+                    bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
+                                    ((self->pos.x + tilePos.x)/2) >> DECIMAL_BITS,
+                                    ((self->pos.y + tilePos.y)/2) >> DECIMAL_BITS);
+                }
+
+
+                
+
+                ////////////////////////////////
+                // Mirror garbotnik's velocity//
+                ////////////////////////////////
+                // Reflect the velocity vector along the normal
+                // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+                printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(gData->vel));
+                int32_t bounceScalar = sqMagVec2d(gData->vel) / -11075 + 3;
+                if (bounceScalar > 3)
+                {
+                    bounceScalar = 3;
+                }
+                else if (bounceScalar < 1)
+                {
+                    bounceScalar = 1;
+                }
+                gData->vel = mulVec2d(
+                    subVec2d(gData->vel, mulVec2d(normal, (2 * dotVec2d(gData->vel, normal)))),
+                    bounceScalar);
+
+                /////////////////////////////////
+                // check neighbors for stability//
+                /////////////////////////////////
+                // for(uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
+                // {
+                //     uint32_t check_x = best_i + self->gameData->neighbors[neighborIdx][0];
+                //     uint32_t check_y = best_j + self->gameData->neighbors[neighborIdx][1];
+                //     //Check if neighbor is in bounds of map (also not on left, right, or bottom, perimiter) and if it
+                //     is dirt. if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y <
+                //     TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
+                //     {
+                //         uint32_t* val = calloc(4, sizeof(uint32_t));
+                //         val[0] = check_x;
+                //         val[1] = check_y;
+                //         val[2] = 1; //1 is for foreground. 0 is midground.
+                //         val[3] = 0; //f value used in pathfinding.
+                //         push(self->gameData->pleaseCheck, (void*)val);
+                //     }
+                // }
+            }
+        }
+    }
+
+}
+
 wsg_t (*bb_GetMidgroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[120]
 {
     if (tilemap->mgTiles[i][j] > 4)
