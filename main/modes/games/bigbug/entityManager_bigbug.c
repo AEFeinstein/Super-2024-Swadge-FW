@@ -121,42 +121,44 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
-        bb_entity_t currentEntity = entityManager->entities[i];
+        bb_entity_t* currentEntity = &entityManager->entities[i];
         
-        if (currentEntity.active)
+        if (currentEntity->active)
         {
-            // printf("hey %d\n", currentEntity.spriteIndex);
-            if (currentEntity.drawFunction != NULL){
-                currentEntity.drawFunction(entityManager, camera, &currentEntity);
+            // printf("hey %d\n", currentEntity->spriteIndex);
+            if (currentEntity->drawFunction != NULL){
+                currentEntity->drawFunction(entityManager, camera, &currentEntity);
             }
             else{
-                drawWsgSimple(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentAnimationFrame],
-                    (currentEntity.pos.x >> SUBPIXEL_RESOLUTION)
-                        - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
-                    (currentEntity.pos.y >> SUBPIXEL_RESOLUTION)
-                        - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y);
+                drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
+                    (currentEntity->pos.x >> SUBPIXEL_RESOLUTION)
+                        - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
+                    (currentEntity->pos.y >> SUBPIXEL_RESOLUTION)
+                        - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
+
+                printf("sprite %d frame %d\n", currentEntity->spriteIndex, currentEntity->currentAnimationFrame);
             }
             
 
-            if(entityManager->entities[i].paused == false){
+            if(currentEntity->paused == false){
                 //increment the frame counter
-                entityManager->entities[i].animationTimer += 1;
-                entityManager->entities[i].currentAnimationFrame = entityManager->entities[i].animationTimer / entityManager->entities[i].gameFramesPerAnimationFrame;
+                currentEntity->animationTimer += 1;
+                currentEntity->currentAnimationFrame = currentEntity->animationTimer / currentEntity->gameFramesPerAnimationFrame;
                 //if frame reached the end of the animation
-                if (entityManager->entities[i].currentAnimationFrame
-                    >= entityManager->sprites[entityManager->entities[i].spriteIndex].numFrames)
+                if (currentEntity->currentAnimationFrame
+                    >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
                 {
-                    switch (entityManager->entities[i].type)
+                    switch (currentEntity->type)
                     {
                     case ONESHOT_ANIMATION:
                         //destroy the entity
-                        bb_destroyEntity(&entityManager->entities[i], false);
+                        bb_destroyEntity(&currentEntity, false);
                         break;
                     
                     case LOOPING_ANIMATION:
                         //reset the animation
-                        entityManager->entities[i].animationTimer = 0;
-                        entityManager->entities[i].currentAnimationFrame = 0;
+                        currentEntity->animationTimer = 0;
+                        currentEntity->currentAnimationFrame = 0;
                         break;
 
                     default:
@@ -259,7 +261,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case ROCKET_ANIM:
             bb_rocketData_t* rData = calloc(1, sizeof(bb_rocketData_t));
             rData->flame = NULL;
-            rData->yVel = 200;
+            rData->yVel = 240;
             entity->data = rData;
 
             entity->updateFunction = &bb_updateRocketLanding;
