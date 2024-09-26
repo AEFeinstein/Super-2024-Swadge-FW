@@ -16,6 +16,14 @@
 #include "cg_SparDraw.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define STAT_BAR_WIDTH 4
+#define STAT_BAR_BASE  200
+#define PADDING        6
+
+//==============================================================================
 // Const Strings
 //==============================================================================
 
@@ -29,7 +37,7 @@ static const char sparSplashScreenPrompt[] = "Press any button to continue!";
 static void cg_drawSparField(cGrove_t* cg);
 static void cg_drawSparBGObject(cGrove_t* cg, int64_t elapsedUs);
 static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs);
-static void cg_drawSparUI(cGrove_t* cg);
+static void cg_drawSparChowaUI(cGrove_t* cg);
 
 //==============================================================================
 // Functions
@@ -64,6 +72,8 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
     cg_drawSparField(cg);
     cg_drawSparBGObject(cg, elapsedUs);
 
+    // TODO: Draw chowa sparring
+
     // Draw title text
     // Get the text offset
     int16_t xOff = (TFT_WIDTH - textWidth(&cg->spar.sparTitleFont, sparSplashScreen)) / 2;
@@ -79,7 +89,7 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
     cg->spar.timer += elapsedUs;
     if (cg->spar.timer >= 500000)
     {
-        cg->spar.timer = 0;
+        cg->spar.timer  = 0;
         cg->spar.toggle = !cg->spar.toggle;
     }
     if (cg->spar.toggle)
@@ -164,7 +174,11 @@ void cg_drawSparRecord(cGrove_t* cg)
     }
 }
 
-
+/**
+ * @brief Draws the match initialization screen
+ *
+ * @param cg Game data
+ */
 void cg_drawSparMatchSetup(cGrove_t* cg)
 {
     // Provide options for Tournament, Single match, or online
@@ -172,11 +186,40 @@ void cg_drawSparMatchSetup(cGrove_t* cg)
     // Secondary selection. chooses a specific tournament, match, or online.
 
     // Allow a player to look at the tutorial
-
 }
 
 void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
 {
+    // BG
+    cg_drawSparField(cg);
+
+    // Draw Chowa
+    cg_drawSparChowa(cg, elapsedUs);
+
+    // Draw BG objects
+    cg_drawSparBGObject(cg, elapsedUs);
+
+    // Draw UI
+    // Buffer
+    char buffer[32];
+
+    // Draw match title
+    snprintf(buffer, sizeof(buffer) - 1, "%s, round %d", cg->spar.match.matchName, cg->spar.match.round);
+    drawText(&cg->spar.sparRegFont, c000, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2, 8);
+
+    // Time
+    paletteColor_t color = c000;
+    if (cg->spar.match.maxTime <= (cg->spar.match.timer + 10))
+    {
+        color = c500;
+    }
+    snprintf(buffer, sizeof(buffer) - 1, "Time: %d", cg->spar.match.timer);
+    drawText(&cg->spar.sparRegFont, color, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2, 24);
+
+    // Draw Chowa UI
+    cg_drawSparChowaUI(cg);
+
+    // If paused, draw pause text
 }
 
 /**
@@ -190,6 +233,12 @@ static void cg_drawSparField(cGrove_t* cg)
     drawWsgSimple(&cg->spar.dojoBG, 0, 0);
 }
 
+/**
+ * @brief Draws the background objects
+ *
+ * @param cg Game data
+ * @param elapsedUs Time since last frame
+ */
 static void cg_drawSparBGObject(cGrove_t* cg, int64_t elapsedUs)
 {
     // FIXME: Do bounce thing
@@ -206,12 +255,88 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
     // - Nametags / "You!"
 }
 
-static void cg_drawSparUI(cGrove_t* cg)
+static void cg_drawSparChowaUI(cGrove_t* cg)
 {
-    // Draw UI
-    // - Stamina bar
-    // - Timer / Rounds
-    // - Moves selection
-    // - Dialogue boxes
-    // - "Ready", "Set" type bubbles
+    // Player 1
+    switch (cg->spar.match.chowaData[0].currState)
+    {
+        case CG_UNREADY:
+        {
+            // Draw stamina bar
+            fillDisplayArea(PADDING - 1, STAT_BAR_BASE - cg->spar.match.chowaData[0].maxStamina - 1,
+                            PADDING + STAT_BAR_WIDTH + 1, STAT_BAR_BASE + 1, c000);
+            fillDisplayArea(PADDING, STAT_BAR_BASE - cg->spar.match.chowaData[0].stamina, PADDING + STAT_BAR_WIDTH,
+                            STAT_BAR_BASE, c550);
+            // Draw Readiness bar
+            fillDisplayArea((2 * PADDING) + STAT_BAR_WIDTH - 1, STAT_BAR_BASE - 128, 2 * (PADDING + STAT_BAR_WIDTH) + 1,
+                            STAT_BAR_BASE + 1, c000);
+            fillDisplayArea((2 * PADDING) + STAT_BAR_WIDTH,
+                            STAT_BAR_BASE - (cg->spar.match.chowaData[0].readiness >> 1),
+                            2 * (PADDING + STAT_BAR_WIDTH), STAT_BAR_BASE, c050);
+
+            // TODO: Draw attack icon
+            switch (cg->spar.match.chowaData[0].currMove)
+            {
+                case CG_SPAR_PUNCH:
+                {
+                    break;
+                }
+                case CG_SPAR_FAST_PUNCH:
+                {
+                    break;
+                }
+                case CG_SPAR_KICK:
+                {
+                    break;
+                }
+                case CG_SPAR_JUMP_KICK:
+                {
+                    break;
+                }
+                case CG_SPAR_HEADBUTT:
+                {
+                    break;
+                }
+                case CG_SPAR_DODGE:
+                {
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
+    // Player 2
+    switch (cg->spar.match.chowaData[1].currState)
+    {
+        case CG_UNREADY:
+        {
+            // Draw stamina bar
+
+            fillDisplayArea(TFT_WIDTH - (PADDING + STAT_BAR_WIDTH + 1),
+                            STAT_BAR_BASE - cg->spar.match.chowaData[1].maxStamina - 1, TFT_WIDTH - (PADDING - 1),
+                            STAT_BAR_BASE + 1, c000);
+            fillDisplayArea(TFT_WIDTH - (PADDING + STAT_BAR_WIDTH), STAT_BAR_BASE - cg->spar.match.chowaData[1].stamina,
+                            TFT_WIDTH - PADDING, STAT_BAR_BASE, c550);
+            // Draw Readiness bar
+            fillDisplayArea(TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH) + 1), STAT_BAR_BASE - 128,
+                            TFT_WIDTH - ((2 * PADDING) + STAT_BAR_WIDTH - 1), STAT_BAR_BASE + 1, c000);
+            fillDisplayArea(TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH)),
+                            STAT_BAR_BASE - (cg->spar.match.chowaData[1].readiness >> 1),
+                            TFT_WIDTH - ((2 * PADDING) + STAT_BAR_WIDTH), STAT_BAR_BASE, c050);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 }

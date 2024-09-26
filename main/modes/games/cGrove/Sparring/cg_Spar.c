@@ -14,6 +14,7 @@
 //==============================================================================
 
 #include "cg_Spar.h"
+#include "cg_Match.h"
 #include "cg_SparDraw.h"
 
 //==============================================================================
@@ -152,11 +153,23 @@ void cg_runSpar(int64_t elapsedUs)
         case CG_SPAR_SCHEDULE:
         {
             cg_drawSparMatchSetup(cg);
+            // FIXME: don't immediately drop through
+            if (true)
+            {
+                cg->spar.state = CG_SPAR_MATCH;
+                cg_initMatch(cg, "TestMatch", &cg->chowa[0], &cg->chowa[1], 0, 20);
+            }
             break;
         }
         case CG_SPAR_MATCH:
         {
+            cg_runSparMatch(cg, elapsedUs);
             cg_drawSparMatch(cg, elapsedUs);
+            break;
+        }
+        case CG_SPAR_MATCH_RESULTS:
+        {
+            // Show the final results
             break;
         }
         case CG_SPAR_BATTLE_RECORD:
@@ -287,16 +300,16 @@ static void sparLoadBattleRecords()
     for (int32_t idx = 0; idx < CG_SPAR_MAX_RECORDS; idx++)
     {
         char buff[32];
-        snprintf(buff, sizeof(buff) - 1, "Match %d", idx);
+        snprintf(buff, sizeof(buff) - 1, "Match %" PRId32, idx);
         strcpy(cg->spar.sparRecord[idx].matchTitle, buff);
         for (int32_t i = 0; i < 2; i++)
         {
-            snprintf(buff, sizeof(buff) - 1, "Player %d", i);
+            snprintf(buff, sizeof(buff) - 1, "Player %" PRId32, i);
             strcpy(cg->spar.sparRecord[idx].playerNames[i], buff);
         }
         for (int32_t i = 0; i < 6; i++)
         {
-            snprintf(buff, sizeof(buff) - 1, "TestChowa%d", i);
+            snprintf(buff, sizeof(buff) - 1, "TestChowa%" PRId32, i);
             strcpy(cg->spar.sparRecord[idx].chowaNames[i], buff);
             cg->spar.sparRecord[idx].colorType[i] = i;
         }

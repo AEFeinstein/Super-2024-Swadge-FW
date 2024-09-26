@@ -100,12 +100,6 @@ typedef enum
 // Structs ==============================
 typedef struct
 {
-    cgChowaStat_t statIdx; ///< Used to identify, get strings, etc
-    uint16_t value;        ///< Current value of the stat (0-65535)
-} cgSkill_t;
-
-typedef struct
-{
     // System
     bool active; ///< If Chowa slot is being used. Only set to true if data has been set.
 
@@ -228,9 +222,30 @@ typedef enum
     CG_SPAR_MENU,
     CG_SPAR_SCHEDULE,
     CG_SPAR_MATCH,
+    CG_SPAR_MATCH_RESULTS,
     CG_SPAR_TUTORIAL,
     CG_SPAR_BATTLE_RECORD,
 } cgSparState_t;
+
+typedef enum
+{
+    CG_UNREADY,
+    CG_READY,
+    CG_RESOLVING,
+    CG_EXHAUSTED,
+    CG_WIN,
+    CG_LOSE,
+} cgMatchChowaState_t;
+
+typedef enum
+{
+    CG_SPAR_PUNCH,
+    CG_SPAR_KICK,
+    CG_SPAR_FAST_PUNCH,
+    CG_SPAR_JUMP_KICK,
+    CG_SPAR_HEADBUTT,
+    CG_SPAR_DODGE,
+} cgRPSState_t;
 
 // Structs ==============================
 typedef struct
@@ -243,12 +258,30 @@ typedef struct
 
 typedef struct
 {
+    cgChowa_t* chowa;              ///< Chowa object
+    cgMatchChowaState_t currState; ///< Current Chowa state
+    cgRPSState_t currMove;         ///< Current selected move
+    int16_t maxStamina;            ///< Max stamina of each Chowa
+    int16_t stamina;               ///< Stamina of both Chowa for stamina bars
+    int16_t readiness;             ///< How ready each Chowa is
+    int32_t updateTimer;           ///< Used for readiness updates
+    bool animating;                ///< If the Chowa is being animated
+} cgSparChowaData_t;
+
+typedef struct
+{
+    // State
     char matchName[CG_MAX_STR_LEN]; ///< Name of the current match
-    cgChowa_t* participants;        ///< Chowa data
-    int16_t stamina[2];             ///< Stamina of both Chowa for stamina bars
-    int16_t readiness[2];           ///< How ready each CHowa is
+    cgSparChowaData_t chowaData[2]; ///< Extended Chowa data
     int8_t round;                   ///< The round of the fight
-    int16_t timer;                  ///< Round timer
+    bool paused;                    ///< If the match is paused
+    bool online;                    ///< If match is online
+    bool done;                      ///< If match if done
+
+    // Match time
+    int64_t usTimer; ///< Microsecond timer
+    int16_t timer;   ///< Round timer
+    int16_t maxTime; ///< Max time allowed for the round
 } cgMatch_t;
 
 typedef struct
