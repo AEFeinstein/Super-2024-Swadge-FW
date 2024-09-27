@@ -65,10 +65,13 @@ void cg_initMatch(cGrove_t* cg, char* matchName, cgChowa_t* player1Chowa, cgChow
         cg->spar.match.chowaData[i].currMove  = CG_SPAR_PUNCH;
         cg->spar.match.chowaData[i].maxStamina
             = CG_MIN_STAMINA + (cg->spar.match.chowaData[i].chowa->stats[CG_STAMINA] >> 1);
-        cg->spar.match.chowaData[i].stamina     = cg->spar.match.chowaData[i].maxStamina;
+        cg->spar.match.chowaData[i].stamina     = 0; // FIXME: cg->spar.match.chowaData[i].maxStamina;
         cg->spar.match.chowaData[i].readiness   = 0;
         cg->spar.match.chowaData[i].readiness   = 0;
         cg->spar.match.chowaData[i].updateTimer = 0;
+
+        cg->spar.match.chowaData[i].chowa->stats[CG_SPEED] = 128;
+        cg->spar.match.chowaData[i].chowa->stats[CG_STAMINA] = 128;
     }
 }
 
@@ -157,7 +160,6 @@ static void cg_sparPlayerInput(cGrove_t* cg)
             {
                 if (!cg->spar.match.paused && evt.down && !(evt.button & PB_SELECT || evt.button & PB_START))
                 {
-                    // FIXME: Change so you cannot spam all buttons or it will start taking away from readiness
                     // Increase readiness
                     cg->spar.match.chowaData[0].readiness += 1;
 
@@ -224,10 +226,32 @@ static void cg_sparPlayerInput(cGrove_t* cg)
                         }
                     }
                 }
+                break;
             }
             case CG_EXHAUSTED:
             {
                 // Steadily regain stamina and readiness to stand up
+                if (!cg->spar.match.paused && evt.down && !(evt.button & PB_SELECT || evt.button & PB_START))
+                {
+                    // Change action based on
+                    switch (evt.button)
+                    {
+                        case PB_A:
+                        {
+                            cg->spar.match.chowaData[0].readiness += 1;
+                            break;
+                        }
+                        case PB_B:
+                        {
+                            cg->spar.match.chowaData[0].stamina += 1;
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                    }
+                }
                 break;
             }
             default:
@@ -278,11 +302,55 @@ static void cg_sparChowaState(cGrove_t* cg, int64_t elapsedUs)
             case CG_READY:
             {
                 // Runs timer until automatically resolve
+                cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
+                int32_t readinessTick = CG_SECOND;
+                if (cg->spar.match.chowaData[idx].updateTimer >= readinessTick)
+                {
+                    cg->spar.match.chowaData[idx].updateTimer = 0;
+                    cg->spar.match.chowaData[idx].stamina -= 24;
+                    // TODO: Resolve 
+                    if (cg->spar.match.chowaData[idx].stamina <= 0)
+                    {
+                        cg->spar.match.chowaData[idx].currState = CG_EXHAUSTED;
+                        cg->spar.match.chowaData[idx].updateTimer = 0;
+                        cg->spar.match.chowaData[idx].readiness   = 200;
+                    } else {
+                        cg->spar.match.chowaData[idx].currState = CG_UNREADY;
+                        cg->spar.match.chowaData[idx].updateTimer = 0;
+                        cg->spar.match.chowaData[idx].readiness   = 0;
+                    }
+                }
                 break;
             }
             case CG_EXHAUSTED:
             {
                 // Steadily regain stamina and readiness to stand up
+                // Steadily becomes more ready
+                cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
+                int32_t readinessTick
+                    = CG_SECOND  - (CG_STAMINA_SCALAR * cg->spar.match.chowaData[idx].chowa->stats[CG_SPEED]);
+                if (cg->spar.match.chowaData[idx].updateTimer >= readinessTick)
+                {
+                    cg->spar.match.chowaData[idx].updateTimer = 0;
+                    cg->spar.match.chowaData[idx].readiness += 1;
+                    cg->spar.match.chowaData[idx].stamina += 1;
+                }
+                // Check if ready
+                if (cg->spar.match.chowaData[idx].readiness > 255
+                    || cg->spar.match.chowaData[idx].stamina >= cg->spar.match.chowaData[idx].maxStamina)
+                {
+                    if (cg->spar.match.chowaData[idx].stamina > cg->spar.match.chowaData[idx].maxStamina)
+                    {
+                        cg->spar.match.chowaData[idx].stamina = cg->spar.match.chowaData[idx].maxStamina;
+                    }
+                    cg->spar.match.chowaData[idx].readiness   = 0;
+                    cg->spar.match.chowaData[idx].updateTimer = 0;
+                    cg->spar.match.chowaData[idx].currState   = CG_UNREADY;
+                }
+                else if (cg->spar.match.chowaData[idx].readiness < 0)
+                {
+                    cg->spar.match.chowaData[idx].readiness = 0;
+                }
                 break;
             }
             default:
