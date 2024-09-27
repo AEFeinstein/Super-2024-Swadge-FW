@@ -65,7 +65,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     printf("bump numFrames %d\n", entityManager->sprites[BUMP_ANIM].numFrames);
 
     bb_sprite_t* rocketSprite    = bb_loadSprite("rocket", 35, &entityManager->sprites[ROCKET_ANIM]);
-    rocketSprite->originX        = 32;
+    rocketSprite->originX        = 33;
     rocketSprite->originY        = 67;
     printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
 
@@ -264,6 +264,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             rData->flame = NULL;
             rData->yVel = 240;
             entity->data = rData;
+            entity->cSquared = 243968;
 
             entity->updateFunction = &bb_updateRocketLanding;
             entityManager->viewEntity = entity;
