@@ -11,6 +11,8 @@
 #define HIT_BAR          16
 #define GAME_NOTE_RADIUS 8
 
+#define SH_TEXT_TIME 500000
+
 //==============================================================================
 // Const Variables
 //==============================================================================
@@ -19,13 +21,23 @@ static const paletteColor_t colors_e[] = {c020, c004, c420, c222};
 static const buttonBit_t noteToBtn_e[] = {PB_LEFT, PB_RIGHT, PB_B, PB_A};
 static const int32_t btnToNote_e[]     = {-1, -1, 0, 1, 3, 2};
 
-static const paletteColor_t colors_m[] = {c020, c400, c550, c004, c420, c222};
-static const buttonBit_t noteToBtn_m[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
-static const int32_t btnToNote_m[]     = {2, 1, 0, 3, 5, 4};
+static const paletteColor_t colors_m[] = {c020, c550, c004, c420, c222};
+static const buttonBit_t noteToBtn_m[] = {PB_LEFT, PB_UP, PB_RIGHT, PB_B, PB_A};
+static const int32_t btnToNote_m[]     = {1, -1, 0, 2, 4, 3};
 
 static const paletteColor_t colors_h[] = {c020, c400, c550, c004, c420, c222};
 static const buttonBit_t noteToBtn_h[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
 static const int32_t btnToNote_h[]     = {2, 1, 0, 3, 5, 4};
+
+static const char hit_fantastic[] = "Fantastic";
+static const char hit_marvelous[] = "Marvelous";
+static const char hit_great[]     = "Great";
+static const char hit_decent[]    = "Decent";
+static const char hit_way_off[]   = "Way Off";
+static const char hit_miss[]      = "Miss";
+
+static const char hit_early[] = "Early";
+static const char hit_late[]  = "Late";
 
 //==============================================================================
 // Functions
@@ -65,10 +77,26 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
     // Load the MIDI file
     loadMidiFile(midi, &sh->midiSong, true);
     globalMidiPlayerPlaySong(&sh->midiSong, MIDI_BGM);
+
+    // Seek to load the tempo
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiSeek(player, 1000);
+    sh->tempo = player->tempo;
+
+    // Return to the beginning of the song
     globalMidiPlayerPauseAll();
+    midiSeek(player, 0);
 
     // Set the lead-in timer
     sh->leadInUs = TRAVEL_TIME_US;
+
+    // Start with one fret line at t=0
+    sh->lastFretLineUs = 0;
+
+    shFretLine_t* fretLine = heap_caps_calloc(1, sizeof(shFretLine_t), MALLOC_CAP_SPIRAM);
+    fretLine->headPosY     = TFT_HEIGHT + 1;
+    fretLine->headTimeUs   = sh->lastFretLineUs;
+    push(&sh->fretLines, fretLine);
 }
 
 /**
@@ -107,7 +135,7 @@ uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
         {
             sh->chartNotes[nIdx].note &= 0x7F;
 
-            // Use the hold time to see when this note ends
+            // Use the hold time to see how long this note is held
             sh->chartNotes[nIdx].hold = (data[dIdx + 0] << 8) | //
                                         (data[dIdx + 1] << 0);
             dIdx += 2;
@@ -137,6 +165,12 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         }
     }
 
+    // Run a timer for pop-up text
+    if (sh->textTimerUs > 0)
+    {
+        sh->textTimerUs -= elapsedUs;
+    }
+
     // Get a reference to the player
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
 
@@ -151,6 +185,18 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         songUs = SAMPLES_TO_US(player->sampleCount);
     }
 
+    // Generate fret lines based on tempo
+    int32_t nextFretLineUs = sh->lastFretLineUs + sh->tempo;
+    if (songUs + TRAVEL_TIME_US >= nextFretLineUs)
+    {
+        sh->lastFretLineUs += sh->tempo;
+
+        shFretLine_t* fretLine = heap_caps_calloc(1, sizeof(shFretLine_t), MALLOC_CAP_SPIRAM);
+        fretLine->headPosY     = TFT_HEIGHT + 1;
+        fretLine->headTimeUs   = sh->lastFretLineUs;
+        push(&sh->fretLines, fretLine);
+    }
+
     // Check events until one hasn't happened yet or the song ends
     while (sh->currentChartNote < sh->numChartNotes)
     {
@@ -161,15 +207,12 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         // Check if the game note should be spawned now to reach the hit bar in time
         if (songUs + TRAVEL_TIME_US >= nextEventUs)
         {
-            // TODO math is getting weird somewhere, maybe use ms, not us?
-            printf("EVT: %d\n", nextEventUs);
-
             // Spawn an game note
             shGameNote_t* ni = heap_caps_calloc(1, sizeof(shGameNote_t), MALLOC_CAP_SPIRAM);
             ni->note         = sh->chartNotes[sh->currentChartNote].note;
 
             // Start the game note offscreen
-            ni->headPosY = TFT_HEIGHT;
+            ni->headPosY = TFT_HEIGHT + (GAME_NOTE_RADIUS / 2);
 
             // Save when the note should be hit
             ni->headTimeUs = nextEventUs;
@@ -178,17 +221,18 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             if (sh->chartNotes[sh->currentChartNote].hold)
             {
                 // Start the tail offscreen too
-                ni->tailPosY = TFT_HEIGHT;
+                ni->tailPosY = TFT_HEIGHT + (GAME_NOTE_RADIUS / 2);
 
                 // Save when the tail ends
-                int32_t tailTick
-                    = sh->chartNotes[sh->currentChartNote].tick + sh->chartNotes[sh->currentChartNote].hold;
+                int32_t tailTick = sh->chartNotes[sh->currentChartNote].tick + //
+                                   sh->chartNotes[sh->currentChartNote].hold;
                 ni->tailTimeUs = MIDI_TICKS_TO_US(tailTick, player->tempo, player->reader.division);
             }
             else
             {
                 // No tail
-                ni->tailPosY = -1;
+                ni->tailPosY   = -1;
+                ni->tailTimeUs = -1;
             }
 
             // Push into the list of game notes
@@ -204,10 +248,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         }
     }
 
-    // Track if an game note was removed
-    bool removed = false;
-
-    // Run all the game note timers
+    // Update note positions based on song position
     node_t* gameNoteNode = sh->gameNotes.first;
     while (gameNoteNode)
     {
@@ -215,7 +256,18 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         shGameNote_t* gameNote = gameNoteNode->val;
 
         // Update note position
-        gameNote->headPosY = (((TFT_HEIGHT - HIT_BAR) * (gameNote->headTimeUs - songUs)) / TRAVEL_TIME_US) + HIT_BAR;
+        if (gameNote->held)
+        {
+            // Held notes stick at the hit bar
+            gameNote->headPosY = HIT_BAR;
+        }
+        else
+        {
+            // Moving notes follow this formula
+            gameNote->headPosY
+                = (((TFT_HEIGHT - HIT_BAR) * (gameNote->headTimeUs - songUs)) / TRAVEL_TIME_US) + HIT_BAR;
+        }
+
         // Update tail position if there is a hold
         if (-1 != gameNote->tailPosY)
         {
@@ -223,71 +275,77 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
                 = (((TFT_HEIGHT - HIT_BAR) * (gameNote->tailTimeUs - songUs)) / TRAVEL_TIME_US) + HIT_BAR;
         }
 
-        // TODO remove note
-
-        // Run this game note's timer
-        // gameNote->timer += elapsedUs;
-        // while (gameNote->timer >= TRAVEL_US_PER_PX)
-        // {
-        //     gameNote->timer -= TRAVEL_US_PER_PX;
-
-        //     bool shouldRemove = false;
-
-        //     // Move the whole game note up
-        //     if (!gameNote->held)
-        //     {
-        //         gameNote->headPosY--;
-        //         if (gameNote->tailPosY >= 0)
-        //         {
-        //             gameNote->tailPosY--;
-        //         }
-
-        //         // If it's off screen
-        //         if (gameNote->headPosY < -GAME_NOTE_RADIUS && (gameNote->tailPosY < 0))
-        //         {
-        //             // Mark it for removal
-        //             shouldRemove = true;
-        //         }
-        //     }
-        //     else // The game note is being held
-        //     {
-        //         // Only move the tail position
-        //         if (gameNote->tailPosY >= HIT_BAR)
-        //         {
-        //             gameNote->tailPosY--;
-        //         }
-
-        //         // If the tail finished
-        //         if (gameNote->tailPosY < HIT_BAR)
-        //         {
-        //             // Mark it for removal
-        //             shouldRemove = true;
-        //         }
-        //     }
-
-        //     // If the game note should be removed
-        //     if (shouldRemove)
-        //     {
-        //         // Remove this game note
-        //         free(gameNoteNode->val);
-        //         removeEntry(&sh->gameNotes, gameNoteNode);
-
-        //         // Stop the while timer loop
-        //         removed = true;
-        //         break;
-        //     }
-        // }
-
-        // If an game note was removed
-        if (removed)
+        // Check if the note should be removed
+        bool shouldRemove = false;
+        if (-1 != gameNote->tailPosY)
         {
-            // Stop iterating through notes
-            break;
+            // There is a tail
+            if (gameNote->held)
+            {
+                if (gameNote->tailPosY < HIT_BAR)
+                {
+                    // Note is currently being held, tail reached the bar
+                    shouldRemove = true;
+                }
+            }
+            else if (gameNote->tailPosY < 0)
+            {
+                // Note is not held, tail is offscreen
+                shouldRemove = true;
+            }
+        }
+        else if (gameNote->headPosY < -GAME_NOTE_RADIUS)
+        {
+            // There is no tail and the whole note is offscreen
+            shouldRemove = true;
+        }
+
+        // If the game note should be removed
+        if (shouldRemove)
+        {
+            // Save the node to remove before iterating
+            node_t* toRemove = gameNoteNode;
+
+            // Iterate to the next
+            gameNoteNode = gameNoteNode->next;
+
+            // Remove the game note
+            free(toRemove->val);
+            removeEntry(&sh->gameNotes, toRemove);
+
+            // Note that it was missed
+            sh->hitText = hit_miss;
+            // Set a timer to not show the text forever
+            sh->textTimerUs = SH_TEXT_TIME;
         }
         else
         {
             // Iterate to the next
             gameNoteNode = gameNoteNode->next;
+        }
+    }
+
+    // Iterate through fret lines
+    node_t* fretLineNode = sh->fretLines.first;
+    while (fretLineNode)
+    {
+        shFretLine_t* fretLine = fretLineNode->val;
+
+        // Update positions
+        fretLine->headPosY = (((TFT_HEIGHT - HIT_BAR) * (fretLine->headTimeUs - songUs)) / TRAVEL_TIME_US) + HIT_BAR;
+
+        // Remove if off screen
+        if (fretLine->headPosY < 0)
+        {
+            node_t* toRemove = fretLineNode;
+            fretLineNode     = fretLineNode->next;
+            free(toRemove->val);
+            removeEntry(&sh->fretLines, toRemove);
+        }
+        else
+        {
+            // Iterate normally
+            fretLineNode = fretLineNode->next;
         }
     }
 }
@@ -301,6 +359,15 @@ void shDrawGame(shVars_t* sh)
 {
     // Clear the display
     clearPxTft();
+
+    // Draw fret lines first
+    node_t* fretLineNode = sh->fretLines.first;
+    while (fretLineNode)
+    {
+        shFretLine_t* fretLine = fretLineNode->val;
+        drawLineFast(0, fretLine->headPosY, TFT_WIDTH, fretLine->headPosY, c111);
+        fretLineNode = fretLineNode->next;
+    }
 
     // Draw the target area
     drawLineFast(0, HIT_BAR, TFT_WIDTH - 1, HIT_BAR, c555);
@@ -341,6 +408,20 @@ void shDrawGame(shVars_t* sh)
         }
     }
 
+    // Draw text
+    if (sh->textTimerUs > 0)
+    {
+        int16_t tWidth = textWidth(&sh->ibm, sh->hitText);
+        drawText(&sh->ibm, c555, sh->hitText, (TFT_WIDTH - tWidth) / 2, 100);
+
+        if ((hit_fantastic != sh->hitText) && (hit_miss != sh->hitText))
+        {
+            tWidth = textWidth(&sh->ibm, sh->timingText);
+            drawText(&sh->ibm, sh->timingText == hit_early ? c335 : c533, sh->timingText, (TFT_WIDTH - tWidth) / 2,
+                     100 + sh->ibm.height + 16);
+        }
+    }
+
     // Set LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
     // for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
@@ -360,10 +441,24 @@ void shDrawGame(shVars_t* sh)
  */
 void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 {
+    // Get the position of the song and when the next event is, in ms
+    int32_t songUs;
+    if (sh->leadInUs > 0)
+    {
+        songUs = -sh->leadInUs;
+    }
+    else
+    {
+        songUs = SAMPLES_TO_US(globalMidiPlayerGet(MIDI_BGM)->sampleCount);
+    }
+
     sh->btnState = evt->state;
 
     if (evt->down)
     {
+        // See if the button press matches a note
+        bool noteMatch = false;
+
         // Iterate through all currently shown game notes
         node_t* gameNoteNode = sh->gameNotes.first;
         while (gameNoteNode)
@@ -373,10 +468,16 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
             // If the game note matches the button
             if (gameNote->note == sh->btnToNote[31 - __builtin_clz(evt->button)])
             {
+                noteMatch = true;
+
                 // Find how off the timing is
-                int32_t pxOff = ABS(HIT_BAR - gameNote->headPosY);
-                int32_t usOff = 0; // TODO pxOff * TRAVEL_US_PER_PX;
-                printf("%" PRId32 " us off\n", usOff);
+                int32_t usOff = (songUs - gameNote->headTimeUs);
+
+                // Set either early or late
+                sh->timingText = (usOff > 0) ? hit_late : hit_early;
+
+                // Find the absolute difference
+                usOff = ABS(usOff);
 
                 // Check if this button hit a note
                 bool gameNoteHit = false;
@@ -384,33 +485,36 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                 // Classify the time off
                 if (usOff < 21500)
                 {
-                    printf("  Fantastic\n");
+                    sh->hitText = hit_fantastic;
                     gameNoteHit = true;
                 }
                 else if (usOff < 43000)
                 {
-                    printf("  Marvelous\n");
+                    sh->hitText = hit_marvelous;
                     gameNoteHit = true;
                 }
                 else if (usOff < 102000)
                 {
-                    printf("  Great\n");
+                    sh->hitText = hit_great;
                     gameNoteHit = true;
                 }
                 else if (usOff < 135000)
                 {
-                    printf("  Decent\n");
+                    sh->hitText = hit_decent;
                     gameNoteHit = true;
                 }
                 else if (usOff < 180000)
                 {
-                    printf("  Way Off\n");
+                    sh->hitText = hit_way_off;
                     gameNoteHit = true;
                 }
                 else
                 {
-                    printf("  MISS\n");
+                    sh->hitText = hit_miss;
                 }
+
+                // Set a timer to not show the text forever
+                sh->textTimerUs = SH_TEXT_TIME;
 
                 // If it was close enough to hit
                 if (gameNoteHit)
@@ -437,6 +541,13 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 
             // Iterate to the next game note
             gameNoteNode = gameNoteNode->next;
+        }
+
+        if (false == noteMatch)
+        {
+            // Total miss
+            sh->hitText = hit_miss;
+            // TODO ignore buttons not used for this difficulty
         }
     }
     else

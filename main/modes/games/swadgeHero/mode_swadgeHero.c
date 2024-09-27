@@ -201,6 +201,10 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
             {
                 free(val);
             }
+            while ((val = pop(&shv->fretLines)))
+            {
+                free(val);
+            }
             break;
         }
         case SH_GAME_END:

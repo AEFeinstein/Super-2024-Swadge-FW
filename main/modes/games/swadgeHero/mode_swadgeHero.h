@@ -59,6 +59,12 @@ typedef struct
 
 typedef struct
 {
+    int32_t headTimeUs;
+    int32_t headPosY;
+} shFretLine_t;
+
+typedef struct
+{
     // Font and menu
     font_t ibm;
     font_t righteous;
@@ -83,11 +89,19 @@ typedef struct
     paletteColor_t const* colors;
     buttonBit_t const* noteToBtn;
     int32_t const* btnToNote;
+    int32_t tempo;
+
+    // Fret line data
+    list_t fretLines;
+    int32_t lastFretLineUs;
 
     // Drawing data
     list_t gameNotes;
     buttonBit_t btnState;
     int32_t numFrets;
+    const char* hitText;
+    const char* timingText;
+    int32_t textTimerUs;
 } shVars_t;
 
 //==============================================================================
