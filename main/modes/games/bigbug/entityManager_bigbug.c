@@ -66,12 +66,12 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* rocketSprite    = bb_loadSprite("rocket", 35, &entityManager->sprites[ROCKET_ANIM]);
     rocketSprite->originX        = 32;
-    rocketSprite->originY        = 108;//80 off from Garbotnik
+    rocketSprite->originY        = 67;
     printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
 
     bb_sprite_t* flameSprite    = bb_loadSprite("flame", 24, &entityManager->sprites[FLAME_ANIM]);
     flameSprite->originX        = 26;
-    flameSprite->originY        = 14;
+    flameSprite->originY        = -27;
     printf("flame numFrames %d\n", entityManager->sprites[FLAME_ANIM].numFrames);
 
     bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, &entityManager->sprites[GARBOTNIK_FLYING]);
@@ -251,6 +251,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case GARBOTNIK_FLYING:
             bb_garbotnikData* gData = calloc(1, sizeof(bb_garbotnikData));
             entity->data = gData;
+            entity->cSquared = 73728;
 
             entity->updateFunction = &bb_updateGarbotnikFlying;
             entity->drawFunction   = &bb_drawGarbotnikFlying;

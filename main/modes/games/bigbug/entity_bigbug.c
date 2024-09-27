@@ -45,7 +45,7 @@ void bb_destroyEntity(bb_entity_t* self, bool respawn)
 void bb_updateRocketLanding(bb_entity_t* self){
     bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
 
-    if(self->pos.y > -3000 && rData->flame == NULL){
+    if(self->pos.y > -3640 && rData->flame == NULL){
         rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
         self->pos.x>>DECIMAL_BITS,
         self->pos.y>>DECIMAL_BITS);

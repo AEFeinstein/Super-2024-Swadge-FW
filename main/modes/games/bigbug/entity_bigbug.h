@@ -70,6 +70,8 @@ struct bb_entity_t
     bb_soundManager_t* soundManager;
     bb_entityManager_t* entityManager;
 
+    int32_t cSquared;//Squared distance from the sprite origin to the corner of the AABB hitbox. Used for collision optimization.
+
     bb_collisionHandler_t collisionHandler;
     bb_tileCollisionHandler_t tileCollisionHandler;
     bb_overlapTileHandler_t overlapTileHandler;
