@@ -282,6 +282,7 @@ LIBRARY_FLAGS += \
 	-static-libstdc++
 else
 LIBRARY_FLAGS += \
+    -framework Carbon \
     -framework Foundation \
 	-framework CoreFoundation \
 	-framework CoreMIDI \
