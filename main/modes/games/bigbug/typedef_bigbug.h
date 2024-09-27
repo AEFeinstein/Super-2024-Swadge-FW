@@ -20,6 +20,7 @@
 typedef struct bb_t bb_t;
 typedef struct bb_entity_t bb_entity_t;
 typedef struct bb_tilemap_t bb_tilemap_t;
+typedef struct bb_hitInfo_t bb_hitInfo_t;
 typedef struct bb_gameData_t bb_gameData_t;
 
 typedef enum

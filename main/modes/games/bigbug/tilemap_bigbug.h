@@ -41,6 +41,15 @@ struct bb_tilemap_t
     int8_t mgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of midground tiles.
 };
 
+struct bb_hitInfo_t
+{
+    bool hit;
+    vec_t pos;//the precise hit point somewhere on an edge of a tile.
+    vec_t normal;
+    int32_t tile_i;
+    int32_t tile_j;
+};
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -52,7 +61,7 @@ void bb_DrawForegroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, con
                                  uint32_t j);
 void bb_DrawMidgroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, uint32_t i,
                                 uint32_t j);
-bool bb_collisionCheck();
+bb_hitInfo_t* bb_collisionCheck();
 wsg_t (*bb_GetMidgroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[120];
 wsg_t (*bb_GetForegroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[240];
 
