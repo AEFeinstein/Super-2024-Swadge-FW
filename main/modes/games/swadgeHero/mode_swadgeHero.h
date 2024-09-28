@@ -89,6 +89,7 @@ typedef struct
     paletteColor_t const* colors;
     buttonBit_t const* noteToBtn;
     int32_t const* btnToNote;
+    int32_t const* noteToIcon;
     int32_t tempo;
 
     // Fret line data
@@ -102,6 +103,7 @@ typedef struct
     const char* hitText;
     const char* timingText;
     int32_t textTimerUs;
+    wsg_t icons[6];
 } shVars_t;
 
 //==============================================================================

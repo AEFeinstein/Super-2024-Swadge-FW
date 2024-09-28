@@ -9,7 +9,8 @@
 //==============================================================================
 
 #define HIT_BAR          16
-#define GAME_NOTE_RADIUS 8
+#define GAME_NOTE_HEIGHT 16
+#define GAME_NOTE_WIDTH  24
 
 #define SH_TEXT_TIME 500000
 
@@ -17,17 +18,20 @@
 // Const Variables
 //==============================================================================
 
-static const paletteColor_t colors_e[] = {c020, c004, c420, c222};
+static const paletteColor_t colors_e[] = {c500, c330, c005, c303};
 static const buttonBit_t noteToBtn_e[] = {PB_LEFT, PB_RIGHT, PB_B, PB_A};
 static const int32_t btnToNote_e[]     = {-1, -1, 0, 1, 3, 2};
+static const int32_t noteToIcon_e[]    = {0, 3, 4, 5};
 
-static const paletteColor_t colors_m[] = {c020, c550, c004, c420, c222};
+static const paletteColor_t colors_m[] = {c500, c033, c330, c005, c303};
 static const buttonBit_t noteToBtn_m[] = {PB_LEFT, PB_UP, PB_RIGHT, PB_B, PB_A};
 static const int32_t btnToNote_m[]     = {1, -1, 0, 2, 4, 3};
+static const int32_t noteToIcon_m[]    = {0, 2, 3, 4, 5};
 
-static const paletteColor_t colors_h[] = {c020, c400, c550, c004, c420, c222};
+static const paletteColor_t colors_h[] = {c500, c050, c033, c330, c005, c303};
 static const buttonBit_t noteToBtn_h[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
 static const int32_t btnToNote_h[]     = {2, 1, 0, 3, 5, 4};
+static const int32_t noteToIcon_h[]    = {0, 1, 2, 3, 4, 5};
 
 static const char hit_fantastic[] = "Fantastic";
 static const char hit_marvelous[] = "Marvelous";
@@ -57,21 +61,24 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
 
     if (6 == sh->numFrets)
     {
-        sh->btnToNote = btnToNote_h;
-        sh->noteToBtn = noteToBtn_h;
-        sh->colors    = colors_h;
+        sh->btnToNote  = btnToNote_h;
+        sh->noteToBtn  = noteToBtn_h;
+        sh->colors     = colors_h;
+        sh->noteToIcon = noteToIcon_h;
     }
     else if (5 == sh->numFrets)
     {
-        sh->btnToNote = btnToNote_m;
-        sh->noteToBtn = noteToBtn_m;
-        sh->colors    = colors_m;
+        sh->btnToNote  = btnToNote_m;
+        sh->noteToBtn  = noteToBtn_m;
+        sh->colors     = colors_m;
+        sh->noteToIcon = noteToIcon_m;
     }
     else if (4 == sh->numFrets)
     {
-        sh->btnToNote = btnToNote_e;
-        sh->noteToBtn = noteToBtn_e;
-        sh->colors    = colors_e;
+        sh->btnToNote  = btnToNote_e;
+        sh->noteToBtn  = noteToBtn_e;
+        sh->colors     = colors_e;
+        sh->noteToIcon = noteToIcon_e;
     }
 
     // Load the MIDI file
@@ -212,7 +219,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             ni->note         = sh->chartNotes[sh->currentChartNote].note;
 
             // Start the game note offscreen
-            ni->headPosY = TFT_HEIGHT + (GAME_NOTE_RADIUS / 2);
+            ni->headPosY = TFT_HEIGHT + (GAME_NOTE_HEIGHT / 2);
 
             // Save when the note should be hit
             ni->headTimeUs = nextEventUs;
@@ -221,7 +228,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             if (sh->chartNotes[sh->currentChartNote].hold)
             {
                 // Start the tail offscreen too
-                ni->tailPosY = TFT_HEIGHT + (GAME_NOTE_RADIUS / 2);
+                ni->tailPosY = TFT_HEIGHT + (GAME_NOTE_HEIGHT / 2);
 
                 // Save when the tail ends
                 int32_t tailTick = sh->chartNotes[sh->currentChartNote].tick + //
@@ -294,7 +301,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
                 shouldRemove = true;
             }
         }
-        else if (gameNote->headPosY < -GAME_NOTE_RADIUS)
+        else if (gameNote->headPosY < -(GAME_NOTE_HEIGHT / 2))
         {
             // There is no tail and the whole note is offscreen
             shouldRemove = true;
@@ -373,18 +380,18 @@ void shDrawGame(shVars_t* sh)
     drawLineFast(0, HIT_BAR, TFT_WIDTH - 1, HIT_BAR, c555);
     for (int32_t i = 0; i < sh->numFrets; i++)
     {
+        int32_t margin  = 4;
         int32_t xOffset = ((i * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
-        drawCircle(xOffset, HIT_BAR, GAME_NOTE_RADIUS + 2, c555);
+        drawRect(xOffset - (GAME_NOTE_WIDTH / 2) - margin, HIT_BAR - (GAME_NOTE_HEIGHT / 2) - margin, //
+                 xOffset + (GAME_NOTE_WIDTH / 2) + margin, HIT_BAR + (GAME_NOTE_HEIGHT / 2) + margin, c555);
     }
 
     // Draw all the game notes
     node_t* gameNoteNode = sh->gameNotes.first;
     while (gameNoteNode)
     {
-        // Draw the game note
         shGameNote_t* gameNote = gameNoteNode->val;
         int32_t xOffset        = ((gameNote->note * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
-        drawCircleFilled(xOffset, gameNote->headPosY, GAME_NOTE_RADIUS, sh->colors[gameNote->note]);
 
         // If there is a tail
         if (gameNote->tailPosY >= 0)
@@ -393,6 +400,10 @@ void shDrawGame(shVars_t* sh)
             fillDisplayArea(xOffset - 2, gameNote->headPosY, xOffset + 3, gameNote->tailPosY,
                             sh->colors[gameNote->note]);
         }
+
+        // Draw the game note
+        drawWsgTile(&sh->icons[sh->noteToIcon[gameNote->note]], xOffset - (GAME_NOTE_WIDTH / 2),
+                    gameNote->headPosY - (GAME_NOTE_HEIGHT / 2));
 
         // Iterate
         gameNoteNode = gameNoteNode->next;
@@ -403,8 +414,11 @@ void shDrawGame(shVars_t* sh)
     {
         if (sh->btnState & sh->noteToBtn[bIdx])
         {
+            int32_t margin  = 8;
             int32_t xOffset = ((bIdx * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
-            drawCircleOutline(xOffset, HIT_BAR, GAME_NOTE_RADIUS + 8, 4, sh->colors[bIdx]);
+            drawRect(xOffset - (GAME_NOTE_WIDTH / 2) - margin, HIT_BAR - (GAME_NOTE_HEIGHT / 2) - margin, //
+                     xOffset + (GAME_NOTE_WIDTH / 2) + margin, HIT_BAR + (GAME_NOTE_HEIGHT / 2) + margin,
+                     sh->colors[bIdx]);
         }
     }
 

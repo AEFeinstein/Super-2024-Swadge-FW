@@ -75,6 +75,12 @@ static void shEnterMode(void)
     loadFont("righteous_150.font", &shv->righteous, false);
     loadFont("rodin_eb.font", &shv->rodin, false);
 
+    const char* icons[] = {"sh_left.wsg", "sh_down.wsg", "sh_up.wsg", "sh_right.wsg", "sh_b.wsg", "sh_a.wsg"};
+    for (int32_t i = 0; i < ARRAY_SIZE(shv->icons); i++)
+    {
+        loadWsg(icons[i], &shv->icons[i], true);
+    }
+
     // Show initial menu
     shChangeScreen(shv, SH_MENU);
 }
@@ -91,6 +97,11 @@ static void shExitMode(void)
     freeFont(&shv->ibm);
     freeFont(&shv->rodin);
     freeFont(&shv->righteous);
+
+    for (int32_t i = 0; i < ARRAY_SIZE(shv->icons); i++)
+    {
+        freeWsg(&shv->icons[i]);
+    }
 
     // Free mode memory
     free(shv);
