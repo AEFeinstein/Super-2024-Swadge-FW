@@ -162,6 +162,17 @@ typedef enum
     CG_DRAW,
 } cgWinLoss_t;
 
+typedef enum
+{
+    CG_BEGINNER,
+    CG_VERY_EASY,
+    CG_EASY,
+    CG_MEDIUM,
+    CG_HARD,
+    CG_VERY_HARD,
+    CG_EXPERT,
+} cgAIDifficulty_t;
+
 // Structs ==============================
 typedef struct
 {
@@ -288,6 +299,17 @@ typedef struct
 
 typedef struct
 {
+    cgAIDifficulty_t aiDifficulty; ///< Difficulty
+    bool pickedMove;               ///< If a move has already been picked
+    bool init;                     ///< Initialized
+    int8_t movesPicked;            ///< Num of move already picked
+    cgRPSState_t prevState;        ///< Last move the AI chose
+    cgRPSState_t prevMoves[20];    ///< All the previous moves the player has taken
+    int64_t timer;                 ///< Timer for button presses
+} cgSparAI_t;
+
+typedef struct
+{
     // Data
     char matchName[CG_MAX_STR_LEN]; ///< Name of the current match
     int8_t round;                   ///< The round of the fight
@@ -297,6 +319,9 @@ typedef struct
     bool paused;                    ///< If the match is paused
     bool online;                    ///< If match is online
     bool resolve;                   ///< Marks that the match should be resolved
+
+    // AI
+    cgSparAI_t ai;
 
     // Match ended
     bool done;               ///< If match if finished

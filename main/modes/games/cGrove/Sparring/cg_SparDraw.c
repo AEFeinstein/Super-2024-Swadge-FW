@@ -221,7 +221,7 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     {
         color = c500;
     }
-    snprintf(buffer, sizeof(buffer) - 1, "Time: %d", cg->spar.match.timer);
+    snprintf(buffer, sizeof(buffer) - 1, "Time: %d", cg->spar.match.maxTime - cg->spar.match.timer);
     drawText(&cg->spar.sparRegFont, color, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2, 24);
 
     // Draw Chowa UI
@@ -355,38 +355,45 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
             {
                 case CG_SPAR_PUNCH:
                 {
+                    drawText(&cg->spar.sparRegFont, c005, "P1: Punch", 100, 108);
                     drawWsgSimple(&cg->spar.arrow, 64, 64);
                     break;
                 }
                 case CG_SPAR_FAST_PUNCH:
                 {
+                    drawText(&cg->spar.sparRegFont, c005, "P1: Fast Punch", 100, 108);
                     drawWsg(&cg->spar.arrow, 64, 64, false, true, 0);
                     break;
                 }
                 case CG_SPAR_KICK:
                 {
+                    drawText(&cg->spar.sparRegFont, c005, "P1: Kick", 100, 108);
                     drawWsg(&cg->spar.arrow, 64, 64, false, false, 270);
                     break;
                 }
                 case CG_SPAR_JUMP_KICK:
                 {
+                    drawText(&cg->spar.sparRegFont, c005, "P1: Jump Kick", 100, 108);
                     drawWsg(&cg->spar.arrow, 64, 64, false, false, 90);
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
+                    drawText(&cg->spar.sparRegFont, c005, "P1: Headbutt", 100, 108);
                     drawWsg(&cg->spar.arrow, 64, 64, false, false, 90);
                     drawWsg(&cg->spar.arrow, 64, 64, false, false, 270);
                     break;
                 }
                 case CG_SPAR_DODGE:
                 {
+                    drawText(&cg->spar.sparRegFont, c005, "P1: Dodge", 100, 108);
                     drawWsg(&cg->spar.arrow, 64, 64, false, true, 0);
                     drawWsg(&cg->spar.arrow, 64, 64, false, false, 0);
                     break;
                 }
                 default:
                 {
+                    drawText(&cg->spar.sparRegFont, c005, "P1: Unset", 100, 108);
                     break;
                 }
             }
@@ -408,6 +415,59 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
     // Draw Readiness bar
     cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowaData[CG_P2].readiness,
                         TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c050, -1);
+
+    // FIXME: For debug only
+    switch (cg->spar.match.chowaData[CG_P2].currState)
+    {
+        case CG_SPAR_UNREADY:
+        case CG_SPAR_READY:
+        {
+            // TODO: Draw attack icon
+            switch (cg->spar.match.chowaData[CG_P2].currMove)
+            {
+                case CG_SPAR_PUNCH:
+                {
+                    drawText(&cg->spar.sparRegFont, c500, "AI: Punch", 100, 128);
+                    break;
+                }
+                case CG_SPAR_FAST_PUNCH:
+                {
+                    drawText(&cg->spar.sparRegFont, c500, "AI: Fast Punch", 100, 128);
+                    break;
+                }
+                case CG_SPAR_KICK:
+                {
+                    drawText(&cg->spar.sparRegFont, c500, "AI: Kick", 100, 128);
+                    break;
+                }
+                case CG_SPAR_JUMP_KICK:
+                {
+                    drawText(&cg->spar.sparRegFont, c500, "AI: Jump Kick", 100, 128);
+                    break;
+                }
+                case CG_SPAR_HEADBUTT:
+                {
+                    drawText(&cg->spar.sparRegFont, c500, "AI: Headbutt", 100, 128);
+                    break;
+                }
+                case CG_SPAR_DODGE:
+                {
+                    drawText(&cg->spar.sparRegFont, c500, "AI: Dodge", 100, 128);
+                    break;
+                }
+                default:
+                {
+                    drawText(&cg->spar.sparRegFont, c500, "AI: Unset", 100, 128);
+                    break;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 }
 
 /**

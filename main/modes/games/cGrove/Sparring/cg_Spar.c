@@ -157,10 +157,11 @@ void cg_runSpar(int64_t elapsedUs)
             if (true)
             {
                 cg->spar.state = CG_SPAR_MATCH;
-                cg_initSparMatch(cg, "TestMatch", &cg->chowa[0], &cg->chowa[1], 0, 120);
+                cg_initSparMatch(cg, "TestMatch", &cg->chowa[0], &cg->chowa[1], 0, 120, CG_MEDIUM);
             }
             break;
         }
+        // TODO: Add match prep case
         case CG_SPAR_MATCH:
         {
             cg_runSparMatch(cg, elapsedUs);
