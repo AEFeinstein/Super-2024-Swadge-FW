@@ -64,7 +64,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bumpSprite->originY        = 37;
     printf("bump numFrames %d\n", entityManager->sprites[BUMP_ANIM].numFrames);
 
-    bb_sprite_t* rocketSprite    = bb_loadSprite("rocket", 35, &entityManager->sprites[ROCKET_ANIM]);
+    bb_sprite_t* rocketSprite    = bb_loadSprite("rocket", 41, &entityManager->sprites[ROCKET_ANIM]);
     rocketSprite->originX        = 33;
     rocketSprite->originY        = 67;
     printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
@@ -164,6 +164,10 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     }
                 }
             }
+            drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+                      ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+                      ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+                      ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
         }
     }
 }
@@ -265,8 +269,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             rData->yVel = 240;
             entity->data = rData;
             entity->halfWidth  =    192;
-            entity->halfHeight =   1072;
-            entity->cSquared   = 243968;
+            entity->halfHeight =    464;
+            entity->cSquared   = 251232;
 
             entity->updateFunction = &bb_updateRocketLanding;
             entityManager->viewEntity = entity;

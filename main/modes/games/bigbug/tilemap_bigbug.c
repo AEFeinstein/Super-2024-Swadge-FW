@@ -1297,9 +1297,11 @@ bb_hitInfo_t* bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* 
     int32_t right_i  = ent->halfWidth*2/BITSHIFT_TILE_SIZE;
     right_i  = right_i  ? right_i : 1;
     right_i += xIdx;
+    right_i += 1;
     int32_t bottom_j = ent->halfHeight*2/BITSHIFT_TILE_SIZE;
     bottom_j = bottom_j ? bottom_j : 1;
     bottom_j += yIdx;
+    bottom_j += 1;
     for (int32_t i = xIdx; i <= right_i; i++)
     {
         for (int32_t j = yIdx; j <= bottom_j; j++)

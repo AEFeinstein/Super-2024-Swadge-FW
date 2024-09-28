@@ -87,6 +87,7 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
 
 void bb_destroyEntity(bb_entity_t* self, bool respawn);
 void bb_updateRocketLanding(bb_entity_t* self);
+void bb_updateHeavyFallingInit(bb_entity_t* self);
 void bb_updateHeavyFalling(bb_entity_t* self);
 void bb_updateGarbotnikDeploy(bb_entity_t* self);
 void bb_updateFlame(bb_entity_t* self);

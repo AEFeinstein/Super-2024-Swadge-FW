@@ -58,12 +58,45 @@ void bb_updateRocketLanding(bb_entity_t* self){
             bb_destroyEntity(rData->flame, false);
             free(self->data);
             self->data = calloc(1,sizeof(bb_heavyFallingData_t));
-            self->updateFunction = bb_updateHeavyFalling;
+            self->updateFunction = bb_updateHeavyFallingInit;
             self->gameData->entityManager.viewEntity = NULL;
             return;
         }
     }
     self->pos.y += rData->yVel * self->gameData->elapsedUs / 100000;
+}
+
+void bb_updateHeavyFallingInit(bb_entity_t* self){
+    bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
+    hfData->yVel += 6;
+
+    printf("delta y %d\n", hfData->yVel * self->gameData->elapsedUs / 100000);
+    self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
+
+    bb_hitInfo_t* hitInfo = bb_collisionCheck(&self->gameData->tilemap, self, NULL);
+    if(hitInfo->hit == false){
+        free(hitInfo);
+        return;
+    }
+    printf("adjust y %d\n", hfData->yVel * self->gameData->elapsedUs / 100000);
+    
+    self->pos.y = hitInfo->pos.y - self->halfHeight;
+    if(hfData->yVel < 160){
+        hfData->yVel = 0;
+        self->updateFunction = bb_updateGarbotnikDeploy;
+        self->paused = false;
+    }
+    else{
+        hfData->yVel -= 160;
+        // Update the dirt to air.
+        self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] = 0;
+        // Create a crumble animation
+        bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                        hitInfo->tile_i * TILE_SIZE + TILE_SIZE,
+                        hitInfo->tile_j * TILE_SIZE + TILE_SIZE);
+    }
+    free(hitInfo);
+    return;
 }
 
 void bb_updateHeavyFalling(bb_entity_t* self){
@@ -76,12 +109,15 @@ void bb_updateHeavyFalling(bb_entity_t* self){
         free(hitInfo);
         return;
     }
-    if(hfData->yVel < 150){
-        self->updateFunction = bb_updateGarbotnikDeploy;
-        self->paused = false;
+    
+    printf("y %d\n", self->halfHeight);
+    // self->pos.y -= hfData->yVel * self->gameData->elapsedUs / 100000;
+    self->pos.y = hitInfo->pos.y - self->halfHeight;
+    if(hfData->yVel < 160){
+        hfData->yVel = 0;
     }
     else{
-        hfData->yVel -= 150;
+        hfData->yVel -= 160;
         // Update the dirt to air.
         self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] = 0;
         // Create a crumble animation
@@ -100,9 +136,9 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self){
         bb_entity_t* garbotnik = bb_createEntity(&(self->gameData->entityManager),
             NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
             self->pos.x >> DECIMAL_BITS,
-            (self->pos.y >> DECIMAL_BITS) - 38);
+            (self->pos.y >> DECIMAL_BITS) - 50);
         self->gameData->entityManager.viewEntity = garbotnik;
-        self->updateFunction = NULL;
+        self->updateFunction = bb_updateHeavyFalling;
     }
 }
 
