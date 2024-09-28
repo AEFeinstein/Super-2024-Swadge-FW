@@ -89,7 +89,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
  */
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont)
 {
-    menuManiaRenderer_t* renderer = calloc(1, sizeof(menuManiaRenderer_t));
+    menuManiaRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuManiaRenderer_t), MALLOC_CAP_SPIRAM);
 
     // Save or allocate title font
     if (NULL == titleFont)

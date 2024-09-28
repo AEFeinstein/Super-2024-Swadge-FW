@@ -55,7 +55,7 @@
 #include <stdint.h>
 
 #include <esp_err.h>
-#include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 
 /// @brief The maximum LED brightness setting
 #define MAX_LED_BRIGHTNESS 8

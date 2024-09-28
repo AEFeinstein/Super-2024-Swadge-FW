@@ -47,3 +47,9 @@ No processing is done on `.txt` files. They are copied from the input directory 
 ### `.mid`, `.midi`
 
 The notes on the first track from the MIDI file are converted to buzzer format (frequency, duration), and compressed with Heatshrink compression. The buzzer is single channel, single voice, so if a note starts while another is playing, the first note is stopped.
+
+### `.chart`
+
+Generate Clone Hero charts [using this tool](https://efhiii.github.io/midi-ch/), see https://github.com/EFHIII/midi-ch.
+
+[.chart file format spec](https://github.com/TheNathannator/GuitarGame_ChartFormats/blob/main/doc/FileFormats/.chart/Core%20Infrastructure.md).

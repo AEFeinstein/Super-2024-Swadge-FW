@@ -12,6 +12,13 @@
 #include <unistd.h>
 #endif
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wunused-result"
+#endif
+
 /* helper to write a little-endian 16-bit number portably */
 #define write_num(fd, n) write((fd), (uint8_t []) {(n) & 0xFF, (n) >> 8}, 2)
 
@@ -321,3 +328,7 @@ ge_close_gif(ge_GIF* gif)
     close(gif->fd);
     free(gif);
 }
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif

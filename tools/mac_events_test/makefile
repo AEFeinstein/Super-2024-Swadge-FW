@@ -1,36 +1,63 @@
-# Makefile by Adam, 2023
+# Makefile by Adam, 2022
+
+################################################################################
+# What OS we're compiling on
+################################################################################
+
+IS_WSL := 0
+ifeq ($(OS),Windows_NT)
+    HOST_OS = Windows
+else
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        HOST_OS = Linux
+		# Check if this is WSL. 0 for not WSL, 1 for WSL
+	    IS_WSL := $(shell uname -a | grep -i WSL | wc -l)
+    else ifeq ($(UNAME_S),Darwin)
+        HOST_OS = Darwin
+    endif
+endif
 
 ################################################################################
 # Programs to use
 ################################################################################
 
 CC = gcc
-FIND = find
+
+FIND:=find
+
 
 ################################################################################
 # Source Files
 ################################################################################
 
-# This is a list of directories to scan for c files recursively
-SRC_DIRS_RECURSIVE = ./src ./src-lib ../../main/asset_loaders/common
-# This is a list of directories to scan for c files not recursively
-SRC_DIRS_FLAT =
-# This is a list of files to compile directly. There's no scanning here
-SRC_FILES =
-# This is all the source directories combined
-SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
-# This is all the source files combined
-SOURCES   = $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES)
+SOURCES   := main.c
 
-# This is a list of all source files to format
-SOURCES_TO_FORMAT = $(shell $(FIND) ./src -iname "*.[c|h]")
+################################################################################
+# Includes
+################################################################################
 
 ################################################################################
 # Compiler Flags
 ################################################################################
 
 # These are flags for the compiler, all files
-CFLAGS = -g -std=c99
+CFLAGS = \
+	-c \
+	-g \
+	-fdiagnostics-color=always \
+	-ffunction-sections \
+	-fdata-sections \
+	-gdwarf-4 \
+	-ggdb \
+	-O2	\
+	-fno-jump-tables \
+	-finline-functions \
+	-std=gnu17
+
+# Required for OpenGL and some other libraries
+CFLAGS += \
+	-mmacosx-version-min=10.0
 
 # These are warning flags that the IDF uses
 CFLAGS_WARNINGS = \
@@ -42,16 +69,14 @@ CFLAGS_WARNINGS = \
 	-Wextra \
 	-Wno-unused-parameter \
 	-Wno-sign-compare \
-	-Wno-error=unused-but-set-variable \
-	-Wno-old-style-declaration \
-	-Wno-missing-field-initializers
+	-Wno-enum-conversion \
+	-Wno-error=unused-but-set-variable
 
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \
 	-Wundef \
 	-Wformat=2 \
 	-Winvalid-pch \
-	-Wlogical-op \
 	-Wmissing-format-attribute \
 	-Wmissing-include-dirs \
 	-Wpointer-arith \
@@ -59,8 +84,7 @@ CFLAGS_WARNINGS_EXTRA = \
 	-Wuninitialized \
 	-Wshadow \
 	-Wredundant-decls \
-	-Wjump-misses-init \
-	-Wswitch-enum \
+	-Wswitch \
 	-Wcast-align \
 	-Wformat-nonliteral \
 	-Wno-switch-default \
@@ -70,6 +94,7 @@ CFLAGS_WARNINGS_EXTRA = \
 	-Wmissing-prototypes \
 	-Wcast-qual \
 	-Wno-switch \
+	-Wunused-result \
 #	-Wstrict-prototypes \
 #	-Wpedantic \
 #	-Wconversion \
@@ -83,20 +108,12 @@ CFLAGS_WARNINGS_EXTRA = \
 # Create a variable with the git hash and branch name
 GIT_HASH  = \"$(shell git rev-parse --short=7 HEAD)\"
 
-# Defines for all files
-DEFINES_LIST = #CONFIG_GC9307_240x280=y
+# Used by the ESP SDK
+DEFINES_LIST = \
+	_GNU_SOURCE \
+	_POSIX_READER_WRITER_LOCKS
+
 DEFINES = $(patsubst %, -D%, $(DEFINES_LIST))
-
-################################################################################
-# Includes
-################################################################################
-
-# Look for folders with .h files in these directories, recursively
-INC_DIRS_RECURSIVE = ./src
-# Treat every source directory as one to search for headers in, also add a few more
-INC_DIRS = $(SRC_DIRS) $(shell $(FIND) $(INC_DIRS_RECURSIVE) -type d)
-# Prefix the directories for gcc
-INC = $(patsubst %, -I%, $(INC_DIRS) )
 
 ################################################################################
 # Output Objects
@@ -113,31 +130,42 @@ OBJECTS = $(patsubst %.c, $(OBJ_DIR)/%.o, $(SOURCES))
 ################################################################################
 
 # This is a list of libraries to include. Order doesn't matter
-LIBS = m
+
+#LIBS = m X11 GL pthread Xext Xinerama
+LIBS =
 
 # These are directories to look for library files in
 LIB_DIRS =
 
+# On MacOS we need to ensure that X11 is added for OpenGL and some others
+#ifeq ($(HOST_OS),Darwin)
+#    LIB_DIRS = /opt/X11/lib
+#endif
+
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
-	-static-libstdc++ \
 	-ggdb
+
+LIBRARY_FLAGS += \
+    -framework Carbon
 
 ################################################################################
 # Build Filenames
 ################################################################################
 
 # These are the files to build
-EXECUTABLE = assets_preprocessor
+EXECUTABLE = test
+BUNDLE = test.app
+ICONS = test.icns
 
 ################################################################################
 # Targets for Building
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all clean format print-%
+.PHONY: all bundle clean print-%
 
-# Build everything!
+# Build the executable
 all: $(EXECUTABLE)
 
 # To build the main file, you have to compile the objects
@@ -147,17 +175,43 @@ $(EXECUTABLE): $(OBJECTS)
 # This compiles each c file into an o file
 ./$(OBJ_DIR)/%.o: ./%.c
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
-	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) -c $< -o $@
+	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
-# This clean everything
+bundle: $(BUNDLE)
+
+$(BUNDLE): $(EXECUTABLE) $(ICONS) Info.plist
+	rm -rf $(BUNDLE)
+	mkdir -p $(BUNDLE)/Contents/{MacOS,Resources,libs}
+	cp Info.plist $(BUNDLE)/Contents/Info.plist
+	echo "APPLTest" > $(BUNDLE)/Contents/PkgInfo
+	cp $(ICONS) $(BUNDLE)/Contents/Resources/
+	vtool -set-build-version macos 10.0 10.0 -replace -output $(BUNDLE)/Contents/MacOS/test $(EXECUTABLE)
+	dylibbundler -od -b -x ./$(BUNDLE)/Contents/MacOS/test -d ./$(BUNDLE)/Contents/libs/
+
+
+$(ICONS): ../../emulator/resources/icon.png
+	rm -rf test.iconset
+	mkdir -p test.iconset
+	sips -z 16 16     $< --out test.iconset/icon_16x16.png
+	sips -z 32 32     $< --out test.iconset/icon_16x16@2x.png
+	sips -z 32 32     $< --out test.iconset/icon_32x32.png
+	sips -z 64 64     $< --out test.iconset/icon_32x32@2x.png
+	sips -z 128 128   $< --out test.iconset/icon_128x128.png
+	sips -z 256 256   $< --out test.iconset/icon_128x128@2x.png
+	sips -z 256 256   $< --out test.iconset/icon_256x256.png
+	sips -z 512 512   $< --out test.iconset/icon_256x256@2x.png
+	sips -z 512 512   $< --out test.iconset/icon_512x512.png
+	sips -z 1024 1024 $< --out test.iconset/icon_512x512@2x.png
+	iconutil -c icns -o $(ICONS) test.iconset
+	rm -r test.iconset
+
+# This cleans emulator files
 clean:
-	-@rm -f $(OBJECTS) $(EXECUTABLE)
+	-@rm -rf $(OBJECTS) $(EXECUTABLE) $(ICONS) test.iconset $(BUNDLE)
 
-format:
-	clang-format-17 -i -style=file $(SOURCES_TO_FORMAT)
 
 ################################################################################
-# Makefile Debugging
+# Firmware targets
 ################################################################################
 
 # Print any value from this makefile
