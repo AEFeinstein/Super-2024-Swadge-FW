@@ -14,6 +14,7 @@
 //==============================================================================
 
 #include "cg_Match.h"
+#include "esp_random.h"
 
 //==============================================================================
 // Defines
@@ -21,7 +22,7 @@
 
 // Microsecond based
 #define SECOND         1000000 // One second of us
-#define STAMINA_SCALAR 60000   // How fast the stamina regenerates
+#define STAMINA_SCALAR 3900    // How fast the stamina regenerates
 
 // Min values
 #define MIN_STAMINA 40  // Minimum value for stamina
@@ -46,6 +47,7 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs);
 static void cg_sparMatchResolve(cGrove_t* cg);
 int8_t static cg_sparMatchStaminaCost(cgRPSState_t rps);
 void static cg_sparMatchResolveState(cGrove_t* cg);
+void static cg_sparMatchRPS(cGrove_t* cg);
 
 //==============================================================================
 // Functions
@@ -67,19 +69,21 @@ void cg_initSparMatch(cGrove_t* cg, char* matchName, cgChowa_t* player1Chowa, cg
     // Initialize
     // Load tournament/match data
     strcpy(cg->spar.match.matchName, matchName);
-    cg->spar.match.round   = round;
-    cg->spar.match.maxTime = maxTime;
+    cg->spar.match.round    = round;
+    cg->spar.match.maxTime  = maxTime;
+    cg->spar.match.animDone = false;
+    cg->spar.match.done     = false;
 
     // Timer is set to 0
     cg->spar.match.timer = 0;
 
     // Chowa
-    cg->spar.match.chowaData[0].chowa = player1Chowa;
-    cg->spar.match.chowaData[1].chowa = player2Chowa;
+    cg->spar.match.chowaData[CG_P1].chowa = player1Chowa;
+    cg->spar.match.chowaData[CG_P2].chowa = player2Chowa;
     for (int32_t i = 0; i < 2; i++)
     {
         // FIXME: Setting stats for test purposes
-        cg->spar.match.chowaData[i].chowa->stats[CG_SPEED]    = 128;
+        cg->spar.match.chowaData[i].chowa->stats[CG_SPEED]    = 255;
         cg->spar.match.chowaData[i].chowa->stats[CG_STAMINA]  = 128;
         cg->spar.match.chowaData[i].chowa->stats[CG_STRENGTH] = 128;
         cg->spar.match.chowaData[i].chowa->stats[CG_AGILITY]  = 128;
@@ -108,6 +112,13 @@ void cg_initSparMatch(cGrove_t* cg, char* matchName, cgChowa_t* player1Chowa, cg
  */
 void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
 {
+    // Check if match has ended
+    if (cg->spar.match.done == true)
+    {
+        // TODO: wait until animations finish, then save data and load next match or show a summary
+        return;
+    }
+
     // Round timer
     // Timer doesn't accumulate if paused and single player
     if (!cg->spar.match.paused && !cg->spar.match.online)
@@ -123,7 +134,8 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
     // If enough seconds have passed, end match
     if (cg->spar.match.timer >= cg->spar.match.maxTime)
     {
-        // TODO: end the match
+        cg->spar.match.done = true;
+        return;
     }
 
     // Loop over both Chowa
@@ -147,11 +159,10 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
     }
 
     // Animate Chowa
-    if (cg->spar.match.animating)
+    // Once animations are done, set state to unready or exhausted as appropriate
+    if (cg->spar.match.animDone)
     {
-        // TODO: Animation timer
-        // Once animations are done, set state to unready or exhausted as appropriate
-        cg->spar.match.animating = false;
+        cg->spar.match.animDone = false;
         cg_sparMatchResolveState(cg);
     }
 }
@@ -169,10 +180,8 @@ static void cg_sparMatchPlayerInput(cGrove_t* cg)
         // Pause or unpause regardless of state
         if (evt.down && evt.button & PB_START)
         {
-            cg->spar.match.paused = true;
+            cg->spar.match.paused = !cg->spar.match.paused;
         }
-
-        // FIXME: Make it so the numbers increase faster if the relationship w/ player is better
 
         // Only accept correct inputs per state
         switch (cg->spar.match.chowaData[0].currState)
@@ -182,69 +191,70 @@ static void cg_sparMatchPlayerInput(cGrove_t* cg)
                 if (!cg->spar.match.paused && evt.down && !(evt.button & PB_SELECT || evt.button & PB_START))
                 {
                     // Increase readiness
-                    cg->spar.match.chowaData[0].readiness += 1;
+                    cg->spar.match.chowaData[0].readiness
+                        += 1 + (cg->spar.match.chowaData[CG_P1].chowa->playerAffinity >> 5);
 
                     // Change action based on
                     switch (evt.button)
                     {
                         case PB_A:
                         {
-                            if (cg->spar.match.chowaData[0].currMove != CG_SPAR_HEADBUTT
-                                && cg->spar.match.chowaData[0].currMove != CG_SPAR_UNSET)
+                            if (cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_HEADBUTT
+                                && cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_UNSET)
                             {
-                                cg->spar.match.chowaData[0].readiness -= 25;
+                                cg->spar.match.chowaData[CG_P1].readiness -= 25;
                             }
-                            cg->spar.match.chowaData[0].currMove = CG_SPAR_HEADBUTT;
+                            cg->spar.match.chowaData[CG_P1].currMove = CG_SPAR_HEADBUTT;
                             break;
                         }
                         case PB_B:
                         {
-                            if (cg->spar.match.chowaData[0].currMove != CG_SPAR_DODGE
-                                && cg->spar.match.chowaData[0].currMove != CG_SPAR_UNSET)
+                            if (cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_DODGE
+                                && cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_UNSET)
                             {
-                                cg->spar.match.chowaData[0].readiness -= 25;
+                                cg->spar.match.chowaData[CG_P1].readiness -= 25;
                             }
-                            cg->spar.match.chowaData[0].currMove = CG_SPAR_DODGE;
+                            cg->spar.match.chowaData[CG_P1].currMove = CG_SPAR_DODGE;
                             break;
                         }
                         case PB_UP:
                         {
-                            if (cg->spar.match.chowaData[0].currMove != CG_SPAR_PUNCH
-                                && cg->spar.match.chowaData[0].currMove != CG_SPAR_UNSET)
+                            if (cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_PUNCH
+                                && cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_UNSET)
                             {
-                                cg->spar.match.chowaData[0].readiness -= 25;
+                                cg->spar.match.chowaData[CG_P1].readiness -= 25;
                             }
-                            cg->spar.match.chowaData[0].currMove = CG_SPAR_PUNCH;
+                            cg->spar.match.chowaData[CG_P1].currMove = CG_SPAR_PUNCH;
                             break;
                         }
                         case PB_DOWN:
                         {
-                            if (cg->spar.match.chowaData[0].currMove != CG_SPAR_FAST_PUNCH
-                                && cg->spar.match.chowaData[0].currMove != CG_SPAR_UNSET)
+                            if (cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_FAST_PUNCH
+                                && cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_UNSET)
                             {
-                                cg->spar.match.chowaData[0].readiness -= 25;
+                                cg->spar.match.chowaData[CG_P1].readiness -= 25;
                             }
-                            cg->spar.match.chowaData[0].currMove = CG_SPAR_FAST_PUNCH;
+                            cg->spar.match.chowaData[CG_P1].currMove = CG_SPAR_FAST_PUNCH;
                             break;
                         }
                         case PB_LEFT:
                         {
-                            if (cg->spar.match.chowaData[0].currMove != CG_SPAR_KICK
-                                && cg->spar.match.chowaData[0].currMove != CG_SPAR_UNSET)
+                            if (cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_KICK
+                                && cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_UNSET)
                             {
-                                cg->spar.match.chowaData[0].readiness -= 25;
+                                cg->spar.match.chowaData[CG_P1].readiness -= 25;
                             }
-                            cg->spar.match.chowaData[0].currMove = CG_SPAR_KICK;
+                            cg->spar.match.chowaData[CG_P1].currMove = CG_SPAR_KICK;
                             break;
                         }
                         case PB_RIGHT:
                         {
-                            if (cg->spar.match.chowaData[0].currMove != CG_SPAR_JUMP_KICK
-                                && cg->spar.match.chowaData[0].currMove != CG_SPAR_UNSET)
+                            if (cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_JUMP_KICK
+                                && cg->spar.match.chowaData[CG_P1].currMove != CG_SPAR_UNSET)
                             {
-                                cg->spar.match.chowaData[0].readiness -= 25;
+                                cg->spar.match.chowaData[CG_P1].readiness -= 25;
                             }
-                            cg->spar.match.chowaData[0].currMove = CG_SPAR_JUMP_KICK;
+                            cg->spar.match.chowaData[CG_P1].currMove = CG_SPAR_JUMP_KICK;
                             break;
                         }
                         default:
@@ -265,12 +275,12 @@ static void cg_sparMatchPlayerInput(cGrove_t* cg)
                     {
                         case PB_A:
                         {
-                            cg->spar.match.chowaData[0].readiness += 1;
+                            cg->spar.match.chowaData[CG_P1].readiness += 1;
                             break;
                         }
                         case PB_B:
                         {
-                            cg->spar.match.chowaData[0].stamina += 1;
+                            cg->spar.match.chowaData[CG_P1].stamina += 1;
                             break;
                         }
                         default:
@@ -305,7 +315,10 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
             case CG_SPAR_UNREADY:
             {
                 // Steadily becomes more ready
-                cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
+                if (!cg->spar.match.paused && !cg->spar.match.online)
+                {
+                    cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
+                }
                 int32_t readinessTick
                     = SECOND - (STAMINA_SCALAR * cg->spar.match.chowaData[idx].chowa->stats[CG_SPEED]);
                 if (cg->spar.match.chowaData[idx].updateTimer >= readinessTick)
@@ -329,7 +342,10 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
             case CG_SPAR_READY:
             {
                 // Runs timer until automatically resolve
-                cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
+                if (!cg->spar.match.paused && !cg->spar.match.online)
+                {
+                    cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
+                }
                 int32_t readinessTick = SECOND;
                 if (cg->spar.match.chowaData[idx].updateTimer >= readinessTick)
                 {
@@ -343,7 +359,10 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
             {
                 // Steadily regain stamina and readiness to stand up
                 // Steadily becomes more ready
-                cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
+                if (!cg->spar.match.paused && !cg->spar.match.online)
+                {
+                    cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
+                }
                 int32_t readinessTick
                     = SECOND - (STAMINA_SCALAR * cg->spar.match.chowaData[idx].chowa->stats[CG_SPEED]);
                 if (cg->spar.match.chowaData[idx].updateTimer >= readinessTick)
@@ -380,16 +399,18 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
     }
 }
 
-//
+/**
+ * @brief Evaluates the result of the preparation stage
+ *
+ * @param cg Game Data
+ */
 static void cg_sparMatchResolve(cGrove_t* cg)
 {
-    // Check RPS
-    // Winner's attack stat is compared with Los67er's agility with some randomness
-    // If executed a move, burn stamina in accordance with move
-
     // Unset resolved
-    cg->spar.match.resolve   = false;
-    cg->spar.match.animating = true;
+    cg->spar.match.resolve = false;
+
+    // FIXME: Only set animation to done when animations finish
+    cg->spar.match.animDone = true;
 
     // Check if both Chowa are ready
     for (int32_t idx = 0; idx < 2; idx++)
@@ -399,7 +420,7 @@ static void cg_sparMatchResolve(cGrove_t* cg)
             // This Chowa is not ready
             // Reduce health based on other Chowa's Str
             cg->spar.match.chowaData[idx].HP
-                -= MIN_DAMAGE + (cg->spar.match.chowaData[(idx + 1) % 2].chowa->stats[CG_STRENGTH] << 2);
+                -= MIN_DAMAGE + (cg->spar.match.chowaData[(idx + 1) % 2].chowa->stats[CG_STRENGTH] << 1);
 
             // Reduce Stamina
             cg->spar.match.chowaData[idx].stamina -= MIN_STAMINA_COST;
@@ -439,11 +460,7 @@ static void cg_sparMatchResolve(cGrove_t* cg)
     }
 
     // Run RPS
-
-    // Change state
-    // FIXME: Dummy to trigger updates
-    cg->spar.match.chowaData[0].currState = CG_SPAR_DODGE_ST;
-    cg->spar.match.chowaData[1].currState = CG_SPAR_DODGE_ST;
+    cg_sparMatchRPS(cg);
 }
 
 /**
@@ -496,6 +513,7 @@ void static cg_sparMatchResolveState(cGrove_t* cg)
 {
     for (int32_t idx = 0; idx < 2; idx++)
     {
+        // Change Chowa State
         if (cg->spar.match.chowaData[idx].stamina <= 0)
         {
             cg->spar.match.chowaData[idx].currState = CG_SPAR_EXHAUSTED;
@@ -508,4 +526,164 @@ void static cg_sparMatchResolveState(cGrove_t* cg)
             cg->spar.match.chowaData[idx].readiness = 0;
         }
     }
+    // End game if either health is Zero
+    if (cg->spar.match.chowaData[CG_P1].HP <= 0 || cg->spar.match.chowaData[CG_P2].HP <= 0)
+    {
+        if (cg->spar.match.chowaData[CG_P1].HP <= 0 && cg->spar.match.chowaData[CG_P2].HP <= 0)
+        {
+            cg->spar.match.finalResult = CG_DRAW;
+        }
+        else if (cg->spar.match.chowaData[CG_P1].HP <= 0)
+        {
+            cg->spar.match.finalResult = CG_P2_WIN;
+        }
+        else if (cg->spar.match.chowaData[CG_P2].HP <= 0)
+        {
+            cg->spar.match.finalResult = CG_P1_WIN;
+        }
+    }
+}
+
+/**
+ * @brief Evaluate RPS
+ *
+ * @param cg Game Data
+ */
+void static cg_sparMatchRPS(cGrove_t* cg)
+{
+    // Check RPS
+    cgRPSState_t player1Move = cg->spar.match.chowaData[CG_P1].currMove;
+    cgRPSState_t player2Move = cg->spar.match.chowaData[CG_P2].currMove;
+
+    cgWinLoss_t winner = CG_DRAW;
+
+    // DRAW
+    if (player1Move == player2Move)
+    {
+        winner = CG_DRAW;
+        if (player1Move == CG_SPAR_UNSET)
+        {
+            cg->spar.match.chowaData[0].currState = CG_SPAR_NOTHING;
+            cg->spar.match.chowaData[1].currState = CG_SPAR_NOTHING;
+        }
+        else
+        {
+            for (int idx = 0; idx < 2; idx++)
+            {
+                // Do a little damage
+                cg->spar.match.chowaData[idx].HP -= 10;
+
+                // Drain stamina
+                cg->spar.match.chowaData[idx].stamina -= 10;
+
+                // Both do attack animation
+                cg->spar.match.chowaData[idx].currState = CG_SPAR_ATTACK;
+            }
+        }
+        return;
+    }
+
+    // Player one doesn't try to play
+    else if (player1Move == CG_SPAR_UNSET)
+    {
+        winner = CG_P2_WIN;
+    }
+
+    // PUNCH
+    else if (player1Move == CG_SPAR_PUNCH
+             && (player2Move == CG_SPAR_PUNCH || player2Move == CG_SPAR_KICK || player2Move == CG_SPAR_JUMP_KICK))
+    {
+        winner = CG_P1_WIN;
+    }
+    else if (player1Move == CG_SPAR_PUNCH && (player2Move == CG_SPAR_FAST_PUNCH || player2Move == CG_SPAR_HEADBUTT))
+    {
+        winner = CG_P2_WIN;
+    }
+
+    // FAST PUNCH
+    else if (player1Move == CG_SPAR_FAST_PUNCH
+             && (player2Move == CG_SPAR_PUNCH || player2Move == CG_SPAR_HEADBUTT || player2Move == CG_SPAR_UNSET))
+    {
+        winner = CG_P1_WIN;
+    }
+    else if (player1Move == CG_SPAR_FAST_PUNCH && (player2Move == CG_SPAR_KICK || player2Move == CG_SPAR_JUMP_KICK))
+    {
+        winner = CG_P2_WIN;
+    }
+
+    // KICK
+    else if (player1Move == CG_SPAR_KICK
+             && (player2Move == CG_SPAR_FAST_PUNCH || player2Move == CG_SPAR_JUMP_KICK || player2Move == CG_SPAR_UNSET))
+    {
+        winner = CG_P1_WIN;
+    }
+    else if (player1Move == CG_SPAR_KICK && (player2Move == CG_SPAR_PUNCH || player2Move == CG_SPAR_HEADBUTT))
+    {
+        winner = CG_P2_WIN;
+    }
+
+    // HEADBUTT
+    else if (player1Move == CG_SPAR_HEADBUTT
+             && (player2Move == CG_SPAR_PUNCH || player2Move == CG_SPAR_KICK || player2Move == CG_SPAR_UNSET))
+    {
+        winner = CG_P1_WIN;
+    }
+    else if (player1Move == CG_SPAR_HEADBUTT && (player2Move == CG_SPAR_FAST_PUNCH || player2Move == CG_SPAR_JUMP_KICK))
+    {
+        winner = CG_P2_WIN;
+    }
+
+    // JUMP KICK
+    else if (player1Move == CG_SPAR_JUMP_KICK
+             && (player2Move == CG_SPAR_FAST_PUNCH || player2Move == CG_SPAR_HEADBUTT || player2Move == CG_SPAR_UNSET))
+    {
+        winner = CG_P1_WIN;
+    }
+    else if (player1Move == CG_SPAR_JUMP_KICK && (player2Move == CG_SPAR_PUNCH || player2Move == CG_SPAR_KICK))
+    {
+        winner = CG_P2_WIN;
+    }
+
+    // Set index for winner and loser for data crunching
+    int8_t winIdx, loseIdx;
+    if (winner == CG_P1_WIN)
+    {
+        winIdx  = CG_P1;
+        loseIdx = CG_P2;
+    }
+    else if (winner == CG_P2_WIN)
+    {
+        winIdx  = CG_P2;
+        loseIdx = CG_P1;
+    }
+    else
+    {
+        // Something went wrong
+        printf("Draw propagated to far");
+        return;
+    }
+
+    // Damage
+    if ((esp_random() % 10) == 0)
+    {
+        // Crit
+        cg->spar.match.chowaData[loseIdx].HP
+            -= MIN_DAMAGE + (cg->spar.match.chowaData[winIdx].chowa->stats[CG_STRENGTH] << 1);
+        cg->spar.match.wasCrit = true;
+    }
+    else
+    {
+        cg->spar.match.chowaData[loseIdx].HP
+            -= MIN_DAMAGE + (cg->spar.match.chowaData[winIdx].chowa->stats[CG_STRENGTH]);
+    }
+
+    // Stamina
+    cg->spar.match.chowaData[loseIdx].stamina
+        -= MIN_STAMINA_COST + cg_sparMatchStaminaCost(cg->spar.match.chowaData[loseIdx].currMove);
+    cg->spar.match.chowaData[winIdx].stamina
+        -= MIN_STAMINA_COST + cg_sparMatchStaminaCost(cg->spar.match.chowaData[winIdx].currMove);
+
+    // Set state of both Chowa
+    cg->spar.match.chowaData[loseIdx].currState = CG_SPAR_HIT;
+    cg->spar.match.chowaData[winIdx].currState  = CG_SPAR_ATTACK;
 }

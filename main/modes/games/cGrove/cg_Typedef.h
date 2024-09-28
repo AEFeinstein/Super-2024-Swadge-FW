@@ -10,12 +10,33 @@
  */
 #pragma once
 
-// Includes ============================
+//==============================================================================
+// Includes
+//==============================================================================
 #include "swadge2024.h"
 #include "wsgPalette.h"
 
-// Defines =============================
+//==============================================================================
+// Defines
+//==============================================================================
 #define CG_MAX_STR_LEN 17
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    CG_P1,
+    CG_P2,
+} cgPlayers_t;
+
+typedef enum
+{
+    CG_P1_WIN,
+    CG_P2_WIN,
+    CG_DRAW,
+} cgWinLoss_t;
 
 //==============================================================================
 // Items
@@ -109,7 +130,7 @@ typedef struct
     char name[17];
     int8_t age;                         ///< Current age of the Chowa
     int8_t maxAge;                      ///< Maximum Chowa age. 4 hours of in game time
-    int8_t PlayerAffinity;              ///< How much Chowa likes the player
+    int8_t playerAffinity;              ///< How much Chowa likes the player
     cgMoodEnum_t mood;                  ///< Current mood of the Chowa
     cgChowaPersonality_t pers;          ///< Chowa's personality
     cgChowaStat_t stats[CG_STAT_COUNT]; ///< Array containing stat information
@@ -159,9 +180,9 @@ typedef struct
     char playerNames[2][CG_MAX_STR_LEN]; ///< Player names
     char chowaNames[6][CG_MAX_STR_LEN];  ///< Up to 6 Chowa participate
     cgColorType_t colorType[6];          ///< Type of Chowa
-    // wsgPalette palettes[6]; ///< Colors of the Chowa for drawing
-    cgResult_t result[3]; ///< Results opf all three matches
-    int16_t timer[3];     ///< Time per round in seconds
+    wsgPalette_t palettes[6];            ///< Colors of the Chowa for drawing
+    cgResult_t result[3];                ///< Results of all three matches
+    int16_t timer[3];                    ///< Time per round in seconds
 } cgRecord_t;
 
 //==============================================================================
@@ -212,7 +233,8 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_SPAR_MAX_RECORDS 10
+#define CG_SPAR_MAX_RECORDS 10 ///< Max number of saved matches
+#define CG_MAX_READY_VALUE  64 ///< How large the Ready bars are
 
 // Enums ===============================
 
@@ -221,6 +243,7 @@ typedef enum
     CG_SPAR_SPLASH,
     CG_SPAR_MENU,
     CG_SPAR_SCHEDULE,
+    CG_MATCH_PREP,
     CG_SPAR_MATCH,
     CG_SPAR_MATCH_RESULTS,
     CG_SPAR_TUTORIAL,
@@ -235,6 +258,7 @@ typedef enum
     CG_SPAR_HIT,       ///< State used to animate being hit
     CG_SPAR_ATTACK,    ///< State used to animate Attacking
     CG_SPAR_DODGE_ST,  ///< State used to animate dodging
+    CG_SPAR_NOTHING,   ///< State for when teh CHowa do nothing
     CG_SPAR_WIN,       ///< Once round ends, Animate in victory pose
     CG_SPAR_LOSE,      ///< Once round ends, Animate in lose pose (Crying?)
 } cgMatchChowaState_t;
@@ -270,7 +294,7 @@ typedef struct
     int16_t HP;                    ///< Current HP for this Chowa
     int16_t maxHP;                 ///< Max HP for this Chowa
     int32_t updateTimer;           ///< Used for readiness updates
-    bool animating;                ///< If the Chowa is being animated
+    bool doneAnimating;            ///< Currently animating
 } cgSparChowaData_t;
 
 typedef struct
@@ -283,6 +307,7 @@ typedef struct
     bool online;                    ///< If match is online
     bool done;                      ///< If match if done
     bool resolve;                   ///< Marks that the match should be resolved
+    cgWinLoss_t finalResult;        ///< The ultimate result of the match
 
     // Match time
     int64_t usTimer; ///< Microsecond timer
@@ -290,8 +315,8 @@ typedef struct
     int16_t maxTime; ///< Max time allowed for the round
 
     // Animations
-    bool animating; ///< If Chowa are currently animating
-    bool wasCrit;   ///< If Chowa was hit while unready
+    bool animDone; ///< If Animation is done
+    bool wasCrit;  ///< If Chowa was hit while unready
 } cgMatch_t;
 
 typedef struct

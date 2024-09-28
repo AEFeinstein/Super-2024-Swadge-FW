@@ -157,7 +157,7 @@ void cg_runSpar(int64_t elapsedUs)
             if (true)
             {
                 cg->spar.state = CG_SPAR_MATCH;
-                cg_initSparMatch(cg, "TestMatch", &cg->chowa[0], &cg->chowa[1], 0, 20);
+                cg_initSparMatch(cg, "TestMatch", &cg->chowa[0], &cg->chowa[1], 0, 120);
             }
             break;
         }
@@ -243,18 +243,6 @@ void cg_runSpar(int64_t elapsedUs)
             break;
         }
     }
-
-    // Manage state
-    // - Schedule match (Pick from opponents, Select your Chowa)
-
-    // Handle input in match
-    // - Chowa is preparing:
-    //   - L/R/U/D/A/B: Pick a move (Punch, Fast punch, Kick, Fast kick, Headbutt, Dodge)
-    // - Chowa is regaining stamina:
-    //   - A: Increases rate of Sta regen
-    //   - B: Encourage them to stand up
-    // - Start: pause
-    // Tutorial is available when paused
 }
 
 static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
