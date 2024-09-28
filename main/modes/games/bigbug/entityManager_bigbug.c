@@ -125,9 +125,9 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
         
         if (currentEntity->active)
         {
-            // printf("hey %d\n", currentEntity->spriteIndex);
+            //printf("hey %d %d\n", i, currentEntity->spriteIndex);
             if (currentEntity->drawFunction != NULL){
-                currentEntity->drawFunction(entityManager, camera, &currentEntity);
+                currentEntity->drawFunction(entityManager, camera, currentEntity);
             }
             else{
                 drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
@@ -150,7 +150,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     {
                     case ONESHOT_ANIMATION:
                         //destroy the entity
-                        bb_destroyEntity(&currentEntity, false);
+                        bb_destroyEntity(currentEntity, false);
                         break;
                     
                     case LOOPING_ANIMATION:
@@ -274,6 +274,13 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             break;
         case FLAME_ANIM:
             entity->updateFunction = &bb_updateFlame;
+            break;
+        default:
+            entity->updateFunction = NULL;
+            entity->data = NULL;
+            entity->halfWidth = 0;
+            entity->halfHeight = 0;
+            entity->cSquared = 0;
             break;
     }
 
