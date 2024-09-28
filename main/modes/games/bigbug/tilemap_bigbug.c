@@ -1318,24 +1318,6 @@ bb_hitInfo_t* bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* 
                                          j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
                         // AABB-AABB collision detection begins here
                         // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-                        if (ent->pos.y > 90 && ent->pos.y < 110) {
-                            printf("Near Y collision: ent->pos.y = %d, ent->halfHeight = %d, tilePos.y = %d\n",
-                                ent->pos.y, ent->halfHeight, tilePos.y);
-
-                            int32_t adjustedPosYMinusHalfHeight = ent->pos.y - ent->halfHeight;
-                            int32_t adjustedPosYPlusHalfHeight  = ent->pos.y + ent->halfHeight;
-                            int32_t adjustedTilePosYPlusHalfTile = tilePos.y + BITSHIFT_HALF_TILE;
-                            int32_t adjustedTilePosYMinusHalfTile = tilePos.y - BITSHIFT_HALF_TILE;
-
-                            printf("ent->pos.y - ent->halfHeight: %d, tilePos.y + BITSHIFT_HALF_TILE: %d\n",
-                                adjustedPosYMinusHalfHeight, adjustedTilePosYPlusHalfTile);
-                            printf("ent->pos.y + ent->halfHeight: %d, tilePos.y - BITSHIFT_HALF_TILE: %d\n",
-                                adjustedPosYPlusHalfHeight, adjustedTilePosYMinusHalfTile);
-                            
-                            printf("3rd case bool: %d\n",(int32_t)ent->pos.y - (int32_t)ent->halfHeight < (int32_t)tilePos.y + (int32_t)BITSHIFT_HALF_TILE);
-                            printf("4th case bool: %d\n",(int32_t)ent->pos.y + (int32_t)ent->halfHeight > (int32_t)tilePos.y - (int32_t)BITSHIFT_HALF_TILE);
-                            printf("Debug");
-                        }
                         if (   (int32_t)ent->pos.x - (int32_t)ent->halfWidth  < (int32_t)tilePos.x + (int32_t)BITSHIFT_HALF_TILE
                             && (int32_t)ent->pos.x + (int32_t)ent->halfWidth  > (int32_t)tilePos.x - (int32_t)BITSHIFT_HALF_TILE
                             && (int32_t)ent->pos.y - (int32_t)ent->halfHeight < (int32_t)tilePos.y + (int32_t)BITSHIFT_HALF_TILE
