@@ -16,7 +16,7 @@ Be sure to take care of your Chowa or they might run away to a better home.
 
 Each Swadge can have up to 5 Chowa at once.
 
-Chowa may get along with others based on a complicated formual I have yet to dream up. Probably along the following lines: `Cha1 * Cha2 * Mood1 * Mood2 * Similar skills + personality modifiers`
+Chowa may get along with others based on a complicated formula I have yet to dream up. Probably along the following lines: `Cha1 * Cha2 * Mood1 * Mood2 * Similar skills + personality modifiers`
 
 ### Numbers
 
@@ -104,13 +104,13 @@ Fighting is a glorified game of five move rock-paper-scissors. Moves:
 - Leaping kick
 
 Chart showing who wins
-| Player 1\Player 2 | Punch | F. Punch | Kick | L. Kick | Headbutt |
-| ----------------- | ----- | -------- | ---- | ------- | -------- |
+| Player 1\Player 2 | Punch | F. Punch | Kick | Headbutt | J. Kick |
+| ----------------- | ----- | -------- | ---- | -------- | ------- |
 | Punch    | Draw | P2 | P1 | P2 | P1 |
 | F. Punch | P1 | Draw | P2 | P1 | P2 |
 | Kick     | P2 | P1 | Draw | P2 | P1 |
-| L. Kick  | P1 | P2 | P1 | Draw | P2 |
-| Headbutt | P2 | P1 | P2 | P1 | Draw |
+| Headbutt | P1 | P2 | P1 | Draw | P2 |
+| J. Kick  | P2 | P1 | P2 | P1 | Draw |
 
 Stages:
 - Both Chowa start completely unready
@@ -135,11 +135,11 @@ Player actions:
 ### Performance
 Have a small dance-off against a fellow Chowa. Plays like Simon, use arrow keys in an ever increasing pattern. Have a cap on max moves by difficulty. Player is guiding Chowa to do the routine, so sometimes the Chowa will mess up.
 
-There's a global timer, and once a sequnce is input, a new sequence will spawn.
+There's a global timer, and once a sequence is input, a new sequence will spawn.
 
-Score is based on number of completed sequnces. Stats adjust how likelt Chowa is to follow directions.
+Score is based on number of completed sequences. Stats adjust how likely Chowa is to follow directions.
 
-Sequnces can use all four arrow keys and A and B.
+Sequences can use all four arrow keys and A and B.
 
 Sequence:
 - Song starts, score is set to 0
@@ -169,7 +169,7 @@ Sequence:
 	- Cheering provides a boost in speed.
 	- Combined running value below 0.5 adds chance of tripping
 - Balance beam (Agi)
-	- Chowa tightrops.
+	- Chowa tightropes.
 	- Cheering provides a boost in speed.
 	- Agi score < 0.5 has a chance of falling off
 - Swimming (Str+Sta)
@@ -215,7 +215,7 @@ Chowa Stats:
 	- Climbing
 	- Kick
 	- Punch
-	- Heatbutt (reuse Run?)
+	- Headbutt (reuse Run?)
 	- Trip (fall over)
 	- Floundering
 - Chowa Expressions

@@ -157,7 +157,7 @@ void cg_runSpar(int64_t elapsedUs)
             if (true)
             {
                 cg->spar.state = CG_SPAR_MATCH;
-                cg_initMatch(cg, "TestMatch", &cg->chowa[0], &cg->chowa[1], 0, 20);
+                cg_initSparMatch(cg, "TestMatch", &cg->chowa[0], &cg->chowa[1], 0, 20);
             }
             break;
         }

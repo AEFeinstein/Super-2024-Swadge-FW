@@ -41,7 +41,8 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_MAX_CHOWA 10
+#define CG_MAX_CHOWA  10 // Max number of Chowa allowed on a swadge
+#define CG_STAT_COUNT 6  // Number of stats
 
 // Enums ===============================
 typedef enum
@@ -72,6 +73,7 @@ typedef enum
 
 typedef enum
 {
+    CG_HEALTH,
     CG_STRENGTH,
     CG_AGILITY,
     CG_SPEED,
@@ -105,12 +107,12 @@ typedef struct
 
     // Base data
     char name[17];
-    int8_t age;                ///< Current age of the Chowa
-    int8_t maxAge;             ///< Maximum Chowa age. 4 hours of in game time
-    int8_t PlayerAffinity;     ///< How much Chowa likes the player
-    cgMoodEnum_t mood;         ///< Current mood of the Chowa
-    cgChowaPersonality_t pers; ///< Chowa's personality
-    cgChowaStat_t stats[5];    ///< Array containing stat information
+    int8_t age;                         ///< Current age of the Chowa
+    int8_t maxAge;                      ///< Maximum Chowa age. 4 hours of in game time
+    int8_t PlayerAffinity;              ///< How much Chowa likes the player
+    cgMoodEnum_t mood;                  ///< Current mood of the Chowa
+    cgChowaPersonality_t pers;          ///< Chowa's personality
+    cgChowaStat_t stats[CG_STAT_COUNT]; ///< Array containing stat information
 
     // Color data
     // Note: Palette must be initialized for all Chowa, regardless or the colors will be screwy
@@ -173,8 +175,6 @@ typedef struct
 #define CG_FIELD_HEIGHT     750
 #define CG_FIELD_WIDTH      750
 
-// TODO: Label and organize
-
 // Structs ==============================
 typedef struct
 {
@@ -229,12 +229,14 @@ typedef enum
 
 typedef enum
 {
-    CG_UNREADY,
-    CG_READY,
-    CG_RESOLVING,
-    CG_EXHAUSTED,
-    CG_WIN,
-    CG_LOSE,
+    CG_SPAR_UNREADY,   ///< Building up for an attack
+    CG_SPAR_READY,     ///< Ready to attack
+    CG_SPAR_EXHAUSTED, ///< Gain Stamina
+    CG_SPAR_HIT,       ///< State used to animate being hit
+    CG_SPAR_ATTACK,    ///< State used to animate Attacking
+    CG_SPAR_DODGE_ST,  ///< State used to animate dodging
+    CG_SPAR_WIN,       ///< Once round ends, Animate in victory pose
+    CG_SPAR_LOSE,      ///< Once round ends, Animate in lose pose (Crying?)
 } cgMatchChowaState_t;
 
 typedef enum
@@ -245,6 +247,7 @@ typedef enum
     CG_SPAR_JUMP_KICK,
     CG_SPAR_HEADBUTT,
     CG_SPAR_DODGE,
+    CG_SPAR_UNSET, ///< Used to avoid any specific moves being prioritized in readiness system
 } cgRPSState_t;
 
 // Structs ==============================
@@ -264,6 +267,8 @@ typedef struct
     int16_t maxStamina;            ///< Max stamina of each Chowa
     int16_t stamina;               ///< Stamina of both Chowa for stamina bars
     int16_t readiness;             ///< How ready each Chowa is
+    int16_t HP;                    ///< Current HP for this Chowa
+    int16_t maxHP;                 ///< Max HP for this Chowa
     int32_t updateTimer;           ///< Used for readiness updates
     bool animating;                ///< If the Chowa is being animated
 } cgSparChowaData_t;
@@ -277,11 +282,16 @@ typedef struct
     bool paused;                    ///< If the match is paused
     bool online;                    ///< If match is online
     bool done;                      ///< If match if done
+    bool resolve;                   ///< Marks that the match should be resolved
 
     // Match time
     int64_t usTimer; ///< Microsecond timer
     int16_t timer;   ///< Round timer
     int16_t maxTime; ///< Max time allowed for the round
+
+    // Animations
+    bool animating; ///< If Chowa are currently animating
+    bool wasCrit;   ///< If Chowa was hit while unready
 } cgMatch_t;
 
 typedef struct

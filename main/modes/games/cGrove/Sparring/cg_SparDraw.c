@@ -38,6 +38,8 @@ static void cg_drawSparField(cGrove_t* cg);
 static void cg_drawSparBGObject(cGrove_t* cg, int64_t elapsedUs);
 static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs);
 static void cg_drawSparChowaUI(cGrove_t* cg);
+static void cg_drawSparProgBars(cGrove_t* cg, int16_t maxVal, int16_t currVal, int16_t x, int16_t y,
+                                paletteColor_t color, int8_t bitShift);
 
 //==============================================================================
 // Functions
@@ -188,6 +190,12 @@ void cg_drawSparMatchSetup(cGrove_t* cg)
     // Allow a player to look at the tutorial
 }
 
+/**
+ * @brief Draws the match based on current state
+ *
+ * @param cg Game Data
+ * @param elapsedUs TIme since last frame
+ */
 void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
 {
     // BG
@@ -220,6 +228,7 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     cg_drawSparChowaUI(cg);
 
     // If paused, draw pause text
+    // TODO
 }
 
 /**
@@ -241,6 +250,7 @@ static void cg_drawSparField(cGrove_t* cg)
  */
 static void cg_drawSparBGObject(cGrove_t* cg, int64_t elapsedUs)
 {
+    // If wasCrit == true, setg false and add impulses to items
     // FIXME: Do bounce thing
     for (int32_t i = 0; i < 2; i++)
     {
@@ -255,49 +265,62 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
     // - Nametags / "You!"
 }
 
+/**
+ * @brief Draws the Chowa centric UI
+ *
+ * @param cg Game Data
+ */
 static void cg_drawSparChowaUI(cGrove_t* cg)
 {
     // Player 1
+    // Draw health bar
+    cg_drawSparProgBars(cg, cg->spar.match.chowaData[0].maxHP, cg->spar.match.chowaData[0].HP, PADDING, STAT_BAR_BASE,
+                        c500, 3);
     // Draw stamina bar
-    fillDisplayArea(PADDING - 1, STAT_BAR_BASE - cg->spar.match.chowaData[0].maxStamina - 1,
-                    PADDING + STAT_BAR_WIDTH + 1, STAT_BAR_BASE + 1, c000);
-    fillDisplayArea(PADDING, STAT_BAR_BASE - cg->spar.match.chowaData[0].stamina, PADDING + STAT_BAR_WIDTH,
-                    STAT_BAR_BASE, c550);
+    cg_drawSparProgBars(cg, cg->spar.match.chowaData[0].maxStamina, cg->spar.match.chowaData[0].stamina,
+                        1 * (PADDING + STAT_BAR_WIDTH) + PADDING, STAT_BAR_BASE, c550, 1);
     // Draw Readiness bar
-    fillDisplayArea((2 * PADDING) + STAT_BAR_WIDTH - 1, STAT_BAR_BASE - 128, 2 * (PADDING + STAT_BAR_WIDTH) + 1,
-                    STAT_BAR_BASE + 1, c000);
-    fillDisplayArea((2 * PADDING) + STAT_BAR_WIDTH, STAT_BAR_BASE - (cg->spar.match.chowaData[0].readiness >> 1),
-                    2 * (PADDING + STAT_BAR_WIDTH), STAT_BAR_BASE, c050);
+    cg_drawSparProgBars(cg, 255, cg->spar.match.chowaData[0].readiness, 2 * (PADDING + STAT_BAR_WIDTH) + PADDING,
+                        STAT_BAR_BASE, c050, 1);
 
     switch (cg->spar.match.chowaData[0].currState)
     {
-        case CG_UNREADY:
+        case CG_SPAR_UNREADY:
+        case CG_SPAR_READY:
         {
             // TODO: Draw attack icon
             switch (cg->spar.match.chowaData[0].currMove)
             {
                 case CG_SPAR_PUNCH:
                 {
+                    drawWsgSimple(&cg->spar.arrow, 64, 64);
                     break;
                 }
                 case CG_SPAR_FAST_PUNCH:
                 {
+                    drawWsg(&cg->spar.arrow, 64, 64, false, true, 0);
                     break;
                 }
                 case CG_SPAR_KICK:
                 {
+                    drawWsg(&cg->spar.arrow, 64, 64, false, false, 270);
                     break;
                 }
                 case CG_SPAR_JUMP_KICK:
                 {
+                    drawWsg(&cg->spar.arrow, 64, 64, false, false, 90);
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
+                    drawWsg(&cg->spar.arrow, 64, 64, false, false, 90);
+                    drawWsg(&cg->spar.arrow, 64, 64, false, false, 270);
                     break;
                 }
                 case CG_SPAR_DODGE:
                 {
+                    drawWsg(&cg->spar.arrow, 64, 64, false, true, 0);
+                    drawWsg(&cg->spar.arrow, 64, 64, false, false, 0);
                     break;
                 }
                 default:
@@ -307,11 +330,6 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
             }
             break;
         }
-        case CG_READY:
-        {
-            drawWsgSimple(&cg->spar.arrow, 64, 64);
-            break;
-        }
         default:
         {
             break;
@@ -319,16 +337,33 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
     }
 
     // Player 2
+    // Draw health bar
+    cg_drawSparProgBars(cg, cg->spar.match.chowaData[1].maxHP, cg->spar.match.chowaData[1].HP, TFT_WIDTH - PADDING,
+                        STAT_BAR_BASE, c500, 3);
     // Draw stamina bar
-    fillDisplayArea(TFT_WIDTH - (PADDING + STAT_BAR_WIDTH + 1),
-                    STAT_BAR_BASE - cg->spar.match.chowaData[1].maxStamina - 1, TFT_WIDTH - (PADDING - 1),
-                    STAT_BAR_BASE + 1, c000);
-    fillDisplayArea(TFT_WIDTH - (PADDING + STAT_BAR_WIDTH), STAT_BAR_BASE - cg->spar.match.chowaData[1].stamina,
-                    TFT_WIDTH - PADDING, STAT_BAR_BASE, c550);
+    cg_drawSparProgBars(cg, cg->spar.match.chowaData[1].maxStamina, cg->spar.match.chowaData[1].stamina,
+                        TFT_WIDTH - (1 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c550, 1);
     // Draw Readiness bar
-    fillDisplayArea(TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH) + 1), STAT_BAR_BASE - 128,
-                    TFT_WIDTH - ((2 * PADDING) + STAT_BAR_WIDTH - 1), STAT_BAR_BASE + 1, c000);
-    fillDisplayArea(TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH)),
-                    STAT_BAR_BASE - (cg->spar.match.chowaData[1].readiness >> 1),
-                    TFT_WIDTH - ((2 * PADDING) + STAT_BAR_WIDTH), STAT_BAR_BASE, c050);
+    cg_drawSparProgBars(cg, 255, cg->spar.match.chowaData[1].readiness,
+                        TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c050, 1);
+}
+
+/**
+ * @brief Draws a progress bar facing vertically
+ *
+ * @param cg Game Data
+ * @param maxVal Height of the stat bar, bit shifted in half (To fit on screen)
+ * @param currVal Current value of the stat to track
+ * @param x X pos of the colored bar
+ * @param y Y pos base of the bar
+ * @param color Color of the bar
+ */
+static void cg_drawSparProgBars(cGrove_t* cg, int16_t maxVal, int16_t currVal, int16_t x, int16_t y,
+                                paletteColor_t color, int8_t bitShift)
+{
+    // Draw background
+    fillDisplayArea(x - 1, y - (maxVal >> bitShift) - 1, x + STAT_BAR_WIDTH + 1, y + 1, c000);
+
+    // Draw bar in proper color
+    fillDisplayArea(x, y - (currVal >> bitShift), x + STAT_BAR_WIDTH, y, color);
 }
