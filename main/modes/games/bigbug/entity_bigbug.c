@@ -69,6 +69,31 @@ void bb_updateHeavyFalling(bb_entity_t* self){
     bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
     hfData->yVel += 6;
     self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
+
+    bb_hitInfo_t* hitInfo = bb_collisionCheck(&self->gameData->tilemap, self, NULL);
+    if(hitInfo->hit == false){
+        free(hitInfo);
+        return;
+    }
+    if(hfData->yVel < 100){
+        self->updateFunction = NULL;
+        self->paused = false;
+    }
+    else{
+        hfData->yVel -= 100;
+        // Update the dirt to air.
+        self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] = 0;
+        // Create a crumble animation
+        bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                        hitInfo->tile_i * TILE_SIZE,
+                        hitInfo->tile_j * TILE_SIZE);
+    }
+    free(hitInfo);
+    return;
+}
+
+void bb_updateAnimateRocket(bb_entity_t* self){
+    
 }
 
 void bb_updateFlame(bb_entity_t* self){
@@ -206,15 +231,15 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
     self->pos.x += gData->vel.x * self->gameData->elapsedUs / 100000;
     self->pos.y += gData->vel.y * self->gameData->elapsedUs / 100000;
 
-    bb_hitInfo_t* hitInfo = bb_collisionCheck(&self->gameData->tilemap, &self, &gData->previousPos);
+    bb_hitInfo_t* hitInfo = bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos);
 
     if(hitInfo->hit == false){
         free(hitInfo);
         return;
     }
 
-    self->pos.x = hitInfo->pos.x + hitInfo->normal.x * 192;
-    self->pos.y = hitInfo->pos.y + hitInfo->normal.y * 192;
+    self->pos.x = hitInfo->pos.x + hitInfo->normal.x * self->halfWidth;
+    self->pos.y = hitInfo->pos.y + hitInfo->normal.y * self->halfHeight;
 
     // printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
     if (dotVec2d(gData->vel, hitInfo->normal)< -95)

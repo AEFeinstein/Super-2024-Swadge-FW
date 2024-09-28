@@ -135,8 +135,6 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                         - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
                     (currentEntity->pos.y >> SUBPIXEL_RESOLUTION)
                         - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
-
-                printf("sprite %d frame %d\n", currentEntity->spriteIndex, currentEntity->currentAnimationFrame);
             }
             
 
@@ -251,6 +249,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case GARBOTNIK_FLYING:
             bb_garbotnikData* gData = calloc(1, sizeof(bb_garbotnikData));
             entity->data = gData;
+            entity->halfWidth = 192;
+            entity->halfHeight = 192;
             entity->cSquared = 73728;
 
             entity->updateFunction = &bb_updateGarbotnikFlying;
@@ -264,7 +264,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             rData->flame = NULL;
             rData->yVel = 240;
             entity->data = rData;
-            entity->cSquared = 243968;
+            entity->halfWidth  =    192;
+            entity->halfHeight =   1072;
+            entity->cSquared   = 243968;
 
             entity->updateFunction = &bb_updateRocketLanding;
             entityManager->viewEntity = entity;

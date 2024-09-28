@@ -70,6 +70,8 @@ struct bb_entity_t
     bb_soundManager_t* soundManager;
     bb_entityManager_t* entityManager;
 
+    int16_t  halfWidth;//Distance from the origin to the side edge (for AABB physics)
+    int16_t  halfHeight;//Distance from the origin to the top edge (for AABB physics)
     int32_t cSquared;//Squared distance from the sprite origin to the corner of the AABB hitbox. Used for collision optimization.
 
     bb_collisionHandler_t collisionHandler;
@@ -86,6 +88,7 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
 void bb_destroyEntity(bb_entity_t* self, bool respawn);
 void bb_updateRocketLanding(bb_entity_t* self);
 void bb_updateHeavyFalling(bb_entity_t* self);
+void bb_updateAnimateRocket(bb_entity_t* self);
 void bb_updateFlame(bb_entity_t* self);
 void bb_updateGarbotnikFlying(bb_entity_t* self);
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);

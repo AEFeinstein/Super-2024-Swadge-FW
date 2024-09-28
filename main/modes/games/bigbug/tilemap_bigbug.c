@@ -1284,19 +1284,25 @@ void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera){
 bb_hitInfo_t* bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousPos){
     bb_hitInfo_t* hitInfo = calloc(1, sizeof(bb_hitInfo_t));
 
-    // Look up 4 nearest tiles for collision checks
+    // Look up nearest tiles for collision checks
     // a tile's width is 16 pixels << 4 = 512. half width is 256.
-    int32_t xIdx = (ent->pos.x - BITSHIFT_HALF_TILE) / BITSHIFT_TILE_SIZE
+    int32_t xIdx = (ent->pos.x - ent->halfWidth) / BITSHIFT_TILE_SIZE
                    - (ent->pos.x < 0); // the x index
-    int32_t yIdx = (ent->pos.y - BITSHIFT_HALF_TILE) / BITSHIFT_TILE_SIZE
+    int32_t yIdx = (ent->pos.y - ent->halfHeight) / BITSHIFT_TILE_SIZE
                    - (ent->pos.y < 0); // the y index
 
     hitInfo->tile_i = -1; // negative means no worthy candidates found.
     hitInfo->tile_j = -1;
     int32_t closestSqDist = 131072 + ent->cSquared; //((16<<4)^2+(16<<4)^2+entity's cSquared)if it's further than this, there's no way it's a collision.
-    for (int32_t i = xIdx; i <= xIdx + 1; i++)
+    int32_t right_i  = ent->halfWidth*2/BITSHIFT_TILE_SIZE;
+    right_i  = right_i  ? right_i : 1;
+    right_i += xIdx;
+    int32_t bottom_j = ent->halfHeight*2/BITSHIFT_TILE_SIZE;
+    bottom_j = bottom_j ? bottom_j : 1;
+    bottom_j += yIdx;
+    for (int32_t i = xIdx; i <= right_i; i++)
     {
-        for (int32_t j = yIdx; j <= yIdx + 1; j++)
+        for (int32_t j = yIdx; j <= bottom_j; j++)
         {
             if (i >= 0 && i < TILE_FIELD_WIDTH && j >= 0 && j < TILE_FIELD_HEIGHT)
             {
@@ -1323,15 +1329,16 @@ bb_hitInfo_t* bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* 
                          hitInfo->tile_j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
         // AABB-AABB collision detection begins here
         // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-        if (   ent->pos.x + 192 > tilePos.x - BITSHIFT_HALF_TILE
-            && ent->pos.x - 192 < tilePos.x + BITSHIFT_HALF_TILE
-            && ent->pos.y + 192 > tilePos.y - BITSHIFT_HALF_TILE
-            && ent->pos.y - 192 < tilePos.y + BITSHIFT_HALF_TILE)
+        if (   ent->pos.x + ent->halfWidth  > tilePos.x - BITSHIFT_HALF_TILE
+            && ent->pos.x - ent->halfWidth  < tilePos.x + BITSHIFT_HALF_TILE
+            && ent->pos.y + ent->halfHeight > tilePos.y - BITSHIFT_HALF_TILE
+            && ent->pos.y - ent->halfHeight < tilePos.y + BITSHIFT_HALF_TILE)
         {
             /////////////////////////
             // Collision detected! //
             /////////////////////////
-            
+            hitInfo->hit = true;
+
             if(previousPos != NULL){
                 //More accurate collision resolution if previousPos provided.
                 //Used by entities that need to bounce around or move quickly.
