@@ -164,10 +164,10 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     }
                 }
             }
-            drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-                      ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
-                      ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-                      ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+            // drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+            //           ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+            //           ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+            //           ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
         }
     }
 }
@@ -270,7 +270,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->data = rData;
             entity->halfWidth  =    192;
             entity->halfHeight =    464;
-            entity->cSquared   = 251232;
+            entity->cSquared   = 252160;
 
             entity->updateFunction = &bb_updateRocketLanding;
             entityManager->viewEntity = entity;

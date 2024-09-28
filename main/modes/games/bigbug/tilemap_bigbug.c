@@ -1291,17 +1291,14 @@ bb_hitInfo_t* bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* 
     int32_t yIdx = (ent->pos.y - ent->halfHeight) / BITSHIFT_TILE_SIZE
                    - (ent->pos.y < 0); // the y index
 
-    hitInfo->tile_i = -1; // negative means no worthy candidates found.
-    hitInfo->tile_j = -1;
     int32_t closestSqDist = 131072 + ent->cSquared; //((16<<4)^2+(16<<4)^2+entity's cSquared)if it's further than this, there's no way it's a collision.
-    int32_t right_i  = ent->halfWidth*2/BITSHIFT_TILE_SIZE;
+    closestSqDist += 200000;//Why do I have to do this? I don't know.............
+    int32_t right_i  = (ent->halfWidth*2)/BITSHIFT_TILE_SIZE;
     right_i  = right_i  ? right_i : 1;
-    right_i += xIdx;
-    right_i += 1;
-    int32_t bottom_j = ent->halfHeight*2/BITSHIFT_TILE_SIZE;
+    right_i += xIdx + 1;
+    int32_t bottom_j = (ent->halfHeight*2)/BITSHIFT_TILE_SIZE;
     bottom_j = bottom_j ? bottom_j : 1;
-    bottom_j += yIdx;
-    bottom_j += 1;
+    bottom_j += yIdx + 1;
     for (int32_t i = xIdx; i <= right_i; i++)
     {
         for (int32_t j = yIdx; j <= bottom_j; j++)
@@ -1317,75 +1314,90 @@ bb_hitInfo_t* bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* 
                     if (sqDist < closestSqDist)
                     {
                         // Good candidate found!
-                        hitInfo->tile_i = i;
-                        hitInfo->tile_j = j;
-                        closestSqDist = sqDist;
-                    }
-                }
-            }
-        }
-    }
-    if (hitInfo->tile_i > -1)
-    {
-        vec_t tilePos = {hitInfo->tile_i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE,
-                         hitInfo->tile_j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
-        // AABB-AABB collision detection begins here
-        // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-        if (   ent->pos.x + ent->halfWidth  > tilePos.x - BITSHIFT_HALF_TILE
-            && ent->pos.x - ent->halfWidth  < tilePos.x + BITSHIFT_HALF_TILE
-            && ent->pos.y + ent->halfHeight > tilePos.y - BITSHIFT_HALF_TILE
-            && ent->pos.y - ent->halfHeight < tilePos.y + BITSHIFT_HALF_TILE)
-        {
-            /////////////////////////
-            // Collision detected! //
-            /////////////////////////
-            hitInfo->hit = true;
+                        vec_t tilePos = {i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE,
+                                         j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
+                        // AABB-AABB collision detection begins here
+                        // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
+                        if (ent->pos.y > 90 && ent->pos.y < 110) {
+                            printf("Near Y collision: ent->pos.y = %d, ent->halfHeight = %d, tilePos.y = %d\n",
+                                ent->pos.y, ent->halfHeight, tilePos.y);
 
-            if(previousPos != NULL){
-                //More accurate collision resolution if previousPos provided.
-                //Used by entities that need to bounce around or move quickly.
-                    
-                // generate hitInfo based on position from previous frame.
-                hitInfo->normal = subVec2d(*previousPos, tilePos);
-            }
-            else{
-                //Worse collision resolution
-                //for entities that don't care to store their previousPos.
-                hitInfo->normal = subVec2d(ent->pos, tilePos);
-            }
-            // Snap the offset to an orthogonal direction.
-            if ((hitInfo->normal.x < 0 ? -hitInfo->normal.x : hitInfo->normal.x) > (hitInfo->normal.y < 0 ? -hitInfo->normal.y : hitInfo->normal.y))
-            {
-                if (hitInfo->normal.x > 0)
-                {
-                    hitInfo->normal.x = 1;
-                    hitInfo->normal.y = 0;
-                    hitInfo->pos.x = tilePos.x + BITSHIFT_HALF_TILE;
-                    hitInfo->pos.y = ent->pos.y;
-                }
-                else
-                {
-                    hitInfo->normal.x = -1;
-                    hitInfo->normal.y = 0;
-                    hitInfo->pos.x = tilePos.x - BITSHIFT_HALF_TILE;
-                    hitInfo->pos.y = ent->pos.y;
-                }
-            }
-            else
-            {
-                if (hitInfo->normal.y > 0)
-                {
-                    hitInfo->normal.x = 0;
-                    hitInfo->normal.y = 1;
-                    hitInfo->pos.x = ent->pos.x;
-                    hitInfo->pos.y = tilePos.y + BITSHIFT_HALF_TILE;
-                }
-                else
-                {
-                    hitInfo->normal.x = 0;
-                    hitInfo->normal.y = -1;
-                    hitInfo->pos.x = ent->pos.x;
-                    hitInfo->pos.y = tilePos.y - BITSHIFT_HALF_TILE;
+                            int32_t adjustedPosYMinusHalfHeight = ent->pos.y - ent->halfHeight;
+                            int32_t adjustedPosYPlusHalfHeight  = ent->pos.y + ent->halfHeight;
+                            int32_t adjustedTilePosYPlusHalfTile = tilePos.y + BITSHIFT_HALF_TILE;
+                            int32_t adjustedTilePosYMinusHalfTile = tilePos.y - BITSHIFT_HALF_TILE;
+
+                            printf("ent->pos.y - ent->halfHeight: %d, tilePos.y + BITSHIFT_HALF_TILE: %d\n",
+                                adjustedPosYMinusHalfHeight, adjustedTilePosYPlusHalfTile);
+                            printf("ent->pos.y + ent->halfHeight: %d, tilePos.y - BITSHIFT_HALF_TILE: %d\n",
+                                adjustedPosYPlusHalfHeight, adjustedTilePosYMinusHalfTile);
+                            
+                            printf("3rd case bool: %d\n",(int32_t)ent->pos.y - (int32_t)ent->halfHeight < (int32_t)tilePos.y + (int32_t)BITSHIFT_HALF_TILE);
+                            printf("4th case bool: %d\n",(int32_t)ent->pos.y + (int32_t)ent->halfHeight > (int32_t)tilePos.y - (int32_t)BITSHIFT_HALF_TILE);
+                            printf("Debug");
+                        }
+                        if (   (int32_t)ent->pos.x - (int32_t)ent->halfWidth  < (int32_t)tilePos.x + (int32_t)BITSHIFT_HALF_TILE
+                            && (int32_t)ent->pos.x + (int32_t)ent->halfWidth  > (int32_t)tilePos.x - (int32_t)BITSHIFT_HALF_TILE
+                            && (int32_t)ent->pos.y - (int32_t)ent->halfHeight < (int32_t)tilePos.y + (int32_t)BITSHIFT_HALF_TILE
+                            && (int32_t)ent->pos.y + (int32_t)ent->halfHeight > (int32_t)tilePos.y - (int32_t)BITSHIFT_HALF_TILE)
+                        {
+                            /////////////////////////
+                            // Collision detected! //
+                            /////////////////////////
+                            hitInfo->hit = true;
+                            closestSqDist = sqDist;
+                            hitInfo->tile_i = i;
+                            hitInfo->tile_j = j;
+
+                            if(previousPos != NULL){
+                                //More accurate collision resolution if previousPos provided.
+                                //Used by entities that need to bounce around or move quickly.
+                                    
+                                // generate hitInfo based on position from previous frame.
+                                hitInfo->normal = subVec2d(*previousPos, tilePos);
+                            }
+                            else{
+                                //Worse collision resolution
+                                //for entities that don't care to store their previousPos.
+                                hitInfo->normal = subVec2d(ent->pos, tilePos);
+                            }
+                            // Snap the offset to an orthogonal direction.
+                            if ((hitInfo->normal.x < 0 ? -hitInfo->normal.x : hitInfo->normal.x) > (hitInfo->normal.y < 0 ? -hitInfo->normal.y : hitInfo->normal.y))
+                            {
+                                if (hitInfo->normal.x > 0)
+                                {
+                                    hitInfo->normal.x = 1;
+                                    hitInfo->normal.y = 0;
+                                    hitInfo->pos.x = tilePos.x + BITSHIFT_HALF_TILE;
+                                    hitInfo->pos.y = ent->pos.y;
+                                }
+                                else
+                                {
+                                    hitInfo->normal.x = -1;
+                                    hitInfo->normal.y = 0;
+                                    hitInfo->pos.x = tilePos.x - BITSHIFT_HALF_TILE;
+                                    hitInfo->pos.y = ent->pos.y;
+                                }
+                            }
+                            else
+                            {
+                                if (hitInfo->normal.y > 0)
+                                {
+                                    hitInfo->normal.x = 0;
+                                    hitInfo->normal.y = 1;
+                                    hitInfo->pos.x = ent->pos.x;
+                                    hitInfo->pos.y = tilePos.y + BITSHIFT_HALF_TILE;
+                                }
+                                else
+                                {
+                                    hitInfo->normal.x = 0;
+                                    hitInfo->normal.y = -1;
+                                    hitInfo->pos.x = ent->pos.x;
+                                    hitInfo->pos.y = tilePos.y - BITSHIFT_HALF_TILE;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

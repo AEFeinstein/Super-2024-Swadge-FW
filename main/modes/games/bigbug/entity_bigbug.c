@@ -70,7 +70,6 @@ void bb_updateHeavyFallingInit(bb_entity_t* self){
     bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
     hfData->yVel += 6;
 
-    printf("delta y %d\n", hfData->yVel * self->gameData->elapsedUs / 100000);
     self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
 
     bb_hitInfo_t* hitInfo = bb_collisionCheck(&self->gameData->tilemap, self, NULL);
@@ -78,7 +77,6 @@ void bb_updateHeavyFallingInit(bb_entity_t* self){
         free(hitInfo);
         return;
     }
-    printf("adjust y %d\n", hfData->yVel * self->gameData->elapsedUs / 100000);
     
     self->pos.y = hitInfo->pos.y - self->halfHeight;
     if(hfData->yVel < 160){
@@ -110,7 +108,6 @@ void bb_updateHeavyFalling(bb_entity_t* self){
         return;
     }
     
-    printf("y %d\n", self->halfHeight);
     // self->pos.y -= hfData->yVel * self->gameData->elapsedUs / 100000;
     self->pos.y = hitInfo->pos.y - self->halfHeight;
     if(hfData->yVel < 160){
@@ -308,8 +305,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
             self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] == 4){
             // Create a crumble animation
             bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                            hitInfo->tile_i * TILE_SIZE,
-                            hitInfo->tile_j * TILE_SIZE);
+                            hitInfo->tile_i * TILE_SIZE + HALF_TILE,
+                            hitInfo->tile_j * TILE_SIZE + HALF_TILE);
         }
         else{
             // Create a bump animation
