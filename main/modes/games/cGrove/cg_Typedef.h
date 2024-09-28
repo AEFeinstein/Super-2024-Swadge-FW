@@ -22,23 +22,6 @@
 #define CG_MAX_STR_LEN 17
 
 //==============================================================================
-// Enums
-//==============================================================================
-
-typedef enum
-{
-    CG_P1,
-    CG_P2,
-} cgPlayers_t;
-
-typedef enum
-{
-    CG_P1_WIN,
-    CG_P2_WIN,
-    CG_DRAW,
-} cgWinLoss_t;
-
-//==============================================================================
 // Items
 //==============================================================================
 
@@ -168,10 +151,16 @@ typedef struct
 // Enums ===============================
 typedef enum
 {
-    CG_SPAR_PLAYER1,
-    CG_SPAR_PLAYER2,
-    CG_SPAR_DRAW,
-} cgResult_t;
+    CG_P1,
+    CG_P2,
+} cgPlayers_t;
+
+typedef enum
+{
+    CG_P1_WIN,
+    CG_P2_WIN,
+    CG_DRAW,
+} cgWinLoss_t;
 
 // Structs ==============================
 typedef struct
@@ -181,7 +170,7 @@ typedef struct
     char chowaNames[6][CG_MAX_STR_LEN];  ///< Up to 6 Chowa participate
     cgColorType_t colorType[6];          ///< Type of Chowa
     wsgPalette_t palettes[6];            ///< Colors of the Chowa for drawing
-    cgResult_t result[3];                ///< Results of all three matches
+    cgWinLoss_t result[3];               ///< Results of all three matches
     int16_t timer[3];                    ///< Time per round in seconds
 } cgRecord_t;
 
@@ -299,15 +288,19 @@ typedef struct
 
 typedef struct
 {
-    // State
+    // Data
     char matchName[CG_MAX_STR_LEN]; ///< Name of the current match
-    cgSparChowaData_t chowaData[2]; ///< Extended Chowa data
     int8_t round;                   ///< The round of the fight
+
+    // State
+    cgSparChowaData_t chowaData[2]; ///< Extended Chowa data
     bool paused;                    ///< If the match is paused
     bool online;                    ///< If match is online
-    bool done;                      ///< If match if done
     bool resolve;                   ///< Marks that the match should be resolved
-    cgWinLoss_t finalResult;        ///< The ultimate result of the match
+
+    // Match ended
+    bool done;               ///< If match if finished
+    cgWinLoss_t finalResult; ///< The ultimate result of the match
 
     // Match time
     int64_t usTimer; ///< Microsecond timer

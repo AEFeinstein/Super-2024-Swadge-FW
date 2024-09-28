@@ -153,21 +153,21 @@ void cg_drawSparRecord(cGrove_t* cg)
     // Draw result of the game
     switch (record->result[cg->spar.roundSelect])
     {
-        case CG_SPAR_PLAYER1:
+        case CG_P1_WIN:
         {
             snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->playerNames[0]);
             drawText(&cg->spar.sparRegFont, c533, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2,
                      220);
             break;
         }
-        case CG_SPAR_PLAYER2:
+        case CG_P2_WIN:
         {
             snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->playerNames[1]);
             drawText(&cg->spar.sparRegFont, c335, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2,
                      220);
             break;
         }
-        case CG_SPAR_DRAW:
+        case CG_DRAW:
         {
             drawText(&cg->spar.sparRegFont, c333, "Draw", (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, "Draw")) / 2,
                      220);
@@ -342,8 +342,8 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
     cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P1].maxStamina, cg->spar.match.chowaData[CG_P1].stamina,
                         1 * (PADDING + STAT_BAR_WIDTH) + PADDING, STAT_BAR_BASE, c550, 1);
     // Draw Readiness bar
-    cg_drawSparProgBars(cg, 255, cg->spar.match.chowaData[CG_P1].readiness, 2 * (PADDING + STAT_BAR_WIDTH) + PADDING,
-                        STAT_BAR_BASE, c050, 1);
+    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowaData[CG_P1].readiness, 2 * (PADDING + STAT_BAR_WIDTH) + PADDING,
+                        STAT_BAR_BASE, c050, -1);
 
     switch (cg->spar.match.chowaData[CG_P1].currState)
     {
@@ -406,8 +406,8 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
     cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P2].maxStamina, cg->spar.match.chowaData[CG_P2].stamina,
                         TFT_WIDTH - (1 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c550, 1);
     // Draw Readiness bar
-    cg_drawSparProgBars(cg, 255, cg->spar.match.chowaData[CG_P2].readiness,
-                        TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c050, 1);
+    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowaData[CG_P2].readiness,
+                        TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c050, -1);
 }
 
 /**
@@ -419,10 +419,20 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
  * @param x X pos of the colored bar
  * @param y Y pos base of the bar
  * @param color Color of the bar
+ * @param bitShift How many bits to shift to ring bar into scale. Negative to expand bar.
  */
 static void cg_drawSparProgBars(cGrove_t* cg, int16_t maxVal, int16_t currVal, int16_t x, int16_t y,
                                 paletteColor_t color, int8_t bitShift)
 {
+    if (bitShift < 0)
+    {
+        // Draw background
+        fillDisplayArea(x - 1, y - (maxVal << abs(bitShift)) - 1, x + STAT_BAR_WIDTH + 1, y + 1, c000);
+
+        // Draw bar in proper color
+        fillDisplayArea(x, y - (currVal << abs(bitShift)), x + STAT_BAR_WIDTH, y, color);
+        return;
+    }
     // Draw background
     fillDisplayArea(x - 1, y - (maxVal >> bitShift) - 1, x + STAT_BAR_WIDTH + 1, y + 1, c000);
 
