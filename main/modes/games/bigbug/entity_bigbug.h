@@ -40,13 +40,13 @@ typedef struct{
     int32_t yVel;
 } bb_heavyFallingData_t;
 
-typedef void (*bb_updateFunction_t)(struct bb_entity_t* self);
-typedef void (*bb_drawFunction_t)(struct bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-typedef void (*bb_collisionHandler_t)(struct bb_entity_t* self, struct bb_entity_t* other);
-typedef bool (*bb_tileCollisionHandler_t)(struct bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
+typedef void (*bb_updateFunction_t)(bb_entity_t* self);
+typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+typedef void (*bb_collisionHandler_t)(bb_entity_t* self, bb_entity_t* other);
+typedef bool (*bb_tileCollisionHandler_t)(bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
                                           uint8_t direction);
-typedef void (*bb_fallOffTileHandler_t)(struct bb_entity_t* self);
-typedef void (*bb_overlapTileHandler_t)(struct bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
+typedef void (*bb_fallOffTileHandler_t)(bb_entity_t* self);
+typedef void (*bb_overlapTileHandler_t)(bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 
 struct bb_entity_t
 {
