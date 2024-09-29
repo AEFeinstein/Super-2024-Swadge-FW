@@ -1362,31 +1362,22 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
     if (pa_isSolid(tileId))
     {
         soundPlaySfx(&(self->soundManager->sndHit), 1);
-        pa_destroyEntity(self, false);
-
+        
+        self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth
+                               + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)]
+                = self->state;
+         
         if (PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) == self->homeTileX
             && PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) == self->homeTileY)
         {
-            paEntity_t* newEntity = pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-           
-            if (self->state == PA_TILE_SPAWN_BLOCK_0)
-            {
-                pa_scorePoints(self->gameData, 50);
-                self->entityManager->gameData->remainingEnemies--;
-
-                pa_executeSpawnBlockCombo(self, self->homeTileX+1, self->homeTileY);
-                pa_executeSpawnBlockCombo(self, self->homeTileX-1, self->homeTileY);
-                pa_executeSpawnBlockCombo(self, self->homeTileX, self->homeTileY+1);
-                pa_executeSpawnBlockCombo(self, self->homeTileX, self->homeTileY-1);
+            if(self->state == PA_TILE_SPAWN_BLOCK_0){ 
+                pa_executeSpawnBlockCombo(self, self->homeTileX, self->homeTileY);
+            } else {
+                pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
             }
-            
         }
-        else
-        {
-            self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth
-                               + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)]
-                = self->state;
-        }
+
+        pa_destroyEntity(self, false);
 
         return true;
     }
@@ -1394,20 +1385,24 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
 }
 
 void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty){
-    if(pa_getTile(self->tilemap, tx, ty) == PA_TILE_SPAWN_BLOCK_0){
-        paEntity_t* newEntity = pa_createBreakBlock(self->entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
-        if(newEntity == NULL) {
-            pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
-        }
-        
-        pa_scorePoints(self->gameData, (self->gameData->combo > 2) ? 1000: 100);
-        self->entityManager->gameData->remainingEnemies--;
-        
-        pa_executeSpawnBlockCombo(self, tx+1, ty);
-        pa_executeSpawnBlockCombo(self, tx-1, ty);
-        pa_executeSpawnBlockCombo(self, tx, ty+1);
-        pa_executeSpawnBlockCombo(self, tx, ty-1);
+    uint8_t t = pa_getTile(self->tilemap, tx, ty);
+    paEntity_t* newEntity;
+
+    switch(t){
+        case PA_TILE_SPAWN_BLOCK_0:
+            newEntity = pa_createBreakBlock(self->entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+            if(newEntity == NULL) {
+                pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
+                pa_scorePoints(self->gameData, (self->gameData->combo > 2) ? 1000: 100);
+                self->entityManager->gameData->remainingEnemies--;
+            } else {
+                newEntity->state = PA_TILE_SPAWN_BLOCK_0;
+            }
+            break;
+        default:
+            break;
     }
+
 }
 
 void dieWhenFallingOffScreen(paEntity_t* self)
@@ -1436,10 +1431,29 @@ void pa_updateBreakBlock(paEntity_t* self)
 
         if (self->spriteIndex > PA_SP_BREAK_BLOCK_3)
         {
-            pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-            pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-            pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-            pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            uint8_t tx = (self->x >> SUBPIXEL_RESOLUTION >> PA_TILE_SIZE_IN_POWERS_OF_2);
+            uint8_t ty = (self->y >> SUBPIXEL_RESOLUTION >> PA_TILE_SIZE_IN_POWERS_OF_2);
+
+            switch(self->state){
+                case PA_TILE_SPAWN_BLOCK_0:
+                    pa_scorePoints(self->gameData, (self->gameData->combo > 2) ? 1000: 100);
+                    soundPlaySfx(&self->soundManager->sndBreak, BZR_STEREO);
+                    self->entityManager->gameData->remainingEnemies--;
+                    
+                    pa_executeSpawnBlockCombo(self, tx+1, ty);
+                    pa_executeSpawnBlockCombo(self, tx-1, ty);
+                    pa_executeSpawnBlockCombo(self, tx, ty+1);
+                    pa_executeSpawnBlockCombo(self, tx, ty-1);
+                    break;
+                default:
+                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION); 
+                    break;
+            }
+           
+            
             pa_destroyEntity(self, false);
         }
     }

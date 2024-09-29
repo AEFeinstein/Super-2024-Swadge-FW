@@ -294,6 +294,7 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->state                = 0;
 
     pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
 
