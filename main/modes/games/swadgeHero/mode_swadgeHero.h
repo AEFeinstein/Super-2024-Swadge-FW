@@ -92,6 +92,11 @@ typedef struct
     int32_t const* noteToIcon;
     int32_t tempo;
 
+    // Score data
+    int32_t score;
+    int32_t failMeter;
+    int32_t combo;
+
     // Fret line data
     list_t fretLines;
     int32_t lastFretLineUs;

@@ -44,6 +44,12 @@ static const char hit_early[] = "Early";
 static const char hit_late[]  = "Late";
 
 //==============================================================================
+// Function Declarations
+//==============================================================================
+
+static int32_t getMultiplier(shVars_t* sh);
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -104,6 +110,11 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
     fretLine->headPosY     = TFT_HEIGHT + 1;
     fretLine->headTimeUs   = sh->lastFretLineUs;
     push(&sh->fretLines, fretLine);
+
+    // Set score, combo, and fail
+    sh->score     = 0;
+    sh->combo     = 0;
+    sh->failMeter = 50;
 }
 
 /**
@@ -305,6 +316,10 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         {
             // There is no tail and the whole note is offscreen
             shouldRemove = true;
+
+            // Break the combo
+            sh->combo     = 0;
+            sh->failMeter = MAX(0, sh->failMeter - 2);
         }
 
         // If the game note should be removed
@@ -436,6 +451,28 @@ void shDrawGame(shVars_t* sh)
         }
     }
 
+    int32_t textMargin    = 12;
+    int32_t failBarHeight = 8;
+
+    // Draw combo when 10+
+    if (sh->combo >= 10)
+    {
+        char comboText[32] = {0};
+        snprintf(comboText, sizeof(comboText) - 1, "Combo: %" PRId32, sh->combo);
+        int16_t tWidth = textWidth(&sh->rodin, comboText);
+        drawText(&sh->rodin, c555, comboText, (TFT_WIDTH - tWidth - textMargin),
+                 TFT_HEIGHT - failBarHeight - sh->rodin.height);
+    }
+
+    // Always draw score
+    char scoreText[32] = {0};
+    snprintf(scoreText, sizeof(scoreText) - 1, "%" PRId32, sh->score);
+    drawText(&sh->rodin, c555, scoreText, textMargin, TFT_HEIGHT - failBarHeight - sh->rodin.height);
+
+    // Draw fail meter bar
+    int32_t failMeterWidth = (sh->failMeter * TFT_WIDTH) / 100;
+    fillDisplayArea(0, TFT_HEIGHT - failBarHeight, failMeterWidth, TFT_HEIGHT - 1, c440);
+
     // Set LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
     // for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
@@ -496,36 +533,49 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                 // Check if this button hit a note
                 bool gameNoteHit = false;
 
+                int32_t baseScore = 0;
+
                 // Classify the time off
                 if (usOff < 21500)
                 {
                     sh->hitText = hit_fantastic;
                     gameNoteHit = true;
+                    baseScore   = 5;
                 }
                 else if (usOff < 43000)
                 {
                     sh->hitText = hit_marvelous;
                     gameNoteHit = true;
+                    baseScore   = 4;
                 }
                 else if (usOff < 102000)
                 {
                     sh->hitText = hit_great;
                     gameNoteHit = true;
+                    baseScore   = 3;
                 }
                 else if (usOff < 135000)
                 {
                     sh->hitText = hit_decent;
                     gameNoteHit = true;
+                    baseScore   = 2;
                 }
                 else if (usOff < 180000)
                 {
                     sh->hitText = hit_way_off;
                     gameNoteHit = true;
+                    baseScore   = 1;
                 }
                 else
                 {
                     sh->hitText = hit_miss;
+                    // Break the combo
+                    sh->combo     = 0;
+                    sh->failMeter = MAX(0, sh->failMeter - 2);
                 }
+
+                // Increment the score
+                sh->score += getMultiplier(sh) * baseScore;
 
                 // Set a timer to not show the text forever
                 sh->textTimerUs = SH_TEXT_TIME;
@@ -533,6 +583,10 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                 // If it was close enough to hit
                 if (gameNoteHit)
                 {
+                    // Increment the combo
+                    sh->combo++;
+                    sh->failMeter = MIN(100, sh->failMeter + 1);
+
                     if (gameNote->tailPosY >= 0)
                     {
                         // There is a tail, don't remove the note yet
@@ -561,6 +615,11 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
         {
             // Total miss
             sh->hitText = hit_miss;
+
+            // Break the combo
+            sh->combo     = 0;
+            sh->failMeter = MAX(0, sh->failMeter - 2);
+
             // TODO ignore buttons not used for this difficulty
         }
     }
@@ -582,4 +641,15 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     // // Get the acceleration
     // int16_t a_x, a_y, a_z;
     // accelGetAccelVec(&a_x, &a_y, &a_z);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param sh
+ * @return int32_t
+ */
+static int32_t getMultiplier(shVars_t* sh)
+{
+    return MIN(4, (sh->combo + 10) / 10);
 }
