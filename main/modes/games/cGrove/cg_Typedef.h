@@ -113,7 +113,7 @@ typedef struct
     char name[17];
     int8_t age;                         ///< Current age of the Chowa
     int8_t maxAge;                      ///< Maximum Chowa age. 4 hours of in game time
-    int8_t playerAffinity;              ///< How much Chowa likes the player
+    uint8_t playerAffinity;              ///< How much Chowa likes the player
     cgMoodEnum_t mood;                  ///< Current mood of the Chowa
     cgChowaPersonality_t pers;          ///< Chowa's personality
     cgChowaStat_t stats[CG_STAT_COUNT]; ///< Array containing stat information
