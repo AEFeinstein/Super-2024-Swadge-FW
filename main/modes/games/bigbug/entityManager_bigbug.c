@@ -148,19 +148,23 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                 {
                     switch (currentEntity->type)
                     {
-                    case ONESHOT_ANIMATION:
-                        //destroy the entity
-                        bb_destroyEntity(currentEntity, false);
-                        break;
-                    
-                    case LOOPING_ANIMATION:
-                        //reset the animation
-                        currentEntity->animationTimer = 0;
-                        currentEntity->currentAnimationFrame = 0;
-                        break;
-
-                    default:
-                        break;
+                        case ONESHOT_ANIMATION:
+                        {
+                            //destroy the entity
+                            bb_destroyEntity(currentEntity, false);
+                            break;
+                        }
+                        case LOOPING_ANIMATION:
+                        {
+                            //reset the animation
+                            currentEntity->animationTimer = 0;
+                            currentEntity->currentAnimationFrame = 0;
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -251,6 +255,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     switch (spriteIndex)
     {
         case GARBOTNIK_FLYING:
+        {
             bb_garbotnikData* gData = calloc(1, sizeof(bb_garbotnikData));
             entity->data = gData;
             entity->halfWidth = 192;
@@ -263,7 +268,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             //entityManager->viewEntity = entity;
             entityManager->playerEntity = entity;
             break;
+        }
         case ROCKET_ANIM:
+        {
             bb_rocketData_t* rData = calloc(1, sizeof(bb_rocketData_t));
             rData->flame = NULL;
             rData->yVel = 240;
@@ -276,16 +283,21 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entityManager->viewEntity = entity;
             entityManager->playerEntity = entity;
             break;
+        }
         case FLAME_ANIM:
+        {
             entity->updateFunction = &bb_updateFlame;
             break;
+        }
         default:
+        {
             entity->updateFunction = NULL;
             entity->data = NULL;
             entity->halfWidth = 0;
             entity->halfHeight = 0;
             entity->cSquared = 0;
             break;
+        }
     }
 
     if (entity != NULL)

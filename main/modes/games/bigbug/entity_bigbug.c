@@ -18,8 +18,8 @@
 // Constants
 //==============================================================================
 // #define SIGNOF(x) ((x > 0) - (x < 0))
-#define TILE_FIELD_WIDTH  32  // matches the level wsg graphic width
-#define TILE_FIELD_HEIGHT 192 // matches the level wsg graphic height
+// #define TILE_FIELD_WIDTH  32  // matches the level wsg graphic width
+// #define TILE_FIELD_HEIGHT 192 // matches the level wsg graphic height
 
 //==============================================================================
 // Functions
@@ -316,7 +316,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
                             hitInfo->pos.x >> DECIMAL_BITS,
                             hitInfo->pos.y >> DECIMAL_BITS);
         }
-        free(hitInfo);
 
         ////////////////////////////////
         // Mirror garbotnik's velocity//
@@ -337,6 +336,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
             subVec2d(gData->vel, mulVec2d(hitInfo->normal, (2 * dotVec2d(gData->vel, hitInfo->normal)))),
             bounceScalar);
 
+        
         /////////////////////////////////
         // check neighbors for stability//
         /////////////////////////////////
@@ -356,6 +356,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
         //         push(self->gameData->pleaseCheck, (void*)val);
         //     }
         // }
+        free(hitInfo);
     }
 }
 

@@ -62,7 +62,7 @@ void bb_DrawForegroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, con
                                  uint32_t j);
 void bb_DrawMidgroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, uint32_t i,
                                 uint32_t j);
-bb_hitInfo_t* bb_collisionCheck();
+bb_hitInfo_t* bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousPos);
 wsg_t (*bb_GetMidgroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[120];
 wsg_t (*bb_GetForegroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[240];
 

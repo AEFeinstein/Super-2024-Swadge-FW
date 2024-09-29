@@ -78,13 +78,11 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
 
 // big bug logic
 // static void bb_LoadScreenDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void bb_ControlGarbotnik(int64_t elapsedUs);
 static void bb_DrawScene(void);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
 static void bb_UpdateTileSupport(void);
-static void bb_UpdatePhysics(int64_t elapsedUs);
 
 //==============================================================================
 // Strings
@@ -242,7 +240,12 @@ static void bb_DrawScene(void)
 {
     vec_t garbotnikDrawPos = {.x = (bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 18,
                               .y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 17};
-    bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos, &((bb_garbotnikData*)bigbug->gameData.entityManager.playerEntity->data)->yaw);
+    if(bigbug->gameData.entityManager.playerEntity->spriteIndex == GARBOTNIK_FLYING){
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos, &((bb_garbotnikData*)bigbug->gameData.entityManager.playerEntity->data)->yaw);
+    }
+    else{
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos, &(vec_t){0,0});
+    }
     bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->camera);
 
     bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->camera);
