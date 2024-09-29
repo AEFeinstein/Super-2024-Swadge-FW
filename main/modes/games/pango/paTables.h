@@ -24,6 +24,18 @@ static const uint8_t
         1,  1, 15, 1,  1,  13, 15, 13, 8, 1,  15, 7, 8, 13, 1,  7, 4, 1,  12, 1,
         15, 4, 15, 10, 12, 13, 4,  13, 1, 10, 1,  4, 6, 1,  10, 1, 6, 13, 10, 13};
 
+#define SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH 10
+
+static const uint32_t spawnBlockComboScores[SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH] = {
+    50, 50, 2000, 2000, 2000, 5000, 5000, 5000, 5000, 10000
+};
+
+#define HIT_BLOCK_COMBO_SCORE_TABLE_LENGTH 10
+
+static const uint32_t hitBlockComboScores[HIT_BLOCK_COMBO_SCORE_TABLE_LENGTH] = {
+    100, 200, 400, 800, 1600, 3200, 3200, 6400, 6400, 6400
+};
+
 /*#define MASTER_DIFFICULTY2_TABLE_LENGTH 6
 
 #define TOTAL_ENEMIES_LOOKUP_OFFSET 0
@@ -60,10 +72,24 @@ static const int16_t masterDifficulty2[MASTER_DIFFICULTY2_TABLE_LENGTH * MASTER_
 
 static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DIFFICULTY_TABLE_ROW_LENGTH] = {
 
-    // Total    max           min    max
-    // enemies, active, speed aggro, aggro,
-    5, 2, 12, 5, 3, 12, 6, 3, 13, 7, 4, 10, 8, 3, 13, 8, 3, 14, 8,  3, 15, 7,  2, 16,
-    8, 3, 15, 8, 3, 16, 9, 3, 16, 8, 4, 12, 9, 3, 16, 8, 3, 17, 10, 4, 14, 12, 1, 18,
+    // Total    max            min    max
+    // enemies, active, speed, aggro, aggro,
+             25,       2,   12, 
+    5, 3, 12, 
+    6, 3, 13, 
+    7, 4, 10,
+    8, 3, 13, 
+    8, 3, 14, 
+    8, 3, 15, 
+    7, 2, 16,
+    8, 3, 15, 
+    8, 3, 16, 
+    9, 3, 16, 
+    8, 4, 12, 
+    9, 3, 16, 
+    8, 3, 17, 
+    10, 4, 14, 
+    12, 1, 18,
 };
 
 #endif

@@ -14,6 +14,7 @@
 #include "trigonometry.h"
 #include <esp_log.h>
 #include "soundFuncs.h"
+#include "paTables.h"
 
 //==============================================================================
 // Constants
@@ -1210,7 +1211,10 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
         case ENTITY_HIT_BLOCK:
             self->xspeed = other->xspeed * 2;
             self->yspeed = other->yspeed * 2;
-            pa_scorePoints(self->gameData, self->scoreValue);
+
+            pa_scorePoints(self->gameData, hitBlockComboScores[other->scoreValue]);
+            other->scoreValue++;
+
             soundPlaySfx(&(self->soundManager->sndHurt), 2);
             killEnemy(self);
             break;
@@ -1371,7 +1375,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
             && PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) == self->homeTileY)
         {
             if(self->state == PA_TILE_SPAWN_BLOCK_0){ 
-                pa_executeSpawnBlockCombo(self, self->homeTileX, self->homeTileY);
+                pa_executeSpawnBlockCombo(self, self->homeTileX, self->homeTileY, 0);
             } else {
                 pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
             }
@@ -1384,7 +1388,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
     return false;
 }
 
-void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty){
+void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty, uint16_t scoreIndex){
     uint8_t t = pa_getTile(self->tilemap, tx, ty);
     paEntity_t* newEntity;
 
@@ -1393,10 +1397,11 @@ void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty){
             newEntity = pa_createBreakBlock(self->entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
             if(newEntity == NULL) {
                 pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
-                pa_scorePoints(self->gameData, (self->gameData->combo > 2) ? 1000: 100);
+                pa_scorePoints(self->gameData, spawnBlockComboScores[self->scoreValue]);
                 self->entityManager->gameData->remainingEnemies--;
             } else {
                 newEntity->state = PA_TILE_SPAWN_BLOCK_0;
+                newEntity->scoreValue = scoreIndex;
             }
             break;
         default:
@@ -1436,14 +1441,14 @@ void pa_updateBreakBlock(paEntity_t* self)
 
             switch(self->state){
                 case PA_TILE_SPAWN_BLOCK_0:
-                    pa_scorePoints(self->gameData, (self->gameData->combo > 2) ? 1000: 100);
+                    pa_scorePoints(self->gameData, spawnBlockComboScores[self->scoreValue]);
                     soundPlaySfx(&self->soundManager->sndBreak, BZR_STEREO);
                     self->entityManager->gameData->remainingEnemies--;
                     
-                    pa_executeSpawnBlockCombo(self, tx+1, ty);
-                    pa_executeSpawnBlockCombo(self, tx-1, ty);
-                    pa_executeSpawnBlockCombo(self, tx, ty+1);
-                    pa_executeSpawnBlockCombo(self, tx, ty-1);
+                    pa_executeSpawnBlockCombo(self, tx+1, ty, self->scoreValue++);
+                    pa_executeSpawnBlockCombo(self, tx-1, ty, self->scoreValue++);
+                    pa_executeSpawnBlockCombo(self, tx, ty+1, self->scoreValue++);
+                    pa_executeSpawnBlockCombo(self, tx, ty-1, self->scoreValue++);
                     break;
                 default:
                     pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);

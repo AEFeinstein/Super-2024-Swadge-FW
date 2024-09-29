@@ -105,12 +105,8 @@ void pa_updateLedsHpMeter(paEntityManager_t* entityManager, paGameData_t* gameDa
 
 void pa_scorePoints(paGameData_t* gameData, uint16_t points)
 {
-    gameData->combo++;
-
-    uint32_t comboPoints = points * gameData->combo;
-
-    gameData->score += comboPoints;
-    gameData->comboScore = comboPoints;
+    gameData->score += points;
+    gameData->comboScore = points;
 
     gameData->comboTimer = 60;
 }

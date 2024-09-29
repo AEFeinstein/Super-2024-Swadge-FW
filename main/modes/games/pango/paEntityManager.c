@@ -366,6 +366,7 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
     entity->type                 = ENTITY_HIT_BLOCK;
     entity->spriteIndex          = PA_SP_BLOCK;
     entity->animationTimer       = 0;
+    entity->scoreValue           = 0;
     entity->updateFunction       = &updateHitBlock;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_hitBlockTileCollisionHandler;
