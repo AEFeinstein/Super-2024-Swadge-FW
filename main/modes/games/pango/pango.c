@@ -49,8 +49,8 @@ static const paletteColor_t redColors[4]    = {c501, c540, c550, c540};
 static const paletteColor_t yellowColors[4] = {c550, c331, c550, c555};
 static const paletteColor_t greenColors[4]  = {c555, c051, c030, c051};
 static const paletteColor_t cyanColors[4]   = {c055, c455, c055, c033};
-static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
-static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
+//static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
+//static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
 
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
