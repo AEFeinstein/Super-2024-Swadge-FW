@@ -17,7 +17,6 @@ typedef enum
     SH_MENU,
     SH_GAME,
     SH_GAME_END,
-    SH_HIGH_SCORES,
 } shScreen_t;
 
 typedef enum
@@ -109,6 +108,9 @@ typedef struct
     const char* timingText;
     int32_t textTimerUs;
     wsg_t icons[6];
+
+    // High score display
+    list_t hsStrs;
 } shVars_t;
 
 //==============================================================================

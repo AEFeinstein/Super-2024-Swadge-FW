@@ -133,7 +133,10 @@ static void shMainLoop(int64_t elapsedUs)
                 break;
             }
             case SH_GAME_END:
-            case SH_HIGH_SCORES:
+            {
+                // TODO implement game end
+                break;
+            }
             case SH_NONE:
             default:
             {
@@ -157,7 +160,10 @@ static void shMainLoop(int64_t elapsedUs)
             break;
         }
         case SH_GAME_END:
-        case SH_HIGH_SCORES:
+        {
+            // TODO implement game end
+            break;
+        }
         case SH_NONE:
         default:
         {
@@ -219,7 +225,10 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
             break;
         }
         case SH_GAME_END:
-        case SH_HIGH_SCORES:
+        {
+            // TODO implement game end
+            break;
+        }
         case SH_NONE:
         default:
         {
@@ -264,7 +273,10 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
             break;
         }
         case SH_GAME_END:
-        case SH_HIGH_SCORES:
+        {
+            // TODO implement game end
+            break;
+        }
         case SH_NONE:
         default:
         {
