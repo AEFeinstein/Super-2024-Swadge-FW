@@ -102,6 +102,8 @@ void bb_updateHeavyFalling(bb_entity_t* self){
     hfData->yVel += 6;
     self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
 
+    // printf("tilemap addr: %p\n", &self->gameData->tilemap);
+    // printf("self    addr: %p\n", self);
     bb_hitInfo_t* hitInfo = bb_collisionCheck(&self->gameData->tilemap, self, NULL);
     if(hitInfo->hit == false){
         free(hitInfo);

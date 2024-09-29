@@ -761,7 +761,9 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     // 1111 1.0.   (18,0), (19,1), (16,2), (17,3),#right of concave corners
                     // 1111 1110   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
                     uint8_t num = (sprite_idx << 4) + corner_info; // 8-bit number
-
+                    if(brightness>5){
+                        brightness = 5;
+                    }
                     if ((num & 0b11000000) == 0b00000000)
                     {
                         // Case 1: 00.. ....
@@ -905,6 +907,9 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     // 1111 .1.0   (17,0), (16,1), (19,2), (18,3),#left of concave corners
                     // 1111 01..   (18,0), (19,1), (16,2), (17,3),#right of concave corners
                     // 1111 1101   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
+                    if(brightness > 5){
+                        brightness = 5;
+                    }
                     if ((num & 0b01100000) == 0b00000000)
                     {
                         // L00D ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
@@ -1056,6 +1061,9 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     // 1111 0.1.   (17,0), (16,1), (19,2), (18,3),#left of concave corners
                     // 1111 ..10   (18,0), (19,1), (16,2), (17,3),#right of concave corners
                     // 1111 1011   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
+                    if(brightness > 5){
+                        brightness = 5;
+                    }
                     if ((num & 0b10010000) == 0b00000000)
                     {
                         // 0UR0 ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
@@ -1197,6 +1205,9 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         // >>    & 0xFF gets blue  channel
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
                         lookup.x += 56;
+                    }
+                    if(brightness > 5){
+                        brightness = 5;
                     }
                     // Bottom Right                          V
                     if ((num & 0b00110000) == 0b00000000)

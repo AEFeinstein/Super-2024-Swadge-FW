@@ -52,69 +52,69 @@ void IRAM_ATTR __wrap_esp_panic_handler(void* info)
 {
     esp_rom_printf("Panic has been triggered\n");
 
-    nvs_handle_t handle;
-    if (nvs_open(NVS_NAMESPACE_NAME, NVS_READWRITE, &handle) == ESP_OK)
-    {
-        // Write and hope for the best.
-        nvs_set_blob(handle, crashwrapTag, info, 36);
-        if (((panic_info_t*)info)->description)
-        {
-            int len = strlen(((panic_info_t*)info)->description);
-            nvs_set_blob(handle, crashdesc, ((panic_info_t*)info)->description, len);
-        }
-        if (((panic_info_t*)info)->reason)
-        {
-            int len = strlen(((panic_info_t*)info)->reason);
-            nvs_set_blob(handle, crashreason, ((panic_info_t*)info)->reason, len);
-        }
+    // nvs_handle_t handle;
+    // if (nvs_open(NVS_NAMESPACE_NAME, NVS_READWRITE, &handle) == ESP_OK)
+    // {
+    //     // Write and hope for the best.
+    //     nvs_set_blob(handle, crashwrapTag, info, 36);
+    //     if (((panic_info_t*)info)->description)
+    //     {
+    //         int len = strlen(((panic_info_t*)info)->description);
+    //         nvs_set_blob(handle, crashdesc, ((panic_info_t*)info)->description, len);
+    //     }
+    //     if (((panic_info_t*)info)->reason)
+    //     {
+    //         int len = strlen(((panic_info_t*)info)->reason);
+    //         nvs_set_blob(handle, crashreason, ((panic_info_t*)info)->reason, len);
+    //     }
 
-        const XtExcFrame* fr = ((panic_info_t*)info)->frame;
-        if (fr)
-        {
-            nvs_set_blob(handle, crashframe, fr, sizeof(XtExcFrame));
-        }
+    //     const XtExcFrame* fr = ((panic_info_t*)info)->frame;
+    //     if (fr)
+    //     {
+    //         nvs_set_blob(handle, crashframe, fr, sizeof(XtExcFrame));
+    //     }
 
-        nvs_set_blob(handle, crashpanic, panicreason ? panicreason : "", panicreason ? strlen(panicreason) : 0);
+    //     nvs_set_blob(handle, crashpanic, panicreason ? panicreason : "", panicreason ? strlen(panicreason) : 0);
 
-        // First, wipe the stack trace, becuase it might not work.
-        uint32_t epc_sp_pairs[STACKPAIRS * 2] = {0};
-        nvs_set_blob(handle, crashstack, epc_sp_pairs, sizeof(epc_sp_pairs));
-        nvs_close(handle);
+    //     // First, wipe the stack trace, becuase it might not work.
+    //     uint32_t epc_sp_pairs[STACKPAIRS * 2] = {0};
+    //     nvs_set_blob(handle, crashstack, epc_sp_pairs, sizeof(epc_sp_pairs));
+    //     nvs_close(handle);
 
-        // Try to actually get a stack trace.
-        if (nvs_open(NVS_NAMESPACE_NAME, NVS_READWRITE, &handle) == ESP_OK)
-        {
-            esp_backtrace_frame_t stk_frame = {0};
-            esp_backtrace_get_start(&(stk_frame.pc), &(stk_frame.sp), &(stk_frame.next_pc));
+    //     // Try to actually get a stack trace.
+    //     if (nvs_open(NVS_NAMESPACE_NAME, NVS_READWRITE, &handle) == ESP_OK)
+    //     {
+    //         esp_backtrace_frame_t stk_frame = {0};
+    //         esp_backtrace_get_start(&(stk_frame.pc), &(stk_frame.sp), &(stk_frame.next_pc));
 
-            uint32_t epc_sp_pairs[STACKPAIRS * 2] = {0};
-            for (int i = 0; i < STACKPAIRS; i++)
-            {
-                epc_sp_pairs[i * 2 + 0] = esp_cpu_process_stack_pc(stk_frame.pc);
-                epc_sp_pairs[i * 2 + 1] = stk_frame.sp;
+    //         uint32_t epc_sp_pairs[STACKPAIRS * 2] = {0};
+    //         for (int i = 0; i < STACKPAIRS; i++)
+    //         {
+    //             epc_sp_pairs[i * 2 + 0] = esp_cpu_process_stack_pc(stk_frame.pc);
+    //             epc_sp_pairs[i * 2 + 1] = stk_frame.sp;
 
-                // Use frame(i-1)'s BS area located below frame(i)'s sp to get frame(i-1)'s sp and frame(i-2)'s pc
-                void* base_save = (void*)stk_frame.sp; // Base save area consists of 4 words under SP
-                stk_frame.pc    = stk_frame.next_pc;
-                // If next_pc = 0, indicates frame(i-1) is the last frame on the stack
-                stk_frame.next_pc = *((uint32_t*)(base_save - 16));
-                stk_frame.sp      = *((uint32_t*)(base_save - 12));
+    //             // Use frame(i-1)'s BS area located below frame(i)'s sp to get frame(i-1)'s sp and frame(i-2)'s pc
+    //             void* base_save = (void*)stk_frame.sp; // Base save area consists of 4 words under SP
+    //             stk_frame.pc    = stk_frame.next_pc;
+    //             // If next_pc = 0, indicates frame(i-1) is the last frame on the stack
+    //             stk_frame.next_pc = *((uint32_t*)(base_save - 16));
+    //             stk_frame.sp      = *((uint32_t*)(base_save - 12));
 
-                // Return true if both sp and pc of frame(i-1) are sane, false otherwise
-                int valid = (esp_stack_ptr_is_sane(stk_frame.sp)
-                             && esp_ptr_executable((void*)esp_cpu_process_stack_pc(stk_frame.pc)));
+    //             // Return true if both sp and pc of frame(i-1) are sane, false otherwise
+    //             int valid = (esp_stack_ptr_is_sane(stk_frame.sp)
+    //                          && esp_ptr_executable((void*)esp_cpu_process_stack_pc(stk_frame.pc)));
 
-                if (!valid)
-                {
-                    break;
-                }
-            }
+    //             if (!valid)
+    //             {
+    //                 break;
+    //             }
+    //         }
 
-            nvs_set_blob(handle, crashstack, epc_sp_pairs, sizeof(epc_sp_pairs));
+    //         nvs_set_blob(handle, crashstack, epc_sp_pairs, sizeof(epc_sp_pairs));
 
-            nvs_close(handle);
-        }
-    }
+    //         nvs_close(handle);
+    //     }
+    // }
 
     __real_esp_panic_handler(info);
 }
