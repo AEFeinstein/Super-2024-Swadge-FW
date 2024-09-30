@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include "swadgeHero_game.h"
+#include "swadgeHero_menu.h"
 
 //==============================================================================
 // Defines
@@ -48,6 +49,7 @@ static const char hit_late[]  = "Late";
 //==============================================================================
 
 static int32_t getMultiplier(shVars_t* sh);
+static void shSongOver(void);
 
 //==============================================================================
 // Functions
@@ -89,7 +91,7 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
 
     // Load the MIDI file
     loadMidiFile(midi, &sh->midiSong, true);
-    globalMidiPlayerPlaySong(&sh->midiSong, MIDI_BGM);
+    globalMidiPlayerPlaySongCb(&sh->midiSong, MIDI_BGM, shSongOver);
 
     // Seek to load the tempo
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
@@ -320,6 +322,10 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             // Break the combo
             sh->combo     = 0;
             sh->failMeter = MAX(0, sh->failMeter - 2);
+            if (0 == sh->failMeter && shGetSettingFail())
+            {
+                shChangeScreen(sh, SH_GAME_END);
+            }
         }
 
         // If the game note should be removed
@@ -469,9 +475,11 @@ void shDrawGame(shVars_t* sh)
     snprintf(scoreText, sizeof(scoreText) - 1, "%" PRId32, sh->score);
     drawText(&sh->rodin, c555, scoreText, textMargin, TFT_HEIGHT - failBarHeight - sh->rodin.height);
 
-    // Draw fail meter bar
-    int32_t failMeterWidth = (sh->failMeter * TFT_WIDTH) / 100;
-    fillDisplayArea(0, TFT_HEIGHT - failBarHeight, failMeterWidth, TFT_HEIGHT - 1, c440);
+    if (shGetSettingFail())
+    { // Draw fail meter bar
+        int32_t failMeterWidth = (sh->failMeter * TFT_WIDTH) / 100;
+        fillDisplayArea(0, TFT_HEIGHT - failBarHeight, failMeterWidth, TFT_HEIGHT - 1, c440);
+    }
 
     // Set LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -572,6 +580,10 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                     // Break the combo
                     sh->combo     = 0;
                     sh->failMeter = MAX(0, sh->failMeter - 2);
+                    if (0 == sh->failMeter && shGetSettingFail())
+                    {
+                        shChangeScreen(sh, SH_GAME_END);
+                    }
                 }
 
                 // Increment the score
@@ -619,6 +631,10 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
             // Break the combo
             sh->combo     = 0;
             sh->failMeter = MAX(0, sh->failMeter - 2);
+            if (0 == sh->failMeter && shGetSettingFail())
+            {
+                shChangeScreen(sh, SH_GAME_END);
+            }
 
             // TODO ignore buttons not used for this difficulty
         }
@@ -652,4 +668,13 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 static int32_t getMultiplier(shVars_t* sh)
 {
     return MIN(4, (sh->combo + 10) / 10);
+}
+
+/**
+ * @brief TODO
+ *
+ */
+static void shSongOver(void)
+{
+    shChangeScreen(getShVars(), SH_GAME_END);
 }

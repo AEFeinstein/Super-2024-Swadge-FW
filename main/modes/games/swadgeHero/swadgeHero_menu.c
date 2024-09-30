@@ -88,19 +88,20 @@ void shSetupMenu(shVars_t* sh)
         // Save them all to a linked list to free later
 
         // TODO get high scores from NVS
+        int32_t maxScore = 0x7FFFFFFF;
 
         char* easyStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
-        snprintf(easyStr, HS_STR_LEN - 1, "Easy: %" PRId32, 0x7FFFFFFF);
+        snprintf(easyStr, HS_STR_LEN - 1, "Easy: %" PRId32, maxScore);
         addSingleItemToMenu(sh->menu, easyStr);
         push(&sh->hsStrs, easyStr);
 
         char* mediumStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
-        snprintf(mediumStr, HS_STR_LEN - 1, "Medium: %" PRId32, 0x7FFFFFFF);
+        snprintf(mediumStr, HS_STR_LEN - 1, "Medium: %" PRId32, maxScore);
         addSingleItemToMenu(sh->menu, mediumStr);
         push(&sh->hsStrs, mediumStr);
 
         char* hardStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
-        snprintf(hardStr, HS_STR_LEN - 1, "Hard: %" PRId32, 0x7FFFFFFF);
+        snprintf(hardStr, HS_STR_LEN - 1, "Hard: %" PRId32, maxScore);
         addSingleItemToMenu(sh->menu, hardStr);
         push(&sh->hsStrs, hardStr);
 

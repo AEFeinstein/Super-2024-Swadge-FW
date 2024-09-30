@@ -4,6 +4,7 @@
 
 #include "mode_swadgeHero.h"
 #include "swadgeHero_game.h"
+#include "swadgeHero_gameEnd.h"
 #include "swadgeHero_menu.h"
 
 //==============================================================================
@@ -134,7 +135,7 @@ static void shMainLoop(int64_t elapsedUs)
             }
             case SH_GAME_END:
             {
-                // TODO implement game end
+                shGameEndInput(shv, &evt);
                 break;
             }
             case SH_NONE:
@@ -161,7 +162,7 @@ static void shMainLoop(int64_t elapsedUs)
         }
         case SH_GAME_END:
         {
-            // TODO implement game end
+            shGameEndDraw(shv, elapsedUs);
             break;
         }
         case SH_NONE:
@@ -207,6 +208,7 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         case SH_GAME:
         {
             // Free MIDI data
+            globalMidiPlayerStop(true);
             unloadMidiFile(&shv->midiSong);
 
             // Free chart data
@@ -226,7 +228,7 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         }
         case SH_GAME_END:
         {
-            // TODO implement game end
+            // Nothing to free
             break;
         }
         case SH_NONE:
@@ -274,7 +276,7 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         }
         case SH_GAME_END:
         {
-            // TODO implement game end
+            // Nothing to set up
             break;
         }
         case SH_NONE:
