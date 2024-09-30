@@ -64,5 +64,6 @@ void pa_freeEntityManager(paEntityManager_t* entityManager);
 paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager);
 paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
+paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 
 #endif

@@ -92,4 +92,6 @@ static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DI
     12, 1, 18,
 };
 
+static const paletteColor_t greenColors[4]  = {c555, c051, c030, c051};
+
 #endif

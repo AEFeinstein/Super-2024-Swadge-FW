@@ -47,7 +47,7 @@ static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055
 
 static const paletteColor_t redColors[4]    = {c501, c540, c550, c540};
 static const paletteColor_t yellowColors[4] = {c550, c331, c550, c555};
-static const paletteColor_t greenColors[4]  = {c555, c051, c030, c051};
+
 static const paletteColor_t cyanColors[4]   = {c055, c455, c055, c033};
 //static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
 //static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
@@ -502,16 +502,7 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     // drawText(font, c553, coinStr, 160, 224);
     drawText(font, c553, scoreStr, 112, 2);
     drawText(font, c553, levelStr, 32, 226);
-    drawText(font, (gameData->countdown > 30) ? c553 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 200, 226);
-
-    if (gameData->comboTimer == 0)
-    {
-        return;
-    }
-
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 /*" (x%d)"*/, gameData->comboScore /*, gameData->combo*/);
-    drawText(font, (gameData->comboTimer < 60) ? c030 : greenColors[(pango->gameData.frameCount >> 3) % 4], scoreStr,
-             190, 2);
+    drawText(font, (gameData->countdown > 30) ? c553 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 200, 226);    
 }
 
 void updateTitleScreen(pango_t* self, int64_t elapsedUs)

@@ -1212,8 +1212,14 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             self->xspeed = other->xspeed * 2;
             self->yspeed = other->yspeed * 2;
 
-            pa_scorePoints(self->gameData, hitBlockComboScores[other->scoreValue]);
+            uint16_t pointsScored = hitBlockComboScores[other->scoreValue];
+            pa_scorePoints(self->gameData, pointsScored);
             other->scoreValue++;
+
+            paEntity_t* createdEntity = pa_createScoreDisplay(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4, (self->y >> SUBPIXEL_RESOLUTION) - 4);
+            if(createdEntity != NULL){
+                createdEntity->scoreValue = pointsScored;
+            }
 
             soundPlaySfx(&(self->soundManager->sndHurt), 2);
             killEnemy(self);
@@ -1438,17 +1444,26 @@ void pa_updateBreakBlock(paEntity_t* self)
         {
             uint8_t tx = (self->x >> SUBPIXEL_RESOLUTION >> PA_TILE_SIZE_IN_POWERS_OF_2);
             uint8_t ty = (self->y >> SUBPIXEL_RESOLUTION >> PA_TILE_SIZE_IN_POWERS_OF_2);
+            uint16_t pointsScored;
 
             switch(self->state){
                 case PA_TILE_SPAWN_BLOCK_0:
-                    pa_scorePoints(self->gameData, spawnBlockComboScores[self->scoreValue]);
-                    soundPlaySfx(&self->soundManager->sndBreak, BZR_STEREO);
+                    pointsScored = spawnBlockComboScores[self->scoreValue];
+
+                    pa_scorePoints(self->gameData, pointsScored);
+                    soundPlaySfx(&(self->soundManager->sndHurt), BZR_STEREO);
                     self->entityManager->gameData->remainingEnemies--;
                     
                     pa_executeSpawnBlockCombo(self, tx+1, ty, self->scoreValue+1);
                     pa_executeSpawnBlockCombo(self, tx-1, ty, self->scoreValue+1);
                     pa_executeSpawnBlockCombo(self, tx, ty+1, self->scoreValue+1);
                     pa_executeSpawnBlockCombo(self, tx, ty-1, self->scoreValue+1);
+
+                    paEntity_t* createdEntity = pa_createScoreDisplay(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4, (self->y >> SUBPIXEL_RESOLUTION) - 4);
+                    if(createdEntity != NULL){
+                        createdEntity->scoreValue = pointsScored;
+                    }
+
                     break;
                 default:
                     pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
@@ -1477,6 +1492,19 @@ void updateEntityDead(paEntity_t* self)
     self->y += self->yspeed;
 
     despawnWhenOffscreen(self);
+}
+
+void pa_updateScoreDisplay(paEntity_t* self){
+    self->stateTimer++;
+
+    if(self->stateTimer > 120){
+        pa_destroyEntity(self, false);
+        return;
+    }
+
+    char scoreStr[32];
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32, self->scoreValue);
+    drawText(&(self->gameData->scoreFont), greenColors[(self->stateTimer >> 3) % 4], scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
 }
 
 void pa_updateBlockFragment(paEntity_t* self)

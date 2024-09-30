@@ -375,6 +375,40 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
     return entity;
 }
 
+paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, uint16_t y){
+    paEntity_t* entity = pa_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active    = true;
+    entity->visible   = false;
+    entity->x         = x << SUBPIXEL_RESOLUTION;
+    entity->y         = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed         = 0;
+    entity->yspeed         = 0;
+    entity->gravityEnabled = false;
+    entity->gravity        = 0;
+
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+
+    entity->type                 = PA_ENTITY_SCORE_DISPLAY;
+    entity->spriteIndex          = 0;
+    entity->animationTimer       = 0;
+    entity->scoreValue           = 0;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &pa_updateScoreDisplay;
+    entity->collisionHandler     = &pa_dummyCollisionHandler;
+    entity->tileCollisionHandler = &pa_hitBlockTileCollisionHandler;
+    entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+
+    return entity;
+}
+
 void pa_freeEntityManager(paEntityManager_t* self)
 {
     free(self->entities);

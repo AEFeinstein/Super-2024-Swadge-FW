@@ -24,7 +24,8 @@ typedef enum
     PA_ENTITY_BREAK_BLOCK,
     PA_ENTITY_BLOCK_FRAGMENT,
     ENTITY_HIT_BLOCK,
-    ENTITY_DEAD
+    ENTITY_DEAD,
+    PA_ENTITY_SCORE_DISPLAY
 } paEntityIndex_t;
 
 typedef enum
@@ -185,5 +186,6 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
 void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty, uint16_t scoreIndex);
 void pa_updateBreakBlock(paEntity_t* self);
 void pa_updateBlockFragment(paEntity_t* self);
+void pa_updateScoreDisplay(paEntity_t* self);
 
 #endif
