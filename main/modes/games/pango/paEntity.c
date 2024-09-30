@@ -1445,10 +1445,10 @@ void pa_updateBreakBlock(paEntity_t* self)
                     soundPlaySfx(&self->soundManager->sndBreak, BZR_STEREO);
                     self->entityManager->gameData->remainingEnemies--;
                     
-                    pa_executeSpawnBlockCombo(self, tx+1, ty, self->scoreValue++);
-                    pa_executeSpawnBlockCombo(self, tx-1, ty, self->scoreValue++);
-                    pa_executeSpawnBlockCombo(self, tx, ty+1, self->scoreValue++);
-                    pa_executeSpawnBlockCombo(self, tx, ty-1, self->scoreValue++);
+                    pa_executeSpawnBlockCombo(self, tx+1, ty, self->scoreValue+1);
+                    pa_executeSpawnBlockCombo(self, tx-1, ty, self->scoreValue+1);
+                    pa_executeSpawnBlockCombo(self, tx, ty+1, self->scoreValue+1);
+                    pa_executeSpawnBlockCombo(self, tx, ty-1, self->scoreValue+1);
                     break;
                 default:
                     pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
