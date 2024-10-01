@@ -90,11 +90,18 @@ typedef struct
     int32_t const* btnToNote;
     int32_t const* noteToIcon;
     int32_t tempo;
+    int32_t failSampleInterval;
+    int32_t failSampleTimer;
+
+    // Setting data
+    bool failOn;
+    int32_t scrollTime;
 
     // Score data
     int32_t score;
     int32_t failMeter;
     int32_t combo;
+    bool gameEnd;
 
     // Fret line data
     list_t fretLines;

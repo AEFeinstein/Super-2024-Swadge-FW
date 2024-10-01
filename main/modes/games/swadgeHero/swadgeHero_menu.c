@@ -46,8 +46,8 @@ const int32_t shs_fail_vals[] = {true, false};
 
 const char* shs_speed_key      = "shs_speed";
 const char* shs_speed_label    = "Scroll: ";
-const char* shs_speed_opts[]   = {"Slow", "Medium", "Fast"};
-const int32_t shs_speed_vals[] = {0, 1, 2};
+const char* shs_speed_opts[]   = {"Slow", "Normal", "Fast", "Turbo"};
+const int32_t shs_speed_vals[] = {4000000, 3000000, 2000000, 1000000};
 
 //==============================================================================
 // Functions

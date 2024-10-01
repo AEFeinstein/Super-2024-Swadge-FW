@@ -15,6 +15,8 @@
 
 #define SH_TEXT_TIME 500000
 
+#define NUM_FAIL_METER_SAMPLES 200
+
 //==============================================================================
 // Const Variables
 //==============================================================================
@@ -50,6 +52,7 @@ static const char hit_late[]  = "Late";
 
 static int32_t getMultiplier(shVars_t* sh);
 static void shSongOver(void);
+static void shMissNote(shVars_t* sh);
 
 //==============================================================================
 // Functions
@@ -64,6 +67,11 @@ static void shSongOver(void);
  */
 void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
 {
+    // Load settings
+    sh->failOn     = shGetSettingFail();
+    sh->scrollTime = shGetSettingSpeed();
+
+    // Load song
     size_t sz    = 0;
     sh->numFrets = 1 + shLoadChartData(sh, cnfsGetFile(chart, &sz), sz);
 
@@ -89,21 +97,29 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
         sh->noteToIcon = noteToIcon_e;
     }
 
+    // Make sure MIDI player is initialized
+    initGlobalMidiPlayer();
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+
     // Load the MIDI file
     loadMidiFile(midi, &sh->midiSong, true);
-    globalMidiPlayerPlaySongCb(&sh->midiSong, MIDI_BGM, shSongOver);
 
-    // Seek to load the tempo
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    midiSeek(player, 1000);
-    sh->tempo = player->tempo;
+    // Set the file, but don't play yet
+    midiPause(player, true);
+    player->sampleCount = 0;
+    midiSetFile(player, &sh->midiSong);
 
-    // Return to the beginning of the song
-    globalMidiPlayerPauseAll();
-    midiSeek(player, 0);
+    // Seek to load the tempo and length, then reset
+    midiSeek(player, -1);
+    sh->tempo         = player->tempo;
+    int32_t songLenUs = SAMPLES_TO_US(player->sampleCount);
+    globalMidiPlayerStop(true);
+
+    sh->failSampleInterval = songLenUs / NUM_FAIL_METER_SAMPLES;
+    sh->failSampleTimer    = 0;
 
     // Set the lead-in timer
-    sh->leadInUs = TRAVEL_TIME_US;
+    sh->leadInUs = sh->scrollTime;
 
     // Start with one fret line at t=0
     sh->lastFretLineUs = 0;
@@ -170,9 +186,17 @@ uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
  *
  * @param sh
  * @param elapsedUs
+ * @return true
+ * @return false
  */
-void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
+bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 {
+    if (sh->gameEnd)
+    {
+        shChangeScreen(sh, SH_GAME_END);
+        return false;
+    }
+
     // Run a lead-in timer to allow notes to spawn before the song starts playing
     if (sh->leadInUs > 0)
     {
@@ -180,8 +204,18 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 
         if (sh->leadInUs <= 0)
         {
-            globalMidiPlayerResumeAll();
+            globalMidiPlayerPlaySongCb(&sh->midiSong, MIDI_BGM, shSongOver);
             sh->leadInUs = 0;
+        }
+    }
+    else if (sh->failOn)
+    {
+        sh->failSampleTimer += elapsedUs;
+        if (sh->failSampleTimer > -sh->failSampleInterval)
+        {
+            sh->failSampleTimer -= sh->failSampleInterval;
+            // TODO save these values somewhere, display on game over screen
+            printf("Fail meter: %d\n", sh->failMeter);
         }
     }
 
@@ -207,7 +241,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 
     // Generate fret lines based on tempo
     int32_t nextFretLineUs = sh->lastFretLineUs + sh->tempo;
-    if (songUs + TRAVEL_TIME_US >= nextFretLineUs)
+    if (songUs + sh->scrollTime >= nextFretLineUs)
     {
         sh->lastFretLineUs += sh->tempo;
 
@@ -225,7 +259,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             = MIDI_TICKS_TO_US(sh->chartNotes[sh->currentChartNote].tick, player->tempo, player->reader.division);
 
         // Check if the game note should be spawned now to reach the hit bar in time
-        if (songUs + TRAVEL_TIME_US >= nextEventUs)
+        if (songUs + sh->scrollTime >= nextEventUs)
         {
             // Spawn an game note
             shGameNote_t* ni = heap_caps_calloc(1, sizeof(shGameNote_t), MALLOC_CAP_SPIRAM);
@@ -285,14 +319,14 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         {
             // Moving notes follow this formula
             gameNote->headPosY
-                = (((TFT_HEIGHT - HIT_BAR) * (gameNote->headTimeUs - songUs)) / TRAVEL_TIME_US) + HIT_BAR;
+                = (((TFT_HEIGHT - HIT_BAR) * (gameNote->headTimeUs - songUs)) / sh->scrollTime) + HIT_BAR;
         }
 
         // Update tail position if there is a hold
         if (-1 != gameNote->tailPosY)
         {
             gameNote->tailPosY
-                = (((TFT_HEIGHT - HIT_BAR) * (gameNote->tailTimeUs - songUs)) / TRAVEL_TIME_US) + HIT_BAR;
+                = (((TFT_HEIGHT - HIT_BAR) * (gameNote->tailTimeUs - songUs)) / sh->scrollTime) + HIT_BAR;
         }
 
         // Check if the note should be removed
@@ -320,12 +354,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             shouldRemove = true;
 
             // Break the combo
-            sh->combo     = 0;
-            sh->failMeter = MAX(0, sh->failMeter - 2);
-            if (0 == sh->failMeter && shGetSettingFail())
-            {
-                shChangeScreen(sh, SH_GAME_END);
-            }
+            shMissNote(sh);
         }
 
         // If the game note should be removed
@@ -360,7 +389,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         shFretLine_t* fretLine = fretLineNode->val;
 
         // Update positions
-        fretLine->headPosY = (((TFT_HEIGHT - HIT_BAR) * (fretLine->headTimeUs - songUs)) / TRAVEL_TIME_US) + HIT_BAR;
+        fretLine->headPosY = (((TFT_HEIGHT - HIT_BAR) * (fretLine->headTimeUs - songUs)) / sh->scrollTime) + HIT_BAR;
 
         // Remove if off screen
         if (fretLine->headPosY < 0)
@@ -376,6 +405,7 @@ void shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             fretLineNode = fretLineNode->next;
         }
     }
+    return true;
 }
 
 /**
@@ -475,8 +505,9 @@ void shDrawGame(shVars_t* sh)
     snprintf(scoreText, sizeof(scoreText) - 1, "%" PRId32, sh->score);
     drawText(&sh->rodin, c555, scoreText, textMargin, TFT_HEIGHT - failBarHeight - sh->rodin.height);
 
-    if (shGetSettingFail())
-    { // Draw fail meter bar
+    if (sh->failOn)
+    {
+        // Draw fail meter bar
         int32_t failMeterWidth = (sh->failMeter * TFT_WIDTH) / 100;
         fillDisplayArea(0, TFT_HEIGHT - failBarHeight, failMeterWidth, TFT_HEIGHT - 1, c440);
     }
@@ -578,12 +609,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                 {
                     sh->hitText = hit_miss;
                     // Break the combo
-                    sh->combo     = 0;
-                    sh->failMeter = MAX(0, sh->failMeter - 2);
-                    if (0 == sh->failMeter && shGetSettingFail())
-                    {
-                        shChangeScreen(sh, SH_GAME_END);
-                    }
+                    shMissNote(sh);
                 }
 
                 // Increment the score
@@ -627,14 +653,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
         {
             // Total miss
             sh->hitText = hit_miss;
-
-            // Break the combo
-            sh->combo     = 0;
-            sh->failMeter = MAX(0, sh->failMeter - 2);
-            if (0 == sh->failMeter && shGetSettingFail())
-            {
-                shChangeScreen(sh, SH_GAME_END);
-            }
+            shMissNote(sh);
 
             // TODO ignore buttons not used for this difficulty
         }
@@ -676,5 +695,24 @@ static int32_t getMultiplier(shVars_t* sh)
  */
 static void shSongOver(void)
 {
-    shChangeScreen(getShVars(), SH_GAME_END);
+    // Set a flag, end the game synchronously
+    getShVars()->gameEnd = true;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param sh
+ */
+static void shMissNote(shVars_t* sh)
+{
+    sh->combo = 0;
+    if (sh->failOn)
+    {
+        sh->failMeter = MAX(0, sh->failMeter - 2);
+        if (0 == sh->failMeter)
+        {
+            sh->gameEnd = true;
+        }
+    }
 }

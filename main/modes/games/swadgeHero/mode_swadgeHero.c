@@ -151,8 +151,10 @@ static void shMainLoop(int64_t elapsedUs)
     {
         case SH_GAME:
         {
-            shRunTimers(shv, elapsedUs);
-            shDrawGame(shv);
+            if (shRunTimers(shv, elapsedUs))
+            {
+                shDrawGame(shv);
+            }
             break;
         }
         case SH_MENU:
