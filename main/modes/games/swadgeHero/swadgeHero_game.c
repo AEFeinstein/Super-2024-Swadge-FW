@@ -15,8 +15,6 @@
 
 #define SH_TEXT_TIME 500000
 
-#define NUM_FAIL_METER_SAMPLES 200
-
 //==============================================================================
 // Const Variables
 //==============================================================================
@@ -67,6 +65,9 @@ static void shMissNote(shVars_t* sh);
  */
 void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
 {
+    // Don't immediately quit
+    sh->gameEnd = false;
+
     // Load settings
     sh->failOn     = shGetSettingFail();
     sh->scrollTime = shGetSettingSpeed();
@@ -112,11 +113,13 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
     // Seek to load the tempo and length, then reset
     midiSeek(player, -1);
     sh->tempo         = player->tempo;
-    int32_t songLenUs = SAMPLES_TO_US(player->sampleCount);
+    int32_t songLenUs = SAMPLES_TO_US(player->sampleCount); // TODO this is incorrect???
     globalMidiPlayerStop(true);
 
+    // TODO not capturing NUM_FAIL_METER_SAMPLES points??
     sh->failSampleInterval = songLenUs / NUM_FAIL_METER_SAMPLES;
-    sh->failSampleTimer    = 0;
+
+    printf("Song len us: %d, sample interval %d\n", songLenUs, sh->failSampleInterval);
 
     // Set the lead-in timer
     sh->leadInUs = sh->scrollTime;
@@ -208,16 +211,6 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             sh->leadInUs = 0;
         }
     }
-    else if (sh->failOn)
-    {
-        sh->failSampleTimer += elapsedUs;
-        if (sh->failSampleTimer > -sh->failSampleInterval)
-        {
-            sh->failSampleTimer -= sh->failSampleInterval;
-            // TODO save these values somewhere, display on game over screen
-            printf("Fail meter: %d\n", sh->failMeter);
-        }
-    }
 
     // Run a timer for pop-up text
     if (sh->textTimerUs > 0)
@@ -237,6 +230,16 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     else
     {
         songUs = SAMPLES_TO_US(player->sampleCount);
+    }
+
+    if (sh->failOn && songUs >= 0)
+    {
+        while (sh->failSampleInterval * sh->failSamples.length <= songUs)
+        {
+            printf("sample at %d\n", songUs);
+            // Save the sample to display on the game over screen
+            push(&sh->failSamples, sh->failMeter);
+        }
     }
 
     // Generate fret lines based on tempo

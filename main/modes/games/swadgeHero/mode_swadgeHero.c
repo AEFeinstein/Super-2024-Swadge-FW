@@ -230,12 +230,15 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         }
         case SH_GAME_END:
         {
-            // Nothing to free
+            // Free fail samples
+            clear(&shv->failSamples);
             break;
         }
         case SH_NONE:
         default:
         {
+            // Clear this on exit, just in case
+            clear(&shv->failSamples);
             break;
         }
     }

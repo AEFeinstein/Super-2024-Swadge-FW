@@ -90,8 +90,11 @@ typedef struct
     int32_t const* btnToNote;
     int32_t const* noteToIcon;
     int32_t tempo;
+
+    // Fail meter tracking
+    int32_t failMeter;
     int32_t failSampleInterval;
-    int32_t failSampleTimer;
+    list_t failSamples;
 
     // Setting data
     bool failOn;
@@ -99,7 +102,6 @@ typedef struct
 
     // Score data
     int32_t score;
-    int32_t failMeter;
     int32_t combo;
     bool gameEnd;
 
