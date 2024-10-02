@@ -51,13 +51,14 @@ static const char hit_late[]  = "Late";
 static int32_t getMultiplier(shVars_t* sh);
 static void shSongOver(void);
 static void shMissNote(shVars_t* sh);
+static void shHitNote(shVars_t* sh, int32_t baseScore);
 
 //==============================================================================
 // Functions
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @param midi
@@ -76,27 +77,34 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
     size_t sz    = 0;
     sh->numFrets = 1 + shLoadChartData(sh, cnfsGetFile(chart, &sz), sz);
 
-    if (6 == sh->numFrets)
+    shDifficulty_t difficulty;
+    if (4 <= sh->numFrets)
     {
-        sh->btnToNote  = btnToNote_h;
-        sh->noteToBtn  = noteToBtn_h;
-        sh->colors     = colors_h;
-        sh->noteToIcon = noteToIcon_h;
-    }
-    else if (5 == sh->numFrets)
-    {
-        sh->btnToNote  = btnToNote_m;
-        sh->noteToBtn  = noteToBtn_m;
-        sh->colors     = colors_m;
-        sh->noteToIcon = noteToIcon_m;
-    }
-    else if (4 == sh->numFrets)
-    {
+        difficulty     = SH_EASY;
         sh->btnToNote  = btnToNote_e;
         sh->noteToBtn  = noteToBtn_e;
         sh->colors     = colors_e;
         sh->noteToIcon = noteToIcon_e;
     }
+    else if (5 == sh->numFrets)
+    {
+        difficulty     = SH_MEDIUM;
+        sh->btnToNote  = btnToNote_m;
+        sh->noteToBtn  = noteToBtn_m;
+        sh->colors     = colors_m;
+        sh->noteToIcon = noteToIcon_m;
+    }
+    else // >= 6
+    {
+        difficulty     = SH_HARD;
+        sh->btnToNote  = btnToNote_h;
+        sh->noteToBtn  = noteToBtn_h;
+        sh->colors     = colors_h;
+        sh->noteToIcon = noteToIcon_h;
+    }
+
+    // Save the key for the score
+    shGetNvsKey(midi, difficulty, sh->hsKey);
 
     // Make sure MIDI player is initialized
     initGlobalMidiPlayer();
@@ -113,13 +121,11 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
     // Seek to load the tempo and length, then reset
     midiSeek(player, -1);
     sh->tempo         = player->tempo;
-    int32_t songLenUs = SAMPLES_TO_US(player->sampleCount); // TODO this is incorrect???
+    int32_t songLenUs = SAMPLES_TO_US(player->sampleCount);
     globalMidiPlayerStop(true);
 
-    // TODO not capturing NUM_FAIL_METER_SAMPLES points??
+    // Figure out how often to sample the fail meter for the chart after the song
     sh->failSampleInterval = songLenUs / NUM_FAIL_METER_SAMPLES;
-
-    printf("Song len us: %d, sample interval %d\n", songLenUs, sh->failSampleInterval);
 
     // Set the lead-in timer
     sh->leadInUs = sh->scrollTime;
@@ -139,7 +145,7 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @param data
@@ -185,7 +191,7 @@ uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @param elapsedUs
@@ -196,6 +202,21 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 {
     if (sh->gameEnd)
     {
+        // Save score to NVS
+        int32_t oldHs = 0;
+        if (!readNvs32(sh->hsKey, &oldHs))
+        {
+            // No score saved yet, assume 0
+            oldHs = 0;
+        }
+
+        // Write the high score to NVS if it's larger
+        if (sh->score > oldHs)
+        {
+            writeNvs32(sh->hsKey, sh->score);
+        }
+
+        // Switch to the game end screen
         shChangeScreen(sh, SH_GAME_END);
         return false;
     }
@@ -236,9 +257,8 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     {
         while (sh->failSampleInterval * sh->failSamples.length <= songUs)
         {
-            printf("sample at %d\n", songUs);
             // Save the sample to display on the game over screen
-            push(&sh->failSamples, sh->failMeter);
+            push(&sh->failSamples, (void*)((intptr_t)sh->failMeter));
         }
     }
 
@@ -343,6 +363,9 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
                 {
                     // Note is currently being held, tail reached the bar
                     shouldRemove = true;
+
+                    // Note was held all the way, so score it.
+                    shHitNote(sh, 5);
                 }
             }
             else if (gameNote->tailPosY < 0)
@@ -412,7 +435,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  */
@@ -527,7 +550,7 @@ void shDrawGame(shVars_t* sh)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @param evt
@@ -547,7 +570,8 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 
     sh->btnState = evt->state;
 
-    if (evt->down)
+    int32_t notePressed = sh->btnToNote[31 - __builtin_clz(evt->button)];
+    if (-1 != notePressed)
     {
         // See if the button press matches a note
         bool noteMatch = false;
@@ -559,89 +583,97 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
             shGameNote_t* gameNote = gameNoteNode->val;
 
             // If the game note matches the button
-            if (gameNote->note == sh->btnToNote[31 - __builtin_clz(evt->button)])
+            if (gameNote->note == notePressed)
             {
+                // Button event matches a note on screen somewhere
                 noteMatch = true;
 
-                // Find how off the timing is
-                int32_t usOff = (songUs - gameNote->headTimeUs);
-
-                // Set either early or late
-                sh->timingText = (usOff > 0) ? hit_late : hit_early;
-
-                // Find the absolute difference
-                usOff = ABS(usOff);
-
-                // Check if this button hit a note
-                bool gameNoteHit = false;
-
-                int32_t baseScore = 0;
-
-                // Classify the time off
-                if (usOff < 21500)
+                // Button was pressed
+                if (evt->down)
                 {
-                    sh->hitText = hit_fantastic;
-                    gameNoteHit = true;
-                    baseScore   = 5;
-                }
-                else if (usOff < 43000)
-                {
-                    sh->hitText = hit_marvelous;
-                    gameNoteHit = true;
-                    baseScore   = 4;
-                }
-                else if (usOff < 102000)
-                {
-                    sh->hitText = hit_great;
-                    gameNoteHit = true;
-                    baseScore   = 3;
-                }
-                else if (usOff < 135000)
-                {
-                    sh->hitText = hit_decent;
-                    gameNoteHit = true;
-                    baseScore   = 2;
-                }
-                else if (usOff < 180000)
-                {
-                    sh->hitText = hit_way_off;
-                    gameNoteHit = true;
-                    baseScore   = 1;
-                }
-                else
-                {
-                    sh->hitText = hit_miss;
-                    // Break the combo
-                    shMissNote(sh);
-                }
+                    // Find how off the timing is
+                    int32_t usOff = (songUs - gameNote->headTimeUs);
 
-                // Increment the score
-                sh->score += getMultiplier(sh) * baseScore;
+                    // Set either early or late
+                    sh->timingText = (usOff > 0) ? hit_late : hit_early;
 
-                // Set a timer to not show the text forever
-                sh->textTimerUs = SH_TEXT_TIME;
+                    // Find the absolute difference
+                    usOff = ABS(usOff);
 
-                // If it was close enough to hit
-                if (gameNoteHit)
-                {
-                    // Increment the combo
-                    sh->combo++;
-                    sh->failMeter = MIN(100, sh->failMeter + 1);
+                    // Check if this button hit a note
+                    bool gameNoteHit = false;
 
-                    if (gameNote->tailPosY >= 0)
+                    int32_t baseScore = 0;
+
+                    // Classify the time off
+                    if (usOff < 21500)
                     {
-                        // There is a tail, don't remove the note yet
-                        gameNote->headPosY = HIT_BAR;
-                        gameNote->held     = true;
+                        sh->hitText = hit_fantastic;
+                        gameNoteHit = true;
+                        baseScore   = 5;
+                    }
+                    else if (usOff < 43000)
+                    {
+                        sh->hitText = hit_marvelous;
+                        gameNoteHit = true;
+                        baseScore   = 4;
+                    }
+                    else if (usOff < 102000)
+                    {
+                        sh->hitText = hit_great;
+                        gameNoteHit = true;
+                        baseScore   = 3;
+                    }
+                    else if (usOff < 135000)
+                    {
+                        sh->hitText = hit_decent;
+                        gameNoteHit = true;
+                        baseScore   = 2;
+                    }
+                    else if (usOff < 180000)
+                    {
+                        sh->hitText = hit_way_off;
+                        gameNoteHit = true;
+                        baseScore   = 1;
                     }
                     else
                     {
-                        // No tail, remove the game note
-                        node_t* nextNode = gameNoteNode->next;
-                        free(gameNoteNode->val);
-                        removeEntry(&sh->gameNotes, gameNoteNode);
-                        gameNoteNode = nextNode;
+                        sh->hitText = hit_miss;
+                        // Break the combo
+                        shMissNote(sh);
                     }
+
+                    // Set a timer to not show the text forever
+                    sh->textTimerUs = SH_TEXT_TIME;
+
+                    // If it was close enough to hit
+                    if (gameNoteHit)
+                    {
+                        shHitNote(sh, baseScore);
+
+                        if (gameNote->tailPosY >= 0)
+                        {
+                            // There is a tail, don't remove the note yet
+                            gameNote->headPosY = HIT_BAR;
+                            gameNote->held     = true;
+                        }
+                        else
+                        {
+                            // No tail, remove the game note
+                            node_t* nextNode = gameNoteNode->next;
+                            free(gameNoteNode->val);
+                            removeEntry(&sh->gameNotes, gameNoteNode);
+                            gameNoteNode = nextNode;
+                        }
+                    }
+                }
+                else if (gameNote->held)
+                {
+                    // A held note was released. Remove it!
+                    node_t* nextNode = gameNoteNode->next;
+                    free(gameNoteNode->val);
+                    removeEntry(&sh->gameNotes, gameNoteNode);
+                    gameNoteNode = nextNode;
                 }
 
                 // the button was matched to an game note, break the loop
@@ -651,19 +683,15 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
             // Iterate to the next game note
             gameNoteNode = gameNoteNode->next;
         }
+        // Done iterating through notes
 
-        if (false == noteMatch)
+        // Check if a button down didn't have a matching note on screen
+        if (false == noteMatch && evt->down)
         {
             // Total miss
             sh->hitText = hit_miss;
             shMissNote(sh);
-
-            // TODO ignore buttons not used for this difficulty
         }
-    }
-    else
-    {
-        // TODO handle ups when holding tails
     }
 
     // Check for analog touch
@@ -682,7 +710,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @return int32_t
@@ -693,7 +721,7 @@ static int32_t getMultiplier(shVars_t* sh)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  */
 static void shSongOver(void)
@@ -703,7 +731,27 @@ static void shSongOver(void)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
+ *
+ * @param sh
+ * @param baseScore
+ */
+static void shHitNote(shVars_t* sh, int32_t baseScore)
+{
+    // Increment the score
+    sh->score += getMultiplier(sh) * baseScore;
+
+    // Increment the combo & fail meter
+    sh->combo++;
+
+    if (sh->failOn)
+    {
+        sh->failMeter = MIN(100, sh->failMeter + 1);
+    }
+}
+
+/**
+ * @brief TODO doc
  *
  * @param sh
  */

@@ -80,6 +80,7 @@ typedef struct
     // Song being played
     midiFile_t midiSong;
     int32_t leadInUs;
+    char hsKey[16];
 
     // Chart data
     int32_t numChartNotes;
@@ -134,3 +135,4 @@ extern swadgeMode_t swadgeHeroMode;
 
 shVars_t* getShVars(void);
 void shChangeScreen(shVars_t* sh, shScreen_t newScreen);
+void shGetNvsKey(const char* songName, shDifficulty_t difficulty, char* key);

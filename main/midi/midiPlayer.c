@@ -2338,7 +2338,14 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
             if (!player->eventAvailable || player->pendingEvent.absTime > ticks)
             {
                 ESP_LOGD("MIDI", "No more events between start and end time\n");
-                curTick = ticks;
+                if ((META_EVENT == player->pendingEvent.type) && (END_OF_TRACK == player->pendingEvent.meta.type))
+                {
+                    curTick = player->pendingEvent.absTime;
+                }
+                else
+                {
+                    curTick = ticks;
+                }
                 break;
             }
 
@@ -2351,18 +2358,15 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
 
         player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
 
-        if ((uint32_t)-1 != ticks)
+        stopped = !player->eventAvailable
+                  && !(player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent));
+        if (stopped && (uint32_t)-1 != ticks)
         {
-            stopped = !player->eventAvailable
-                      && !(player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent));
-            if (stopped)
-            {
-                midiSongEnd(player);
+            midiSongEnd(player);
 
-                if (endCb)
-                {
-                    endCb();
-                }
+            if (endCb)
+            {
+                endCb();
             }
         }
 

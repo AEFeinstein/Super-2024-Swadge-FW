@@ -50,7 +50,7 @@ shVars_t* shv;
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @return
  */
@@ -192,7 +192,7 @@ static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @param newScreen
@@ -237,8 +237,7 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         case SH_NONE:
         default:
         {
-            // Clear this on exit, just in case
-            clear(&shv->failSamples);
+            // Nothing tear down
             break;
         }
     }
@@ -287,7 +286,45 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         case SH_NONE:
         default:
         {
+            // Clear this on exit, just in case
+            clear(&shv->failSamples);
             break;
         }
     }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param songName
+ * @param difficulty
+ * @param key Must be at least 9 bytes
+ */
+void shGetNvsKey(const char* songName, shDifficulty_t difficulty, char* key)
+{
+    int32_t toCopy = MIN(strlen(songName), 7);
+    memcpy(key, songName, toCopy);
+
+    char dChar;
+    switch (difficulty)
+    {
+        default:
+        case SH_EASY:
+        {
+            dChar = 'e';
+            break;
+        }
+        case SH_MEDIUM:
+        {
+            dChar = 'm';
+            break;
+        }
+        case SH_HARD:
+        {
+            dChar = 'h';
+            break;
+        }
+    }
+    key[toCopy]     = dChar;
+    key[toCopy + 1] = 0;
 }

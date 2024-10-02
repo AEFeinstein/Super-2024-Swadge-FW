@@ -54,7 +54,7 @@ const int32_t shs_speed_vals[] = {4000000, 3000000, 2000000, 1000000};
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  */
@@ -87,21 +87,37 @@ void shSetupMenu(shVars_t* sh)
         // Allocate and print high score strings
         // Save them all to a linked list to free later
 
-        // TODO get high scores from NVS
-        int32_t maxScore = 0x7FFFFFFF;
+        // Variables for reading from NVS
+        int32_t tmpScore;
+        char nvsKey[16];
 
+        shGetNvsKey(shSongList[sIdx].midi, SH_EASY, nvsKey);
+        if (!readNvs32(nvsKey, &tmpScore))
+        {
+            tmpScore = 0;
+        }
         char* easyStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
-        snprintf(easyStr, HS_STR_LEN - 1, "Easy: %" PRId32, maxScore);
+        snprintf(easyStr, HS_STR_LEN - 1, "Easy: %" PRId32, tmpScore);
         addSingleItemToMenu(sh->menu, easyStr);
         push(&sh->hsStrs, easyStr);
 
+        shGetNvsKey(shSongList[sIdx].name, SH_MEDIUM, nvsKey);
+        if (!readNvs32(nvsKey, &tmpScore))
+        {
+            tmpScore = 0;
+        }
         char* mediumStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
-        snprintf(mediumStr, HS_STR_LEN - 1, "Medium: %" PRId32, maxScore);
+        snprintf(mediumStr, HS_STR_LEN - 1, "Medium: %" PRId32, tmpScore);
         addSingleItemToMenu(sh->menu, mediumStr);
         push(&sh->hsStrs, mediumStr);
 
+        shGetNvsKey(shSongList[sIdx].name, SH_HARD, nvsKey);
+        if (!readNvs32(nvsKey, &tmpScore))
+        {
+            tmpScore = 0;
+        }
         char* hardStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
-        snprintf(hardStr, HS_STR_LEN - 1, "Hard: %" PRId32, maxScore);
+        snprintf(hardStr, HS_STR_LEN - 1, "Hard: %" PRId32, tmpScore);
         addSingleItemToMenu(sh->menu, hardStr);
         push(&sh->hsStrs, hardStr);
 
@@ -136,7 +152,7 @@ void shSetupMenu(shVars_t* sh)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  */
@@ -153,7 +169,7 @@ void shTeardownMenu(shVars_t* sh)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @param btn
@@ -164,7 +180,7 @@ void shMenuInput(shVars_t* sh, buttonEvt_t* btn)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  */
@@ -263,9 +279,7 @@ static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
 }
 
 /**
- * @brief TODO
- *
- * TODO use this somewhere
+ * @brief TODO doc
  *
  * @return true
  * @return false
@@ -281,9 +295,7 @@ bool shGetSettingFail(void)
 }
 
 /**
- * @brief TODO
- *
- * TODO use this somewhere
+ * @brief TODO doc
  *
  * @return true
  * @return false

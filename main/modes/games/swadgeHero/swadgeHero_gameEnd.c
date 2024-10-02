@@ -22,7 +22,7 @@
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @param evt
@@ -47,7 +47,7 @@ void shGameEndInput(shVars_t* sh, buttonEvt_t* evt)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @param elapsedUs
