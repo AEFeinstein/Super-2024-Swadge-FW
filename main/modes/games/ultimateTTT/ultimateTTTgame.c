@@ -291,11 +291,6 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                 break;
             }
 
-#undef CURSOR_DIR_X
-#undef CURSOR_DIR_Y
-#undef CHOOSE_CURSOR_X
-#undef CHOOSE_CURSOR_Y
-
             case PB_A:
             {
                 // If a subgame is being selected
