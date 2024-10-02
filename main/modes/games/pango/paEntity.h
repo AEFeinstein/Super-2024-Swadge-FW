@@ -69,6 +69,7 @@ typedef bool (*pa_tileCollisionHandler_t)(struct paEntity_t* self, uint8_t tileI
                                            uint8_t direction);
 typedef void (*pa_fallOffTileHandler_t)(struct paEntity_t* self);
 typedef void (*pa_overlapTileHandler_t)(struct paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
+typedef void (*pa_drawHandler_t)(struct paEntity_t* self);
 
 struct paEntity_t
 {
@@ -127,6 +128,7 @@ struct paEntity_t
     pa_collisionHandler_t collisionHandler;
     pa_tileCollisionHandler_t tileCollisionHandler;
     pa_overlapTileHandler_t overlapTileHandler;
+    pa_drawHandler_t drawHandler;
 };
 
 //==============================================================================
@@ -187,5 +189,7 @@ void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty, uint16_
 void pa_updateBreakBlock(paEntity_t* self);
 void pa_updateBlockFragment(paEntity_t* self);
 void pa_updateScoreDisplay(paEntity_t* self);
+void pa_defaultEntityDrawHandler(paEntity_t* self);
+void pa_scoreDisplayDrawHandler(paEntity_t* self);
 
 #endif

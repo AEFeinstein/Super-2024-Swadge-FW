@@ -1499,12 +1499,7 @@ void pa_updateScoreDisplay(paEntity_t* self){
 
     if(self->stateTimer > 120){
         pa_destroyEntity(self, false);
-        return;
     }
-
-    char scoreStr[32];
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu16, self->scoreValue);
-    drawText(&(self->gameData->scoreFont), greenColors[(self->stateTimer >> 3) % 4], scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
 }
 
 void pa_updateBlockFragment(paEntity_t* self)
@@ -1609,4 +1604,20 @@ void drawEntityTargetTile(paEntity_t* self)
              self->targetTileY << PA_TILE_SIZE_IN_POWERS_OF_2,
              (self->targetTileX << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_TILE_SIZE - self->tilemap->mapOffsetX,
              (self->targetTileY << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_TILE_SIZE, esp_random() % 216);
+}
+
+void pa_defaultEntityDrawHandler(paEntity_t* self){
+    drawWsg(self->entityManager->wsgManager->sprites[self->spriteIndex].wsg,
+                    (self->x >> SUBPIXEL_RESOLUTION)
+                        - self->entityManager->wsgManager->sprites[self->spriteIndex].originX
+                        - self->entityManager->tilemap->mapOffsetX,
+                    (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
+                        - self->entityManager->wsgManager->sprites[self->spriteIndex].originY,
+                    self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+}
+
+void pa_scoreDisplayDrawHandler(paEntity_t* self){
+    char scoreStr[32];
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu16, self->scoreValue);
+    drawText(&(self->gameData->scoreFont), greenColors[(self->stateTimer >> 3) % 4], scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
 }

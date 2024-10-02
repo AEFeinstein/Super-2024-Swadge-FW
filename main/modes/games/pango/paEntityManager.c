@@ -99,13 +99,7 @@ void pa_drawEntities(paEntityManager_t* entityManager)
 
         if (currentEntity.active && currentEntity.visible)
         {
-            drawWsg(entityManager->wsgManager->sprites[currentEntity.spriteIndex].wsg,
-                    (currentEntity.x >> SUBPIXEL_RESOLUTION)
-                        - entityManager->wsgManager->sprites[currentEntity.spriteIndex].originX
-                        - entityManager->tilemap->mapOffsetX,
-                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->tilemap->mapOffsetY
-                        - entityManager->wsgManager->sprites[currentEntity.spriteIndex].originY,
-                    currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical, 0);
+            currentEntity.drawHandler(&currentEntity);
         }
     }
 }
@@ -219,6 +213,7 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->collisionHandler     = &pa_playerCollisionHandler;
     entity->tileCollisionHandler = &pa_playerTileCollisionHandler;
     entity->overlapTileHandler   = &pa_playerOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
     return entity;
 }
 
@@ -259,6 +254,7 @@ paEntity_t* createCrabdozer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
 
     return entity;
 }
@@ -294,6 +290,7 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
     entity->state                = 0;
 
     pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
@@ -332,6 +329,7 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
 
     return entity;
 }
@@ -371,6 +369,7 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_hitBlockTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
 
     return entity;
 }
@@ -384,7 +383,7 @@ paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, 
     }
 
     entity->active    = true;
-    entity->visible   = false;
+    entity->visible   = true;
     entity->x         = x << SUBPIXEL_RESOLUTION;
     entity->y         = y << SUBPIXEL_RESOLUTION;
 
@@ -405,6 +404,7 @@ paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, 
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_hitBlockTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_scoreDisplayDrawHandler;
 
     return entity;
 }
