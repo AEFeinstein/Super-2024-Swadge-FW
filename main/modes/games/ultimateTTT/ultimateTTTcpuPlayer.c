@@ -841,31 +841,6 @@ static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
     }
 
     return minMovesToWin;
-
-    // An already-won game will result in 0 movesToWin
-    while (result == TTT_NONE)
-    {
-        uint16_t analysis = analyzeSubgame(simulation, player, 0);
-
-        simulation[DECODE_LOC_X(analysis)][DECODE_LOC_Y(analysis)] = player;
-
-        movesToWin++;
-        result = tttCheckWinner(simulation);
-    }
-
-    if (result == player)
-    {
-        // TCPU_LOG("%" PRIu16 " moves to win\n", movesToWin);
-        //  Player won, return moves to win
-        return movesToWin;
-    }
-    else
-    {
-        // TCPU_LOG("Can't win, 3 moves to win\n");
-        //  This is a tie or a loss
-        //  10 moves to win is basically infinite
-        return 3;
-    }
 }
 
 static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player, uint16_t filter)
