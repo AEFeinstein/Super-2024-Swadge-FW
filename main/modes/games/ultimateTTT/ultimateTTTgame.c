@@ -683,44 +683,42 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
     if (won || lost || drew)
     {
         // Record the outcome
-        if (!ttt->game.singlePlayer)
+        if (won)
         {
-            // Don't give points for beating the computer!
-            // At least, not until it has a hard mode
-            if (won)
-            {
-                // Increment wins
-                ttt->wins++;
-                writeNvs32(tttWinKey, ttt->wins);
-                ttt->lastResult = TTR_WIN;
+            // Increment wins
+            ttt->wins++;
+            writeNvs32(tttWinKey, ttt->wins);
+            ttt->lastResult = TTR_WIN;
 
-                // Check for unlocked markers
-                for (int16_t mIdx = 0; mIdx < NUM_UNLOCKABLE_MARKERS; mIdx++)
+            // Check for unlocked markers
+            for (int16_t mIdx = 0; mIdx < NUM_UNLOCKABLE_MARKERS; mIdx++)
+            {
+                // If the player got the required number of wins
+                if (0 != ttt->wins && markersUnlockedAtWins[mIdx] == ttt->wins)
                 {
-                    // If the player got the required number of wins
-                    if (0 != ttt->wins && markersUnlockedAtWins[mIdx] == ttt->wins)
-                    {
-                        // Unlock the next marker
-                        ttt->numUnlockedMarkers++;
-                        // Save to NVS
-                        writeNvs32(tttUnlockKey, ttt->numUnlockedMarkers);
-                        break;
-                    }
+                    // Unlock the next marker
+                    ttt->numUnlockedMarkers++;
+                    // Save to NVS
+                    writeNvs32(tttUnlockKey, ttt->numUnlockedMarkers);
+                    break;
                 }
             }
-            else if (lost)
-            {
-                ttt->losses++;
-                writeNvs32(tttLossKey, ttt->losses);
-                ttt->lastResult = TTR_LOSE;
-            }
-            else if (drew)
-            {
-                ttt->draws++;
-                writeNvs32(tttDrawKey, ttt->draws);
-                ttt->lastResult = TTR_DRAW;
-            }
+        }
+        else if (lost)
+        {
+            ttt->losses++;
+            writeNvs32(tttLossKey, ttt->losses);
+            ttt->lastResult = TTR_LOSE;
+        }
+        else if (drew)
+        {
+            ttt->draws++;
+            writeNvs32(tttDrawKey, ttt->draws);
+            ttt->lastResult = TTR_DRAW;
+        }
 
+        if (!ttt->game.singlePlayer)
+        {
             // Stop p2p
             p2pDeinit(&ttt->game.p2p);
         }
