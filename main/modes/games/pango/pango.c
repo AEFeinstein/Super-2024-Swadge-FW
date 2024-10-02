@@ -144,6 +144,7 @@ void updatePause(pango_t* self, int64_t elapsedUs);
 void drawPause(font_t* font);
 uint16_t getLevelIndex(uint8_t world, uint8_t level);
 void pangoChangeStateMainMenu(pango_t* self);
+static void pa_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 //==============================================================================
 // Variables
@@ -160,7 +161,7 @@ swadgeMode_t pangoMode = {.modeName                 = pangoName,
                           .fnExitMode               = pangoExitMode,
                           .fnMainLoop               = pangoMainLoop,
                           .fnAudioCallback          = NULL,
-                          .fnBackgroundDrawCallback = NULL,
+                          .fnBackgroundDrawCallback = pa_backgroundDrawCallback,
                           .fnEspNowRecvCb           = NULL,
                           .fnEspNowSendCb           = NULL};
 
@@ -435,9 +436,6 @@ static void pangoUpdateMainMenu(pango_t* self, int64_t elapsedUs)
 
 void updateGame(pango_t* self, int64_t elapsedUs)
 {
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
-
     pa_updateEntities(&(self->entityManager));
 
     pa_animateTiles(&(self->wsgManager));
@@ -507,9 +505,6 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
 
 void updateTitleScreen(pango_t* self, int64_t elapsedUs)
 {
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
-
     self->gameData.frameCount++;
 
     if (self->gameData.frameCount > 600)
@@ -601,9 +596,6 @@ void changeStateReadyScreen(pango_t* self)
 
 void updateReadyScreen(pango_t* self, int64_t elapsedUs)
 {
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 179)
     {
@@ -714,6 +706,11 @@ void changeStateGame(pango_t* self)
     self->update = &updateGame;
 }
 
+static void pa_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    fillDisplayArea(x, y, x + w, y + h, c000);
+}
+
 void detectGameStateChange(pango_t* self)
 {
     if (!self->gameData.changeState)
@@ -815,9 +812,6 @@ void changeStateDead(pango_t* self)
 
 void updateDead(pango_t* self, int64_t elapsedUs)
 {
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
-
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 179)
     {
@@ -845,9 +839,6 @@ void updateDead(pango_t* self, int64_t elapsedUs)
 
 void updateGameOver(pango_t* self, int64_t elapsedUs)
 {
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 179)
     {
@@ -909,9 +900,6 @@ void changeStateLevelClear(pango_t* self)
 
 void updateLevelClear(pango_t* self, int64_t elapsedUs)
 {
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
-
     self->gameData.frameCount++;
 
     if (self->gameData.frameCount > 60)
@@ -1034,9 +1022,6 @@ void changeStateGameClear(pango_t* self)
 
 void updateGameClear(pango_t* self, int64_t elapsedUs)
 {
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
     self->gameData.frameCount++;
 
     if (self->gameData.frameCount > 450)
@@ -1235,8 +1220,6 @@ void changeStateNameEntry(pango_t* self)
 
 void updateNameEntry(pango_t* self, int64_t elapsedUs)
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
     self->gameData.frameCount++;
 
     if (self->gameData.btnState & PB_LEFT && !(self->gameData.prevBtnState & PB_LEFT))
@@ -1324,8 +1307,6 @@ void pangoChangeStateShowHighScores(pango_t* self)
 
 void updateShowHighScores(pango_t* self, int64_t elapsedUs)
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
     self->gameData.frameCount++;
 
     if ((self->gameData.frameCount > 300)
