@@ -1503,7 +1503,7 @@ void pa_updateScoreDisplay(paEntity_t* self){
     }
 
     char scoreStr[32];
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32, self->scoreValue);
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu16, self->scoreValue);
     drawText(&(self->gameData->scoreFont), greenColors[(self->stateTimer >> 3) % 4], scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
 }
 
