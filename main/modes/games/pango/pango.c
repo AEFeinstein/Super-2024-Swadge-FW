@@ -33,6 +33,7 @@
 #include "mainMenu.h"
 #include "fill.h"
 #include "paTables.h"
+#include "shapes.h"
 
 //==============================================================================
 // Constants
@@ -46,6 +47,7 @@ const char pangoName[] = "Pango";
 static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055};
 
 static const paletteColor_t redColors[4]    = {c501, c540, c550, c540};
+static const paletteColor_t tsRedColors[4]    = {c535, c534, c514, c534};
 static const paletteColor_t yellowColors[4] = {c550, c331, c550, c555};
 
 static const paletteColor_t cyanColors[4]   = {c055, c455, c055, c033};
@@ -145,6 +147,7 @@ void drawPause(font_t* font);
 uint16_t getLevelIndex(uint8_t world, uint8_t level);
 void pangoChangeStateMainMenu(pango_t* self);
 static void pa_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+void drawPangoLogo(font_t* font, int16_t x, int16_t y);
 
 //==============================================================================
 // Variables
@@ -556,9 +559,22 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
         for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
             // self->gameData.leds[i].r = (( (self->gameData.frameCount >> 4) % NUM_LEDS) == i) ? 0xFF : 0x00;
+            uint8_t ledRandVal;
 
-            paLeds[i].r += (esp_random() % 1);
-            paLeds[i].g += (esp_random() % 8);
+            switch(esp_random() % 3){
+                case 0:
+                default:
+                    paLeds[i].r += (esp_random() % 8);
+                case 1:
+                    ledRandVal = esp_random() % 8;
+                    paLeds[i].r += ledRandVal;
+                    paLeds[i].g += ledRandVal;
+                case 2:
+                    paLeds[i].b += (esp_random() % 8);
+            }
+
+            paLeds[i].r += (esp_random() % 8);
+            paLeds[i].g += (esp_random() % 1);
             paLeds[i].b += (esp_random() % 8);
         }
     }
@@ -567,9 +583,7 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
 
 void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
 {
-    // pa_drawTileMap(&(pango->tilemap));
-
-    drawText(font, c555, "P A N G O", 96, 32);
+    drawPangoLogo(font, 100, 32);
 
     if (pango->gameData.debugMode)
     {
@@ -581,6 +595,13 @@ void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
         drawText(font, c555, "- Press START button -", 20, 128);
     }
 
+}
+
+void drawPangoLogo(font_t* font, int16_t x, int16_t y){
+    drawTriangleOutlined(x, y+23, x+63, y, x+71, y+47, c003, cyanColors[(pango->gameData.frameCount >> 2) % 4]);
+    drawTriangleOutlined(x, y, x+79, y+15, x+23, y+47, c330, yellowColors[(pango->gameData.frameCount >> 3) % 4]);
+    drawText(font, c500, "PANGO", x+12, y+16);
+    drawText(font, tsRedColors[(pango->gameData.frameCount >> 4) % 4], "PANGO", x+11, y+15);
 }
 
 void changeStateReadyScreen(pango_t* self)
