@@ -250,27 +250,7 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         case SH_GAME:
         {
             // Load the chart data
-            const char* chartFile;
-            switch (sh->difficulty)
-            {
-                default:
-                case SH_EASY:
-                {
-                    chartFile = sh->menuSong->easy;
-                    break;
-                }
-                case SH_MEDIUM:
-                {
-                    chartFile = sh->menuSong->med;
-                    break;
-                }
-                case SH_HARD:
-                {
-                    chartFile = sh->menuSong->hard;
-                    break;
-                }
-            }
-            shLoadSong(sh, sh->menuSong->midi, chartFile);
+            shLoadSong(sh, sh->menuSong, sh->difficulty);
             break;
         }
         case SH_MENU:

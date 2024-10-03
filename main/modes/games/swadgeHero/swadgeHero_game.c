@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <limits.h>
 #include "swadgeHero_game.h"
 #include "swadgeHero_menu.h"
 
@@ -14,6 +15,15 @@
 #define GAME_NOTE_WIDTH  24
 
 #define SH_TEXT_TIME 500000
+
+//==============================================================================
+// Enums
+//==============================================================================
+typedef struct
+{
+    int32_t val;
+    const char* letter;
+} shLetterGrade_t;
 
 //==============================================================================
 // Const Variables
@@ -34,15 +44,25 @@ static const buttonBit_t noteToBtn_h[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_
 static const int32_t btnToNote_h[]     = {2, 1, 0, 3, 5, 4};
 static const int32_t noteToIcon_h[]    = {0, 1, 2, 3, 4, 5};
 
-static const char hit_fantastic[] = "Fantastic";
-static const char hit_marvelous[] = "Marvelous";
-static const char hit_great[]     = "Great";
-static const char hit_decent[]    = "Decent";
-static const char hit_way_off[]   = "Way Off";
-static const char hit_miss[]      = "Miss";
-
 static const char hit_early[] = "Early";
 static const char hit_late[]  = "Late";
+
+static const shLetterGrade_t grades[] = {
+    {.val = 100, .letter = "S"}, //
+    {.val = 97, .letter = "A+"}, {.val = 93, .letter = "A"},  {.val = 90, .letter = "A-"}, {.val = 87, .letter = "B+"},
+    {.val = 83, .letter = "B"},  {.val = 80, .letter = "B-"}, {.val = 77, .letter = "C+"}, {.val = 73, .letter = "C"},
+    {.val = 70, .letter = "C-"}, {.val = 67, .letter = "D+"}, {.val = 63, .letter = "D"},  {.val = 0, .letter = "F"},
+};
+
+// TODO don't hardcode
+const shTimingGrade_t timings[6] = {
+    {.timing = 21500, .label = "Fantastic"}, //
+    {.timing = 43000, .label = "Marvelous"}, //
+    {.timing = 102000, .label = "Great"},    //
+    {.timing = 135000, .label = "Decent"},   //
+    {.timing = 180000, .label = "Way Off"},  //
+    {.timing = INT32_MAX, .label = "Miss"},  //
+};
 
 //==============================================================================
 // Function Declarations
@@ -61,10 +81,10 @@ static void shHitNote(shVars_t* sh, int32_t baseScore);
  * @brief TODO doc
  *
  * @param sh
- * @param midi
- * @param chart
+ * @param song
+ * @param difficulty
  */
-void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
+void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
 {
     // Don't immediately quit
     sh->gameEnd = false;
@@ -73,45 +93,56 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
     sh->failOn     = shGetSettingFail();
     sh->scrollTime = shGetSettingSpeed();
 
-    // Load song
-    size_t sz    = 0;
-    sh->numFrets = 1 + shLoadChartData(sh, cnfsGetFile(chart, &sz), sz);
+    // Save song name
+    sh->songName = song->name;
 
-    shDifficulty_t difficulty;
-    if (4 <= sh->numFrets)
+    // Pick variables based on difficulty
+    const char* chartFile;
+    switch (difficulty)
     {
-        difficulty     = SH_EASY;
-        sh->btnToNote  = btnToNote_e;
-        sh->noteToBtn  = noteToBtn_e;
-        sh->colors     = colors_e;
-        sh->noteToIcon = noteToIcon_e;
+        default:
+        case SH_EASY:
+        {
+            chartFile      = song->easy;
+            sh->btnToNote  = btnToNote_e;
+            sh->noteToBtn  = noteToBtn_e;
+            sh->colors     = colors_e;
+            sh->noteToIcon = noteToIcon_e;
+            break;
+        }
+        case SH_MEDIUM:
+        {
+            chartFile      = song->med;
+            sh->btnToNote  = btnToNote_m;
+            sh->noteToBtn  = noteToBtn_m;
+            sh->colors     = colors_m;
+            sh->noteToIcon = noteToIcon_m;
+            break;
+        }
+        case SH_HARD:
+        {
+            chartFile      = song->hard;
+            sh->btnToNote  = btnToNote_h;
+            sh->noteToBtn  = noteToBtn_h;
+            sh->colors     = colors_h;
+            sh->noteToIcon = noteToIcon_h;
+            break;
+        }
     }
-    else if (5 == sh->numFrets)
-    {
-        difficulty     = SH_MEDIUM;
-        sh->btnToNote  = btnToNote_m;
-        sh->noteToBtn  = noteToBtn_m;
-        sh->colors     = colors_m;
-        sh->noteToIcon = noteToIcon_m;
-    }
-    else // >= 6
-    {
-        difficulty     = SH_HARD;
-        sh->btnToNote  = btnToNote_h;
-        sh->noteToBtn  = noteToBtn_h;
-        sh->colors     = colors_h;
-        sh->noteToIcon = noteToIcon_h;
-    }
+
+    // Load chart data
+    size_t sz    = 0;
+    sh->numFrets = 1 + shLoadChartData(sh, cnfsGetFile(chartFile, &sz), sz);
 
     // Save the key for the score
-    shGetNvsKey(midi, difficulty, sh->hsKey);
+    shGetNvsKey(song->midi, difficulty, sh->hsKey);
 
     // Make sure MIDI player is initialized
     initGlobalMidiPlayer();
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
 
     // Load the MIDI file
-    loadMidiFile(midi, &sh->midiSong, true);
+    loadMidiFile(song->midi, &sh->midiSong, true);
 
     // Set the file, but don't play yet
     midiPause(player, true);
@@ -141,6 +172,7 @@ void shLoadSong(shVars_t* sh, const char* midi, const char* chart)
     // Set score, combo, and fail
     sh->score     = 0;
     sh->combo     = 0;
+    sh->maxCombo  = 0;
     sh->failMeter = 50;
 }
 
@@ -158,6 +190,8 @@ uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
     uint32_t dIdx     = 0;
     sh->numChartNotes = (data[dIdx++] << 8);
     sh->numChartNotes |= (data[dIdx++]);
+
+    sh->totalNotes = sh->numChartNotes;
 
     sh->chartNotes = heap_caps_calloc(sh->numChartNotes, sizeof(shChartNote_t), MALLOC_CAP_SPIRAM);
 
@@ -184,6 +218,9 @@ uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
             sh->chartNotes[nIdx].hold = (data[dIdx + 0] << 8) | //
                                         (data[dIdx + 1] << 0);
             dIdx += 2;
+
+            // Holds count as another note for letter ranking
+            sh->totalNotes++;
         }
     }
 
@@ -202,6 +239,17 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 {
     if (sh->gameEnd)
     {
+        // Grade the performance
+        int32_t notePct = (100 * sh->notesHit) / sh->totalNotes;
+        for (int32_t gIdx = 0; gIdx < ARRAY_SIZE(grades); gIdx++)
+        {
+            if (notePct >= grades[gIdx].val)
+            {
+                sh->grade = grades[gIdx].letter;
+                break;
+            }
+        }
+
         // Save score to NVS
         int32_t oldHs = 0;
         if (!readNvs32(sh->hsKey, &oldHs))
@@ -214,6 +262,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         if (sh->score > oldHs)
         {
             writeNvs32(sh->hsKey, sh->score);
+            // TODO also write grade?
         }
 
         // Switch to the game end screen
@@ -397,7 +446,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             removeEntry(&sh->gameNotes, toRemove);
 
             // Note that it was missed
-            sh->hitText = hit_miss;
+            sh->hitText = timings[ARRAY_SIZE(timings) - 1].label;
             // Set a timer to not show the text forever
             sh->textTimerUs = SH_TEXT_TIME;
         }
@@ -505,7 +554,7 @@ void shDrawGame(shVars_t* sh)
         int16_t tWidth = textWidth(&sh->ibm, sh->hitText);
         drawText(&sh->ibm, c555, sh->hitText, (TFT_WIDTH - tWidth) / 2, 100);
 
-        if ((hit_fantastic != sh->hitText) && (hit_miss != sh->hitText))
+        if ((timings[0].label != sh->hitText) && (timings[ARRAY_SIZE(timings) - 1].label != sh->hitText))
         {
             tWidth = textWidth(&sh->ibm, sh->timingText);
             drawText(&sh->ibm, sh->timingText == hit_early ? c335 : c533, sh->timingText, (TFT_WIDTH - tWidth) / 2,
@@ -570,6 +619,12 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 
     sh->btnState = evt->state;
 
+    if (PB_B < evt->button)
+    {
+        // TODO handle non-face buttons
+        return;
+    }
+
     int32_t notePressed = sh->btnToNote[31 - __builtin_clz(evt->button)];
     if (-1 != notePressed)
     {
@@ -601,46 +656,28 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                     usOff = ABS(usOff);
 
                     // Check if this button hit a note
-                    bool gameNoteHit = false;
-
+                    bool gameNoteHit  = false;
                     int32_t baseScore = 0;
 
                     // Classify the time off
-                    if (usOff < 21500)
+                    for (int32_t tIdx = 0; tIdx < ARRAY_SIZE(timings); tIdx++)
                     {
-                        sh->hitText = hit_fantastic;
-                        gameNoteHit = true;
-                        baseScore   = 5;
-                    }
-                    else if (usOff < 43000)
-                    {
-                        sh->hitText = hit_marvelous;
-                        gameNoteHit = true;
-                        baseScore   = 4;
-                    }
-                    else if (usOff < 102000)
-                    {
-                        sh->hitText = hit_great;
-                        gameNoteHit = true;
-                        baseScore   = 3;
-                    }
-                    else if (usOff < 135000)
-                    {
-                        sh->hitText = hit_decent;
-                        gameNoteHit = true;
-                        baseScore   = 2;
-                    }
-                    else if (usOff < 180000)
-                    {
-                        sh->hitText = hit_way_off;
-                        gameNoteHit = true;
-                        baseScore   = 1;
-                    }
-                    else
-                    {
-                        sh->hitText = hit_miss;
-                        // Break the combo
-                        shMissNote(sh);
+                        if (usOff <= timings[tIdx].timing)
+                        {
+                            sh->hitText = timings[tIdx].label;
+                            if (INT32_MAX != timings[tIdx].timing)
+                            {
+                                // Note hit
+                                gameNoteHit = true;
+                                baseScore   = ARRAY_SIZE(timings) - tIdx - 1;
+                            }
+                            else
+                            {
+                                // Break the combo
+                                shMissNote(sh);
+                            }
+                            break;
+                        }
                     }
 
                     // Set a timer to not show the text forever
@@ -689,7 +726,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
         if (false == noteMatch && evt->down)
         {
             // Total miss
-            sh->hitText = hit_miss;
+            sh->hitText = timings[ARRAY_SIZE(timings) - 1].label;
             shMissNote(sh);
         }
     }
@@ -717,7 +754,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
  */
 static int32_t getMultiplier(shVars_t* sh)
 {
-    return MIN(4, (sh->combo + 10) / 10);
+    return (sh->combo + 10) / 10;
 }
 
 /**
@@ -738,11 +775,19 @@ static void shSongOver(void)
  */
 static void shHitNote(shVars_t* sh, int32_t baseScore)
 {
+    sh->noteHistogram[ARRAY_SIZE(timings) - 1 - baseScore]++;
+
     // Increment the score
     sh->score += getMultiplier(sh) * baseScore;
 
+    sh->notesHit++;
+
     // Increment the combo & fail meter
     sh->combo++;
+    if (sh->combo > sh->maxCombo)
+    {
+        sh->maxCombo = sh->combo;
+    }
 
     if (sh->failOn)
     {
@@ -757,6 +802,8 @@ static void shHitNote(shVars_t* sh, int32_t baseScore)
  */
 static void shMissNote(shVars_t* sh)
 {
+    sh->noteHistogram[ARRAY_SIZE(timings) - 1]++;
+
     sh->combo = 0;
     if (sh->failOn)
     {

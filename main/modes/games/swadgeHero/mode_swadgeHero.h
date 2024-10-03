@@ -81,6 +81,7 @@ typedef struct
     midiFile_t midiSong;
     int32_t leadInUs;
     char hsKey[16];
+    const char* songName;
 
     // Chart data
     int32_t numChartNotes;
@@ -104,7 +105,12 @@ typedef struct
     // Score data
     int32_t score;
     int32_t combo;
+    int32_t maxCombo;
     bool gameEnd;
+    int32_t totalNotes;
+    int32_t notesHit;
+    const char* grade;
+    int32_t noteHistogram[6]; // TODO don't hardcode length
 
     // Fret line data
     list_t fretLines;

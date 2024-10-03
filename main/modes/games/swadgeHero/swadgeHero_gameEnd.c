@@ -49,6 +49,8 @@ void shGameEndInput(shVars_t* sh, buttonEvt_t* evt)
 /**
  * @brief TODO doc
  *
+ * TODO better measurement
+ *
  * @param sh
  * @param elapsedUs
  */
@@ -56,11 +58,62 @@ void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
 {
     clearPxTft();
 
-    // Draw the score
+    int32_t yOff = 8;
+
+    // Draw the name
+    int16_t tWidth = textWidth(&sh->rodin, sh->songName);
+    drawText(&sh->rodin, c555, sh->songName, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += sh->rodin.height + 19;
+
+    // Draw all note count labels
+    int32_t yCounts = yOff;
+    int32_t maxXoff = 0;
+    for (int32_t i = 0; i < 6; i++)
+    {
+        int32_t xOff = drawText(&sh->ibm, c555, timings[i].label, 8, yOff);
+        if (xOff > maxXoff)
+        {
+            maxXoff = xOff;
+        }
+        yOff += sh->ibm.height + 8;
+    }
+
+    // Draw all note counts
+    yOff          = yCounts;
+    int32_t xVals = maxXoff + 8;
+    for (int32_t i = 0; i < 6; i++)
+    {
+        char histText[32];
+        snprintf(histText, sizeof(histText), "%" PRId32, sh->noteHistogram[i]);
+        int32_t xOff = drawText(&sh->ibm, c555, histText, xVals, yOff);
+        if (xOff > maxXoff)
+        {
+            maxXoff = xOff;
+        }
+        yOff += sh->ibm.height + 8;
+    }
+
+    // Reset Y offset
+    yOff = 52;
+
+    // Draw letter
     char scoreStr[32];
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%s", sh->grade);
+    tWidth = textWidth(&sh->rodin, scoreStr);
+    drawText(&sh->rodin, c555, scoreStr, maxXoff + (TFT_WIDTH - maxXoff - tWidth) / 2, yOff);
+    yOff += sh->rodin.height + 8;
+
+    // Draw the score
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, sh->score);
-    int16_t tWidth = textWidth(&sh->rodin, scoreStr);
-    drawText(&sh->rodin, c555, scoreStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - sh->rodin.height) / 2);
+    tWidth = textWidth(&sh->rodin, scoreStr);
+    drawText(&sh->rodin, c555, scoreStr, maxXoff + (TFT_WIDTH - maxXoff - tWidth) / 2, yOff);
+    yOff += sh->rodin.height + 8;
+
+    // Draw max combo
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "Combo: %" PRId32, sh->maxCombo);
+    tWidth = textWidth(&sh->rodin, scoreStr);
+    drawText(&sh->rodin, c555, scoreStr, maxXoff + (TFT_WIDTH - maxXoff - tWidth) / 2, yOff);
+    yOff += sh->rodin.height + 8;
 
     // Draw a graph of the fail meter
     if (sh->failOn)
