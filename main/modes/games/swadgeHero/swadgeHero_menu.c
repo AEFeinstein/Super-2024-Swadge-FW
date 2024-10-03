@@ -63,6 +63,14 @@ void shSetupMenu(shVars_t* sh)
     // Allocate the menu
     sh->menu     = initMenu(swadgeHeroMode.modeName, shMenuCb);
     sh->renderer = initMenuManiaRenderer(&sh->righteous, NULL, &sh->rodin);
+
+    static const paletteColor_t shadowColors[] = {c110, c210, c220, c320, c330, c430, c330, c320, c220, c210};
+    recolorMenuManiaRenderer(sh->renderer,     //
+                             c431, c100, c100, // Title colors (bg, text, outline)
+                             c111,             // Background
+                             c200, c210,       // Rings
+                             c000, c444,       // Rows
+                             shadowColors, ARRAY_SIZE(shadowColors));
     setManiaLedsOn(sh->renderer, true);
 
     // Add songs to play
