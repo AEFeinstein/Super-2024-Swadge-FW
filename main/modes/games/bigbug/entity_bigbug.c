@@ -57,7 +57,7 @@ void bb_updateRocketLanding(bb_entity_t* self){
         if(rData->yVel <= 0){
             bb_destroyEntity(rData->flame, false);
             free(self->data);
-            self->data = calloc(1,sizeof(bb_heavyFallingData_t));
+            self->data = heap_caps_calloc(1,sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
             self->updateFunction = bb_updateHeavyFallingInit;
             self->gameData->entityManager.viewEntity = NULL;
             return;
@@ -72,13 +72,13 @@ void bb_updateHeavyFallingInit(bb_entity_t* self){
 
     self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
 
-    bb_hitInfo_t* hitInfo = bb_collisionCheck(&self->gameData->tilemap, self, NULL);
-    if(hitInfo->hit == false){
-        free(hitInfo);
+    bb_hitInfo_t hitInfo = {0};
+    bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+    if(hitInfo.hit == false){
         return;
     }
     
-    self->pos.y = hitInfo->pos.y - self->halfHeight;
+    self->pos.y = hitInfo.pos.y - self->halfHeight;
     if(hfData->yVel < 160){
         hfData->yVel = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
@@ -87,13 +87,12 @@ void bb_updateHeavyFallingInit(bb_entity_t* self){
     else{
         hfData->yVel -= 160;
         // Update the dirt to air.
-        self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] = 0;
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] = 0;
         // Create a crumble animation
         bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                        hitInfo->tile_i * TILE_SIZE + TILE_SIZE,
-                        hitInfo->tile_j * TILE_SIZE + TILE_SIZE);
+                        hitInfo.tile_i * TILE_SIZE + TILE_SIZE,
+                        hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
     }
-    free(hitInfo);
     return;
 }
 
@@ -102,29 +101,28 @@ void bb_updateHeavyFalling(bb_entity_t* self){
     hfData->yVel += 6;
     self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
 
-    printf("tilemap addr: %p\n", &self->gameData->tilemap);
-    printf("self    addr: %p\n", self);
-    bb_hitInfo_t* hitInfo = bb_collisionCheck(&self->gameData->tilemap, self, NULL);
-    if(hitInfo->hit == false){
-        free(hitInfo);
+    // printf("tilemap addr: %p\n", &self->gameData->tilemap);
+    // printf("self    addr: %p\n", self);
+    bb_hitInfo_t hitInfo = {0};
+    bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+    if(hitInfo.hit == false){
         return;
     }
     
     // self->pos.y -= hfData->yVel * self->gameData->elapsedUs / 100000;
-    self->pos.y = hitInfo->pos.y - self->halfHeight;
+    self->pos.y = hitInfo.pos.y - self->halfHeight;
     if(hfData->yVel < 160){
         hfData->yVel = 0;
     }
     else{
         hfData->yVel -= 160;
         // Update the dirt to air.
-        self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] = 0;
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] = 0;
         // Create a crumble animation
         bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                        hitInfo->tile_i * TILE_SIZE + HALF_TILE,
-                        hitInfo->tile_j * TILE_SIZE + HALF_TILE);
+                        hitInfo.tile_i * TILE_SIZE + HALF_TILE,
+                        hitInfo.tile_j * TILE_SIZE + HALF_TILE);
     }
-    free(hitInfo);
     return;
 }
 
@@ -276,45 +274,45 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
     self->pos.x += gData->vel.x * self->gameData->elapsedUs / 100000;
     self->pos.y += gData->vel.y * self->gameData->elapsedUs / 100000;
 
-    bb_hitInfo_t* hitInfo = bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos);
+    bb_hitInfo_t hitInfo = {0};
+    bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos, &hitInfo);
 
-    if(hitInfo->hit == false){
-        free(hitInfo);
+    if(hitInfo.hit == false){
         return;
     }
 
-    self->pos.x = hitInfo->pos.x + hitInfo->normal.x * self->halfWidth;
-    self->pos.y = hitInfo->pos.y + hitInfo->normal.y * self->halfHeight;
+    self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
+    self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
 
     // printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
-    if (dotVec2d(gData->vel, hitInfo->normal)< -95)
+    if (dotVec2d(gData->vel, hitInfo.normal)< -95)
     {   // velocity angle is opposing garbage normal vector. Tweak number for different threshold.
         ///////////////////////
         // digging detected! //
         ///////////////////////
 
         // crumble test
-        //  uint32_t* val = calloc(2,sizeof(uint32_t));
+        //  uint32_t* val = heap_caps_calloc(2,sizeof(uint32_t), MALLOC_CAP_SPIRAM);
         //  val[0] = 5;
         //  val[1] = 3;
         //  push(self->gameData->unsupported, (void*)val);
 
         // Update the dirt by decrementing it.
-        self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] -= 1;
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] -= 1;
 
-        if(self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] == 0 ||
-            self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] == 1 ||
-            self->gameData->tilemap.fgTiles[hitInfo->tile_i][hitInfo->tile_j] == 4){
+        if(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] == 0 ||
+            self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] == 1 ||
+            self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] == 4){
             // Create a crumble animation
             bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                            hitInfo->tile_i * TILE_SIZE + HALF_TILE,
-                            hitInfo->tile_j * TILE_SIZE + HALF_TILE);
+                            hitInfo.tile_i * TILE_SIZE + HALF_TILE,
+                            hitInfo.tile_j * TILE_SIZE + HALF_TILE);
         }
         else{
             // Create a bump animation
             bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
-                            hitInfo->pos.x >> DECIMAL_BITS,
-                            hitInfo->pos.y >> DECIMAL_BITS);
+                            hitInfo.pos.x >> DECIMAL_BITS,
+                            hitInfo.pos.y >> DECIMAL_BITS);
         }
 
         ////////////////////////////////
@@ -333,7 +331,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
             bounceScalar = 1;
         }
         gData->vel = mulVec2d(
-            subVec2d(gData->vel, mulVec2d(hitInfo->normal, (2 * dotVec2d(gData->vel, hitInfo->normal)))),
+            subVec2d(gData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(gData->vel, hitInfo.normal)))),
             bounceScalar);
 
         
@@ -342,13 +340,13 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
         /////////////////////////////////
         // for(uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
         // {
-        //     uint32_t check_x = hitInfo->tile_i + self->gameData->neighbors[neighborIdx][0];
-        //     uint32_t check_y = hitInfo->tile_j + self->gameData->neighbors[neighborIdx][1];
+        //     uint32_t check_x = hitInfo.tile_i + self->gameData->neighbors[neighborIdx][0];
+        //     uint32_t check_y = hitInfo.tile_j + self->gameData->neighbors[neighborIdx][1];
         //     //Check if neighbor is in bounds of map (also not on left, right, or bottom, perimiter) and if it
         //     is dirt. if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y <
         //     TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
         //     {
-        //         uint32_t* val = calloc(4, sizeof(uint32_t));
+        //         uint32_t* val = heap_caps_calloc(4, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
         //         val[0] = check_x;
         //         val[1] = check_y;
         //         val[2] = 1; //1 is for foreground. 0 is midground.
@@ -356,7 +354,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self){
         //         push(self->gameData->pleaseCheck, (void*)val);
         //     }
         // }
-        free(hitInfo);
     }
 }
 

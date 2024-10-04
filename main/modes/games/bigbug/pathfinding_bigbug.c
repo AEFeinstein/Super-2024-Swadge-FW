@@ -16,19 +16,19 @@ uint16_t fCost(const bb_node_t* node)
 bool pathfindToPerimeter(bb_node_t* start)
 {
     // 1. initialize the open list
-    list_t* open = calloc(1, sizeof(list_t));
+    list_t open = {0};
     // 2. initialize the closed list
-    list_t* closed = calloc(1, sizeof(list_t));
+    // list_t closed = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     // put the starting node on the open list (you can leave its f at zero)
-    push(open, (void*)start);
+    push(&open, (void*)start);
 
     // 3. while the open list is not empty
-    while (open->first != NULL)
+    while (open.first != NULL)
     {
         // a) find the node with the least f on the open list, call it "q"
         uint16_t least_f    = 0;
         // uint8_t least_idx   = 0;
-        node_t* currentNode = open->first;
+        node_t* currentNode = open.first;
         currentNode         = currentNode->next;
         // uint8_t cur_idx     = 1;
         while (currentNode != NULL)
@@ -72,7 +72,5 @@ bool pathfindToPerimeter(bb_node_t* start)
 
     } // end (while loop)
 
-    free(open);
-    free(closed);
     return false;
 }

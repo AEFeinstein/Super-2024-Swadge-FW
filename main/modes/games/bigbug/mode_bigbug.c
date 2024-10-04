@@ -330,12 +330,12 @@ static void bb_SetLeds(void)
  */
 static void bb_UpdateTileSupport(void)
 {
-    if (bigbug->gameData.unsupported->first != NULL)
+    if (bigbug->gameData.unsupported.first != NULL)
     {
         for (int i = 0; i < 50; i++) // arbitrarily large loop to get to the dirt tiles.
         {
             // remove the first item from the list
-            uint32_t* shiftedVal = shift(bigbug->gameData.unsupported);
+            uint32_t* shiftedVal = shift(&bigbug->gameData.unsupported);
             // check that it's still dirt, because a previous pass may have crumbled it.
             if (bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] > 0)
             {
@@ -354,11 +354,12 @@ static void bb_UpdateTileSupport(void)
                         && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] >= 0
                         && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] < TILE_FIELD_HEIGHT)
                     {
+                        // TODO where is this free()'d?
                         uint32_t* val = heap_caps_calloc(2, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
                         val[0]        = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
                         val[1]        = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
 
-                        push(bigbug->gameData.unsupported, (void*)val);
+                        push(&bigbug->gameData.unsupported, (void*)val);
                     }
                 }
                 break;

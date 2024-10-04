@@ -27,7 +27,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
                                 bb_soundManager_t* soundManager)
 {
     bb_loadSprites(entityManager);
-    entityManager->entities = calloc(MAX_ENTITIES, sizeof(bb_entity_t));
+    entityManager->entities = heap_caps_calloc(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -40,7 +40,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, bb_sprite_t* sprite)
 {
     sprite->numFrames = num_frames;
-    sprite->frames    = malloc(sizeof(wsg_t) * num_frames);
+    sprite->frames    = heap_caps_calloc(num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
     for (uint8_t i = 0; i < num_frames; i++)
     {
         char wsg_name[strlen(name) + 7]; // 7 extra characters makes room for up to a 2 digit number + ".wsg" + null
@@ -256,7 +256,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     {
         case GARBOTNIK_FLYING:
         {
-            bb_garbotnikData* gData = calloc(1, sizeof(bb_garbotnikData));
+            bb_garbotnikData* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData), MALLOC_CAP_SPIRAM);
             entity->data = gData;
             entity->halfWidth = 192;
             entity->halfHeight = 192;
@@ -271,7 +271,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case ROCKET_ANIM:
         {
-            bb_rocketData_t* rData = calloc(1, sizeof(bb_rocketData_t));
+            bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
             rData->flame = NULL;
             rData->yVel = 240;
             entity->data = rData;

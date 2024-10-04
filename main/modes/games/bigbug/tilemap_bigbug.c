@@ -1292,9 +1292,7 @@ void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera){
     // drawWsgSimpleScaled(&tilemap->fore_h_Wsg[39], 0, 160, 10, 2);
 }
 
-bb_hitInfo_t* bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousPos){
-    bb_hitInfo_t* hitInfo = calloc(1, sizeof(bb_hitInfo_t));
-
+void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousPos, bb_hitInfo_t* hitInfo){
     // Look up nearest tiles for collision checks
     // a tile's width is 16 pixels << 4 = 512. half width is 256.
     int32_t xIdx = (ent->pos.x - ent->halfWidth) / BITSHIFT_TILE_SIZE
@@ -1395,7 +1393,6 @@ bb_hitInfo_t* bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* 
             }
         }
     }
-    return hitInfo;
 }
 
 wsg_t (*bb_GetMidgroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[120]

@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <esp_heap_caps.h>
 #include "hdw-led.h"
 #include "typedef_bigbug.h"
 #include "entityManager_bigbug.h"
@@ -60,8 +61,8 @@ struct bb_gameData_t
 
     int8_t neighbors[4][2]; // a handy table of left, up, right, and down offsets
 
-    list_t* pleaseCheck; // a list of tiles to check if they are supported.
-    list_t* unsupported; // a list of tiles that flood-fill crumble.
+    list_t pleaseCheck; // a list of tiles to check if they are supported.
+    list_t unsupported; // a list of tiles that flood-fill crumble.
 
 };
 

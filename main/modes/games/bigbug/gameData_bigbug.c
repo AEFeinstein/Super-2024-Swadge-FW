@@ -33,8 +33,8 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
     gameData->neighbors[3][0] = 0; //down  neighbor x offset
     gameData->neighbors[3][1] = 1; //down  neighbor y offset
 
-    gameData->pleaseCheck = calloc(1, sizeof(list_t));
-    gameData->unsupported = calloc(1, sizeof(list_t));
+    memset(&gameData->pleaseCheck, 0, sizeof(list_t));
+    memset(&gameData->unsupported, 0, sizeof(list_t));
 }
 
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData)
