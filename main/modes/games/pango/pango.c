@@ -558,24 +558,36 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
     {
         for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            // self->gameData.leds[i].r = (( (self->gameData.frameCount >> 4) % NUM_LEDS) == i) ? 0xFF : 0x00;
-            uint8_t ledRandVal;
-
-            switch(esp_random() % 3){
-                case 0:
-                default:
-                    paLeds[i].r += (esp_random() % 8);
-                case 1:
-                    ledRandVal = esp_random() % 8;
-                    paLeds[i].r += ledRandVal;
-                    paLeds[i].g += ledRandVal;
-                case 2:
-                    paLeds[i].b += (esp_random() % 8);
+            if( !(esp_random() % 8) ) {
+                switch(esp_random() % 3){
+                    case 0:
+                    default:
+                        paLeds[i].r = 255;
+                        paLeds[i].g = 0;
+                        paLeds[i].b = 0;
+                        break;
+                    case 1:
+                        paLeds[i].r = 255;
+                        paLeds[i].g = 255;
+                        paLeds[i].b = 0;
+                        break;
+                    case 2:
+                        paLeds[i].r = 0;
+                        paLeds[i].g = 0;
+                        paLeds[i].b = 255;
+                        break;
+                }
             }
 
-            paLeds[i].r += (esp_random() % 8);
-            paLeds[i].g += (esp_random() % 1);
-            paLeds[i].b += (esp_random() % 8);
+            if(paLeds[i].r >= 16){
+                paLeds[i].r -= 16;
+            }
+            if(paLeds[i].g >= 16){
+                paLeds[i].g -= 16;
+            }
+            if(paLeds[i].b >= 16) {
+                paLeds[i].b -= 16;
+            }
         }
     }
     setLeds(paLeds, CONFIG_NUM_LEDS);
@@ -583,6 +595,8 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
 
 void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
 {
+    //pa_drawTileMap(&(pango->tilemap));
+
     drawPangoLogo(font, 100, 32);
 
     if (pango->gameData.debugMode)
@@ -590,16 +604,25 @@ void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
         drawText(font, c555, "Debug Mode", 80, 48);
     }
 
+    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_GIRL_WIN]), 128, 116);
+    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PO_PUSH_SIDE_1]), 144, 122);
+    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PIXEL_WIN]), 120, 126);
+    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PANGO_PUSH_SOUTH_2]), 136, 132);
+    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_ENEMY_SIDE_2]), 64, 120);
+    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_ENEMY_DRILL_SIDE_1]), 52, 128);
+    drawWsg(&(pango->wsgManager.wsgs[PA_WSG_ENEMY_DRILL_SIDE_2]), 200, 120, true, false, 0);
+    drawWsg(&(pango->wsgManager.wsgs[PA_WSG_ENEMY_SIDE_1]), 212, 128, true, false, 0);
+
     if ((gameData->frameCount % 60) < 30)
     {
-        drawText(font, c555, "- Press START button -", 20, 128);
+        drawText(font, c555, "- Press START button -", 20, 208);
     }
 
 }
 
 void drawPangoLogo(font_t* font, int16_t x, int16_t y){
     drawTriangleOutlined(x, y+23, x+63, y, x+71, y+47, c003, cyanColors[(pango->gameData.frameCount >> 2) % 4]);
-    drawTriangleOutlined(x, y, x+79, y+15, x+23, y+47, c330, yellowColors[(pango->gameData.frameCount >> 3) % 4]);
+    drawTriangleOutlined(x, y, x+79, y+15, x+23, y+47, c220, yellowColors[(pango->gameData.frameCount >> 3) % 4]);
     drawText(font, c500, "PANGO", x+12, y+16);
     drawText(font, tsRedColors[(pango->gameData.frameCount >> 4) % 4], "PANGO", x+11, y+15);
 }
