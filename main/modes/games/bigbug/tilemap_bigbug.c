@@ -254,8 +254,8 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     // vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + 16 + tilemap->headlampWsg.w / 2,
                     //                 tilePos.y + 8 - garbotnikDrawPos->y + 17 + tilemap->headlampWsg.h / 2};
                     // printf("lookup: %d\n",lookup.x);
-                    lookup       = divVec2d(lookup, 2);
-                    brightness   = 5 - j / 5;
+                    lookup     = divVec2d(lookup, 2);
+                    brightness = 5 - j / 5;
                     if (brightness < 0)
                     {
                         brightness = 0;
@@ -306,7 +306,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        
+
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
@@ -400,7 +400,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        
+
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
@@ -498,7 +498,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        
+
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
@@ -595,7 +595,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        
+
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
@@ -761,7 +761,8 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     // 1111 1.0.   (18,0), (19,1), (16,2), (17,3),#right of concave corners
                     // 1111 1110   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
                     uint8_t num = (sprite_idx << 4) + corner_info; // 8-bit number
-                    if(brightness>5){
+                    if (brightness > 5)
+                    {
                         brightness = 5;
                     }
                     if ((num & 0b11000000) == 0b00000000)
@@ -889,7 +890,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        
+
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
@@ -907,7 +908,8 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     // 1111 .1.0   (17,0), (16,1), (19,2), (18,3),#left of concave corners
                     // 1111 01..   (18,0), (19,1), (16,2), (17,3),#right of concave corners
                     // 1111 1101   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
-                    if(brightness > 5){
+                    if (brightness > 5)
+                    {
                         brightness = 5;
                     }
                     if ((num & 0b01100000) == 0b00000000)
@@ -1043,7 +1045,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 = paletteToRGB(tilemap->headlampWsg.px[(lookup.y * tilemap->headlampWsg.w) + lookup.x]);
                             g = (rgbCol >> 8) & 0xFF;
                         }
-                        
+
                         // >> 16 & 0xFF gets red   channel
                         // >> 8  & 0xFF gets green channel
                         // >>    & 0xFF gets blue  channel
@@ -1061,7 +1063,8 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     // 1111 0.1.   (17,0), (16,1), (19,2), (18,3),#left of concave corners
                     // 1111 ..10   (18,0), (19,1), (16,2), (17,3),#right of concave corners
                     // 1111 1011   (16,0), (18,1), (17,2), (19,3) #opposite concave corners
-                    if(brightness > 5){
+                    if (brightness > 5)
+                    {
                         brightness = 5;
                     }
                     if ((num & 0b10010000) == 0b00000000)
@@ -1206,7 +1209,8 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         brightness += (g + ((b - g) * (garbotnikRotation->x - 720)) / 720) / 51;
                         lookup.x += 56;
                     }
-                    if(brightness > 5){
+                    if (brightness > 5)
+                    {
                         brightness = 5;
                     }
                     // Bottom Right                          V
@@ -1285,28 +1289,29 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
     // freeFont(&ibm);
 }
 
-void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera){
+void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera)
+{
     // printf("Camera x,y: %d,%d\n", camera->pos.x, camera->pos.y);
     // drawWsgSimple(&tilemap->fore_h_Wsg[39], 0, 0);
     // drawWsgSimple(&tilemap->fore_h_Wsg[39], TFT_WIDTH, 0);
     // drawWsgSimpleScaled(&tilemap->fore_h_Wsg[39], 0, 160, 10, 2);
 }
 
-void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousPos, bb_hitInfo_t* hitInfo){
+void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousPos, bb_hitInfo_t* hitInfo)
+{
     // Look up nearest tiles for collision checks
     // a tile's width is 16 pixels << 4 = 512. half width is 256.
-    int32_t xIdx = (ent->pos.x - ent->halfWidth) / BITSHIFT_TILE_SIZE
-                   - (ent->pos.x < 0); // the x index
-    int32_t yIdx = (ent->pos.y - ent->halfHeight) / BITSHIFT_TILE_SIZE
-                   - (ent->pos.y < 0); // the y index
+    int32_t xIdx = (ent->pos.x - ent->halfWidth) / BITSHIFT_TILE_SIZE - (ent->pos.x < 0);  // the x index
+    int32_t yIdx = (ent->pos.y - ent->halfHeight) / BITSHIFT_TILE_SIZE - (ent->pos.y < 0); // the y index
 
-    int32_t closestSqDist = 131072 + ent->cSquared; //((16<<4)^2+(16<<4)^2+entity's cSquared)if it's further than this, there's no way it's a collision.
-    closestSqDist += 150000;//Why do I have to do this? I don't know.............
-    int32_t right_i  = (ent->halfWidth*2)/BITSHIFT_TILE_SIZE;
-    right_i  = right_i  ? right_i : 1;
+    int32_t closestSqDist = 131072 + ent->cSquared; //((16<<4)^2+(16<<4)^2+entity's cSquared)if it's further than this,
+                                                    //there's no way it's a collision.
+    closestSqDist += 150000;                        // Why do I have to do this? I don't know.............
+    int32_t right_i = (ent->halfWidth * 2) / BITSHIFT_TILE_SIZE;
+    right_i         = right_i ? right_i : 1;
     right_i += xIdx + 1;
-    int32_t bottom_j = (ent->halfHeight*2)/BITSHIFT_TILE_SIZE;
-    bottom_j = bottom_j ? bottom_j : 1;
+    int32_t bottom_j = (ent->halfHeight * 2) / BITSHIFT_TILE_SIZE;
+    bottom_j         = bottom_j ? bottom_j : 1;
     bottom_j += yIdx + 1;
     for (int32_t i = xIdx; i <= right_i; i++)
     {
@@ -1317,9 +1322,9 @@ void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousP
                 if (ent->gameData->tilemap.fgTiles[i][j] >= 1)
                 {
                     // Initial circle check for preselecting the closest dirt tile
-                    int32_t sqDist = sqMagVec2d(
-                        subVec2d(ent->pos, (vec_t){i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE,
-                                                    j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE}));
+                    int32_t sqDist
+                        = sqMagVec2d(subVec2d(ent->pos, (vec_t){i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE,
+                                                                j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE}));
                     if (sqDist < closestSqDist)
                     {
                         // Good candidate found!
@@ -1327,47 +1332,54 @@ void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousP
                                          j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
                         // AABB-AABB collision detection begins here
                         // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-                        if (   (int32_t)ent->pos.x - (int32_t)ent->halfWidth  < (int32_t)tilePos.x + (int32_t)BITSHIFT_HALF_TILE
-                            && (int32_t)ent->pos.x + (int32_t)ent->halfWidth  > (int32_t)tilePos.x - (int32_t)BITSHIFT_HALF_TILE
-                            && (int32_t)ent->pos.y - (int32_t)ent->halfHeight < (int32_t)tilePos.y + (int32_t)BITSHIFT_HALF_TILE
-                            && (int32_t)ent->pos.y + (int32_t)ent->halfHeight > (int32_t)tilePos.y - (int32_t)BITSHIFT_HALF_TILE)
+                        if ((int32_t)ent->pos.x - (int32_t)ent->halfWidth
+                                < (int32_t)tilePos.x + (int32_t)BITSHIFT_HALF_TILE
+                            && (int32_t)ent->pos.x + (int32_t)ent->halfWidth
+                                   > (int32_t)tilePos.x - (int32_t)BITSHIFT_HALF_TILE
+                            && (int32_t)ent->pos.y - (int32_t)ent->halfHeight
+                                   < (int32_t)tilePos.y + (int32_t)BITSHIFT_HALF_TILE
+                            && (int32_t)ent->pos.y + (int32_t)ent->halfHeight
+                                   > (int32_t)tilePos.y - (int32_t)BITSHIFT_HALF_TILE)
                         {
                             /////////////////////////
                             // Collision detected! //
                             /////////////////////////
-                            hitInfo->hit = true;
-                            closestSqDist = sqDist;
+                            hitInfo->hit    = true;
+                            closestSqDist   = sqDist;
                             hitInfo->tile_i = i;
                             hitInfo->tile_j = j;
 
-                            if(previousPos != NULL){
-                                //More accurate collision resolution if previousPos provided.
-                                //Used by entities that need to bounce around or move quickly.
-                                    
+                            if (previousPos != NULL)
+                            {
+                                // More accurate collision resolution if previousPos provided.
+                                // Used by entities that need to bounce around or move quickly.
+
                                 // generate hitInfo based on position from previous frame.
                                 hitInfo->normal = subVec2d(*previousPos, tilePos);
                             }
-                            else{
-                                //Worse collision resolution
-                                //for entities that don't care to store their previousPos.
+                            else
+                            {
+                                // Worse collision resolution
+                                // for entities that don't care to store their previousPos.
                                 hitInfo->normal = subVec2d(ent->pos, tilePos);
                             }
                             // Snap the offset to an orthogonal direction.
-                            if ((hitInfo->normal.x < 0 ? -hitInfo->normal.x : hitInfo->normal.x) > (hitInfo->normal.y < 0 ? -hitInfo->normal.y : hitInfo->normal.y))
+                            if ((hitInfo->normal.x < 0 ? -hitInfo->normal.x : hitInfo->normal.x)
+                                > (hitInfo->normal.y < 0 ? -hitInfo->normal.y : hitInfo->normal.y))
                             {
                                 if (hitInfo->normal.x > 0)
                                 {
                                     hitInfo->normal.x = 1;
                                     hitInfo->normal.y = 0;
-                                    hitInfo->pos.x = tilePos.x + BITSHIFT_HALF_TILE;
-                                    hitInfo->pos.y = ent->pos.y;
+                                    hitInfo->pos.x    = tilePos.x + BITSHIFT_HALF_TILE;
+                                    hitInfo->pos.y    = ent->pos.y;
                                 }
                                 else
                                 {
                                     hitInfo->normal.x = -1;
                                     hitInfo->normal.y = 0;
-                                    hitInfo->pos.x = tilePos.x - BITSHIFT_HALF_TILE;
-                                    hitInfo->pos.y = ent->pos.y;
+                                    hitInfo->pos.x    = tilePos.x - BITSHIFT_HALF_TILE;
+                                    hitInfo->pos.y    = ent->pos.y;
                                 }
                             }
                             else
@@ -1376,15 +1388,15 @@ void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousP
                                 {
                                     hitInfo->normal.x = 0;
                                     hitInfo->normal.y = 1;
-                                    hitInfo->pos.x = ent->pos.x;
-                                    hitInfo->pos.y = tilePos.y + BITSHIFT_HALF_TILE;
+                                    hitInfo->pos.x    = ent->pos.x;
+                                    hitInfo->pos.y    = tilePos.y + BITSHIFT_HALF_TILE;
                                 }
                                 else
                                 {
                                     hitInfo->normal.x = 0;
                                     hitInfo->normal.y = -1;
-                                    hitInfo->pos.x = ent->pos.x;
-                                    hitInfo->pos.y = tilePos.y - BITSHIFT_HALF_TILE;
+                                    hitInfo->pos.x    = ent->pos.x;
+                                    hitInfo->pos.y    = tilePos.y - BITSHIFT_HALF_TILE;
                                 }
                             }
                         }

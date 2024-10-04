@@ -33,7 +33,7 @@ typedef struct
 
     bb_entity_t* viewEntity;
     bb_entity_t* playerEntity;
-}bb_entityManager_t;
+} bb_entityManager_t;
 
 //==============================================================================
 // Prototypes
@@ -49,8 +49,8 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera);
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager);
 
 void bb_viewFollowEntity(bb_entity_t* entity, rectangle_t* camera);
-bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused, bb_spriteDef_t spriteIndex,
-                            uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y);
+bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
+                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y);
 
 void bb_freeEntityManager(bb_entityManager_t* entityManager);
 

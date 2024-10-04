@@ -19,7 +19,6 @@
 #include "hdw-tft.h"
 #include <math.h>
 
-
 //==============================================================================
 // Defines
 //==============================================================================
@@ -137,20 +136,18 @@ static void bb_EnterMode(void)
     drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
     drawDisplayTft(NULL);
 
-
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
     bb_initializeTileMap(&(bigbug->gameData.tilemap));
     bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
 
     bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
-            (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE+1,
-            -1000);
-    bigbug->camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE +HALF_TILE+1) - TFT_WIDTH/2;
+                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000);
+    bigbug->camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
 
-    //Player
-    // bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
-    //         5 * 32 + 16,
-    //         -110);
+    // Player
+    //  bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+    //          5 * 32 + 16,
+    //          -110);
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
@@ -238,13 +235,17 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
  */
 static void bb_DrawScene(void)
 {
-    vec_t garbotnikDrawPos = {.x = (bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 18,
-                              .y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 17};
-    if(bigbug->gameData.entityManager.playerEntity->spriteIndex == GARBOTNIK_FLYING){
-        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos, &((bb_garbotnikData*)bigbug->gameData.entityManager.playerEntity->data)->yaw);
+    vec_t garbotnikDrawPos
+        = {.x = (bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 18,
+           .y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 17};
+    if (bigbug->gameData.entityManager.playerEntity->spriteIndex == GARBOTNIK_FLYING)
+    {
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos,
+                       &((bb_garbotnikData*)bigbug->gameData.entityManager.playerEntity->data)->yaw);
     }
-    else{
-        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos, &(vec_t){0,0});
+    else
+    {
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos, &(vec_t){0, 0});
     }
     bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->camera);
 
@@ -280,8 +281,6 @@ static void bb_GameLoop(int64_t elapsedUs)
             bigbug->isPaused = !bigbug->isPaused;
         }
     }
-
-    
 
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
@@ -343,11 +342,11 @@ static void bb_UpdateTileSupport(void)
                 bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] = 0;
                 // create a crumble animation
                 bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                                shiftedVal[0] * 32 + 16,
-                                shiftedVal[1] * 32 + 16);
+                                shiftedVal[0] * 32 + 16, shiftedVal[1] * 32 + 16);
 
                 // queue neighbors for crumbling
-                for (uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)//neighborIdx 0 thru 3 is Left, Up, Right, Down
+                for (uint8_t neighborIdx = 0; neighborIdx < 4;
+                     neighborIdx++) // neighborIdx 0 thru 3 is Left, Up, Right, Down
                 {
                     if ((int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] >= 0
                         && (int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] < TILE_FIELD_WIDTH
@@ -367,4 +366,3 @@ static void bb_UpdateTileSupport(void)
         }
     }
 }
-

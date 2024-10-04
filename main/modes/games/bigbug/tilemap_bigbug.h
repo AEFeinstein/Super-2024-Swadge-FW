@@ -44,7 +44,7 @@ struct bb_tilemap_t
 struct bb_hitInfo_t
 {
     bool hit;
-    vec_t pos;//the precise hit point somewhere on an edge of a tile.
+    vec_t pos; // the precise hit point somewhere on an edge of a tile.
     vec_t normal;
     int32_t tile_i;
     int32_t tile_j;

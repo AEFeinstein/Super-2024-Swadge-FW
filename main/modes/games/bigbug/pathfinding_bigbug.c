@@ -26,7 +26,7 @@ bool pathfindToPerimeter(bb_node_t* start)
     while (open.first != NULL)
     {
         // a) find the node with the least f on the open list, call it "q"
-        uint16_t least_f    = 0;
+        uint16_t least_f = 0;
         // uint8_t least_idx   = 0;
         node_t* currentNode = open.first;
         currentNode         = currentNode->next;
@@ -39,7 +39,7 @@ bool pathfindToPerimeter(bb_node_t* start)
 
             if (((uint16_t*)currentNode->val)[3] < least_f)
             {
-                least_f   = ((uint16_t*)currentNode->val)[3];
+                least_f = ((uint16_t*)currentNode->val)[3];
                 // least_idx = cur_idx;
             }
             currentNode = currentNode->next;

@@ -59,24 +59,24 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     crumbleSprite->originY     = 43;
     printf("crumble numFrames %d\n", entityManager->sprites[CRUMBLE_ANIM].numFrames);
 
-    bb_sprite_t* bumpSprite    = bb_loadSprite("hit", 8, &entityManager->sprites[BUMP_ANIM]);
-    bumpSprite->originX        = 37;
-    bumpSprite->originY        = 37;
+    bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, &entityManager->sprites[BUMP_ANIM]);
+    bumpSprite->originX     = 37;
+    bumpSprite->originY     = 37;
     printf("bump numFrames %d\n", entityManager->sprites[BUMP_ANIM].numFrames);
 
-    bb_sprite_t* rocketSprite    = bb_loadSprite("rocket", 41, &entityManager->sprites[ROCKET_ANIM]);
-    rocketSprite->originX        = 33;
-    rocketSprite->originY        = 67;
+    bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 41, &entityManager->sprites[ROCKET_ANIM]);
+    rocketSprite->originX     = 33;
+    rocketSprite->originY     = 67;
     printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
 
-    bb_sprite_t* flameSprite    = bb_loadSprite("flame", 24, &entityManager->sprites[FLAME_ANIM]);
-    flameSprite->originX        = 26;
-    flameSprite->originY        = -27;
+    bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, &entityManager->sprites[FLAME_ANIM]);
+    flameSprite->originX     = 26;
+    flameSprite->originY     = -27;
     printf("flame numFrames %d\n", entityManager->sprites[FLAME_ANIM].numFrames);
 
     bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, &entityManager->sprites[GARBOTNIK_FLYING]);
-    garbotnikFlyingSprite->originX = 18;
-    garbotnikFlyingSprite->originY = 17;
+    garbotnikFlyingSprite->originX     = 18;
+    garbotnikFlyingSprite->originY     = 17;
     printf("flame numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
 }
 
@@ -86,7 +86,8 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
     {
         if (entityManager->entities[i].active)
         {
-            if(entityManager->entities[i].updateFunction != NULL){
+            if (entityManager->entities[i].updateFunction != NULL)
+            {
                 entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
             }
             if (&(entityManager->entities[i]) == entityManager->viewEntity)
@@ -122,27 +123,31 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* currentEntity = &entityManager->entities[i];
-        
+
         if (currentEntity->active)
         {
-            //printf("hey %d %d\n", i, currentEntity->spriteIndex);
-            if (currentEntity->drawFunction != NULL){
+            // printf("hey %d %d\n", i, currentEntity->spriteIndex);
+            if (currentEntity->drawFunction != NULL)
+            {
                 currentEntity->drawFunction(entityManager, camera, currentEntity);
             }
-            else{
-                drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
+            else
+            {
+                drawWsgSimple(
+                    &entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
                     (currentEntity->pos.x >> SUBPIXEL_RESOLUTION)
                         - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
                     (currentEntity->pos.y >> SUBPIXEL_RESOLUTION)
                         - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
             }
-            
 
-            if(currentEntity->paused == false){
-                //increment the frame counter
+            if (currentEntity->paused == false)
+            {
+                // increment the frame counter
                 currentEntity->animationTimer += 1;
-                currentEntity->currentAnimationFrame = currentEntity->animationTimer / currentEntity->gameFramesPerAnimationFrame;
-                //if frame reached the end of the animation
+                currentEntity->currentAnimationFrame
+                    = currentEntity->animationTimer / currentEntity->gameFramesPerAnimationFrame;
+                // if frame reached the end of the animation
                 if (currentEntity->currentAnimationFrame
                     >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
                 {
@@ -150,14 +155,14 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     {
                         case ONESHOT_ANIMATION:
                         {
-                            //destroy the entity
+                            // destroy the entity
                             bb_destroyEntity(currentEntity, false);
                             break;
                         }
                         case LOOPING_ANIMATION:
                         {
-                            //reset the animation
-                            currentEntity->animationTimer = 0;
+                            // reset the animation
+                            currentEntity->animationTimer        = 0;
                             currentEntity->currentAnimationFrame = 0;
                             break;
                         }
@@ -221,8 +226,8 @@ void bb_viewFollowEntity(bb_entity_t* entity, rectangle_t* camera)
     }
 }
 
-bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused, bb_spriteDef_t spriteIndex,
-                            uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y)
+bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
+                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
@@ -239,16 +244,15 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     }
 
     entity->active = true;
-    entity->pos.x = x << SUBPIXEL_RESOLUTION,
-    entity->pos.y = y << SUBPIXEL_RESOLUTION;
+    entity->pos.x = x << SUBPIXEL_RESOLUTION, entity->pos.y = y << SUBPIXEL_RESOLUTION;
 
     entity->type        = type;
     entity->paused      = paused;
     entity->spriteIndex = spriteIndex;
 
-    entity->animationTimer = 0;
+    entity->animationTimer              = 0;
     entity->gameFramesPerAnimationFrame = gameFramesPerAnimationFrame;
-    entity->currentAnimationFrame = 0;
+    entity->currentAnimationFrame       = 0;
     // entity->collisionHandler     = &dummyCollisionHandler;
     // entity->tileCollisionHandler = &ballTileCollisionHandler;
 
@@ -257,30 +261,30 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case GARBOTNIK_FLYING:
         {
             bb_garbotnikData* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData), MALLOC_CAP_SPIRAM);
-            entity->data = gData;
-            entity->halfWidth = 192;
-            entity->halfHeight = 192;
-            entity->cSquared = 73728;
+            entity->data            = gData;
+            entity->halfWidth       = 192;
+            entity->halfHeight      = 192;
+            entity->cSquared        = 73728;
 
             entity->updateFunction = &bb_updateGarbotnikFlying;
             entity->drawFunction   = &bb_drawGarbotnikFlying;
 
-            //entityManager->viewEntity = entity;
+            // entityManager->viewEntity = entity;
             entityManager->playerEntity = entity;
             break;
         }
         case ROCKET_ANIM:
         {
             bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
-            rData->flame = NULL;
-            rData->yVel = 240;
-            entity->data = rData;
-            entity->halfWidth  =    192;
-            entity->halfHeight =    464;
-            entity->cSquared   = 252160;
+            rData->flame           = NULL;
+            rData->yVel            = 240;
+            entity->data           = rData;
+            entity->halfWidth      = 192;
+            entity->halfHeight     = 464;
+            entity->cSquared       = 252160;
 
-            entity->updateFunction = &bb_updateRocketLanding;
-            entityManager->viewEntity = entity;
+            entity->updateFunction      = &bb_updateRocketLanding;
+            entityManager->viewEntity   = entity;
             entityManager->playerEntity = entity;
             break;
         }
@@ -292,10 +296,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         default:
         {
             entity->updateFunction = NULL;
-            entity->data = NULL;
-            entity->halfWidth = 0;
-            entity->halfHeight = 0;
-            entity->cSquared = 0;
+            entity->data           = NULL;
+            entity->halfWidth      = 0;
+            entity->halfHeight     = 0;
+            entity->cSquared       = 0;
             break;
         }
     }
@@ -310,8 +314,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
 void bb_freeEntityManager(bb_entityManager_t* self)
 {
-
-
     for (uint8_t i = 0; i < NUM_SPRITES; i++)
     {
         for (uint8_t f = 0; f < self->sprites[i].numFrames; f++)

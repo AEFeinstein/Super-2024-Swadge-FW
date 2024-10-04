@@ -24,14 +24,14 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
 
     gameData->soundManager = soundManager;
 
-    gameData->neighbors[0][0] = -1;//left  neighbor x offset
-    gameData->neighbors[0][1] = 0; //left  neighbor y offset
-    gameData->neighbors[1][0] = 0; //up    neighbor x offset
-    gameData->neighbors[1][1] = -1;//up    neighbor y offset
-    gameData->neighbors[2][0] = 1; //right neighbor x offset
-    gameData->neighbors[2][1] = 0; //right neighbor y offset
-    gameData->neighbors[3][0] = 0; //down  neighbor x offset
-    gameData->neighbors[3][1] = 1; //down  neighbor y offset
+    gameData->neighbors[0][0] = -1; // left  neighbor x offset
+    gameData->neighbors[0][1] = 0;  // left  neighbor y offset
+    gameData->neighbors[1][0] = 0;  // up    neighbor x offset
+    gameData->neighbors[1][1] = -1; // up    neighbor y offset
+    gameData->neighbors[2][0] = 1;  // right neighbor x offset
+    gameData->neighbors[2][1] = 0;  // right neighbor y offset
+    gameData->neighbors[3][0] = 0;  // down  neighbor x offset
+    gameData->neighbors[3][1] = 1;  // down  neighbor y offset
 
     memset(&gameData->pleaseCheck, 0, sizeof(list_t));
     memset(&gameData->unsupported, 0, sizeof(list_t));

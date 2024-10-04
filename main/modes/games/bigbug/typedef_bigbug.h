@@ -26,15 +26,15 @@ typedef struct bb_gameData_t bb_gameData_t;
 typedef enum
 {
     CRUMBLE_ANIM,
-    BUMP_ANIM,   // A particle effect where you bump things
-    ROCKET_ANIM, // A vehicle to enter and depart the level
-    FLAME_ANIM,  //A particle effect at the bottom of the rocket
-    GARBOTNIK_FLYING, //Frames of garbotnik flying
-    WILE,        // A metal ball that is thrown
-    HARPOON,     // A harpoon you throw
-    FLY,         // A bug that flies
-    ANT,         // A bug that crawls on the midground tile field
-    BEETLE,      // A bug that walks on the the foreground tile field
+    BUMP_ANIM,        // A particle effect where you bump things
+    ROCKET_ANIM,      // A vehicle to enter and depart the level
+    FLAME_ANIM,       // A particle effect at the bottom of the rocket
+    GARBOTNIK_FLYING, // Frames of garbotnik flying
+    WILE,             // A metal ball that is thrown
+    HARPOON,          // A harpoon you throw
+    FLY,              // A bug that flies
+    ANT,              // A bug that crawls on the midground tile field
+    BEETLE,           // A bug that walks on the the foreground tile field
 } bb_spriteDef_t;
 
 typedef enum
