@@ -81,6 +81,7 @@ static void shEnterMode(void)
     {
         loadWsg(icons[i], &shv->icons[i], true);
     }
+    loadWsg("star.wsg", &shv->star, true);
 
     // Show initial menu
     shChangeScreen(shv, SH_MENU);
@@ -103,6 +104,7 @@ static void shExitMode(void)
     {
         freeWsg(&shv->icons[i]);
     }
+    freeWsg(&shv->star);
 
     // Free mode memory
     free(shv);
@@ -223,6 +225,10 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
                 free(val);
             }
             while ((val = pop(&shv->fretLines)))
+            {
+                free(val);
+            }
+            while ((val = pop(&shv->starList)))
             {
                 free(val);
             }

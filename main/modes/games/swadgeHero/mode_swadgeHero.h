@@ -130,6 +130,8 @@ typedef struct
     const char* timingText;
     int32_t textTimerUs;
     wsg_t icons[6];
+    wsg_t star;
+    list_t starList;
 
     // High score display
     list_t hsStrs;

@@ -25,6 +25,13 @@ typedef struct
     const char* letter;
 } shLetterGrade_t;
 
+typedef struct
+{
+    int32_t x;
+    int32_t y;
+    int32_t timer;
+} drawStar_t;
+
 //==============================================================================
 // Const Variables
 //==============================================================================
@@ -72,6 +79,7 @@ static int32_t getMultiplier(shVars_t* sh);
 static void shSongOver(void);
 static void shMissNote(shVars_t* sh);
 static void shHitNote(shVars_t* sh, int32_t baseScore);
+static int32_t getXoffset(shVars_t* sh, int32_t note);
 
 //==============================================================================
 // Functions
@@ -288,6 +296,25 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     if (sh->textTimerUs > 0)
     {
         sh->textTimerUs -= elapsedUs;
+    }
+
+    // Run timers for stars
+    node_t* starNode = sh->starList.first;
+    while (starNode)
+    {
+        drawStar_t* ds = starNode->val;
+        ds->timer -= elapsedUs;
+        if (0 >= ds->timer)
+        {
+            node_t* toRemove = starNode;
+            starNode         = starNode->next;
+            free(toRemove->val);
+            removeEntry(&sh->starList, toRemove);
+        }
+        else
+        {
+            starNode = starNode->next;
+        }
     }
 
     // Get a reference to the player
@@ -519,7 +546,7 @@ void shDrawGame(shVars_t* sh)
     while (gameNoteNode)
     {
         shGameNote_t* gameNote = gameNoteNode->val;
-        int32_t xOffset        = ((gameNote->note * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
+        int32_t xOffset        = getXoffset(sh, gameNote->note);
 
         // If there is a tail
         if (gameNote->tailPosY >= 0)
@@ -548,6 +575,15 @@ void shDrawGame(shVars_t* sh)
                      xOffset + (GAME_NOTE_WIDTH / 2) + margin, HIT_BAR + (GAME_NOTE_HEIGHT / 2) + margin,
                      sh->colors[bIdx]);
         }
+    }
+
+    // Draw stars
+    node_t* starNode = sh->starList.first;
+    while (starNode)
+    {
+        drawStar_t* ds = starNode->val;
+        drawWsgSimple(&sh->star, ds->x, ds->y);
+        starNode = starNode->next;
     }
 
     // Draw text
@@ -690,6 +726,13 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                     {
                         shHitNote(sh, baseScore);
 
+                        // Draw a star for a moment
+                        drawStar_t* ds = heap_caps_calloc(1, sizeof(drawStar_t), MALLOC_CAP_SPIRAM);
+                        ds->x          = getXoffset(sh, gameNote->note) - sh->star.w / 2;
+                        ds->y          = gameNote->headPosY - (sh->star.h / 2);
+                        ds->timer      = 250000;
+                        push(&sh->starList, ds);
+
                         if (gameNote->tailPosY >= 0)
                         {
                             // There is a tail, don't remove the note yet
@@ -826,4 +869,16 @@ static void shMissNote(shVars_t* sh)
 const char* getLetterGrade(int32_t gradeIdx)
 {
     return grades[gradeIdx].letter;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param sh
+ * @param note
+ * @return int32_t
+ */
+static int32_t getXoffset(shVars_t* sh, int32_t note)
+{
+    return ((note * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
 }
