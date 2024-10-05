@@ -8,6 +8,12 @@
 #include <swadge2024.h>
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define NUM_NOTE_TIMINGS 6
+
+//==============================================================================
 // Enums
 //==============================================================================
 
@@ -110,7 +116,7 @@ typedef struct
     int32_t totalNotes;
     int32_t notesHit;
     const char* grade;
-    int32_t noteHistogram[6]; // TODO don't hardcode length
+    int32_t noteHistogram[NUM_NOTE_TIMINGS];
 
     // Fret line data
     list_t fretLines;

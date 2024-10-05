@@ -48,14 +48,14 @@ static const char hit_early[] = "Early";
 static const char hit_late[]  = "Late";
 
 static const shLetterGrade_t grades[] = {
-    {.val = 100, .letter = "S"}, //
-    {.val = 97, .letter = "A+"}, {.val = 93, .letter = "A"},  {.val = 90, .letter = "A-"}, {.val = 87, .letter = "B+"},
-    {.val = 83, .letter = "B"},  {.val = 80, .letter = "B-"}, {.val = 77, .letter = "C+"}, {.val = 73, .letter = "C"},
-    {.val = 70, .letter = "C-"}, {.val = 67, .letter = "D+"}, {.val = 63, .letter = "D"},  {.val = 0, .letter = "F"},
+    {.val = 100, .letter = "S"},                                                          //
+    {.val = 97, .letter = "A+"}, {.val = 93, .letter = "A"}, {.val = 90, .letter = "A-"}, //
+    {.val = 87, .letter = "B+"}, {.val = 83, .letter = "B"}, {.val = 80, .letter = "B-"}, //
+    {.val = 77, .letter = "C+"}, {.val = 73, .letter = "C"}, {.val = 70, .letter = "C-"}, //
+    {.val = 67, .letter = "D+"}, {.val = 63, .letter = "D"}, {.val = 0, .letter = "F"},
 };
 
-// TODO don't hardcode
-const shTimingGrade_t timings[6] = {
+const shTimingGrade_t timings[NUM_NOTE_TIMINGS] = {
     {.timing = 21500, .label = "Fantastic"}, //
     {.timing = 43000, .label = "Marvelous"}, //
     {.timing = 102000, .label = "Great"},    //
@@ -241,11 +241,12 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     {
         // Grade the performance
         int32_t notePct = (100 * sh->notesHit) / sh->totalNotes;
-        for (int32_t gIdx = 0; gIdx < ARRAY_SIZE(grades); gIdx++)
+        int gradeIdx;
+        for (gradeIdx = 0; gradeIdx < ARRAY_SIZE(grades); gradeIdx++)
         {
-            if (notePct >= grades[gIdx].val)
+            if (notePct >= grades[gradeIdx].val)
             {
-                sh->grade = grades[gIdx].letter;
+                sh->grade = grades[gradeIdx].letter;
                 break;
             }
         }
@@ -261,8 +262,9 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         // Write the high score to NVS if it's larger
         if (sh->score > oldHs)
         {
-            writeNvs32(sh->hsKey, sh->score);
-            // TODO also write grade?
+            // four top bits are letter, bottom 28 bits are score
+            int32_t nvsScore = ((gradeIdx & 0x0F) << 28) | (sh->score & 0x0FFFFFFF);
+            writeNvs32(sh->hsKey, nvsScore);
         }
 
         // Switch to the game end screen
@@ -813,4 +815,15 @@ static void shMissNote(shVars_t* sh)
             sh->gameEnd = true;
         }
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param gradeIdx
+ * @return const char*
+ */
+const char* getLetterGrade(int32_t gradeIdx)
+{
+    return grades[gradeIdx].letter;
 }

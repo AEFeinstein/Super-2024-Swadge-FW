@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include "swadgeHero_menu.h"
+#include "swadgeHero_game.h"
 #include "mainMenu.h"
 
 //==============================================================================
@@ -38,6 +39,10 @@ static const char strHard[]       = "Hard";
 static const char strHighScores[] = "High Scores";
 static const char strSettings[]   = "Settings";
 static const char strExit[]       = "Exit";
+
+static const char easyStr_noscore[]   = "Easy:";
+static const char mediumStr_noscore[] = "Medium:";
+static const char hardStr_noscore[]   = "Hard:";
 
 const char* shs_fail_key      = "shs_fail";
 const char* shs_fail_label    = "Song Fail: ";
@@ -92,42 +97,34 @@ void shSetupMenu(shVars_t* sh)
     {
         sh->menu = startSubMenu(sh->menu, shSongList[sIdx].name);
 
-        // Allocate and print high score strings
-        // Save them all to a linked list to free later
+        // Helpers for building the high score menu
+        const shDifficulty_t difficulties[] = {SH_EASY, SH_MEDIUM, SH_HARD};
+        const char* labels[]                = {easyStr_noscore, mediumStr_noscore, hardStr_noscore};
 
-        // Variables for reading from NVS
-        int32_t tmpScore;
-        char nvsKey[16];
-
-        shGetNvsKey(shSongList[sIdx].midi, SH_EASY, nvsKey);
-        if (!readNvs32(nvsKey, &tmpScore))
+        for (int32_t i = 0; i < ARRAY_SIZE(difficulties); i++)
         {
-            tmpScore = 0;
-        }
-        char* easyStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
-        snprintf(easyStr, HS_STR_LEN - 1, "Easy: %" PRId32, tmpScore);
-        addSingleItemToMenu(sh->menu, easyStr);
-        push(&sh->hsStrs, easyStr);
+            char nvsKey[16];
+            shGetNvsKey(shSongList[sIdx].midi, difficulties[i], nvsKey);
 
-        shGetNvsKey(shSongList[sIdx].name, SH_MEDIUM, nvsKey);
-        if (!readNvs32(nvsKey, &tmpScore))
-        {
-            tmpScore = 0;
-        }
-        char* mediumStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
-        snprintf(mediumStr, HS_STR_LEN - 1, "Medium: %" PRId32, tmpScore);
-        addSingleItemToMenu(sh->menu, mediumStr);
-        push(&sh->hsStrs, mediumStr);
+            int32_t tmpScore;
+            if (readNvs32(nvsKey, &tmpScore))
+            {
+                int32_t gradeIdx = (tmpScore >> 28) & 0x0F;
+                tmpScore &= 0x0FFFFFFF;
 
-        shGetNvsKey(shSongList[sIdx].name, SH_HARD, nvsKey);
-        if (!readNvs32(nvsKey, &tmpScore))
-        {
-            tmpScore = 0;
+                // Allocate and print high score strings
+                char* hsStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
+                snprintf(hsStr, HS_STR_LEN - 1, "%s %" PRId32 " %s", labels[i], tmpScore, getLetterGrade(gradeIdx));
+                addSingleItemToMenu(sh->menu, hsStr);
+
+                // Save them all to a linked list to free later
+                push(&sh->hsStrs, hsStr);
+            }
+            else
+            {
+                addSingleItemToMenu(sh->menu, labels[i]);
+            }
         }
-        char* hardStr = heap_caps_calloc(1, sizeof(char) * HS_STR_LEN, MALLOC_CAP_SPIRAM);
-        snprintf(hardStr, HS_STR_LEN - 1, "Hard: %" PRId32, tmpScore);
-        addSingleItemToMenu(sh->menu, hardStr);
-        push(&sh->hsStrs, hardStr);
 
         sh->menu = endSubMenu(sh->menu);
     }
@@ -315,5 +312,5 @@ int32_t shGetSettingSpeed(void)
     {
         return speedSetting;
     }
-    return 0;
+    return shs_speed_vals[1];
 }
