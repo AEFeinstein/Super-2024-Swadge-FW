@@ -29,6 +29,12 @@ typedef struct
     vec_t previousPos; // position from the previous frame
     vec_t yaw;         //.x is the yaw, .y is the change in yaw over time. Gravitates toward left or right.
     // uint8_t numHarpoons;//number of harpoons
+    
+    //touchpad stuff
+    bool touching;
+    int32_t phi;
+    int32_t r;
+    int32_t intensity;
 } bb_garbotnikData;
 
 typedef struct

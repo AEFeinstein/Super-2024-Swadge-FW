@@ -365,6 +365,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         //     }
         // }
     }
+
+    //touchpad stuff
+    gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -406,5 +409,13 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
                 (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                 (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, true,
                 false, 0);
+    }
+
+    if(gData->touching){
+        int32_t x;
+        int32_t y;
+        getTouchCartesian (gData->phi, gData->r, &x, &y);
+        printf("X: %d, Y: %d\n", x, y);
+        drawLineFast(self->pos.x, self->pos.y, self->pos.x + x, self->pos.y + y, c305);
     }
 }
