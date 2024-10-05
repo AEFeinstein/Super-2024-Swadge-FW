@@ -176,7 +176,6 @@ led_t paLeds[CONFIG_NUM_LEDS];
 static const char str_ready[]        = "Ready?";
 static const char str_set[]          = "Set...";
 static const char str_pango[]        = "PANGO!";
-static const char str_time_up[]      = "-Time Up!-";
 static const char str_game_over[]    = "Game Over";
 static const char str_well_done[]    = "Nice Clear!";
 static const char str_congrats[]     = "Congratulations!";
