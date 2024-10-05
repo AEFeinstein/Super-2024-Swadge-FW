@@ -19,22 +19,15 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
     gameData->btnState           = 0;
     gameData->score              = 0;
     gameData->lives              = 3;
-    gameData->countdown          = 000;
+    gameData->levelTime          = 000;
     gameData->world              = 1;
     gameData->level              = 1;
     gameData->frameCount         = 0;
-    gameData->coins              = 0;
-    gameData->combo              = 0;
-    gameData->comboTimer         = 0;
     gameData->bgColor            = c000;
     gameData->initials[0]        = 'A';
     gameData->initials[1]        = 'A';
     gameData->initials[2]        = 'A';
     gameData->rank               = 5;
-    gameData->extraLifeCollected = false;
-    gameData->checkpoint         = 0;
-    gameData->levelDeaths        = 0;
-    gameData->initialHp          = 1;
     gameData->debugMode          = false;
     gameData->continuesUsed      = false;
     gameData->inGameTimer        = 0;
@@ -47,18 +40,11 @@ void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t level
     gameData->btnState           = 0;
     gameData->score              = 0;
     gameData->lives              = 3;
-    gameData->countdown          = 000;
+    gameData->levelTime          = 000;
     gameData->frameCount         = 0;
-    gameData->coins              = 0;
-    gameData->combo              = 0;
-    gameData->comboTimer         = 0;
     gameData->bgColor            = c000;
-    gameData->extraLifeCollected = false;
-    gameData->checkpoint         = 0;
-    gameData->levelDeaths        = 0;
     gameData->currentBgm         = 0;
     gameData->changeBgm          = 0;
-    gameData->initialHp          = 1;
     gameData->continuesUsed      = (gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer        = 0;
 
@@ -106,32 +92,6 @@ void pa_updateLedsHpMeter(paEntityManager_t* entityManager, paGameData_t* gameDa
 void pa_scorePoints(paGameData_t* gameData, uint16_t points)
 {
     gameData->score += points;
-}
-
-void addCoins(paGameData_t* gameData, uint8_t coins)
-{
-    gameData->coins += coins;
-    if (gameData->coins > 99)
-    {
-        gameData->lives++;
-        soundPlaySfx(&(gameData->soundManager->snd1up), BZR_LEFT);
-        gameData->coins = 0;
-    }
-    else
-    {
-        soundPlaySfx(&(gameData->soundManager->sndCoin), BZR_LEFT);
-    }
-}
-
-void updateComboTimer(paGameData_t* gameData)
-{
-    gameData->comboTimer--;
-
-    if (gameData->comboTimer < 0)
-    {
-        gameData->comboTimer = 0;
-        gameData->combo      = 0;
-    }
 }
 
 void pa_resetGameDataLeds(paGameData_t* gameData)

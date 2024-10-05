@@ -51,8 +51,8 @@ static const paletteColor_t tsRedColors[4]    = {c535, c534, c514, c534};
 static const paletteColor_t yellowColors[4] = {c550, c331, c550, c555};
 
 static const paletteColor_t cyanColors[4]   = {c055, c455, c055, c033};
-//static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
-//static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
+static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
+static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
 
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
@@ -148,6 +148,7 @@ uint16_t getLevelIndex(uint8_t world, uint8_t level);
 void pangoChangeStateMainMenu(pango_t* self);
 static void pa_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 void drawPangoLogo(font_t* font, int16_t x, int16_t y);
+uint16_t pa_getLevelClearBonus(int16_t elapsedTime);
 
 //==============================================================================
 // Variables
@@ -451,17 +452,17 @@ void updateGame(pango_t* self, int64_t elapsedUs)
     detectBgmChange(self);
 
     // self->gameData.coins = self->gameData.remainingEnemies;
-    self->gameData.coins = self->entityManager.aggroEnemies;
+    // self->gameData.coins = self->entityManager.aggroEnemies;
     drawPangoHud(&(self->font), &(self->gameData));
 
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 59)
     {
         self->gameData.frameCount = 0;
-        self->gameData.countdown--;
+        self->gameData.levelTime++;
         self->gameData.inGameTimer++;
 
-        if (self->gameData.countdown < 10)
+        /*if (self->gameData.countdown < 10)
         {
             soundPlayBgm(&(self->soundManager.sndOuttaTime), BZR_STEREO);
         }
@@ -469,18 +470,17 @@ void updateGame(pango_t* self, int64_t elapsedUs)
         if (self->gameData.countdown < 0)
         {
             killPlayer(self->entityManager.playerEntity);
-        }
+        }*/
 
         pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
     }
 
-    updateComboTimer(&(self->gameData));
 }
 
 void drawPangoHud(font_t* font, paGameData_t* gameData)
 {
-    char coinStr[8];
-    snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
+   // char coinStr[8];
+    //snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
 
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
@@ -492,7 +492,7 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
 
     char timeStr[10];
-    snprintf(timeStr, sizeof(timeStr) - 1, "T:%03d", gameData->countdown);
+    snprintf(timeStr, sizeof(timeStr) - 1, "T:%02d", gameData->levelTime);
 
     if (gameData->frameCount > 29)
     {
@@ -503,7 +503,7 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     // drawText(font, c553, coinStr, 160, 224);
     drawText(font, c553, scoreStr, 112, 2);
     drawText(font, c553, levelStr, 32, 226);
-    drawText(font, (gameData->countdown > 30) ? c553 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 200, 226);    
+    drawText(font, c553, timeStr, 200, 226);    
 }
 
 void updateTitleScreen(pango_t* self, int64_t elapsedUs)
@@ -681,13 +681,10 @@ void changeStateGame(pango_t* self)
 
     pa_deactivateAllEntities(&(self->entityManager), false);
 
-    self->gameData.countdown = 60;
-
     paEntityManager_t* entityManager = &(self->entityManager);
     entityManager->viewEntity   = pa_createPlayer(entityManager, (9 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
                                                   (7 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
     entityManager->playerEntity = entityManager->viewEntity;
-    entityManager->playerEntity->hp = self->gameData.initialHp;
 
     if (entityManager->activeEnemies == 0)
     {
@@ -843,10 +840,6 @@ void changeStateDead(pango_t* self)
 {
     self->gameData.frameCount = 0;
     self->gameData.lives--;
-    self->gameData.levelDeaths++;
-    self->gameData.combo      = 0;
-    self->gameData.comboTimer = 0;
-    self->gameData.initialHp  = 1;
 
     soundStop(true);
     soundPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
@@ -873,12 +866,6 @@ void updateDead(pango_t* self, int64_t elapsedUs)
     pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
     drawPangoHud(&(self->font), &(self->gameData));
-
-    if (self->gameData.countdown < 0)
-    {
-        drawText(&(self->font), c555, str_time_up, (TFT_WIDTH - textWidth(&(self->font), str_time_up)) / 2,
-                 128);
-    }
 }
 
 void updateGameOver(pango_t* self, int64_t elapsedUs)
@@ -934,11 +921,10 @@ void changeStateTitleScreen(pango_t* self)
 void changeStateLevelClear(pango_t* self)
 {
     self->gameData.frameCount         = 0;
-    self->gameData.checkpoint         = 0;
-    self->gameData.levelDeaths        = 0;
-    self->gameData.initialHp          = self->entityManager.playerEntity->hp;
-    self->gameData.extraLifeCollected = false;
     pa_resetGameDataLeds(&(self->gameData));
+
+    self->gameData.bonusScore = pa_getLevelClearBonus(self->gameData.levelTime);
+
     self->update = &updateLevelClear;
 }
 
@@ -946,31 +932,17 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
 
-    if (self->gameData.frameCount > 60)
+    if (self->gameData.frameCount > 100)
     {
-        if (self->gameData.countdown > 0)
-        {
-            self->gameData.countdown--;
-
-            if (self->gameData.countdown % 2)
-            {
-                soundPlayBgm(&(self->soundManager.sndTally), BZR_STEREO);
-            }
-
-            uint16_t comboPoints = 50 * self->gameData.combo;
-
-            self->gameData.score += comboPoints;
-            self->gameData.comboScore = comboPoints;
-
-            if (self->gameData.combo > 1)
-            {
-                self->gameData.combo--;
-            }
+        if(self->gameData.bonusScore > 0){
+            self->gameData.score += 100;
+            self->gameData.bonusScore -= 100;
+            soundPlaySfx(&(self->soundManager.sndTally), 0);
         }
-        else if (self->gameData.frameCount % 60 == 0)
+        else if (self->gameData.frameCount % 120 == 0)
         {
             // Hey look, it's a frame rule!
-
+            self->gameData.levelTime          = 0;
             uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level);
 
             if (levelIndex >= NUM_LEVELS - 1)
@@ -1040,9 +1012,13 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
             return;
         }
     }
+    else if (self->gameData.frameCount < 30 || !(self->gameData.frameCount % 2))
+    {
+        pa_drawTileMap(&(self->tilemap));
+    }
 
     pa_updateEntities(&(self->entityManager));
-    pa_drawTileMap(&(self->tilemap));
+    //pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
     drawPangoHud(&(self->font), &(self->gameData));
     drawLevelClear(&(self->font), &(self->gameData));
@@ -1052,8 +1028,18 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
 void drawLevelClear(font_t* font, paGameData_t* gameData)
 {
     drawPangoHud(font, gameData);
-    drawText(font, c000, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done) + 1) >> 1, 129);
-    drawText(font, c553, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done)) >> 1, 128);
+    drawText(font, c000, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done) + 1) >> 1, 48);
+    drawText(font, c553, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done)) >> 1, 48);
+
+    if(gameData->frameCount > 30) {
+        drawText(font, c555, "Time Bonus", 80, 80);
+        drawText(font, (gameData->levelTime < 20) ? yellowColors[(pango->gameData.frameCount >> 3) % 4] : c555, "00 - 19s ... 5000", 44, 100);
+        drawText(font, (gameData->levelTime >=20 && gameData->levelTime < 30) ? greenColors[(pango->gameData.frameCount >> 3) % 4] : c555, "20 - 29s ... 2000", 44, 112);
+        drawText(font, (gameData->levelTime >=30 && gameData->levelTime < 40) ? cyanColors[(pango->gameData.frameCount >> 3) % 4] : c555, "30 - 39s ... 1000", 44, 124);
+        drawText(font, (gameData->levelTime >=40 && gameData->levelTime < 50) ? purpleColors[(pango->gameData.frameCount >> 3) % 4] : c555, "40 - 49s ...  500", 44, 136);
+        drawText(font, (gameData->levelTime >=50 && gameData->levelTime < 60) ? redColors[(pango->gameData.frameCount >> 3) % 4] : c555, "50 - 59s ...  100", 44, 148);
+        drawText(font, (gameData->levelTime > 59) ? c500 : c555, ">59s ....... None", 44, 160);
+    }
 }
 
 void changeStateGameClear(pango_t* self)
@@ -1419,4 +1405,22 @@ void drawPause(font_t* font)
 uint16_t getLevelIndex(uint8_t world, uint8_t level)
 {
     return (world - 1) * 4 + (level - 1);
+}
+
+uint16_t pa_getLevelClearBonus(int16_t elapsedTime)
+{
+    switch(elapsedTime){
+        case 0 ... 19:
+            return 5000;
+        case 20 ... 29:
+            return 2000;
+        case 30 ... 39:
+            return 1000;
+        case 40 ... 49:
+            return 500;
+        case 50 ... 59:
+            return 100;
+        default:
+            return 0;
+    }
 }

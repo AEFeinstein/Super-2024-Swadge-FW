@@ -1136,7 +1136,6 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
             {
                 self->hp--;
                 pa_updateLedsHpMeter(self->entityManager, self->gameData);
-                self->gameData->comboTimer = 0;
 
                 if (!self->gameData->debugMode && self->hp == 0)
                 {

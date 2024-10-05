@@ -28,22 +28,13 @@ typedef struct
     uint8_t changeState;
 
     uint32_t score;
+    uint32_t bonusScore;
     uint8_t lives;
-    uint8_t coins;
-    int16_t countdown;
+    int16_t levelTime;
     uint16_t frameCount;
 
     uint8_t world;
     uint8_t level;
-
-    uint16_t combo;
-    int16_t comboTimer;
-    uint32_t comboScore;
-
-    bool extraLifeCollected;
-    uint8_t checkpoint;
-    uint8_t levelDeaths;
-    uint8_t initialHp;
 
     led_t leds[CONFIG_NUM_LEDS];
 

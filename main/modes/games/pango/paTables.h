@@ -74,7 +74,7 @@ static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DI
 
     // Total    max            min    max
     // enemies, active, speed, aggro, aggro,
-             25,       2,   12, 
+             5,       2,   12, 
     5, 3, 12, 
     6, 3, 13, 
     7, 4, 10,

@@ -50,7 +50,7 @@ void pa_initializeSoundManager(paSoundManager_t* self)
     loadMidiFile("sndPause.mid", &self->sndPause, true);
     loadMidiFile("sndPowerUp.mid", &self->sndPowerUp, true);
     loadMidiFile("sndSlide.mid", &self->sndSquish, true);
-    // loadMidiFile("sndTally.mid", &self->sndTally, true);
+    loadMidiFile("sndTally.mid", &self->sndTally, true);
     loadMidiFile("sndWarp.mid", &self->sndWarp, true);
     loadMidiFile("sndWaveBall.mid", &self->sndWaveBall, true);
 
