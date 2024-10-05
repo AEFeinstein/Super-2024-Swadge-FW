@@ -1383,6 +1383,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
                 pa_executeSpawnBlockCombo(self, self->homeTileX, self->homeTileY, 0);
             } else {
                 pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+                pa_scorePoints(self->gameData, 10);
             }
         }
 
