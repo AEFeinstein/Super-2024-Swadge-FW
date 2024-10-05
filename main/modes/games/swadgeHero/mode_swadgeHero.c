@@ -4,6 +4,7 @@
 
 #include "mode_swadgeHero.h"
 #include "swadgeHero_game.h"
+#include "swadgeHero_gameEnd.h"
 #include "swadgeHero_menu.h"
 
 //==============================================================================
@@ -49,7 +50,7 @@ shVars_t* shv;
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @return
  */
@@ -75,6 +76,12 @@ static void shEnterMode(void)
     loadFont("righteous_150.font", &shv->righteous, false);
     loadFont("rodin_eb.font", &shv->rodin, false);
 
+    const char* icons[] = {"sh_left.wsg", "sh_down.wsg", "sh_up.wsg", "sh_right.wsg", "sh_b.wsg", "sh_a.wsg"};
+    for (int32_t i = 0; i < ARRAY_SIZE(shv->icons); i++)
+    {
+        loadWsg(icons[i], &shv->icons[i], true);
+    }
+
     // Show initial menu
     shChangeScreen(shv, SH_MENU);
 }
@@ -91,6 +98,11 @@ static void shExitMode(void)
     freeFont(&shv->ibm);
     freeFont(&shv->rodin);
     freeFont(&shv->righteous);
+
+    for (int32_t i = 0; i < ARRAY_SIZE(shv->icons); i++)
+    {
+        freeWsg(&shv->icons[i]);
+    }
 
     // Free mode memory
     free(shv);
@@ -122,7 +134,10 @@ static void shMainLoop(int64_t elapsedUs)
                 break;
             }
             case SH_GAME_END:
-            case SH_HIGH_SCORES:
+            {
+                shGameEndInput(shv, &evt);
+                break;
+            }
             case SH_NONE:
             default:
             {
@@ -136,8 +151,10 @@ static void shMainLoop(int64_t elapsedUs)
     {
         case SH_GAME:
         {
-            shRunTimers(shv, elapsedUs);
-            shDrawGame(shv);
+            if (shRunTimers(shv, elapsedUs))
+            {
+                shDrawGame(shv);
+            }
             break;
         }
         case SH_MENU:
@@ -146,7 +163,10 @@ static void shMainLoop(int64_t elapsedUs)
             break;
         }
         case SH_GAME_END:
-        case SH_HIGH_SCORES:
+        {
+            shGameEndDraw(shv, elapsedUs);
+            break;
+        }
         case SH_NONE:
         default:
         {
@@ -172,7 +192,7 @@ static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param sh
  * @param newScreen
@@ -190,6 +210,7 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         case SH_GAME:
         {
             // Free MIDI data
+            globalMidiPlayerStop(true);
             unloadMidiFile(&shv->midiSong);
 
             // Free chart data
@@ -201,13 +222,22 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
             {
                 free(val);
             }
+            while ((val = pop(&shv->fretLines)))
+            {
+                free(val);
+            }
             break;
         }
         case SH_GAME_END:
-        case SH_HIGH_SCORES:
+        {
+            // Free fail samples
+            clear(&shv->failSamples);
+            break;
+        }
         case SH_NONE:
         default:
         {
+            // Nothing tear down
             break;
         }
     }
@@ -220,27 +250,7 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         case SH_GAME:
         {
             // Load the chart data
-            const char* chartFile;
-            switch (sh->difficulty)
-            {
-                default:
-                case SH_EASY:
-                {
-                    chartFile = sh->menuSong->easy;
-                    break;
-                }
-                case SH_MEDIUM:
-                {
-                    chartFile = sh->menuSong->med;
-                    break;
-                }
-                case SH_HARD:
-                {
-                    chartFile = sh->menuSong->hard;
-                    break;
-                }
-            }
-            shLoadSong(sh, sh->menuSong->midi, chartFile);
+            shLoadSong(sh, sh->menuSong, sh->difficulty);
             break;
         }
         case SH_MENU:
@@ -249,11 +259,52 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
             break;
         }
         case SH_GAME_END:
-        case SH_HIGH_SCORES:
+        {
+            // Nothing to set up
+            break;
+        }
         case SH_NONE:
         default:
         {
+            // Clear this on exit, just in case
+            clear(&shv->failSamples);
             break;
         }
     }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param songName
+ * @param difficulty
+ * @param key Must be at least 9 bytes
+ */
+void shGetNvsKey(const char* songName, shDifficulty_t difficulty, char* key)
+{
+    int32_t toCopy = MIN(strlen(songName), 7);
+    memcpy(key, songName, toCopy);
+
+    char dChar;
+    switch (difficulty)
+    {
+        default:
+        case SH_EASY:
+        {
+            dChar = 'e';
+            break;
+        }
+        case SH_MEDIUM:
+        {
+            dChar = 'm';
+            break;
+        }
+        case SH_HARD:
+        {
+            dChar = 'h';
+            break;
+        }
+    }
+    key[toCopy]     = dChar;
+    key[toCopy + 1] = 0;
 }
