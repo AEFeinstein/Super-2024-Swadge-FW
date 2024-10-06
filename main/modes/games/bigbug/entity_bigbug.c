@@ -162,8 +162,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
     gData->fire     = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
-    if (gData->fire)
+    if (gData->fire && gData->numHarpoons > 0)
     {
+        gData->numHarpoons -= 1;
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                 self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
@@ -172,10 +173,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         int32_t y;
         getTouchCartesian(gData->phi, gData->r, &x, &y);
         // Set harpoon's velocity
-        printf("pData address: %p\n", (void*)pData);
-
-        pData->vel.x = x-512;
-        pData->vel.y = -y+512;
+        pData->vel.x = (x-512) / 2;
+        pData->vel.y = (-y+512) / 2;
     }
 
     // record the previous frame's position before any logic.
@@ -389,8 +388,12 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
 void bb_updateHarpoon(bb_entity_t* self)
 {
-    // Update harpoon's position
     bb_projectileData* hData = (bb_projectileData*)self->data;
+
+    // Update harpoon's velocity
+    hData->vel.y += 6;
+
+    // Update harpoon's position
     self->pos.x += hData->vel.x * self->gameData->elapsedUs / 100000;
     self->pos.y += hData->vel.y * self->gameData->elapsedUs / 100000;
 }
@@ -431,8 +434,16 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         int32_t x;
         int32_t y;
         getTouchCartesian(gData->phi, gData->r, &x, &y);
-        drawLineFast(xOff, yOff, xOff + (x - 511) / 4, yOff - (y - 511) / 4, c305);
+        drawLineFast(xOff, yOff, xOff + (x - 511) / 5, yOff - (y - 511) / 5, c305);
     }
+    
+    char harpoonText[13]; // 13 characters makes room for up to a 2 digit number + " harpooons" + null
+                                        // terminator ('\0')
+    snprintf(harpoonText, sizeof(harpoonText), "%d harpoons", gData->numHarpoons);
+
+    int32_t tWidth          = textWidth(&self->gameData->font, harpoonText);
+    drawText(&self->gameData->font, c344, harpoonText, TFT_WIDTH - tWidth - 30, TFT_HEIGHT - self->gameData->font.height - 3);
+    drawText(&self->gameData->font, c223, harpoonText, TFT_WIDTH - tWidth - 30, TFT_HEIGHT - self->gameData->font.height - 2);
 }
 
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -440,5 +451,24 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
 
-    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame], xOff, yOff);
+    bb_projectileData* pData = (bb_projectileData*)self->data;
+    
+    vecFl_t floatVel = {(float)pData->vel.x, (float)pData->vel.y};
+
+    int16_t angle = (int16_t)(atan2f(floatVel.y, floatVel.x) * (180.0 / M_PI));
+    angle += 135;
+    while(angle < 0){
+        angle += 360;
+    }
+    while(angle > 360){
+        angle -= 360;
+    }
+
+    floatVel = normVecFl2d(floatVel);
+
+    drawLineFast(xOff, yOff-1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 - 1, c344);
+    drawLineFast(xOff, yOff, xOff - floatVel.x * 20, yOff - floatVel.y * 20, c223);
+
+    drawWsg(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame], xOff, yOff,
+            false, false, angle);
 }

@@ -33,6 +33,9 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
     gameData->neighbors[3][0] = 0;  // down  neighbor x offset
     gameData->neighbors[3][1] = 1;  // down  neighbor y offset
 
+    // Load font
+    loadFont("ibm_vga8.font", &gameData->font, false);
+
     memset(&gameData->pleaseCheck, 0, sizeof(list_t));
     memset(&gameData->unsupported, 0, sizeof(list_t));
 }
