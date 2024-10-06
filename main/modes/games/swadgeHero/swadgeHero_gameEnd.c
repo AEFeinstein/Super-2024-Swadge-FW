@@ -57,19 +57,21 @@ void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
 // Space between lines
 #define TEXT_Y_SPACING 8
 // Spacing for the fail chart
-#define Y_MARGIN   14
+#define Y_MARGIN   8
 #define Y_HEIGHT   50
 #define X_MARGIN   ((TFT_WIDTH - NUM_FAIL_METER_SAMPLES) / 2)
 #define BOX_MARGIN 2
 
-    clearPxTft();
+    // Draw background
+    fillDisplayArea(0, 0, TFT_WIDTH, 2 * Y_MARGIN + sh->rodin.height, c000);
+    fillDisplayArea(0, 2 * Y_MARGIN + sh->rodin.height, TFT_WIDTH, TFT_HEIGHT, c111);
 
     int32_t yOff = Y_MARGIN;
 
     // Draw the name
     int16_t tWidth = textWidth(&sh->rodin, sh->songName);
     drawText(&sh->rodin, c555, sh->songName, (TFT_WIDTH - tWidth) / 2, yOff);
-    yOff += sh->rodin.height;
+    yOff += sh->rodin.height + Y_MARGIN;
 
     // This is the text area between the title and fail chart
     int32_t textAreaTop    = yOff;
@@ -84,9 +86,11 @@ void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
     // Draw all note count labels
     int32_t yCounts = yOff;
     int32_t maxXoff = 0;
+
+    const paletteColor_t timingColors[NUM_NOTE_TIMINGS] = {c051, c141, c231, c321, c411, c501};
     for (int32_t i = 0; i < NUM_NOTE_TIMINGS; i++)
     {
-        int32_t xOff = drawText(&sh->ibm, c555, timings[i].label, TEXT_Y_SPACING, yOff);
+        int32_t xOff = drawText(&sh->ibm, timingColors[i], timings[i].label, TEXT_Y_SPACING, yOff);
         if (xOff > maxXoff)
         {
             maxXoff = xOff;
@@ -115,8 +119,9 @@ void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
     // Draw letter
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%s", sh->grade);
-    tWidth = textWidth(&sh->rodin, scoreStr);
-    drawText(&sh->rodin, c555, scoreStr, maxXoff + (TFT_WIDTH - maxXoff - tWidth) / 2, yOff);
+    tWidth                     = textWidth(&sh->rodin, scoreStr);
+    paletteColor_t letterColor = 'S' == sh->grade[0] ? c225 : timingColors[sh->grade[0] - 'A'];
+    drawText(&sh->rodin, letterColor, scoreStr, maxXoff + (TFT_WIDTH - maxXoff - tWidth) / 2, yOff);
     yOff += sh->rodin.height + TEXT_Y_SPACING;
 
     // Draw the score
@@ -126,7 +131,7 @@ void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
     yOff += sh->rodin.height + TEXT_Y_SPACING;
 
     // Draw max combo
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "Combo: %" PRId32, sh->maxCombo);
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32 " Combo", sh->maxCombo);
     tWidth = textWidth(&sh->rodin, scoreStr);
     drawText(&sh->rodin, c555, scoreStr, maxXoff + (TFT_WIDTH - maxXoff - tWidth) / 2, yOff);
     yOff += sh->rodin.height + TEXT_Y_SPACING;

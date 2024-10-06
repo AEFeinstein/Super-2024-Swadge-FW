@@ -25,6 +25,13 @@ typedef struct
     const char* letter;
 } shLetterGrade_t;
 
+typedef struct
+{
+    int32_t x;
+    int32_t y;
+    int32_t timer;
+} drawStar_t;
+
 //==============================================================================
 // Const Variables
 //==============================================================================
@@ -72,6 +79,7 @@ static int32_t getMultiplier(shVars_t* sh);
 static void shSongOver(void);
 static void shMissNote(shVars_t* sh);
 static void shHitNote(shVars_t* sh, int32_t baseScore);
+static int32_t getXoffset(shVars_t* sh, int32_t note);
 
 //==============================================================================
 // Functions
@@ -154,6 +162,9 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     sh->tempo         = player->tempo;
     int32_t songLenUs = SAMPLES_TO_US(player->sampleCount);
     globalMidiPlayerStop(true);
+
+    // Save the LED decay rate based on tempo
+    sh->usPerLedDecay = sh->tempo / (2 * 0xFF);
 
     // Figure out how often to sample the fail meter for the chart after the song
     sh->failSampleInterval = songLenUs / NUM_FAIL_METER_SAMPLES;
@@ -290,6 +301,25 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         sh->textTimerUs -= elapsedUs;
     }
 
+    // Run timers for stars
+    node_t* starNode = sh->starList.first;
+    while (starNode)
+    {
+        drawStar_t* ds = starNode->val;
+        ds->timer -= elapsedUs;
+        if (0 >= ds->timer)
+        {
+            node_t* toRemove = starNode;
+            starNode         = starNode->next;
+            free(toRemove->val);
+            removeEntry(&sh->starList, toRemove);
+        }
+        else
+        {
+            starNode = starNode->next;
+        }
+    }
+
     // Get a reference to the player
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
 
@@ -323,6 +353,40 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         fretLine->headPosY     = TFT_HEIGHT + 1;
         fretLine->headTimeUs   = sh->lastFretLineUs;
         push(&sh->fretLines, fretLine);
+    }
+
+    // Decay LEDs
+    sh->ledDecayTimer += elapsedUs;
+    while (sh->ledDecayTimer >= sh->usPerLedDecay)
+    {
+        sh->ledDecayTimer -= sh->usPerLedDecay;
+
+        // Tempo LEDs
+        if (sh->ledBaseVal)
+        {
+            sh->ledBaseVal--;
+        }
+
+        // LEDs from note hits
+        if (sh->ledHitVal.r)
+        {
+            sh->ledHitVal.r--;
+        }
+        if (sh->ledHitVal.g)
+        {
+            sh->ledHitVal.g--;
+        }
+        if (sh->ledHitVal.b)
+        {
+            sh->ledHitVal.b--;
+        }
+    }
+
+    // Blink based on tempo
+    if (songUs >= sh->nextBlinkUs)
+    {
+        sh->nextBlinkUs += sh->tempo;
+        sh->ledBaseVal = 0xFF;
     }
 
     // Check events until one hasn't happened yet or the song ends
@@ -519,7 +583,7 @@ void shDrawGame(shVars_t* sh)
     while (gameNoteNode)
     {
         shGameNote_t* gameNote = gameNoteNode->val;
-        int32_t xOffset        = ((gameNote->note * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
+        int32_t xOffset        = getXoffset(sh, gameNote->note);
 
         // If there is a tail
         if (gameNote->tailPosY >= 0)
@@ -548,6 +612,15 @@ void shDrawGame(shVars_t* sh)
                      xOffset + (GAME_NOTE_WIDTH / 2) + margin, HIT_BAR + (GAME_NOTE_HEIGHT / 2) + margin,
                      sh->colors[bIdx]);
         }
+    }
+
+    // Draw stars
+    node_t* starNode = sh->starList.first;
+    while (starNode)
+    {
+        drawStar_t* ds = starNode->val;
+        drawWsgSimple(&sh->star, ds->x, ds->y);
+        starNode = starNode->next;
     }
 
     // Draw text
@@ -590,13 +663,13 @@ void shDrawGame(shVars_t* sh)
     }
 
     // Set LEDs
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-    // for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
-    // {
-    //     leds[i].r = (255 * ((i + 0) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    //     leds[i].g = (255 * ((i + 3) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    //     leds[i].b = (255 * ((i + 6) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    // }
+    led_t leds[CONFIG_NUM_LEDS];
+    memset(leds, sh->ledBaseVal, sizeof(led_t) * 5);
+
+    for (int32_t i = 5; i < CONFIG_NUM_LEDS; i++)
+    {
+        leds[i] = sh->ledHitVal;
+    }
     setLeds(leds, CONFIG_NUM_LEDS);
 }
 
@@ -689,6 +762,36 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                     if (gameNoteHit)
                     {
                         shHitNote(sh, baseScore);
+
+                        // Draw a star for a moment
+                        drawStar_t* ds = heap_caps_calloc(1, sizeof(drawStar_t), MALLOC_CAP_SPIRAM);
+                        ds->x          = getXoffset(sh, gameNote->note) - sh->star.w / 2;
+                        ds->y          = gameNote->headPosY - (sh->star.h / 2);
+                        ds->timer      = 250000;
+                        push(&sh->starList, ds);
+
+                        // Light some LEDs
+                        if (4 <= baseScore)
+                        {
+                            // Greenish
+                            sh->ledHitVal.r = 0x00;
+                            sh->ledHitVal.g = 0xFF;
+                            sh->ledHitVal.b = 0x00;
+                        }
+                        else if (hit_late == sh->timingText)
+                        {
+                            // Reddish
+                            sh->ledHitVal.r = 0xFF;
+                            sh->ledHitVal.g = 0x00;
+                            sh->ledHitVal.b = 0x00;
+                        }
+                        else
+                        {
+                            // Blueish
+                            sh->ledHitVal.r = 0x00;
+                            sh->ledHitVal.g = 0x00;
+                            sh->ledHitVal.b = 0xFF;
+                        }
 
                         if (gameNote->tailPosY >= 0)
                         {
@@ -826,4 +929,16 @@ static void shMissNote(shVars_t* sh)
 const char* getLetterGrade(int32_t gradeIdx)
 {
     return grades[gradeIdx].letter;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param sh
+ * @param note
+ * @return int32_t
+ */
+static int32_t getXoffset(shVars_t* sh, int32_t note)
+{
+    return ((note * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
 }

@@ -122,6 +122,13 @@ typedef struct
     list_t fretLines;
     int32_t lastFretLineUs;
 
+    // LED data
+    int32_t nextBlinkUs;
+    int8_t ledBaseVal;
+    int32_t ledDecayTimer;
+    int32_t usPerLedDecay;
+    led_t ledHitVal;
+
     // Drawing data
     list_t gameNotes;
     buttonBit_t btnState;
@@ -130,6 +137,8 @@ typedef struct
     const char* timingText;
     int32_t textTimerUs;
     wsg_t icons[6];
+    wsg_t star;
+    list_t starList;
 
     // High score display
     list_t hsStrs;
