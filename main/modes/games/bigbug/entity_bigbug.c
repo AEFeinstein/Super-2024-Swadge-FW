@@ -165,8 +165,17 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     if (gData->fire)
     {
         // Create a harpoon
-        bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 2,
-                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
+        bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
+                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
+        bb_projectileData* pData = (bb_projectileData*)harpoon->data;
+        int32_t x;
+        int32_t y;
+        getTouchCartesian(gData->phi, gData->r, &x, &y);
+        // Set harpoon's velocity
+        printf("pData address: %p\n", (void*)pData);
+
+        pData->vel.x = x-512;
+        pData->vel.y = -y+512;
     }
 
     // record the previous frame's position before any logic.
@@ -380,6 +389,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
 void bb_updateHarpoon(bb_entity_t* self)
 {
+    // Update harpoon's position
+    bb_projectileData* hData = (bb_projectileData*)self->data;
+    self->pos.x += hData->vel.x * self->gameData->elapsedUs / 100000;
+    self->pos.y += hData->vel.y * self->gameData->elapsedUs / 100000;
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)

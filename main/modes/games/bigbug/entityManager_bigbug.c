@@ -79,9 +79,9 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     garbotnikFlyingSprite->originY     = 17;
     printf("flame numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
 
-    bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 4, &entityManager->sprites[HARPOON]);
+    bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, &entityManager->sprites[HARPOON]);
     harpoonSprite->originX     = 0;
-    harpoonSprite->originY     = 4;
+    harpoonSprite->originY     = 0;
     printf("harpoon numFrames %d\n", entityManager->sprites[HARPOON].numFrames);
 }
 
@@ -302,7 +302,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case HARPOON:
         {
-            bb_rocketData_t* pData = heap_caps_calloc(1, sizeof(bb_projectileData), MALLOC_CAP_SPIRAM);
+            bb_projectileData* pData = heap_caps_calloc(1, sizeof(bb_projectileData), MALLOC_CAP_SPIRAM);
             entity->data           = pData;
 
             entity->halfWidth  = 0; // 0,0,0 makes it behave as a physical point rather than a collision rectangle.
@@ -311,6 +311,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             entity->updateFunction = &bb_updateHarpoon;
             entity->drawFunction   = &bb_drawHarpoon;
+            break;
         }
         default:
         {
