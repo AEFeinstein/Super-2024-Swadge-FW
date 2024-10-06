@@ -1305,7 +1305,7 @@ void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousP
     int32_t yIdx = (ent->pos.y - ent->halfHeight) / BITSHIFT_TILE_SIZE - (ent->pos.y < 0); // the y index
 
     int32_t closestSqDist = 131072 + ent->cSquared; //((16<<4)^2+(16<<4)^2+entity's cSquared)if it's further than this,
-                                                    //there's no way it's a collision.
+                                                    // there's no way it's a collision.
     closestSqDist += 150000;                        // Why do I have to do this? I don't know.............
     int32_t right_i = (ent->halfWidth * 2) / BITSHIFT_TILE_SIZE;
     right_i         = right_i ? right_i : 1;

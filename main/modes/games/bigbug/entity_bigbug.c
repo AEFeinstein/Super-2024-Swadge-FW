@@ -158,8 +158,16 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 {
     bb_garbotnikData* gData = (bb_garbotnikData*)self->data;
 
-    //touchpad stuff
+    // touchpad stuff
+    gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
+    gData->fire     = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
+    if (gData->fire)
+    {
+        // Create a harpoon
+        bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 2,
+                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
+    }
 
     // record the previous frame's position before any logic.
     gData->previousPos = self->pos;
@@ -368,7 +376,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         //     }
         // }
     }
+}
 
+void bb_updateHarpoon(bb_entity_t* self)
+{
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -381,38 +392,40 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
     // Draw garbotnik
     if (gData->yaw.x < -1400)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0],
-                      xOff, yOff);
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0], xOff, yOff);
     }
     else if (gData->yaw.x < -400)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[1],
-                      xOff, yOff);
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[1], xOff, yOff);
     }
     else if (gData->yaw.x < 400)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[2],
-                      xOff, yOff);
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[2], xOff, yOff);
     }
     else if (gData->yaw.x < 1400)
     {
-        drawWsg(&entityManager->sprites[self->spriteIndex].frames[1],
-                xOff, yOff, true,
-                false, 0);
+        drawWsg(&entityManager->sprites[self->spriteIndex].frames[1], xOff, yOff, true, false, 0);
     }
     else
     {
-        drawWsg(&entityManager->sprites[self->spriteIndex].frames[0],
-                xOff, yOff, true,
-                false, 0);
+        drawWsg(&entityManager->sprites[self->spriteIndex].frames[0], xOff, yOff, true, false, 0);
     }
 
-    if(gData->touching){
+    if (gData->touching)
+    {
         xOff += entityManager->sprites[self->spriteIndex].originX;
         yOff += entityManager->sprites[self->spriteIndex].originY;
         int32_t x;
         int32_t y;
-        getTouchCartesian (gData->phi, gData->r, &x, &y);
-        drawLineFast(xOff, yOff, xOff + x - 511, yOff + y - 511, c305);
+        getTouchCartesian(gData->phi, gData->r, &x, &y);
+        drawLineFast(xOff, yOff, xOff + (x - 511) / 4, yOff - (y - 511) / 4, c305);
     }
+}
+
+void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+
+    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame], xOff, yOff);
 }

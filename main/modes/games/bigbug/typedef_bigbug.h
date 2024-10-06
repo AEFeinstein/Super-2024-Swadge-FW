@@ -30,8 +30,8 @@ typedef enum
     ROCKET_ANIM,      // A vehicle to enter and depart the level
     FLAME_ANIM,       // A particle effect at the bottom of the rocket
     GARBOTNIK_FLYING, // Frames of garbotnik flying
-    WILE,             // A metal ball that is thrown
     HARPOON,          // A harpoon you throw
+    WILE,             // A metal ball that is thrown
     FLY,              // A bug that flies
     ANT,              // A bug that crawls on the midground tile field
     BEETLE,           // A bug that walks on the the foreground tile field

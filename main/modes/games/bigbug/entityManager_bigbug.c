@@ -78,6 +78,11 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     garbotnikFlyingSprite->originX     = 18;
     garbotnikFlyingSprite->originY     = 17;
     printf("flame numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
+
+    bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 4, &entityManager->sprites[HARPOON]);
+    harpoonSprite->originX     = 0;
+    harpoonSprite->originY     = 4;
+    printf("harpoon numFrames %d\n", entityManager->sprites[HARPOON].numFrames);
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
@@ -262,9 +267,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_garbotnikData* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData), MALLOC_CAP_SPIRAM);
             entity->data            = gData;
-            entity->halfWidth       = 192;
-            entity->halfHeight      = 192;
-            entity->cSquared        = 73728;
+
+            entity->halfWidth  = 192;
+            entity->halfHeight = 192;
+            entity->cSquared   = 73728;
 
             entity->updateFunction = &bb_updateGarbotnikFlying;
             entity->drawFunction   = &bb_drawGarbotnikFlying;
@@ -279,9 +285,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             rData->flame           = NULL;
             rData->yVel            = 240;
             entity->data           = rData;
-            entity->halfWidth      = 192;
-            entity->halfHeight     = 464;
-            entity->cSquared       = 252160;
+
+            entity->halfWidth  = 192;
+            entity->halfHeight = 464;
+            entity->cSquared   = 252160;
 
             entity->updateFunction      = &bb_updateRocketLanding;
             entityManager->viewEntity   = entity;
@@ -292,6 +299,18 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             entity->updateFunction = &bb_updateFlame;
             break;
+        }
+        case HARPOON:
+        {
+            bb_rocketData_t* pData = heap_caps_calloc(1, sizeof(bb_projectileData), MALLOC_CAP_SPIRAM);
+            entity->data           = pData;
+
+            entity->halfWidth  = 0; // 0,0,0 makes it behave as a physical point rather than a collision rectangle.
+            entity->halfHeight = 0;
+            entity->cSquared   = 0;
+
+            entity->updateFunction = &bb_updateHarpoon;
+            entity->drawFunction   = &bb_drawHarpoon;
         }
         default:
         {
