@@ -93,6 +93,12 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
     renderer->shadowColors     = defaultShadowColors;
     renderer->shadowColorsLen  = ARRAY_SIZE(defaultShadowColors);
 
+    // LED color
+    uint32_t ledColor        = paletteToRGB(renderer->bgColor);
+    renderer->baseLedColor.r = ((ledColor >> 16) & 0xFF) / 2;
+    renderer->baseLedColor.g = ((ledColor >> 8) & 0xFF) / 2;
+    renderer->baseLedColor.b = ((ledColor >> 0) & 0xFF) / 2;
+
     // Save or allocate title font
     if (NULL == titleFont)
     {
@@ -379,14 +385,11 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     {
         // Run timer for LED excitation
         renderer->ledExciteTimer += elapsedUs;
-        while (renderer->ledExciteTimer >= 40000 * 8)
+        while (renderer->ledExciteTimer >= 40000 * CONFIG_NUM_LEDS)
         {
-            renderer->ledExciteTimer -= 40000 * 8;
-            uint32_t ledColor                      = paletteToRGB(renderer->bgColor);
-            renderer->leds[renderer->currentLed].r = ((ledColor >> 16) & 0xFF) / 2;
-            renderer->leds[renderer->currentLed].g = ((ledColor >> 8) & 0xFF) / 2;
-            renderer->leds[renderer->currentLed].b = ((ledColor >> 0) & 0xFF) / 2;
-            renderer->currentLed                   = (renderer->currentLed + 1) % CONFIG_NUM_LEDS;
+            renderer->ledExciteTimer -= 40000 * CONFIG_NUM_LEDS;
+            renderer->leds[renderer->currentLed] = renderer->baseLedColor;
+            renderer->currentLed                 = (renderer->currentLed + 1) % CONFIG_NUM_LEDS;
         }
 
         // Run timer for LED decay
@@ -662,11 +665,12 @@ void setManiaLedsOn(menuManiaRenderer_t* renderer, bool ledsOn)
  * @param rowTextColor The color of the row text
  * @param shadowColors The colors cycled through as the selected shadow
  * @param shadowColorsLen The number of selected shadow colors to cycle through
+ * @param baseLedColor The color of the LED illumination
  */
 void recolorMenuManiaRenderer(menuManiaRenderer_t* renderer, paletteColor_t titleBgColor, paletteColor_t titleTextColor,
                               paletteColor_t textOutlineColor, paletteColor_t bgColor, paletteColor_t outerRingColor,
                               paletteColor_t innerRingColor, paletteColor_t rowColor, paletteColor_t rowTextColor,
-                              const paletteColor_t* shadowColors, int32_t shadowColorsLen)
+                              const paletteColor_t* shadowColors, int32_t shadowColorsLen, led_t baseLedColor)
 {
     renderer->titleBgColor      = titleBgColor;
     renderer->titleTextColor    = titleTextColor;
@@ -681,4 +685,5 @@ void recolorMenuManiaRenderer(menuManiaRenderer_t* renderer, paletteColor_t titl
     renderer->shadowColors      = shadowColors;
     renderer->shadowColorsLen   = shadowColorsLen;
     renderer->selectedShadowIdx = 0;
+    renderer->baseLedColor      = baseLedColor;
 }

@@ -94,6 +94,7 @@ typedef struct
     paletteColor_t rowTextColor;        ///< The color of the row text
     const paletteColor_t* shadowColors; ///< The colors cycled through as the selected shadow
     int32_t shadowColorsLen;            ///< The number of selected shadow colors to cycle through
+    led_t baseLedColor;                 ///< The base color of the LED rotation
 } menuManiaRenderer_t;
 
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
@@ -103,6 +104,6 @@ void setManiaLedsOn(menuManiaRenderer_t* renderer, bool ledsOn);
 void recolorMenuManiaRenderer(menuManiaRenderer_t* renderer, paletteColor_t titleBgColor, paletteColor_t titleTextColor,
                               paletteColor_t textOutlineColor, paletteColor_t bgColor, paletteColor_t outerRingColor,
                               paletteColor_t innerRingColor, paletteColor_t rowColor, paletteColor_t rowTextColor,
-                              const paletteColor_t* shadowColors, int32_t shadowColorsLen);
+                              const paletteColor_t* shadowColors, int32_t shadowColorsLen, led_t baseLedColor);
 
 #endif
