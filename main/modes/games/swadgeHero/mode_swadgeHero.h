@@ -122,6 +122,12 @@ typedef struct
     list_t fretLines;
     int32_t lastFretLineUs;
 
+    // LED data
+    int32_t nextBlinkUs;
+    int8_t ledBaseVal;
+    int32_t ledDecayTimer;
+    int32_t usPerLedDecay;
+
     // Drawing data
     list_t gameNotes;
     buttonBit_t btnState;

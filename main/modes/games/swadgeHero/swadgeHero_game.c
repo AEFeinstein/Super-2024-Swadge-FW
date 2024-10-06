@@ -163,6 +163,9 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     int32_t songLenUs = SAMPLES_TO_US(player->sampleCount);
     globalMidiPlayerStop(true);
 
+    // Save the LED decay rate based on tempo
+    sh->usPerLedDecay = sh->tempo / (2 * 0xFF);
+
     // Figure out how often to sample the fail meter for the chart after the song
     sh->failSampleInterval = songLenUs / NUM_FAIL_METER_SAMPLES;
 
@@ -350,6 +353,24 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         fretLine->headPosY     = TFT_HEIGHT + 1;
         fretLine->headTimeUs   = sh->lastFretLineUs;
         push(&sh->fretLines, fretLine);
+    }
+
+    // Decay LEDs
+    sh->ledDecayTimer += elapsedUs;
+    while (sh->ledDecayTimer >= sh->usPerLedDecay)
+    {
+        sh->ledDecayTimer -= sh->usPerLedDecay;
+        if (sh->ledBaseVal)
+        {
+            sh->ledBaseVal--;
+        }
+    }
+
+    // Blink based on tempo
+    if (songUs >= sh->nextBlinkUs)
+    {
+        sh->nextBlinkUs += sh->tempo;
+        sh->ledBaseVal = 0xFF;
     }
 
     // Check events until one hasn't happened yet or the song ends
@@ -626,13 +647,8 @@ void shDrawGame(shVars_t* sh)
     }
 
     // Set LEDs
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-    // for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
-    // {
-    //     leds[i].r = (255 * ((i + 0) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    //     leds[i].g = (255 * ((i + 3) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    //     leds[i].b = (255 * ((i + 6) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    // }
+    led_t leds[CONFIG_NUM_LEDS];
+    memset(leds, sh->ledBaseVal, sizeof(leds));
     setLeds(leds, CONFIG_NUM_LEDS);
 }
 
