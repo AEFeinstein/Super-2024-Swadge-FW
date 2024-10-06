@@ -360,9 +360,25 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     while (sh->ledDecayTimer >= sh->usPerLedDecay)
     {
         sh->ledDecayTimer -= sh->usPerLedDecay;
+
+        // Tempo LEDs
         if (sh->ledBaseVal)
         {
             sh->ledBaseVal--;
+        }
+
+        // LEDs from note hits
+        if (sh->ledHitVal.r)
+        {
+            sh->ledHitVal.r--;
+        }
+        if (sh->ledHitVal.g)
+        {
+            sh->ledHitVal.g--;
+        }
+        if (sh->ledHitVal.b)
+        {
+            sh->ledHitVal.b--;
         }
     }
 
@@ -648,7 +664,12 @@ void shDrawGame(shVars_t* sh)
 
     // Set LEDs
     led_t leds[CONFIG_NUM_LEDS];
-    memset(leds, sh->ledBaseVal, sizeof(leds));
+    memset(leds, sh->ledBaseVal, sizeof(led_t) * 5);
+
+    for (int32_t i = 5; i < CONFIG_NUM_LEDS; i++)
+    {
+        leds[i] = sh->ledHitVal;
+    }
     setLeds(leds, CONFIG_NUM_LEDS);
 }
 
@@ -748,6 +769,29 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                         ds->y          = gameNote->headPosY - (sh->star.h / 2);
                         ds->timer      = 250000;
                         push(&sh->starList, ds);
+
+                        // Light some LEDs
+                        if (4 <= baseScore)
+                        {
+                            // Greenish
+                            sh->ledHitVal.r = 0x00;
+                            sh->ledHitVal.g = 0xFF;
+                            sh->ledHitVal.b = 0x00;
+                        }
+                        else if (hit_late == sh->timingText)
+                        {
+                            // Reddish
+                            sh->ledHitVal.r = 0xFF;
+                            sh->ledHitVal.g = 0x00;
+                            sh->ledHitVal.b = 0x00;
+                        }
+                        else
+                        {
+                            // Blueish
+                            sh->ledHitVal.r = 0x00;
+                            sh->ledHitVal.g = 0x00;
+                            sh->ledHitVal.b = 0xFF;
+                        }
 
                         if (gameNote->tailPosY >= 0)
                         {

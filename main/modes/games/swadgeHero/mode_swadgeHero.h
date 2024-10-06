@@ -127,6 +127,7 @@ typedef struct
     int8_t ledBaseVal;
     int32_t ledDecayTimer;
     int32_t usPerLedDecay;
+    led_t ledHitVal;
 
     // Drawing data
     list_t gameNotes;
