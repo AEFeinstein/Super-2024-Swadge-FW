@@ -158,6 +158,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 {
     bb_garbotnikData* gData = (bb_garbotnikData*)self->data;
 
+    gData->fuel -= self->gameData->elapsedUs; // Fuel decrements with time.
+    if(gData->fuel < 0){
+        gData->fuel = 0;
+    }
+
     // touchpad stuff
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
@@ -460,7 +465,7 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     while(angle < 0){
         angle += 360;
     }
-    while(angle > 360){
+    while(angle > 359){
         angle -= 360;
     }
 
@@ -469,6 +474,6 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     drawLineFast(xOff, yOff-1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 - 1, c344);
     drawLineFast(xOff, yOff, xOff - floatVel.x * 20, yOff - floatVel.y * 20, c223);
 
-    drawWsg(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame], xOff, yOff,
+    drawWsg(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame], xOff - entityManager->sprites[self->spriteIndex].originX, yOff - entityManager->sprites[self->spriteIndex].originY,
             false, false, angle);
 }

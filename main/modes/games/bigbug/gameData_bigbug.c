@@ -16,7 +16,6 @@
 void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundManager)
 {
     gameData->gameState = 0;
-    gameData->harpoons  = 3;
 
     gameData->bgColor     = c335;
     gameData->debugMode   = false;

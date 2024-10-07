@@ -42,8 +42,6 @@ struct bb_gameData_t
 
     bb_entityManager_t entityManager;
 
-    uint8_t harpoons;
-
     led_t leds[CONFIG_NUM_LEDS];
 
     paletteColor_t bgColor;

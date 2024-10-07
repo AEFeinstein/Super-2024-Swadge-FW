@@ -80,8 +80,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     printf("flame numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
 
     bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, &entityManager->sprites[HARPOON]);
-    harpoonSprite->originX     = 0;
-    harpoonSprite->originY     = 0;
+    harpoonSprite->originX     = 10;
+    harpoonSprite->originY     = 10;
     printf("harpoon numFrames %d\n", entityManager->sprites[HARPOON].numFrames);
 }
 
@@ -267,6 +267,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_garbotnikData* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData), MALLOC_CAP_SPIRAM);
             gData->numHarpoons = 15;
+            gData->fuel = 1000000LL * 60 * 1;//1 million microseconds in a second. 60 seconds in a minute. 1 minutes.
             entity->data       = gData;
 
             entity->halfWidth  = 192;

@@ -55,7 +55,7 @@ struct bb_t
 
     midiFile_t bgm;  ///< Background music
     midiFile_t hit1; ///< A sound effect
-
+    
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
     int32_t ledFadeTimer; ///< The timer to fade LEDs
@@ -82,6 +82,7 @@ static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
 static void bb_UpdateTileSupport(void);
+static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
 
 //==============================================================================
 // Strings
@@ -127,6 +128,9 @@ static void bb_EnterMode(void)
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
     bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+
+    
+    bb_SetLeds();
 
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
@@ -288,12 +292,12 @@ static void bb_GameLoop(int64_t elapsedUs)
         bb_updateEntities(&(bigbug->gameData.entityManager), &bigbug->camera);
 
         bb_UpdateTileSupport();
+
+        bb_UpdateLEDs(&(bigbug->gameData.entityManager));
         // bigbugFadeLeds(elapsedUs);
         // bigbugControlCpuPaddle();
     }
-
-    // Set the LEDs
-    bb_SetLeds();
+    
     // Draw the field
     bb_DrawScene();
 }
@@ -366,3 +370,29 @@ static void bb_UpdateTileSupport(void)
         }
     }
 }
+
+static void bb_UpdateLEDs(bb_entityManager_t* entityManager){
+    if (bigbug->gameData.entityManager.playerEntity->spriteIndex == GARBOTNIK_FLYING){
+        int16_t squishedFuel = (((bb_garbotnikData*)bigbug->gameData.entityManager.playerEntity->data))->fuel / (60000000 / 0b11111111);
+        // Set the LEDs to a display fuel level
+        led_t leds[CONFIG_NUM_LEDS] = {0};
+        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            leds[i].r = 0;
+            if(squishedFuel >= (i+1)*255/CONFIG_NUM_LEDS){
+               leds[i].g = 255; 
+            }
+            else if(squishedFuel < (i)*255/CONFIG_NUM_LEDS){
+                leds[i].g = 0;
+            }
+            else{
+                leds[i].g = ((squishedFuel - i*255/CONFIG_NUM_LEDS)*255)/(255/CONFIG_NUM_LEDS);
+            }
+            leds[i].b = 0;
+        }
+        setLeds(leds, CONFIG_NUM_LEDS);
+    }
+
+    
+}
+
