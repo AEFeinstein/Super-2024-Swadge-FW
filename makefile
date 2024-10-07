@@ -100,7 +100,6 @@ CFLAGS = \
 	-fdata-sections \
 	-gdwarf-4 \
 	-ggdb \
-	-O2 \
 	-fno-jump-tables \
 	-finline-functions \
 	-std=gnu17
@@ -215,7 +214,7 @@ DEFINES_LIST = \
 	CONFIG_GC9307_240x280=y \
 	CONFIG_TFT_MAX_BRIGHTNESS=200 \
 	CONFIG_TFT_MIN_BRIGHTNESS=10 \
-	CONFIG_NUM_LEDS=8 \
+	CONFIG_NUM_LEDS=9 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
 	IDF_VER="v5.3.1" \

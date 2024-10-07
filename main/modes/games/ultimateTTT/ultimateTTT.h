@@ -6,7 +6,7 @@
 // Defines
 //==============================================================================
 
-#define NUM_UNLOCKABLE_MARKERS 4
+#define NUM_UNLOCKABLE_MARKERS 13
 
 #define ARROW_BLINK_PERIOD 1000000
 
@@ -63,6 +63,20 @@ typedef enum __attribute((packed))
     TTR_RECORDS,
 } tttResult_t;
 
+typedef enum __attribute__((packed))
+{
+    TCPU_INACTIVE,
+    TCPU_THINKING,
+    TCPU_MOVING,
+} tttCpuState_t;
+
+typedef enum __attribute__((packed))
+{
+    TDIFF_EASY,
+    TDIFF_MEDIUM,
+    TDIFF_HARD,
+} tttCpuDifficulty_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -87,14 +101,27 @@ typedef struct
 
 typedef struct
 {
+    tttCpuState_t state;
+    tttCpuDifficulty_t difficulty;
+    vec_t destSubgame;
+    vec_t destCell;
+    int64_t delayTime;
+} tttCpuData_t;
+
+typedef struct
+{
+    bool singlePlayer;
+    playOrder_t singlePlayerPlayOrder;
     p2pInfo p2p;
     tttGameState_t state;
     tttSubgame_t subgames[3][3];
     vec_t cursor;
     vec_t selectedSubgame;
     tttCursorMode_t cursorMode;
+    vec_t cursorLastDir;
     int32_t p1MarkerIdx;
     int32_t p2MarkerIdx;
+    tttCpuData_t cpu;
 } tttGameData_t;
 
 typedef struct

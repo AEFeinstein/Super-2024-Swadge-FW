@@ -965,7 +965,8 @@ void midiPause(midiPlayer_t* player, bool pause);
  * large MIDI files.
  *
  * @param player The MIDI player to seek on
- * @param ticks The absolute number of MIDI ticks to seek to.
+ * @param ticks The absolute number of MIDI ticks to seek to. If this is -1, it
+ *              will seek to the end of the song
  */
 void midiSeek(midiPlayer_t* player, uint32_t ticks);
 

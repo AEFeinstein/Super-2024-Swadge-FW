@@ -466,7 +466,7 @@ CONFIG_SOUND_OUTPUT_SPEAKER=y
 #
 # LED Configuration
 #
-CONFIG_NUM_LEDS=8
+CONFIG_NUM_LEDS=9
 # end of LED Configuration
 
 #
