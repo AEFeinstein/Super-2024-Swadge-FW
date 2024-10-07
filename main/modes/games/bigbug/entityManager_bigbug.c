@@ -266,9 +266,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case GARBOTNIK_FLYING:
         {
             bb_garbotnikData* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData), MALLOC_CAP_SPIRAM);
-            gData->numHarpoons = 15;
-            gData->fuel = 1000000LL * 60 * 1;//1 million microseconds in a second. 60 seconds in a minute. 1 minutes.
-            entity->data       = gData;
+            gData->numHarpoons      = 15;
+            gData->fuel = 1000000LL * 60 * 1; // 1 million microseconds in a second. 60 seconds in a minute. 1 minutes.
+            entity->data = gData;
 
             entity->halfWidth  = 192;
             entity->halfHeight = 192;
@@ -305,7 +305,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case HARPOON:
         {
             bb_projectileData* pData = heap_caps_calloc(1, sizeof(bb_projectileData), MALLOC_CAP_SPIRAM);
-            entity->data           = pData;
+            entity->data             = pData;
 
             entity->halfWidth  = 0; // 0,0,0 makes it behave as a physical point rather than a collision rectangle.
             entity->halfHeight = 0;

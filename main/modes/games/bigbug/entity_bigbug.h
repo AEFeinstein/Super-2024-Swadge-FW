@@ -24,12 +24,12 @@
 
 typedef struct
 {
-    vec_t vel;         // velocity
-    vec_t accel;       // acceleration
-    vec_t previousPos; // position from the previous frame
-    vec_t yaw;         //.x is the yaw, .y is the change in yaw over time. Gravitates toward left or right.
-    uint8_t numHarpoons;//number of harpoons
-    int64_t fuel;      // garbotnik's remaining fuel. Like a level timer that can be influenced.
+    vec_t vel;           // velocity
+    vec_t accel;         // acceleration
+    vec_t previousPos;   // position from the previous frame
+    vec_t yaw;           //.x is the yaw, .y is the change in yaw over time. Gravitates toward left or right.
+    uint8_t numHarpoons; // number of harpoons
+    int64_t fuel;        // garbotnik's remaining fuel. Like a level timer that can be influenced.
 
     // touchpad stuff
     bool touching;
