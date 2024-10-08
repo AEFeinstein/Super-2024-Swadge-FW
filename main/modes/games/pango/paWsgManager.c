@@ -44,7 +44,7 @@ void pa_loadWsgs(paWsgManager_t* self)
     loadWsg("pa-112.wsg", &self->wsgs[PA_WSG_PANGO_PUSH_SIDE_2], false);
     loadWsg("pa-113.wsg", &self->wsgs[PA_WSG_PANGO_HURT], false);
     loadWsg("pa-114.wsg", &self->wsgs[PA_WSG_PANGO_WIN], false);
-    loadWsg("pa-015.wsg", &self->wsgs[PA_WSG_PANGO_ICON], false);
+    loadWsg("pa-115.wsg", &self->wsgs[PA_WSG_PANGO_ICON], false);
     loadWsg("po-000.wsg", &self->wsgs[PA_WSG_PO_SOUTH], false);
     loadWsg("po-001.wsg", &self->wsgs[PA_WSG_PO_WALK_SOUTH], false);
     loadWsg("po-002.wsg", &self->wsgs[PA_WSG_PO_NORTH], false);
@@ -60,7 +60,7 @@ void pa_loadWsgs(paWsgManager_t* self)
     loadWsg("po-012.wsg", &self->wsgs[PA_WSG_PO_PUSH_SIDE_2], false);
     loadWsg("po-013.wsg", &self->wsgs[PA_WSG_PO_HURT], false);
     loadWsg("po-014.wsg", &self->wsgs[PA_WSG_PO_WIN], false);
-    loadWsg("pa-015.wsg", &self->wsgs[PA_WSG_PO_ICON], false);
+    loadWsg("po-015.wsg", &self->wsgs[PA_WSG_PO_ICON], false);
     loadWsg("px-000.wsg", &self->wsgs[PA_WSG_PIXEL_SOUTH], false);
     loadWsg("px-001.wsg", &self->wsgs[PA_WSG_PIXEL_WALK_SOUTH], false);
     loadWsg("px-002.wsg", &self->wsgs[PA_WSG_PIXEL_NORTH], false);
