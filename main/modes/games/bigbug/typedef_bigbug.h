@@ -31,6 +31,8 @@ typedef enum
     FLAME_ANIM,       // A particle effect at the bottom of the rocket
     GARBOTNIK_FLYING, // Frames of garbotnik flying
     HARPOON,          // A harpoon you throw
+    EGG_LEAVES,       // They receive light and stimulate the egg
+    EGG,              // When stimulated enough, they hatch into a bug!
     WILE,             // A metal ball that is thrown
     FLY,              // A bug that flies
     ANT,              // A bug that crawls on the midground tile field

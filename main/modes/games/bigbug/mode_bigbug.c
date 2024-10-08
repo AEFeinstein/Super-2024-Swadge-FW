@@ -244,7 +244,7 @@ static void bb_DrawScene(void)
     if (bigbug->gameData.entityManager.playerEntity->spriteIndex == GARBOTNIK_FLYING)
     {
         bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos,
-                       &((bb_garbotnikData*)bigbug->gameData.entityManager.playerEntity->data)->yaw);
+                       &((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data)->yaw);
     }
     else
     {
@@ -375,7 +375,7 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
     if (bigbug->gameData.entityManager.playerEntity->spriteIndex == GARBOTNIK_FLYING)
     {
         int16_t squishedFuel
-            = (((bb_garbotnikData*)bigbug->gameData.entityManager.playerEntity->data))->fuel / (60000000 / 0b11111111);
+            = (((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data))->fuel / (60000000 / 0b11111111);
         // Set the LEDs to a display fuel level
         led_t leds[CONFIG_NUM_LEDS] = {0};
         for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)

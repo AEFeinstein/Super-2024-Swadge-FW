@@ -37,52 +37,61 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
     entityManager->activeEntities = 0;
 }
 
-bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, bb_sprite_t* sprite)
+bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite)
 {
     sprite->numFrames = num_frames;
     sprite->frames    = heap_caps_calloc(num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
-    for (uint8_t i = 0; i < num_frames; i++)
-    {
-        char wsg_name[strlen(name) + 7]; // 7 extra characters makes room for up to a 2 digit number + ".wsg" + null
-                                         // terminator ('\0')
-        snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, i);
-        loadWsg(wsg_name, &sprite->frames[i], true);
-    }
 
+    for (uint8_t brightness = 0; brightness < brightnessLevels; brightness++)
+    {
+        for (uint8_t i = 0; i < num_frames; i++)
+        {
+            char wsg_name[strlen(name) + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" + null
+                                            // terminator ('\0')
+            snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, brightness*i+i);
+            loadWsg(wsg_name, &sprite->frames[i], true);
+        }
+    }
+    
     return sprite;
 }
 
 void bb_loadSprites(bb_entityManager_t* entityManager)
 {
-    bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 24, &entityManager->sprites[CRUMBLE_ANIM]);
+    bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 24, 1, &entityManager->sprites[CRUMBLE_ANIM]);
     crumbleSprite->originX     = 48;
     crumbleSprite->originY     = 43;
     printf("crumble numFrames %d\n", entityManager->sprites[CRUMBLE_ANIM].numFrames);
 
-    bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, &entityManager->sprites[BUMP_ANIM]);
+    bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, 1, &entityManager->sprites[BUMP_ANIM]);
     bumpSprite->originX     = 37;
     bumpSprite->originY     = 37;
     printf("bump numFrames %d\n", entityManager->sprites[BUMP_ANIM].numFrames);
 
-    bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 41, &entityManager->sprites[ROCKET_ANIM]);
+    bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 41, 1, &entityManager->sprites[ROCKET_ANIM]);
     rocketSprite->originX     = 33;
     rocketSprite->originY     = 67;
     printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
 
-    bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, &entityManager->sprites[FLAME_ANIM]);
+    bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, 1, &entityManager->sprites[FLAME_ANIM]);
     flameSprite->originX     = 26;
     flameSprite->originY     = -27;
     printf("flame numFrames %d\n", entityManager->sprites[FLAME_ANIM].numFrames);
 
-    bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, &entityManager->sprites[GARBOTNIK_FLYING]);
+    bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, 1, &entityManager->sprites[GARBOTNIK_FLYING]);
     garbotnikFlyingSprite->originX     = 18;
     garbotnikFlyingSprite->originY     = 17;
     printf("flame numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
 
-    bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, &entityManager->sprites[HARPOON]);
+    bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, 1, &entityManager->sprites[HARPOON]);
     harpoonSprite->originX     = 10;
     harpoonSprite->originY     = 10;
     printf("harpoon numFrames %d\n", entityManager->sprites[HARPOON].numFrames);
+
+    bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves-", 1, 6, &entityManager->sprites[EGG_LEAVES]);
+    eggLeavesSprite->originX = 12;
+    eggLeavesSprite->originX = 5; // just guessing here
+    printf("eggLeaves numFrames %d\n", entityManager->sprites[EGG_LEAVES].numFrames);
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
@@ -265,9 +274,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     {
         case GARBOTNIK_FLYING:
         {
-            bb_garbotnikData* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData), MALLOC_CAP_SPIRAM);
-            gData->numHarpoons      = 15;
-            gData->fuel = 1000000LL * 60 * 1; // 1 million microseconds in a second. 60 seconds in a minute. 1 minutes.
+            bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
+            gData->numHarpoons        = 15;
+            gData->fuel  = 1000000LL * 60 * 1; // 1 million microseconds in a second. 60 seconds in a minute. 1 minutes.
             entity->data = gData;
 
             entity->halfWidth  = 192;
@@ -297,15 +306,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entityManager->playerEntity = entity;
             break;
         }
-        case FLAME_ANIM:
-        {
-            entity->updateFunction = &bb_updateFlame;
-            break;
-        }
         case HARPOON:
         {
-            bb_projectileData* pData = heap_caps_calloc(1, sizeof(bb_projectileData), MALLOC_CAP_SPIRAM);
-            entity->data             = pData;
+            bb_projectileData_t* pData = heap_caps_calloc(1, sizeof(bb_projectileData_t), MALLOC_CAP_SPIRAM);
+            entity->data               = pData;
 
             entity->halfWidth  = 0; // 0,0,0 makes it behave as a physical point rather than a collision rectangle.
             entity->halfHeight = 0;
@@ -315,7 +319,17 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->drawFunction   = &bb_drawHarpoon;
             break;
         }
-        default:
+        case EGG_LEAVES:
+        {
+            bb_eggLeavesData_t* eData = heap_caps_calloc(1, sizeof(bb_eggLeavesData_t), MALLOC_CAP_SPIRAM);
+            entity->data              = eData;
+
+            entity->hasLighting = true;
+
+            entity->updateFunction = &bb_updateEggLeaves;
+            break;
+        }
+        default://FLAME_ANIM and others need nothing set
         {
             entity->updateFunction = NULL;
             entity->data           = NULL;

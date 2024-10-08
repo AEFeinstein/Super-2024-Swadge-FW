@@ -37,12 +37,12 @@ typedef struct
     int32_t phi;
     int32_t r;
     int32_t intensity;
-} bb_garbotnikData;
+} bb_garbotnikData_t;
 
 typedef struct
 {
     vec_t vel;
-} bb_projectileData;
+} bb_projectileData_t;
 
 typedef struct
 {
@@ -54,6 +54,16 @@ typedef struct
 {
     int32_t yVel;
 } bb_heavyFallingData_t;
+
+typedef struct
+{
+    bb_entity_t* egg; // tracks the egg to stimulate it
+} bb_eggLeavesData_t;
+
+typedef struct
+{
+    uint8_t stimulation; // once it reaches 200, it turns into a bug
+} bb_eggData_t;
 
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -75,6 +85,7 @@ struct bb_entity_t
     bb_animationType_t type;
     bb_spriteDef_t spriteIndex;
     bool paused;
+    bool hasLighting; // True if it has 6 lighting versions per frame
 
     uint16_t animationTimer;
     uint8_t gameFramesPerAnimationFrame;
@@ -105,10 +116,10 @@ void bb_updateRocketLanding(bb_entity_t* self);
 void bb_updateHeavyFallingInit(bb_entity_t* self);
 void bb_updateHeavyFalling(bb_entity_t* self);
 void bb_updateGarbotnikDeploy(bb_entity_t* self);
-void bb_updateFlame(bb_entity_t* self);
 void bb_updateGarbotnikFlying(bb_entity_t* self);
 void bb_updateHarpoon(bb_entity_t* self);
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_updateEggLeaves(bb_entity_t* self);
 
 #endif

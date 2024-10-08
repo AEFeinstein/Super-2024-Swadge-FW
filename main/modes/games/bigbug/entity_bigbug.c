@@ -57,6 +57,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
     else if (rData->flame != NULL)
     {
         rData->yVel -= 5;
+        rData->flame->pos.y = self->pos.y + rData->yVel * self->gameData->elapsedUs / 100000;
         if (rData->yVel <= 0)
         {
             bb_destroyEntity(rData->flame, false);
@@ -64,6 +65,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
             self->data           = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
             self->updateFunction = bb_updateHeavyFallingInit;
             self->gameData->entityManager.viewEntity = NULL;
+            
             return;
         }
     }
@@ -149,14 +151,9 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
     }
 }
 
-void bb_updateFlame(bb_entity_t* self)
-{
-    self->pos.y = self->gameData->entityManager.entities[0].pos.y; // It's nasty, but that is the rocket.
-}
-
 void bb_updateGarbotnikFlying(bb_entity_t* self)
 {
-    bb_garbotnikData* gData = (bb_garbotnikData*)self->data;
+    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
 
     gData->fuel -= self->gameData->elapsedUs; // Fuel decrements with time.
     if (gData->fuel < 0)
@@ -174,7 +171,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
-        bb_projectileData* pData = (bb_projectileData*)harpoon->data;
+        bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
         int32_t x;
         int32_t y;
         getTouchCartesian(gData->phi, gData->r, &x, &y);
@@ -394,7 +391,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
 void bb_updateHarpoon(bb_entity_t* self)
 {
-    bb_projectileData* hData = (bb_projectileData*)self->data;
+    bb_projectileData_t* hData = (bb_projectileData_t*)self->data;
 
     // Update harpoon's velocity
     hData->vel.y += 6;
@@ -404,9 +401,14 @@ void bb_updateHarpoon(bb_entity_t* self)
     self->pos.y += hData->vel.y * self->gameData->elapsedUs / 100000;
 }
 
+void bb_updateEggLeaves(bb_entity_t* self)
+{
+    ((bb_eggData_t*)((bb_eggLeavesData_t*)self->data)->egg->data)->stimulation += 1;
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    bb_garbotnikData* gData = (bb_garbotnikData*)self->data;
+    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
 
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
@@ -459,7 +461,7 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
 
-    bb_projectileData* pData = (bb_projectileData*)self->data;
+    bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
 
     vecFl_t floatVel = {(float)pData->vel.x, (float)pData->vel.y};
 
