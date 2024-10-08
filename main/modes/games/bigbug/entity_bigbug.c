@@ -403,7 +403,7 @@ void bb_updateHarpoon(bb_entity_t* self)
 
 void bb_updateEggLeaves(bb_entity_t* self)
 {
-    ((bb_eggData_t*)((bb_eggLeavesData_t*)self->data)->egg->data)->stimulation += 1;
+    //((bb_eggData_t*)((bb_eggLeavesData_t*)self->data)->egg->data)->stimulation += 1;
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)

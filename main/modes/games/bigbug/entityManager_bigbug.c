@@ -88,7 +88,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     harpoonSprite->originY     = 10;
     printf("harpoon numFrames %d\n", entityManager->sprites[HARPOON].numFrames);
 
-    bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves-", 1, 6, &entityManager->sprites[EGG_LEAVES]);
+    bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES]);
     eggLeavesSprite->originX = 12;
     eggLeavesSprite->originX = 5; // just guessing here
     printf("eggLeaves numFrames %d\n", entityManager->sprites[EGG_LEAVES].numFrames);

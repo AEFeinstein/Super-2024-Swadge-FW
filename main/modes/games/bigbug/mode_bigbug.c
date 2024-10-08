@@ -13,6 +13,7 @@
 #include "mode_bigbug.h"
 #include "gameData_bigbug.h"
 #include "tilemap_bigbug.h"
+#include "worldGen_bigbug.h"
 #include "entity_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "esp_heap_caps.h"
@@ -142,6 +143,8 @@ static void bb_EnterMode(void)
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
     bb_initializeTileMap(&(bigbug->gameData.tilemap));
     bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
+    
+    bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
     bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000);
