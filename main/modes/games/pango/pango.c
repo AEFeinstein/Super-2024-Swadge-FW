@@ -144,7 +144,6 @@ void drawShowHighScores(font_t* font, uint8_t menuState);
 void changeStatePause(pango_t* self);
 void updatePause(pango_t* self, int64_t elapsedUs);
 void drawPause(font_t* font);
-uint16_t getLevelIndex(uint8_t world, uint8_t level);
 void pangoChangeStateMainMenu(pango_t* self);
 static void pa_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 void drawPangoLogo(font_t* font, int16_t x, int16_t y);
@@ -182,7 +181,7 @@ static const char str_congrats[]     = "Congratulations!";
 static const char str_initials[]     = "Enter your initials!";
 static const char str_hbd[]          = "Happy Birthday, Evelyn!";
 static const char str_registrated[]  = "Your name registrated.";
-static const char str_do_your_best[] = "Do your best!";
+static const char str_do_your_best[] = "Hotdog Heroes";
 static const char str_pause[]        = "-Pause-";
 
 static const char pangoMenuNewGame[]       = "New Game";
@@ -287,7 +286,6 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         if (label == pangoMenuNewGame)
         {
-            pango->gameData.world              = 1;
             pango->gameData.level              = 1;
             pango->entityManager.activeEnemies = 0;
             pa_initializeGameDataFromTitleScreen(&(pango->gameData), 0);
@@ -300,7 +298,6 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (label == pangoMenuContinue)
         {
-            pango->gameData.world = 1;
             pango->gameData.level = settingVal;
             pa_initializeGameDataFromTitleScreen(&(pango->gameData), settingVal);
             pango->entityManager.activeEnemies = 0;
@@ -485,7 +482,7 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
 
     char levelStr[15];
-    snprintf(levelStr, sizeof(levelStr) - 1, "Level %d-%d", gameData->world, gameData->level);
+    snprintf(levelStr, sizeof(levelStr) - 1, "Round %d", gameData->level);
 
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
@@ -942,9 +939,8 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
         {
             // Hey look, it's a frame rule!
             self->gameData.levelTime          = 0;
-            uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level);
 
-            if (levelIndex >= NUM_LEVELS - 1)
+            if (self->gameData.level >= NUM_LEVELS - 1)
             {
                 // Game Cleared!
 
@@ -980,20 +976,14 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
             {
                 // Advance to the next level
                 self->gameData.level++;
-                if (self->gameData.level > 4)
-                {
-                    self->gameData.world++;
-                    self->gameData.level = 1;
-                }
 
                 // Unlock the next level
-                levelIndex++;
-                if (levelIndex > self->unlockables.maxLevelIndexUnlocked)
+                if (self->gameData.level > self->unlockables.maxLevelIndexUnlocked)
                 {
-                    self->unlockables.maxLevelIndexUnlocked = levelIndex;
+                    self->unlockables.maxLevelIndexUnlocked = self->gameData.level;
                 }
 
-                pa_setDifficultyLevel(&(pango->gameData), getLevelIndex(self->gameData.world, self->gameData.level));
+                pa_setDifficultyLevel(&(pango->gameData), self->gameData.level);
                 pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
                 pa_generateMaze(&(pango->tilemap));
                 pa_placeEnemySpawns(&(pango->tilemap));
@@ -1399,11 +1389,6 @@ void drawPause(font_t* font)
 {
     drawText(font, c000, str_pause, (TFT_WIDTH - textWidth(font, str_pause) + 2) >> 1, 129);
     drawText(font, c553, str_pause, (TFT_WIDTH - textWidth(font, str_pause)) >> 1, 128);
-}
-
-uint16_t getLevelIndex(uint8_t world, uint8_t level)
-{
-    return (world - 1) * 4 + (level - 1);
 }
 
 uint16_t pa_getLevelClearBonus(int16_t elapsedTime)

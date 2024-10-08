@@ -20,7 +20,6 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
     gameData->score              = 0;
     gameData->lives              = 3;
     gameData->levelTime          = 000;
-    gameData->world              = 1;
     gameData->level              = 1;
     gameData->frameCount         = 0;
     gameData->bgColor            = c000;
@@ -45,7 +44,7 @@ void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t level
     gameData->bgColor            = c000;
     gameData->currentBgm         = 0;
     gameData->changeBgm          = 0;
-    gameData->continuesUsed      = (gameData->world == 1 && gameData->level == 1) ? false : true;
+    gameData->continuesUsed      = (gameData->level == 1) ? false : true;
     gameData->inGameTimer        = 0;
 
     pa_setDifficultyLevel(gameData, levelIndex);
