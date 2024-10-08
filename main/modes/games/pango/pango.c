@@ -475,14 +475,11 @@ void updateGame(pango_t* self, int64_t elapsedUs)
 
 void drawPangoHud(font_t* font, paGameData_t* gameData)
 {
-   // char coinStr[8];
-    //snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
-
     char scoreStr[32];
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%7.6" PRIu32, gameData->score);
 
     char levelStr[15];
-    snprintf(levelStr, sizeof(levelStr) - 1, "Round %d", gameData->level);
+    snprintf(levelStr, sizeof(levelStr) - 1, "R:%02d", gameData->level);
 
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
@@ -494,11 +491,16 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     {
         drawText(font, c500, "1UP", 24, 2);
     }
+    
+    drawText(font, c553, scoreStr, 57, 2);
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "HI%7.6" PRIu32, pango->highScores.scores[0]);
+    drawText(font, c553, scoreStr, 157, 2);
 
-    drawText(font, c553, livesStr, 56, 2);
-    // drawText(font, c553, coinStr, 160, 224);
-    drawText(font, c553, scoreStr, 112, 2);
-    drawText(font, c553, levelStr, 32, 226);
+    for(uint8_t i=0; i < gameData->lives; i++){
+        drawWsgSimple(pango->wsgManager.sprites[PA_SP_PLAYER_ICON].wsg, 32 + i * 16, 224);
+    }
+
+    drawText(font, c553, levelStr, 145, 226);
     drawText(font, c553, timeStr, 200, 226);    
 }
 
