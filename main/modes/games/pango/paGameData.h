@@ -49,6 +49,8 @@ typedef struct
     bool continuesUsed;
     uint32_t inGameTimer;
 
+    uint8_t playerCharacter;
+
     int16_t maxActiveEnemies;
     int16_t remainingEnemies;
     int16_t enemyInitialSpeed;

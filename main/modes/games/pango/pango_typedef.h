@@ -89,4 +89,12 @@ typedef enum
     PA_TILE_INVISIBLE_BLOCK
 } pa_tileDef_t;
 
+typedef enum
+{
+    PA_PLAYER_CHARACTER_PANGO,
+    PA_PLAYER_CHARACTER_PO,
+    PA_PLAYER_CHARACTER_PIXEL,
+    PA_PLAYER_CHARACTER_GIRL
+} pa_playerCharacterDef_t;
+
 #endif

@@ -31,6 +31,7 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
     gameData->continuesUsed      = false;
     gameData->inGameTimer        = 0;
     gameData->soundManager       = soundManager;
+    gameData->playerCharacter    = PA_PLAYER_CHARACTER_PANGO;
 }
 
 void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t levelIndex)

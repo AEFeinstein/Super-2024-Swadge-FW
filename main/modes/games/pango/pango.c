@@ -134,7 +134,7 @@ void loadPangoUnlockables(pango_t* self);
 void pangoSaveUnlockables(pango_t* self);
 void drawPangoHighScores(font_t* font, pangoHighScores_t* highScores, paGameData_t* gameData);
 uint8_t getHighScoreRank(pangoHighScores_t* highScores, uint32_t newScore);
-void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore, char newInitials[], uint8_t rank);
+void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore, char newInitials[], uint8_t newCharacter, uint8_t rank);
 void changeStateNameEntry(pango_t* self);
 void updateNameEntry(pango_t* self, int64_t elapsedUs);
 void drawNameEntry(font_t* font, paGameData_t* gameData, uint8_t currentInitial);
@@ -310,6 +310,7 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (label == pangoMenuCharacter)
         {
+            pango->gameData.playerCharacter = settingVal;
             pa_remapPlayerCharacter(&(pango->wsgManager), 16 * settingVal);
             soundPlaySfx(&(pango->soundManager.sndMenuConfirm), BZR_STEREO);
         }
@@ -491,7 +492,7 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     {
         drawText(font, c500, "1UP", 24, 2);
     }
-    
+
     drawText(font, c553, scoreStr, 57, 2);
     snprintf(scoreStr, sizeof(scoreStr) - 1, "HI%7.6" PRIu32, pango->highScores.scores[0]);
     drawText(font, c553, scoreStr, 157, 2);
@@ -1117,6 +1118,12 @@ void pangoInitializeHighScores(pango_t* self)
     self->highScores.scores[3] = 20000;
     self->highScores.scores[4] = 10000;
 
+    self->highScores.character[0] = 0;
+    self->highScores.character[1] = 1;
+    self->highScores.character[2] = 2;
+    self->highScores.character[3] = 3;
+    self->highScores.character[4] = 0;
+
     for (uint8_t i = 0; i < NUM_PLATFORMER_HIGH_SCORES; i++)
     {
         self->highScores.initials[i][0] = 'J' + i;
@@ -1179,6 +1186,7 @@ void drawPangoHighScores(font_t* font, pangoHighScores_t* highScores, paGameData
                  highScores->initials[i][0], highScores->initials[i][1], highScores->initials[i][2]);
         drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr,
                  60, 128 + i * 16);
+        drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PANGO_ICON + 16 * highScores->character[i]]), 75, 126 + i * 16);
     }
 }
 
@@ -1196,7 +1204,7 @@ uint8_t getHighScoreRank(pangoHighScores_t* highScores, uint32_t newScore)
     return i;
 }
 
-void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore, char newInitials[], uint8_t rank)
+void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore, char newInitials[], uint8_t newCharacter, uint8_t rank)
 {
     if (rank >= NUM_PLATFORMER_HIGH_SCORES)
     {
@@ -1209,12 +1217,14 @@ void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore,
         highScores->initials[i][0] = highScores->initials[i - 1][0];
         highScores->initials[i][1] = highScores->initials[i - 1][1];
         highScores->initials[i][2] = highScores->initials[i - 1][2];
+        highScores->character[i]   = highScores->character[i - 1];
     }
 
     highScores->scores[rank]      = newScore;
     highScores->initials[rank][0] = newInitials[0];
     highScores->initials[rank][1] = newInitials[1];
     highScores->initials[rank][2] = newInitials[2];
+    highScores->character[rank] = newCharacter;
 }
 
 void changeStateNameEntry(pango_t* self)
@@ -1286,7 +1296,7 @@ void updateNameEntry(pango_t* self, int64_t elapsedUs)
 
         if (self->menuState > 2)
         {
-            insertScoreIntoHighScores(&(self->highScores), self->gameData.score, self->gameData.initials,
+            insertScoreIntoHighScores(&(self->highScores), self->gameData.score, self->gameData.initials, self->gameData.playerCharacter,
                                       self->gameData.rank);
             pangoSaveHighScores(self);
             pangoChangeStateShowHighScores(self);
