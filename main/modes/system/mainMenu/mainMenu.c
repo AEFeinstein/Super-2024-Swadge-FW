@@ -21,6 +21,7 @@
 #include "mode_synth.h"
 #include "ultimateTTT.h"
 #include "pango.h"
+#include "sequencerMode.h"
 #include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -162,6 +163,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
+    addSingleItemToMenu(mainMenu->menu, sequencerMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
@@ -327,6 +329,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == colorchordMode.modeName)
         {
             switchToSwadgeMode(&colorchordMode);
+        }
+        else if (label == sequencerMode.modeName)
+        {
+            switchToSwadgeMode(&sequencerMode);
         }
         else if (label == synthMode.modeName)
         {

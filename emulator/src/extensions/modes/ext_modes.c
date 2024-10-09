@@ -32,6 +32,7 @@
 #include "mode_synth.h"
 #include "modeTimer.h"
 #include "pango.h"
+#include "sequencerMode.h"
 #include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -74,6 +75,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &mainMenuMode,
     &modeCredits,
     &pangoMode,
+    &sequencerMode,
     &sokoMode,
     &swadgeHeroMode,
     &synthMode,
