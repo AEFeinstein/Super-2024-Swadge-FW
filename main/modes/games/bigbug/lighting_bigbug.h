@@ -11,8 +11,8 @@
 //==============================================================================
 // Prototypes
 //==============================================================================
-inline uint8_t bb_midgroundLighting(vec_t* lookup, bb_entityManager_t* entityManager);
+inline uint8_t bb_midgroundLighting(vec_t* lookup, int32_t* garbotnikRotation);
 
-inline uint8_t bb_foregroundLighting(vec_t* lookup, bb_entityManager_t* entityManager);
+inline uint8_t bb_foregroundLighting(vec_t* lookup, int32_t* garbotnikRotation);
 
 #endif
