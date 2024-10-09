@@ -6,13 +6,14 @@
 #include "swadge2024.h"
 #include "vector2d.h"
 #include "entityManager_bigbug.h"
+#include "wsg.h"
 #include <stdint.h>
 
 //==============================================================================
 // Prototypes
 //==============================================================================
-inline uint8_t bb_midgroundLighting(vec_t* lookup, int32_t* garbotnikRotation);
+uint8_t bb_midgroundLighting(wsg_t* headlampWsg, vec_t* lookup, int32_t* garbotnikRotation);
 
-inline uint8_t bb_foregroundLighting(vec_t* lookup, int32_t* garbotnikRotation);
+uint8_t bb_foregroundLighting(wsg_t* headlampWsg, vec_t* lookup, int32_t* garbotnikRotation);
 
 #endif

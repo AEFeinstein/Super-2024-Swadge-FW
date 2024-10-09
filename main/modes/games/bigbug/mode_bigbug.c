@@ -302,6 +302,8 @@ static void bb_GameLoop(int64_t elapsedUs)
 
     // Draw the field
     bb_DrawScene();
+
+    printf("FPS: %ld\n", 1000000 / elapsedUs);
 }
 
 static void bb_Reset(void)

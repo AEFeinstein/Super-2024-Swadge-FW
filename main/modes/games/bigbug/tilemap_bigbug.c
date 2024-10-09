@@ -674,7 +674,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     tilePos.y + 8 - (garbotnikDrawPos->y + 17) + tilemap->headlampWsg.h};
                     lookup       = divVec2d(lookup, 2);
                     
-                    brightness = bb_foregroundLighting(&lookup, &(garbotnikRotation->x));
+                    brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
 
                     // Top Left      V
                     // 00RD ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
@@ -745,7 +745,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
 
                     lookup.x += 8;
-                    brightness = bb_foregroundLighting(&lookup, &(garbotnikRotation->x));
+                    brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
                     // Top Right             V
                     // L00D ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
                     // 0110 .1..   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
@@ -826,7 +826,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
 
                     lookup.x -= 8;
                     lookup.y += 8;
-                    brightness = bb_foregroundLighting(&lookup, &(garbotnikRotation->x));
+                    brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
                     // Bottom Left                   V
                     // 0UR0 ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
                     // 0110 ..1.   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
@@ -907,7 +907,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
 
                     lookup.x += 8;
-                    brightness = bb_foregroundLighting(&lookup, &(garbotnikRotation->x));
+                    brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
                     // Bottom Right                          V
                     if ((num & 0b00110000) == 0b00000000)
                     {
