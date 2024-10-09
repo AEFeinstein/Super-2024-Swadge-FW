@@ -1,4 +1,23 @@
 menu "Swadge Configuration"
+
+	choice BUILD_HARDWARE
+		prompt "Select the hardware"
+		default HARDWARE_GUNSHIP
+		help
+			Select the hardware being built for
+		config HARDWARE_WAVEBIRD
+			bool "HARDWARE_WAVEBIRD"
+			help
+				Build for the Squarewavebird Swadge (2023)
+		config HARDWARE_GUNSHIP
+			bool "HARDWARE_GUNSHIP"
+			help
+				Build for the Gunship Swadge (2024)
+		config HARDWARE_HOTDOG
+			bool "HARDWARE_HOTDOG"
+			help
+				Build for the Hotdog Swadge (2025)
+	endchoice
 	choice DEBUG_OUTPUT_TYPE
 		prompt "Select Debug Output"
 		default DEBUG_OUTPUT_USB

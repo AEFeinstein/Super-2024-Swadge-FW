@@ -127,7 +127,8 @@ void writeHeatshrinkFile(uint8_t* input, uint32_t len, const char* outFilePath)
 
     /* Write a compressed file */
     shrunkFile = fopen(outFilePath, "wb");
-    if (shrunkFile == NULL) {
+    if (shrunkFile == NULL)
+    {
         perror("Error occurred while writing file.\n");
     }
     /* First four bytes are decompresed size */

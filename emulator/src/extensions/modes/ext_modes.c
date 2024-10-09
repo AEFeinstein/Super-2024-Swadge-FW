@@ -28,9 +28,11 @@
 #include "mode_2048.h"
 #include "mode_bigbug.h"
 #include "mode_credits.h"
+#include "mode_swadgeHero.h"
 #include "mode_synth.h"
 #include "modeTimer.h"
 #include "pango.h"
+#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "ultimateTTT.h"
@@ -72,6 +74,8 @@ static swadgeMode_t* allSwadgeModes[] = {
     &mainMenuMode,
     &modeCredits,
     &pangoMode,
+    &sokoMode,
+    &swadgeHeroMode,
     &synthMode,
     &t48Mode,
     &timerMode,

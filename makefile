@@ -71,6 +71,8 @@ SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
 # The emulator doesn't build components, but there is a target for formatting them
 ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
 
+SUBMODULES = $(shell git config --file .gitmodules --name-only --get-regexp path | sed -nr 's/submodule.(.*).path/\1/p')
+
 ################################################################################
 # Includes
 ################################################################################
@@ -98,7 +100,6 @@ CFLAGS = \
 	-fdata-sections \
 	-gdwarf-4 \
 	-ggdb \
-	-O2	\
 	-fno-jump-tables \
 	-finline-functions \
 	-std=gnu17
@@ -194,6 +195,7 @@ DEFINES_LIST = \
 	CONFIG_ESP_SYSTEM_PANIC=y\
 	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
 	CONFIG_DEBUG_OUTPUT_USB=y\
+	CONFIG_HARDWARE_GUNSHIP=y \
 	CONFIG_IDF_TARGET_ESP32S2=y \
 	SOC_RMT_CHANNELS_PER_GROUP=4 \
 	SOC_TOUCH_SENSOR_NUM=15 \
@@ -212,7 +214,7 @@ DEFINES_LIST = \
 	CONFIG_GC9307_240x280=y \
 	CONFIG_TFT_MAX_BRIGHTNESS=200 \
 	CONFIG_TFT_MIN_BRIGHTNESS=10 \
-	CONFIG_NUM_LEDS=8 \
+	CONFIG_NUM_LEDS=9 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
 	IDF_VER="v5.3.1" \
@@ -279,6 +281,7 @@ LIBRARY_FLAGS += \
 	-static-libstdc++
 else
 LIBRARY_FLAGS += \
+    -framework Carbon \
     -framework Foundation \
 	-framework CoreFoundation \
 	-framework CoreMIDI \
@@ -312,7 +315,7 @@ EXECUTABLE = swadge_emulator
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets bundle clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) print-%
+.PHONY: all assets bundle clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) update-submodules print-%
 
 # Build the executable
 all: $(EXECUTABLE)
@@ -332,10 +335,16 @@ $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 
 # To create the c file with assets, run these tools
 $(CNFS_FILE):
+# Sokoban .tmx to bin preprocessor
+	python ./tools/soko/soko_tmx_preprocessor.py ./assets/soko/ ./assets_image/
+	
 	$(MAKE) -C ./tools/assets_preprocessor/
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 	$(MAKE) -C ./tools/cnfs/
 	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+	
+
+
 
 bundle: SwadgeEmulator.app
 
@@ -477,6 +486,13 @@ gen-coverage:
 	lcov --capture --directory ./emulator/obj/ --output-file ./coverage.info
 	genhtml ./coverage.info --output-directory ./coverage
 	firefox ./coverage/index.html &
+
+update-submodules:
+	for submodule in $(SUBMODULES) ; do \
+		echo Updating $$submodule to latest ; \
+		git -C $$submodule fetch --prune ; \
+		git -C $$submodule checkout origin/HEAD ; \
+	done
 
 # Print any value from this makefile
 print-%  : ; @echo $* = $($*)

@@ -14,6 +14,8 @@
 #include "macros.h"
 #include "geometry.h"
 
+#include <esp_heap_caps.h>
+
 #include <inttypes.h>
 #include <string.h>
 
@@ -73,7 +75,7 @@ static int cmpDrawInfo(const void* a, const void* b);
  */
 wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, const rectangle_t* textBox)
 {
-    wheelMenuRenderer_t* renderer = calloc(1, sizeof(wheelMenuRenderer_t));
+    wheelMenuRenderer_t* renderer = heap_caps_calloc(1, sizeof(wheelMenuRenderer_t), MALLOC_CAP_SPIRAM);
 
     renderer->font        = font;
     renderer->anchorAngle = anchorAngle;
@@ -1050,7 +1052,7 @@ static wheelItemInfo_t* findOrAddInfo(wheelMenuRenderer_t* renderer, const char*
 
     if (NULL == info)
     {
-        info        = calloc(1, sizeof(wheelItemInfo_t));
+        info        = heap_caps_calloc(1, sizeof(wheelItemInfo_t), MALLOC_CAP_SPIRAM);
         info->label = label;
 
         // Defaults for colors

@@ -93,7 +93,7 @@ void tttDrawResult(ultimateTTT_t* ttt, int64_t elapsedUs)
         for (int16_t mIdx = 0; mIdx < NUM_UNLOCKABLE_MARKERS; mIdx++)
         {
             // If the player got the required number of wins
-            if (markersUnlockedAtWins[mIdx] == ttt->wins)
+            if (0 != ttt->wins && markersUnlockedAtWins[mIdx] == ttt->wins)
             {
                 // Get the asset
                 unlockedMarker = &ttt->markerWsg[mIdx];

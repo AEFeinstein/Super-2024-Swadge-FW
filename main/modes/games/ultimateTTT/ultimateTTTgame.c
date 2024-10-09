@@ -3,6 +3,11 @@
 //==============================================================================
 
 #include "ultimateTTTgame.h"
+#include "ultimateTTTcpuPlayer.h"
+
+#include <esp_log.h>
+#include <esp_random.h>
+#include <inttypes.h>
 
 //==============================================================================
 // Defines
@@ -28,7 +33,7 @@ typedef void (*cursorFunc_t)(ultimateTTT_t* ttt);
 
 static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPlayer_t marker);
 static tttPlayer_t checkWinner(ultimateTTT_t* ttt);
-static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame);
+tttPlayer_t tttCheckSubgameWinner(tttSubgame_t* subgame);
 static wsg_t* getMarkerWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig);
 static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt);
 
@@ -76,8 +81,22 @@ void tttBeginGame(ultimateTTT_t* ttt)
     // Clean up after showing instructions
     ttt->showingInstructions = false;
 
+    /// Clear any CPU data
+    ttt->game.cpu.state         = TCPU_INACTIVE;
+    ttt->game.cpu.destSubgame.x = 0;
+    ttt->game.cpu.destSubgame.y = 0;
+    ttt->game.cpu.destCell.x    = 0;
+    ttt->game.cpu.destCell.y    = 0;
+    ttt->game.cpu.delayTime     = 0;
+
     // Show the game UI
     tttShowUi(TUI_GAME);
+
+    // Randomly determine play order for single player
+    if (ttt->game.singlePlayer)
+    {
+        ttt->game.singlePlayerPlayOrder = (esp_random() % 2) ? GOING_FIRST : GOING_SECOND;
+    }
 
     // Set the cursor mode
 
@@ -88,6 +107,35 @@ void tttBeginGame(ultimateTTT_t* ttt)
         ttt->game.p1MarkerIdx = ttt->activeMarkerIdx;
         // Send it to the second player
         tttSendMarker(ttt, ttt->game.p1MarkerIdx);
+
+        if (ttt->game.singlePlayer)
+        {
+            ttt->game.state     = TGS_PLACING_MARKER;
+            ttt->game.cpu.state = TCPU_INACTIVE;
+
+            // Randomize CPU marker to be not the players
+            ttt->game.p2MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
+            // While the markers match
+            while (ttt->game.p1MarkerIdx == ttt->game.p2MarkerIdx)
+            {
+                // Pick a new one
+                ttt->game.p2MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
+            }
+        }
+    }
+    else if (ttt->game.singlePlayer)
+    {
+        ttt->game.state     = TGS_WAITING;
+        ttt->game.cpu.state = TCPU_THINKING;
+
+        // Randomize CPU marker to be not the players
+        ttt->game.p1MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
+        // While the markers match
+        while (ttt->game.p1MarkerIdx == ttt->game.p2MarkerIdx)
+        {
+            // Pick a new one
+            ttt->game.p1MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
+        }
     }
     // If going second, wait to receive p1's marker before responding
 }
@@ -152,7 +200,7 @@ static void decCursorY(ultimateTTT_t* ttt)
  * @param ttt The entire game state
  * @return true if the cursor is on a valid subgame or cell, false otherwise
  */
-static bool cursorIsValid(ultimateTTT_t* ttt)
+bool tttCursorIsValid(ultimateTTT_t* ttt, const vec_t* cursor)
 {
     switch (ttt->game.cursorMode)
     {
@@ -165,7 +213,7 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
         case SELECT_SUBGAME:
         {
             // Subgames are valid if there is no winner
-            return TTT_NONE == ttt->game.subgames[ttt->game.cursor.x][ttt->game.cursor.y].winner;
+            return TTT_NONE == ttt->game.subgames[cursor->x][cursor->y].winner;
         }
         case SELECT_CELL:
         case SELECT_CELL_LOCKED:
@@ -173,7 +221,7 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
             // Cells are valid if there is no marker
             return TTT_NONE
                    == ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y]
-                          .game[ttt->game.cursor.x][ttt->game.cursor.y];
+                          .game[cursor->x][cursor->y];
         }
     }
 }
@@ -200,33 +248,49 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
         cursorFunc_t cursorFunc          = NULL;
         cursorFunc_t cursorFuncSecondary = NULL;
 
+// A bunch of obnoxious macros, but basically they try to bump the cursor's movement in the secondary
+// axis from the edges, and tie-break movement from the middle with the movement direction.
+// This bump away from the edge means you're a lot less likely to wrap somewhere weird when there's
+// a more sensible free space nearby.
+#define CURSOR_DIR_X() ((ttt->game.cursorLastDir.x >= 0) ? incCursorX : decCursorX)
+#define CURSOR_DIR_Y() ((ttt->game.cursorLastDir.y >= 0) ? incCursorY : decCursorY)
+#define CHOOSE_CURSOR_X() \
+    ((ttt->game.cursor.x == 1) ? CURSOR_DIR_X() : ((ttt->game.cursor.x < 1) ? incCursorX : decCursorX))
+#define CHOOSE_CURSOR_Y() \
+    ((ttt->game.cursor.y == 1) ? CURSOR_DIR_Y() : ((ttt->game.cursor.y < 1) ? incCursorY : decCursorY))
+
         // Assign function pointers based on the button press
         switch (evt->button)
         {
             case PB_UP:
             {
-                cursorFunc          = decCursorY;
-                cursorFuncSecondary = incCursorX;
+                cursorFunc                = decCursorY;
+                cursorFuncSecondary       = CHOOSE_CURSOR_X();
+                ttt->game.cursorLastDir.y = -1;
                 break;
             }
             case PB_DOWN:
             {
-                cursorFunc          = incCursorY;
-                cursorFuncSecondary = incCursorX;
+                cursorFunc                = incCursorY;
+                cursorFuncSecondary       = CHOOSE_CURSOR_X();
+                ttt->game.cursorLastDir.y = 1;
                 break;
             }
             case PB_LEFT:
             {
-                cursorFunc          = decCursorX;
-                cursorFuncSecondary = incCursorY;
+                cursorFunc                = decCursorX;
+                cursorFuncSecondary       = CHOOSE_CURSOR_Y();
+                ttt->game.cursorLastDir.x = -1;
                 break;
             }
             case PB_RIGHT:
             {
-                cursorFunc          = incCursorX;
-                cursorFuncSecondary = incCursorY;
+                cursorFunc                = incCursorX;
+                cursorFuncSecondary       = CHOOSE_CURSOR_Y();
+                ttt->game.cursorLastDir.x = 1;
                 break;
             }
+
             case PB_A:
             {
                 // If a subgame is being selected
@@ -244,7 +308,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                     {
                         for (int16_t x = 0; x < 3; x++)
                         {
-                            if (!cursorIsValid(ttt))
+                            if (!tttCursorIsValid(ttt, &ttt->game.cursor))
                             {
                                 incCursorX(ttt);
                             }
@@ -254,7 +318,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                             }
                         }
 
-                        if (!cursorIsValid(ttt))
+                        if (!tttCursorIsValid(ttt, &ttt->game.cursor))
                         {
                             incCursorY(ttt);
                         }
@@ -304,39 +368,46 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
 
             // First check along the primary axis
             bool cursorIsSet = false;
-            for (int16_t a = 0; a < 2; a++)
-            {
-                cursorFunc(ttt);
-                if (cursorIsValid(ttt))
-                {
-                    cursorIsSet = true;
-                    break;
-                }
-            }
 
-            // If the primary axis is filled
-            if (!cursorIsSet)
+            // Do 3 passes along the path of the cursor direction.
+            // Each pass will first check along the primary axis
+            // If the space is available, it will be selected.
+            // If the space is unavailable,
+            for (int16_t pass = 0; pass < 3; pass++)
             {
-                // Move back to where we started
-                cursorFunc(ttt);
+                ESP_LOGD("TTT", "Trying secondary axis");
 
                 // Move along the primary axis
                 for (int16_t b = 0; b < 3; b++)
                 {
                     cursorFunc(ttt);
 
-                    // Check perpendicular spaces
-                    for (int16_t a = 0; a < 3; a++)
+                    ESP_LOGD("TTT", "Checking secondary axis from %" PRId32 ", %" PRId32, ttt->game.cursor.x,
+                             ttt->game.cursor.y);
+
+                    if (tttCursorIsValid(ttt, &ttt->game.cursor))
                     {
+                        cursorIsSet = true;
+                        break;
+                    }
+
+                    // Check perpendicular spaces
+                    for (int16_t a = 0; a < 2; a++)
+                    {
+                        // Always move the cursor along the secondary axis, so that we can return to the original
+                        // position after the loop finishes
                         cursorFuncSecondary(ttt);
 
-                        // If it's valid
-                        if (cursorIsValid(ttt))
+                        // But only check if the cursor is valid up to the psas number
+                        if (a <= pass && tttCursorIsValid(ttt, &ttt->game.cursor))
                         {
                             // Mark and break
                             cursorIsSet = true;
+                            ESP_LOGD("TTT", "%" PRId32 ", %" PRId32 " OK!", ttt->game.cursor.x, ttt->game.cursor.y);
                             break;
                         }
+
+                        ESP_LOGD("TTT", "%" PRId32 ", %" PRId32 " invalid", ttt->game.cursor.x, ttt->game.cursor.y);
                     }
 
                     // If the cursor is valid
@@ -344,6 +415,15 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                     {
                         break;
                     }
+
+                    // Move back to the original position for the next check on the primary axis
+                    cursorFuncSecondary(ttt);
+                    ESP_LOGD("TTT", "Trying next along primary axis...");
+                }
+
+                if (cursorIsSet)
+                {
+                    break;
                 }
             }
         }
@@ -448,7 +528,12 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
  */
 void tttSendPlacedMarker(ultimateTTT_t* ttt)
 {
-    if (ttt->game.p2p.cnc.isConnected)
+    if (ttt->game.singlePlayer)
+    {
+        ttt->game.state     = TGS_WAITING;
+        ttt->game.cpu.state = TCPU_THINKING;
+    }
+    else if (ttt->game.p2p.cnc.isConnected)
     {
         // Send move to the other swadge
         tttMsgPlaceMarker_t place = {
@@ -565,7 +650,7 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
                 {
                     for (int16_t x = 0; x < 3; x++)
                     {
-                        if (!cursorIsValid(ttt))
+                        if (!tttCursorIsValid(ttt, &ttt->game.cursor))
                         {
                             incCursorX(ttt);
                         }
@@ -575,7 +660,7 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
                         }
                     }
 
-                    if (!cursorIsValid(ttt))
+                    if (!tttCursorIsValid(ttt, &ttt->game.cursor))
                     {
                         incCursorY(ttt);
                     }
@@ -604,7 +689,7 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
             for (int16_t mIdx = 0; mIdx < NUM_UNLOCKABLE_MARKERS; mIdx++)
             {
                 // If the player got the required number of wins
-                if (markersUnlockedAtWins[mIdx] == ttt->wins)
+                if (0 != ttt->wins && markersUnlockedAtWins[mIdx] == ttt->wins)
                 {
                     // Unlock the next marker
                     ttt->numUnlockedMarkers++;
@@ -627,8 +712,11 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
             ttt->lastResult = TTR_DRAW;
         }
 
-        // Stop p2p
-        p2pDeinit(&ttt->game.p2p);
+        if (!ttt->game.singlePlayer)
+        {
+            // Stop p2p
+            p2pDeinit(&ttt->game.p2p);
+        }
 
         // Show the result
         tttShowUi(TUI_RESULT);
@@ -648,7 +736,7 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
     {
         for (uint16_t x = 0; x < 3; x++)
         {
-            checkSubgameWinner(&ttt->game.subgames[x][y]);
+            tttCheckSubgameWinner(&ttt->game.subgames[x][y]);
         }
     }
 
@@ -736,83 +824,15 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
  * @param subgame The subgame to check
  * @return The winner of the subgame, if there was one
  */
-static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame)
+tttPlayer_t tttCheckSubgameWinner(tttSubgame_t* subgame)
 {
     // If it wasn't already won
     if (TTT_NONE == subgame->winner)
     {
-        for (uint16_t i = 0; i < 3; i++)
-        {
-            // Check horizontals
-            if (subgame->game[i][0] == subgame->game[i][1] && subgame->game[i][1] == subgame->game[i][2])
-            {
-                if (TTT_NONE != subgame->game[i][0])
-                {
-                    subgame->winner = subgame->game[i][0];
-                    return subgame->game[i][0];
-                }
-            }
-
-            // Check verticals
-            if (subgame->game[0][i] == subgame->game[1][i] && subgame->game[1][i] == subgame->game[2][i])
-            {
-                if (TTT_NONE != subgame->game[0][i])
-                {
-                    subgame->winner = subgame->game[0][i];
-                    return subgame->game[0][i];
-                }
-            }
-        }
-
-        // Check diagonals
-        if (subgame->game[0][0] == subgame->game[1][1] && subgame->game[1][1] == subgame->game[2][2])
-        {
-            if (TTT_NONE != subgame->game[0][0])
-            {
-                subgame->winner = subgame->game[0][0];
-                return subgame->game[0][0];
-            }
-        }
-        else if (subgame->game[2][0] == subgame->game[1][1] && subgame->game[1][1] == subgame->game[0][2])
-        {
-            if (TTT_NONE != subgame->game[2][0])
-            {
-                subgame->winner = subgame->game[2][0];
-                return subgame->game[2][0];
-            }
-        }
-
-        // Check for a draw
-        if (TTT_NONE == subgame->winner)
-        {
-            // Assume it's a draw
-            bool isDraw = true;
-            // Check for an empty space
-            for (uint16_t y = 0; y < 3; y++)
-            {
-                for (uint16_t x = 0; x < 3; x++)
-                {
-                    if (TTT_NONE == subgame->game[x][y])
-                    {
-                        // Empty space means not a draw
-                        isDraw = false;
-                        break;
-                    }
-                }
-            }
-
-            if (isDraw)
-            {
-                subgame->winner = TTT_DRAW;
-                return subgame->winner;
-            }
-        }
+        subgame->winner = tttCheckWinner(subgame->game);
     }
-    else
-    {
-        return subgame->winner;
-    }
-    return TTT_NONE;
+
+    return subgame->winner;
 }
 
 /**
@@ -825,7 +845,14 @@ static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame)
  */
 static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt)
 {
-    return ttt->game.p2p.cnc.playOrder;
+    if (ttt->game.singlePlayer)
+    {
+        return ttt->game.singlePlayerPlayOrder;
+    }
+    else
+    {
+        return ttt->game.p2p.cnc.playOrder;
+    }
 }
 
 /**
@@ -974,6 +1001,11 @@ void tttDrawGame(ultimateTTT_t* ttt)
             }
         }
     }
+
+    if (ttt->game.singlePlayer && ttt->game.state == TGS_WAITING)
+    {
+        tttCpuNextMove(ttt);
+    }
 }
 
 /**
@@ -1018,4 +1050,60 @@ void tttDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t margin,
                  x0 + cellWidth, y1 - 1 - margin, color);
     drawLineFast(x0 + (2 * cellWidth) + 1, y0 + margin, //
                  x0 + (2 * cellWidth) + 1, y1 - 1 - margin, color);
+}
+
+tttPlayer_t tttCheckWinner(const tttPlayer_t game[3][3])
+{
+    for (uint16_t i = 0; i < 3; i++)
+    {
+        // Check horizontals
+        if (game[i][0] == game[i][1] && game[i][1] == game[i][2])
+        {
+            if (TTT_NONE != game[i][0])
+            {
+                return game[i][0];
+            }
+        }
+
+        // Check verticals
+        if (game[0][i] == game[1][i] && game[1][i] == game[2][i])
+        {
+            if (TTT_NONE != game[0][i])
+            {
+                return game[0][i];
+            }
+        }
+    }
+
+    // Check diagonals
+    if (game[0][0] == game[1][1] && game[1][1] == game[2][2])
+    {
+        if (TTT_NONE != game[0][0])
+        {
+            return game[0][0];
+        }
+    }
+    else if (game[2][0] == game[1][1] && game[1][1] == game[0][2])
+    {
+        if (TTT_NONE != game[2][0])
+        {
+            return game[2][0];
+        }
+    }
+
+    // Check for an empty space
+    for (uint16_t y = 0; y < 3; y++)
+    {
+        for (uint16_t x = 0; x < 3; x++)
+        {
+            if (TTT_NONE == game[x][y])
+            {
+                // Empty space means not a draw
+                return TTT_NONE;
+            }
+        }
+    }
+
+    // Assume it's a draw
+    return TTT_DRAW;
 }
