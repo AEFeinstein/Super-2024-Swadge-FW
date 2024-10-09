@@ -40,7 +40,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite)
 {
     sprite->numFrames = num_frames;
-    sprite->frames    = heap_caps_calloc(num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    sprite->frames    = heap_caps_calloc(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
 
     for (uint8_t brightness = 0; brightness < brightnessLevels; brightness++)
     {
@@ -48,8 +48,8 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
         {
             char wsg_name[strlen(name) + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" + null
                                              // terminator ('\0')
-            snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, brightness * i + i);
-            loadWsg(wsg_name, &sprite->frames[i], true);
+            snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, brightness * num_frames + i);
+            loadWsg(wsg_name, &sprite->frames[brightness * num_frames + i], true);
         }
     }
 
@@ -81,7 +81,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, 1, &entityManager->sprites[GARBOTNIK_FLYING]);
     garbotnikFlyingSprite->originX     = 18;
     garbotnikFlyingSprite->originY     = 17;
-    printf("flame numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
+    printf("garbotnik numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
 
     bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, 1, &entityManager->sprites[HARPOON]);
     harpoonSprite->originX     = 10;
@@ -90,8 +90,13 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES]);
     eggLeavesSprite->originX     = 12;
-    eggLeavesSprite->originX     = 5; // just guessing here
+    eggLeavesSprite->originY     = 5; // just guessing here
     printf("eggLeaves numFrames %d\n", entityManager->sprites[EGG_LEAVES].numFrames);
+
+    bb_sprite_t* eggSprite = bb_loadSprite("egg", 1, 6, &entityManager->sprites[EGG]);
+    eggSprite->originX     = 12;
+    eggSprite->originY     = 12; // just guessing here
+    printf("egg numFrames %d\n", entityManager->sprites[EGG].numFrames);
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
@@ -301,9 +306,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 464;
             entity->cSquared   = 252160;
 
-            entity->updateFunction      = &bb_updateRocketLanding;
-            entityManager->viewEntity   = entity;
-            entityManager->playerEntity = entity;
+            entity->updateFunction    = &bb_updateRocketLanding;
+            entityManager->viewEntity = entity;
             break;
         }
         case HARPOON:
@@ -321,14 +325,19 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case EGG_LEAVES:
         {
-            bb_eggLeavesData_t* eData = heap_caps_calloc(1, sizeof(bb_eggLeavesData_t), MALLOC_CAP_SPIRAM);
-            entity->data              = eData;
-
-            entity->hasLighting = true;
+            bb_eggLeavesData_t* elData = heap_caps_calloc(1, sizeof(bb_eggLeavesData_t), MALLOC_CAP_SPIRAM);
+            entity->data               = elData;
 
             entity->updateFunction = &bb_updateEggLeaves;
+            entity->drawFunction   = &bb_drawEggLeaves;
             break;
         }
+        case EGG:
+            bb_eggData_t* eData = heap_caps_calloc(1, sizeof(bb_eggData_t), MALLOC_CAP_SPIRAM);
+            entity->data        = eData;
+
+            entity->drawFunction = &bb_drawEgg;
+            break;
         default: // FLAME_ANIM and others need nothing set
         {
             entity->updateFunction = NULL;

@@ -3,6 +3,7 @@
 //==============================================================================
 #include "tilemap_bigbug.h"
 #include "entityManager_bigbug.h"
+#include "entity_bigbug.h"
 #include "esp_random.h"
 #include "worldGen_bigbug.h"
 
@@ -25,9 +26,11 @@ void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
         {
             if (bb_randomInt(0, 9) == 0) //%10 chance
             {
-                printf("yoooo %d %d\n", x, y);
-                bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1, x * TILE_SIZE + HALF_TILE,
-                                y * TILE_SIZE + HALF_TILE);
+                printf("egg at i:%d j:%d\n", x, y);
+                bb_entity_t* eggLeaves = bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1,
+                                                         x * TILE_SIZE + HALF_TILE, y * TILE_SIZE + HALF_TILE);
+                ((bb_eggLeavesData_t*)eggLeaves->data)->egg = bb_createEntity(
+                    entityManager, NO_ANIMATION, true, EGG, 1, x * TILE_SIZE + HALF_TILE, y * TILE_SIZE + HALF_TILE);
             }
         }
     }

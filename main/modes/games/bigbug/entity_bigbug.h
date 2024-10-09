@@ -57,12 +57,14 @@ typedef struct
 
 typedef struct
 {
-    bb_entity_t* egg; // tracks the egg to stimulate it
+    uint8_t brightness; // stores brightness so that it may be stored so it may be calculated once then used to
+                        // stimulate the egg and also to draw.
+    bb_entity_t* egg;   // tracks the egg to stimulate it.
 } bb_eggLeavesData_t;
 
 typedef struct
 {
-    uint8_t stimulation; // once it reaches 200, it turns into a bug
+    uint16_t stimulation; // once it reaches 600, it turns into a bug.
 } bb_eggData_t;
 
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
@@ -118,8 +120,10 @@ void bb_updateHeavyFalling(bb_entity_t* self);
 void bb_updateGarbotnikDeploy(bb_entity_t* self);
 void bb_updateGarbotnikFlying(bb_entity_t* self);
 void bb_updateHarpoon(bb_entity_t* self);
+void bb_updateEggLeaves(bb_entity_t* self);
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-void bb_updateEggLeaves(bb_entity_t* self);
+void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 #endif

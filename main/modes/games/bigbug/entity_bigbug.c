@@ -1,18 +1,20 @@
 //==============================================================================
 // Includes
 //==============================================================================
-
 #include <stdlib.h>
+#include <esp_log.h>
+#include <math.h>
+
 #include "entity_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "gameData_bigbug.h"
+#include "aabb_utils_bigbug.h"
+#include "lighting_bigbug.h"
+
 #include "soundFuncs.h"
 #include "hdw-btn.h"
 #include "esp_random.h"
-#include "aabb_utils_bigbug.h"
 #include "trigonometry.h"
-#include <esp_log.h>
-#include <math.h>
 
 //==============================================================================
 // Constants
@@ -403,7 +405,28 @@ void bb_updateHarpoon(bb_entity_t* self)
 
 void bb_updateEggLeaves(bb_entity_t* self)
 {
-    //((bb_eggData_t*)((bb_eggLeavesData_t*)self->data)->egg->data)->stimulation += 1;
+    if (self->gameData->entityManager.playerEntity != NULL)
+    {
+        bb_eggLeavesData_t* elData = (bb_eggLeavesData_t*)self->data;
+        vec_t lookup               = {.x = (self->pos.x >> DECIMAL_BITS) - (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS) + self->gameData->tilemap.headlampWsg.w,
+                                      .y = (self->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) + self->gameData->tilemap.headlampWsg.h};
+
+        lookup             = divVec2d(lookup, 2);
+        elData->brightness = bb_foregroundLighting(
+            &(self->gameData->tilemap.headlampWsg), &lookup,
+            &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x));
+        bb_eggData_t* eData = (bb_eggData_t*)elData->egg->data;
+        eData->stimulation += elData->brightness;
+        if(eData->stimulation > 0){
+            eData->stimulation -= 1;
+        }
+        if (eData->stimulation > 599)
+        {
+            eData->stimulation = 599;
+            // hatch a bug
+        }
+        
+    }
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -484,4 +507,22 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     drawWsg(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
             xOff - entityManager->sprites[self->spriteIndex].originX,
             yOff - entityManager->sprites[self->spriteIndex].originY, false, false, angle);
+}
+
+void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+
+    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[((bb_eggLeavesData_t*)self->data)->brightness],
+                  xOff, yOff);
+}
+
+void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+
+    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[((bb_eggData_t*)self->data)->stimulation / 100],
+                  xOff, yOff);
 }

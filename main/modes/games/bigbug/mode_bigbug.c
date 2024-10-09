@@ -50,8 +50,6 @@ struct bb_t
     bb_gameData_t gameData;
     bb_soundManager_t soundManager;
 
-    rectangle_t camera; ///< The camera
-
     bool isPaused; ///< true if the game is paused, false if it is running
 
     midiFile_t bgm;  ///< Background music
@@ -148,7 +146,7 @@ static void bb_EnterMode(void)
 
     bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000);
-    bigbug->camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
+    bigbug->gameData.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
 
     // Player
     //  bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
@@ -206,7 +204,7 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // accelIntegrate(); only needed if using accelerometer for something
     // SETUP_FOR_TURBO(); only needed if drawing individual pixels
-    if (bigbug->camera.pos.y < 100)
+    if (bigbug->gameData.camera.pos.y < 100)
     {
         fillDisplayArea(x, y, x + w, y + h, c455);
     }
@@ -241,21 +239,22 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
  */
 static void bb_DrawScene(void)
 {
-    vec_t garbotnikDrawPos
-        = {.x = (bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 18,
-           .y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 17};
-    if (bigbug->gameData.entityManager.playerEntity->spriteIndex == GARBOTNIK_FLYING)
+    if (bigbug->gameData.entityManager.playerEntity != NULL)
     {
-        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos,
+        vec_t garbotnikDrawPos = {.x = (bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS)
+                                       - bigbug->gameData.camera.pos.x - 18,
+                                  .y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS)
+                                       - bigbug->gameData.camera.pos.y - 17};
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &garbotnikDrawPos,
                        &((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data)->yaw);
     }
     else
     {
-        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->camera, &garbotnikDrawPos, &(vec_t){0, 0});
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &(vec_t){0, 0}, &(vec_t){0, 0});
     }
-    bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->camera);
+    bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->gameData.camera);
 
-    bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->camera);
+    bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera);
 }
 
 /**
@@ -291,7 +290,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
-        bb_updateEntities(&(bigbug->gameData.entityManager), &bigbug->camera);
+        bb_updateEntities(&(bigbug->gameData.entityManager), &(bigbug->gameData.camera));
 
         bb_UpdateTileSupport();
 
@@ -311,8 +310,8 @@ static void bb_Reset(void)
     printf("The width is: %d\n", FIELD_WIDTH);
     printf("The height is: %d\n", FIELD_HEIGHT);
 
-    bigbug->camera.width  = FIELD_WIDTH;
-    bigbug->camera.height = FIELD_HEIGHT;
+    bigbug->gameData.camera.width  = FIELD_WIDTH;
+    bigbug->gameData.camera.height = FIELD_HEIGHT;
 }
 
 /**
@@ -377,7 +376,7 @@ static void bb_UpdateTileSupport(void)
 
 static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
 {
-    if (bigbug->gameData.entityManager.playerEntity->spriteIndex == GARBOTNIK_FLYING)
+    if (bigbug->gameData.entityManager.playerEntity != NULL)
     {
         int16_t squishedFuel = (((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data))->fuel
                                / (60000000 / 0b11111111);

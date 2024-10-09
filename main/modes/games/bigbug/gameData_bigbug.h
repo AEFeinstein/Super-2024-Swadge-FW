@@ -37,6 +37,8 @@ struct bb_gameData_t
     int32_t touchX;
     int32_t touchY;
 
+    rectangle_t camera;
+
     uint8_t gameState;
     uint8_t changeState;
 
