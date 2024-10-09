@@ -4,18 +4,12 @@
 #include "tilemap_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "entity_bigbug.h"
-#include "esp_random.h"
 #include "worldGen_bigbug.h"
+#include "random_bigbug.h"
 
 //==============================================================================
 // Functions
 //==============================================================================
-
-int bb_randomInt(int lowerBound, int upperBound)
-{
-    return esp_random() % (upperBound - lowerBound + 1) + lowerBound;
-}
-
 void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
 {
     printf("initializing eggs\n");

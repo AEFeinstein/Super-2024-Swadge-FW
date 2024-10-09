@@ -10,6 +10,7 @@
 #include "gameData_bigbug.h"
 #include "aabb_utils_bigbug.h"
 #include "lighting_bigbug.h"
+#include "random_bigbug.h"
 
 #include "soundFuncs.h"
 #include "hdw-btn.h"
@@ -419,6 +420,10 @@ void bb_updateEggLeaves(bb_entity_t* self)
         eData->stimulation += elData->brightness;
         if(eData->stimulation > 0){
             eData->stimulation -= 1;
+        }
+        if(eData->stimulation > 499){
+            ((bb_entity_t*)elData->egg)->pos.x += bb_randomInt(-1,1);
+            ((bb_entity_t*)elData->egg)->pos.y += bb_randomInt(-1,1);
         }
         if (eData->stimulation > 599)
         {
