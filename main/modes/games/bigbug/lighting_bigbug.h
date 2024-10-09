@@ -12,7 +12,7 @@
 //==============================================================================
 // Prototypes
 //==============================================================================
-uint8_t bb_midgroundLighting(wsg_t* headlampWsg, vec_t* lookup, int32_t* garbotnikRotation);
+uint8_t bb_midgroundLighting(wsg_t* headlampWsg, vec_t* lookup, int32_t* garbotnikRotation, uint8_t brightness);
 
 uint8_t bb_foregroundLighting(wsg_t* headlampWsg, vec_t* lookup, int32_t* garbotnikRotation);
 

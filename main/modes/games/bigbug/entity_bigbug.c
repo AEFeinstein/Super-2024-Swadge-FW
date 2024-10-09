@@ -65,7 +65,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
             self->data           = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
             self->updateFunction = bb_updateHeavyFallingInit;
             self->gameData->entityManager.viewEntity = NULL;
-            
+
             return;
         }
     }

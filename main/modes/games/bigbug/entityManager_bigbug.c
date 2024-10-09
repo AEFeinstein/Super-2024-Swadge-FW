@@ -47,12 +47,12 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
         for (uint8_t i = 0; i < num_frames; i++)
         {
             char wsg_name[strlen(name) + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" + null
-                                            // terminator ('\0')
-            snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, brightness*i+i);
+                                             // terminator ('\0')
+            snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, brightness * i + i);
             loadWsg(wsg_name, &sprite->frames[i], true);
         }
     }
-    
+
     return sprite;
 }
 
@@ -89,8 +89,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     printf("harpoon numFrames %d\n", entityManager->sprites[HARPOON].numFrames);
 
     bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES]);
-    eggLeavesSprite->originX = 12;
-    eggLeavesSprite->originX = 5; // just guessing here
+    eggLeavesSprite->originX     = 12;
+    eggLeavesSprite->originX     = 5; // just guessing here
     printf("eggLeaves numFrames %d\n", entityManager->sprites[EGG_LEAVES].numFrames);
 }
 
@@ -329,7 +329,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->updateFunction = &bb_updateEggLeaves;
             break;
         }
-        default://FLAME_ANIM and others need nothing set
+        default: // FLAME_ANIM and others need nothing set
         {
             entity->updateFunction = NULL;
             entity->data           = NULL;

@@ -143,7 +143,7 @@ static void bb_EnterMode(void)
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
     bb_initializeTileMap(&(bigbug->gameData.tilemap));
     bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
-    
+
     bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
     bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
@@ -303,7 +303,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     // Draw the field
     bb_DrawScene();
 
-    printf("FPS: %ld\n", 1000000 / elapsedUs);
+    // printf("FPS: %ld\n", 1000000 / elapsedUs);
 }
 
 static void bb_Reset(void)
@@ -379,8 +379,8 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
 {
     if (bigbug->gameData.entityManager.playerEntity->spriteIndex == GARBOTNIK_FLYING)
     {
-        int16_t squishedFuel
-            = (((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data))->fuel / (60000000 / 0b11111111);
+        int16_t squishedFuel = (((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data))->fuel
+                               / (60000000 / 0b11111111);
         // Set the LEDs to a display fuel level
         led_t leds[CONFIG_NUM_LEDS] = {0};
         for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
