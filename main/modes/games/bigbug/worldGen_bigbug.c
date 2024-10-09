@@ -4,6 +4,7 @@
 #include "tilemap_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "esp_random.h"
+#include "worldGen_bigbug.h"
 
 //==============================================================================
 // Functions

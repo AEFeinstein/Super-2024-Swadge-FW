@@ -29,7 +29,7 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
             // blue value used for foreground tiles
             switch (rgbCol & 255)
             {
-                case 0: // 0 in wsg land
+                case 0:   // 0 in wsg land
                     tilemap->fgTiles[i][j] = 1;
                     break;
                 case 153: // 3 in wsg land
