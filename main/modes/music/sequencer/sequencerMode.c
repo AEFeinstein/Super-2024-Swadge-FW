@@ -27,6 +27,8 @@ static const char* const sequencerOpts[] = {opt1, opt2, opt3, opt4};
 static const char sequencerSubMenu1[] = "SubMenu1";
 static const char sequencerSubMenu2[] = "SubMenu2";
 
+static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+
 swadgeMode_t sequencerMode = {
     .modeName                 = sequencerName,
     .wifiMode                 = NO_WIFI,
@@ -104,16 +106,68 @@ static void sequencerExitMode(void)
  */
 static void sequencerMainLoop(int64_t elapsedUs)
 {
-    clearPxTft();
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c111);
 
     // Process button events
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        dv->menu = menuButton(dv->menu, evt);
+        // dv->menu = menuButton(dv->menu, evt);
     }
 
-    drawMenuMania(dv->menu, dv->renderer, elapsedUs);
+    // drawMenuMania(dv->menu, dv->renderer, elapsedUs);
+
+#define KEY_MARGIN 2
+
+    int32_t keyWidth = textWidth(&dv->ibm, "C#7") + (2 * KEY_MARGIN);
+
+    int32_t kIdx = 0;
+    int32_t kNum = 8;
+    int32_t yOff = 3;
+    while (yOff < TFT_HEIGHT)
+    {
+        char tmp[8];
+        snprintf(tmp, sizeof(tmp) - 1, "%s%d", keys[kIdx], kNum);
+        if (0 == kIdx)
+        {
+            kIdx = ARRAY_SIZE(keys) - 1;
+            kNum--;
+        }
+        else
+        {
+            kIdx--;
+        }
+
+        paletteColor_t bgColor   = c555;
+        paletteColor_t textColor = c000;
+        if ('#' == tmp[1])
+        {
+            bgColor   = c000;
+            textColor = c555;
+        }
+
+        fillDisplayArea(0, yOff - KEY_MARGIN, keyWidth, yOff + dv->ibm.height + KEY_MARGIN, bgColor);
+
+        drawText(&dv->ibm, textColor, tmp, KEY_MARGIN, yOff);
+        yOff += dv->ibm.height;
+        yOff += KEY_MARGIN;
+        drawLineFast(0, yOff, TFT_WIDTH, yOff, c222);
+        yOff += KEY_MARGIN + 1;
+    }
+
+    int32_t xOff = keyWidth;
+    int32_t lIdx = 0;
+    while (xOff < TFT_WIDTH)
+    {
+        paletteColor_t lineColor = c222;
+        if (0 == lIdx % 4)
+        {
+            lineColor = c333;
+        }
+        drawLineFast(xOff, 0, xOff, TFT_HEIGHT, lineColor);
+        xOff += keyWidth;
+        lIdx++;
+    }
 }
 
 /**
