@@ -121,6 +121,7 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self);
 void bb_updateGarbotnikFlying(bb_entity_t* self);
 void bb_updateHarpoon(bb_entity_t* self);
 void bb_updateEggLeaves(bb_entity_t* self);
+void bb_updateBug(bb_entity_t* self);
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);

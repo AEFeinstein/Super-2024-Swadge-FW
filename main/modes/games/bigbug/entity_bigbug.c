@@ -38,13 +38,33 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
 
 void bb_destroyEntity(bb_entity_t* self, bool respawn)
 {
+    // Zero out most info (but not references to manager type things) for entity to be reused.
+    self->active = false;
+
     if (self->data != NULL)
     {
         free(self->data);
         self->data = NULL;
     }
+
+    self->updateFunction              = NULL;
+    self->drawFunction                = NULL;
+    self->pos                         = (vec_t){0, 0};
+    self->type                        = 0;
+    self->spriteIndex                 = 0;
+    self->paused                      = false;
+    self->hasLighting                 = false;
+    self->animationTimer              = 0;
+    self->gameFramesPerAnimationFrame = 1;
+    self->currentAnimationFrame       = 0;
+    self->halfWidth                   = 0;
+    self->halfHeight                  = 0;
+    self->cSquared                    = 0;
+    self->collisionHandler            = NULL;
+    self->tileCollisionHandler        = NULL;
+    self->overlapTileHandler          = NULL;
+
     self->entityManager->activeEntities--;
-    self->active = false;
 }
 
 void bb_updateRocketLanding(bb_entity_t* self)
@@ -409,29 +429,69 @@ void bb_updateEggLeaves(bb_entity_t* self)
     if (self->gameData->entityManager.playerEntity != NULL)
     {
         bb_eggLeavesData_t* elData = (bb_eggLeavesData_t*)self->data;
-        vec_t lookup               = {.x = (self->pos.x >> DECIMAL_BITS) - (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS) + self->gameData->tilemap.headlampWsg.w,
-                                      .y = (self->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) + self->gameData->tilemap.headlampWsg.h};
+        vec_t lookup
+            = {.x = (self->pos.x >> DECIMAL_BITS) - (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS)
+                    + self->gameData->tilemap.headlampWsg.w,
+               .y = (self->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS)
+                    + self->gameData->tilemap.headlampWsg.h};
 
-        lookup             = divVec2d(lookup, 2);
-        elData->brightness = bb_foregroundLighting(
-            &(self->gameData->tilemap.headlampWsg), &lookup,
-            &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x));
+        lookup = divVec2d(lookup, 2);
+        if (self->gameData->entityManager.playerEntity == NULL)
+        {
+            elData->brightness = 0;
+        }
+        else
+        {
+            elData->brightness = bb_foregroundLighting(
+                &(self->gameData->tilemap.headlampWsg), &lookup,
+                &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x));
+        }
+
         bb_eggData_t* eData = (bb_eggData_t*)elData->egg->data;
         eData->stimulation += elData->brightness;
-        if(eData->stimulation > 0){
+        if (eData->stimulation > 0)
+        {
             eData->stimulation -= 1;
         }
-        if(eData->stimulation > 499){
-            ((bb_entity_t*)elData->egg)->pos.x += bb_randomInt(-1,1);
-            ((bb_entity_t*)elData->egg)->pos.y += bb_randomInt(-1,1);
+        if (eData->stimulation > 499)
+        {
+            ((bb_entity_t*)elData->egg)->pos.x += bb_randomInt(-1, 1);
+            ((bb_entity_t*)elData->egg)->pos.y += bb_randomInt(-1, 1);
         }
         if (eData->stimulation > 599)
         {
             eData->stimulation = 599;
-            // hatch a bug
+            // transform "hatch" into a bug...
+            self->pos = elData->egg->pos; // sets what will be the bug to the egg position, because eggs tend to wiggle
+                                          // about before hatching.
+
+            // create a bug
+            bb_entity_t* bug
+                = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
+                                  elData->egg->pos.x >> DECIMAL_BITS, elData->egg->pos.y >> DECIMAL_BITS);
+
+            // destroy the egg
+            bb_destroyEntity(elData->egg, false);
+
+            bb_hitInfo_t hitInfo = {0};
+            bb_collisionCheck(&self->gameData->tilemap, bug, NULL, &hitInfo);
+            if (hitInfo.hit == true)
+            {
+                // Update the dirt to air.
+                self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] = 0;
+                // Create a crumble animation
+                bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                                hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
+            }
+
+            // destroy this
+            bb_destroyEntity(self, false);
         }
-        
     }
+}
+
+void bb_updateBug(bb_entity_t* self)
+{
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)

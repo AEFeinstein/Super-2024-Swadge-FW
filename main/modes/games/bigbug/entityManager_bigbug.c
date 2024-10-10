@@ -9,6 +9,8 @@
 #include "gameData_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "entity_bigbug.h"
+#include "lighting_bigbug.h"
+#include "random_bigbug.h"
 
 #include "esp_random.h"
 #include "palette.h"
@@ -90,13 +92,43 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES]);
     eggLeavesSprite->originX     = 12;
-    eggLeavesSprite->originY     = 5; // just guessing here
+    eggLeavesSprite->originY     = 5;
     printf("eggLeaves numFrames %d\n", entityManager->sprites[EGG_LEAVES].numFrames);
 
     bb_sprite_t* eggSprite = bb_loadSprite("egg", 1, 6, &entityManager->sprites[EGG]);
     eggSprite->originX     = 12;
-    eggSprite->originY     = 12; // just guessing here
+    eggSprite->originY     = 12;
     printf("egg numFrames %d\n", entityManager->sprites[EGG].numFrames);
+
+    bb_sprite_t* buSprite = bb_loadSprite("bu", 4, 6, &entityManager->sprites[BU]);
+    buSprite->originX     = 12;
+    buSprite->originY     = 15;
+    printf("bu numFrames %d\n", entityManager->sprites[BU].numFrames);
+
+    bb_sprite_t* bugSprite = bb_loadSprite("bug", 4, 6, &entityManager->sprites[BUG]);
+    bugSprite->originX     = 13;
+    bugSprite->originY     = 7;
+    printf("bug numFrames %d\n", entityManager->sprites[BUG].numFrames);
+
+    bb_sprite_t* buggSprite = bb_loadSprite("bugg", 4, 6, &entityManager->sprites[BUGG]);
+    buggSprite->originX     = 11;
+    buggSprite->originY     = 10;
+    printf("bugg numFrames %d\n", entityManager->sprites[BUGG].numFrames);
+
+    bb_sprite_t* buggoSprite = bb_loadSprite("buggo", 4, 6, &entityManager->sprites[BUGGO]);
+    buggoSprite->originX     = 12;
+    buggoSprite->originY     = 14;
+    printf("buggo numFrames %d\n", entityManager->sprites[BUGGO].numFrames);
+
+    bb_sprite_t* buggySprite = bb_loadSprite("buggy", 4, 6, &entityManager->sprites[BUGGY]);
+    buggySprite->originX     = 12;
+    buggySprite->originY     = 10;
+    printf("buggy numFrames %d\n", entityManager->sprites[BUGGY].numFrames);
+
+    bb_sprite_t* buttSprite = bb_loadSprite("butt", 4, 6, &entityManager->sprites[BUTT]);
+    buttSprite->originX     = 14;
+    buttSprite->originY     = 6;
+    printf("butt numFrames %d\n", entityManager->sprites[BUTT].numFrames);
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
@@ -149,6 +181,53 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             if (currentEntity->drawFunction != NULL)
             {
                 currentEntity->drawFunction(entityManager, camera, currentEntity);
+            }
+            else if (currentEntity->hasLighting)
+            {
+                vec_t lookup = {
+                    .x = (currentEntity->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
+                         + currentEntity->gameData->tilemap.headlampWsg.w,
+                    .y = (currentEntity->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
+                         + currentEntity->gameData->tilemap.headlampWsg.h};
+
+                lookup = divVec2d(lookup, 2);
+
+                int16_t xOff = (currentEntity->pos.x >> DECIMAL_BITS)
+                               - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
+                int16_t yOff = (currentEntity->pos.y >> DECIMAL_BITS)
+                               - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
+
+                uint8_t brightness = 0;
+                if (currentEntity->pos.y > 0)
+                {
+                    if (currentEntity->pos.y > 2560)
+                    {
+                        brightness = 5;
+                    }
+                    else
+                    {
+                        brightness = currentEntity->pos.y / 512;
+                    }
+                }
+
+                if (currentEntity->gameData->entityManager.playerEntity == NULL)
+                {
+                    drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
+                                       .frames[brightness + currentEntity->currentAnimationFrame * 6],
+                                  xOff, yOff);
+                }
+                else
+                {
+                    drawWsgSimple(
+                        &entityManager->sprites[currentEntity->spriteIndex]
+                             .frames[bb_midgroundLighting(&(currentEntity->gameData->tilemap.headlampWsg), &lookup,
+                                                          &(((bb_garbotnikData_t*)currentEntity->gameData->entityManager
+                                                                 .playerEntity->data)
+                                                                ->yaw.x),
+                                                          brightness)
+                                     + currentEntity->currentAnimationFrame * 6],
+                        xOff, yOff);
+                }
             }
             else
             {
@@ -207,20 +286,14 @@ bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
         return NULL;
     };
 
-    uint8_t entityIndex = 0;
-
-    while (entityManager->entities[entityIndex].active)
+    for (int i = 0; i < MAX_ENTITIES; i++)
     {
-        entityIndex++;
-
-        // Extra safeguard to make sure we don't get stuck here
-        if (entityIndex >= MAX_ENTITIES)
+        if (entityManager->entities[i].active == false)
         {
-            return NULL;
+            return &(entityManager->entities[i]);
         }
     }
-
-    return &(entityManager->entities[entityIndex]);
+    return NULL;
 }
 
 void bb_viewFollowEntity(bb_entity_t* entity, rectangle_t* camera)
@@ -269,9 +342,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     entity->paused      = paused;
     entity->spriteIndex = spriteIndex;
 
-    entity->animationTimer              = 0;
     entity->gameFramesPerAnimationFrame = gameFramesPerAnimationFrame;
-    entity->currentAnimationFrame       = 0;
     // entity->collisionHandler     = &dummyCollisionHandler;
     // entity->tileCollisionHandler = &ballTileCollisionHandler;
 
@@ -315,10 +386,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_projectileData_t* pData = heap_caps_calloc(1, sizeof(bb_projectileData_t), MALLOC_CAP_SPIRAM);
             entity->data               = pData;
 
-            entity->halfWidth  = 0; // 0,0,0 makes it behave as a physical point rather than a collision rectangle.
-            entity->halfHeight = 0;
-            entity->cSquared   = 0;
-
             entity->updateFunction = &bb_updateHarpoon;
             entity->drawFunction   = &bb_drawHarpoon;
             break;
@@ -333,18 +400,63 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             break;
         }
         case EGG:
+        {
             bb_eggData_t* eData = heap_caps_calloc(1, sizeof(bb_eggData_t), MALLOC_CAP_SPIRAM);
             entity->data        = eData;
 
             entity->drawFunction = &bb_drawEgg;
             break;
+        }
+        case BU:
+        {
+            entity->hasLighting                 = true;
+            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+
+            entity->updateFunction = &bb_updateBug;
+            break;
+        }
+        case BUG:
+        {
+            entity->hasLighting                 = true;
+            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+
+            entity->updateFunction = &bb_updateBug;
+            break;
+        }
+        case BUGG:
+        {
+            entity->hasLighting                 = true;
+            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+
+            entity->updateFunction = &bb_updateBug;
+            break;
+        }
+        case BUGGO:
+        {
+            entity->hasLighting                 = true;
+            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+
+            entity->updateFunction = &bb_updateBug;
+            break;
+        }
+        case BUGGY:
+        {
+            entity->hasLighting                 = true;
+            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+
+            entity->updateFunction = &bb_updateBug;
+            break;
+        }
+        case BUTT:
+        {
+            entity->hasLighting                 = true;
+            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+
+            entity->updateFunction = &bb_updateBug;
+            break;
+        }
         default: // FLAME_ANIM and others need nothing set
         {
-            entity->updateFunction = NULL;
-            entity->data           = NULL;
-            entity->halfWidth      = 0;
-            entity->halfHeight     = 0;
-            entity->cSquared       = 0;
             break;
         }
     }

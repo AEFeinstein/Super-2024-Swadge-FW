@@ -33,10 +33,15 @@ typedef enum
     HARPOON,          // A harpoon you throw
     EGG_LEAVES,       // They receive light and stimulate the egg
     EGG,              // When stimulated enough, they hatch into a bug!
-    WILE,             // A metal ball that is thrown
-    FLY,              // A bug that flies
-    ANT,              // A bug that crawls on the midground tile field
-    BEETLE,           // A bug that walks on the the foreground tile field
+    BU,
+    BUG, // A bug that walks on the the foreground tile field
+    BUGG,
+    BUGGO,
+    BUGGY,
+    BUTT,
+    WILE, // A metal ball that is thrown
+    FLY,  // A bug that flies
+    ANT,  // A bug that crawls on the midground tile field
 } bb_spriteDef_t;
 
 typedef enum
