@@ -34,10 +34,39 @@ static const char cGroveTitle[] = "Chowa Grove"; // Game title
 // Function declarations
 //==============================================================================
 
+/**
+ * @brief Constructs the mode
+ * 
+ */
 static void cGroveEnterMode(void);
+
+/**
+ * @brief Deconstructs the mode
+ * 
+ */
 static void cGroveExitMode(void);
+
+/**
+ * @brief Main loop of Chowa Grove
+ * 
+ * @param elapsedUs 
+ */
 static void cGroveMainLoop(int64_t elapsedUs);
+
+/**
+ * @brief Loads the appropriate WSGs, sounds etc for the current mode.
+ * 
+ */
 static void cg_loadMode(void);
+
+/**
+ * @brief Menu callback for the main Chowa Grove menu
+ * 
+ * @param label 
+ * @param selected 
+ * @param settingVal 
+ */
+static void cg_menuCB(const char* label, bool selected, uint32_t settingVal);
 
 //==============================================================================
 // Variables
@@ -92,7 +121,7 @@ static void cGroveExitMode(void)
         }
         case CG_GROVE:
         {   
-            cg_deInitGrove();
+            cg_deInitGrove(cg);
             break;
         }
         default:
@@ -149,10 +178,6 @@ static void cGroveMainLoop(int64_t elapsedUs)
     }
 }
 
-/**
- * @brief Loads the appropriate WSGs, sounds etc for the current mode.
- * 
- */
 static void cg_loadMode()
 {
     switch (cg->state)
@@ -173,4 +198,9 @@ static void cg_loadMode()
         }
     }
     cg->loaded = true;
+}
+
+static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
+{
+
 }

@@ -38,11 +38,3 @@ void cgInitItem(cGrove_t* cg, int8_t idx, char* name, wsg_t spr, vec_t pos);
  * @param idx Index of item
  */
 void cgDeactivateItem(cGrove_t* cg, int8_t idx);
-
-/**
- * @brief Draws item at specified index
- *
- * @param cg Game Object
- * @param idx index of item to draw
- */
-void cgDrawItem(cGrove_t* cg, int8_t idx);

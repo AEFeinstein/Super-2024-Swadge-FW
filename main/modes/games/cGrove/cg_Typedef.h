@@ -45,8 +45,8 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_MAX_CHOWA  10 // Max number of Chowa allowed on a swadge
-#define CG_STAT_COUNT 6  // Number of stats
+#define CG_MAX_CHOWA  5 // Max number of Chowa allowed on a swadge
+#define CG_STAT_COUNT 6 // Number of stats
 
 // Enums ===============================
 typedef enum
@@ -113,7 +113,7 @@ typedef struct
     char name[17];
     int8_t age;                         ///< Current age of the Chowa
     int8_t maxAge;                      ///< Maximum Chowa age. 4 hours of in game time
-    uint8_t playerAffinity;              ///< How much Chowa likes the player
+    uint8_t playerAffinity;             ///< How much Chowa likes the player
     cgMoodEnum_t mood;                  ///< Current mood of the Chowa
     cgChowaPersonality_t pers;          ///< Chowa's personality
     cgChowaStat_t stats[CG_STAT_COUNT]; ///< Array containing stat information
@@ -190,43 +190,33 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_FIELD_OBJ_COUNT  64
-#define CG_FIELD_BOUNDARY   32
-#define CG_FIELD_ITEM_LIMIT 10
-#define CG_FIELD_HEIGHT     750
-#define CG_FIELD_WIDTH      750
+#define CG_GROVE_MAX_ITEMS       10 ///< Max number of items. Cannot assume unique
+#define CG_GROVE_MAX_GUEST_CHOWA 5  ///< Maximum number of Chowa allowed to be in the grove at once
+
+#define CG_GROVE_SCREEN_BOUNDARY 32 ///< How close the cursor can get to the edge of the screen
 
 // Structs ==============================
 typedef struct
 {
-    rectangle_t aabb; ///< Camera position and bounding box for draw calls
-} cgGardenCamera_t;
+    // Assets
+    // Grove WSGs
+    wsg_t groveBG; ///< Grove background
 
-typedef struct
-{
-    wsg_t spr;        ///< Sprite for object
-    rectangle_t aabb; ///< Position and collision box
-} cgGardenObject_t;
+    // UI WSGs
+    wsg_t* cursors; ///< Cursor sprites
 
-typedef struct
-{
-    cgGardenObject_t staticObjects[CG_FIELD_OBJ_COUNT]; ///< Static objects littering the field
-    cgGardenCamera_t cam;                               ///< Camera
-} cgField_t;
+    // Field data
+    cgItem_t items[CG_GROVE_MAX_ITEMS];         ///< Items present in the Grove
+    cgChowa_t guests[CG_GROVE_MAX_GUEST_CHOWA]; ///< Guest Chowa
 
-typedef struct
-{
-    // Objects
-    cgField_t field;                     ///< Field object
-    cgItem_t items[CG_FIELD_ITEM_LIMIT]; ///< List of items in the garden
-
-    // Cursor
-    rectangle_t cursorAABB; ///< Cursor position and bounding box
-    bool holdingItem;       ///< If the player is holding an item
-    cgItem_t* heldItem;     ///< The held item
-    bool holdingChowa;      ///< If the pl;ayer is holding a Chowa
-    cgChowa_t* heldChowa;   ///< The held Chowa
-} cgGarden_t;
+    // Player resources
+    rectangle_t camera;   ///< In-garden camera viewport
+    rectangle_t cursor;   ///< Cursor position and bounding box
+    bool holdingItem;     ///< If the player is holding an item
+    cgItem_t* heldItem;   ///< The held item
+    bool holdingChowa;    ///< If the pl;ayer is holding a Chowa
+    cgChowa_t* heldChowa; ///< The held Chowa
+} cgGrove_t;
 
 //==============================================================================
 // Sparring
@@ -392,11 +382,6 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-// FIXME: Get rid of these
-#define CG_CHOWA_EXPRESSION_COUNT 3
-#define CG_GARDEN_ITEMS_COUNT     1
-#define CG_GARDEN_STATIC_OBJECTS  1
-#define CG_GARDEN_CURSORS         1
 
 // Enums ===============================
 typedef enum
@@ -417,15 +402,15 @@ typedef struct
     font_t menuFont; ///< Main font
 
     // Modes
-    cgGarden_t garden; ///< Garden data
-    cgSpar_t spar;     ///< Spar data
+    cgGrove_t grove; ///< Garden data
+    cgSpar_t spar;   ///< Spar data
 
     // State
     cgMainState_t state; ///< Main mode state
-    bool loaded; ///< if the state has already been loaded
+    bool loaded;         ///< if the state has already been loaded
 
     // Settings
-    bool touch;  ///< Touch controls active
+    bool touch;  ///< Touch controls for Grove
     bool online; ///< If online features are enabled
 
     // Chowa

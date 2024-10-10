@@ -77,8 +77,11 @@ void cg_initSpar(cGrove_t* grove)
     addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[3]); // Settings
     addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[4]); // Go back to main menu
 
-    // TODO: New renderer
-    cg->spar.renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    cg->spar.renderer                          = initMenuManiaRenderer(NULL, NULL, &cg->spar.sparRegFont);
+    static const paletteColor_t shadowColors[] = {c110, c210, c220, c320, c330, c430, c330, c320, c220, c210};
+    led_t ledColor                             = {.r = 128, .g = 128, .b = 0};
+    recolorMenuManiaRenderer(cg->spar.renderer, c115, c335, c000, c110, c003, c004, c220, c335, shadowColors,
+                             ARRAY_SIZE(shadowColors), ledColor);
 
     // Initialize battle record
     sparLoadBattleRecords();
@@ -96,7 +99,6 @@ void cg_deInitSpar()
 {
     // Free the menu
     deinitMenu(cg->spar.sparMenu);
-    // TODO: New renderer
     deinitMenuManiaRenderer(cg->spar.renderer);
 
     // Fonts
@@ -146,7 +148,6 @@ void cg_runSpar(int64_t elapsedUs)
             {
                 cg->spar.sparMenu = menuButton(cg->spar.sparMenu, evt);
             }
-            // TODO: new renderer
             drawMenuMania(cg->spar.sparMenu, cg->spar.renderer, elapsedUs);
             break;
         }

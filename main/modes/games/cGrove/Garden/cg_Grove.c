@@ -14,7 +14,7 @@
 //==============================================================================
 
 #include "cg_Grove.h"
-#include "cg_Field.h"
+#include "cg_GroveDraw.h"
 #include "cg_Items.h"
 
 //==============================================================================
@@ -24,29 +24,42 @@
 #define CG_CURSOR_SPEED 16
 
 //==============================================================================
-// Function Declarations
+// Consts
 //==============================================================================
 
-/**
- * @brief Draws the hand at the appropriate position
- *
- * @param cg Game object
- */
-static void _cgDrawHand(cGrove_t* cg);
+// TODO: See if hand4 is actually identical to hand1
+static const char* groveCursorSprites[] = {
+    "chowa_hand1.wsg",
+    "chowa_hand2.wsg",
+    "chowa_hand3.wsg",
+};
+
+//==============================================================================
+// Function Declarations
+//==============================================================================
 
 /**
  * @brief Attempts to grab objects. Due to total amount being limited, no need to optimize
  *
  * @param cg Game Object
  */
-static void _cgAttemptGrab(cGrove_t* cg);
+static void cg_attemptGrab(cGrove_t* cg);
 
 /**
  * @brief Input handling for garden
  *
  * @param cg Game Object
  */
-static void _cgHandleInputGarden(cGrove_t* cg);
+static void cg_handleInputGarden(cGrove_t* cg);
+
+/**
+ * @brief Moves the view of the field byt eh provided x and y
+ *
+ * @param cg Game Object
+ * @param xChange Distance to move horizontally. Negative is right, positive if left.
+ * @param yChange Distance to move vertically. Negative is up, positive s down
+ */
+static void cg_moveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange);
 
 //==============================================================================
 // Functions
@@ -59,140 +72,128 @@ static void _cgHandleInputGarden(cGrove_t* cg);
  */
 void cg_initGrove(cGrove_t* cg)
 {
+    // Load assets
+    // WSGs
+    loadWsg("garden_background.wsg", &cg->grove.groveBG, true);
+    
+    // Cursors
+    cg->grove.cursors = calloc(ARRAY_SIZE(groveCursorSprites), sizeof(wsg_t));
+    for (int32_t idx = 0; idx < ARRAY_SIZE(groveCursorSprites); idx++)
+    {
+        loadWsg(groveCursorSprites[idx], &cg->grove.cursors[idx], true);
+    }
+
+    // Initialize viewport
+    cg->grove.camera.height = TFT_HEIGHT; // Used to check what objects should be drawn
+    cg->grove.camera.width  = TFT_WIDTH;
+    cg->grove.camera.pos.x  = (TFT_WIDTH - cg->grove.groveBG.w) >> 1;
+    cg->grove.camera.pos.y  = (TFT_WIDTH - cg->grove.groveBG.h) >> 1;
+
     // Initialize the cursor
-    cg->garden.cursorAABB.height = 32;
-    cg->garden.cursorAABB.width  = 32;
-    cg->garden.cursorAABB.pos.x  = 32;
-    cg->garden.cursorAABB.pos.y  = 32;
-    cg->garden.holdingChowa      = false;
-    cg->garden.holdingItem       = false;
+    cg->grove.cursor.height = cg->grove.cursors[0].h;
+    cg->grove.cursor.width  = cg->grove.cursors[0].w;
+    cg->grove.cursor.pos.x  = (TFT_WIDTH - cg->grove.cursors[0].w) >> 1;
+    cg->grove.cursor.pos.y  = (TFT_HEIGHT - cg->grove.cursors[0].h) >> 1;
+    cg->grove.holdingChowa  = false;
+    cg->grove.holdingItem   = false;
+
+   /*  
 
     // Initialize the items
     vec_t pos;
     pos.x = 64;
     pos.y = 64;
-    //cgInitItem(cg, 0, "Ball", cg->items[0], pos);
-
-    // Initialize the field
-    cgInitField(cg);
-}
-
-void cg_deInitGrove()
-{
-
+    // cgInitItem(cg, 0, "Ball", cg->items[0], pos);
+    
+    
+    */
 }
 
 /**
- * @brief Main loop ofr Garden mode
+ * @brief Destroys the grove data
+ * 
+ * @param cg Game Data
+ */
+void cg_deInitGrove(cGrove_t* cg)
+{
+    // Unload assets
+    // WSGs
+    for (uint8_t i = 0; i < ARRAY_SIZE(groveCursorSprites); i++)
+    {
+        freeWsg(&cg->grove.cursors[i]);
+    }
+    free(cg->grove.cursors);
+    freeWsg(&cg->grove.groveBG);
+}
+
+/**
+ * @brief Main loop for Garden mode
  *
  * @param cg Game Object
  */
 void cg_runGrove(cGrove_t* cg)
 {
     // Input
-    _cgHandleInputGarden(cg);
+    cg_handleInputGarden(cg);
 
     // Garden Logic
-    if (cg->garden.holdingItem)
+    if (cg->grove.holdingItem)
     {
-        cg->garden.heldItem->aabb.pos = addVec2d(cg->garden.cursorAABB.pos, cg->garden.field.cam.aabb.pos);
+        cg->grove.heldItem->aabb.pos = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos);
     }
-    if (cg->garden.holdingChowa)
+    if (cg->grove.holdingChowa)
     {
-        cg->garden.heldChowa->aabb.pos = addVec2d(cg->garden.cursorAABB.pos, cg->garden.field.cam.aabb.pos);
+        cg->grove.heldChowa->aabb.pos = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos);
     }
 
     // TODO: Chowa AI
-    // - Wander
-    // - Chase ball
-    // - struggle in grip
 
     // Draw
-    // Field
-    cgDrawField(cg);
-    // Items
-    for (int8_t item = 0; item < CG_FIELD_ITEM_LIMIT; item++)
-    {
-        if (cg->garden.items[item].active)
-        {
-            cgDrawItem(cg, item);
-        }
-    }
-    // Chowa
-    // vec_t cam = {.x = -cg->garden.field.cam.aabb.pos.x, .y = -cg->garden.field.cam.aabb.pos.y};
-    for (int8_t c = 0; c < CG_FIELD_ITEM_LIMIT; c++)
-    {
-        if (cg->chowa[c].active)
-        {
-            // cgDrawChowa(cg, c, cam);
-        }
-    }
-    // Hand
-    _cgDrawHand(cg);
+    cg_groveDraw(cg);
 }
 
 //==============================================================================
 // Static functions
 //==============================================================================
 
-/**
- * @brief Draws the hand at the appropriate position
- *
- * @param cg Game object
- */
-static void _cgDrawHand(cGrove_t* cg)
-{
-    //drawWsgSimple(&cg->cursors[0], cg->garden.cursorAABB.pos.x, cg->garden.cursorAABB.pos.y);
-}
-
-/**
- * @brief Attempts to grab objects. Due to total amount being limited, no need to optimize
- *
- * @param cg Game Object
- */
-static void _cgAttemptGrab(cGrove_t* cg)
+static void cg_attemptGrab(cGrove_t* cg)
 {
     vec_t collVec;
-    cg->garden.heldItem = NULL;
+    cg->grove.heldItem = NULL;
     // Check if over a Chowa
     for (int8_t c = 0; c < CG_MAX_CHOWA; c++)
     {
         if (cg->chowa[c].active)
         {
-            rectangle_t translated = {.pos    = subVec2d(cg->chowa[c].aabb.pos, cg->garden.field.cam.aabb.pos),
+            rectangle_t translated = {.pos    = subVec2d(cg->chowa[c].aabb.pos, cg->grove.camera.pos),
                                       .height = cg->chowa[c].aabb.height,
                                       .width  = cg->chowa[c].aabb.width};
-            if (rectRectIntersection(cg->garden.cursorAABB, translated, &collVec))
+            if (rectRectIntersection(cg->grove.cursor, translated, &collVec))
             {
-                cg->garden.holdingChowa = true;
-                cg->garden.heldChowa    = &cg->chowa[c];
-                cg->chowa[c].mood       = CG_WORRIED;
+                cg->grove.holdingChowa = true;
+                cg->grove.heldChowa    = &cg->chowa[c];
+                cg->chowa[c].mood      = CG_WORRIED;
             }
         }
     }
     // Check if over an item
-    for (int8_t item = 0; item < CG_FIELD_ITEM_LIMIT; item++)
+    for (int8_t item = 0; item < CG_GROVE_MAX_ITEMS; item++)
     {
-        if (cg->garden.items[item].active)
+        if (cg->grove.items[item].active)
         {
-            rectangle_t translated = {.pos = subVec2d(cg->garden.items[item].aabb.pos, cg->garden.field.cam.aabb.pos),
-                                      .height = cg->garden.items[item].aabb.height,
-                                      .width  = cg->garden.items[item].aabb.width};
-            if (rectRectIntersection(cg->garden.cursorAABB, translated, &collVec))
+            rectangle_t translated = {.pos    = subVec2d(cg->grove.items[item].aabb.pos, cg->grove.camera.pos),
+                                      .height = cg->grove.items[item].aabb.height,
+                                      .width  = cg->grove.items[item].aabb.width};
+            if (rectRectIntersection(cg->grove.cursor, translated, &collVec))
             {
-                cg->garden.holdingItem = true;
-                cg->garden.heldItem    = &cg->garden.items[item];
+                cg->grove.holdingItem = true;
+                cg->grove.heldItem    = &cg->grove.items[item];
             }
         }
     }
 }
 
-/**
- * @brief Input handling for garden
- *
- * @param cg Game Object
- */
-static void _cgHandleInputGarden(cGrove_t* cg)
+static void cg_handleInputGarden(cGrove_t* cg)
 {
     buttonEvt_t evt;
     // Touch pad for the hands
@@ -206,22 +207,22 @@ static void _cgHandleInputGarden(cGrove_t* cg)
             {
                 printf("touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32 "\n", phi, r, intensity);
                 // Move hand
-                cg->garden.cursorAABB.pos.x += (getCos1024(phi) * speed) / 1024;
-                cg->garden.cursorAABB.pos.y -= (getSin1024(phi) * speed) / 1024;
+                cg->grove.cursor.pos.x += (getCos1024(phi) * speed) / 1024;
+                cg->grove.cursor.pos.y -= (getSin1024(phi) * speed) / 1024;
             }
         }
         while (checkButtonQueueWrapper(&evt))
         {
             if (evt.button & PB_A && evt.down)
             {
-                if (cg->garden.holdingItem || cg->garden.holdingChowa)
+                if (cg->grove.holdingItem || cg->grove.holdingChowa)
                 {
-                    cg->garden.holdingItem  = false;
-                    cg->garden.holdingChowa = false;
+                    cg->grove.holdingItem  = false;
+                    cg->grove.holdingChowa = false;
                 }
                 else
                 {
-                    _cgAttemptGrab(cg);
+                    cg_attemptGrab(cg);
                 }
             }
             if (evt.button & PB_B && evt.down)
@@ -236,30 +237,30 @@ static void _cgHandleInputGarden(cGrove_t* cg)
         {
             if (evt.button & PB_RIGHT)
             {
-                cg->garden.cursorAABB.pos.x += CG_CURSOR_SPEED;
+                cg->grove.cursor.pos.x += CG_CURSOR_SPEED;
             }
             else if (evt.button & PB_LEFT)
             {
-                cg->garden.cursorAABB.pos.x -= CG_CURSOR_SPEED;
+                cg->grove.cursor.pos.x -= CG_CURSOR_SPEED;
             }
             if (evt.button & PB_UP)
             {
-                cg->garden.cursorAABB.pos.y -= CG_CURSOR_SPEED;
+                cg->grove.cursor.pos.y -= CG_CURSOR_SPEED;
             }
             else if (evt.button & PB_DOWN)
             {
-                cg->garden.cursorAABB.pos.y += CG_CURSOR_SPEED;
+                cg->grove.cursor.pos.y += CG_CURSOR_SPEED;
             }
             if (evt.button & PB_A && evt.down)
             {
-                if (cg->garden.holdingItem || cg->garden.holdingChowa)
+                if (cg->grove.holdingItem || cg->grove.holdingChowa)
                 {
-                    cg->garden.holdingItem  = false;
-                    cg->garden.holdingChowa = false;
+                    cg->grove.holdingItem  = false;
+                    cg->grove.holdingChowa = false;
                 }
                 else
                 {
-                    _cgAttemptGrab(cg);
+                    cg_attemptGrab(cg);
                 }
             }
             if (evt.button & PB_B && evt.down)
@@ -269,24 +270,46 @@ static void _cgHandleInputGarden(cGrove_t* cg)
         }
     }
     // Check if out of bounds
-    if (cg->garden.cursorAABB.pos.x < CG_FIELD_BOUNDARY)
+    if (cg->grove.cursor.pos.x < CG_GROVE_SCREEN_BOUNDARY)
     {
-        cgMoveCamera(cg, -CG_CURSOR_SPEED, 0);
-        cg->garden.cursorAABB.pos.x = CG_FIELD_BOUNDARY;
+        cg_moveCamera(cg, -CG_CURSOR_SPEED, 0);
+        cg->grove.cursor.pos.x = CG_GROVE_SCREEN_BOUNDARY;
     }
-    else if (cg->garden.cursorAABB.pos.x > TFT_WIDTH - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.width))
+    else if (cg->grove.cursor.pos.x > TFT_WIDTH - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.width))
     {
-        cgMoveCamera(cg, CG_CURSOR_SPEED, 0);
-        cg->garden.cursorAABB.pos.x = TFT_WIDTH - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.width);
+        cg_moveCamera(cg, CG_CURSOR_SPEED, 0);
+        cg->grove.cursor.pos.x = TFT_WIDTH - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.width);
     }
-    if (cg->garden.cursorAABB.pos.y < CG_FIELD_BOUNDARY)
+    if (cg->grove.cursor.pos.y < CG_GROVE_SCREEN_BOUNDARY)
     {
-        cgMoveCamera(cg, 0, -CG_CURSOR_SPEED);
-        cg->garden.cursorAABB.pos.y = CG_FIELD_BOUNDARY;
+        cg_moveCamera(cg, 0, -CG_CURSOR_SPEED);
+        cg->grove.cursor.pos.y = CG_GROVE_SCREEN_BOUNDARY;
     }
-    else if (cg->garden.cursorAABB.pos.y > TFT_HEIGHT - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.height))
+    else if (cg->grove.cursor.pos.y > TFT_HEIGHT - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.height))
     {
-        cgMoveCamera(cg, 0, CG_CURSOR_SPEED);
-        cg->garden.cursorAABB.pos.y = TFT_HEIGHT - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.height);
+        cg_moveCamera(cg, 0, CG_CURSOR_SPEED);
+        cg->grove.cursor.pos.y = TFT_HEIGHT - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.height);
+    }
+}
+
+static void cg_moveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange)
+{
+    cg->grove.camera.pos.x += xChange;
+    cg->grove.camera.pos.y += yChange;
+    if (cg->grove.camera.pos.x < 0)
+    {
+        cg->grove.camera.pos.x = 0;
+    }
+    else if (cg->grove.camera.pos.x > cg->grove.groveBG.w - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.width))
+    {
+        cg->grove.camera.pos.x = cg->grove.groveBG.w - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.width);
+    }
+    if (cg->grove.camera.pos.y < 0)
+    {
+        cg->grove.camera.pos.y = 0;
+    }
+    else if (cg->grove.camera.pos.y > cg->grove.groveBG.h - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.height))
+    {
+        cg->grove.camera.pos.x = cg->grove.groveBG.h - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.height);
     }
 }

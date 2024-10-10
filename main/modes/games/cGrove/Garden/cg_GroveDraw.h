@@ -1,12 +1,12 @@
 /**
- * @file cg_Garden.h
+ * @file cg_GroveDraw.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
- * @brief The main interation area with the Chowa
+ * @brief Drawing functions for the Grove mode of Chowa Grove
  * @version 0.1
- * @date 2024-09-07
- *
+ * @date 2024-10-09
+ * 
  * @copyright Copyright (c) 2024
- *
+ * 
  */
 #pragma once
 
@@ -20,8 +20,4 @@
 // Function declarations
 //==============================================================================
 
-void cg_initGrove(cGrove_t* cg);
-
-void cg_deInitGrove(cGrove_t* cg);
-
-void cg_runGrove(cGrove_t* cg);
+void cg_groveDraw(cGrove_t* cg);
