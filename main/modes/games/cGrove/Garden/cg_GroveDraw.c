@@ -48,6 +48,7 @@ void cg_groveDraw(cGrove_t* cg)
     // Get camera offset
 
     // Draw BG
+    drawWsgSimple(&cg->grove.groveBG, -cg->grove.camera.pos.x, -cg->grove.camera.pos.y);
 
     // Draw Items
     for (int8_t item = 0; item < CG_GROVE_MAX_ITEMS; item++)

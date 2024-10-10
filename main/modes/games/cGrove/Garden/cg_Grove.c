@@ -86,8 +86,8 @@ void cg_initGrove(cGrove_t* cg)
     // Initialize viewport
     cg->grove.camera.height = TFT_HEIGHT; // Used to check what objects should be drawn
     cg->grove.camera.width  = TFT_WIDTH;
-    cg->grove.camera.pos.x  = (TFT_WIDTH - cg->grove.groveBG.w) >> 1;
-    cg->grove.camera.pos.y  = (TFT_WIDTH - cg->grove.groveBG.h) >> 1;
+    cg->grove.camera.pos.x  = (cg->grove.groveBG.w - TFT_HEIGHT) >> 1;
+    cg->grove.camera.pos.y  = (cg->grove.groveBG.h - TFT_WIDTH) >> 1;
 
     // Initialize the cursor
     cg->grove.cursor.height = cg->grove.cursors[0].h;
@@ -133,6 +133,12 @@ void cg_deInitGrove(cGrove_t* cg)
  */
 void cg_runGrove(cGrove_t* cg)
 {
+    // TODO:
+    // Collision boxes for obstacles
+    // Swim zone
+    // Ability to sit on stump and do things
+    // Change cursor if over item or Chowa
+
     // Input
     cg_handleInputGarden(cg);
 
@@ -300,16 +306,16 @@ static void cg_moveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange)
     {
         cg->grove.camera.pos.x = 0;
     }
-    else if (cg->grove.camera.pos.x > cg->grove.groveBG.w - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.width))
+    else if (cg->grove.camera.pos.x > (cg->grove.groveBG.w - TFT_WIDTH))
     {
-        cg->grove.camera.pos.x = cg->grove.groveBG.w - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.width);
+        cg->grove.camera.pos.x = (cg->grove.groveBG.w - TFT_WIDTH);
     }
     if (cg->grove.camera.pos.y < 0)
     {
         cg->grove.camera.pos.y = 0;
     }
-    else if (cg->grove.camera.pos.y > cg->grove.groveBG.h - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.height))
+    else if (cg->grove.camera.pos.y > (cg->grove.groveBG.h - TFT_HEIGHT))
     {
-        cg->grove.camera.pos.x = cg->grove.groveBG.h - (CG_GROVE_SCREEN_BOUNDARY + cg->grove.cursor.height);
+        cg->grove.camera.pos.y = (cg->grove.groveBG.h - TFT_HEIGHT);
     }
 }
