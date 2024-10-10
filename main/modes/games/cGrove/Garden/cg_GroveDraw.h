@@ -4,9 +4,9 @@
  * @brief Drawing functions for the Grove mode of Chowa Grove
  * @version 0.1
  * @date 2024-10-09
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 

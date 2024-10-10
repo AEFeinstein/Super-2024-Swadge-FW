@@ -4,9 +4,9 @@
  * @brief Drawing functions for the Grove mode of Chowa Grove
  * @version 0.1
  * @date 2024-10-09
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 //==============================================================================
@@ -40,7 +40,7 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx);
 
 /**
  * @brief Draws the grove in its current state
- * 
+ *
  * @param cg Game Data
  */
 void cg_groveDraw(cGrove_t* cg)
@@ -84,10 +84,9 @@ void cg_groveDraw(cGrove_t* cg)
 //==============================================================================
 // Static Functions
 //==============================================================================
- 
+
 static void cg_drawHand(cGrove_t* cg)
 {
-    
     drawWsgSimple(&cg->grove.cursors[0], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
 }
 

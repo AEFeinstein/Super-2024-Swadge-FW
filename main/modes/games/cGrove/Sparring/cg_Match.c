@@ -584,15 +584,15 @@ static void cg_sparMatchAITimer(cGrove_t* cg, int32_t tick)
 
 /**
  * @brief Evaluate past moves
- * 
+ *
  * @param cg Game Data
  * @param numOfMove Past moves to evaluate
  */
 static void cg_sparMatchAIEvalPrevMoves(cGrove_t* cg, int8_t numOfMove)
 {
     // Count how many of each are in the provided range
-    cgRPSState_t chosenMove =  CG_SPAR_UNSET;
-    int8_t moveCount[7] = {0};
+    cgRPSState_t chosenMove = CG_SPAR_UNSET;
+    int8_t moveCount[7]     = {0};
 
     for (int32_t idx = 0; idx < numOfMove; idx++)
     {

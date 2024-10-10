@@ -228,15 +228,17 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     cg_drawSparChowaUI(cg);
 
     // If paused, draw pause text
-    if(cg->spar.match.paused)
+    if (cg->spar.match.paused)
     {
-        drawText(&cg->spar.sparTitleFont, c005, "--PAUSE--", (TFT_WIDTH - textWidth(&cg->spar.sparTitleFont, "--PAUSE--")) / 2, TFT_HEIGHT / 2 - 16);
+        drawText(&cg->spar.sparTitleFont, c005, "--PAUSE--",
+                 (TFT_WIDTH - textWidth(&cg->spar.sparTitleFont, "--PAUSE--")) / 2, TFT_HEIGHT / 2 - 16);
     }
 
     // Draw match end
-    if(cg->spar.match.done)
+    if (cg->spar.match.done)
     {
-        drawText(&cg->spar.sparTitleFont, c005, "FINISHED", (TFT_WIDTH - textWidth(&cg->spar.sparTitleFont, "FINISHED")) / 2, TFT_HEIGHT / 2 - 16);
+        drawText(&cg->spar.sparTitleFont, c005, "FINISHED",
+                 (TFT_WIDTH - textWidth(&cg->spar.sparTitleFont, "FINISHED")) / 2, TFT_HEIGHT / 2 - 16);
     }
 }
 
@@ -336,14 +338,14 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
 {
     // Player 1
     // Draw health bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P1].maxHP, cg->spar.match.chowaData[CG_P1].HP, PADDING, STAT_BAR_BASE,
-                        c500, 3);
+    cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P1].maxHP, cg->spar.match.chowaData[CG_P1].HP, PADDING,
+                        STAT_BAR_BASE, c500, 3);
     // Draw stamina bar
     cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P1].maxStamina, cg->spar.match.chowaData[CG_P1].stamina,
                         1 * (PADDING + STAT_BAR_WIDTH) + PADDING, STAT_BAR_BASE, c550, 1);
     // Draw Readiness bar
-    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowaData[CG_P1].readiness, 2 * (PADDING + STAT_BAR_WIDTH) + PADDING,
-                        STAT_BAR_BASE, c050, -1);
+    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowaData[CG_P1].readiness,
+                        2 * (PADDING + STAT_BAR_WIDTH) + PADDING, STAT_BAR_BASE, c050, -1);
 
     switch (cg->spar.match.chowaData[CG_P1].currState)
     {
@@ -407,8 +409,8 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
 
     // Player 2
     // Draw health bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P2].maxHP, cg->spar.match.chowaData[CG_P2].HP, TFT_WIDTH - PADDING,
-                        STAT_BAR_BASE, c500, 3);
+    cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P2].maxHP, cg->spar.match.chowaData[CG_P2].HP,
+                        TFT_WIDTH - PADDING, STAT_BAR_BASE, c500, 3);
     // Draw stamina bar
     cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P2].maxStamina, cg->spar.match.chowaData[CG_P2].stamina,
                         TFT_WIDTH - (1 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c550, 1);

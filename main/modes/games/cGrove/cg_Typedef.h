@@ -407,7 +407,11 @@ typedef struct
 
     // State
     cgMainState_t state; ///< Main mode state
-    bool loaded;         ///< if the state has already been loaded
+    bool unload;         ///< if the state is ready to unload
+
+    // Menu
+    menu_t* menu;                  ///< Main menu
+    menuManiaRenderer_t* renderer; ///< Menu renderer
 
     // Settings
     bool touch;  ///< Touch controls for Grove

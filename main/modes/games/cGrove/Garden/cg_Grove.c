@@ -75,7 +75,7 @@ void cg_initGrove(cGrove_t* cg)
     // Load assets
     // WSGs
     loadWsg("garden_background.wsg", &cg->grove.groveBG, true);
-    
+
     // Cursors
     cg->grove.cursors = calloc(ARRAY_SIZE(groveCursorSprites), sizeof(wsg_t));
     for (int32_t idx = 0; idx < ARRAY_SIZE(groveCursorSprites); idx++)
@@ -97,21 +97,21 @@ void cg_initGrove(cGrove_t* cg)
     cg->grove.holdingChowa  = false;
     cg->grove.holdingItem   = false;
 
-   /*  
+    /*
 
-    // Initialize the items
-    vec_t pos;
-    pos.x = 64;
-    pos.y = 64;
-    // cgInitItem(cg, 0, "Ball", cg->items[0], pos);
-    
-    
-    */
+     // Initialize the items
+     vec_t pos;
+     pos.x = 64;
+     pos.y = 64;
+     // cgInitItem(cg, 0, "Ball", cg->items[0], pos);
+
+
+     */
 }
 
 /**
  * @brief Destroys the grove data
- * 
+ *
  * @param cg Game Data
  */
 void cg_deInitGrove(cGrove_t* cg)
