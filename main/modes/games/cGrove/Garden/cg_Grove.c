@@ -13,9 +13,123 @@
 // Includes
 //==============================================================================
 
-#include "cg_Garden.h"
+#include "cg_Grove.h"
 #include "cg_Field.h"
 #include "cg_Items.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define CG_CURSOR_SPEED 16
+
+//==============================================================================
+// Function Declarations
+//==============================================================================
+
+/**
+ * @brief Draws the hand at the appropriate position
+ *
+ * @param cg Game object
+ */
+static void _cgDrawHand(cGrove_t* cg);
+
+/**
+ * @brief Attempts to grab objects. Due to total amount being limited, no need to optimize
+ *
+ * @param cg Game Object
+ */
+static void _cgAttemptGrab(cGrove_t* cg);
+
+/**
+ * @brief Input handling for garden
+ *
+ * @param cg Game Object
+ */
+static void _cgHandleInputGarden(cGrove_t* cg);
+
+//==============================================================================
+// Functions
+//==============================================================================
+
+/**
+ * @brief Initialize the Garden mode
+ *
+ * @param cg Game Object
+ */
+void cg_initGrove(cGrove_t* cg)
+{
+    // Initialize the cursor
+    cg->garden.cursorAABB.height = 32;
+    cg->garden.cursorAABB.width  = 32;
+    cg->garden.cursorAABB.pos.x  = 32;
+    cg->garden.cursorAABB.pos.y  = 32;
+    cg->garden.holdingChowa      = false;
+    cg->garden.holdingItem       = false;
+
+    // Initialize the items
+    vec_t pos;
+    pos.x = 64;
+    pos.y = 64;
+    //cgInitItem(cg, 0, "Ball", cg->items[0], pos);
+
+    // Initialize the field
+    cgInitField(cg);
+}
+
+void cg_deInitGrove()
+{
+
+}
+
+/**
+ * @brief Main loop ofr Garden mode
+ *
+ * @param cg Game Object
+ */
+void cg_runGrove(cGrove_t* cg)
+{
+    // Input
+    _cgHandleInputGarden(cg);
+
+    // Garden Logic
+    if (cg->garden.holdingItem)
+    {
+        cg->garden.heldItem->aabb.pos = addVec2d(cg->garden.cursorAABB.pos, cg->garden.field.cam.aabb.pos);
+    }
+    if (cg->garden.holdingChowa)
+    {
+        cg->garden.heldChowa->aabb.pos = addVec2d(cg->garden.cursorAABB.pos, cg->garden.field.cam.aabb.pos);
+    }
+
+    // TODO: Chowa AI
+    // - Wander
+    // - Chase ball
+    // - struggle in grip
+
+    // Draw
+    // Field
+    cgDrawField(cg);
+    // Items
+    for (int8_t item = 0; item < CG_FIELD_ITEM_LIMIT; item++)
+    {
+        if (cg->garden.items[item].active)
+        {
+            cgDrawItem(cg, item);
+        }
+    }
+    // Chowa
+    // vec_t cam = {.x = -cg->garden.field.cam.aabb.pos.x, .y = -cg->garden.field.cam.aabb.pos.y};
+    for (int8_t c = 0; c < CG_FIELD_ITEM_LIMIT; c++)
+    {
+        if (cg->chowa[c].active)
+        {
+            // cgDrawChowa(cg, c, cam);
+        }
+    }
+    // Hand
+    _cgDrawHand(cg);
+}
 
 //==============================================================================
 // Static functions
@@ -28,7 +142,7 @@
  */
 static void _cgDrawHand(cGrove_t* cg)
 {
-    drawWsgSimple(&cg->cursors[0], cg->garden.cursorAABB.pos.x, cg->garden.cursorAABB.pos.y);
+    //drawWsgSimple(&cg->cursors[0], cg->garden.cursorAABB.pos.x, cg->garden.cursorAABB.pos.y);
 }
 
 /**
@@ -175,72 +289,4 @@ static void _cgHandleInputGarden(cGrove_t* cg)
         cgMoveCamera(cg, 0, CG_CURSOR_SPEED);
         cg->garden.cursorAABB.pos.y = TFT_HEIGHT - (CG_FIELD_BOUNDARY + cg->garden.cursorAABB.height);
     }
-}
-
-//==============================================================================
-// Functions
-//==============================================================================
-
-void cgInitGarden(cGrove_t* cg)
-{
-    // Initialize the cursor
-    cg->garden.cursorAABB.height = 32;
-    cg->garden.cursorAABB.width  = 32;
-    cg->garden.cursorAABB.pos.x  = 32;
-    cg->garden.cursorAABB.pos.y  = 32;
-    cg->garden.holdingChowa      = false;
-    cg->garden.holdingItem       = false;
-
-    // Initialize the items
-    vec_t pos;
-    pos.x = 64;
-    pos.y = 64;
-    cgInitItem(cg, 0, "Ball", cg->items[0], pos);
-
-    // Initialize the field
-    cgInitField(cg);
-}
-
-void cgRunGarden(cGrove_t* cg)
-{
-    // Input
-    _cgHandleInputGarden(cg);
-
-    // Garden Logic
-    if (cg->garden.holdingItem)
-    {
-        cg->garden.heldItem->aabb.pos = addVec2d(cg->garden.cursorAABB.pos, cg->garden.field.cam.aabb.pos);
-    }
-    if (cg->garden.holdingChowa)
-    {
-        cg->garden.heldChowa->aabb.pos = addVec2d(cg->garden.cursorAABB.pos, cg->garden.field.cam.aabb.pos);
-    }
-
-    // TODO: Chowa AI
-    // - Wander
-    // - Chase ball
-    // - struggle in grip
-
-    // Draw
-    // Field
-    cgDrawField(cg);
-    // Items
-    for (int8_t item = 0; item < CG_FIELD_ITEM_LIMIT; item++)
-    {
-        if (cg->garden.items[item].active)
-        {
-            cgDrawItem(cg, item);
-        }
-    }
-    // Chowa
-    // vec_t cam = {.x = -cg->garden.field.cam.aabb.pos.x, .y = -cg->garden.field.cam.aabb.pos.y};
-    for (int8_t c = 0; c < CG_FIELD_ITEM_LIMIT; c++)
-    {
-        if (cg->chowa[c].active)
-        {
-            // cgDrawChowa(cg, c, cam);
-        }
-    }
-    // Hand
-    _cgDrawHand(cg);
 }

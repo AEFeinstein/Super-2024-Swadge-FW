@@ -15,7 +15,7 @@
 
 #include "mode_cGrove.h"
 #include "cg_Chowa.h"
-#include "cg_Garden.h"
+#include "cg_Grove.h"
 #include "cg_Spar.h"
 
 //==============================================================================
@@ -37,10 +37,12 @@ static const char cGroveTitle[] = "Chowa Grove"; // Game title
 static void cGroveEnterMode(void);
 static void cGroveExitMode(void);
 static void cGroveMainLoop(int64_t elapsedUs);
+static void cg_loadMode(void);
 
 //==============================================================================
 // Variables
 //==============================================================================
+
 swadgeMode_t cGroveMode = {
     .modeName                 = cGroveTitle,
     .wifiMode                 = ESP_NOW,
@@ -59,7 +61,7 @@ swadgeMode_t cGroveMode = {
     .fnDacCb                  = NULL,
 };
 
-static cGrove_t* grove = NULL;
+static cGrove_t* cg = NULL;
 
 //==============================================================================
 // Functions
@@ -68,69 +70,56 @@ static cGrove_t* grove = NULL;
 static void cGroveEnterMode(void)
 {
     // Mode memory allocation
-    grove = calloc(1, sizeof(cGrove_t));
+    cg = calloc(1, sizeof(cGrove_t));
     setFrameRateUs(CG_FRAMERATE);
 
     // Load a font
-    loadFont("ibm_vga8.font", &grove->menuFont, false);
-
-    // Load images
-    // Static objects
-    loadWsg("cgBigBoulder.wsg", &grove->gardenSpr[0], true);
-    // Cursors
-    loadWsg("cgHandCursor.wsg", &grove->cursors[0], true);
-    // Items
-    loadWsg("cgBall.wsg", &grove->items[0], true);
-    // Chowa expressions
-    loadWsg("cgChowaNeutral.wsg", &grove->chowaExpressions[CG_NEUTRAL], true);
-    loadWsg("cgChowaHappy.wsg", &grove->chowaExpressions[CG_HAPPY], true);
-    loadWsg("cgChowaWorried.wsg", &grove->chowaExpressions[CG_WORRIED], true);
+    loadFont("ibm_vga8.font", &cg->menuFont, false);
 
     // Init
-    // FIXME: Load and unload when switching to and from a mode
-    cgInitGarden(grove);
-    cg_initSpar(grove);
-
-    grove->state = CG_SPAR;
+    cg->state = CG_SPAR; // FIXME: Load into main menu
 }
 
 static void cGroveExitMode(void)
 {
     // Unload sub modes
-    cg_deInitSpar();
-
-    // WSGs
-    for (int8_t i = 0; i < CG_CHOWA_EXPRESSION_COUNT; i++)
+    switch (cg->state)
     {
-        freeWsg(&grove->chowaExpressions[i]);
-    }
-    for (int8_t i = 0; i < CG_GARDEN_CURSORS; i++)
-    {
-        freeWsg(&grove->cursors[i]);
-    }
-    for (int8_t i = 0; i < CG_GARDEN_ITEMS_COUNT; i++)
-    {
-        freeWsg(&grove->items[i]);
-    }
-    for (int8_t i = 0; i < CG_GARDEN_STATIC_OBJECTS; i++)
-    {
-        freeWsg(&grove->gardenSpr[i]);
+        case CG_SPAR:
+        {   
+            cg_deInitSpar();
+            break;
+        }
+        case CG_GROVE:
+        {   
+            cg_deInitGrove();
+            break;
+        }
+        default:
+        {
+            break;
+        }
     }
 
     // Fonts
-    freeFont(&grove->menuFont);
+    freeFont(&cg->menuFont);
+
     // Main
-    free(grove);
+    free(cg);
 }
 
 static void cGroveMainLoop(int64_t elapsedUs)
 {
-    switch (grove->state)
+    if (!cg->loaded)
+    {
+        cg_loadMode();
+    }
+
+    switch (cg->state)
     {
         case CG_MAIN_MENU:
         {
             // Menu
-            grove->state = CG_SPAR;
             break;
         }
         case CG_GROVE:
@@ -158,4 +147,30 @@ static void cGroveMainLoop(int64_t elapsedUs)
             break;
         }
     }
+}
+
+/**
+ * @brief Loads the appropriate WSGs, sounds etc for the current mode.
+ * 
+ */
+static void cg_loadMode()
+{
+    switch (cg->state)
+    {
+        case CG_SPAR:
+        {   
+            cg_initSpar(cg);
+            break;
+        }
+        case CG_GROVE:
+        {   
+            cg_initGrove(cg);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    cg->loaded = true;
 }

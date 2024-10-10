@@ -415,20 +415,14 @@ typedef struct
     // ========================================================================
     // Fonts
     font_t menuFont; ///< Main font
-    // Sprites
-    // TODO: move into garden
-    // FIXME: DO the dynamic system
-    wsg_t gardenSpr[CG_GARDEN_STATIC_OBJECTS];
-    wsg_t cursors[CG_GARDEN_CURSORS];
-    wsg_t items[CG_GARDEN_ITEMS_COUNT];
-    wsg_t chowaExpressions[CG_CHOWA_EXPRESSION_COUNT];
 
     // Modes
     cgGarden_t garden; ///< Garden data
-    cgSpar_t spar;     ///< Spar date
+    cgSpar_t spar;     ///< Spar data
 
     // State
     cgMainState_t state; ///< Main mode state
+    bool loaded; ///< if the state has already been loaded
 
     // Settings
     bool touch;  ///< Touch controls active

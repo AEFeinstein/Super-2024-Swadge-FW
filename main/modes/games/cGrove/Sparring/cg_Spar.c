@@ -161,7 +161,12 @@ void cg_runSpar(int64_t elapsedUs)
             }
             break;
         }
-        // TODO: Add match prep case
+        case CG_MATCH_PREP:
+        {
+            // TODO: Match preview
+            // Show the matchup, then handle countdown
+            break;
+        }
         case CG_SPAR_MATCH:
         {
             cg_runSparMatch(cg, elapsedUs);
@@ -170,6 +175,7 @@ void cg_runSpar(int64_t elapsedUs)
         }
         case CG_SPAR_MATCH_RESULTS:
         {
+            // TODO: Show match results, save to Swadge
             // Show the final results
             break;
         }
@@ -272,7 +278,6 @@ static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == sparMenuNames[4])
         {
             // Go to main menu
-            // TODO: see if I can load and unload without crashing
             cg->state      = CG_MAIN_MENU;
             cg->spar.state = CG_SPAR_SPLASH;
         }

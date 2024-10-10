@@ -17,25 +17,11 @@
 #include "cg_Typedef.h"
 
 //==============================================================================
-// Defines
-//==============================================================================
-
-#define CG_CURSOR_SPEED 16
-
-//==============================================================================
 // Function declarations
 //==============================================================================
 
-/**
- * @brief Initialize the Garden mode
- *
- * @param cg Game Object
- */
-void cgInitGarden(cGrove_t* cg);
+void cg_initGrove(cGrove_t* cg);
 
-/**
- * @brief Main loop ofr Garden mode
- *
- * @param cg Game Object
- */
-void cgRunGarden(cGrove_t* cg);
+void cg_deInitGrove(void);
+
+void cg_runGrove(cGrove_t* cg);

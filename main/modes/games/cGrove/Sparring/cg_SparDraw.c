@@ -131,7 +131,7 @@ void cg_drawSparRecord(cGrove_t* cg)
              24);
 
     // Round number and arrows
-    char buffer[20];
+    char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "Round %d", cg->spar.roundSelect);
     drawWsgSimple(&cg->spar.arrow, (TFT_WIDTH - cg->spar.arrow.w) / 2, 40);
     drawText(&cg->spar.sparRegFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2, 60);

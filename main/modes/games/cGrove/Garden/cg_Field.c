@@ -75,8 +75,8 @@ void cgInitField(cGrove_t* cg)
     cg->garden.field.cam.aabb.pos.y  = 32;
 
     // Init objects
-    _cgInitObject(cg, cg->gardenSpr[0], 108, 88, 0);
-    _cgInitObject(cg, cg->gardenSpr[0], 280, 240, 1);
+    /* _cgInitObject(cg, cg->gardenSpr[0], 108, 88, 0);
+    _cgInitObject(cg, cg->gardenSpr[0], 280, 240, 1); */
 }
 
 void cgMoveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange)
