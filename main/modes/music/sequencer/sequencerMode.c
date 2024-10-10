@@ -8,26 +8,32 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 
 static void sequencerMenuCb(const char*, bool selected, uint32_t settingVal);
 
-static const char sequencerName[]  = "Sequencer";
-static const char sequencerMenu1[] = "Menu 1";
-static const char sequencerMenu2[] = "Menu 2";
-static const char sequencerMenu3[] = "Menu 3";
-static const char sequencerMenu4[] = "Menu 4";
-static const char sequencerMenu5[] = "Menu 5";
-static const char sequencerMenu6[] = "Menu 6";
-static const char sequencerMenu7[] = "Menu 7";
-static const char sequencerMenu8[] = "Menu 8";
-
-static const char opt1[]                 = "opt1";
-static const char opt2[]                 = "opt2";
-static const char opt3[]                 = "opt3";
-static const char opt4[]                 = "opt4";
-static const char* const sequencerOpts[] = {opt1, opt2, opt3, opt4};
-
-static const char sequencerSubMenu1[] = "SubMenu1";
-static const char sequencerSubMenu2[] = "SubMenu2";
+static const char sequencerName[] = "Sequencer";
 
 static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+
+static const char str_noteOptions[] = "Note Options";
+
+static const char str_songOptions[] = "Song Options";
+
+static const char str_songTempo[] = "Tempo: ";
+static const char* tempoLabels[]
+    = {"60",  "70",  "80",  "90",  "100", "110", "120", "130", "140", "150", "160", "170", "180",
+       "190", "200", "210", "220", "230", "240", "250", "260", "270", "280", "290", "300"};
+static const int32_t tempoVals[] = {60,  70,  80,  90,  100, 110, 120, 130, 140, 150, 160, 170, 180,
+                                    190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300};
+
+static const char str_songGrid[] = "Grid Lines: ";
+static const char* gridLabels[]  = {"1/1", "1/2", "1/4", "1/8", "1/16", "1/32"};
+static const int32_t gridVals[]  = {1, 2, 4, 8, 16, 32};
+
+static const char str_songTimeSig[] = "Time Signature: ";
+static const char* timeSigLabels[]  = {"2/4", "3/4", "4/4", "5/4"};
+static const int32_t timeSigVals[]  = {2, 3, 4, 5};
+
+static const char str_songLength[]    = "Length: ";
+static const char* songLengthLabels[] = {"1 bar", "2 bars"};
+static const int32_t songLengthVals[] = {1, 2};
 
 swadgeMode_t sequencerMode = {
     .modeName                 = sequencerName,
@@ -65,23 +71,39 @@ static void sequencerEnterMode(void)
     loadFont("ibm_vga8.font", &dv->ibm, false);
 
     dv->menu = initMenu(sequencerName, sequencerMenuCb);
-    addSingleItemToMenu(dv->menu, sequencerMenu1);
-    addSingleItemToMenu(dv->menu, sequencerMenu2);
 
-    dv->menu = startSubMenu(dv->menu, sequencerSubMenu1);
-    addSingleItemToMenu(dv->menu, sequencerMenu7);
-
-    dv->menu = startSubMenu(dv->menu, sequencerSubMenu2);
-    addSingleItemToMenu(dv->menu, sequencerMenu8);
+    dv->menu = startSubMenu(dv->menu, str_noteOptions);
     dv->menu = endSubMenu(dv->menu);
 
-    dv->menu = endSubMenu(dv->menu);
+    dv->menu                = startSubMenu(dv->menu, str_songOptions);
+    settingParam_t sp_tempo = {
+        .min = tempoVals[0],
+        .max = tempoVals[ARRAY_SIZE(tempoVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(dv->menu, str_songTempo, tempoLabels, tempoVals, ARRAY_SIZE(tempoVals), &sp_tempo,
+                                 120);
 
-    addSingleItemToMenu(dv->menu, sequencerMenu3);
-    addSingleItemToMenu(dv->menu, sequencerMenu4);
-    addMultiItemToMenu(dv->menu, sequencerOpts, ARRAY_SIZE(sequencerOpts), 0);
-    addSingleItemToMenu(dv->menu, sequencerMenu5);
-    addSingleItemToMenu(dv->menu, sequencerMenu6);
+    settingParam_t sp_grid = {
+        .min = gridVals[0],
+        .max = gridVals[ARRAY_SIZE(gridVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(dv->menu, str_songGrid, gridLabels, gridVals, ARRAY_SIZE(gridVals), &sp_grid, 4);
+
+    settingParam_t sp_timeSig = {
+        .min = timeSigVals[0],
+        .max = timeSigVals[ARRAY_SIZE(timeSigVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(dv->menu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
+                                 &sp_timeSig, 4);
+
+    settingParam_t sp_songLength = {
+        .min = songLengthVals[0],
+        .max = songLengthVals[ARRAY_SIZE(songLengthVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(dv->menu, str_songLength, songLengthLabels, songLengthVals, ARRAY_SIZE(songLengthVals),
+                                 &sp_songLength, 1);
+
+    dv->menu = endSubMenu(dv->menu);
 
     dv->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
 }
@@ -112,10 +134,12 @@ static void sequencerMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        // dv->menu = menuButton(dv->menu, evt);
+        dv->menu = menuButton(dv->menu, evt);
     }
 
-    // drawMenuMania(dv->menu, dv->renderer, elapsedUs);
+    drawMenuMania(dv->menu, dv->renderer, elapsedUs);
+
+    return;
 
 #define KEY_MARGIN 2
 
