@@ -197,16 +197,16 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                 int16_t yOff = (currentEntity->pos.y >> DECIMAL_BITS)
                                - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
 
-                uint8_t brightness = 0;
+                uint8_t brightness = 5;
                 if (currentEntity->pos.y > 0)
                 {
                     if (currentEntity->pos.y > 2560)
                     {
-                        brightness = 5;
+                        brightness = 0;
                     }
                     else
                     {
-                        brightness = currentEntity->pos.y / 512;
+                        brightness = (2560 - currentEntity->pos.y) / 512;
                     }
                 }
 
