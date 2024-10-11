@@ -34,6 +34,11 @@ typedef struct
     int32_t cellWidth;
     int32_t rowHeight;
 
+    // Scrolling
+    bool isPlaying;
+    int32_t usPerPx;
+    int32_t scrollTimer;
+
     // Song parameters
     int32_t usPerBeat;
     int32_t numBars;
