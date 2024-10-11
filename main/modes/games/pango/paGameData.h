@@ -76,6 +76,6 @@ void pa_updateLedsShowHighScores(paGameData_t* gameData);
 void pa_updateLedsLevelClear(paGameData_t* gameData);
 void pa_updateLedsGameClear(paGameData_t* gameData);
 void pa_updateLedsGameOver(paGameData_t* gameData);
-void pa_setDifficultyLevel(paGameData_t* gameData, uint16_t levelIndex);
+
 
 #endif

@@ -148,6 +148,7 @@ void pangoChangeStateMainMenu(pango_t* self);
 static void pa_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 void drawPangoLogo(font_t* font, int16_t x, int16_t y);
 uint16_t pa_getLevelClearBonus(int16_t elapsedTime);
+void pa_setDifficultyLevel(paWsgManager_t* wsgManager, paGameData_t* gameData, uint16_t levelIndex);
 
 //==============================================================================
 // Variables
@@ -289,6 +290,7 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
             pango->gameData.level              = 1;
             pango->entityManager.activeEnemies = 0;
             pa_initializeGameDataFromTitleScreen(&(pango->gameData), 0);
+            pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), 1);
             pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
             pa_generateMaze(&(pango->tilemap));
             pa_placeEnemySpawns(&(pango->tilemap));
@@ -300,6 +302,7 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             pango->gameData.level = settingVal;
             pa_initializeGameDataFromTitleScreen(&(pango->gameData), settingVal);
+            pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), settingVal);
             pango->entityManager.activeEnemies = 0;
             pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
             pa_generateMaze(&(pango->tilemap));
@@ -986,7 +989,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
                     self->unlockables.maxLevelIndexUnlocked = self->gameData.level;
                 }
 
-                pa_setDifficultyLevel(&(pango->gameData), self->gameData.level);
+                pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), self->gameData.level);
                 pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
                 pa_generateMaze(&(pango->tilemap));
                 pa_placeEnemySpawns(&(pango->tilemap));
@@ -1419,4 +1422,18 @@ uint16_t pa_getLevelClearBonus(int16_t elapsedTime)
         default:
             return 0;
     }
+}
+
+void pa_setDifficultyLevel(paWsgManager_t* wsgManager, paGameData_t* gameData, uint16_t levelIndex)
+{
+    gameData->remainingEnemies
+        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + TOTAL_ENEMIES_LOOKUP_OFFSET];
+    gameData->maxActiveEnemies
+        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET];
+    gameData->enemyInitialSpeed
+        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_INITIAL_SPEED_LOOKUP_OFFSET];
+    gameData->minAggroEnemies = 1;
+    gameData->maxAggroEnemies = 1;
+
+    pa_remapBlockTile(wsgManager, masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + BLOCK_WSG_LOOKUP_OFFSET]);
 }

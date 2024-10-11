@@ -5,6 +5,7 @@
 // Includes
 //==============================================================================
 #include <stdlib.h>
+#include "pango_typedef.h"
 
 //==============================================================================
 // Look Up Tables
@@ -65,31 +66,32 @@ static const int16_t masterDifficulty2[MASTER_DIFFICULTY2_TABLE_LENGTH * MASTER_
 
 #define MASTER_DIFFICULTY_TABLE_LENGTH 16
 
-#define TOTAL_ENEMIES_LOOKUP_OFFSET        0
-#define MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET   1
-#define ENEMY_INITIAL_SPEED_LOOKUP_OFFSET  2
-#define MASTER_DIFFICULTY_TABLE_ROW_LENGTH 3
+#define BLOCK_WSG_LOOKUP_OFFSET            0
+#define TOTAL_ENEMIES_LOOKUP_OFFSET        1
+#define MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET   2
+#define ENEMY_INITIAL_SPEED_LOOKUP_OFFSET  3
+#define MASTER_DIFFICULTY_TABLE_ROW_LENGTH 4
 
 static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DIFFICULTY_TABLE_ROW_LENGTH] = {
 
-    // Total    max            min    max
-    // enemies, active, speed, aggro, aggro,
-             5,       2,   12, 
-    5, 3, 12, 
-    6, 3, 13, 
-    7, 4, 10,
-    8, 3, 13, 
-    8, 3, 14, 
-    8, 3, 15, 
-    7, 2, 16,
-    8, 3, 15, 
-    8, 3, 16, 
-    9, 3, 16, 
-    8, 4, 12, 
-    9, 3, 16, 
-    8, 3, 17, 
-    10, 4, 14, 
-    12, 1, 18,
+    //          Block  Total    max            min    max
+    //            wsg, enemies, active, speed, aggro, aggro,
+    PA_WSG_BLOCK_BLUE,       5,       2,   12, 
+    PA_WSG_BLOCK_RED, 5,       3,   12, 
+    PA_WSG_BLOCK_YELLOW, 6,       3,   13, 
+    PA_WSG_BLOCK_MAGENTA,         7,       4,   10,
+    PA_WSG_BLOCK_BLUE,         8,       3,   13, 
+    PA_WSG_BLOCK_BLUE,        8,       3,   14, 
+    PA_WSG_BLOCK_BLUE,         8,       3,   15, 
+    PA_WSG_BLOCK_BLUE,         7,       2,   16,
+    PA_WSG_BLOCK_BLUE,         8,       3,   15, 
+    PA_WSG_BLOCK_BLUE,         8,       3,   16, 
+    PA_WSG_BLOCK_BLUE,         9,       3,   16, 
+    PA_WSG_BLOCK_BLUE,         8,       4,   12, 
+    PA_WSG_BLOCK_BLUE,         9,       3,   16, 
+    PA_WSG_BLOCK_BLUE,         8,       3,   17, 
+    PA_WSG_BLOCK_BLUE,        10,       4,   14, 
+    PA_WSG_BLOCK_BLUE,        12,       1,   18,
 };
 
 static const paletteColor_t greenColors[4]  = {c555, c051, c030, c051};
