@@ -597,7 +597,7 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
 
 void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
 {
-    //pa_drawTileMap(&(pango->tilemap));
+    pa_drawTileMap(&(pango->tilemap));
 
     drawPangoLogo(font, 100, 32);
 
@@ -917,6 +917,7 @@ void changeStateTitleScreen(pango_t* self)
 {
     self->gameData.frameCount = 0;
     self->gameData.gameState  = PA_ST_TITLE_SCREEN;
+    pa_remapBlockTile(&(pango->wsgManager), PA_WSG_BONUS_BLOCK_0);
     self->update              = &updateTitleScreen;
 }
 
