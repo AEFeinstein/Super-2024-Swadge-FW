@@ -1,5 +1,14 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "menu.h"
 #include "sequencerMode.h"
+#include "sequencerGrid.h"
+
+//==============================================================================
+// Function Declarations
+//==============================================================================
 
 static void sequencerEnterMode(void);
 static void sequencerExitMode(void);
@@ -8,9 +17,11 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 
 static void sequencerMenuCb(const char*, bool selected, uint32_t settingVal);
 
-static const char sequencerName[] = "Sequencer";
+//==============================================================================
+// Const Variables
+//==============================================================================
 
-static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+static const char sequencerName[] = "Sequencer";
 
 static const char str_noteOptions[] = "Note Options";
 
@@ -24,8 +35,8 @@ static const int32_t tempoVals[] = {60,  70,  80,  90,  100, 110, 120, 130, 140,
                                     190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300};
 
 static const char str_songGrid[] = "Grid Lines: ";
-static const char* gridLabels[]  = {"1/1", "1/2", "1/4", "1/8", "1/16", "1/32"};
-static const int32_t gridVals[]  = {1, 2, 4, 8, 16, 32};
+static const char* gridLabels[]  = {"1/1", "1/2", "1/4", "1/8", "1/16"};
+static const int32_t gridVals[]  = {1, 2, 4, 8, 16};
 
 static const char str_songTimeSig[] = "Time Signature: ";
 static const char* timeSigLabels[]  = {"2/4", "3/4", "4/4", "5/4"};
@@ -34,6 +45,10 @@ static const int32_t timeSigVals[]  = {2, 3, 4, 5};
 static const char str_songLength[]    = "Length: ";
 static const char* songLengthLabels[] = {"1 bar", "2 bars"};
 static const int32_t songLengthVals[] = {1, 2};
+
+static const char str_instrument[]    = "Instrument: ";
+static const char* instrumentLabels[] = {"Piano", "Marimba", "Organ", "Guitar", "Bass", "Violin", "Trumpet", "Sax"};
+static const int32_t instrumentVals[] = {1, 13, 20, 27, 39, 41, 57, 66};
 
 swadgeMode_t sequencerMode = {
     .modeName                 = sequencerName,
@@ -52,14 +67,15 @@ swadgeMode_t sequencerMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-typedef struct
-{
-    font_t ibm;
-    menu_t* menu;
-    menuManiaRenderer_t* renderer;
-} sequencerVars_t;
+//==============================================================================
+// Variables
+//==============================================================================
 
-sequencerVars_t* dv;
+static sequencerVars_t* sv;
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
  * This function is called when this mode is started. It should initialize
@@ -67,45 +83,64 @@ sequencerVars_t* dv;
  */
 static void sequencerEnterMode(void)
 {
-    dv = calloc(1, sizeof(sequencerVars_t));
-    loadFont("ibm_vga8.font", &dv->ibm, false);
+    sv = calloc(1, sizeof(sequencerVars_t));
 
-    dv->menu = initMenu(sequencerName, sequencerMenuCb);
+    sv->screen = SEQUENCER_SEQ;
 
-    dv->menu = startSubMenu(dv->menu, str_noteOptions);
-    dv->menu = endSubMenu(dv->menu);
+    loadFont("ibm_vga8.font", &sv->ibm, false);
 
-    dv->menu                = startSubMenu(dv->menu, str_songOptions);
+    sv->menu = initMenu(sequencerName, sequencerMenuCb);
+
+    sv->menu = startSubMenu(sv->menu, str_noteOptions);
+
+    settingParam_t sp_instrument = {
+        .min = instrumentVals[0],
+        .max = instrumentVals[ARRAY_SIZE(instrumentVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(sv->menu, str_instrument, instrumentLabels, instrumentVals, ARRAY_SIZE(instrumentVals),
+                                 &sp_instrument, 1);
+
+    sv->menu = endSubMenu(sv->menu);
+
+    sv->menu = startSubMenu(sv->menu, str_songOptions);
+
     settingParam_t sp_tempo = {
         .min = tempoVals[0],
         .max = tempoVals[ARRAY_SIZE(tempoVals) - 1],
     };
-    addSettingsOptionsItemToMenu(dv->menu, str_songTempo, tempoLabels, tempoVals, ARRAY_SIZE(tempoVals), &sp_tempo,
+    addSettingsOptionsItemToMenu(sv->menu, str_songTempo, tempoLabels, tempoVals, ARRAY_SIZE(tempoVals), &sp_tempo,
                                  120);
 
     settingParam_t sp_grid = {
         .min = gridVals[0],
         .max = gridVals[ARRAY_SIZE(gridVals) - 1],
     };
-    addSettingsOptionsItemToMenu(dv->menu, str_songGrid, gridLabels, gridVals, ARRAY_SIZE(gridVals), &sp_grid, 4);
+    addSettingsOptionsItemToMenu(sv->menu, str_songGrid, gridLabels, gridVals, ARRAY_SIZE(gridVals), &sp_grid, 4);
 
     settingParam_t sp_timeSig = {
         .min = timeSigVals[0],
         .max = timeSigVals[ARRAY_SIZE(timeSigVals) - 1],
     };
-    addSettingsOptionsItemToMenu(dv->menu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
+    addSettingsOptionsItemToMenu(sv->menu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
                                  &sp_timeSig, 4);
 
     settingParam_t sp_songLength = {
         .min = songLengthVals[0],
         .max = songLengthVals[ARRAY_SIZE(songLengthVals) - 1],
     };
-    addSettingsOptionsItemToMenu(dv->menu, str_songLength, songLengthLabels, songLengthVals, ARRAY_SIZE(songLengthVals),
+    addSettingsOptionsItemToMenu(sv->menu, str_songLength, songLengthLabels, songLengthVals, ARRAY_SIZE(songLengthVals),
                                  &sp_songLength, 1);
 
-    dv->menu = endSubMenu(dv->menu);
+    sv->menu = endSubMenu(sv->menu);
 
-    dv->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    sv->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+
+    sv->usPerBeat = 500000; // 120bpm
+    sv->numBars   = 2;      // 2 bar song
+    sv->timeSig   = 4;      // 4/4 time
+    sv->gridSize  = 4;      // Grid at quarter notes
+
+    measureSequencerGrid(sv);
 }
 
 /**
@@ -113,10 +148,10 @@ static void sequencerEnterMode(void)
  */
 static void sequencerExitMode(void)
 {
-    freeFont(&dv->ibm);
-    deinitMenuManiaRenderer(dv->renderer);
-    deinitMenu(dv->menu);
-    free(dv);
+    freeFont(&sv->ibm);
+    deinitMenuManiaRenderer(sv->renderer);
+    deinitMenu(sv->menu);
+    free(sv);
 }
 
 /**
@@ -134,63 +169,34 @@ static void sequencerMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        dv->menu = menuButton(dv->menu, evt);
+        switch (sv->screen)
+        {
+            case SEQUENCER_MENU:
+            {
+                sv->menu = menuButton(sv->menu, evt);
+                break;
+            }
+            case SEQUENCER_SEQ:
+            {
+                sequencerGridButton(sv, &evt);
+                break;
+            }
+        }
     }
 
-    drawMenuMania(dv->menu, dv->renderer, elapsedUs);
-
-    return;
-
-#define KEY_MARGIN 2
-
-    int32_t keyWidth = textWidth(&dv->ibm, "C#7") + (2 * KEY_MARGIN);
-
-    int32_t kIdx = 0;
-    int32_t kNum = 8;
-    int32_t yOff = 3;
-    while (yOff < TFT_HEIGHT)
+    switch (sv->screen)
     {
-        char tmp[8];
-        snprintf(tmp, sizeof(tmp) - 1, "%s%d", keys[kIdx], kNum);
-        if (0 == kIdx)
+        case SEQUENCER_MENU:
         {
-            kIdx = ARRAY_SIZE(keys) - 1;
-            kNum--;
+            drawMenuMania(sv->menu, sv->renderer, elapsedUs);
+            break;
         }
-        else
+        case SEQUENCER_SEQ:
         {
-            kIdx--;
+            // TODO
+            drawSequencerGrid(sv, elapsedUs);
+            break;
         }
-
-        paletteColor_t bgColor   = c555;
-        paletteColor_t textColor = c000;
-        if ('#' == tmp[1])
-        {
-            bgColor   = c000;
-            textColor = c555;
-        }
-
-        fillDisplayArea(0, yOff - KEY_MARGIN, keyWidth, yOff + dv->ibm.height + KEY_MARGIN, bgColor);
-
-        drawText(&dv->ibm, textColor, tmp, KEY_MARGIN, yOff);
-        yOff += dv->ibm.height;
-        yOff += KEY_MARGIN;
-        drawLineFast(0, yOff, TFT_WIDTH, yOff, c222);
-        yOff += KEY_MARGIN + 1;
-    }
-
-    int32_t xOff = keyWidth;
-    int32_t lIdx = 0;
-    while (xOff < TFT_WIDTH)
-    {
-        paletteColor_t lineColor = c222;
-        if (0 == lIdx % 4)
-        {
-            lineColor = c333;
-        }
-        drawLineFast(xOff, 0, xOff, TFT_HEIGHT, lineColor);
-        xOff += keyWidth;
-        lIdx++;
     }
 }
 
