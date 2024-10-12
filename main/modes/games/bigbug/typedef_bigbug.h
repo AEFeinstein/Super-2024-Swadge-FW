@@ -22,11 +22,12 @@ typedef struct bb_entity_t bb_entity_t;
 typedef struct bb_tilemap_t bb_tilemap_t;
 typedef struct bb_hitInfo_t bb_hitInfo_t;
 typedef struct bb_gameData_t bb_gameData_t;
+typedef struct bb_tileInfo_t bb_tileInfo_t;
 
 typedef enum
 {
-    CRUMBLE_ANIM,
-    BUMP_ANIM,        // A particle effect where you bump things
+    CRUMBLE_ANIM,     // A particle effect where garbage crumbles
+    BUMP_ANIM,        // A particle effect where you bump things but they don't crumble
     ROCKET_ANIM,      // A vehicle to enter and depart the level
     FLAME_ANIM,       // A particle effect at the bottom of the rocket
     GARBOTNIK_FLYING, // Frames of garbotnik flying
@@ -43,6 +44,11 @@ typedef enum
     FLY,  // A bug that flies
     ANT,  // A bug that crawls on the midground tile field
 } bb_spriteDef_t;
+
+typedef enum{//The kinds of stuff that may be embedded into a garbage tile.
+    NOTHING_EMBED,
+    EGG_EMBED,
+} bb_embeddable_t;
 
 typedef enum
 {

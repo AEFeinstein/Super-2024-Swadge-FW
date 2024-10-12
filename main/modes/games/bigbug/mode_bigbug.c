@@ -344,10 +344,10 @@ static void bb_UpdateTileSupport(void)
             // remove the first item from the list
             uint32_t* shiftedVal = shift(&bigbug->gameData.unsupported);
             // check that it's still dirt, because a previous pass may have crumbled it.
-            if (bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] > 0)
+            if (bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health > 0)
             {
                 // set it to air
-                bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] = 0;
+                bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
                 // create a crumble animation
                 bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                                 shiftedVal[0] * 32 + 16, shiftedVal[1] * 32 + 16);

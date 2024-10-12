@@ -120,7 +120,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     {
         hfData->yVel -= 160;
         // Update the dirt to air.
-        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] = 0;
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble animation
         bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                         hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
@@ -153,7 +153,7 @@ void bb_updateHeavyFalling(bb_entity_t* self)
     {
         hfData->yVel -= 160;
         // Update the dirt to air.
-        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] = 0;
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble animation
         bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                         hitInfo.tile_i * TILE_SIZE + HALF_TILE, hitInfo.tile_j * TILE_SIZE + HALF_TILE);
@@ -360,11 +360,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         //  push(self->gameData->unsupported, (void*)val);
 
         // Update the dirt by decrementing it.
-        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] -= 1;
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= 1;
 
-        if (self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] == 0
-            || self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] == 1
-            || self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] == 4)
+        if (self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 0
+            || self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 1
+            || self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 4)
         {
             // Create a crumble animation
             bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
@@ -485,7 +485,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                 if (hitInfo.hit == true)
                 {
                     // Update the dirt to air.
-                    self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] = 0;
+                    self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
                     // Create a crumble animation
                     bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                                     hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);

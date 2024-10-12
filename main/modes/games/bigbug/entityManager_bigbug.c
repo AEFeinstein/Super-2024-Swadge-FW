@@ -323,7 +323,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
-        printf("OH NO!\n");
+        printf("Failed entity creation. MAX_ENTITIES exceeded.\n");
         return NULL;
     }
 
@@ -331,7 +331,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
     if (entity == NULL)
     {
-        printf("OH CRAP\n");
+        printf("This should hopefully never happen.\n");
         return NULL;
     }
 
