@@ -142,11 +142,12 @@ static void bb_EnterMode(void)
     bb_initializeTileMap(&(bigbug->gameData.tilemap));
     bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
 
-    bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
     bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000);
     bigbug->gameData.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
+
+    bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
     // Player
     //  bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,

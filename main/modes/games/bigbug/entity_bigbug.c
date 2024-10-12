@@ -190,17 +190,22 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     gData->fire     = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
     if (gData->fire && gData->numHarpoons > 0)
     {
-        gData->numHarpoons -= 1;
+        
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
-        bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
-        int32_t x;
-        int32_t y;
-        getTouchCartesian(gData->phi, gData->r, &x, &y);
-        // Set harpoon's velocity
-        pData->vel.x = (x - 512) / 2;
-        pData->vel.y = (-y + 512) / 2;
+        if(harpoon != NULL)
+        {
+            gData->numHarpoons -= 1;
+            bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
+            int32_t x;
+            int32_t y;
+            getTouchCartesian(gData->phi, gData->r, &x, &y);
+            // Set harpoon's velocity
+            pData->vel.x = (x - 512) / 2;
+            pData->vel.y = (-y + 512) / 2;
+        }
+        
     }
 
     // record the previous frame's position before any logic.
@@ -473,15 +478,18 @@ void bb_updateEggLeaves(bb_entity_t* self)
             // destroy the egg
             bb_destroyEntity(elData->egg, false);
 
-            bb_hitInfo_t hitInfo = {0};
-            bb_collisionCheck(&self->gameData->tilemap, bug, NULL, &hitInfo);
-            if (hitInfo.hit == true)
+            if(bug != NULL)
             {
-                // Update the dirt to air.
-                self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] = 0;
-                // Create a crumble animation
-                bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                                hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
+                bb_hitInfo_t hitInfo = {0};
+                bb_collisionCheck(&self->gameData->tilemap, bug, NULL, &hitInfo);
+                if (hitInfo.hit == true)
+                {
+                    // Update the dirt to air.
+                    self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j] = 0;
+                    // Create a crumble animation
+                    bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                                    hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
+                }
             }
 
             // destroy this
