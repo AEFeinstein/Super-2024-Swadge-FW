@@ -237,6 +237,7 @@ typedef struct soko_abs_s
     sokoLevel_t currentLevel;
 
     //undo ring buffer
+    
     sokoUndoMove_t history[SOKO_UNDO_BUFFER_SIZE];//if >255, change index to uint16.
     uint8_t historyBufferTail;
     uint8_t historyCurrent;

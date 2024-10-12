@@ -380,6 +380,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
         {
             screenMaxX = level->width;
         }
+        
         screenMinY = self->camY - self->camHeight / 2 - 1;
         if (screenMinY < 0)
         {
@@ -1046,6 +1047,10 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
                 break;
             }
         }
+
+        //int32_t data = self->overworld_playerY << 16;
+        //data = data | self->overworld_playerX;
+       // writeNvs32("sk_over_pos",data);
 
         self->loadNewLevelIndex = targetWorldIndex;
         self->loadNewLevelFlag  = false;//load saved data.

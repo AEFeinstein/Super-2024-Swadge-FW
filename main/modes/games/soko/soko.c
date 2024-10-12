@@ -13,9 +13,9 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
 
 // strings
-static const char sokoModeName[]        = "Sokobanabokabon";
-static const char sokoResumeGameLabel[] = "returnitytoit";
-static const char sokoNewGameLabel[]    = "startsyfreshy";
+static const char sokoModeName[]        = "Eulerian";
+static const char sokoResumeGameLabel[] = "Play";
+static const char sokoNewGameLabel[]    = "Also Play";
 
 // create the mode
 swadgeMode_t sokoMode = {
@@ -165,7 +165,14 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (label == sokoNewGameLabel)
         {
-            // load level.
+            // load 
+
+            //set soko->overworld_playerX and playerY from some ... data... store... 
+            //readNvs32("sk_over_pos",&soko->overworld_playerX);
+            //readNvs32("sk_over_pos",&soko->overworld_playerY);
+            //soko->overworld_playerX = soko->overworld_playerY >> 16;
+            //soko->overworld_playerY = soko->overworld_playerX & 0xb1111111111111111;
+
             //we probably shouldn't have a new game option; just an overworld option.
             sokoLoadGameplay(soko,0,true);    
             sokoInitGameBin(soko);

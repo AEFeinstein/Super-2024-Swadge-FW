@@ -15,6 +15,7 @@
 36:sk_e_spiral.bin:
 37:sk_e_steeringwheel.bin:
 38:sk_e_casette.bin:
+100:sk_e_apollo.bin:
 101:sk_e_apollo.bin:
 102:sk_e_waterwheel.bin:
 103:sk_e_feint.bin:
