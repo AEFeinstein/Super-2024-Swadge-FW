@@ -102,7 +102,7 @@ static void sokoEnterMode(void)
     soko->menu              = initMenu(sokoModeName, sokoMenuCb);
     soko->menuManiaRenderer = initMenuManiaRenderer(&soko->ibm, NULL, NULL);
 
-    addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
+    //addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
     addSingleItemToMenu(soko->menu, sokoNewGameLabel);
 
     // Set the mode to menu mode
@@ -166,6 +166,9 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (label == sokoNewGameLabel)
         {
+            // load position in overworld.
+            // soko->soko_player->x = soko->overworld_playerX;
+            // soko->soko_player->y = soko->overworld_playerY;
             // load level.
             // we probably shouldn't have a new game option; just an overworld option.
             sokoLoadGameplay(soko, 0, true);
