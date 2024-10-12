@@ -88,7 +88,7 @@ float fixToFloat(q24_8 fx);
      * @param in The integer to convert to q24_8
      * @return A q24_8
      */
-    #define TO_FX(in) ((in) << FRAC_BITS)
+    #define TO_FX(in) ((in) * (1 << FRAC_BITS))
 
     /**
      * @brief Convert a q24_8 to an integer

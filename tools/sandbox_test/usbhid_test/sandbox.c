@@ -124,7 +124,7 @@ int16_t sandboxAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
 		buffer[1] = 0x55;
 		buffer[2] = 0xaa;
 		buffer[3] = 0x55;
-		return 64;
+		return 254;
 	}
 	else
 	{

@@ -38,21 +38,27 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
     if ((btn & PB_B) && !(input->prevBtnState & PB_B))
     {
         input->restartLevel = true;
-    }else{
+    }
+    else
+    {
         input->restartLevel = false;
     }
 
-    if((btn & PB_A) && !(input->prevBtnState & PB_A))
+    if ((btn & PB_A) && !(input->prevBtnState & PB_A))
     {
         input->undo = true;
-    }else{
+    }
+    else
+    {
         input->undo = false;
     }
 
     if ((btn & PB_START) && !(input->prevBtnState & PB_START))
     {
         input->exitToOverworld = true;
-    }else{
+    }
+    else
+    {
         input->exitToOverworld = false;
     }
 
@@ -117,20 +123,30 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
         switch (input->holdingDir)
         {
             case SKD_RIGHT:
+            {
                 input->playerInputDeltaX = 1;
                 break;
+            }
             case SKD_LEFT:
+            {
                 input->playerInputDeltaX = -1;
                 break;
+            }
             case SKD_UP:
+            {
                 input->playerInputDeltaY = -1;
                 break;
+            }
             case SKD_DOWN:
+            {
                 input->playerInputDeltaY = 1;
                 break;
+            }
             case SKD_NONE:
             default:
+            {
                 break;
+            }
         }
     }
     else
