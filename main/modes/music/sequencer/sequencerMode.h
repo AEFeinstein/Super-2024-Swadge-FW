@@ -22,6 +22,7 @@ typedef struct
     int32_t midiNum;
     int32_t sixteenthOn;
     int32_t sixteenthOff;
+    bool isOn;
 } sequencerNote_t;
 
 typedef struct
@@ -52,7 +53,10 @@ typedef struct
     int32_t timeSig;
     int32_t gridSize;
 
+    // Playing
+    int32_t songTimer;
     list_t notes;
+    list_t midiQueue;
 } sequencerVars_t;
 
 //==============================================================================

@@ -1,8 +1,7 @@
 #include "sequencerGrid.h"
 
-#define NUM_PIANO_KEYS 88
-#define KEY_MARGIN     2
-#define PX_PER_BEAT    16
+#define KEY_MARGIN  2
+#define PX_PER_BEAT 16
 
 static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
@@ -59,7 +58,7 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                     sv->cursorPos.y++;
 
                     // Adjust grid offset to be on screen
-                    while (getCursorScreenPos(sv).y >= (sv->rowHeight * 14)
+                    while (getCursorScreenPos(sv).y >= (TFT_HEIGHT - (2 * sv->rowHeight))
                            && sv->gridOffset.y < (sv->rowHeight) * (NUM_PIANO_KEYS - 16))
                     {
                         // TODO smooth scrolling
@@ -73,18 +72,29 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 if (sv->cursorPos.x)
                 {
                     sv->cursorPos.x--;
-                    // TODO Adjust grid offset to be on screen
-                    // TODO smooth scrolling
+
+                    // Adjust grid offset to be on screen
+                    while (getCursorScreenPos(sv).x < (sv->labelWidth + sv->cellWidth * 2) && sv->gridOffset.x > 0)
+                    {
+                        // TODO smooth scrolling
+                        sv->gridOffset.x -= sv->cellWidth;
+                    }
                 }
                 break;
             }
             case PB_RIGHT:
             {
-                if (sv->cursorPos.x < numCells - 1)
+                if (sv->cursorPos.x < (numCells - 1))
                 {
                     sv->cursorPos.x++;
-                    // TODO Adjust grid offset to be on screen
-                    // TODO smooth scrolling
+
+                    // Adjust grid offset to be on screen
+                    while (getCursorScreenPos(sv).x >= (TFT_WIDTH - (sv->cellWidth * 2))
+                           && sv->gridOffset.x < ((numCells - 2) * sv->cellWidth))
+                    {
+                        // TODO smooth scrolling
+                        sv->gridOffset.x += sv->cellWidth;
+                    }
                 }
                 break;
             }
@@ -139,11 +149,31 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
             }
             case PB_B:
             {
-                // Play / pause
-                sv->isPlaying = !sv->isPlaying;
                 if (sv->isPlaying)
                 {
+                    // If it's playing, stop
+                    sv->isPlaying = false;
+                    midiPause(globalMidiPlayerGet(MIDI_BGM), true);
+
+                    node_t* noteNode = sv->notes.first;
+                    while (noteNode)
+                    {
+                        sequencerNote_t* note = noteNode->val;
+                        note->isOn            = false;
+                        noteNode              = noteNode->next;
+                    }
+                }
+                else if (sv->songTimer)
+                {
+                    // If it's stopped, reset to beginning
+                    sv->songTimer    = 0;
                     sv->gridOffset.x = 0;
+                }
+                else
+                {
+                    // If it's at the beginning, play
+                    sv->isPlaying = true;
+                    midiPause(globalMidiPlayerGet(MIDI_BGM), false);
                 }
                 break;
             }
@@ -186,7 +216,49 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
             sv->gridOffset.x++;
         }
 
-        // TODO check for note on/offs
+        // Check for note on/off
+        sv->songTimer += elapsedUs;
+        node_t* noteNode = sv->notes.first;
+        while (noteNode)
+        {
+            sequencerNote_t* note = noteNode->val;
+            int32_t usOn          = note->sixteenthOn * sv->usPerBeat / 4;
+            int32_t usOff         = note->sixteenthOff * sv->usPerBeat / 4;
+
+            if (usOn > sv->songTimer)
+            {
+                // Note start is past the song timer, stop looping
+                break;
+            }
+            else if (usOn <= sv->songTimer && sv->songTimer <= usOff)
+            {
+                if (!note->isOn)
+                {
+                    note->isOn = true;
+
+                    // Create MIDI on and push it into the queue to be picked up by the callback
+                    midiEvent_t* evt  = calloc(1, sizeof(midiEvent_t));
+                    evt->type         = MIDI_EVENT;
+                    evt->midi.status  = 0x90;
+                    evt->midi.data[0] = note->midiNum;
+                    evt->midi.data[1] = 0x40;
+                    push(&sv->midiQueue, evt);
+                }
+            }
+            else if (note->isOn)
+            {
+                note->isOn = false;
+
+                // Create MIDI off and push it into the queue to be picked up by the callback
+                midiEvent_t* evt  = calloc(1, sizeof(midiEvent_t));
+                evt->type         = MIDI_EVENT;
+                evt->midi.status  = 0x80;
+                evt->midi.data[0] = note->midiNum;
+                evt->midi.data[1] = 0x40;
+                push(&sv->midiQueue, evt);
+            }
+            noteNode = noteNode->next;
+        }
     }
 
     // Draw horizontal grid lines

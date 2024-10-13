@@ -16,6 +16,7 @@ static void sequencerMainLoop(int64_t elapsedUs);
 static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static void sequencerMenuCb(const char*, bool selected, uint32_t settingVal);
+static bool sequencerMidiCb(midiEvent_t* event);
 
 //==============================================================================
 // Const Variables
@@ -136,11 +137,31 @@ static void sequencerEnterMode(void)
     sv->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     sv->usPerBeat = 500000; // 120bpm
-    sv->numBars   = 2;      // 2 bar song
+    sv->numBars   = 8;      // 2 bar song
     sv->timeSig   = 4;      // 4/4 time
     sv->gridSize  = 4;      // Grid at quarter notes
 
     measureSequencerGrid(sv);
+
+    // Init midi
+    initGlobalMidiPlayer();
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    // Configure MIDI for streaming
+    player->mode              = MIDI_STREAMING;
+    player->paused            = true;
+    player->streamingCallback = sequencerMidiCb;
+
+    // Hack to bring the cursor on screen
+    sv->cursorPos.y = NUM_PIANO_KEYS / 2;
+    buttonEvt_t evt = {
+        .down   = true,
+        .button = PB_UP,
+        .state  = PB_UP,
+    };
+    sequencerGridButton(sv, &evt);
+    evt.button = PB_DOWN;
+    evt.state  = PB_DOWN;
+    sequencerGridButton(sv, &evt);
 }
 
 /**
@@ -150,6 +171,11 @@ static void sequencerExitMode(void)
 {
     void* val;
     while ((val = pop(&sv->notes)))
+    {
+        free(val);
+    }
+
+    while ((val = pop(&sv->midiQueue)))
     {
         free(val);
     }
@@ -235,4 +261,24 @@ static void sequencerMenuCb(const char* label, bool selected, uint32_t settingVa
     if (selected)
     {
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param event
+ * @return true
+ * @return false
+ */
+static bool sequencerMidiCb(midiEvent_t* event)
+{
+    // If there is something in the midi queue, pop and return it
+    midiEvent_t* qEvt;
+    if ((qEvt = pop(&sv->midiQueue)))
+    {
+        memcpy(event, qEvt, sizeof(midiEvent_t));
+        free(qEvt);
+        return true;
+    }
+    return false;
 }
