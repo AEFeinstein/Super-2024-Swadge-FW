@@ -194,7 +194,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     {
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
-                                               self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
+                                               (self->pos.x >> DECIMAL_BITS) + self->entityManager->sprites[self->spriteIndex].originX ,
+                                               (self->pos.y >> DECIMAL_BITS) + self->entityManager->sprites[self->spriteIndex].originY);
         if (harpoon != NULL)
         {
             gData->numHarpoons -= 1;
