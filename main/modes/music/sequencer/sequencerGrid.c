@@ -90,8 +90,51 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
             }
             case PB_A:
             {
-                // TODO place / delete
-                printf("Toggle note at [%d, %d]\n", sv->cursorPos.x, sv->cursorPos.y);
+                // place / delete
+
+                // Make a new note
+                sequencerNote_t* newNote = calloc(1, sizeof(sequencerNote_t));
+                newNote->midiNum         = 108 - sv->cursorPos.y;
+                // sv->gridSize is denominator, i.e. quarter note grid is 4, eighth note grid is 8, etc.
+                newNote->sixteenthOn  = sv->cursorPos.x * 16 / sv->gridSize;
+                newNote->sixteenthOff = (sv->cursorPos.x + 1) * 16 / sv->gridSize;
+
+                // Check for overlaps
+                node_t* addBeforeThis = NULL;
+                node_t* noteNode      = sv->notes.first;
+                while (noteNode)
+                {
+                    sequencerNote_t* setNote = noteNode->val;
+
+                    if ((setNote->midiNum == newNote->midiNum) && (setNote->sixteenthOn) < (newNote->sixteenthOff)
+                        && (setNote->sixteenthOff) > (newNote->sixteenthOn))
+                    {
+                        // Overlap, delete note
+                        free(newNote);
+                        free(setNote);
+                        removeEntry(&sv->notes, noteNode);
+                        return;
+                    }
+                    else
+                    {
+                        if ((NULL == addBeforeThis) && (newNote->sixteenthOn <= setNote->sixteenthOn))
+                        {
+                            addBeforeThis = noteNode;
+                        }
+                        // Iterate
+                        noteNode = noteNode->next;
+                    }
+                }
+
+                // Reached this far, insert the note, in order
+                if (NULL == addBeforeThis)
+                {
+                    push(&sv->notes, newNote);
+                }
+                else
+                {
+                    addBefore(&sv->notes, newNote, addBeforeThis);
+                }
                 break;
             }
             case PB_B:
@@ -142,6 +185,8 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
             sv->scrollTimer -= sv->usPerPx;
             sv->gridOffset.x++;
         }
+
+        // TODO check for note on/offs
     }
 
     // Draw horizontal grid lines
@@ -181,6 +226,29 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         drawLineFast(xOff, 0, xOff, TFT_HEIGHT, lineColor);
         xOff += sv->cellWidth;
         lIdx++;
+    }
+
+    // Draw placed notes
+    node_t* noteNode = sv->notes.first;
+    while (noteNode)
+    {
+        sequencerNote_t* note = noteNode->val;
+
+        vec_t topLeft = {
+            .x = 1 + sv->labelWidth + (4 * note->sixteenthOn),
+            .y = (108 - note->midiNum) * sv->rowHeight,
+        };
+        vec_t bottomRight = {
+            .x = sv->labelWidth + (4 * note->sixteenthOff),
+            .y = topLeft.y + sv->rowHeight - 1,
+        };
+
+        topLeft     = subVec2d(topLeft, sv->gridOffset);
+        bottomRight = subVec2d(bottomRight, sv->gridOffset);
+
+        fillDisplayArea(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y, c005);
+
+        noteNode = noteNode->next;
     }
 
     // Draw cursor

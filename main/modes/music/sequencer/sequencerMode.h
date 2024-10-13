@@ -19,6 +19,13 @@ typedef enum
 
 typedef struct
 {
+    int32_t midiNum;
+    int32_t sixteenthOn;
+    int32_t sixteenthOff;
+} sequencerNote_t;
+
+typedef struct
+{
     // Menu
     menu_t* menu;
     menuManiaRenderer_t* renderer;
@@ -44,6 +51,8 @@ typedef struct
     int32_t numBars;
     int32_t timeSig;
     int32_t gridSize;
+
+    list_t notes;
 } sequencerVars_t;
 
 //==============================================================================

@@ -148,6 +148,11 @@ static void sequencerEnterMode(void)
  */
 static void sequencerExitMode(void)
 {
+    void* val;
+    while ((val = pop(&sv->notes)))
+    {
+        free(val);
+    }
     freeFont(&sv->ibm);
     deinitMenuManiaRenderer(sv->renderer);
     deinitMenu(sv->menu);
