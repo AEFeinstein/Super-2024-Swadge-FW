@@ -141,6 +141,14 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             {
                 entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
             }
+            if (entityManager->entities[i].updateFarFunction != NULL)
+            {
+                if(bb_boxesCollideShift(&(bb_box_t){addVec2d(camera->pos, (vec_t){camera->width/2, camera->height/2}), camera->width/2, camera->height/2},
+                                &(bb_box_t){entityManager->entities[i].pos, entityManager->entities[i].halfWidth, entityManager->entities[i].halfHeight}) == false)
+                {
+                       entityManager->entities[i].updateFarFunction(&(entityManager->entities[i]));
+                }
+            }
             if (&(entityManager->entities[i]) == entityManager->viewEntity)
             {
                 bb_viewFollowEntity(&(entityManager->entities[i]), camera);
@@ -200,13 +208,13 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                 uint8_t brightness = 5;
                 if (currentEntity->pos.y > 0)
                 {
-                    if (currentEntity->pos.y > 2560)
+                    if (currentEntity->pos.y > 25600)
                     {
                         brightness = 0;
                     }
                     else
                     {
-                        brightness = (2560 - currentEntity->pos.y) / 512;
+                        brightness = (25600 - currentEntity->pos.y) / 5120;
                     }
                 }
 
@@ -401,6 +409,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->data               = elData;
 
             entity->updateFunction = &bb_updateEggLeaves;
+            entity->updateFarFunction = &bb_updateFarEggleaves;
             entity->drawFunction   = &bb_drawEggLeaves;
             break;
         }
@@ -469,6 +478,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     if (entity != NULL)
     {
         entityManager->activeEntities++;
+        printf("%d/%d entities\n",entityManager->activeEntities, MAX_ENTITIES);
     }
 
     return entity;

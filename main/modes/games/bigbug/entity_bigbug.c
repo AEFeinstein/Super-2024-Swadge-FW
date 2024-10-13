@@ -48,6 +48,7 @@ void bb_destroyEntity(bb_entity_t* self, bool respawn)
     }
 
     self->updateFunction              = NULL;
+    self->updateFarFunction           = NULL;
     self->drawFunction                = NULL;
     self->pos                         = (vec_t){0, 0};
     self->type                        = 0;
@@ -65,6 +66,7 @@ void bb_destroyEntity(bb_entity_t* self, bool respawn)
     self->overlapTileHandler          = NULL;
 
     self->entityManager->activeEntities--;
+    printf("%d/%d entitiess\n", self->entityManager->activeEntities, MAX_ENTITIES);
 }
 
 void bb_updateRocketLanding(bb_entity_t* self)
@@ -397,7 +399,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ////////////////////////////////
         // Reflect the velocity vector along the normal
         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-        printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(gData->vel));
+        // printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(gData->vel));
         int32_t bounceScalar = sqMagVec2d(gData->vel) / -11075 + 3;
         if (bounceScalar > 3)
         {
@@ -468,12 +470,12 @@ void bb_updateEggLeaves(bb_entity_t* self)
         }
 
         bb_eggData_t* eData = (bb_eggData_t*)elData->egg->data;
-        eData->stimulation += elData->brightness;
+        eData->stimulation += elData->brightness * 2;
         if (eData->stimulation > 0)
         {
-            eData->stimulation -= 1;
+            eData->stimulation -= 2;
         }
-        if (eData->stimulation > 499)
+        if (eData->stimulation > 399)
         {
             ((bb_entity_t*)elData->egg)->pos.x += bb_randomInt(-1, 1);
             ((bb_entity_t*)elData->egg)->pos.y += bb_randomInt(-1, 1);
@@ -509,6 +511,24 @@ void bb_updateEggLeaves(bb_entity_t* self)
             }
         }
     }
+}
+
+void bb_updateFarEggleaves(bb_entity_t* self)
+{
+    bb_hitInfo_t hitInfo = {0};
+    bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+    if(hitInfo.hit == true){
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
+    }
+    else{
+        printf("this should not happen\n");
+    }
+
+    //destroy the egg
+    bb_destroyEntity(((bb_eggLeavesData_t*)(self->data))->egg, false);
+
+    // destroy this
+    bb_destroyEntity(self,false);
 }
 
 void bb_updateBug(bb_entity_t* self)
