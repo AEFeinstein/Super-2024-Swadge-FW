@@ -143,10 +143,14 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             }
             if (entityManager->entities[i].updateFarFunction != NULL)
             {
-                if(bb_boxesCollideShift(&(bb_box_t){addVec2d(camera->pos, (vec_t){camera->width/2, camera->height/2}), camera->width/2, camera->height/2},
-                                &(bb_box_t){entityManager->entities[i].pos, entityManager->entities[i].halfWidth, entityManager->entities[i].halfHeight}) == false)
+                if (bb_boxesCollideShift(
+                        &(bb_box_t){addVec2d(camera->pos, (vec_t){camera->width / 2, camera->height / 2}),
+                                    camera->width / 2, camera->height / 2},
+                        &(bb_box_t){entityManager->entities[i].pos, entityManager->entities[i].halfWidth,
+                                    entityManager->entities[i].halfHeight})
+                    == false)
                 {
-                       entityManager->entities[i].updateFarFunction(&(entityManager->entities[i]));
+                    entityManager->entities[i].updateFarFunction(&(entityManager->entities[i]));
                 }
             }
             if (&(entityManager->entities[i]) == entityManager->viewEntity)
@@ -331,14 +335,15 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
-        printf("Failed entity creation. MAX_ENTITIES exceeded.\n");
+        // printf("Failed entity creation. MAX_ENTITIES exceeded.\n");
         return NULL;
     }
 
     bb_entity_t* entity = bb_findInactiveEntity(entityManager);
 
-    if(spriteIndex == GARBOTNIK_FLYING){
-        //Just forcibly make garbotnik the last entity so he's drawn on top.
+    if (spriteIndex == GARBOTNIK_FLYING)
+    {
+        // Just forcibly make garbotnik the last entity so he's drawn on top.
         entity = &entityManager->entities[MAX_ENTITIES - 1];
     }
 
@@ -408,9 +413,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_eggLeavesData_t* elData = heap_caps_calloc(1, sizeof(bb_eggLeavesData_t), MALLOC_CAP_SPIRAM);
             entity->data               = elData;
 
-            entity->updateFunction = &bb_updateEggLeaves;
+            entity->updateFunction    = &bb_updateEggLeaves;
             entity->updateFarFunction = &bb_updateFarEggleaves;
-            entity->drawFunction   = &bb_drawEggLeaves;
+            entity->drawFunction      = &bb_drawEggLeaves;
             break;
         }
         case EGG:
@@ -478,7 +483,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     if (entity != NULL)
     {
         entityManager->activeEntities++;
-        printf("%d/%d entities\n",entityManager->activeEntities, MAX_ENTITIES);
+        // printf("%d/%d entities\n", entityManager->activeEntities, MAX_ENTITIES);
     }
 
     return entity;

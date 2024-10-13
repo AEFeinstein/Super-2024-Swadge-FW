@@ -23,9 +23,8 @@ void bb_drawBox(bb_box_t* box, paletteColor_t* color, bool isFilled)
 {
     if (isFilled)
     {
-        fillDisplayArea(box->pos.x - box->halfWidth, box->pos.y - box->halfHeight,
-                        box->pos.x + box->halfWidth, box->pos.y + box->halfHeight,
-                    *color);
+        fillDisplayArea(box->pos.x - box->halfWidth, box->pos.y - box->halfHeight, box->pos.x + box->halfWidth,
+                        box->pos.y + box->halfHeight, *color);
     }
     else
     {
@@ -45,16 +44,16 @@ void bb_drawBox(bb_box_t* box, paletteColor_t* color, bool isFilled)
  */
 bool bb_boxesCollide(bb_box_t* box0, bb_box_t* box1)
 {
-    return    box0->pos.x - box0->halfWidth  < box1->pos.x + box1->halfWidth
-           && box0->pos.x + box0->halfWidth  > box1->pos.x - box1->halfWidth
+    return box0->pos.x - box0->halfWidth < box1->pos.x + box1->halfWidth
+           && box0->pos.x + box0->halfWidth > box1->pos.x - box1->halfWidth
            && box0->pos.y - box0->halfHeight < box1->pos.y + box1->halfHeight
            && box0->pos.y + box0->halfHeight > box1->pos.y - box1->halfHeight;
 }
 
 bool bb_boxesCollideShift(bb_box_t* box0, bb_box_t* box1)
 {
-    return    box0->pos.x - box0->halfWidth  < (box1->pos.x >> DECIMAL_BITS) + (box1->halfWidth  >> DECIMAL_BITS)
-           && box0->pos.x + box0->halfWidth  > (box1->pos.x >> DECIMAL_BITS) - (box1->halfWidth  >> DECIMAL_BITS)
+    return box0->pos.x - box0->halfWidth < (box1->pos.x >> DECIMAL_BITS) + (box1->halfWidth >> DECIMAL_BITS)
+           && box0->pos.x + box0->halfWidth > (box1->pos.x >> DECIMAL_BITS) - (box1->halfWidth >> DECIMAL_BITS)
            && box0->pos.y - box0->halfHeight < (box1->pos.y >> DECIMAL_BITS) + (box1->halfHeight >> DECIMAL_BITS)
            && box0->pos.y + box0->halfHeight > (box1->pos.y >> DECIMAL_BITS) - (box1->halfHeight >> DECIMAL_BITS);
 }

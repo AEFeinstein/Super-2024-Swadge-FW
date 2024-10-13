@@ -142,7 +142,6 @@ static void bb_EnterMode(void)
     bb_initializeTileMap(&(bigbug->gameData.tilemap));
     bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
 
-
     bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000);
     bigbug->gameData.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
@@ -247,11 +246,13 @@ static void bb_DrawScene(void)
                                   .y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS)
                                        - bigbug->gameData.camera.pos.y - 17};
         bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &garbotnikDrawPos,
-                       &((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data)->yaw, &bigbug->gameData.entityManager);
+                       &((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data)->yaw,
+                       &bigbug->gameData.entityManager);
     }
     else
     {
-        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &(vec_t){0, 0}, &(vec_t){0, 0}, &bigbug->gameData.entityManager);
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &(vec_t){0, 0}, &(vec_t){0, 0},
+                       &bigbug->gameData.entityManager);
     }
     bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->gameData.camera);
 
@@ -379,8 +380,8 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
 {
     if (entityManager->playerEntity != NULL)
     {
-        int16_t squishedFuel = (((bb_garbotnikData_t*)entityManager->playerEntity->data))->fuel
-                               / (60000000 / 0b11111111);
+        int16_t squishedFuel
+            = (((bb_garbotnikData_t*)entityManager->playerEntity->data))->fuel / (60000000 / 0b11111111);
         // Set the LEDs to a display fuel level
         led_t leds[CONFIG_NUM_LEDS] = {0};
         for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)

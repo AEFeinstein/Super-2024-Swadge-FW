@@ -23,7 +23,7 @@ void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
             {
                 printf("egg at i:%d j:%d\n", x, y);
                 tilemap->fgTiles[x][y].embed = EGG_EMBED;
-                
+
                 // bb_entity_t* eggLeaves = bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1,
                 //                                          x * TILE_SIZE + HALF_TILE, y * TILE_SIZE + HALF_TILE);
                 // if(eggLeaves == NULL)
@@ -38,7 +38,7 @@ void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
                 //     bb_destroyEntity(eggLeaves, false);
                 // }
             }
-        
+
             else
             {
                 tilemap->fgTiles[x][y].embed = NOTHING_EMBED;

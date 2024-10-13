@@ -8,7 +8,7 @@
 
 typedef struct
 {
-    vec_t pos;//at the center
+    vec_t pos; // at the center
     int32_t halfWidth;
     int32_t halfHeight;
 } bb_box_t;

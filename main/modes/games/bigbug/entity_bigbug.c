@@ -66,7 +66,7 @@ void bb_destroyEntity(bb_entity_t* self, bool respawn)
     self->overlapTileHandler          = NULL;
 
     self->entityManager->activeEntities--;
-    printf("%d/%d entitiess\n", self->entityManager->activeEntities, MAX_ENTITIES);
+    // printf("%d/%d entitiess\n", self->entityManager->activeEntities, MAX_ENTITIES);
 }
 
 void bb_updateRocketLanding(bb_entity_t* self)
@@ -192,11 +192,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     gData->fire     = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
     if (gData->fire && gData->numHarpoons > 0)
     {
-        
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
-        if(harpoon != NULL)
+        if (harpoon != NULL)
         {
             gData->numHarpoons -= 1;
             bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
@@ -207,7 +206,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             pData->vel.x = (x - 512) / 2;
             pData->vel.y = (-y + 512) / 2;
         }
-        
     }
 
     // record the previous frame's position before any logic.
@@ -364,16 +362,21 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // Update the dirt by decrementing it.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= 1;
 
-        if(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed == EGG_EMBED){
+        if (self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 0
+            && self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed == EGG_EMBED
+            && self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity != NULL)
+        {
             vec_t tilePos = {.x = hitInfo.tile_i * TILE_SIZE + HALF_TILE, .y = hitInfo.tile_j * TILE_SIZE + HALF_TILE};
             // create a bug
-            bb_entity_t* bug
-                = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
-                                  tilePos.x, tilePos.y);
-            if(bug != NULL)
+            bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
+                                               bb_randomInt(8, 13), 1, tilePos.x, tilePos.y);
+            if (bug != NULL)
             {
                 // destroy the egg
-                bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity->data))->egg, false);
+                bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j]
+                                                            .entity->data))
+                                     ->egg,
+                                 false);
                 // destroy this (eggLeaves)
                 bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
             }
@@ -492,7 +495,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                 = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
                                   elData->egg->pos.x >> DECIMAL_BITS, elData->egg->pos.y >> DECIMAL_BITS);
 
-            if(bug != NULL)
+            if (bug != NULL)
             {
                 // destroy the egg
                 bb_destroyEntity(elData->egg, false);
@@ -502,6 +505,8 @@ void bb_updateEggLeaves(bb_entity_t* self)
                 {
                     // Update the dirt to air.
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
+                    self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed  = NOTHING_EMBED;
+                    self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
                     // Create a crumble animation
                     bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                                     hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
@@ -517,18 +522,20 @@ void bb_updateFarEggleaves(bb_entity_t* self)
 {
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
-    if(hitInfo.hit == true){
+    if (hitInfo.hit == true)
+    {
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
     }
-    else{
+    else
+    {
         printf("this should not happen\n");
     }
 
-    //destroy the egg
+    // destroy the egg
     bb_destroyEntity(((bb_eggLeavesData_t*)(self->data))->egg, false);
 
     // destroy this
-    bb_destroyEntity(self,false);
+    bb_destroyEntity(self, false);
 }
 
 void bb_updateBug(bb_entity_t* self)

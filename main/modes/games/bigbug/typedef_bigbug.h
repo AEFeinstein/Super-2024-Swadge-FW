@@ -45,7 +45,8 @@ typedef enum
     ANT,  // A bug that crawls on the midground tile field
 } bb_spriteDef_t;
 
-typedef enum{//The kinds of stuff that may be embedded into a garbage tile.
+typedef enum
+{ // The kinds of stuff that may be embedded into a garbage tile.
     NOTHING_EMBED,
     EGG_EMBED,
 } bb_embeddable_t;

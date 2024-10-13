@@ -80,9 +80,9 @@ struct bb_entity_t
     bool active;
 
     void* data;
-    bb_updateFunction_t updateFunction; // Only set for entities that need update logic
-    bb_updateFarFunction_t updateFarFunction; //Runs if the entity is outside the camera bounds
-    bb_drawFunction_t drawFunction;     // Only set for custom entities such as Garbotnik
+    bb_updateFunction_t updateFunction;       // Only set for entities that need update logic
+    bb_updateFarFunction_t updateFarFunction; // Runs if the entity is outside the camera bounds
+    bb_drawFunction_t drawFunction;           // Only set for custom entities such as Garbotnik
 
     vec_t pos;
 

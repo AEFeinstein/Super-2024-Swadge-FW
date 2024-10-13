@@ -129,7 +129,8 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     }
 }
 
-void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation, bb_entityManager_t* entityManager)
+void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation,
+                    bb_entityManager_t* entityManager)
 {
     // font_t ibm;
     // loadFont("ibm_vga8.font", &ibm, false);
@@ -212,26 +213,34 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
         {
             for (int32_t j = jStart; j <= jEnd; j++)
             {
-                //Hijacking this i j double for loop to load entities within the camera bounds before drawing tiles.
-                if(tilemap->fgTiles[i][j].embed != NOTHING_EMBED && tilemap->fgTiles[i][j].entity == NULL){
-                    switch(tilemap->fgTiles[i][j].embed)
+                // Hijacking this i j double for loop to load entities within the camera bounds before drawing tiles.
+                if (tilemap->fgTiles[i][j].embed != NOTHING_EMBED && tilemap->fgTiles[i][j].entity == NULL)
+                {
+                    switch (tilemap->fgTiles[i][j].embed)
                     {
                         case EGG_EMBED:
                         {
-                            bb_entity_t* eggLeaves = bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1,
-                                                                     i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE);
-                            if(eggLeaves != NULL)
+                            bb_entity_t* eggLeaves
+                                = bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1,
+                                                  i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE);
+                            if (eggLeaves != NULL)
                             {
-                                ((bb_eggLeavesData_t*)eggLeaves->data)->egg = bb_createEntity(
-                                    entityManager, NO_ANIMATION, true, EGG, 1, i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE);
-                                if(((bb_eggLeavesData_t*)eggLeaves->data)->egg == NULL)
+                                ((bb_eggLeavesData_t*)eggLeaves->data)->egg
+                                    = bb_createEntity(entityManager, NO_ANIMATION, true, EGG, 1,
+                                                      i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE);
+                                if (((bb_eggLeavesData_t*)eggLeaves->data)->egg == NULL)
                                 {
                                     bb_destroyEntity(eggLeaves, false);
                                 }
-                                else{
+                                else
+                                {
                                     tilemap->fgTiles[i][j].entity = eggLeaves;
                                 }
                             }
+                        }
+                        default:
+                        {
+                            break;
                         }
                     }
                 }
@@ -435,10 +444,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     wsg_t(*wsgForegroundArrayPtr)[240] = bb_GetForegroundWsgArrForCoord(tilemap, i, j);
 
                     // sprite_idx LURD order.
-                    uint8_t sprite_idx = 8 * ((i - 1 < 0) ? 0 : (tilemap->fgTiles[i - 1][j].health > 0))
-                                         + 4 * ((j - 1 < 0) ? 0 : (tilemap->fgTiles[i][j - 1].health > 0))
-                                         + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : (tilemap->fgTiles[i + 1][j].health > 0))
-                                         + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : (tilemap->fgTiles[i][j + 1]).health > 0);
+                    uint8_t sprite_idx
+                        = 8 * ((i - 1 < 0) ? 0 : (tilemap->fgTiles[i - 1][j].health > 0))
+                          + 4 * ((j - 1 < 0) ? 0 : (tilemap->fgTiles[i][j - 1].health > 0))
+                          + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : (tilemap->fgTiles[i + 1][j].health > 0))
+                          + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : (tilemap->fgTiles[i][j + 1]).health > 0);
                     // corner_info represents up_left, up_right, down_left, down_right dirt presence (remember >0 is
                     // dirt).
                     uint8_t corner_info
