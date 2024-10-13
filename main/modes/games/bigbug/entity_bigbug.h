@@ -68,6 +68,7 @@ typedef struct
 } bb_eggData_t;
 
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
+typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
 typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 typedef void (*bb_collisionHandler_t)(bb_entity_t* self, bb_entity_t* other);
 typedef bool (*bb_tileCollisionHandler_t)(bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
@@ -80,6 +81,7 @@ struct bb_entity_t
 
     void* data;
     bb_updateFunction_t updateFunction; // Only set for entities that need update logic
+    bb_updateFarFunction_t updateFarFunction; //Runs if the entity is outside the camera bounds
     bb_drawFunction_t drawFunction;     // Only set for custom entities such as Garbotnik
 
     vec_t pos;

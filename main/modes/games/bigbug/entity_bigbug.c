@@ -362,6 +362,21 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // Update the dirt by decrementing it.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= 1;
 
+        if(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed == EGG_EMBED){
+            vec_t tilePos = {.x = hitInfo.tile_i * TILE_SIZE + HALF_TILE, .y = hitInfo.tile_j * TILE_SIZE + HALF_TILE};
+            // create a bug
+            bb_entity_t* bug
+                = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
+                                  tilePos.x, tilePos.y);
+            if(bug != NULL)
+            {
+                // destroy the egg
+                bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity->data))->egg, false);
+                // destroy this (eggLeaves)
+                bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
+            }
+        }
+
         if (self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 0
             || self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 1
             || self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 4)
@@ -475,11 +490,10 @@ void bb_updateEggLeaves(bb_entity_t* self)
                 = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
                                   elData->egg->pos.x >> DECIMAL_BITS, elData->egg->pos.y >> DECIMAL_BITS);
 
-            // destroy the egg
-            bb_destroyEntity(elData->egg, false);
-
             if(bug != NULL)
             {
+                // destroy the egg
+                bb_destroyEntity(elData->egg, false);
                 bb_hitInfo_t hitInfo = {0};
                 bb_collisionCheck(&self->gameData->tilemap, bug, NULL, &hitInfo);
                 if (hitInfo.hit == true)
@@ -490,10 +504,9 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                                     hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
                 }
+                // destroy this
+                bb_destroyEntity(self, false);
             }
-
-            // destroy this
-            bb_destroyEntity(self, false);
         }
     }
 }

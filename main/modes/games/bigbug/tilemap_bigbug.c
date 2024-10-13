@@ -129,7 +129,7 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     }
 }
 
-void bb_drawTileMap(bb_gameData_t* player, bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation)
+void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation, bb_entityManager_t* entityManager)
 {
     // font_t ibm;
     // loadFont("ibm_vga8.font", &ibm, false);
@@ -212,24 +212,25 @@ void bb_drawTileMap(bb_gameData_t* player, bb_tilemap_t* tilemap, rectangle_t* c
         {
             for (int32_t j = jStart; j <= jEnd; j++)
             {
-                //gonna use this looping for some other stuff and check to load entities within the camera before drawing.
-                if(tilemap->fgTiles[i][j].embed != NOTHING_EMBED && tilemap->fgTiles[i][j].loaded = false){
+                //Hijacking this i j double for loop to load entities within the camera bounds before drawing tiles.
+                if(tilemap->fgTiles[i][j].embed != NOTHING_EMBED && tilemap->fgTiles[i][j].entity == NULL){
                     switch(tilemap->fgTiles[i][j].embed)
                     {
                         case EGG_EMBED:
                         {
                             bb_entity_t* eggLeaves = bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1,
-                                                                     x * TILE_SIZE + HALF_TILE, y * TILE_SIZE + HALF_TILE);
-                            if(eggLeaves == NULL)
+                                                                     i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE);
+                            if(eggLeaves != NULL)
                             {
-                                //no more room in the EntityManager. :(
-                                return;
-                            }
-                            ((bb_eggLeavesData_t*)eggLeaves->data)->egg = bb_createEntity(
-                                entityManager, NO_ANIMATION, true, EGG, 1, x * TILE_SIZE + HALF_TILE, y * TILE_SIZE + HALF_TILE);
-                            if(((bb_eggLeavesData_t*)eggLeaves->data)->egg == NULL)
-                            {
-                                bb_destroyEntity(eggLeaves, false);
+                                ((bb_eggLeavesData_t*)eggLeaves->data)->egg = bb_createEntity(
+                                    entityManager, NO_ANIMATION, true, EGG, 1, i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE);
+                                if(((bb_eggLeavesData_t*)eggLeaves->data)->egg == NULL)
+                                {
+                                    bb_destroyEntity(eggLeaves, false);
+                                }
+                                else{
+                                    tilemap->fgTiles[i][j].entity = eggLeaves;
+                                }
                             }
                         }
                     }

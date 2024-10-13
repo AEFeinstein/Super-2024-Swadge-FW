@@ -247,11 +247,11 @@ static void bb_DrawScene(void)
                                   .y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS)
                                        - bigbug->gameData.camera.pos.y - 17};
         bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &garbotnikDrawPos,
-                       &((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data)->yaw);
+                       &((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data)->yaw, &bigbug->gameData.entityManager);
     }
     else
     {
-        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &(vec_t){0, 0}, &(vec_t){0, 0});
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &(vec_t){0, 0}, &(vec_t){0, 0}, &bigbug->gameData.entityManager);
     }
     bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->gameData.camera);
 
@@ -377,9 +377,9 @@ static void bb_UpdateTileSupport(void)
 
 static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
 {
-    if (bigbug->gameData.entityManager.playerEntity != NULL)
+    if (entityManager->playerEntity != NULL)
     {
-        int16_t squishedFuel = (((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data))->fuel
+        int16_t squishedFuel = (((bb_garbotnikData_t*)entityManager->playerEntity->data))->fuel
                                / (60000000 / 0b11111111);
         // Set the LEDs to a display fuel level
         led_t leds[CONFIG_NUM_LEDS] = {0};

@@ -17,7 +17,7 @@ void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
 
     for (int x = 0; x < TILE_FIELD_WIDTH; x++)
     {
-        for (int y = 0; y < 2; y++)
+        for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
         {
             if (bb_randomInt(0, 1) == 0) //%50 chance
             {

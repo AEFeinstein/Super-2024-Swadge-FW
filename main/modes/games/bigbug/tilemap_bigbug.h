@@ -5,6 +5,7 @@
 //==============================================================================
 #include "swadge2024.h"
 #include "typedef_bigbug.h"
+#include "entityManager_bigbug.h"
 
 //==============================================================================
 // Constants
@@ -23,8 +24,8 @@ struct bb_tileInfo_t
 {
     int8_t health;//0 is air, > 0 is garbage. Use an int8_t incase damage decrements lower than zero, then we can snap to zero.
     bb_embeddable_t embed;//Some kind of something embedded in the garbage tile.
-    bool loaded;//true when the the player gets close and thus the embed is in the entity manager.
-                //loaded can become false again under the right circumstances & player leaving.
+    bb_entity_t* entity;//Null when the the player player is far away.
+                       //Can become null again if the entity is still embed & player leaving.
 };
 
 struct bb_tilemap_t
@@ -64,7 +65,7 @@ struct bb_hitInfo_t
 //==============================================================================
 void bb_initializeTileMap(bb_tilemap_t* tilemap);
 void bb_loadWsgs(bb_tilemap_t* tilemap);
-void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikPos, vec_t* garbotnikRotation);
+void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation, bb_entityManager_t* entityManager);
 void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera);
 void bb_DrawForegroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, uint32_t i,
                                  uint32_t j);

@@ -329,6 +329,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
     bb_entity_t* entity = bb_findInactiveEntity(entityManager);
 
+    if(spriteIndex == GARBOTNIK_FLYING){
+        //Just forcibly make garbotnik the last entity so he's drawn on top.
+        entity = &entityManager->entities[MAX_ENTITIES - 1];
+    }
+
     if (entity == NULL)
     {
         printf("This should hopefully never happen.\n");
