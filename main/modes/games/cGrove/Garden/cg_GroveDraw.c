@@ -34,6 +34,8 @@ static void cg_drawHand(cGrove_t* cg);
  */
 static void cg_drawItem(cGrove_t* cg, int8_t idx);
 
+static void cg_groveDebug(cGrove_t* cg);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -80,6 +82,9 @@ void cg_groveDraw(cGrove_t* cg)
 
     // Draw UI
     cg_drawHand(cg);
+
+    // Debug draw
+    cg_groveDebug(cg);
 }
 
 //==============================================================================
@@ -97,4 +102,16 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx)
     int16_t yOffset = cg->grove.items[idx].aabb.pos.y - cg->grove.camera.pos.y;
     drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);
     drawText(&cg->menuFont, c555, cg->grove.items[idx].name, xOffset, yOffset - 16);
+}
+
+static void cg_groveDebug(cGrove_t* cg)
+{
+    int16_t xOffset = -cg->grove.camera.pos.x;
+    int16_t yOffset = -cg->grove.camera.pos.y;
+    // draw AABBs for grove
+    for (int32_t i = 0; i < 4; i++)
+    {
+        drawRect(cg->grove.boundaries[i].pos.x + xOffset, cg->grove.boundaries[i].pos.y + yOffset,
+                 cg->grove.boundaries[i].pos.x + cg->grove.boundaries[i].width + xOffset, cg->grove.boundaries[i].pos.y + cg->grove.boundaries[i].height + yOffset, c500);
+    }
 }

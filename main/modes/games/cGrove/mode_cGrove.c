@@ -98,11 +98,13 @@ static cGrove_t* cg = NULL;
 static void cGroveEnterMode(void)
 {
     // Mode memory allocation
+    // FIXME: can't include 
+    // cg = heap_caps_calloc(1, sizeof(cGrove_t), MALLOC_CAP_SPIRAM);
     cg = calloc(1, sizeof(cGrove_t));
     setFrameRateUs(CG_FRAMERATE);
 
     // Load a font
-    loadFont("ibm_vga8.font", &cg->menuFont, false);
+    loadFont("ibm_vga8.font", &cg->menuFont, true);
 
     // Menu
     cg->menu                                   = initMenu(cGroveTitle, cg_menuCB);

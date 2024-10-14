@@ -195,6 +195,16 @@ typedef struct
 
 #define CG_GROVE_SCREEN_BOUNDARY 32 ///< How close the cursor can get to the edge of the screen
 
+// Enum =================================
+
+typedef enum
+{
+    CG_BORDER,
+    CG_TREE,
+    CG_STUMP,
+    CG_WATER
+} cgBoundary_t;
+
 // Structs ==============================
 typedef struct
 {
@@ -208,6 +218,7 @@ typedef struct
     // Field data
     cgItem_t items[CG_GROVE_MAX_ITEMS];         ///< Items present in the Grove
     cgChowa_t guests[CG_GROVE_MAX_GUEST_CHOWA]; ///< Guest Chowa
+    rectangle_t boundaries[5];                  ///< Boundary boxes
 
     // Player resources
     rectangle_t camera;   ///< In-garden camera viewport
