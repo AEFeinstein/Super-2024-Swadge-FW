@@ -28,7 +28,8 @@ typedef struct
 {
     bb_sprite_t sprites[NUM_SPRITES];
     // list_t* sprites[NUM_SPRITES];
-    bb_entity_t* entities;
+    bb_entity_t*  entities;
+    list_t* cachedEntities;
     uint8_t activeEntities;
 
     bb_entity_t* viewEntity;
@@ -43,8 +44,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite);
 void bb_loadSprites(bb_entityManager_t* entityManager);
 void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera);
-void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer, bool excludePersistent,
-                              bool respawn);
+void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer);
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera);
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager);
 

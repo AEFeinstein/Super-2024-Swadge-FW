@@ -78,6 +78,7 @@ typedef void (*bb_overlapTileHandler_t)(bb_entity_t* self, uint8_t tileId, uint8
 struct bb_entity_t
 {
     bool active;
+    bool cacheable;
 
     void* data;
     bb_updateFunction_t updateFunction;       // Only set for entities that need update logic
@@ -115,7 +116,7 @@ struct bb_entity_t
 void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData,
                          bb_soundManager_t* soundManager);
 
-void bb_destroyEntity(bb_entity_t* self, bool respawn);
+void bb_destroyEntity(bb_entity_t* self);
 void bb_updateRocketLanding(bb_entity_t* self);
 void bb_updateHeavyFallingInit(bb_entity_t* self);
 void bb_updateHeavyFalling(bb_entity_t* self);

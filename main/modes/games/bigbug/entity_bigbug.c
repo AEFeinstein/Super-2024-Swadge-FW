@@ -36,10 +36,11 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
     self->entityManager = entityManager;
 }
 
-void bb_destroyEntity(bb_entity_t* self, bool respawn)
+void bb_destroyEntity(bb_entity_t* self)
 {
     // Zero out most info (but not references to manager type things) for entity to be reused.
-    self->active = false;
+    self->active    = false;
+    self->cacheable = false;
 
     if (self->data != NULL)
     {
@@ -85,7 +86,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
         rData->flame->pos.y = self->pos.y + rData->yVel * self->gameData->elapsedUs / 100000;
         if (rData->yVel <= 0)
         {
-            bb_destroyEntity(rData->flame, false);
+            bb_destroyEntity(rData->flame);
             free(self->data);
             self->data           = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
             self->updateFunction = bb_updateHeavyFallingInit;
@@ -193,9 +194,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     if (gData->fire && gData->numHarpoons > 0)
     {
         // Create a harpoon
-        bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
-                                               (self->pos.x >> DECIMAL_BITS) + self->entityManager->sprites[self->spriteIndex].originX ,
-                                               (self->pos.y >> DECIMAL_BITS) + self->entityManager->sprites[self->spriteIndex].originY);
+        bb_entity_t* harpoon
+            = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
+                              (self->pos.x >> DECIMAL_BITS) + self->entityManager->sprites[self->spriteIndex].originX,
+                              (self->pos.y >> DECIMAL_BITS) + self->entityManager->sprites[self->spriteIndex].originY);
         if (harpoon != NULL)
         {
             gData->numHarpoons -= 1;
@@ -376,10 +378,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                 // destroy the egg
                 bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j]
                                                             .entity->data))
-                                     ->egg,
-                                 false);
+                                     ->egg);
                 // destroy this (eggLeaves)
-                bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
+                bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity);
             }
         }
 
@@ -499,7 +500,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
             if (bug != NULL)
             {
                 // destroy the egg
-                bb_destroyEntity(elData->egg, false);
+                bb_destroyEntity(elData->egg);
                 bb_hitInfo_t hitInfo = {0};
                 bb_collisionCheck(&self->gameData->tilemap, bug, NULL, &hitInfo);
                 if (hitInfo.hit == true)
@@ -513,7 +514,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                                     hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
                 }
                 // destroy this
-                bb_destroyEntity(self, false);
+                bb_destroyEntity(self);
             }
         }
     }
@@ -533,10 +534,10 @@ void bb_updateFarEggleaves(bb_entity_t* self)
     }
 
     // destroy the egg
-    bb_destroyEntity(((bb_eggLeavesData_t*)(self->data))->egg, false);
+    bb_destroyEntity(((bb_eggLeavesData_t*)(self->data))->egg);
 
     // destroy this
-    bb_destroyEntity(self, false);
+    bb_destroyEntity(self);
 }
 
 void bb_updateBug(bb_entity_t* self)
