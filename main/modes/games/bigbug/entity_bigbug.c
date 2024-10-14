@@ -445,10 +445,18 @@ void bb_updateHarpoon(bb_entity_t* self)
 
     // Update harpoon's velocity
     hData->vel.y += 6;
+    // Update harpoon's lifetime. I'm not using elapsed time because it is in microseconds and would need division to
+    // accumulate milliseconds in a reasonable data type.
+    hData->lifetime++;
 
     // Update harpoon's position
     self->pos.x += hData->vel.x * self->gameData->elapsedUs / 100000;
     self->pos.y += hData->vel.y * self->gameData->elapsedUs / 100000;
+
+    if (hData->lifetime > 140)
+    {
+        bb_destroyEntity(self);
+    }
 }
 
 void bb_updateEggLeaves(bb_entity_t* self)

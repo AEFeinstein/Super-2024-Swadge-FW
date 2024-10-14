@@ -42,6 +42,7 @@ typedef struct
 typedef struct
 {
     vec_t vel;
+    uint16_t lifetime;
 } bb_projectileData_t;
 
 typedef struct
