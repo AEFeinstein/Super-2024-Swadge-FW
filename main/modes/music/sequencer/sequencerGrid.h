@@ -6,4 +6,5 @@
 
 void measureSequencerGrid(sequencerVars_t* sv);
 void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt);
+void sequencerGridTouch(sequencerVars_t* sv);
 void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs);

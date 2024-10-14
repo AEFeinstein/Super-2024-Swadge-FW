@@ -51,6 +51,10 @@ static const char str_instrument[]    = "Instrument: ";
 static const char* instrumentLabels[] = {"Piano", "Marimba", "Organ", "Guitar", "Bass", "Violin", "Trumpet", "Sax"};
 static const int32_t instrumentVals[] = {1, 13, 20, 27, 39, 41, 57, 66};
 
+static const char str_noteType[]    = "Type: ";
+static const char* noteTypeLabels[] = {"Whole", "Half", "Quarter", "Eighth", "Sixteenth"};
+static const int32_t noteTypeVals[] = {1, 2, 4, 8, 16};
+
 swadgeMode_t sequencerMode = {
     .modeName                 = sequencerName,
     .wifiMode                 = NO_WIFI,
@@ -90,52 +94,80 @@ static void sequencerEnterMode(void)
 
     loadFont("ibm_vga8.font", &sv->ibm, false);
 
-    sv->menu = initMenu(sequencerName, sequencerMenuCb);
-
-    sv->menu = startSubMenu(sv->menu, str_noteOptions);
-
-    settingParam_t sp_instrument = {
-        .min = instrumentVals[0],
-        .max = instrumentVals[ARRAY_SIZE(instrumentVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->menu, str_instrument, instrumentLabels, instrumentVals, ARRAY_SIZE(instrumentVals),
-                                 &sp_instrument, 1);
-
-    sv->menu = endSubMenu(sv->menu);
-
-    sv->menu = startSubMenu(sv->menu, str_songOptions);
+    sv->songMenu = initMenu(str_songOptions, sequencerMenuCb);
 
     settingParam_t sp_tempo = {
         .min = tempoVals[0],
         .max = tempoVals[ARRAY_SIZE(tempoVals) - 1],
     };
-    addSettingsOptionsItemToMenu(sv->menu, str_songTempo, tempoLabels, tempoVals, ARRAY_SIZE(tempoVals), &sp_tempo,
+    addSettingsOptionsItemToMenu(sv->songMenu, str_songTempo, tempoLabels, tempoVals, ARRAY_SIZE(tempoVals), &sp_tempo,
                                  120);
 
     settingParam_t sp_grid = {
         .min = gridVals[0],
         .max = gridVals[ARRAY_SIZE(gridVals) - 1],
     };
-    addSettingsOptionsItemToMenu(sv->menu, str_songGrid, gridLabels, gridVals, ARRAY_SIZE(gridVals), &sp_grid, 4);
+    addSettingsOptionsItemToMenu(sv->songMenu, str_songGrid, gridLabels, gridVals, ARRAY_SIZE(gridVals), &sp_grid, 4);
 
     settingParam_t sp_timeSig = {
         .min = timeSigVals[0],
         .max = timeSigVals[ARRAY_SIZE(timeSigVals) - 1],
     };
-    addSettingsOptionsItemToMenu(sv->menu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
+    addSettingsOptionsItemToMenu(sv->songMenu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
                                  &sp_timeSig, 4);
 
     settingParam_t sp_songLength = {
         .min = songLengthVals[0],
         .max = songLengthVals[ARRAY_SIZE(songLengthVals) - 1],
     };
-    addSettingsOptionsItemToMenu(sv->menu, str_songLength, songLengthLabels, songLengthVals, ARRAY_SIZE(songLengthVals),
+    addSettingsOptionsItemToMenu(sv->songMenu, str_songLength, songLengthLabels, songLengthVals, ARRAY_SIZE(songLengthVals),
                                  &sp_songLength, 1);
 
-    sv->menu = endSubMenu(sv->menu);
 
-    sv->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    sv->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
+    //////////////////////////////////////////////////////////////////////////
+    // Attempt to initialize wheel menu
+
+    rectangle_t textRect = {
+        .pos.x = 0,
+        .pos.y = 0,
+        .width = TFT_WIDTH,
+        .height = TFT_HEIGHT,
+    };
+    sv->wheelRenderer = initWheelMenu(&sv->ibm, 0, &textRect);
+
+    sv->noteMenu = initMenu(str_noteOptions, sequencerMenuCb);
+
+    // Add instrument options
+    settingParam_t sp_instrument = {
+        .min = instrumentVals[0],
+        .max = instrumentVals[ARRAY_SIZE(instrumentVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(sv->noteMenu, str_instrument, instrumentLabels, instrumentVals, ARRAY_SIZE(instrumentVals),
+                                 &sp_instrument, 1);
+    for(uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
+    {
+        wheelMenuSetItemInfo(sv->wheelRenderer, instrumentLabels[i], NULL, i, NO_SCROLL);
+        // wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
+        // wheelMenuSetItemSize(sd->wheelMenu, itemInfo->label, -1, -1, WM_SHAPE_ROUNDED_RECT);
+    }
+
+    // Add note type options
+    settingParam_t sp_noteType = {
+        .min = noteTypeVals[0],
+        .max = noteTypeVals[ARRAY_SIZE(noteTypeVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(sv->noteMenu, str_noteType, noteTypeLabels, noteTypeVals, ARRAY_SIZE(noteTypeVals),
+                                 &sp_noteType, 4);
+    for(uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
+    {
+        wheelMenuSetItemInfo(sv->wheelRenderer, noteTypeLabels[i], NULL, i, NO_SCROLL);
+        // wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
+        // wheelMenuSetItemSize(sd->wheelMenu, itemInfo->label, -1, -1, WM_SHAPE_ROUNDED_RECT);
+    }
+
+    // Song defaults
     sv->usPerBeat = 500000; // 120bpm
     sv->numBars   = 8;      // 2 bar song
     sv->timeSig   = 4;      // 4/4 time
@@ -180,8 +212,11 @@ static void sequencerExitMode(void)
         free(val);
     }
     freeFont(&sv->ibm);
-    deinitMenuManiaRenderer(sv->renderer);
-    deinitMenu(sv->menu);
+    deinitMenuManiaRenderer(sv->menuRenderer);
+    deinitMenu(sv->songMenu);
+
+    deinitWheelMenu(sv->wheelRenderer);
+    deinitMenu(sv->noteMenu);
     free(sv);
 }
 
@@ -204,7 +239,7 @@ static void sequencerMainLoop(int64_t elapsedUs)
         {
             case SEQUENCER_MENU:
             {
-                sv->menu = menuButton(sv->menu, evt);
+                sv->songMenu = menuButton(sv->songMenu, evt);
                 break;
             }
             case SEQUENCER_SEQ:
@@ -219,12 +254,13 @@ static void sequencerMainLoop(int64_t elapsedUs)
     {
         case SEQUENCER_MENU:
         {
-            drawMenuMania(sv->menu, sv->renderer, elapsedUs);
+            drawMenuMania(sv->songMenu, sv->menuRenderer, elapsedUs);
             break;
         }
         case SEQUENCER_SEQ:
         {
             // TODO
+            sequencerGridTouch(sv);
             drawSequencerGrid(sv, elapsedUs);
             break;
         }

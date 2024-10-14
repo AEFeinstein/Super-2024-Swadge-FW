@@ -186,6 +186,44 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
 }
 
 /**
+ * @brief TODO
+ * 
+ * @param sv 
+ */
+void sequencerGridTouch(sequencerVars_t* sv)
+{
+    int32_t phi = 0, r = 0, intensity = 0;
+    bool touched = getTouchJoystick(&phi, &r, &intensity);
+
+    bool isWheelMenuActive = wheelMenuActive(sv->noteMenu, sv->wheelRenderer);
+
+    if (isWheelMenuActive || touched)
+    {
+        if (touched)
+        {
+            sv->noteMenu = wheelMenuTouch(sv->noteMenu, sv->wheelRenderer, phi, r);
+        }
+        else
+        {
+            sv->noteMenu = wheelMenuTouchRelease(sv->noteMenu, sv->wheelRenderer);
+        }
+
+        bool nowActive = wheelMenuActive(sv->noteMenu, sv->wheelRenderer);
+        if (nowActive && !isWheelMenuActive)
+        {
+            // Menu just became active, reset it?
+            // sd->updateMenu = true;
+        }
+        else if (isWheelMenuActive && !nowActive)
+        {
+            // sd->updateMenu     = true;
+            // sd->forceResetMenu = true;
+        }
+        isWheelMenuActive = nowActive;
+    }
+}
+
+/**
  * @brief TODO doc
  *
  * @param sv
@@ -375,5 +413,22 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         {
             kIdx--;
         }
+    }
+
+    if (wheelMenuActive(sv->noteMenu, sv->wheelRenderer))
+    {
+        // fillDisplayArea(sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y - 2,
+        //                 sd->wheelTextArea.pos.x + sd->wheelTextArea.width,
+        //                 sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025);
+        // drawTriangleOutlined(sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y - 2,
+        //                      sd->wheelTextArea.pos.x - sd->betterFont.height / 2,
+        //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2, sd->wheelTextArea.pos.x,
+        //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025, c025);
+        // drawTriangleOutlined(sd->wheelTextArea.pos.x + sd->wheelTextArea.width, sd->wheelTextArea.pos.y - 2,
+        //                      sd->wheelTextArea.pos.x + sd->wheelTextArea.width + sd->betterFont.height / 2,
+        //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2,
+        //                      sd->wheelTextArea.pos.x + sd->wheelTextArea.width,
+        //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025, c025);
+        drawWheelMenu(sv->noteMenu, sv->wheelRenderer, elapsedUs);
     }
 }

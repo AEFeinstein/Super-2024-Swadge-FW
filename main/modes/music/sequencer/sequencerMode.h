@@ -2,6 +2,7 @@
 #define _SEQUENCER_MODE_H_
 
 #include "swadge2024.h"
+#include "wheel_menu.h"
 
 //==============================================================================
 // Enums
@@ -28,8 +29,10 @@ typedef struct
 typedef struct
 {
     // Menu
-    menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menu_t* songMenu;
+    menuManiaRenderer_t* menuRenderer;
+    menu_t* noteMenu;
+    wheelMenuRenderer_t* wheelRenderer;
 
     // Mode state
     sequencerScreen_t screen;
