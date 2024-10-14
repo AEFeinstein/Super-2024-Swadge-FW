@@ -412,7 +412,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case GARBOTNIK_FLYING:
         {
             bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
-            gData->numHarpoons        = 100;
+            gData->numHarpoons        = 60;
             gData->fuel  = 1000000LL * 60 * 1; // 1 million microseconds in a second. 60 seconds in a minute. 1 minutes.
             entity->data = gData;
 
