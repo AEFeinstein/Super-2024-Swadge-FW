@@ -552,13 +552,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     }
     entity->cSquared = entity->halfWidth * entity->halfWidth + entity->halfHeight * entity->halfHeight;
 
-    if (entity != NULL)
-    {
-        entityManager->activeEntities++;
-        // if(entityManager->activeEntities % 10 == 0 || entityManager->activeEntities == MAX_ENTITIES){
-        //     printf("%d/%d entities ^\n", entityManager->activeEntities, MAX_ENTITIES);
-        // }
-    }
+    entityManager->activeEntities++;
+    // if(entityManager->activeEntities % 10 == 0 || entityManager->activeEntities == MAX_ENTITIES){
+    //     printf("%d/%d entities ^\n", entityManager->activeEntities, MAX_ENTITIES);
+    // }
 
     return entity;
 }
