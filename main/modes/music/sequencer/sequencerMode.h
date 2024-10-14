@@ -45,6 +45,10 @@ typedef struct
     int32_t cellWidth;
     int32_t rowHeight;
 
+    // UI Images
+    wsg_t noteWsgs[5];
+    wsg_t instrumentWsgs[3];
+
     // Scrolling
     bool isPlaying;
     int32_t usPerPx;

@@ -15,7 +15,8 @@ static void sequencerExitMode(void);
 static void sequencerMainLoop(int64_t elapsedUs);
 static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
-static void sequencerMenuCb(const char*, bool selected, uint32_t settingVal);
+static void sequencerSongMenuCb(const char*, bool selected, uint32_t settingVal);
+static void sequencerNoteMenuCb(const char*, bool selected, uint32_t settingVal);
 static bool sequencerMidiCb(midiEvent_t* event);
 
 //==============================================================================
@@ -48,12 +49,15 @@ static const char* songLengthLabels[] = {"1 bar", "2 bars"};
 static const int32_t songLengthVals[] = {1, 2};
 
 static const char str_instrument[]    = "Instrument: ";
-static const char* instrumentLabels[] = {"Piano", "Marimba", "Organ", "Guitar", "Bass", "Violin", "Trumpet", "Sax"};
-static const int32_t instrumentVals[] = {1, 13, 20, 27, 39, 41, 57, 66};
+static const char* instrumentLabels[] = {"Piano", "Guitar", "Drums"};
+static const int32_t instrumentVals[] = {1, 27, 99}; // TODO pick correct drum val
+const char* const instrumentWsgs[]    = {"seq_piano.wsg", "seq_guitar.wsg", "seq_drums.wsg"};
 
-static const char str_noteType[]    = "Type: ";
+static const char str_noteType[]    = "Note: ";
 static const char* noteTypeLabels[] = {"Whole", "Half", "Quarter", "Eighth", "Sixteenth"};
 static const int32_t noteTypeVals[] = {1, 2, 4, 8, 16};
+const char* const noteWsgs[]
+    = {"whole_note.wsg", "half_note.wsg", "quarter_note.wsg", "eighth_note.wsg", "sixteenth_note.wsg"};
 
 swadgeMode_t sequencerMode = {
     .modeName                 = sequencerName,
@@ -94,7 +98,7 @@ static void sequencerEnterMode(void)
 
     loadFont("ibm_vga8.font", &sv->ibm, false);
 
-    sv->songMenu = initMenu(str_songOptions, sequencerMenuCb);
+    sv->songMenu = initMenu(str_songOptions, sequencerSongMenuCb);
 
     settingParam_t sp_tempo = {
         .min = tempoVals[0],
@@ -120,57 +124,61 @@ static void sequencerEnterMode(void)
         .min = songLengthVals[0],
         .max = songLengthVals[ARRAY_SIZE(songLengthVals) - 1],
     };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_songLength, songLengthLabels, songLengthVals, ARRAY_SIZE(songLengthVals),
-                                 &sp_songLength, 1);
-
+    addSettingsOptionsItemToMenu(sv->songMenu, str_songLength, songLengthLabels, songLengthVals,
+                                 ARRAY_SIZE(songLengthVals), &sp_songLength, 1);
 
     sv->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     //////////////////////////////////////////////////////////////////////////
-    // Attempt to initialize wheel menu
+    // Initialize wheel menu
 
     static const rectangle_t textRect = {
-        .pos.x = 15,
-        .pos.y = 0,
-        .width = TFT_WIDTH - 30,
+        .pos.x  = 15,
+        .pos.y  = 0,
+        .width  = TFT_WIDTH - 30,
         .height = 40,
     };
-    sv->wheelRenderer = initWheelMenu(&sv->ibm, 0, &textRect);
+    sv->wheelRenderer = initWheelMenu(&sv->ibm, 90, &textRect);
 
-    sv->noteMenu = initMenu(str_noteOptions, sequencerMenuCb);
+    wheelMenuSetColor(sv->wheelRenderer, c555);
+
+    sv->noteMenu = initMenu(str_noteOptions, sequencerNoteMenuCb);
 
     uint8_t noteMenuPos = 0;
 
     // Add instrument options
+    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
+    {
+        loadWsg(instrumentWsgs[i], &sv->instrumentWsgs[i], true);
+    }
     settingParam_t sp_instrument = {
         .min = instrumentVals[0],
         .max = instrumentVals[ARRAY_SIZE(instrumentVals) - 1],
     };
-    addSettingsOptionsItemToMenu(sv->noteMenu, str_instrument, instrumentLabels, instrumentVals, ARRAY_SIZE(instrumentVals),
-                                 &sp_instrument, 1);
-    wheelMenuSetItemInfo(sv->wheelRenderer, str_instrument, NULL, noteMenuPos++, SCROLL_VERT);
-    wheelMenuSetItemTextIcon(sv->wheelRenderer, str_instrument, "I");
-    for(uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
+    addSettingsOptionsItemToMenu(sv->noteMenu, str_instrument, instrumentLabels, instrumentVals,
+                                 ARRAY_SIZE(instrumentVals), &sp_instrument, 1);
+    wheelMenuSetItemInfo(sv->wheelRenderer, str_instrument, &sv->instrumentWsgs[0], noteMenuPos++, SCROLL_VERT);
+    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
     {
-        wheelMenuSetItemInfo(sv->wheelRenderer, instrumentLabels[i], NULL, i, NO_SCROLL);
-        // wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
-        // wheelMenuSetItemSize(sd->wheelMenu, itemInfo->label, -1, -1, WM_SHAPE_ROUNDED_RECT);
+        wheelMenuSetItemInfo(sv->wheelRenderer, instrumentLabels[i], &sv->instrumentWsgs[i], i, NO_SCROLL);
     }
 
     // Add note type options
+    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
+    {
+        loadWsg(noteWsgs[i], &sv->noteWsgs[i], true);
+    }
     settingParam_t sp_noteType = {
         .min = noteTypeVals[0],
         .max = noteTypeVals[ARRAY_SIZE(noteTypeVals) - 1],
     };
     addSettingsOptionsItemToMenu(sv->noteMenu, str_noteType, noteTypeLabels, noteTypeVals, ARRAY_SIZE(noteTypeVals),
-                                &sp_noteType, 4);
-    wheelMenuSetItemInfo(sv->wheelRenderer, str_noteType, NULL, noteMenuPos++, SCROLL_VERT);
-    wheelMenuSetItemTextIcon(sv->wheelRenderer, str_noteType, "NT");
-    for(uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
+                                 &sp_noteType, 4);
+    wheelMenuSetItemInfo(sv->wheelRenderer, str_noteType, &sv->noteWsgs[2], noteMenuPos++, SCROLL_VERT);
+
+    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
     {
-        wheelMenuSetItemInfo(sv->wheelRenderer, noteTypeLabels[i], NULL, i, NO_SCROLL);
-        // wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
-        // wheelMenuSetItemSize(sd->wheelMenu, itemInfo->label, -1, -1, WM_SHAPE_ROUNDED_RECT);
+        wheelMenuSetItemInfo(sv->wheelRenderer, noteTypeLabels[i], &sv->noteWsgs[i], i, NO_SCROLL);
     }
 
     // Song defaults
@@ -223,6 +231,16 @@ static void sequencerExitMode(void)
 
     deinitWheelMenu(sv->wheelRenderer);
     deinitMenu(sv->noteMenu);
+
+    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
+    {
+        freeWsg(&sv->noteWsgs[i]);
+    }
+    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
+    {
+        freeWsg(&sv->instrumentWsgs[i]);
+    }
+
     free(sv);
 }
 
@@ -296,12 +314,45 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
  */
-static void sequencerMenuCb(const char* label, bool selected, uint32_t settingVal)
+static void sequencerSongMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    printf("%s %s\n", label, selected ? "selected" : "scrolled to");
+    printf("%s %s (%d)\n", selected ? "selected" : "scrolled to", label, settingVal);
 
     if (selected)
     {
+        // TODO adjust song params
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param label
+ * @param selected
+ * @param settingVal
+ */
+static void sequencerNoteMenuCb(const char* label, bool selected, uint32_t settingVal)
+{
+    if (selected)
+    {
+        // TODO adjust note params
+        if (str_noteType == label)
+        {
+            // TODO set note parameter
+            wheelMenuSetItemIcon(sv->wheelRenderer, str_noteType, &sv->noteWsgs[__builtin_ctz(settingVal)]);
+        }
+        else if (str_instrument == label)
+        {
+            // TODO set note parameter
+            for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
+            {
+                if (instrumentVals[i] == settingVal)
+                {
+                    wheelMenuSetItemIcon(sv->wheelRenderer, str_instrument, &sv->instrumentWsgs[i]);
+                    break;
+                }
+            }
+        }
     }
 }
 

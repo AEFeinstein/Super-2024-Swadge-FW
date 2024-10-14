@@ -187,8 +187,8 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
 
 /**
  * @brief TODO
- * 
- * @param sv 
+ *
+ * @param sv
  */
 void sequencerGridTouch(sequencerVars_t* sv)
 {
