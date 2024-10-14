@@ -98,7 +98,7 @@ static cGrove_t* cg = NULL;
 static void cGroveEnterMode(void)
 {
     // Mode memory allocation
-    // FIXME: can't include 
+    // FIXME: Emulator doesn't accept this?
     // cg = heap_caps_calloc(1, sizeof(cGrove_t), MALLOC_CAP_SPIRAM);
     cg = calloc(1, sizeof(cGrove_t));
     setFrameRateUs(CG_FRAMERATE);

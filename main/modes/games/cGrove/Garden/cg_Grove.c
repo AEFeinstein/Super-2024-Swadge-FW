@@ -14,6 +14,7 @@
 //==============================================================================
 
 #include "cg_Grove.h"
+#include "cg_GroveAI.h"
 #include "cg_GroveDraw.h"
 #include "cg_Items.h"
 
@@ -63,8 +64,8 @@ static void cg_moveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange);
 
 /**
  * @brief Initialize object boundaries
- * 
- * @param cg Game Data 
+ *
+ * @param cg Game Data
  */
 static void cg_setupBorders(cGrove_t* cg);
 
@@ -158,7 +159,15 @@ void cg_runGrove(cGrove_t* cg)
         cg->grove.heldChowa->aabb.pos = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos);
     }
 
-    // TODO: Chowa AI
+    // Chowa AI
+    for (int32_t idx = 0; idx < CG_MAX_CHOWA; idx++)
+    {
+        //cg_GroveChowaBrain(cg, idx, false);
+    }
+    for (int32_t idx = 0; idx < CG_GROVE_MAX_GUEST_CHOWA; idx++)
+    {
+        //cg_GroveChowaBrain(cg, idx, true);
+    }
 
     // Draw
     cg_groveDraw(cg);
@@ -328,27 +337,21 @@ static void cg_moveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange)
 
 static void cg_setupBorders(cGrove_t* cg)
 {
-    // Border
-    cg->grove.boundaries[CG_BORDER].pos.x  = 32;
-    cg->grove.boundaries[CG_BORDER].pos.y  = 32;
-    cg->grove.boundaries[CG_BORDER].width  = cg->grove.groveBG.w - 64;
-    cg->grove.boundaries[CG_BORDER].height = cg->grove.groveBG.h - 64;
-
     // Tree
-    cg->grove.boundaries[CG_TREE].pos.x = 0;
-    cg->grove.boundaries[CG_TREE].pos.y = 10;
-    cg->grove.boundaries[CG_TREE].width = 106;
+    cg->grove.boundaries[CG_TREE].pos.x  = 0;
+    cg->grove.boundaries[CG_TREE].pos.y  = 10;
+    cg->grove.boundaries[CG_TREE].width  = 106;
     cg->grove.boundaries[CG_TREE].height = 82;
 
     // Stump
-    cg->grove.boundaries[CG_STUMP].pos.x = 492;
-    cg->grove.boundaries[CG_STUMP].pos.y = 66;
-    cg->grove.boundaries[CG_STUMP].width = 48;
+    cg->grove.boundaries[CG_STUMP].pos.x  = 492;
+    cg->grove.boundaries[CG_STUMP].pos.y  = 66;
+    cg->grove.boundaries[CG_STUMP].width  = 48;
     cg->grove.boundaries[CG_STUMP].height = 32;
 
     // Water
-    cg->grove.boundaries[CG_WATER].pos.x = 32;
-    cg->grove.boundaries[CG_WATER].pos.y = 348;
-    cg->grove.boundaries[CG_WATER].width = 290;
-    cg->grove.boundaries[CG_WATER].height = 96;
+    cg->grove.boundaries[CG_WATER].pos.x  = 32;
+    cg->grove.boundaries[CG_WATER].pos.y  = 348;
+    cg->grove.boundaries[CG_WATER].width  = 290;
+    cg->grove.boundaries[CG_WATER].height = 108;
 }

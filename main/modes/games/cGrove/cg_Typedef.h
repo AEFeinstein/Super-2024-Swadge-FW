@@ -95,14 +95,6 @@ typedef enum
     CG_ZAPPY,
 } cgColorType_t;
 
-typedef enum
-{
-    CHOWA_STATIC,
-    CHOWA_WANDER,
-    CHOWA_CHASE,
-    CHOWA_HELD,
-} cgChowaStateGarden_t;
-
 // Structs ==============================
 typedef struct
 {
@@ -122,14 +114,6 @@ typedef struct
     // Note: Palette must be initialized for all Chowa, regardless or the colors will be screwy
     cgColorType_t type; ///< Type of Chowa
     wsgPalette_t color; ///< If Normal type, color scheme
-
-    // Garden
-    rectangle_t aabb;            ///< Position and bounding box for grabbing
-    bool holdingItem;            ///< If Chowa is holding an item
-    cgItem_t* heldItem;          ///< Pointer to the held item
-    cgChowaStateGarden_t gState; ///< Behavior state in the garden
-    vec_t targetPos;             ///< Target position when moving
-    int32_t waitTimer;           ///< generic timer for waiting between states
 } cgChowa_t;
 
 //==============================================================================
@@ -199,13 +183,41 @@ typedef struct
 
 typedef enum
 {
-    CG_BORDER,
     CG_TREE,
     CG_STUMP,
     CG_WATER
 } cgBoundary_t;
 
+typedef enum
+{
+    CHOWA_IDLE,     ///< Doing nothing. Get new behavior
+    CHOWA_STATIC,   ///< Standing in place
+    CHOWA_WALK,     ///< Walking, running, swimming, struggling to swim towards a target
+    CHOWA_CHASE,    ///< Follow Other chowa, object, or cursor
+    CHOWA_USE_ITEM, ///< Use an item held in Chowa's possession
+    CHOWA_BOX,      ///< Does sparring type moves
+    CHOWA_SING,     ///< Sings
+    CHOWA_TALK,     ///< Talks with another Chowa
+    CHOWA_HELD,     ///< Held, cannot move
+} cgChowaStateGarden_t;
+
 // Structs ==============================
+typedef struct
+{
+    // Basic data
+    cgChowa_t* chowa; ///< Main Chowa data
+    rectangle_t aabb; ///< Position and bounding box for grabbing
+
+    // Items
+    bool holdingItem;   ///< If Chowa is holding an item
+    cgItem_t* heldItem; ///< Pointer to the held item
+
+    // AI
+    cgChowaStateGarden_t gState; ///< Behavior state in the garden
+    int64_t timer;               ///< Timer for continuing to do a behavior
+    vec_t targetPos;             ///< Position to head to
+} cgGroveChowa_t;
+
 typedef struct
 {
     // Assets
@@ -216,17 +228,17 @@ typedef struct
     wsg_t* cursors; ///< Cursor sprites
 
     // Field data
-    cgItem_t items[CG_GROVE_MAX_ITEMS];         ///< Items present in the Grove
-    cgChowa_t guests[CG_GROVE_MAX_GUEST_CHOWA]; ///< Guest Chowa
-    rectangle_t boundaries[5];                  ///< Boundary boxes
+    cgItem_t items[CG_GROVE_MAX_ITEMS];                            ///< Items present in the Grove
+    rectangle_t boundaries[3];                                     ///< Boundary boxes
+    cgGroveChowa_t chowa[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA]; ///< List of all chowa in the garden
 
     // Player resources
-    rectangle_t camera;   ///< In-garden camera viewport
-    rectangle_t cursor;   ///< Cursor position and bounding box
-    bool holdingItem;     ///< If the player is holding an item
-    cgItem_t* heldItem;   ///< The held item
-    bool holdingChowa;    ///< If the pl;ayer is holding a Chowa
-    cgChowa_t* heldChowa; ///< The held Chowa
+    rectangle_t camera;        ///< In-garden camera viewport
+    rectangle_t cursor;        ///< Cursor position and bounding box
+    bool holdingItem;          ///< If the player is holding an item
+    cgItem_t* heldItem;        ///< The held item
+    bool holdingChowa;         ///< If the pl;ayer is holding a Chowa
+    cgGroveChowa_t* heldChowa; ///< The held Chowa
 } cgGrove_t;
 
 //==============================================================================
@@ -429,5 +441,6 @@ typedef struct
     bool online; ///< If online features are enabled
 
     // Chowa
-    cgChowa_t chowa[CG_MAX_CHOWA]; ///< List of Chowa
+    cgChowa_t chowa[CG_MAX_CHOWA];              ///< List of Chowa
+    cgChowa_t guests[CG_GROVE_MAX_GUEST_CHOWA]; ///< Guest Chowa
 } cGrove_t;
