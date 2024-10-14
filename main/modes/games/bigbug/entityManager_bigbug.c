@@ -137,30 +137,31 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 {
     vec_t shiftedCameraPos = camera->pos;
-    shiftedCameraPos.x = shiftedCameraPos.x << DECIMAL_BITS;
-    shiftedCameraPos.y = shiftedCameraPos.y << DECIMAL_BITS;
-    node_t* currentNode = entityManager->cachedEntities->first;
-    while(currentNode != NULL)
+    shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
+    shiftedCameraPos.y     = (shiftedCameraPos.y + 120) << DECIMAL_BITS;
+    node_t* currentNode    = entityManager->cachedEntities->first;
+    while (currentNode != NULL)
     {
         bb_entity_t* curEntity = (bb_entity_t*)currentNode->val;
+        node_t* next           = currentNode->next;
         // Camera diagonal explained
         // 280 240 tft width x height
-        // 140 120 half width height
+        // 140 120 halfWidth halfHeight
         // 2240 1920 bit shifted << 4
         // 5,017,600 3,686,400 squared
         // 8,704,000 added
-        if(sqMagVec2d(subVec2d(curEntity->pos, shiftedCameraPos))<=curEntity->cSquared + 8704000)
-        {//if it is close
+        if (sqMagVec2d(subVec2d(curEntity->pos, shiftedCameraPos)) <= curEntity->cSquared + 8704000)
+        { // if it is close
             bb_entity_t* foundSpot = bb_findInactiveEntity(entityManager);
-            if(foundSpot != NULL)
+            if (foundSpot != NULL)
             {
-                //like a memcopy
+                // like a memcopy
                 *foundSpot = *curEntity;
+                entityManager->activeEntities++;
                 removeEntry(entityManager->cachedEntities, currentNode);
             }
-        
-            currentNode = currentNode->next;
         }
+        currentNode = next;
     }
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
@@ -168,14 +169,15 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
         bb_entity_t* curEntity = &entityManager->entities[i];
         if (curEntity->active)
         {
-            if(curEntity->cacheable){
-                if(sqMagVec2d(subVec2d(curEntity->pos, shiftedCameraPos))>curEntity->cSquared + 8704000)
-                {//if it is far
-                    //This entity gets cached
+            if (curEntity->cacheable)
+            {
+                if (sqMagVec2d(subVec2d(curEntity->pos, shiftedCameraPos)) > curEntity->cSquared + 8704000)
+                { // if it is far
+                    // This entity gets cached
                     bb_entity_t* cachedEntity = heap_caps_malloc(sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
-                    //It's like a memcopy
+                    // It's like a memcopy
                     *cachedEntity = *curEntity;
-                    //push to the tail
+                    // push to the tail
                     push(entityManager->cachedEntities, (void*)cachedEntity);
                     bb_destroyEntity(curEntity);
                     continue;
@@ -188,11 +190,8 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             }
             if (curEntity->updateFarFunction != NULL)
             {
-                if (bb_boxesCollideShift(
-                        &(bb_box_t){addVec2d(camera->pos, (vec_t){camera->width / 2, camera->height / 2}),
-                                    camera->width / 2, camera->height / 2},
-                        &(bb_box_t){curEntity->pos, curEntity->halfWidth,
-                                    curEntity->halfHeight})
+                if (bb_boxesCollideShift(&(bb_box_t){addVec2d(camera->pos, (vec_t){140, 120}), 140, 120},
+                                         &(bb_box_t){curEntity->pos, curEntity->halfWidth, curEntity->halfHeight})
                     == false)
                 {
                     curEntity->updateFarFunction(curEntity);
@@ -393,7 +392,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
     if (entity == NULL)
     {
-        printf("This should hopefully never happen.\n");
+        printf("entityManager_bigbug.c This should hopefully never happen.\n");
         return NULL;
     }
 
@@ -413,7 +412,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case GARBOTNIK_FLYING:
         {
             bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
-            gData->numHarpoons        = 15;
+            gData->numHarpoons        = 100;
             gData->fuel  = 1000000LL * 60 * 1; // 1 million microseconds in a second. 60 seconds in a minute. 1 minutes.
             entity->data = gData;
 
@@ -473,6 +472,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 
+            entity->cacheable = true;
+
             entity->halfWidth  = 192;
             entity->halfHeight = 104;
 
@@ -483,6 +484,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+
+            entity->cacheable = true;
 
             entity->halfWidth  = 88;
             entity->halfHeight = 48;
@@ -495,6 +498,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 
+            entity->cacheable = true;
+
             entity->halfWidth  = 120;
             entity->halfHeight = 104;
 
@@ -505,6 +510,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+
+            entity->cacheable = true;
 
             entity->halfWidth  = 144;
             entity->halfHeight = 144;
@@ -517,6 +524,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 
+            entity->cacheable = true;
+
             entity->halfWidth  = 184;
             entity->halfHeight = 64;
 
@@ -528,8 +537,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 
-            entity->halfWidth  = 14;
-            entity->halfHeight = 66;
+            entity->cacheable = true;
+
+            entity->halfWidth  = 184;
+            entity->halfHeight = 88;
 
             entity->updateFunction = &bb_updateBug;
             break;
@@ -544,7 +555,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     if (entity != NULL)
     {
         entityManager->activeEntities++;
-        // printf("%d/%d entities\n", entityManager->activeEntities, MAX_ENTITIES);
+        // if(entityManager->activeEntities % 10 == 0 || entityManager->activeEntities == MAX_ENTITIES){
+        //     printf("%d/%d entities ^\n", entityManager->activeEntities, MAX_ENTITIES);
+        // }
     }
 
     return entity;
@@ -559,7 +572,7 @@ void bb_freeEntityManager(bb_entityManager_t* self)
             freeWsg(&self->sprites[i].frames[f]);
         }
     }
-    //free and clear
+    // free and clear
     free(self->entities);
     clear(self->cachedEntities);
 }

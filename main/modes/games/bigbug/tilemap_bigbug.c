@@ -202,10 +202,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
             jEnd = TILE_FIELD_HEIGHT - 1;
         }
 
-        // printf("iStart: %d\n", iStart);
-        // printf("iEnd: %d\n", iEnd);
-        // printf("jStart: %d\n", jStart);
-        // printf("jEnd: %d\n", jEnd);
+        // printf("i: %d-%d j:%d-%d\n", iStart, iEnd, jStart, jEnd);
 
         int32_t brightness;
 
@@ -237,6 +234,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     tilemap->fgTiles[i][j].entity = eggLeaves;
                                 }
                             }
+                            break;
                         }
                         default:
                         {

@@ -67,7 +67,7 @@ void bb_destroyEntity(bb_entity_t* self)
     self->overlapTileHandler          = NULL;
 
     self->entityManager->activeEntities--;
-    // printf("%d/%d entitiess\n", self->entityManager->activeEntities, MAX_ENTITIES);
+    // printf("%d/%d entities v\n", self->entityManager->activeEntities, MAX_ENTITIES);
 }
 
 void bb_updateRocketLanding(bb_entity_t* self)
@@ -530,7 +530,7 @@ void bb_updateFarEggleaves(bb_entity_t* self)
     }
     else
     {
-        printf("this should not happen\n");
+        printf("entity_bigbug.c this should not happen\n");
     }
 
     // destroy the egg

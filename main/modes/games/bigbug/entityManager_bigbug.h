@@ -17,7 +17,7 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define MAX_ENTITIES 128
+#define MAX_ENTITIES 200
 #define NUM_SPRITES  14 // The number of bb_sprite_t
 
 //==============================================================================
@@ -28,7 +28,7 @@ typedef struct
 {
     bb_sprite_t sprites[NUM_SPRITES];
     // list_t* sprites[NUM_SPRITES];
-    bb_entity_t*  entities;
+    bb_entity_t* entities;
     list_t* cachedEntities;
     uint8_t activeEntities;
 
