@@ -29,6 +29,7 @@ typedef struct
 
     uint32_t score;
     uint32_t bonusScore;
+    uint32_t extraLifeScore;
     uint8_t lives;
     int16_t levelTime;
     uint16_t frameCount;

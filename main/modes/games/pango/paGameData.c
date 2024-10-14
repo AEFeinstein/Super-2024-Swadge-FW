@@ -18,6 +18,7 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
     gameData->gameState          = 0;
     gameData->btnState           = 0;
     gameData->score              = 0;
+    gameData->extraLifeScore     = 10000;
     gameData->lives              = 3;
     gameData->levelTime          = 000;
     gameData->level              = 1;
@@ -39,6 +40,7 @@ void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t level
     gameData->gameState          = 0;
     gameData->btnState           = 0;
     gameData->score              = 0;
+    gameData->extraLifeScore     = 10000;
     gameData->lives              = 3;
     gameData->levelTime          = 000;
     gameData->frameCount         = 0;
@@ -90,6 +92,13 @@ void pa_updateLedsHpMeter(paEntityManager_t* entityManager, paGameData_t* gameDa
 void pa_scorePoints(paGameData_t* gameData, uint16_t points)
 {
     gameData->score += points;
+
+    if (gameData->score >= gameData->extraLifeScore)
+    {
+        gameData->lives++;
+        gameData->extraLifeScore += 10000; //(gameData->extraLifeScore + 2000);
+        soundPlaySfx(&(gameData->soundManager->snd1up), MIDI_SFX);
+    }
 }
 
 void pa_resetGameDataLeds(paGameData_t* gameData)

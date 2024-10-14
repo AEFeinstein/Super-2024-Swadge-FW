@@ -938,7 +938,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
     if (self->gameData.frameCount > 100)
     {
         if(self->gameData.bonusScore > 0){
-            self->gameData.score += 100;
+            pa_scorePoints(&(pango->gameData), 100);
             self->gameData.bonusScore -= 100;
             soundPlaySfx(&(self->soundManager.sndTally), 0);
         }
