@@ -110,8 +110,6 @@ struct paEntity_t
     uint8_t homeTileY;
 
     bool visible;
-    uint8_t hp;
-    int8_t invincibilityFrames;
     uint16_t scoreValue;
 
     uint8_t targetTileX;

@@ -1120,24 +1120,9 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
         {
             other->xspeed = -other->xspeed;
 
-            /*if (self->y < other->y || self->yspeed > 0)
+            if (other->state != PA_EN_ST_STUN)
             {
-                pa_scorePoints(self->gameData, other->scoreValue);
-
-                killEnemy(other);
-                soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
-
-                self->yspeed    = -180;
-                self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
-                self->falling   = true;
-            }
-            else*/
-            if (self->invincibilityFrames <= 0 && other->state != PA_EN_ST_STUN)
-            {
-                self->hp--;
-                pa_updateLedsHpMeter(self->entityManager, self->gameData);
-
-                if (!self->gameData->debugMode && self->hp == 0)
+                if (!self->gameData->debugMode)
                 {
                     self->updateFunction        = &updateEntityDead;
                     self->type                  = ENTITY_DEAD;
@@ -1152,7 +1137,6 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
                 {
                     self->xspeed              = 0;
                     self->yspeed              = 0;
-                    self->invincibilityFrames = 120;
                     soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
                 }
             }
@@ -1422,8 +1406,6 @@ void dieWhenFallingOffScreen(paEntity_t* self)
     if (((self->y >> SUBPIXEL_RESOLUTION) > deathBoundary)
         && ((self->y >> SUBPIXEL_RESOLUTION) < deathBoundary + DESPAWN_THRESHOLD))
     {
-        self->hp = 0;
-        pa_updateLedsHpMeter(self->entityManager, self->gameData);
         self->gameData->changeState = PA_ST_DEAD;
         pa_destroyEntity(self, true);
     }
@@ -1586,9 +1568,6 @@ void pa_defaultOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, 
 
 void killPlayer(paEntity_t* self)
 {
-    self->hp = 0;
-    pa_updateLedsHpMeter(self->entityManager, self->gameData);
-
     self->updateFunction        = &updateEntityDead;
     self->type                  = ENTITY_DEAD;
     self->xspeed                = 0;

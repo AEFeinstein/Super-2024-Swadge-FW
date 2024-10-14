@@ -53,42 +53,6 @@ void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t level
     pa_resetGameDataLeds(gameData);
 }
 
-void pa_updateLedsHpMeter(paEntityManager_t* entityManager, paGameData_t* gameData)
-{
-    if (entityManager->playerEntity == NULL)
-    {
-        return;
-    }
-
-    uint8_t hp = entityManager->playerEntity->hp;
-    if (hp > 3)
-    {
-        hp = 3;
-    }
-
-    // HP meter led pairs:
-    // 3 4
-    // 2 5
-    // 1 6
-    for (int32_t i = 1; i < 7; i++)
-    {
-        gameData->leds[i].r = 0x80;
-        gameData->leds[i].g = 0x00;
-        gameData->leds[i].b = 0x00;
-    }
-
-    for (int32_t i = 1; i < 1 + hp; i++)
-    {
-        gameData->leds[i].r = 0x00;
-        gameData->leds[i].g = 0x80;
-
-        gameData->leds[7 - i].r = 0x00;
-        gameData->leds[7 - i].g = 0x80;
-    }
-
-    setLeds(gameData->leds, CONFIG_NUM_LEDS);
-}
-
 void pa_scorePoints(paGameData_t* gameData, uint16_t points)
 {
     gameData->score += points;

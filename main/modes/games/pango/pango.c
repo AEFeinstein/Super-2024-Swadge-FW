@@ -742,8 +742,6 @@ void changeStateGame(pango_t* self)
         entityManager->activeEnemies -= skippedEnemyRespawnCount;
     }
 
-    pa_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
-
     self->tilemap.executeTileSpawnAll = true;
 
     self->update = &updateGame;

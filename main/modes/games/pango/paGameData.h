@@ -68,10 +68,7 @@ typedef struct
 //==============================================================================
 void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManager);
 void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t levelIndex);
-void pa_updateLedsHpMeter(paEntityManager_t* entityManager, paGameData_t* gameData);
 void pa_scorePoints(paGameData_t* gameData, uint16_t points);
-void addCoins(paGameData_t* gameData, uint8_t coins);
-void updateComboTimer(paGameData_t* gameData);
 void pa_resetGameDataLeds(paGameData_t* gameData);
 void pa_updateLedsShowHighScores(paGameData_t* gameData);
 void pa_updateLedsLevelClear(paGameData_t* gameData);

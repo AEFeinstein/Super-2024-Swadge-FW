@@ -202,7 +202,6 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->gravity            = 4;
     entity->falling            = false;
     entity->spriteFlipVertical = false;
-    entity->hp                 = 1;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
     entity->state              = PA_PL_ST_NORMAL;
     entity->stateTimer         = -1;
