@@ -129,15 +129,17 @@ static void sequencerEnterMode(void)
     //////////////////////////////////////////////////////////////////////////
     // Attempt to initialize wheel menu
 
-    rectangle_t textRect = {
-        .pos.x = 0,
+    static const rectangle_t textRect = {
+        .pos.x = 15,
         .pos.y = 0,
-        .width = TFT_WIDTH,
-        .height = TFT_HEIGHT,
+        .width = TFT_WIDTH - 30,
+        .height = 40,
     };
     sv->wheelRenderer = initWheelMenu(&sv->ibm, 0, &textRect);
 
     sv->noteMenu = initMenu(str_noteOptions, sequencerMenuCb);
+
+    uint8_t noteMenuPos = 0;
 
     // Add instrument options
     settingParam_t sp_instrument = {
@@ -146,6 +148,8 @@ static void sequencerEnterMode(void)
     };
     addSettingsOptionsItemToMenu(sv->noteMenu, str_instrument, instrumentLabels, instrumentVals, ARRAY_SIZE(instrumentVals),
                                  &sp_instrument, 1);
+    wheelMenuSetItemInfo(sv->wheelRenderer, str_instrument, NULL, noteMenuPos++, SCROLL_VERT);
+    wheelMenuSetItemTextIcon(sv->wheelRenderer, str_instrument, "I");
     for(uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
     {
         wheelMenuSetItemInfo(sv->wheelRenderer, instrumentLabels[i], NULL, i, NO_SCROLL);
@@ -159,7 +163,9 @@ static void sequencerEnterMode(void)
         .max = noteTypeVals[ARRAY_SIZE(noteTypeVals) - 1],
     };
     addSettingsOptionsItemToMenu(sv->noteMenu, str_noteType, noteTypeLabels, noteTypeVals, ARRAY_SIZE(noteTypeVals),
-                                 &sp_noteType, 4);
+                                &sp_noteType, 4);
+    wheelMenuSetItemInfo(sv->wheelRenderer, str_noteType, NULL, noteMenuPos++, SCROLL_VERT);
+    wheelMenuSetItemTextIcon(sv->wheelRenderer, str_noteType, "NT");
     for(uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
     {
         wheelMenuSetItemInfo(sv->wheelRenderer, noteTypeLabels[i], NULL, i, NO_SCROLL);
