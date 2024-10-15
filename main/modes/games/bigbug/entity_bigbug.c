@@ -38,11 +38,6 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
 
 void bb_destroyEntity(bb_entity_t* self)
 {
-    if(self == NULL)
-    {
-        return;
-    }
-
     // Zero out most info (but not references to manager type things) for entity to be reused.
     self->active    = false;
     self->cacheable = false;

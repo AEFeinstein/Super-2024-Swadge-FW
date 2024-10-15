@@ -210,7 +210,6 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     node_t* currentCollisionCheck = curEntity->collisions->first;
                     while (currentCollisionCheck != NULL)
                     {
-                        
                         node_t* currentOtherType = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
                         while (currentOtherType != NULL)
                         {
