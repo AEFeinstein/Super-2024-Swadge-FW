@@ -57,6 +57,8 @@ typedef struct
     int16_t enemyInitialSpeed;
     int16_t minAggroEnemies;
     int16_t maxAggroEnemies;
+    int16_t minAggroTime;
+    int16_t maxAggroTime;
 
     paSoundManager_t* soundManager;
 

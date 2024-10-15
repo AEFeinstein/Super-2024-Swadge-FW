@@ -189,5 +189,6 @@ void pa_updateBlockFragment(paEntity_t* self);
 void pa_updateScoreDisplay(paEntity_t* self);
 void pa_defaultEntityDrawHandler(paEntity_t* self);
 void pa_scoreDisplayDrawHandler(paEntity_t* self);
+int16_t pa_enemySetAggroStateTimer(paEntity_t* self);
 
 #endif

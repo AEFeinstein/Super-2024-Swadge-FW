@@ -271,7 +271,7 @@ void updateCrabdozer(paEntity_t* self)
                 } else*/
                 {
                     self->state      = PA_EN_ST_NORMAL;
-                    self->stateTimer = (300 + esp_random() % 600); // Min 5 seconds, max 15 seconds
+                    self->stateTimer = pa_enemySetAggroStateTimer(self);
                 }
             }
             else
@@ -303,14 +303,14 @@ void updateCrabdozer(paEntity_t* self)
                     self->state = PA_EN_ST_AGGRESSIVE;
                     self->entityManager->aggroEnemies++;
                     self->baseSpeed += 2;
-                    self->stateTimer = (300 + esp_random() % 300); // Min 5 seconds, max 10 seconds
+                    self->stateTimer = pa_enemySetAggroStateTimer(self);
                 }
                 else if (self->state == PA_EN_ST_AGGRESSIVE)
                 {
                     self->state = PA_EN_ST_NORMAL;
                     self->entityManager->aggroEnemies--;
                     self->baseSpeed -= 2;
-                    self->stateTimer = (300 + esp_random() % 300); // Min 5 seconds, max 10 seconds
+                    self->stateTimer = pa_enemySetAggroStateTimer(self);
                 }
             }
 
@@ -719,6 +719,10 @@ void updateCrabdozer(paEntity_t* self)
             break;
         }
     }
+}
+
+int16_t pa_enemySetAggroStateTimer(paEntity_t* self){
+    return (self->gameData->minAggroTime + esp_random() % (self->gameData->maxAggroTime - self->gameData->minAggroTime));
 }
 
 void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t speed)

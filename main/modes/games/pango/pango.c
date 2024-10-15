@@ -401,7 +401,7 @@ void pangoBuildMainMenu(pango_t* self)
         pango->levelSelectMenuItem->label      = pangoMenuContinue;
         pango->levelSelectMenuItem->minSetting = 1;
         pango->levelSelectMenuItem->maxSetting
-            = (pango->gameData.debugMode) ? NUM_LEVELS - 1 : pango->unlockables.maxLevelIndexUnlocked;
+            = (pango->gameData.debugMode) ? MASTER_DIFFICULTY_TABLE_LENGTH : pango->unlockables.maxLevelIndexUnlocked;
         pango->levelSelectMenuItem->currentSetting
             = (pango->gameData.level == 1) ? pango->levelSelectMenuItem->maxSetting : pango->gameData.level;
         pango->levelSelectMenuItem->options = NULL;
@@ -945,7 +945,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
             // Hey look, it's a frame rule!
             self->gameData.levelTime          = 0;
 
-            if (self->gameData.level >= NUM_LEVELS - 1)
+            if (self->gameData.level >= MASTER_DIFFICULTY_TABLE_LENGTH)
             {
                 // Game Cleared!
 
@@ -1431,8 +1431,14 @@ void pa_setDifficultyLevel(paWsgManager_t* wsgManager, paGameData_t* gameData, u
         = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET];
     gameData->enemyInitialSpeed
         = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_INITIAL_SPEED_LOOKUP_OFFSET];
-    gameData->minAggroEnemies = 1;
-    gameData->maxAggroEnemies = 1;
+    gameData->minAggroTime
+        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_MINIMUM_AGGRESSIVE_TIME_LOOKUP_OFFSET];
+    gameData->maxAggroTime
+        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_MAXIMUM_AGGRESSIVE_TIME_LOOKUP_OFFSET];
+    gameData->minAggroEnemies
+        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_MINIMUM_AGGRESSIVE_COUNT_LOOKUP_OFFSET];
+    gameData->maxAggroEnemies
+        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_MAXIMUM_AGGRESSIVE_COUNT_LOOKUP_OFFSET];
 
     pa_remapBlockTile(wsgManager, masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + BLOCK_WSG_LOOKUP_OFFSET]);
 }
