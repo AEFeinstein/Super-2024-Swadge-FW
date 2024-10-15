@@ -58,9 +58,8 @@ void bb_destroyEntity(bb_entity_t* self)
             bb_collision_t* shiftedCollision = shift(self->collisions);
             while (shiftedCollision->checkOthers->first != NULL)
             {
-                free(shift(shiftedCollision->checkOthers));
+                shift(shiftedCollision->checkOthers);
             }
-            free(shiftedCollision);
         }
         free(self->collisions);
         self->collisions = NULL;
@@ -718,11 +717,10 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
             bb_collision_t* shiftedCollision = shift(self->collisions);
             while (shiftedCollision->checkOthers->first != NULL)
             {
-                free(shift(shiftedCollision->checkOthers));
+                shift(shiftedCollision->checkOthers);
             }
-            free(shiftedCollision);
         }
-    free(self->collisions);
+        free(self->collisions);
     self->collisions = NULL;
     
     self->updateFunction = bb_updateStuckHarpoon;
