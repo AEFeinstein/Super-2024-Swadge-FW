@@ -94,6 +94,8 @@ static sequencerVars_t* sv;
  */
 static void sequencerEnterMode(void)
 {
+    setFrameRateUs(16667);
+
     sv = calloc(1, sizeof(sequencerVars_t));
 
     sv->screen = SEQUENCER_SEQ;

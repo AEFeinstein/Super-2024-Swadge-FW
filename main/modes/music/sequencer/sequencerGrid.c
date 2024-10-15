@@ -153,9 +153,14 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 {
                     // If it's playing, stop
                     sv->isPlaying = false;
-                    // midiPause(globalMidiPlayerGet(MIDI_BGM), true);
+
+                    // Stop MIDI
                     midiPlayerReset(globalMidiPlayerGet(MIDI_BGM));
 
+                    // Stop here
+                    sv->gridOffsetTarget.x = sv->gridOffset.x;
+
+                    // Turn of all notes
                     node_t* noteNode = sv->notes.first;
                     while (noteNode)
                     {
@@ -164,10 +169,9 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                         noteNode              = noteNode->next;
                     }
                 }
-                else if (sv->songTimer)
+                else if (sv->gridOffset.x)
                 {
                     // If it's stopped, reset to beginning
-                    sv->songTimer          = 0;
                     sv->gridOffsetTarget.x = 0;
                 }
                 else
@@ -175,9 +179,7 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                     // If it's at the beginning, play
                     sv->isPlaying = true;
 
-                    // player->mode              = MIDI_STREAMING;
-                    // player->paused            = true;
-                    // player->streamingCallback = sequencerMidiCb;
+                    sv->songTimer = 0;
 
                     midiPause(globalMidiPlayerGet(MIDI_BGM), false);
                 }
@@ -253,26 +255,29 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
 {
     if (!sv->isPlaying)
     {
-        // TODO make this faster
-        // Smooth scroll grid to the cursor
-        if (sv->gridOffsetTarget.x > sv->gridOffset.x)
-        {
-            sv->gridOffset.x++;
-        }
-        else if (sv->gridOffsetTarget.x < sv->gridOffset.x)
-        {
-            sv->gridOffset.x--;
-        }
+        RUN_TIMER_EVERY(sv->smoothScrollTimer, 16667, elapsedUs, {
+            // Half the distance to X
+            if (sv->gridOffsetTarget.x > sv->gridOffset.x)
+            {
+                sv->gridOffset.x += (sv->gridOffsetTarget.x - sv->gridOffset.x + 1) / 2;
+            }
+            else if (sv->gridOffsetTarget.x < sv->gridOffset.x)
+            {
+                sv->gridOffset.x -= (sv->gridOffset.x - sv->gridOffsetTarget.x + 1) / 2;
+            }
 
-        if (sv->gridOffsetTarget.y > sv->gridOffset.y)
-        {
-            sv->gridOffset.y++;
-        }
-        else if (sv->gridOffsetTarget.y < sv->gridOffset.y)
-        {
-            sv->gridOffset.y--;
-        }
+            // Half the distance to Y
+            if (sv->gridOffsetTarget.y > sv->gridOffset.y)
+            {
+                sv->gridOffset.y += (sv->gridOffsetTarget.y - sv->gridOffset.y + 1) / 2;
+            }
+            else if (sv->gridOffsetTarget.y < sv->gridOffset.y)
+            {
+                sv->gridOffset.y -= (sv->gridOffset.y - sv->gridOffsetTarget.y + 1) / 2;
+            }
+        });
     }
+
     // Scroll
     if (sv->isPlaying)
     {

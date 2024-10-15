@@ -65,6 +65,7 @@ typedef struct
     int32_t cellWidth;
     int32_t rowHeight;
     int32_t numRows;
+    int32_t smoothScrollTimer;
 
     // UI Images
     wsg_t noteWsgs[5];
