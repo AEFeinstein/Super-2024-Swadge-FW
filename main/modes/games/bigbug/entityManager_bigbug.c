@@ -125,7 +125,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     printf("buggo numFrames %d\n", entityManager->sprites[BUGGO].numFrames);
 
     bb_sprite_t* buggySprite = bb_loadSprite("buggy", 4, 6, &entityManager->sprites[BUGGY]);
-    buggySprite->originX     = 12;
+    buggySprite->originX     = 13;
     buggySprite->originY     = 11;
     printf("buggy numFrames %d\n", entityManager->sprites[BUGGY].numFrames);
 
@@ -205,19 +205,12 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             {
                 for (uint8_t j = 0; j < MAX_ENTITIES; j++)
                 {
-                    if (curEntity->collisions == NULL)
-                    {
-                        break;
-                    }
                     bb_entity_t* collisionCandidate = &entityManager->entities[j];
                     // Iterate over all nodes
                     node_t* currentCollisionCheck = curEntity->collisions->first;
                     while (currentCollisionCheck != NULL)
                     {
-                        if (curEntity->collisions == NULL)
-                        {
-                            break;
-                        }
+                        
                         node_t* currentOtherType = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
                         while (currentOtherType != NULL)
                         {
@@ -232,8 +225,20 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                                 break;
                             }
                             currentOtherType = currentOtherType->next;
+                            if (curEntity->collisions == NULL)
+                            {
+                                break;
+                            }
                         }
                         currentCollisionCheck = currentCollisionCheck->next;
+                        if (curEntity->collisions == NULL)
+                        {
+                            break;
+                        }
+                    }
+                    if (curEntity->collisions == NULL)
+                    {
+                        break;
                     }
                 }
             }
@@ -515,7 +520,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             bb_collision_t* collision = heap_caps_malloc(sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionHarpoon};
-            push(entity->collisions, collision);
+            push(entity->collisions, (void*)collision);
 
             entity->updateFunction = &bb_updateHarpoon;
             entity->drawFunction   = &bb_drawHarpoon;
@@ -567,7 +572,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             entity->cacheable = true;
 
-            entity->halfWidth  = 88;
+            entity->halfWidth  = 176;
             entity->halfHeight = 48;
 
             entity->updateFunction = &bb_updateBug;

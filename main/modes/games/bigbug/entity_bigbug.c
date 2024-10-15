@@ -38,6 +38,11 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
 
 void bb_destroyEntity(bb_entity_t* self)
 {
+    if(self == NULL)
+    {
+        return;
+    }
+
     // Zero out most info (but not references to manager type things) for entity to be reused.
     self->active    = false;
     self->cacheable = false;
@@ -671,8 +676,8 @@ void bb_drawStuckHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera,
 
     vecFl_t floatVel = ((bb_stuckHarpoonData_t*)self->data)->floatVel;
 
+    drawLineFast(xOff, yOff, xOff - floatVel.x * 20, yOff - floatVel.y * 20, c112);
     drawLineFast(xOff, yOff - 1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 - 1, c344);
-    drawLineFast(xOff, yOff, xOff - floatVel.x * 20, yOff - floatVel.y * 20, c223);
 }
 
 void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -700,7 +705,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
     bb_bugData_t* bData = (bb_bugData_t*)other->data;
     bData->health -= 10;
     if(bData->health < 0){
-        bData = 0;
+        bData->health = 0;
         other->paused = true;
     }
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
