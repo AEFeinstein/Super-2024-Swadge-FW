@@ -380,24 +380,25 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
 {
     if (entityManager->playerEntity != NULL)
     {
-        int16_t squishedFuel
-            = (((bb_garbotnikData_t*)entityManager->playerEntity->data))->fuel / (60000000 / 0b11111111);
+        int32_t fuel = ((bb_garbotnikData_t*)entityManager->playerEntity->data)->fuel;
         // Set the LEDs to a display fuel level
+        // printf("timer %d\n", fuel);
         led_t leds[CONFIG_NUM_LEDS] = {0};
+        int32_t ledChunk            = 60000 / CONFIG_NUM_LEDS;
         for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
             leds[i].r = 0;
-            if (squishedFuel >= (i + 1) * 255 / CONFIG_NUM_LEDS)
+            if (fuel >= (i + 1) * ledChunk)
             {
                 leds[i].g = 255;
             }
-            else if (squishedFuel < (i) * 255 / CONFIG_NUM_LEDS)
+            else if (fuel < i * ledChunk)
             {
                 leds[i].g = 0;
             }
             else
             {
-                leds[i].g = ((squishedFuel - i * 255 / CONFIG_NUM_LEDS) * 255) / (255 / CONFIG_NUM_LEDS);
+                leds[i].g = ((fuel - i * ledChunk) * 60000) / ledChunk;
             }
             leds[i].b = 0;
         }
