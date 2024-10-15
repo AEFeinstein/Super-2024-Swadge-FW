@@ -11,6 +11,7 @@
 #include "entity_bigbug.h"
 #include "lighting_bigbug.h"
 #include "random_bigbug.h"
+#include "aabb_utils_bigbug.h"
 
 #include "esp_random.h"
 #include "palette.h"
@@ -140,6 +141,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
     shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
     shiftedCameraPos.y     = (shiftedCameraPos.y + 120) << DECIMAL_BITS;
     node_t* currentNode    = entityManager->cachedEntities->first;
+    // This loop loads entities back in if they are close to the camera.
     while (currentNode != NULL)
     {
         bb_entity_t* curEntity = (bb_entity_t*)currentNode->val;
@@ -164,6 +166,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
         currentNode = next;
     }
 
+    // This loops over all entities, doing updates and collision checks and moving the camera to the viewEntity.
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* curEntity = &entityManager->entities[i];
@@ -197,6 +200,44 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     curEntity->updateFarFunction(curEntity);
                 }
             }
+
+            if (curEntity->collisions != NULL)
+            {
+                for (uint8_t j = 0; j < MAX_ENTITIES; j++)
+                {
+                    if (curEntity->collisions == NULL)
+                    {
+                        break;
+                    }
+                    bb_entity_t* collisionCandidate = &entityManager->entities[j];
+                    // Iterate over all nodes
+                    node_t* currentCollisionCheck = curEntity->collisions->first;
+                    while (currentCollisionCheck != NULL)
+                    {
+                        if (curEntity->collisions == NULL)
+                        {
+                            break;
+                        }
+                        node_t* currentOtherType = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
+                        while (currentOtherType != NULL)
+                        {
+                            if (collisionCandidate->spriteIndex == *((bb_spriteDef_t*)currentOtherType->val))
+                            {
+                                //do a collision check here
+                                if (bb_boxesCollide(&(bb_box_t){collisionCandidate->pos, collisionCandidate->halfWidth, collisionCandidate->halfHeight},
+                                         &(bb_box_t){curEntity->pos, curEntity->halfWidth, curEntity->halfHeight}))
+                                {
+                                    ((bb_collision_t*)currentCollisionCheck->val)->function(curEntity, collisionCandidate);
+                                }
+                                break;
+                            }
+                            currentOtherType = currentOtherType->next;
+                        }
+                        currentCollisionCheck = currentCollisionCheck->next;
+                    }
+                }
+            }
+
             if (curEntity == entityManager->viewEntity)
             {
                 bb_viewFollowEntity(curEntity, camera);
@@ -326,10 +367,10 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     }
                 }
             }
-            // drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-            //           ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
-            //           ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-            //           ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+            drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+                      ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+                      ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+                      ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
         }
     }
 }
@@ -445,6 +486,37 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_projectileData_t* pData = heap_caps_calloc(1, sizeof(bb_projectileData_t), MALLOC_CAP_SPIRAM);
             entity->data               = pData;
 
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+
+            bb_spriteDef_t* bu = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
+            *bu                = BU;
+            push(others, (void*)bu);
+
+            bb_spriteDef_t* bug = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
+            *bug                = BUG;
+            push(others, (void*)bug);
+
+            bb_spriteDef_t* bugg = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
+            *bugg                = BUGG;
+            push(others, (void*)bugg);
+
+            bb_spriteDef_t* buggo = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
+            *buggo                = BUGGO;
+            push(others, (void*)buggo);
+
+            bb_spriteDef_t* buggy = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
+            *buggy                = BUGGY;
+            push(others, (void*)buggy);
+
+            bb_spriteDef_t* butt = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
+            *butt                = BUTT;
+            push(others, (void*)butt);
+
+            bb_collision_t* collision = heap_caps_malloc(sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionHarpoon};
+            push(entity->collisions, collision);
+
             entity->updateFunction = &bb_updateHarpoon;
             entity->drawFunction   = &bb_drawHarpoon;
             break;
@@ -469,6 +541,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BU:
         {
+            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bData->health = 100;
+            entity->data        = bData;
+
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 
@@ -482,6 +558,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUG:
         {
+            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bData->health = 100;
+            entity->data        = bData;
+
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 
@@ -495,6 +575,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUGG:
         {
+            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bData->health = 100;
+            entity->data        = bData;
+
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 
@@ -508,6 +592,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUGGO:
         {
+            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bData->health = 100;
+            entity->data        = bData;
+
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 
@@ -521,6 +609,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUGGY:
         {
+            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bData->health = 100;
+            entity->data        = bData;
+
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 
@@ -534,6 +626,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUTT:
         {
+            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bData->health = 100;
+            entity->data        = bData;
+
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
 

@@ -22,6 +22,8 @@
 // Structs
 //==============================================================================
 
+
+
 typedef struct
 {
     vec_t vel;           // velocity
@@ -38,6 +40,19 @@ typedef struct
     int32_t r;
     int32_t intensity;
 } bb_garbotnikData_t;
+
+typedef struct
+{
+    bb_entity_t* parent;
+    vec_t offset;
+    uint16_t lifetime;
+    vecFl_t floatVel;
+} bb_stuckHarpoonData_t;
+
+typedef struct
+{
+    int8_t health;
+} bb_bugData_t;
 
 typedef struct
 {
@@ -72,6 +87,12 @@ typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
 typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 typedef void (*bb_collisionHandler_t)(bb_entity_t* self, bb_entity_t* other);
+typedef struct
+{
+    list_t* checkOthers; // A list of bb_spriteDef_t's to check collision against. i.e. all bug spriteDef indices for
+                         // the harpoon.
+    bb_collisionHandler_t function; // Triggers on collision enter with any of the checkOthers.
+} bb_collision_t;
 typedef bool (*bb_tileCollisionHandler_t)(bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 typedef void (*bb_fallOffTileHandler_t)(bb_entity_t* self);
 typedef void (*bb_overlapTileHandler_t)(bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
@@ -83,8 +104,9 @@ struct bb_entity_t
 
     void* data;
     bb_updateFunction_t updateFunction;       // Only set for entities that need update logic
-    bb_updateFarFunction_t updateFarFunction; // Runs if the entity is outside the camera bounds
-    bb_drawFunction_t drawFunction;           // Only set for custom entities such as Garbotnik
+    bb_updateFarFunction_t updateFarFunction; // Only set for execution when the entity is far from the camera center
+    bb_drawFunction_t drawFunction;           // Only set for entities such as Garbotnik that need custom drawing logic
+    list_t* collisions; // It's a list of bb_collision_t which each get processed by the entity manager.
 
     vec_t pos;
 
@@ -106,7 +128,6 @@ struct bb_entity_t
     int32_t cSquared;   // Squared distance from the sprite origin to the corner of the AABB hitbox. Used for collision
                         // optimization.
 
-    bb_collisionHandler_t collisionHandler;
     bb_tileCollisionHandler_t tileCollisionHandler;
     bb_overlapTileHandler_t overlapTileHandler;
 };
@@ -124,12 +145,16 @@ void bb_updateHeavyFalling(bb_entity_t* self);
 void bb_updateGarbotnikDeploy(bb_entity_t* self);
 void bb_updateGarbotnikFlying(bb_entity_t* self);
 void bb_updateHarpoon(bb_entity_t* self);
+void bb_updateStuckHarpoon(bb_entity_t* self);
 void bb_updateEggLeaves(bb_entity_t* self);
 void bb_updateFarEggleaves(bb_entity_t* self);
 void bb_updateBug(bb_entity_t* self);
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+
+void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other);
 
 #endif

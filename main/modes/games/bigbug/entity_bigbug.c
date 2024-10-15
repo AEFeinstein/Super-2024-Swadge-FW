@@ -48,6 +48,24 @@ void bb_destroyEntity(bb_entity_t* self)
         self->data = NULL;
     }
 
+    if (self->collisions != NULL)
+    {
+        // FREE WILLY FROM THE EVIL CLUTCHES OF SPIRAM!
+        // remove & free all the nodes
+        while (self->collisions->first != NULL)
+        {
+            // Remove from head
+            bb_collision_t* shiftedCollision = shift(self->collisions);
+            while (shiftedCollision->checkOthers->first != NULL)
+            {
+                free(shift(shiftedCollision->checkOthers));
+            }
+            free(shiftedCollision);
+        }
+        free(self->collisions);
+        self->collisions = NULL;
+    }
+
     self->updateFunction              = NULL;
     self->updateFarFunction           = NULL;
     self->drawFunction                = NULL;
@@ -62,7 +80,6 @@ void bb_destroyEntity(bb_entity_t* self)
     self->halfWidth                   = 0;
     self->halfHeight                  = 0;
     self->cSquared                    = 0;
-    self->collisionHandler            = NULL;
     self->tileCollisionHandler        = NULL;
     self->overlapTileHandler          = NULL;
 
@@ -181,8 +198,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
 
-    gData->fuel -= self->gameData->elapsedUs >> 9; // Fuel decrements with time. Right shifting by 9 is kind of like
-                                                   // converting microseconds to milliseconds. Measure this later.
+    gData->fuel
+        -= self->gameData->elapsedUs >> 10; // Fuel decrements with time. Right shifting by 10 is fairly close to
+                                            // converting microseconds to milliseconds without requiring division.
     if (gData->fuel < 0)
     {
         gData->fuel = 0;
@@ -197,8 +215,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // Create a harpoon
         bb_entity_t* harpoon
             = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
-                              (self->pos.x >> DECIMAL_BITS) + self->entityManager->sprites[self->spriteIndex].originX,
-                              (self->pos.y >> DECIMAL_BITS) + self->entityManager->sprites[self->spriteIndex].originY);
+                              self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
         if (harpoon != NULL)
         {
             gData->numHarpoons -= 1;
@@ -446,15 +463,29 @@ void bb_updateHarpoon(bb_entity_t* self)
 
     // Update harpoon's velocity
     hData->vel.y += 6;
-    // Update harpoon's lifetime. I'm not using elapsed time because it is in microseconds and would need division to
-    // accumulate milliseconds in a reasonable data type.
-    hData->lifetime++;
-
     // Update harpoon's position
     self->pos.x += hData->vel.x * self->gameData->elapsedUs / 100000;
     self->pos.y += hData->vel.y * self->gameData->elapsedUs / 100000;
-
+    
+    // Update harpoon's lifetime. I'm not using elapsed time because it is in microseconds and would need division to
+    // accumulate milliseconds in a reasonable data type.
+    hData->lifetime++;
     if (hData->lifetime > 140)
+    {
+        bb_destroyEntity(self);
+    }
+}
+
+void bb_updateStuckHarpoon(bb_entity_t* self)
+{
+    bb_stuckHarpoonData_t* shData = (bb_stuckHarpoonData_t*)self->data;
+
+    if(shData->parent != NULL)
+    {
+        self->pos = addVec2d(shData->parent->pos,shData->offset);
+    }
+    shData->lifetime++;
+    if (shData->lifetime > 140)
     {
         bb_destroyEntity(self);
     }
@@ -605,8 +636,8 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
 
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
-    int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+    int16_t xOff = (self->pos.x >> DECIMAL_BITS) - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS) - camera->pos.y;
 
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
 
@@ -633,6 +664,17 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
             yOff - entityManager->sprites[self->spriteIndex].originY, false, false, angle);
 }
 
+void bb_drawStuckHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    int16_t xOff = (self->pos.x >> DECIMAL_BITS) - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS) - camera->pos.y;
+
+    vecFl_t floatVel = ((bb_stuckHarpoonData_t*)self->data)->floatVel;
+
+    drawLineFast(xOff, yOff - 1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 - 1, c344);
+    drawLineFast(xOff, yOff, xOff - floatVel.x * 20, yOff - floatVel.y * 20, c223);
+}
+
 void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
@@ -649,4 +691,41 @@ void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
 
     drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[((bb_eggData_t*)self->data)->stimulation / 100],
                   xOff, yOff);
+}
+
+void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
+{
+    //Bug got stabbed
+    self->paused = true;
+    bb_bugData_t* bData = (bb_bugData_t*)other->data;
+    bData->health -= 10;
+    if(bData->health < 0){
+        bData = 0;
+        other->paused = true;
+    }
+    bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
+    vecFl_t floatVel = {(float)pData->vel.x, (float)pData->vel.y};
+    free(self->data);
+    bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
+    shData->parent = other;
+    shData->offset = subVec2d(self->pos,other->pos);
+    shData->floatVel = normVecFl2d(floatVel);
+    self->data = shData;
+
+    while (self->collisions->first != NULL)
+        {
+            // Remove from head
+            bb_collision_t* shiftedCollision = shift(self->collisions);
+            while (shiftedCollision->checkOthers->first != NULL)
+            {
+                free(shift(shiftedCollision->checkOthers));
+            }
+            free(shiftedCollision);
+        }
+    free(self->collisions);
+    self->collisions = NULL;
+    
+    self->updateFunction = bb_updateStuckHarpoon;
+    self->drawFunction = bb_drawStuckHarpoon;
+    
 }
