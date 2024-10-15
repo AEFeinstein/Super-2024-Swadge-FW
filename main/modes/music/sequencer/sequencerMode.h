@@ -4,6 +4,10 @@
 #include "swadge2024.h"
 #include "wheel_menu.h"
 
+#if !defined(__XTENSA__)
+    #include "os_generic.h"
+#endif
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -29,6 +33,12 @@ typedef struct
 
 typedef struct
 {
+    uint32_t type;
+    uint32_t instrument;
+} seqNoteParams_t;
+
+typedef struct
+{
     int32_t midiNum;
     int32_t sixteenthOn;
     int32_t sixteenthOff;
@@ -50,9 +60,11 @@ typedef struct
     font_t ibm;
     vec_t cursorPos;
     vec_t gridOffset;
+    vec_t gridOffsetTarget;
     int32_t labelWidth;
     int32_t cellWidth;
     int32_t rowHeight;
+    int32_t numRows;
 
     // UI Images
     wsg_t noteWsgs[5];
@@ -66,11 +78,16 @@ typedef struct
     // Song parameters
     seqSongParams_t songParams;
     int32_t usPerBeat;
+    seqNoteParams_t noteParams;
 
     // Playing
     int32_t songTimer;
     list_t notes;
     list_t midiQueue;
+
+#if !defined(__XTENSA__)
+    og_mutex_t midiQueueMutex;
+#endif
 } sequencerVars_t;
 
 //==============================================================================

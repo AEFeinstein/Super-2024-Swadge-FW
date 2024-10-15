@@ -42,12 +42,11 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 if (sv->cursorPos.y)
                 {
                     sv->cursorPos.y--;
-
                     // Adjust grid offset to be on screen
-                    while (getCursorScreenPos(sv).y < (sv->rowHeight * 2) && sv->gridOffset.y > 0)
+                    // TODO smooth scrolling
+                    if (getCursorScreenPos(sv).y < sv->rowHeight && sv->gridOffset.y > 0)
                     {
-                        // TODO smooth scrolling
-                        sv->gridOffset.y -= sv->rowHeight;
+                        sv->gridOffsetTarget.y = sv->rowHeight * (sv->cursorPos.y - 1);
                     }
                 }
                 break;
@@ -58,12 +57,10 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 {
                     sv->cursorPos.y++;
 
-                    // Adjust grid offset to be on screen
-                    while (getCursorScreenPos(sv).y >= (TFT_HEIGHT - (2 * sv->rowHeight))
-                           && sv->gridOffset.y < (sv->rowHeight) * (NUM_PIANO_KEYS - 16))
+                    if (getCursorScreenPos(sv).y > TFT_HEIGHT - (2 * sv->rowHeight)
+                        && sv->cursorPos.y < (NUM_PIANO_KEYS - 1))
                     {
-                        // TODO smooth scrolling
-                        sv->gridOffset.y += sv->rowHeight;
+                        sv->gridOffsetTarget.y = sv->rowHeight * (sv->cursorPos.y - sv->numRows + 2);
                     }
                 }
                 break;
@@ -73,12 +70,11 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 if (sv->cursorPos.x)
                 {
                     sv->cursorPos.x--;
-
                     // Adjust grid offset to be on screen
-                    while (getCursorScreenPos(sv).x < (sv->labelWidth + sv->cellWidth * 2) && sv->gridOffset.x > 0)
+                    // TODO smooth scrolling
+                    if (getCursorScreenPos(sv).x < sv->labelWidth + sv->cellWidth && sv->gridOffset.x > 0)
                     {
-                        // TODO smooth scrolling
-                        sv->gridOffset.x -= sv->cellWidth;
+                        sv->gridOffsetTarget.x = sv->cellWidth * (sv->cursorPos.x - 1);
                     }
                 }
                 break;
@@ -89,26 +85,29 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 {
                     sv->cursorPos.x++;
 
-                    // Adjust grid offset to be on screen
-                    while (getCursorScreenPos(sv).x >= (TFT_WIDTH - (sv->cellWidth * 2))
-                           && sv->gridOffset.x < ((numCells - 2) * sv->cellWidth))
+                    if (getCursorScreenPos(sv).x > TFT_WIDTH - (2 * sv->cellWidth)
+                        && (sv->cursorPos.x < (numCells - 1)))
                     {
-                        // TODO smooth scrolling
-                        sv->gridOffset.x += sv->cellWidth;
+                        int32_t cellsOnScreen  = (TFT_WIDTH - sv->labelWidth) / sv->cellWidth;
+                        sv->gridOffsetTarget.x = sv->cellWidth * (sv->cursorPos.x - cellsOnScreen + 1);
                     }
                 }
                 break;
             }
             case PB_A:
             {
-                // place / delete
+                // Don't modify notes while playing
+                if (sv->isPlaying)
+                {
+                    return;
+                }
 
                 // Make a new note
                 sequencerNote_t* newNote = calloc(1, sizeof(sequencerNote_t));
                 newNote->midiNum         = 108 - sv->cursorPos.y;
                 // sv->songParams.grid is denominator, i.e. quarter note grid is 4, eighth note grid is 8, etc.
                 newNote->sixteenthOn  = sv->cursorPos.x * 16 / sv->songParams.grid;
-                newNote->sixteenthOff = (sv->cursorPos.x + 1) * 16 / sv->songParams.grid;
+                newNote->sixteenthOff = newNote->sixteenthOn + (16 / sv->noteParams.type);
 
                 // Check for overlaps
                 node_t* addBeforeThis = NULL;
@@ -168,8 +167,8 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 else if (sv->songTimer)
                 {
                     // If it's stopped, reset to beginning
-                    sv->songTimer    = 0;
-                    sv->gridOffset.x = 0;
+                    sv->songTimer          = 0;
+                    sv->gridOffsetTarget.x = 0;
                 }
                 else
                 {
@@ -240,6 +239,7 @@ void measureSequencerGrid(sequencerVars_t* sv)
     sv->labelWidth = textWidth(&sv->ibm, "C#7") + (2 * KEY_MARGIN);
     sv->cellWidth  = 64 / sv->songParams.grid;
     sv->rowHeight  = sv->ibm.height + (2 * KEY_MARGIN) + 1;
+    sv->numRows    = TFT_HEIGHT / sv->rowHeight;
 
     sv->usPerPx = sv->usPerBeat / PX_PER_BEAT;
 }
@@ -251,6 +251,28 @@ void measureSequencerGrid(sequencerVars_t* sv)
  */
 void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
 {
+    if (!sv->isPlaying)
+    {
+        // TODO make this faster
+        // Smooth scroll grid to the cursor
+        if (sv->gridOffsetTarget.x > sv->gridOffset.x)
+        {
+            sv->gridOffset.x++;
+        }
+        else if (sv->gridOffsetTarget.x < sv->gridOffset.x)
+        {
+            sv->gridOffset.x--;
+        }
+
+        if (sv->gridOffsetTarget.y > sv->gridOffset.y)
+        {
+            sv->gridOffset.y++;
+        }
+        else if (sv->gridOffsetTarget.y < sv->gridOffset.y)
+        {
+            sv->gridOffset.y--;
+        }
+    }
     // Scroll
     if (sv->isPlaying)
     {
@@ -287,7 +309,13 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
                     evt->midi.status  = 0x90;
                     evt->midi.data[0] = note->midiNum;
                     evt->midi.data[1] = 0x40;
+#if !defined(__XTENSA__)
+                    OGLockMutex(sv->midiQueueMutex);
+#endif
                     push(&sv->midiQueue, evt);
+#if !defined(__XTENSA__)
+                    OGUnlockMutex(sv->midiQueueMutex);
+#endif
                 }
             }
             else if (note->isOn)
@@ -300,7 +328,14 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
                 evt->midi.status  = 0x80;
                 evt->midi.data[0] = note->midiNum;
                 evt->midi.data[1] = 0x40;
+
+#if !defined(__XTENSA__)
+                OGLockMutex(sv->midiQueueMutex);
+#endif
                 push(&sv->midiQueue, evt);
+#if !defined(__XTENSA__)
+                OGUnlockMutex(sv->midiQueueMutex);
+#endif
             }
             noteNode = noteNode->next;
         }
@@ -371,7 +406,8 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
 
     // Draw cursor
     vec_t rectPos = getCursorScreenPos(sv);
-    drawRect(rectPos.x, rectPos.y, rectPos.x + sv->cellWidth - 1, rectPos.y + sv->rowHeight - 1, c550);
+    int32_t width = 64 / sv->noteParams.type;
+    drawRect(rectPos.x, rectPos.y, rectPos.x + width - 1, rectPos.y + sv->rowHeight - 1, c550);
 
     // Keep track of key and index
     int32_t kIdx   = 0;

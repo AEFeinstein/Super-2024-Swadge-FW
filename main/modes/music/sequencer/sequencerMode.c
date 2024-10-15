@@ -185,6 +185,7 @@ static void sequencerEnterMode(void)
     }
 
     // Song defaults
+    // TODO load from settings
     sv->songParams.grid    = 4;     // grid at quarter notes
     sv->songParams.loop    = false; // don't loop
     sv->songParams.songEnd = 480;   // one minute long
@@ -192,6 +193,9 @@ static void sequencerEnterMode(void)
     sv->songParams.timeSig = 4;     // 4/4 time
 
     sv->usPerBeat = (60 * 1000000) / sv->songParams.tempo;
+
+    sv->noteParams.instrument = instrumentVals[0];
+    sv->noteParams.type       = noteTypeVals[2];
 
     measureSequencerGrid(sv);
 
@@ -214,6 +218,12 @@ static void sequencerEnterMode(void)
     evt.button = PB_DOWN;
     evt.state  = PB_DOWN;
     sequencerGridButton(sv, &evt);
+
+    sv->gridOffset = sv->gridOffsetTarget;
+
+#if !defined(__XTENSA__)
+    sv->midiQueueMutex = OGCreateMutex();
+#endif
 }
 
 /**
@@ -227,10 +237,17 @@ static void sequencerExitMode(void)
         free(val);
     }
 
+#if !defined(__XTENSA__)
+    OGLockMutex(sv->midiQueueMutex);
+#endif
     while ((val = pop(&sv->midiQueue)))
     {
         free(val);
     }
+#if !defined(__XTENSA__)
+    OGUnlockMutex(sv->midiQueueMutex);
+#endif
+
     freeFont(&sv->ibm);
     deinitMenuManiaRenderer(sv->menuRenderer);
     deinitMenu(sv->songMenu);
@@ -246,6 +263,10 @@ static void sequencerExitMode(void)
     {
         freeWsg(&sv->instrumentWsgs[i]);
     }
+
+#if !defined(__XTENSA__)
+    OGDeleteMutex(sv->midiQueueMutex);
+#endif
 
     free(sv);
 }
@@ -374,15 +395,14 @@ static void sequencerNoteMenuCb(const char* label, bool selected, uint32_t setti
 {
     if (selected)
     {
-        // TODO adjust note params
         if (str_noteType == label)
         {
-            // TODO set note parameter
             wheelMenuSetItemIcon(sv->wheelRenderer, str_noteType, &sv->noteWsgs[__builtin_ctz(settingVal)]);
+            sv->noteParams.type = settingVal;
         }
         else if (str_instrument == label)
         {
-            // TODO set note parameter
+            sv->noteParams.instrument = settingVal;
             for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
             {
                 if (instrumentVals[i] == settingVal)
@@ -405,12 +425,21 @@ static void sequencerNoteMenuCb(const char* label, bool selected, uint32_t setti
 static bool sequencerMidiCb(midiEvent_t* event)
 {
     // If there is something in the midi queue, pop and return it
+    bool retVal = false;
     midiEvent_t* qEvt;
+
+#if !defined(__XTENSA__)
+    OGLockMutex(sv->midiQueueMutex);
+#endif
     if ((qEvt = pop(&sv->midiQueue)))
     {
         memcpy(event, qEvt, sizeof(midiEvent_t));
         free(qEvt);
-        return true;
+        retVal = true;
     }
-    return false;
+#if !defined(__XTENSA__)
+    OGUnlockMutex(sv->midiQueueMutex);
+#endif
+
+    return retVal;
 }
