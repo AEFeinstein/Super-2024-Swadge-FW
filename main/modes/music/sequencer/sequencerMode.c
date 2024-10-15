@@ -40,13 +40,15 @@ static const char str_songGrid[] = "Grid Lines: ";
 static const char* gridLabels[]  = {"1/1", "1/2", "1/4", "1/8", "1/16"};
 static const int32_t gridVals[]  = {1, 2, 4, 8, 16};
 
-static const char str_songTimeSig[] = "Time Signature: ";
+static const char str_songTimeSig[] = "Signature: ";
 static const char* timeSigLabels[]  = {"2/4", "3/4", "4/4", "5/4"};
 static const int32_t timeSigVals[]  = {2, 3, 4, 5};
 
-static const char str_songLength[]    = "Length: ";
-static const char* songLengthLabels[] = {"1 bar", "2 bars"};
-static const int32_t songLengthVals[] = {1, 2};
+static const char str_loop[]    = "Loop: ";
+static const char* loopLabels[] = {"On", "Off"};
+static const int32_t loopVals[] = {true, false};
+
+static const char str_songEnd[] = "End Song Here";
 
 static const char str_instrument[]    = "Instrument: ";
 static const char* instrumentLabels[] = {"Piano", "Guitar", "Drums"};
@@ -120,12 +122,13 @@ static void sequencerEnterMode(void)
     addSettingsOptionsItemToMenu(sv->songMenu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
                                  &sp_timeSig, 4);
 
-    settingParam_t sp_songLength = {
-        .min = songLengthVals[0],
-        .max = songLengthVals[ARRAY_SIZE(songLengthVals) - 1],
+    settingParam_t sp_loop = {
+        .min = loopVals[0],
+        .max = loopVals[ARRAY_SIZE(loopVals) - 1],
     };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_songLength, songLengthLabels, songLengthVals,
-                                 ARRAY_SIZE(songLengthVals), &sp_songLength, 1);
+    addSettingsOptionsItemToMenu(sv->songMenu, str_loop, loopLabels, loopVals, ARRAY_SIZE(loopVals), &sp_loop, 1);
+
+    addSingleItemToMenu(sv->songMenu, str_songEnd);
 
     sv->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
@@ -182,10 +185,13 @@ static void sequencerEnterMode(void)
     }
 
     // Song defaults
-    sv->usPerBeat = 500000; // 120bpm
-    sv->numBars   = 8;      // 2 bar song
-    sv->timeSig   = 4;      // 4/4 time
-    sv->gridSize  = 4;      // Grid at quarter notes
+    sv->songParams.grid    = 4;     // grid at quarter notes
+    sv->songParams.loop    = false; // don't loop
+    sv->songParams.songEnd = 480;   // one minute long
+    sv->songParams.tempo   = 120;   // 120 bpm
+    sv->songParams.timeSig = 4;     // 4/4 time
+
+    sv->usPerBeat = (60 * 1000000) / sv->songParams.tempo;
 
     measureSequencerGrid(sv);
 
@@ -259,17 +265,31 @@ static void sequencerMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        switch (sv->screen)
+        if (evt.down && PB_START == evt.button)
         {
-            case SEQUENCER_MENU:
+            if (SEQUENCER_MENU == sv->screen)
             {
-                sv->songMenu = menuButton(sv->songMenu, evt);
-                break;
+                sv->screen = SEQUENCER_SEQ;
             }
-            case SEQUENCER_SEQ:
+            else
             {
-                sequencerGridButton(sv, &evt);
-                break;
+                sv->screen = SEQUENCER_MENU;
+            }
+        }
+        else
+        {
+            switch (sv->screen)
+            {
+                case SEQUENCER_MENU:
+                {
+                    sv->songMenu = menuButton(sv->songMenu, evt);
+                    break;
+                }
+                case SEQUENCER_SEQ:
+                {
+                    sequencerGridButton(sv, &evt);
+                    break;
+                }
             }
         }
     }
@@ -318,10 +338,29 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
 {
     printf("%s %s (%d)\n", selected ? "selected" : "scrolled to", label, settingVal);
 
-    if (selected)
+    if (str_songTempo == label)
     {
-        // TODO adjust song params
+        sv->songParams.tempo = settingVal;
+        sv->usPerBeat        = (60 * 1000000) / sv->songParams.tempo;
     }
+    else if (str_songGrid == label)
+    {
+        sv->songParams.grid = settingVal;
+    }
+    else if (str_songTimeSig == label)
+    {
+        sv->songParams.timeSig = settingVal;
+    }
+    else if (str_loop == label)
+    {
+        sv->songParams.loop = settingVal;
+    }
+    else if (str_songEnd == label)
+    {
+        sv->songParams.songEnd = settingVal;
+    }
+
+    measureSequencerGrid(sv);
 }
 
 /**

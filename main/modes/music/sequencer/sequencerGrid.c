@@ -32,7 +32,8 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
 {
     if (evt->down)
     {
-        int numCells = sv->timeSig * sv->numBars;
+        // TODO validate
+        int numCells = sv->songParams.songEnd * sv->songParams.grid / 16;
 
         switch (evt->button)
         {
@@ -105,9 +106,9 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 // Make a new note
                 sequencerNote_t* newNote = calloc(1, sizeof(sequencerNote_t));
                 newNote->midiNum         = 108 - sv->cursorPos.y;
-                // sv->gridSize is denominator, i.e. quarter note grid is 4, eighth note grid is 8, etc.
-                newNote->sixteenthOn  = sv->cursorPos.x * 16 / sv->gridSize;
-                newNote->sixteenthOff = (sv->cursorPos.x + 1) * 16 / sv->gridSize;
+                // sv->songParams.grid is denominator, i.e. quarter note grid is 4, eighth note grid is 8, etc.
+                newNote->sixteenthOn  = sv->cursorPos.x * 16 / sv->songParams.grid;
+                newNote->sixteenthOff = (sv->cursorPos.x + 1) * 16 / sv->songParams.grid;
 
                 // Check for overlaps
                 node_t* addBeforeThis = NULL;
@@ -153,7 +154,8 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 {
                     // If it's playing, stop
                     sv->isPlaying = false;
-                    midiPause(globalMidiPlayerGet(MIDI_BGM), true);
+                    // midiPause(globalMidiPlayerGet(MIDI_BGM), true);
+                    midiPlayerReset(globalMidiPlayerGet(MIDI_BGM));
 
                     node_t* noteNode = sv->notes.first;
                     while (noteNode)
@@ -173,6 +175,11 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 {
                     // If it's at the beginning, play
                     sv->isPlaying = true;
+
+                    // player->mode              = MIDI_STREAMING;
+                    // player->paused            = true;
+                    // player->streamingCallback = sequencerMidiCb;
+
                     midiPause(globalMidiPlayerGet(MIDI_BGM), false);
                 }
                 break;
@@ -231,7 +238,7 @@ void sequencerGridTouch(sequencerVars_t* sv)
 void measureSequencerGrid(sequencerVars_t* sv)
 {
     sv->labelWidth = textWidth(&sv->ibm, "C#7") + (2 * KEY_MARGIN);
-    sv->cellWidth  = 64 / sv->gridSize;
+    sv->cellWidth  = 64 / sv->songParams.grid;
     sv->rowHeight  = sv->ibm.height + (2 * KEY_MARGIN) + 1;
 
     sv->usPerPx = sv->usPerBeat / PX_PER_BEAT;
@@ -324,12 +331,13 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
     }
 
     // Only draw lines until the end of screen or song
-    int numCells = sv->timeSig * sv->numBars;
+    // TODO validate
+    int numCells = sv->songParams.songEnd * sv->songParams.grid / 16;
     while (xOff < TFT_WIDTH && lIdx <= numCells)
     {
         // Lighten the line every bar
         paletteColor_t lineColor = c222;
-        if (0 == lIdx % sv->timeSig)
+        if (0 == lIdx % (sv->songParams.timeSig * sv->songParams.grid / 4))
         {
             lineColor = c444;
         }

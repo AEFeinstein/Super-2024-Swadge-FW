@@ -20,6 +20,15 @@ typedef enum
 
 typedef struct
 {
+    int32_t tempo;   ///< The song tempo, beats per minute
+    int32_t grid;    ///< Grid lines, 1, 2, 4, 8, or 16
+    int32_t timeSig; ///< Time signature, 2, 3, 4, or 5
+    int32_t songEnd; ///< Where the song ends, in 1/16 increments
+    bool loop;       ///< True to loop when finished, false to stop
+} seqSongParams_t;
+
+typedef struct
+{
     int32_t midiNum;
     int32_t sixteenthOn;
     int32_t sixteenthOff;
@@ -55,10 +64,8 @@ typedef struct
     int32_t scrollTimer;
 
     // Song parameters
+    seqSongParams_t songParams;
     int32_t usPerBeat;
-    int32_t numBars;
-    int32_t timeSig;
-    int32_t gridSize;
 
     // Playing
     int32_t songTimer;
