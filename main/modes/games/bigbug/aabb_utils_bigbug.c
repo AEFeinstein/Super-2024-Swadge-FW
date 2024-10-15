@@ -5,6 +5,7 @@
 #include "aabb_utils_bigbug.h"
 // #include <stdint.h>
 #include "fill.h"
+#include "typedef_bigbug.h"
 
 //==============================================================================
 // Functions
@@ -18,20 +19,18 @@
  * @param isFilled true to draw a filled box, false to draw an outline
  * @param scalingFactor The scaling factor to apply before drawing the box
  */
-void bb_drawBox(bb_box_t box, paletteColor_t color, bool isFilled, int32_t scalingFactor)
+void bb_drawBox(bb_box_t* box, paletteColor_t* color, bool isFilled)
 {
     if (isFilled)
     {
-        fillDisplayArea(box.x0 >> scalingFactor, box.y0 >> scalingFactor, box.x1 >> scalingFactor,
-                        box.y1 >> scalingFactor, color);
+        fillDisplayArea(box->pos.x - box->halfWidth, box->pos.y - box->halfHeight, box->pos.x + box->halfWidth,
+                        box->pos.y + box->halfHeight, *color);
     }
     else
     {
-        /*plotRect(box.x0 >> scalingFactor,
-                 box.y0 >> scalingFactor,
-                 box.x1 >> scalingFactor,
-                 box.y1 >> scalingFactor,
-                 color);*/
+        // plotRect(box->pos.x - box->halfWidth, box->pos.y - box->halfHeight,
+        //             box->pos.x + box->halfWidth, box->pos.y + box->halfHeight,
+        //             *color);
     }
 }
 
@@ -43,10 +42,18 @@ void bb_drawBox(bb_box_t box, paletteColor_t color, bool isFilled, int32_t scali
  * @param scalingFactor The factor to scale the boxes by before checking for collision
  * @return true if the boxes collide, false if they do not
  */
-bool bb_boxesCollide(bb_box_t box0, bb_box_t box1, int32_t scalingFactor)
+bool bb_boxesCollide(bb_box_t* box0, bb_box_t* box1)
 {
-    return (box0.x0 >> scalingFactor) < (box1.x1 >> scalingFactor)
-           && (box0.x1 >> scalingFactor) > (box1.x0 >> scalingFactor)
-           && (box0.y0 >> scalingFactor) < (box1.y1 >> scalingFactor)
-           && (box0.y1 >> scalingFactor) > (box1.y0 >> scalingFactor);
+    return box0->pos.x - box0->halfWidth < box1->pos.x + box1->halfWidth
+           && box0->pos.x + box0->halfWidth > box1->pos.x - box1->halfWidth
+           && box0->pos.y - box0->halfHeight < box1->pos.y + box1->halfHeight
+           && box0->pos.y + box0->halfHeight > box1->pos.y - box1->halfHeight;
+}
+
+bool bb_boxesCollideShift(bb_box_t* box0, bb_box_t* box1)
+{
+    return box0->pos.x - box0->halfWidth < (box1->pos.x >> DECIMAL_BITS) + (box1->halfWidth >> DECIMAL_BITS)
+           && box0->pos.x + box0->halfWidth > (box1->pos.x >> DECIMAL_BITS) - (box1->halfWidth >> DECIMAL_BITS)
+           && box0->pos.y - box0->halfHeight < (box1->pos.y >> DECIMAL_BITS) + (box1->halfHeight >> DECIMAL_BITS)
+           && box0->pos.y + box0->halfHeight > (box1->pos.y >> DECIMAL_BITS) - (box1->halfHeight >> DECIMAL_BITS);
 }

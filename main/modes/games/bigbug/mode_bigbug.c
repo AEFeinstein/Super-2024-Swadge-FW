@@ -13,8 +13,11 @@
 #include "mode_bigbug.h"
 #include "gameData_bigbug.h"
 #include "tilemap_bigbug.h"
+#include "worldGen_bigbug.h"
+#include "entity_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "esp_heap_caps.h"
+#include "hdw-tft.h"
 #include <math.h>
 
 //==============================================================================
@@ -45,21 +48,9 @@ struct bb_t
     bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
-    bb_tilemap_t tilemap;
-    bb_entityManager_t entityManager;
     bb_soundManager_t soundManager;
 
-    vec_t garbotnikPos;      ///< Garbotnik (player character)
-    vec_t garbotnikVel;      ///< Garbotnik's velocity
-    vec_t garbotnikAccel;    ///< Garbotnik's acceleration
-    vec_t previousPos;       ///< Garbotnik's position on the previous frame (for resolving collisions)
-    vec_t garbotnikRotation; ///< x is Yaw to left or right. Y is change to yaw over time. Tends towards left or right.
-
-    rectangle_t camera; ///< The camera
-
     bool isPaused; ///< true if the game is paused, false if it is running
-
-    wsg_t garbotnikWsg[3]; ///< An array of graphics for garbotnik.
 
     midiFile_t bgm;  ///< Background music
     midiFile_t hit1; ///< A sound effect
@@ -85,13 +76,12 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
 
 // big bug logic
 // static void bb_LoadScreenDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void bb_ControlGarbotnik(int64_t elapsedUs);
 static void bb_DrawScene(void);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
 static void bb_UpdateTileSupport(void);
-static void bb_UpdatePhysics(int64_t elapsedUs);
+static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
 
 //==============================================================================
 // Strings
@@ -136,45 +126,44 @@ static void bb_EnterMode(void)
     // Force draw a loading screen
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
-    printf("a\n");
     bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+
+    bb_SetLeds();
 
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
 
-    const char loadingStr[] = "Loading...\n(40 seconds)";
+    const char loadingStr[] = "Loading...";
     int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
     drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
     drawDisplayTft(NULL);
 
-    printf("b\n");
-
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
-    printf("c\n");
-    bb_initializeTileMap(&(bigbug->tilemap));
-    printf("d\n");
-    bb_initializeEntityManager(&(bigbug->entityManager), &(bigbug->gameData), &(bigbug->soundManager));
-    printf("e\n");
-    // Load graphics
-    loadWsg("garbotnik-0.wsg", &bigbug->garbotnikWsg[0], true);
-    loadWsg("garbotnik-1.wsg", &bigbug->garbotnikWsg[1], true);
-    loadWsg("garbotnik-2.wsg", &bigbug->garbotnikWsg[2], true);
-    printf("f\n");
+    bb_initializeTileMap(&(bigbug->gameData.tilemap));
+    bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
+
+    bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
+                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000);
+    bigbug->gameData.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
+
+    bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
+
+    // Player
+    //  bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+    //          5 * 32 + 16,
+    //          -110);
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
-    printf("g\n");
-
-    printf("h\n");
 
     bb_Reset();
-    printf("i\n");
 }
 
 static void bb_ExitMode(void)
 {
+    bb_deactivateAllEntities(&bigbug->gameData.entityManager, false);
     // Free entity manager
-    bb_freeEntityManager(&bigbug->entityManager);
+    bb_freeEntityManager(&bigbug->gameData.entityManager);
     // Free font
     freeFont(&bigbug->font);
 }
@@ -215,7 +204,7 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // accelIntegrate(); only needed if using accelerometer for something
     // SETUP_FOR_TURBO(); only needed if drawing individual pixels
-    if (bigbug->camera.pos.y < 100)
+    if (bigbug->gameData.camera.pos.y < 100)
     {
         fillDisplayArea(x, y, x + w, y + h, c455);
     }
@@ -245,119 +234,29 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
 // Big Bug Functions
 //==============================================================================
 
-static void bb_ControlGarbotnik(int64_t elapsedUs)
-{
-    vec_t accel;
-    accel.x = 0;
-    accel.y = 0;
-    // Update garbotnik's velocity if a button is currently down
-    switch (bigbug->gameData.btnState)
-    {
-        // up
-        case 0b0001:
-            accel.y = -50;
-            break;
-        case 0b1101:
-            accel.y = -50;
-            break;
-
-        // down
-        case 0b0010:
-            accel.y = 50;
-            break;
-        case 0b1110:
-            accel.y = 50;
-            break;
-
-        // left
-        case 0b0100:
-            accel.x = -50;
-            break;
-        case 0b0111:
-            accel.x = -50;
-            break;
-
-        // right
-        case 0b1000:
-            accel.x = 50;
-            break;
-        case 0b1011:
-            accel.x = 50;
-            break;
-
-        // up,left
-        case 0b0101:
-            accel.x = -35; // magnitude is sqrt(1/2) * 100000
-            accel.y = -35;
-            break;
-
-        // up,right
-        case 0b1001:
-            accel.x = 35; // 35 707 7035
-            accel.y = -35;
-            break;
-
-        // down,right
-        case 0b1010:
-            accel.x = 35;
-            accel.y = 35;
-            break;
-
-        // down,left
-        case 0b0110:
-            accel.x = -35;
-            accel.y = 35;
-            break;
-        default:
-            break;
-    }
-
-    // printf("accel x: %d\n", accel.x);
-    // printf("elapsed: %d", (int32_t) elapsedUs);
-    // printf("offender: %d\n", (int32_t) elapsedUs / 100000);
-    // printf("now   x: %d\n", mulVec2d(accel, elapsedUs) / 100000).x);
-
-    bigbug->garbotnikAccel = divVec2d(mulVec2d(accel, elapsedUs), 100000);
-}
-
 /**
  * @brief Draw the bigbug field to the TFT
  */
 static void bb_DrawScene(void)
 {
-    vec_t garbotnikDrawPos = {.x = (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 18,
-                              .y = (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 17};
-    bb_drawTileMap(&bigbug->tilemap, &bigbug->camera, &garbotnikDrawPos, &bigbug->garbotnikRotation);
-
-    // printf("garbotnikPos.y: %d\n", bigbug->garbotnikPos.y);
-    // printf("garbotnik.radius: %d\n", bigbug->garbotnik.radius);
-    // printf("camera.pos.y: %d\n", bigbug->camera.pos.y);
-    // printf("render y: %d\n", (bigbug->garbotnikPos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >>
-    // DECIMAL_BITS);
-
-    bb_drawEntities(&bigbug->entityManager, &bigbug->camera);
-
-    // Draw garbotnik
-    if (bigbug->garbotnikRotation.x < -1400)
+    if (bigbug->gameData.entityManager.playerEntity != NULL)
     {
-        drawWsgSimple(&bigbug->garbotnikWsg[0], garbotnikDrawPos.x, garbotnikDrawPos.y);
-    }
-    else if (bigbug->garbotnikRotation.x < -400)
-    {
-        drawWsgSimple(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y);
-    }
-    else if (bigbug->garbotnikRotation.x < 400)
-    {
-        drawWsgSimple(&bigbug->garbotnikWsg[2], garbotnikDrawPos.x, garbotnikDrawPos.y);
-    }
-    else if (bigbug->garbotnikRotation.x < 1400)
-    {
-        drawWsg(&bigbug->garbotnikWsg[1], garbotnikDrawPos.x, garbotnikDrawPos.y, true, false, 0);
+        vec_t garbotnikDrawPos = {.x = (bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS)
+                                       - bigbug->gameData.camera.pos.x - 18,
+                                  .y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS)
+                                       - bigbug->gameData.camera.pos.y - 17};
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &garbotnikDrawPos,
+                       &((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data)->yaw,
+                       &bigbug->gameData.entityManager);
     }
     else
     {
-        drawWsg(&bigbug->garbotnikWsg[0], garbotnikDrawPos.x, garbotnikDrawPos.y, true, false, 0);
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &(vec_t){0, 0}, &(vec_t){0, 0},
+                       &bigbug->gameData.entityManager);
     }
+    bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->gameData.camera);
+
+    bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera);
 }
 
 /**
@@ -368,6 +267,9 @@ static void bb_DrawScene(void)
  */
 static void bb_GameLoop(int64_t elapsedUs)
 {
+    // Save the elapsed time
+    bigbug->gameData.elapsedUs = elapsedUs;
+
     // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -390,34 +292,28 @@ static void bb_GameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
-        // record the previous frame's position before any logic.
-        bigbug->previousPos = bigbug->garbotnikPos;
+        bb_updateEntities(&(bigbug->gameData.entityManager), &(bigbug->gameData.camera));
+
         bb_UpdateTileSupport();
+
+        bb_UpdateLEDs(&(bigbug->gameData.entityManager));
         // bigbugFadeLeds(elapsedUs);
-        bb_ControlGarbotnik(elapsedUs);
         // bigbugControlCpuPaddle();
-        bb_UpdatePhysics(elapsedUs);
     }
 
-    // Set the LEDs
-    bb_SetLeds();
     // Draw the field
     bb_DrawScene();
+
+    // printf("FPS: %ld\n", 1000000 / elapsedUs);
 }
 
 static void bb_Reset(void)
 {
-    // Set garbotnik variables
-    bigbug->garbotnikPos.x      = 128 << DECIMAL_BITS;
-    bigbug->garbotnikPos.y      = -(90 << DECIMAL_BITS);
-    bigbug->garbotnikRotation.x = 0 << DECIMAL_BITS;
-    bigbug->garbotnikRotation.y = 0 << DECIMAL_BITS;
-
     printf("The width is: %d\n", FIELD_WIDTH);
     printf("The height is: %d\n", FIELD_HEIGHT);
 
-    bigbug->camera.width  = FIELD_WIDTH;
-    bigbug->camera.height = FIELD_HEIGHT;
+    bigbug->gameData.camera.width  = FIELD_WIDTH;
+    bigbug->gameData.camera.height = FIELD_HEIGHT;
 }
 
 /**
@@ -442,34 +338,36 @@ static void bb_SetLeds(void)
  */
 static void bb_UpdateTileSupport(void)
 {
-    if (bigbug->gameData.unsupported->first != NULL)
+    if (bigbug->gameData.unsupported.first != NULL)
     {
         for (int i = 0; i < 50; i++) // arbitrarily large loop to get to the dirt tiles.
         {
             // remove the first item from the list
-            uint32_t* shiftedVal = shift(bigbug->gameData.unsupported);
+            uint32_t* shiftedVal = shift(&bigbug->gameData.unsupported);
             // check that it's still dirt, because a previous pass may have crumbled it.
-            if (bigbug->tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] > 0)
+            if (bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health > 0)
             {
                 // set it to air
-                bigbug->tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] = 0;
+                bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
                 // create a crumble animation
-                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM, shiftedVal[0] * 32 + 16,
-                                shiftedVal[1] * 32 + 16);
+                bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                                shiftedVal[0] * 32 + 16, shiftedVal[1] * 32 + 16);
 
                 // queue neighbors for crumbling
-                for (uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
+                for (uint8_t neighborIdx = 0; neighborIdx < 4;
+                     neighborIdx++) // neighborIdx 0 thru 3 is Left, Up, Right, Down
                 {
                     if ((int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] >= 0
                         && (int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] < TILE_FIELD_WIDTH
                         && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] >= 0
                         && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] < TILE_FIELD_HEIGHT)
                     {
+                        // TODO where is this free()'d?
                         uint32_t* val = heap_caps_calloc(2, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
                         val[0]        = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
                         val[1]        = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
 
-                        push(bigbug->gameData.unsupported, (void*)val);
+                        push(&bigbug->gameData.unsupported, (void*)val);
                     }
                 }
                 break;
@@ -478,222 +376,32 @@ static void bb_UpdateTileSupport(void)
     }
 }
 
-static void bb_UpdatePhysics(int64_t elapsedUs)
+static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
 {
-    bigbug->garbotnikRotation.y += bigbug->garbotnikAccel.x;
-    if (bigbug->garbotnikRotation.x < 0)
+    if (entityManager->playerEntity != NULL)
     {
-        bigbug->garbotnikRotation.y -= 5.0 * elapsedUs / 100000;
-    }
-    else
-    {
-        bigbug->garbotnikRotation.y += 5.0 * elapsedUs / 100000;
-    }
-    bigbug->garbotnikRotation.x += bigbug->garbotnikRotation.y;
-    if (bigbug->garbotnikRotation.x < -1440)
-    {
-        bigbug->garbotnikRotation.x = -1440;
-        bigbug->garbotnikRotation.y = 0;
-    }
-    else if (bigbug->garbotnikRotation.x > 1440)
-    {
-        bigbug->garbotnikRotation.x = 1440;
-        bigbug->garbotnikRotation.y = 0;
-    }
-    // printf("rotation: %d\n",bigbug->garbotnikRotation.x);
-
-    // Apply garbotnik's drag
-    int32_t sqMagVel = sqMagVec2d(bigbug->garbotnikVel);
-    int32_t speed    = sqrt(sqMagVel);
-    int32_t drag     = sqMagVel / 500; // smaller denominator for bigger drag.
-
-    if (drag > speed * 0.9)
-    {
-        drag = speed * 0.9;
-    }
-    if (drag < 5)
-    {
-        drag = 5.0;
-    }
-    // printf("speed: %d\n", speed);
-    // printf("drag: %d\n", drag);
-    if (speed > 0)
-    {
-        bigbug->garbotnikAccel.x += (bigbug->garbotnikVel.x / (double)speed) * -drag * elapsedUs / 100000;
-        bigbug->garbotnikAccel.y += (bigbug->garbotnikVel.y / (double)speed) * -drag * elapsedUs / 100000;
-        // bigbug->garbotnikAccel = addVec2d(bigbug->garbotnikAccel, mulVec2d(divVec2d(bigbug->garbotnikVel, speed),
-        // -drag * elapsedUs / 100000));
-    }
-
-    // Update garbotnik's velocity
-    bigbug->garbotnikVel.x += bigbug->garbotnikAccel.x;
-    bigbug->garbotnikVel.y += bigbug->garbotnikAccel.y;
-
-    // Update garbotnik's position
-    bigbug->garbotnikPos.x += bigbug->garbotnikVel.x * elapsedUs / 100000;
-    bigbug->garbotnikPos.y += bigbug->garbotnikVel.y * elapsedUs / 100000;
-
-    // Look up 4 nearest tiles for collision checks
-    // a tile's width is 16 pixels << 4 = 512. half width is 256.
-    int32_t xIdx = (bigbug->garbotnikPos.x - BITSHIFT_HALF_TILE) / BITSHIFT_TILE_SIZE
-                   - (bigbug->garbotnikPos.x < 0); // the x index
-    int32_t yIdx = (bigbug->garbotnikPos.y - BITSHIFT_HALF_TILE) / BITSHIFT_TILE_SIZE
-                   - (bigbug->garbotnikPos.y < 0); // the y index
-
-    int32_t best_i        = -1; // negative means no worthy candidates found.
-    int32_t best_j        = -1;
-    int32_t closestSqDist = 1063842; //(307.35+724.077)^2 if it's further than this, there's no way it's a collision.
-    for (int32_t i = xIdx; i <= xIdx + 1; i++)
-    {
-        for (int32_t j = yIdx; j <= yIdx + 1; j++)
+        int32_t fuel = ((bb_garbotnikData_t*)entityManager->playerEntity->data)->fuel;
+        // Set the LEDs to a display fuel level
+        // printf("timer %d\n", fuel);
+        led_t leds[CONFIG_NUM_LEDS] = {0};
+        int32_t ledChunk            = 60000 / CONFIG_NUM_LEDS;
+        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            if (i >= 0 && i < TILE_FIELD_WIDTH && j >= 0 && j < TILE_FIELD_HEIGHT)
+            leds[i].r = 0;
+            if (fuel >= (i + 1) * ledChunk)
             {
-                if (bigbug->tilemap.fgTiles[i][j] >= 1)
-                {
-                    // Initial circle check for preselecting the closest dirt tile
-                    int32_t sqDist = sqMagVec2d(
-                        subVec2d(bigbug->garbotnikPos, (vec_t){i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE,
-                                                               j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE}));
-                    if (sqDist < closestSqDist)
-                    {
-                        // Good candidate found!
-                        best_i        = i;
-                        best_j        = j;
-                        closestSqDist = sqDist;
-                    }
-                }
+                leds[i].g = 255;
             }
-        }
-    }
-    if (best_i > -1)
-    {
-        vec_t tilePos
-            = {best_i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE, best_j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
-        // AABB-AABB collision detection begins here
-        // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-        if (bigbug->garbotnikPos.x + 192 > tilePos.x - BITSHIFT_HALF_TILE
-            && bigbug->garbotnikPos.x - 192 < tilePos.x + BITSHIFT_HALF_TILE
-            && bigbug->garbotnikPos.y + 192 > tilePos.y - BITSHIFT_HALF_TILE
-            && bigbug->garbotnikPos.y - 192 < tilePos.y + BITSHIFT_HALF_TILE)
-        {
-            ///////////////////////
-            // Collision detected!//
-            ///////////////////////
-            // printf("hit\n");
-            // Resolve garbotnik's position somewhat based on his position previously.
-            vec_t normal = subVec2d(bigbug->previousPos, tilePos);
-            // Snap the previous frame offset to an orthogonal direction.
-            if ((normal.x < 0 ? -normal.x : normal.x) > (normal.y < 0 ? -normal.y : normal.y))
+            else if (fuel < i * ledChunk)
             {
-                if (normal.x > 0)
-                {
-                    normal.x               = 1;
-                    normal.y               = 0;
-                    bigbug->garbotnikPos.x = tilePos.x + 192 + BITSHIFT_HALF_TILE;
-                }
-                else
-                {
-                    normal.x               = -1;
-                    normal.y               = 0;
-                    bigbug->garbotnikPos.x = tilePos.x - 192 - BITSHIFT_HALF_TILE;
-                }
+                leds[i].g = 0;
             }
             else
             {
-                if (normal.y > 0)
-                {
-                    normal.x               = 0;
-                    normal.y               = 1;
-                    bigbug->garbotnikPos.y = tilePos.y + 192 + BITSHIFT_HALF_TILE;
-                }
-                else
-                {
-                    normal.x               = 0;
-                    normal.y               = -1;
-                    bigbug->garbotnikPos.y = tilePos.y - 192 - BITSHIFT_HALF_TILE;
-                }
+                leds[i].g = ((fuel - i * ledChunk) * 60000) / ledChunk;
             }
-
-            // printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
-            if (dotVec2d(bigbug->garbotnikVel, normal)
-                < -95) // velocity angle is opposing garbage normal vector. Tweak number for different threshold.
-            {
-                /////////////////////
-                // digging detected!//
-                /////////////////////
-
-                // crumble test
-                //  uint32_t* val = calloc(2,sizeof(uint32_t));
-                //  val[0] = 5;
-                //  val[1] = 3;
-                //  push(bigbug->gameData.unsupported, (void*)val);
-
-                // Update the dirt by decrementing it.
-                bigbug->tilemap.fgTiles[best_i][best_j] -= 1;
-
-                // Create a crumble animation
-                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM, tilePos.x >> DECIMAL_BITS,
-                                tilePos.y >> DECIMAL_BITS);
-
-                ///////////////////////////////
-                // Mirror garbotnik's velocity//
-                ///////////////////////////////
-                // Reflect the velocity vector along the normal
-                // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-                printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(bigbug->garbotnikVel));
-                int32_t bounceScalar = sqMagVec2d(bigbug->garbotnikVel) / -11075 + 3;
-                if (bounceScalar > 3)
-                {
-                    bounceScalar = 3;
-                }
-                else if (bounceScalar < 1)
-                {
-                    bounceScalar = 1;
-                }
-                bigbug->garbotnikVel = mulVec2d(
-                    subVec2d(bigbug->garbotnikVel, mulVec2d(normal, (2 * dotVec2d(bigbug->garbotnikVel, normal)))),
-                    bounceScalar);
-
-                /////////////////////////////////
-                // check neighbors for stability//
-                /////////////////////////////////
-                // for(uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
-                // {
-                //     uint32_t check_x = best_i + bigbug->gameData.neighbors[neighborIdx][0];
-                //     uint32_t check_y = best_j + bigbug->gameData.neighbors[neighborIdx][1];
-                //     //Check if neighbor is in bounds of map (also not on left, right, or bottom, perimiter) and if it
-                //     is dirt. if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y <
-                //     TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
-                //     {
-                //         uint32_t* val = calloc(4, sizeof(uint32_t));
-                //         val[0] = check_x;
-                //         val[1] = check_y;
-                //         val[2] = 1; //1 is for foreground. 0 is midground.
-                //         val[3] = 0; //f value used in pathfinding.
-                //         push(bigbug->gameData.pleaseCheck, (void*)val);
-                //     }
-                // }
-            }
+            leds[i].b = 0;
         }
-    }
-
-    // Update the camera's position to catch up to the player
-    if (((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x < -15)
-    {
-        bigbug->camera.pos.x = ((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) + 15;
-    }
-    else if (((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x > 15)
-    {
-        bigbug->camera.pos.x = ((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - 15;
-    }
-
-    if (((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - bigbug->camera.pos.y < -10)
-    {
-        bigbug->camera.pos.y = ((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) + 10;
-    }
-    else if (((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - bigbug->camera.pos.y > 10)
-    {
-        bigbug->camera.pos.y = ((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
+        setLeds(leds, CONFIG_NUM_LEDS);
     }
 }
