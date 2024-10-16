@@ -209,18 +209,6 @@ static void sequencerEnterMode(void)
     player->paused            = true;
     player->streamingCallback = sequencerMidiCb;
 
-    // Hack to bring the cursor on screen
-    sv->cursorPos.y = NUM_PIANO_KEYS / 2;
-    buttonEvt_t evt = {
-        .down   = true,
-        .button = PB_UP,
-        .state  = PB_UP,
-    };
-    sequencerGridButton(sv, &evt);
-    evt.button = PB_DOWN;
-    evt.state  = PB_DOWN;
-    sequencerGridButton(sv, &evt);
-
     sv->gridOffset = sv->gridOffsetTarget;
 
 #if !defined(__XTENSA__)
@@ -359,8 +347,6 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
  */
 static void sequencerSongMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    printf("%s %s (%d)\n", selected ? "selected" : "scrolled to", label, settingVal);
-
     if (str_songTempo == label)
     {
         sv->songParams.tempo = settingVal;
