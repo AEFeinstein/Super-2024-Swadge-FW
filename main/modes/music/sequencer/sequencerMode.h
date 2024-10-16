@@ -4,10 +4,6 @@
 #include "swadge2024.h"
 #include "wheel_menu.h"
 
-#if !defined(__XTENSA__)
-    #include "os_generic.h"
-#endif
-
 //==============================================================================
 // Enums
 //==============================================================================
@@ -33,8 +29,8 @@ typedef struct
 
 typedef struct
 {
-    uint32_t type;
-    uint32_t instrument;
+    uint32_t type;    ///< Note width, 1 (whole), 2, 4, 8, 16 (sixteenth)
+    uint32_t channel; ///< Channel (0, 1, 2...)
 } seqNoteParams_t;
 
 typedef struct
@@ -42,6 +38,7 @@ typedef struct
     int32_t midiNum;
     int32_t sixteenthOn;
     int32_t sixteenthOff;
+    int32_t channel;
     bool isOn;
 } sequencerNote_t;
 
@@ -84,13 +81,9 @@ typedef struct
     // Playing
     int32_t songTimer;
     list_t notes;
-    list_t midiQueue;
     int32_t exampleMidiNote;
+    int32_t exampleMidiChannel;
     int32_t exampleMidiNoteTimer;
-
-#if !defined(__XTENSA__)
-    og_mutex_t midiQueueMutex;
-#endif
 } sequencerVars_t;
 
 //==============================================================================
@@ -98,5 +91,11 @@ typedef struct
 //==============================================================================
 
 extern swadgeMode_t sequencerMode;
+
+//==============================================================================
+// Functions
+//==============================================================================
+
+paletteColor_t getChannelColor(int32_t channel);
 
 #endif

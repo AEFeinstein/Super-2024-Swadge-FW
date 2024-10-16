@@ -17,7 +17,6 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 
 static void sequencerSongMenuCb(const char*, bool selected, uint32_t settingVal);
 static void sequencerNoteMenuCb(const char*, bool selected, uint32_t settingVal);
-static bool sequencerMidiCb(midiEvent_t* event);
 
 //==============================================================================
 // Const Variables
@@ -50,10 +49,12 @@ static const int32_t loopVals[] = {true, false};
 
 static const char str_songEnd[] = "End Song Here";
 
-static const char str_instrument[]    = "Instrument: ";
-static const char* instrumentLabels[] = {"Piano", "Guitar", "Drums"};
-static const int32_t instrumentVals[] = {1, 27, 99}; // TODO pick correct drum val
-const char* const instrumentWsgs[]    = {"seq_piano.wsg", "seq_guitar.wsg", "seq_drums.wsg"};
+static const char str_instrument[]             = "Instrument: ";
+static const char* instrumentLabels[]          = {"Piano", "Guitar", "Drums"};
+static const int32_t instrumentVals[]          = {0, 1, 2};
+static const int32_t instrumentPrograms[]      = {0, 26, 13}; // TODO pick correct drum val
+const char* const instrumentWsgs[]             = {"seq_piano.wsg", "seq_guitar.wsg", "seq_drums.wsg"};
+static const paletteColor_t instrumentColors[] = {c500, c050, c005};
 
 static const char str_noteType[]    = "Note: ";
 static const char* noteTypeLabels[] = {"Whole", "Half", "Quarter", "Eighth", "Sixteenth"};
@@ -163,9 +164,12 @@ static void sequencerEnterMode(void)
     addSettingsOptionsItemToMenu(sv->noteMenu, str_instrument, instrumentLabels, instrumentVals,
                                  ARRAY_SIZE(instrumentVals), &sp_instrument, 1);
     wheelMenuSetItemInfo(sv->wheelRenderer, str_instrument, &sv->instrumentWsgs[0], noteMenuPos++, SCROLL_VERT);
+    wheelMenuSetItemColor(sv->wheelRenderer, str_instrument, instrumentColors[0], instrumentColors[0]);
+
     for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
     {
         wheelMenuSetItemInfo(sv->wheelRenderer, instrumentLabels[i], &sv->instrumentWsgs[i], i, NO_SCROLL);
+        wheelMenuSetItemColor(sv->wheelRenderer, instrumentLabels[i], instrumentColors[i], instrumentColors[i]);
     }
 
     // Add note type options
@@ -196,8 +200,8 @@ static void sequencerEnterMode(void)
 
     sv->usPerBeat = (60 * 1000000) / sv->songParams.tempo;
 
-    sv->noteParams.instrument = instrumentVals[0];
-    sv->noteParams.type       = noteTypeVals[2];
+    sv->noteParams.channel = instrumentVals[0];
+    sv->noteParams.type    = noteTypeVals[2];
 
     measureSequencerGrid(sv);
 
@@ -206,14 +210,19 @@ static void sequencerEnterMode(void)
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     // Configure MIDI for streaming
     player->mode              = MIDI_STREAMING;
-    player->streamingCallback = sequencerMidiCb;
-    midiPause(globalMidiPlayerGet(MIDI_BGM), false);
+    player->streamingCallback = NULL;
+
+    midiGmOn(player);
+
+    // Set each instrument
+    for (int32_t ch = 0; ch < ARRAY_SIZE(instrumentVals); ch++)
+    {
+        midiSetProgram(player, ch, instrumentPrograms[ch]);
+    }
+
+    midiPause(player, false);
 
     sv->gridOffset = sv->gridOffsetTarget;
-
-#if !defined(__XTENSA__)
-    sv->midiQueueMutex = OGCreateMutex();
-#endif
 }
 
 /**
@@ -226,18 +235,6 @@ static void sequencerExitMode(void)
     {
         free(val);
     }
-
-#if !defined(__XTENSA__)
-    OGLockMutex(sv->midiQueueMutex);
-#endif
-    while ((val = pop(&sv->midiQueue)))
-    {
-        free(val);
-    }
-#if !defined(__XTENSA__)
-    OGUnlockMutex(sv->midiQueueMutex);
-    OGDeleteMutex(sv->midiQueueMutex);
-#endif
 
     freeFont(&sv->ibm);
     deinitMenuManiaRenderer(sv->menuRenderer);
@@ -387,12 +384,13 @@ static void sequencerNoteMenuCb(const char* label, bool selected, uint32_t setti
         }
         else if (str_instrument == label)
         {
-            sv->noteParams.instrument = settingVal;
+            sv->noteParams.channel = settingVal;
             for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
             {
                 if (instrumentVals[i] == settingVal)
                 {
                     wheelMenuSetItemIcon(sv->wheelRenderer, str_instrument, &sv->instrumentWsgs[i]);
+                    wheelMenuSetItemColor(sv->wheelRenderer, str_instrument, instrumentColors[i], instrumentColors[i]);
                     break;
                 }
             }
@@ -401,30 +399,12 @@ static void sequencerNoteMenuCb(const char* label, bool selected, uint32_t setti
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
- * @param event
- * @return true
- * @return false
+ * @param channel
+ * @return paletteColor_t
  */
-static bool sequencerMidiCb(midiEvent_t* event)
+paletteColor_t getChannelColor(int32_t channel)
 {
-    // If there is something in the midi queue, pop and return it
-    bool retVal = false;
-    midiEvent_t* qEvt;
-
-#if !defined(__XTENSA__)
-    OGLockMutex(sv->midiQueueMutex);
-#endif
-    if ((qEvt = pop(&sv->midiQueue)))
-    {
-        memcpy(event, qEvt, sizeof(midiEvent_t));
-        free(qEvt);
-        retVal = true;
-    }
-#if !defined(__XTENSA__)
-    OGUnlockMutex(sv->midiQueueMutex);
-#endif
-
-    return retVal;
+    return instrumentColors[channel];
 }

@@ -3,11 +3,11 @@
 #define KEY_MARGIN  2
 #define PX_PER_BEAT 16
 
+#define MIDI_VELOCITY 0xFF
+
 static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
 static vec_t getCursorScreenPos(sequencerVars_t* sv);
-
-static void enqueueMidiEvt(sequencerVars_t* sv, int32_t midiNote, bool start);
 
 /**
  * @brief TODO doc
@@ -118,6 +118,7 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 // sv->songParams.grid is denominator, i.e. quarter note grid is 4, eighth note grid is 8, etc.
                 newNote->sixteenthOn  = sv->cursorPos.x;
                 newNote->sixteenthOff = newNote->sixteenthOn + (16 / sv->noteParams.type);
+                newNote->channel      = sv->noteParams.channel;
 
                 // Check for overlaps
                 node_t* addBeforeThis = NULL;
@@ -160,15 +161,17 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 // Stop it first if it's currently exampling
                 if (0 < sv->exampleMidiNoteTimer)
                 {
-                    enqueueMidiEvt(sv, sv->exampleMidiNote, false);
+                    midiNoteOff(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote,
+                                MIDI_VELOCITY);
                 }
 
                 // Set the example note and timer
                 sv->exampleMidiNote      = newNote->midiNum;
+                sv->exampleMidiChannel   = sv->noteParams.channel;
                 sv->exampleMidiNoteTimer = (sv->usPerBeat * 4) / (sv->noteParams.type);
 
                 // Play it
-                enqueueMidiEvt(sv, sv->exampleMidiNote, true);
+                midiNoteOn(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, MIDI_VELOCITY);
                 break;
             }
             case PB_B:
@@ -289,7 +292,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         if (0 >= sv->exampleMidiNoteTimer)
         {
             // Stop the example note
-            enqueueMidiEvt(sv, sv->exampleMidiNote, false);
+            midiNoteOff(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, MIDI_VELOCITY);
         }
     }
 
@@ -355,7 +358,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
                     note->isOn = true;
 
                     // Create MIDI on and push it into the queue to be picked up by the callback
-                    enqueueMidiEvt(sv, note->midiNum, true);
+                    midiNoteOn(globalMidiPlayerGet(MIDI_BGM), note->channel, note->midiNum, MIDI_VELOCITY);
                 }
             }
             else if (note->isOn)
@@ -363,7 +366,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
                 note->isOn = false;
 
                 // Create MIDI off and push it into the queue to be picked up by the callback
-                enqueueMidiEvt(sv, note->midiNum, false);
+                midiNoteOff(globalMidiPlayerGet(MIDI_BGM), note->channel, note->midiNum, MIDI_VELOCITY);
             }
             noteNode = noteNode->next;
         }
@@ -427,7 +430,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         topLeft     = subVec2d(topLeft, sv->gridOffset);
         bottomRight = subVec2d(bottomRight, sv->gridOffset);
 
-        fillDisplayArea(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y, c005);
+        fillDisplayArea(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y, getChannelColor(note->channel));
 
         noteNode = noteNode->next;
     }
@@ -503,27 +506,4 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025, c025);
         drawWheelMenu(sv->noteMenu, sv->wheelRenderer, elapsedUs);
     }
-}
-
-/**
- * @brief TODO
- *
- * @param sv
- * @param midiNote
- * @param start
- */
-static void enqueueMidiEvt(sequencerVars_t* sv, int32_t midiNote, bool start)
-{
-    midiEvent_t* evt  = calloc(1, sizeof(midiEvent_t));
-    evt->type         = MIDI_EVENT;
-    evt->midi.status  = start ? 0x90 : 0x80;
-    evt->midi.data[0] = midiNote;
-    evt->midi.data[1] = 0x40;
-#if !defined(__XTENSA__)
-    OGLockMutex(sv->midiQueueMutex);
-#endif
-    push(&sv->midiQueue, evt);
-#if !defined(__XTENSA__)
-    OGUnlockMutex(sv->midiQueueMutex);
-#endif
 }
