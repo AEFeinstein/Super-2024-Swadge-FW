@@ -206,8 +206,8 @@ static void sequencerEnterMode(void)
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     // Configure MIDI for streaming
     player->mode              = MIDI_STREAMING;
-    player->paused            = true;
     player->streamingCallback = sequencerMidiCb;
+    midiPause(globalMidiPlayerGet(MIDI_BGM), false);
 
     sv->gridOffset = sv->gridOffsetTarget;
 
@@ -236,6 +236,7 @@ static void sequencerExitMode(void)
     }
 #if !defined(__XTENSA__)
     OGUnlockMutex(sv->midiQueueMutex);
+    OGDeleteMutex(sv->midiQueueMutex);
 #endif
 
     freeFont(&sv->ibm);
@@ -253,10 +254,6 @@ static void sequencerExitMode(void)
     {
         freeWsg(&sv->instrumentWsgs[i]);
     }
-
-#if !defined(__XTENSA__)
-    OGDeleteMutex(sv->midiQueueMutex);
-#endif
 
     free(sv);
 }

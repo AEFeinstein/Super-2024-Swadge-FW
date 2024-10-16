@@ -85,6 +85,8 @@ typedef struct
     int32_t songTimer;
     list_t notes;
     list_t midiQueue;
+    int32_t exampleMidiNote;
+    int32_t exampleMidiNoteTimer;
 
 #if !defined(__XTENSA__)
     og_mutex_t midiQueueMutex;

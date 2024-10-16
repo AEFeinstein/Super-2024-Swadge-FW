@@ -7,6 +7,8 @@ static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A
 
 static vec_t getCursorScreenPos(sequencerVars_t* sv);
 
+static void enqueueMidiEvt(sequencerVars_t* sv, int32_t midiNote, bool start);
+
 /**
  * @brief TODO doc
  *
@@ -153,6 +155,20 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 {
                     addBefore(&sv->notes, newNote, addBeforeThis);
                 }
+
+                // Beep the just-added note
+                // Stop it first if it's currently exampling
+                if (0 < sv->exampleMidiNoteTimer)
+                {
+                    enqueueMidiEvt(sv, sv->exampleMidiNote, false);
+                }
+
+                // Set the example note and timer
+                sv->exampleMidiNote      = newNote->midiNum;
+                sv->exampleMidiNoteTimer = (sv->usPerBeat * 4) / (sv->noteParams.type);
+
+                // Play it
+                enqueueMidiEvt(sv, sv->exampleMidiNote, true);
                 break;
             }
             case PB_B:
@@ -164,6 +180,7 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
 
                     // Stop MIDI
                     midiPlayerReset(globalMidiPlayerGet(MIDI_BGM));
+                    midiPause(globalMidiPlayerGet(MIDI_BGM), false);
 
                     // Stop here
                     sv->gridOffsetTarget.x = sv->gridOffset.x;
@@ -189,8 +206,6 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                     sv->isPlaying = true;
 
                     sv->songTimer = 0;
-
-                    midiPause(globalMidiPlayerGet(MIDI_BGM), false);
                 }
                 break;
             }
@@ -266,6 +281,18 @@ void measureSequencerGrid(sequencerVars_t* sv)
  */
 void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
 {
+    // Run timer for example note
+    if (0 < sv->exampleMidiNoteTimer)
+    {
+        sv->exampleMidiNoteTimer -= elapsedUs;
+        // If the timer expired
+        if (0 >= sv->exampleMidiNoteTimer)
+        {
+            // Stop the example note
+            enqueueMidiEvt(sv, sv->exampleMidiNote, false);
+        }
+    }
+
     if (!sv->isPlaying)
     {
         RUN_TIMER_EVERY(sv->smoothScrollTimer, 16667, elapsedUs, {
@@ -328,18 +355,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
                     note->isOn = true;
 
                     // Create MIDI on and push it into the queue to be picked up by the callback
-                    midiEvent_t* evt  = calloc(1, sizeof(midiEvent_t));
-                    evt->type         = MIDI_EVENT;
-                    evt->midi.status  = 0x90;
-                    evt->midi.data[0] = note->midiNum;
-                    evt->midi.data[1] = 0x40;
-#if !defined(__XTENSA__)
-                    OGLockMutex(sv->midiQueueMutex);
-#endif
-                    push(&sv->midiQueue, evt);
-#if !defined(__XTENSA__)
-                    OGUnlockMutex(sv->midiQueueMutex);
-#endif
+                    enqueueMidiEvt(sv, note->midiNum, true);
                 }
             }
             else if (note->isOn)
@@ -347,19 +363,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
                 note->isOn = false;
 
                 // Create MIDI off and push it into the queue to be picked up by the callback
-                midiEvent_t* evt  = calloc(1, sizeof(midiEvent_t));
-                evt->type         = MIDI_EVENT;
-                evt->midi.status  = 0x80;
-                evt->midi.data[0] = note->midiNum;
-                evt->midi.data[1] = 0x40;
-
-#if !defined(__XTENSA__)
-                OGLockMutex(sv->midiQueueMutex);
-#endif
-                push(&sv->midiQueue, evt);
-#if !defined(__XTENSA__)
-                OGUnlockMutex(sv->midiQueueMutex);
-#endif
+                enqueueMidiEvt(sv, note->midiNum, false);
             }
             noteNode = noteNode->next;
         }
@@ -499,4 +503,27 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025, c025);
         drawWheelMenu(sv->noteMenu, sv->wheelRenderer, elapsedUs);
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param sv
+ * @param midiNote
+ * @param start
+ */
+static void enqueueMidiEvt(sequencerVars_t* sv, int32_t midiNote, bool start)
+{
+    midiEvent_t* evt  = calloc(1, sizeof(midiEvent_t));
+    evt->type         = MIDI_EVENT;
+    evt->midi.status  = start ? 0x90 : 0x80;
+    evt->midi.data[0] = midiNote;
+    evt->midi.data[1] = 0x40;
+#if !defined(__XTENSA__)
+    OGLockMutex(sv->midiQueueMutex);
+#endif
+    push(&sv->midiQueue, evt);
+#if !defined(__XTENSA__)
+    OGUnlockMutex(sv->midiQueueMutex);
+#endif
 }
