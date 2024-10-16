@@ -36,19 +36,19 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
     self->entityManager = entityManager;
 }
 
-void bb_destroyEntity(bb_entity_t* self)
+void bb_destroyEntity(bb_entity_t* self, bool caching)
 {
     // Zero out most info (but not references to manager type things) for entity to be reused.
     self->active    = false;
     self->cacheable = false;
 
-    if (self->data != NULL)
+    if (self->data != NULL && caching == false)
     {
         free(self->data);
-        self->data = NULL;
     }
+    self->data = NULL;
 
-    if (self->collisions != NULL)
+    if (self->collisions != NULL && caching == false)
     {
         // FREE WILLY FROM THE EVIL CLUTCHES OF SPIRAM!
         // remove & free all the nodes
@@ -62,8 +62,8 @@ void bb_destroyEntity(bb_entity_t* self)
             }
         }
         free(self->collisions);
-        self->collisions = NULL;
     }
+    self->collisions = NULL;
 
     self->updateFunction              = NULL;
     self->updateFarFunction           = NULL;
@@ -102,7 +102,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
         rData->flame->pos.y = self->pos.y + rData->yVel * self->gameData->elapsedUs / 100000;
         if (rData->yVel <= 0)
         {
-            bb_destroyEntity(rData->flame);
+            bb_destroyEntity(rData->flame, false);
             free(self->data);
             self->data           = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
             self->updateFunction = bb_updateHeavyFallingInit;
@@ -395,9 +395,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                 // destroy the egg
                 bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j]
                                                             .entity->data))
-                                     ->egg);
+                                     ->egg, false);
                 // destroy this (eggLeaves)
-                bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity);
+                bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
             }
         }
 
@@ -471,7 +471,7 @@ void bb_updateHarpoon(bb_entity_t* self)
     hData->lifetime++;
     if (hData->lifetime > 140)
     {
-        bb_destroyEntity(self);
+        bb_destroyEntity(self, false);
     }
 }
 
@@ -486,7 +486,7 @@ void bb_updateStuckHarpoon(bb_entity_t* self)
     shData->lifetime++;
     if (shData->lifetime > 140)
     {
-        bb_destroyEntity(self);
+        bb_destroyEntity(self, false);
     }
 }
 
@@ -539,7 +539,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
             if (bug != NULL)
             {
                 // destroy the egg
-                bb_destroyEntity(elData->egg);
+                bb_destroyEntity(elData->egg, false);
                 bb_hitInfo_t hitInfo = {0};
                 bb_collisionCheck(&self->gameData->tilemap, bug, NULL, &hitInfo);
                 if (hitInfo.hit == true)
@@ -553,7 +553,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                                     hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
                 }
                 // destroy this
-                bb_destroyEntity(self);
+                bb_destroyEntity(self, false);
             }
         }
     }
@@ -573,10 +573,10 @@ void bb_updateFarEggleaves(bb_entity_t* self)
     }
 
     // destroy the egg
-    bb_destroyEntity(((bb_eggLeavesData_t*)(self->data))->egg);
+    bb_destroyEntity(((bb_eggLeavesData_t*)(self->data))->egg, false);
 
     // destroy this
-    bb_destroyEntity(self);
+    bb_destroyEntity(self, false);
 }
 
 void bb_updateBug(bb_entity_t* self)
@@ -697,6 +697,9 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
     //Bug got stabbed
     self->paused = true;
     bb_bugData_t* bData = (bb_bugData_t*)other->data;
+    if(other->data == NULL){
+        printf("HUUUUUUUUHHHH\n");
+    }
     bData->health -= 10;
     if(bData->health < 0){
         bData->health = 0;

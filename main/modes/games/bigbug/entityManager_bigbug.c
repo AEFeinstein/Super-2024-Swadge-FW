@@ -182,7 +182,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                     *cachedEntity = *curEntity;
                     // push to the tail
                     push(entityManager->cachedEntities, (void*)cachedEntity);
-                    bb_destroyEntity(curEntity);
+                    bb_destroyEntity(curEntity, true);
                     continue;
                 }
             }
@@ -260,12 +260,30 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePla
             continue;
         }
 
-        bb_destroyEntity(currentEntity);
+        bb_destroyEntity(currentEntity, false);
 
         if (excludePlayer && currentEntity == entityManager->playerEntity)
         {
             currentEntity->active = true;
         }
+    }
+
+    //load all cached enemies and destroy them one by one.
+    node_t* currentNode    = entityManager->cachedEntities->first;
+    while (currentNode != NULL)
+    {
+        bb_entity_t* curEntity = (bb_entity_t*)currentNode->val;
+        node_t* next           = currentNode->next;
+        bb_entity_t* foundSpot = bb_findInactiveEntity(entityManager);
+        if (foundSpot != NULL)
+        {
+            // like a memcopy
+            *foundSpot = *curEntity;
+            entityManager->activeEntities++;
+            removeEntry(entityManager->cachedEntities, currentNode);
+            bb_destroyEntity(foundSpot, false);
+        }
+        currentNode = next;
     }
 }
 
@@ -354,7 +372,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                         case ONESHOT_ANIMATION:
                         {
                             // destroy the entity
-                            bb_destroyEntity(currentEntity);
+                            bb_destroyEntity(currentEntity, false);
                             break;
                         }
                         case LOOPING_ANIMATION:

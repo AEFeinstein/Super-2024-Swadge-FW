@@ -138,7 +138,7 @@ struct bb_entity_t
 void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData,
                          bb_soundManager_t* soundManager);
 
-void bb_destroyEntity(bb_entity_t* self);
+void bb_destroyEntity(bb_entity_t* self, bool caching);
 void bb_updateRocketLanding(bb_entity_t* self);
 void bb_updateHeavyFallingInit(bb_entity_t* self);
 void bb_updateHeavyFalling(bb_entity_t* self);

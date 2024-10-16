@@ -227,7 +227,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                                       i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE);
                                 if (((bb_eggLeavesData_t*)eggLeaves->data)->egg == NULL)
                                 {
-                                    bb_destroyEntity(eggLeaves);
+                                    bb_destroyEntity(eggLeaves, false);
                                 }
                                 else
                                 {
