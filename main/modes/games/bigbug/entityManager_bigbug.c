@@ -204,43 +204,61 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 
             if (curEntity->collisions != NULL)
             {
-                for (uint8_t j = 0; j < MAX_ENTITIES; j++)
+                if (*((bb_spriteDef_t*)(((bb_collision_t*)curEntity->collisions->first->val)->checkOthers->first)->val) == GARBOTNIK_FLYING)
                 {
-                    bb_entity_t* collisionCandidate = &entityManager->entities[j];
-                    // Iterate over all nodes
-                    node_t* currentCollisionCheck = curEntity->collisions->first;
-                    while (currentCollisionCheck != NULL)
-                    {
-                        node_t* currentOtherType = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
-                        while (currentOtherType != NULL)
+                    if(entityManager->playerEntity != NULL){
+                        //no need to search all other players if it's simply something to do with the player.
+                        
+                        // do a collision check here
+                        bb_hitInfo_t hitInfo = {0};
+                        if (bb_boxesCollide(curEntity, entityManager->playerEntity, &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos), &hitInfo))
                         {
-                            if (collisionCandidate->spriteIndex == *((bb_spriteDef_t*)currentOtherType->val))
+                            ((bb_collision_t*)curEntity->collisions->first->val)
+                                ->function(curEntity, entityManager->playerEntity, &hitInfo);
+                        }
+                    }
+                }
+                else
+                {
+                    for (uint8_t j = 0; j < MAX_ENTITIES; j++)
+                    {
+                        bb_entity_t* collisionCandidate = &entityManager->entities[j];
+                        // Iterate over all nodes
+                        node_t* currentCollisionCheck = curEntity->collisions->first;
+                        while (currentCollisionCheck != NULL)
+                        {
+                            node_t* currentOtherType = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
+                            while (currentOtherType != NULL)
                             {
-                                // do a collision check here
-                                if (bb_boxesCollide(collisionCandidate, curEntity, NULL, NULL))
+                                if (collisionCandidate->spriteIndex == *((bb_spriteDef_t*)currentOtherType->val))
                                 {
-                                    ((bb_collision_t*)currentCollisionCheck->val)
-                                        ->function(curEntity, collisionCandidate);
+                                    // do a collision check here
+                                    if (bb_boxesCollide(collisionCandidate, curEntity, NULL, NULL))
+                                    {
+                                        ((bb_collision_t*)currentCollisionCheck->val)
+                                            ->function(curEntity, collisionCandidate, NULL);
+                                    }
+                                    break;
                                 }
-                                break;
+                                currentOtherType = currentOtherType->next;
+                                if (curEntity->collisions == NULL)
+                                {
+                                    break;
+                                }
                             }
-                            currentOtherType = currentOtherType->next;
+                            currentCollisionCheck = currentCollisionCheck->next;
                             if (curEntity->collisions == NULL)
                             {
                                 break;
                             }
                         }
-                        currentCollisionCheck = currentCollisionCheck->next;
                         if (curEntity->collisions == NULL)
                         {
                             break;
                         }
                     }
-                    if (curEntity->collisions == NULL)
-                    {
-                        break;
-                    }
                 }
+                
             }
 
             if (curEntity == entityManager->viewEntity)
@@ -496,6 +514,15 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             rData->flame           = NULL;
             rData->yVel            = 240;
             entity->data           = rData;
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            bb_spriteDef_t* garbotnik = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
+            *garbotnik                = GARBOTNIK_FLYING;
+            push(others, (void*)garbotnik);
+            bb_collision_t* collision = heap_caps_malloc(sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionRocket};
+            push(entity->collisions, (void*)collision);
 
             entity->halfWidth  = 192;
             entity->halfHeight = 448;

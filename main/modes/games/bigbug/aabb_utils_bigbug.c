@@ -20,7 +20,7 @@
  * @return true if the boxes collide, false if they do not
  */
 
-bool bb_boxesCollide(bb_entity_t* unyielding, bb_entity_t* yielding, bb_hitInfo_t* hitInfo, vec_t* previousPos)
+bool bb_boxesCollide(bb_entity_t* unyielding, bb_entity_t* yielding, vec_t* previousPos, bb_hitInfo_t* hitInfo)
 {
     // AABB-AABB collision detection begins here
     // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
@@ -56,11 +56,10 @@ bool bb_boxesCollide(bb_entity_t* unyielding, bb_entity_t* yielding, bb_hitInfo_
         {
             // Worse collision resolution
             // for entities that don't care to store their previousPos.
-            hitInfo->normal = subVec2d(*previousPos, unyielding->pos);
+            hitInfo->normal = subVec2d(yielding->pos, unyielding->pos);
         }
         // Snap the offset to an orthogonal direction.
-        if ((hitInfo->normal.x < 0 ? -hitInfo->normal.x : hitInfo->normal.x)
-            > (hitInfo->normal.y < 0 ? -hitInfo->normal.y : hitInfo->normal.y))
+        if (hitInfo->normal.x < -unyielding->halfWidth || hitInfo->normal.x > unyielding->halfWidth)
         {
             if (hitInfo->normal.x > 0)
             {

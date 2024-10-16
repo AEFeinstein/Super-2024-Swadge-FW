@@ -31,6 +31,7 @@ typedef struct
     vec_t yaw;           //.x is the yaw, .y is the change in yaw over time. Gravitates toward left or right.
     uint8_t numHarpoons; // number of harpoons
     int32_t fuel;        // garbotnik's remaining fuel. Like a level timer that can be influenced.
+    bool gettingCrushed; // Set to true when a heavy falling object is pushing Garbotnik down.
 
     // touchpad stuff
     bool touching;
@@ -94,7 +95,7 @@ typedef struct
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
 typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-typedef void (*bb_collisionHandler_t)(bb_entity_t* self, bb_entity_t* other);
+typedef void (*bb_collisionHandler_t)(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 typedef struct
 {
     list_t* checkOthers; // A list of bb_spriteDef_t's to check collision against. i.e. all bug spriteDef indices for
@@ -168,7 +169,7 @@ void bb_drawStuckHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera,
 void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
-void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other);
-void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other);
+void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 #endif

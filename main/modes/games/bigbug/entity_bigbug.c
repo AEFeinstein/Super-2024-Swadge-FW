@@ -393,7 +393,13 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     if (hitInfo.hit == false)
     {
+        gData->gettingCrushed = false;
         return;
+    }
+
+    if(gData->gettingCrushed)
+    {
+        gData->fuel -= 2000;
     }
 
     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
@@ -738,7 +744,7 @@ void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
                   xOff, yOff);
 }
 
-void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
+void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
     bb_bugData_t* bData        = (bb_bugData_t*)other->data;
@@ -771,9 +777,13 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
     self->drawFunction   = bb_drawStuckHarpoon;
 }
 
-void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other)
+void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    
+    other->pos.x = hitInfo->pos.x + hitInfo->normal.x * other->halfWidth;
+    other->pos.y = hitInfo->pos.y + hitInfo->normal.y * other->halfHeight;
+    if(hitInfo->normal.y == 1){
+        ((bb_garbotnikData_t*)other->data)->gettingCrushed = true;
+    }
 }
 
 
