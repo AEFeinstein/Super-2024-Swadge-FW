@@ -1,6 +1,8 @@
 #ifndef _AABB_UTILS_BIGBUG_H_
 #define _AABB_UTILS_BIGBUG_H_
 
+#include "typedef_bigbug.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <palette.h>
@@ -13,8 +15,6 @@ typedef struct
     int32_t halfHeight;
 } bb_box_t;
 
-void bb_drawBox(bb_box_t* box, paletteColor_t* color, bool isFilled);
-bool bb_boxesCollide(bb_box_t* box0, bb_box_t* box1);
-bool bb_boxesCollideShift(bb_box_t* box0, bb_box_t* box1);
+bool bb_boxesCollide(bb_entity_t* unmoving, bb_entity_t* moving, bb_hitInfo_t* hitInfo, vec_t* previousPos);
 
 #endif

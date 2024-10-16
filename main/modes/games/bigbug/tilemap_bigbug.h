@@ -58,7 +58,6 @@ struct bb_hitInfo_t
     vec_t normal;
     int32_t tile_i;
     int32_t tile_j;
-    int32_t sqrDist;
 };
 
 //==============================================================================

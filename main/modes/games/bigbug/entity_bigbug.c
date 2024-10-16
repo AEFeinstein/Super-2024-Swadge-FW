@@ -8,7 +8,6 @@
 #include "entity_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "gameData_bigbug.h"
-#include "aabb_utils_bigbug.h"
 #include "lighting_bigbug.h"
 #include "random_bigbug.h"
 
@@ -771,3 +770,10 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
     self->updateFunction = bb_updateStuckHarpoon;
     self->drawFunction   = bb_drawStuckHarpoon;
 }
+
+void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other)
+{
+    
+}
+
+

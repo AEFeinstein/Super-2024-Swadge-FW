@@ -193,8 +193,9 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             }
             if (curEntity->updateFarFunction != NULL)
             {
-                if (bb_boxesCollideShift(&(bb_box_t){addVec2d(camera->pos, (vec_t){140, 120}), 140, 120},
-                                         &(bb_box_t){curEntity->pos, curEntity->halfWidth, curEntity->halfHeight})
+                //2240 = 140 << 4; 1920 = 120 << 4
+                if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 2240, .halfHeight = 1920},
+                                         curEntity, NULL, NULL)
                     == false)
                 {
                     curEntity->updateFarFunction(curEntity);
@@ -216,10 +217,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                             if (collisionCandidate->spriteIndex == *((bb_spriteDef_t*)currentOtherType->val))
                             {
                                 // do a collision check here
-                                if (bb_boxesCollide(
-                                        &(bb_box_t){collisionCandidate->pos, collisionCandidate->halfWidth,
-                                                    collisionCandidate->halfHeight},
-                                        &(bb_box_t){curEntity->pos, curEntity->halfWidth, curEntity->halfHeight}))
+                                if (bb_boxesCollide(collisionCandidate, curEntity, NULL, NULL))
                                 {
                                     ((bb_collision_t*)currentCollisionCheck->val)
                                         ->function(curEntity, collisionCandidate);

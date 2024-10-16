@@ -6,6 +6,7 @@
 //==============================================================================
 #include <stdint.h>
 #include <stdbool.h>
+
 #include "gameData_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "soundManager_bigbug.h"
@@ -168,5 +169,6 @@ void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other);
+void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other);
 
 #endif

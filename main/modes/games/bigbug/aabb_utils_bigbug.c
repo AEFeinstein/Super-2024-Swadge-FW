@@ -3,36 +3,13 @@
 //==============================================================================
 
 #include "aabb_utils_bigbug.h"
+#include "entity_bigbug.h"
 // #include <stdint.h>
 #include "fill.h"
-#include "typedef_bigbug.h"
 
 //==============================================================================
 // Functions
 //==============================================================================
-
-/**
- * @brief Draw a box
- *
- * @param box The box to draw
- * @param color The color of the box to draw
- * @param isFilled true to draw a filled box, false to draw an outline
- * @param scalingFactor The scaling factor to apply before drawing the box
- */
-void bb_drawBox(bb_box_t* box, paletteColor_t* color, bool isFilled)
-{
-    if (isFilled)
-    {
-        fillDisplayArea(box->pos.x - box->halfWidth, box->pos.y - box->halfHeight, box->pos.x + box->halfWidth,
-                        box->pos.y + box->halfHeight, *color);
-    }
-    else
-    {
-        // plotRect(box->pos.x - box->halfWidth, box->pos.y - box->halfHeight,
-        //             box->pos.x + box->halfWidth, box->pos.y + box->halfHeight,
-        //             *color);
-    }
-}
 
 /**
  * @brief
@@ -42,18 +19,83 @@ void bb_drawBox(bb_box_t* box, paletteColor_t* color, bool isFilled)
  * @param scalingFactor The factor to scale the boxes by before checking for collision
  * @return true if the boxes collide, false if they do not
  */
-bool bb_boxesCollide(bb_box_t* box0, bb_box_t* box1)
+
+bool bb_boxesCollide(bb_entity_t* unyielding, bb_entity_t* yielding, bb_hitInfo_t* hitInfo, vec_t* previousPos)
 {
-    return box0->pos.x - box0->halfWidth < box1->pos.x + box1->halfWidth
-           && box0->pos.x + box0->halfWidth > box1->pos.x - box1->halfWidth
-           && box0->pos.y - box0->halfHeight < box1->pos.y + box1->halfHeight
-           && box0->pos.y + box0->halfHeight > box1->pos.y - box1->halfHeight;
+    // AABB-AABB collision detection begins here
+    // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
+    if (unyielding->pos.x - unyielding->halfWidth
+            < yielding->pos.x + yielding->halfWidth
+        && unyielding->pos.x + unyielding->halfWidth
+                > yielding->pos.x - yielding->halfWidth
+        && unyielding->pos.y - unyielding->halfHeight
+                < yielding->pos.y + yielding->halfHeight
+        && unyielding->pos.y + unyielding->halfHeight
+                > yielding->pos.y - yielding->halfHeight)
+    {
+        /////////////////////////
+        // Collision detected! //
+        /////////////////////////
+        if(hitInfo == NULL)
+        {
+            //The caller simply wants a simple true or false.
+            return true;
+        }
+
+        hitInfo->hit    = true;
+
+        if (previousPos != NULL)
+        {
+            // More accurate collision resolution if previousPos provided.
+            // Used by entities that need to bounce around or move quickly.
+
+            // generate hitInfo based on position from previous frame.
+            hitInfo->normal = subVec2d(*previousPos, unyielding->pos);
+        }
+        else
+        {
+            // Worse collision resolution
+            // for entities that don't care to store their previousPos.
+            hitInfo->normal = subVec2d(*previousPos, unyielding->pos);
+        }
+        // Snap the offset to an orthogonal direction.
+        if ((hitInfo->normal.x < 0 ? -hitInfo->normal.x : hitInfo->normal.x)
+            > (hitInfo->normal.y < 0 ? -hitInfo->normal.y : hitInfo->normal.y))
+        {
+            if (hitInfo->normal.x > 0)
+            {
+                hitInfo->normal.x = 1;
+                hitInfo->normal.y = 0;
+                hitInfo->pos.x    = unyielding->pos.x + unyielding->halfWidth;
+                hitInfo->pos.y    = yielding->pos.y;
+            }
+            else
+            {
+                hitInfo->normal.x = -1;
+                hitInfo->normal.y = 0;
+                hitInfo->pos.x    = unyielding->pos.x - unyielding->halfWidth;
+                hitInfo->pos.y    = yielding->pos.y;
+            }
+        }
+        else
+        {
+            if (hitInfo->normal.y > 0)
+            {
+                hitInfo->normal.x = 0;
+                hitInfo->normal.y = 1;
+                hitInfo->pos.x    = yielding->pos.x;
+                hitInfo->pos.y    = unyielding->pos.y + unyielding->halfHeight;
+            }
+            else
+            {
+                hitInfo->normal.x = 0;
+                hitInfo->normal.y = -1;
+                hitInfo->pos.x    = yielding->pos.x;
+                hitInfo->pos.y    = unyielding->pos.y - unyielding->halfHeight;
+            }
+        }
+        return true;
+    }
+    return false;
 }
 
-bool bb_boxesCollideShift(bb_box_t* box0, bb_box_t* box1)
-{
-    return box0->pos.x - box0->halfWidth < (box1->pos.x >> DECIMAL_BITS) + (box1->halfWidth >> DECIMAL_BITS)
-           && box0->pos.x + box0->halfWidth > (box1->pos.x >> DECIMAL_BITS) - (box1->halfWidth >> DECIMAL_BITS)
-           && box0->pos.y - box0->halfHeight < (box1->pos.y >> DECIMAL_BITS) + (box1->halfHeight >> DECIMAL_BITS)
-           && box0->pos.y + box0->halfHeight > (box1->pos.y >> DECIMAL_BITS) - (box1->halfHeight >> DECIMAL_BITS);
-}
