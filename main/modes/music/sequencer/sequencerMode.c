@@ -35,8 +35,8 @@ static const char* tempoLabels[]
 static const int32_t tempoVals[] = {60,  70,  80,  90,  100, 110, 120, 130, 140, 150, 160, 170, 180,
                                     190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300};
 
-static const char str_songGrid[] = "Grid Lines: ";
-static const char* gridLabels[]  = {"1/1", "1/2", "1/4", "1/8", "1/16"};
+static const char str_songGrid[] = "Grid: ";
+static const char* gridLabels[]  = {"Whole", "Half", "Quarter", "Eighth", "Sixteenth"};
 static const int32_t gridVals[]  = {1, 2, 4, 8, 16};
 
 static const char str_songTimeSig[] = "Signature: ";
@@ -360,10 +360,15 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
     }
     else if (str_songEnd == label)
     {
-        sv->songParams.songEnd = settingVal;
+        sv->songParams.songEnd = sv->cursorPos.x;
     }
 
     measureSequencerGrid(sv);
+
+    if (selected)
+    {
+        sv->screen = SEQUENCER_SEQ;
+    }
 }
 
 /**

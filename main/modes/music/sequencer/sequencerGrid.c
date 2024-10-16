@@ -8,6 +8,7 @@
 static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
 static vec_t getCursorScreenPos(sequencerVars_t* sv);
+static void stopSequencer(sequencerVars_t* sv);
 
 /**
  * @brief TODO doc
@@ -91,7 +92,7 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
             }
             case PB_RIGHT:
             {
-                if (!sv->isPlaying && sv->cursorPos.x < (sv->songParams.songEnd - 1))
+                if (!sv->isPlaying)
                 {
                     // Move the cursor
                     sv->cursorPos.x += (16 / sv->songParams.grid);
@@ -179,23 +180,7 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 if (sv->isPlaying)
                 {
                     // If it's playing, stop
-                    sv->isPlaying = false;
-
-                    // Stop MIDI
-                    midiPlayerReset(globalMidiPlayerGet(MIDI_BGM));
-                    midiPause(globalMidiPlayerGet(MIDI_BGM), false);
-
-                    // Stop here
-                    sv->gridOffsetTarget.x = sv->gridOffset.x;
-
-                    // Turn of all notes
-                    node_t* noteNode = sv->notes.first;
-                    while (noteNode)
-                    {
-                        sequencerNote_t* note = noteNode->val;
-                        note->isOn            = false;
-                        noteNode              = noteNode->next;
-                    }
+                    stopSequencer(sv);
                 }
                 else if (sv->gridOffset.x)
                 {
@@ -296,30 +281,27 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         }
     }
 
-    if (!sv->isPlaying)
-    {
-        RUN_TIMER_EVERY(sv->smoothScrollTimer, 16667, elapsedUs, {
-            // Half the distance to X
-            if (sv->gridOffsetTarget.x > sv->gridOffset.x)
-            {
-                sv->gridOffset.x += (sv->gridOffsetTarget.x - sv->gridOffset.x + 1) / 2;
-            }
-            else if (sv->gridOffsetTarget.x < sv->gridOffset.x)
-            {
-                sv->gridOffset.x -= (sv->gridOffset.x - sv->gridOffsetTarget.x + 1) / 2;
-            }
+    RUN_TIMER_EVERY(sv->smoothScrollTimer, 16667, elapsedUs, {
+        // Half the distance to X
+        if (sv->gridOffsetTarget.x > sv->gridOffset.x)
+        {
+            sv->gridOffset.x += (sv->gridOffsetTarget.x - sv->gridOffset.x + 1) / 2;
+        }
+        else if (sv->gridOffsetTarget.x < sv->gridOffset.x)
+        {
+            sv->gridOffset.x -= (sv->gridOffset.x - sv->gridOffsetTarget.x + 1) / 2;
+        }
 
-            // Half the distance to Y
-            if (sv->gridOffsetTarget.y > sv->gridOffset.y)
-            {
-                sv->gridOffset.y += (sv->gridOffsetTarget.y - sv->gridOffset.y + 1) / 2;
-            }
-            else if (sv->gridOffsetTarget.y < sv->gridOffset.y)
-            {
-                sv->gridOffset.y -= (sv->gridOffset.y - sv->gridOffsetTarget.y + 1) / 2;
-            }
-        });
-    }
+        // Half the distance to Y
+        if (sv->gridOffsetTarget.y > sv->gridOffset.y)
+        {
+            sv->gridOffset.y += (sv->gridOffsetTarget.y - sv->gridOffset.y + 1) / 2;
+        }
+        else if (sv->gridOffsetTarget.y < sv->gridOffset.y)
+        {
+            sv->gridOffset.y -= (sv->gridOffset.y - sv->gridOffsetTarget.y + 1) / 2;
+        }
+    });
 
     // Scroll
     if (sv->isPlaying)
@@ -329,6 +311,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         {
             sv->scrollTimer -= sv->usPerPx;
             sv->gridOffset.x++;
+            sv->gridOffsetTarget.x++;
 
             // Move cursor to be visible, even if it's not controllable
             if (getCursorScreenPos(sv).x < sv->labelWidth)
@@ -370,6 +353,24 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
             }
             noteNode = noteNode->next;
         }
+
+        // Check for song end
+        uint32_t songEndUs = (sv->songParams.songEnd * 60 * (int64_t)1000000) / (4 * sv->songParams.tempo);
+        if (sv->songTimer >= songEndUs)
+        {
+            // Always stop
+            stopSequencer(sv);
+            // Loop if that's set
+            if (sv->songParams.loop)
+            {
+                // reset to beginning
+                sv->gridOffsetTarget.x = 0;
+                sv->cursorPos.x        = 0;
+                // Play
+                sv->isPlaying = true;
+                sv->songTimer = 0;
+            }
+        }
     }
 
     // Draw horizontal grid lines
@@ -396,10 +397,8 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         lIdx++;
     }
 
-    // Only draw lines until the end of screen or song
-    // TODO validate
-    int numCells = sv->songParams.songEnd * sv->songParams.grid / 16;
-    while (xOff < TFT_WIDTH && lIdx <= numCells)
+    // Only draw lines until the end of screen
+    while (xOff < TFT_WIDTH)
     {
         // Lighten the line every bar
         paletteColor_t lineColor = c222;
@@ -439,6 +438,10 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
     vec_t rectPos = getCursorScreenPos(sv);
     int32_t width = (4 * PX_PER_BEAT) / sv->noteParams.type;
     drawRect(rectPos.x, rectPos.y, rectPos.x + width - 1, rectPos.y + sv->rowHeight - 1, c550);
+
+    // Draw song end line
+    int32_t songEndX = sv->labelWidth + sv->songParams.songEnd * (PX_PER_BEAT / 4) - sv->gridOffset.x;
+    fillDisplayArea(songEndX, 0, songEndX + 4, TFT_HEIGHT, c331);
 
     // Keep track of key and index
     int32_t kIdx   = 0;
@@ -492,18 +495,31 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
 
     if (wheelMenuActive(sv->noteMenu, sv->wheelRenderer))
     {
-        // fillDisplayArea(sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y - 2,
-        //                 sd->wheelTextArea.pos.x + sd->wheelTextArea.width,
-        //                 sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025);
-        // drawTriangleOutlined(sd->wheelTextArea.pos.x, sd->wheelTextArea.pos.y - 2,
-        //                      sd->wheelTextArea.pos.x - sd->betterFont.height / 2,
-        //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2, sd->wheelTextArea.pos.x,
-        //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025, c025);
-        // drawTriangleOutlined(sd->wheelTextArea.pos.x + sd->wheelTextArea.width, sd->wheelTextArea.pos.y - 2,
-        //                      sd->wheelTextArea.pos.x + sd->wheelTextArea.width + sd->betterFont.height / 2,
-        //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height / 2,
-        //                      sd->wheelTextArea.pos.x + sd->wheelTextArea.width,
-        //                      sd->wheelTextArea.pos.y + sd->wheelTextArea.height + 2, c025, c025);
         drawWheelMenu(sv->noteMenu, sv->wheelRenderer, elapsedUs);
+    }
+}
+/**
+ * @brief TODO doc
+ *
+ * @param sv
+ */
+static void stopSequencer(sequencerVars_t* sv)
+{
+    sv->isPlaying = false;
+
+    // Stop MIDI
+    midiPlayerReset(globalMidiPlayerGet(MIDI_BGM));
+    midiPause(globalMidiPlayerGet(MIDI_BGM), false);
+
+    // Stop here
+    sv->gridOffsetTarget.x = sv->gridOffset.x;
+
+    // Turn of all notes
+    node_t* noteNode = sv->notes.first;
+    while (noteNode)
+    {
+        sequencerNote_t* note = noteNode->val;
+        note->isOn            = false;
+        noteNode              = noteNode->next;
     }
 }
