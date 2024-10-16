@@ -298,7 +298,7 @@ void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume)
 uint8_t swSynthMixOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators)
 {
     // Return the 8-bit unsigned sample
-    return (swSynthSumOscillators(oscillators, numOscillators) / numOscillators) + 128;
+    return 0;//(swSynthSumOscillators(oscillators, numOscillators) / numOscillators) + 128;
 }
 
 /**
@@ -312,14 +312,14 @@ uint8_t swSynthMixOscillators(synthOscillator_t* oscillators[], uint16_t numOsci
  * @param numOscillators The number of members in oscillators
  * @return int32_t The signed sum of all oscillator samples
  */
-int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators)
+int32_t swSynthSumOscillators(synthOscillator_t* oscillators, uint16_t numOscillators)
 {
     // Start off with an empty sample. It's 32-bit for math but will be returned as 8-bit
     int32_t sample = 0;
     // For each oscillator
     for (int32_t oscIdx = 0; oscIdx < numOscillators; oscIdx++)
     {
-        synthOscillator_t* osc = oscillators[oscIdx];
+        synthOscillator_t* osc = &oscillators[oscIdx];
         // Step the oscillator's accumulator
         osc->accumulator.accum32 += osc->stepSize;
 

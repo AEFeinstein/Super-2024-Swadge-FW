@@ -3865,10 +3865,10 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
         int16_t x0       = x + ((chan->percussion ? voiceIdx : i++) * (BAR_WIDTH + BAR_SPACING));
         int16_t x1       = x0 + BAR_WIDTH;
 
-        if (chan->percussion || voices[voiceIdx].oscillators[0].cVol > 0 || voices[voiceIdx].oscillators[0].tVol > 0)
+        if (chan->percussion || voices[voiceIdx].oscillator->cVol > 0 || voices[voiceIdx].oscillator->tVol > 0)
         {
             int16_t barH
-                = MAX((chan->percussion ? (voices[voiceIdx].velocity << 1 | 1) : voices[voiceIdx].oscillators[0].cVol)
+                = MAX((chan->percussion ? (voices[voiceIdx].velocity << 1 | 1) : voices[voiceIdx].oscillator->cVol)
                           * BAR_HEIGHT / 255,
                       1);
 
