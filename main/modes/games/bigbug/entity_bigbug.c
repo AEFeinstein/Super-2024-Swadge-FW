@@ -36,6 +36,15 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
     self->entityManager = entityManager;
 }
 
+void bb_setData(bb_entity_t* self, void* data)
+{
+    if (self->data != NULL)
+    {
+        free(self->data);
+    }
+    self->data = data;
+}
+
 void bb_destroyEntity(bb_entity_t* self, bool caching)
 {
     // Zero out most info (but not references to manager type things) for entity to be reused.
@@ -103,9 +112,8 @@ void bb_updateRocketLanding(bb_entity_t* self)
         if (rData->yVel <= 0)
         {
             bb_destroyEntity(rData->flame, false);
-            free(self->data);
-            self->data           = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
-            self->updateFunction = bb_updateHeavyFallingInit;
+            bb_setData(self, heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM));
+            self->updateFunction                     = bb_updateHeavyFallingInit;
             self->gameData->entityManager.viewEntity = NULL;
 
             return;
@@ -117,9 +125,9 @@ void bb_updateRocketLanding(bb_entity_t* self)
 void bb_updateHeavyFallingInit(bb_entity_t* self)
 {
     bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
-    hfData->yVel += 6;
+    hfData->yVel++;
 
-    self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
+    self->pos.y += hfData->yVel * (self->gameData->elapsedUs >> 14);
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
@@ -150,8 +158,8 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
 void bb_updateHeavyFalling(bb_entity_t* self)
 {
     bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
-    hfData->yVel += 6;
-    self->pos.y += hfData->yVel * self->gameData->elapsedUs / 100000;
+    hfData->yVel++;
+    self->pos.y += hfData->yVel * (self->gameData->elapsedUs >> 14);
 
     // printf("tilemap addr: %p\n", &self->gameData->tilemap);
     // printf("self    addr: %p\n", self);
@@ -164,13 +172,13 @@ void bb_updateHeavyFalling(bb_entity_t* self)
 
     // self->pos.y -= hfData->yVel * self->gameData->elapsedUs / 100000;
     self->pos.y = hitInfo.pos.y - self->halfHeight;
-    if (hfData->yVel < 160)
+    if (hfData->yVel < 26)
     {
         hfData->yVel = 0;
     }
     else
     {
-        hfData->yVel -= 160;
+        hfData->yVel -= 26;
         // Update the dirt to air.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble animation
@@ -178,6 +186,29 @@ void bb_updateHeavyFalling(bb_entity_t* self)
                         hitInfo.tile_i * TILE_SIZE + HALF_TILE, hitInfo.tile_j * TILE_SIZE + HALF_TILE);
     }
     return;
+}
+
+void bb_updatePhysicsObject(bb_entity_t* self)
+{
+    bb_physicsData_t* pData = (bb_physicsData_t*)self->data;
+    pData->vel.y++;
+    self->pos = addVec2d(self->pos, mulVec2d(pData->vel, (self->gameData->elapsedUs >> 14)));
+
+    bb_hitInfo_t hitInfo = {0};
+    bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+    if (hitInfo.hit == false)
+    {
+        return;
+    }
+    self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
+    self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
+
+    // Reflect the velocity vector along the normal
+    // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+    pData->vel
+        = divVec2d(mulVec2d(subVec2d(pData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(pData->vel, hitInfo.normal)))),
+                            pData->bounceNumerator),
+                   pData->bounceDenominator);
 }
 
 void bb_updateGarbotnikDeploy(bb_entity_t* self)
@@ -212,9 +243,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     if (gData->fire && gData->numHarpoons > 0)
     {
         // Create a harpoon
-        bb_entity_t* harpoon
-            = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
-                              self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
+        bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
+                                               self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
         if (harpoon != NULL)
         {
             gData->numHarpoons -= 1;
@@ -223,8 +253,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t y;
             getTouchCartesian(gData->phi, gData->r, &x, &y);
             // Set harpoon's velocity
-            pData->vel.x = (x - 512) / 2;
-            pData->vel.y = (-y + 512) / 2;
+            pData->vel.x = (x - 512) / 10;
+            pData->vel.y = (-y + 512) / 10;
         }
     }
 
@@ -395,7 +425,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                 // destroy the egg
                 bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j]
                                                             .entity->data))
-                                     ->egg, false);
+                                     ->egg,
+                                 false);
                 // destroy this (eggLeaves)
                 bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
             }
@@ -458,18 +489,17 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
 void bb_updateHarpoon(bb_entity_t* self)
 {
-    bb_projectileData_t* hData = (bb_projectileData_t*)self->data;
+    bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
 
     // Update harpoon's velocity
-    hData->vel.y += 6;
+    pData->vel.y++;
     // Update harpoon's position
-    self->pos.x += hData->vel.x * self->gameData->elapsedUs / 100000;
-    self->pos.y += hData->vel.y * self->gameData->elapsedUs / 100000;
-    
+    self->pos = addVec2d(self->pos, mulVec2d(pData->vel, (self->gameData->elapsedUs >> 14)));
+
     // Update harpoon's lifetime. I'm not using elapsed time because it is in microseconds and would need division to
     // accumulate milliseconds in a reasonable data type.
-    hData->lifetime++;
-    if (hData->lifetime > 140)
+    pData->lifetime++;
+    if (pData->lifetime > 140)
     {
         bb_destroyEntity(self, false);
     }
@@ -479,9 +509,9 @@ void bb_updateStuckHarpoon(bb_entity_t* self)
 {
     bb_stuckHarpoonData_t* shData = (bb_stuckHarpoonData_t*)self->data;
 
-    if(shData->parent != NULL)
+    if (shData->parent != NULL)
     {
-        self->pos = addVec2d(shData->parent->pos,shData->offset);
+        self->pos = addVec2d(shData->parent->pos, shData->offset);
     }
     shData->lifetime++;
     if (shData->lifetime > 140)
@@ -694,39 +724,41 @@ void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
 {
-    //Bug got stabbed
-    self->paused = true;
-    bb_bugData_t* bData = (bb_bugData_t*)other->data;
-    if(other->data == NULL){
-        printf("HUUUUUUUUHHHH\n");
-    }
-    bData->health -= 10;
-    if(bData->health < 0){
-        bData->health = 0;
-        other->paused = true;
-    }
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
-    vecFl_t floatVel = {(float)pData->vel.x, (float)pData->vel.y};
-    free(self->data);
+    bb_bugData_t* bData        = (bb_bugData_t*)other->data;
+    // Bug got stabbed
+    self->paused = true;
+    bData->health -= 20;
+    if (bData->health < 0)
+    {
+        bData->health               = 0;
+        other->paused               = true;
+        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+        physData->vel               = divVec2d(pData->vel, 2);
+        physData->bounceNumerator   = 1;
+        physData->bounceDenominator = 2;
+        bb_setData(other, physData);
+        other->updateFunction = bb_updatePhysicsObject;
+    }
+    vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
     bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
-    shData->parent = other;
-    shData->offset = subVec2d(self->pos,other->pos);
-    shData->floatVel = normVecFl2d(floatVel);
-    self->data = shData;
+    shData->parent                = other;
+    shData->offset                = subVec2d(self->pos, other->pos);
+    shData->floatVel              = normVecFl2d(floatVel);
+    bb_setData(self, shData);
 
     while (self->collisions->first != NULL)
+    {
+        // Remove from head
+        bb_collision_t* shiftedCollision = shift(self->collisions);
+        while (shiftedCollision->checkOthers->first != NULL)
         {
-            // Remove from head
-            bb_collision_t* shiftedCollision = shift(self->collisions);
-            while (shiftedCollision->checkOthers->first != NULL)
-            {
-                shift(shiftedCollision->checkOthers);
-            }
+            shift(shiftedCollision->checkOthers);
         }
-        free(self->collisions);
+    }
+    free(self->collisions);
     self->collisions = NULL;
-    
+
     self->updateFunction = bb_updateStuckHarpoon;
-    self->drawFunction = bb_drawStuckHarpoon;
-    
+    self->drawFunction   = bb_drawStuckHarpoon;
 }
