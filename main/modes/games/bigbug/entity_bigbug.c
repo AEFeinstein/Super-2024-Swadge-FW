@@ -735,8 +735,8 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
         other->paused               = true;
         bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
         physData->vel               = divVec2d(pData->vel, 2);
-        physData->bounceNumerator   = 1;
-        physData->bounceDenominator = 2;
+        physData->bounceNumerator   = 2;
+        physData->bounceDenominator = 3;
         bb_setData(other, physData);
         other->updateFunction = bb_updatePhysicsObject;
     }

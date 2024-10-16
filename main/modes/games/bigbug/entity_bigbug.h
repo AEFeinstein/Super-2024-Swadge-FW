@@ -72,7 +72,6 @@ typedef struct
 typedef struct
 {
     vec_t vel;
-    int32_t angularVel;
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
