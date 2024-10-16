@@ -478,7 +478,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case GARBOTNIK_FLYING:
         {
             bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
-            gData->numHarpoons        = 100;
+            gData->numHarpoons        = 250;
             gData->fuel  = 1000 * 60 * 1; // 1 thousand milliseconds in a second. 60 seconds in a minute. 1 minutes.
             entity->data = gData;
 
@@ -674,8 +674,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     entity->cSquared = entity->halfWidth * entity->halfWidth + entity->halfHeight * entity->halfHeight;
 
     entityManager->activeEntities++;
-    // if(entityManager->activeEntities % 10 == 0 || entityManager->activeEntities == MAX_ENTITIES){
-    //     printf("%d/%d entities ^\n", entityManager->activeEntities, MAX_ENTITIES);
+    // if(entityManager->activeEntities == MAX_ENTITIES){
+        printf("%d/%d entities ^\n", entityManager->activeEntities, MAX_ENTITIES);
     // }
 
     return entity;

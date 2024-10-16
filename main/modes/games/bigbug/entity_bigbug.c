@@ -176,13 +176,13 @@ void bb_updateHeavyFalling(bb_entity_t* self)
 
     // self->pos.y -= hfData->yVel * self->gameData->elapsedUs / 100000;
     self->pos.y = hitInfo.pos.y - self->halfHeight;
-    if (hfData->yVel < 26)
+    if (hfData->yVel < 28)
     {
         hfData->yVel = 0;
     }
     else
     {
-        hfData->yVel -= 26;
+        hfData->yVel -= 28;
         // Update the dirt to air.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble animation
@@ -427,10 +427,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             if (bug != NULL)
             {
                 // destroy the egg
-                bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j]
-                                                            .entity->data))
-                                     ->egg,
-                                 false);
+                bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity->data))->egg, false);
                 // destroy this (eggLeaves)
                 bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
             }
@@ -528,15 +525,15 @@ void bb_updateHarpoon(bb_entity_t* self)
 void bb_updateStuckHarpoon(bb_entity_t* self)
 {
     bb_stuckHarpoonData_t* shData = (bb_stuckHarpoonData_t*)self->data;
-
-    if (shData->parent != NULL)
-    {
-        self->pos = addVec2d(shData->parent->pos, shData->offset);
-    }
     shData->lifetime++;
     if (shData->lifetime > 140)
     {
         bb_destroyEntity(self, false);
+    }
+
+    if (shData->parent != NULL)
+    {
+        self->pos = addVec2d(shData->parent->pos, shData->offset);
     }
 }
 
@@ -746,8 +743,10 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
 {
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
     bb_bugData_t* bData        = (bb_bugData_t*)other->data;
-    // Bug got stabbed
+    //pause the harpoon animation as the tip will no longer even be rendered.
     self->paused = true;
+
+    // Bug got stabbed
     bData->health -= 20;
     if (bData->health < 0)
     {
@@ -755,7 +754,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
         other->paused               = true;
         bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
         physData->vel               = divVec2d(pData->vel, 2);
-        physData->bounceNumerator   = 2;
+        physData->bounceNumerator   = 2;//66% bounce
         physData->bounceDenominator = 3;
         bb_setData(other, physData);
         other->updateFunction = bb_updatePhysicsObject;
