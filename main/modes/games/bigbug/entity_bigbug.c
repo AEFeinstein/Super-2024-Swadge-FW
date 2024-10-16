@@ -779,10 +779,19 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
 
 void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
+    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
     other->pos.x = hitInfo->pos.x + hitInfo->normal.x * other->halfWidth;
     other->pos.y = hitInfo->pos.y + hitInfo->normal.y * other->halfHeight;
+    if(hitInfo->normal.x == 0)
+    {
+        gData->vel.y = 0;
+    }
+    else
+    {
+        gData->vel.x = 0;
+    }
     if(hitInfo->normal.y == 1){
-        ((bb_garbotnikData_t*)other->data)->gettingCrushed = true;
+        gData->gettingCrushed = true;
     }
 }
 
