@@ -537,7 +537,7 @@ typedef struct
     uint8_t channel;
 
     /// @brief The synthesizer oscillators used to generate the sounds
-    synthOscillator_t oscillators[OSC_PER_VOICE];
+    synthOscillator_t oscillator;
 
     // TODO union this with the oscillators? They shouldn't both be used
     // But we need to make sure those oscillators don't get summed
@@ -662,7 +662,7 @@ typedef struct
     voiceStates_t poolVoiceStates;
 
     /// @brief An array holding a pointer to every oscillator
-    synthOscillator_t* allOscillators[(POOL_VOICE_COUNT + PERCUSSION_VOICES) * OSC_PER_VOICE];
+    synthOscillator_t* allOscillators[POOL_VOICE_COUNT + PERCUSSION_VOICES];
 
     /// @brief The total number of oscillators in the \c allOscillators array
     uint16_t oscillatorCount;

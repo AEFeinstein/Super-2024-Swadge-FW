@@ -212,12 +212,8 @@ static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* vo
     states->decay &= mask;
     states->sustain &= mask;
 
-    for (uint8_t i = 0; i < OSC_PER_VOICE; i++)
-    {
-        swSynthSetVolume(&voice->oscillators[i], oscVol);
-
-        // add up the actual current oscillator volume
-    }
+    swSynthSetVolume(&voice->oscillator, oscVol);
+    // add up the actual current oscillator volume
 
     if (0 == releaseTime)
     {
@@ -371,10 +367,7 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
 
     if (voice->timbre->type != SAMPLE)
     {
-        for (int i = 0; i < OSC_PER_VOICE; i++)
-        {
-            swSynthSetVolume(&voice->oscillators[i], oscVol);
-        }
+        swSynthSetVolume(&voice->oscillator, oscVol);
     }
 }
 
@@ -387,36 +380,32 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
 static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
 {
     voice->timbre = timbre;
-    for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
+    switch (timbre->type)
     {
-        switch (timbre->type)
+        case WAVETABLE:
         {
-            case WAVETABLE:
-            {
-                swSynthSetWaveFunc(&voice->oscillators[oscIdx], timbre->waveFunc,
-                                   (void*)((uintptr_t)timbre->waveIndex));
-                voice->oscillators[oscIdx].chorus = (timbre->effects.chorus) >> 3;
-                break;
-            }
+            swSynthSetWaveFunc(&voice->oscillator, timbre->waveFunc, (void*)((uintptr_t)timbre->waveIndex));
+            voice->oscillator.chorus = (timbre->effects.chorus) >> 3;
+            break;
+        }
 
-            case NOISE:
-            {
-                swSynthSetShape(&voice->oscillators[oscIdx], SHAPE_NOISE);
-                break;
-            }
+        case NOISE:
+        {
+            swSynthSetShape(&voice->oscillator, SHAPE_NOISE);
+            break;
+        }
 
-            case WAVE_SHAPE:
-            {
-                swSynthSetShape(&voice->oscillators[oscIdx], timbre->shape);
-                break;
-            }
+        case WAVE_SHAPE:
+        {
+            swSynthSetShape(&voice->oscillator, timbre->shape);
+            break;
+        }
 
-            case SAMPLE:
-            {
-                // Just reset the oscillators in case they were previously in-use
-                swSynthSetVolume(&voice->oscillators[oscIdx], 0);
-                break;
-            }
+        case SAMPLE:
+        {
+            // Just reset the oscillator in case they were previously in-use
+            swSynthSetVolume(&voice->oscillator, 0);
+            break;
         }
     }
 }
@@ -1142,15 +1131,11 @@ void midiPlayerInit(midiPlayer_t* player)
         bool percussion = voiceIdx >= POOL_VOICE_COUNT;
         midiVoice_t* voice
             = percussion ? (&player->percVoices[voiceIdx - POOL_VOICE_COUNT]) : (&player->poolVoices[voiceIdx]);
-        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-        {
-            swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uint32_t)0), 0, 0);
+        swSynthInitOscillatorWave(&voice->oscillator, waveTableFunc, (void*)((uint32_t)0), 0, 0);
 #ifdef OSC_DITHER
-            voice->oscillators[oscIdx].accumulator.bytes[3]
-                = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
+        voice->oscillator.accumulator.bytes[3] = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
 #endif
-            player->allOscillators[player->oscillatorCount++] = &voice->oscillators[oscIdx];
-        }
+        player->allOscillators[player->oscillatorCount++] = &voice->oscillator;
 
         voice->timbre = percussion ? &defaultDrumkitTimbre : &acousticGrandPianoTimbre;
     }
@@ -1355,11 +1340,8 @@ void midiAllSoundOff(midiPlayer_t* player)
         player->poolVoiceStates.release              = 0;
         player->poolVoiceStates.on                   = 0;
         // TODO: Handle samplers
-        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-        {
-            swSynthSetVolume(&player->poolVoices[voiceIdx].oscillators[oscIdx], 0);
-            swSynthSetFreqPrecise(&player->poolVoices[voiceIdx].oscillators[oscIdx], 0);
-        }
+        swSynthSetVolume(&player->poolVoices[voiceIdx].oscillator, 0);
+        swSynthSetFreqPrecise(&player->poolVoices[voiceIdx].oscillator, 0);
     }
 
     for (uint8_t voiceIdx = 0; voiceIdx < PERCUSSION_VOICES; voiceIdx++)
@@ -1368,12 +1350,9 @@ void midiAllSoundOff(midiPlayer_t* player)
         player->percVoices[voiceIdx].targetVol       = 0;
         player->percVoiceStates.held                 = 0;
         player->percVoiceStates.on                   = 0;
-        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-        {
-            player->percVoices[voiceIdx].targetVol = 0;
-            swSynthSetVolume(&player->percVoices[voiceIdx].oscillators[oscIdx], 0);
-            swSynthSetFreqPrecise(&player->percVoices[voiceIdx].oscillators[oscIdx], 0);
-        }
+        player->percVoices[voiceIdx].targetVol       = 0;
+        swSynthSetVolume(&player->percVoices[voiceIdx].oscillator, 0);
+        swSynthSetFreqPrecise(&player->percVoices[voiceIdx].oscillator, 0);
     }
 
     for (int chanIdx = 0; chanIdx < MIDI_CHANNEL_COUNT; chanIdx++)
@@ -1674,8 +1653,8 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
         // StepVoice() will take care of everything else
 
-        swSynthSetVolume(&voice->oscillators[0], attackTime ? 0 : pressureVol);
-        swSynthSetFreqPrecise(&voice->oscillators[0], bendPitchWheel(note, chan->pitchBend));
+        swSynthSetVolume(&voice->oscillator, attackTime ? 0 : pressureVol);
+        swSynthSetFreqPrecise(&voice->oscillator, bendPitchWheel(note, chan->pitchBend));
     }
 }
 
@@ -2241,15 +2220,11 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
             uint8_t voiceIdx  = __builtin_ctz(playingVoices);
             uint32_t voiceBit = (1 << voiceIdx);
 
-            for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-            {
-                // Apply the pitch bend to all this channel's oscillators
-                // TODO: If each voice has multiple oscillators, we would obviously
-                // want to be able to control them separately here.
-                // Maybe we only apply that for like, chorus?
-                swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[oscIdx],
-                                      bendPitchWheel(voices[voiceIdx].note, value));
-            }
+            // Apply the pitch bend to all this channel's oscillators
+            // TODO: If each voice has multiple oscillators, we would obviously
+            // want to be able to control them separately here.
+            // Maybe we only apply that for like, chorus?
+            swSynthSetFreqPrecise(&voices[voiceIdx].oscillator, bendPitchWheel(voices[voiceIdx].note, value));
 
             // Next!
             playingVoices &= ~voiceBit;
