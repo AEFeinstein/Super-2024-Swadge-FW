@@ -22,8 +22,6 @@
 // Structs
 //==============================================================================
 
-
-
 typedef struct
 {
     vec_t vel;           // velocity
@@ -70,6 +68,15 @@ typedef struct
 {
     int32_t yVel;
 } bb_heavyFallingData_t;
+
+typedef struct
+{
+    vec_t vel;
+    int32_t angularVel;
+    uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
+                             // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
+    uint8_t bounceDenominator;
+} bb_physicsData_t;
 
 typedef struct
 {
@@ -138,10 +145,13 @@ struct bb_entity_t
 void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData,
                          bb_soundManager_t* soundManager);
 
+void bb_setData(bb_entity_t* self, void* data);
+
 void bb_destroyEntity(bb_entity_t* self, bool caching);
 void bb_updateRocketLanding(bb_entity_t* self);
 void bb_updateHeavyFallingInit(bb_entity_t* self);
 void bb_updateHeavyFalling(bb_entity_t* self);
+void bb_updatePhysicsObject(bb_entity_t* self);
 void bb_updateGarbotnikDeploy(bb_entity_t* self);
 void bb_updateGarbotnikFlying(bb_entity_t* self);
 void bb_updateHarpoon(bb_entity_t* self);
