@@ -45,19 +45,8 @@ void bb_setData(bb_entity_t* self, void* data)
     self->data = data;
 }
 
-void bb_destroyEntity(bb_entity_t* self, bool caching)
-{
-    // Zero out most info (but not references to manager type things) for entity to be reused.
-    self->active    = false;
-    self->cacheable = false;
-
-    if (self->data != NULL && caching == false)
-    {
-        free(self->data);
-    }
-    self->data = NULL;
-
-    if (self->collisions != NULL && caching == false)
+void bb_clearCollisions(bb_entity_t* self, bool keepCollisionsCached){
+    if (self->collisions != NULL && keepCollisionsCached == false)
     {
         // FREE WILLY FROM THE EVIL CLUTCHES OF SPIRAM!
         // remove & free all the nodes
@@ -73,6 +62,21 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         free(self->collisions);
     }
     self->collisions = NULL;
+}
+
+void bb_destroyEntity(bb_entity_t* self, bool caching)
+{
+    // Zero out most info (but not references to manager type things) for entity to be reused.
+    self->active    = false;
+    self->cacheable = false;
+
+    if (self->data != NULL && caching == false)
+    {
+        free(self->data);
+    }
+    self->data = NULL;
+
+    bb_clearCollisions(self, caching);
 
     self->updateFunction              = NULL;
     self->updateFarFunction           = NULL;
@@ -491,17 +495,33 @@ void bb_updateHarpoon(bb_entity_t* self)
 {
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
 
+    // Update harpoon's lifetime. I think not using elapsed time is good enough.
+    pData->lifetime++;
+    if (pData->lifetime > 140)
+    {
+        bb_destroyEntity(self, false);
+    }
+
     // Update harpoon's velocity
     pData->vel.y++;
     // Update harpoon's position
     self->pos = addVec2d(self->pos, mulVec2d(pData->vel, (self->gameData->elapsedUs >> 14)));
 
-    // Update harpoon's lifetime. I'm not using elapsed time because it is in microseconds and would need division to
-    // accumulate milliseconds in a reasonable data type.
-    pData->lifetime++;
-    if (pData->lifetime > 140)
+    bb_hitInfo_t hitInfo = {0};
+    bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+    if (hitInfo.hit && pData->prevFrameInAir && pData->vel.y > 0)
     {
-        bb_destroyEntity(self, false);
+        vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
+        bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
+        shData->floatVel              = normVecFl2d(floatVel);
+        bb_setData(self, shData);
+
+        bb_clearCollisions(self, false);
+        self->updateFunction = bb_updateStuckHarpoon;
+        self->drawFunction = bb_drawStuckHarpoon;
+    }
+    else{
+        pData->prevFrameInAir = !hitInfo.hit;
     }
 }
 
@@ -747,17 +767,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other)
     shData->floatVel              = normVecFl2d(floatVel);
     bb_setData(self, shData);
 
-    while (self->collisions->first != NULL)
-    {
-        // Remove from head
-        bb_collision_t* shiftedCollision = shift(self->collisions);
-        while (shiftedCollision->checkOthers->first != NULL)
-        {
-            shift(shiftedCollision->checkOthers);
-        }
-    }
-    free(self->collisions);
-    self->collisions = NULL;
+    bb_clearCollisions(self, false);
 
     self->updateFunction = bb_updateStuckHarpoon;
     self->drawFunction   = bb_drawStuckHarpoon;

@@ -56,6 +56,7 @@ typedef struct
 {
     vec_t vel;
     uint16_t lifetime;
+    bool prevFrameInAir; //Was this previous frame located in air or garbage.
 } bb_projectileData_t;
 
 typedef struct
@@ -145,6 +146,7 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
                          bb_soundManager_t* soundManager);
 
 void bb_setData(bb_entity_t* self, void* data);
+void bb_clearCollisions(bb_entity_t* self, bool keepCached);
 
 void bb_destroyEntity(bb_entity_t* self, bool caching);
 void bb_updateRocketLanding(bb_entity_t* self);
@@ -161,6 +163,7 @@ void bb_updateBug(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawStuckHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 

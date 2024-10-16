@@ -76,7 +76,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 41, 1, &entityManager->sprites[ROCKET_ANIM]);
     rocketSprite->originX     = 33;
-    rocketSprite->originY     = 67;
+    rocketSprite->originY     = 66;
     printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
 
     bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, 1, &entityManager->sprites[FLAME_ANIM]);
@@ -500,7 +500,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->data           = rData;
 
             entity->halfWidth  = 192;
-            entity->halfHeight = 464;
+            entity->halfHeight = 448;
 
             entity->updateFunction    = &bb_updateRocketLanding;
             entityManager->viewEntity = entity;
