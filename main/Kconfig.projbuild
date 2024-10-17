@@ -8,7 +8,7 @@ menu "Swadge Configuration"
 		config HARDWARE_WAVEBIRD
 			bool "HARDWARE_WAVEBIRD"
 			help
-				Build for the Squarewavebird Swadge (2023)	
+				Build for the Squarewavebird Swadge (2023)
 		config HARDWARE_GUNSHIP
 			bool "HARDWARE_GUNSHIP"
 			help

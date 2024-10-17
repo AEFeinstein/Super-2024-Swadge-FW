@@ -83,11 +83,27 @@ typedef struct
     int32_t selectedBounceTimer;  ///< The timer to bounce the offset for the selected item
     int32_t selectedValue;        ///< The option index or setting value to tell when it changes
     int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
+
+    paletteColor_t titleBgColor;        ///< The color of the title background
+    paletteColor_t titleTextColor;      ///< The color of the title text
+    paletteColor_t textOutlineColor;    ///< The color of the title text outline
+    paletteColor_t bgColor;             ///< The color of the screen background
+    paletteColor_t outerRingColor;      ///< The color of the outer rotating ring
+    paletteColor_t innerRingColor;      ///< The color of the inner rotating ring
+    paletteColor_t rowColor;            ///< The color of the row background
+    paletteColor_t rowTextColor;        ///< The color of the row text
+    const paletteColor_t* shadowColors; ///< The colors cycled through as the selected shadow
+    int32_t shadowColorsLen;            ///< The number of selected shadow colors to cycle through
+    led_t baseLedColor;                 ///< The base color of the LED rotation
 } menuManiaRenderer_t;
 
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
 void setManiaLedsOn(menuManiaRenderer_t* renderer, bool ledsOn);
+void recolorMenuManiaRenderer(menuManiaRenderer_t* renderer, paletteColor_t titleBgColor, paletteColor_t titleTextColor,
+                              paletteColor_t textOutlineColor, paletteColor_t bgColor, paletteColor_t outerRingColor,
+                              paletteColor_t innerRingColor, paletteColor_t rowColor, paletteColor_t rowTextColor,
+                              const paletteColor_t* shadowColors, int32_t shadowColorsLen, led_t baseLedColor);
 
 #endif

@@ -7,8 +7,11 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <esp_heap_caps.h>
 #include "hdw-led.h"
 #include "typedef_bigbug.h"
+#include "entityManager_bigbug.h"
+#include "tilemap_bigbug.h"
 #include "palette.h"
 #include "linked_list.h"
 #include "soundManager_bigbug.h"
@@ -21,8 +24,10 @@
 // Structs
 //==============================================================================
 
-typedef struct
+struct bb_gameData_t
 {
+    int32_t elapsedUs;
+
     uint16_t btnState;
 
     int32_t touchPhi;
@@ -32,10 +37,12 @@ typedef struct
     int32_t touchX;
     int32_t touchY;
 
+    rectangle_t camera;
+
     uint8_t gameState;
     uint8_t changeState;
 
-    uint8_t harpoons;
+    bb_entityManager_t entityManager;
 
     led_t leds[CONFIG_NUM_LEDS];
 
@@ -50,12 +57,15 @@ typedef struct
 
     bb_soundManager_t* soundManager;
 
+    bb_tilemap_t tilemap;
+
     int8_t neighbors[4][2]; // a handy table of left, up, right, and down offsets
 
-    list_t* pleaseCheck; // a list of tiles to check if they are supported.
-    list_t* unsupported; // a list of tiles that flood-fill crumble.
+    list_t pleaseCheck; // a list of tiles to check if they are supported.
+    list_t unsupported; // a list of tiles that flood-fill crumble.
 
-} bb_gameData_t;
+    font_t font;
+};
 
 //==============================================================================
 // Functions

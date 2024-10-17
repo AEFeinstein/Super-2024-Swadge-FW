@@ -34,6 +34,9 @@ static const char tttName[]          = "Ultimate TTT";
 static const char tttMultiStr[]      = "Wireless Connect";
 static const char tttMultiShortStr[] = "Connect";
 static const char tttSingleStr[]     = "Single Player";
+static const char tttDiffEasyStr[]   = "Easy";
+static const char tttDiffMediumStr[] = "Medium";
+static const char tttDiffHardStr[]   = "Hard";
 static const char tttMarkerSelStr[]  = "Marker Select";
 static const char tttHowToStr[]      = "How To Play";
 static const char tttResultStr[]     = "Result";
@@ -52,13 +55,12 @@ const char tttUnlockKey[]   = "ttt_unlock";
  * Marker names to load WSGs
  */
 const char* markerNames[NUM_UNLOCKABLE_MARKERS] = {
-    "x",
-    "o",
-    "sq",
-    "tri",
+    "x", "o", "sq", "tri", "banana", "dance", "hand", "hat", "hotdog", "lizard", "pixil", "spock", "swadgeman",
 };
 
-const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS] = {0, 0, 1, 3};
+const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS] = {
+    0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+};
 
 swadgeMode_t tttMode = {
     .modeName                 = tttName,
@@ -96,18 +98,16 @@ static void tttEnterMode(void)
     for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(markerNames); pIdx++)
     {
         char assetName[32];
-        snprintf(assetName, sizeof(assetName) - 1, "up**_%s.wsg", markerNames[pIdx]);
 
-        assetName[2] = 'b'; // blue
-        assetName[3] = 's'; // small
+        snprintf(assetName, sizeof(assetName) - 1, "%s_%c%c.wsg", markerNames[pIdx], 'b', 's');
+
         loadWsg(assetName, &ttt->markerWsg[pIdx].blue.small, true);
-        assetName[3] = 'l'; // large
+        snprintf(assetName, sizeof(assetName) - 1, "%s_%c%c.wsg", markerNames[pIdx], 'b', 'l');
         loadWsg(assetName, &ttt->markerWsg[pIdx].blue.large, true);
 
-        assetName[2] = 'r'; // red
-        assetName[3] = 's'; // small
+        snprintf(assetName, sizeof(assetName) - 1, "%s_%c%c.wsg", markerNames[pIdx], 'r', 's');
         loadWsg(assetName, &ttt->markerWsg[pIdx].red.small, true);
-        assetName[3] = 'l'; // large
+        snprintf(assetName, sizeof(assetName) - 1, "%s_%c%c.wsg", markerNames[pIdx], 'r', 'l');
         loadWsg(assetName, &ttt->markerWsg[pIdx].red.large, true);
     }
 
@@ -121,7 +121,13 @@ static void tttEnterMode(void)
     // Initialize the main menu
     ttt->menu = initMenu(tttName, tttMenuCb);
     addSingleItemToMenu(ttt->menu, tttMultiStr);
-    addSingleItemToMenu(ttt->menu, tttSingleStr);
+
+    ttt->menu = startSubMenu(ttt->menu, tttSingleStr);
+    addSingleItemToMenu(ttt->menu, tttDiffEasyStr);
+    addSingleItemToMenu(ttt->menu, tttDiffMediumStr);
+    addSingleItemToMenu(ttt->menu, tttDiffHardStr);
+    ttt->menu = endSubMenu(ttt->menu);
+
     addSingleItemToMenu(ttt->menu, tttMarkerSelStr);
     addSingleItemToMenu(ttt->menu, tttHowToStr);
     addSingleItemToMenu(ttt->menu, tttRecordsStr);
@@ -329,15 +335,32 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (tttMultiStr == label)
         {
+            ttt->game.singlePlayer = false;
             // Show connection UI
             tttShowUi(TUI_CONNECTING);
             // Start multiplayer
             p2pStartConnection(&ttt->game.p2p);
         }
-        else if (tttSingleStr == label)
+        else if (tttDiffEasyStr == label)
         {
-            // TODO implement single player
-            printf("Implement Single Player\n");
+            ttt->game.singlePlayer   = true;
+            ttt->game.cpu.difficulty = TDIFF_EASY;
+            tttBeginGame(ttt);
+            tttShowUi(TUI_GAME);
+        }
+        else if (tttDiffMediumStr == label)
+        {
+            ttt->game.singlePlayer   = true;
+            ttt->game.cpu.difficulty = TDIFF_MEDIUM;
+            tttBeginGame(ttt);
+            tttShowUi(TUI_GAME);
+        }
+        else if (tttDiffHardStr == label)
+        {
+            ttt->game.singlePlayer   = true;
+            ttt->game.cpu.difficulty = TDIFF_HARD;
+            tttBeginGame(ttt);
+            tttShowUi(TUI_GAME);
         }
         else if (tttMarkerSelStr == label)
         {

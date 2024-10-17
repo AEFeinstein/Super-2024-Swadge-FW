@@ -11,8 +11,8 @@
 // Variables
 //==============================================================================
 
-static led_t rdLeds[CONFIG_NUM_LEDS + 1] = {0};
-static uint8_t ledBrightness             = 0;
+static led_t rdLeds[CONFIG_NUM_LEDS] = {0};
+static uint8_t ledBrightness         = 0;
 
 //==============================================================================
 // Functions
@@ -82,9 +82,9 @@ uint8_t getLedState(led_t* leds, uint8_t numLeds)
 {
     if (NULL != leds && numLeds > 0)
     {
-        if (numLeds > CONFIG_NUM_LEDS + 1)
+        if (numLeds > CONFIG_NUM_LEDS)
         {
-            numLeds = CONFIG_NUM_LEDS + 1;
+            numLeds = CONFIG_NUM_LEDS;
         }
 
         memcpy(leds, rdLeds, sizeof(led_t) * numLeds);
