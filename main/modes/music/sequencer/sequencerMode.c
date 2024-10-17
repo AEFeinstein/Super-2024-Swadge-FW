@@ -222,7 +222,10 @@ static void sequencerEnterMode(void)
 
     midiPause(player, false);
 
-    sv->gridOffset = sv->gridOffsetTarget;
+    // Start in the middle of the piano
+    sv->cursorPos.y        = NUM_PIANO_KEYS / 2;
+    sv->gridOffsetTarget.y = sv->rowHeight * (NUM_PIANO_KEYS - sv->numRows) / 2;
+    sv->gridOffset         = sv->gridOffsetTarget;
 }
 
 /**
