@@ -1437,7 +1437,7 @@ void pa_updateBreakBlock(paEntity_t* self)
                     pointsScored = spawnBlockComboScores[self->scoreValue];
 
                     pa_scorePoints(self->gameData, pointsScored);
-                    soundPlaySfx(&(self->soundManager->sndHurt), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager->sndCoin), BZR_STEREO);
                     self->entityManager->gameData->remainingEnemies--;
                     
                     pa_executeSpawnBlockCombo(self, tx+1, ty, self->scoreValue+1);

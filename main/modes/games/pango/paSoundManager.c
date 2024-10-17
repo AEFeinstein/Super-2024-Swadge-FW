@@ -30,7 +30,7 @@ void pa_initializeSoundManager(paSoundManager_t* self)
     loadMidiFile("snd1up.mid", &self->snd1up, true);
     // loadMidiFile("sndBreak.mid", &self->sndBreak, true);
     loadMidiFile("sndCheckpoint.mid", &self->sndCheckpoint, true);
-    loadMidiFile("sndCoin.mid", &self->sndCoin, true);
+    loadMidiFile("sndBlockCombo.mid", &self->sndCoin, true);
     loadMidiFile("sndDie.mid", &self->sndDie, true);
     loadMidiFile("bgmGameOver.mid", &self->bgmGameOver, true);
     loadMidiFile("sndBlockStop.mid", &self->sndHit, true);
