@@ -193,8 +193,8 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             }
             if (curEntity->updateFarFunction != NULL)
             {
-                //2240 = 140 << 4; 1920 = 120 << 4
-                if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 2240, .halfHeight = 1920},
+                //2752 = (140+32) << 4; 2432 = (120+32) << 4
+                if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 2752, .halfHeight = 2432},
                                          curEntity, NULL, NULL)
                     == false)
                 {
@@ -699,9 +699,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     entity->cSquared = entity->halfWidth * entity->halfWidth + entity->halfHeight * entity->halfHeight;
 
     entityManager->activeEntities++;
-    // if(entityManager->activeEntities == MAX_ENTITIES){
+    if(entityManager->activeEntities > MAX_ENTITIES - 10 || entityManager->activeEntities < 10 || entityManager->activeEntities % 25 == 0){
         printf("%d/%d entities ^\n", entityManager->activeEntities, MAX_ENTITIES);
-    // }
+    }
 
     return entity;
 }

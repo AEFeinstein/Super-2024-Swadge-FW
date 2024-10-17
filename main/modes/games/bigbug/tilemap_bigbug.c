@@ -203,6 +203,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
         }
 
         // printf("i: %d-%d j:%d-%d\n", iStart, iEnd, jStart, jEnd);
+        // printf("x tile count: %d y tile count: %d\n", iEnd-iStart, jEnd-jStart);
 
         int32_t brightness;
 
