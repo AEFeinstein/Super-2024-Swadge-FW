@@ -212,7 +212,7 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     {
         fillDisplayArea(x, y, x + w, y + h, c000);
     }
-    if (bigbug->gameData.camera.pos.y < -999)
+    else if (bigbug->gameData.camera.pos.y < -999)
     {
         // Normalize position from 0 (at -1000) to 1 (at -200)
         float normalizedPos = ((bigbug->gameData.camera.pos.y < -10000 ? -10000 : bigbug->gameData.camera.pos.y) + 10000) / 9000.0f;
