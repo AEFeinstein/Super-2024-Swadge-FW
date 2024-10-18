@@ -186,13 +186,13 @@ static void cg_attemptGrab(cGrove_t* cg)
     {
         if (cg->chowa[c].active)
         {
-            rectangle_t translated = {.pos    = subVec2d(cg->chowa[c].aabb.pos, cg->grove.camera.pos),
-                                      .height = cg->chowa[c].aabb.height,
-                                      .width  = cg->chowa[c].aabb.width};
+            rectangle_t translated = {.pos    = subVec2d(cg->grove.chowa[c].aabb.pos, cg->grove.camera.pos),
+                                      .height = cg->grove.chowa[c].aabb.height,
+                                      .width  = cg->grove.chowa[c].aabb.width};
             if (rectRectIntersection(cg->grove.cursor, translated, &collVec))
             {
                 cg->grove.holdingChowa = true;
-                cg->grove.heldChowa    = &cg->chowa[c];
+                cg->grove.heldChowa    = &cg->grove.chowa[c];
                 cg->chowa[c].mood      = CG_WORRIED;
             }
         }

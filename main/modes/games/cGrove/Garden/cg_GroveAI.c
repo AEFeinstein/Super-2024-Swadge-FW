@@ -18,6 +18,12 @@
 #include <math.h>
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define SECOND 1000000
+
+//==============================================================================
 // Function Declarations
 //==============================================================================
 
@@ -40,7 +46,7 @@ static void cg_GroveGetRandMovePoint(cGrove_t* cg, cgGroveChowa_t* c);
  * @param chowa The chowa to run AI on
  * @param elapsedUs Time since last frame
  */
-void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* chowa, int64_t elapsedUs)
+void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
 {
     // Basic behaviors:
     // - Stand in place (includes other things like singing)
@@ -50,12 +56,104 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* chowa, int64_t elapsedUs)
     // - Struggle when held
     // - Chase cursor 
 
+    // Abort if not active
+    if (!c->chowa->active)
+    {
+        return;
+    }
+
     // Update timer
-    chowa->timer += elapsedUs;
+    c->timeLeft -= elapsedUs;
+    c->statUpdate += elapsedUs;
 
     // The MONOLITH
-    if (true)
+    switch(c->gState)
     {
+        case CHOWA_IDLE:
+        {
+            // Chowa is essentially unset. Look for new behavior
+            // Check other behaviors list
+            // Check mood
+            // Check stats
+            break;
+        }
+        case CHOWA_STATIC:
+        {
+            // Chowa is standing around doing nothing
+            if (c->timeLeft)
+            {
+                c->gState = CHOWA_IDLE;
+            }
+            break;
+        }
+        case CHOWA_WALK:
+        {
+            // Chowa is moving toward a location.
+            // Cues a state to load afterward
+            break;
+        }
+        case CHOWA_CHASE:
+        {
+            // Chowa updates target location each frame
+            break;
+        }
+        case CHOWA_USE_ITEM:
+        {
+            // Wait until item is done being used
+            break;
+        }
+        case CHOWA_BOX:
+        {
+            // Cycle between attack animations
+            if (c->timeLeft)
+            {
+                c->gState = CHOWA_IDLE;
+            }
+            break;
+        }
+        case CHOWA_SING:
+        {
+            // stand in place and sing
+            if (c->timeLeft)
+            {
+                c->gState = CHOWA_IDLE;
+            }
+            else 
+            {
+                if (c->statUpdate >= SECOND)
+                {
+                    c->statUpdate = 0;
+                    c->chowa->stats[CG_CHARISMA] += 1;
+                }
+            }
+            break;
+        }
+        case CHOWA_TALK:
+        {
+            // talk to another chowa
+            if (c->timeLeft)
+            {
+                c->gState = CHOWA_IDLE;
+            }
+            else 
+            {
+                if (c->statUpdate >= SECOND)
+                {
+                    c->statUpdate = 0;
+                    c->chowa->stats[CG_CHARISMA] += 1;
+                }
+            }
+            break;
+        }
+        case CHOWA_HELD:
+        {
+            // Picked up by player
+            break;
+        }
+        default:
+        {
+            break;
+        }
     }
 }
 

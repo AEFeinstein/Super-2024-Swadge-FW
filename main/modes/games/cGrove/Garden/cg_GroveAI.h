@@ -20,4 +20,4 @@
 // Function declarations
 //==============================================================================
 
-void cg_GroveAI(cGrove_t* cg, cgChowa_t* chowa);
+void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* chowa, int64_t elapsedUs);

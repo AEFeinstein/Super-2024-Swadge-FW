@@ -213,9 +213,11 @@ typedef struct
     cgItem_t* heldItem; ///< Pointer to the held item
 
     // AI
-    cgChowaStateGarden_t gState; ///< Behavior state in the garden
-    int64_t timer;               ///< Timer for continuing to do a behavior
-    vec_t targetPos;             ///< Position to head to
+    cgChowaStateGarden_t gState;    ///< Behavior state in the garden
+    int64_t timeLeft;               ///< Set to number of seconds a behavior can take
+    int64_t statUpdate;             ///< Time elapsed. When high enough, stat updates
+    vec_t targetPos;                ///< Position to head to
+    cgChowaStateGarden_t nextState; ///< Cued state after arriving at target
 } cgGroveChowa_t;
 
 typedef struct
@@ -228,9 +230,10 @@ typedef struct
     wsg_t* cursors; ///< Cursor sprites
 
     // Field data
-    cgItem_t items[CG_GROVE_MAX_ITEMS];                            ///< Items present in the Grove
-    rectangle_t boundaries[3];                                     ///< Boundary boxes
-    cgGroveChowa_t chowa[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA]; ///< List of all chowa in the garden
+    cgItem_t items[CG_GROVE_MAX_ITEMS];                                      ///< Items present in the Grove
+    rectangle_t boundaries[3];                                               ///< Boundary boxes
+    cgGroveChowa_t chowa[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA];           ///< List of all chowa in the garden
+    cgChowaStateGarden_t stateList[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA]; ///< List of current chowa states
 
     // Player resources
     rectangle_t camera;        ///< In-garden camera viewport
