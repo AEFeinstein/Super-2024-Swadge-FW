@@ -635,6 +635,27 @@ void bb_updateBug(bb_entity_t* self)
 {
 }
 
+void bb_updateMenu(bb_entity_t* self)
+{
+    switch (self->gameData->btnState)
+    {
+        // up
+        case 0b0001:
+            break;
+        case 0b1101:
+            break;
+
+        // down
+        case 0b0010:
+            break;
+        case 0b1110:
+            break;
+
+        default:
+            break;
+    }
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
@@ -674,7 +695,7 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         drawLineFast(xOff, yOff, xOff + (x - 511) / 5, yOff - (y - 511) / 5, c305);
     }
 
-    char harpoonText[13]; // 13 characters makes room for up to a 2 digit number + " harpooons" + null
+    char harpoonText[13]; // 13 characters makes room for up to a 3 digit number + " harpooons" + null
                           // terminator ('\0')
     snprintf(harpoonText, sizeof(harpoonText), "%d harpoons", gData->numHarpoons);
 
@@ -743,6 +764,31 @@ void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
     drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[((bb_eggData_t*)self->data)->stimulation / 100],
                   xOff, yOff);
 }
+
+void bb_drawMenu(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    int16_t xDrawPos = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+
+    int32_t yDrawPosFront = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY;
+    int32_t YDrawPosBack =  yDrawPosFront - camera->pos.y - (yDrawPosFront - camera->pos.y)/3;
+    int32_t YDrawPosMid =   yDrawPosFront - camera->pos.y - (yDrawPosFront - camera->pos.y)/2;
+    yDrawPosFront -= camera->pos.y;
+
+    //Background
+    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[0],
+                    xDrawPos, YDrawPosBack);
+    //Text
+    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[1],
+                    xDrawPos+14, YDrawPosMid+28);
+    //Midground
+    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[2],
+                    xDrawPos, yDrawPosFront);
+    //Foreground
+    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[3],
+                    xDrawPos, yDrawPosFront+97);
+}
+
+
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {

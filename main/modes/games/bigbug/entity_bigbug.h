@@ -56,6 +56,12 @@ typedef struct
 
 typedef struct
 {
+    uint8_t selectionIdx;
+} bb_menuData_t;
+
+
+typedef struct
+{
     vec_t vel;
     uint16_t lifetime;
     bool prevFrameInAir; //Was this previous frame located in air or garbage.
@@ -151,25 +157,27 @@ void bb_setData(bb_entity_t* self, void* data);
 void bb_clearCollisions(bb_entity_t* self, bool keepCached);
 
 void bb_destroyEntity(bb_entity_t* self, bool caching);
-void bb_updateRocketLanding(bb_entity_t* self);
-void bb_updateHeavyFallingInit(bb_entity_t* self);
-void bb_updateHeavyFalling(bb_entity_t* self);
-void bb_updatePhysicsObject(bb_entity_t* self);
-void bb_updateGarbotnikDeploy(bb_entity_t* self);
-void bb_updateGarbotnikFlying(bb_entity_t* self);
-void bb_updateHarpoon(bb_entity_t* self);
-void bb_updateStuckHarpoon(bb_entity_t* self);
-void bb_updateEggLeaves(bb_entity_t* self);
-void bb_updateFarEggleaves(bb_entity_t* self);
-void bb_updateBug(bb_entity_t* self);
+void bb_updateRocketLanding(    bb_entity_t* self);
+void bb_updateHeavyFallingInit( bb_entity_t* self);
+void bb_updateHeavyFalling(     bb_entity_t* self);
+void bb_updatePhysicsObject(    bb_entity_t* self);
+void bb_updateGarbotnikDeploy(  bb_entity_t* self);
+void bb_updateGarbotnikFlying(  bb_entity_t* self);
+void bb_updateHarpoon(          bb_entity_t* self);
+void bb_updateStuckHarpoon(     bb_entity_t* self);
+void bb_updateEggLeaves(        bb_entity_t* self);
+void bb_updateFarEggleaves(     bb_entity_t* self);
+void bb_updateBug(              bb_entity_t* self);
+void bb_updateMenu(             bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-void bb_drawStuckHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-void bb_drawEggLeaves(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawHarpoon(        bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawStuckHarpoon(   bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawEggLeaves(      bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawEgg(            bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawMenu(           bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
-void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
-void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionHarpoon( bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionRocket(  bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 #endif

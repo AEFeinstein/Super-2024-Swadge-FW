@@ -40,9 +40,8 @@ typedef enum
     BUGGO,
     BUGGY,
     BUTT,
+    BB_MENU, // Various sprites loaded as frames to create the parallax main menu
     WILE, // A metal ball that is thrown
-    FLY,  // A bug that flies
-    ANT,  // A bug that crawls on the midground tile field
 } bb_spriteDef_t;
 
 typedef enum

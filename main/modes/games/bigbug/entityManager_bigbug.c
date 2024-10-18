@@ -67,72 +67,62 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 24, 1, &entityManager->sprites[CRUMBLE_ANIM]);
     crumbleSprite->originX     = 48;
     crumbleSprite->originY     = 43;
-    printf("crumble numFrames %d\n", entityManager->sprites[CRUMBLE_ANIM].numFrames);
 
     bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, 1, &entityManager->sprites[BUMP_ANIM]);
     bumpSprite->originX     = 37;
     bumpSprite->originY     = 37;
-    printf("bump numFrames %d\n", entityManager->sprites[BUMP_ANIM].numFrames);
 
     bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 41, 1, &entityManager->sprites[ROCKET_ANIM]);
     rocketSprite->originX     = 33;
     rocketSprite->originY     = 66;
-    printf("rocket numFrames %d\n", entityManager->sprites[ROCKET_ANIM].numFrames);
 
     bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, 1, &entityManager->sprites[FLAME_ANIM]);
     flameSprite->originX     = 26;
     flameSprite->originY     = -27;
-    printf("flame numFrames %d\n", entityManager->sprites[FLAME_ANIM].numFrames);
 
     bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, 1, &entityManager->sprites[GARBOTNIK_FLYING]);
     garbotnikFlyingSprite->originX     = 18;
     garbotnikFlyingSprite->originY     = 17;
-    printf("garbotnik numFrames %d\n", entityManager->sprites[GARBOTNIK_FLYING].numFrames);
 
     bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, 1, &entityManager->sprites[HARPOON]);
     harpoonSprite->originX     = 10;
     harpoonSprite->originY     = 10;
-    printf("harpoon numFrames %d\n", entityManager->sprites[HARPOON].numFrames);
 
     bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES]);
     eggLeavesSprite->originX     = 12;
     eggLeavesSprite->originY     = 5;
-    printf("eggLeaves numFrames %d\n", entityManager->sprites[EGG_LEAVES].numFrames);
 
     bb_sprite_t* eggSprite = bb_loadSprite("egg", 1, 6, &entityManager->sprites[EGG]);
     eggSprite->originX     = 12;
     eggSprite->originY     = 12;
-    printf("egg numFrames %d\n", entityManager->sprites[EGG].numFrames);
 
     bb_sprite_t* buSprite = bb_loadSprite("bu", 4, 6, &entityManager->sprites[BU]);
     buSprite->originX     = 13;
     buSprite->originY     = 15;
-    printf("bu numFrames %d\n", entityManager->sprites[BU].numFrames);
 
     bb_sprite_t* bugSprite = bb_loadSprite("bug", 4, 6, &entityManager->sprites[BUG]);
     bugSprite->originX     = 13;
     bugSprite->originY     = 7;
-    printf("bug numFrames %d\n", entityManager->sprites[BUG].numFrames);
 
     bb_sprite_t* buggSprite = bb_loadSprite("bugg", 4, 6, &entityManager->sprites[BUGG]);
     buggSprite->originX     = 11;
     buggSprite->originY     = 11;
-    printf("bugg numFrames %d\n", entityManager->sprites[BUGG].numFrames);
 
     bb_sprite_t* buggoSprite = bb_loadSprite("buggo", 4, 6, &entityManager->sprites[BUGGO]);
     buggoSprite->originX     = 12;
     buggoSprite->originY     = 14;
-    printf("buggo numFrames %d\n", entityManager->sprites[BUGGO].numFrames);
 
     bb_sprite_t* buggySprite = bb_loadSprite("buggy", 4, 6, &entityManager->sprites[BUGGY]);
     buggySprite->originX     = 13;
     buggySprite->originY     = 11;
-    printf("buggy numFrames %d\n", entityManager->sprites[BUGGY].numFrames);
 
     bb_sprite_t* buttSprite = bb_loadSprite("butt", 4, 6, &entityManager->sprites[BUTT]);
     buttSprite->originX     = 14;
     buttSprite->originY     = 6;
-    printf("butt numFrames %d\n", entityManager->sprites[BUTT].numFrames);
+
+    bb_sprite_t* menuSprite = bb_loadSprite("bb_menu", 4, 1, &entityManager->sprites[BB_MENU]);
+    menuSprite->originX = 140;
+
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
@@ -689,6 +679,18 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 88;
 
             entity->updateFunction = &bb_updateBug;
+            break;
+        }
+        case BB_MENU:
+        {
+            bb_menuData_t* mData = heap_caps_calloc(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
+            entity->data = mData;
+
+            entity->halfWidth = 140;
+            entity->halfHeight = 120;
+
+            entity->updateFunction = &bb_updateMenu;
+            entity->drawFunction = &bb_drawMenu;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

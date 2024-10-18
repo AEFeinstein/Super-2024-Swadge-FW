@@ -146,6 +146,10 @@ static void bb_EnterMode(void)
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000);
     bigbug->gameData.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
 
+    bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
+                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000);
+    bigbug->gameData.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
+
     bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
     // Player
@@ -204,13 +208,41 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // accelIntegrate(); only needed if using accelerometer for something
     // SETUP_FOR_TURBO(); only needed if drawing individual pixels
-    if (bigbug->gameData.camera.pos.y < 100)
+    if (bigbug->gameData.camera.pos.y >= 100)
     {
-        fillDisplayArea(x, y, x + w, y + h, c455);
+        fillDisplayArea(x, y, x + w, y + h, c000);
+    }
+    if (bigbug->gameData.camera.pos.y < -999)
+    {
+        // Normalize position from 0 (at -1000) to 1 (at -200)
+        float normalizedPos = ((bigbug->gameData.camera.pos.y < -10000 ? -10000 : bigbug->gameData.camera.pos.y) + 10000) / 9000.0f;
+
+        // Calculate the total number of decrements (since the max RGB is 4, 5, 5)
+        int totalSteps = 14;  // 4 + 5 + 5 = 14 decrement steps
+        int currentStep = (int)(normalizedPos * totalSteps);
+
+        // Initialize r, g, b to 4, 5, 5
+        uint8_t r = 0;
+        uint8_t g = 0;
+        uint8_t b = 0;
+
+        // Apply decrements based on current step
+        for (int i = 0; i < currentStep; i++) {
+            if (r == g && g == b) {
+                b++;
+            }
+            else if (r == g) {
+                g++;
+            }
+            else{
+                r++;
+            } 
+        }
+            fillDisplayArea(x, y, x + w, y + h, (paletteColor_t)(r*36+g*6+b));
     }
     else
     {
-        fillDisplayArea(x, y, x + w, y + h, c000);
+        fillDisplayArea(x, y, x + w, y + h, c455);
     }
 }
 
@@ -275,8 +307,8 @@ static void bb_GameLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         // Print the current event
-        // printf("state: %04X, button: %d, down: %s\n",
-        // evt.state, evt.button, evt.down ? "down" : "up");
+        printf("state: %04X, button: %d, down: %s\n",
+        evt.state, evt.button, evt.down ? "down" : "up");
 
         // Save the button state
         bigbug->gameData.btnState = evt.state;
