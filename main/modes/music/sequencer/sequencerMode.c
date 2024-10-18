@@ -24,6 +24,20 @@ static void sequencerNoteMenuCb(const char*, bool selected, uint32_t settingVal)
 
 static const char sequencerName[] = "Sequencer";
 
+static const char str_file[] = "File";
+static const char str_load[] = "Load";
+static const char str_save[] = "Save";
+// static const char str_overwriteFile[] = "Overwrite File?";
+// static const char str_yes[]           = "Yes";
+// static const char str_no[]            = "No";
+static const char str_reset[]            = "Reset This Song";
+static const char* const str_songNames[] = {
+    "Song 1",
+    "Song 2",
+    "Song 3",
+    "Song 4",
+};
+
 static const char str_noteOptions[] = "Note Options";
 
 static const char str_songOptions[] = "Song Options";
@@ -105,6 +119,33 @@ static void sequencerEnterMode(void)
 
     sv->songMenu = initMenu(str_songOptions, sequencerSongMenuCb);
 
+    sv->songMenu = startSubMenu(sv->songMenu, str_file);
+
+    // Load
+    sv->songMenu = startSubMenu(sv->songMenu, str_load);
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(str_songNames); sIdx++)
+    {
+        // TODO check if song is saved first
+        addSingleItemToMenu(sv->songMenu, str_songNames[sIdx]);
+    }
+    sv->songMenu = endSubMenu(sv->songMenu);
+
+    sv->songMenu = startSubMenu(sv->songMenu, str_save);
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(str_songNames); sIdx++)
+    {
+        // TODO Show which is loaded somehow?
+        // TODO check if song is already saved?
+        addSingleItemToMenu(sv->songMenu, str_songNames[sIdx]);
+        // static const char str_overwriteFile[] = "Overwrite File?";
+        // static const char str_yes[]           = "Yes";
+        // static const char str_no[]            = "No";
+    }
+    sv->songMenu = endSubMenu(sv->songMenu);
+
+    addSingleItemToMenu(sv->songMenu, str_reset);
+
+    sv->songMenu = endSubMenu(sv->songMenu);
+
     settingParam_t sp_tempo = {
         .min = tempoVals[0],
         .max = tempoVals[ARRAY_SIZE(tempoVals) - 1],
@@ -134,6 +175,20 @@ static void sequencerEnterMode(void)
     addSingleItemToMenu(sv->songMenu, str_songEnd);
 
     sv->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+
+    // Color the menu like Pixil
+    led_t menuColor = {
+        .r = 0x80,
+        .g = 0x00,
+        .b = 0x80,
+    };
+    static const paletteColor_t shadowColors[] = {c535, c524, c424, c314, c313, c302, c202, c203, c313, c413, c424};
+    recolorMenuManiaRenderer(sv->menuRenderer, //
+                             c202, c444, c000, // titleBgColor, titleTextColor, textOutlineColor
+                             c333,             // bgColor
+                             c521, c522,       // outerRingColor, innerRingColor
+                             c000, c555,       // rowColor, rowTextColor
+                             shadowColors, ARRAY_SIZE(shadowColors), menuColor);
 
     //////////////////////////////////////////////////////////////////////////
     // Initialize wheel menu
@@ -344,31 +399,37 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
  */
 static void sequencerSongMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
+    bool returnToGrid = false;
     if (str_songTempo == label)
     {
         sv->songParams.tempo = settingVal;
         sv->usPerBeat        = (60 * 1000000) / sv->songParams.tempo;
+        returnToGrid         = true;
     }
     else if (str_songGrid == label)
     {
         sv->songParams.grid = settingVal;
+        returnToGrid        = true;
     }
     else if (str_songTimeSig == label)
     {
         sv->songParams.timeSig = settingVal;
+        returnToGrid           = true;
     }
     else if (str_loop == label)
     {
         sv->songParams.loop = settingVal;
+        returnToGrid        = true;
     }
     else if (str_songEnd == label)
     {
         sv->songParams.songEnd = sv->cursorPos.x;
+        returnToGrid           = true;
     }
 
     measureSequencerGrid(sv);
 
-    if (selected)
+    if (selected && returnToGrid)
     {
         sv->screen = SEQUENCER_SEQ;
     }
