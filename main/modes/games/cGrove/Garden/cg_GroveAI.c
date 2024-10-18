@@ -109,6 +109,14 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             {
                 c->gState = CHOWA_IDLE;
             }
+            else 
+            {
+                if (c->statUpdate >= SECOND)
+                {
+                    c->statUpdate = 0;
+                    c->chowa->stats[CG_STAMINA] += 1;
+                }
+            }
             break;
         }
         case CHOWA_SING:
@@ -148,6 +156,12 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         case CHOWA_HELD:
         {
             // Picked up by player
+            // If held for too long, start losing affinity
+            if (c->statUpdate >= 5 * SECOND)
+            {
+                c->statUpdate = 0;
+                c->chowa->stats[CG_CHARISMA] -= 1;
+            }
             break;
         }
         default:

@@ -23,6 +23,7 @@
 //==============================================================================
 
 #define CG_FRAMERATE 16667
+#define SECOND       1000000
 
 //==============================================================================
 // Consts
@@ -34,6 +35,11 @@ static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Pe
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
 static const uint32_t cGroveEnabledVals[]       = {true, false};
+
+static const char* cGroveTitleSprites[] = {"cg_cloud.wsg",          "cg_sky.wsg",
+                                           "cg_title_1.wsg",        "cg_title_2.wsg",
+                                           "cg_title_middle_1.wsg", "cg_title_middle_2.wsg",
+                                           "cg_title_middle_3.wsg", "cg_title_middle_4.wsg"};
 
 //==============================================================================
 // Function declarations
@@ -66,6 +72,13 @@ static void cGroveMainLoop(int64_t elapsedUs);
  * @param settingVal
  */
 static void cg_menuCB(const char* label, bool selected, uint32_t settingVal);
+
+/**
+ * @brief Draw title screen
+ * 
+ * @param elapsedUs Time since I last dunked my head in a bucket of acid
+ */
+static void cg_titleScreen(int64_t elapsedUs);
 
 //==============================================================================
 // Variables
@@ -106,6 +119,13 @@ static void cGroveEnterMode(void)
     // Load a font
     loadFont("ibm_vga8.font", &cg->menuFont, true);
 
+    // Load title screen
+    cg->title = calloc(ARRAY_SIZE(cGroveTitleSprites), sizeof(wsg_t));
+    for (int32_t idx = 0; idx < ARRAY_SIZE(cGroveTitleSprites); idx++)
+    {
+        loadWsg(cGroveTitleSprites[idx], &cg->title[idx], true);
+    }
+
     // Menu
     cg->menu                                   = initMenu(cGroveTitle, cg_menuCB);
     cg->renderer                               = initMenuManiaRenderer(NULL, NULL, NULL);
@@ -130,7 +150,8 @@ static void cGroveEnterMode(void)
     cg->menu = endSubMenu(cg->menu);
 
     // Init
-    cg->state = CG_MAIN_MENU;
+    cg->state       = CG_MAIN_MENU;
+    cg->titleActive = true;
 }
 
 static void cGroveExitMode(void)
@@ -158,6 +179,13 @@ static void cGroveExitMode(void)
     deinitMenu(cg->menu);
     deinitMenuManiaRenderer(cg->renderer);
 
+    // WSGs
+    for (uint8_t i = 0; i < ARRAY_SIZE(cGroveTitleSprites); i++)
+    {
+        freeWsg(&cg->title[i]);
+    }
+    free(cg->title);
+
     // Fonts
     freeFont(&cg->menuFont);
 
@@ -167,6 +195,21 @@ static void cGroveExitMode(void)
 
 static void cGroveMainLoop(int64_t elapsedUs)
 {
+    // Draw title screen
+    if (cg->titleActive)
+    {
+        buttonEvt_t evt = {0};
+        while (checkButtonQueueWrapper(&evt))
+        {
+            if (evt.down)
+            {
+                cg->titleActive = false;
+            }
+        }
+        cg_titleScreen(elapsedUs);
+        return;
+    }
+
     // Unload old assets if they're not needed
     if (cg->unload)
     {
@@ -290,4 +333,27 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
         // Online on or off
         cg->online = settingVal;
     }
+}
+
+static void cg_titleScreen(int64_t elapsedUs)
+{
+    // Update
+    cg->timer += elapsedUs;
+    if (cg->timer >= SECOND)
+    {
+        cg->timer = 0;
+        cg->cloudPos.x += 1;
+        if (cg->cloudPos.x >= TFT_WIDTH)
+        {
+            cg->cloudPos.x = -cg->title[0].h;
+        }
+    }
+    cg->animFrame = (cg->animFrame + 1) % 32;
+    cg->titleFrame = (cg->titleFrame + 1) % 64;
+
+    // Draw
+    drawWsgSimple(&cg->title[1], 0, 0);
+    drawWsgSimpleHalf(&cg->title[0], cg->cloudPos.x, -30);
+    drawWsgSimpleHalf(&cg->title[4 + (cg->animFrame >> 3)], 0, 84);
+    drawWsgSimpleHalf(&cg->title[2 + (cg->titleFrame >> 5)], 0, 0);
 }
