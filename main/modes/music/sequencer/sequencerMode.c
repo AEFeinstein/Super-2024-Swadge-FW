@@ -364,7 +364,15 @@ static void sequencerExitMode(void)
     }
     else
     {
-        // TODO try to find an unused slot and save in it
+        // Try to find an unused slot and save in it
+        for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(str_songNames); sIdx++)
+        {
+            if (!sequencerIsSongSaved(str_songNames[sIdx]))
+            {
+                sequencerSaveSong(str_songNames[sIdx]);
+                break;
+            }
+        }
     }
 
     void* val;
