@@ -903,7 +903,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
             drawText(&tunernome->ibm_vga8, c555, rightStrTuner2, TFT_WIDTH - widestRightStrTunerWidth - CORNER_OFFSET,
                      TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
 
-            // Other logic things
+            // Turn off LEDs after blink is over
             if (tunernome->isBlinking)
             {
                 if (tunernome->blinkAccumulatedUs == 0)
@@ -956,12 +956,14 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 } // if(tunernome->tAccumulatedUs <= 0)
             }     // if(!tunernome->isClockwise)
 
+            // Turn LEDs on at start of blink
             if (shouldBlink)
             {
                 // Add one to the beat counter
                 tunernome->beatCtr = (tunernome->beatCtr + 1) % tunernome->beatLength;
 
                 // const song_t* song;
+                // Start all LEDs as being off
                 led_t leds[CONFIG_NUM_LEDS] = {{0}};
 
                 if (0 == tunernome->beatCtr)
