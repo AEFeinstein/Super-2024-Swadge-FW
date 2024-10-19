@@ -21,7 +21,7 @@ typedef struct
 //==============================================================================
 // Prototypes
 //==============================================================================
-uint16_t fCost(bb_node_t* node);
+uint16_t fCost(const bb_node_t* node);
 bool pathfindToPerimeter(bb_node_t* start);
 
 #endif
