@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "gameData_bigbug.h"
+#include "gameData_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "entity_bigbug.h"
 #include "lighting_bigbug.h"

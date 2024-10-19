@@ -6,6 +6,7 @@
 #include "entity_bigbug.h"
 // #include <stdint.h>
 #include "fill.h"
+#include "typedef_bigbug.h"
 
 //==============================================================================
 // Functions

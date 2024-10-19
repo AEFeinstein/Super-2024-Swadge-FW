@@ -42,12 +42,19 @@ void fillDisplayArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, paletteColo
     // Only draw on the display
     int xMin = CLAMP(x1, 0, TFT_WIDTH);
     int xMax = CLAMP(x2, 0, TFT_WIDTH);
+
+    // Quick return if nothing would be drawn
+    int copyLen = xMax - xMin;
+    if (!copyLen)
+    {
+        return;
+    }
+
     int yMin = CLAMP(y1, 0, TFT_HEIGHT);
     int yMax = CLAMP(y2, 0, TFT_HEIGHT);
 
     uint32_t dw         = TFT_WIDTH;
     paletteColor_t* pxs = getPxTftFramebuffer() + yMin * dw + xMin;
-    int copyLen         = xMax - xMin;
 
     // Set each pixel
     for (int y = yMin; y < yMax; y++)

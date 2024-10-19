@@ -9,10 +9,12 @@
 
 #include "gameData_bigbug.h"
 #include "entityManager_bigbug.h"
+#include "entityManager_bigbug.h"
 #include "soundManager_bigbug.h"
 #include "sprite_bigbug.h"
 
 #include "linked_list.h"
+#include "vector2d.h"
 #include "vector2d.h"
 
 //==============================================================================

@@ -7,9 +7,13 @@
 #include <stdbool.h>
 #include <palette.h>
 #include <vector2d.h>
+#include <vector2d.h>
 
 typedef struct
 {
+    vec_t pos; // at the center
+    int32_t halfWidth;
+    int32_t halfHeight;
     vec_t pos; // at the center
     int32_t halfWidth;
     int32_t halfHeight;
