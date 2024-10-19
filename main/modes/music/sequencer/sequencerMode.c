@@ -409,10 +409,12 @@ static void sequencerMainLoop(int64_t elapsedUs)
         {
             if (SEQUENCER_MENU == sv->screen)
             {
+                globalMidiPlayerResumeAll();
                 sv->screen = SEQUENCER_SEQ;
             }
             else if (SEQUENCER_SEQ == sv->screen)
             {
+                globalMidiPlayerPauseAll();
                 sv->screen = SEQUENCER_MENU;
             }
         }
@@ -570,7 +572,6 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
                         sv->loadedSong = label;
                         sprintf(sv->str_save, "Save %s", sv->loadedSong);
                         sequencerLoadSong(label);
-                        measureSequencerGrid(sv);
                         sv->rebuildMenu = true;
                         returnToGrid    = true;
                     }
@@ -714,6 +715,10 @@ static void sequencerLoadSong(const char* fname)
         // Read song parameters from the blob
         memcpy(&sv->songParams, &blob[blobIdx], sizeof(sv->songParams));
         blobIdx += sizeof(sv->songParams);
+
+        // Recalculate after load
+        sv->usPerBeat = (60 * 1000000) / sv->songParams.tempo;
+        measureSequencerGrid(sv);
 
         // Read note parameters from the blob
         memcpy(&sv->noteParams, &blob[blobIdx], sizeof(sv->noteParams));
