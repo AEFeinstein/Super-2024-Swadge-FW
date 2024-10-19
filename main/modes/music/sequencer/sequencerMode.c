@@ -6,6 +6,7 @@
 #include "menu.h"
 #include "sequencerMode.h"
 #include "sequencerGrid.h"
+#include "mainMenu.h"
 
 //==============================================================================
 // Function Declarations
@@ -31,6 +32,10 @@ static void setDefaultParameters(void);
 //==============================================================================
 
 static const char sequencerName[] = "Sequencer";
+
+static const char str_grid[] = "The Grid";
+static const char str_help[] = "Help";
+static const char str_exit[] = "Exit";
 
 static const char str_file[]      = "File";
 static const char str_load[]      = "Load";
@@ -121,7 +126,7 @@ static void sequencerEnterMode(void)
 
     sv = calloc(1, sizeof(sequencerVars_t));
 
-    sv->screen = SEQUENCER_SEQ;
+    sv->screen = SEQUENCER_MENU;
 
     loadFont("ibm_vga8.font", &sv->ibm, false);
 
@@ -255,7 +260,7 @@ static void buildMainMenu(void)
         deinitMenu(sv->songMenu);
     }
 
-    sv->songMenu = initMenu(str_songOptions, sequencerSongMenuCb);
+    sv->songMenu = initMenu(sequencerName, sequencerSongMenuCb);
 
     // Start a submenu for file operations
     sv->songMenu = startSubMenu(sv->songMenu, str_file);
@@ -303,40 +308,48 @@ static void buildMainMenu(void)
     }
     sv->songMenu = endSubMenu(sv->songMenu);
 
-    // Add option for tempo
-    settingParam_t sp_tempo = {
-        .min = tempoVals[0],
-        .max = tempoVals[ARRAY_SIZE(tempoVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_songTempo, tempoLabels, tempoVals, ARRAY_SIZE(tempoVals), &sp_tempo,
-                                 sv->songParams.tempo);
+    sv->songMenu = startSubMenu(sv->songMenu, str_songOptions);
+    {
+        // Add option for tempo
+        settingParam_t sp_tempo = {
+            .min = tempoVals[0],
+            .max = tempoVals[ARRAY_SIZE(tempoVals) - 1],
+        };
+        addSettingsOptionsItemToMenu(sv->songMenu, str_songTempo, tempoLabels, tempoVals, ARRAY_SIZE(tempoVals),
+                                     &sp_tempo, sv->songParams.tempo);
 
-    // Add option for grid marks
-    settingParam_t sp_grid = {
-        .min = gridVals[0],
-        .max = gridVals[ARRAY_SIZE(gridVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_songGrid, gridLabels, gridVals, ARRAY_SIZE(gridVals), &sp_grid,
-                                 sv->songParams.grid);
+        // Add option for grid marks
+        settingParam_t sp_grid = {
+            .min = gridVals[0],
+            .max = gridVals[ARRAY_SIZE(gridVals) - 1],
+        };
+        addSettingsOptionsItemToMenu(sv->songMenu, str_songGrid, gridLabels, gridVals, ARRAY_SIZE(gridVals), &sp_grid,
+                                     sv->songParams.grid);
 
-    // Add option for time signature
-    settingParam_t sp_timeSig = {
-        .min = timeSigVals[0],
-        .max = timeSigVals[ARRAY_SIZE(timeSigVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
-                                 &sp_timeSig, sv->songParams.timeSig);
+        // Add option for time signature
+        settingParam_t sp_timeSig = {
+            .min = timeSigVals[0],
+            .max = timeSigVals[ARRAY_SIZE(timeSigVals) - 1],
+        };
+        addSettingsOptionsItemToMenu(sv->songMenu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
+                                     &sp_timeSig, sv->songParams.timeSig);
 
-    // Add option for Looping
-    settingParam_t sp_loop = {
-        .min = loopVals[0],
-        .max = loopVals[ARRAY_SIZE(loopVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_loop, loopLabels, loopVals, ARRAY_SIZE(loopVals), &sp_loop,
-                                 sv->songParams.loop);
+        // Add option for Looping
+        settingParam_t sp_loop = {
+            .min = loopVals[0],
+            .max = loopVals[ARRAY_SIZE(loopVals) - 1],
+        };
+        addSettingsOptionsItemToMenu(sv->songMenu, str_loop, loopLabels, loopVals, ARRAY_SIZE(loopVals), &sp_loop,
+                                     sv->songParams.loop);
 
-    // Add option to mark the song end
-    addSingleItemToMenu(sv->songMenu, str_songEnd);
+        // Add option to mark the song end
+        addSingleItemToMenu(sv->songMenu, str_songEnd);
+    }
+    sv->songMenu = endSubMenu(sv->songMenu);
+
+    addSingleItemToMenu(sv->songMenu, str_grid);
+    addSingleItemToMenu(sv->songMenu, str_help);
+    addSingleItemToMenu(sv->songMenu, str_exit);
 }
 
 /**
@@ -348,6 +361,10 @@ static void sequencerExitMode(void)
     if (sv->loadedSong)
     {
         sequencerSaveSong(sv->loadedSong);
+    }
+    else
+    {
+        // TODO try to find an unused slot and save in it
     }
 
     void* val;
@@ -394,7 +411,7 @@ static void sequencerMainLoop(int64_t elapsedUs)
             {
                 sv->screen = SEQUENCER_SEQ;
             }
-            else
+            else if (SEQUENCER_SEQ == sv->screen)
             {
                 sv->screen = SEQUENCER_MENU;
             }
@@ -469,85 +486,109 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 static void sequencerSongMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     bool returnToGrid = false;
+
+    // These menu options change when scrolling
     if (str_songTempo == label)
     {
         sv->songParams.tempo = settingVal;
         sv->usPerBeat        = (60 * 1000000) / sv->songParams.tempo;
-        returnToGrid         = true;
+        measureSequencerGrid(sv);
+        returnToGrid = selected;
     }
     else if (str_songGrid == label)
     {
         sv->songParams.grid = settingVal;
-        returnToGrid        = true;
+        measureSequencerGrid(sv);
+        returnToGrid = selected;
     }
     else if (str_songTimeSig == label)
     {
         sv->songParams.timeSig = settingVal;
-        returnToGrid           = true;
+        measureSequencerGrid(sv);
+        returnToGrid = selected;
     }
     else if (str_loop == label)
     {
         sv->songParams.loop = settingVal;
-        returnToGrid        = true;
-    }
-    else if (str_songEnd == label)
-    {
-        sv->songParams.songEnd = sv->cursorPos.x;
-        returnToGrid           = true;
-    }
-    else if (str_reset == label)
-    {
-        // reset track
-        sv->loadedSong = NULL;
-        void* val;
-        while ((val = pop(&sv->notes)))
-        {
-            free(val);
-        }
-        returnToGrid = true;
-
-        // Reset parameters
-        setDefaultParameters();
-        sv->rebuildMenu = true;
-    }
-    else if (selected && sv->str_save == label)
-    {
-        // Save with loaded label
-        sequencerSaveSong(sv->loadedSong);
-        sv->rebuildMenu = true;
-        returnToGrid    = true;
+        measureSequencerGrid(sv);
+        returnToGrid = selected;
     }
     else if (selected)
     {
-        // Check if a song for saving or loading was selected
-        for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(str_songNames); sIdx++)
+        // These menu options need to be selected, not just scrolled to
+        if (str_songEnd == label)
         {
-            if (str_songNames[sIdx] == label)
+            sv->songParams.songEnd = sv->cursorPos.x;
+            measureSequencerGrid(sv);
+            returnToGrid = true;
+        }
+        else if (str_reset == label)
+        {
+            // reset track
+            sv->loadedSong = NULL;
+            void* val;
+            while ((val = pop(&sv->notes)))
             {
-                if (str_load == sv->songMenu->title)
+                free(val);
+            }
+            returnToGrid = true;
+
+            // Reset parameters
+            setDefaultParameters();
+            measureSequencerGrid(sv);
+            sv->rebuildMenu = true;
+        }
+        else if (sv->str_save == label)
+        {
+            // Save with loaded label
+            sequencerSaveSong(sv->loadedSong);
+            sv->rebuildMenu = true;
+            returnToGrid    = true;
+        }
+        else if (str_exit == label)
+        {
+            // Exit to the main menu
+            switchToSwadgeMode(&mainMenuMode);
+        }
+        else if (str_grid == label)
+        {
+            returnToGrid = true;
+        }
+        else if (str_help == label)
+        {
+            // TODO show help
+        }
+        else // This checks song name labels in a loop
+        {
+            // Check if a song for saving or loading was selected
+            for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(str_songNames); sIdx++)
+            {
+                if (str_songNames[sIdx] == label)
                 {
-                    sv->loadedSong = label;
-                    sprintf(sv->str_save, "Save %s", sv->loadedSong);
-                    sequencerLoadSong(label);
-                    sv->rebuildMenu = true;
-                    returnToGrid    = true;
+                    if (str_load == sv->songMenu->title)
+                    {
+                        sv->loadedSong = label;
+                        sprintf(sv->str_save, "Save %s", sv->loadedSong);
+                        sequencerLoadSong(label);
+                        measureSequencerGrid(sv);
+                        sv->rebuildMenu = true;
+                        returnToGrid    = true;
+                    }
+                    else if (str_saveAs == sv->songMenu->title)
+                    {
+                        sv->loadedSong = label;
+                        sprintf(sv->str_save, "Save %s", sv->loadedSong);
+                        sequencerSaveSong(label);
+                        sv->rebuildMenu = true;
+                        returnToGrid    = true;
+                    }
+                    break;
                 }
-                else if (str_saveAs == sv->songMenu->title)
-                {
-                    sv->loadedSong = label;
-                    sprintf(sv->str_save, "Save %s", sv->loadedSong);
-                    sequencerSaveSong(label);
-                    sv->rebuildMenu = true;
-                    returnToGrid    = true;
-                }
-                break;
             }
         }
     }
 
-    measureSequencerGrid(sv);
-
-    if (selected && returnToGrid)
+    if (returnToGrid)
     {
         sv->screen = SEQUENCER_SEQ;
     }
