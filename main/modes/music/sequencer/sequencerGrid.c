@@ -1,20 +1,40 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "sequencerGrid.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
 
 #define KEY_MARGIN  2
 #define PX_PER_BEAT 16
 
 #define MIDI_VELOCITY 0xFF
 
+//==============================================================================
+// Variables
+//==============================================================================
+
 static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+
+//==============================================================================
+// Function declarations
+//==============================================================================
 
 static vec_t getCursorScreenPos(sequencerVars_t* sv);
 static void stopSequencer(sequencerVars_t* sv);
 
+//==============================================================================
+// Functions
+//==============================================================================
+
 /**
- * @brief TODO doc
+ * @brief Get the screen position of the cursor (top left)
  *
- * @param sv
- * @return vec_t
+ * @param sv The entire sequencer state
+ * @return The X,Y position of the cursor on the screen
  */
 static vec_t getCursorScreenPos(sequencerVars_t* sv)
 {
@@ -26,10 +46,10 @@ static vec_t getCursorScreenPos(sequencerVars_t* sv)
 }
 
 /**
- * @brief TODO doc
+ * @brief Handle a button input event which may move the cursor, edit notes, or play
  *
- * @param sv
- * @param evt
+ * @param sv The entire sequencer state
+ * @param evt The event that occurred
  */
 void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
 {
@@ -135,12 +155,16 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                         free(newNote);
                         free(setNote);
                         removeEntry(&sv->notes, noteNode);
+
+                        // Return, nothing to add
                         return;
                     }
                     else
                     {
+                        // No overlap yet
                         if ((NULL == addBeforeThis) && (newNote->sixteenthOn <= setNote->sixteenthOn))
                         {
+                            // Save where the note should be inserted in time order
                             addBeforeThis = noteNode;
                         }
                         // Iterate
@@ -158,7 +182,7 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                     addBefore(&sv->notes, newNote, addBeforeThis);
                 }
 
-                // Beep the just-added note
+                // Play the just-added note
                 // Stop it first if it's currently exampling
                 if (0 < sv->exampleMidiNoteTimer)
                 {
@@ -192,11 +216,11 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 {
                     // If it's at the beginning, play
                     sv->isPlaying = true;
-
                     sv->songTimer = 0;
                 }
                 break;
             }
+            // PB_START is handled in sequencerMainLoop()
             default:
             {
                 break;
@@ -206,18 +230,17 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
 }
 
 /**
- * @brief TODO
+ * @brief Handle a touch event on the touchpad. This uses the wheel menu
  *
- * @param sv
+ * @param sv The entire sequencer state
  */
 void sequencerGridTouch(sequencerVars_t* sv)
 {
+    // Poll the touchpad state
     int32_t phi = 0, r = 0, intensity = 0;
     bool touched = getTouchJoystick(&phi, &r, &intensity);
 
-    bool isWheelMenuActive = wheelMenuActive(sv->noteMenu, sv->wheelRenderer);
-
-    if (isWheelMenuActive || touched)
+    if (wheelMenuActive(sv->noteMenu, sv->wheelRenderer) || touched)
     {
         if (touched)
         {
@@ -227,26 +250,13 @@ void sequencerGridTouch(sequencerVars_t* sv)
         {
             sv->noteMenu = wheelMenuTouchRelease(sv->noteMenu, sv->wheelRenderer);
         }
-
-        bool nowActive = wheelMenuActive(sv->noteMenu, sv->wheelRenderer);
-        if (nowActive && !isWheelMenuActive)
-        {
-            // Menu just became active, reset it?
-            // sd->updateMenu = true;
-        }
-        else if (isWheelMenuActive && !nowActive)
-        {
-            // sd->updateMenu     = true;
-            // sd->forceResetMenu = true;
-        }
-        isWheelMenuActive = nowActive;
     }
 }
 
 /**
- * @brief TODO doc
+ * @brief Measure out how to draw the sequencer grid. This should be called after changing settings.
  *
- * @param sv
+ * @param sv The entire sequencer state
  */
 void measureSequencerGrid(sequencerVars_t* sv)
 {
@@ -263,11 +273,12 @@ void measureSequencerGrid(sequencerVars_t* sv)
 }
 
 /**
- * @brief TODO doc
+ * @brief Run the timers for sequencer grid, like scrolling the grid and playing the song
  *
- * @param elapsedUs
+ * @param sv The entire sequencer state
+ * @param elapsedUs The time elapsed since the last function call
  */
-void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
+void runSequencerTimers(sequencerVars_t* sv, int32_t elapsedUs)
 {
     // Run timer for example note
     if (0 < sv->exampleMidiNoteTimer)
@@ -281,6 +292,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         }
     }
 
+    // Run a timer to smoothly scroll the grid offset to match the target
     RUN_TIMER_EVERY(sv->smoothScrollTimer, 16667, elapsedUs, {
         // Half the distance to X
         if (sv->gridOffsetTarget.x > sv->gridOffset.x)
@@ -303,13 +315,16 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         }
     });
 
-    // Scroll
+    // If the song is playing, scroll everything along
     if (sv->isPlaying)
     {
+        // Run scroll timer
         sv->scrollTimer += elapsedUs;
         while (sv->scrollTimer >= sv->usPerPx)
         {
             sv->scrollTimer -= sv->usPerPx;
+
+            // Move the grid
             sv->gridOffset.x++;
             sv->gridOffsetTarget.x++;
 
@@ -326,31 +341,36 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         while (noteNode)
         {
             sequencerNote_t* note = noteNode->val;
-            int32_t usOn          = note->sixteenthOn * sv->usPerBeat / 4;
-            int32_t usOff         = note->sixteenthOff * sv->usPerBeat / 4;
+
+            // Get the note on and off times
+            int32_t usOn  = note->sixteenthOn * sv->usPerBeat / 4;
+            int32_t usOff = note->sixteenthOff * sv->usPerBeat / 4;
 
             if (usOn > sv->songTimer)
             {
                 // Note start is past the song timer, stop looping
                 break;
             }
+            // If the song time is between on and off
             else if (usOn <= sv->songTimer && sv->songTimer <= usOff)
             {
+                // If the note isn't on yet
                 if (!note->isOn)
                 {
+                    // Turn the note on
                     note->isOn = true;
-
-                    // Create MIDI on and push it into the queue to be picked up by the callback
                     midiNoteOn(globalMidiPlayerGet(MIDI_BGM), note->channel, note->midiNum, MIDI_VELOCITY);
                 }
             }
+            // If the note is on, and shouldn't be
             else if (note->isOn)
             {
+                // Turn it off
                 note->isOn = false;
-
-                // Create MIDI off and push it into the queue to be picked up by the callback
                 midiNoteOff(globalMidiPlayerGet(MIDI_BGM), note->channel, note->midiNum, MIDI_VELOCITY);
             }
+
+            // Iterate
             noteNode = noteNode->next;
         }
 
@@ -360,6 +380,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         {
             // Always stop
             stopSequencer(sv);
+
             // Loop if that's set
             if (sv->songParams.loop)
             {
@@ -372,7 +393,16 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
             }
         }
     }
+}
 
+/**
+ * @brief Draw the sequencer grid
+ *
+ * @param sv The entire sequencer state
+ * @param elapsedUs The time elapsed since the last function call
+ */
+void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
+{
     // Draw horizontal grid lines
     int32_t yOff = sv->rowHeight - 1 - sv->gridOffset.y;
     while (yOff < 0)
@@ -498,10 +528,11 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         drawWheelMenu(sv->noteMenu, sv->wheelRenderer, elapsedUs);
     }
 }
+
 /**
- * @brief TODO doc
+ * @brief Stop the sequencer from playing
  *
- * @param sv
+ * @param sv The entire sequencer state
  */
 static void stopSequencer(sequencerVars_t* sv)
 {

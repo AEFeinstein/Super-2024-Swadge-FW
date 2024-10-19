@@ -49,6 +49,7 @@ typedef struct
     menuManiaRenderer_t* menuRenderer;
     menu_t* noteMenu;
     wheelMenuRenderer_t* wheelRenderer;
+    bool rebuildMenu;
 
     // Mode state
     sequencerScreen_t screen;
@@ -77,6 +78,8 @@ typedef struct
     seqSongParams_t songParams;
     int32_t usPerBeat;
     seqNoteParams_t noteParams;
+    const char* loadedSong;
+    char str_save[16];
 
     // Playing
     int32_t songTimer;
