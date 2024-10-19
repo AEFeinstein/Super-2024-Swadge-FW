@@ -915,7 +915,7 @@ void changeStateTitleScreen(pango_t* self)
 {
     self->gameData.frameCount = 0;
     self->gameData.gameState  = PA_ST_TITLE_SCREEN;
-    pa_remapBlockTile(&(pango->wsgManager), PA_WSG_BONUS_BLOCK_0);
+    pa_remapBlockTile(&(pango->wsgManager), PA_WSG_BLOCK_TITLESCREEN);
     self->update              = &updateTitleScreen;
 }
 

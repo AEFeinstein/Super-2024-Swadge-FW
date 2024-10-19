@@ -119,12 +119,12 @@ void pa_loadWsgs(paWsgManager_t* self)
     loadWsg("pa-tile-007.wsg", &self->wsgs[PA_WSG_WALL_6], false);
     loadWsg("pa-tile-008.wsg", &self->wsgs[PA_WSG_WALL_7], false);
     loadWsg("pa-tile-009.wsg", &self->wsgs[PA_WSG_BLOCK_BLUE], false);
-    loadWsg("pa-tile-010.wsg", &self->wsgs[PA_WSG_BLOCK_RED], false);
-    loadWsg("pa-tile-011.wsg", &self->wsgs[PA_WSG_BLOCK_YELLOW], false);
-    loadWsg("pa-tile-012.wsg", &self->wsgs[PA_WSG_BLOCK_MAGENTA], false);
-    loadWsg("pa-tile-013.wsg", &self->wsgs[PA_WSG_BONUS_BLOCK_0], false);
-    loadWsg("pa-tile-014.wsg", &self->wsgs[PA_WSG_BONUS_BLOCK_1], false);
-    loadWsg("pa-tile-015.wsg", &self->wsgs[PA_WSG_BONUS_BLOCK_2], false);
+    loadWsg("pa-tile-010.wsg", &self->wsgs[PA_WSG_BLOCK_MAGENTA], false);
+    loadWsg("pa-tile-011.wsg", &self->wsgs[PA_WSG_BLOCK_RED], false);
+    loadWsg("pa-tile-012.wsg", &self->wsgs[PA_WSG_BLOCK_ORANGE], false);
+    loadWsg("pa-tile-013.wsg", &self->wsgs[PA_WSG_BLOCK_YELLOW], false);
+    loadWsg("pa-tile-014.wsg", &self->wsgs[PA_WSG_BLOCK_GREEN], false);
+    loadWsg("pa-tile-015.wsg", &self->wsgs[PA_WSG_BLOCK_TITLESCREEN], false);
 }
 
 void pa_initializeSprites(paWsgManager_t* self)
@@ -197,7 +197,7 @@ void pa_initializeSprites(paWsgManager_t* self)
     self->sprites[PA_SP_BLOCK].originX = 8;
     self->sprites[PA_SP_BLOCK].originY = 8;
 
-    self->sprites[PA_SP_BONUS_BLOCK].wsg     = &self->wsgs[PA_WSG_BONUS_BLOCK_0];
+    self->sprites[PA_SP_BONUS_BLOCK].wsg     = &self->wsgs[PA_WSG_BLOCK_RED];
     self->sprites[PA_SP_BONUS_BLOCK].originX = 8;
     self->sprites[PA_SP_BONUS_BLOCK].originY = 8;
 
@@ -270,11 +270,11 @@ void pa_initializeTiles(paWsgManager_t* self)
     self->tiles[7]  = &self->wsgs[PA_WSG_WALL_7];
     self->tiles[8]  = &self->wsgs[PA_WSG_BLOCK_BLUE];
     self->tiles[9]  = &self->wsgs[PA_WSG_BLOCK_RED];
-    self->tiles[10] = &self->wsgs[PA_WSG_BLOCK_YELLOW];
-    self->tiles[11] = &self->wsgs[PA_WSG_BLOCK_MAGENTA];
-    self->tiles[12] = &self->wsgs[PA_WSG_BONUS_BLOCK_0];
-    self->tiles[13] = &self->wsgs[PA_WSG_BONUS_BLOCK_1];
-    self->tiles[14] = &self->wsgs[PA_WSG_BONUS_BLOCK_2];
+    self->tiles[10] = &self->wsgs[PA_WSG_BLOCK_ORANGE];
+    self->tiles[11] = &self->wsgs[PA_WSG_BLOCK_YELLOW];
+    self->tiles[12] = &self->wsgs[PA_WSG_BLOCK_GREEN];
+    self->tiles[13] = &self->wsgs[PA_WSG_BLOCK_MAGENTA];
+    self->tiles[14] = &self->wsgs[PA_WSG_BLOCK_TITLESCREEN];
 }
 
 void pa_remapWsgToSprite(paWsgManager_t* self, uint16_t spriteIndex, uint16_t wsgIndex)
@@ -300,12 +300,12 @@ void pa_animateTiles(paWsgManager_t* self)
     self->globalTileAnimationTimer--;
     if (self->globalTileAnimationTimer < 0)
     {
-        //Assumption: all animated tiles have 4 frames of animation
-        self->globalTileAnimationFrame = ((self->globalTileAnimationFrame + 1) % 4);
+        //Assumption: all animated tiles have 6 frames of animation
+        self->globalTileAnimationFrame = ((self->globalTileAnimationFrame + 1) % 6);
 
         pa_remapWsgToTile(self, 9, PA_WSG_BLOCK_BLUE + self->globalTileAnimationFrame);
 
-        self->globalTileAnimationTimer = 23;
+        self->globalTileAnimationTimer = 6;
     }
 }
 
