@@ -214,7 +214,8 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 }
                 else
                 {
-                    // If it's at the beginning, play
+                    // If it's at the beginning, stop again to be safe, then play
+                    stopSequencer(sv);
                     sv->isPlaying = true;
                     sv->songTimer = 0;
                 }
@@ -403,6 +404,10 @@ void runSequencerTimers(sequencerVars_t* sv, int32_t elapsedUs)
  */
 void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
 {
+    // Turn off LEDs
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, CONFIG_NUM_LEDS);
+
     // Draw horizontal grid lines
     int32_t yOff = sv->rowHeight - 1 - sv->gridOffset.y;
     while (yOff < 0)
@@ -553,4 +558,9 @@ static void stopSequencer(sequencerVars_t* sv)
         note->isOn            = false;
         noteNode              = noteNode->next;
     }
+
+    // Turn off example note
+    sv->exampleMidiChannel   = 0;
+    sv->exampleMidiNote      = 0;
+    sv->exampleMidiNoteTimer = 0;
 }
