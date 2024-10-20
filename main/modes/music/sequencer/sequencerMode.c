@@ -57,8 +57,9 @@ static const char str_songOptions[] = "Song Options";
 
 static const char str_songTempo[] = "Tempo: ";
 static const char* tempoLabels[]
-    = {"60",  "70",  "80",  "90",  "100", "110", "120", "130", "140", "150", "160", "170", "180",
-       "190", "200", "210", "220", "230", "240", "250", "260", "270", "280", "290", "300"};
+    = {"60 bpm",  "70 bpm",  "80 bpm",  "90 bpm",  "100 bpm", "110 bpm", "120 bpm", "130 bpm", "140 bpm",
+       "150 bpm", "160 bpm", "170 bpm", "180 bpm", "190 bpm", "200 bpm", "210 bpm", "220 bpm", "230 bpm",
+       "240 bpm", "250 bpm", "260 bpm", "270 bpm", "280 bpm", "290 bpm", "300 bpm"};
 static const int32_t tempoVals[] = {60,  70,  80,  90,  100, 110, 120, 130, 140, 150, 160, 170, 180,
                                     190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300};
 
@@ -67,8 +68,8 @@ static const char* gridLabels[]  = {"Whole", "Half", "Quarter", "Eighth", "Sixte
 static const int32_t gridVals[]  = {1, 2, 4, 8, 16};
 
 static const char str_songTimeSig[] = "Signature: ";
-static const char* timeSigLabels[]  = {"2/4", "3/4", "4/4", "5/4"};
-static const int32_t timeSigVals[]  = {2, 3, 4, 5};
+static const char* timeSigLabels[]  = {"2/4", "3/4", "4/4", "5/4", "6/4", "7/4"};
+static const int32_t timeSigVals[]  = {2, 3, 4, 5, 6, 7};
 
 static const char str_loop[]    = "Loop: ";
 static const char* loopLabels[] = {"On", "Off"};
@@ -433,6 +434,11 @@ static void sequencerMainLoop(int64_t elapsedUs)
                 case SEQUENCER_MENU:
                 {
                     sv->songMenu = menuButton(sv->songMenu, evt);
+                    if (sv->upOneMenuLevel)
+                    {
+                        sv->upOneMenuLevel = false;
+                        sv->songMenu       = sv->songMenu->parentMenu;
+                    }
                     break;
                 }
                 case SEQUENCER_SEQ:
@@ -568,6 +574,20 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
         {
             // TODO show help
         }
+        else if (str_overwrite == label)
+        {
+            // Save the song
+            sv->loadedSong = sv->songMenu->title;
+            sprintf(sv->str_save, "Save %s", sv->loadedSong);
+            sequencerSaveSong(sv->loadedSong);
+            sv->rebuildMenu = true;
+            returnToGrid    = true;
+        }
+        else if (str_cancel == label)
+        {
+            // Flag to go one level up
+            sv->upOneMenuLevel = true;
+        }
         else // This checks song name labels in a loop
         {
             // Check if a song for saving or loading was selected
@@ -579,17 +599,23 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
                     {
                         sv->loadedSong = label;
                         sprintf(sv->str_save, "Save %s", sv->loadedSong);
-                        sequencerLoadSong(label);
+                        sequencerLoadSong(sv->loadedSong);
                         sv->rebuildMenu = true;
                         returnToGrid    = true;
                     }
                     else if (str_saveAs == sv->songMenu->title)
                     {
-                        sv->loadedSong = label;
-                        sprintf(sv->str_save, "Save %s", sv->loadedSong);
-                        sequencerSaveSong(label);
-                        sv->rebuildMenu = true;
-                        returnToGrid    = true;
+                        // If this is the Save As menu and there's no overwrite warning
+                        menuItem_t* cItem = sv->songMenu->currentItem->val;
+                        if (NULL == cItem->subMenu)
+                        {
+                            // Save the song
+                            sv->loadedSong = label;
+                            sprintf(sv->str_save, "Save %s", sv->loadedSong);
+                            sequencerSaveSong(sv->loadedSong);
+                            sv->rebuildMenu = true;
+                            returnToGrid    = true;
+                        }
                     }
                     break;
                 }

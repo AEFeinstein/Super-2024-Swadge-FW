@@ -50,6 +50,7 @@ typedef struct
     menu_t* noteMenu;
     wheelMenuRenderer_t* wheelRenderer;
     bool rebuildMenu;
+    bool upOneMenuLevel;
 
     // Mode state
     sequencerScreen_t screen;
