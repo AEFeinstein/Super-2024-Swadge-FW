@@ -601,7 +601,8 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
             // TODO turn these on when exiting the menu
 
             // Show help
-            sv->screen = SEQUENCER_HELP;
+            sv->screen  = SEQUENCER_HELP;
+            sv->helpIdx = 0;
         }
         else if (str_overwrite == label)
         {

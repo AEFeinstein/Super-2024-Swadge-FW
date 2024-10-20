@@ -12,6 +12,8 @@
 #define TEXT_MARGIN_L 18
 #define TEXT_MARGIN_R 13
 
+#define ARROW_BLINK_PERIOD 1000000
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -45,9 +47,9 @@ const seqHelpPage_t helpPages[] = {
     },
     {
         .title = str_file,
-        .text
-        = "The song is auto saved when exiting the mode with the \"Exit\" option or the Menu, but NOT if you turn off "
-          "the Swadge!",
+        .text  = "The song is auto saved when exiting the mode with the \"Exit\" option or the Menu button, but NOT if "
+                 "you turn off "
+                 "the Swadge!",
     },
     {
         .title = str_file,
@@ -85,8 +87,8 @@ const seqHelpPage_t helpPages[] = {
     },
     {
         .title = str_songOptions,
-        .text  = "\"End Song Here\" sets the song's ending where the cursor currently is. When playing, the song will "
-                 "either stop or loop at this point.",
+        .text  = "\"End Song Here\" sets the song's ending where the cursor currently is. The song will either stop or "
+                 "loop here.",
     },
     {
         .title = str_grid,
@@ -110,7 +112,11 @@ const seqHelpPage_t helpPages[] = {
     },
     {
         .title = str_grid,
-        .text  = "The touchpad changes the length of the note (from sixteenth to whole) and the instrument.",
+        .text  = "Up on the touchpad changes the instrument being placed.",
+    },
+    {
+        .title = str_grid,
+        .text  = "Down on the touchpad changes the length of the note from sixteenth note to whole note.",
     },
     {
         .title = sequencerName,
@@ -123,12 +129,12 @@ const seqHelpPage_t helpPages[] = {
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Draw the help menu
  *
- * @param sv
- * @param tElapsed
+ * @param sv The entire sequencer state
+ * @param elapsedUs The time elapsed since the last function call
  */
-void drawSequencerHelp(sequencerVars_t* sv, int32_t tElapsed)
+void drawSequencerHelp(sequencerVars_t* sv, int32_t elapsedUs)
 {
     // Set the title
     sv->bgMenu->title = helpPages[sv->helpIdx].title;
@@ -137,20 +143,50 @@ void drawSequencerHelp(sequencerVars_t* sv, int32_t tElapsed)
     drawMenuMania(sv->bgMenu, sv->menuRenderer, 0);
 
     // Draw text
-    int16_t xOff = TEXT_MARGIN_L;
-    int16_t yOff = MANIA_TITLE_HEIGHT + 8;
-    drawTextWordWrap(&sv->font_rodin, c000, helpPages[sv->helpIdx].text, &xOff, &yOff, TFT_WIDTH - TEXT_MARGIN_R,
+    paletteColor_t textColor = c000;
+    int16_t xOff             = TEXT_MARGIN_L;
+    int16_t yOff             = MANIA_TITLE_HEIGHT + 8;
+    drawTextWordWrap(&sv->font_rodin, textColor, helpPages[sv->helpIdx].text, &xOff, &yOff, TFT_WIDTH - TEXT_MARGIN_R,
                      TFT_HEIGHT);
 
-    //  TODO page numbers?
-    // TODO indicator arrows?
+    // Draw page numbers
+    char pageText[32];
+    snprintf(pageText, sizeof(pageText) - 1, "%" PRId32 "/%" PRId32 "", 1 + sv->helpIdx,
+             (int32_t)ARRAY_SIZE(helpPages));
+
+    int16_t tWidth = textWidth(&sv->font_rodin, pageText);
+    drawText(&sv->font_rodin, textColor, pageText, TFT_WIDTH - 30 - tWidth, TFT_HEIGHT - sv->font_rodin.height + 2);
+
+    // Blink the arrows
+    sv->arrowBlinkTimer += elapsedUs;
+    while (sv->arrowBlinkTimer >= ARROW_BLINK_PERIOD)
+    {
+        sv->arrowBlinkTimer -= ARROW_BLINK_PERIOD;
+    }
+
+    if (sv->arrowBlinkTimer < (ARROW_BLINK_PERIOD / 2))
+    {
+        // Draw arrows to indicate this can be scrolled
+        if (0 != sv->helpIdx)
+        {
+            // Draw left arrow if not on the first page
+            drawText(&sv->font_rodin, textColor, "<", 0, (TFT_HEIGHT - sv->font_rodin.height) / 2);
+        }
+
+        if ((ARRAY_SIZE(helpPages) - 1) != sv->helpIdx)
+        {
+            // Draw right arrow if not on the last page
+            drawText(&sv->font_rodin, textColor, ">", TFT_WIDTH - textWidth(&sv->font_rodin, ">"),
+                     (TFT_HEIGHT - sv->font_rodin.height) / 2);
+        }
+    }
 }
 
 /**
- * @brief TODO
+ * @brief Handle a button event on the help screen
  *
- * @param sv
- * @param evt
+ * @param sv The entire sequencer state
+ * @param evt The button event to handle
  */
 void buttonSequencerHelp(sequencerVars_t* sv, buttonEvt_t* evt)
 {

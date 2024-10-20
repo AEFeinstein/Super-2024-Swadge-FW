@@ -96,6 +96,7 @@ typedef struct
 
     // Help page
     uint32_t helpIdx;
+    uint32_t arrowBlinkTimer;
 } sequencerVars_t;
 
 //==============================================================================

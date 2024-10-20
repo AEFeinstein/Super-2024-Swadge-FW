@@ -55,6 +55,7 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
 {
     if (evt->down)
     {
+        // TODO hold directions to continuously scroll
         switch (evt->button)
         {
             case PB_UP:
