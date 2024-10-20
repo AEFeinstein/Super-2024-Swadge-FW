@@ -6,6 +6,7 @@
 #include "menu.h"
 #include "sequencerMode.h"
 #include "sequencerGrid.h"
+#include "sequencerHelp.h"
 #include "mainMenu.h"
 
 //==============================================================================
@@ -31,13 +32,13 @@ static void setDefaultParameters(void);
 // Const Variables
 //==============================================================================
 
-static const char sequencerName[] = "Sequencer";
+const char sequencerName[] = "Sequencer";
 
-static const char str_grid[] = "The Grid";
+const char str_grid[]        = "The Grid";
 static const char str_help[] = "Help";
 static const char str_exit[] = "Exit";
 
-static const char str_file[]      = "File";
+const char str_file[]             = "File";
 static const char str_load[]      = "Load";
 static const char str_saveAs[]    = "Save As";
 static const char str_overwrite[] = "Overwrite Save";
@@ -53,7 +54,7 @@ static const char* const str_songNames[] = {
 
 static const char str_noteOptions[] = "Note Options";
 
-static const char str_songOptions[] = "Song Options";
+const char str_songOptions[] = "Song Options";
 
 static const char str_songTempo[] = "Tempo: ";
 static const char* tempoLabels[]
@@ -129,14 +130,21 @@ static void sequencerEnterMode(void)
 
     sv->screen = SEQUENCER_MENU;
 
-    loadFont("ibm_vga8.font", &sv->ibm, false);
+    // Load fonts
+    loadFont("ibm_vga8.font", &sv->font_ibm, false);
+    loadFont("rodin_eb.font", &sv->font_rodin, true);
+    loadFont("righteous_150.font", &sv->font_righteous, true);
+    makeOutlineFont(&sv->font_righteous, &sv->font_righteous_outline, true);
+
+    // Set up menu renderers
+    sv->menuRenderer = initMenuManiaRenderer(&sv->font_righteous, &sv->font_righteous_outline, &sv->font_rodin);
 
     setDefaultParameters();
 
     // Build out the main menu
     buildMainMenu();
 
-    sv->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    sv->bgMenu = initMenu(sequencerName, NULL);
 
     // Color the menu like Pixil
     led_t menuColor = {
@@ -161,7 +169,7 @@ static void sequencerEnterMode(void)
         .width  = TFT_WIDTH - 30,
         .height = 40,
     };
-    sv->wheelRenderer = initWheelMenu(&sv->ibm, 90, &textRect);
+    sv->wheelRenderer = initWheelMenu(&sv->font_ibm, 90, &textRect);
 
     wheelMenuSetColor(sv->wheelRenderer, c555);
 
@@ -382,9 +390,13 @@ static void sequencerExitMode(void)
         free(val);
     }
 
-    freeFont(&sv->ibm);
+    freeFont(&sv->font_ibm);
+    freeFont(&sv->font_righteous);
+    freeFont(&sv->font_righteous_outline);
+    freeFont(&sv->font_rodin);
     deinitMenuManiaRenderer(sv->menuRenderer);
     deinitMenu(sv->songMenu);
+    deinitMenu(sv->bgMenu);
 
     deinitWheelMenu(sv->wheelRenderer);
     deinitMenu(sv->noteMenu);
@@ -421,7 +433,7 @@ static void sequencerMainLoop(int64_t elapsedUs)
                 globalMidiPlayerResumeAll();
                 sv->screen = SEQUENCER_SEQ;
             }
-            else if (SEQUENCER_SEQ == sv->screen)
+            else
             {
                 globalMidiPlayerPauseAll();
                 sv->screen = SEQUENCER_MENU;
@@ -444,6 +456,11 @@ static void sequencerMainLoop(int64_t elapsedUs)
                 case SEQUENCER_SEQ:
                 {
                     sequencerGridButton(sv, &evt);
+                    break;
+                }
+                case SEQUENCER_HELP:
+                {
+                    buttonSequencerHelp(sv, &evt);
                     break;
                 }
             }
@@ -470,6 +487,11 @@ static void sequencerMainLoop(int64_t elapsedUs)
             sequencerGridTouch(sv);
             runSequencerTimers(sv, elapsedUs);
             drawSequencerGrid(sv, elapsedUs);
+            break;
+        }
+        case SEQUENCER_HELP:
+        {
+            drawSequencerHelp(sv, elapsedUs);
             break;
         }
     }
@@ -572,7 +594,14 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
         }
         else if (str_help == label)
         {
-            // TODO show help
+            // Turn off LEDs
+            setManiaLedsOn(sv->menuRenderer, false);
+            led_t leds[CONFIG_NUM_LEDS] = {0};
+            setLeds(leds, CONFIG_NUM_LEDS);
+            // TODO turn these on when exiting the menu
+
+            // Show help
+            sv->screen = SEQUENCER_HELP;
         }
         else if (str_overwrite == label)
         {

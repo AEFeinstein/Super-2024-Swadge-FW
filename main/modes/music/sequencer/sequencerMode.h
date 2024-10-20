@@ -12,6 +12,7 @@ typedef enum
 {
     SEQUENCER_MENU,
     SEQUENCER_SEQ,
+    SEQUENCER_HELP,
 } sequencerScreen_t;
 
 //==============================================================================
@@ -46,6 +47,7 @@ typedef struct
 {
     // Menu
     menu_t* songMenu;
+    menu_t* bgMenu;
     menuManiaRenderer_t* menuRenderer;
     menu_t* noteMenu;
     wheelMenuRenderer_t* wheelRenderer;
@@ -56,7 +58,10 @@ typedef struct
     sequencerScreen_t screen;
 
     // Drawing
-    font_t ibm;
+    font_t font_ibm;
+    font_t font_rodin;
+    font_t font_righteous;
+    font_t font_righteous_outline;
     vec_t cursorPos;
     vec_t gridOffset;
     vec_t gridOffsetTarget;
@@ -88,6 +93,9 @@ typedef struct
     int32_t exampleMidiNote;
     int32_t exampleMidiChannel;
     int32_t exampleMidiNoteTimer;
+
+    // Help page
+    uint32_t helpIdx;
 } sequencerVars_t;
 
 //==============================================================================
@@ -95,6 +103,11 @@ typedef struct
 //==============================================================================
 
 extern swadgeMode_t sequencerMode;
+
+extern const char sequencerName[];
+extern const char str_grid[];
+extern const char str_file[];
+extern const char str_songOptions[];
 
 //==============================================================================
 // Functions
