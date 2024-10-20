@@ -27,6 +27,7 @@ static bool sequencerIsSongSaved(const char* fname);
 
 static void buildMainMenu(void);
 static void setDefaultParameters(void);
+static void buildWheelMenu(void);
 
 //==============================================================================
 // Const Variables
@@ -124,27 +125,33 @@ static sequencerVars_t* sv;
  */
 static void sequencerEnterMode(void)
 {
+    // Make it 60fps
     setFrameRateUs(16667);
 
+    // Allocate memory for the mode
     sv = calloc(1, sizeof(sequencerVars_t));
 
-    sv->screen = SEQUENCER_MENU;
-
     // Load fonts
-    loadFont("ibm_vga8.font", &sv->font_ibm, false);
+    loadFont("ibm_vga8.font", &sv->font_ibm, true);
     loadFont("rodin_eb.font", &sv->font_rodin, true);
     loadFont("righteous_150.font", &sv->font_righteous, true);
     makeOutlineFont(&sv->font_righteous, &sv->font_righteous_outline, true);
 
-    // Set up menu renderers
+    // Load WSGs
+    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
+    {
+        loadWsg(instrumentWsgs[i], &sv->instrumentWsgs[i], true);
+    }
+
+    // Set up menu renderer
     sv->menuRenderer = initMenuManiaRenderer(&sv->font_righteous, &sv->font_righteous_outline, &sv->font_rodin);
 
+    // Set default parameters
     setDefaultParameters();
 
     // Build out the main menu
-    buildMainMenu();
-
     sv->bgMenu = initMenu(sequencerName, NULL);
+    buildMainMenu();
 
     // Color the menu like Pixil
     led_t menuColor = {
@@ -160,61 +167,13 @@ static void sequencerEnterMode(void)
                              c000, c555,       // rowColor, rowTextColor
                              shadowColors, ARRAY_SIZE(shadowColors), menuColor);
 
-    //////////////////////////////////////////////////////////////////////////
+    // Show the menu by default
+    setSequencerScreen(SEQUENCER_MENU);
+
     // Initialize wheel menu
+    buildWheelMenu();
 
-    static const rectangle_t textRect = {
-        .pos.x  = 15,
-        .pos.y  = 0,
-        .width  = TFT_WIDTH - 30,
-        .height = 40,
-    };
-    sv->wheelRenderer = initWheelMenu(&sv->font_ibm, 90, &textRect);
-
-    wheelMenuSetColor(sv->wheelRenderer, c555);
-
-    sv->noteMenu = initMenu(str_noteOptions, sequencerNoteMenuCb);
-
-    uint8_t noteMenuPos = 0;
-
-    // Add instrument options
-    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
-    {
-        loadWsg(instrumentWsgs[i], &sv->instrumentWsgs[i], true);
-    }
-    settingParam_t sp_instrument = {
-        .min = instrumentVals[0],
-        .max = instrumentVals[ARRAY_SIZE(instrumentVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->noteMenu, str_instrument, instrumentLabels, instrumentVals,
-                                 ARRAY_SIZE(instrumentVals), &sp_instrument, 1);
-    wheelMenuSetItemInfo(sv->wheelRenderer, str_instrument, &sv->instrumentWsgs[0], noteMenuPos++, SCROLL_VERT);
-    wheelMenuSetItemColor(sv->wheelRenderer, str_instrument, instrumentColors[0], instrumentColors[0]);
-
-    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
-    {
-        wheelMenuSetItemInfo(sv->wheelRenderer, instrumentLabels[i], &sv->instrumentWsgs[i], i, NO_SCROLL);
-        wheelMenuSetItemColor(sv->wheelRenderer, instrumentLabels[i], instrumentColors[i], instrumentColors[i]);
-    }
-
-    // Add note type options
-    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
-    {
-        loadWsg(noteWsgs[i], &sv->noteWsgs[i], true);
-    }
-    settingParam_t sp_noteType = {
-        .min = noteTypeVals[0],
-        .max = noteTypeVals[ARRAY_SIZE(noteTypeVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->noteMenu, str_noteType, noteTypeLabels, noteTypeVals, ARRAY_SIZE(noteTypeVals),
-                                 &sp_noteType, 4);
-    wheelMenuSetItemInfo(sv->wheelRenderer, str_noteType, &sv->noteWsgs[2], noteMenuPos++, SCROLL_VERT);
-
-    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
-    {
-        wheelMenuSetItemInfo(sv->wheelRenderer, noteTypeLabels[i], &sv->noteWsgs[i], i, NO_SCROLL);
-    }
-
+    // Measure the grid
     measureSequencerGrid(sv);
 
     // Init midi
@@ -223,16 +182,14 @@ static void sequencerEnterMode(void)
     // Configure MIDI for streaming
     player->mode              = MIDI_STREAMING;
     player->streamingCallback = NULL;
-
     midiGmOn(player);
+    midiPause(player, false);
 
     // Set each instrument
     for (int32_t ch = 0; ch < ARRAY_SIZE(instrumentVals); ch++)
     {
         midiSetProgram(player, ch, instrumentPrograms[ch]);
     }
-
-    midiPause(player, false);
 
     // Start in the middle of the piano
     sv->cursorPos.y        = NUM_PIANO_KEYS / 2;
@@ -362,6 +319,60 @@ static void buildMainMenu(void)
 }
 
 /**
+ * @brief Build out the wheel menu with note options
+ */
+static void buildWheelMenu(void)
+{
+    static const rectangle_t textRect = {
+        .pos.x  = 15,
+        .pos.y  = 0,
+        .width  = TFT_WIDTH - 30,
+        .height = 40,
+    };
+    sv->wheelRenderer = initWheelMenu(&sv->font_ibm, 90, &textRect);
+
+    wheelMenuSetColor(sv->wheelRenderer, c555);
+
+    sv->noteMenu = initMenu(str_noteOptions, sequencerNoteMenuCb);
+
+    uint8_t noteMenuPos = 0;
+
+    // Add instrument options
+    settingParam_t sp_instrument = {
+        .min = instrumentVals[0],
+        .max = instrumentVals[ARRAY_SIZE(instrumentVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(sv->noteMenu, str_instrument, instrumentLabels, instrumentVals,
+                                 ARRAY_SIZE(instrumentVals), &sp_instrument, 1);
+    wheelMenuSetItemInfo(sv->wheelRenderer, str_instrument, &sv->instrumentWsgs[0], noteMenuPos++, SCROLL_VERT);
+    wheelMenuSetItemColor(sv->wheelRenderer, str_instrument, instrumentColors[0], instrumentColors[0]);
+
+    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
+    {
+        wheelMenuSetItemInfo(sv->wheelRenderer, instrumentLabels[i], &sv->instrumentWsgs[i], i, NO_SCROLL);
+        wheelMenuSetItemColor(sv->wheelRenderer, instrumentLabels[i], instrumentColors[i], instrumentColors[i]);
+    }
+
+    // Add note type options
+    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
+    {
+        loadWsg(noteWsgs[i], &sv->noteWsgs[i], true);
+    }
+    settingParam_t sp_noteType = {
+        .min = noteTypeVals[0],
+        .max = noteTypeVals[ARRAY_SIZE(noteTypeVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(sv->noteMenu, str_noteType, noteTypeLabels, noteTypeVals, ARRAY_SIZE(noteTypeVals),
+                                 &sp_noteType, 4);
+    wheelMenuSetItemInfo(sv->wheelRenderer, str_noteType, &sv->noteWsgs[2], noteMenuPos++, SCROLL_VERT);
+
+    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
+    {
+        wheelMenuSetItemInfo(sv->wheelRenderer, noteTypeLabels[i], &sv->noteWsgs[i], i, NO_SCROLL);
+    }
+}
+
+/**
  * This function is called when the mode is exited. It should free any allocated memory.
  */
 static void sequencerExitMode(void)
@@ -431,12 +442,12 @@ static void sequencerMainLoop(int64_t elapsedUs)
             if (SEQUENCER_MENU == sv->screen)
             {
                 globalMidiPlayerResumeAll();
-                sv->screen = SEQUENCER_SEQ;
+                setSequencerScreen(SEQUENCER_SEQ);
             }
             else
             {
                 globalMidiPlayerPauseAll();
-                sv->screen = SEQUENCER_MENU;
+                setSequencerScreen(SEQUENCER_MENU);
             }
         }
         else
@@ -594,14 +605,8 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
         }
         else if (str_help == label)
         {
-            // Turn off LEDs
-            setManiaLedsOn(sv->menuRenderer, false);
-            led_t leds[CONFIG_NUM_LEDS] = {0};
-            setLeds(leds, CONFIG_NUM_LEDS);
-            // TODO turn these on when exiting the menu
-
             // Show help
-            sv->screen  = SEQUENCER_HELP;
+            setSequencerScreen(SEQUENCER_HELP);
             sv->helpIdx = 0;
         }
         else if (str_overwrite == label)
@@ -655,7 +660,7 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
 
     if (returnToGrid)
     {
-        sv->screen = SEQUENCER_SEQ;
+        setSequencerScreen(SEQUENCER_SEQ);
     }
 }
 
@@ -811,5 +816,28 @@ static void sequencerLoadSong(const char* fname)
 
         // Free the blob
         free(blob);
+    }
+}
+
+/**
+ * @brief Set the sequencer screen and LEDs appropriately
+ *
+ * @param screen The new screen to show
+ */
+void setSequencerScreen(sequencerScreen_t screen)
+{
+    sv->screen = screen;
+
+    if (SEQUENCER_HELP == screen)
+    {
+        // Turn off LEDs for help
+        setManiaLedsOn(sv->menuRenderer, false);
+        led_t leds[CONFIG_NUM_LEDS] = {0};
+        setLeds(leds, CONFIG_NUM_LEDS);
+    }
+    else
+    {
+        // Turn on LEDs for other screens
+        setManiaLedsOn(sv->menuRenderer, true);
     }
 }

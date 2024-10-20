@@ -115,5 +115,6 @@ extern const char str_songOptions[];
 //==============================================================================
 
 paletteColor_t getChannelColor(int32_t channel);
+void setSequencerScreen(sequencerScreen_t screen);
 
 #endif

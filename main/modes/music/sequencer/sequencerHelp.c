@@ -202,7 +202,7 @@ void buttonSequencerHelp(sequencerVars_t* sv, buttonEvt_t* evt)
                 }
                 else
                 {
-                    sv->screen = SEQUENCER_MENU;
+                    setSequencerScreen(SEQUENCER_MENU);
                 }
                 break;
             }
@@ -214,7 +214,7 @@ void buttonSequencerHelp(sequencerVars_t* sv, buttonEvt_t* evt)
                 }
                 else
                 {
-                    sv->screen = SEQUENCER_MENU;
+                    setSequencerScreen(SEQUENCER_MENU);
                 }
                 break;
             }
