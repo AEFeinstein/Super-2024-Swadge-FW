@@ -796,8 +796,9 @@ static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t pla
 // - You have to think about not just how that move advances, but also how many moves away from winning we are
 static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player)
 {
-    uint16_t movesToWin = 0;
-    tttPlayer_t result  = tttCheckWinner(subgame);
+    /* uint16_t movesToWin = 0;
+    tttPlayer_t result  = */
+    tttCheckWinner(subgame);
     tttPlayer_t simulation[3][3];
 
     memcpy(simulation, subgame, sizeof(simulation));

@@ -258,6 +258,10 @@ static void moveCursor(sequencerVars_t* sv, buttonBit_t direction)
             }
             break;
         }
+        default:
+        {
+            break;
+        }
     }
 }
 
