@@ -552,5 +552,9 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
         *intensity = totalIntensity;
     }
 
+#if defined(CONFIG_HARDWARE_HOTDOG)
+    *phi = (*phi + 225) % 360;
+#endif
+
     return 1;
 }
