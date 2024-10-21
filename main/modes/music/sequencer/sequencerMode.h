@@ -57,25 +57,33 @@ typedef struct
     // Mode state
     sequencerScreen_t screen;
 
-    // Drawing
+    // Fonts
     font_t font_ibm;
     font_t font_rodin;
     font_t font_righteous;
     font_t font_righteous_outline;
+
+    // Cursor and scrolling
     vec_t cursorPos;
     vec_t gridOffset;
     vec_t gridOffsetTarget;
+    int32_t smoothScrollTimer;
+    int32_t buttonHeldTimer;
+    int32_t buttonState;
+    int32_t holdScrollTimer;
+    bool holdScrollingActive;
+
+    // Drawing measurements
     int32_t labelWidth;
     int32_t cellWidth;
     int32_t rowHeight;
     int32_t numRows;
-    int32_t smoothScrollTimer;
 
     // UI Images
     wsg_t noteWsgs[5];
     wsg_t instrumentWsgs[3];
 
-    // Scrolling
+    // Song Scrolling
     bool isPlaying;
     int32_t usPerPx;
     int32_t scrollTimer;
