@@ -25,6 +25,7 @@ static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A
 
 static vec_t getCursorScreenPos(sequencerVars_t* sv);
 static void stopSequencer(sequencerVars_t* sv);
+static void moveCursor(sequencerVars_t* sv, buttonBit_t direction);
 
 //==============================================================================
 // Functions
@@ -53,76 +54,25 @@ static vec_t getCursorScreenPos(sequencerVars_t* sv)
  */
 void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
 {
+    // Save the whole state for continuous scrolling
+    sv->buttonState = evt->state;
+
     if (evt->down)
     {
         switch (evt->button)
         {
             case PB_UP:
-            {
-                if (!sv->isPlaying && sv->cursorPos.y)
-                {
-                    // Move the cursor
-                    sv->cursorPos.y--;
-
-                    // Adjust the grid offset target to smoothly scroll
-                    if (getCursorScreenPos(sv).y < sv->rowHeight)
-                    {
-                        sv->gridOffsetTarget.y -= sv->rowHeight;
-                        if (sv->gridOffsetTarget.y < 0)
-                        {
-                            sv->gridOffsetTarget.y = 0;
-                        }
-                    }
-                }
-                break;
-            }
             case PB_DOWN:
-            {
-                if (!sv->isPlaying && sv->cursorPos.y < (NUM_PIANO_KEYS - 1))
-                {
-                    // Move the cursor
-                    sv->cursorPos.y++;
-
-                    // Adjust the grid offset target to smoothly scroll
-                    if (getCursorScreenPos(sv).y > TFT_HEIGHT - (2 * sv->rowHeight))
-                    {
-                        sv->gridOffsetTarget.y += sv->rowHeight;
-                    }
-                }
-                break;
-            }
             case PB_LEFT:
-            {
-                if (!sv->isPlaying && sv->cursorPos.x)
-                {
-                    // Move the cursor
-                    sv->cursorPos.x -= (16 / sv->songParams.grid);
-
-                    // Adjust the grid offset target to smoothly scroll
-                    if (getCursorScreenPos(sv).x < sv->labelWidth + sv->cellWidth)
-                    {
-                        sv->gridOffsetTarget.x -= sv->cellWidth;
-                        if (sv->gridOffsetTarget.x < 0)
-                        {
-                            sv->gridOffsetTarget.x = 0;
-                        }
-                    }
-                }
-                break;
-            }
             case PB_RIGHT:
             {
-                if (!sv->isPlaying)
+                // Start the hold scroll timer
+                if (sv->holdScrollTimer <= 0)
                 {
-                    // Move the cursor
-                    sv->cursorPos.x += (16 / sv->songParams.grid);
-
-                    // Adjust the grid offset target to smoothly scroll
-                    if (getCursorScreenPos(sv).x > TFT_WIDTH - sv->cellWidth)
-                    {
-                        sv->gridOffsetTarget.x += sv->cellWidth;
-                    }
+                    sv->holdScrollTimer = 500000;
                 }
+                // Move the cursor
+                moveCursor(sv, evt->button);
                 break;
             }
             case PB_A:
@@ -214,7 +164,8 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
                 }
                 else
                 {
-                    // If it's at the beginning, play
+                    // If it's at the beginning, stop again to be safe, then play
+                    stopSequencer(sv);
                     sv->isPlaying = true;
                     sv->songTimer = 0;
                 }
@@ -225,6 +176,91 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
             {
                 break;
             }
+        }
+    }
+}
+
+/**
+ * @brief Move the sequencer cursor in the given direction
+ *
+ * @param sv The entire sequencer state
+ * @param direction The direction to move the cursor
+ */
+static void moveCursor(sequencerVars_t* sv, buttonBit_t direction)
+{
+    switch (direction)
+    {
+        case PB_UP:
+        {
+            if (!sv->isPlaying && sv->cursorPos.y)
+            {
+                // Move the cursor
+                sv->cursorPos.y--;
+
+                // Adjust the grid offset target to smoothly scroll
+                if (getCursorScreenPos(sv).y < sv->rowHeight)
+                {
+                    sv->gridOffsetTarget.y -= sv->rowHeight;
+                    if (sv->gridOffsetTarget.y < 0)
+                    {
+                        sv->gridOffsetTarget.y = 0;
+                    }
+                }
+            }
+            break;
+        }
+        case PB_DOWN:
+        {
+            if (!sv->isPlaying && sv->cursorPos.y < (NUM_PIANO_KEYS - 1))
+            {
+                // Move the cursor
+                sv->cursorPos.y++;
+
+                // Adjust the grid offset target to smoothly scroll
+                if (getCursorScreenPos(sv).y > TFT_HEIGHT - (2 * sv->rowHeight))
+                {
+                    sv->gridOffsetTarget.y += sv->rowHeight;
+                }
+            }
+            break;
+        }
+        case PB_LEFT:
+        {
+            if (!sv->isPlaying && sv->cursorPos.x)
+            {
+                // Move the cursor
+                sv->cursorPos.x -= (16 / sv->songParams.grid);
+
+                // Adjust the grid offset target to smoothly scroll
+                if (getCursorScreenPos(sv).x < sv->labelWidth + sv->cellWidth)
+                {
+                    sv->gridOffsetTarget.x -= sv->cellWidth;
+                    if (sv->gridOffsetTarget.x < 0)
+                    {
+                        sv->gridOffsetTarget.x = 0;
+                    }
+                }
+            }
+            break;
+        }
+        case PB_RIGHT:
+        {
+            if (!sv->isPlaying)
+            {
+                // Move the cursor
+                sv->cursorPos.x += (16 / sv->songParams.grid);
+
+                // Adjust the grid offset target to smoothly scroll
+                if (getCursorScreenPos(sv).x > TFT_WIDTH - sv->cellWidth)
+                {
+                    sv->gridOffsetTarget.x += sv->cellWidth;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            break;
         }
     }
 }
@@ -260,9 +296,9 @@ void sequencerGridTouch(sequencerVars_t* sv)
  */
 void measureSequencerGrid(sequencerVars_t* sv)
 {
-    sv->labelWidth = textWidth(&sv->ibm, "C#7") + (2 * KEY_MARGIN);
+    sv->labelWidth = textWidth(&sv->font_ibm, "C#7") + (2 * KEY_MARGIN);
     sv->cellWidth  = (4 * PX_PER_BEAT) / sv->songParams.grid;
-    sv->rowHeight  = sv->ibm.height + (2 * KEY_MARGIN) + 1;
+    sv->rowHeight  = sv->font_ibm.height + (2 * KEY_MARGIN) + 1;
     sv->numRows    = TFT_HEIGHT / sv->rowHeight;
 
     sv->usPerPx = sv->usPerBeat / PX_PER_BEAT;
@@ -291,6 +327,45 @@ void runSequencerTimers(sequencerVars_t* sv, int32_t elapsedUs)
             midiNoteOff(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, MIDI_VELOCITY);
         }
     }
+
+    // If no directions are held
+    if (!(sv->buttonState & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)))
+    {
+        // Deactivate hold scrolling
+        sv->holdScrollingActive = false;
+    }
+    // Otherwise if the timer to activate hold scrolling is running
+    else if (sv->holdScrollTimer > 0)
+    {
+        sv->holdScrollTimer -= elapsedUs;
+        if (sv->holdScrollTimer <= 0)
+        {
+            sv->holdScrollingActive = true;
+        }
+    }
+
+    // Run a timer for hold-scrolling
+    RUN_TIMER_EVERY(sv->buttonHeldTimer, 75000, elapsedUs, {
+        if (sv->holdScrollingActive)
+        {
+            if (PB_UP & sv->buttonState)
+            {
+                moveCursor(sv, PB_UP);
+            }
+            if (PB_DOWN & sv->buttonState)
+            {
+                moveCursor(sv, PB_DOWN);
+            }
+            if (PB_LEFT & sv->buttonState)
+            {
+                moveCursor(sv, PB_LEFT);
+            }
+            if (PB_RIGHT & sv->buttonState)
+            {
+                moveCursor(sv, PB_RIGHT);
+            }
+        }
+    });
 
     // Run a timer to smoothly scroll the grid offset to match the target
     RUN_TIMER_EVERY(sv->smoothScrollTimer, 16667, elapsedUs, {
@@ -403,6 +478,10 @@ void runSequencerTimers(sequencerVars_t* sv, int32_t elapsedUs)
  */
 void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
 {
+    // Turn off LEDs
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, CONFIG_NUM_LEDS);
+
     // Draw horizontal grid lines
     int32_t yOff = sv->rowHeight - 1 - sv->gridOffset.y;
     while (yOff < 0)
@@ -486,7 +565,7 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
         if (yOff + sv->rowHeight <= 0)
         {
             // Off-screen, just increment until we're on screen
-            yOff += sv->ibm.height + (2 * KEY_MARGIN) + 1;
+            yOff += sv->font_ibm.height + (2 * KEY_MARGIN) + 1;
         }
         else
         {
@@ -506,8 +585,8 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
             }
 
             // Draw the key label
-            fillDisplayArea(0, yOff - KEY_MARGIN, sv->labelWidth, yOff + sv->ibm.height + KEY_MARGIN, bgColor);
-            drawText(&sv->ibm, textColor, tmp, KEY_MARGIN, yOff);
+            fillDisplayArea(0, yOff - KEY_MARGIN, sv->labelWidth, yOff + sv->font_ibm.height + KEY_MARGIN, bgColor);
+            drawText(&sv->font_ibm, textColor, tmp, KEY_MARGIN, yOff);
             yOff += sv->rowHeight;
         }
 
@@ -553,4 +632,9 @@ static void stopSequencer(sequencerVars_t* sv)
         note->isOn            = false;
         noteNode              = noteNode->next;
     }
+
+    // Turn off example note
+    sv->exampleMidiChannel   = 0;
+    sv->exampleMidiNote      = 0;
+    sv->exampleMidiNoteTimer = 0;
 }

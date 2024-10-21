@@ -6,6 +6,8 @@
 #include "menu.h"
 #include "sequencerMode.h"
 #include "sequencerGrid.h"
+#include "sequencerHelp.h"
+#include "mainMenu.h"
 
 //==============================================================================
 // Function Declarations
@@ -25,14 +27,19 @@ static bool sequencerIsSongSaved(const char* fname);
 
 static void buildMainMenu(void);
 static void setDefaultParameters(void);
+static void buildWheelMenu(void);
 
 //==============================================================================
 // Const Variables
 //==============================================================================
 
-static const char sequencerName[] = "Sequencer";
+const char sequencerName[] = "Sequencer";
 
-static const char str_file[]      = "File";
+const char str_grid[]        = "The Grid";
+static const char str_help[] = "Help";
+static const char str_exit[] = "Exit";
+
+const char str_file[]             = "File";
 static const char str_load[]      = "Load";
 static const char str_saveAs[]    = "Save As";
 static const char str_overwrite[] = "Overwrite Save";
@@ -48,12 +55,13 @@ static const char* const str_songNames[] = {
 
 static const char str_noteOptions[] = "Note Options";
 
-static const char str_songOptions[] = "Song Options";
+const char str_songOptions[] = "Song Options";
 
 static const char str_songTempo[] = "Tempo: ";
 static const char* tempoLabels[]
-    = {"60",  "70",  "80",  "90",  "100", "110", "120", "130", "140", "150", "160", "170", "180",
-       "190", "200", "210", "220", "230", "240", "250", "260", "270", "280", "290", "300"};
+    = {"60 bpm",  "70 bpm",  "80 bpm",  "90 bpm",  "100 bpm", "110 bpm", "120 bpm", "130 bpm", "140 bpm",
+       "150 bpm", "160 bpm", "170 bpm", "180 bpm", "190 bpm", "200 bpm", "210 bpm", "220 bpm", "230 bpm",
+       "240 bpm", "250 bpm", "260 bpm", "270 bpm", "280 bpm", "290 bpm", "300 bpm"};
 static const int32_t tempoVals[] = {60,  70,  80,  90,  100, 110, 120, 130, 140, 150, 160, 170, 180,
                                     190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300};
 
@@ -62,8 +70,8 @@ static const char* gridLabels[]  = {"Whole", "Half", "Quarter", "Eighth", "Sixte
 static const int32_t gridVals[]  = {1, 2, 4, 8, 16};
 
 static const char str_songTimeSig[] = "Signature: ";
-static const char* timeSigLabels[]  = {"2/4", "3/4", "4/4", "5/4"};
-static const int32_t timeSigVals[]  = {2, 3, 4, 5};
+static const char* timeSigLabels[]  = {"2/4", "3/4", "4/4", "5/4", "6/4", "7/4"};
+static const int32_t timeSigVals[]  = {2, 3, 4, 5, 6, 7};
 
 static const char str_loop[]    = "Loop: ";
 static const char* loopLabels[] = {"On", "Off"};
@@ -117,20 +125,33 @@ static sequencerVars_t* sv;
  */
 static void sequencerEnterMode(void)
 {
+    // Make it 60fps
     setFrameRateUs(16667);
 
+    // Allocate memory for the mode
     sv = calloc(1, sizeof(sequencerVars_t));
 
-    sv->screen = SEQUENCER_SEQ;
+    // Load fonts
+    loadFont("ibm_vga8.font", &sv->font_ibm, true);
+    loadFont("rodin_eb.font", &sv->font_rodin, true);
+    loadFont("righteous_150.font", &sv->font_righteous, true);
+    makeOutlineFont(&sv->font_righteous, &sv->font_righteous_outline, true);
 
-    loadFont("ibm_vga8.font", &sv->ibm, false);
+    // Load WSGs
+    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
+    {
+        loadWsg(instrumentWsgs[i], &sv->instrumentWsgs[i], true);
+    }
 
+    // Set up menu renderer
+    sv->menuRenderer = initMenuManiaRenderer(&sv->font_righteous, &sv->font_righteous_outline, &sv->font_rodin);
+
+    // Set default parameters
     setDefaultParameters();
 
     // Build out the main menu
+    sv->bgMenu = initMenu(sequencerName, NULL);
     buildMainMenu();
-
-    sv->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     // Color the menu like Pixil
     led_t menuColor = {
@@ -146,61 +167,13 @@ static void sequencerEnterMode(void)
                              c000, c555,       // rowColor, rowTextColor
                              shadowColors, ARRAY_SIZE(shadowColors), menuColor);
 
-    //////////////////////////////////////////////////////////////////////////
+    // Show the menu by default
+    setSequencerScreen(SEQUENCER_MENU);
+
     // Initialize wheel menu
+    buildWheelMenu();
 
-    static const rectangle_t textRect = {
-        .pos.x  = 15,
-        .pos.y  = 0,
-        .width  = TFT_WIDTH - 30,
-        .height = 40,
-    };
-    sv->wheelRenderer = initWheelMenu(&sv->ibm, 90, &textRect);
-
-    wheelMenuSetColor(sv->wheelRenderer, c555);
-
-    sv->noteMenu = initMenu(str_noteOptions, sequencerNoteMenuCb);
-
-    uint8_t noteMenuPos = 0;
-
-    // Add instrument options
-    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
-    {
-        loadWsg(instrumentWsgs[i], &sv->instrumentWsgs[i], true);
-    }
-    settingParam_t sp_instrument = {
-        .min = instrumentVals[0],
-        .max = instrumentVals[ARRAY_SIZE(instrumentVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->noteMenu, str_instrument, instrumentLabels, instrumentVals,
-                                 ARRAY_SIZE(instrumentVals), &sp_instrument, 1);
-    wheelMenuSetItemInfo(sv->wheelRenderer, str_instrument, &sv->instrumentWsgs[0], noteMenuPos++, SCROLL_VERT);
-    wheelMenuSetItemColor(sv->wheelRenderer, str_instrument, instrumentColors[0], instrumentColors[0]);
-
-    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
-    {
-        wheelMenuSetItemInfo(sv->wheelRenderer, instrumentLabels[i], &sv->instrumentWsgs[i], i, NO_SCROLL);
-        wheelMenuSetItemColor(sv->wheelRenderer, instrumentLabels[i], instrumentColors[i], instrumentColors[i]);
-    }
-
-    // Add note type options
-    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
-    {
-        loadWsg(noteWsgs[i], &sv->noteWsgs[i], true);
-    }
-    settingParam_t sp_noteType = {
-        .min = noteTypeVals[0],
-        .max = noteTypeVals[ARRAY_SIZE(noteTypeVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->noteMenu, str_noteType, noteTypeLabels, noteTypeVals, ARRAY_SIZE(noteTypeVals),
-                                 &sp_noteType, 4);
-    wheelMenuSetItemInfo(sv->wheelRenderer, str_noteType, &sv->noteWsgs[2], noteMenuPos++, SCROLL_VERT);
-
-    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
-    {
-        wheelMenuSetItemInfo(sv->wheelRenderer, noteTypeLabels[i], &sv->noteWsgs[i], i, NO_SCROLL);
-    }
-
+    // Measure the grid
     measureSequencerGrid(sv);
 
     // Init midi
@@ -209,16 +182,14 @@ static void sequencerEnterMode(void)
     // Configure MIDI for streaming
     player->mode              = MIDI_STREAMING;
     player->streamingCallback = NULL;
-
     midiGmOn(player);
+    midiPause(player, false);
 
     // Set each instrument
     for (int32_t ch = 0; ch < ARRAY_SIZE(instrumentVals); ch++)
     {
         midiSetProgram(player, ch, instrumentPrograms[ch]);
     }
-
-    midiPause(player, false);
 
     // Start in the middle of the piano
     sv->cursorPos.y        = NUM_PIANO_KEYS / 2;
@@ -255,7 +226,7 @@ static void buildMainMenu(void)
         deinitMenu(sv->songMenu);
     }
 
-    sv->songMenu = initMenu(str_songOptions, sequencerSongMenuCb);
+    sv->songMenu = initMenu(sequencerName, sequencerSongMenuCb);
 
     // Start a submenu for file operations
     sv->songMenu = startSubMenu(sv->songMenu, str_file);
@@ -303,40 +274,102 @@ static void buildMainMenu(void)
     }
     sv->songMenu = endSubMenu(sv->songMenu);
 
-    // Add option for tempo
-    settingParam_t sp_tempo = {
-        .min = tempoVals[0],
-        .max = tempoVals[ARRAY_SIZE(tempoVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_songTempo, tempoLabels, tempoVals, ARRAY_SIZE(tempoVals), &sp_tempo,
-                                 sv->songParams.tempo);
+    sv->songMenu = startSubMenu(sv->songMenu, str_songOptions);
+    {
+        // Add option for tempo
+        settingParam_t sp_tempo = {
+            .min = tempoVals[0],
+            .max = tempoVals[ARRAY_SIZE(tempoVals) - 1],
+        };
+        addSettingsOptionsItemToMenu(sv->songMenu, str_songTempo, tempoLabels, tempoVals, ARRAY_SIZE(tempoVals),
+                                     &sp_tempo, sv->songParams.tempo);
 
-    // Add option for grid marks
-    settingParam_t sp_grid = {
-        .min = gridVals[0],
-        .max = gridVals[ARRAY_SIZE(gridVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_songGrid, gridLabels, gridVals, ARRAY_SIZE(gridVals), &sp_grid,
-                                 sv->songParams.grid);
+        // Add option for grid marks
+        settingParam_t sp_grid = {
+            .min = gridVals[0],
+            .max = gridVals[ARRAY_SIZE(gridVals) - 1],
+        };
+        addSettingsOptionsItemToMenu(sv->songMenu, str_songGrid, gridLabels, gridVals, ARRAY_SIZE(gridVals), &sp_grid,
+                                     sv->songParams.grid);
 
-    // Add option for time signature
-    settingParam_t sp_timeSig = {
-        .min = timeSigVals[0],
-        .max = timeSigVals[ARRAY_SIZE(timeSigVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
-                                 &sp_timeSig, sv->songParams.timeSig);
+        // Add option for time signature
+        settingParam_t sp_timeSig = {
+            .min = timeSigVals[0],
+            .max = timeSigVals[ARRAY_SIZE(timeSigVals) - 1],
+        };
+        addSettingsOptionsItemToMenu(sv->songMenu, str_songTimeSig, timeSigLabels, timeSigVals, ARRAY_SIZE(timeSigVals),
+                                     &sp_timeSig, sv->songParams.timeSig);
 
-    // Add option for Looping
-    settingParam_t sp_loop = {
-        .min = loopVals[0],
-        .max = loopVals[ARRAY_SIZE(loopVals) - 1],
-    };
-    addSettingsOptionsItemToMenu(sv->songMenu, str_loop, loopLabels, loopVals, ARRAY_SIZE(loopVals), &sp_loop,
-                                 sv->songParams.loop);
+        // Add option for Looping
+        settingParam_t sp_loop = {
+            .min = loopVals[0],
+            .max = loopVals[ARRAY_SIZE(loopVals) - 1],
+        };
+        addSettingsOptionsItemToMenu(sv->songMenu, str_loop, loopLabels, loopVals, ARRAY_SIZE(loopVals), &sp_loop,
+                                     sv->songParams.loop);
 
-    // Add option to mark the song end
-    addSingleItemToMenu(sv->songMenu, str_songEnd);
+        // Add option to mark the song end
+        addSingleItemToMenu(sv->songMenu, str_songEnd);
+    }
+    sv->songMenu = endSubMenu(sv->songMenu);
+
+    addSingleItemToMenu(sv->songMenu, str_grid);
+    addSingleItemToMenu(sv->songMenu, str_help);
+    addSingleItemToMenu(sv->songMenu, str_exit);
+}
+
+/**
+ * @brief Build out the wheel menu with note options
+ */
+static void buildWheelMenu(void)
+{
+    static const rectangle_t textRect = {
+        .pos.x  = 15,
+        .pos.y  = 0,
+        .width  = TFT_WIDTH - 30,
+        .height = 40,
+    };
+    sv->wheelRenderer = initWheelMenu(&sv->font_ibm, 90, &textRect);
+
+    wheelMenuSetColor(sv->wheelRenderer, c555);
+
+    sv->noteMenu = initMenu(str_noteOptions, sequencerNoteMenuCb);
+
+    uint8_t noteMenuPos = 0;
+
+    // Add instrument options
+    settingParam_t sp_instrument = {
+        .min = instrumentVals[0],
+        .max = instrumentVals[ARRAY_SIZE(instrumentVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(sv->noteMenu, str_instrument, instrumentLabels, instrumentVals,
+                                 ARRAY_SIZE(instrumentVals), &sp_instrument, 1);
+    wheelMenuSetItemInfo(sv->wheelRenderer, str_instrument, &sv->instrumentWsgs[0], noteMenuPos++, SCROLL_VERT);
+    wheelMenuSetItemColor(sv->wheelRenderer, str_instrument, instrumentColors[0], instrumentColors[0]);
+
+    for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
+    {
+        wheelMenuSetItemInfo(sv->wheelRenderer, instrumentLabels[i], &sv->instrumentWsgs[i], i, NO_SCROLL);
+        wheelMenuSetItemColor(sv->wheelRenderer, instrumentLabels[i], instrumentColors[i], instrumentColors[i]);
+    }
+
+    // Add note type options
+    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
+    {
+        loadWsg(noteWsgs[i], &sv->noteWsgs[i], true);
+    }
+    settingParam_t sp_noteType = {
+        .min = noteTypeVals[0],
+        .max = noteTypeVals[ARRAY_SIZE(noteTypeVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(sv->noteMenu, str_noteType, noteTypeLabels, noteTypeVals, ARRAY_SIZE(noteTypeVals),
+                                 &sp_noteType, 4);
+    wheelMenuSetItemInfo(sv->wheelRenderer, str_noteType, &sv->noteWsgs[2], noteMenuPos++, SCROLL_VERT);
+
+    for (uint32_t i = 0; i < ARRAY_SIZE(noteTypeVals); i++)
+    {
+        wheelMenuSetItemInfo(sv->wheelRenderer, noteTypeLabels[i], &sv->noteWsgs[i], i, NO_SCROLL);
+    }
 }
 
 /**
@@ -349,6 +382,18 @@ static void sequencerExitMode(void)
     {
         sequencerSaveSong(sv->loadedSong);
     }
+    else
+    {
+        // Try to find an unused slot and save in it
+        for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(str_songNames); sIdx++)
+        {
+            if (!sequencerIsSongSaved(str_songNames[sIdx]))
+            {
+                sequencerSaveSong(str_songNames[sIdx]);
+                break;
+            }
+        }
+    }
 
     void* val;
     while ((val = pop(&sv->notes)))
@@ -356,9 +401,13 @@ static void sequencerExitMode(void)
         free(val);
     }
 
-    freeFont(&sv->ibm);
+    freeFont(&sv->font_ibm);
+    freeFont(&sv->font_righteous);
+    freeFont(&sv->font_righteous_outline);
+    freeFont(&sv->font_rodin);
     deinitMenuManiaRenderer(sv->menuRenderer);
     deinitMenu(sv->songMenu);
+    deinitMenu(sv->bgMenu);
 
     deinitWheelMenu(sv->wheelRenderer);
     deinitMenu(sv->noteMenu);
@@ -392,11 +441,13 @@ static void sequencerMainLoop(int64_t elapsedUs)
         {
             if (SEQUENCER_MENU == sv->screen)
             {
-                sv->screen = SEQUENCER_SEQ;
+                globalMidiPlayerResumeAll();
+                setSequencerScreen(SEQUENCER_SEQ);
             }
             else
             {
-                sv->screen = SEQUENCER_MENU;
+                globalMidiPlayerPauseAll();
+                setSequencerScreen(SEQUENCER_MENU);
             }
         }
         else
@@ -406,11 +457,21 @@ static void sequencerMainLoop(int64_t elapsedUs)
                 case SEQUENCER_MENU:
                 {
                     sv->songMenu = menuButton(sv->songMenu, evt);
+                    if (sv->upOneMenuLevel)
+                    {
+                        sv->upOneMenuLevel = false;
+                        sv->songMenu       = sv->songMenu->parentMenu;
+                    }
                     break;
                 }
                 case SEQUENCER_SEQ:
                 {
                     sequencerGridButton(sv, &evt);
+                    break;
+                }
+                case SEQUENCER_HELP:
+                {
+                    buttonSequencerHelp(sv, &evt);
                     break;
                 }
             }
@@ -437,6 +498,11 @@ static void sequencerMainLoop(int64_t elapsedUs)
             sequencerGridTouch(sv);
             runSequencerTimers(sv, elapsedUs);
             drawSequencerGrid(sv, elapsedUs);
+            break;
+        }
+        case SEQUENCER_HELP:
+        {
+            drawSequencerHelp(sv, elapsedUs);
             break;
         }
     }
@@ -469,87 +535,132 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 static void sequencerSongMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     bool returnToGrid = false;
+
+    // These menu options change when scrolling
     if (str_songTempo == label)
     {
         sv->songParams.tempo = settingVal;
         sv->usPerBeat        = (60 * 1000000) / sv->songParams.tempo;
-        returnToGrid         = true;
+        measureSequencerGrid(sv);
+        returnToGrid = selected;
     }
     else if (str_songGrid == label)
     {
         sv->songParams.grid = settingVal;
-        returnToGrid        = true;
+        measureSequencerGrid(sv);
+        returnToGrid = selected;
     }
     else if (str_songTimeSig == label)
     {
         sv->songParams.timeSig = settingVal;
-        returnToGrid           = true;
+        measureSequencerGrid(sv);
+        returnToGrid = selected;
     }
     else if (str_loop == label)
     {
         sv->songParams.loop = settingVal;
-        returnToGrid        = true;
-    }
-    else if (str_songEnd == label)
-    {
-        sv->songParams.songEnd = sv->cursorPos.x;
-        returnToGrid           = true;
-    }
-    else if (str_reset == label)
-    {
-        // reset track
-        sv->loadedSong = NULL;
-        void* val;
-        while ((val = pop(&sv->notes)))
-        {
-            free(val);
-        }
-        returnToGrid = true;
-
-        // Reset parameters
-        setDefaultParameters();
-        sv->rebuildMenu = true;
-    }
-    else if (selected && sv->str_save == label)
-    {
-        // Save with loaded label
-        sequencerSaveSong(sv->loadedSong);
-        sv->rebuildMenu = true;
-        returnToGrid    = true;
+        measureSequencerGrid(sv);
+        returnToGrid = selected;
     }
     else if (selected)
     {
-        // Check if a song for saving or loading was selected
-        for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(str_songNames); sIdx++)
+        // These menu options need to be selected, not just scrolled to
+        if (str_songEnd == label)
         {
-            if (str_songNames[sIdx] == label)
+            sv->songParams.songEnd = sv->cursorPos.x;
+            measureSequencerGrid(sv);
+            returnToGrid = true;
+        }
+        else if (str_reset == label)
+        {
+            // reset track
+            sv->loadedSong = NULL;
+            void* val;
+            while ((val = pop(&sv->notes)))
             {
-                if (str_load == sv->songMenu->title)
+                free(val);
+            }
+            returnToGrid = true;
+
+            // Reset parameters
+            setDefaultParameters();
+            measureSequencerGrid(sv);
+            sv->rebuildMenu = true;
+        }
+        else if (sv->str_save == label)
+        {
+            // Save with loaded label
+            sequencerSaveSong(sv->loadedSong);
+            sv->rebuildMenu = true;
+            returnToGrid    = true;
+        }
+        else if (str_exit == label)
+        {
+            // Exit to the main menu
+            switchToSwadgeMode(&mainMenuMode);
+        }
+        else if (str_grid == label)
+        {
+            returnToGrid = true;
+        }
+        else if (str_help == label)
+        {
+            // Show help
+            setSequencerScreen(SEQUENCER_HELP);
+            sv->helpIdx = 0;
+        }
+        else if (str_overwrite == label)
+        {
+            // Save the song
+            sv->loadedSong = sv->songMenu->title;
+            sprintf(sv->str_save, "Save %s", sv->loadedSong);
+            sequencerSaveSong(sv->loadedSong);
+            sv->rebuildMenu = true;
+            returnToGrid    = true;
+        }
+        else if (str_cancel == label)
+        {
+            // Flag to go one level up
+            sv->upOneMenuLevel = true;
+        }
+        else // This checks song name labels in a loop
+        {
+            // Check if a song for saving or loading was selected
+            for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(str_songNames); sIdx++)
+            {
+                if (str_songNames[sIdx] == label)
                 {
-                    sv->loadedSong = label;
-                    sprintf(sv->str_save, "Save %s", sv->loadedSong);
-                    sequencerLoadSong(label);
-                    sv->rebuildMenu = true;
-                    returnToGrid    = true;
+                    if (str_load == sv->songMenu->title)
+                    {
+                        sv->loadedSong = label;
+                        sprintf(sv->str_save, "Save %s", sv->loadedSong);
+                        sequencerLoadSong(sv->loadedSong);
+                        sv->rebuildMenu = true;
+                        returnToGrid    = true;
+                    }
+                    else if (str_saveAs == sv->songMenu->title)
+                    {
+                        // If this is the Save As menu and there's no overwrite warning
+                        menuItem_t* cItem = sv->songMenu->currentItem->val;
+                        if (NULL == cItem->subMenu)
+                        {
+                            // Save the song
+                            sv->loadedSong = label;
+                            sprintf(sv->str_save, "Save %s", sv->loadedSong);
+                            sequencerSaveSong(sv->loadedSong);
+                            sv->rebuildMenu = true;
+                            returnToGrid    = true;
+                        }
+                    }
+                    break;
                 }
-                else if (str_saveAs == sv->songMenu->title)
-                {
-                    sv->loadedSong = label;
-                    sprintf(sv->str_save, "Save %s", sv->loadedSong);
-                    sequencerSaveSong(label);
-                    sv->rebuildMenu = true;
-                    returnToGrid    = true;
-                }
-                break;
             }
         }
     }
 
-    measureSequencerGrid(sv);
-
-    if (selected && returnToGrid)
+    if (returnToGrid)
     {
-        sv->screen = SEQUENCER_SEQ;
+        setSequencerScreen(SEQUENCER_SEQ);
     }
 }
 
@@ -674,6 +785,10 @@ static void sequencerLoadSong(const char* fname)
         memcpy(&sv->songParams, &blob[blobIdx], sizeof(sv->songParams));
         blobIdx += sizeof(sv->songParams);
 
+        // Recalculate after load
+        sv->usPerBeat = (60 * 1000000) / sv->songParams.tempo;
+        measureSequencerGrid(sv);
+
         // Read note parameters from the blob
         memcpy(&sv->noteParams, &blob[blobIdx], sizeof(sv->noteParams));
         blobIdx += sizeof(sv->noteParams);
@@ -701,5 +816,28 @@ static void sequencerLoadSong(const char* fname)
 
         // Free the blob
         free(blob);
+    }
+}
+
+/**
+ * @brief Set the sequencer screen and LEDs appropriately
+ *
+ * @param screen The new screen to show
+ */
+void setSequencerScreen(sequencerScreen_t screen)
+{
+    sv->screen = screen;
+
+    if (SEQUENCER_HELP == screen)
+    {
+        // Turn off LEDs for help
+        setManiaLedsOn(sv->menuRenderer, false);
+        led_t leds[CONFIG_NUM_LEDS] = {0};
+        setLeds(leds, CONFIG_NUM_LEDS);
+    }
+    else
+    {
+        // Turn on LEDs for other screens
+        setManiaLedsOn(sv->menuRenderer, true);
     }
 }
