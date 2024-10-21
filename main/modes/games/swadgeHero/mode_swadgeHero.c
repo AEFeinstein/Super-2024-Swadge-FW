@@ -76,6 +76,7 @@ static void shEnterMode(void)
     loadFont("righteous_150.font", &shv->righteous, false);
     loadFont("rodin_eb.font", &shv->rodin, false);
 
+    // TODO import new blinking icons
     const char* icons[] = {"sh_left.wsg", "sh_down.wsg", "sh_up.wsg", "sh_right.wsg", "sh_b.wsg", "sh_a.wsg"};
     for (int32_t i = 0; i < ARRAY_SIZE(shv->icons); i++)
     {
