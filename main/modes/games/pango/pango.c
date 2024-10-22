@@ -57,6 +57,10 @@ static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
 
+const char* characterSelectOptions[]   = {"Pango", "Po", "Pixel", "Polly"};
+const int32_t characterSelectOptionValues[]   = {PA_PLAYER_CHARACTER_PANGO, PA_PLAYER_CHARACTER_PO, PA_PLAYER_CHARACTER_PIXEL, PA_PLAYER_CHARACTER_GIRL};
+#define NUM_CHARACTERS 4
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -186,8 +190,8 @@ static const char str_do_your_best[] = "Hotdog Heroes";
 static const char str_pause[]        = "-Pause-";
 
 static const char pangoMenuNewGame[]       = "New Game";
-static const char pangoMenuContinue[]      = "Continue - Lv";
-static const char pangoMenuCharacter[]     = "Character";
+static const char pangoMenuContinue[]      = "Continue - Rd";
+static const char pangoMenuCharacter[]     = "Character: ";
 static const char pangoMenuHighScores[]    = "High Scores";
 static const char pangoMenuResetScores[]   = "Reset Scores";
 static const char pangoMenuResetProgress[] = "Reset Progress";
@@ -226,6 +230,15 @@ void pangoEnterMode(void)
 
     loadFont("pango-fw.font", &pango->font, false);
     pango->menuRenderer = initMenuManiaRenderer(&pango->font, &pango->font, &pango->font);
+
+    led_t ledColor                             = {.r = 0xf0, .g = 0xf0, .b = 0x00};
+    recolorMenuManiaRenderer(pango->menuRenderer,     //
+                             c200, c555, c555, // Title colors (bg, text, outline)
+                             c000,             // Background
+                             c110, c100,       // Rings
+                             c003, c555,       // Rows
+                             highScoreNewEntryColors, ARRAY_SIZE(highScoreNewEntryColors), ledColor);
+    setManiaLedsOn(pango->menuRenderer, true);
 
     pa_initializeWsgManager(&(pango->wsgManager));
 
@@ -346,7 +359,12 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
     }
     else
     {
-        // soundPlaySfx(&(pango->soundManager.hit3), BZR_STEREO);
+        if (label == pangoMenuCharacter){
+            pango->gameData.playerCharacter = settingVal;
+            pa_remapPlayerCharacter(&(pango->wsgManager), 16 * settingVal);
+        }
+
+        soundPlaySfx(&(pango->soundManager.sndMenuConfirm), BZR_STEREO);
     }
 }
 
@@ -416,7 +434,7 @@ void pangoBuildMainMenu(pango_t* self)
         .max = 3,
         .key = NULL,
     };
-    addSettingsItemToMenu(pango->menu, pangoMenuCharacter, &characterSettingBounds, 0);
+    addSettingsOptionsItemToMenu(pango->menu, pangoMenuCharacter, characterSelectOptions, characterSelectOptionValues, NUM_CHARACTERS, &characterSettingBounds, pango->gameData.playerCharacter);
 
     addSingleItemToMenu(pango->menu, pangoMenuHighScores);
 
@@ -436,6 +454,7 @@ static void pangoUpdateMainMenu(pango_t* self, int64_t elapsedUs)
 {
     // Draw the menu
     drawMenuMania(pango->menu, pango->menuRenderer, elapsedUs);
+    drawWsgSimple(pango->wsgManager.sprites[PA_SP_PLAYER_ICON].wsg, 224, 136);
 }
 
 void updateGame(pango_t* self, int64_t elapsedUs)
