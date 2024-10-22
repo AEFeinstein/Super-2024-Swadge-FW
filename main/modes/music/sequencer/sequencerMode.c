@@ -395,6 +395,8 @@ static void sequencerExitMode(void)
         }
     }
 
+    deinitGlobalMidiPlayer();
+
     void* val;
     while ((val = pop(&sv->notes)))
     {
@@ -441,12 +443,10 @@ static void sequencerMainLoop(int64_t elapsedUs)
         {
             if (SEQUENCER_MENU == sv->screen)
             {
-                globalMidiPlayerResumeAll();
                 setSequencerScreen(SEQUENCER_SEQ);
             }
             else
             {
-                globalMidiPlayerPauseAll();
                 setSequencerScreen(SEQUENCER_MENU);
             }
         }
@@ -827,6 +827,15 @@ static void sequencerLoadSong(const char* fname)
 void setSequencerScreen(sequencerScreen_t screen)
 {
     sv->screen = screen;
+
+    if (SEQUENCER_SEQ == sv->screen)
+    {
+        globalMidiPlayerResumeAll();
+    }
+    else
+    {
+        globalMidiPlayerPauseAll();
+    }
 
     if (SEQUENCER_HELP == screen)
     {

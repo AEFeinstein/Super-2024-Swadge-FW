@@ -11,7 +11,7 @@
 #define KEY_MARGIN  2
 #define PX_PER_BEAT 16
 
-#define MIDI_VELOCITY 0xFF
+#define MIDI_VELOCITY 0x7F
 
 //==============================================================================
 // Variables
@@ -178,6 +178,16 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
             }
         }
     }
+    // else Something was released
+    {
+        // If no directions are held
+        if (!(sv->buttonState & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)))
+        {
+            // Deactivate hold scrolling
+            sv->holdScrollingActive = false;
+            sv->holdScrollTimer     = 0;
+        }
+    }
 }
 
 /**
@@ -328,14 +338,8 @@ void runSequencerTimers(sequencerVars_t* sv, int32_t elapsedUs)
         }
     }
 
-    // If no directions are held
-    if (!(sv->buttonState & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)))
-    {
-        // Deactivate hold scrolling
-        sv->holdScrollingActive = false;
-    }
-    // Otherwise if the timer to activate hold scrolling is running
-    else if (sv->holdScrollTimer > 0)
+    // If the timer to activate hold scrolling is running
+    if (sv->holdScrollTimer > 0)
     {
         sv->holdScrollTimer -= elapsedUs;
         if (sv->holdScrollTimer <= 0)
@@ -618,8 +622,7 @@ static void stopSequencer(sequencerVars_t* sv)
     sv->isPlaying = false;
 
     // Stop MIDI
-    midiPlayerReset(globalMidiPlayerGet(MIDI_BGM));
-    midiPause(globalMidiPlayerGet(MIDI_BGM), false);
+    midiAllSoundOff(globalMidiPlayerGet(MIDI_BGM));
 
     // Stop here
     sv->gridOffsetTarget.x = sv->gridOffset.x;
