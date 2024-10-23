@@ -81,7 +81,7 @@ typedef struct
 
     // UI Images
     wsg_t noteWsgs[5];
-    wsg_t instrumentWsgs[3];
+    wsg_t instrumentWsgs[6];
 
     // Song Scrolling
     bool isPlaying;

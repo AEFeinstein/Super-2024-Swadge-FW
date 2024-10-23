@@ -79,12 +79,13 @@ static const int32_t loopVals[] = {true, false};
 
 static const char str_songEnd[] = "End Song Here";
 
-static const char str_instrument[]             = "Instrument: ";
-static const char* instrumentLabels[]          = {"Piano", "Guitar", "Drums"};
-static const int32_t instrumentVals[]          = {0, 1, 2};
-static const int32_t instrumentPrograms[]      = {0, 26, 13}; // TODO Pick better instruments
-static const char* const instrumentWsgs[]      = {"seq_piano.wsg", "seq_guitar.wsg", "seq_drums.wsg"};
-static const paletteColor_t instrumentColors[] = {c500, c050, c005};
+static const char str_instrument[]        = "Instrument: ";
+static const char* instrumentLabels[]     = {"Piano", "Guitar", "Cello", "Trumpet", "Clarinet", "Ocarina"};
+static const int32_t instrumentVals[]     = {0, 1, 2, 3, 4, 5};
+static const int32_t instrumentPrograms[] = {2, 31, 42, 56, 71, 79}; // TODO Pick better instruments
+static const char* const instrumentWsgs[]
+    = {"seq_piano.wsg", "seq_guitar.wsg", "seq_cello.wsg", "seq_trumpet.wsg", "seq_clarinet.wsg", "seq_ocarina.wsg"};
+static const paletteColor_t instrumentColors[] = {c500, c330, c050, c033, c005, c303};
 
 static const char str_noteType[]    = "Note: ";
 static const char* noteTypeLabels[] = {"Whole", "Half", "Quarter", "Eighth", "Sixteenth"};
