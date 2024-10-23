@@ -144,11 +144,11 @@ static void bb_EnterMode(void)
 
     bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000);
-    bigbug->gameData.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
+    bigbug->gameData.camera.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
 
     bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000);
-    bigbug->gameData.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
+    bigbug->gameData.camera.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
 
     bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
@@ -208,14 +208,14 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // accelIntegrate(); only needed if using accelerometer for something
     // SETUP_FOR_TURBO(); only needed if drawing individual pixels
-    if (bigbug->gameData.camera.pos.y >= 100)
+    if (bigbug->gameData.camera.camera.pos.y >= 100)
     {
         fillDisplayArea(x, y, x + w, y + h, c000);
     }
-    else if (bigbug->gameData.camera.pos.y < -999)
+    else if (bigbug->gameData.camera.camera.pos.y < -999)
     {
         // Normalize position from 0 (at -1000) to 1 (at -200)
-        float normalizedPos = ((bigbug->gameData.camera.pos.y < -10000 ? -10000 : bigbug->gameData.camera.pos.y) + 10000) / 9000.0f;
+        float normalizedPos = ((bigbug->gameData.camera.camera.pos.y < -10000 ? -10000 : bigbug->gameData.camera.camera.pos.y) + 10000) / 9000.0f;
 
         // Calculate the total number of decrements (since the max RGB is 4, 5, 5)
         int totalSteps = 14;  // 4 + 5 + 5 = 14 decrement steps
@@ -274,21 +274,21 @@ static void bb_DrawScene(void)
     if (bigbug->gameData.entityManager.playerEntity != NULL)
     {
         vec_t garbotnikDrawPos = {.x = (bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS)
-                                       - bigbug->gameData.camera.pos.x - 18,
+                                       - bigbug->gameData.camera.camera.pos.x - 18,
                                   .y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS)
-                                       - bigbug->gameData.camera.pos.y - 17};
-        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &garbotnikDrawPos,
+                                       - bigbug->gameData.camera.camera.pos.y - 17};
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera.camera, &garbotnikDrawPos,
                        &((bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data)->yaw,
                        &bigbug->gameData.entityManager);
     }
     else
     {
-        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera, &(vec_t){0, 0}, &(vec_t){0, 0},
+        bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera.camera, &(vec_t){0, 0}, &(vec_t){0, 0},
                        &bigbug->gameData.entityManager);
     }
-    bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->gameData.camera);
+    bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->gameData.camera.camera);
 
-    bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera);
+    bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera.camera);
 }
 
 /**
@@ -324,7 +324,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
-        bb_updateEntities(&(bigbug->gameData.entityManager), &(bigbug->gameData.camera));
+        bb_updateEntities(&(bigbug->gameData.entityManager), &(bigbug->gameData.camera.camera));
 
         bb_UpdateTileSupport();
 
@@ -344,8 +344,8 @@ static void bb_Reset(void)
     printf("The width is: %d\n", FIELD_WIDTH);
     printf("The height is: %d\n", FIELD_HEIGHT);
 
-    bigbug->gameData.camera.width  = FIELD_WIDTH;
-    bigbug->gameData.camera.height = FIELD_HEIGHT;
+    bigbug->gameData.camera.camera.width  = FIELD_WIDTH;
+    bigbug->gameData.camera.camera.height = FIELD_HEIGHT;
 }
 
 /**

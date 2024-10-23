@@ -21,6 +21,7 @@ typedef struct bb_t bb_t;
 typedef struct bb_entity_t bb_entity_t;
 typedef struct bb_tilemap_t bb_tilemap_t;
 typedef struct bb_hitInfo_t bb_hitInfo_t;
+typedef struct bb_camera_t bb_camera_t;
 typedef struct bb_gameData_t bb_gameData_t;
 typedef struct bb_tileInfo_t bb_tileInfo_t;
 
@@ -42,6 +43,7 @@ typedef enum
     BUTT,
     BB_MENU, // Various sprites loaded as frames to create the parallax main menu
     WILE, // A metal ball that is thrown
+    NO_SPRITE_STAR // a single white pixel for aesthetic beauty.
 } bb_spriteDef_t;
 
 typedef enum

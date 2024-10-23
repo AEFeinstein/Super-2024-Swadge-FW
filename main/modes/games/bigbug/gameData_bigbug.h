@@ -24,6 +24,12 @@
 // Structs
 //==============================================================================
 
+struct bb_camera_t
+{
+    rectangle_t camera;
+    vec_t velocity; //stored retroactivelly to drive the starfield
+};
+
 struct bb_gameData_t
 {
     int32_t elapsedUs;
@@ -37,7 +43,7 @@ struct bb_gameData_t
     int32_t touchX;
     int32_t touchY;
 
-    rectangle_t camera;
+    bb_camera_t camera;
 
     uint8_t gameState;
     uint8_t changeState;

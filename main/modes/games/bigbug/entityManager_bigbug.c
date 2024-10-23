@@ -260,6 +260,28 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
     }
 }
 
+void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
+{
+    if(camera->camera.pos.y < -1000)
+    {
+        int8_t halfWidth = HALF_WIDTH >> DECIMAL_BITS;
+        int8_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
+        if(bb_randomInt(1, 500) < (camera->velocity.x > 0 ? camera->velocity.x : -camera->velocity.x) * camera->camera.width)
+        {
+            
+            bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
+            camera->velocity.x > 0 ? camera->camera.pos.x + halfWidth : camera->camera.pos.x - halfWidth,
+            camera->camera.pos.y + bb_randomInt(-halfHeight, halfHeight));
+        }
+        if(bb_randomInt(1, 500) < (camera->velocity.y > 0 ? camera->velocity.y : -camera->velocity.y) * camera->camera.height)
+        {
+            bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
+            camera->camera.pos.x + bb_randomInt(-halfWidth, halfWidth),
+            camera->velocity.y > 0 ? camera->camera.pos.y + halfHeight : camera->camera.pos.y - halfHeight);
+        }
+    }
+}
+
 void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
@@ -426,6 +448,7 @@ bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
 
 void bb_viewFollowEntity(bb_entity_t* entity, rectangle_t* camera)
 {
+    vec_t previousCamPos = camera->pos;
     // Update the camera's position to catch up to the player
     if (((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - camera->pos.x < -15)
     {
@@ -444,6 +467,7 @@ void bb_viewFollowEntity(bb_entity_t* entity, rectangle_t* camera)
     {
         camera->pos.y = ((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
     }
+    camera->pos = subVec2d(camera->pos, previousCamPos);
 }
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
@@ -692,6 +716,14 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             entity->updateFunction = &bb_updateMenu;
             entity->drawFunction = &bb_drawMenu;
+            break;
+        }
+        case NO_SPRITE_STAR:
+        {
+            bb_starData_t* sData = heap_caps_calloc(1, sizeof(bb_starData_t), MALLOC_CAP_SPIRAM);
+            sData->parallaxDenominator = bb_randomInt(1,20);
+            entity->data = sData;
+            entity->updateFarFunction = bb_updateFarStar;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

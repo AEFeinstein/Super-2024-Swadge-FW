@@ -631,6 +631,11 @@ void bb_updateFarEggleaves(bb_entity_t* self)
     bb_destroyEntity(self, false);
 }
 
+void bb_updateFarStar(bb_entity_t* self)
+{
+    bb_destroyEntity(self, false);
+}
+
 void bb_updateBug(bb_entity_t* self)
 {
 }
@@ -769,10 +774,9 @@ void bb_drawMenu(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 {
     int16_t xDrawPos = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
 
-    int32_t yDrawPosFront = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY;
-    int32_t YDrawPosBack =  yDrawPosFront - camera->pos.y - (yDrawPosFront - camera->pos.y)/3;
-    int32_t YDrawPosMid =   yDrawPosFront - camera->pos.y - (yDrawPosFront - camera->pos.y)/2;
-    yDrawPosFront -= camera->pos.y;
+    int32_t yDrawPosFront = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+    int32_t YDrawPosBack =  yDrawPosFront - yDrawPosFront/3;
+    int32_t YDrawPosMid =   yDrawPosFront - yDrawPosFront/2;
 
     //Background
     drawWsgSimple(&entityManager->sprites[BB_MENU].frames[0],
@@ -786,6 +790,17 @@ void bb_drawMenu(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
     //Foreground
     drawWsgSimple(&entityManager->sprites[BB_MENU].frames[3],
                     xDrawPos, yDrawPosFront+97);
+}
+
+void bb_drawStar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_starData_t* sData = (bb_starData_t*)self->data;
+    int16_t xDrawPos = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    xDrawPos =  xDrawPos - xDrawPos/sData->parallaxDenominator;
+    int32_t yDrawPos = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+    yDrawPos =  yDrawPos - yDrawPos/sData->parallaxDenominator;
+
+    drawLineFast(xDrawPos, yDrawPos, xDrawPos, yDrawPos, c555);
 }
 
 

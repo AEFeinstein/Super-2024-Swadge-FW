@@ -61,6 +61,11 @@ typedef struct
     uint8_t selectionIdx;
 } bb_menuData_t;
 
+typedef struct
+{
+    uint8_t parallaxDenominator;
+}bb_starData_t;
+
 
 typedef struct
 {
@@ -169,6 +174,7 @@ void bb_updateHarpoon(          bb_entity_t* self);
 void bb_updateStuckHarpoon(     bb_entity_t* self);
 void bb_updateEggLeaves(        bb_entity_t* self);
 void bb_updateFarEggleaves(     bb_entity_t* self);
+void bb_updateFarStar(          bb_entity_t* self);
 void bb_updateBug(              bb_entity_t* self);
 void bb_updateMenu(             bb_entity_t* self);
 
@@ -178,6 +184,7 @@ void bb_drawStuckHarpoon(   bb_entityManager_t* entityManager, rectangle_t* came
 void bb_drawEggLeaves(      bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawEgg(            bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawMenu(           bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawStar(           bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon( bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionRocket(  bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);

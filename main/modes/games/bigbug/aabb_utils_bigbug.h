@@ -14,9 +14,6 @@ typedef struct
     vec_t pos; // at the center
     int32_t halfWidth;
     int32_t halfHeight;
-    vec_t pos; // at the center
-    int32_t halfWidth;
-    int32_t halfHeight;
 } bb_box_t;
 
 bool bb_boxesCollide(bb_entity_t* unyielding, bb_entity_t* yielding, vec_t* previousPos, bb_hitInfo_t* hitInfo);
