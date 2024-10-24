@@ -10,9 +10,7 @@
 // Defines
 //==============================================================================
 
-#define HIT_BAR          16
-#define GAME_NOTE_HEIGHT 16
-#define GAME_NOTE_WIDTH  24
+#define HIT_BAR 16
 
 #define SH_TEXT_TIME 500000
 
@@ -36,17 +34,17 @@ typedef struct
 // Const Variables
 //==============================================================================
 
-static const paletteColor_t colors_e[] = {c500, c330, c005, c303};
+static const paletteColor_t colors_e[] = {c333, c512, c024, c400};
 static const buttonBit_t noteToBtn_e[] = {PB_LEFT, PB_RIGHT, PB_B, PB_A};
 static const int32_t btnToNote_e[]     = {-1, -1, 0, 1, 3, 2};
 static const int32_t noteToIcon_e[]    = {0, 3, 4, 5};
 
-static const paletteColor_t colors_m[] = {c500, c033, c330, c005, c303};
+static const paletteColor_t colors_m[] = {c333, c542, c512, c024, c400};
 static const buttonBit_t noteToBtn_m[] = {PB_LEFT, PB_UP, PB_RIGHT, PB_B, PB_A};
 static const int32_t btnToNote_m[]     = {1, -1, 0, 2, 4, 3};
 static const int32_t noteToIcon_m[]    = {0, 2, 3, 4, 5};
 
-static const paletteColor_t colors_h[] = {c500, c050, c033, c330, c005, c303};
+static const paletteColor_t colors_h[] = {c333, c315, c542, c512, c024, c400};
 static const buttonBit_t noteToBtn_h[] = {PB_LEFT, PB_DOWN, PB_UP, PB_RIGHT, PB_B, PB_A};
 static const int32_t btnToNote_h[]     = {2, 1, 0, 3, 5, 4};
 static const int32_t noteToIcon_h[]    = {0, 1, 2, 3, 4, 5};
@@ -79,7 +77,7 @@ static int32_t getMultiplier(shVars_t* sh);
 static void shSongOver(void);
 static void shMissNote(shVars_t* sh);
 static void shHitNote(shVars_t* sh, int32_t baseScore);
-static int32_t getXoffset(shVars_t* sh, int32_t note);
+static int32_t getXOffset(shVars_t* sh, int32_t note);
 
 //==============================================================================
 // Functions
@@ -387,6 +385,21 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     {
         sh->nextBlinkUs += sh->tempo;
         sh->ledBaseVal = 0xFF;
+
+        // Change icons on the beat & start a timer to revert
+        sh->iconIdx     = 1;
+        sh->iconTimerUs = sh->tempo / 4;
+    }
+
+    // Run a timer for icon pulsing
+    if (sh->iconTimerUs > 0)
+    {
+        sh->iconTimerUs -= elapsedUs;
+        if (sh->iconTimerUs <= 0)
+        {
+            // Return to the normal icon
+            sh->iconIdx = 0;
+        }
     }
 
     // Check events until one hasn't happened yet or the song ends
@@ -403,8 +416,11 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             shGameNote_t* ni = heap_caps_calloc(1, sizeof(shGameNote_t), MALLOC_CAP_SPIRAM);
             ni->note         = sh->chartNotes[sh->currentChartNote].note;
 
+            // Get an icon reference for spacing
+            wsg_t* icon = &sh->icons[sh->noteToIcon[ni->note]][0];
+
             // Start the game note offscreen
-            ni->headPosY = TFT_HEIGHT + (GAME_NOTE_HEIGHT / 2);
+            ni->headPosY = TFT_HEIGHT + (icon->h / 2);
 
             // Save when the note should be hit
             ni->headTimeUs = nextEventUs;
@@ -413,7 +429,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             if (sh->chartNotes[sh->currentChartNote].hold)
             {
                 // Start the tail offscreen too
-                ni->tailPosY = TFT_HEIGHT + (GAME_NOTE_HEIGHT / 2);
+                ni->tailPosY = TFT_HEIGHT + (icon->h / 2);
 
                 // Save when the tail ends
                 int32_t tailTick = sh->chartNotes[sh->currentChartNote].tick + //
@@ -446,6 +462,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     {
         // Get a reference
         shGameNote_t* gameNote = gameNoteNode->val;
+        wsg_t* icon            = &sh->icons[sh->noteToIcon[gameNote->note]][0];
 
         // Update note position
         if (gameNote->held)
@@ -489,7 +506,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
                 shouldRemove = true;
             }
         }
-        else if (gameNote->headPosY < -(GAME_NOTE_HEIGHT / 2))
+        else if (gameNote->headPosY < -(icon->h / 2))
         {
             // There is no tail and the whole note is offscreen
             shouldRemove = true;
@@ -569,13 +586,11 @@ void shDrawGame(shVars_t* sh)
     }
 
     // Draw the target area
-    drawLineFast(0, HIT_BAR, TFT_WIDTH - 1, HIT_BAR, c555);
     for (int32_t i = 0; i < sh->numFrets; i++)
     {
-        int32_t margin  = 4;
         int32_t xOffset = ((i * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
-        drawRect(xOffset - (GAME_NOTE_WIDTH / 2) - margin, HIT_BAR - (GAME_NOTE_HEIGHT / 2) - margin, //
-                 xOffset + (GAME_NOTE_WIDTH / 2) + margin, HIT_BAR + (GAME_NOTE_HEIGHT / 2) + margin, c555);
+        wsg_t* outline  = &sh->outlines[sh->noteToIcon[i]];
+        drawWsgSimple(outline, xOffset - (outline->w / 2), HIT_BAR - (outline->h / 2));
     }
 
     // Draw all the game notes
@@ -583,7 +598,7 @@ void shDrawGame(shVars_t* sh)
     while (gameNoteNode)
     {
         shGameNote_t* gameNote = gameNoteNode->val;
-        int32_t xOffset        = getXoffset(sh, gameNote->note);
+        int32_t xOffset        = getXOffset(sh, gameNote->note);
 
         // If there is a tail
         if (gameNote->tailPosY >= 0)
@@ -594,8 +609,8 @@ void shDrawGame(shVars_t* sh)
         }
 
         // Draw the game note
-        drawWsgTile(&sh->icons[sh->noteToIcon[gameNote->note]], xOffset - (GAME_NOTE_WIDTH / 2),
-                    gameNote->headPosY - (GAME_NOTE_HEIGHT / 2));
+        wsg_t* icon = &sh->icons[sh->noteToIcon[gameNote->note]][sh->iconIdx];
+        drawWsgSimple(icon, xOffset - (icon->w / 2), gameNote->headPosY - (icon->h / 2));
 
         // Iterate
         gameNoteNode = gameNoteNode->next;
@@ -606,11 +621,9 @@ void shDrawGame(shVars_t* sh)
     {
         if (sh->btnState & sh->noteToBtn[bIdx])
         {
-            int32_t margin  = 8;
             int32_t xOffset = ((bIdx * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
-            drawRect(xOffset - (GAME_NOTE_WIDTH / 2) - margin, HIT_BAR - (GAME_NOTE_HEIGHT / 2) - margin, //
-                     xOffset + (GAME_NOTE_WIDTH / 2) + margin, HIT_BAR + (GAME_NOTE_HEIGHT / 2) + margin,
-                     sh->colors[bIdx]);
+            wsg_t* pressed  = &sh->pressed[sh->noteToIcon[bIdx]];
+            drawWsgSimple(pressed, xOffset - (pressed->w / 2), HIT_BAR - (pressed->h / 2));
         }
     }
 
@@ -765,7 +778,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 
                         // Draw a star for a moment
                         drawStar_t* ds = heap_caps_calloc(1, sizeof(drawStar_t), MALLOC_CAP_SPIRAM);
-                        ds->x          = getXoffset(sh, gameNote->note) - sh->star.w / 2;
+                        ds->x          = getXOffset(sh, gameNote->note) - sh->star.w / 2;
                         ds->y          = gameNote->headPosY - (sh->star.h / 2);
                         ds->timer      = 250000;
                         push(&sh->starList, ds);
@@ -938,7 +951,7 @@ const char* getLetterGrade(int32_t gradeIdx)
  * @param note
  * @return int32_t
  */
-static int32_t getXoffset(shVars_t* sh, int32_t note)
+static int32_t getXOffset(shVars_t* sh, int32_t note)
 {
     return ((note * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
 }

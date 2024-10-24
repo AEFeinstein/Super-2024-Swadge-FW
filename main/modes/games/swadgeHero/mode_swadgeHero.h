@@ -12,6 +12,8 @@
 //==============================================================================
 
 #define NUM_NOTE_TIMINGS 6
+#define NUM_NOTES        6
+#define NUM_NOTE_FRAMES  2
 
 //==============================================================================
 // Enums
@@ -136,7 +138,11 @@ typedef struct
     const char* hitText;
     const char* timingText;
     int32_t textTimerUs;
-    wsg_t icons[6];
+    wsg_t icons[NUM_NOTES][NUM_NOTE_FRAMES];
+    wsg_t outlines[NUM_NOTES];
+    wsg_t pressed[NUM_NOTES];
+    int32_t iconIdx;
+    int32_t iconTimerUs;
     wsg_t star;
     list_t starList;
 
