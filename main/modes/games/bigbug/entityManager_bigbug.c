@@ -216,9 +216,11 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                         bb_entity_t* collisionCandidate = &entityManager->entities[j];
                         // Iterate over all nodes
                         node_t* currentCollisionCheck = curEntity->collisions->first;
+                        node_t* cccNext = currentCollisionCheck->next;
                         while (currentCollisionCheck != NULL)
                         {
                             node_t* currentOtherType = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
+                            node_t* cccNext = currentCollisionCheck->next;
                             while (currentOtherType != NULL)
                             {
                                 if (collisionCandidate->spriteIndex == *((bb_spriteDef_t*)currentOtherType->val))
@@ -237,7 +239,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                                     break;
                                 }
                             }
-                            currentCollisionCheck = currentCollisionCheck->next;
+                            currentCollisionCheck = cccNext;
                             if (curEntity->collisions == NULL)
                             {
                                 break;
@@ -256,28 +258,29 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             {
                 bb_viewFollowEntity(curEntity, camera);
             }
+
+            bb_updateStarField(entityManager, camera);
         }
     }
 }
 
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    if(camera->camera.pos.y < -1000)
+    if(camera->camera.pos.y < -2000) // make -1000
     {
-        int8_t halfWidth = HALF_WIDTH >> DECIMAL_BITS;
-        int8_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
-        if(bb_randomInt(1, 500) < (camera->velocity.x > 0 ? camera->velocity.x : -camera->velocity.x) * camera->camera.width)
+        int16_t halfWidth = HALF_WIDTH >> DECIMAL_BITS;
+        int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
+        if(bb_randomInt(1, 150000) < (abs(camera->velocity.x) * camera->camera.height))
         {
-            
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
-            camera->velocity.x > 0 ? camera->camera.pos.x + halfWidth : camera->camera.pos.x - halfWidth,
-            camera->camera.pos.y + bb_randomInt(-halfHeight, halfHeight));
+            camera->velocity.x > 0 ? camera->camera.pos.x + 2 * halfWidth : camera->camera.pos.x,
+            camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight));
         }
-        if(bb_randomInt(1, 500) < (camera->velocity.y > 0 ? camera->velocity.y : -camera->velocity.y) * camera->camera.height)
+        if(bb_randomInt(1, 150000) < (abs(camera->velocity.y) * camera->camera.width))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
-            camera->camera.pos.x + bb_randomInt(-halfWidth, halfWidth),
-            camera->velocity.y > 0 ? camera->camera.pos.y + halfHeight : camera->camera.pos.y - halfHeight);
+            camera->camera.pos.x + halfWidth + bb_randomInt(-halfWidth, halfWidth),
+            camera->velocity.y > 0 ? camera->camera.pos.y + 2 * halfHeight : camera->camera.pos.y);
         }
     }
 }
@@ -446,28 +449,27 @@ bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
     return NULL;
 }
 
-void bb_viewFollowEntity(bb_entity_t* entity, rectangle_t* camera)
+void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera)
 {
-    vec_t previousCamPos = camera->pos;
+    vec_t previousCamPos = camera->camera.pos;
     // Update the camera's position to catch up to the player
-    if (((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - camera->pos.x < -15)
+    if (((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - camera->camera.pos.x < -15)
     {
-        camera->pos.x = ((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) + 15;
+        camera->camera.pos.x = ((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) + 15;
     }
-    else if (((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - camera->pos.x > 15)
+    else if (((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - camera->camera.pos.x > 15)
     {
-        camera->pos.x = ((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - 15;
+        camera->camera.pos.x = ((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - 15;
     }
-
-    if (((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - camera->pos.y < -10)
+    if (((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - camera->camera.pos.y < -10)
     {
-        camera->pos.y = ((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) + 10;
+        camera->camera.pos.y = ((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) + 10;
     }
-    else if (((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - camera->pos.y > 10)
+    else if (((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - camera->camera.pos.y > 10)
     {
-        camera->pos.y = ((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
+        camera->camera.pos.y = ((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
     }
-    camera->pos = subVec2d(camera->pos, previousCamPos);
+    camera->velocity = subVec2d(camera->camera.pos, previousCamPos);
 }
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
@@ -723,6 +725,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_starData_t* sData = heap_caps_calloc(1, sizeof(bb_starData_t), MALLOC_CAP_SPIRAM);
             sData->parallaxDenominator = bb_randomInt(1,20);
             entity->data = sData;
+            entity->drawFunction = bb_drawStar;
             entity->updateFarFunction = bb_updateFarStar;
             break;
         }

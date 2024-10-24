@@ -502,6 +502,7 @@ void bb_updateHarpoon(bb_entity_t* self)
     if (pData->lifetime > 140)
     {
         bb_destroyEntity(self, false);
+        return;
     }
 
     // Update harpoon's velocity
@@ -534,6 +535,7 @@ void bb_updateStuckHarpoon(bb_entity_t* self)
     if (shData->lifetime > 140)
     {
         bb_destroyEntity(self, false);
+        return;
     }
 
     if (shData->parent != NULL)
@@ -795,10 +797,10 @@ void bb_drawMenu(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 void bb_drawStar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     bb_starData_t* sData = (bb_starData_t*)self->data;
-    int16_t xDrawPos = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
-    xDrawPos =  xDrawPos - xDrawPos/sData->parallaxDenominator;
-    int32_t yDrawPos = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
-    yDrawPos =  yDrawPos - yDrawPos/sData->parallaxDenominator;
+    int32_t xDrawPos = (self->pos.x >> DECIMAL_BITS) - camera->pos.x;
+    // xDrawPos =  xDrawPos - xDrawPos/sData->parallaxDenominator;
+    int32_t yDrawPos = (self->pos.y >> DECIMAL_BITS) - camera->pos.y;
+    // yDrawPos =  yDrawPos - yDrawPos/sData->parallaxDenominator;
 
     drawLineFast(xDrawPos, yDrawPos, xDrawPos, yDrawPos, c555);
 }
