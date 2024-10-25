@@ -10,9 +10,11 @@
 //==============================================================================
 
 #include <esp_sleep.h>
+#include <esp_heap_caps.h>
 
 #include "dance.h"
 #include "settingsManager.h"
+#include "mainMenu.h"
 
 //==============================================================================
 // Defines
@@ -23,8 +25,7 @@
 #define ARG_G(arg)         (((arg) >> 8) & 0xFF)
 #define ARG_B(arg)         (((arg) >> 0) & 0xFF)
 
-#define DANCE_SPEED_MULT         8
-#define DANCE_NORMAL_SPEED_INDEX 5
+#define DANCE_SPEED_MULT 8
 
 // Sleep the TFT after 5s
 #define TFT_TIMEOUT_US 5000000
@@ -35,43 +36,44 @@
 
 typedef struct
 {
-    uint8_t danceIdx;
-    uint8_t danceSpeed;
+    uint32_t danceIdx;
+    uint32_t danceSpeed;
 
     bool resetDance;
     bool blankScreen;
 
-    uint64_t buttonPressedTimer;
+    uint32_t buttonPressedTimer;
 
-    touchSpinState_t spinState;
-    uint8_t startDanceSpeed;
+    menu_t* menu;
+    menuManiaRenderer_t* menuRenderer;
 
-    font_t infoFont;
-    wsg_t arrow;
+    const char** danceNames;
+    int32_t* danceVals;
 } danceMode_t;
 
 //==============================================================================
 // Prototypes
 //==============================================================================
 
-void danceEnterMode(void);
-void danceExitMode(void);
-void danceMainLoop(int64_t elapsedUs);
-void danceButtonHandler(buttonEvt_t* evt);
-void dancePollTouch(void);
-
-uint32_t danceRand(uint32_t bound);
-void danceRedrawScreen(void);
-void selectNextDance(void);
-void selectPrevDance(void);
+static void danceEnterMode(void);
+static void danceExitMode(void);
+static void danceMainLoop(int64_t elapsedUs);
+static uint32_t danceRand(uint32_t bound);
+static void danceMenuCb(const char* label, bool selected, uint32_t value);
 
 //==============================================================================
-// Variables
+// Const Variables
 //==============================================================================
 
-static const char ledDancesExitText[] = "Hold Menu To Exit";
+static const char danceName[]      = "Light Dances";
+static const char str_exit[]       = "Exit";
+static const char str_brightness[] = "Brightness";
 
-static const uint8_t danceSpeeds[] = {
+static const char str_speed[]    = "Speed: ";
+static const char* speedLabels[] = {
+    "1/8x", "1/6x", "1/4x", "1/3x", "1/2x", "1x", "1.5x", "2x", "4x",
+};
+static const int32_t speedVals[] = {
     64, // 1/8x
     48, // 1/6x
     32, // 1/4x
@@ -113,8 +115,12 @@ const ledDanceArg ledDances[] = {
     {.func = danceRandomDance, .arg = 0, .name = "Shuffle All"},
 };
 
+//==============================================================================
+// Variables
+//==============================================================================
+
 swadgeMode_t danceMode = {
-    .modeName        = "Light Dances",
+    .modeName        = danceName,
     .fnEnterMode     = danceEnterMode,
     .fnExitMode      = danceExitMode,
     .fnMainLoop      = danceMainLoop,
@@ -128,7 +134,7 @@ swadgeMode_t danceMode = {
 danceMode_t* danceState;
 
 //==============================================================================
-// Mode Functions
+// Functions
 //==============================================================================
 
 /**
@@ -139,15 +145,45 @@ void danceEnterMode(void)
     danceState = calloc(1, sizeof(danceMode_t));
 
     danceState->danceIdx   = 0;
-    danceState->danceSpeed = DANCE_NORMAL_SPEED_INDEX;
+    danceState->danceSpeed = DANCE_SPEED_MULT;
 
     danceState->resetDance  = true;
     danceState->blankScreen = false;
 
     danceState->buttonPressedTimer = 0;
 
-    loadFont("logbook.font", &(danceState->infoFont), false);
-    loadWsg("arrow18.wsg", &danceState->arrow, false);
+    danceState->menu         = initMenu(danceName, danceMenuCb);
+    danceState->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    setManiaLedsOn(danceState->menuRenderer, false);
+
+    // Add dances to the menu
+    danceState->danceNames = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(char*), MALLOC_CAP_SPIRAM);
+    danceState->danceVals  = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(int32_t), MALLOC_CAP_SPIRAM);
+    for (int32_t dIdx = 0; dIdx < ARRAY_SIZE(ledDances); dIdx++)
+    {
+        danceState->danceNames[dIdx] = ledDances[dIdx].name;
+        danceState->danceVals[dIdx]  = dIdx;
+    }
+    const settingParam_t danceParam = {
+        .min = 0,
+        .max = ARRAY_SIZE(ledDances) - 1,
+    };
+    addSettingsOptionsItemToMenu(danceState->menu, NULL, danceState->danceNames, danceState->danceVals,
+                                 ARRAY_SIZE(ledDances), &danceParam, 0);
+
+    // Add brightness to the menu
+    addSettingsItemToMenu(danceState->menu, str_brightness, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
+
+    // Add speed to the menu
+    const settingParam_t speedParam = {
+        .min = speedVals[0],
+        .max = speedVals[ARRAY_SIZE(speedVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(danceState->menu, str_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
+                                 &speedParam, speedVals[5]);
+
+    // Add exit to the menu
+    addSingleItemToMenu(danceState->menu, str_exit);
 }
 
 /**
@@ -161,8 +197,11 @@ void danceExitMode(void)
         enableTFTBacklight();
         setTFTBacklightBrightness(getTftBrightnessSetting());
     }
-    freeFont(&(danceState->infoFont));
-    freeWsg(&danceState->arrow);
+    deinitMenuManiaRenderer(danceState->menuRenderer);
+    deinitMenu(danceState->menu);
+
+    free(danceState->danceNames);
+    free(danceState->danceVals);
     free(danceState);
     danceState = NULL;
 }
@@ -178,15 +217,22 @@ void danceMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        danceButtonHandler(&evt);
+        // Reset this on any button event
+        danceState->buttonPressedTimer = 0;
+
+        // This button press will wake the display, so don't process it
+        if (danceState->blankScreen)
+        {
+            return;
+        }
+
+        danceState->menu = menuButton(danceState->menu, evt);
     }
 
-    // Poll for touch inputs
-    dancePollTouch();
-
     // Light the LEDs!
-    ledDances[danceState->danceIdx].func(elapsedUs * DANCE_SPEED_MULT / danceSpeeds[danceState->danceSpeed],
+    ledDances[danceState->danceIdx].func(elapsedUs * DANCE_SPEED_MULT / danceState->danceSpeed,
                                          ledDances[danceState->danceIdx].arg, danceState->resetDance);
+    danceState->resetDance = false;
 
     // If the screen is blank
     if (danceState->blankScreen)
@@ -199,7 +245,7 @@ void danceMainLoop(int64_t elapsedUs)
             setTFTBacklightBrightness(getTftBrightnessSetting());
             danceState->blankScreen = false;
             // Draw to it
-            danceRedrawScreen();
+            drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
         }
     }
     else
@@ -214,11 +260,9 @@ void danceMainLoop(int64_t elapsedUs)
         else
         {
             // Screen is not blank, draw to it
-            danceRedrawScreen();
+            drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
         }
     }
-
-    danceState->resetDance = false;
 
     // Only sleep with a blank screen, otherwise the screen flickers
     if (danceState->blankScreen)
@@ -235,139 +279,34 @@ void danceMainLoop(int64_t elapsedUs)
 }
 
 /**
- * @brief Handle button events for the LED dance mode
+ * @brief Callback for the menu options
  *
- * @param evt The button event that occurred
+ * @param label The menu option that was selected or changed
+ * @param selected True if the option was selected, false if it was only changed
+ * @param value The setting value for this operation
  */
-void danceButtonHandler(buttonEvt_t* evt)
+void danceMenuCb(const char* label, bool selected, uint32_t value)
 {
-    // Reset this on any button event
-    danceState->buttonPressedTimer = 0;
-
-    // This button press will wake the display, so don't process it
-    if (danceState->blankScreen)
+    if (selected && str_exit == label)
     {
-        return;
+        // Exit to the main menu
+        switchToSwadgeMode(&mainMenuMode);
     }
-
-    if (evt->down)
+    else if (str_brightness == label)
     {
-        switch (evt->button)
-        {
-            case PB_UP:
-            {
-                incLedBrightnessSetting();
-                break;
-            }
-
-            case PB_DOWN:
-            {
-                decLedBrightnessSetting();
-                break;
-            }
-
-            case PB_LEFT:
-            case PB_B:
-            {
-                selectPrevDance();
-                break;
-            }
-
-            case PB_RIGHT:
-            case PB_A:
-            {
-                selectNextDance();
-                break;
-            }
-
-            case PB_SELECT:
-            case PB_START:
-            {
-                // Unused
-                break;
-            }
-        }
+        setLedBrightnessSetting(value);
     }
-}
-
-/**
- * @brief Poll for touch events for the LED dance mode
- * TODO hook this up when the touch driver is implemented
- */
-void dancePollTouch(void)
-{
-    int32_t phi, r, intensity;
-    if (getTouchJoystick(&phi, &r, &intensity))
+    else if (str_speed == label)
     {
-        if (!danceState->spinState.startSet)
-        {
-            danceState->startDanceSpeed = danceState->danceSpeed;
-        }
-
-        getTouchSpins(&danceState->spinState, phi, r);
-
-        // Make sure we are pressing on the edge.
-
-        int32_t speeds = ARRAY_SIZE(danceSpeeds);
-        int32_t diff
-            = CLAMP((((danceState->spinState.spins * 360 + danceState->spinState.remainder) * (speeds - 1)) / -360),
-                    -speeds, speeds);
-
-        danceState->danceSpeed         = CLAMP(danceState->startDanceSpeed + diff, 0, speeds - 1);
-        danceState->buttonPressedTimer = 0;
+        danceState->danceSpeed = value;
     }
-    else
+    else if (NULL == label) // Dance names are label-less
     {
-        danceState->spinState.startSet = false;
-    }
-}
-
-/**
- * @brief Blanks and redraws the entire screen
- */
-void danceRedrawScreen(void)
-{
-    clearPxTft();
-
-    if (!danceState->blankScreen)
-    {
-        // Draw the name, perfectly centered
-        int16_t yOff   = (TFT_HEIGHT - danceState->infoFont.height) / 2;
-        uint16_t width = textWidth(&(danceState->infoFont), ledDances[danceState->danceIdx].name);
-        drawText(&(danceState->infoFont), c555, ledDances[danceState->danceIdx].name, (TFT_WIDTH - width) / 2, yOff);
-        // Draw some arrows
-        drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) - 8 - danceState->arrow.w, yOff, false, false, 270);
-        drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 90);
-
-        // Draw the brightness at the top
-        char text[32];
-        snprintf(text, sizeof(text) - 1, "Brightness: %d", getLedBrightnessSetting());
-        width = textWidth(&(danceState->infoFont), text);
-        yOff  = 16;
-        drawText(&(danceState->infoFont), c555, text, (TFT_WIDTH - width) / 2, yOff);
-        // Draw some arrows
-        drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) - 8 - danceState->arrow.w, yOff, false, false, 0);
-        drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 180);
-
-        // Draw the speed below the brightness
-        yOff += danceState->infoFont.height + 16;
-        if (danceSpeeds[danceState->danceSpeed] > DANCE_SPEED_MULT)
+        if (danceState->danceIdx != value)
         {
-            snprintf(text, sizeof(text) - 1, "Touch: Speed: 1/%dx",
-                     danceSpeeds[danceState->danceSpeed] / DANCE_SPEED_MULT);
+            danceState->danceIdx   = value;
+            danceState->resetDance = true;
         }
-        else
-        {
-            snprintf(text, sizeof(text) - 1, "Touch: Speed: %dx",
-                     DANCE_SPEED_MULT / danceSpeeds[danceState->danceSpeed]);
-        }
-        width = textWidth(&(danceState->infoFont), text);
-        drawText(&(danceState->infoFont), c555, text, (TFT_WIDTH - width) / 2, yOff);
-
-        // Draw text to show how to exit at the bottom
-        width = textWidth(&(danceState->infoFont), ledDancesExitText);
-        yOff  = TFT_HEIGHT - danceState->infoFont.height - 16;
-        drawText(&(danceState->infoFont), c555, ledDancesExitText, (TFT_WIDTH - width) / 2, yOff);
     }
 }
 
@@ -376,7 +315,7 @@ void danceRedrawScreen(void)
  */
 uint8_t getNumDances(void)
 {
-    return (sizeof(ledDances) / sizeof(ledDances[0]));
+    return ARRAY_SIZE(ledDances);
 }
 
 /**
@@ -1390,38 +1329,4 @@ void danceNone(uint32_t tElapsedUs __attribute__((unused)), uint32_t arg __attri
         led_t leds[CONFIG_NUM_LEDS] = {{0}};
         setLeds(leds, CONFIG_NUM_LEDS);
     }
-}
-
-/**
- * @brief Switches to the previous dance in the list, with wrapping
- */
-void selectPrevDance(void)
-{
-    if (danceState->danceIdx > 0)
-    {
-        danceState->danceIdx--;
-    }
-    else
-    {
-        danceState->danceIdx = getNumDances() - 1;
-    }
-
-    danceState->resetDance = true;
-}
-
-/**
- * @brief Switches to the next dance in the list, with wrapping
- */
-void selectNextDance(void)
-{
-    if (danceState->danceIdx < getNumDances() - 1)
-    {
-        danceState->danceIdx++;
-    }
-    else
-    {
-        danceState->danceIdx = 0;
-    }
-
-    danceState->resetDance = true;
 }
