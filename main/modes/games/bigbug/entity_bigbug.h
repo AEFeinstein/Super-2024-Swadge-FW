@@ -89,6 +89,12 @@ typedef struct
 
 typedef struct
 {
+    int8_t xVel;
+    bool firstTrip;
+} bb_menuBugData_t;
+
+typedef struct
+{
     uint8_t brightness; // stores brightness so that it may be stored so it may be calculated once then used to
                         // stimulate the egg and also to draw.
     bb_entity_t* egg;   // tracks the egg to stimulate it.
@@ -168,7 +174,9 @@ void bb_updateHarpoon(          bb_entity_t* self);
 void bb_updateStuckHarpoon(     bb_entity_t* self);
 void bb_updateEggLeaves(        bb_entity_t* self);
 void bb_updateFarEggleaves(     bb_entity_t* self);
-void bb_updateFarStar(          bb_entity_t* self);
+void bb_updateFarDestroy(       bb_entity_t* self);
+void bb_updateMenuBug(          bb_entity_t* self);
+void bb_updateMoveLeft(         bb_entity_t* self);
 void bb_updateBug(              bb_entity_t* self);
 void bb_updateMenu(             bb_entity_t* self);
 void bb_updatePOI(              bb_entity_t* self);
@@ -179,6 +187,7 @@ void bb_drawStuckHarpoon(   bb_entityManager_t* entityManager, rectangle_t* came
 void bb_drawEggLeaves(      bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawEgg(            bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawMenu(           bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawMenuForeground( bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawStar(           bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawNothing(        bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawMenuBug(        bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);

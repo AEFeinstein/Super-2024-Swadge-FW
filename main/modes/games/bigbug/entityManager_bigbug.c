@@ -126,9 +126,9 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
 }
 
-void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
+void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    vec_t shiftedCameraPos = camera->pos;
+    vec_t shiftedCameraPos = camera->camera.pos;
     shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
     shiftedCameraPos.y     = (shiftedCameraPos.y + 120) << DECIMAL_BITS;
     node_t* currentNode    = entityManager->cachedEntities->first;
@@ -216,7 +216,6 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
                         bb_entity_t* collisionCandidate = &entityManager->entities[j];
                         // Iterate over all nodes
                         node_t* currentCollisionCheck = curEntity->collisions->first;
-                        node_t* cccNext = currentCollisionCheck->next;
                         while (currentCollisionCheck != NULL)
                         {
                             node_t* currentOtherType = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
@@ -742,7 +741,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case NO_SPRITE_STAR:
         {
             entity->drawFunction = &bb_drawStar;
-            entity->updateFarFunction = &bb_updateFarStar;
+            entity->updateFarFunction = &bb_updateFarDestroy;
             break;
         }
         case NO_SPRITE_POI:

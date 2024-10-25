@@ -633,13 +633,31 @@ void bb_updateFarEggleaves(bb_entity_t* self)
     bb_destroyEntity(self, false);
 }
 
-void bb_updateFarStar(bb_entity_t* self)
+void bb_updateFarDestroy(bb_entity_t* self)
 {
     bb_destroyEntity(self, false);
 }
 
-void bb_updateBug(bb_entity_t* self)
+void bb_updateMenuBug(bb_entity_t* self)
 {
+    bb_menuBugData_t* mbData = (bb_menuBugData_t*)self->data;
+    self->pos.x += (mbData->xVel - 3) << DECIMAL_BITS;
+    if(mbData->firstTrip && self->pos.x < self->entityManager->viewEntity->pos.x - (130<<DECIMAL_BITS))
+    {
+        mbData->firstTrip = false;
+        mbData->xVel = bb_randomInt(-5,5);
+        mbData->xVel = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; //So as not to match the treadmill speed exactly.
+    }
+}
+
+void bb_updateMoveLeft(bb_entity_t* self)
+{
+    self->pos.x -= 3 << DECIMAL_BITS;
+}
+
+void bb_updateBug(              bb_entity_t* self)
+{
+
 }
 
 void bb_updateMenu(bb_entity_t* self)
@@ -661,6 +679,36 @@ void bb_updateMenu(bb_entity_t* self)
         default:
             break;
     }
+
+    if(self->gameData->menuBug == NULL || self->gameData->menuBug->active == false)
+    {
+        self->gameData->menuBug = bb_createEntity(
+            &self->gameData->entityManager, LOOPING_ANIMATION, false,
+            bb_randomInt(8,13), 1, 
+            (TILE_FIELD_WIDTH) * (TILE_SIZE/2) + 135, -1817, true);
+        self->gameData->menuBug->drawFunction = &bb_drawMenuBug;
+        self->gameData->menuBug->updateFunction = &bb_updateMenuBug;
+        self->gameData->menuBug->updateFarFunction = &bb_updateFarDestroy;
+        bb_menuBugData_t* mbData  = heap_caps_calloc(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
+        mbData->xVel = bb_randomInt(-5,5);
+        mbData->xVel = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; //So as not to match the treadmill speed exactly.
+        mbData->firstTrip = true;
+        self->gameData->menuBug->data = mbData;
+        self->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
+        if(mbData->xVel == 0){
+            self->gameFramesPerAnimationFrame = 255;
+        }
+    }
+
+    if(bb_randomInt(0,1) < 1)//%50
+    {
+        bb_entity_t* treadmillDust = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
+            self->gameData->camera.camera.pos.x + 280,
+            -1811 + bb_randomInt(-10, 10), false);
+        treadmillDust->updateFunction = &bb_updateMoveLeft;
+    }
+
+
 }
 
 void bb_updatePOI(bb_entity_t* self)
@@ -742,6 +790,7 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
 
     drawLineFast(xOff, yOff - 1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 - 1, c344);
     drawLineFast(xOff, yOff, xOff - floatVel.x * 20, yOff - floatVel.y * 20, c223);
+    // drawLineFast(xOff, yOff + 1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 + 1, c000);
 
     drawWsg(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
             xOff - entityManager->sprites[self->spriteIndex].originX,
@@ -794,6 +843,14 @@ void bb_drawMenu(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
     //Midground
     drawWsgSimple(&entityManager->sprites[BB_MENU].frames[2],
                     xDrawPos, yDrawPosFront);
+    
+}
+
+void bb_drawMenuForeground(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    int16_t xDrawPos = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+
+    int32_t yDrawPosFront = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
     //Foreground
     drawWsgSimple(&entityManager->sprites[BB_MENU].frames[3],
                     xDrawPos, yDrawPosFront+97);
@@ -815,19 +872,20 @@ void bb_drawNothing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
 
 void bb_drawMenuBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
+    bb_menuBugData_t* mbData = (bb_menuBugData_t*) self->data;
     int16_t xOff = (self->pos.x >> DECIMAL_BITS)
                 - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS)
                 - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
 
-    uint8_t brightness = abs((self->pos.x >> DECIMAL_BITS) - entityManager->viewEntity->pos.x);
+    uint8_t brightness = abs((self->pos.x >> DECIMAL_BITS) - (entityManager->viewEntity->pos.x >> DECIMAL_BITS));
     brightness = (140 - brightness)/23;
     brightness = brightness > 5 ? 5 : brightness;
     brightness = brightness < 0 ? 0 : brightness;
 
-    drawWsgSimple(&entityManager->sprites[self->spriteIndex]
+    drawWsg(&entityManager->sprites[self->spriteIndex]
                     .frames[brightness + self->currentAnimationFrame * 6],
-                xOff, yOff);   
+                xOff, yOff, mbData->xVel < 0, false, 0);
 }
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)

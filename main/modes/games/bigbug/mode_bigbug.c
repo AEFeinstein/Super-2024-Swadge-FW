@@ -78,7 +78,6 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
 // big bug logic
 // static void bb_LoadScreenDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void bb_DrawScene(void);
-static void bb_MenuLoop(int64_t elapsedUs);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
@@ -147,9 +146,24 @@ static void bb_EnterMode(void)
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
     //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
     bigbug->gameData.camera.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
+    bigbug->gameData.camera.camera.pos.y = -1890;
 
     bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000, false);
+
+    bb_entity_t* harpoon = bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
+                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE - 12, -1865, false);
+
+    bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
+    pData->vel.x = 10; //This will make it draw pointed right
+    pData->vel.y = 0;
+    
+    harpoon->updateFunction = NULL;
+
+    bb_entity_t* foreground = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
+                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000, true);
+    foreground->updateFunction = NULL;
+    foreground->drawFunction = &bb_drawMenuForeground;
 
     bigbug->gameData.entityManager.viewEntity = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1890, true);
@@ -162,7 +176,7 @@ static void bb_EnterMode(void)
     //          -110);
 
     // Set the mode to game mode
-    bigbug->screen = BIGBUG_MENU;
+    bigbug->screen = BIGBUG_GAME;
 
     bb_Reset();
 }
@@ -186,7 +200,6 @@ static void bb_MainLoop(int64_t elapsedUs)
     {
         case BIGBUG_MENU:
         {
-            bb_MenuLoop(elapsedUs);
             break;
         }
         case BIGBUG_GAME:
@@ -290,20 +303,6 @@ static void bb_DrawScene(void)
     bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera.camera);
 }
 
-static void bb_MenuLoop(int64_t elapsedUs)
-{
-    if(bigbug->gameData.menuBug == NULL)
-    {
-        bigbug->gameData.menuBug = bb_createEntity(
-            &bigbug->gameData.entityManager, LOOPING_ANIMATION, false,
-            bb_randomInt(8,13), bb_randomInt(1,5), 
-            (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1890, true);
-        bigbug->gameData.menuBug->drawFunction = &bb_drawMenuBug;
-    }
-
-    bb_GameLoop(elapsedUs);
-}
-
 /**
  * @brief This function is called periodically and frequently. It runs the actual game, including processing inputs,
  * physics updates and drawing to the display.
@@ -334,7 +333,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
-        bb_updateEntities(&(bigbug->gameData.entityManager), &(bigbug->gameData.camera.camera));
+        bb_updateEntities(&(bigbug->gameData.entityManager), &(bigbug->gameData.camera));
 
         bb_UpdateTileSupport();
 
