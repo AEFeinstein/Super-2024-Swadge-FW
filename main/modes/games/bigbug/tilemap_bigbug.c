@@ -220,12 +220,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         {
                             bb_entity_t* eggLeaves
                                 = bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1,
-                                                  i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE);
+                                                  i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false);
                             if (eggLeaves != NULL)
                             {
                                 ((bb_eggLeavesData_t*)eggLeaves->data)->egg
                                     = bb_createEntity(entityManager, NO_ANIMATION, true, EGG, 1,
-                                                      i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE);
+                                                      i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false);
                                 if (((bb_eggLeavesData_t*)eggLeaves->data)->egg == NULL)
                                 {
                                     bb_destroyEntity(eggLeaves, false);

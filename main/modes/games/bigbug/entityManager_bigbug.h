@@ -48,10 +48,11 @@ void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera);
 void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer);
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera);
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager);
+bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager);
 
 void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera);
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
-                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y);
+                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y, bool renderFront);
 
 void bb_freeEntityManager(bb_entityManager_t* entityManager);
 

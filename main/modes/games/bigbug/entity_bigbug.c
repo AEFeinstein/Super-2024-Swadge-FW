@@ -105,7 +105,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
     if (self->pos.y > -3640 && rData->flame == NULL)
     {
         rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
-                                       self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
+                                       self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false);
     }
 
     else if (rData->flame != NULL)
@@ -153,7 +153,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble animation
         bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                        hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
+                        hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE, true);
     }
     return;
 }
@@ -186,7 +186,7 @@ void bb_updateHeavyFalling(bb_entity_t* self)
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble animation
         bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                        hitInfo.tile_i * TILE_SIZE + HALF_TILE, hitInfo.tile_j * TILE_SIZE + HALF_TILE);
+                        hitInfo.tile_i * TILE_SIZE + HALF_TILE, hitInfo.tile_j * TILE_SIZE + HALF_TILE, true);
     }
     return;
 }
@@ -221,7 +221,7 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
         self->paused = true;
         // deploy garbotnik!!!
         bb_entity_t* garbotnik = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING,
-                                                 1, self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50);
+                                                 1, self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50, true);
         self->gameData->entityManager.viewEntity = garbotnik;
         self->updateFunction                     = bb_updateHeavyFalling;
     }
@@ -247,7 +247,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     {
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
-                                               self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS);
+                                               self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false);
         if (harpoon != NULL)
         {
             gData->numHarpoons -= 1;
@@ -428,7 +428,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             vec_t tilePos = {.x = hitInfo.tile_i * TILE_SIZE + HALF_TILE, .y = hitInfo.tile_j * TILE_SIZE + HALF_TILE};
             // create a bug
             bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
-                                               bb_randomInt(8, 13), 1, tilePos.x, tilePos.y);
+                                               bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false);
             if (bug != NULL)
             {
                 // destroy the egg
@@ -444,13 +444,13 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             // Create a crumble animation
             bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                            hitInfo.tile_i * TILE_SIZE + HALF_TILE, hitInfo.tile_j * TILE_SIZE + HALF_TILE);
+                            hitInfo.tile_i * TILE_SIZE + HALF_TILE, hitInfo.tile_j * TILE_SIZE + HALF_TILE, true);
         }
         else
         {
             // Create a bump animation
             bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
-                            hitInfo.pos.x >> DECIMAL_BITS, hitInfo.pos.y >> DECIMAL_BITS);
+                            hitInfo.pos.x >> DECIMAL_BITS, hitInfo.pos.y >> DECIMAL_BITS, true);
         }
 
         ////////////////////////////////
@@ -588,7 +588,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
             // create a bug
             bb_entity_t* bug
                 = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
-                                  elData->egg->pos.x >> DECIMAL_BITS, elData->egg->pos.y >> DECIMAL_BITS);
+                                  elData->egg->pos.x >> DECIMAL_BITS, elData->egg->pos.y >> DECIMAL_BITS, false);
 
             if (bug != NULL)
             {
@@ -604,7 +604,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
                     // Create a crumble animation
                     bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                                    hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE);
+                                    hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE, false);
                 }
                 // destroy this
                 bb_destroyEntity(self, false);
@@ -661,6 +661,11 @@ void bb_updateMenu(bb_entity_t* self)
         default:
             break;
     }
+}
+
+void bb_updatePOI(bb_entity_t* self)
+{
+
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -796,16 +801,34 @@ void bb_drawMenu(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 
 void bb_drawStar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    bb_starData_t* sData = (bb_starData_t*)self->data;
     int32_t xDrawPos = (self->pos.x >> DECIMAL_BITS) - camera->pos.x;
     // xDrawPos =  xDrawPos - xDrawPos/sData->parallaxDenominator;
     int32_t yDrawPos = (self->pos.y >> DECIMAL_BITS) - camera->pos.y;
     // yDrawPos =  yDrawPos - yDrawPos/sData->parallaxDenominator;
-
     drawLineFast(xDrawPos, yDrawPos, xDrawPos, yDrawPos, c555);
 }
 
+void bb_drawNothing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    //Do nothing lol
+}
 
+void bb_drawMenuBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    int16_t xOff = (self->pos.x >> DECIMAL_BITS)
+                - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS)
+                - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+
+    uint8_t brightness = abs((self->pos.x >> DECIMAL_BITS) - entityManager->viewEntity->pos.x);
+    brightness = (140 - brightness)/23;
+    brightness = brightness > 5 ? 5 : brightness;
+    brightness = brightness < 0 ? 0 : brightness;
+
+    drawWsgSimple(&entityManager->sprites[self->spriteIndex]
+                    .frames[brightness + self->currentAnimationFrame * 6],
+                xOff, yOff);   
+}
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {

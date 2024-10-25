@@ -16,6 +16,7 @@
 #include "worldGen_bigbug.h"
 #include "entity_bigbug.h"
 #include "entityManager_bigbug.h"
+#include "random_bigbug.h"
 #include "esp_heap_caps.h"
 #include "hdw-tft.h"
 #include <math.h>
@@ -43,14 +44,14 @@ typedef enum
 
 struct bb_t
 {
-    menu_t* menu;       ///< The menu structure
-    font_t font;        ///< The font used in the menu and game
+    menu_t* menu;           ///< The menu structure
+    font_t font;            ///< The font used in the menu and game
     bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
     bb_soundManager_t soundManager;
 
-    bool isPaused; ///< true if the game is paused, false if it is running
+    bool isPaused;   ///< true if the game is paused, false if it is running
 
     midiFile_t bgm;  ///< Background music
     midiFile_t hit1; ///< A sound effect
@@ -77,6 +78,7 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
 // big bug logic
 // static void bb_LoadScreenDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void bb_DrawScene(void);
+static void bb_MenuLoop(int64_t elapsedUs);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
@@ -142,13 +144,15 @@ static void bb_EnterMode(void)
     bb_initializeTileMap(&(bigbug->gameData.tilemap));
     bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
 
-    bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
-                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000);
+    // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
+    //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
     bigbug->gameData.camera.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
 
     bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000);
-    bigbug->gameData.camera.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
+                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000, false);
+
+    bigbug->gameData.entityManager.viewEntity = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
+                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1890, true);
 
     bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
@@ -158,7 +162,7 @@ static void bb_EnterMode(void)
     //          -110);
 
     // Set the mode to game mode
-    bigbug->screen = BIGBUG_GAME;
+    bigbug->screen = BIGBUG_MENU;
 
     bb_Reset();
 }
@@ -174,20 +178,15 @@ static void bb_ExitMode(void)
 
 static void bb_MainLoop(int64_t elapsedUs)
 {
+    // Save the elapsed time
+    bigbug->gameData.elapsedUs = elapsedUs;
+
     // Pick what runs and draws depending on the screen being displayed
     switch (bigbug->screen)
     {
         case BIGBUG_MENU:
         {
-            // Process button events
-            buttonEvt_t evt = {0};
-            while (checkButtonQueueWrapper(&evt))
-            {
-                // Pass button events to the menu
-                bigbug->menu = menuButton(bigbug->menu, evt);
-            }
-
-            // Draw the menu
+            bb_MenuLoop(elapsedUs);
             break;
         }
         case BIGBUG_GAME:
@@ -291,6 +290,20 @@ static void bb_DrawScene(void)
     bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera.camera);
 }
 
+static void bb_MenuLoop(int64_t elapsedUs)
+{
+    if(bigbug->gameData.menuBug == NULL)
+    {
+        bigbug->gameData.menuBug = bb_createEntity(
+            &bigbug->gameData.entityManager, LOOPING_ANIMATION, false,
+            bb_randomInt(8,13), bb_randomInt(1,5), 
+            (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1890, true);
+        bigbug->gameData.menuBug->drawFunction = &bb_drawMenuBug;
+    }
+
+    bb_GameLoop(elapsedUs);
+}
+
 /**
  * @brief This function is called periodically and frequently. It runs the actual game, including processing inputs,
  * physics updates and drawing to the display.
@@ -299,9 +312,6 @@ static void bb_DrawScene(void)
  */
 static void bb_GameLoop(int64_t elapsedUs)
 {
-    // Save the elapsed time
-    bigbug->gameData.elapsedUs = elapsedUs;
-
     // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -333,7 +343,6 @@ static void bb_GameLoop(int64_t elapsedUs)
         // bigbugControlCpuPaddle();
     }
 
-    // Draw the field
     bb_DrawScene();
 
     // printf("FPS: %ld\n", 1000000 / elapsedUs);
@@ -383,7 +392,7 @@ static void bb_UpdateTileSupport(void)
                 bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
                 // create a crumble animation
                 bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                                shiftedVal[0] * 32 + 16, shiftedVal[1] * 32 + 16);
+                                shiftedVal[0] * 32 + 16, shiftedVal[1] * 32 + 16, true);
 
                 // queue neighbors for crumbling
                 for (uint8_t neighborIdx = 0; neighborIdx < 4;

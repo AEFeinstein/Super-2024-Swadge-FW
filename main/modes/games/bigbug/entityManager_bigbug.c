@@ -266,21 +266,21 @@ void bb_updateEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    if(camera->camera.pos.y < -2000) // make -1000
+    if(camera->camera.pos.y < -1000) // make -1000
     {
         int16_t halfWidth = HALF_WIDTH >> DECIMAL_BITS;
         int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
-        if(bb_randomInt(1, 150000) < (abs(camera->velocity.x) * camera->camera.height))
+        if(bb_randomInt(1, 1300000) < (abs(camera->velocity.x) * camera->camera.height))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
             camera->velocity.x > 0 ? camera->camera.pos.x + 2 * halfWidth : camera->camera.pos.x,
-            camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight));
+            camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight), false);
         }
-        if(bb_randomInt(1, 150000) < (abs(camera->velocity.y) * camera->camera.width))
+        if(bb_randomInt(1, 1300000) < (abs(camera->velocity.y) * camera->camera.width))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
             camera->camera.pos.x + halfWidth + bb_randomInt(-halfWidth, halfWidth),
-            camera->velocity.y > 0 ? camera->camera.pos.y + 2 * halfHeight : camera->camera.pos.y);
+            camera->velocity.y > 0 ? camera->camera.pos.y + 2 * halfHeight : camera->camera.pos.y, false);
         }
     }
 }
@@ -449,6 +449,23 @@ bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
     return NULL;
 }
 
+bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager)
+{
+    if (entityManager->activeEntities == MAX_ENTITIES)
+    {
+        return NULL;
+    };
+
+    for (int i = MAX_ENTITIES - 1; i >= 0; i--)
+    {
+        if (entityManager->entities[i].active == false)
+        {
+            return &(entityManager->entities[i]);
+        }
+    }
+    return NULL;
+}
+
 void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera)
 {
     vec_t previousCamPos = camera->camera.pos;
@@ -473,7 +490,7 @@ void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera)
 }
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
-                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y)
+                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y, bool renderFront)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
@@ -481,12 +498,14 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         return NULL;
     }
 
-    bb_entity_t* entity = bb_findInactiveEntity(entityManager);
-
-    if (spriteIndex == GARBOTNIK_FLYING)
+    bb_entity_t* entity;
+    if(renderFront)
     {
-        // Just forcibly make garbotnik the last entity so he's drawn on top.
-        entity = &entityManager->entities[MAX_ENTITIES - 1];
+        entity = bb_findInactiveEntityBackwards(entityManager);
+    }
+    else
+    {
+        entity = bb_findInactiveEntity(entityManager);
     }
 
     if (entity == NULL)
@@ -722,12 +741,14 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case NO_SPRITE_STAR:
         {
-            bb_starData_t* sData = heap_caps_calloc(1, sizeof(bb_starData_t), MALLOC_CAP_SPIRAM);
-            sData->parallaxDenominator = bb_randomInt(1,20);
-            entity->data = sData;
-            entity->drawFunction = bb_drawStar;
-            entity->updateFarFunction = bb_updateFarStar;
+            entity->drawFunction = &bb_drawStar;
+            entity->updateFarFunction = &bb_updateFarStar;
             break;
+        }
+        case NO_SPRITE_POI:
+        {
+            entity->updateFunction = &bb_updatePOI;
+            entity->drawFunction = &bb_drawNothing;
         }
         default: // FLAME_ANIM and others need nothing set
         {

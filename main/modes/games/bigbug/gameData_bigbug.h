@@ -71,6 +71,8 @@ struct bb_gameData_t
     list_t unsupported; // a list of tiles that flood-fill crumble.
 
     font_t font;
+
+    bb_entity_t* menuBug; // Featured entity walking through the main menu.
 };
 
 //==============================================================================
