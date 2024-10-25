@@ -647,6 +647,10 @@ void bb_updateMenuBug(bb_entity_t* self)
         mbData->firstTrip = false;
         mbData->xVel = bb_randomInt(-5,5);
         mbData->xVel = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; //So as not to match the treadmill speed exactly.
+        self->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
+        if(mbData->xVel == 0){
+            self->gameFramesPerAnimationFrame = 255;
+        }
     }
 }
 
@@ -694,9 +698,9 @@ void bb_updateMenu(bb_entity_t* self)
         mbData->xVel = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; //So as not to match the treadmill speed exactly.
         mbData->firstTrip = true;
         self->gameData->menuBug->data = mbData;
-        self->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
+        self->gameData->menuBug->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
         if(mbData->xVel == 0){
-            self->gameFramesPerAnimationFrame = 255;
+            self->gameData->menuBug->gameFramesPerAnimationFrame = 255;
         }
     }
 
