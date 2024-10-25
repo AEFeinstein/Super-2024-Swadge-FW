@@ -155,6 +155,16 @@ void danceEnterMode(void)
     danceState->menu         = initMenu(danceName, danceMenuCb);
     danceState->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
     setManiaLedsOn(danceState->menuRenderer, false);
+    static const paletteColor_t shadowColors[] = {
+        c430, c431, c442, c543, c554, c555, c554, c543, c442, c431,
+    };
+    led_t offLed = {0};
+    recolorMenuManiaRenderer(danceState->menuRenderer, // Pango palette!
+                             c430, c542, c111,         // titleBgColor, titleTextColor, textOutlineColor
+                             c045,                     // bgColor
+                             c542, c541,               // outerRingColor, innerRingColor
+                             c111, c455,               // rowColor, rowTextColor
+                             shadowColors, ARRAY_SIZE(shadowColors), offLed);
 
     // Add dances to the menu
     danceState->danceNames = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(char*), MALLOC_CAP_SPIRAM);
