@@ -83,6 +83,7 @@ static void bb_Reset(void);
 static void bb_SetLeds(void);
 static void bb_UpdateTileSupport(void);
 static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
+static void bb_BgmCb(void);
 
 //==============================================================================
 // Strings
@@ -135,7 +136,7 @@ static void bb_EnterMode(void)
     loadFont("ibm_vga8.font", &bigbug->font, false);
 
     loadMidiFile("Big Bug Exploration.mid", &bigbug->bgm, true);
-    soundPlayBgm(&bigbug->bgm, MIDI_BGM);
+    soundPlayBgmCb(&bigbug->bgm, MIDI_BGM, bb_BgmCb);
 
     const char loadingStr[] = "Loading...";
     int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
@@ -287,6 +288,12 @@ static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
 /**
  * @brief Draw the bigbug field to the TFT
  */
+
+static void bb_BgmCb()
+{
+    soundPlayBgmCb(&bigbug->bgm, MIDI_BGM, bb_BgmCb);
+}
+
 static void bb_DrawScene(void)
 {
     if (bigbug->gameData.entityManager.playerEntity != NULL)
