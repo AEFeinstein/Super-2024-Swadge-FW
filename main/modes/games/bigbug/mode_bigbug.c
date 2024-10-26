@@ -135,8 +135,7 @@ static void bb_EnterMode(void)
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
 
-    loadMidiFile("Big Bug Exploration.mid", &bigbug->bgm, true);
-    soundPlayBgmCb(&bigbug->bgm, MIDI_BGM, bb_BgmCb);
+    loadMidiFile("BigBugExploration.mid", &bigbug->bgm, true);
 
     const char loadingStr[] = "Loading...";
     int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
@@ -181,6 +180,9 @@ static void bb_EnterMode(void)
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
+
+    
+    soundPlayBgmCb(&bigbug->bgm, MIDI_BGM, bb_BgmCb);
 
     bb_Reset();
 }
