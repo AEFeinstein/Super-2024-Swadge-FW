@@ -134,6 +134,9 @@ static void bb_EnterMode(void)
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
 
+    loadMidiFile("Big Bug Exploration.mid", &bigbug->bgm, true);
+    soundPlayBgm(&bigbug->bgm, MIDI_BGM);
+
     const char loadingStr[] = "Loading...";
     int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
     drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
@@ -188,6 +191,9 @@ static void bb_ExitMode(void)
     bb_freeEntityManager(&bigbug->gameData.entityManager);
     // Free font
     freeFont(&bigbug->font);
+
+    soundStop(true);
+    unloadMidiFile(&bigbug->bgm);
 }
 
 static void bb_MainLoop(int64_t elapsedUs)
