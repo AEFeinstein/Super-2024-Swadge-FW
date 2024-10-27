@@ -60,6 +60,7 @@ typedef struct
     // Fonts
     font_t font_ibm;
     font_t font_rodin;
+    font_t font_rodin_outline;
     font_t font_righteous;
     font_t font_righteous_outline;
 
