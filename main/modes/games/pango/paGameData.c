@@ -15,40 +15,40 @@
 //==============================================================================
 void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManager)
 {
-    gameData->gameState          = 0;
-    gameData->btnState           = 0;
-    gameData->score              = 0;
-    gameData->extraLifeScore     = 10000;
-    gameData->lives              = 3;
-    gameData->levelTime          = 000;
-    gameData->level              = 1;
-    gameData->frameCount         = 0;
-    gameData->bgColor            = c000;
-    gameData->initials[0]        = 'A';
-    gameData->initials[1]        = 'A';
-    gameData->initials[2]        = 'A';
-    gameData->rank               = 5;
-    gameData->debugMode          = false;
-    gameData->continuesUsed      = false;
-    gameData->inGameTimer        = 0;
-    gameData->soundManager       = soundManager;
-    gameData->playerCharacter    = PA_PLAYER_CHARACTER_PANGO;
+    gameData->gameState       = 0;
+    gameData->btnState        = 0;
+    gameData->score           = 0;
+    gameData->extraLifeScore  = 10000;
+    gameData->lives           = 3;
+    gameData->levelTime       = 000;
+    gameData->level           = 1;
+    gameData->frameCount      = 0;
+    gameData->bgColor         = c000;
+    gameData->initials[0]     = 'A';
+    gameData->initials[1]     = 'A';
+    gameData->initials[2]     = 'A';
+    gameData->rank            = 5;
+    gameData->debugMode       = false;
+    gameData->continuesUsed   = false;
+    gameData->inGameTimer     = 0;
+    gameData->soundManager    = soundManager;
+    gameData->playerCharacter = PA_PLAYER_CHARACTER_PANGO;
 }
 
 void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t levelIndex)
 {
-    gameData->gameState          = 0;
-    gameData->btnState           = 0;
-    gameData->score              = 0;
-    gameData->extraLifeScore     = 10000;
-    gameData->lives              = 3;
-    gameData->levelTime          = 000;
-    gameData->frameCount         = 0;
-    gameData->bgColor            = c000;
-    gameData->currentBgm         = 0;
-    gameData->changeBgm          = 0;
-    gameData->continuesUsed      = (gameData->level == 1) ? false : true;
-    gameData->inGameTimer        = 0;
+    gameData->gameState      = 0;
+    gameData->btnState       = 0;
+    gameData->score          = 0;
+    gameData->extraLifeScore = 10000;
+    gameData->lives          = 3;
+    gameData->levelTime      = 000;
+    gameData->frameCount     = 0;
+    gameData->bgColor        = c000;
+    gameData->currentBgm     = 0;
+    gameData->changeBgm      = 0;
+    gameData->continuesUsed  = (gameData->level == 1) ? false : true;
+    gameData->inGameTimer    = 0;
 
     pa_resetGameDataLeds(gameData);
 }

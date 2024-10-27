@@ -21,7 +21,6 @@
 // Enums
 //==============================================================================
 
-
 //==============================================================================
 // Structs
 //==============================================================================
@@ -50,6 +49,6 @@ void pa_remapWsgToTile(paWsgManager_t* self, uint16_t tileIndex, uint16_t wsgInd
 
 void pa_remapPlayerCharacter(paWsgManager_t* self, uint16_t newBaseIndex);
 void pa_animateTiles(paWsgManager_t* self);
-void pa_remapBlockTile(paWsgManager_t *self, uint16_t newBlockWsgIndex);
+void pa_remapBlockTile(paWsgManager_t* self, uint16_t newBlockWsgIndex);
 
 #endif

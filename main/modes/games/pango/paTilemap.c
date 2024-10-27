@@ -238,10 +238,10 @@ void pa_unlockScrolling(paTilemap_t* tilemap)
 
 bool pa_needsTransparency(uint8_t tileId)
 {
-    //TODO
-    //Currently, all tiles need transparency.
-    //So get rid of this then?
-    
+    // TODO
+    // Currently, all tiles need transparency.
+    // So get rid of this then?
+
     switch (tileId)
     {
         /*case PA_TILE_BOUNCE_BLOCK:

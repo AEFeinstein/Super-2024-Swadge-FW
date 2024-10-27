@@ -300,7 +300,7 @@ void pa_animateTiles(paWsgManager_t* self)
     self->globalTileAnimationTimer--;
     if (self->globalTileAnimationTimer < 0)
     {
-        //Assumption: all animated tiles have 6 frames of animation
+        // Assumption: all animated tiles have 6 frames of animation
         self->globalTileAnimationFrame = ((self->globalTileAnimationFrame + 1) % 6);
 
         pa_remapWsgToTile(self, 9, PA_WSG_BLOCK_BLUE + self->globalTileAnimationFrame);
@@ -309,7 +309,8 @@ void pa_animateTiles(paWsgManager_t* self)
     }
 }
 
-void pa_remapBlockTile(paWsgManager_t *self, uint16_t newBlockWsgIndex){
+void pa_remapBlockTile(paWsgManager_t* self, uint16_t newBlockWsgIndex)
+{
     pa_remapWsgToTile(self, 8, newBlockWsgIndex);
     pa_remapWsgToSprite(self, PA_SP_BLOCK, newBlockWsgIndex);
 }

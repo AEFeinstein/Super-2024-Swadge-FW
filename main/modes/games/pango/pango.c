@@ -47,18 +47,19 @@ const char pangoName[] = "Pango";
 static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055};
 
 static const paletteColor_t redColors[4]    = {c501, c540, c550, c540};
-static const paletteColor_t tsRedColors[4]    = {c535, c534, c514, c534};
+static const paletteColor_t tsRedColors[4]  = {c535, c534, c514, c534};
 static const paletteColor_t yellowColors[4] = {c550, c331, c550, c555};
 
 static const paletteColor_t cyanColors[4]   = {c055, c455, c055, c033};
 static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
-//static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
+// static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
 
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
 
-const char* characterSelectOptions[]   = {"Pango", "Po", "Pixel", "Polly"};
-const int32_t characterSelectOptionValues[]   = {PA_PLAYER_CHARACTER_PANGO, PA_PLAYER_CHARACTER_PO, PA_PLAYER_CHARACTER_PIXEL, PA_PLAYER_CHARACTER_GIRL};
+const char* characterSelectOptions[] = {"Pango", "Po", "Pixel", "Polly"};
+const int32_t characterSelectOptionValues[]
+    = {PA_PLAYER_CHARACTER_PANGO, PA_PLAYER_CHARACTER_PO, PA_PLAYER_CHARACTER_PIXEL, PA_PLAYER_CHARACTER_GIRL};
 #define NUM_CHARACTERS 4
 
 //==============================================================================
@@ -138,7 +139,8 @@ void loadPangoUnlockables(pango_t* self);
 void pangoSaveUnlockables(pango_t* self);
 void drawPangoHighScores(font_t* font, pangoHighScores_t* highScores, paGameData_t* gameData);
 uint8_t getHighScoreRank(pangoHighScores_t* highScores, uint32_t newScore);
-void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore, char newInitials[], uint8_t newCharacter, uint8_t rank);
+void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore, char newInitials[],
+                               uint8_t newCharacter, uint8_t rank);
 void changeStateNameEntry(pango_t* self);
 void updateNameEntry(pango_t* self, int64_t elapsedUs);
 void drawNameEntry(font_t* font, paGameData_t* gameData, uint8_t currentInitial);
@@ -231,12 +233,12 @@ void pangoEnterMode(void)
     loadFont("pango-fw.font", &pango->font, false);
     pango->menuRenderer = initMenuManiaRenderer(&pango->font, &pango->font, &pango->font);
 
-    led_t ledColor                             = {.r = 0xf0, .g = 0xf0, .b = 0x00};
-    recolorMenuManiaRenderer(pango->menuRenderer,     //
-                             c200, c555, c555, // Title colors (bg, text, outline)
-                             c000,             // Background
-                             c110, c100,       // Rings
-                             c003, c555,       // Rows
+    led_t ledColor = {.r = 0xf0, .g = 0xf0, .b = 0x00};
+    recolorMenuManiaRenderer(pango->menuRenderer, //
+                             c200, c555, c555,    // Title colors (bg, text, outline)
+                             c000,                // Background
+                             c110, c100,          // Rings
+                             c003, c555,          // Rows
                              highScoreNewEntryColors, ARRAY_SIZE(highScoreNewEntryColors), ledColor);
     setManiaLedsOn(pango->menuRenderer, true);
 
@@ -359,7 +361,8 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
     }
     else
     {
-        if (label == pangoMenuCharacter){
+        if (label == pangoMenuCharacter)
+        {
             pango->gameData.playerCharacter = settingVal;
             pa_remapPlayerCharacter(&(pango->wsgManager), 16 * settingVal);
         }
@@ -434,7 +437,8 @@ void pangoBuildMainMenu(pango_t* self)
         .max = 3,
         .key = NULL,
     };
-    addSettingsOptionsItemToMenu(pango->menu, pangoMenuCharacter, characterSelectOptions, characterSelectOptionValues, NUM_CHARACTERS, &characterSettingBounds, pango->gameData.playerCharacter);
+    addSettingsOptionsItemToMenu(pango->menu, pangoMenuCharacter, characterSelectOptions, characterSelectOptionValues,
+                                 NUM_CHARACTERS, &characterSettingBounds, pango->gameData.playerCharacter);
 
     addSingleItemToMenu(pango->menu, pangoMenuHighScores);
 
@@ -493,7 +497,6 @@ void updateGame(pango_t* self, int64_t elapsedUs)
 
         pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
     }
-
 }
 
 void drawPangoHud(font_t* font, paGameData_t* gameData)
@@ -519,12 +522,13 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     snprintf(scoreStr, sizeof(scoreStr) - 1, "HI%7.6" PRIu32, pango->highScores.scores[0]);
     drawText(font, c553, scoreStr, 157, 2);
 
-    for(uint8_t i=0; i < gameData->lives; i++){
+    for (uint8_t i = 0; i < gameData->lives; i++)
+    {
         drawWsgSimple(pango->wsgManager.sprites[PA_SP_PLAYER_ICON].wsg, 32 + i * 16, 224);
     }
 
     drawText(font, c553, levelStr, 145, 226);
-    drawText(font, c553, timeStr, 200, 226);    
+    drawText(font, c553, timeStr, 200, 226);
 }
 
 void updateTitleScreen(pango_t* self, int64_t elapsedUs)
@@ -579,8 +583,10 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
     {
         for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            if( !(esp_random() % 8) ) {
-                switch(esp_random() % 3){
+            if (!(esp_random() % 8))
+            {
+                switch (esp_random() % 3)
+                {
                     case 0:
                     default:
                         paLeds[i].r = 255;
@@ -600,13 +606,16 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
                 }
             }
 
-            if(paLeds[i].r >= 16){
+            if (paLeds[i].r >= 16)
+            {
                 paLeds[i].r -= 16;
             }
-            if(paLeds[i].g >= 16){
+            if (paLeds[i].g >= 16)
+            {
                 paLeds[i].g -= 16;
             }
-            if(paLeds[i].b >= 16) {
+            if (paLeds[i].b >= 16)
+            {
                 paLeds[i].b -= 16;
             }
         }
@@ -638,14 +647,15 @@ void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
     {
         drawText(font, c555, "- Press START button -", 20, 208);
     }
-
 }
 
-void drawPangoLogo(font_t* font, int16_t x, int16_t y){
-    drawTriangleOutlined(x, y+23, x+63, y, x+71, y+47, c003, cyanColors[(pango->gameData.frameCount >> 2) % 4]);
-    drawTriangleOutlined(x, y, x+79, y+15, x+23, y+47, c220, yellowColors[(pango->gameData.frameCount >> 3) % 4]);
-    drawText(font, c500, "PANGO", x+12, y+16);
-    drawText(font, tsRedColors[(pango->gameData.frameCount >> 4) % 4], "PANGO", x+11, y+15);
+void drawPangoLogo(font_t* font, int16_t x, int16_t y)
+{
+    drawTriangleOutlined(x, y + 23, x + 63, y, x + 71, y + 47, c003, cyanColors[(pango->gameData.frameCount >> 2) % 4]);
+    drawTriangleOutlined(x, y, x + 79, y + 15, x + 23, y + 47, c220,
+                         yellowColors[(pango->gameData.frameCount >> 3) % 4]);
+    drawText(font, c500, "PANGO", x + 12, y + 16);
+    drawText(font, tsRedColors[(pango->gameData.frameCount >> 4) % 4], "PANGO", x + 11, y + 15);
 }
 
 void changeStateReadyScreen(pango_t* self)
@@ -935,12 +945,12 @@ void changeStateTitleScreen(pango_t* self)
     self->gameData.frameCount = 0;
     self->gameData.gameState  = PA_ST_TITLE_SCREEN;
     pa_remapBlockTile(&(pango->wsgManager), PA_WSG_BLOCK_TITLESCREEN);
-    self->update              = &updateTitleScreen;
+    self->update = &updateTitleScreen;
 }
 
 void changeStateLevelClear(pango_t* self)
 {
-    self->gameData.frameCount         = 0;
+    self->gameData.frameCount = 0;
     pa_resetGameDataLeds(&(self->gameData));
 
     self->gameData.bonusScore = pa_getLevelClearBonus(self->gameData.levelTime);
@@ -954,7 +964,8 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
 
     if (self->gameData.frameCount > 100)
     {
-        if(self->gameData.bonusScore > 0){
+        if (self->gameData.bonusScore > 0)
+        {
             pa_scorePoints(&(pango->gameData), 100);
             self->gameData.bonusScore -= 100;
             soundPlaySfx(&(self->soundManager.sndTally), 0);
@@ -962,7 +973,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
         else if (self->gameData.frameCount % 120 == 0)
         {
             // Hey look, it's a frame rule!
-            self->gameData.levelTime          = 0;
+            self->gameData.levelTime = 0;
 
             if (self->gameData.level >= MASTER_DIFFICULTY_TABLE_LENGTH)
             {
@@ -1031,7 +1042,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
     }
 
     pa_updateEntities(&(self->entityManager));
-    //pa_drawTileMap(&(self->tilemap));
+    // pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
     drawPangoHud(&(self->font), &(self->gameData));
     drawLevelClear(&(self->font), &(self->gameData));
@@ -1044,13 +1055,31 @@ void drawLevelClear(font_t* font, paGameData_t* gameData)
     drawText(font, c000, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done) + 1) >> 1, 48);
     drawText(font, c553, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done)) >> 1, 48);
 
-    if(gameData->frameCount > 30) {
+    if (gameData->frameCount > 30)
+    {
         drawText(font, c555, "Time Bonus", 80, 80);
-        drawText(font, (gameData->levelTime < 20) ? yellowColors[(pango->gameData.frameCount >> 3) % 4] : c555, "00 - 19s ... 5000", 44, 100);
-        drawText(font, (gameData->levelTime >=20 && gameData->levelTime < 30) ? greenColors[(pango->gameData.frameCount >> 3) % 4] : c555, "20 - 29s ... 2000", 44, 112);
-        drawText(font, (gameData->levelTime >=30 && gameData->levelTime < 40) ? cyanColors[(pango->gameData.frameCount >> 3) % 4] : c555, "30 - 39s ... 1000", 44, 124);
-        drawText(font, (gameData->levelTime >=40 && gameData->levelTime < 50) ? purpleColors[(pango->gameData.frameCount >> 3) % 4] : c555, "40 - 49s ...  500", 44, 136);
-        drawText(font, (gameData->levelTime >=50 && gameData->levelTime < 60) ? redColors[(pango->gameData.frameCount >> 3) % 4] : c555, "50 - 59s ...  100", 44, 148);
+        drawText(font, (gameData->levelTime < 20) ? yellowColors[(pango->gameData.frameCount >> 3) % 4] : c555,
+                 "00 - 19s ... 5000", 44, 100);
+        drawText(font,
+                 (gameData->levelTime >= 20 && gameData->levelTime < 30)
+                     ? greenColors[(pango->gameData.frameCount >> 3) % 4]
+                     : c555,
+                 "20 - 29s ... 2000", 44, 112);
+        drawText(font,
+                 (gameData->levelTime >= 30 && gameData->levelTime < 40)
+                     ? cyanColors[(pango->gameData.frameCount >> 3) % 4]
+                     : c555,
+                 "30 - 39s ... 1000", 44, 124);
+        drawText(font,
+                 (gameData->levelTime >= 40 && gameData->levelTime < 50)
+                     ? purpleColors[(pango->gameData.frameCount >> 3) % 4]
+                     : c555,
+                 "40 - 49s ...  500", 44, 136);
+        drawText(font,
+                 (gameData->levelTime >= 50 && gameData->levelTime < 60)
+                     ? redColors[(pango->gameData.frameCount >> 3) % 4]
+                     : c555,
+                 "50 - 59s ...  100", 44, 148);
         drawText(font, (gameData->levelTime > 59) ? c500 : c555, ">59s ....... None", 44, 160);
     }
 }
@@ -1225,7 +1254,8 @@ uint8_t getHighScoreRank(pangoHighScores_t* highScores, uint32_t newScore)
     return i;
 }
 
-void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore, char newInitials[], uint8_t newCharacter, uint8_t rank)
+void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore, char newInitials[],
+                               uint8_t newCharacter, uint8_t rank)
 {
     if (rank >= NUM_PLATFORMER_HIGH_SCORES)
     {
@@ -1245,7 +1275,7 @@ void insertScoreIntoHighScores(pangoHighScores_t* highScores, uint32_t newScore,
     highScores->initials[rank][0] = newInitials[0];
     highScores->initials[rank][1] = newInitials[1];
     highScores->initials[rank][2] = newInitials[2];
-    highScores->character[rank] = newCharacter;
+    highScores->character[rank]   = newCharacter;
 }
 
 void changeStateNameEntry(pango_t* self)
@@ -1317,8 +1347,8 @@ void updateNameEntry(pango_t* self, int64_t elapsedUs)
 
         if (self->menuState > 2)
         {
-            insertScoreIntoHighScores(&(self->highScores), self->gameData.score, self->gameData.initials, self->gameData.playerCharacter,
-                                      self->gameData.rank);
+            insertScoreIntoHighScores(&(self->highScores), self->gameData.score, self->gameData.initials,
+                                      self->gameData.playerCharacter, self->gameData.rank);
             pangoSaveHighScores(self);
             pangoChangeStateShowHighScores(self);
             soundPlaySfx(&(self->soundManager.sndPowerUp), BZR_STEREO);
@@ -1426,7 +1456,8 @@ void drawPause(font_t* font)
 
 uint16_t pa_getLevelClearBonus(int16_t elapsedTime)
 {
-    switch(elapsedTime){
+    switch (elapsedTime)
+    {
         case 0 ... 19:
             return 5000;
         case 20 ... 29:
@@ -1445,19 +1476,21 @@ uint16_t pa_getLevelClearBonus(int16_t elapsedTime)
 void pa_setDifficultyLevel(paWsgManager_t* wsgManager, paGameData_t* gameData, uint16_t levelIndex)
 {
     gameData->remainingEnemies
-        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + TOTAL_ENEMIES_LOOKUP_OFFSET];
+        = masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + TOTAL_ENEMIES_LOOKUP_OFFSET];
     gameData->maxActiveEnemies
-        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET];
+        = masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + MAX_ACTIVE_ENEMIES_LOOKUP_OFFSET];
     gameData->enemyInitialSpeed
-        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_INITIAL_SPEED_LOOKUP_OFFSET];
-    gameData->minAggroTime
-        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_MINIMUM_AGGRESSIVE_TIME_LOOKUP_OFFSET];
-    gameData->maxAggroTime
-        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_MAXIMUM_AGGRESSIVE_TIME_LOOKUP_OFFSET];
-    gameData->minAggroEnemies
-        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_MINIMUM_AGGRESSIVE_COUNT_LOOKUP_OFFSET];
-    gameData->maxAggroEnemies
-        = masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_MAXIMUM_AGGRESSIVE_COUNT_LOOKUP_OFFSET];
+        = masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + ENEMY_INITIAL_SPEED_LOOKUP_OFFSET];
+    gameData->minAggroTime    = masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH)
+                                              + ENEMY_MINIMUM_AGGRESSIVE_TIME_LOOKUP_OFFSET];
+    gameData->maxAggroTime    = masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH)
+                                              + ENEMY_MAXIMUM_AGGRESSIVE_TIME_LOOKUP_OFFSET];
+    gameData->minAggroEnemies = masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH)
+                                                 + ENEMY_MINIMUM_AGGRESSIVE_COUNT_LOOKUP_OFFSET];
+    gameData->maxAggroEnemies = masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH)
+                                                 + ENEMY_MAXIMUM_AGGRESSIVE_COUNT_LOOKUP_OFFSET];
 
-    pa_remapBlockTile(wsgManager, masterDifficulty[((levelIndex-1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + BLOCK_WSG_LOOKUP_OFFSET]);
+    pa_remapBlockTile(
+        wsgManager,
+        masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + BLOCK_WSG_LOOKUP_OFFSET]);
 }

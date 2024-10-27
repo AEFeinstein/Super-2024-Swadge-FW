@@ -94,13 +94,13 @@ void pa_updatePlayer(paEntity_t* self)
                     self->xspeed = -16;
                 }
 
-                //Make the player face in the most recent direction pressed
+                // Make the player face in the most recent direction pressed
                 if (!(self->gameData->prevBtnState & PB_LEFT))
                 {
                     self->facingDirection = PA_DIRECTION_WEST;
                 }
             }
-            
+
             if (self->gameData->btnState & PB_RIGHT)
             {
                 self->xspeed += 4;
@@ -110,7 +110,7 @@ void pa_updatePlayer(paEntity_t* self)
                     self->xspeed = 16;
                 }
 
-                //Make the player face in the most recent direction pressed
+                // Make the player face in the most recent direction pressed
                 if (!(self->gameData->prevBtnState & PB_RIGHT))
                 {
                     self->facingDirection = PA_DIRECTION_EAST;
@@ -126,13 +126,13 @@ void pa_updatePlayer(paEntity_t* self)
                     self->yspeed = -16;
                 }
 
-                //Make the player face in the most recent direction pressed
+                // Make the player face in the most recent direction pressed
                 if (!(self->gameData->prevBtnState & PB_UP))
                 {
                     self->facingDirection = PA_DIRECTION_NORTH;
                 }
             }
-            
+
             if (self->gameData->btnState & PB_DOWN)
             {
                 self->yspeed += 4;
@@ -142,14 +142,14 @@ void pa_updatePlayer(paEntity_t* self)
                     self->yspeed = 16;
                 }
 
-                //Make the player face in the most recent direction pressed
+                // Make the player face in the most recent direction pressed
                 if (!(self->gameData->prevBtnState & PB_DOWN))
                 {
                     self->facingDirection = PA_DIRECTION_SOUTH;
                 }
             }
 
-            //Fix the player's facing direction if:
+            // Fix the player's facing direction if:
             //- the player has let go of the most recent direction held
             //- the player is pressing opposite directions
             self->facingDirection = pa_correctPlayerFacingDirection(self->gameData->btnState, self->facingDirection);
@@ -163,7 +163,7 @@ void pa_updatePlayer(paEntity_t* self)
             {
                 self->gameData->changeState = PA_ST_PAUSE;
             }
-            
+
             switch (self->facingDirection)
             {
                 case PA_DIRECTION_WEST:
@@ -269,10 +269,10 @@ void pa_updatePlayer(paEntity_t* self)
 
 uint16_t pa_correctPlayerFacingDirection(int16_t btnState, uint16_t currentFacingDirection)
 {
-    //Mask out button bits that do not correspond to directional buttons
+    // Mask out button bits that do not correspond to directional buttons
     int16_t directionBtnState = btnState & 0b1111;
-    
-    switch(directionBtnState)
+
+    switch (directionBtnState)
     {
         case PA_DIRECTION_NORTH:
         case PA_DIRECTION_SOUTH:
@@ -753,8 +753,10 @@ void updateCrabdozer(paEntity_t* self)
     }
 }
 
-int16_t pa_enemySetAggroStateTimer(paEntity_t* self){
-    return (self->gameData->minAggroTime + esp_random() % (self->gameData->maxAggroTime - self->gameData->minAggroTime));
+int16_t pa_enemySetAggroStateTimer(paEntity_t* self)
+{
+    return (self->gameData->minAggroTime
+            + esp_random() % (self->gameData->maxAggroTime - self->gameData->minAggroTime));
 }
 
 void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t speed)
@@ -974,7 +976,6 @@ void pa_moveEntityWithTileCollisions(paEntity_t* self)
                                << SUBPIXEL_RESOLUTION;
                     }
                 }
-
             }
         }
     }
@@ -1079,7 +1080,8 @@ void pa_destroyEntity(paEntity_t* self, bool respawn)
 
 void animatePlayer(paEntity_t* self)
 {
-    switch(self->facingDirection){
+    switch (self->facingDirection)
+    {
         case PA_DIRECTION_NORTH:
             if ((self->gameData->btnState & PB_UP) && self->yspeed < 0)
             {
@@ -1165,8 +1167,8 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
                 }
                 else
                 {
-                    self->xspeed              = 0;
-                    self->yspeed              = 0;
+                    self->xspeed = 0;
+                    self->yspeed = 0;
                     soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
                 }
             }
@@ -1229,8 +1231,10 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             pa_scorePoints(self->gameData, pointsScored);
             other->scoreValue++;
 
-            paEntity_t* createdEntity = pa_createScoreDisplay(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4, (self->y >> SUBPIXEL_RESOLUTION) - 4);
-            if(createdEntity != NULL){
+            paEntity_t* createdEntity = pa_createScoreDisplay(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
+                                                              (self->y >> SUBPIXEL_RESOLUTION) - 4);
+            if (createdEntity != NULL)
+            {
                 createdEntity->scoreValue = pointsScored;
             }
 
@@ -1385,18 +1389,22 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
     if (pa_isSolid(tileId))
     {
         soundPlaySfx(&(self->soundManager->sndHit), 1);
-        
+
         self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth
-                               + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)]
-                = self->state;
-         
+                           + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)]
+            = self->state;
+
         if (PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) == self->homeTileX
             && PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) == self->homeTileY)
         {
-            if(self->state == PA_TILE_SPAWN_BLOCK_0){ 
+            if (self->state == PA_TILE_SPAWN_BLOCK_0)
+            {
                 pa_executeSpawnBlockCombo(self, self->homeTileX, self->homeTileY, 0);
-            } else {
-                pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            }
+            else
+            {
+                pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION,
+                                    self->y >> SUBPIXEL_RESOLUTION);
                 pa_scorePoints(self->gameData, 10);
             }
         }
@@ -1408,26 +1416,32 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
     return false;
 }
 
-void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty, uint16_t scoreIndex){
+void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty, uint16_t scoreIndex)
+{
     uint8_t t = pa_getTile(self->tilemap, tx, ty);
     paEntity_t* newEntity;
 
-    switch(t){
+    switch (t)
+    {
         case PA_TILE_SPAWN_BLOCK_0:
-            newEntity = pa_createBreakBlock(self->entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
-            if(newEntity == NULL) {
+            newEntity
+                = pa_createBreakBlock(self->entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                                      (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+            if (newEntity == NULL)
+            {
                 pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
                 pa_scorePoints(self->gameData, spawnBlockComboScores[self->scoreValue]);
                 self->entityManager->gameData->remainingEnemies--;
-            } else {
-                newEntity->state = PA_TILE_SPAWN_BLOCK_0;
+            }
+            else
+            {
+                newEntity->state      = PA_TILE_SPAWN_BLOCK_0;
                 newEntity->scoreValue = scoreIndex;
             }
             break;
         default:
             break;
     }
-
 }
 
 void dieWhenFallingOffScreen(paEntity_t* self)
@@ -1458,34 +1472,41 @@ void pa_updateBreakBlock(paEntity_t* self)
             uint8_t ty = (self->y >> SUBPIXEL_RESOLUTION >> PA_TILE_SIZE_IN_POWERS_OF_2);
             uint16_t pointsScored;
 
-            switch(self->state){
+            switch (self->state)
+            {
                 case PA_TILE_SPAWN_BLOCK_0:
                     pointsScored = spawnBlockComboScores[self->scoreValue];
 
                     pa_scorePoints(self->gameData, pointsScored);
                     soundPlaySfx(&(self->soundManager->sndCoin), BZR_STEREO);
                     self->entityManager->gameData->remainingEnemies--;
-                    
-                    pa_executeSpawnBlockCombo(self, tx+1, ty, self->scoreValue+1);
-                    pa_executeSpawnBlockCombo(self, tx-1, ty, self->scoreValue+1);
-                    pa_executeSpawnBlockCombo(self, tx, ty+1, self->scoreValue+1);
-                    pa_executeSpawnBlockCombo(self, tx, ty-1, self->scoreValue+1);
 
-                    paEntity_t* createdEntity = pa_createScoreDisplay(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4, (self->y >> SUBPIXEL_RESOLUTION) - 4);
-                    if(createdEntity != NULL){
+                    pa_executeSpawnBlockCombo(self, tx + 1, ty, self->scoreValue + 1);
+                    pa_executeSpawnBlockCombo(self, tx - 1, ty, self->scoreValue + 1);
+                    pa_executeSpawnBlockCombo(self, tx, ty + 1, self->scoreValue + 1);
+                    pa_executeSpawnBlockCombo(self, tx, ty - 1, self->scoreValue + 1);
+
+                    paEntity_t* createdEntity
+                        = pa_createScoreDisplay(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
+                                                (self->y >> SUBPIXEL_RESOLUTION) - 4);
+                    if (createdEntity != NULL)
+                    {
                         createdEntity->scoreValue = pointsScored;
                     }
 
                     break;
                 default:
-                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION); 
+                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION,
+                                           self->y >> SUBPIXEL_RESOLUTION);
+                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION,
+                                           self->y >> SUBPIXEL_RESOLUTION);
+                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION,
+                                           self->y >> SUBPIXEL_RESOLUTION);
+                    pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION,
+                                           self->y >> SUBPIXEL_RESOLUTION);
                     break;
             }
-           
-            
+
             pa_destroyEntity(self, false);
         }
     }
@@ -1493,7 +1514,8 @@ void pa_updateBreakBlock(paEntity_t* self)
     /*if(self->scoreValue > 0){
         char scoreStr[32];
         snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32, self->scoreValue);
-        drawText(&(self->gameData->scoreFont), c050, scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+        drawText(&(self->gameData->scoreFont), c050, scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >>
+    SUBPIXEL_RESOLUTION);
     }*/
 }
 
@@ -1506,10 +1528,12 @@ void updateEntityDead(paEntity_t* self)
     despawnWhenOffscreen(self);
 }
 
-void pa_updateScoreDisplay(paEntity_t* self){
+void pa_updateScoreDisplay(paEntity_t* self)
+{
     self->stateTimer++;
 
-    if(self->stateTimer > 120){
+    if (self->stateTimer > 120)
+    {
         pa_destroyEntity(self, false);
     }
 }
@@ -1615,18 +1639,20 @@ void drawEntityTargetTile(paEntity_t* self)
              (self->targetTileY << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_TILE_SIZE, esp_random() % 216);
 }
 
-void pa_defaultEntityDrawHandler(paEntity_t* self){
+void pa_defaultEntityDrawHandler(paEntity_t* self)
+{
     drawWsg(self->entityManager->wsgManager->sprites[self->spriteIndex].wsg,
-                    (self->x >> SUBPIXEL_RESOLUTION)
-                        - self->entityManager->wsgManager->sprites[self->spriteIndex].originX
-                        - self->entityManager->tilemap->mapOffsetX,
-                    (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
-                        - self->entityManager->wsgManager->sprites[self->spriteIndex].originY,
-                    self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+            (self->x >> SUBPIXEL_RESOLUTION) - self->entityManager->wsgManager->sprites[self->spriteIndex].originX
+                - self->entityManager->tilemap->mapOffsetX,
+            (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
+                - self->entityManager->wsgManager->sprites[self->spriteIndex].originY,
+            self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
 }
 
-void pa_scoreDisplayDrawHandler(paEntity_t* self){
+void pa_scoreDisplayDrawHandler(paEntity_t* self)
+{
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu16, self->scoreValue);
-    drawText(&(self->gameData->scoreFont), greenColors[(self->stateTimer >> 3) % 4], scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+    drawText(&(self->gameData->scoreFont), greenColors[(self->stateTimer >> 3) % 4], scoreStr,
+             self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
 }

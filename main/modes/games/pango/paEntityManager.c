@@ -74,7 +74,7 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
             continue;
         }
 
-        currentEntity->active     = false;
+        currentEntity->active = false;
 
         if (currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->state == PA_TILE_SPAWN_BLOCK_0)
         {
@@ -368,7 +368,8 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
     return entity;
 }
 
-paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, uint16_t y){
+paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
     paEntity_t* entity = pa_findInactiveEntity(entityManager);
 
     if (entity == NULL)
@@ -376,10 +377,10 @@ paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, 
         return NULL;
     }
 
-    entity->active    = true;
-    entity->visible   = true;
-    entity->x         = x << SUBPIXEL_RESOLUTION;
-    entity->y         = y << SUBPIXEL_RESOLUTION;
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = x << SUBPIXEL_RESOLUTION;
+    entity->y       = y << SUBPIXEL_RESOLUTION;
 
     entity->xspeed         = 0;
     entity->yspeed         = 0;
