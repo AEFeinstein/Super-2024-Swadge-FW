@@ -36,6 +36,7 @@ void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset);
 void danceRandomDance(uint32_t tElapsedUs, uint32_t arg, bool reset);
 void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset);
 void danceNone(uint32_t tElapsedUs, uint32_t arg, bool reset);
+void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset);
 
 uint8_t getNumDances(void);
 
