@@ -285,13 +285,16 @@ void pa_updatePlayer(paEntity_t* self)
 
 uint16_t pa_correctPlayerFacingDirection(int16_t btnState, uint16_t currentFacingDirection)
 {
-    switch(btnState & 0b1111)
+    //Mask out button bits that do not correspond to directional buttons
+    int16_t directionBtnState = btnState & 0b1111;
+    
+    switch(directionBtnState)
     {
         case PA_DIRECTION_NORTH:
         case PA_DIRECTION_SOUTH:
         case PA_DIRECTION_WEST:
         case PA_DIRECTION_EAST:
-            return btnState & 0b1111;
+            return directionBtnState;
             break;
         default:
             return currentFacingDirection;
