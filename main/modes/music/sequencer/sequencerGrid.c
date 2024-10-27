@@ -26,6 +26,7 @@ static const char* keys[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A
 static vec_t getCursorScreenPos(sequencerVars_t* sv);
 static void stopSequencer(sequencerVars_t* sv);
 static void moveCursor(sequencerVars_t* sv, buttonBit_t direction);
+void addOrRemoveNote(sequencerVars_t* sv, bool playPreview);
 
 //==============================================================================
 // Functions
@@ -77,76 +78,7 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
             }
             case PB_A:
             {
-                // Don't modify notes while playing
-                if (sv->isPlaying)
-                {
-                    return;
-                }
-
-                // Make a new note
-                sequencerNote_t* newNote = calloc(1, sizeof(sequencerNote_t));
-                newNote->midiNum         = 108 - sv->cursorPos.y;
-                // sv->songParams.grid is denominator, i.e. quarter note grid is 4, eighth note grid is 8, etc.
-                newNote->sixteenthOn  = sv->cursorPos.x;
-                newNote->sixteenthOff = newNote->sixteenthOn + (16 / sv->noteParams.type);
-                newNote->channel      = sv->noteParams.channel;
-
-                // Check for overlaps
-                node_t* addBeforeThis = NULL;
-                node_t* noteNode      = sv->notes.first;
-                while (noteNode)
-                {
-                    sequencerNote_t* setNote = noteNode->val;
-
-                    if ((setNote->midiNum == newNote->midiNum) && (setNote->sixteenthOn) < (newNote->sixteenthOff)
-                        && (setNote->sixteenthOff) > (newNote->sixteenthOn))
-                    {
-                        // Overlap, delete note
-                        free(newNote);
-                        free(setNote);
-                        removeEntry(&sv->notes, noteNode);
-
-                        // Return, nothing to add
-                        return;
-                    }
-                    else
-                    {
-                        // No overlap yet
-                        if ((NULL == addBeforeThis) && (newNote->sixteenthOn <= setNote->sixteenthOn))
-                        {
-                            // Save where the note should be inserted in time order
-                            addBeforeThis = noteNode;
-                        }
-                        // Iterate
-                        noteNode = noteNode->next;
-                    }
-                }
-
-                // Reached this far, insert the note, in order
-                if (NULL == addBeforeThis)
-                {
-                    push(&sv->notes, newNote);
-                }
-                else
-                {
-                    addBefore(&sv->notes, newNote, addBeforeThis);
-                }
-
-                // Play the just-added note
-                // Stop it first if it's currently exampling
-                if (0 < sv->exampleMidiNoteTimer)
-                {
-                    midiNoteOff(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote,
-                                MIDI_VELOCITY);
-                }
-
-                // Set the example note and timer
-                sv->exampleMidiNote      = newNote->midiNum;
-                sv->exampleMidiChannel   = sv->noteParams.channel;
-                sv->exampleMidiNoteTimer = (sv->usPerBeat * 4) / (sv->noteParams.type);
-
-                // Play it
-                midiNoteOn(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, MIDI_VELOCITY);
+                addOrRemoveNote(sv, true);
                 break;
             }
             case PB_B:
@@ -187,6 +119,88 @@ void sequencerGridButton(sequencerVars_t* sv, buttonEvt_t* evt)
             sv->holdScrollingActive = false;
             sv->holdScrollTimer     = 0;
         }
+    }
+}
+
+/**
+ * @brief Add or remove a note from where the cursor is
+ *
+ * @param sv The entire sequencer state
+ * @param playPreview True to play the note as a preview, false to not
+ */
+void addOrRemoveNote(sequencerVars_t* sv, bool playPreview)
+{
+    // Don't modify notes while playing
+    if (sv->isPlaying)
+    {
+        return;
+    }
+
+    // Make a new note
+    sequencerNote_t* newNote = calloc(1, sizeof(sequencerNote_t));
+    newNote->midiNum         = 108 - sv->cursorPos.y;
+    // sv->songParams.grid is denominator, i.e. quarter note grid is 4, eighth note grid is 8, etc.
+    newNote->sixteenthOn  = sv->cursorPos.x;
+    newNote->sixteenthOff = newNote->sixteenthOn + (16 / sv->noteParams.type);
+    newNote->channel      = sv->noteParams.channel;
+
+    // Check for overlaps
+    node_t* addBeforeThis = NULL;
+    node_t* noteNode      = sv->notes.first;
+    while (noteNode)
+    {
+        sequencerNote_t* setNote = noteNode->val;
+
+        if ((setNote->midiNum == newNote->midiNum) && (setNote->sixteenthOn) < (newNote->sixteenthOff)
+            && (setNote->sixteenthOff) > (newNote->sixteenthOn))
+        {
+            // Overlap, delete note
+            free(newNote);
+            free(setNote);
+            removeEntry(&sv->notes, noteNode);
+
+            // Return, nothing to add
+            return;
+        }
+        else
+        {
+            // No overlap yet
+            if ((NULL == addBeforeThis) && (newNote->sixteenthOn <= setNote->sixteenthOn))
+            {
+                // Save where the note should be inserted in time order
+                addBeforeThis = noteNode;
+            }
+            // Iterate
+            noteNode = noteNode->next;
+        }
+    }
+
+    // Reached this far, insert the note, in order
+    if (NULL == addBeforeThis)
+    {
+        push(&sv->notes, newNote);
+    }
+    else
+    {
+        addBefore(&sv->notes, newNote, addBeforeThis);
+    }
+
+    if (playPreview)
+    {
+        // Play the just-added note
+        // Stop it first if it's currently exampling
+        if (0 < sv->exampleMidiNoteTimer)
+        {
+            midiNoteOff(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, MIDI_VELOCITY);
+        }
+
+        // Set the example note and timer
+        sv->exampleMidiNote      = newNote->midiNum;
+        sv->exampleMidiChannel   = sv->noteParams.channel;
+        sv->exampleMidiNoteTimer = (sv->usPerBeat * 4) / (sv->noteParams.type);
+
+        // Play it
+        midiNoteOn(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, MIDI_VELOCITY);
     }
 }
 
@@ -270,8 +284,14 @@ static void moveCursor(sequencerVars_t* sv, buttonBit_t direction)
         }
         default:
         {
-            break;
+            return;
         }
+    }
+
+    // Change note state if button is held
+    if (sv->buttonState & PB_A)
+    {
+        addOrRemoveNote(sv, false);
     }
 }
 
