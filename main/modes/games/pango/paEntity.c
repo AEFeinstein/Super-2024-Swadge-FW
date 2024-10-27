@@ -100,7 +100,8 @@ void pa_updatePlayer(paEntity_t* self)
                     self->facingDirection = PA_DIRECTION_WEST;
                 }
             }
-            /*else*/ if (self->gameData->btnState & PB_RIGHT)
+            
+            if (self->gameData->btnState & PB_RIGHT)
             {
                 self->xspeed += 4;
 
@@ -131,7 +132,8 @@ void pa_updatePlayer(paEntity_t* self)
                     self->facingDirection = PA_DIRECTION_NORTH;
                 }
             }
-            /*else*/ if (self->gameData->btnState & PB_DOWN)
+            
+            if (self->gameData->btnState & PB_DOWN)
             {
                 self->yspeed += 4;
 
@@ -161,25 +163,7 @@ void pa_updatePlayer(paEntity_t* self)
             {
                 self->gameData->changeState = PA_ST_PAUSE;
             }
-
-            /*
-                if(self->xspeed){
-                    self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) + SIGNOF(self->xspeed);
-
-                    if(!self->yspeed){
-                        self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
-                    }
-                }
-
-                if(self->yspeed){
-                    self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) + SIGNOF(self->yspeed);
-
-                    if(!self->xspeed){
-                        self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
-                    }
-                }
-            */
-
+            
             switch (self->facingDirection)
             {
                 case PA_DIRECTION_WEST:
