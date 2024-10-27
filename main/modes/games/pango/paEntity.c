@@ -93,14 +93,26 @@ void pa_updatePlayer(paEntity_t* self)
                 {
                     self->xspeed = -16;
                 }
+
+                //Make the player face in the most recent direction pressed
+                if (!(self->gameData->prevBtnState & PB_LEFT))
+                {
+                    self->facingDirection = PA_DIRECTION_WEST;
+                }
             }
-            else if (self->gameData->btnState & PB_RIGHT)
+            /*else*/ if (self->gameData->btnState & PB_RIGHT)
             {
                 self->xspeed += 4;
 
                 if (self->xspeed > 16)
                 {
                     self->xspeed = 16;
+                }
+
+                //Make the player face in the most recent direction pressed
+                if (!(self->gameData->prevBtnState & PB_RIGHT))
+                {
+                    self->facingDirection = PA_DIRECTION_EAST;
                 }
             }
 
@@ -112,8 +124,14 @@ void pa_updatePlayer(paEntity_t* self)
                 {
                     self->yspeed = -16;
                 }
+
+                //Make the player face in the most recent direction pressed
+                if (!(self->gameData->prevBtnState & PB_UP))
+                {
+                    self->facingDirection = PA_DIRECTION_NORTH;
+                }
             }
-            else if (self->gameData->btnState & PB_DOWN)
+            /*else*/ if (self->gameData->btnState & PB_DOWN)
             {
                 self->yspeed += 4;
 
@@ -121,7 +139,18 @@ void pa_updatePlayer(paEntity_t* self)
                 {
                     self->yspeed = 16;
                 }
+
+                //Make the player face in the most recent direction pressed
+                if (!(self->gameData->prevBtnState & PB_DOWN))
+                {
+                    self->facingDirection = PA_DIRECTION_SOUTH;
+                }
             }
+
+            //Fix the player's facing direction if:
+            //- the player has let go of the most recent direction held
+            //- the player is pressing opposite directions
+            self->facingDirection = pa_correctPlayerFacingDirection(self->gameData->btnState, self->facingDirection);
 
             if (self->animationTimer > 0)
             {
@@ -252,6 +281,22 @@ void pa_updatePlayer(paEntity_t* self)
     pa_moveEntityWithTileCollisions(self);
     applyDamping(self);
     pa_detectEntityCollisions(self);
+}
+
+uint16_t pa_correctPlayerFacingDirection(int16_t btnState, uint16_t currentFacingDirection)
+{
+    switch(btnState & 0b1111)
+    {
+        case PA_DIRECTION_NORTH:
+        case PA_DIRECTION_SOUTH:
+        case PA_DIRECTION_WEST:
+        case PA_DIRECTION_EAST:
+            return btnState & 0b1111;
+            break;
+        default:
+            return currentFacingDirection;
+            break;
+    }
 }
 
 void updateCrabdozer(paEntity_t* self)
@@ -1047,55 +1092,49 @@ void pa_destroyEntity(paEntity_t* self, bool respawn)
 
 void animatePlayer(paEntity_t* self)
 {
-    if (abs(self->xspeed) > abs(self->yspeed))
-    {
-        if (((self->gameData->btnState & PB_LEFT) && self->xspeed < 0)
-            || ((self->gameData->btnState & PB_RIGHT) && self->xspeed > 0))
-        {
-            // Running
-            self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
-            self->facingDirection      = self->spriteFlipHorizontal ? PA_DIRECTION_WEST : PA_DIRECTION_EAST;
-
-            if (self->gameData->frameCount % 7 == 0)
+    switch(self->facingDirection){
+        case PA_DIRECTION_NORTH:
+            if ((self->gameData->btnState & PB_UP) && self->yspeed < 0)
             {
-                self->spriteIndex = PA_SP_PLAYER_SIDE + ((self->spriteIndex + 1) % 3);
+                if (self->gameData->frameCount % 7 == 0)
+                {
+                    self->spriteIndex          = PA_SP_PLAYER_NORTH + ((self->spriteIndex + 1) % 2);
+                    self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                }
             }
-        }
-        else
-        {
-            // self->spriteIndex = SP_PLAYER_SLIDE;
-        }
-    }
-    else if (self->yspeed > 0)
-    {
-        if ((self->gameData->btnState & PB_DOWN) && self->yspeed > 0)
-        {
-            self->facingDirection = PA_DIRECTION_SOUTH;
-
-            if (self->gameData->frameCount % 7 == 0)
+            break;
+        case PA_DIRECTION_SOUTH:
+            if ((self->gameData->btnState & PB_DOWN) && self->yspeed > 0)
             {
-                self->spriteIndex          = PA_SP_PLAYER_SOUTH + ((self->spriteIndex + 1) % 2);
-                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                if (self->gameData->frameCount % 7 == 0)
+                {
+                    self->spriteIndex          = PA_SP_PLAYER_SOUTH + ((self->spriteIndex + 1) % 2);
+                    self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                }
             }
-        }
-    }
-    else if (self->yspeed < 0)
-    {
-        if ((self->gameData->btnState & PB_UP) && self->yspeed < 0)
-        {
-            self->facingDirection = PA_DIRECTION_NORTH;
-
-            if (self->gameData->frameCount % 7 == 0)
+            break;
+        case PA_DIRECTION_WEST:
+            if ((self->gameData->btnState & PB_LEFT) && self->xspeed < 0)
             {
-                self->spriteIndex          = PA_SP_PLAYER_NORTH + ((self->spriteIndex + 1) % 2);
-                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                self->spriteFlipHorizontal = 1;
+                if (self->gameData->frameCount % 7 == 0)
+                {
+                    self->spriteIndex = PA_SP_PLAYER_SIDE + ((self->spriteIndex + 1) % 3);
+                }
             }
-        }
-    }
-    else
-    {
-        // Standing
-        // self->spriteIndex = PA_SP_PLAYER_SOUTH;
+            break;
+        case PA_DIRECTION_EAST:
+            if ((self->gameData->btnState & PB_RIGHT) && self->xspeed > 0)
+            {
+                self->spriteFlipHorizontal = 0;
+                if (self->gameData->frameCount % 7 == 0)
+                {
+                    self->spriteIndex = PA_SP_PLAYER_SIDE + ((self->spriteIndex + 1) % 3);
+                }
+            }
+            break;
+        default:
+            break;
     }
 }
 
