@@ -68,22 +68,17 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         paEntity_t* currentEntity = &(entityManager->entities[i]);
-        currentEntity->active     = false;
 
-        // clear out invisible block tiles that are placed for every Break Block object
-        // if(currentEntity->type == PA_ENTITY_BREAK_BLOCK){
-        //     pa_setTile(currentEntity->tilemap, PA_TO_TILECOORDS(currentEntity->x >> SUBPIXEL_RESOLUTION),
-        //     PA_TO_TILECOORDS(currentEntity->y >> SUBPIXEL_RESOLUTION), PA_TILE_EMPTY);
-        // }
-
-        if (currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->jumpPower == PA_TILE_SPAWN_BLOCK_0)
+        if (currentEntity->active == false || (excludePlayer && currentEntity == entityManager->playerEntity))
         {
-            entityManager->gameData->remainingEnemies--;
+            continue;
         }
 
-        if (excludePlayer && currentEntity == entityManager->playerEntity)
+        currentEntity->active = false;
+
+        if (currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->state == PA_TILE_SPAWN_BLOCK_0)
         {
-            currentEntity->active = true;
+            entityManager->gameData->remainingEnemies--;
         }
     }
 
@@ -99,13 +94,7 @@ void pa_drawEntities(paEntityManager_t* entityManager)
 
         if (currentEntity.active && currentEntity.visible)
         {
-            drawWsg(entityManager->wsgManager->sprites[currentEntity.spriteIndex].wsg,
-                    (currentEntity.x >> SUBPIXEL_RESOLUTION)
-                        - entityManager->wsgManager->sprites[currentEntity.spriteIndex].originX
-                        - entityManager->tilemap->mapOffsetX,
-                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->tilemap->mapOffsetY
-                        - entityManager->wsgManager->sprites[currentEntity.spriteIndex].originY,
-                    currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical, 0);
+            currentEntity.drawHandler(&currentEntity);
         }
     }
 }
@@ -207,9 +196,7 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->gravityEnabled     = false;
     entity->gravity            = 4;
     entity->falling            = false;
-    entity->jumpPower          = 0;
     entity->spriteFlipVertical = false;
-    entity->hp                 = 1;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
     entity->state              = PA_PL_ST_NORMAL;
     entity->stateTimer         = -1;
@@ -219,8 +206,8 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->updateFunction       = &pa_updatePlayer;
     entity->collisionHandler     = &pa_playerCollisionHandler;
     entity->tileCollisionHandler = &pa_playerTileCollisionHandler;
-    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_playerOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
     return entity;
 }
 
@@ -260,8 +247,8 @@ paEntity_t* createCrabdozer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->updateFunction       = &updateCrabdozer;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
-    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
 
     return entity;
 }
@@ -288,7 +275,7 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 0;
     entity->animationTimer       = 0;
     entity->type                 = PA_ENTITY_BREAK_BLOCK;
     entity->spriteIndex          = PA_SP_BREAK_BLOCK;
@@ -296,8 +283,9 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->updateFunction       = &pa_updateBreakBlock;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
-    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
+    entity->state                = 0;
 
     pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
 
@@ -323,7 +311,7 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
-    entity->gravity              = 0;
+    entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
@@ -334,8 +322,8 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->updateFunction       = &pa_updateBlockFragment;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
-    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
 
     return entity;
 }
@@ -370,10 +358,48 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
     entity->type                 = ENTITY_HIT_BLOCK;
     entity->spriteIndex          = PA_SP_BLOCK;
     entity->animationTimer       = 0;
+    entity->scoreValue           = 0;
     entity->updateFunction       = &updateHitBlock;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_hitBlockTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
+
+    return entity;
+}
+
+paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    paEntity_t* entity = pa_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = x << SUBPIXEL_RESOLUTION;
+    entity->y       = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed         = 0;
+    entity->yspeed         = 0;
+    entity->gravityEnabled = false;
+    entity->gravity        = 0;
+
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+
+    entity->type                 = PA_ENTITY_SCORE_DISPLAY;
+    entity->spriteIndex          = 0;
+    entity->animationTimer       = 0;
+    entity->scoreValue           = 0;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &pa_updateScoreDisplay;
+    entity->collisionHandler     = &pa_dummyCollisionHandler;
+    entity->tileCollisionHandler = &pa_hitBlockTileCollisionHandler;
+    entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_scoreDisplayDrawHandler;
 
     return entity;
 }

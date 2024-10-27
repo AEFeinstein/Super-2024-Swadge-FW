@@ -9,7 +9,6 @@
 
 #include "fs_wsg.h"
 #include "paTilemap.h"
-#include "paLeveldef.h"
 #include "esp_random.h"
 
 #include "cnfs.h"
@@ -33,21 +32,11 @@ void pa_initializeTileMap(paTilemap_t* tilemap, paWsgManager_t* wsgManager)
     tilemap->executeTileSpawnColumn = -1;
     tilemap->executeTileSpawnRow    = -1;
 
-    tilemap->animationFrame = 0;
-    tilemap->animationTimer = 23;
-
     tilemap->wsgManager = wsgManager;
 }
 
 void pa_drawTileMap(paTilemap_t* tilemap)
 {
-    tilemap->animationTimer--;
-    if (tilemap->animationTimer < 0)
-    {
-        tilemap->animationFrame = ((tilemap->animationFrame + 1) % 3);
-        tilemap->animationTimer = 23;
-    }
-
     for (int32_t y = (tilemap->mapOffsetY >> PA_TILE_SIZE_IN_POWERS_OF_2);
          y < (tilemap->mapOffsetY >> PA_TILE_SIZE_IN_POWERS_OF_2) + PA_TILE_MAP_DISPLAY_HEIGHT_TILES; y++)
     {
@@ -73,12 +62,6 @@ void pa_drawTileMap(paTilemap_t* tilemap)
             if (tile < PA_TILE_WALL_0 || tile == PA_TILE_INVISIBLE_BLOCK)
             {
                 continue;
-            }
-
-            // Test animated tiles
-            if (tile == PA_TILE_SPAWN_BLOCK_0 || tile == PA_TILE_BONUS_BLOCK_0)
-            {
-                tile += tilemap->animationFrame;
             }
 
             // Draw only non-garbage tiles
@@ -183,12 +166,6 @@ bool pa_loadMapFromFile(paTilemap_t* tilemap, const char* name)
     tilemap->minMapOffsetY = 0;
     tilemap->maxMapOffsetY = height * PA_TILE_SIZE - PA_TILE_MAP_DISPLAY_HEIGHT_PIXELS;
 
-    /*for (uint16_t i = 0; i < 16; i++)
-    {
-        tilemap->warps[i].x = buf[2 + width * height + i * 2];
-        tilemap->warps[i].y = buf[2 + width * height + i * 2 + 1];
-    }*/
-
     free(buf);
 
     return true;
@@ -250,11 +227,6 @@ bool pa_isSolid(uint8_t tileId)
     }
 }
 
-// bool isInteractive(uint8_t tileId)
-// {
-//     return tileId > PA_TILE_INVISIBLE_BLOCK && tileId < PA_TILE_BG_GOAL_ZONE;
-// }
-
 void pa_unlockScrolling(paTilemap_t* tilemap)
 {
     tilemap->minMapOffsetX = 0;
@@ -266,6 +238,10 @@ void pa_unlockScrolling(paTilemap_t* tilemap)
 
 bool pa_needsTransparency(uint8_t tileId)
 {
+    // TODO
+    // Currently, all tiles need transparency.
+    // So get rid of this then?
+
     switch (tileId)
     {
         /*case PA_TILE_BOUNCE_BLOCK:
