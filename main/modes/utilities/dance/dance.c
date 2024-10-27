@@ -826,47 +826,29 @@ void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset)
         tAccumulated -= 75000;
         ledsUpdated = true;
 
-        uint8_t randC;
+        // How bright each level flickers
+        const int32_t baseLevels[][2] = {{105, 150}, {40, 24}, {16, 4}};
+        // What LEDs are in each level. -1 means "no led"
+        const int32_t baseLeds[][4] = {{5, 6, 7, 8}, {0, 4, -1, -1}, {1, 2, 3, -1}};
 
-        // Base
-        randC     = danceRand(105) + 150;
-        leds[1].r = (randC * ARG_R(arg)) / 256;
-        leds[1].g = (randC * ARG_G(arg)) / 256;
-        leds[1].b = (randC * ARG_B(arg)) / 256;
-        randC     = danceRand(105) + 150;
-        leds[6].r = (randC * ARG_R(arg)) / 256;
-        leds[6].g = (randC * ARG_G(arg)) / 256;
-        leds[6].b = (randC * ARG_B(arg)) / 256;
-
-        // Mid-low
-        randC     = danceRand(48) + 32;
-        leds[0].r = (randC * ARG_R(arg)) / 256;
-        leds[0].g = (randC * ARG_G(arg)) / 256;
-        leds[0].b = (randC * ARG_B(arg)) / 256;
-        randC     = danceRand(48) + 32;
-        leds[7].r = (randC * ARG_R(arg)) / 256;
-        leds[7].g = (randC * ARG_G(arg)) / 256;
-        leds[7].b = (randC * ARG_B(arg)) / 256;
-
-        // Mid-high
-        randC     = danceRand(32) + 16;
-        leds[2].r = (randC * ARG_R(arg)) / 256;
-        leds[2].g = (randC * ARG_G(arg)) / 256;
-        leds[2].b = (randC * ARG_B(arg)) / 256;
-        randC     = danceRand(32) + 16;
-        leds[5].r = (randC * ARG_R(arg)) / 256;
-        leds[5].g = (randC * ARG_G(arg)) / 256;
-        leds[5].b = (randC * ARG_B(arg)) / 256;
-
-        // Tip
-        randC     = danceRand(16) + 4;
-        leds[3].r = (randC * ARG_R(arg)) / 256;
-        leds[3].g = (randC * ARG_G(arg)) / 256;
-        leds[3].b = (randC * ARG_B(arg)) / 256;
-        randC     = danceRand(16) + 4;
-        leds[4].r = (randC * ARG_R(arg)) / 256;
-        leds[4].g = (randC * ARG_G(arg)) / 256;
-        leds[4].b = (randC * ARG_B(arg)) / 256;
+        // for each level of the fire
+        for (int32_t base = 0; base < ARRAY_SIZE(baseLevels); base++)
+        {
+            // for each LED in that level
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(baseLeds[0]); lIdx++)
+            {
+                // Get the index for convenience
+                int32_t ledNum = baseLeds[base][lIdx];
+                if (-1 != ledNum)
+                {
+                    // Randomly light the LED, within bounds
+                    uint8_t randC  = danceRand(baseLevels[base][0]) + baseLevels[base][1];
+                    leds[ledNum].r = (randC * ARG_R(arg)) / 256;
+                    leds[ledNum].g = (randC * ARG_G(arg)) / 256;
+                    leds[ledNum].b = (randC * ARG_B(arg)) / 256;
+                }
+            }
+        }
     }
     if (ledsUpdated)
     {
