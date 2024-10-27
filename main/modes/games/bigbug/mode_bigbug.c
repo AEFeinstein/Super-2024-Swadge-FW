@@ -154,19 +154,11 @@ static void bb_EnterMode(void)
     bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000, false);
 
-    bb_entity_t* harpoon = bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
-                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE - 12, -1865, false);
-
-    bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
-    pData->vel.x = 10; //This will make it draw pointed right
-    pData->vel.y = 0;
-    
-    harpoon->updateFunction = NULL;
-
     bb_entity_t* foreground = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000, true);
     foreground->updateFunction = NULL;
     foreground->drawFunction = &bb_drawMenuForeground;
+    bb_destroyEntity(((bb_menuData_t*) foreground->data)->cursor, false);
 
     bigbug->gameData.entityManager.viewEntity = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                     (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1890, true);
@@ -326,6 +318,7 @@ static void bb_DrawScene(void)
  */
 static void bb_GameLoop(int64_t elapsedUs)
 {
+    bigbug->gameData.btnDownState = 0b0;
     // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -338,10 +331,22 @@ static void bb_GameLoop(int64_t elapsedUs)
         bigbug->gameData.btnState = evt.state;
 
         // Check if the pause button was pressed
-        if (evt.down && (PB_START == evt.button))
+        if (evt.down)
         {
-            // Toggle pause
-            bigbug->isPaused = !bigbug->isPaused;
+            bigbug->gameData.btnDownState += evt.button;
+            // PB_UP     = 0x0001, //!< The up button's bit
+            // PB_DOWN   = 0x0002, //!< The down button's bit
+            // PB_LEFT   = 0x0004, //!< The left button's bit
+            // PB_RIGHT  = 0x0008, //!< The right button's bit
+            // PB_A      = 0x0010, //!< The A button's bit
+            // PB_B      = 0x0020, //!< The B button's bit
+            // PB_START  = 0x0040, //!< The start button's bit
+            // PB_SELECT = 0x0080, //!< The select button's bit
+            if(evt.button == PB_START)
+            {
+                // Toggle pause
+                bigbug->isPaused = !bigbug->isPaused;
+            }
         }
     }
 

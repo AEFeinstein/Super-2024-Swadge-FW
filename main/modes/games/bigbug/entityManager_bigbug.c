@@ -531,7 +531,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
             gData->numHarpoons        = 250;
             gData->fuel  = 1000 * 60 * 1; // 1 thousand milliseconds in a second. 60 seconds in a minute. 1 minutes.
-            entity->data = gData;
+            bb_setData(entity, gData);
 
             entity->halfWidth  = 192;
             entity->halfHeight = 192;
@@ -548,7 +548,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
             rData->flame           = NULL;
             rData->yVel            = 240;
-            entity->data           = rData;
+            bb_setData(entity, rData);
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
@@ -569,7 +569,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case HARPOON:
         {
             bb_projectileData_t* pData = heap_caps_calloc(1, sizeof(bb_projectileData_t), MALLOC_CAP_SPIRAM);
-            entity->data               = pData;
+            bb_setData(entity, pData);
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
@@ -609,7 +609,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case EGG_LEAVES:
         {
             bb_eggLeavesData_t* elData = heap_caps_calloc(1, sizeof(bb_eggLeavesData_t), MALLOC_CAP_SPIRAM);
-            entity->data               = elData;
+            bb_setData(entity, elData);
 
             entity->updateFunction    = &bb_updateEggLeaves;
             entity->updateFarFunction = &bb_updateFarEggleaves;
@@ -628,7 +628,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
-            entity->data        = bData;
+            bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
@@ -645,7 +645,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
-            entity->data        = bData;
+            bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
@@ -662,7 +662,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
-            entity->data        = bData;
+            bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
@@ -679,7 +679,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
-            entity->data        = bData;
+            bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
@@ -696,7 +696,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
-            entity->data        = bData;
+            bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
@@ -713,7 +713,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
-            entity->data        = bData;
+            bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
@@ -729,7 +729,19 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_MENU:
         {
             bb_menuData_t* mData = heap_caps_calloc(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
-            entity->data = mData;
+
+            bb_entity_t* harpoon = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 1,
+                    (entity->pos.x>>DECIMAL_BITS) - 29, (entity->pos.y>>DECIMAL_BITS) + 135, false);
+            
+            bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
+            pData->vel.x = 10; //This will make it draw pointed right
+            pData->vel.y = 0;
+            
+            harpoon->updateFunction = NULL;
+
+            mData->cursor = harpoon;
+
+            bb_setData(entity, mData);
 
             entity->halfWidth = 140;
             entity->halfHeight = 120;

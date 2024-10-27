@@ -58,7 +58,8 @@ typedef struct
 
 typedef struct
 {
-    uint8_t selectionIdx;
+    int8_t selectionIdx;
+    bb_entity_t* cursor;
 } bb_menuData_t;
 
 typedef struct

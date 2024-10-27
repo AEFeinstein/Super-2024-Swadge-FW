@@ -666,23 +666,27 @@ void bb_updateBug(              bb_entity_t* self)
 
 void bb_updateMenu(bb_entity_t* self)
 {
-    switch (self->gameData->btnState)
+    bb_menuData_t* mData = (bb_menuData_t*) self->data;
+    switch (self->gameData->btnDownState & 0b11)
     {
         // up
-        case 0b0001:
-            break;
-        case 0b1101:
+        case PB_UP:
+            mData->selectionIdx--;
             break;
 
         // down
-        case 0b0010:
-            break;
-        case 0b1110:
+        case PB_DOWN:
+            mData->selectionIdx++;
+            printf("down pressed\n");
             break;
 
         default:
             break;
     }
+    mData->selectionIdx = mData->selectionIdx < 0 ? 1 : mData->selectionIdx;
+    mData->selectionIdx = mData->selectionIdx > 1 ? 0 : mData->selectionIdx;
+
+    mData->cursor->pos.y = self->pos.y + (135<<DECIMAL_BITS) + mData->selectionIdx * (28<<DECIMAL_BITS);
 
     if(self->gameData->menuBug == NULL || self->gameData->menuBug->active == false)
     {
@@ -885,7 +889,6 @@ void bb_drawMenuBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     uint8_t brightness = abs((self->pos.x >> DECIMAL_BITS) - (entityManager->viewEntity->pos.x >> DECIMAL_BITS));
     brightness = (140 - brightness)/23;
     brightness = brightness > 5 ? 5 : brightness;
-    brightness = brightness < 0 ? 0 : brightness;
 
     drawWsg(&entityManager->sprites[self->spriteIndex]
                     .frames[brightness + self->currentAnimationFrame * 6],

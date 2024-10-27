@@ -34,7 +34,8 @@ struct bb_gameData_t
 {
     int32_t elapsedUs;
 
-    uint16_t btnState;
+    uint16_t btnState; //represents any buttons states
+    uint16_t btnDownState; //represents the initial downpresses on each button
 
     int32_t touchPhi;
     int32_t touchRadius;
