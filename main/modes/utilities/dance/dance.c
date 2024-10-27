@@ -864,13 +864,13 @@ void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset)
  */
 void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset)
 {
-    static int32_t ledCount;
+    static bool sideLit;
     static uint32_t tAccumulated = 0;
 
     if (reset)
     {
-        ledCount     = 0;
-        tAccumulated = 120000;
+        sideLit      = false;
+        tAccumulated = 500000;
         return;
     }
 
@@ -879,38 +879,38 @@ void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)),
     bool ledsUpdated            = false;
 
     tAccumulated += tElapsedUs;
-    while (tAccumulated >= 120000)
+    while (tAccumulated >= 500000)
     {
-        tAccumulated -= 120000;
+        tAccumulated -= 500000;
         ledsUpdated = true;
 
-        // Skip to the next LED around the swadge
-        ledCount = ledCount + 1;
-        if (ledCount > CONFIG_NUM_LEDS)
-        {
-            ledCount = 0;
-        }
+        // Alternate which side is lit
+        sideLit = !sideLit;
 
-        uint8_t i;
-        if (ledCount < (CONFIG_NUM_LEDS >> 1))
-        {
-            // red
-            for (i = 0; i < (CONFIG_NUM_LEDS >> 1); i++)
+        // These are the LEDs on each side
+        static const uint8_t halves[2][5] = {
+            {0, 1, 2, 7, 8},
+            {2, 3, 4, 5, 6},
+        };
+
+        // These are the colors for each side
+        static const led_t colors[2] = {
             {
-                leds[i].r = 0xFF;
-                leds[i].g = 0x00;
-                leds[i].b = 0x00;
-            }
-        }
-        else
-        {
-            // blue
-            for (i = (CONFIG_NUM_LEDS >> 1); i < CONFIG_NUM_LEDS; i++)
+                .r = 0xFF,
+                .g = 0x00,
+                .b = 0x00,
+            },
             {
-                leds[i].r = 0x00;
-                leds[i].g = 0x00;
-                leds[i].b = 0xFF;
-            }
+                .r = 0x00,
+                .g = 0x00,
+                .b = 0xFF,
+            },
+        };
+
+        // Set the appropriate LEDs to the appropriate color
+        for (uint32_t i = 0; i < ARRAY_SIZE(halves[0]); i++)
+        {
+            leds[halves[sideLit][i]] = colors[sideLit];
         }
     }
     // Output the LED data, actually turning them on
