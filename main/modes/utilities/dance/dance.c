@@ -514,15 +514,26 @@ void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset)
  */
 void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
-    static int16_t levels[CONFIG_NUM_LEDS / 2] = {0, -256, -512};
-    static bool rising[CONFIG_NUM_LEDS / 2]    = {true, true, true};
-    static uint8_t angle                       = 0;
-    static uint32_t tAccumulated               = 0;
-    static uint8_t ledRemap[CONFIG_NUM_LEDS]   = {1, 0, 2, 3, 4, 5, 7, 6};
+#define RISE_LEVELS 3
+    static const int8_t ledsPerLevel[RISE_LEVELS][4] = {
+        {
+            5,
+            6,
+            7,
+            8,
+        },
+        {0, 4, -1, -1},
+        {1, 2, 3, -1},
+    };
+
+    static int16_t levels[RISE_LEVELS] = {0, -256, -512};
+    static bool rising[RISE_LEVELS]    = {true, true, true};
+    static uint8_t angle               = 0;
+    static uint32_t tAccumulated       = 0;
 
     if (reset)
     {
-        for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
+        for (uint8_t i = 0; i < RISE_LEVELS; i++)
         {
             levels[i] = i * -256;
             rising[i] = true;
@@ -545,7 +556,7 @@ void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset)
             angle = danceRand(256);
         }
 
-        for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
+        for (uint8_t i = 0; i < RISE_LEVELS; i++)
         {
             if (rising[i])
             {
@@ -565,36 +576,26 @@ void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset)
             }
         }
 
+        int32_t color;
         if (0 == arg)
         {
-            int32_t color = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
-            for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
-            {
-                if (levels[i] > 0)
-                {
-                    leds[ledRemap[i]].r = (levels[i] * ((color >> 0) & 0xFF) >> 8);
-                    leds[ledRemap[i]].g = (levels[i] * ((color >> 8) & 0xFF) >> 8);
-                    leds[ledRemap[i]].b = (levels[i] * ((color >> 16) & 0xFF) >> 8);
-
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].r = (levels[i] * ((color >> 0) & 0xFF) >> 8);
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].g = (levels[i] * ((color >> 8) & 0xFF) >> 8);
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].b = (levels[i] * ((color >> 16) & 0xFF) >> 8);
-                }
-            }
+            color = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
         }
         else
         {
-            for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
-            {
-                if (levels[i] > 0)
-                {
-                    leds[ledRemap[i]].r = (levels[i] * ARG_R(arg)) >> 8;
-                    leds[ledRemap[i]].g = (levels[i] * ARG_G(arg)) >> 8;
-                    leds[ledRemap[i]].b = (levels[i] * ARG_B(arg)) >> 8;
+            color = arg;
+        }
 
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].r = (levels[i] * ARG_R(arg)) >> 8;
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].g = (levels[i] * ARG_G(arg)) >> 8;
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].b = (levels[i] * ARG_B(arg)) >> 8;
+        for (uint8_t i = 0; i < RISE_LEVELS; i++)
+        {
+            for (int8_t lIdx = 0; lIdx < ARRAY_SIZE(ledsPerLevel[0]); lIdx++)
+            {
+                int8_t ledNum = ledsPerLevel[i][lIdx];
+                if (-1 != ledNum && levels[i] > 0)
+                {
+                    leds[ledNum].r = (levels[i] * ((color >> 16) & 0xFF) >> 8);
+                    leds[ledNum].g = (levels[i] * ((color >> 8) & 0xFF) >> 8);
+                    leds[ledNum].b = (levels[i] * ((color >> 0) & 0xFF) >> 8);
                 }
             }
         }
