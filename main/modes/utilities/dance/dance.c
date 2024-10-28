@@ -150,6 +150,9 @@ danceMode_t* danceState;
  */
 void danceEnterMode(void)
 {
+    // No speaker output for LEDs!
+    setDacShutdown(true);
+
     danceState = calloc(1, sizeof(danceMode_t));
 
     danceState->danceIdx   = 0;
