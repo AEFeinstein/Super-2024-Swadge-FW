@@ -119,6 +119,10 @@ const seqHelpPage_t helpPages[] = {
         .text  = "Down on the touchpad changes the length of the note from sixteenth note to whole note.",
     },
     {
+        .title = str_grid,
+        .text  = "The drums don't have hits for every note, so play around and find the good ones.",
+    },
+    {
         .title = sequencerName,
         .text  = "Now go make a masterpiece!",
     },
@@ -143,11 +147,16 @@ void drawSequencerHelp(sequencerVars_t* sv, int32_t elapsedUs)
     drawMenuMania(sv->bgMenu, sv->menuRenderer, 0);
 
     // Draw text
-    paletteColor_t textColor = c000;
-    int16_t xOff             = TEXT_MARGIN_L;
-    int16_t yOff             = MANIA_TITLE_HEIGHT + 8;
+    paletteColor_t textColor    = c555;
+    paletteColor_t outlineColor = c000;
+    int16_t xOff                = TEXT_MARGIN_L;
+    int16_t yOff                = MANIA_TITLE_HEIGHT + 8;
     drawTextWordWrap(&sv->font_rodin, textColor, helpPages[sv->helpIdx].text, &xOff, &yOff, TFT_WIDTH - TEXT_MARGIN_R,
                      TFT_HEIGHT);
+    xOff = TEXT_MARGIN_L;
+    yOff = MANIA_TITLE_HEIGHT + 8;
+    drawTextWordWrap(&sv->font_rodin_outline, outlineColor, helpPages[sv->helpIdx].text, &xOff, &yOff,
+                     TFT_WIDTH - TEXT_MARGIN_R, TFT_HEIGHT);
 
     // Draw page numbers
     char pageText[32];
@@ -156,6 +165,8 @@ void drawSequencerHelp(sequencerVars_t* sv, int32_t elapsedUs)
 
     int16_t tWidth = textWidth(&sv->font_rodin, pageText);
     drawText(&sv->font_rodin, textColor, pageText, TFT_WIDTH - 30 - tWidth, TFT_HEIGHT - sv->font_rodin.height + 2);
+    drawText(&sv->font_rodin_outline, outlineColor, pageText, TFT_WIDTH - 30 - tWidth,
+             TFT_HEIGHT - sv->font_rodin_outline.height + 2);
 
     // Blink the arrows
     sv->arrowBlinkTimer += elapsedUs;
@@ -171,6 +182,7 @@ void drawSequencerHelp(sequencerVars_t* sv, int32_t elapsedUs)
         {
             // Draw left arrow if not on the first page
             drawText(&sv->font_rodin, textColor, "<", 0, (TFT_HEIGHT - sv->font_rodin.height) / 2);
+            drawText(&sv->font_rodin_outline, outlineColor, "<", 0, (TFT_HEIGHT - sv->font_rodin_outline.height) / 2);
         }
 
         if ((ARRAY_SIZE(helpPages) - 1) != sv->helpIdx)
@@ -178,6 +190,8 @@ void drawSequencerHelp(sequencerVars_t* sv, int32_t elapsedUs)
             // Draw right arrow if not on the last page
             drawText(&sv->font_rodin, textColor, ">", TFT_WIDTH - textWidth(&sv->font_rodin, ">"),
                      (TFT_HEIGHT - sv->font_rodin.height) / 2);
+            drawText(&sv->font_rodin_outline, outlineColor, ">", TFT_WIDTH - textWidth(&sv->font_rodin, ">"),
+                     (TFT_HEIGHT - sv->font_rodin_outline.height) / 2);
         }
     }
 }
