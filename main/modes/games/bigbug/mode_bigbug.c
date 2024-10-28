@@ -69,11 +69,7 @@ struct bb_t
 static void bb_EnterMode(void);
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
-static void bb_AudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void bb_EspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
-static void bb_EspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
-static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
 
 // big bug logic
 // static void bb_LoadScreenDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -100,19 +96,16 @@ static const char bigbugName[] = "Big Bug";
 //==============================================================================
 
 swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
-                           .wifiMode                 = ESP_NOW,
+                           .wifiMode                 = NO_WIFI,
                            .overrideUsb              = false,
                            .usesAccelerometer        = true,
                            .usesThermometer          = true,
                            .overrideSelectBtn        = false,
+                           .fnAudioCallback          = NULL,
                            .fnEnterMode              = bb_EnterMode,
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
-                           .fnAudioCallback          = bb_AudioCallback,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
-                           .fnEspNowRecvCb           = bb_EspNowRecvCb,
-                           .fnEspNowSendCb           = bb_EspNowSendCb,
-                           .fnAdvancedUSB            = bb_AdvancedUSB,
                            .fnDacCb                  = NULL};
 
 /// All state information for bigbug mode. This whole struct is calloc()'d and free()'d so that bigbug is only
@@ -212,11 +205,6 @@ static void bb_MainLoop(int64_t elapsedUs)
     }
 }
 
-static void bb_AudioCallback(uint16_t* samples, uint32_t sampleCnt)
-{
-    // Fill this in
-}
-
 static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     // accelIntegrate(); only needed if using accelerometer for something
@@ -257,22 +245,6 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     {
         fillDisplayArea(x, y, x + w, y + h, c455);
     }
-}
-
-static void bb_EspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
-{
-    // Fill this in
-}
-
-static void bb_EspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
-{
-    // Fill this in
-}
-
-static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
-{
-    // Fill this in
-    return 0;
 }
 
 //==============================================================================

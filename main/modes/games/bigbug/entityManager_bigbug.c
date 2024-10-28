@@ -195,7 +195,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
             if (curEntity->collisions != NULL)
             {
-                if (*((bb_spriteDef_t*)(((bb_collision_t*)curEntity->collisions->first->val)->checkOthers->first)->val) == GARBOTNIK_FLYING)
+                if ((bb_spriteDef_t)(((bb_collision_t*)curEntity->collisions->first->val)->checkOthers->first)->val == GARBOTNIK_FLYING)
                 {
                     if(entityManager->playerEntity != NULL){
                         //no need to search all other players if it's simply something to do with the player.
@@ -222,7 +222,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                             node_t* cccNext = currentCollisionCheck->next;
                             while (currentOtherType != NULL)
                             {
-                                if (collisionCandidate->spriteIndex == *((bb_spriteDef_t*)currentOtherType->val))
+                                if (collisionCandidate->spriteIndex == (bb_spriteDef_t)currentOtherType->val)
                                 {
                                     // do a collision check here
                                     if (bb_boxesCollide(collisionCandidate, curEntity, NULL, NULL))
@@ -552,9 +552,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-            bb_spriteDef_t* garbotnik = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
-            *garbotnik                = GARBOTNIK_FLYING;
-            push(others, (void*)garbotnik);
+            push(others, (void*)GARBOTNIK_FLYING);
             bb_collision_t* collision = heap_caps_malloc(sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionRocket};
             push(entity->collisions, (void*)collision);
@@ -574,29 +572,13 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
 
-            bb_spriteDef_t* bu = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
-            *bu                = BU;
-            push(others, (void*)bu);
-
-            bb_spriteDef_t* bug = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
-            *bug                = BUG;
-            push(others, (void*)bug);
-
-            bb_spriteDef_t* bugg = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
-            *bugg                = BUGG;
-            push(others, (void*)bugg);
-
-            bb_spriteDef_t* buggo = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
-            *buggo                = BUGGO;
-            push(others, (void*)buggo);
-
-            bb_spriteDef_t* buggy = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
-            *buggy                = BUGGY;
-            push(others, (void*)buggy);
-
-            bb_spriteDef_t* butt = heap_caps_malloc(sizeof(bb_spriteDef_t), MALLOC_CAP_SPIRAM);
-            *butt                = BUTT;
-            push(others, (void*)butt);
+            //Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any 32 bits of info you want there, as long as you know how to handle it on the other end
+            push(others, (void*)BU);
+            push(others, (void*)BUG);
+            push(others, (void*)BUGG);
+            push(others, (void*)BUGGO);
+            push(others, (void*)BUGGY);
+            push(others, (void*)BUTT);
 
             bb_collision_t* collision = heap_caps_malloc(sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionHarpoon};
