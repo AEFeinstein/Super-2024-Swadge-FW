@@ -168,7 +168,7 @@ void danceEnterMode(void)
     };
     led_t offLed = {0};
     recolorMenuManiaRenderer(danceState->menuRenderer, // Pango palette!
-                             c430, c542, c111,         // titleBgColor, titleTextColor, textOutlineColor
+                             c320, c542, c111,         // titleBgColor, titleTextColor, textOutlineColor
                              c045,                     // bgColor
                              c542, c541,               // outerRingColor, innerRingColor
                              c111, c455,               // rowColor, rowTextColor
