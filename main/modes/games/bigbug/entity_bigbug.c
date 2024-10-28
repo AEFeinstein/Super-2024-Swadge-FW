@@ -53,10 +53,8 @@ void bb_clearCollisions(bb_entity_t* self, bool keepCollisionsCached){
         {
             // Remove from head
             bb_collision_t* shiftedCollision = shift(self->collisions);
-            while (shiftedCollision->checkOthers->first != NULL)
-            {
-                shift(shiftedCollision->checkOthers);
-            }
+            free(shiftedCollision->checkOthers);
+            free(shiftedCollision);
         }
         free(self->collisions);
     }
