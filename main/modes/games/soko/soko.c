@@ -13,9 +13,8 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
 
 // strings
-static const char sokoModeName[]        = "Eulerian";
-static const char sokoResumeGameLabel[] = "Play";
-static const char sokoNewGameLabel[]    = "Also Play";
+static const char sokoModeName[]        = "Hunter's Block Puzzles";
+static const char sokoPlayGameLabel[] = "Play";
 
 // create the mode
 swadgeMode_t sokoMode = {
@@ -103,7 +102,7 @@ static void sokoEnterMode(void)
     soko->menuManiaRenderer = initMenuManiaRenderer(&soko->ibm, NULL, NULL);
 
     //addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
-    addSingleItemToMenu(soko->menu, sokoNewGameLabel);
+    addSingleItemToMenu(soko->menu, sokoPlayGameLabel);
 
     // Set the mode to menu mode
     soko->screen = SOKO_MENU;
@@ -154,24 +153,17 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
     if (selected)
     {
         // placeholder.
-        if (label == sokoResumeGameLabel)
+        if (label == sokoPlayGameLabel)
         {
-            int32_t data;
-            readNvs32("sk_data", &data);
-            // bitshift, etc, as needed.
-            uint16_t lastSaved = (uint16_t)data;
-            sokoLoadGameplay(soko, lastSaved, false);
-            sokoInitGameBin(soko);
-            soko->screen = SOKO_LEVELPLAY;
-        }
-        else if (label == sokoNewGameLabel)
-        {
-            // load position in overworld.
-            // soko->soko_player->x = soko->overworld_playerX;
-            // soko->soko_player->y = soko->overworld_playerY;
-            // load level.
-            // we probably shouldn't have a new game option; just an overworld option.
-            sokoLoadGameplay(soko, 0, true);
+            int32_t overworld_player;
+            readNvs32("sk_overworldPos", &overworld_player);
+            soko->overworld_playerX = (uint16_t)(overworld_player & 0b1111111111111111);//okay so the cast to uint16 just does this right?
+            soko->overworld_playerY = (uint16_t)(overworld_player >> 16);
+            printf("Load Overworld: %d,%d - {%d}\n", soko->overworld_playerX, soko->overworld_playerY, overworld_player);
+
+            //if x == 0 && y == 0, then put the player somewhere else.
+
+            sokoLoadGameplay(soko, 0, false);
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
         }

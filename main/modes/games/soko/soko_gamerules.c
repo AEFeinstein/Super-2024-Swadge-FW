@@ -74,6 +74,7 @@ void sokoConfigGamemode(
         soko->currentTheme                     = &soko->overworldTheme;
         // set position to previous overworld positon when re-entering the overworld
         // but like... not an infinite loop?
+        
         soko->soko_player->x = soko->overworld_playerX;
         soko->soko_player->y = soko->overworld_playerY;
         soko->background     = SKBG_FORREST;
@@ -101,6 +102,10 @@ void sokoConfigGamemode(
     {
         printf("invalid gamemode.");
     }
+
+    //save overworld position.
+    uint32_t overworldData =  (soko->overworld_playerY << 16) | soko->overworld_playerX;
+    writeNvs32("sk_overworldPos", overworldData);
 
     // add conditional for alternative variants
     sokoInitHistory(soko);
