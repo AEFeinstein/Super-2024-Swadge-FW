@@ -333,9 +333,18 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                 states->on &= ~voiceBit;
                 channels[voice->channel].allocedVoices &= ~voiceBit;
 
-                pressureVol               = 0;
-                voice->transitionStartVol = VOICE_CUR_VOL(voice);
-                voice->targetVol          = 0;
+                pressureVol = 0;
+
+                if (voice->transitionTicksTotal)
+                {
+                    voice->transitionStartVol = VOICE_CUR_VOL(voice);
+                }
+                else
+                {
+                    voice->transitionStartVol = voice->velocity << 1 | 1;
+                }
+
+                voice->targetVol = 0;
 
                 voice->transitionTicksTotal = UINT32_MAX;
                 voice->transitionTicks      = UINT32_MAX;
@@ -1410,6 +1419,7 @@ void midiGmOn(midiPlayer_t* player)
 
         // Channel 10 (index 9) is reserved for percussion.
         chan->percussion = (9 == chanIdx);
+        chan->bank       = 0;
 
         initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, 0, chan->program));
     }

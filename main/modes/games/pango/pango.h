@@ -23,6 +23,7 @@ typedef struct
 {
     uint32_t scores[NUM_PLATFORMER_HIGH_SCORES];
     char initials[NUM_PLATFORMER_HIGH_SCORES][3];
+    uint8_t character[NUM_PLATFORMER_HIGH_SCORES];
 } pangoHighScores_t;
 
 typedef struct

@@ -120,6 +120,9 @@ static timerMode_t* timerData = NULL;
 
 static void timerEnterMode(void)
 {
+    // Disable speaker for timer
+    setDacShutdown(true);
+
     timerData = calloc(1, sizeof(timerMode_t));
 
     loadFont("ibm_vga8.font", &timerData->textFont, false);

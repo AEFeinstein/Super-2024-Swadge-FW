@@ -79,12 +79,18 @@ static const int32_t loopVals[] = {true, false};
 
 static const char str_songEnd[] = "End Song Here";
 
-static const char str_instrument[]             = "Instrument: ";
-static const char* instrumentLabels[]          = {"Piano", "Guitar", "Drums"};
-static const int32_t instrumentVals[]          = {0, 1, 2};
-static const int32_t instrumentPrograms[]      = {0, 26, 13}; // TODO Pick better instruments
-static const char* const instrumentWsgs[]      = {"seq_piano.wsg", "seq_guitar.wsg", "seq_drums.wsg"};
-static const paletteColor_t instrumentColors[] = {c500, c050, c005};
+static const char str_instrument[]        = "Instrument: ";
+static const char* instrumentLabels[]     = {"Piano", "Brass", "Sax", "Synth", "Bass", "Drums"};
+static const int32_t instrumentVals[]     = {0, 1, 2, 3, 4, 9};
+static const int32_t instrumentPrograms[] = {2,  // Electric Grand Piano
+                                             61, // Brass Section
+                                             64, // Soprano Sax
+                                             87, // Lead 8 (bass) [synth]
+                                             38, // Synth Bass    [bass]
+                                             0}; // Drum Kit, channel 10
+static const char* const instrumentWsgs[]
+    = {"seq_piano.wsg", "seq_trumpet.wsg", "seq_sax.wsg", "seq_synth.wsg", "seq_guitar.wsg", "seq_drums.wsg"};
+static const paletteColor_t instrumentColors[] = {c500, c330, c050, c033, c005, c303};
 
 static const char str_noteType[]    = "Note: ";
 static const char* noteTypeLabels[] = {"Whole", "Half", "Quarter", "Eighth", "Sixteenth"};
@@ -134,6 +140,7 @@ static void sequencerEnterMode(void)
     // Load fonts
     loadFont("ibm_vga8.font", &sv->font_ibm, true);
     loadFont("rodin_eb.font", &sv->font_rodin, true);
+    makeOutlineFont(&sv->font_rodin, &sv->font_rodin_outline, true);
     loadFont("righteous_150.font", &sv->font_righteous, true);
     makeOutlineFont(&sv->font_righteous, &sv->font_righteous_outline, true);
 
@@ -188,7 +195,7 @@ static void sequencerEnterMode(void)
     // Set each instrument
     for (int32_t ch = 0; ch < ARRAY_SIZE(instrumentVals); ch++)
     {
-        midiSetProgram(player, ch, instrumentPrograms[ch]);
+        midiSetProgram(player, instrumentVals[ch], instrumentPrograms[ch]);
     }
 
     // Start in the middle of the piano
@@ -395,6 +402,8 @@ static void sequencerExitMode(void)
         }
     }
 
+    deinitGlobalMidiPlayer();
+
     void* val;
     while ((val = pop(&sv->notes)))
     {
@@ -405,6 +414,7 @@ static void sequencerExitMode(void)
     freeFont(&sv->font_righteous);
     freeFont(&sv->font_righteous_outline);
     freeFont(&sv->font_rodin);
+    freeFont(&sv->font_rodin_outline);
     deinitMenuManiaRenderer(sv->menuRenderer);
     deinitMenu(sv->songMenu);
     deinitMenu(sv->bgMenu);
@@ -441,12 +451,10 @@ static void sequencerMainLoop(int64_t elapsedUs)
         {
             if (SEQUENCER_MENU == sv->screen)
             {
-                globalMidiPlayerResumeAll();
                 setSequencerScreen(SEQUENCER_SEQ);
             }
             else
             {
-                globalMidiPlayerPauseAll();
                 setSequencerScreen(SEQUENCER_MENU);
             }
         }
@@ -704,7 +712,14 @@ static void sequencerNoteMenuCb(const char* label, bool selected, uint32_t setti
  */
 paletteColor_t getChannelColor(int32_t channel)
 {
-    return instrumentColors[channel];
+    for (int32_t idx = 0; idx < ARRAY_SIZE(instrumentVals); idx++)
+    {
+        if (channel == instrumentVals[idx])
+        {
+            return instrumentColors[idx];
+        }
+    }
+    return instrumentColors[0];
 }
 
 /**
@@ -827,6 +842,15 @@ static void sequencerLoadSong(const char* fname)
 void setSequencerScreen(sequencerScreen_t screen)
 {
     sv->screen = screen;
+
+    if (SEQUENCER_SEQ == sv->screen)
+    {
+        globalMidiPlayerResumeAll();
+    }
+    else
+    {
+        globalMidiPlayerPauseAll();
+    }
 
     if (SEQUENCER_HELP == screen)
     {
