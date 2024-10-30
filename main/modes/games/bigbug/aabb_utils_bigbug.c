@@ -25,25 +25,21 @@ bool bb_boxesCollide(bb_entity_t* unyielding, bb_entity_t* yielding, vec_t* prev
 {
     // AABB-AABB collision detection begins here
     // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-    if (unyielding->pos.x - unyielding->halfWidth
-            < yielding->pos.x + yielding->halfWidth
-        && unyielding->pos.x + unyielding->halfWidth
-                > yielding->pos.x - yielding->halfWidth
-        && unyielding->pos.y - unyielding->halfHeight
-                < yielding->pos.y + yielding->halfHeight
-        && unyielding->pos.y + unyielding->halfHeight
-                > yielding->pos.y - yielding->halfHeight)
+    if (unyielding->pos.x - unyielding->halfWidth < yielding->pos.x + yielding->halfWidth
+        && unyielding->pos.x + unyielding->halfWidth > yielding->pos.x - yielding->halfWidth
+        && unyielding->pos.y - unyielding->halfHeight < yielding->pos.y + yielding->halfHeight
+        && unyielding->pos.y + unyielding->halfHeight > yielding->pos.y - yielding->halfHeight)
     {
         /////////////////////////
         // Collision detected! //
         /////////////////////////
-        if(hitInfo == NULL)
+        if (hitInfo == NULL)
         {
-            //The caller simply wants a simple true or false.
+            // The caller simply wants a simple true or false.
             return true;
         }
 
-        hitInfo->hit    = true;
+        hitInfo->hit = true;
 
         if (previousPos != NULL)
         {
@@ -98,4 +94,3 @@ bool bb_boxesCollide(bb_entity_t* unyielding, bb_entity_t* yielding, vec_t* prev
     }
     return false;
 }
-

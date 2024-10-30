@@ -825,14 +825,10 @@ void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousP
                                          j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
                         // AABB-AABB collision detection begins here
                         // https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-                        if (ent->pos.x - (int32_t)ent->halfWidth
-                                < tilePos.x + (int32_t)BITSHIFT_HALF_TILE
-                            && ent->pos.x + (int32_t)ent->halfWidth
-                                   > tilePos.x - (int32_t)BITSHIFT_HALF_TILE
-                            && ent->pos.y - (int32_t)ent->halfHeight
-                                   < tilePos.y + (int32_t)BITSHIFT_HALF_TILE
-                            && ent->pos.y + (int32_t)ent->halfHeight
-                                   > tilePos.y - (int32_t)BITSHIFT_HALF_TILE)
+                        if (ent->pos.x - (int32_t)ent->halfWidth < tilePos.x + (int32_t)BITSHIFT_HALF_TILE
+                            && ent->pos.x + (int32_t)ent->halfWidth > tilePos.x - (int32_t)BITSHIFT_HALF_TILE
+                            && ent->pos.y - (int32_t)ent->halfHeight < tilePos.y + (int32_t)BITSHIFT_HALF_TILE
+                            && ent->pos.y + (int32_t)ent->halfHeight > tilePos.y - (int32_t)BITSHIFT_HALF_TILE)
                         {
                             /////////////////////////
                             // Collision detected! //

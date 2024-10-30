@@ -44,7 +44,8 @@ void bb_setData(bb_entity_t* self, void* data)
     self->data = data;
 }
 
-void bb_clearCollisions(bb_entity_t* self, bool keepCollisionsCached){
+void bb_clearCollisions(bb_entity_t* self, bool keepCollisionsCached)
+{
     if (self->collisions != NULL && keepCollisionsCached == false)
     {
         // FREE WILLY FROM THE EVIL CLUTCHES OF SPIRAM!
@@ -218,8 +219,9 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
     {
         self->paused = true;
         // deploy garbotnik!!!
-        bb_entity_t* garbotnik = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING,
-                                                 1, self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50, true);
+        bb_entity_t* garbotnik
+            = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50, true);
         self->gameData->entityManager.viewEntity = garbotnik;
         self->updateFunction                     = bb_updateHeavyFalling;
     }
@@ -395,7 +397,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         return;
     }
 
-    if(gData->gettingCrushed)
+    if (gData->gettingCrushed)
     {
         gData->fuel -= 2000;
     }
@@ -430,7 +432,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             if (bug != NULL)
             {
                 // destroy the egg
-                bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity->data))->egg, false);
+                bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j]
+                                                            .entity->data))
+                                     ->egg,
+                                 false);
                 // destroy this (eggLeaves)
                 bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
             }
@@ -519,9 +524,10 @@ void bb_updateHarpoon(bb_entity_t* self)
 
         bb_clearCollisions(self, false);
         self->updateFunction = bb_updateStuckHarpoon;
-        self->drawFunction = bb_drawStuckHarpoon;
+        self->drawFunction   = bb_drawStuckHarpoon;
     }
-    else{
+    else
+    {
         pData->prevFrameInAir = !hitInfo.hit;
     }
 }
@@ -602,7 +608,8 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
                     // Create a crumble animation
                     bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                                    hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE, false);
+                                    hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE,
+                                    false);
                 }
                 // destroy this
                 bb_destroyEntity(self, false);
@@ -640,13 +647,15 @@ void bb_updateMenuBug(bb_entity_t* self)
 {
     bb_menuBugData_t* mbData = (bb_menuBugData_t*)self->data;
     self->pos.x += (mbData->xVel - 3) << DECIMAL_BITS;
-    if(mbData->firstTrip && self->pos.x < self->entityManager->viewEntity->pos.x - (130<<DECIMAL_BITS))
+    if (mbData->firstTrip && self->pos.x < self->entityManager->viewEntity->pos.x - (130 << DECIMAL_BITS))
     {
         mbData->firstTrip = false;
-        mbData->xVel = bb_randomInt(-5,5);
-        mbData->xVel = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; //So as not to match the treadmill speed exactly.
+        mbData->xVel      = bb_randomInt(-5, 5);
+        mbData->xVel
+            = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
         self->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
-        if(mbData->xVel == 0){
+        if (mbData->xVel == 0)
+        {
             self->gameFramesPerAnimationFrame = 255;
         }
     }
@@ -657,69 +666,141 @@ void bb_updateMoveLeft(bb_entity_t* self)
     self->pos.x -= 3 << DECIMAL_BITS;
 }
 
-void bb_updateBug(              bb_entity_t* self)
+void bb_updateBug(bb_entity_t* self)
 {
-
 }
 
 void bb_updateMenu(bb_entity_t* self)
 {
-    bb_menuData_t* mData = (bb_menuData_t*) self->data;
-    switch (self->gameData->btnDownState & 0b11)
+    bb_menuData_t* mData = (bb_menuData_t*)self->data;
+    if (self->gameData->btnDownState & PB_UP)
     {
-        // up
-        case PB_UP:
-            mData->selectionIdx--;
-            break;
-
-        // down
-        case PB_DOWN:
-            mData->selectionIdx++;
-            printf("down pressed\n");
-            break;
-
-        default:
-            break;
+        mData->selectionIdx--;
+        mData->selectionIdx = mData->selectionIdx < 0 ? 1 : mData->selectionIdx;
     }
-    mData->selectionIdx = mData->selectionIdx < 0 ? 1 : mData->selectionIdx;
-    mData->selectionIdx = mData->selectionIdx > 1 ? 0 : mData->selectionIdx;
-
-    mData->cursor->pos.y = self->pos.y + (135<<DECIMAL_BITS) + mData->selectionIdx * (28<<DECIMAL_BITS);
-
-    if(self->gameData->menuBug == NULL || self->gameData->menuBug->active == false)
+    if (self->gameData->btnDownState & PB_DOWN)
     {
-        self->gameData->menuBug = bb_createEntity(
-            &self->gameData->entityManager, LOOPING_ANIMATION, false,
-            bb_randomInt(8,13), 1, 
-            (TILE_FIELD_WIDTH) * (TILE_SIZE/2) + 135, -1817, true);
-        self->gameData->menuBug->drawFunction = &bb_drawMenuBug;
-        self->gameData->menuBug->updateFunction = &bb_updateMenuBug;
+        mData->selectionIdx++;
+        mData->selectionIdx = mData->selectionIdx > 1 ? 0 : mData->selectionIdx;
+    }
+    if (self->gameData->btnDownState & PB_A)
+    {
+        if (mData->selectionIdx == 0)
+        {
+            // start game
+
+            // destroy the cursor
+            bb_destroyEntity(mData->cursor, false);
+            mData->cursor = NULL;
+
+            
+
+            // create the death dumpster
+            bb_goToData* tData = heap_caps_calloc(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM);
+            tData->tracking = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
+                                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) + 700, true);
+            tData->midPointSqDist = sqMagVec2d(
+                divVec2d(subVec2d(tData->tracking->pos, self->gameData->entityManager.viewEntity->pos), 2));
+
+            self->gameData->entityManager.viewEntity->data = (void*)tData;
+            self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
+
+            for(int rocketIdx = 0; rocketIdx < 3; rocketIdx++){
+                bb_entity_t* rocket = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 3,
+                    (self->pos.x >> DECIMAL_BITS) - 80 + 80 * rocketIdx, (self->pos.y >> DECIMAL_BITS) + 675, true);
+            
+                rocket->updateFunction = NULL;
+
+                bb_rocketData_t* rData = (bb_rocketData_t*)rocket->data;
+
+                rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
+                    rocket->pos.x >> DECIMAL_BITS, rocket->pos.y >> DECIMAL_BITS, true);
+
+                rData->flame->updateFunction = &bb_updateFlame;
+            }
+
+            self->updateFunction = NULL;
+            return;
+        }
+    }
+
+
+    mData->cursor->pos.y = self->pos.y + (135 << DECIMAL_BITS) + mData->selectionIdx * (28 << DECIMAL_BITS);
+
+    if (self->gameData->menuBug == NULL || self->gameData->menuBug->active == false)
+    {
+        self->gameData->menuBug
+            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
+                              (self->pos.x >> DECIMAL_BITS) + 135, (self->pos.y >> DECIMAL_BITS) + 182, true);
+        self->gameData->menuBug->drawFunction      = &bb_drawMenuBug;
+        self->gameData->menuBug->updateFunction    = &bb_updateMenuBug;
         self->gameData->menuBug->updateFarFunction = &bb_updateFarDestroy;
-        bb_menuBugData_t* mbData  = heap_caps_calloc(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
-        mbData->xVel = bb_randomInt(-5,5);
-        mbData->xVel = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; //So as not to match the treadmill speed exactly.
-        mbData->firstTrip = true;
-        self->gameData->menuBug->data = mbData;
+        bb_menuBugData_t* mbData                   = heap_caps_calloc(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
+        mbData->xVel                               = bb_randomInt(-5, 5);
+        mbData->xVel
+            = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
+        mbData->firstTrip                                    = true;
+        self->gameData->menuBug->data                        = mbData;
         self->gameData->menuBug->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
-        if(mbData->xVel == 0){
+        if (mbData->xVel == 0)
+        {
             self->gameData->menuBug->gameFramesPerAnimationFrame = 255;
         }
     }
 
-    if(bb_randomInt(0,1) < 1)//%50
+    if (bb_randomInt(0, 1) < 1) //%50
     {
-        bb_entity_t* treadmillDust = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
-            self->gameData->camera.camera.pos.x + 280,
-            -1811 + bb_randomInt(-10, 10), false);
+        bb_entity_t* treadmillDust
+            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
+                              (self->pos.x >> DECIMAL_BITS) + 140, (self->pos.y >> DECIMAL_BITS) + 190 + bb_randomInt(-10, 10), false);
         treadmillDust->updateFunction = &bb_updateMoveLeft;
     }
-
-
 }
 
 void bb_updatePOI(bb_entity_t* self)
 {
+    bb_goToData* tData = (bb_goToData*)self->data;
+    if (tData != NULL)
+    {
+        vec_t ToFrom = subVec2d(tData->tracking->pos, self->pos);
+        if (sqMagVec2d(ToFrom) > tData->midPointSqDist)
+        {
+            tData->speed++;
+        }
+        else
+        {
+            tData->speed--;
+        }
+        if (tData->speed == 0)
+        {
+            free(tData);
+            self->data           = NULL;
+            self->updateFunction = NULL;
+            return;
+        }
+        fastNormVec(&ToFrom.x, &ToFrom.y);
+        ToFrom    = mulVec2d(ToFrom, tData->speed);
+        ToFrom.x  = ToFrom.x >> 8;
+        ToFrom.y  = ToFrom.y >> 8;
+        self->pos = addVec2d(self->pos, ToFrom);
+    }
+}
 
+void bb_updateFlame(bb_entity_t* self)
+{
+    if(self->currentAnimationFrame > 2)
+    {
+        if(bb_randomInt(0,1))
+        {
+            int newFrame = 0;
+            while(bb_randomInt(0,1) && newFrame < self->currentAnimationFrame - 1)
+            {
+                newFrame++;
+            }
+            self->animationTimer = newFrame;
+            self->currentAnimationFrame = newFrame;
+        }
+    }
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -834,32 +915,31 @@ void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
 
 void bb_drawMenu(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    int16_t xDrawPos = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t xDrawPos
+        = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
 
-    int32_t yDrawPosFront = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
-    int32_t YDrawPosBack =  yDrawPosFront - yDrawPosFront/3;
-    int32_t YDrawPosMid =   yDrawPosFront - yDrawPosFront/2;
+    int32_t yDrawPosFront
+        = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+    int32_t YDrawPosBack = yDrawPosFront - yDrawPosFront / 3;
+    int32_t YDrawPosMid  = yDrawPosFront - yDrawPosFront / 2;
 
-    //Background
-    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[0],
-                    xDrawPos, YDrawPosBack);
-    //Text
-    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[1],
-                    xDrawPos+14, YDrawPosMid+28);
-    //Midground
-    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[2],
-                    xDrawPos, yDrawPosFront);
-    
+    // Background
+    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[0], xDrawPos, YDrawPosBack);
+    // Text
+    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[1], xDrawPos + 14, YDrawPosMid + 28);
+    // Midground
+    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[2], xDrawPos, yDrawPosFront);
 }
 
 void bb_drawMenuForeground(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    int16_t xDrawPos = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t xDrawPos
+        = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
 
-    int32_t yDrawPosFront = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
-    //Foreground
-    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[3],
-                    xDrawPos, yDrawPosFront+97);
+    int32_t yDrawPosFront
+        = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+    // Foreground
+    drawWsgSimple(&entityManager->sprites[BB_MENU].frames[3], xDrawPos, yDrawPosFront + 97);
 }
 
 void bb_drawStar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -873,31 +953,28 @@ void bb_drawStar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 
 void bb_drawNothing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    //Do nothing lol
+    // Do nothing lol
 }
 
 void bb_drawMenuBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    bb_menuBugData_t* mbData = (bb_menuBugData_t*) self->data;
-    int16_t xOff = (self->pos.x >> DECIMAL_BITS)
-                - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
-    int16_t yOff = (self->pos.y >> DECIMAL_BITS)
-                - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+    bb_menuBugData_t* mbData = (bb_menuBugData_t*)self->data;
+    int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
 
     uint8_t brightness = abs((self->pos.x >> DECIMAL_BITS) - (entityManager->viewEntity->pos.x >> DECIMAL_BITS));
-    brightness = (140 - brightness)/23;
-    brightness = brightness > 5 ? 5 : brightness;
+    brightness         = (140 - brightness) / 23;
+    brightness         = brightness > 5 ? 5 : brightness;
 
-    drawWsg(&entityManager->sprites[self->spriteIndex]
-                    .frames[brightness + self->currentAnimationFrame * 6],
-                xOff, yOff, mbData->xVel < 0, false, 0);
+    drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff, yOff,
+            mbData->xVel < 0, false, 0);
 }
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
     bb_bugData_t* bData        = (bb_bugData_t*)other->data;
-    //pause the harpoon animation as the tip will no longer even be rendered.
+    // pause the harpoon animation as the tip will no longer even be rendered.
     self->paused = true;
 
     // Bug got stabbed
@@ -908,7 +985,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         other->paused               = true;
         bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
         physData->vel               = divVec2d(pData->vel, 2);
-        physData->bounceNumerator   = 2;//66% bounce
+        physData->bounceNumerator   = 2; // 66% bounce
         physData->bounceDenominator = 3;
         bb_setData(other, physData);
         other->updateFunction = bb_updatePhysicsObject;
@@ -929,9 +1006,9 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
 void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
-    other->pos.x = hitInfo->pos.x + hitInfo->normal.x * other->halfWidth;
-    other->pos.y = hitInfo->pos.y + hitInfo->normal.y * other->halfHeight;
-    if(hitInfo->normal.x == 0)
+    other->pos.x              = hitInfo->pos.x + hitInfo->normal.x * other->halfWidth;
+    other->pos.y              = hitInfo->pos.y + hitInfo->normal.y * other->halfHeight;
+    if (hitInfo->normal.x == 0)
     {
         gData->vel.y = 0;
     }
@@ -939,9 +1016,8 @@ void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     {
         gData->vel.x = 0;
     }
-    if(hitInfo->normal.y == 1){
+    if (hitInfo->normal.y == 1)
+    {
         gData->gettingCrushed = true;
     }
 }
-
-
