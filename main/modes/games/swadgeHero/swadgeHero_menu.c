@@ -22,14 +22,14 @@ static void shMenuCb(const char*, bool selected, uint32_t settingVal);
 // Const Variables
 //==============================================================================
 
-// TODO add artist
 static const shSong_t shSongList[] = {
     {
-        .name = "GShip Credits",
-        .midi = "credits.mid",
-        .easy = "credits_e.cch",
-        .med  = "credits_m.cch",
-        .hard = "credits_h.cch",
+        .name   = "GShip Credits",
+        .artist = "Newmajoe",
+        .midi   = "credits.mid",
+        .easy   = "credits_e.cch",
+        .med    = "credits_m.cch",
+        .hard   = "credits_h.cch",
     },
 };
 

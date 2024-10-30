@@ -675,6 +675,16 @@ void shDrawGame(shVars_t* sh)
         fillDisplayArea(0, TFT_HEIGHT - failBarHeight, failMeterWidth, TFT_HEIGHT - 1, c440);
     }
 
+    // Draw title and artist during lead in
+    if (sh->leadInUs > 0)
+    {
+        int16_t tWidth = textWidth(&sh->rodin, sh->menuSong->name);
+        drawText(&sh->rodin, c555, sh->menuSong->name, (TFT_WIDTH - tWidth) / 2,
+                 (TFT_HEIGHT / 2) - sh->rodin.height - 2);
+        tWidth = textWidth(&sh->rodin, sh->menuSong->artist);
+        drawText(&sh->rodin, c555, sh->menuSong->artist, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 2);
+    }
+
     // Set LEDs
     led_t leds[CONFIG_NUM_LEDS];
     memset(leds, sh->ledBaseVal, sizeof(led_t) * 5);

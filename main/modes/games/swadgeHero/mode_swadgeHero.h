@@ -40,11 +40,12 @@ typedef enum
 
 typedef struct
 {
-    char* name;
-    char* midi;
-    char* easy;
-    char* med;
-    char* hard;
+    const char* name;
+    const char* artist;
+    const char* midi;
+    const char* easy;
+    const char* med;
+    const char* hard;
 } shSong_t;
 
 typedef struct
