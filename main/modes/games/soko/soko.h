@@ -220,6 +220,7 @@ typedef struct soko_abs_s
     // level
     char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if
                                     ///< I need level names like picross.
+    bool allSolved;
     // wsg_t levelWSG;                 ///< Current level
     uint8_t* levelBinaryData;
 

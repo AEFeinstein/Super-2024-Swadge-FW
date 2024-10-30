@@ -43,13 +43,15 @@ static void sokoEnterMode(void)
     // Load a font
     loadFont("ibm_vga8.font", &soko->ibm, false);
 
+    soko->allSolved = false;
+
     // load sprite assets
     // set pointer
     soko->currentTheme                   = &soko->sokoDefaultTheme;
     soko->sokoDefaultTheme.wallColor     = c111;
     soko->sokoDefaultTheme.floorColor    = c444;
     soko->sokoDefaultTheme.altFloorColor = c444;
-    soko->background                     = SKBG_FORREST;
+    soko->background                     = SKBG_BLACK;
     // load or set themes...
     //  Default Theme
     loadWsg("sk_pixel_front.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);

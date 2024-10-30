@@ -77,7 +77,7 @@ void sokoConfigGamemode(
         
         soko->soko_player->x = soko->overworld_playerX;
         soko->soko_player->y = soko->overworld_playerY;
-        soko->background     = SKBG_FORREST;
+        soko->background     = SKBG_BLACK;
 
         for (size_t i = 0; i < soko->portalCount; i++)
         {
@@ -500,6 +500,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
     // sprint("a\n");
     if (self->currentLevel.gameMode == SOKO_OVERWORLD)
     {
+        self->allSolved=true;
         for (int i = 0; i < self->portalCount; i++)
         {
             if (self->portals[i].x >= screenMinX && self->portals[i].x <= screenMaxX && self->portals[i].y >= screenMinY
@@ -514,6 +515,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                 {
                     drawWsg(&self->currentTheme->portal_incompleteWSG, ox + self->portals[i].x * scale,
                             oy + self->portals[i].y * scale, false, false, 0);
+                    self->allSolved = false;
                 }
             }
         }
@@ -530,6 +532,14 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
             {
                 case SKE_PLAYER:
                 {
+                    for (size_t xd = ox + level->entities[i].x * scale; xd < ox + level->entities[i].x * scale + scale; xd++)
+                    {
+                        for (size_t yd = oy +level->entities[i]. y * scale; yd < oy + level->entities[i].y * scale + scale; yd++)
+                        {
+                            TURBO_SET_PIXEL(xd, yd, c211);
+                        }
+                    }
+                    continue;
                     switch (level->entities[i].facing)
                     {
                         case SKD_UP:
@@ -1158,8 +1168,6 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
         if (self->allCratesOnGoal)
         {
             self->state = SKS_VICTORY;
-
-            printf("Player at %d,%d\n", self->soko_player->x, self->soko_player->y);
             victoryDanceTimer = 0;
         }
         // draw level
@@ -1191,23 +1199,23 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
 
     // DEBUG PLACEHOLDER:
     //  Render the time to a string
-    char str[16] = {0};
+    char str[31] = {0};
     int16_t tWidth;
-    if (!self->allCratesOnGoal)
+    if (!self->allSolved)
     {
-        snprintf(str, sizeof(str) - 1, "sokoban");
+        snprintf(str, sizeof(str) - 1, "Hunter's Block Puzzles");
         // Measure the width of the time string
         tWidth = textWidth(&self->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
-        drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+        drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 3);
     }
     else
     {
-        snprintf(str, sizeof(str) - 1, "sokasuccess");
+        snprintf(str, sizeof(str) - 1, "'oh, nice, You won' - Hunter");
         // Measure the width of the time string
         tWidth = textWidth(&self->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
-        drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+        drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 3);
     }
 }
 
