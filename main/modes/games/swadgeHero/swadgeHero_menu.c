@@ -62,7 +62,7 @@ const int32_t shs_speed_vals[] = {4000000, 3000000, 2000000, 1000000};
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  */
 void shSetupMenu(shVars_t* sh)
 {
@@ -161,7 +161,7 @@ void shSetupMenu(shVars_t* sh)
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  */
 void shTeardownMenu(shVars_t* sh)
 {
@@ -178,7 +178,7 @@ void shTeardownMenu(shVars_t* sh)
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  * @param btn
  */
 void shMenuInput(shVars_t* sh, buttonEvt_t* btn)
@@ -189,7 +189,7 @@ void shMenuInput(shVars_t* sh, buttonEvt_t* btn)
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  */
 void shMenuDraw(shVars_t* sh, int32_t elapsedUs)
 {

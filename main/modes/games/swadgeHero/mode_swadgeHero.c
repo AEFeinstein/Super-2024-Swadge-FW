@@ -50,9 +50,9 @@ shVars_t* shv;
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Get the entire Swadge Hero game state
  *
- * @return
+ * @return the entire Swadge Hero game state
  */
 shVars_t* getShVars(void)
 {
@@ -71,10 +71,10 @@ static void shEnterMode(void)
     // Allocate mode memory
     shv = calloc(1, sizeof(shVars_t));
 
-    // Load a font
-    loadFont("ibm_vga8.font", &shv->ibm, false);
-    loadFont("righteous_150.font", &shv->righteous, false);
-    loadFont("rodin_eb.font", &shv->rodin, false);
+    // Load fonts
+    loadFont("ibm_vga8.font", &shv->ibm, true);
+    loadFont("righteous_150.font", &shv->righteous, true);
+    loadFont("rodin_eb.font", &shv->rodin, true);
 
     // Load icons
     const char icons[] = {'l', 'd', 'u', 'r', 'b', 'a'};
@@ -113,6 +113,7 @@ static void shExitMode(void)
     freeFont(&shv->rodin);
     freeFont(&shv->righteous);
 
+    // Free all icons
     for (int32_t i = 0; i < ARRAY_SIZE(shv->icons); i++)
     {
         for (int32_t fIdx = 0; fIdx < NUM_NOTE_FRAMES; fIdx++)
@@ -197,7 +198,7 @@ static void shMainLoop(int64_t elapsedUs)
 
 /**
  * This function is called when the display driver wishes to update a
- * section of the display.
+ * section of the display. Always blank the display
  *
  * @param x the x coordinate that should be updated
  * @param y the x coordinate that should be updated
@@ -208,14 +209,15 @@ static void shMainLoop(int64_t elapsedUs)
  */
 static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    // fillDisplayArea(x, y, x + w, y + h, c555);
+    // Blank the display area
+    fillDisplayArea(x, y, x + w, y + h, c000);
 }
 
 /**
- * @brief TODO doc
+ * @brief Tear down the current Swadge Hero screen and set up the next one
  *
- * @param sh
- * @param newScreen
+ * @param sh The Swadge Hero game state
+ * @param newScreen The new screen to display
  */
 void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
 {
@@ -236,7 +238,7 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
             // Free chart data
             free(shv->chartNotes);
 
-            // Free UI data
+            // Free game UI data
             void* val;
             while ((val = pop(&shv->gameNotes)))
             {
@@ -298,37 +300,14 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get the NVS key for high score for a given song and difficulty
  *
- * @param songName
- * @param difficulty
- * @param key Must be at least 9 bytes
+ * @param songName The name of the song
+ * @param difficulty The difficulty for this key
+ * @param key Must be at least 8 bytes
  */
 void shGetNvsKey(const char* songName, shDifficulty_t difficulty, char* key)
 {
-    int32_t toCopy = MIN(strlen(songName), 7);
-    memcpy(key, songName, toCopy);
-
-    char dChar;
-    switch (difficulty)
-    {
-        default:
-        case SH_EASY:
-        {
-            dChar = 'e';
-            break;
-        }
-        case SH_MEDIUM:
-        {
-            dChar = 'm';
-            break;
-        }
-        case SH_HARD:
-        {
-            dChar = 'h';
-            break;
-        }
-    }
-    key[toCopy]     = dChar;
-    key[toCopy + 1] = 0;
+    const char dMap[] = {'e', 'm', 'h'};
+    sprintf(key, "%.6s%c", songName, dMap[difficulty]);
 }

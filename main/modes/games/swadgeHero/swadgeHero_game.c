@@ -86,7 +86,7 @@ static int32_t getXOffset(shVars_t* sh, int32_t note);
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  * @param song
  * @param difficulty
  */
@@ -188,7 +188,7 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  * @param data
  * @param size
  * @return uint32_t
@@ -239,8 +239,8 @@ uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
 /**
  * @brief TODO doc
  *
- * @param sh
- * @param elapsedUs
+ * @param sh The Swadge Hero game state
+ * @param elapsedUs The time elapsed since the last time this function was called.
  * @return true
  * @return false
  */
@@ -569,12 +569,11 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  */
 void shDrawGame(shVars_t* sh)
 {
-    // Clear the display
-    clearPxTft();
+    // Display cleared in background callback
 
     // Draw fret lines first
     node_t* fretLineNode = sh->fretLines.first;
@@ -699,7 +698,7 @@ void shDrawGame(shVars_t* sh)
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  * @param evt
  */
 void shGameInput(shVars_t* sh, buttonEvt_t* evt)
@@ -787,6 +786,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                         shHitNote(sh, baseScore);
 
                         // Draw a star for a moment
+                        // TODO is there some way a star is drawn, but the note isn't cleared?
                         drawStar_t* ds = heap_caps_calloc(1, sizeof(drawStar_t), MALLOC_CAP_SPIRAM);
                         ds->x          = getXOffset(sh, gameNote->note) - sh->star.w / 2;
                         ds->y          = gameNote->headPosY - (sh->star.h / 2);
@@ -877,7 +877,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  * @return int32_t
  */
 static int32_t getMultiplier(shVars_t* sh)
@@ -898,7 +898,7 @@ static void shSongOver(void)
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  * @param baseScore
  */
 static void shHitNote(shVars_t* sh, int32_t baseScore)
@@ -926,7 +926,7 @@ static void shHitNote(shVars_t* sh, int32_t baseScore)
 /**
  * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  */
 static void shMissNote(shVars_t* sh)
 {
@@ -944,7 +944,7 @@ static void shMissNote(shVars_t* sh)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param gradeIdx
  * @return const char*
@@ -955,9 +955,9 @@ const char* getLetterGrade(int32_t gradeIdx)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
- * @param sh
+ * @param sh The Swadge Hero game state
  * @param note
  * @return int32_t
  */
