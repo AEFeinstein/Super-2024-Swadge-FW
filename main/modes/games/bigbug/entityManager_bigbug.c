@@ -78,7 +78,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     rocketSprite->originY     = 66;
 
     bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, 1, &entityManager->sprites[FLAME_ANIM]);
-    flameSprite->originX     = 26;
+    flameSprite->originX     = 27;
     flameSprite->originY     = -27;
 
     bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, 1, &entityManager->sprites[GARBOTNIK_FLYING]);
@@ -122,8 +122,11 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     buttSprite->originY     = 6;
 
     bb_sprite_t* menuSprite = bb_loadSprite("bb_menu", 4, 1, &entityManager->sprites[BB_MENU]);
-    menuSprite->originX = 140;
+    menuSprite->originX     = 140;
 
+    bb_sprite_t* deathDumpsterSprite = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER]);
+    deathDumpsterSprite->originX     = 138;
+    deathDumpsterSprite->originY     = 115;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -184,9 +187,9 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
             }
             if (curEntity->updateFarFunction != NULL)
             {
-                //2752 = (140+32) << 4; 2432 = (120+32) << 4
+                // 2752 = (140+32) << 4; 2432 = (120+32) << 4
                 if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 2752, .halfHeight = 2432},
-                                         curEntity, NULL, NULL)
+                                    curEntity, NULL, NULL)
                     == false)
                 {
                     curEntity->updateFarFunction(curEntity);
@@ -195,14 +198,18 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
             if (curEntity->collisions != NULL)
             {
-                if ((bb_spriteDef_t)(((bb_collision_t*)curEntity->collisions->first->val)->checkOthers->first)->val == GARBOTNIK_FLYING)
+                if ((bb_spriteDef_t)(((bb_collision_t*)curEntity->collisions->first->val)->checkOthers->first)->val
+                    == GARBOTNIK_FLYING)
                 {
-                    if(entityManager->playerEntity != NULL){
-                        //no need to search all other players if it's simply something to do with the player.
-                        
+                    if (entityManager->playerEntity != NULL)
+                    {
+                        // no need to search all other players if it's simply something to do with the player.
+
                         // do a collision check here
                         bb_hitInfo_t hitInfo = {0};
-                        if (bb_boxesCollide(curEntity, entityManager->playerEntity, &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos), &hitInfo))
+                        if (bb_boxesCollide(curEntity, entityManager->playerEntity,
+                                            &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
+                                            &hitInfo))
                         {
                             ((bb_collision_t*)curEntity->collisions->first->val)
                                 ->function(curEntity, entityManager->playerEntity, &hitInfo);
@@ -218,7 +225,8 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                         node_t* currentCollisionCheck = curEntity->collisions->first;
                         while (currentCollisionCheck != NULL)
                         {
-                            node_t* currentOtherType = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
+                            node_t* currentOtherType
+                                = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
                             node_t* cccNext = currentCollisionCheck->next;
                             while (currentOtherType != NULL)
                             {
@@ -250,7 +258,6 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                         }
                     }
                 }
-                
             }
 
             if (curEntity == entityManager->viewEntity)
@@ -265,21 +272,22 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    if(camera->camera.pos.y < -1000) // make -1000
+    if (camera->camera.pos.y < -1000 && camera->camera.pos.y > -4880)
     {
-        int16_t halfWidth = HALF_WIDTH >> DECIMAL_BITS;
+        int16_t halfWidth  = HALF_WIDTH >> DECIMAL_BITS;
         int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
-        if(bb_randomInt(1, 1300000) < (abs(camera->velocity.x) * camera->camera.height))
+        if (bb_randomInt(1, 1300000) < (abs(camera->velocity.x) * camera->camera.height))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
-            camera->velocity.x > 0 ? camera->camera.pos.x + 2 * halfWidth : camera->camera.pos.x,
-            camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight), false);
+                            camera->velocity.x > 0 ? camera->camera.pos.x + 2 * halfWidth : camera->camera.pos.x,
+                            camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight), false);
         }
-        if(bb_randomInt(1, 1300000) < (abs(camera->velocity.y) * camera->camera.width))
+        if (bb_randomInt(1, 1300000) < (abs(camera->velocity.y) * camera->camera.width))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
-            camera->camera.pos.x + halfWidth + bb_randomInt(-halfWidth, halfWidth),
-            camera->velocity.y > 0 ? camera->camera.pos.y + 2 * halfHeight : camera->camera.pos.y, false);
+                            camera->camera.pos.x + halfWidth + bb_randomInt(-halfWidth, halfWidth),
+                            camera->velocity.y > 0 ? camera->camera.pos.y + 2 * halfHeight : camera->camera.pos.y,
+                            false);
         }
     }
 }
@@ -489,7 +497,8 @@ void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera)
 }
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
-                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y, bool renderFront)
+                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y,
+                             bool renderFront)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
@@ -498,7 +507,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     }
 
     bb_entity_t* entity;
-    if(renderFront)
+    if (renderFront)
     {
         entity = bb_findInactiveEntityBackwards(entityManager);
     }
@@ -530,7 +539,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
             gData->numHarpoons        = 250;
-            gData->fuel  = 1000 * 60 * 1; // 1 thousand milliseconds in a second. 60 seconds in a minute. 1 minutes.
+            gData->fuel = 1000 * 60 * 1; // 1 thousand milliseconds in a second. 60 seconds in a minute. 1 minutes.
             bb_setData(entity, gData);
 
             entity->halfWidth  = 192;
@@ -561,7 +570,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 448;
 
             entity->updateFunction    = &bb_updateRocketLanding;
-            entityManager->viewEntity = entity;
             break;
         }
         case HARPOON:
@@ -572,7 +580,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
 
-            //Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any 32 bits of info you want there, as long as you know how to handle it on the other end
+            // Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it
+            // instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any
+            // 32 bits of info you want there, as long as you know how to handle it on the other end
             push(others, (void*)BU);
             push(others, (void*)BUG);
             push(others, (void*)BUGG);
@@ -712,36 +722,34 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_menuData_t* mData = heap_caps_calloc(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
 
-            bb_entity_t* harpoon = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 1,
-                    (entity->pos.x>>DECIMAL_BITS) - 29, (entity->pos.y>>DECIMAL_BITS) + 135, false);
-            
-            bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
-            pData->vel.x = 10; //This will make it draw pointed right
-            pData->vel.y = 0;
-            
-            harpoon->updateFunction = NULL;
+            mData->cursor
+                = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 1,
+                                  (entity->pos.x >> DECIMAL_BITS) - 29, (entity->pos.y >> DECIMAL_BITS) + 135, false);
 
-            mData->cursor = harpoon;
+            // This will make it draw pointed right
+            ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};
+
+            mData->cursor->updateFunction = NULL;
 
             bb_setData(entity, mData);
 
-            entity->halfWidth = 140;
+            entity->halfWidth  = 140;
             entity->halfHeight = 120;
 
             entity->updateFunction = &bb_updateMenu;
-            entity->drawFunction = &bb_drawMenu;
+            entity->drawFunction   = &bb_drawMenu;
             break;
         }
         case NO_SPRITE_STAR:
         {
-            entity->drawFunction = &bb_drawStar;
+            entity->drawFunction      = &bb_drawStar;
             entity->updateFarFunction = &bb_updateFarDestroy;
             break;
         }
         case NO_SPRITE_POI:
         {
             entity->updateFunction = &bb_updatePOI;
-            entity->drawFunction = &bb_drawNothing;
+            entity->drawFunction   = &bb_drawNothing;
         }
         default: // FLAME_ANIM and others need nothing set
         {
@@ -751,7 +759,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     entity->cSquared = entity->halfWidth * entity->halfWidth + entity->halfHeight * entity->halfHeight;
 
     entityManager->activeEntities++;
-    if(entityManager->activeEntities > MAX_ENTITIES - 10 || entityManager->activeEntities < 10 || entityManager->activeEntities % 25 == 0){
+    if (entityManager->activeEntities > MAX_ENTITIES - 10 || entityManager->activeEntities < 10
+        || entityManager->activeEntities % 25 == 0)
+    {
         printf("%d/%d entities ^\n", entityManager->activeEntities, MAX_ENTITIES);
     }
 
@@ -769,5 +779,13 @@ void bb_freeEntityManager(bb_entityManager_t* self)
     }
     // free and clear
     free(self->entities);
-    clear(self->cachedEntities);
+
+    while (self->cachedEntities->first != NULL)
+    {
+        bb_entity_t* shiftedVal = (bb_entity_t*)shift(self->cachedEntities);
+        if (shiftedVal->data != NULL)
+        {
+            free(shiftedVal->data);
+        }
+    }
 }

@@ -18,7 +18,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 200
-#define NUM_SPRITES  15 // The number of bb_sprite_t
+#define NUM_SPRITES  16 // The number of bb_sprite_t
 
 //==============================================================================
 // Structs
@@ -27,7 +27,6 @@
 typedef struct
 {
     bb_sprite_t sprites[NUM_SPRITES];
-    // list_t* sprites[NUM_SPRITES];
     bb_entity_t* entities;
     list_t* cachedEntities;
     uint8_t activeEntities;
@@ -52,7 +51,8 @@ bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager);
 
 void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera);
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
-                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y, bool renderFront);
+                             bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y,
+                             bool renderFront);
 
 void bb_freeEntityManager(bb_entityManager_t* entityManager);
 

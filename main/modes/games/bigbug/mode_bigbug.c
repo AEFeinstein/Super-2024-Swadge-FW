@@ -44,14 +44,14 @@ typedef enum
 
 struct bb_t
 {
-    menu_t* menu;           ///< The menu structure
-    font_t font;            ///< The font used in the menu and game
+    menu_t* menu;       ///< The menu structure
+    font_t font;        ///< The font used in the menu and game
     bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
     bb_soundManager_t soundManager;
 
-    bool isPaused;   ///< true if the game is paused, false if it is running
+    bool isPaused; ///< true if the game is paused, false if it is running
 
     midiFile_t bgm;  ///< Background music
     midiFile_t hit1; ///< A sound effect
@@ -141,20 +141,25 @@ static void bb_EnterMode(void)
 
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
     //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
-    bigbug->gameData.camera.camera.pos.x = ((TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1) - TFT_WIDTH / 2;
-    bigbug->gameData.camera.camera.pos.y = -1890;
+    
 
-    bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000, false);
 
-    bb_entity_t* foreground = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -2000, true);
+    bb_entity_t* foreground    = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
+                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -5000, true);
+
     foreground->updateFunction = NULL;
-    foreground->drawFunction = &bb_drawMenuForeground;
-    bb_destroyEntity(((bb_menuData_t*) foreground->data)->cursor, false);
+    foreground->drawFunction   = &bb_drawMenuForeground;
+    bb_destroyEntity(((bb_menuData_t*)foreground->data)->cursor, false);
+                                                 
+    bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
+                    (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS), false);
 
-    bigbug->gameData.entityManager.viewEntity = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
-                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1890, true);
+    bigbug->gameData.entityManager.viewEntity
+        = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
+                          (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS) + 120, true);
+
+    bigbug->gameData.camera.camera.pos.x = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
+    bigbug->gameData.camera.camera.pos.y = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
 
     bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
@@ -166,7 +171,6 @@ static void bb_EnterMode(void)
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
 
-    
     soundPlayBgmCb(&bigbug->bgm, MIDI_BGM, bb_BgmCb);
 
     bb_Reset();
@@ -215,11 +219,13 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     }
     else if (bigbug->gameData.camera.camera.pos.y < -999)
     {
-        // Normalize position from 0 (at -1000) to 1 (at -200)
-        float normalizedPos = ((bigbug->gameData.camera.camera.pos.y < -10000 ? -10000 : bigbug->gameData.camera.camera.pos.y) + 10000) / 9000.0f;
+        // Normalize position from 0 (at -5000) to 1 (at -200)
+        float normalizedPos
+            = ((bigbug->gameData.camera.camera.pos.y < -5000 ? -5000 : bigbug->gameData.camera.camera.pos.y) + 5000)
+              / 4500.0f;
 
         // Calculate the total number of decrements (since the max RGB is 4, 5, 5)
-        int totalSteps = 14;  // 4 + 5 + 5 = 14 decrement steps
+        int totalSteps  = 14; // 4 + 5 + 5 = 14 decrement steps
         int currentStep = (int)(normalizedPos * totalSteps);
 
         // Initialize r, g, b to 4, 5, 5
@@ -228,18 +234,22 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         uint8_t b = 0;
 
         // Apply decrements based on current step
-        for (int i = 0; i < currentStep; i++) {
-            if (r == g && g == b) {
+        for (int i = 0; i < currentStep; i++)
+        {
+            if (r == g && g == b)
+            {
                 b++;
             }
-            else if (r == g) {
+            else if (r == g)
+            {
                 g++;
             }
-            else{
+            else
+            {
                 r++;
-            } 
+            }
         }
-            fillDisplayArea(x, y, x + w, y + h, (paletteColor_t)(r*36+g*6+b));
+        fillDisplayArea(x, y, x + w, y + h, (paletteColor_t)(r * 36 + g * 6 + b));
     }
     else
     {
@@ -296,8 +306,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         // Print the current event
-        printf("state: %04X, button: %d, down: %s\n",
-        evt.state, evt.button, evt.down ? "down" : "up");
+        printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
 
         // Save the button state
         bigbug->gameData.btnState = evt.state;
@@ -314,7 +323,7 @@ static void bb_GameLoop(int64_t elapsedUs)
             // PB_B      = 0x0020, //!< The B button's bit
             // PB_START  = 0x0040, //!< The start button's bit
             // PB_SELECT = 0x0080, //!< The select button's bit
-            if(evt.button == PB_START)
+            if (evt.button == PB_START)
             {
                 // Toggle pause
                 bigbug->isPaused = !bigbug->isPaused;
