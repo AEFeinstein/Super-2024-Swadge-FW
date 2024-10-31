@@ -45,22 +45,22 @@ static const char easyStr_noscore[]   = "Easy:";
 static const char mediumStr_noscore[] = "Medium:";
 static const char hardStr_noscore[]   = "Hard:";
 
-const char* shs_fail_key      = "shs_fail";
-const char* shs_fail_label    = "Song Fail: ";
-const char* shs_fail_opts[]   = {"On", "Off"};
-const int32_t shs_fail_vals[] = {true, false};
+static const char* shs_fail_key      = "shs_fail";
+static const char* shs_fail_label    = "Song Fail: ";
+static const char* shs_fail_opts[]   = {"On", "Off"};
+static const int32_t shs_fail_vals[] = {true, false};
 
-const char* shs_speed_key      = "shs_speed";
-const char* shs_speed_label    = "Scroll: ";
-const char* shs_speed_opts[]   = {"Slow", "Normal", "Fast", "Turbo"};
-const int32_t shs_speed_vals[] = {4000000, 3000000, 2000000, 1000000};
+static const char* shs_speed_key      = "shs_speed";
+static const char* shs_speed_label    = "Scroll: ";
+static const char* shs_speed_opts[]   = {"Slow", "Normal", "Fast", "Turbo"};
+static const int32_t shs_speed_vals[] = {4000000, 3000000, 2000000, 1000000};
 
 //==============================================================================
 // Functions
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Setup the menu for Swadge Hero
  *
  * @param sh The Swadge Hero game state
  */
@@ -70,6 +70,7 @@ void shSetupMenu(shVars_t* sh)
     sh->menu     = initMenu(swadgeHeroMode.modeName, shMenuCb);
     sh->renderer = initMenuManiaRenderer(&sh->righteous, NULL, &sh->rodin);
 
+    // Setup menu colors
     static const paletteColor_t shadowColors[] = {c110, c210, c220, c320, c330, c430, c330, c320, c220, c210};
     led_t ledColor                             = {.r = 0x80, .g = 0x00, .b = 0x00};
     recolorMenuManiaRenderer(sh->renderer,     //
@@ -103,15 +104,18 @@ void shSetupMenu(shVars_t* sh)
         const shDifficulty_t difficulties[] = {SH_EASY, SH_MEDIUM, SH_HARD};
         const char* labels[]                = {easyStr_noscore, mediumStr_noscore, hardStr_noscore};
 
+        // For each difficulty
         for (int32_t i = 0; i < ARRAY_SIZE(difficulties); i++)
         {
+            // Get the NVS key and try to read the value
             char nvsKey[16];
             shGetNvsKey(shSongList[sIdx].midi, difficulties[i], nvsKey);
-
             int32_t tmpScore;
             if (readNvs32(nvsKey, &tmpScore))
             {
+                // The letter grade is in the top four bits
                 int32_t gradeIdx = (tmpScore >> 28) & 0x0F;
+                // The score is in the bottom 28 bits
                 tmpScore &= 0x0FFFFFFF;
 
                 // Allocate and print high score strings
@@ -124,6 +128,7 @@ void shSetupMenu(shVars_t* sh)
             }
             else
             {
+                // No high score yet!
                 addSingleItemToMenu(sh->menu, labels[i]);
             }
         }
@@ -159,27 +164,32 @@ void shSetupMenu(shVars_t* sh)
 }
 
 /**
- * @brief TODO doc
+ * @brief Tear down the Swadge Hero menu (free memory)
  *
  * @param sh The Swadge Hero game state
  */
 void shTeardownMenu(shVars_t* sh)
 {
+    // Free all high score strings
     void* toFree;
     while ((toFree = pop(&sh->hsStrs)))
     {
         free(toFree);
     }
+
+    // Turn LEDs off
     setManiaLedsOn(sh->renderer, false);
+
+    // Free menu
     deinitMenuManiaRenderer(sh->renderer);
     deinitMenu(sh->menu);
 }
 
 /**
- * @brief TODO doc
+ * @brief Handle button input for the Swadge Hero menu
  *
  * @param sh The Swadge Hero game state
- * @param btn
+ * @param btn The button event
  */
 void shMenuInput(shVars_t* sh, buttonEvt_t* btn)
 {
@@ -187,7 +197,7 @@ void shMenuInput(shVars_t* sh, buttonEvt_t* btn)
 }
 
 /**
- * @brief TODO doc
+ * @brief Draw the Swadge Hero menu
  *
  * @param sh The Swadge Hero game state
  */
@@ -232,19 +242,19 @@ static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (strEasy == label)
         {
-            printf("Play %s (Easy)\n", sh->menuSong->midi);
+            // Set the difficulty and start the game
             sh->difficulty = SH_EASY;
             shChangeScreen(sh, SH_GAME);
         }
         else if (strMedium == label)
         {
-            printf("Play %s (Medium)\n", sh->menuSong->midi);
+            // Set the difficulty and start the game
             sh->difficulty = SH_MEDIUM;
             shChangeScreen(sh, SH_GAME);
         }
         else if (strHard == label)
         {
-            printf("Play %s (Hard)\n", sh->menuSong->midi);
+            // Set the difficulty and start the game
             sh->difficulty = SH_HARD;
             shChangeScreen(sh, SH_GAME);
         }
@@ -259,14 +269,8 @@ static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
                     // Save the song
                     sh->menuSong = &shSongList[sIdx];
 
-                    if (sh->submenu == strHighScores)
-                    {
-                        // Show high scores
-                        printf("HS %s\n", shSongList[sIdx].midi);
-                    }
-                    // If playing a song, difficulty select is next
-
-                    // Found the song, so break
+                    // Found the song, so break.
+                    // Either high scores or difficulty options are next
                     break;
                 }
             }
@@ -274,6 +278,7 @@ static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
     }
     else
     {
+        // These options don't require selection, they're just settings
         if (label == shs_fail_label)
         {
             writeNvs32(shs_fail_key, settingVal);
@@ -286,10 +291,9 @@ static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get the fail on/off setting for if the game
  *
- * @return true
- * @return false
+ * @return true if failure is on, false if it is off
  */
 bool shGetSettingFail(void)
 {
@@ -302,10 +306,9 @@ bool shGetSettingFail(void)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get the note speed setting for the game
  *
- * @return true
- * @return false
+ * @return How many microseconds it takes for a note to traverse the screen
  */
 int32_t shGetSettingSpeed(void)
 {

@@ -116,7 +116,7 @@ typedef struct
     int32_t combo;
     int32_t maxCombo;
     bool gameEnd;
-    int32_t totalNotes;
+    int32_t totalHitNotes; ///< Similar to numChartNotes, but counts holds as two notes (on and off)
     int32_t notesHit;
     const char* grade;
     int32_t noteHistogram[NUM_NOTE_TIMINGS];

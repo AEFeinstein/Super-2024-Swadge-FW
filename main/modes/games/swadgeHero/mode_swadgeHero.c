@@ -231,27 +231,7 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
         }
         case SH_GAME:
         {
-            // Free MIDI data
-            globalMidiPlayerStop(true);
-            unloadMidiFile(&shv->midiSong);
-
-            // Free chart data
-            free(shv->chartNotes);
-
-            // Free game UI data
-            void* val;
-            while ((val = pop(&shv->gameNotes)))
-            {
-                free(val);
-            }
-            while ((val = pop(&shv->fretLines)))
-            {
-                free(val);
-            }
-            while ((val = pop(&shv->starList)))
-            {
-                free(val);
-            }
+            shTeardownGame(shv);
             break;
         }
         case SH_GAME_END:

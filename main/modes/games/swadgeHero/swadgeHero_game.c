@@ -17,6 +17,7 @@
 //==============================================================================
 // Enums
 //==============================================================================
+
 typedef struct
 {
     int32_t val;
@@ -84,11 +85,11 @@ static int32_t getXOffset(shVars_t* sh, int32_t note);
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Load a song to play
  *
  * @param sh The Swadge Hero game state
- * @param song
- * @param difficulty
+ * @param song The name of the song to load
+ * @param difficulty The song difficulty
  */
 void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
 {
@@ -161,96 +162,162 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     int32_t songLenUs = SAMPLES_TO_US(player->sampleCount);
     globalMidiPlayerStop(true);
 
-    // Save the LED decay rate based on tempo
-    sh->usPerLedDecay = sh->tempo / (2 * 0xFF);
-
-    // Figure out how often to sample the fail meter for the chart after the song
-    sh->failSampleInterval = songLenUs / NUM_FAIL_METER_SAMPLES;
-
     // Set the lead-in timer
     sh->leadInUs = sh->scrollTime;
 
     // Start with one fret line at t=0
-    sh->lastFretLineUs = 0;
-
+    sh->lastFretLineUs     = 0;
     shFretLine_t* fretLine = heap_caps_calloc(1, sizeof(shFretLine_t), MALLOC_CAP_SPIRAM);
     fretLine->headPosY     = TFT_HEIGHT + 1;
     fretLine->headTimeUs   = sh->lastFretLineUs;
     push(&sh->fretLines, fretLine);
 
-    // Set score, combo, and fail
-    sh->score     = 0;
-    sh->combo     = 0;
-    sh->maxCombo  = 0;
+    // Reset scoring
+    sh->score    = 0;
+    sh->combo    = 0;
+    sh->maxCombo = 0;
+    sh->notesHit = 0;
+    sh->grade    = grades[ARRAY_SIZE(grades) - 1].letter;
+
+    // Figure out how often to sample the fail meter for the chart after the song
+    sh->failSampleInterval = songLenUs / NUM_FAIL_METER_SAMPLES;
+    clear(&sh->failSamples);
     sh->failMeter = 50;
+
+    // Clear histogram
+    memset(sh->noteHistogram, 0, sizeof(sh->noteHistogram));
+
+    // Set up LED variables
+    sh->usPerLedDecay = sh->tempo / (2 * 0xFF);
+    sh->nextBlinkUs   = 0;
+    sh->ledBaseVal    = 0;
+    sh->ledDecayTimer = 0;
+    memset(&sh->ledHitVal, 0, sizeof(sh->ledHitVal));
+
+    // Set up
+    sh->textTimerUs = 0;
+    sh->hitText     = timings[ARRAY_SIZE(timings) - 1].label;
+    sh->timingText  = hit_early;
+
+    // Set up icon pulse variables
+    sh->iconIdx     = 0;
+    sh->iconTimerUs = 0;
 }
 
 /**
- * @brief TODO doc
+ * @brief Load chart data about a song
  *
  * @param sh The Swadge Hero game state
- * @param data
- * @param size
- * @return uint32_t
+ * @param data The data to parse
+ * @param size The size of the data to load
+ * @return The number of frets used by this chart
  */
 uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
 {
-    uint32_t maxFret  = 0;
-    uint32_t dIdx     = 0;
+    // The number of frets in the track, counted while loading
+    uint32_t maxFret = 0;
+
+    // Data index
+    uint32_t dIdx = 0;
+
+    // The first 16 bits are number of notes
     sh->numChartNotes = (data[dIdx++] << 8);
     sh->numChartNotes |= (data[dIdx++]);
 
-    sh->totalNotes = sh->numChartNotes;
+    // Start the chart at note 0
+    sh->currentChartNote = 0;
 
+    // Start a count of hit notes. This is incremented by hold notes
+    sh->totalHitNotes = sh->numChartNotes;
+
+    // Allocate memory for all the chart notes
     sh->chartNotes = heap_caps_calloc(sh->numChartNotes, sizeof(shChartNote_t), MALLOC_CAP_SPIRAM);
 
+    // Read all the chart notes from the file
     for (int32_t nIdx = 0; nIdx < sh->numChartNotes; nIdx++)
     {
+        // The tick this note should be hit at
         sh->chartNotes[nIdx].tick = (data[dIdx + 0] << 24) | //
                                     (data[dIdx + 1] << 16) | //
                                     (data[dIdx + 2] << 8) |  //
                                     (data[dIdx + 3] << 0);
         dIdx += 4;
 
+        // Tye type of note
         sh->chartNotes[nIdx].note = data[dIdx++];
 
+        // Keep track of the max fret. The top bit indicates a hold note
         if ((sh->chartNotes[nIdx].note & 0x7F) > maxFret)
         {
             maxFret = sh->chartNotes[nIdx].note & 0x7F;
         }
 
+        // If this is a hold note
         if (0x80 & sh->chartNotes[nIdx].note)
         {
+            // Clear the bit
             sh->chartNotes[nIdx].note &= 0x7F;
 
-            // Use the hold time to see how long this note is held
+            // Read the next two bytes as the hold time
             sh->chartNotes[nIdx].hold = (data[dIdx + 0] << 8) | //
                                         (data[dIdx + 1] << 0);
             dIdx += 2;
 
-            // Holds count as another note for letter ranking
-            sh->totalNotes++;
+            // Increment this, because hold notes count as two for the letter ranking
+            sh->totalHitNotes++;
         }
     }
 
+    // Return the number of frets used
     return maxFret;
 }
 
 /**
- * @brief TODO doc
+ * @brief Tear down the Swadge Hero game and free memory
+ *
+ * @param sh The Swadge Hero game state
+ */
+void shTeardownGame(shVars_t* sh)
+{
+    // Free MIDI data
+    globalMidiPlayerStop(true);
+    unloadMidiFile(&sh->midiSong);
+
+    // Free chart data
+    free(sh->chartNotes);
+
+    // Free game UI data
+    void* val;
+    while ((val = pop(&sh->gameNotes)))
+    {
+        free(val);
+    }
+    while ((val = pop(&sh->fretLines)))
+    {
+        free(val);
+    }
+    while ((val = pop(&sh->starList)))
+    {
+        free(val);
+    }
+}
+
+/**
+ * @brief Run timers for the Swadge Hero game
  *
  * @param sh The Swadge Hero game state
  * @param elapsedUs The time elapsed since the last time this function was called.
- * @return true
- * @return false
+ * @return true if the game is still running, false if it is over
  */
 bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 {
+    // If the game end flag is raised
     if (sh->gameEnd)
     {
         // Grade the performance
-        int32_t notePct = (100 * sh->notesHit) / sh->totalNotes;
-        int gradeIdx;
+        int32_t notePct = (100 * sh->notesHit) / sh->totalHitNotes;
+        // Find the letter grade based on the note percentage
+        int32_t gradeIdx;
         for (gradeIdx = 0; gradeIdx < ARRAY_SIZE(grades); gradeIdx++)
         {
             if (notePct >= grades[gradeIdx].val)
@@ -260,7 +327,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             }
         }
 
-        // Save score to NVS
+        // Read old high score from NVS
         int32_t oldHs = 0;
         if (!readNvs32(sh->hsKey, &oldHs))
         {
@@ -268,7 +335,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             oldHs = 0;
         }
 
-        // Write the high score to NVS if it's larger
+        // Write the new high score to NVS if it's larger
         if (sh->score > oldHs)
         {
             // four top bits are letter, bottom 28 bits are score
@@ -278,19 +345,37 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 
         // Switch to the game end screen
         shChangeScreen(sh, SH_GAME_END);
+
+        // Return and indicate the game is over
         return false;
     }
 
+    // Get a reference to the player
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+
     // Run a lead-in timer to allow notes to spawn before the song starts playing
+    int32_t songUs;
     if (sh->leadInUs > 0)
     {
+        // Decrement the lead in timer
         sh->leadInUs -= elapsedUs;
 
+        // The song hasn't started yet, so the time is negative
+        songUs = -sh->leadInUs;
+
+        // Start the song
         if (sh->leadInUs <= 0)
         {
+            // Lead in is over, start the song
             globalMidiPlayerPlaySongCb(&sh->midiSong, MIDI_BGM, shSongOver);
             sh->leadInUs = 0;
+            songUs       = 0;
         }
+    }
+    else
+    {
+        // Song is playing, Get the position of the song and when the next event is, in microseconds
+        songUs = SAMPLES_TO_US(player->sampleCount);
     }
 
     // Run a timer for pop-up text
@@ -299,14 +384,17 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         sh->textTimerUs -= elapsedUs;
     }
 
-    // Run timers for stars
+    // Run timers for stars. For each star
     node_t* starNode = sh->starList.first;
     while (starNode)
     {
         drawStar_t* ds = starNode->val;
+        // Decrement the timer
         ds->timer -= elapsedUs;
+        // If it expired
         if (0 >= ds->timer)
         {
+            // Remove and free the star without disturbing the list
             node_t* toRemove = starNode;
             starNode         = starNode->next;
             free(toRemove->val);
@@ -314,26 +402,15 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         }
         else
         {
+            // Just iterate
             starNode = starNode->next;
         }
     }
 
-    // Get a reference to the player
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-
-    // Get the position of the song and when the next event is, in ms
-    int32_t songUs;
-    if (sh->leadInUs > 0)
-    {
-        songUs = -sh->leadInUs;
-    }
-    else
-    {
-        songUs = SAMPLES_TO_US(player->sampleCount);
-    }
-
+    // If failure is on and the song is playing
     if (sh->failOn && songUs >= 0)
     {
+        // Run a timer to sample the fail meter for a chart
         while (sh->failSampleInterval * sh->failSamples.length <= songUs)
         {
             // Save the sample to display on the game over screen
@@ -345,12 +422,38 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     int32_t nextFretLineUs = sh->lastFretLineUs + sh->tempo;
     if (songUs + sh->scrollTime >= nextFretLineUs)
     {
+        // Increment time for the last fret line
         sh->lastFretLineUs += sh->tempo;
 
+        // Allocate and push a new fret line
         shFretLine_t* fretLine = heap_caps_calloc(1, sizeof(shFretLine_t), MALLOC_CAP_SPIRAM);
         fretLine->headPosY     = TFT_HEIGHT + 1;
         fretLine->headTimeUs   = sh->lastFretLineUs;
         push(&sh->fretLines, fretLine);
+    }
+
+    // Iterate through fret lines
+    node_t* fretLineNode = sh->fretLines.first;
+    while (fretLineNode)
+    {
+        shFretLine_t* fretLine = fretLineNode->val;
+
+        // Update positions
+        fretLine->headPosY = (((TFT_HEIGHT - HIT_BAR) * (fretLine->headTimeUs - songUs)) / sh->scrollTime) + HIT_BAR;
+
+        // Remove if off screen
+        if (fretLine->headPosY < 0)
+        {
+            node_t* toRemove = fretLineNode;
+            fretLineNode     = fretLineNode->next;
+            free(toRemove->val);
+            removeEntry(&sh->fretLines, toRemove);
+        }
+        else
+        {
+            // Iterate normally
+            fretLineNode = fretLineNode->next;
+        }
     }
 
     // Decay LEDs
@@ -380,7 +483,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         }
     }
 
-    // Blink based on tempo
+    // Blink LEDs based on tempo
     if (songUs >= sh->nextBlinkUs)
     {
         sh->nextBlinkUs += sh->tempo;
@@ -412,7 +515,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         // Check if the game note should be spawned now to reach the hit bar in time
         if (songUs + sh->scrollTime >= nextEventUs)
         {
-            // Spawn an game note
+            // Spawn a game note
             shGameNote_t* ni = heap_caps_calloc(1, sizeof(shGameNote_t), MALLOC_CAP_SPIRAM);
             ni->note         = sh->chartNotes[sh->currentChartNote].note;
 
@@ -540,34 +643,12 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         }
     }
 
-    // Iterate through fret lines
-    node_t* fretLineNode = sh->fretLines.first;
-    while (fretLineNode)
-    {
-        shFretLine_t* fretLine = fretLineNode->val;
-
-        // Update positions
-        fretLine->headPosY = (((TFT_HEIGHT - HIT_BAR) * (fretLine->headTimeUs - songUs)) / sh->scrollTime) + HIT_BAR;
-
-        // Remove if off screen
-        if (fretLine->headPosY < 0)
-        {
-            node_t* toRemove = fretLineNode;
-            fretLineNode     = fretLineNode->next;
-            free(toRemove->val);
-            removeEntry(&sh->fretLines, toRemove);
-        }
-        else
-        {
-            // Iterate normally
-            fretLineNode = fretLineNode->next;
-        }
-    }
+    // Return that the game is still playing
     return true;
 }
 
 /**
- * @brief TODO doc
+ * @brief Draw the Swadge Hero game
  *
  * @param sh The Swadge Hero game state
  */
@@ -592,6 +673,17 @@ void shDrawGame(shVars_t* sh)
         drawWsgSimple(outline, xOffset - (outline->w / 2), HIT_BAR - (outline->h / 2));
     }
 
+    // Draw indicators that the button is pressed
+    for (int32_t bIdx = 0; bIdx < sh->numFrets; bIdx++)
+    {
+        if (sh->btnState & sh->noteToBtn[bIdx])
+        {
+            int32_t xOffset = ((bIdx * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
+            wsg_t* pressed  = &sh->pressed[sh->noteToIcon[bIdx]];
+            drawWsgSimple(pressed, xOffset - (pressed->w / 2), HIT_BAR - (pressed->h / 2));
+        }
+    }
+
     // Draw all the game notes
     node_t* gameNoteNode = sh->gameNotes.first;
     while (gameNoteNode)
@@ -613,17 +705,6 @@ void shDrawGame(shVars_t* sh)
 
         // Iterate
         gameNoteNode = gameNoteNode->next;
-    }
-
-    // Draw indicators that the button is pressed
-    for (int32_t bIdx = 0; bIdx < sh->numFrets; bIdx++)
-    {
-        if (sh->btnState & sh->noteToBtn[bIdx])
-        {
-            int32_t xOffset = ((bIdx * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
-            wsg_t* pressed  = &sh->pressed[sh->noteToIcon[bIdx]];
-            drawWsgSimple(pressed, xOffset - (pressed->w / 2), HIT_BAR - (pressed->h / 2));
-        }
     }
 
     // Draw stars
@@ -667,6 +748,7 @@ void shDrawGame(shVars_t* sh)
     snprintf(scoreText, sizeof(scoreText) - 1, "%" PRId32, sh->score);
     drawText(&sh->rodin, c555, scoreText, textMargin, TFT_HEIGHT - failBarHeight - sh->rodin.height);
 
+    // If fail is on
     if (sh->failOn)
     {
         // Draw fail meter bar
@@ -696,10 +778,22 @@ void shDrawGame(shVars_t* sh)
 }
 
 /**
- * @brief TODO doc
+ * @brief Helper draw function to get the X offset for a given note
  *
  * @param sh The Swadge Hero game state
- * @param evt
+ * @param note The note to get the X offset for
+ * @return The X offset for the note
+ */
+static int32_t getXOffset(shVars_t* sh, int32_t note)
+{
+    return ((note * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
+}
+
+/**
+ * @brief Handle button input during a Swadge Hero game
+ *
+ * @param sh The Swadge Hero game state
+ * @param evt The button event
  */
 void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 {
@@ -714,6 +808,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
         songUs = SAMPLES_TO_US(globalMidiPlayerGet(MIDI_BGM)->sampleCount);
     }
 
+    // Save the button state
     sh->btnState = evt->state;
 
     if (PB_B < evt->button)
@@ -722,7 +817,10 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
         return;
     }
 
+    // Find the note that corresponds to this button press
     int32_t notePressed = sh->btnToNote[31 - __builtin_clz(evt->button)];
+
+    // If a note was pressed
     if (-1 != notePressed)
     {
         // See if the button press matches a note
@@ -841,7 +939,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                     gameNoteNode = nextNode;
                 }
 
-                // the button was matched to an game note, break the loop
+                // the button was matched to a game note, break the loop
                 break;
             }
 
@@ -858,27 +956,15 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
             shMissNote(sh);
         }
     }
-
-    // Check for analog touch
-    // int32_t centerVal, intensityVal;
-    // if (getTouchCentroid(&centerVal, &intensityVal))
-    // {
-    //     printf("touch center: %" PRId32 ", intensity: %" PRId32 "\n", centerVal, intensityVal);
-    // }
-    // else
-    // {hold
-    // }
-
-    // // Get the acceleration
-    // int16_t a_x, a_y, a_z;
-    // accelGetAccelVec(&a_x, &a_y, &a_z);
 }
 
 /**
- * @brief TODO doc
+ * @brief Get the current Swadge Hero multiplier, based on combo
+ *
+ * Every 10 combo is another 1x multiplier
  *
  * @param sh The Swadge Hero game state
- * @return int32_t
+ * @return The current multiplier
  */
 static int32_t getMultiplier(shVars_t* sh)
 {
@@ -886,8 +972,7 @@ static int32_t getMultiplier(shVars_t* sh)
 }
 
 /**
- * @brief TODO doc
- *
+ * @brief Set a flag that the game is over and should be cleaned up next loop
  */
 static void shSongOver(void)
 {
@@ -896,27 +981,30 @@ static void shSongOver(void)
 }
 
 /**
- * @brief TODO doc
+ * @brief Score a Swadge Hero note as hit
  *
  * @param sh The Swadge Hero game state
- * @param baseScore
+ * @param baseScore The score of this note, 1 to 5
  */
 static void shHitNote(shVars_t* sh, int32_t baseScore)
 {
+    // Save this note in the histogram
     sh->noteHistogram[ARRAY_SIZE(timings) - 1 - baseScore]++;
 
     // Increment the score
     sh->score += getMultiplier(sh) * baseScore;
 
+    // Increment the notes hit, for letter grading later
     sh->notesHit++;
 
-    // Increment the combo & fail meter
+    // Increment the combo & track the max combo
     sh->combo++;
     if (sh->combo > sh->maxCombo)
     {
         sh->maxCombo = sh->combo;
     }
 
+    // Increment the fail meter
     if (sh->failOn)
     {
         sh->failMeter = MIN(100, sh->failMeter + 1);
@@ -924,17 +1012,22 @@ static void shHitNote(shVars_t* sh, int32_t baseScore)
 }
 
 /**
- * @brief TODO doc
+ * @brief Score a Swadge Hero note as a miss
  *
  * @param sh The Swadge Hero game state
  */
 static void shMissNote(shVars_t* sh)
 {
+    // Tally this as a miss in the histogram
     sh->noteHistogram[ARRAY_SIZE(timings) - 1]++;
 
+    // Break the combo
     sh->combo = 0;
+
+    // If fail is on
     if (sh->failOn)
     {
+        // Decrement the fail meter
         sh->failMeter = MAX(0, sh->failMeter - 2);
         if (0 == sh->failMeter)
         {
@@ -944,24 +1037,12 @@ static void shMissNote(shVars_t* sh)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get the letter grade for the grade index
  *
- * @param gradeIdx
- * @return const char*
+ * @param gradeIdx The grade index, 0 through 12
+ * @return The letter grade for this index
  */
 const char* getLetterGrade(int32_t gradeIdx)
 {
     return grades[gradeIdx].letter;
-}
-
-/**
- * @brief TODO doc
- *
- * @param sh The Swadge Hero game state
- * @param note
- * @return int32_t
- */
-static int32_t getXOffset(shVars_t* sh, int32_t note)
-{
-    return ((note * TFT_WIDTH) / sh->numFrets) + (TFT_WIDTH / (2 * sh->numFrets));
 }
