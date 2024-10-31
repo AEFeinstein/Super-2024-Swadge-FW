@@ -176,7 +176,7 @@ swadgeMode_t pangoMode = {.modeName                 = pangoName,
                           .fnEspNowRecvCb           = NULL,
                           .fnEspNowSendCb           = NULL};
 
-#define NUM_LEVELS 16
+// #define NUM_LEVELS 16
 
 led_t paLeds[CONFIG_NUM_LEDS];
 

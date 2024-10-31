@@ -843,26 +843,20 @@ void pa_animateEnemy(paEntity_t* self)
     }
     else if (self->yspeed > 0)
     {
-        if (self->yspeed > 0)
+        if (self->gameData->frameCount % 5 == 0)
         {
-            if (self->gameData->frameCount % 5 == 0)
-            {
-                self->spriteIndex          = PA_SP_ENEMY_SOUTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
-                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                self->facingDirection      = PA_DIRECTION_SOUTH;
-            }
+            self->spriteIndex          = PA_SP_ENEMY_SOUTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+            self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+            self->facingDirection      = PA_DIRECTION_SOUTH;
         }
     }
     else if (self->yspeed < 0)
     {
-        if (self->yspeed < 0)
+        if (self->gameData->frameCount % 5 == 0)
         {
-            if (self->gameData->frameCount % 5 == 0)
-            {
-                self->spriteIndex          = PA_SP_ENEMY_NORTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
-                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
-                self->facingDirection      = PA_DIRECTION_NORTH;
-            }
+            self->spriteIndex          = PA_SP_ENEMY_NORTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+            self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+            self->facingDirection      = PA_DIRECTION_NORTH;
         }
     }
     else
@@ -1211,6 +1205,7 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
     switch (other->type)
     {
         case PA_ENTITY_CRABDOZER:
+        {
             if ((self->xspeed > 0 && self->x < other->x) || (self->xspeed < 0 && self->x > other->x))
             {
                 self->xspeed = -self->xspeed;
@@ -1223,7 +1218,9 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
                 // self->spriteFlipHorizontal = -self->spriteFlipHorizontal;
             }
             break;
+        }
         case ENTITY_HIT_BLOCK:
+        {
             self->xspeed = other->xspeed * 2;
             self->yspeed = other->yspeed * 2;
 
@@ -1241,6 +1238,7 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             soundPlaySfx(&(self->soundManager->sndHurt), 2);
             killEnemy(self);
             break;
+        }
         default:
         {
             break;
@@ -1476,6 +1474,7 @@ void pa_updateBreakBlock(paEntity_t* self)
             switch (self->state)
             {
                 case PA_TILE_SPAWN_BLOCK_0:
+                {
                     pointsScored = spawnBlockComboScores[self->scoreValue];
 
                     pa_scorePoints(self->gameData, pointsScored);
@@ -1496,7 +1495,9 @@ void pa_updateBreakBlock(paEntity_t* self)
                     }
 
                     break;
+                }
                 default:
+                {
                     pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION,
                                            self->y >> SUBPIXEL_RESOLUTION);
                     pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION,
@@ -1506,6 +1507,7 @@ void pa_updateBreakBlock(paEntity_t* self)
                     pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION,
                                            self->y >> SUBPIXEL_RESOLUTION);
                     break;
+                }
             }
 
             pa_destroyEntity(self, false);
