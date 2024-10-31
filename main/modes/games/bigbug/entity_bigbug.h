@@ -151,7 +151,6 @@ struct bb_entity_t
 
     bb_gameData_t* gameData;
     bb_soundManager_t* soundManager;
-    bb_entityManager_t* entityManager;
 
     int16_t halfWidth;  // Distance from the origin to the side edge (for AABB physics)
     int16_t halfHeight; // Distance from the origin to the top edge (for AABB physics)
@@ -189,6 +188,7 @@ void bb_updateBug(bb_entity_t* self);
 void bb_updateMenu(bb_entity_t* self);
 void bb_updatePOI(bb_entity_t* self);
 void bb_updateFlame(bb_entity_t* self);
+void bb_updateCharacterTalk(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);

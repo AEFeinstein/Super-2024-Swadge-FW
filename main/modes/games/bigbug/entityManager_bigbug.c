@@ -127,6 +127,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bb_sprite_t* deathDumpsterSprite = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER]);
     deathDumpsterSprite->originX     = 138;
     deathDumpsterSprite->originY     = 115;
+
+    bb_sprite_t* ovoTalk = bb_loadSprite("ovo_talk", 8, 1, &entityManager->sprites[OVO_TALK]);
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -272,7 +274,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    if (camera->camera.pos.y < -1000 && camera->camera.pos.y > -4880)
+    if (camera->camera.pos.y < -1000 && camera->camera.pos.y > -5385)
     {
         int16_t halfWidth  = HALF_WIDTH >> DECIMAL_BITS;
         int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
@@ -724,7 +726,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             mData->cursor
                 = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 1,
-                                  (entity->pos.x >> DECIMAL_BITS) - 29, (entity->pos.y >> DECIMAL_BITS) + 135, false);
+                                  (entity->pos.x >> DECIMAL_BITS) - 22, (entity->pos.y >> DECIMAL_BITS) + 135, false);
 
             // This will make it draw pointed right
             ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};
@@ -750,6 +752,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             entity->updateFunction = &bb_updatePOI;
             entity->drawFunction   = &bb_drawNothing;
+        }
+        case OVO_TALK:
+        {
+            entityManager->sprites[OVO_TALK].originY = -240;
+            entity->currentAnimationFrame = bb_randomInt(0,7);
+            entity->updateFunction = &bb_updateCharacterTalk;
         }
         default: // FLAME_ANIM and others need nothing set
         {

@@ -32,7 +32,6 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
     self->active        = false;
     self->gameData      = gameData;
     self->soundManager  = soundManager;
-    self->entityManager = entityManager;
 }
 
 void bb_setData(bb_entity_t* self, void* data)
@@ -93,8 +92,8 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     self->tileCollisionHandler        = NULL;
     self->overlapTileHandler          = NULL;
 
-    self->entityManager->activeEntities--;
-    // printf("%d/%d entities v\n", self->entityManager->activeEntities, MAX_ENTITIES);
+    self->gameData->entityManager.activeEntities--;
+    // printf("%d/%d entities v\n", self->gameData->entityManager.activeEntities, MAX_ENTITIES);
 }
 
 void bb_updateRocketLanding(bb_entity_t* self)
@@ -215,7 +214,7 @@ void bb_updatePhysicsObject(bb_entity_t* self)
 
 void bb_updateGarbotnikDeploy(bb_entity_t* self)
 {
-    if (self->currentAnimationFrame == self->entityManager->sprites[self->spriteIndex].numFrames - 1)
+    if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 1)
     {
         self->paused = true;
         // deploy garbotnik!!!
@@ -647,7 +646,7 @@ void bb_updateMenuBug(bb_entity_t* self)
 {
     bb_menuBugData_t* mbData = (bb_menuBugData_t*)self->data;
     self->pos.x += (mbData->xVel - 3) << DECIMAL_BITS;
-    if (mbData->firstTrip && self->pos.x < self->entityManager->viewEntity->pos.x - (130 << DECIMAL_BITS))
+    if (mbData->firstTrip && self->pos.x < self->gameData->entityManager.viewEntity->pos.x - (130 << DECIMAL_BITS))
     {
         mbData->firstTrip = false;
         mbData->xVel      = bb_randomInt(-5, 5);
@@ -725,7 +724,7 @@ void bb_updateMenu(bb_entity_t* self)
     }
 
 
-    mData->cursor->pos.y = self->pos.y + (143<<DECIMAL_BITS) + mData->selectionIdx * (24<<DECIMAL_BITS);
+    mData->cursor->pos.y = self->pos.y + (145<<DECIMAL_BITS) + mData->selectionIdx * (22<<DECIMAL_BITS);
 
     if (self->gameData->menuBug == NULL || self->gameData->menuBug->active == false)
     {
@@ -776,6 +775,9 @@ void bb_updatePOI(bb_entity_t* self)
             free(tData);
             self->data           = NULL;
             self->updateFunction = NULL;
+
+            bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true);
+
             return;
         }
         fastNormVec(&ToFrom.x, &ToFrom.y);
@@ -784,6 +786,7 @@ void bb_updatePOI(bb_entity_t* self)
         ToFrom.y  = ToFrom.y >> 8;
         self->pos = addVec2d(self->pos, ToFrom);
     }
+
 }
 
 void bb_updateFlame(bb_entity_t* self)
@@ -800,6 +803,15 @@ void bb_updateFlame(bb_entity_t* self)
             self->animationTimer = newFrame;
             self->currentAnimationFrame = newFrame;
         }
+    }
+}
+
+void bb_updateCharacterTalk(bb_entity_t* self)
+{
+    if(self->gameData->entityManager.sprites[self->spriteIndex].originY < -30)
+    {
+        self->gameData->entityManager.sprites[self->spriteIndex].originY += 10;
+        printf("Y %d\n", self->gameData->entityManager.sprites[self->spriteIndex].originY);
     }
 }
 

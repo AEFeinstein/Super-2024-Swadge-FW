@@ -43,6 +43,7 @@ typedef enum
     BUTT,
     BB_MENU,           // Various sprites loaded as frames to create the parallax main menu
     BB_DEATH_DUMPSTER, // Garbotnik's evil lair in space
+    OVO_TALK,          // Awesome art for dialogue moments. Each frame just provides a different flavor.
     WILE,              // A metal ball that is thrown
     NO_SPRITE_STAR,    // a single white pixel for aesthetic beauty.
     NO_SPRITE_POI      // Point of interest for the camera to follow in the main menu

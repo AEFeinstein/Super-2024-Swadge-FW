@@ -145,7 +145,7 @@ static void bb_EnterMode(void)
 
 
     bb_entity_t* foreground    = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -5000, true);
+                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -5500, true);
 
     foreground->updateFunction = NULL;
     foreground->drawFunction   = &bb_drawMenuForeground;
