@@ -884,7 +884,6 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                         shHitNote(sh, baseScore);
 
                         // Draw a star for a moment
-                        // TODO is there some way a star is drawn, but the note isn't cleared?
                         drawStar_t* ds = heap_caps_calloc(1, sizeof(drawStar_t), MALLOC_CAP_SPIRAM);
                         ds->x          = getXOffset(sh, gameNote->note) - sh->star.w / 2;
                         ds->y          = gameNote->headPosY - (sh->star.h / 2);
