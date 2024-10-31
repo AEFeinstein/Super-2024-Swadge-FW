@@ -74,6 +74,8 @@ struct bb_gameData_t
     font_t font;
 
     bb_entity_t* menuBug; // Featured entity walking through the main menu.
+
+    bool exit; //Entities can set it to true, and the mode will exit eventually.
 };
 
 //==============================================================================

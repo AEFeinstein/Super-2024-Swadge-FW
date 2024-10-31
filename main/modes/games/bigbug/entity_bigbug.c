@@ -706,7 +706,7 @@ void bb_updateMenu(bb_entity_t* self)
 
             for(int rocketIdx = 0; rocketIdx < 3; rocketIdx++){
                 bb_entity_t* rocket = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 3,
-                    (self->pos.x >> DECIMAL_BITS) - 80 + 80 * rocketIdx, (self->pos.y >> DECIMAL_BITS) + 675, true);
+                    (self->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx, (self->pos.y >> DECIMAL_BITS) + 675, true);
             
                 rocket->updateFunction = NULL;
 
@@ -720,6 +720,11 @@ void bb_updateMenu(bb_entity_t* self)
 
             self->updateFunction = NULL;
             return;
+        }
+        else if(mData->selectionIdx == 1)
+        {
+            //exit the game
+            self->gameData->exit = true;
         }
     }
 
@@ -811,7 +816,6 @@ void bb_updateCharacterTalk(bb_entity_t* self)
     if(self->gameData->entityManager.sprites[self->spriteIndex].originY < -30)
     {
         self->gameData->entityManager.sprites[self->spriteIndex].originY += 10;
-        printf("Y %d\n", self->gameData->entityManager.sprites[self->spriteIndex].originY);
     }
 }
 

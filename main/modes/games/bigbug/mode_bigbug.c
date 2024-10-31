@@ -300,6 +300,10 @@ static void bb_DrawScene(void)
  */
 static void bb_GameLoop(int64_t elapsedUs)
 {
+    if(bigbug->gameData.exit)
+    {
+        bb_ExitMode();
+    }
     bigbug->gameData.btnDownState = 0b0;
     // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
