@@ -84,7 +84,7 @@ static void shEnterMode(void)
 
         for (int32_t fIdx = 0; fIdx < NUM_NOTE_FRAMES; fIdx++)
         {
-            sprintf(tmp, "sh_%c%d.wsg", icons[i], fIdx + 1);
+            sprintf(tmp, "sh_%c%" PRId32 ".wsg", icons[i], fIdx + 1);
             loadWsg(tmp, &shv->icons[i][fIdx], true);
         }
 
