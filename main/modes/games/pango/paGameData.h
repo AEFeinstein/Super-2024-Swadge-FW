@@ -59,6 +59,7 @@ typedef struct
     int16_t maxAggroEnemies;
     int16_t minAggroTime;
     int16_t maxAggroTime;
+    int16_t remainingBlocks;
 
     paSoundManager_t* soundManager;
 

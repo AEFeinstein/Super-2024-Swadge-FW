@@ -273,9 +273,12 @@ void pa_freeTilemap(paTilemap_t* tilemap)
 
 void pa_generateMaze(paTilemap_t* tilemap)
 {
+    tilemap->entityManager->gameData->remainingBlocks = 195;
     int32_t tx = 1;
     int32_t ty = 13;
+    
     pa_setTile(tilemap, tx, ty, PA_TILE_EMPTY);
+    tilemap->entityManager->gameData->remainingBlocks--;
 
     while (ty > 1)
     {
@@ -329,33 +332,37 @@ void pa_genMakePath(paTilemap_t* tilemap, uint32_t x, uint32_t y)
             case 0:
                 if (pa_getTile(tilemap, nx, ny - 2))
                 {
-                    pa_setTile(tilemap, nx, ny - 1, 0);
-                    pa_setTile(tilemap, nx, ny - 2, 0);
+                    pa_setTile(tilemap, nx, ny - 1, PA_TILE_EMPTY);
+                    pa_setTile(tilemap, nx, ny - 2, PA_TILE_EMPTY);
                     ny -= 2;
+                    tilemap->entityManager->gameData->remainingBlocks-=2;
                 }
                 break;
             case 1:
                 if (pa_getTile(tilemap, nx, ny + 2))
                 {
-                    pa_setTile(tilemap, nx, ny + 1, 0);
-                    pa_setTile(tilemap, nx, ny + 2, 0);
+                    pa_setTile(tilemap, nx, ny + 1, PA_TILE_EMPTY);
+                    pa_setTile(tilemap, nx, ny + 2, PA_TILE_EMPTY);
                     ny += 2;
+                    tilemap->entityManager->gameData->remainingBlocks-=2;
                 }
                 break;
             case 2:
                 if (pa_getTile(tilemap, nx - 2, ny))
                 {
-                    pa_setTile(tilemap, nx - 1, ny, 0);
-                    pa_setTile(tilemap, nx - 2, ny, 0);
+                    pa_setTile(tilemap, nx - 1, ny, PA_TILE_EMPTY);
+                    pa_setTile(tilemap, nx - 2, ny, PA_TILE_EMPTY);
                     nx -= 2;
+                    tilemap->entityManager->gameData->remainingBlocks-=2;
                 }
                 break;
             case 3:
                 if (pa_getTile(tilemap, nx + 2, ny))
                 {
-                    pa_setTile(tilemap, nx + 1, ny, 0);
-                    pa_setTile(tilemap, nx + 2, ny, 0);
+                    pa_setTile(tilemap, nx + 1, ny, PA_TILE_EMPTY);
+                    pa_setTile(tilemap, nx + 2, ny, PA_TILE_EMPTY);
                     nx += 2;
+                    tilemap->entityManager->gameData->remainingBlocks-=2;
                 }
                 break;
         }

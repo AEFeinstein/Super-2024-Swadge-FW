@@ -1430,6 +1430,7 @@ void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty, uint16_
             if (newEntity == NULL)
             {
                 pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
+                self->gameData->remainingBlocks--;
                 pa_scorePoints(self->gameData, spawnBlockComboScores[self->scoreValue]);
                 self->entityManager->gameData->remainingEnemies--;
             }

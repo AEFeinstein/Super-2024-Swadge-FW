@@ -76,9 +76,13 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
 
         currentEntity->active = false;
 
-        if (currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->state == PA_TILE_SPAWN_BLOCK_0)
+        if (currentEntity->type == ENTITY_HIT_BLOCK)
         {
-            entityManager->gameData->remainingEnemies--;
+            entityManager->gameData->remainingBlocks--;
+            
+            if(currentEntity->state == PA_TILE_SPAWN_BLOCK_0){
+                entityManager->gameData->remainingEnemies--;
+            }
         }
     }
 
@@ -288,6 +292,7 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->state                = 0;
 
     pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
+    entityManager->gameData->remainingBlocks--;
 
     return entity;
 }

@@ -245,8 +245,7 @@ void pangoEnterMode(void)
     pa_initializeWsgManager(&(pango->wsgManager));
 
     pa_initializeTileMap(&(pango->tilemap), &(pango->wsgManager));
-    pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
-    pa_generateMaze(&(pango->tilemap));
+   
     pango->tilemap.mapOffsetX = -4;
 
     pa_initializeSoundManager(&(pango->soundManager));
@@ -258,6 +257,9 @@ void pangoEnterMode(void)
 
     pango->tilemap.entityManager    = &(pango->entityManager);
     pango->tilemap.tileSpawnEnabled = true;
+
+    pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+    pa_generateMaze(&(pango->tilemap));
 
     setFrameRateUs(16666);
 
@@ -750,6 +752,7 @@ void changeStateGame(pango_t* self)
                     break;
                 case PA_TILE_BLOCK:
                     pa_setTile(&(self->tilemap), spawnTx, spawnTy, PA_TILE_EMPTY);
+                    self->gameData.remainingBlocks--;
                     break;
                 case PA_TILE_SPAWN_BLOCK_0:
                     skippedEnemyRespawnCount++;
