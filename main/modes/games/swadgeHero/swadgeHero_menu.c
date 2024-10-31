@@ -26,10 +26,18 @@ static const shSong_t shSongList[] = {
     {
         .name   = "GShip Credits",
         .artist = "Newmajoe",
-        .midi   = "credits.mid",
-        .easy   = "credits_e.cch",
-        .med    = "credits_m.cch",
-        .hard   = "credits_h.cch",
+        .midi   = "g_cred.mid",
+        .easy   = "g_cred_e.cch",
+        .med    = "g_cred_m.cch",
+        .hard   = "g_cred_h.cch",
+    },
+    {
+        .name   = "Hotdog Credits",
+        .artist = "Newmajoe",
+        .midi   = "s_cred.mid",
+        .easy   = "s_cred_e.cch",
+        .med    = "s_cred_m.cch",
+        .hard   = "s_cred_h.cch",
     },
 };
 

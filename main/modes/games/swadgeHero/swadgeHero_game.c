@@ -202,6 +202,9 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     // Set up icon pulse variables
     sh->iconIdx     = 0;
     sh->iconTimerUs = 0;
+
+    // Turn general MIDI on
+    midiGmOn(player);
 }
 
 /**
