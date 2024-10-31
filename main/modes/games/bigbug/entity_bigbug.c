@@ -684,7 +684,7 @@ void bb_updateMenu(bb_entity_t* self)
     mData->selectionIdx = mData->selectionIdx < 0 ? 1 : mData->selectionIdx;
     mData->selectionIdx = mData->selectionIdx > 1 ? 0 : mData->selectionIdx;
 
-    mData->cursor->pos.y = self->pos.y + (135<<DECIMAL_BITS) + mData->selectionIdx * (28<<DECIMAL_BITS);
+    mData->cursor->pos.y = self->pos.y + (143<<DECIMAL_BITS) + mData->selectionIdx * (24<<DECIMAL_BITS);
 
     if(self->gameData->menuBug == NULL || self->gameData->menuBug->active == false)
     {
