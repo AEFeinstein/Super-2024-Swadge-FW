@@ -756,36 +756,44 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case OVO_TALK:
         {
-            bb_dialogueData_t* dData = bb_createDialogueData(28);
+            bb_dialogueData_t* dData = bb_createDialogueData(36);
 
-            bb_setCharacterLine(dData, 0, "Holy bug farts!");
-            bb_setCharacterLine(dData, 1, "After I marketed the chilidog car freshener at MAGFest,");
-            bb_setCharacterLine(dData, 2, "Garbotnik Industries' stock went up by 6,969%% percent%%!");
-            bb_setCharacterLine(dData, 3, "I'm going to use my time machine");
-            bb_setCharacterLine(dData, 4, "to steal the next big-selling trinket from the future now.");
-            bb_setCharacterLine(dData, 5, "That will floor all my stakeholders and make me UNDEFINED money!");
-            bb_setCharacterLine(dData, 6, "With that amount of money,");
-            bb_setCharacterLine(dData, 7, "I can recruit 200 professional bassoon players to the MAGFest Community Orchestra.");
-            bb_setCharacterLine(dData, 8, "I'm so hyped to turn on my time machine for the first time!");
-            bb_setCharacterLine(dData, 9, "Everything's in order.");
-            bb_setCharacterLine(dData, 10, "Even Pango can't stop me!");
-            bb_setCharacterLine(dData, 11, "I just have to attach the chaos core right here.");
-            bb_setCharacterLine(dData, 12, "Where did I put that core?");
-            bb_setCharacterLine(dData, 13, "hmmm...");
-            bb_setCharacterLine(dData, 14, "What about in the freezer?");
-            bb_setCharacterLine(dData, 15, "I've checked every inch of the death dumpster.");
-            bb_setCharacterLine(dData, 16, "Glitch my circuits!");
-            bb_setCharacterLine(dData, 17, "It must have gone out with the trash last Wednesday.");
-            bb_setCharacterLine(dData, 18, "Can I get an F in the chat?");
-            bb_setCharacterLine(dData, 19, "...");
-            bb_setCharacterLine(dData, 20, "Well if Low Earth Waste Management took it to the the landfill,");
-            bb_setCharacterLine(dData, 21, "then it is definitely at the VERY BOTTOM of the dump.");
-            bb_setCharacterLine(dData, 22, "That's because the chaos core is three times the density of a black hole.");
-            bb_setCharacterLine(dData, 23, "Not a problem.");
-            bb_setCharacterLine(dData, 24, "We have the technology to retrieve it.");
-            bb_setCharacterLine(dData, 25, "Safety first.");
-            bb_setCharacterLine(dData, 26, "I've activated my cloning machine up here in case I perish on that nuclear wasteland.");
-            bb_setCharacterLine(dData, 27, "YOLO!");
+            bb_setCharacterLine(dData, 0,  "Holy bug farts!");
+            bb_setCharacterLine(dData, 1,  "After I marketed the");
+            bb_setCharacterLine(dData, 2,  "chilidog car freshener at MAGFest,");
+            bb_setCharacterLine(dData, 3,  "Garbotnik Industries' stock went up by 6,969%!");
+            bb_setCharacterLine(dData, 4,  "I'm going to use my time machine");
+            bb_setCharacterLine(dData, 5,  "to steal the next big-selling trinket");
+            bb_setCharacterLine(dData, 6,  "from the future now.");
+            bb_setCharacterLine(dData, 7,  "That will floor all my stakeholders and make me");
+            bb_setCharacterLine(dData, 8,  "UNDEFINED money!");
+            bb_setCharacterLine(dData, 9,  "With that amount of money,");
+            bb_setCharacterLine(dData, 10, "I can recruit 200 professional bassoon players");
+            bb_setCharacterLine(dData, 11, "to the MAGFest Community Orchestra.");
+            bb_setCharacterLine(dData, 12, "I'm so hyped");
+            bb_setCharacterLine(dData, 13, "to turn on my time machine for the first time!");
+            bb_setCharacterLine(dData, 14, "Everything's in order.");
+            bb_setCharacterLine(dData, 15, "Even Pango can't stop me!");
+            bb_setCharacterLine(dData, 16, "I just have to attach the chaos core right here.");
+            bb_setCharacterLine(dData, 17, "Where did I put that core?");
+            bb_setCharacterLine(dData, 18, "hmmm...");
+            bb_setCharacterLine(dData, 19, "What about in the freezer?");
+            bb_setCharacterLine(dData, 20, "I've checked every inch of the death dumpster.");
+            bb_setCharacterLine(dData, 21, "Glitch my circuits!");
+            bb_setCharacterLine(dData, 22, "It must have gone out with the trash last Wednesday.");
+            bb_setCharacterLine(dData, 23, "Can I get an F in the chat?");
+            bb_setCharacterLine(dData, 24, "...");
+            bb_setCharacterLine(dData, 25, "Well if Earth Waste Management took it");
+            bb_setCharacterLine(dData, 26, "to the the landfill,");
+            bb_setCharacterLine(dData, 27, "then it is definitely at the VERY BOTTOM of the dump.");
+            bb_setCharacterLine(dData, 28, "That's because the chaos core is three times the");
+            bb_setCharacterLine(dData, 29, "density of a black hole.");
+            bb_setCharacterLine(dData, 30, "Not a problem.");
+            bb_setCharacterLine(dData, 31, "We have the technology to retrieve it.");
+            bb_setCharacterLine(dData, 32, "Safety first.");
+            bb_setCharacterLine(dData, 33, "I've activated my cloning machine up here in case I");
+            bb_setCharacterLine(dData, 34, "perish on that nuclear wasteland.");
+            bb_setCharacterLine(dData, 35, "YOLO!");
 
             dData->curString = -1;
 
