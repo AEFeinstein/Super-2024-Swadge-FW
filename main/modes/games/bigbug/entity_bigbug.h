@@ -118,6 +118,7 @@ typedef struct
     uint8_t numStrings;
     char** strings;
     int8_t curString;
+    char character[8];
 } bb_dialogueData_t;
 
 

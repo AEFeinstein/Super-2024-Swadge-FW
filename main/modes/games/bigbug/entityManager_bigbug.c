@@ -758,6 +758,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_dialogueData_t* dData = bb_createDialogueData(36);
 
+            strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
+            dData->character[sizeof(dData->character) - 1] = '\0';
+
             bb_setCharacterLine(dData, 0,  "Holy bug farts!");
             bb_setCharacterLine(dData, 1,  "After I marketed the");
             bb_setCharacterLine(dData, 2,  "chilidog car freshener at MAGFest,");

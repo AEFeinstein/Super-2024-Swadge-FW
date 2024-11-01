@@ -1010,8 +1010,12 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
                     (self->pos.y >> DECIMAL_BITS)
                         - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
     
+    
+
     if(dData->curString >= 0)
     {
+        drawText(&self->gameData->font, c344, dData->character, 33, 184);
+
         uint8_t end = 28;
         if(end > strlen(dData->strings[dData->curString]))
         {
