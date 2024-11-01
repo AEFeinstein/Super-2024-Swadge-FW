@@ -1012,7 +1012,21 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
     
     if(dData->curString >= 0)
     {
-        drawText(&self->gameData->font, c344, dData->strings[dData->curString], 33, 202);
+        uint8_t end = 28;
+        end = end > strlen(dData->strings[dData->curString]) ? strlen(dData->strings[dData->curString]) : end;
+        char substring[29];
+        strncpy(substring, dData->strings[dData->curString], end);
+        substring[28] = '\0';
+        drawText(&self->gameData->font, c344, substring, 33, 202);
+        if(strlen(dData->strings[dData->curString]) > 28)
+        {
+            end = 28;
+            end = end > strlen(dData->strings[dData->curString]) - 28 ? strlen(dData->strings[dData->curString]) - 28 : end;
+            char substring2[29];
+            strncpy(substring2, dData->strings[dData->curString] + 28, end);
+            substring2[28] = '\0';
+            drawText(&self->gameData->font, c344, substring2, 33, 220);
+        }
     }
 }
 
