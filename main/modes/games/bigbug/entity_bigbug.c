@@ -692,8 +692,6 @@ void bb_updateMenu(bb_entity_t* self)
             bb_destroyEntity(mData->cursor, false);
             mData->cursor = NULL;
 
-            
-
             // create the death dumpster
             bb_goToData* tData = heap_caps_calloc(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM);
             tData->tracking = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
@@ -816,6 +814,21 @@ void bb_updateCharacterTalk(bb_entity_t* self)
     if(self->gameData->entityManager.sprites[self->spriteIndex].originY < -30)
     {
         self->gameData->entityManager.sprites[self->spriteIndex].originY += 10;
+    }
+    else
+    {
+        bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
+
+        if(dData->curString < 0)
+        {
+            dData->curString = 0;
+        }
+
+        if(self->gameData->btnDownState & PB_A)
+        {
+            self->currentAnimationFrame = bb_randomInt(0,7);
+            dData->curString++;
+        }
     }
 }
 
@@ -986,6 +999,23 @@ void bb_drawMenuBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
             mbData->xVel < 0, false, 0);
 }
 
+void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
+
+    drawWsgSimple(
+                    &entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
+                    (self->pos.x >> DECIMAL_BITS)
+                        - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                    (self->pos.y >> DECIMAL_BITS)
+                        - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    
+    if(dData->curString >= 0)
+    {
+        drawText(&self->gameData->font, c344, dData->strings[dData->curString], 33, 202);
+    }
+}
+
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
@@ -1036,4 +1066,27 @@ void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     {
         gData->gettingCrushed = true;
     }
+}
+
+bb_dialogueData_t* bb_createDialogueData(int numStrings)
+{
+    bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
+    dData->numStrings = numStrings;
+    dData->strings = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
+    return dData;
+}
+
+void bb_setCharacterLine(bb_dialogueData_t* dData, int index, const char* str)
+{
+    dData->strings[index] = heap_caps_calloc(1, strlen(str) + 1, MALLOC_CAP_SPIRAM);
+    strcpy(dData->strings[index], str);
+}
+
+void bb_freeDialogueData(bb_dialogueData_t* dData)
+{
+    for (int i = 0; i < dData->numStrings; i++) {
+        free(dData->strings[i]);  // Free each string
+    }
+    free(dData->strings);         // Free the array of string pointers
+    free(dData);                  // Free the struct itself
 }
