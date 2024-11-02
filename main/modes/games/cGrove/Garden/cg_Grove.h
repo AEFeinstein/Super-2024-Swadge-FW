@@ -24,4 +24,4 @@ void cg_initGrove(cGrove_t* cg);
 
 void cg_deInitGrove(cGrove_t* cg);
 
-void cg_runGrove(cGrove_t* cg);
+void cg_runGrove(cGrove_t* cg, int64_t elapsedUS);

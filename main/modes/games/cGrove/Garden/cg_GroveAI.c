@@ -14,6 +14,7 @@
 //==============================================================================
 
 #include "cg_GroveAI.h"
+#include "trigonometry.h"
 #include <esp_random.h>
 #include <math.h>
 
@@ -29,7 +30,7 @@
 
 /**
  * @brief Gets a new target position to wander to
- * 
+ *
  * @param cg Game Data
  * @param c Pointer to CHowa to calc position for
  */
@@ -40,8 +41,8 @@ static void cg_GroveGetRandMovePoint(cGrove_t* cg, cgGroveChowa_t* c);
 //==============================================================================
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param cg Game data
  * @param chowa The chowa to run AI on
  * @param elapsedUs Time since last frame
@@ -54,7 +55,7 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
     // - Use item (Must be holding item)
     // - Join other Chowa at activity
     // - Struggle when held
-    // - Chase cursor 
+    // - Chase cursor
 
     // Abort if not active
     if (!c->chowa->active)
@@ -67,7 +68,7 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
     c->statUpdate += elapsedUs;
 
     // The MONOLITH
-    switch(c->gState)
+    switch (c->gState)
     {
         case CHOWA_IDLE:
         {
@@ -75,12 +76,18 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             // Check other behaviors list
             // Check mood
             // Check stats
+
+            // Wander
+            // TODO: Move to decision function
+            cg_GroveGetRandMovePoint(cg, c);
+            c->gState    = CHOWA_WALK;
+            c->nextState = CHOWA_IDLE;
             break;
         }
         case CHOWA_STATIC:
         {
             // Chowa is standing around doing nothing
-            if (c->timeLeft)
+            if (c->timeLeft <= 0)
             {
                 c->gState = CHOWA_IDLE;
             }
@@ -88,8 +95,21 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         }
         case CHOWA_WALK:
         {
-            // Chowa is moving toward a location.
-            // Cues a state to load afterward
+            // Calculate the distance to target
+            vec_t difference = {.x = c->targetPos.x - c->aabb.pos.x, .y = c->targetPos.y - c->aabb.pos.y};
+
+            float dist = sqrt(pow(difference.x, 2) + pow(difference.y, 2));
+            if (dist < 10.0f)
+            {
+                c->gState = c->nextState;
+            }
+            int16_t angle = getAtan2(difference.y, difference.x);
+            float xFrac = 2 * getCos1024(angle)/1024.0f;
+            float yFrac = 2 * getSin1024(angle)/1024.0f;
+            vec_t moveVec = {.x = (int)xFrac, .y = (int)yFrac};
+            c->moveLine = moveVec;
+            c->aabb.pos.x += xFrac;
+            c->aabb.pos.y += yFrac;
             break;
         }
         case CHOWA_CHASE:
@@ -105,11 +125,11 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         case CHOWA_BOX:
         {
             // Cycle between attack animations
-            if (c->timeLeft)
+            if (c->timeLeft <= 0)
             {
                 c->gState = CHOWA_IDLE;
             }
-            else 
+            else
             {
                 if (c->statUpdate >= SECOND)
                 {
@@ -126,7 +146,7 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             {
                 c->gState = CHOWA_IDLE;
             }
-            else 
+            else
             {
                 if (c->statUpdate >= SECOND)
                 {
@@ -139,11 +159,11 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         case CHOWA_TALK:
         {
             // talk to another chowa
-            if (c->timeLeft)
+            if (c->timeLeft <= 0)
             {
                 c->gState = CHOWA_IDLE;
             }
-            else 
+            else
             {
                 if (c->statUpdate >= SECOND)
                 {
@@ -160,7 +180,7 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             if (c->statUpdate >= 5 * SECOND)
             {
                 c->statUpdate = 0;
-                c->chowa->stats[CG_CHARISMA] -= 1;
+                c->chowa->playerAffinity -= 1;
             }
             break;
         }

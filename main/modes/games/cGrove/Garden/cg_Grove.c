@@ -28,7 +28,6 @@
 // Consts
 //==============================================================================
 
-// TODO: See if hand4 is actually identical to hand1
 static const char* groveCursorSprites[] = {
     "chowa_hand1.wsg",
     "chowa_hand2.wsg",
@@ -83,6 +82,7 @@ void cg_initGrove(cGrove_t* cg)
     // Load assets
     // WSGs
     loadWsg("garden_background.wsg", &cg->grove.groveBG, true);
+    loadWsg("ckd_walk1.wsg", &cg->grove.groveSampleChowa, true);
 
     // Cursors
     cg->grove.cursors = calloc(ARRAY_SIZE(groveCursorSprites), sizeof(wsg_t));
@@ -108,6 +108,26 @@ void cg_initGrove(cGrove_t* cg)
     // Setup boundaries
     cg_setupBorders(cg);
 
+    // Initialize Chowa
+    for (int32_t i = 0; i < CG_MAX_CHOWA; i++)
+    {
+        cg->grove.chowa[i].chowa = &cg->chowa[i];
+        if (cg->grove.chowa[i].chowa->active)
+        {
+            cg->grove.chowa[i].aabb.height = 24;
+            cg->grove.chowa[i].aabb.width = 24;
+        }
+    }
+    for (int32_t i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
+    {
+        cg->grove.chowa[i + CG_MAX_CHOWA].chowa = &cg->guests[i];
+    }
+
+    // FIXME: Test code
+    cg->grove.chowa[0].aabb.pos.x = 120;
+    cg->grove.chowa[0].aabb.pos.y = 120;
+    cg->grove.chowa[0].chowa->stats[CG_SPEED] = 255;
+
     /*
      // Initialize the items
      vec_t pos;
@@ -131,6 +151,7 @@ void cg_deInitGrove(cGrove_t* cg)
         freeWsg(&cg->grove.cursors[i]);
     }
     free(cg->grove.cursors);
+    freeWsg(&cg->grove.groveSampleChowa);
     freeWsg(&cg->grove.groveBG);
 }
 
@@ -139,7 +160,7 @@ void cg_deInitGrove(cGrove_t* cg)
  *
  * @param cg Game Object
  */
-void cg_runGrove(cGrove_t* cg)
+void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
 {
     // TODO:
     // Swim zone
@@ -160,13 +181,12 @@ void cg_runGrove(cGrove_t* cg)
     }
 
     // Chowa AI
-    for (int32_t idx = 0; idx < CG_MAX_CHOWA; idx++)
+    for (int32_t idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
     {
-        //cg_GroveChowaBrain(cg, idx, false);
-    }
-    for (int32_t idx = 0; idx < CG_GROVE_MAX_GUEST_CHOWA; idx++)
-    {
-        //cg_GroveChowaBrain(cg, idx, true);
+        if (cg->grove.chowa[idx].chowa->active)
+        {
+            cg_GroveAI(cg, &cg->grove.chowa[idx], elapsedUS);
+        }
     }
 
     // Draw

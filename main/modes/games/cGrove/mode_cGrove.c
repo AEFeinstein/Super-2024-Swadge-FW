@@ -152,6 +152,9 @@ static void cGroveEnterMode(void)
     // Init
     cg->state       = CG_MAIN_MENU;
     cg->titleActive = true;
+
+    //FIXME: test
+    cg->chowa[0].active = true;
 }
 
 static void cGroveExitMode(void)
@@ -262,7 +265,7 @@ static void cGroveMainLoop(int64_t elapsedUs)
         case CG_GROVE:
         {
             // Grove
-            cg_runGrove(cg);
+            cg_runGrove(cg, elapsedUs);
             break;
         }
         case CG_SPAR:

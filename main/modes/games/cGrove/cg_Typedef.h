@@ -77,6 +77,52 @@ typedef enum
 
 typedef enum
 {
+    // Emotes
+    CG_ANIM_ANGRY,
+    CG_ANIM_DISGUST,
+    CG_ANIM_FEAR,
+    CG_ANIM_FLAIL,
+    CG_ANIM_GIVE_UP,
+    CG_ANIM_HAPPY,
+    CG_ANIM_SAD,
+
+    // Moving
+    CG_ANIM_WALK_DOWN,
+    CG_ANIM_WALK_RIGHT,
+    CG_ANIM_WALK_UP,
+    CG_ANIM_WALK_LEFT,
+    CG_ANIM_SWIM_LEFT,
+    CG_ANIM_SWIM_RIGHT,
+    CG_ANIM_CLIMB,
+
+    // Falling
+    CG_ANIM_FALL_RIGHT,
+    CG_ANIM_FALL_LEFT,
+    CG_ANIM_FALL_UP,
+    CG_ANIM_FALL_DOWN,
+
+    // Attacking
+    CG_ANIM_HEADBUTT,
+    CG_ANIM_KICK,
+    CG_ANIM_PUNCH,
+
+    // Using Items
+    CG_ANIM_DRAW,
+    CG_ANIM_EAT,
+    CG_ANIM_GIFT,
+    CG_ANIM_READ,
+    CG_ANIM_SWORD,
+    CG_ANIM_THROW,
+
+    // Other
+    CG_ANIM_DANCE,
+    CG_ANIM_PET,
+    CG_ANIM_SING,
+    CG_ANIM_SIT,
+} cgChowaAnimIdx_t;
+
+typedef enum
+{
     CG_HEALTH,
     CG_STRENGTH,
     CG_AGILITY,
@@ -102,7 +148,7 @@ typedef struct
     bool active; ///< If Chowa slot is being used. Only set to true if data has been set.
 
     // Base data
-    char name[17];
+    char name[CG_MAX_STR_LEN];
     int8_t age;                         ///< Current age of the Chowa
     int8_t maxAge;                      ///< Maximum Chowa age. 4 hours of in game time
     uint8_t playerAffinity;             ///< How much Chowa likes the player
@@ -218,6 +264,9 @@ typedef struct
     int64_t statUpdate;             ///< Time elapsed. When high enough, stat updates
     vec_t targetPos;                ///< Position to head to
     cgChowaStateGarden_t nextState; ///< Cued state after arriving at target
+
+    // Test
+    vec_t moveLine;
 } cgGroveChowa_t;
 
 typedef struct
@@ -225,6 +274,7 @@ typedef struct
     // Assets
     // Grove WSGs
     wsg_t groveBG; ///< Grove background
+    wsg_t groveSampleChowa;
 
     // UI WSGs
     wsg_t* cursors; ///< Cursor sprites
@@ -429,6 +479,7 @@ typedef struct
 
     // WSGs
     wsg_t* title; ///< Title screen sprites
+    wsg_t* chowaWSGs;
 
     // Modes
     cgGrove_t grove; ///< Garden data

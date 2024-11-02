@@ -34,6 +34,14 @@ static void cg_drawHand(cGrove_t* cg);
  */
 static void cg_drawItem(cGrove_t* cg, int8_t idx);
 
+/**
+ * @brief Draws a Chowa
+ * 
+ * @param cg Game Data
+ * @param idx Index of the Chowa 
+ */
+static void cg_drawChowaGrove(cGrove_t* cg, int8_t idx);
+
 static void cg_groveDebug(cGrove_t* cg);
 
 //==============================================================================
@@ -67,7 +75,7 @@ void cg_groveDraw(cGrove_t* cg)
     {
         if (cg->chowa[c].active)
         {
-            // cgDrawChowa(cg, c, cam);
+            cg_drawChowaGrove(cg, c);
         }
     }
 
@@ -104,14 +112,38 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx)
     drawText(&cg->menuFont, c555, cg->grove.items[idx].name, xOffset, yOffset - 16);
 }
 
+static void cg_drawChowaGrove(cGrove_t* cg, int8_t idx)
+{
+    int16_t xOffset = cg->grove.chowa->aabb.pos.x - cg->grove.camera.pos.x;
+    int16_t yOffset = cg->grove.chowa->aabb.pos.y - cg->grove.camera.pos.y;
+    drawWsgSimple(&cg->grove.groveSampleChowa, xOffset, yOffset);
+}
+
 static void cg_groveDebug(cGrove_t* cg)
 {
     int16_t xOffset = -cg->grove.camera.pos.x;
     int16_t yOffset = -cg->grove.camera.pos.y;
+    char buffer[32];
     // draw AABBs for grove
     for (int32_t i = 0; i < 3; i++)
     {
         drawRect(cg->grove.boundaries[i].pos.x + xOffset, cg->grove.boundaries[i].pos.y + yOffset,
-                 cg->grove.boundaries[i].pos.x + cg->grove.boundaries[i].width + xOffset, cg->grove.boundaries[i].pos.y + cg->grove.boundaries[i].height + yOffset, c500);
+                 cg->grove.boundaries[i].pos.x + cg->grove.boundaries[i].width + xOffset,
+                 cg->grove.boundaries[i].pos.y + cg->grove.boundaries[i].height + yOffset, c500);
+    }
+    for (int32_t i = 0; i < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; i++)
+    {
+        // Draw Chowa info
+        if (cg->grove.chowa[i].chowa->active)
+        {
+            drawRect(cg->grove.chowa[i].aabb.pos.x + xOffset, cg->grove.chowa[i].aabb.pos.y + yOffset,
+                     cg->grove.chowa[i].aabb.pos.x + cg->grove.chowa[i].aabb.width + xOffset,
+                     cg->grove.chowa[i].aabb.pos.y + cg->grove.chowa[i].aabb.height + yOffset, c500);
+            drawCircle(cg->grove.chowa[i].targetPos.x + xOffset, cg->grove.chowa[i].targetPos.y + yOffset, 12, c500);
+            drawText(&cg->menuFont, c550, buffer, 24, 24);
+            drawLine(cg->grove.chowa[i].aabb.pos.x + xOffset, cg->grove.chowa[i].aabb.pos.y + yOffset,
+                     cg->grove.chowa[i].aabb.pos.x + xOffset + cg->grove.chowa[i].moveLine.x,
+                     cg->grove.chowa[i].aabb.pos.y + yOffset + cg->grove.chowa[i].moveLine.y, c005, 2);
+        }
     }
 }
