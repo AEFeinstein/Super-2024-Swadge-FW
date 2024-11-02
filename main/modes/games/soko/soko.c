@@ -158,9 +158,14 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == sokoPlayGameLabel)
         {
             int32_t overworld_player;
-            readNvs32("sk_overworldPos", &overworld_player);
-            soko->overworld_playerX = (uint16_t)(overworld_player & 0b1111111111111111);//okay so the cast to uint16 just does this right?
-            soko->overworld_playerY = (uint16_t)(overworld_player >> 16);
+            if(readNvs32("sk_overworldPos", &overworld_player))
+            {
+                soko->overworld_playerX = (uint16_t)(overworld_player & 0b1111111111111111);//okay so the cast to uint16 just does this right?
+                soko->overworld_playerY = (uint16_t)(overworld_player >> 16);
+            }else{
+                soko->overworld_playerX = 0;
+                soko->overworld_playerY = 0;
+            }
             printf("Load Overworld: %d,%d - {%d}\n", soko->overworld_playerX, soko->overworld_playerY, overworld_player);
 
             //if x == 0 && y == 0, then put the player somewhere else.
