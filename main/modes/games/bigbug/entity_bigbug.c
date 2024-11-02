@@ -69,6 +69,14 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
 
     if (self->data != NULL && caching == false)
     {
+        if(self->spriteIndex == OVO_TALK)
+        {
+            bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
+            for(int i = 0; i<dData->numStrings; i++){
+                free(dData->strings[i]);
+            }
+            free(dData->strings);
+        }
         free(self->data);
     }
     self->data = NULL;
@@ -779,7 +787,51 @@ void bb_updatePOI(bb_entity_t* self)
             self->data           = NULL;
             self->updateFunction = NULL;
 
-            bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true);
+            bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true);
+
+            bb_dialogueData_t* dData = bb_createDialogueData(34);
+
+            strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
+            dData->character[sizeof(dData->character) - 1] = '\0';
+
+            bb_setCharacterLine(dData, 0,  "Holy bug farts!");
+            bb_setCharacterLine(dData, 1,  "After I marketed the");
+            bb_setCharacterLine(dData, 2,  "chilidog car freshener at MAGFest,");
+            bb_setCharacterLine(dData, 3,  "Garbotnik Industries' stock went up by 6,969%!");
+            bb_setCharacterLine(dData, 4,  "I'm going to use my time machine to steal the");
+            bb_setCharacterLine(dData, 5,  "next big-selling trinket from the future now.");
+            bb_setCharacterLine(dData, 6,  "That will floor all my stakeholders and make me");
+            bb_setCharacterLine(dData, 7,  "UNDEFINED money!");
+            bb_setCharacterLine(dData, 8,  "With that kind of cash,");
+            bb_setCharacterLine(dData, 9,  "I can recruit 200 professional bassoon players");
+            bb_setCharacterLine(dData, 10, "to the MAGFest Community Orchestra.");
+            bb_setCharacterLine(dData, 11, "I'm so hyped");
+            bb_setCharacterLine(dData, 12, "to turn on my time machine for the first time!");
+            bb_setCharacterLine(dData, 13, "Everything's in order.");
+            bb_setCharacterLine(dData, 14, "Even Pango can't stop me!");
+            bb_setCharacterLine(dData, 15, "I just have to attach the chaos core right here.");
+            bb_setCharacterLine(dData, 16, "Where did I put that core?");
+            bb_setCharacterLine(dData, 17, "hmmm...");
+            bb_setCharacterLine(dData, 18, "What about in the freezer?");
+            bb_setCharacterLine(dData, 19, "I've checked every inch of the death dumpster.");
+            bb_setCharacterLine(dData, 20, "Glitch my circuits!");
+            bb_setCharacterLine(dData, 21, "It must have gone out with the trash last Wednesday.");
+            bb_setCharacterLine(dData, 22, "Can I get an F in the chat?");
+            bb_setCharacterLine(dData, 23, "...");
+            bb_setCharacterLine(dData, 24, "The chaos core is three times denser");
+            bb_setCharacterLine(dData, 25, "than a black hole.");
+            bb_setCharacterLine(dData, 26, "Well if  Waste Management took it to the landfill,");
+            bb_setCharacterLine(dData, 27, "then it is definitely at the VERY BOTTOM of the dump.");
+            bb_setCharacterLine(dData, 28, "Not a problem.");
+            bb_setCharacterLine(dData, 29, "We have the technology to retrieve it.");
+            bb_setCharacterLine(dData, 30, "Safety first.");
+            bb_setCharacterLine(dData, 31, "I've activated my cloning machine up here in case I");
+            bb_setCharacterLine(dData, 32, "should perish on that nuclear wasteland.");
+            bb_setCharacterLine(dData, 33, "YOLO!");
+
+            dData->curString = -1;
+
+            bb_setData(ovo, dData);
 
             return;
         }
@@ -789,7 +841,6 @@ void bb_updatePOI(bb_entity_t* self)
         ToFrom.y  = ToFrom.y >> 8;
         self->pos = addVec2d(self->pos, ToFrom);
     }
-
 }
 
 void bb_updateFlame(bb_entity_t* self)
@@ -811,13 +862,24 @@ void bb_updateFlame(bb_entity_t* self)
 
 void bb_updateCharacterTalk(bb_entity_t* self)
 {
-    if(self->gameData->entityManager.sprites[self->spriteIndex].originY < -30)
+    bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
+
+    if(self->gameData->entityManager.sprites[self->spriteIndex].originY < -30 && dData->curString < dData->numStrings)
     {
         self->gameData->entityManager.sprites[self->spriteIndex].originY += 10;
     }
+    else if(dData->curString >= dData->numStrings)
+    {
+        self->gameData->entityManager.sprites[self->spriteIndex].originY -= 10;
+        if(self->gameData->entityManager.sprites[self->spriteIndex].originY <= -240)
+        {
+            //self->gameData->entityManager.viewEntity = 
+            bb_destroyEntity(self, false);
+            return;
+        }
+    }
     else
     {
-        bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
 
         if(dData->curString < 0)
         {
@@ -826,8 +888,11 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 
         if(self->gameData->btnDownState & PB_A)
         {
-            self->currentAnimationFrame = bb_randomInt(0,7);
             dData->curString++;
+            if(dData->curString < dData->numStrings)
+            {
+                self->currentAnimationFrame = bb_randomInt(0,7);
+            }
         }
     }
 }
@@ -1011,8 +1076,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
                         - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
     
     
-
-    if(dData->curString >= 0)
+    if(dData->curString >= 0 && dData->curString < dData->numStrings)
     {
         drawText(&self->gameData->font, c344, dData->character, 33, 184);
 
