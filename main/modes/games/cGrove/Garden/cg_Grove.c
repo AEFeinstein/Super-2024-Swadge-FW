@@ -77,6 +77,14 @@ static void cg_moveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange);
  */
 static void cg_setupBorders(cGrove_t* cg);
 
+static void cg_bgmCB(void);
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+bool isBGMPlaying;
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -108,6 +116,8 @@ void cg_initGrove(cGrove_t* cg)
     {
         loadWsg(questionMarkSprites[idx], &cg->grove.questionMarks[idx], true);
     }
+    // Audio
+    loadMidiFile("Chowa_Grove_Meadow.mid", &cg->grove.bgm, true);
 
     // Initialize viewport
     cg->grove.camera.height = TFT_HEIGHT; // Used to check what objects should be drawn
@@ -155,6 +165,8 @@ void cg_initGrove(cGrove_t* cg)
 void cg_deInitGrove(cGrove_t* cg)
 {
     // Unload assets
+    // Audio
+    unloadMidiFile(&cg->grove.bgm);
     // WSGs
     for (uint8_t i = 0; i < ARRAY_SIZE(questionMarkSprites); i++)
     {
@@ -181,8 +193,14 @@ void cg_deInitGrove(cGrove_t* cg)
  */
 void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
 {
+    // Play BGM if it's not playing
+    if (!isBGMPlaying)
+    {
+        soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
+        isBGMPlaying = true;
+    }
+
     // TODO:
-    // Swim zone
     // Ability to sit on stump and do things
     // Change cursor if over item or Chowa
 
@@ -390,7 +408,12 @@ static void cg_setupBorders(cGrove_t* cg)
 
     // Water
     cg->grove.boundaries[CG_WATER].pos.x  = 32;
-    cg->grove.boundaries[CG_WATER].pos.y  = 348;
-    cg->grove.boundaries[CG_WATER].width  = 290;
+    cg->grove.boundaries[CG_WATER].pos.y  = 350;
+    cg->grove.boundaries[CG_WATER].width  = 280;
     cg->grove.boundaries[CG_WATER].height = 108;
+}
+
+static void cg_bgmCB()
+{
+    isBGMPlaying = false;
 }

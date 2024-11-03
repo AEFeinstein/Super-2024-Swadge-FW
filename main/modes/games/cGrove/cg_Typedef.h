@@ -279,18 +279,20 @@ typedef struct
 {
     // Assets
     // Grove WSGs
-    wsg_t groveBG; ///< Grove background
-
-    // UI WSGs
+    wsg_t groveBG;         ///< Grove background
     wsg_t* cursors;        ///< Cursor sprites
     wsg_t* angerParticles; ///< Anger particle sprites
     wsg_t* questionMarks;  ///< Question mark sprites
+    // Audio
+    midiFile_t bgm; ///< Main BGM for the Grove
+    // TODO: singing, splashing, talking
 
     // Field data
     cgItem_t items[CG_GROVE_MAX_ITEMS];                                      ///< Items present in the Grove
     rectangle_t boundaries[3];                                               ///< Boundary boxes
     cgGroveChowa_t chowa[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA];           ///< List of all chowa in the garden
     cgChowaStateGarden_t stateList[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA]; ///< List of current chowa states
+    bool bgmPlaying;                                                         ///< If the BGM is active
 
     // Player resources
     rectangle_t camera;        ///< In-garden camera viewport
