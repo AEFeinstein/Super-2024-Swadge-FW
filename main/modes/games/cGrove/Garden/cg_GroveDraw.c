@@ -15,6 +15,7 @@
 
 #include "cg_GroveDraw.h"
 #include "cg_Chowa.h"
+#include <esp_random.h>
 
 //==============================================================================
 // Defines
@@ -136,15 +137,15 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 {
                     spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_ANGRY, c->animFrame);
                     drawWsgSimple(spr, xOffset, yOffset);
-                    // TODO: Draw anger particles
                     if (c->animFrame == 0)
                     {
                         drawWsgSimple(&cg->grove.angerParticles[1], xOffset, yOffset);
-                    } else {
+                    }
+                    else
+                    {
                         drawWsg(&cg->grove.angerParticles[1], xOffset + 17, yOffset, true, false, 0);
                         drawWsgSimple(&cg->grove.angerParticles[0], xOffset + 5, yOffset + 3);
                     }
-                    
                 }
                 else if (c->chowa->mood == CG_SAD)
                 {
@@ -160,7 +161,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 {
                     spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SIT, 0);
                     drawWsgSimple(spr, xOffset, yOffset);
-                    switch(c->chowa->type)
+                    switch (c->chowa->type)
                     {
                         case CG_RED_LUMBERJACK:
                         default:
@@ -195,7 +196,8 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                         }
                     }
                 }
-                else {
+                else
+                {
                     spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SIT, 0);
                     drawWsgSimple(spr, xOffset, yOffset);
                 }
@@ -255,6 +257,92 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 }
                 spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SING, c->animFrame);
                 drawWsgSimple(spr, xOffset, yOffset);
+                // TODO: Add music note sprites
+                break;
+            }
+            case CHOWA_DANCE:
+            {
+                // Update animation frame if enough time has passed
+                c->frameTimer += elapsedUS;
+                if (c->frameTimer > SECOND / 4)
+                {
+                    c->frameTimer = 0;
+                    c->animFrame  = (c->animFrame + 1) % 4;
+                }
+                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_DANCE, c->animFrame);
+                drawWsgSimple(spr, xOffset, yOffset);
+                break;
+            }
+            case CHOWA_BOX:
+            {
+                // Update animation frame if enough time has passed
+                c->frameTimer += elapsedUS;
+                if (c->frameTimer > SECOND / 4)
+                {
+                    c->frameTimer = 0;
+                    c->animFrame  = (c->animFrame + 1) % 3;
+                    if (c->animFrame == 2)
+                    {
+                        c->animIdx   = esp_random() % 3;
+                        c->animFrame = 0;
+                    }
+                }
+                switch (c->animIdx)
+                {
+                    case 0:
+                    {
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PUNCH, c->animFrame);
+                        break;
+                    }
+                    case 1:
+                    {
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_KICK, c->animFrame);
+                        break;
+                    }
+                    case 2:
+                    {
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_HEADBUTT, c->animFrame);
+                        break;
+                    }
+                }
+                drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
+                if (c->hasPartner && c->animFrame % 2 == 0)
+                {
+                    if (c->flip)
+                    {
+                        drawWsg(&cg->grove.angerParticles[1], xOffset, yOffset, true, false, 0);
+                    }
+                    else
+                    {
+                        drawWsgSimple(&cg->grove.angerParticles[1], xOffset, yOffset);
+                    }
+                }
+                break;
+            }
+            case CHOWA_HELD:
+            {
+                // Update animation frame if enough time has passed
+                c->frameTimer += elapsedUS;
+                if (c->frameTimer > SECOND / 6)
+                {
+                    c->frameTimer = 0;
+                    c->animFrame  = (c->animFrame + 1) % 2;
+                }
+                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_FLAIL, c->animFrame);
+                break;
+            }
+            case CHOWA_TALK:
+            {
+                // Update animation frame if enough time has passed
+                c->frameTimer += elapsedUS;
+                if (c->frameTimer > SECOND / 6)
+                {
+                    c->frameTimer = 0;
+                    c->animFrame  = (c->animFrame + 1) % 2;
+                }
+                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, 0);
+                drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
+                // Draw Speech bubbles. Only animate if talking to other Chowa
                 break;
             }
             default:

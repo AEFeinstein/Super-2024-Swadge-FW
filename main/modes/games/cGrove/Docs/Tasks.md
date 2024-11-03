@@ -24,7 +24,6 @@
 ## Grove
 - Create/Add SFX
 - AI
-  - Dancing
   - Using items
   - Group activities
 - Update hand sprite

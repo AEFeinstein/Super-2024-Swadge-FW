@@ -249,9 +249,9 @@ static void cg_attemptGrab(cGrove_t* cg)
                                       .width  = cg->grove.chowa[c].aabb.width};
             if (rectRectIntersection(cg->grove.cursor, translated, &collVec))
             {
-                cg->grove.holdingChowa = true;
-                cg->grove.heldChowa    = &cg->grove.chowa[c];
-                cg->chowa[c].mood      = CG_WORRIED;
+                cg->grove.holdingChowa      = true;
+                cg->grove.heldChowa         = &cg->grove.chowa[c];
+                cg->grove.heldChowa->gState = CHOWA_HELD;
             }
         }
     }
@@ -294,10 +294,14 @@ static void cg_handleInputGarden(cGrove_t* cg)
         {
             if (evt.button & PB_A && evt.down)
             {
-                if (cg->grove.holdingItem || cg->grove.holdingChowa)
+                if (cg->grove.holdingItem)
                 {
-                    cg->grove.holdingItem  = false;
+                    cg->grove.holdingItem = false;
+                }
+                else if (cg->grove.holdingChowa)
+                {
                     cg->grove.holdingChowa = false;
+                    cg->grove.heldChowa->gState = CHOWA_IDLE;
                 }
                 else
                 {
@@ -332,10 +336,14 @@ static void cg_handleInputGarden(cGrove_t* cg)
             }
             if (evt.button & PB_A && evt.down)
             {
-                if (cg->grove.holdingItem || cg->grove.holdingChowa)
+                if (cg->grove.holdingItem)
                 {
-                    cg->grove.holdingItem  = false;
+                    cg->grove.holdingItem = false;
+                }
+                else if (cg->grove.holdingChowa)
+                {
                     cg->grove.holdingChowa = false;
+                    cg->grove.heldChowa->gState = CHOWA_IDLE;
                 }
                 else
                 {

@@ -248,6 +248,7 @@ typedef enum
     CHOWA_USE_ITEM, ///< Use an item held in Chowa's possession
     CHOWA_BOX,      ///< Does sparring type moves
     CHOWA_SING,     ///< Sings
+    CHOWA_DANCE,    ///< Dancing
     CHOWA_TALK,     ///< Talks with another Chowa
     CHOWA_HELD,     ///< Held, cannot move
 } cgChowaStateGarden_t;
@@ -274,7 +275,10 @@ typedef struct
     // Animations
     int16_t angle;      ///< Angle that the Chowa is moving at
     int8_t animFrame;   ///< Frame that the animation is on
-    int64_t frameTimer; ///< TImer until the next frame triggers
+    int64_t frameTimer; ///< Timer until the next frame triggers
+    int8_t animIdx;     ///< which animation is being played
+    bool flip;          ///< If image needs to be flipped manually 
+    bool hasPartner;    ///< If Chowa has a partner for talking or boxing
 } cgGroveChowa_t;
 
 typedef struct
