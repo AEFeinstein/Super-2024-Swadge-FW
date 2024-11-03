@@ -90,10 +90,10 @@
 #define RUN_TIMER_EVERY(timer, period, elapsed, timer_code) \
     do                                                      \
     {                                                       \
-        timer += elapsed;                                   \
-        while (timer > period)                              \
+        timer += (elapsed);                                 \
+        while (timer > (period))                            \
         {                                                   \
-            timer -= period;                                \
+            timer -= (period);                              \
             {                                               \
                 timer_code                                  \
             }                                               \

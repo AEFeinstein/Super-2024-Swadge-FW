@@ -116,12 +116,12 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
     if (NULL == titleFontOutline)
     {
         renderer->titleFontOutline = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
-        makeOutlineFont(renderer->titleFont, renderer->titleFontOutline, false);
+        makeOutlineFont(renderer->titleFont, renderer->titleFontOutline, true);
         renderer->titleFontOutlineAllocated = true;
     }
     else
     {
-        renderer->titleFontOutline          = titleFont;
+        renderer->titleFontOutline          = titleFontOutline;
         renderer->titleFontOutlineAllocated = false;
     }
 

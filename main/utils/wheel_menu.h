@@ -87,8 +87,10 @@ wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, con
 void deinitWheelMenu(wheelMenuRenderer_t* renderer);
 void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedUs);
 
+void wheelMenuSetColor(wheelMenuRenderer_t* renderer, paletteColor_t textColor);
 void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, const wsg_t* icon, uint8_t position,
                           wheelScrollDir_t scrollDir);
+void wheelMenuSetItemIcon(wheelMenuRenderer_t* renderer, const char* label, const wsg_t* icon);
 void wheelMenuSetItemColor(wheelMenuRenderer_t* renderer, const char* label, paletteColor_t selectedBg,
                            paletteColor_t unselectedBg);
 void wheelMenuSetItemTextIcon(wheelMenuRenderer_t* renderer, const char* label, const char* textIcon);

@@ -115,6 +115,17 @@ void deinitWheelMenu(wheelMenuRenderer_t* renderer)
 }
 
 /**
+ * @brief Set the text color for the selected item
+ *
+ * @param renderer The wheel menu renderer
+ * @param textColor The text color for the selected item
+ */
+void wheelMenuSetColor(wheelMenuRenderer_t* renderer, paletteColor_t textColor)
+{
+    renderer->textColor = textColor;
+}
+
+/**
  * @brief Sets the icon and ring position for the item with the given label
  *
  * @param renderer The wheel menu renderer
@@ -136,6 +147,18 @@ void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, cons
     {
         renderer->customBack = true;
     }
+}
+
+/**
+ * @brief Set the icon for an item with the given label
+ *
+ * @param renderer The wheel menu renderer
+ * @param label The label of the item to set the icon and position for
+ * @param icon  The icon to use when drawing the menu item
+ */
+void wheelMenuSetItemIcon(wheelMenuRenderer_t* renderer, const char* label, const wsg_t* icon)
+{
+    findOrAddInfo(renderer, label)->icon = icon;
 }
 
 /**
@@ -370,8 +393,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
                     if (!rectRectIntersection(textBox, lastTextBox, NULL))
                     {
-                        drawText(renderer->font, c000, hasOptions ? curItem->options[nextOptIndex] : tickLabel, textX,
-                                 textY);
+                        drawText(renderer->font, renderer->textColor,
+                                 hasOptions ? curItem->options[nextOptIndex] : tickLabel, textX, textY);
                         lastTickAngle = tickAngle;
                         lastTextBox   = textBox;
                     }
@@ -582,7 +605,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         if (info->text)
         {
             uint16_t textW = textWidth(renderer->font, info->text);
-            drawText(renderer->font, c000, info->text, info->x - textW / 2, info->y - (renderer->font->height - 1) / 2);
+            drawText(renderer->font, renderer->textColor, info->text, info->x - textW / 2,
+                     info->y - (renderer->font->height - 1) / 2);
         }
 
         switch (info->shape)
