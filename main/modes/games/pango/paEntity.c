@@ -1494,6 +1494,9 @@ void pa_updateBreakBlock(paEntity_t* self)
                         createdEntity->scoreValue = pointsScored;
                     }
 
+                    createdEntity
+                        = pa_createHotDog(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
+                                                (self->y >> SUBPIXEL_RESOLUTION) - 4);
                     break;
                 }
                 default:
@@ -1543,8 +1546,8 @@ void pa_updateScoreDisplay(paEntity_t* self)
 
 void pa_updateBlockFragment(paEntity_t* self)
 {
-    self->animationTimer++;
-    if (self->animationTimer > 8)
+    self->stateTimer--;
+    if (self->stateTimer < 0)
     {
         pa_destroyEntity(self, false);
         return;

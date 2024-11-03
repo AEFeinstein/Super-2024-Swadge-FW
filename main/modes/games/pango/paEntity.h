@@ -25,7 +25,8 @@ typedef enum
     PA_ENTITY_BLOCK_FRAGMENT,
     ENTITY_HIT_BLOCK,
     ENTITY_DEAD,
-    PA_ENTITY_SCORE_DISPLAY
+    PA_ENTITY_SCORE_DISPLAY,
+    PA_ENTITY_HOTDOG
 } paEntityIndex_t;
 
 typedef enum

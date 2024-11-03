@@ -317,8 +317,8 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
     entity->gravity              = 4;
-    entity->spriteFlipHorizontal = false;
-    entity->spriteFlipVertical   = false;
+    entity->spriteFlipHorizontal = esp_random() % 2;
+    entity->spriteFlipVertical   = esp_random() % 2;
     entity->scoreValue           = 100;
     entity->animationTimer       = 0;
     entity->type                 = PA_ENTITY_BLOCK_FRAGMENT;
@@ -329,6 +329,44 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
     entity->drawHandler          = &pa_defaultEntityDrawHandler;
+    entity->stateTimer           = 8;
+
+    return entity;
+}
+
+paEntity_t* pa_createHotDog(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    paEntity_t* entity = pa_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = x << SUBPIXEL_RESOLUTION;
+    entity->y       = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed               = -16 + (esp_random() % 32);
+    entity->yspeed               = -16 + (esp_random() % 32);
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->spriteFlipHorizontal = esp_random() % 2;
+    entity->spriteFlipVertical   = esp_random() % 2;
+    entity->scoreValue           = 100;
+    entity->animationTimer       = 0;
+    entity->type                 = PA_ENTITY_HOTDOG;
+    entity->spriteIndex          = PA_SP_HOTDOG;
+    entity->facingDirection      = PA_DIRECTION_NONE;
+    entity->updateFunction       = &pa_updateBlockFragment;
+    entity->collisionHandler     = &pa_dummyCollisionHandler;
+    entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
+    entity->stateTimer           = 32;
 
     return entity;
 }
