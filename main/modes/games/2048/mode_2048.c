@@ -129,7 +129,7 @@ static void t48EnterMode(void)
     }
 
     // Load sounds
-    loadMidiFile("Follinesque.mid", &t48->bgm, true);
+    loadMidiFile("lullaby_in_numbers.mid", &t48->bgm, true);
     loadMidiFile("sndBounce.mid", &t48->click, true);
 
     // Init Text Entry
