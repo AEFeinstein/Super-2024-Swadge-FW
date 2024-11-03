@@ -25,7 +25,6 @@
 - Create/Add SFX
 - AI
   - Using items
-  - Group activities
 - Update hand sprite
 - Add menu for buying items
 - Add money system (Chowa grab nearby money that spawns)

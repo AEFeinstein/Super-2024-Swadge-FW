@@ -277,7 +277,7 @@ typedef struct
     int8_t animFrame;   ///< Frame that the animation is on
     int64_t frameTimer; ///< Timer until the next frame triggers
     int8_t animIdx;     ///< which animation is being played
-    bool flip;          ///< If image needs to be flipped manually 
+    bool flip;          ///< If image needs to be flipped manually
     bool hasPartner;    ///< If Chowa has a partner for talking or boxing
 } cgGroveChowa_t;
 
@@ -289,6 +289,8 @@ typedef struct
     wsg_t* cursors;        ///< Cursor sprites
     wsg_t* angerParticles; ///< Anger particle sprites
     wsg_t* questionMarks;  ///< Question mark sprites
+    wsg_t* notes;          ///< Musical notes
+    wsg_t* speechBubbles;  ///< Speech Bubbles for Chowa
     // Audio
     midiFile_t bgm; ///< Main BGM for the Grove
     // TODO: singing, splashing, talking

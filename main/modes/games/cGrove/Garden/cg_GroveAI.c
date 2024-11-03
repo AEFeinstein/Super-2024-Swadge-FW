@@ -57,12 +57,9 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c);
  */
 void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
 {
-    // Basic behaviors:
-    // - Stand in place (includes other things like singing)
+    // TODO:
     // - Go to place/item
     // - Use item (Must be holding item)
-    // - Join other Chowa at activity
-    // - Struggle when held
     // - Chase cursor
 
     // Abort if not active

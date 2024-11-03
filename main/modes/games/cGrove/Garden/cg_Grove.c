@@ -44,6 +44,14 @@ static const char* angerParticles[] = {
     "anger-2.wsg",
 };
 
+static const char* musicNoteSprites[] = {
+    "cg_note1.wsg", "cg_note2.wsg", "cg_note3.wsg", 
+};
+
+static const char* speechBubbleSprites[] = {
+    "cg_text0.wsg", "cg_text1.wsg", "cg_text2.wsg", "cg_text3.wsg", 
+};
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -117,6 +125,16 @@ void cg_initGrove(cGrove_t* cg)
     {
         loadWsg(questionMarkSprites[idx], &cg->grove.questionMarks[idx], true);
     }
+    cg->grove.notes = calloc(ARRAY_SIZE(musicNoteSprites), sizeof(wsg_t));
+    for (int32_t idx = 0; idx < ARRAY_SIZE(musicNoteSprites); idx++)
+    {
+        loadWsg(musicNoteSprites[idx], &cg->grove.notes[idx], true);
+    }
+    cg->grove.speechBubbles = calloc(ARRAY_SIZE(speechBubbleSprites), sizeof(wsg_t));
+    for (int32_t idx = 0; idx < ARRAY_SIZE(speechBubbleSprites); idx++)
+    {
+        loadWsg(speechBubbleSprites[idx], &cg->grove.speechBubbles[idx], true);
+    }
     // Audio
     loadMidiFile("Chowa_Grove_Meadow.mid", &cg->grove.bgm, true);
 
@@ -169,6 +187,16 @@ void cg_deInitGrove(cGrove_t* cg)
     // Audio
     unloadMidiFile(&cg->grove.bgm);
     // WSGs
+    for (uint8_t i = 0; i < ARRAY_SIZE(speechBubbleSprites); i++)
+    {
+        freeWsg(&cg->grove.speechBubbles[i]);
+    }
+    free(cg->grove.speechBubbles);
+    for (uint8_t i = 0; i < ARRAY_SIZE(musicNoteSprites); i++)
+    {
+        freeWsg(&cg->grove.notes[i]);
+    }
+    free(cg->grove.notes);
     for (uint8_t i = 0; i < ARRAY_SIZE(questionMarkSprites); i++)
     {
         freeWsg(&cg->grove.questionMarks[i]);
@@ -202,7 +230,6 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
     }
 
     // TODO:
-    // Ability to sit on stump and do things
     // Change cursor if over item or Chowa
 
     // Input

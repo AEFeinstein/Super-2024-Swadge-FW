@@ -257,7 +257,28 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 }
                 spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SING, c->animFrame);
                 drawWsgSimple(spr, xOffset, yOffset);
-                // TODO: Add music note sprites
+                switch (c->animFrame)
+                {
+                    case 0:
+                    {
+                        drawWsgSimple(&cg->grove.notes[0], xOffset - 7, yOffset + 9);
+                        break;
+                    }
+                    case 1:
+                    {
+                        drawWsgSimple(&cg->grove.notes[1], xOffset + 9, yOffset + 15);
+                        break;
+                    }
+                    case 2:
+                    {
+                        drawWsgSimple(&cg->grove.notes[2], xOffset, yOffset - 10);
+                        break;
+                    }
+                    case 3:
+                    {
+                        break;
+                    }
+                }
                 break;
             }
             case CHOWA_DANCE:
@@ -338,11 +359,19 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 if (c->frameTimer > SECOND / 6)
                 {
                     c->frameTimer = 0;
-                    c->animFrame  = (c->animFrame + 1) % 2;
+                    c->animFrame  = (c->animFrame + 1) % 4;
                 }
                 spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, 0);
                 drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
                 // Draw Speech bubbles. Only animate if talking to other Chowa
+                if (!c->hasPartner)
+                {
+                    drawWsgSimple(&cg->grove.speechBubbles[0], xOffset, yOffset - 16);
+                }
+                else
+                {
+                    drawWsgSimple(&cg->grove.speechBubbles[c->animFrame], xOffset, yOffset - 16);
+                }
                 break;
             }
             default:
