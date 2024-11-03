@@ -28,6 +28,7 @@
 - Add menu for buying items
 - Add money system (Chowa grab nearby money that spawns)
 - Add items
+- Stats can be increased
 
 ## Race
 - Build mode

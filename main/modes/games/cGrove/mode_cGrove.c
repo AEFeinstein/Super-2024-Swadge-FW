@@ -179,6 +179,27 @@ static void cGroveEnterMode(void)
         }
         cg->chowa[i].playerAffinity = 101;
     }
+    for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
+    {
+        cg->guests[i].active = true;
+        cg->guests[i].type = CG_KING_DONUT;
+        switch (esp_random() % 4)
+        {
+            case 0:
+                cg->guests[i].mood = CG_HAPPY;
+                break;
+            case 1:
+                cg->guests[i].mood = CG_SAD;
+                break;
+            case 2:
+                cg->guests[i].mood = CG_ANGRY;
+                break;
+            case 3:
+                cg->guests[i].mood = CG_CONFUSED;
+                break;
+        }
+        cg->guests[i].playerAffinity = 1;
+    }
 }
 
 static void cGroveExitMode(void)

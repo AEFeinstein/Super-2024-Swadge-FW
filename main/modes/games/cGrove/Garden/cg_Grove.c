@@ -91,6 +91,10 @@ static void cg_moveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange);
  */
 static void cg_setupBorders(cGrove_t* cg);
 
+/**
+ * @brief Callback to restart BGM
+ * 
+ */
 static void cg_bgmCB(void);
 
 //==============================================================================
@@ -175,6 +179,13 @@ void cg_initGrove(cGrove_t* cg)
     for (int32_t i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
     {
         cg->grove.chowa[i + CG_MAX_CHOWA].chowa = &cg->guests[i];
+        if (cg->grove.chowa[i + CG_MAX_CHOWA].chowa->active)
+        {
+            cg->grove.chowa[i + CG_MAX_CHOWA].aabb.height = 24;
+            cg->grove.chowa[i + CG_MAX_CHOWA].aabb.width  = 24;
+            cg->grove.chowa[i + CG_MAX_CHOWA].aabb.pos.x  = 32 + esp_random() % (cg->grove.groveBG.w - 64);
+            cg->grove.chowa[i + CG_MAX_CHOWA].aabb.pos.y  = 32 + esp_random() % (cg->grove.groveBG.h - 64);
+        }
     }
 
     // Initialize items
