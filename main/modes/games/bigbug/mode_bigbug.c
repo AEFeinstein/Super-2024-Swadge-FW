@@ -53,9 +53,6 @@ struct bb_t
 
     bool isPaused; ///< true if the game is paused, false if it is running
 
-    midiFile_t bgm;  ///< Background music
-    midiFile_t hit1; ///< A sound effect
-
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
     int32_t ledFadeTimer; ///< The timer to fade LEDs
@@ -128,7 +125,6 @@ static void bb_EnterMode(void)
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
 
-    loadMidiFile("BigBugExploration.mid", &bigbug->bgm, true);
 
     const char loadingStr[] = "Loading...";
     int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
@@ -158,6 +154,8 @@ static void bb_EnterMode(void)
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                           (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS) - 234, true);
 
+    ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
+
     bigbug->gameData.camera.camera.pos.x = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
     bigbug->gameData.camera.camera.pos.y = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
 
@@ -172,7 +170,7 @@ static void bb_EnterMode(void)
     bigbug->screen = BIGBUG_GAME;
 
     //play the music!
-    //soundPlayBgmCb(&bigbug->bgm, MIDI_BGM, bb_BgmCb);
+    soundPlayBgmCb(&bigbug->gameData.hurryUp, MIDI_BGM, bb_BgmCb);
 
     bb_Reset();
 }
@@ -186,7 +184,11 @@ static void bb_ExitMode(void)
     freeFont(&bigbug->font);
 
     soundStop(true);
-    unloadMidiFile(&bigbug->bgm);
+    unloadMidiFile(&bigbug->gameData.bgm);
+    
+    unloadMidiFile(&bigbug->gameData.hurryUp);
+
+    free(bigbug);
 }
 
 static void bb_MainLoop(int64_t elapsedUs)
@@ -218,12 +220,12 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     {
         fillDisplayArea(x, y, x + w, y + h, c000);
     }
-    else if (bigbug->gameData.camera.camera.pos.y < -999)
+    else if (bigbug->gameData.camera.camera.pos.y < -400)
     {
-        // Normalize position from 0 (at -5000) to 1 (at -200)
+        // Normalize position from 0 (at -2500) to 1 (at -400)
         float normalizedPos
-            = ((bigbug->gameData.camera.camera.pos.y < -5000 ? -5000 : bigbug->gameData.camera.camera.pos.y) + 5000)
-              / 4500.0f;
+            = ((bigbug->gameData.camera.camera.pos.y < -2500 ? -2500 : bigbug->gameData.camera.camera.pos.y) + 2500)
+              / 2100.0f; //2100 is the range between 2500 and 400.
 
         // Calculate the total number of decrements (since the max RGB is 4, 5, 5)
         int totalSteps  = 14; // 4 + 5 + 5 = 14 decrement steps
@@ -268,7 +270,7 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
 static void bb_BgmCb()
 {
-    soundPlayBgmCb(&bigbug->bgm, MIDI_BGM, bb_BgmCb);
+    soundPlayBgmCb(&bigbug->gameData.bgm, MIDI_BGM, bb_BgmCb);
 }
 
 static void bb_DrawScene(void)

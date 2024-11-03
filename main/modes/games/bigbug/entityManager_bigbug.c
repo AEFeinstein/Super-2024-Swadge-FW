@@ -275,17 +275,24 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    if (camera->camera.pos.y < -1000 && camera->camera.pos.y > -5385)
+    if (camera->camera.pos.y < -600 && camera->camera.pos.y > -5390)
     {
         int16_t halfWidth  = HALF_WIDTH >> DECIMAL_BITS;
         int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
-        if (bb_randomInt(1, 1300000) < (abs(camera->velocity.x) * camera->camera.height))
+
+        int skewedChance = 0;
+        if(camera->camera.pos.y > -2000)
+        {
+            skewedChance = 7500*(camera->camera.pos.y/4 + 800);
+        }
+
+        if (bb_randomInt(1, 1300000+skewedChance) < (abs(camera->velocity.x) * camera->camera.height))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
                             camera->velocity.x > 0 ? camera->camera.pos.x + 2 * halfWidth : camera->camera.pos.x,
                             camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight), false);
         }
-        if (bb_randomInt(1, 1300000) < (abs(camera->velocity.y) * camera->camera.width))
+        if (bb_randomInt(1, 1300000+skewedChance) < (abs(camera->velocity.y) * camera->camera.width))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
                             camera->camera.pos.x + halfWidth + bb_randomInt(-halfWidth, halfWidth),
@@ -559,7 +566,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
             rData->flame           = NULL;
-            rData->yVel            = 240;
+            rData->yVel            = 0;
             bb_setData(entity, rData);
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
@@ -752,6 +759,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case NO_SPRITE_POI:
         {
+            bb_goToData* tData = heap_caps_calloc(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM);
+            entity->data = tData;
             //entity->updateFunction = &bb_updatePOI;
             entity->drawFunction   = &bb_drawNothing;
             break;

@@ -22,6 +22,9 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
     gameData->inGameTimer = 0;
 
     gameData->soundManager = soundManager;
+    
+    loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);
+    loadMidiFile("Big Bug Hurry Up.mid", &gameData->hurryUp, true);
 
     gameData->neighbors[0][0] = -1; // left  neighbor x offset
     gameData->neighbors[0][1] = 0;  // left  neighbor y offset

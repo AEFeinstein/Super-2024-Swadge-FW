@@ -101,11 +101,15 @@ typedef struct
     bb_entity_t* egg;   // tracks the egg to stimulate it.
 } bb_eggLeavesData_t;
 
+
+typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
+
 typedef struct
 {
     bb_entity_t* tracking;
     uint16_t speed;
     uint32_t midPointSqDist; // The point at which to decelerate.
+    bb_callbackFunction_t executeOnArrival;
 } bb_goToData;
 
 typedef struct
@@ -114,7 +118,6 @@ typedef struct
 } bb_eggData_t;
 
 
-typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
 
 typedef struct
 {
@@ -218,7 +221,10 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
+//callbacks
+void bb_startGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikIntro(bb_entity_t* self);
+void bb_deployBooster(bb_entity_t* self);
 
 bb_dialogueData_t* bb_createDialogueData(int numStrings);
 void bb_setCharacterLine(bb_dialogueData_t* dData, int index, const char* str);

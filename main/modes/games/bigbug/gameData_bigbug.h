@@ -44,6 +44,9 @@ struct bb_gameData_t
     int32_t touchX;
     int32_t touchY;
 
+    midiFile_t bgm;  ///< Background music
+    midiFile_t hurryUp; ///< plays when you have to get back
+
     bb_camera_t camera;
 
     uint8_t gameState;
