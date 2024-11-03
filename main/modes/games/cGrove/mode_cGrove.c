@@ -17,6 +17,7 @@
 #include "cg_Chowa.h"
 #include "cg_Grove.h"
 #include "cg_Spar.h"
+#include <esp_random.h>
 
 //==============================================================================
 // Defines
@@ -161,6 +162,22 @@ static void cGroveEnterMode(void)
     {
         cg->chowa[i].active = true;
         cg->chowa[i].type = CG_KING_DONUT;
+        switch (esp_random() % 4)
+        {
+            case 0:
+                cg->chowa[i].mood = CG_HAPPY;
+                break;
+            case 1:
+                cg->chowa[i].mood = CG_SAD;
+                break;
+            case 2:
+                cg->chowa[i].mood = CG_ANGRY;
+                break;
+            case 3:
+                cg->chowa[i].mood = CG_CONFUSED;
+                break;
+        }
+        
     }
 }
 

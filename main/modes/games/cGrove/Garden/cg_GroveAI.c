@@ -36,6 +36,14 @@
  */
 static void cg_GroveGetRandMovePoint(cGrove_t* cg, cgGroveChowa_t* c);
 
+/**
+ * @brief Sets a new task for the Chowa
+ * 
+ * @param cg Game Data
+ * @param c Chowa Data
+ */
+static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -65,7 +73,6 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
 
     // Update timer
     c->timeLeft -= elapsedUs;
-    c->statUpdate += elapsedUs;
 
     // The MONOLITH
     switch (c->gState)
@@ -73,16 +80,31 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         case CHOWA_IDLE:
         {
             // Chowa is essentially unset. Look for new behavior
-            // Check other behaviors list
-            // Check mood
-            // Check stats
-
-            // Wander
-            // TODO: Move to decision function
-            cg_GroveGetRandMovePoint(cg, c);
-            c->frameTimer += esp_random() % SECOND;
-            c->gState    = CHOWA_WALK;
-            c->nextState = CHOWA_IDLE;
+            c->gState = cg_getNewTask(cg, c);
+            c->animFrame = 0; // Reset animation frame to avoid displaying garbage data
+            // Execute decision
+            switch (c->gState)
+            {
+                case CHOWA_WALK:
+                {
+                    cg_GroveGetRandMovePoint(cg, c);
+                    c->frameTimer += esp_random() % SECOND; // Offset frame timer 
+                    c->nextState = CHOWA_IDLE;
+                    break;
+                }
+                case CHOWA_SING:
+                {
+                    c->timeLeft = SECOND * (10);
+                    break;
+                }
+                case CHOWA_STATIC:
+                default:
+                {
+                    c->gState = CHOWA_STATIC; // If some random value, make sure it'll resolve
+                    c->timeLeft = SECOND * (1 + (esp_random() % 10));
+                    break;
+                }
+            }
             break;
         }
         case CHOWA_STATIC:
@@ -128,45 +150,34 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             }
             else
             {
-                if (c->statUpdate >= SECOND)
-                {
-                    c->statUpdate = 0;
-                    c->chowa->stats[CG_STAMINA] += 1;
-                }
+                // Update stats
             }
             break;
         }
         case CHOWA_SING:
         {
             // stand in place and sing
-            if (c->timeLeft)
-            {
-                c->gState = CHOWA_IDLE;
-            }
-            else
-            {
-                if (c->statUpdate >= SECOND)
-                {
-                    c->statUpdate = 0;
-                    c->chowa->stats[CG_CHARISMA] += 1;
-                }
-            }
-            break;
-        }
-        case CHOWA_TALK:
-        {
-            // talk to another chowa
             if (c->timeLeft <= 0)
             {
                 c->gState = CHOWA_IDLE;
             }
             else
             {
-                if (c->statUpdate >= SECOND)
-                {
-                    c->statUpdate = 0;
-                    c->chowa->stats[CG_CHARISMA] += 1;
-                }
+                // Update stats
+            }
+            break;
+        }
+        case CHOWA_TALK:
+        {
+            // talk to another chowa
+            // TODO: Require second Chowa
+            if (c->timeLeft <= 0)
+            {
+                c->gState = CHOWA_IDLE;
+            }
+            else
+            {
+                // Update stats
             }
             break;
         }
@@ -174,11 +185,6 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         {
             // Picked up by player
             // If held for too long, start losing affinity
-            if (c->statUpdate >= 5 * SECOND)
-            {
-                c->statUpdate = 0;
-                c->chowa->playerAffinity -= 1;
-            }
             break;
         }
         default:
@@ -209,4 +215,45 @@ static void cg_GroveGetRandMovePoint(cGrove_t* cg, cgGroveChowa_t* c)
 
     // Once a position is found, calculate angle and distance to point
     c->targetPos = targetPos.pos;
+}
+
+static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
+{
+    // If in water, continue moving until outside the water
+    vec_t temp;
+    if (rectRectIntersection(c->aabb, cg->grove.boundaries[CG_WATER], &temp))
+    {
+        return CHOWA_WALK;
+    }
+    // Check other behaviors list
+    // - If other Chowa are singing, boxing, wanting to talk, or dancing, can move close and do the same thing
+    // Check mood (If not neutral, chance to do "STATIC" increases)
+    // - Angry: More likely to throw items, remain idle
+    // - Sad: May cry or just act defeated
+    // - Happy: More likely to sing, Dance
+    // Check for held items
+    // - Much more likely to use held items
+    // Check if items present on map
+    // - If item is loose, will more likely go grab it than do anything else
+    // Otherwise, choose randomly
+    switch (esp_random() % 3)
+    {
+        case 0:
+        {
+            return CHOWA_WALK;
+        }
+        case 1:
+        {
+            return CHOWA_STATIC;
+        }
+        case 2:
+        {
+            return CHOWA_SING;
+        }
+        default:
+        {
+            // Re-run because something went wrong
+            return CHOWA_IDLE;
+        }
+    }
 }

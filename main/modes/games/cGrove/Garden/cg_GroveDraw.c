@@ -122,6 +122,85 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
         wsg_t* spr;
         switch (c->gState)
         {
+            case CHOWA_STATIC:
+            {
+                // Update animation frame if enough time has passed
+                c->frameTimer += elapsedUS;
+                if (c->frameTimer > SECOND / 2)
+                {
+                    c->frameTimer = 0;
+                    c->animFrame  = (c->animFrame + 1) % 2;
+                }
+                // Pick option
+                if (c->chowa->mood == CG_ANGRY)
+                {
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_ANGRY, c->animFrame);
+                    drawWsgSimple(spr, xOffset, yOffset);
+                    // TODO: Draw anger particles
+                    if (c->animFrame == 0)
+                    {
+                        drawWsgSimple(&cg->grove.angerParticles[1], xOffset, yOffset);
+                    } else {
+                        drawWsg(&cg->grove.angerParticles[1], xOffset + 17, yOffset, true, false, 0);
+                        drawWsgSimple(&cg->grove.angerParticles[0], xOffset + 5, yOffset + 3);
+                    }
+                    
+                }
+                else if (c->chowa->mood == CG_SAD)
+                {
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SAD, c->animFrame);
+                    drawWsgSimple(spr, xOffset, yOffset);
+                }
+                else if (c->chowa->mood == CG_HAPPY)
+                {
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PET, 0);
+                    drawWsgSimple(spr, xOffset, yOffset);
+                }
+                else if (c->chowa->mood == CG_CONFUSED)
+                {
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SIT, 0);
+                    drawWsgSimple(spr, xOffset, yOffset);
+                    switch(c->chowa->type)
+                    {
+                        case CG_RED_LUMBERJACK:
+                        default:
+                        {
+                            drawWsgSimple(&cg->grove.questionMarks[0], xOffset + 5, yOffset - 10);
+                            break;
+                        }
+                        case CG_GREEN_LUMBERJACK:
+                        {
+                            drawWsgSimple(&cg->grove.questionMarks[1], xOffset + 5, yOffset - 10);
+                            break;
+                        }
+                        case CG_CHO:
+                        {
+                            drawWsgSimple(&cg->grove.questionMarks[2], xOffset + 5, yOffset - 10);
+                            break;
+                        }
+                        case CG_LILB:
+                        {
+                            drawWsgSimple(&cg->grove.questionMarks[3], xOffset + 5, yOffset - 10);
+                            break;
+                        }
+                        case CG_KOSMO:
+                        {
+                            drawWsgSimple(&cg->grove.questionMarks[4], xOffset + 5, yOffset - 10);
+                            break;
+                        }
+                        case CG_KING_DONUT:
+                        {
+                            drawWsgSimple(&cg->grove.questionMarks[5], xOffset + 5, yOffset - 10);
+                            break;
+                        }
+                    }
+                }
+                else {
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SIT, 0);
+                    drawWsgSimple(spr, xOffset, yOffset);
+                }
+                break;
+            }
             case CHOWA_WALK:
             {
                 // Update animation frame if enough time has passed
@@ -140,30 +219,42 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     {
                         flip = true;
                     }
-                    spr = cg_getChowaWSG(cg, cg->grove.chowa[idx].chowa, CG_ANIM_SWIM, c->animFrame);
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SWIM, c->animFrame);
                 }
                 else
                 {
                     if (c->angle > 45 && c->angle <= 135)
                     {
-                        spr = cg_getChowaWSG(cg, cg->grove.chowa[idx].chowa, CG_ANIM_WALK_DOWN, c->animFrame);
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_DOWN, c->animFrame);
                     }
                     else if (c->angle > 135 && c->angle <= 225)
                     {
-                        spr  = cg_getChowaWSG(cg, cg->grove.chowa[idx].chowa, CG_ANIM_WALK_SIDE, c->animFrame);
+                        spr  = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, c->animFrame);
                         flip = true;
                     }
                     else if (c->angle > 225 && c->angle <= 315)
                     {
-                        spr = cg_getChowaWSG(cg, cg->grove.chowa[idx].chowa, CG_ANIM_WALK_UP, c->animFrame);
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_UP, c->animFrame);
                     }
                     else
                     {
-                        spr = cg_getChowaWSG(cg, cg->grove.chowa[idx].chowa, CG_ANIM_WALK_SIDE, c->animFrame);
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, c->animFrame);
                     }
                 }
-
                 drawWsg(spr, xOffset, yOffset, flip, false, 0);
+                break;
+            }
+            case CHOWA_SING:
+            {
+                // Update animation frame if enough time has passed
+                c->frameTimer += elapsedUS;
+                if (c->frameTimer > SECOND / 4)
+                {
+                    c->frameTimer = 0;
+                    c->animFrame  = (c->animFrame + 1) % 4;
+                }
+                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SING, c->animFrame);
+                drawWsgSimple(spr, xOffset, yOffset);
                 break;
             }
             default:

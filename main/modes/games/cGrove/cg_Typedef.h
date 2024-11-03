@@ -265,10 +265,9 @@ typedef struct
 
     // AI
     cgChowaStateGarden_t gState;    ///< Behavior state in the garden
-    int64_t timeLeft;               ///< Set to number of seconds a behavior can take
-    int64_t statUpdate;             ///< Time elapsed. When high enough, stat updates
-    vec_t targetPos;                ///< Position to head to
     cgChowaStateGarden_t nextState; ///< Cued state after arriving at target
+    int64_t timeLeft;               ///< Set to number of seconds a behavior can take
+    vec_t targetPos;                ///< Position to head to
 
     // Animations
     int16_t angle;      ///< Angle that the Chowa is moving at
@@ -281,10 +280,11 @@ typedef struct
     // Assets
     // Grove WSGs
     wsg_t groveBG; ///< Grove background
-    wsg_t groveSampleChowa;
 
     // UI WSGs
-    wsg_t* cursors; ///< Cursor sprites
+    wsg_t* cursors;        ///< Cursor sprites
+    wsg_t* angerParticles; ///< Anger particle sprites
+    wsg_t* questionMarks;  ///< Question mark sprites
 
     // Field data
     cgItem_t items[CG_GROVE_MAX_ITEMS];                                      ///< Items present in the Grove

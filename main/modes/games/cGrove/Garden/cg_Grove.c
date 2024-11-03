@@ -35,6 +35,14 @@ static const char* groveCursorSprites[] = {
     "chowa_hand3.wsg",
 };
 
+static const char* questionMarkSprites[] = {
+    "questmk-1.wsg", "questmk-2.wsg", "questmk-3.wsg", "questmk-4.wsg", "questmk-5.wsg", "questmk-6.wsg",
+};
+
+static const char* angerParticles[] = {
+    "anger-1.wsg", "anger-2.wsg",
+};
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -83,13 +91,22 @@ void cg_initGrove(cGrove_t* cg)
     // Load assets
     // WSGs
     loadWsg("garden_background.wsg", &cg->grove.groveBG, true);
-    loadWsg("ckd_walk1.wsg", &cg->grove.groveSampleChowa, true);
-
     // Cursors
     cg->grove.cursors = calloc(ARRAY_SIZE(groveCursorSprites), sizeof(wsg_t));
     for (int32_t idx = 0; idx < ARRAY_SIZE(groveCursorSprites); idx++)
     {
         loadWsg(groveCursorSprites[idx], &cg->grove.cursors[idx], true);
+    }
+    // Emotes
+    cg->grove.angerParticles = calloc(ARRAY_SIZE(angerParticles), sizeof(wsg_t));
+    for (int32_t idx = 0; idx < ARRAY_SIZE(angerParticles); idx++)
+    {
+        loadWsg(angerParticles[idx], &cg->grove.angerParticles[idx], true);
+    }
+    cg->grove.questionMarks = calloc(ARRAY_SIZE(questionMarkSprites), sizeof(wsg_t));
+    for (int32_t idx = 0; idx < ARRAY_SIZE(questionMarkSprites); idx++)
+    {
+        loadWsg(questionMarkSprites[idx], &cg->grove.questionMarks[idx], true);
     }
 
     // Initialize viewport
@@ -126,13 +143,8 @@ void cg_initGrove(cGrove_t* cg)
         cg->grove.chowa[i + CG_MAX_CHOWA].chowa = &cg->guests[i];
     }
 
-    /*
-     // Initialize the items
-     vec_t pos;
-     pos.x = 64;
-     pos.y = 64;
-     // cgInitItem(cg, 0, "Ball", cg->items[0], pos);
-     */
+    // Initialize items
+    // TODO:
 }
 
 /**
@@ -144,12 +156,21 @@ void cg_deInitGrove(cGrove_t* cg)
 {
     // Unload assets
     // WSGs
+    for (uint8_t i = 0; i < ARRAY_SIZE(questionMarkSprites); i++)
+    {
+        freeWsg(&cg->grove.questionMarks[i]);
+    }
+    free(cg->grove.questionMarks);
+    for (uint8_t i = 0; i < ARRAY_SIZE(angerParticles); i++)
+    {
+        freeWsg(&cg->grove.angerParticles[i]);
+    }
+    free(cg->grove.angerParticles);
     for (uint8_t i = 0; i < ARRAY_SIZE(groveCursorSprites); i++)
     {
         freeWsg(&cg->grove.cursors[i]);
     }
     free(cg->grove.cursors);
-    freeWsg(&cg->grove.groveSampleChowa);
     freeWsg(&cg->grove.groveBG);
 }
 
