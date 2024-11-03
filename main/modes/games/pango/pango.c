@@ -883,7 +883,7 @@ void detectBgmChange(pango_t* self)
 
 void changeStateDead(pango_t* self)
 {
-    self->gameData.frameCount = 0;
+    //self->gameData.frameCount = 0;
     self->gameData.lives--;
 
     soundStop(true);
@@ -895,6 +895,14 @@ void changeStateDead(pango_t* self)
 void updateDead(pango_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
+
+    if ((self->gameData.frameCount % 60) == 0)
+    {
+        //Keep counting time as a penalty
+        self->gameData.levelTime++;
+        self->gameData.inGameTimer++;
+    }
+
     if (self->gameData.frameCount > 179)
     {
         if (self->gameData.lives > 0)
