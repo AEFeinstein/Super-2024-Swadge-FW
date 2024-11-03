@@ -257,6 +257,50 @@ paEntity_t* createCrabdozer(paEntityManager_t* entityManager, uint16_t x, uint16
     return entity;
 }
 
+paEntity_t* pa_createBonusItem(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    paEntity_t* entity = pa_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = x << SUBPIXEL_RESOLUTION;
+    entity->y       = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->stateTimer           = -1;
+    entity->tempStateTimer       = -1;
+    entity->stateFlag            = false;
+    entity->baseSpeed            = entityManager->gameData->enemyInitialSpeed;
+
+    entity->type                 = PA_ENTITY_BONUS_ITEM;
+    entity->spriteIndex          = PA_SP_HOTDOG;
+    entity->facingDirection      = PA_DIRECTION_NONE;
+    entity->state                = 0;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &pa_updateBonusItem;
+    entity->collisionHandler     = &pa_dummyCollisionHandler;
+    entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
+    entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
+    entity->targetTileX = 1 + (esp_random() % 14);
+    entity->targetTileY = 1 + (esp_random() % 13);
+
+    return entity;
+}
+
 paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
     paEntity_t* entity = pa_findInactiveEntity(entityManager);

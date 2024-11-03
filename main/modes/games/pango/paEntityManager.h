@@ -66,5 +66,6 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
 paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 paEntity_t* pa_createHotDog(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
+paEntity_t* pa_createBonusItem(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 
 #endif

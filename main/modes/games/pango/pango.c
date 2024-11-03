@@ -57,7 +57,7 @@ static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
 
-const char* characterSelectOptions[] = {"Pango", "Po", "Pixel", "Polly"};
+const char* characterSelectOptions[] = {"Pango", "Po", "Pixel", "Piper"};
 const int32_t characterSelectOptionValues[]
     = {PA_PLAYER_CHARACTER_PANGO, PA_PLAYER_CHARACTER_PO, PA_PLAYER_CHARACTER_PIXEL, PA_PLAYER_CHARACTER_GIRL};
 #define NUM_CHARACTERS 4
@@ -496,6 +496,18 @@ void updateGame(pango_t* self, int64_t elapsedUs)
         if (self->gameData.remainingBlocks <= 0)
         {
             killPlayer(self->entityManager.playerEntity);
+        }
+
+        if (!self->gameData.firstBonusItemDispensed && (self->gameData.remainingBlocks < self->gameData.firstBonusItemDispenseThreshold)){
+            pa_createBonusItem(&(self->entityManager), ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                                              ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+            self->gameData.firstBonusItemDispensed = true;
+        } 
+        
+        if (!self->gameData.secondBonusItemDispensed && (self->gameData.remainingBlocks < self->gameData.secondBonusItemDispenseThreshold)){
+            pa_createBonusItem(&(self->entityManager), ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                                              ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+            self->gameData.secondBonusItemDispensed = true;
         }
 
         pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
@@ -1452,6 +1464,8 @@ void pa_setDifficultyLevel(paWsgManager_t* wsgManager, paGameData_t* gameData, u
 
 void pa_advanceToNextLevelOrGameClear(pango_t* self){
     self->gameData.levelTime = 0;
+    self->gameData.firstBonusItemDispensed = false;
+    self->gameData.secondBonusItemDispensed = false;
 
     if (self->gameData.level >= MASTER_DIFFICULTY_TABLE_LENGTH)
     {

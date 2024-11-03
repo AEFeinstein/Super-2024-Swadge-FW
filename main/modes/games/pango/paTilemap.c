@@ -293,7 +293,11 @@ void pa_generateMaze(paTilemap_t* tilemap)
         }
         ty -= 2;
     }
-}
+
+    tilemap->entityManager->gameData->levelBlocks = tilemap->entityManager->gameData->remainingBlocks;
+    tilemap->entityManager->gameData->firstBonusItemDispenseThreshold = tilemap->entityManager->gameData->levelBlocks - (tilemap->entityManager->gameData->levelBlocks >> 2);
+    tilemap->entityManager->gameData->secondBonusItemDispenseThreshold = tilemap->entityManager->gameData->levelBlocks - 3*(tilemap->entityManager->gameData->levelBlocks >> 2);}
+
 
 bool pa_genPathContinue(paTilemap_t* tilemap, uint32_t x, uint32_t y)
 {

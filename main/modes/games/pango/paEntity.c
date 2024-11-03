@@ -358,345 +358,15 @@ void updateCrabdozer(paEntity_t* self)
                 self->targetTileY = (esp_random() % 2) ? 1 : 13;
             }
 
-            uint8_t tx = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
-            uint8_t ty = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
-
-            uint8_t t1, t2, t3 = 0;
-            uint8_t distT1, distT2, distT3;
-
             if (self->state != PA_EN_ST_RUNAWAY)
             {
                 self->targetTileX = PA_TO_TILECOORDS(self->entityManager->playerEntity->x >> SUBPIXEL_RESOLUTION);
                 self->targetTileY = PA_TO_TILECOORDS(self->entityManager->playerEntity->y >> SUBPIXEL_RESOLUTION);
             }
 
-            int16_t hcof = (((self->x >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
-            int16_t vcof = (((self->y >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
-
             bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE) /*? esp_random() % 2 : false*/;
 
-            switch (self->facingDirection)
-            {
-                case PA_DIRECTION_WEST:
-                    if (hcof)
-                    {
-                        break;
-                    }
-
-                    t1 = pa_getTile(self->tilemap, tx - 1, ty);
-                    t2 = pa_getTile(self->tilemap, tx, ty - 1);
-                    t3 = pa_getTile(self->tilemap, tx, ty + 1);
-
-                    distT1 = PA_GET_TAXICAB_DISTANCE(tx - 1, ty, self->targetTileX, self->targetTileY);
-                    distT2 = PA_GET_TAXICAB_DISTANCE(tx, ty - 1, self->targetTileX, self->targetTileY);
-                    distT3 = PA_GET_TAXICAB_DISTANCE(tx, ty + 1, self->targetTileX, self->targetTileY);
-
-                    if ((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3))
-                    {
-                        if (doAgression && t2 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
-                        }
-                        else
-                        {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
-                        }
-                        break;
-                    }
-
-                    if ((!t3 || doAgression) && distT3 < distT1)
-                    {
-                        if (doAgression && t3 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
-                        }
-                        else
-                        {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
-                        }
-                        break;
-                    }
-
-                    if (t1)
-                    {
-                        if (doAgression && t1 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
-                            break;
-                        }
-
-                        if ((!t2 || doAgression) && (t3 || distT2 < distT3))
-                        {
-                            if (doAgression && t2 == PA_TILE_BLOCK)
-                            {
-                                pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
-                            }
-                            else
-                            {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
-                            }
-                            break;
-                        }
-
-                        if (!t3 || doAgression)
-                        {
-                            if (doAgression && t3 == PA_TILE_BLOCK)
-                            {
-                                pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
-                            }
-                            else
-                            {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
-                            }
-                            break;
-                        }
-
-                        pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
-                        break;
-                    }
-
-                    break;
-                case PA_DIRECTION_EAST:
-                    if (hcof)
-                    {
-                        break;
-                    }
-
-                    t1 = pa_getTile(self->tilemap, tx + 1, ty);
-                    t2 = pa_getTile(self->tilemap, tx, ty - 1);
-                    t3 = pa_getTile(self->tilemap, tx, ty + 1);
-
-                    distT1 = PA_GET_TAXICAB_DISTANCE(tx + 1, ty, self->targetTileX, self->targetTileY);
-                    distT2 = PA_GET_TAXICAB_DISTANCE(tx, ty - 1, self->targetTileX, self->targetTileY);
-                    distT3 = PA_GET_TAXICAB_DISTANCE(tx, ty + 1, self->targetTileX, self->targetTileY);
-
-                    if ((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3))
-                    {
-                        if (doAgression && t2 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
-                        }
-                        else
-                        {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
-                        }
-                        break;
-                    }
-                    if ((!t3 || doAgression) && distT3 < distT1)
-                    {
-                        if (doAgression && t3 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
-                        }
-                        else
-                        {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
-                        }
-                        break;
-                    }
-                    if (t1)
-                    {
-                        if (doAgression && t1 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
-                            break;
-                        }
-
-                        if ((!t2 || doAgression) && (t3 || distT2 < distT3))
-                        {
-                            if (doAgression && t2 == PA_TILE_BLOCK)
-                            {
-                                pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
-                            }
-                            else
-                            {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
-                            }
-                            break;
-                        }
-
-                        if (!t3 || doAgression)
-                        {
-                            if (doAgression && t2 == PA_TILE_BLOCK)
-                            {
-                                pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
-                            }
-                            else
-                            {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
-                            }
-                            break;
-                        }
-
-                        pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
-                        break;
-                    }
-
-                    break;
-                case PA_DIRECTION_NORTH:
-                    if (vcof)
-                    {
-                        break;
-                    }
-
-                    t1 = pa_getTile(self->tilemap, tx, ty - 1);
-                    t2 = pa_getTile(self->tilemap, tx - 1, ty);
-                    t3 = pa_getTile(self->tilemap, tx + 1, ty);
-
-                    distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty - 1, self->targetTileX, self->targetTileY);
-                    distT2 = PA_GET_TAXICAB_DISTANCE(tx - 1, ty, self->targetTileX, self->targetTileY);
-                    distT3 = PA_GET_TAXICAB_DISTANCE(tx + 1, ty, self->targetTileX, self->targetTileY);
-
-                    if ((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3))
-                    {
-                        if (doAgression && t2 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
-                        }
-                        else
-                        {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
-                        }
-                        break;
-                    }
-
-                    if ((!t3 || doAgression) && distT3 < distT1)
-                    {
-                        if (doAgression && t3 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
-                        }
-                        else
-                        {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
-                        }
-                        break;
-                    }
-
-                    if (t1)
-                    {
-                        if (doAgression && t1 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
-                            break;
-                        }
-
-                        if ((!t2 || doAgression) && (t3 || distT2 < distT3))
-                        {
-                            if (doAgression && t2 == PA_TILE_BLOCK)
-                            {
-                                pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
-                            }
-                            else
-                            {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
-                            }
-                            break;
-                        }
-
-                        if (!t3 || doAgression)
-                        {
-                            if (doAgression && t3 == PA_TILE_BLOCK)
-                            {
-                                pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
-                            }
-                            else
-                            {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
-                            }
-
-                            break;
-                        }
-
-                        pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
-                        break;
-                    }
-
-                    break;
-                case PA_DIRECTION_NONE:
-                default:
-                    pa_enemyChangeDirection(self, 1 >> (esp_random() % 3), self->baseSpeed);
-                    break;
-                case PA_DIRECTION_SOUTH:
-                    if (vcof)
-                    {
-                        break;
-                    }
-
-                    t1 = pa_getTile(self->tilemap, tx, ty + 1);
-                    t2 = pa_getTile(self->tilemap, tx - 1, ty);
-                    t3 = pa_getTile(self->tilemap, tx + 1, ty);
-
-                    distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty + 1, self->targetTileX, self->targetTileY);
-                    distT2 = PA_GET_TAXICAB_DISTANCE(tx - 1, ty, self->targetTileX, self->targetTileY);
-                    distT3 = PA_GET_TAXICAB_DISTANCE(tx + 1, ty, self->targetTileX, self->targetTileY);
-
-                    if ((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3))
-                    {
-                        if (doAgression && t2 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
-                        }
-                        else
-                        {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
-                        }
-                        break;
-                    }
-
-                    if ((!t3 || doAgression) && distT3 < distT1)
-                    {
-                        if (doAgression && t3 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
-                        }
-                        else
-                        {
-                            pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
-                        }
-                        break;
-                    }
-
-                    if (t1)
-                    {
-                        if (doAgression && t1 == PA_TILE_BLOCK)
-                        {
-                            pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
-                            break;
-                        }
-
-                        if ((!t2 || doAgression) && (t3 || distT2 < distT3))
-                        {
-                            if (doAgression && t2 == PA_TILE_BLOCK)
-                            {
-                                pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
-                            }
-                            else
-                            {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
-                            }
-                            break;
-                        }
-
-                        if (!t3 || doAgression)
-                        {
-                            if (doAgression && t3 == PA_TILE_BLOCK)
-                            {
-                                pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
-                            }
-                            else
-                            {
-                                pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
-                            }
-                            break;
-                        }
-
-                        pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
-                        break;
-                    }
-
-                    break;
-            }
+            pa_enemyDecideDirection(self, doAgression);
 
             pa_animateEnemy(self);
             despawnWhenOffscreen(self);
@@ -757,6 +427,340 @@ int16_t pa_enemySetAggroStateTimer(paEntity_t* self)
 {
     return (self->gameData->minAggroTime
             + esp_random() % (self->gameData->maxAggroTime - self->gameData->minAggroTime));
+}
+
+void pa_enemyDecideDirection(paEntity_t* self, bool doAgression){
+    uint8_t tx = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+    uint8_t ty = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+
+    uint8_t t1, t2, t3 = 0;
+    uint8_t distT1, distT2, distT3;
+
+    int16_t hcof = (((self->x >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
+    int16_t vcof = (((self->y >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
+
+    switch (self->facingDirection)
+        {
+            case PA_DIRECTION_WEST:
+                if (hcof)
+                {
+                    break;
+                }
+
+                t1 = pa_getTile(self->tilemap, tx - 1, ty);
+                t2 = pa_getTile(self->tilemap, tx, ty - 1);
+                t3 = pa_getTile(self->tilemap, tx, ty + 1);
+
+                distT1 = PA_GET_TAXICAB_DISTANCE(tx - 1, ty, self->targetTileX, self->targetTileY);
+                distT2 = PA_GET_TAXICAB_DISTANCE(tx, ty - 1, self->targetTileX, self->targetTileY);
+                distT3 = PA_GET_TAXICAB_DISTANCE(tx, ty + 1, self->targetTileX, self->targetTileY);
+
+                if ((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3))
+                {
+                    if (doAgression && t2 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
+                    }
+                    else
+                    {
+                        pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
+                    }
+                    break;
+                }
+
+                if ((!t3 || doAgression) && distT3 < distT1)
+                {
+                    if (doAgression && t3 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
+                    }
+                    else
+                    {
+                        pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
+                    }
+                    break;
+                }
+
+                if (t1)
+                {
+                    if (doAgression && t1 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
+                        break;
+                    }
+
+                    if ((!t2 || doAgression) && (t3 || distT2 < distT3))
+                    {
+                        if (doAgression && t2 == PA_TILE_BLOCK)
+                        {
+                            pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
+                        }
+                        else
+                        {
+                            pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
+                        }
+                        break;
+                    }
+
+                    if (!t3 || doAgression)
+                    {
+                        if (doAgression && t3 == PA_TILE_BLOCK)
+                        {
+                            pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
+                        }
+                        else
+                        {
+                            pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
+                        }
+                        break;
+                    }
+
+                    pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
+                    break;
+                }
+
+                break;
+            case PA_DIRECTION_EAST:
+                if (hcof)
+                {
+                    break;
+                }
+
+                t1 = pa_getTile(self->tilemap, tx + 1, ty);
+                t2 = pa_getTile(self->tilemap, tx, ty - 1);
+                t3 = pa_getTile(self->tilemap, tx, ty + 1);
+
+                distT1 = PA_GET_TAXICAB_DISTANCE(tx + 1, ty, self->targetTileX, self->targetTileY);
+                distT2 = PA_GET_TAXICAB_DISTANCE(tx, ty - 1, self->targetTileX, self->targetTileY);
+                distT3 = PA_GET_TAXICAB_DISTANCE(tx, ty + 1, self->targetTileX, self->targetTileY);
+
+                if ((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3))
+                {
+                    if (doAgression && t2 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
+                    }
+                    else
+                    {
+                        pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
+                    }
+                    break;
+                }
+                if ((!t3 || doAgression) && distT3 < distT1)
+                {
+                    if (doAgression && t3 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
+                    }
+                    else
+                    {
+                        pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
+                    }
+                    break;
+                }
+                if (t1)
+                {
+                    if (doAgression && t1 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
+                        break;
+                    }
+
+                    if ((!t2 || doAgression) && (t3 || distT2 < distT3))
+                    {
+                        if (doAgression && t2 == PA_TILE_BLOCK)
+                        {
+                            pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
+                        }
+                        else
+                        {
+                            pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
+                        }
+                        break;
+                    }
+
+                    if (!t3 || doAgression)
+                    {
+                        if (doAgression && t2 == PA_TILE_BLOCK)
+                        {
+                            pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
+                        }
+                        else
+                        {
+                            pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
+                        }
+                        break;
+                    }
+
+                    pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
+                    break;
+                }
+
+                break;
+            case PA_DIRECTION_NORTH:
+                if (vcof)
+                {
+                    break;
+                }
+
+                t1 = pa_getTile(self->tilemap, tx, ty - 1);
+                t2 = pa_getTile(self->tilemap, tx - 1, ty);
+                t3 = pa_getTile(self->tilemap, tx + 1, ty);
+
+                distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty - 1, self->targetTileX, self->targetTileY);
+                distT2 = PA_GET_TAXICAB_DISTANCE(tx - 1, ty, self->targetTileX, self->targetTileY);
+                distT3 = PA_GET_TAXICAB_DISTANCE(tx + 1, ty, self->targetTileX, self->targetTileY);
+
+                if ((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3))
+                {
+                    if (doAgression && t2 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
+                    }
+                    else
+                    {
+                        pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
+                    }
+                    break;
+                }
+
+                if ((!t3 || doAgression) && distT3 < distT1)
+                {
+                    if (doAgression && t3 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
+                    }
+                    else
+                    {
+                        pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
+                    }
+                    break;
+                }
+
+                if (t1)
+                {
+                    if (doAgression && t1 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_NORTH, self->baseSpeed >> 1, tx, ty);
+                        break;
+                    }
+
+                    if ((!t2 || doAgression) && (t3 || distT2 < distT3))
+                    {
+                        if (doAgression && t2 == PA_TILE_BLOCK)
+                        {
+                            pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
+                        }
+                        else
+                        {
+                            pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
+                        }
+                        break;
+                    }
+
+                    if (!t3 || doAgression)
+                    {
+                        if (doAgression && t3 == PA_TILE_BLOCK)
+                        {
+                            pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
+                        }
+                        else
+                        {
+                            pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
+                        }
+
+                        break;
+                    }
+
+                    pa_enemyChangeDirection(self, PA_DIRECTION_SOUTH, self->baseSpeed);
+                    break;
+                }
+
+                break;
+            case PA_DIRECTION_NONE:
+            default:
+                pa_enemyChangeDirection(self, 1 >> (esp_random() % 3), self->baseSpeed);
+                break;
+            case PA_DIRECTION_SOUTH:
+                if (vcof)
+                {
+                    break;
+                }
+
+                t1 = pa_getTile(self->tilemap, tx, ty + 1);
+                t2 = pa_getTile(self->tilemap, tx - 1, ty);
+                t3 = pa_getTile(self->tilemap, tx + 1, ty);
+
+                distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty + 1, self->targetTileX, self->targetTileY);
+                distT2 = PA_GET_TAXICAB_DISTANCE(tx - 1, ty, self->targetTileX, self->targetTileY);
+                distT3 = PA_GET_TAXICAB_DISTANCE(tx + 1, ty, self->targetTileX, self->targetTileY);
+
+                if ((!t2 || doAgression) && distT2 < distT1 && (t3 || distT2 < distT3))
+                {
+                    if (doAgression && t2 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
+                    }
+                    else
+                    {
+                        pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
+                    }
+                    break;
+                }
+
+                if ((!t3 || doAgression) && distT3 < distT1)
+                {
+                    if (doAgression && t3 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
+                    }
+                    else
+                    {
+                        pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
+                    }
+                    break;
+                }
+
+                if (t1)
+                {
+                    if (doAgression && t1 == PA_TILE_BLOCK)
+                    {
+                        pa_enemyBreakBlock(self, PA_DIRECTION_SOUTH, self->baseSpeed >> 1, tx, ty);
+                        break;
+                    }
+
+                    if ((!t2 || doAgression) && (t3 || distT2 < distT3))
+                    {
+                        if (doAgression && t2 == PA_TILE_BLOCK)
+                        {
+                            pa_enemyBreakBlock(self, PA_DIRECTION_WEST, self->baseSpeed >> 1, tx, ty);
+                        }
+                        else
+                        {
+                            pa_enemyChangeDirection(self, PA_DIRECTION_WEST, self->baseSpeed);
+                        }
+                        break;
+                    }
+
+                    if (!t3 || doAgression)
+                    {
+                        if (doAgression && t3 == PA_TILE_BLOCK)
+                        {
+                            pa_enemyBreakBlock(self, PA_DIRECTION_EAST, self->baseSpeed >> 1, tx, ty);
+                        }
+                        else
+                        {
+                            pa_enemyChangeDirection(self, PA_DIRECTION_EAST, self->baseSpeed);
+                        }
+                        break;
+                    }
+
+                    pa_enemyChangeDirection(self, PA_DIRECTION_NORTH, self->baseSpeed);
+                    break;
+                }
+
+                break;
+        }
 }
 
 void pa_enemyChangeDirection(paEntity_t* self, uint16_t newDirection, int16_t speed)
@@ -1193,6 +1197,23 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
             }
             break;
         }
+        case PA_ENTITY_BONUS_ITEM:
+        {
+            pa_destroyEntity(other, false);
+            uint16_t pointsScored = 1000; //TODO: vary points depending on level
+            pa_scorePoints(self->gameData, pointsScored);
+
+            soundPlaySfx(&self->soundManager->sndCoin, MIDI_SFX);
+
+            paEntity_t* createdEntity
+                = pa_createScoreDisplay(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
+                                        (self->y >> SUBPIXEL_RESOLUTION) - 4);
+            if (createdEntity != NULL)
+            {
+                createdEntity->scoreValue = pointsScored;
+            }
+            break;
+        }
         default:
         {
             break;
@@ -1497,6 +1518,11 @@ void pa_updateBreakBlock(paEntity_t* self)
                     createdEntity
                         = pa_createHotDog(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
                                                 (self->y >> SUBPIXEL_RESOLUTION) - 4);
+
+                    /*createdEntity
+                        = pa_createBonusItem(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
+                                                (self->y >> SUBPIXEL_RESOLUTION) - 4);*/
+
                     break;
                 }
                 default:
@@ -1661,4 +1687,11 @@ void pa_scoreDisplayDrawHandler(paEntity_t* self)
     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu16, self->scoreValue);
     drawText(&(self->gameData->scoreFont), greenColors[(self->stateTimer >> 3) % 4], scoreStr,
              self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+}
+
+void pa_updateBonusItem(paEntity_t* self){
+    pa_enemyDecideDirection(self, false);
+    despawnWhenOffscreen(self);
+    pa_moveEntityWithTileCollisions(self);
+    //pa_detectEntityCollisions(self);
 }

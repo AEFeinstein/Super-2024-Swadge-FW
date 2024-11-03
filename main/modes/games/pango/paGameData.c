@@ -49,6 +49,8 @@ void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t level
     gameData->changeBgm      = 0;
     gameData->continuesUsed  = (gameData->level == 1) ? false : true;
     gameData->inGameTimer    = 0;
+    gameData->firstBonusItemDispensed = false;
+    gameData->secondBonusItemDispensed = false;
 
     pa_resetGameDataLeds(gameData);
 }
