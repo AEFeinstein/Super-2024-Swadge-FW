@@ -279,7 +279,7 @@ paEntity_t* pa_createBonusItem(paEntityManager_t* entityManager, uint16_t x, uin
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
-    entity->scoreValue           = pa_getBonusItemValue(entityManager->gameData->levelTime);
+    entity->scoreValue           = (entityManager->gameData->firstBonusItemDispensed) ? 2000: 1000;
     entity->stateTimer           = -1;
     entity->tempStateTimer       = -1;
     entity->stateFlag            = false;
