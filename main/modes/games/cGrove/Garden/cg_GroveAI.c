@@ -38,7 +38,7 @@ static void cg_GroveGetRandMovePoint(cGrove_t* cg, cgGroveChowa_t* c);
 
 /**
  * @brief Sets a new task for the Chowa
- * 
+ *
  * @param cg Game Data
  * @param c Chowa Data
  */
@@ -80,31 +80,8 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         case CHOWA_IDLE:
         {
             // Chowa is essentially unset. Look for new behavior
-            c->gState = cg_getNewTask(cg, c);
+            c->gState    = cg_getNewTask(cg, c);
             c->animFrame = 0; // Reset animation frame to avoid displaying garbage data
-            // Execute decision
-            switch (c->gState)
-            {
-                case CHOWA_WALK:
-                {
-                    cg_GroveGetRandMovePoint(cg, c);
-                    c->frameTimer += esp_random() % SECOND; // Offset frame timer 
-                    c->nextState = CHOWA_IDLE;
-                    break;
-                }
-                case CHOWA_SING:
-                {
-                    c->timeLeft = SECOND * (10);
-                    break;
-                }
-                case CHOWA_STATIC:
-                default:
-                {
-                    c->gState = CHOWA_STATIC; // If some random value, make sure it'll resolve
-                    c->timeLeft = SECOND * (1 + (esp_random() % 10));
-                    break;
-                }
-            }
             break;
         }
         case CHOWA_STATIC:
@@ -120,8 +97,9 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         {
             // Calculate the distance to target
             vec_t difference = {.x = c->targetPos.x - c->aabb.pos.x, .y = c->targetPos.y - c->aabb.pos.y};
-            if (sqMagVec2d(difference) < 100.0f)
+            if (sqMagVec2d(difference) < pow(c->precision, 2))
             {
+                c->timeLeft = c->nextTimeLeft;
                 c->gState = c->nextState;
             }
             fastNormVec(&difference.x, &difference.y);
@@ -227,6 +205,18 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
     }
     // Check other behaviors list
     // - If other Chowa are singing, boxing, wanting to talk, or dancing, can move close and do the same thing
+    for (int32_t idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+    {
+        if (cg->grove.chowa[idx].gState == CHOWA_SING && (esp_random() % 6 == 0))
+        {
+            // Get the other Chowa's position
+            c->targetPos = cg->grove.chowa[idx].aabb.pos;
+            c->precision = 32.0f;
+            c->nextState = CHOWA_SING;
+            c->nextTimeLeft = c->timeLeft = SECOND * (10);
+            return CHOWA_WALK;
+        }
+    }
     // Check mood (If not neutral, chance to do "STATIC" increases)
     // - Angry: More likely to throw items, remain idle
     // - Sad: May cry or just act defeated
@@ -240,20 +230,23 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
     {
         case 0:
         {
+            cg_GroveGetRandMovePoint(cg, c);
+            c->precision = 10.0f;
+            c->frameTimer += esp_random() % SECOND; // Offset frame timer
+            c->nextState = CHOWA_IDLE;
             return CHOWA_WALK;
         }
         case 1:
+        default:
         {
+            c->timeLeft = SECOND * (1 + (esp_random() % 10));
             return CHOWA_STATIC;
         }
         case 2:
         {
+            c->timeLeft = SECOND * (10);
             return CHOWA_SING;
         }
-        default:
-        {
-            // Re-run because something went wrong
-            return CHOWA_IDLE;
-        }
+        
     }
 }

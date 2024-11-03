@@ -40,7 +40,8 @@ static const char* questionMarkSprites[] = {
 };
 
 static const char* angerParticles[] = {
-    "anger-1.wsg", "anger-2.wsg",
+    "anger-1.wsg",
+    "anger-2.wsg",
 };
 
 //==============================================================================
@@ -143,9 +144,9 @@ void cg_initGrove(cGrove_t* cg)
         if (cg->grove.chowa[i].chowa->active)
         {
             cg->grove.chowa[i].aabb.height = 24;
-            cg->grove.chowa[i].aabb.width = 24;
-            cg->grove.chowa[i].aabb.pos.x = 32 + esp_random() % (cg->grove.groveBG.w - 64);
-            cg->grove.chowa[i].aabb.pos.y = 32 + esp_random() % (cg->grove.groveBG.h - 64);
+            cg->grove.chowa[i].aabb.width  = 24;
+            cg->grove.chowa[i].aabb.pos.x  = 32 + esp_random() % (cg->grove.groveBG.w - 64);
+            cg->grove.chowa[i].aabb.pos.y  = 32 + esp_random() % (cg->grove.groveBG.h - 64);
         }
     }
     for (int32_t i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
