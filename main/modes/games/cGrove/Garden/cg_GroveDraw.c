@@ -98,6 +98,33 @@ void cg_groveDraw(cGrove_t* cg, int64_t elapsedUs)
 
 static void cg_drawHand(cGrove_t* cg)
 {
+    // If holding
+    if (cg->grove.holdingChowa || cg->grove.holdingItem)
+    {
+        drawWsgSimple(&cg->grove.cursors[2], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
+        return;
+    }
+    // If hovering over
+    for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+    {
+        vec_t temp;
+        rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
+                            .height = cg->grove.cursor.height,
+                            .width  = cg->grove.cursor.width};
+        // Chowa
+        if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
+        {
+            drawWsgSimple(&cg->grove.cursors[1], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
+            return;
+        }
+        // Items
+        if (rectRectIntersection(cg->grove.cursor, cg->grove.items[idx].aabb, &temp))
+        {
+            drawWsgSimple(&cg->grove.cursors[1], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
+            return;
+        }
+    }
+    // Otherwise
     drawWsgSimple(&cg->grove.cursors[0], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
 }
 
@@ -204,6 +231,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 break;
             }
             case CHOWA_WALK:
+            case CHOWA_CHASE:
             {
                 // Update animation frame if enough time has passed
                 c->frameTimer += elapsedUS;
@@ -350,6 +378,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     c->animFrame  = (c->animFrame + 1) % 2;
                 }
                 spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_FLAIL, c->animFrame);
+                drawWsgSimple(spr, xOffset, yOffset);
                 break;
             }
             case CHOWA_TALK:
@@ -372,6 +401,18 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 {
                     drawWsgSimple(&cg->grove.speechBubbles[c->animFrame], xOffset, yOffset - 16);
                 }
+                break;
+            }
+            case CHOWA_GIFT:
+            {
+                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_GIFT, 0);
+                drawWsgSimple(spr, xOffset, yOffset);
+                break;
+            }
+            case CHOWA_PET:
+            {
+                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PET, 0);
+                drawWsgSimple(spr, xOffset, yOffset);
                 break;
             }
             default:
@@ -405,6 +446,8 @@ static void cg_groveDebug(cGrove_t* cg)
                      cg->grove.chowa[i].aabb.pos.y + cg->grove.chowa[i].aabb.height + yOffset, c500);
             drawCircle(cg->grove.chowa[i].targetPos.x + xOffset, cg->grove.chowa[i].targetPos.y + yOffset, 12, c500);
             drawText(&cg->menuFont, c550, buffer, 24, 24);
+            drawLineFast(cg->grove.chowa[i].aabb.pos.x + xOffset, cg->grove.chowa[i].aabb.pos.y + yOffset,
+                         cg->grove.cursor.pos.x, cg->grove.cursor.pos.y, c505);
         }
     }
 }

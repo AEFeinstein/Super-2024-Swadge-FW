@@ -25,14 +25,9 @@
 - Create/Add SFX
 - AI
   - Using items
-- Update hand sprite
 - Add menu for buying items
 - Add money system (Chowa grab nearby money that spawns)
-- Add splash animations
 - Add items
-- Add cursor chase
-- Add guest Chowa
-- Go to stump
 
 ## Race
 - Build mode

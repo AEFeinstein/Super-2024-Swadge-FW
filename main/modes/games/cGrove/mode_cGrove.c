@@ -177,7 +177,7 @@ static void cGroveEnterMode(void)
                 cg->chowa[i].mood = CG_CONFUSED;
                 break;
         }
-        
+        cg->chowa[i].playerAffinity = 101;
     }
 }
 

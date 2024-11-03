@@ -251,6 +251,8 @@ typedef enum
     CHOWA_DANCE,    ///< Dancing
     CHOWA_TALK,     ///< Talks with another Chowa
     CHOWA_HELD,     ///< Held, cannot move
+    CHOWA_GIFT,     ///< Receiving a gift/head pats
+    CHOWA_PET,      ///< Chowa is being pet
 } cgChowaStateGarden_t;
 
 // Structs ==============================
@@ -293,7 +295,7 @@ typedef struct
     wsg_t* speechBubbles;  ///< Speech Bubbles for Chowa
     // Audio
     midiFile_t bgm; ///< Main BGM for the Grove
-    // TODO: singing, splashing, talking
+
 
     // Field data
     cgItem_t items[CG_GROVE_MAX_ITEMS];                            ///< Items present in the Grove
@@ -306,7 +308,7 @@ typedef struct
     rectangle_t cursor;        ///< Cursor position and bounding box
     bool holdingItem;          ///< If the player is holding an item
     cgItem_t* heldItem;        ///< The held item
-    bool holdingChowa;         ///< If the pl;ayer is holding a Chowa
+    bool holdingChowa;         ///< If the player is holding a Chowa
     cgGroveChowa_t* heldChowa; ///< The held Chowa
 } cgGrove_t;
 

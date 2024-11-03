@@ -45,11 +45,16 @@ static const char* angerParticles[] = {
 };
 
 static const char* musicNoteSprites[] = {
-    "cg_note1.wsg", "cg_note2.wsg", "cg_note3.wsg", 
+    "cg_note1.wsg",
+    "cg_note2.wsg",
+    "cg_note3.wsg",
 };
 
 static const char* speechBubbleSprites[] = {
-    "cg_text0.wsg", "cg_text1.wsg", "cg_text2.wsg", "cg_text3.wsg", 
+    "cg_text0.wsg",
+    "cg_text1.wsg",
+    "cg_text2.wsg",
+    "cg_text3.wsg",
 };
 
 //==============================================================================
@@ -229,9 +234,6 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
         isBGMPlaying = true;
     }
 
-    // TODO:
-    // Change cursor if over item or Chowa
-
     // Input
     cg_handleInputGarden(cg);
 
@@ -327,7 +329,7 @@ static void cg_handleInputGarden(cGrove_t* cg)
                 }
                 else if (cg->grove.holdingChowa)
                 {
-                    cg->grove.holdingChowa = false;
+                    cg->grove.holdingChowa      = false;
                     cg->grove.heldChowa->gState = CHOWA_IDLE;
                 }
                 else
@@ -337,7 +339,19 @@ static void cg_handleInputGarden(cGrove_t* cg)
             }
             if (evt.button & PB_B && evt.down)
             {
-                // TODO: Pet Chowa
+                for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+                {
+                    vec_t temp;
+                    rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
+                                        .height = cg->grove.cursor.height,
+                                        .width  = cg->grove.cursor.width};
+                    // Chowa
+                    if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
+                    {
+                        cg->grove.chowa[idx].gState = CHOWA_PET;
+                        cg->grove.chowa[idx].timeLeft = 1000000;
+                    }
+                }
             }
         }
     }
@@ -369,7 +383,7 @@ static void cg_handleInputGarden(cGrove_t* cg)
                 }
                 else if (cg->grove.holdingChowa)
                 {
-                    cg->grove.holdingChowa = false;
+                    cg->grove.holdingChowa      = false;
                     cg->grove.heldChowa->gState = CHOWA_IDLE;
                 }
                 else
@@ -379,7 +393,19 @@ static void cg_handleInputGarden(cGrove_t* cg)
             }
             if (evt.button & PB_B && evt.down)
             {
-                // TODO: Pet Chowa
+                for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+                {
+                    vec_t temp;
+                    rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
+                                        .height = cg->grove.cursor.height,
+                                        .width  = cg->grove.cursor.width};
+                    // Chowa
+                    if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
+                    {
+                        cg->grove.chowa[idx].gState = CHOWA_PET;
+                        cg->grove.chowa[idx].timeLeft = 1000000;
+                    }
+                }
             }
         }
     }

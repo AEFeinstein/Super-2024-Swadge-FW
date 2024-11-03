@@ -113,7 +113,19 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         }
         case CHOWA_CHASE:
         {
-            // Chowa updates target location each frame
+            // Calculate the distance to target
+            c->targetPos     = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos);
+            vec_t difference = {.x = c->targetPos.x - c->aabb.pos.x, .y = c->targetPos.y - c->aabb.pos.y};
+            if (sqMagVec2d(difference) < pow(c->precision, 2))
+            {
+                c->timeLeft = c->nextTimeLeft;
+                c->gState   = c->nextState;
+            }
+            fastNormVec(&difference.x, &difference.y);
+            int16_t angle = getAtan2(difference.y, difference.x);
+            c->angle      = angle;
+            c->aabb.pos.x += difference.x / 128;
+            c->aabb.pos.y += difference.y / 128;
             break;
         }
         case CHOWA_USE_ITEM:
@@ -179,6 +191,20 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             // If held for too long, start losing affinity
             break;
         }
+        case CHOWA_GIFT:
+        {
+            // stand in place with arms raised
+            if (c->timeLeft <= 0)
+            {
+                c->gState = CHOWA_IDLE;
+            }
+            break;
+        }
+        case CHOWA_PET:
+        {
+            // Chowa is being pet
+            break;
+        }
         default:
         {
             break;
@@ -221,8 +247,7 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
         c->nextState = CHOWA_IDLE;
         return CHOWA_WALK;
     }
-    // Check other behaviors list
-    // - If other Chowa are boxing, wanting to talk, can move close and do the same thing
+    // Check other behaviors
     for (int32_t idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
     {
         if ((cg->grove.chowa[idx].gState == CHOWA_SING || cg->grove.chowa[idx].gState == CHOWA_DANCE)
@@ -287,6 +312,14 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
         c->flip       = false;
         c->hasPartner = false;
         return CHOWA_BOX;
+    }
+    // Check player affinity
+    if (c->chowa->playerAffinity > 100 && esp_random() % 6 == 0)
+    {
+        c->precision = 32.0f;
+        c->nextTimeLeft = SECOND * (1 + (esp_random() % 3));
+        c->nextState = CHOWA_GIFT;
+        return CHOWA_CHASE;
     }
     // Check for held items
     // - Much more likely to use held items
