@@ -12,6 +12,7 @@ typedef enum
 {
     SEQUENCER_MENU,
     SEQUENCER_SEQ,
+    SEQUENCER_HELP,
 } sequencerScreen_t;
 
 //==============================================================================
@@ -46,30 +47,44 @@ typedef struct
 {
     // Menu
     menu_t* songMenu;
+    menu_t* bgMenu;
     menuManiaRenderer_t* menuRenderer;
     menu_t* noteMenu;
     wheelMenuRenderer_t* wheelRenderer;
     bool rebuildMenu;
+    bool upOneMenuLevel;
 
     // Mode state
     sequencerScreen_t screen;
 
-    // Drawing
-    font_t ibm;
+    // Fonts
+    font_t font_ibm;
+    font_t font_rodin;
+    font_t font_rodin_outline;
+    font_t font_righteous;
+    font_t font_righteous_outline;
+
+    // Cursor and scrolling
     vec_t cursorPos;
     vec_t gridOffset;
     vec_t gridOffsetTarget;
+    int32_t smoothScrollTimer;
+    int32_t buttonHeldTimer;
+    int32_t buttonState;
+    int32_t holdScrollTimer;
+    bool holdScrollingActive;
+
+    // Drawing measurements
     int32_t labelWidth;
     int32_t cellWidth;
     int32_t rowHeight;
     int32_t numRows;
-    int32_t smoothScrollTimer;
 
     // UI Images
     wsg_t noteWsgs[5];
-    wsg_t instrumentWsgs[3];
+    wsg_t instrumentWsgs[6];
 
-    // Scrolling
+    // Song Scrolling
     bool isPlaying;
     int32_t usPerPx;
     int32_t scrollTimer;
@@ -87,6 +102,10 @@ typedef struct
     int32_t exampleMidiNote;
     int32_t exampleMidiChannel;
     int32_t exampleMidiNoteTimer;
+
+    // Help page
+    uint32_t helpIdx;
+    uint32_t arrowBlinkTimer;
 } sequencerVars_t;
 
 //==============================================================================
@@ -95,10 +114,16 @@ typedef struct
 
 extern swadgeMode_t sequencerMode;
 
+extern const char sequencerName[];
+extern const char str_grid[];
+extern const char str_file[];
+extern const char str_songOptions[];
+
 //==============================================================================
 // Functions
 //==============================================================================
 
 paletteColor_t getChannelColor(int32_t channel);
+void setSequencerScreen(sequencerScreen_t screen);
 
 #endif

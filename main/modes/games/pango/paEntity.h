@@ -24,7 +24,8 @@ typedef enum
     PA_ENTITY_BREAK_BLOCK,
     PA_ENTITY_BLOCK_FRAGMENT,
     ENTITY_HIT_BLOCK,
-    ENTITY_DEAD
+    ENTITY_DEAD,
+    PA_ENTITY_SCORE_DISPLAY
 } paEntityIndex_t;
 
 typedef enum
@@ -64,10 +65,11 @@ typedef enum
 
 typedef void (*pa_updateFunction_t)(struct paEntity_t* self);
 typedef void (*pa_collisionHandler_t)(struct paEntity_t* self, struct paEntity_t* other);
-typedef bool (*PA_TILE_CollisionHandler_t)(struct paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
-                                           uint8_t direction);
+typedef bool (*pa_tileCollisionHandler_t)(struct paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
+                                          uint8_t direction);
 typedef void (*pa_fallOffTileHandler_t)(struct paEntity_t* self);
 typedef void (*pa_overlapTileHandler_t)(struct paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
+typedef void (*pa_drawHandler_t)(struct paEntity_t* self);
 
 struct paEntity_t
 {
@@ -107,11 +109,7 @@ struct paEntity_t
     uint8_t homeTileX;
     uint8_t homeTileY;
 
-    int16_t jumpPower;
-
     bool visible;
-    uint8_t hp;
-    int8_t invincibilityFrames;
     uint16_t scoreValue;
 
     uint8_t targetTileX;
@@ -126,9 +124,9 @@ struct paEntity_t
     paEntityManager_t* entityManager;
 
     pa_collisionHandler_t collisionHandler;
-    PA_TILE_CollisionHandler_t tileCollisionHandler;
-    pa_fallOffTileHandler_t fallOffTileHandler;
+    pa_tileCollisionHandler_t tileCollisionHandler;
     pa_overlapTileHandler_t overlapTileHandler;
+    pa_drawHandler_t drawHandler;
 };
 
 //==============================================================================
@@ -185,7 +183,13 @@ void killPlayer(paEntity_t* self);
 void drawEntityTargetTile(paEntity_t* self);
 
 bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty, uint16_t scoreIndex);
 void pa_updateBreakBlock(paEntity_t* self);
 void pa_updateBlockFragment(paEntity_t* self);
+void pa_updateScoreDisplay(paEntity_t* self);
+void pa_defaultEntityDrawHandler(paEntity_t* self);
+void pa_scoreDisplayDrawHandler(paEntity_t* self);
+int16_t pa_enemySetAggroStateTimer(paEntity_t* self);
+uint16_t pa_correctPlayerFacingDirection(int16_t btnState, uint16_t currentFacingDirection);
 
 #endif
