@@ -17,6 +17,7 @@
 #include "cg_GroveAI.h"
 #include "cg_GroveDraw.h"
 #include "cg_Items.h"
+#include <esp_random.h>
 
 //==============================================================================
 // Defines
@@ -116,17 +117,14 @@ void cg_initGrove(cGrove_t* cg)
         {
             cg->grove.chowa[i].aabb.height = 24;
             cg->grove.chowa[i].aabb.width = 24;
+            cg->grove.chowa[i].aabb.pos.x = 32 + esp_random() % (cg->grove.groveBG.w - 64);
+            cg->grove.chowa[i].aabb.pos.y = 32 + esp_random() % (cg->grove.groveBG.h - 64);
         }
     }
     for (int32_t i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
     {
         cg->grove.chowa[i + CG_MAX_CHOWA].chowa = &cg->guests[i];
     }
-
-    // FIXME: Test code
-    cg->grove.chowa[0].aabb.pos.x = 120;
-    cg->grove.chowa[0].aabb.pos.y = 120;
-    cg->grove.chowa[0].chowa->stats[CG_SPEED] = 255;
 
     /*
      // Initialize the items
@@ -190,7 +188,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
     }
 
     // Draw
-    cg_groveDraw(cg);
+    cg_groveDraw(cg, elapsedUS);
 }
 
 //==============================================================================

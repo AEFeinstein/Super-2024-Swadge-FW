@@ -19,3 +19,7 @@
 //==============================================================================
 // Function declarations
 //==============================================================================
+
+void cg_initChowaWSGs(cGrove_t* cg);
+void cg_deInitChowaWSGs(cGrove_t* cg);
+wsg_t* cg_getChowaWSG(cGrove_t* cg, cgChowa_t* c, cgChowaAnimIdx_t anim, int8_t idx);

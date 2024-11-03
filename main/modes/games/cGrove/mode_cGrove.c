@@ -116,6 +116,9 @@ static void cGroveEnterMode(void)
     cg = calloc(1, sizeof(cGrove_t));
     setFrameRateUs(CG_FRAMERATE);
 
+    // Load Chowa WSGs
+    cg_initChowaWSGs(cg);
+
     // Load a font
     loadFont("ibm_vga8.font", &cg->menuFont, true);
 
@@ -154,7 +157,11 @@ static void cGroveEnterMode(void)
     cg->titleActive = true;
 
     //FIXME: test
-    cg->chowa[0].active = true;
+    for (int i = 0; i < CG_MAX_CHOWA; i++)
+    {
+        cg->chowa[i].active = true;
+        cg->chowa[i].type = CG_KING_DONUT;
+    }
 }
 
 static void cGroveExitMode(void)
@@ -191,6 +198,9 @@ static void cGroveExitMode(void)
 
     // Fonts
     freeFont(&cg->menuFont);
+
+    // WSGs
+    cg_deInitChowaWSGs(cg);
 
     // Main
     free(cg);

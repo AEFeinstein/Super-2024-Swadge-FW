@@ -47,6 +47,7 @@ typedef struct
 // Defines =============================
 #define CG_MAX_CHOWA  5 // Max number of Chowa allowed on a swadge
 #define CG_STAT_COUNT 6 // Number of stats
+#define CG_NUM_TYPES  7 // Total number of different types of Chowa
 
 // Enums ===============================
 typedef enum
@@ -88,16 +89,13 @@ typedef enum
 
     // Moving
     CG_ANIM_WALK_DOWN,
-    CG_ANIM_WALK_RIGHT,
+    CG_ANIM_WALK_SIDE,
     CG_ANIM_WALK_UP,
-    CG_ANIM_WALK_LEFT,
-    CG_ANIM_SWIM_LEFT,
-    CG_ANIM_SWIM_RIGHT,
+    CG_ANIM_SWIM,
     CG_ANIM_CLIMB,
 
     // Falling
-    CG_ANIM_FALL_RIGHT,
-    CG_ANIM_FALL_LEFT,
+    CG_ANIM_FALL_SIDE,
     CG_ANIM_FALL_UP,
     CG_ANIM_FALL_DOWN,
 
@@ -123,6 +121,12 @@ typedef enum
 
 typedef enum
 {
+    CG_ADULT,
+    CG_CHILD,
+} cgChowaAnimAge_t;
+
+typedef enum
+{
     CG_HEALTH,
     CG_STRENGTH,
     CG_AGILITY,
@@ -134,11 +138,12 @@ typedef enum
 typedef enum
 {
     CG_NORMAL,
-    CG_BIRD,
-    CG_DONUT,
-    CG_LUMBERJACK_1,
-    CG_LUMBERJACK_2,
-    CG_ZAPPY,
+    CG_CHO,
+    CG_KING_DONUT,
+    CG_RED_LUMBERJACK,
+    CG_GREEN_LUMBERJACK,
+    CG_KOSMO,
+    CG_LILB,
 } cgColorType_t;
 
 // Structs ==============================
@@ -265,8 +270,10 @@ typedef struct
     vec_t targetPos;                ///< Position to head to
     cgChowaStateGarden_t nextState; ///< Cued state after arriving at target
 
-    // Test
-    vec_t moveLine;
+    // Animations
+    int16_t angle;      ///< Angle that the Chowa is moving at
+    int8_t animFrame;   ///< Frame that the animation is on
+    int64_t frameTimer; ///< TImer until the next frame triggers
 } cgGroveChowa_t;
 
 typedef struct
@@ -478,8 +485,8 @@ typedef struct
     font_t menuFont; ///< Main font
 
     // WSGs
-    wsg_t* title; ///< Title screen sprites
-    wsg_t* chowaWSGs;
+    wsg_t* title;                      ///< Title screen sprites
+    wsg_t* chowaWSGs[CG_NUM_TYPES][2]; ///< Chowa sprites
 
     // Modes
     cgGrove_t grove; ///< Garden data

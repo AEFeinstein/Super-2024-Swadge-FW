@@ -80,6 +80,7 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             // Wander
             // TODO: Move to decision function
             cg_GroveGetRandMovePoint(cg, c);
+            c->frameTimer += esp_random() % SECOND;
             c->gState    = CHOWA_WALK;
             c->nextState = CHOWA_IDLE;
             break;
@@ -97,19 +98,15 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         {
             // Calculate the distance to target
             vec_t difference = {.x = c->targetPos.x - c->aabb.pos.x, .y = c->targetPos.y - c->aabb.pos.y};
-
-            float dist = sqrt(pow(difference.x, 2) + pow(difference.y, 2));
-            if (dist < 10.0f)
+            if (sqMagVec2d(difference) < 100.0f)
             {
                 c->gState = c->nextState;
             }
+            fastNormVec(&difference.x, &difference.y);
             int16_t angle = getAtan2(difference.y, difference.x);
-            float xFrac = 2 * getCos1024(angle)/1024.0f;
-            float yFrac = 2 * getSin1024(angle)/1024.0f;
-            vec_t moveVec = {.x = (int)xFrac, .y = (int)yFrac};
-            c->moveLine = moveVec;
-            c->aabb.pos.x += xFrac;
-            c->aabb.pos.y += yFrac;
+            c->angle      = angle;
+            c->aabb.pos.x += difference.x / 128;
+            c->aabb.pos.y += difference.y / 128;
             break;
         }
         case CHOWA_CHASE:
