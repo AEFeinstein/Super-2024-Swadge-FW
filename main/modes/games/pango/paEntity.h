@@ -195,5 +195,6 @@ int16_t pa_enemySetAggroStateTimer(paEntity_t* self);
 uint16_t pa_correctPlayerFacingDirection(int16_t btnState, uint16_t currentFacingDirection);
 void pa_enemyDecideDirection(paEntity_t* self, bool doAgression);
 void pa_updateBonusItem(paEntity_t* self);
+uint16_t pa_getBonusItemValue(int16_t elapsedTime);
 
 #endif

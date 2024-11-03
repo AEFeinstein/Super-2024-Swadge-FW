@@ -1199,9 +1199,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
         }
         case PA_ENTITY_BONUS_ITEM:
         {
-            pa_destroyEntity(other, false);
-            uint16_t pointsScored = 1000; //TODO: vary points depending on level
-            pa_scorePoints(self->gameData, pointsScored);
+            pa_scorePoints(self->gameData, other->scoreValue);
 
             soundPlaySfx(&self->soundManager->sndCoin, MIDI_SFX);
 
@@ -1210,8 +1208,10 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
                                         (self->y >> SUBPIXEL_RESOLUTION) - 4);
             if (createdEntity != NULL)
             {
-                createdEntity->scoreValue = pointsScored;
+                createdEntity->scoreValue = other->scoreValue;
             }
+
+            pa_destroyEntity(other, false);
             break;
         }
         default:
@@ -1694,4 +1694,21 @@ void pa_updateBonusItem(paEntity_t* self){
     despawnWhenOffscreen(self);
     pa_moveEntityWithTileCollisions(self);
     //pa_detectEntityCollisions(self);
+}
+
+uint16_t pa_getBonusItemValue(int16_t elapsedTime)
+{
+    switch (elapsedTime)
+    {
+        case 0 ... 19:
+            return 5000;
+        case 20 ... 29:
+            return 2000;
+        case 30 ... 39:
+            return 1000;
+        case 40 ... 49:
+            return 500;
+        default:
+            return 100;
+    }
 }
