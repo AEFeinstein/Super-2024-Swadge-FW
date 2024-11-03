@@ -113,16 +113,17 @@ typedef struct
     uint16_t stimulation; // once it reaches 600, it turns into a bug.
 } bb_eggData_t;
 
+
+typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
+
 typedef struct
 {
     uint8_t numStrings;
     char** strings;
     int8_t curString;
     char character[8];
+    bb_callbackFunction_t endDialogueCB;// executes when the character is done talking.
 } bb_dialogueData_t;
-
-
-
 
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
@@ -193,6 +194,7 @@ void bb_updateStuckHarpoon(bb_entity_t* self);
 void bb_updateEggLeaves(bb_entity_t* self);
 void bb_updateFarEggleaves(bb_entity_t* self);
 void bb_updateFarDestroy(bb_entity_t* self);
+void bb_updateFarMenu(bb_entity_t* self);
 void bb_updateMenuBug(bb_entity_t* self);
 void bb_updateMoveLeft(bb_entity_t* self);
 void bb_updateBug(bb_entity_t* self);
@@ -215,6 +217,8 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+
+void bb_afterGarbotnikIntro(bb_entity_t* self);
 
 bb_dialogueData_t* bb_createDialogueData(int numStrings);
 void bb_setCharacterLine(bb_dialogueData_t* dData, int index, const char* str);

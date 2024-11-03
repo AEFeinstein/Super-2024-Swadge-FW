@@ -123,6 +123,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* menuSprite = bb_loadSprite("bb_menu", 4, 1, &entityManager->sprites[BB_MENU]);
     menuSprite->originX     = 140;
+    menuSprite->originY     = 354;
 
     bb_sprite_t* deathDumpsterSprite = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER]);
     deathDumpsterSprite->originX     = 138;
@@ -726,7 +727,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             mData->cursor
                 = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 1,
-                                  (entity->pos.x >> DECIMAL_BITS) - 22, (entity->pos.y >> DECIMAL_BITS) + 135, false);
+                                  (entity->pos.x >> DECIMAL_BITS) - 22, 0, false);//y position doesn't matter here. It will be handled in the update loop.
 
             // This will make it draw pointed right
             ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};
@@ -739,6 +740,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 120;
 
             entity->updateFunction = &bb_updateMenu;
+            entity->updateFarFunction = &bb_updateFarMenu;
             entity->drawFunction   = &bb_drawMenu;
             break;
         }

@@ -650,6 +650,14 @@ void bb_updateFarDestroy(bb_entity_t* self)
     bb_destroyEntity(self, false);
 }
 
+void bb_updateFarMenu(bb_entity_t* self)
+{
+    if((self->pos.y >> DECIMAL_BITS) < self->gameData->camera.camera.pos.y)
+    {
+        bb_destroyEntity(self, false);
+    }
+}
+
 void bb_updateMenuBug(bb_entity_t* self)
 {
     bb_menuBugData_t* mbData = (bb_menuBugData_t*)self->data;
@@ -703,7 +711,7 @@ void bb_updateMenu(bb_entity_t* self)
             // create the death dumpster
             bb_goToData* tData = heap_caps_calloc(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM);
             tData->tracking = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
-                                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) + 700, true);
+                                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) + 586, true);
             tData->midPointSqDist = sqMagVec2d(
                 divVec2d(subVec2d(tData->tracking->pos, self->gameData->entityManager.viewEntity->pos), 2));
 
@@ -711,15 +719,15 @@ void bb_updateMenu(bb_entity_t* self)
             self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
 
             for(int rocketIdx = 0; rocketIdx < 3; rocketIdx++){
-                bb_entity_t* rocket = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 3,
-                    (self->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx, (self->pos.y >> DECIMAL_BITS) + 675, true);
+                self->gameData->entityManager.boosterEntities[rocketIdx] = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 3,
+                    (self->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx, (self->pos.y >> DECIMAL_BITS) + 561, true);
             
-                rocket->updateFunction = NULL;
+                self->gameData->entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 
-                bb_rocketData_t* rData = (bb_rocketData_t*)rocket->data;
+                bb_rocketData_t* rData = (bb_rocketData_t*)self->gameData->entityManager.boosterEntities[rocketIdx]->data;
 
                 rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
-                    rocket->pos.x >> DECIMAL_BITS, rocket->pos.y >> DECIMAL_BITS, true);
+                    self->gameData->entityManager.boosterEntities[rocketIdx]->pos.x >> DECIMAL_BITS, self->gameData->entityManager.boosterEntities[rocketIdx]->pos.y >> DECIMAL_BITS, true);
 
                 rData->flame->updateFunction = &bb_updateFlame;
             }
@@ -735,13 +743,13 @@ void bb_updateMenu(bb_entity_t* self)
     }
 
 
-    mData->cursor->pos.y = self->pos.y + (145<<DECIMAL_BITS) + mData->selectionIdx * (22<<DECIMAL_BITS);
+    mData->cursor->pos.y = self->pos.y - (209<<DECIMAL_BITS) + mData->selectionIdx * (22<<DECIMAL_BITS);
 
     if (self->gameData->menuBug == NULL || self->gameData->menuBug->active == false)
     {
         self->gameData->menuBug
             = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
-                              (self->pos.x >> DECIMAL_BITS) + 135, (self->pos.y >> DECIMAL_BITS) + 182, true);
+                              (self->pos.x >> DECIMAL_BITS) + 135, (self->pos.y >> DECIMAL_BITS) - 172, true);
         self->gameData->menuBug->drawFunction      = &bb_drawMenuBug;
         self->gameData->menuBug->updateFunction    = &bb_updateMenuBug;
         self->gameData->menuBug->updateFarFunction = &bb_updateFarDestroy;
@@ -762,10 +770,11 @@ void bb_updateMenu(bb_entity_t* self)
     {
         bb_entity_t* treadmillDust
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
-                              (self->pos.x >> DECIMAL_BITS) + 140, (self->pos.y >> DECIMAL_BITS) + 190 + bb_randomInt(-10, 10), false);
+                              (self->pos.x >> DECIMAL_BITS) + 140, (self->pos.y >> DECIMAL_BITS) - 164 + bb_randomInt(-10, 10), false);
         treadmillDust->updateFunction = &bb_updateMoveLeft;
     }
 }
+
 
 void bb_updatePOI(bb_entity_t* self)
 {
@@ -831,6 +840,8 @@ void bb_updatePOI(bb_entity_t* self)
 
             dData->curString = -1;
 
+            dData->endDialogueCB = &bb_afterGarbotnikIntro;
+
             bb_setData(ovo, dData);
 
             return;
@@ -873,7 +884,7 @@ void bb_updateCharacterTalk(bb_entity_t* self)
         self->gameData->entityManager.sprites[self->spriteIndex].originY -= 10;
         if(self->gameData->entityManager.sprites[self->spriteIndex].originY <= -240)
         {
-            //self->gameData->entityManager.viewEntity = 
+            dData->endDialogueCB(self);
             bb_destroyEntity(self, false);
             return;
         }
@@ -972,6 +983,7 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     drawLineFast(xOff, yOff - 1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 - 1, c344);
     drawLineFast(xOff, yOff, xOff - floatVel.x * 20, yOff - floatVel.y * 20, c223);
     // drawLineFast(xOff, yOff + 1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 + 1, c000);
+
 
     drawWsg(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
             xOff - entityManager->sprites[self->spriteIndex].originX,
@@ -1157,6 +1169,31 @@ void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     if (hitInfo->normal.y == 1)
     {
         gData->gettingCrushed = true;
+    }
+}
+
+void bb_afterGarbotnikIntro(bb_entity_t* self)
+{
+    for(int i = 0; i < 3; i++)
+    {
+        if(self->gameData->entityManager.boosterEntities[i] != NULL)
+        {
+            bb_destroyEntity(self->gameData->entityManager.viewEntity, false);
+
+            self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[i];
+            vec_t newPosition = (vec_t){(self->gameData->entityManager.activeBooster->pos.x>>DECIMAL_BITS) - 140, (self->gameData->entityManager.activeBooster->pos.x>>DECIMAL_BITS) - 120};
+            self->gameData->camera.velocity = subVec2d(newPosition, self->gameData->camera.camera.pos);
+            self->gameData->camera.camera.pos = newPosition;
+
+            bb_rocketData_t* rData = (bb_rocketData_t*) self->gameData->entityManager.activeBooster->data;
+            bb_destroyEntity(rData->flame, false);
+            rData->flame = NULL;
+
+            self->gameData->entityManager.activeBooster->updateFunction = &bb_updateRocketLanding;
+
+            self->gameData->entityManager.viewEntity = self->gameData->entityManager.activeBooster;
+            return;
+        }
     }
 }
 

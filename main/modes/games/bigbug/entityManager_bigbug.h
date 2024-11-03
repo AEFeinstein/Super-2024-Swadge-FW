@@ -33,6 +33,8 @@ typedef struct
 
     bb_entity_t* viewEntity;
     bb_entity_t* playerEntity;
+    bb_entity_t* boosterEntities[3]; // boosters for three lives
+    bb_entity_t* activeBooster;      // the currently active booster
 } bb_entityManager_t;
 
 //==============================================================================

@@ -21,7 +21,7 @@ void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
         {
             if (bb_randomInt(0, 1) == 0) //%50 chance
             {
-                printf("egg at i:%d j:%d\n", x, y);
+                // printf("egg at i:%d j:%d\n", x, y);
                 tilemap->fgTiles[x][y].embed = EGG_EMBED;
 
                 // bb_entity_t* eggLeaves = bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1,

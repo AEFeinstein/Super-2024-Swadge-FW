@@ -145,7 +145,7 @@ static void bb_EnterMode(void)
 
 
     bb_entity_t* foreground    = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -5500, true);
+                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -5146, true);
 
     foreground->updateFunction = NULL;
     foreground->drawFunction   = &bb_drawMenuForeground;
@@ -156,7 +156,7 @@ static void bb_EnterMode(void)
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
-                          (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS) + 120, true);
+                          (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS) - 234, true);
 
     bigbug->gameData.camera.camera.pos.x = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
     bigbug->gameData.camera.camera.pos.y = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
@@ -171,7 +171,8 @@ static void bb_EnterMode(void)
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
 
-    soundPlayBgmCb(&bigbug->bgm, MIDI_BGM, bb_BgmCb);
+    //play the music!
+    //soundPlayBgmCb(&bigbug->bgm, MIDI_BGM, bb_BgmCb);
 
     bb_Reset();
 }
