@@ -3,7 +3,6 @@
 ## General
 - Add BGM
 - Update menu colors
-- Figure out why the emulator doesn't work with the CALLOC SPI function
 - Load data from NVM
 - View recently interacted with players
 
@@ -19,16 +18,16 @@
 - Save and load contest results from NVM
 - Add NPCs
 - Add online functionality
-- Get icons for punching, kicking,m dodging, etc
+- Get icons for punching, kicking, dodging, etc
 
 ## Grove
-- Create/Add SFX
 - AI
-  - Using items
+  - Go to an item
+  - Using item
 - Add menu for buying items
-- Add money system (Chowa grab nearby money that spawns)
 - Stats can be increased
 - Save and load from NVS
+- Create/Add SFX
 
 ## Race
 - Build mode

@@ -62,6 +62,21 @@ static const char* itemSprites[] = {
     "cg_crayons.wsg", "cg_knife.wsg", "cg_toy_sword.wsg", "cake.wsg",     "souffle.wsg",  "DonutRing.wsg",
 };
 
+static const char shopMenuTitle[] = "Ring Shop";
+
+static const char* shopMenuItems[] = {
+    "Agility Stat Book",
+    "Charisma Stat Book",
+    "Strength Stat Book",
+    "Stamina Stat Book",
+    "Speed Stat Book",
+    "Souffle",
+    "Ball",
+    "Crayons",
+    "Toy Sword",
+    "Back",
+};
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -97,6 +112,15 @@ static void cg_moveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange);
 static void cg_setupBorders(cGrove_t* cg);
 
 /**
+ * @brief Menu callback
+ *
+ * @param label Selection labels
+ * @param selected If selected
+ * @param settingVal Value of a changed setting
+ */
+static void shopMenuCb(const char* label, bool selected, uint32_t settingVal);
+
+/**
  * @brief Callback to restart BGM
  *
  */
@@ -107,6 +131,7 @@ static void cg_bgmCB(void);
 //==============================================================================
 
 bool isBGMPlaying;
+cGrove_t* cgr;
 
 //==============================================================================
 // Functions
@@ -119,6 +144,9 @@ bool isBGMPlaying;
  */
 void cg_initGrove(cGrove_t* cg)
 {
+    // set cgr
+    cgr = cg;
+
     // Load assets
     // WSGs
     loadWsg("garden_background.wsg", &cg->grove.groveBG, true);
@@ -219,6 +247,16 @@ void cg_initGrove(cGrove_t* cg)
     cg->grove.ring.aabb.height = cg->grove.itemsWSGs[11].h;
     cg->grove.ring.aabb.width  = cg->grove.itemsWSGs[11].w;
 
+    // Initialize shop menu
+    cg->grove.shop = initMenu(shopMenuTitle, shopMenuCb);
+    for (int idx = 0; idx < ARRAY_SIZE(shopMenuItems); idx++)
+    {
+        addSingleItemToMenu(cg->grove.shop, shopMenuItems[idx]);
+    }
+    // TODO: Recolor
+    cg->grove.renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    cg->grove.shopOpen = true;
+
     // TODO: Load inventory from NVS
     cg->grove.inv.money = 0;
 }
@@ -230,6 +268,9 @@ void cg_initGrove(cGrove_t* cg)
  */
 void cg_deInitGrove(cGrove_t* cg)
 {
+    deinitMenuManiaRenderer(cg->grove.renderer);
+    deinitMenu(cg->grove.shop);
+
     // Unload assets
     // Audio
     unloadMidiFile(&cg->grove.bgm);
@@ -280,7 +321,18 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
         soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
         isBGMPlaying = true;
     }
-
+    if (cg->grove.shopOpen)
+    {
+        buttonEvt_t evt = {0};
+        while (checkButtonQueueWrapper(&evt))
+        {
+            cg->grove.shop = menuButton(cg->grove.shop, evt);
+        }
+        drawMenuMania(cg->grove.shop, cg->grove.renderer, elapsedUS);
+        // TODO: Add ring count to menu
+        // TODO: Draw current inv count over selected item
+        return;
+    }
     // Input
     cg_handleInputGarden(cg);
 
@@ -423,6 +475,10 @@ static void cg_handleInputGarden(cGrove_t* cg)
                     }
                 }
             }
+            if (evt.button & PB_START && evt.down)
+            {
+                cg->grove.shopOpen = true;
+            }
         }
     }
     else
@@ -482,6 +538,10 @@ static void cg_handleInputGarden(cGrove_t* cg)
                         cg->grove.chowa[idx].timeLeft = 1000000;
                     }
                 }
+            }
+            if (evt.button & PB_START && evt.down)
+            {
+                cg->grove.shopOpen = true;
             }
         }
     }
@@ -549,6 +609,59 @@ static void cg_setupBorders(cGrove_t* cg)
     cg->grove.boundaries[CG_WATER].pos.y  = 350;
     cg->grove.boundaries[CG_WATER].width  = 280;
     cg->grove.boundaries[CG_WATER].height = 108;
+}
+
+static void shopMenuCb(const char* label, bool selected, uint32_t settingVal)
+{
+    // FIXME: implement prices
+    if (selected)
+    {
+        if (label == shopMenuItems[0])
+        {
+            // Agi book
+        }
+        else if (label == shopMenuItems[1])
+        {
+            // Cha book
+        }
+        else if (label == shopMenuItems[2])
+        {
+            // Spd book
+        }
+        else if (label == shopMenuItems[3])
+        {
+            // Sta book
+        }
+        else if (label == shopMenuItems[4])
+        {
+            // Str book
+        }
+        else if (label == shopMenuItems[5])
+        {
+            // Souffle
+        }
+        else if (label == shopMenuItems[6])
+        {
+            // Ball
+        }
+        else if (label == shopMenuItems[7])
+        {
+            // Crayons
+        }
+        else if (label == shopMenuItems[8])
+        {
+            // Toy Sword
+        }
+        else if (label == shopMenuItems[9])
+        {
+            // Back
+            cgr->grove.shopOpen = false;
+        }
+        else
+        {
+            // Unset item
+        }
+    }
 }
 
 static void cg_bgmCB()

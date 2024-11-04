@@ -57,10 +57,8 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c);
  */
 void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
 {
-    // TODO:
     // - Go to place/item
     // - Use item (Must be holding item)
-    // - Chase cursor
 
     // Abort if not active
     if (!c->chowa->active)

@@ -320,6 +320,11 @@ typedef struct
     cgInventory_t inv;                                             ///< Inventory struct
     cgGroveMoney_t ring;                                           ///< Rings available to collect
 
+    // Menu
+    menu_t* shop;                  ///< Shop menu object
+    menuManiaRenderer_t* renderer; ///< Menu renderer
+    bool shopOpen;                 ///< If Shop is open and being drawn or not
+
     // Player resources
     rectangle_t camera;        ///< In-garden camera viewport
     rectangle_t cursor;        ///< Cursor position and bounding box
