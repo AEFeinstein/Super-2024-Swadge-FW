@@ -27,8 +27,8 @@
   - Using items
 - Add menu for buying items
 - Add money system (Chowa grab nearby money that spawns)
-- Add items
 - Stats can be increased
+- Save and load from NVS
 
 ## Race
 - Build mode

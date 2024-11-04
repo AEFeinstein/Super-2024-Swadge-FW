@@ -57,6 +57,11 @@ static const char* speechBubbleSprites[] = {
     "cg_text3.wsg",
 };
 
+static const char* itemSprites[] = {
+    "agi_book.wsg",   "cha_book.wsg", "spd_book.wsg",     "sta_book.wsg", "str_book.wsg", "cg_ball.wsg",
+    "cg_crayons.wsg", "cg_knife.wsg", "cg_toy_sword.wsg", "cake.wsg",     "souffle.wsg",  "DonutRing.wsg",
+};
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -93,7 +98,7 @@ static void cg_setupBorders(cGrove_t* cg);
 
 /**
  * @brief Callback to restart BGM
- * 
+ *
  */
 static void cg_bgmCB(void);
 
@@ -144,6 +149,11 @@ void cg_initGrove(cGrove_t* cg)
     {
         loadWsg(speechBubbleSprites[idx], &cg->grove.speechBubbles[idx], true);
     }
+    cg->grove.itemsWSGs = calloc(ARRAY_SIZE(itemSprites), sizeof(wsg_t));
+    for (int32_t idx = 0; idx < ARRAY_SIZE(itemSprites); idx++)
+    {
+        loadWsg(itemSprites[idx], &cg->grove.itemsWSGs[idx], true);
+    }
     // Audio
     loadMidiFile("Chowa_Grove_Meadow.mid", &cg->grove.bgm, true);
 
@@ -189,7 +199,28 @@ void cg_initGrove(cGrove_t* cg)
     }
 
     // Initialize items
-    // TODO:
+    for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
+    {
+        // FIXME: Load from NVS
+        cg->grove.items[idx].active = true;
+        cg->grove.items[idx].spr    = cg->grove.itemsWSGs[idx];
+        cg->grove.items[idx].aabb.pos.x
+            = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[idx].w)));
+        cg->grove.items[idx].aabb.pos.y
+            = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[idx].h)));
+        cg->grove.items[idx].aabb.height = cg->grove.itemsWSGs[idx].h;
+        cg->grove.items[idx].aabb.width  = cg->grove.itemsWSGs[idx].w;
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer) - 1, "Item_%" PRId32, idx);
+        strcpy(cg->grove.items[idx].name, buffer);
+    }
+
+    // Init Ring
+    cg->grove.ring.aabb.height = cg->grove.itemsWSGs[11].h;
+    cg->grove.ring.aabb.width  = cg->grove.itemsWSGs[11].w;
+
+    // TODO: Load inventory from NVS
+    cg->grove.inv.money = 0;
 }
 
 /**
@@ -203,6 +234,11 @@ void cg_deInitGrove(cGrove_t* cg)
     // Audio
     unloadMidiFile(&cg->grove.bgm);
     // WSGs
+    for (uint8_t i = 0; i < ARRAY_SIZE(itemSprites); i++)
+    {
+        freeWsg(&cg->grove.itemsWSGs[i]);
+    }
+    free(cg->grove.itemsWSGs);
     for (uint8_t i = 0; i < ARRAY_SIZE(speechBubbleSprites); i++)
     {
         freeWsg(&cg->grove.speechBubbles[i]);
@@ -241,7 +277,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
     // Play BGM if it's not playing
     if (!isBGMPlaying)
     {
-        soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
+        // soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
         isBGMPlaying = true;
     }
 
@@ -256,6 +292,28 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
     if (cg->grove.holdingChowa)
     {
         cg->grove.heldChowa->aabb.pos = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos);
+    }
+
+    // Resurface items dropped in the water
+    vec_t temp;
+    for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
+    {
+        if (&cg->grove.items[idx] != cg->grove.heldItem
+            && rectRectIntersection(cg->grove.items[idx].aabb, cg->grove.boundaries[CG_WATER], &temp))
+        {
+            cg->grove.items[idx].aabb.pos.x
+                = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[idx].w)));
+            cg->grove.items[idx].aabb.pos.y
+                = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[idx].h)));
+        }
+    }
+
+    // Spawn Rings
+    if (esp_random() % 512 == 0)
+    {
+        cg->grove.ring.aabb.pos.x = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[11].w)));
+        cg->grove.ring.aabb.pos.y = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[11].h)));
+        cg->grove.ring.active     = true;
     }
 
     // Chowa AI
@@ -337,6 +395,7 @@ static void cg_handleInputGarden(cGrove_t* cg)
                 if (cg->grove.holdingItem)
                 {
                     cg->grove.holdingItem = false;
+                    cg->grove.heldItem    = NULL;
                 }
                 else if (cg->grove.holdingChowa)
                 {
@@ -359,7 +418,7 @@ static void cg_handleInputGarden(cGrove_t* cg)
                     // Chowa
                     if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
                     {
-                        cg->grove.chowa[idx].gState = CHOWA_PET;
+                        cg->grove.chowa[idx].gState   = CHOWA_PET;
                         cg->grove.chowa[idx].timeLeft = 1000000;
                     }
                 }
@@ -368,6 +427,10 @@ static void cg_handleInputGarden(cGrove_t* cg)
     }
     else
     {
+        vec_t temp;
+        rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
+                            .height = cg->grove.cursor.height,
+                            .width  = cg->grove.cursor.width};
         while (checkButtonQueueWrapper(&evt))
         {
             if (evt.button & PB_RIGHT)
@@ -391,11 +454,17 @@ static void cg_handleInputGarden(cGrove_t* cg)
                 if (cg->grove.holdingItem)
                 {
                     cg->grove.holdingItem = false;
+                    cg->grove.heldItem    = NULL;
                 }
                 else if (cg->grove.holdingChowa)
                 {
                     cg->grove.holdingChowa      = false;
                     cg->grove.heldChowa->gState = CHOWA_IDLE;
+                }
+                else if (cg->grove.ring.active && rectRectIntersection(rect, cg->grove.ring.aabb, &temp))
+                {
+                    cg->grove.ring.active = false;
+                    cg->grove.inv.money += 1;
                 }
                 else
                 {
@@ -406,14 +475,10 @@ static void cg_handleInputGarden(cGrove_t* cg)
             {
                 for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
                 {
-                    vec_t temp;
-                    rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
-                                        .height = cg->grove.cursor.height,
-                                        .width  = cg->grove.cursor.width};
                     // Chowa
                     if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
                     {
-                        cg->grove.chowa[idx].gState = CHOWA_PET;
+                        cg->grove.chowa[idx].gState   = CHOWA_PET;
                         cg->grove.chowa[idx].timeLeft = 1000000;
                     }
                 }

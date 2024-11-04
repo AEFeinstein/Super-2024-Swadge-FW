@@ -43,6 +43,13 @@ static void cg_drawHand(cGrove_t* cg);
 static void cg_drawItem(cGrove_t* cg, int8_t idx);
 
 /**
+ * @brief Draws the ring
+ *
+ * @param cg Game Data
+ */
+static void cg_drawRing(cGrove_t* cg);
+
+/**
  * @brief Draws a Chowa
  *
  * @param cg Game Data
@@ -56,6 +63,13 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS);
  * @param cg Game Data
  */
 static void cg_groveDebug(cGrove_t* cg);
+
+/**
+ * @brief Draws the UI elements
+ *
+ * @param cg Game Data
+ */
+static void cg_drawUI(cGrove_t* cg);
 
 //==============================================================================
 // Functions
@@ -82,11 +96,14 @@ void cg_groveDraw(cGrove_t* cg, int64_t elapsedUs)
         }
     }
 
+    cg_drawRing(cg);
+
     // Draw Chowa
     cg_drawChowaGrove(cg, elapsedUs);
 
     // Draw UI
     cg_drawHand(cg);
+    cg_drawUI(cg);
 
     // Debug draw
     cg_groveDebug(cg);
@@ -104,25 +121,34 @@ static void cg_drawHand(cGrove_t* cg)
         drawWsgSimple(&cg->grove.cursors[2], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
         return;
     }
+    vec_t temp;
+    rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
+                        .height = cg->grove.cursor.height,
+                        .width  = cg->grove.cursor.width};
     // If hovering over
     for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
     {
-        vec_t temp;
-        rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
-                            .height = cg->grove.cursor.height,
-                            .width  = cg->grove.cursor.width};
         // Chowa
         if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
         {
             drawWsgSimple(&cg->grove.cursors[1], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
             return;
         }
+    }
+    for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
+    {
         // Items
-        if (rectRectIntersection(cg->grove.cursor, cg->grove.items[idx].aabb, &temp))
+        if (rectRectIntersection(rect, cg->grove.items[idx].aabb, &temp))
         {
             drawWsgSimple(&cg->grove.cursors[1], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
             return;
         }
+    }
+    // Ring
+    if (rectRectIntersection(rect, cg->grove.ring.aabb, &temp))
+    {
+        drawWsgSimple(&cg->grove.cursors[1], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
+        return;
     }
     // Otherwise
     drawWsgSimple(&cg->grove.cursors[0], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
@@ -134,6 +160,16 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx)
     int16_t yOffset = cg->grove.items[idx].aabb.pos.y - cg->grove.camera.pos.y;
     drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);
     drawText(&cg->menuFont, c555, cg->grove.items[idx].name, xOffset, yOffset - 16);
+}
+
+static void cg_drawRing(cGrove_t* cg)
+{
+    int16_t xOffset = cg->grove.ring.aabb.pos.x - cg->grove.camera.pos.x;
+    int16_t yOffset = cg->grove.ring.aabb.pos.y - cg->grove.camera.pos.y;
+    if (cg->grove.ring.active)
+    {
+        drawWsgSimple(&cg->grove.itemsWSGs[11], xOffset, yOffset);
+    }
 }
 
 static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
@@ -424,11 +460,20 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
     }
 }
 
+static void cg_drawUI(cGrove_t* cg)
+{
+    // Draw image
+    drawWsgSimple(&cg->grove.itemsWSGs[11], 15, 15);
+    // Draw amount of rings
+    char buffer[24];
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, cg->grove.inv.money);
+    drawText(&cg->menuFont, c555, buffer, 45, 23);
+}
+
 static void cg_groveDebug(cGrove_t* cg)
 {
     int16_t xOffset = -cg->grove.camera.pos.x;
     int16_t yOffset = -cg->grove.camera.pos.y;
-    char buffer[32];
     // draw AABBs for grove
     for (int32_t i = 0; i < 3; i++)
     {
@@ -445,7 +490,6 @@ static void cg_groveDebug(cGrove_t* cg)
                      cg->grove.chowa[i].aabb.pos.x + cg->grove.chowa[i].aabb.width + xOffset,
                      cg->grove.chowa[i].aabb.pos.y + cg->grove.chowa[i].aabb.height + yOffset, c500);
             drawCircle(cg->grove.chowa[i].targetPos.x + xOffset, cg->grove.chowa[i].targetPos.y + yOffset, 12, c500);
-            drawText(&cg->menuFont, c550, buffer, 24, 24);
             drawLineFast(cg->grove.chowa[i].aabb.pos.x + xOffset, cg->grove.chowa[i].aabb.pos.y + yOffset,
                          cg->grove.cursor.pos.x, cg->grove.cursor.pos.y, c505);
         }

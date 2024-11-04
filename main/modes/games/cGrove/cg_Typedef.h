@@ -225,7 +225,7 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_GROVE_MAX_ITEMS       10 ///< Max number of items. Cannot assume unique
+#define CG_GROVE_MAX_ITEMS       11 ///< Max number of items. Cannot assume unique
 #define CG_GROVE_MAX_GUEST_CHOWA 5  ///< Maximum number of Chowa allowed to be in the grove at once
 
 #define CG_GROVE_SCREEN_BOUNDARY 32 ///< How close the cursor can get to the edge of the screen
@@ -256,6 +256,21 @@ typedef enum
 } cgChowaStateGarden_t;
 
 // Structs ==============================
+typedef struct
+{
+    int16_t money;                          ///< Money
+    cgItem_t items[CG_GROVE_MAX_ITEMS];     ///< Item IDs
+    uint8_t quantities[CG_GROVE_MAX_ITEMS]; ///< Item qtys
+} cgInventory_t;
+
+typedef struct
+{
+    rectangle_t aabb;     ///< Position and bounding box
+    int64_t despawnTimer; ///< Time left until money despawns
+    int8_t animFrame;     ///< Sparkle animation frames
+    bool active; ///< If the ring is active
+} cgGroveMoney_t;
+
 typedef struct
 {
     // Basic data
@@ -293,15 +308,17 @@ typedef struct
     wsg_t* questionMarks;  ///< Question mark sprites
     wsg_t* notes;          ///< Musical notes
     wsg_t* speechBubbles;  ///< Speech Bubbles for Chowa
+    wsg_t* itemsWSGs;      ///< Item sprites
     // Audio
     midiFile_t bgm; ///< Main BGM for the Grove
-
 
     // Field data
     cgItem_t items[CG_GROVE_MAX_ITEMS];                            ///< Items present in the Grove
     rectangle_t boundaries[3];                                     ///< Boundary boxes
     cgGroveChowa_t chowa[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA]; ///< List of all chowa in the garden
     bool bgmPlaying;                                               ///< If the BGM is active
+    cgInventory_t inv;                                             ///< Inventory struct
+    cgGroveMoney_t ring;                                           ///< Rings available to collect
 
     // Player resources
     rectangle_t camera;        ///< In-garden camera viewport
