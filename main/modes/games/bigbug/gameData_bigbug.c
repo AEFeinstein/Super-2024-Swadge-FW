@@ -42,6 +42,13 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
     memset(&gameData->unsupported, 0, sizeof(list_t));
 }
 
+void bb_freeGameData(bb_gameData_t* gameData)
+{
+    unloadMidiFile(&gameData->bgm);
+    unloadMidiFile(&gameData->hurryUp);
+    freeFont(&gameData->font);
+}
+
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData)
 {
     gameData->gameState = 0;

@@ -31,7 +31,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
                                 bb_soundManager_t* soundManager)
 {
     bb_loadSprites(entityManager);
-    entityManager->entities = heap_caps_calloc(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
+    entityManager->entities = HEAP_CAPS_CALLOC_DBG(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -41,13 +41,14 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
     entityManager->activeEntities = 0;
 
     // Use calloc to ensure members are all 0 or NULL
-    entityManager->cachedEntities = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    entityManager->cachedEntities = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
 }
 
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite)
 {
+    sprite->brightnessLevels = brightnessLevels;
     sprite->numFrames = num_frames;
-    sprite->frames    = heap_caps_calloc(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    sprite->frames    = HEAP_CAPS_CALLOC_DBG(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
 
     for (uint8_t brightness = 0; brightness < brightnessLevels; brightness++)
     {
@@ -174,7 +175,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                 if (sqMagVec2d(subVec2d(curEntity->pos, shiftedCameraPos)) > curEntity->cSquared + 8704000)
                 { // if it is far
                     // This entity gets cached
-                    bb_entity_t* cachedEntity = heap_caps_malloc(sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
+                    bb_entity_t* cachedEntity = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
                     // It's like a memcopy
                     *cachedEntity = *curEntity;
                     // push to the tail
@@ -321,21 +322,10 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePla
     }
 
     // load all cached enemies and destroy them one by one.
-    node_t* currentNode = entityManager->cachedEntities->first;
-    while (currentNode != NULL)
+    bb_entity_t* curEntity;
+    while(NULL != (curEntity = pop(entityManager->cachedEntities)))
     {
-        bb_entity_t* curEntity = (bb_entity_t*)currentNode->val;
-        node_t* next           = currentNode->next;
-        bb_entity_t* foundSpot = bb_findInactiveEntity(entityManager);
-        if (foundSpot != NULL)
-        {
-            // like a memcopy
-            *foundSpot = *curEntity;
-            entityManager->activeEntities++;
-            removeEntry(entityManager->cachedEntities, currentNode);
-            bb_destroyEntity(foundSpot, false);
-        }
-        currentNode = next;
+        bb_destroyEntity(curEntity, false);
     }
 }
 
@@ -547,7 +537,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     {
         case GARBOTNIK_FLYING:
         {
-            bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
+            bb_garbotnikData_t* gData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
             gData->numHarpoons        = 250;
             gData->fuel = 1000 * 60 * 1; // 1 thousand milliseconds in a second. 60 seconds in a minute. 1 minutes.
             bb_setData(entity, gData);
@@ -564,15 +554,15 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case ROCKET_ANIM:
         {
-            bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
+            bb_rocketData_t* rData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
             rData->flame           = NULL;
             rData->yVel            = 0;
             bb_setData(entity, rData);
 
-            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            entity->collisions = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             push(others, (void*)GARBOTNIK_FLYING);
-            bb_collision_t* collision = heap_caps_malloc(sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            bb_collision_t* collision = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionRocket};
             push(entity->collisions, (void*)collision);
 
@@ -584,11 +574,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case HARPOON:
         {
-            bb_projectileData_t* pData = heap_caps_calloc(1, sizeof(bb_projectileData_t), MALLOC_CAP_SPIRAM);
+            bb_projectileData_t* pData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_projectileData_t), MALLOC_CAP_SPIRAM);
             bb_setData(entity, pData);
 
-            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            entity->collisions = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
 
             // Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it
             // instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any
@@ -600,7 +590,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(others, (void*)BUGGY);
             push(others, (void*)BUTT);
 
-            bb_collision_t* collision = heap_caps_malloc(sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            bb_collision_t* collision = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionHarpoon};
             push(entity->collisions, (void*)collision);
 
@@ -610,7 +600,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case EGG_LEAVES:
         {
-            bb_eggLeavesData_t* elData = heap_caps_calloc(1, sizeof(bb_eggLeavesData_t), MALLOC_CAP_SPIRAM);
+            bb_eggLeavesData_t* elData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_eggLeavesData_t), MALLOC_CAP_SPIRAM);
             bb_setData(entity, elData);
 
             entity->updateFunction    = &bb_updateEggLeaves;
@@ -620,7 +610,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case EGG:
         {
-            bb_eggData_t* eData = heap_caps_calloc(1, sizeof(bb_eggData_t), MALLOC_CAP_SPIRAM);
+            bb_eggData_t* eData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_eggData_t), MALLOC_CAP_SPIRAM);
             entity->data        = eData;
 
             entity->drawFunction = &bb_drawEgg;
@@ -628,7 +618,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BU:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_bugData_t* bData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bb_setData(entity, bData);
 
@@ -645,7 +635,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUG:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_bugData_t* bData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bb_setData(entity, bData);
 
@@ -662,7 +652,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUGG:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_bugData_t* bData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bb_setData(entity, bData);
 
@@ -679,7 +669,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUGGO:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_bugData_t* bData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bb_setData(entity, bData);
 
@@ -696,7 +686,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUGGY:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_bugData_t* bData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bb_setData(entity, bData);
 
@@ -713,7 +703,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUTT:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_bugData_t* bData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bb_setData(entity, bData);
 
@@ -730,7 +720,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_MENU:
         {
-            bb_menuData_t* mData = heap_caps_calloc(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
+            bb_menuData_t* mData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
 
             mData->cursor
                 = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 1,
@@ -759,7 +749,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case NO_SPRITE_POI:
         {
-            bb_goToData* tData = heap_caps_calloc(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM);
+            bb_goToData* tData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM);
             entity->data = tData;
             //entity->updateFunction = &bb_updatePOI;
             entity->drawFunction   = &bb_drawNothing;
@@ -794,20 +784,27 @@ void bb_freeEntityManager(bb_entityManager_t* self)
 {
     for (uint8_t i = 0; i < NUM_SPRITES; i++)
     {
-        for (uint8_t f = 0; f < self->sprites[i].numFrames; f++)
+        bb_sprite_t* sprite = &self->sprites[i];
+        for (uint8_t brightness = 0; brightness < sprite->brightnessLevels; brightness++)
         {
-            freeWsg(&self->sprites[i].frames[f]);
+            for (uint8_t f = 0; f < sprite->numFrames; f++)
+            {
+                freeWsg(&sprite->frames[brightness * sprite->numFrames + f]);
+            }
         }
+        FREE_DBG(sprite->frames);
     }
     // free and clear
-    free(self->entities);
+    FREE_DBG(self->entities);
 
     while (self->cachedEntities->first != NULL)
     {
         bb_entity_t* shiftedVal = (bb_entity_t*)shift(self->cachedEntities);
         if (shiftedVal->data != NULL)
         {
-            free(shiftedVal->data);
+            FREE_DBG(shiftedVal->data);
         }
     }
+
+    FREE_DBG(self->cachedEntities);
 }

@@ -129,6 +129,31 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     }
 }
 
+void bb_freeWsgs(bb_tilemap_t* tilemap)
+{
+    freeWsg(&tilemap->headlampWsg); // 122 x 107 pixels
+
+    freeWsg(&tilemap->surface1Wsg);
+    freeWsg(&tilemap->surface2Wsg);
+    freeWsg(&tilemap->bgWsg);
+
+    // Midground
+    for (int16_t i = 0; i < 120; i++)
+    {
+        freeWsg(&tilemap->mid_s_Wsg[i]);
+        freeWsg(&tilemap->mid_m_Wsg[i]);
+        freeWsg(&tilemap->mid_h_Wsg[i]);
+    }
+
+    // Foreground
+    for (int16_t i = 0; i < 240; i++)
+    {
+        freeWsg(&tilemap->fore_s_Wsg[i]);
+        freeWsg(&tilemap->fore_m_Wsg[i]);
+        freeWsg(&tilemap->fore_h_Wsg[i]);
+    }
+}
+
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation,
                     bb_entityManager_t* entityManager)
 {

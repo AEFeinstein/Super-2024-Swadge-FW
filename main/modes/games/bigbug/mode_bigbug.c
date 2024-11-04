@@ -105,7 +105,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
                            .fnDacCb                  = NULL};
 
-/// All state information for bigbug mode. This whole struct is calloc()'d and free()'d so that bigbug is only
+/// All state information for bigbug mode. This whole struct is calloc()'d and FREE_DBG()'d so that bigbug is only
 /// using memory while it is being played
 bb_t* bigbug = NULL;
 
@@ -118,7 +118,7 @@ static void bb_EnterMode(void)
     // Force draw a loading screen
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
-    bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+    bigbug = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
 
     bb_SetLeds();
 
@@ -177,6 +177,7 @@ static void bb_EnterMode(void)
 
 static void bb_ExitMode(void)
 {
+    bb_freeGameData(&bigbug->gameData);
     bb_deactivateAllEntities(&bigbug->gameData.entityManager, false);
     // Free entity manager
     bb_freeEntityManager(&bigbug->gameData.entityManager);
@@ -188,7 +189,9 @@ static void bb_ExitMode(void)
     
     unloadMidiFile(&bigbug->gameData.hurryUp);
 
-    free(bigbug);
+    bb_freeWsgs(&bigbug->gameData.tilemap);
+
+    FREE_DBG(bigbug);
 }
 
 static void bb_MainLoop(int64_t elapsedUs)
@@ -410,8 +413,8 @@ static void bb_UpdateTileSupport(void)
                         && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] >= 0
                         && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] < TILE_FIELD_HEIGHT)
                     {
-                        // TODO where is this free()'d?
-                        uint32_t* val = heap_caps_calloc(2, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
+                        // TODO where is this FREE_DBG()'d?
+                        uint32_t* val = HEAP_CAPS_CALLOC_DBG(2, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
                         val[0]        = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
                         val[1]        = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
 

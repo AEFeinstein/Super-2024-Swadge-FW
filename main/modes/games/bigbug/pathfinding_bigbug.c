@@ -18,7 +18,7 @@ bool pathfindToPerimeter(bb_node_t* start)
     // 1. initialize the open list
     list_t open = {0};
     // 2. initialize the closed list
-    // list_t closed = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    // list_t closed = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     // put the starting node on the open list (you can leave its f at zero)
     push(&open, (void*)start);
 
