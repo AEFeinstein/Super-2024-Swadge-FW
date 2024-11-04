@@ -177,6 +177,9 @@ static void bb_EnterMode(void)
 
 static void bb_ExitMode(void)
 {
+    // Destroy menu bug, just in case
+    bb_destroyEntity(bigbug->gameData.menuBug, false);
+
     bb_freeGameData(&bigbug->gameData);
     bb_deactivateAllEntities(&bigbug->gameData.entityManager, false);
     // Free entity manager

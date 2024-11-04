@@ -763,6 +763,7 @@ void bb_updateMenu(bb_entity_t* self)
         mbData->xVel
             = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
         mbData->firstTrip                                    = true;
+        FREE_DBG(self->gameData->menuBug->data);
         self->gameData->menuBug->data                        = mbData;
         self->gameData->menuBug->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
         if (mbData->xVel == 0)
