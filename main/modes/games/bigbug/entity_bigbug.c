@@ -38,7 +38,7 @@ void bb_setData(bb_entity_t* self, void* data)
 {
     if (self->data != NULL)
     {
-        free(self->data);
+        FREE_DBG(self->data);
     }
     self->data = data;
 }
@@ -53,10 +53,11 @@ void bb_clearCollisions(bb_entity_t* self, bool keepCollisionsCached)
         {
             // Remove from head
             bb_collision_t* shiftedCollision = shift(self->collisions);
-            free(shiftedCollision->checkOthers);
-            free(shiftedCollision);
+            clear(shiftedCollision->checkOthers);
+            FREE_DBG(shiftedCollision->checkOthers);
+            FREE_DBG(shiftedCollision);
         }
-        free(self->collisions);
+        FREE_DBG(self->collisions);
     }
     self->collisions = NULL;
 }
@@ -73,11 +74,11 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         {
             bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
             for(int i = 0; i<dData->numStrings; i++){
-                free(dData->strings[i]);
+                FREE_DBG(dData->strings[i]);
             }
-            free(dData->strings);
+            FREE_DBG(dData->strings);
         }
-        free(self->data);
+        FREE_DBG(self->data);
     }
     self->data = NULL;
 
@@ -121,7 +122,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
         if (rData->yVel <= 0)
         {
             bb_destroyEntity(rData->flame, false);
-            bb_setData(self, heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM));
+            bb_setData(self, HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM));
             self->updateFunction                     = bb_updateHeavyFallingInit;
 
             bb_entity_t* arm = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1, self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false);
@@ -428,7 +429,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ///////////////////////
 
         // crumble test
-        //  uint32_t* val = heap_caps_calloc(2,sizeof(uint32_t), MALLOC_CAP_SPIRAM);
+        //  uint32_t* val = HEAP_CAPS_CALLOC_DBG(2,sizeof(uint32_t), MALLOC_CAP_SPIRAM);
         //  val[0] = 5;
         //  val[1] = 3;
         //  push(self->gameData->unsupported, (void*)val);
@@ -500,7 +501,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         //     is dirt. if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y <
         //     TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
         //     {
-        //         uint32_t* val = heap_caps_calloc(4, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
+        //         uint32_t* val = HEAP_CAPS_CALLOC_DBG(4, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
         //         val[0] = check_x;
         //         val[1] = check_y;
         //         val[2] = 1; //1 is for foreground. 0 is midground.
@@ -533,7 +534,7 @@ void bb_updateHarpoon(bb_entity_t* self)
     if (hitInfo.hit && pData->prevFrameInAir && pData->vel.y > 0)
     {
         vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
-        bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
+        bb_stuckHarpoonData_t* shData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
         shData->floatVel              = normVecFl2d(floatVel);
         bb_setData(self, shData);
 
@@ -757,14 +758,16 @@ void bb_updateMenu(bb_entity_t* self)
         self->gameData->menuBug
             = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
                               (self->pos.x >> DECIMAL_BITS) + 135, (self->pos.y >> DECIMAL_BITS) - 172, true);
+        self->gameData->menuBug->cacheable = false;
         self->gameData->menuBug->drawFunction      = &bb_drawMenuBug;
         self->gameData->menuBug->updateFunction    = &bb_updateMenuBug;
         self->gameData->menuBug->updateFarFunction = &bb_updateFarDestroy;
-        bb_menuBugData_t* mbData                   = heap_caps_calloc(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
+        bb_menuBugData_t* mbData                   = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
         mbData->xVel                               = bb_randomInt(-5, 5);
         mbData->xVel
             = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
         mbData->firstTrip                                    = true;
+        FREE_DBG(self->gameData->menuBug->data);
         self->gameData->menuBug->data                        = mbData;
         self->gameData->menuBug->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
         if (mbData->xVel == 0)
@@ -1120,7 +1123,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     {
         bData->health               = 0;
         other->paused               = true;
-        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+        bb_physicsData_t* physData  = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
         physData->vel               = divVec2d(pData->vel, 2);
         physData->bounceNumerator   = 2; // 66% bounce
         physData->bounceDenominator = 3;
@@ -1128,7 +1131,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         other->updateFunction = bb_updatePhysicsObject;
     }
     vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
-    bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
+    bb_stuckHarpoonData_t* shData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
     shData->parent                = other;
     shData->offset                = subVec2d(self->pos, other->pos);
     shData->floatVel              = normVecFl2d(floatVel);
@@ -1245,23 +1248,23 @@ void bb_deployBooster(bb_entity_t* self) //separates from the death dumpster in 
 
 bb_dialogueData_t* bb_createDialogueData(int numStrings)
 {
-    bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
+    bb_dialogueData_t* dData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings = numStrings;
-    dData->strings = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
+    dData->strings = HEAP_CAPS_CALLOC_DBG(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
 }
 
 void bb_setCharacterLine(bb_dialogueData_t* dData, int index, const char* str)
 {
-    dData->strings[index] = heap_caps_calloc(1, strlen(str) + 1, MALLOC_CAP_SPIRAM);
+    dData->strings[index] = HEAP_CAPS_CALLOC_DBG(1, strlen(str) + 1, MALLOC_CAP_SPIRAM);
     strcpy(dData->strings[index], str);
 }
 
 void bb_freeDialogueData(bb_dialogueData_t* dData)
 {
     for (int i = 0; i < dData->numStrings; i++) {
-        free(dData->strings[i]);  // Free each string
+        FREE_DBG(dData->strings[i]);  // Free each string
     }
-    free(dData->strings);         // Free the array of string pointers
-    free(dData);                  // Free the struct itself
+    FREE_DBG(dData->strings);         // Free the array of string pointers
+    FREE_DBG(dData);                  // Free the struct itself
 }

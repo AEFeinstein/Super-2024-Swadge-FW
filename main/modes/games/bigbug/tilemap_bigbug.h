@@ -65,6 +65,7 @@ struct bb_hitInfo_t
 //==============================================================================
 void bb_initializeTileMap(bb_tilemap_t* tilemap);
 void bb_loadWsgs(bb_tilemap_t* tilemap);
+void bb_freeWsgs(bb_tilemap_t* tilemap);
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation,
                     bb_entityManager_t* entityManager);
 void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera);
