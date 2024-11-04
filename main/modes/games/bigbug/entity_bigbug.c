@@ -1166,7 +1166,7 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
 {
         bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true);
 
-        bb_dialogueData_t* dData = bb_createDialogueData(1);//34
+        bb_dialogueData_t* dData = bb_createDialogueData(34);//34
 
         strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
         dData->character[sizeof(dData->character) - 1] = '\0';

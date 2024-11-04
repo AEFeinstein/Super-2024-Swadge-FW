@@ -209,10 +209,9 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                 if ((bb_spriteDef_t)(((bb_collision_t*)curEntity->collisions->first->val)->checkOthers->first)->val
                     == GARBOTNIK_FLYING)
                 {
+                    // no need to search all other entities if it's simply something to do with the player.
                     if (entityManager->playerEntity != NULL)
                     {
-                        // no need to search all other players if it's simply something to do with the player.
-
                         // do a collision check here
                         bb_hitInfo_t hitInfo = {0};
                         if (bb_boxesCollide(curEntity, entityManager->playerEntity,
