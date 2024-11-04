@@ -268,7 +268,7 @@ typedef struct
     rectangle_t aabb;     ///< Position and bounding box
     int64_t despawnTimer; ///< Time left until money despawns
     int8_t animFrame;     ///< Sparkle animation frames
-    bool active; ///< If the ring is active
+    bool active;          ///< If the ring is active
 } cgGroveMoney_t;
 
 typedef struct

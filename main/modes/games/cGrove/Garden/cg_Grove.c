@@ -211,7 +211,7 @@ void cg_initGrove(cGrove_t* cg)
         cg->grove.items[idx].aabb.height = cg->grove.itemsWSGs[idx].h;
         cg->grove.items[idx].aabb.width  = cg->grove.itemsWSGs[idx].w;
         char buffer[32];
-        snprintf(buffer, sizeof(buffer) - 1, "Item_%" PRId32, idx);
+        snprintf(buffer, sizeof(buffer) - 1, "Item_%d" PRId16, idx);
         strcpy(cg->grove.items[idx].name, buffer);
     }
 
@@ -277,7 +277,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
     // Play BGM if it's not playing
     if (!isBGMPlaying)
     {
-        // soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
+        soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
         isBGMPlaying = true;
     }
 

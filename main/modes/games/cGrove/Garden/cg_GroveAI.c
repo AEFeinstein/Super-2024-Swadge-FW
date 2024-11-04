@@ -316,9 +316,9 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
     // Check player affinity
     if (c->chowa->playerAffinity > 100 && esp_random() % 6 == 0)
     {
-        c->precision = 16.0f;
+        c->precision    = 16.0f;
         c->nextTimeLeft = SECOND * (1 + (esp_random() % 3));
-        c->nextState = CHOWA_GIFT;
+        c->nextState    = CHOWA_GIFT;
         return CHOWA_CHASE;
     }
     // Check for held items

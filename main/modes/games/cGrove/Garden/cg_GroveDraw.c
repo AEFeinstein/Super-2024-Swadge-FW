@@ -184,6 +184,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
         int16_t xOffset = c->aabb.pos.x - cg->grove.camera.pos.x;
         int16_t yOffset = c->aabb.pos.y - cg->grove.camera.pos.y;
         wsg_t* spr;
+        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_DOWN, 0);
         switch (c->gState)
         {
             case CHOWA_STATIC:

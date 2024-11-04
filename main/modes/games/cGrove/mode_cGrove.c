@@ -18,6 +18,7 @@
 #include "cg_Grove.h"
 #include "cg_Spar.h"
 #include <esp_random.h>
+#include <esp_heap_caps.h>
 
 //==============================================================================
 // Defines
@@ -76,7 +77,7 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal);
 
 /**
  * @brief Draw title screen
- * 
+ *
  * @param elapsedUs Time since I last dunked my head in a bucket of acid
  */
 static void cg_titleScreen(int64_t elapsedUs);
@@ -112,9 +113,7 @@ static cGrove_t* cg = NULL;
 static void cGroveEnterMode(void)
 {
     // Mode memory allocation
-    // FIXME: Emulator doesn't accept this?
-    // cg = heap_caps_calloc(1, sizeof(cGrove_t), MALLOC_CAP_SPIRAM);
-    cg = calloc(1, sizeof(cGrove_t));
+    cg = heap_caps_calloc(1, sizeof(cGrove_t), MALLOC_CAP_SPIRAM);
     setFrameRateUs(CG_FRAMERATE);
 
     // Load Chowa WSGs
@@ -157,11 +156,11 @@ static void cGroveEnterMode(void)
     cg->state       = CG_MAIN_MENU;
     cg->titleActive = true;
 
-    //FIXME: test
+    // FIXME: test
     for (int i = 0; i < CG_MAX_CHOWA; i++)
     {
         cg->chowa[i].active = true;
-        cg->chowa[i].type = CG_KING_DONUT;
+        cg->chowa[i].type   = CG_KING_DONUT;
         switch (esp_random() % 4)
         {
             case 0:
@@ -182,7 +181,7 @@ static void cGroveEnterMode(void)
     for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
     {
         cg->guests[i].active = true;
-        cg->guests[i].type = CG_KING_DONUT;
+        cg->guests[i].type   = CG_KING_DONUT;
         switch (esp_random() % 4)
         {
             case 0:
@@ -399,7 +398,7 @@ static void cg_titleScreen(int64_t elapsedUs)
             cg->cloudPos.x = -cg->title[0].h;
         }
     }
-    cg->animFrame = (cg->animFrame + 1) % 32;
+    cg->animFrame  = (cg->animFrame + 1) % 32;
     cg->titleFrame = (cg->titleFrame + 1) % 64;
 
     // Draw
