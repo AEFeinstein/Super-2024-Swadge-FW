@@ -772,11 +772,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case ATTACHMENT_ARM:
         {
-            bb_attachmentArmData_t* aData = heap_caps_calloc(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM);
+            bb_attachmentArmData_t* aData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM);
             aData->angle = 359;
             bb_setData(entity, aData);
             entity->updateFunction = &bb_updateAttachmentArm;
             entity->drawFunction = &bb_drawAttachmentArm;
+            break;
         }
         default: // FLAME_ANIM and others need nothing set
         {
