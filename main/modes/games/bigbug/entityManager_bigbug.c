@@ -129,6 +129,10 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     deathDumpsterSprite->originX     = 138;
     deathDumpsterSprite->originY     = 115;
 
+    bb_sprite_t* attachmentArmSprite = bb_loadSprite("AttachmentArm", 1, 1, &entityManager->sprites[ATTACHMENT_ARM]);
+    attachmentArmSprite->originX     = 3;
+    attachmentArmSprite->originY     = 21;
+
     bb_loadSprite("ovo_talk", 8, 1, &entityManager->sprites[OVO_TALK]);
 }
 
@@ -347,7 +351,10 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 
         if (currentEntity->active)
         {
-            // printf("hey %d %d\n", i, currentEntity->spriteIndex);
+            // if(currentEntity->spriteIndex == ATTACHMENT_ARM)
+            // {
+            //     printf("attachment arm x %d y %d\n", currentEntity->pos.x, currentEntity->pos.y);
+            // }
             if (currentEntity->drawFunction != NULL)
             {
                 currentEntity->drawFunction(entityManager, camera, currentEntity);
@@ -759,8 +766,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case NO_SPRITE_POI:
         {
-            bb_goToData* tData = heap_caps_calloc(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM);
-            entity->data = tData;
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM));
             //entity->updateFunction = &bb_updatePOI;
             entity->drawFunction   = &bb_drawNothing;
             break;
@@ -772,6 +778,14 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->updateFunction = &bb_updateCharacterTalk;
             entity->drawFunction = &bb_drawCharacterTalk;
             break;
+        }
+        case ATTACHMENT_ARM:
+        {
+            bb_attachmentArmData_t* aData = heap_caps_calloc(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM);
+            aData->angle = 359;
+            bb_setData(entity, aData);
+            entity->updateFunction = &bb_updateAttachmentArm;
+            entity->drawFunction = &bb_drawAttachmentArm;
         }
         default: // FLAME_ANIM and others need nothing set
         {

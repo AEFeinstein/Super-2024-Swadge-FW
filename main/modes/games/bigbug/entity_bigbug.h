@@ -117,6 +117,12 @@ typedef struct
     uint16_t stimulation; // once it reaches 600, it turns into a bug.
 } bb_eggData_t;
 
+typedef struct
+{
+    int16_t angle; // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
+    bb_entity_t* rocket; // a reference to the booster. Notify to take off at angle = 359.
+} bb_attachmentArmData_t;
+
 
 
 typedef struct
@@ -205,6 +211,7 @@ void bb_updateMenu(bb_entity_t* self);
 void bb_updatePOI(bb_entity_t* self);
 void bb_updateFlame(bb_entity_t* self);
 void bb_updateCharacterTalk(bb_entity_t* self);
+void bb_updateAttachmentArm(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -217,9 +224,11 @@ void bb_drawStar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 void bb_drawNothing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawMenuBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 //callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);

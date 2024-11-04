@@ -170,7 +170,7 @@ static void bb_EnterMode(void)
     bigbug->screen = BIGBUG_GAME;
 
     //play the music!
-    soundPlayBgmCb(&bigbug->gameData.hurryUp, MIDI_BGM, bb_BgmCb);
+    //soundPlayBgmCb(&bigbug->gameData.hurryUp, MIDI_BGM, bb_BgmCb);
 
     bb_Reset();
 }
