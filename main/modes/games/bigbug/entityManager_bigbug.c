@@ -326,6 +326,7 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePla
     while(NULL != (curEntity = pop(entityManager->cachedEntities)))
     {
         bb_destroyEntity(curEntity, false);
+        FREE_DBG(curEntity);
     }
 }
 
@@ -797,13 +798,11 @@ void bb_freeEntityManager(bb_entityManager_t* self)
     // free and clear
     FREE_DBG(self->entities);
 
-    while (self->cachedEntities->first != NULL)
+    bb_entity_t* curEntity;
+    while(NULL != (curEntity = pop(self->cachedEntities)))
     {
-        bb_entity_t* shiftedVal = (bb_entity_t*)shift(self->cachedEntities);
-        if (shiftedVal->data != NULL)
-        {
-            FREE_DBG(shiftedVal->data);
-        }
+        bb_destroyEntity(curEntity, false);
+        FREE_DBG(curEntity);
     }
 
     FREE_DBG(self->cachedEntities);
