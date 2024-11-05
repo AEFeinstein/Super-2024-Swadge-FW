@@ -128,7 +128,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* deathDumpsterSprite = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER]);
     deathDumpsterSprite->originX     = 138;
-    deathDumpsterSprite->originY     = 115;
+    deathDumpsterSprite->originY     = 100;
 
     bb_sprite_t* attachmentArmSprite = bb_loadSprite("AttachmentArm", 1, 1, &entityManager->sprites[ATTACHMENT_ARM]);
     attachmentArmSprite->originX     = 3;
@@ -287,22 +287,24 @@ void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
         int skewedChance = 0;
         if(camera->camera.pos.y > -2000)
         {
-            skewedChance = 7500*(camera->camera.pos.y/4 + 800);
+            skewedChance = 128*camera->camera.pos.y + 256000;
         }
 
-        if (bb_randomInt(1, 1300000+skewedChance) < (abs(camera->velocity.x) * camera->camera.height))
+        if (bb_randomInt(1, 13000+skewedChance) < (abs(camera->velocity.x) * camera->camera.height))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
                             camera->velocity.x > 0 ? camera->camera.pos.x + 2 * halfWidth : camera->camera.pos.x,
                             camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight), false);
         }
-        if (bb_randomInt(1, 1300000+skewedChance) < (abs(camera->velocity.y) * camera->camera.width))
+        if (bb_randomInt(1, 13000+skewedChance) < (abs(camera->velocity.y) * camera->camera.width))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
                             camera->camera.pos.x + halfWidth + bb_randomInt(-halfWidth, halfWidth),
                             camera->velocity.y > 0 ? camera->camera.pos.y + 2 * halfHeight : camera->camera.pos.y,
                             false);
         }
+        camera->velocity.x = 0;
+        camera->velocity.y = 0;
     }
 }
 
@@ -482,7 +484,7 @@ bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager)
 
 void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera)
 {
-    vec_t previousCamPos = camera->camera.pos;
+    vec_t previousPos = camera->camera.pos;
     // Update the camera's position to catch up to the player
     if (((entity->pos.x - HALF_WIDTH) >> DECIMAL_BITS) - camera->camera.pos.x < -15)
     {
@@ -500,7 +502,7 @@ void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera)
     {
         camera->camera.pos.y = ((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
     }
-    camera->velocity = subVec2d(camera->camera.pos, previousCamPos);
+    camera->velocity = addVec2d(camera->velocity,subVec2d(camera->camera.pos, previousPos));//velocity is this position minus previous position.
 }
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
