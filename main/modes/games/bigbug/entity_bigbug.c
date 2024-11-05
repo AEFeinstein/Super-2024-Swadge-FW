@@ -144,7 +144,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
     hfData->yVel++;
 
-    self->pos.y += hfData->yVel * (self->gameData->elapsedUs >> 14);
+    self->pos.y += hfData->yVel * (self->gameData->elapsedUs >> 12);
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
@@ -176,7 +176,7 @@ void bb_updateHeavyFalling(bb_entity_t* self)
 {
     bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
     hfData->yVel++;
-    self->pos.y += hfData->yVel * (self->gameData->elapsedUs >> 14);
+    self->pos.y += hfData->yVel * (self->gameData->elapsedUs >> 12);
 
     // printf("tilemap addr: %p\n", &self->gameData->tilemap);
     // printf("self    addr: %p\n", self);
@@ -209,7 +209,7 @@ void bb_updatePhysicsObject(bb_entity_t* self)
 {
     bb_physicsData_t* pData = (bb_physicsData_t*)self->data;
     pData->vel.y++;
-    self->pos = addVec2d(self->pos, mulVec2d(pData->vel, (self->gameData->elapsedUs >> 14)));
+    self->pos = addVec2d(self->pos, mulVec2d(pData->vel, (self->gameData->elapsedUs >> 12)));
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
@@ -262,7 +262,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     if (gData->fire && gData->numHarpoons > 0)
     {
         // Create a harpoon
-        bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
+        bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 2,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false);
         if (harpoon != NULL)
         {
@@ -527,7 +527,7 @@ void bb_updateHarpoon(bb_entity_t* self)
     // Update harpoon's velocity
     pData->vel.y++;
     // Update harpoon's position
-    self->pos = addVec2d(self->pos, mulVec2d(pData->vel, (self->gameData->elapsedUs >> 14)));
+    self->pos = addVec2d(self->pos, mulVec2d(pData->vel, (self->gameData->elapsedUs >> 12)));
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
@@ -670,14 +670,14 @@ void bb_updateFarMenu(bb_entity_t* self)
 void bb_updateMenuBug(bb_entity_t* self)
 {
     bb_menuBugData_t* mbData = (bb_menuBugData_t*)self->data;
-    self->pos.x += (mbData->xVel - 3) << DECIMAL_BITS;
+    self->pos.x += (mbData->xVel - 1) << 3;
     if (mbData->firstTrip && self->pos.x < self->gameData->entityManager.viewEntity->pos.x - (130 << DECIMAL_BITS))
     {
         mbData->firstTrip = false;
-        mbData->xVel      = bb_randomInt(-5, 5);
+        mbData->xVel      = bb_randomInt(-2, 2);
         mbData->xVel
-            = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
-        self->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
+            = mbData->xVel == 1 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
+        self->gameFramesPerAnimationFrame = (3 - abs(mbData->xVel)) * 4;
         if (mbData->xVel == 0)
         {
             self->gameFramesPerAnimationFrame = 255;
@@ -687,7 +687,7 @@ void bb_updateMenuBug(bb_entity_t* self)
 
 void bb_updateMoveLeft(bb_entity_t* self)
 {
-    self->pos.x -= 3 << DECIMAL_BITS;
+    self->pos.x -= 1 << 3;
 }
 
 void bb_updateBug(bb_entity_t* self)
@@ -763,9 +763,9 @@ void bb_updateMenu(bb_entity_t* self)
         self->gameData->menuBug->updateFunction    = &bb_updateMenuBug;
         self->gameData->menuBug->updateFarFunction = &bb_updateFarDestroy;
         bb_menuBugData_t* mbData                   = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
-        mbData->xVel                               = bb_randomInt(-5, 5);
+        mbData->xVel                               = bb_randomInt(-2, 2);
         mbData->xVel
-            = mbData->xVel == 3 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
+            = mbData->xVel == 1 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
         mbData->firstTrip                                    = true;
         FREE_DBG(self->gameData->menuBug->data);
         self->gameData->menuBug->data                        = mbData;
@@ -776,7 +776,7 @@ void bb_updateMenu(bb_entity_t* self)
         }
     }
 
-    if (bb_randomInt(0, 1) < 1) //%50
+    if (bb_randomInt(0, 8) < 1) //%50
     {
         bb_entity_t* treadmillDust
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,

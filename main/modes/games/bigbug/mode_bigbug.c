@@ -115,6 +115,8 @@ bb_t* bigbug = NULL;
 
 static void bb_EnterMode(void)
 {
+    setFrameRateUs(16667); // 60 FPS
+
     // Force draw a loading screen
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 

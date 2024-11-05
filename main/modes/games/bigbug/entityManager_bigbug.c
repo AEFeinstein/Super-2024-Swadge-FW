@@ -732,7 +732,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_menuData_t* mData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
 
             mData->cursor
-                = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 1,
+                = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 3,
                                   (entity->pos.x >> DECIMAL_BITS) - 22, 0, false);//y position doesn't matter here. It will be handled in the update loop.
 
             // This will make it draw pointed right
