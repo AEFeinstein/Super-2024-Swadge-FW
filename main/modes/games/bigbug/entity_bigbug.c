@@ -867,8 +867,8 @@ void bb_updatePOI(bb_entity_t* self)
         {
             fastNormVec(&ToFrom.x, &ToFrom.y);
             ToFrom    = mulVec2d(ToFrom, tData->speed);
-            ToFrom.x  = ToFrom.x >> 8;
-            ToFrom.y  = ToFrom.y >> 8;
+            ToFrom.x  = ToFrom.x >> 11;
+            ToFrom.y  = ToFrom.y >> 11;
         }
         self->pos = addVec2d(self->pos, ToFrom);
         vec_t previousPos = self->gameData->camera.camera.pos;
