@@ -1230,13 +1230,13 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             if ((self->xspeed > 0 && self->x < other->x) || (self->xspeed < 0 && self->x > other->x))
             {
                 self->xspeed = -self->xspeed;
-                // self->spriteFlipHorizontal = -self->spriteFlipHorizontal;
+                self->facingDirection = (self->xspeed > 0)? PA_DIRECTION_EAST : PA_DIRECTION_WEST;
             }
 
             if ((self->yspeed > 0 && self->y < other->y) || (self->yspeed < 0 && self->y > other->y))
             {
                 self->yspeed = -self->yspeed;
-                // self->spriteFlipHorizontal = -self->spriteFlipHorizontal;
+                self->facingDirection = (self->yspeed > 0)? PA_DIRECTION_SOUTH : PA_DIRECTION_NORTH;
             }
             break;
         }
