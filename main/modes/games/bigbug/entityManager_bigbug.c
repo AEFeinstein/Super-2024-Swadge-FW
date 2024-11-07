@@ -632,7 +632,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
 
             entity->cacheable = true;
 
@@ -649,7 +649,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
 
             entity->cacheable = true;
 
@@ -666,7 +666,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
 
             entity->cacheable = true;
 
@@ -683,7 +683,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
 
             entity->cacheable = true;
 
@@ -700,7 +700,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
 
             entity->cacheable = true;
 
@@ -717,7 +717,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_setData(entity, bData);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(2, 4);
+            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
 
             entity->cacheable = true;
 

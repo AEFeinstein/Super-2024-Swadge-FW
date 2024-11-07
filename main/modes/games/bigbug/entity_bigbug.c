@@ -109,15 +109,15 @@ void bb_updateRocketLanding(bb_entity_t* self)
 {
     bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
 
-    if (self->pos.y > -5000 && rData->flame == NULL)
+    if (self->pos.y > -4000 && rData->flame == NULL)
     {
-        rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
+        rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
                                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false);
     }
 
     else if (rData->flame != NULL)
     {
-        rData->yVel -= 7;
+        rData->yVel -= 2;
         rData->flame->pos.y = self->pos.y + rData->yVel * self->gameData->elapsedUs / 100000;
         if (rData->yVel <= 0)
         {
@@ -132,19 +132,18 @@ void bb_updateRocketLanding(bb_entity_t* self)
             return;
         }
     }
-    else if (rData->yVel < 350)
+    else if (rData->yVel < 300)
     {
         rData->yVel++;
     }
-    self->pos.y += rData->yVel * self->gameData->elapsedUs / 100000;
+    self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
 }
 
 void bb_updateHeavyFallingInit(bb_entity_t* self)
 {
     bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
     hfData->yVel++;
-
-    self->pos.y += hfData->yVel * (self->gameData->elapsedUs >> 12);
+    self->pos.y += (hfData->yVel * self->gameData->elapsedUs) >> 15;
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
@@ -166,7 +165,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
         // Update the dirt to air.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble animation
-        bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+        bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 2,
                         hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE, true);
     }
     return;
@@ -176,7 +175,7 @@ void bb_updateHeavyFalling(bb_entity_t* self)
 {
     bb_heavyFallingData_t* hfData = (bb_heavyFallingData_t*)self->data;
     hfData->yVel++;
-    self->pos.y += hfData->yVel * (self->gameData->elapsedUs >> 12);
+    self->pos.y += (hfData->yVel * self->gameData->elapsedUs) >> 15;
 
     // printf("tilemap addr: %p\n", &self->gameData->tilemap);
     // printf("self    addr: %p\n", self);
@@ -189,17 +188,17 @@ void bb_updateHeavyFalling(bb_entity_t* self)
 
     // self->pos.y -= hfData->yVel * self->gameData->elapsedUs / 100000;
     self->pos.y = hitInfo.pos.y - self->halfHeight;
-    if (hfData->yVel < 28)
+    if (hfData->yVel < 50)
     {
         hfData->yVel = 0;
     }
     else
     {
-        hfData->yVel -= 28;
+        hfData->yVel -= 45;
         // Update the dirt to air.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble animation
-        bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+        bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 2,
                         hitInfo.tile_i * TILE_SIZE + HALF_TILE, hitInfo.tile_j * TILE_SIZE + HALF_TILE, true);
     }
     return;
@@ -272,8 +271,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t y;
             getTouchCartesian(gData->phi, gData->r, &x, &y);
             // Set harpoon's velocity
-            pData->vel.x = (x - 512) / 10;
-            pData->vel.y = (-y + 512) / 10;
+            pData->vel.x = (x - 512) >> 8;
+            pData->vel.y = (-y + 512) >> 8;
         }
     }
 
@@ -349,10 +348,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     // printf("offender: %d\n", (int32_t) elapsedUs / 100000);
     // printf("now   x: %d\n", mulVec2d(accel, elapsedUs) / 100000).x);
 
-    gData->accel = divVec2d(mulVec2d(accel, self->gameData->elapsedUs), 100000);
+    gData->accel.x = (accel.x * self->gameData->elapsedUs) >> 17;
+    gData->accel.y = (accel.y * self->gameData->elapsedUs) >> 17;
 
     // physics
-    gData->yaw.y += gData->accel.x;
+    gData->yaw.y += gData->accel.x >> 1;
     if (gData->yaw.x < 0)
     {
         gData->yaw.y -= 5.0 * self->gameData->elapsedUs / 100000;
@@ -374,26 +374,51 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     }
 
     // Apply garbotnik's drag
-    int32_t sqMagVel = sqMagVec2d(gData->vel);
-    int32_t speed    = sqrt(sqMagVel);
-    int32_t drag     = sqMagVel / 500; // smaller denominator for bigger drag.
+    int32_t sqMagX = gData->vel.x * gData->vel.x;
+    if (sqMagX > 0)
+    {
+        int32_t drag = sqMagX >> 8;
+        if(drag < 10)
+        {
+            drag = 10;
+        }
+        // Apply drag based on absolute value to smooth asymmetry
+        int32_t dragEffect = (drag * self->gameData->elapsedUs) >> 17;
 
-    if (drag > speed * 0.9)
-    {
-        drag = speed * 0.9;
+        // Adjust velocity symmetrically for both positive and negative values
+        if (gData->vel.x > 0)
+        {
+            gData->vel.x -= dragEffect;
+            if (gData->vel.x < 0) gData->vel.x = 0; // Prevent overshoot
+        }
+        else if (gData->vel.x < 0)
+        {
+            gData->vel.x += dragEffect;
+            if (gData->vel.x > 0) gData->vel.x = 0;
+        }
     }
-    if (drag < 5)
+    int32_t sqMagY = gData->vel.y * gData->vel.y;
+    if (sqMagY > 0)
     {
-        drag = 5.0;
-    }
-    // printf("speed: %d\n", speed);
-    // printf("drag: %d\n", drag);
-    if (speed > 0)
-    {
-        gData->accel.x += (gData->vel.x / (double)speed) * -drag * self->gameData->elapsedUs / 100000;
-        gData->accel.y += (gData->vel.y / (double)speed) * -drag * self->gameData->elapsedUs / 100000;
-        // bigbug->garbotnikAccel = addVec2d(bigbug->garbotnikAccel, mulVec2d(divVec2d(bigbug->garbotnikVel, speed),
-        // -drag * elapsedUs / 100000));
+        int32_t drag = sqMagY >> 8;
+        if(drag < 10)
+        {
+            drag = 10;
+        }
+        // Apply drag based on absolute value to smooth asymmetry
+        int32_t dragEffect = (drag * self->gameData->elapsedUs) >> 17;
+
+        // Adjust velocity symmetrically for both positive and negative values
+        if (gData->vel.y > 0)
+        {
+            gData->vel.y -= dragEffect;
+            if (gData->vel.y < 0) gData->vel.y = 0; // Prevent overshoot
+        }
+        else if (gData->vel.y < 0)
+        {
+            gData->vel.y += dragEffect;
+            if (gData->vel.y > 0) gData->vel.y = 0;
+        }
     }
 
     // Update garbotnik's velocity
@@ -462,7 +487,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             || self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 4)
         {
             // Create a crumble animation
-            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 2,
                             hitInfo.tile_i * TILE_SIZE + HALF_TILE, hitInfo.tile_j * TILE_SIZE + HALF_TILE, true);
         }
         else
@@ -623,7 +648,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed  = NOTHING_EMBED;
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
                     // Create a crumble animation
-                    bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                    bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 2,
                                     hitInfo.tile_i * TILE_SIZE + TILE_SIZE, hitInfo.tile_j * TILE_SIZE + TILE_SIZE,
                                     false);
                 }
@@ -726,15 +751,16 @@ void bb_updateMenu(bb_entity_t* self)
 
             self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
 
+            // create 3 rockets
             for(int rocketIdx = 0; rocketIdx < 3; rocketIdx++){
-                self->gameData->entityManager.boosterEntities[rocketIdx] = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 3,
+                self->gameData->entityManager.boosterEntities[rocketIdx] = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 8,
                     (self->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx, (self->pos.y >> DECIMAL_BITS) + 561, true);
             
                 self->gameData->entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 
                 bb_rocketData_t* rData = (bb_rocketData_t*)self->gameData->entityManager.boosterEntities[rocketIdx]->data;
 
-                rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 2,
+                rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
                     self->gameData->entityManager.boosterEntities[rocketIdx]->pos.x >> DECIMAL_BITS, self->gameData->entityManager.boosterEntities[rocketIdx]->pos.y >> DECIMAL_BITS, true);
 
                 rData->flame->updateFunction = &bb_updateFlame;
@@ -803,27 +829,27 @@ void bb_updatePOI(bb_entity_t* self)
         }
         if (tData->speed == 0)
         {
-            if(ToFrom.x > 16 || ToFrom.x < -16 || ToFrom.y > 16 || ToFrom.y < -16)
+            if(ToFrom.x >= 16 || ToFrom.x < 0 || ToFrom.y >= 16 || ToFrom.y < 0)
             {
-                if(ToFrom.x > 16)
+                if(ToFrom.x >= 16)
                 {
                     self->pos.x += 16;
                     self->gameData->camera.camera.pos.x++;
                     self->gameData->camera.velocity.x++;
                 }
-                else if(ToFrom.x < -16)
+                else if(ToFrom.x < 0)
                 {
                     self->pos.x -= 16;
                     self->gameData->camera.camera.pos.x--;
                     self->gameData->camera.velocity.x--;
                 }
-                if(ToFrom.y > 16)
+                if(ToFrom.y >= 16)
                 {
                     self->pos.y += 16;
                     self->gameData->camera.camera.pos.y++;
                     self->gameData->camera.velocity.y++;
                 }
-                else if(ToFrom.y < -16)
+                else if(ToFrom.y < 0)
                 {
                     self->pos.y -= 16;
                     self->gameData->camera.camera.pos.y--;
@@ -872,11 +898,11 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 
     if(self->gameData->entityManager.sprites[self->spriteIndex].originY < -30 && dData->curString < dData->numStrings)
     {
-        self->gameData->entityManager.sprites[self->spriteIndex].originY += 10;
+        self->gameData->entityManager.sprites[self->spriteIndex].originY += 3;
     }
     else if(dData->curString >= dData->numStrings)
     {
-        self->gameData->entityManager.sprites[self->spriteIndex].originY -= 10;
+        self->gameData->entityManager.sprites[self->spriteIndex].originY -= 3;
         if(self->gameData->entityManager.sprites[self->spriteIndex].originY <= -240)
         {
             dData->endDialogueCB(self);
@@ -985,9 +1011,12 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
 
     floatVel = normVecFl2d(floatVel);
 
-    drawLineFast(xOff, yOff - 1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 - 1, c344);
-    drawLineFast(xOff, yOff, xOff - floatVel.x * 20, yOff - floatVel.y * 20, c223);
-    drawLineFast(xOff, yOff + 1, xOff - floatVel.x * 20, yOff - floatVel.y * 20 + 1, c000);
+    int16_t xOff2 = xOff - floatVel.x * 20;
+    int16_t yOff2 = yOff - floatVel.y * 20;
+
+    drawLineFast(xOff, yOff - 1, xOff2, yOff2 - 1, c344);
+    drawLineFast(xOff, yOff,     xOff2, yOff2,     c223);
+    drawLineFast(xOff, yOff + 1, xOff2, yOff2 + 1, c101);
 
 
     drawWsg(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
@@ -1198,45 +1227,45 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
 {
         bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true);
 
-        bb_dialogueData_t* dData = bb_createDialogueData(34);//34
+        bb_dialogueData_t* dData = bb_createDialogueData(1);//34
 
         strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
         dData->character[sizeof(dData->character) - 1] = '\0';
 
         bb_setCharacterLine(dData, 0,  "Holy bug farts!");
-        bb_setCharacterLine(dData, 1,  "After I marketed the");
-        bb_setCharacterLine(dData, 2,  "chilidog car freshener at MAGFest,");
-        bb_setCharacterLine(dData, 3,  "Garbotnik Industries' stock went up by 6,969%!");
-        bb_setCharacterLine(dData, 4,  "I'm going to use my time machine to steal the");
-        bb_setCharacterLine(dData, 5,  "next big-selling trinket from the future now.");
-        bb_setCharacterLine(dData, 6,  "That will floor all my stakeholders and make me");
-        bb_setCharacterLine(dData, 7,  "UNDEFINED money!");
-        bb_setCharacterLine(dData, 8,  "With that kind of cash,");
-        bb_setCharacterLine(dData, 9,  "I can recruit 200 professional bassoon players");
-        bb_setCharacterLine(dData, 10, "to the MAGFest Community Orchestra.");
-        bb_setCharacterLine(dData, 11, "I'm so hyped");
-        bb_setCharacterLine(dData, 12, "to turn on my time machine for the first time!");
-        bb_setCharacterLine(dData, 13, "Everything's in order.");
-        bb_setCharacterLine(dData, 14, "Even Pango can't stop me!");
-        bb_setCharacterLine(dData, 15, "I just have to attach the chaos core right here.");
-        bb_setCharacterLine(dData, 16, "Where did I put that core?");
-        bb_setCharacterLine(dData, 17, "hmmm...");
-        bb_setCharacterLine(dData, 18, "What about in the freezer?");
-        bb_setCharacterLine(dData, 19, "I've checked every inch of the death dumpster.");
-        bb_setCharacterLine(dData, 20, "Glitch my circuits!");
-        bb_setCharacterLine(dData, 21, "It must have gone out with the trash last Wednesday.");
-        bb_setCharacterLine(dData, 22, "Can I get an F in the chat?");
-        bb_setCharacterLine(dData, 23, "...");
-        bb_setCharacterLine(dData, 24, "The chaos core is three times denser");
-        bb_setCharacterLine(dData, 25, "than a black hole.");
-        bb_setCharacterLine(dData, 26, "Well if  Waste Management took it to the landfill,");
-        bb_setCharacterLine(dData, 27, "then it is definitely at the VERY BOTTOM of the dump.");
-        bb_setCharacterLine(dData, 28, "Not a problem.");
-        bb_setCharacterLine(dData, 29, "We have the technology to retrieve it.");
-        bb_setCharacterLine(dData, 30, "Safety first.");
-        bb_setCharacterLine(dData, 31, "I've activated my cloning machine up here in case I");
-        bb_setCharacterLine(dData, 32, "should perish on that nuclear wasteland.");
-        bb_setCharacterLine(dData, 33, "YOLO!");
+        // bb_setCharacterLine(dData, 1,  "After I marketed the");
+        // bb_setCharacterLine(dData, 2,  "chilidog car freshener at MAGFest,");
+        // bb_setCharacterLine(dData, 3,  "Garbotnik Industries' stock went up by 6,969%!");
+        // bb_setCharacterLine(dData, 4,  "I'm going to use my time machine to steal the");
+        // bb_setCharacterLine(dData, 5,  "next big-selling trinket from the future now.");
+        // bb_setCharacterLine(dData, 6,  "That will floor all my stakeholders and make me");
+        // bb_setCharacterLine(dData, 7,  "UNDEFINED money!");
+        // bb_setCharacterLine(dData, 8,  "With that kind of cash,");
+        // bb_setCharacterLine(dData, 9,  "I can recruit 200 professional bassoon players");
+        // bb_setCharacterLine(dData, 10, "to the MAGFest Community Orchestra.");
+        // bb_setCharacterLine(dData, 11, "I'm so hyped");
+        // bb_setCharacterLine(dData, 12, "to turn on my time machine for the first time!");
+        // bb_setCharacterLine(dData, 13, "Everything's in order.");
+        // bb_setCharacterLine(dData, 14, "Even Pango can't stop me!");
+        // bb_setCharacterLine(dData, 15, "I just have to attach the chaos core right here.");
+        // bb_setCharacterLine(dData, 16, "Where did I put that core?");
+        // bb_setCharacterLine(dData, 17, "hmmm...");
+        // bb_setCharacterLine(dData, 18, "What about in the freezer?");
+        // bb_setCharacterLine(dData, 19, "I've checked every inch of the death dumpster.");
+        // bb_setCharacterLine(dData, 20, "Glitch my circuits!");
+        // bb_setCharacterLine(dData, 21, "It must have gone out with the trash last Wednesday.");
+        // bb_setCharacterLine(dData, 22, "Can I get an F in the chat?");
+        // bb_setCharacterLine(dData, 23, "...");
+        // bb_setCharacterLine(dData, 24, "The chaos core is three times denser");
+        // bb_setCharacterLine(dData, 25, "than a black hole.");
+        // bb_setCharacterLine(dData, 26, "Well if  Waste Management took it to the landfill,");
+        // bb_setCharacterLine(dData, 27, "then it is definitely at the VERY BOTTOM of the dump.");
+        // bb_setCharacterLine(dData, 28, "Not a problem.");
+        // bb_setCharacterLine(dData, 29, "We have the technology to retrieve it.");
+        // bb_setCharacterLine(dData, 30, "Safety first.");
+        // bb_setCharacterLine(dData, 31, "I've activated my cloning machine up here in case I");
+        // bb_setCharacterLine(dData, 32, "should perish on that nuclear wasteland.");
+        // bb_setCharacterLine(dData, 33, "YOLO!");
 
         dData->curString = -1;
 
