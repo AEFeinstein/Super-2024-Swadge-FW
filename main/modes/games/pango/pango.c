@@ -496,7 +496,7 @@ void updateGame(pango_t* self, int64_t elapsedUs)
         if (self->gameData.remainingBlocks <= 0)
         {
             killPlayer(self->entityManager.playerEntity);
-        }*/
+        }
 
         if (!self->gameData.firstBonusItemDispensed && (self->gameData.remainingBlocks < self->gameData.firstBonusItemDispenseThreshold)){
             pa_createBonusItem(&(self->entityManager), ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
