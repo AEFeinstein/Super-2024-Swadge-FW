@@ -271,8 +271,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t y;
             getTouchCartesian(gData->phi, gData->r, &x, &y);
             // Set harpoon's velocity
-            pData->vel.x = (x - 512) >> 8;
-            pData->vel.y = (-y + 512) >> 8;
+            pData->vel.x = (x - 512) >> 4;
+            pData->vel.y = (-y + 512) >> 4;
         }
     }
 
