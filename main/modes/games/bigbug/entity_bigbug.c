@@ -827,29 +827,29 @@ void bb_updatePOI(bb_entity_t* self)
         {
             tData->speed--;
         }
-        if (tData->speed == 0)
+        else if (tData->speed == 0)
         {
-            if(ToFrom.x >= 16 || ToFrom.x < 0 || ToFrom.y >= 16 || ToFrom.y < 0)
+            if(ToFrom.x > 0 || ToFrom.x <= -16 || ToFrom.y > 0 || ToFrom.y <= -16)
             {
-                if(ToFrom.x >= 16)
+                if(ToFrom.x > 0)
                 {
                     self->pos.x += 16;
                     self->gameData->camera.camera.pos.x++;
                     self->gameData->camera.velocity.x++;
                 }
-                else if(ToFrom.x < 0)
+                else if(ToFrom.x <= -16)
                 {
                     self->pos.x -= 16;
                     self->gameData->camera.camera.pos.x--;
                     self->gameData->camera.velocity.x--;
                 }
-                if(ToFrom.y >= 16)
+                if(ToFrom.y > 0)
                 {
                     self->pos.y += 16;
                     self->gameData->camera.camera.pos.y++;
                     self->gameData->camera.velocity.y++;
                 }
-                else if(ToFrom.y < 0)
+                else if(ToFrom.y <= -16)
                 {
                     self->pos.y -= 16;
                     self->gameData->camera.camera.pos.y--;
@@ -863,11 +863,13 @@ void bb_updatePOI(bb_entity_t* self)
                 return;
             }
         }
-        
-        fastNormVec(&ToFrom.x, &ToFrom.y);
-        ToFrom    = mulVec2d(ToFrom, tData->speed);
-        ToFrom.x  = ToFrom.x >> 8;
-        ToFrom.y  = ToFrom.y >> 8;
+        if(sqMagVec2d(ToFrom) > tData->speed * tData->speed)
+        {
+            fastNormVec(&ToFrom.x, &ToFrom.y);
+            ToFrom    = mulVec2d(ToFrom, tData->speed);
+            ToFrom.x  = ToFrom.x >> 8;
+            ToFrom.y  = ToFrom.y >> 8;
+        }
         self->pos = addVec2d(self->pos, ToFrom);
         vec_t previousPos = self->gameData->camera.camera.pos;
         self->gameData->camera.camera.pos = (vec_t){(self->pos.x >> DECIMAL_BITS) - 140, (self->pos.y >> DECIMAL_BITS) - 120};
