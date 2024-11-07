@@ -23,6 +23,7 @@
 #include "pango.h"
 #include "sequencerMode.h"
 #include "soko.h"
+#include "mode_cGrove.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "keebTest.h"
@@ -157,6 +158,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, cGroveMode.modeName);
     addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
     addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
@@ -385,6 +387,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pangoMode.modeName)
         {
             switchToSwadgeMode(&pangoMode);
+        }
+        else if (label == cGroveMode.modeName)
+        {
+            switchToSwadgeMode(&cGroveMode);
         }
         else if (label == timerMode.modeName)
         {

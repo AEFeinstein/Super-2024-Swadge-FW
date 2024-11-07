@@ -269,6 +269,9 @@ static const tinyusb_config_t ns_tusb_cfg = {
  */
 void gamepadEnterMode(void)
 {
+    // Disable speaker for gamepad
+    setDacShutdown(true);
+
     // Allocate and zero memory
     gamepad = (gamepad_t*)calloc(1, sizeof(gamepad_t));
 

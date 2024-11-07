@@ -25,11 +25,25 @@ const char* getMenuItemLabelText(char* buffer, int buflen, const menuItem_t* ite
         // Handle concatenating the values
         if (item->options)
         {
-            snprintf(buffer, buflen - 1, "%s%s", item->label, item->options[item->currentOpt]);
+            if (NULL != item->label)
+            {
+                snprintf(buffer, buflen - 1, "%s%s", item->label, item->options[item->currentOpt]);
+            }
+            else
+            {
+                snprintf(buffer, buflen - 1, "%s", item->options[item->currentOpt]);
+            }
         }
         else
         {
-            snprintf(buffer, buflen - 1, "%s: %" PRId32, item->label, item->currentSetting);
+            if (NULL != item->label)
+            {
+                snprintf(buffer, buflen - 1, "%s: %" PRId32, item->label, item->currentSetting);
+            }
+            else
+            {
+                snprintf(buffer, buflen - 1, "%" PRId32, item->currentSetting);
+            }
         }
 
         // Return the buffer passed to us
