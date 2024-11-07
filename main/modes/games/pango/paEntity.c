@@ -1692,8 +1692,21 @@ void pa_scoreDisplayDrawHandler(paEntity_t* self)
 void pa_updateBonusItem(paEntity_t* self){
     pa_enemyDecideDirection(self, false);
     despawnWhenOffscreen(self);
-    pa_moveEntityWithTileCollisions(self);
-    //pa_detectEntityCollisions(self);
+
+    switch(self->state){
+        case 0:
+            //Ignore solid tiles if the bonus item spawned inside one
+            if(!pa_isSolid(pa_getTile(self->tilemap, PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION), PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION)))){
+                self->state = 1;
+            }
+            self->x += self->xspeed;
+            self->y += self->yspeed;
+            break;
+        case 1:
+        default:
+            pa_moveEntityWithTileCollisions(self);
+            break;
+    }
 }
 
 uint16_t pa_getBonusItemValue(int16_t elapsedTime)
