@@ -174,7 +174,7 @@ static void bb_EnterMode(void)
     //play the music!
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiGmOn(player);
-    // soundPlayBgmCb(&bigbug->gameData.hurryUp, MIDI_BGM, bb_BgmCb);
+    soundPlayBgmCb(&bigbug->gameData.hurryUp, MIDI_BGM, bb_BgmCb);
     
 
     bb_Reset();
