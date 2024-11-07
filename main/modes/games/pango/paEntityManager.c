@@ -335,8 +335,12 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->drawHandler          = &pa_defaultEntityDrawHandler;
     entity->state                = 0;
 
-    pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
-    entityManager->gameData->remainingBlocks--;
+    uint8_t tile = pa_getTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y));
+    
+    if(tile == PA_TILE_BLOCK || tile == PA_TILE_SPAWN_BLOCK_0){
+        pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
+        entityManager->gameData->remainingBlocks--;
+    }
 
     return entity;
 }
