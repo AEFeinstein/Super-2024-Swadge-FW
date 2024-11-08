@@ -207,6 +207,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     {
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
         midiPlayerReset(player);
+        setBgmVolumeSetting(13);
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
@@ -402,18 +403,18 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     // printf("offender: %d\n", (int32_t) elapsedUs / 100000);
     // printf("now   x: %d\n", mulVec2d(accel, elapsedUs) / 100000).x);
 
-    gData->accel.x = (accel.x * self->gameData->elapsedUs) >> 17;
-    gData->accel.y = (accel.y * self->gameData->elapsedUs) >> 17;
+    gData->accel.x = (accel.x * self->gameData->elapsedUs) >> 16;
+    gData->accel.y = (accel.y * self->gameData->elapsedUs) >> 16;
 
     // physics
     gData->yaw.y += gData->accel.x;
     if (gData->yaw.x < 0)
     {
-        gData->yaw.y -= (5 * self->gameData->elapsedUs) >> 12;
+        gData->yaw.y -= (4 * self->gameData->elapsedUs) >> 14;
     }
     else
     {
-        gData->yaw.y += (5 * self->gameData->elapsedUs) >> 12;
+        gData->yaw.y += (4 * self->gameData->elapsedUs) >> 14;
     }
     gData->yaw.x += gData->yaw.y;
     if (gData->yaw.x < -1440)
@@ -1456,9 +1457,10 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 {
     globalMidiPlayerSetVolume(MIDI_BGM, 13);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiPlayerReset(player);
     midiGmOn(player);
-    globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     player->loop = true;
+    globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     self->gameData->isPaused = false;
 }
 
