@@ -341,58 +341,58 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     {
         // up
         case 0b0001:
-            accel.y = -30;
+            accel.y = -25;
             break;
         case 0b1101:
-            accel.y = -30;
+            accel.y = -25;
             break;
 
         // down
         case 0b0010:
-            accel.y = 30;
+            accel.y = 25;
             break;
         case 0b1110:
-            accel.y = 30;
+            accel.y = 25;
             break;
 
         // left
         case 0b0100:
-            accel.x = -30;
+            accel.x = -25;
             break;
         case 0b0111:
-            accel.x = -30;
+            accel.x = -25;
             break;
 
         // right
         case 0b1000:
-            accel.x = 30;
+            accel.x = 25;
             break;
         case 0b1011:
-            accel.x = 30;
+            accel.x = 25;
             break;
 
         // up,left
         case 0b0101:
-            accel.x = -21; // magnitude is sqrt(1/2) * 100000
-            accel.y = -21;
+            accel.x = -18; // magnitude is sqrt(1/2) * 100000
+            accel.y = -18;
             break;
 
         // up,right
         case 0b1001:
-            accel.x = 21; // 35 707 7035
-            accel.y = -21;
+            accel.x = 18; // 35 707 7035
+            accel.y = -18;
             break;
 
         // down,right
         case 0b1010:
-            accel.x = 21;
-            accel.y = 21;
+            accel.x = 18;
+            accel.y = 18;
             break;
 
         // down,left
         case 0b0110:
-            accel.x = -21;
-            accel.y = 21;
+            accel.x = -18;
+            accel.y = 18;
             break;
         default:
             break;
@@ -432,7 +432,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     int32_t sqMagX = gData->vel.x * gData->vel.x;
     if (sqMagX > 0)
     {
-        int32_t drag = sqMagX >> 8;
+        int32_t drag = sqMagX >> 7;
         if(drag < 10)
         {
             drag = 10;
@@ -455,7 +455,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     int32_t sqMagY = gData->vel.y * gData->vel.y;
     if (sqMagY > 0)
     {
-        int32_t drag = sqMagY >> 8;
+        int32_t drag = sqMagY >> 7;
         if(drag < 10)
         {
             drag = 10;
@@ -501,8 +501,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
 
-    //printf("dot product: %d\n",dotVec2d(gData->vel, hitInfo.normal));
-    if (dotVec2d(gData->vel, hitInfo.normal) < -40)
+    
+    int32_t dot = dotVec2d(gData->vel, hitInfo.normal);
+    if (dot < -40)
     { // velocity angle is opposing garbage normal vector. Tweak number for different threshold.
         ///////////////////////
         // digging detected! //
@@ -560,16 +561,17 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(gData->vel));
 
         //range is roughly 2600 to 7100
-        printf("sqMagVec %d\n", sqMagVec2d(gData->vel));
-        int32_t bounceScalar = sqMagVec2d(gData->vel) / -2200 + 3;
-        if (bounceScalar > 3)
+        //printf("dot %d\n", dot);
+        printf("thing: %d\n",sqMagVec2d(gData->vel) * dot);
+        int32_t bounceScalar = 3;
+        if(sqMagVec2d(gData->vel) * dot < -360000)
         {
-            bounceScalar = 3;
+            bounceScalar = 2;
         }
-        else if (bounceScalar < 1)
+        if(sqMagVec2d(gData->vel) * dot < -550000)
         {
             bounceScalar = 1;
-        }
+        } 
         printf("bounceScalar %d\n", bounceScalar);
         gData->vel = mulVec2d(
             subVec2d(gData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(gData->vel, hitInfo.normal)))), bounceScalar);
@@ -989,10 +991,10 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
-                int deepBluesPitches[] = {31, 34, 36, 37, 38, 41, 43, 55, 50};
-                uint8_t pitch = bb_randomInt(0, 8);
-                midiNoteOn(bgm, 12, deepBluesPitches[pitch], 0x40);
-                midiNoteOff(bgm, 12, deepBluesPitches[pitch], 0x7F);
+                int deepBlueseyPitches[] = {31, 34, 36, 37, 38, 41, 43, 54, 55, 50};
+                uint8_t pitch = bb_randomInt(0, 9);
+                midiNoteOn(bgm, 12, deepBlueseyPitches[pitch], 0x40);
+                midiNoteOff(bgm, 12, deepBlueseyPitches[pitch], 0x7F);
             }
         }
     }
@@ -1002,6 +1004,7 @@ void bb_updateAttachmentArm(bb_entity_t* self)
 {
     bb_attachmentArmData_t* aData = (bb_attachmentArmData_t*) self->data;
     self->pos = aData->rocket->pos;
+    self->pos.y -= 500;
     if(aData->angle > 180)
     {
         aData->angle--;
@@ -1397,7 +1400,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         }
         case 2:
         {
-            bb_setCharacterLine(dData, 0, "Another day, another dumpster ");
+            bb_setCharacterLine(dData, 0, "Another day, another dumpster");
             bb_setCharacterLine(dData, 1, "full of delectable delights!");
             break;
         }
@@ -1432,6 +1435,67 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
     bb_setData(ovo, dData);
 }
 
+void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
+{
+    bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+
+    bb_dialogueData_t* dData = bb_createDialogueData(3);
+
+    strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
+    dData->character[sizeof(dData->character) - 1] = '\0';
+
+    //bb_setCharacterLine(dData, 21, "It must have gone out with the trash last Wednesday.");
+    bb_setCharacterLine(dData, 0, "Oogly Boogly! Look at that dark gelatinous mass!");
+    bb_setCharacterLine(dData, 1, "I can use the directional buttons on my swadge");
+    bb_setCharacterLine(dData, 2, "to fly over there.");
+
+    dData->curString = -1;
+    dData->endDialogueCB = &bb_afterGarbotnikEggTutorialTalk;
+
+    bb_setData(ovo, dData);
+}
+
+void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
+{
+    bb_destroyEntity(self->gameData->entityManager.viewEntity, false);
+    self->gameData->entityManager.viewEntity = self->gameData->entityManager.playerEntity;
+
+    bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+
+    bb_dialogueData_t* dData = bb_createDialogueData(4);
+
+    strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
+    dData->character[sizeof(dData->character) - 1] = '\0';
+
+    //bb_setCharacterLine(dData, 21, "It must have gone out with the trash last Wednesday.");
+    bb_setCharacterLine(dData, 0, "When I travel away from the booster I've got to");
+    bb_setCharacterLine(dData, 1, "keep an eye on my fuel level at all times.");
+    bb_setCharacterLine(dData, 2, "Sit back atop the booster before all the lights");
+    bb_setCharacterLine(dData, 3, "around the outside of the swadge turn off.");
+
+    dData->curString = -1;
+    dData->endDialogueCB = &bb_afterGarbotnikFuelTutorialTalk;
+
+    bb_setData(ovo, dData);
+}
+
+void bb_afterGarbotnikFuelTutorialTalk(bb_entity_t* self)
+{
+    self->gameData->isPaused = false;
+}
+
+void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self)
+{
+    bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
+    tData->tracking = self->gameData->entityManager.playerEntity;
+    tData->midPointSqDist = sqMagVec2d(
+    divVec2d(subVec2d(tData->tracking->pos, self->gameData->entityManager.viewEntity->pos), 2));
+
+    tData->executeOnArrival = &bb_startGarbotnikFuelTutorialTalk;
+
+    self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
+}
+
 void bb_afterGarbotnikIntro(bb_entity_t* self)
 {
     for(int i = 0; i < 3; i++)
@@ -1462,18 +1526,40 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
     midiGmOn(player);
     player->loop = true;
     globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
-    self->gameData->isPaused = false;
+    
+    
+
+    
+    for(int i = 0; i < MAX_ENTITIES; i++)
+    {
+        bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
+        if(curEntity->spriteIndex == EGG_LEAVES)
+        {
+            self->gameData->entityManager.viewEntity
+            = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
+                          (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS), (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS), true, false);
+            bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
+            tData->tracking = curEntity;
+            tData->midPointSqDist = sqMagVec2d(
+            divVec2d(subVec2d(tData->tracking->pos, self->gameData->entityManager.viewEntity->pos), 2));
+
+            tData->executeOnArrival = &bb_startGarbotnikEggTutorialTalk;
+
+            self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
+        }
+    }
 }
 
 void bb_deployBooster(bb_entity_t* self) //separates from the death dumpster in orbit.
 {
-        self->gameData->entityManager.viewEntity = self->gameData->entityManager.activeBooster;
+    bb_destroyEntity(self->gameData->entityManager.viewEntity, false);
+    self->gameData->entityManager.viewEntity = self->gameData->entityManager.activeBooster;
 
-        bb_rocketData_t* rData = (bb_rocketData_t*) self->gameData->entityManager.activeBooster->data;
-        bb_destroyEntity(rData->flame, false);
-        rData->flame = NULL;
+    bb_rocketData_t* rData = (bb_rocketData_t*) self->gameData->entityManager.activeBooster->data;
+    bb_destroyEntity(rData->flame, false);
+    rData->flame = NULL;
 
-        self->gameData->entityManager.activeBooster->updateFunction = &bb_updateRocketLanding;
+    self->gameData->entityManager.activeBooster->updateFunction = &bb_updateRocketLanding;
 }
 
 bb_dialogueData_t* bb_createDialogueData(int numStrings)

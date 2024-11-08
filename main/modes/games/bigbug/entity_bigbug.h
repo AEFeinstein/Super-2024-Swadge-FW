@@ -239,6 +239,10 @@ void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 //callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
 void bb_startGarbotnikLandingTalk(bb_entity_t* self);
+void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self);
+void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self);
+void bb_afterGarbotnikFuelTutorialTalk(bb_entity_t* self);
+void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
 void bb_deployBooster(bb_entity_t* self);

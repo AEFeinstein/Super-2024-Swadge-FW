@@ -290,13 +290,12 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
 static void bb_GarbotniksHomeMusicCb()
 {
+    soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    midiPlayerReset(player);
     midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
     midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
     midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME , 60);
     midiGmOn(player);
-    soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
 }
 
 static void bb_DrawScene(void)
@@ -339,7 +338,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         // Print the current event
-        printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
+        //printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
 
         // Save the button state
         bigbug->gameData.btnState = evt.state;
