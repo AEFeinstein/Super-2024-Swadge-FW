@@ -51,8 +51,6 @@ struct bb_t
     bb_gameData_t gameData;
     bb_soundManager_t soundManager;
 
-    bool isPaused; ///< true if the game is paused, false if it is running
-
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
     int32_t ledFadeTimer; ///< The timer to fade LEDs
@@ -143,18 +141,18 @@ static void bb_EnterMode(void)
 
 
     bb_entity_t* foreground    = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -5146, true);
+                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -5146, true, false);
 
     foreground->updateFunction = NULL;
     foreground->drawFunction   = &bb_drawMenuForeground;
     bb_destroyEntity(((bb_menuData_t*)foreground->data)->cursor, false);
                                                  
     bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                    (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS), false);
+                    (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS), false, false);
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
-                          (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS) - 234, true);
+                          (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS) - 234, true, false);
 
     ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
 
@@ -344,15 +342,16 @@ static void bb_GameLoop(int64_t elapsedUs)
             if (evt.button == PB_START)
             {
                 // Toggle pause
-                bigbug->isPaused = !bigbug->isPaused;
+                bigbug->gameData.isPaused = !bigbug->gameData.isPaused;
             }
         }
     }
 
+    bb_updateEntities(&(bigbug->gameData.entityManager), &(bigbug->gameData.camera));
+
     // If the game is not paused, do game logic
-    if (bigbug->isPaused == false)
+    if (bigbug->gameData.isPaused == false)
     {
-        bb_updateEntities(&(bigbug->gameData.entityManager), &(bigbug->gameData.camera));
 
         bb_UpdateTileSupport();
 
@@ -410,7 +409,7 @@ static void bb_UpdateTileSupport(void)
                 bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
                 // create a crumble animation
                 bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
-                                shiftedVal[0] * 32 + 16, shiftedVal[1] * 32 + 16, true);
+                                shiftedVal[0] * 32 + 16, shiftedVal[1] * 32 + 16, true, false);
 
                 // queue neighbors for crumbling
                 for (uint8_t neighborIdx = 0; neighborIdx < 4;

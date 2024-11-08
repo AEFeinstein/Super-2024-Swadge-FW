@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <esp_log.h>
 #include <string.h>
+#include <limits.h>
 
 #include "gameData_bigbug.h"
 #include "gameData_bigbug.h"
@@ -143,8 +144,9 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
     shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
     shiftedCameraPos.y     = (shiftedCameraPos.y + 120) << DECIMAL_BITS;
     node_t* currentNode    = entityManager->cachedEntities->first;
+    bool isPaused = entityManager->entities[0].gameData->isPaused;
     // This loop loads entities back in if they are close to the camera.
-    while (currentNode != NULL)
+    while (currentNode != NULL && !isPaused)
     {
         bb_entity_t* curEntity = (bb_entity_t*)currentNode->val;
         node_t* next           = currentNode->next;
@@ -189,11 +191,11 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                 }
             }
 
-            if (curEntity->updateFunction != NULL)
+            if (curEntity->updateFunction != NULL && (!isPaused || curEntity->spriteIndex == OVO_TALK))
             {
                 curEntity->updateFunction(&(entityManager->entities[i]));
             }
-            if (curEntity->updateFarFunction != NULL)
+            if (curEntity->updateFarFunction != NULL && (!isPaused || curEntity->spriteIndex == OVO_TALK))
             {
                 // 2752 = (140+32) << 4; 2432 = (120+32) << 4
                 if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 2752, .halfHeight = 2432},
@@ -279,7 +281,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    if (camera->camera.pos.y < -600 && camera->camera.pos.y > -5390)
+    if (camera->camera.pos.y < -600 && camera->camera.pos.y > -5386)
     {
         int16_t halfWidth  = HALF_WIDTH >> DECIMAL_BITS;
         int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
@@ -294,14 +296,14 @@ void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
                             camera->velocity.x > 0 ? camera->camera.pos.x + 2 * halfWidth : camera->camera.pos.x,
-                            camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight), false);
+                            camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight), false, false);
         }
         if (bb_randomInt(1, 13000+skewedChance) < (abs(camera->velocity.y) * camera->camera.width))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
                             camera->camera.pos.x + halfWidth + bb_randomInt(-halfWidth, halfWidth),
                             camera->velocity.y > 0 ? camera->camera.pos.y + 2 * halfHeight : camera->camera.pos.y,
-                            false);
+                            false, false);
         }
         camera->velocity.x = 0;
         camera->velocity.y = 0;
@@ -335,115 +337,130 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePla
     }
 }
 
+void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager, rectangle_t* camera)
+{
+    if (currentEntity->drawFunction != NULL)
+    {
+        currentEntity->drawFunction(entityManager, camera, currentEntity);
+    }
+    else if (currentEntity->hasLighting)
+    {
+        vec_t lookup = {
+            .x = (currentEntity->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
+                    + currentEntity->gameData->tilemap.headlampWsg.w,
+            .y = (currentEntity->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
+                    + currentEntity->gameData->tilemap.headlampWsg.h};
+
+        lookup = divVec2d(lookup, 2);
+
+        int16_t xOff = (currentEntity->pos.x >> DECIMAL_BITS)
+                        - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
+        int16_t yOff = (currentEntity->pos.y >> DECIMAL_BITS)
+                        - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
+
+        uint8_t brightness = 5;
+        if (currentEntity->pos.y > 5120)
+        {
+            if (currentEntity->pos.y > 30720)
+            {
+                brightness = 0;
+            }
+            else
+            {
+                brightness = (30720 - currentEntity->pos.y) / 5120;
+            }
+        }
+
+        if (currentEntity->gameData->entityManager.playerEntity == NULL)
+        {
+            drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
+                                .frames[brightness + currentEntity->currentAnimationFrame * 6],
+                            xOff, yOff);
+        }
+        else
+        {
+            drawWsgSimple(
+                &entityManager->sprites[currentEntity->spriteIndex]
+                        .frames[bb_midgroundLighting(&(currentEntity->gameData->tilemap.headlampWsg), &lookup,
+                                                    &(((bb_garbotnikData_t*)currentEntity->gameData->entityManager
+                                                            .playerEntity->data)
+                                                        ->yaw.x),
+                                                    brightness)
+                                + currentEntity->currentAnimationFrame * 6],
+                xOff, yOff);
+        }
+    }
+    else
+    {
+        drawWsgSimple(
+            &entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
+            (currentEntity->pos.x >> SUBPIXEL_RESOLUTION)
+                - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
+            (currentEntity->pos.y >> SUBPIXEL_RESOLUTION)
+                - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
+    }
+
+    if (currentEntity->paused == false)
+    {
+        // increment the frame counter
+        currentEntity->animationTimer += 1;
+        currentEntity->currentAnimationFrame
+            = currentEntity->animationTimer / currentEntity->gameFramesPerAnimationFrame;
+        // if frame reached the end of the animation
+        if (currentEntity->currentAnimationFrame
+            >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
+        {
+            switch (currentEntity->type)
+            {
+                case ONESHOT_ANIMATION:
+                {
+                    // destroy the entity
+                    bb_destroyEntity(currentEntity, false);
+                    break;
+                }
+                case LOOPING_ANIMATION:
+                {
+                    // reset the animation
+                    currentEntity->animationTimer        = 0;
+                    currentEntity->currentAnimationFrame = 0;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+        }
+    }
+    // drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+    //           ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+    //           ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+    //           ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+}
+
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* currentEntity = &entityManager->entities[i];
 
-        if (currentEntity->active)
+        if (currentEntity->active && !currentEntity->forceToFront)
         {
-            // if(currentEntity->spriteIndex == ATTACHMENT_ARM)
-            // {
-            //     printf("attachment arm x %d y %d\n", currentEntity->pos.x, currentEntity->pos.y);
-            // }
-            if (currentEntity->drawFunction != NULL)
-            {
-                currentEntity->drawFunction(entityManager, camera, currentEntity);
-            }
-            else if (currentEntity->hasLighting)
-            {
-                vec_t lookup = {
-                    .x = (currentEntity->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
-                         + currentEntity->gameData->tilemap.headlampWsg.w,
-                    .y = (currentEntity->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
-                         + currentEntity->gameData->tilemap.headlampWsg.h};
+            bb_drawEntity(currentEntity, entityManager, camera);
+        }
+    }
 
-                lookup = divVec2d(lookup, 2);
+    for (uint8_t i = MAX_ENTITIES - 1; i >= 0; i--)
+    {
+        bb_entity_t* currentEntity = &entityManager->entities[i];
 
-                int16_t xOff = (currentEntity->pos.x >> DECIMAL_BITS)
-                               - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
-                int16_t yOff = (currentEntity->pos.y >> DECIMAL_BITS)
-                               - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
-
-                uint8_t brightness = 5;
-                if (currentEntity->pos.y > 5120)
-                {
-                    if (currentEntity->pos.y > 30720)
-                    {
-                        brightness = 0;
-                    }
-                    else
-                    {
-                        brightness = (30720 - currentEntity->pos.y) / 5120;
-                    }
-                }
-
-                if (currentEntity->gameData->entityManager.playerEntity == NULL)
-                {
-                    drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
-                                       .frames[brightness + currentEntity->currentAnimationFrame * 6],
-                                  xOff, yOff);
-                }
-                else
-                {
-                    drawWsgSimple(
-                        &entityManager->sprites[currentEntity->spriteIndex]
-                             .frames[bb_midgroundLighting(&(currentEntity->gameData->tilemap.headlampWsg), &lookup,
-                                                          &(((bb_garbotnikData_t*)currentEntity->gameData->entityManager
-                                                                 .playerEntity->data)
-                                                                ->yaw.x),
-                                                          brightness)
-                                     + currentEntity->currentAnimationFrame * 6],
-                        xOff, yOff);
-                }
-            }
-            else
-            {
-                drawWsgSimple(
-                    &entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
-                    (currentEntity->pos.x >> SUBPIXEL_RESOLUTION)
-                        - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
-                    (currentEntity->pos.y >> SUBPIXEL_RESOLUTION)
-                        - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
-            }
-
-            if (currentEntity->paused == false)
-            {
-                // increment the frame counter
-                currentEntity->animationTimer += 1;
-                currentEntity->currentAnimationFrame
-                    = currentEntity->animationTimer / currentEntity->gameFramesPerAnimationFrame;
-                // if frame reached the end of the animation
-                if (currentEntity->currentAnimationFrame
-                    >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
-                {
-                    switch (currentEntity->type)
-                    {
-                        case ONESHOT_ANIMATION:
-                        {
-                            // destroy the entity
-                            bb_destroyEntity(currentEntity, false);
-                            break;
-                        }
-                        case LOOPING_ANIMATION:
-                        {
-                            // reset the animation
-                            currentEntity->animationTimer        = 0;
-                            currentEntity->currentAnimationFrame = 0;
-                            break;
-                        }
-                        default:
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            // drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-            //           ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
-            //           ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-            //           ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+        if (!currentEntity->active)
+        {
+            break;
+        }
+        if(currentEntity->forceToFront)
+        {
+            bb_drawEntity(currentEntity, entityManager, camera);
         }
     }
 }
@@ -459,7 +476,7 @@ bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
     {
         if (entityManager->entities[i].active == false)
         {
-            return &(entityManager->entities[i]);
+            return &entityManager->entities[i];
         }
     }
     return NULL;
@@ -476,7 +493,7 @@ bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager)
     {
         if (entityManager->entities[i].active == false)
         {
-            return &(entityManager->entities[i]);
+            return &entityManager->entities[i];
         }
     }
     return NULL;
@@ -507,7 +524,7 @@ void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera)
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
                              bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y,
-                             bool renderFront)
+                             bool renderFront, bool forceToFront)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
@@ -516,22 +533,22 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     }
 
     bb_entity_t* entity;
-    if (renderFront)
+    if(renderFront)
     {
         entity = bb_findInactiveEntityBackwards(entityManager);
     }
-    else
-    {
+    else{
         entity = bb_findInactiveEntity(entityManager);
     }
 
     if (entity == NULL)
     {
-        printf("entityManager_bigbug.c This should hopefully never happen.\n");
+        printf("entityManager_bigbug.c YOOOOO! This should never happen.\n");
         return NULL;
     }
 
     entity->active = true;
+    entity->forceToFront = forceToFront;
     entity->pos.x = x << SUBPIXEL_RESOLUTION, entity->pos.y = y << SUBPIXEL_RESOLUTION;
 
     entity->type        = type;
@@ -549,6 +566,18 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_garbotnikData_t* gData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
             gData->numHarpoons        = 250;
             gData->fuel = 1000 * 60 * 1; // 1 thousand milliseconds in a second. 60 seconds in a minute. 1 minutes.
+            int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
+            //create sequential numbers of all phrase indices
+            for(int16_t i = 0; i < arraySize; i++) gData->landingPhrases[i] = i;
+            //shuffle the array
+            for(int16_t i = arraySize - 1; i > 0; i--)
+            {
+                int16_t j = (int16_t)(bb_randomInt(0, INT_MAX) % (i + 1));
+                int16_t temp = gData->landingPhrases[i];
+                gData->landingPhrases[i] = gData->landingPhrases[j];
+                gData->landingPhrases[j] = temp;
+            }
+
             bb_setData(entity, gData);
 
             entity->halfWidth  = 192;
@@ -733,7 +762,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             mData->cursor
                 = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 3,
-                                  (entity->pos.x >> DECIMAL_BITS) - 22, 0, false);//y position doesn't matter here. It will be handled in the update loop.
+                                  (entity->pos.x >> DECIMAL_BITS) - 22, 0, false, false);//y position doesn't matter here. It will be handled in the update loop.
 
             // This will make it draw pointed right
             ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};

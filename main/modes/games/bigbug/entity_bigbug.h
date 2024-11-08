@@ -43,6 +43,9 @@ typedef struct
     int32_t phi;
     int32_t r;
     int32_t intensity;
+    
+    //dialogue stuff
+    int16_t landingPhrases[5];
 } bb_garbotnikData_t;
 
 typedef struct
@@ -154,6 +157,7 @@ struct bb_entity_t
 {
     bool active;
     bool cacheable;
+    bool forceToFront;
 
     void* data;
     bb_updateFunction_t updateFunction;       // Only set for entities that need update logic
@@ -234,7 +238,9 @@ void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 
 //callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
+void bb_startGarbotnikLandingTalk(bb_entity_t* self);
 void bb_afterGarbotnikIntro(bb_entity_t* self);
+void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
 void bb_deployBooster(bb_entity_t* self);
 
 bb_dialogueData_t* bb_createDialogueData(int numStrings);
