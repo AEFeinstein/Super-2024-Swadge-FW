@@ -345,31 +345,36 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     }
     else if (currentEntity->hasLighting)
     {
-        vec_t lookup = {
-            .x = (currentEntity->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
-                    + currentEntity->gameData->tilemap.headlampWsg.w,
-            .y = (currentEntity->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
-                    + currentEntity->gameData->tilemap.headlampWsg.h};
-
-        lookup = divVec2d(lookup, 2);
-
-        int16_t xOff = (currentEntity->pos.x >> DECIMAL_BITS)
-                        - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
-        int16_t yOff = (currentEntity->pos.y >> DECIMAL_BITS)
-                        - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
-
         uint8_t brightness = 5;
-        if (currentEntity->pos.y > 5120)
+        if(entityManager->playerEntity!=NULL)
         {
-            if (currentEntity->pos.y > 30720)
+            vec_t lookup = {
+                    .x = (currentEntity->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
+                            + currentEntity->gameData->tilemap.headlampWsg.w,
+                    .y = (currentEntity->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
+                            + currentEntity->gameData->tilemap.headlampWsg.h};
+
+            lookup = divVec2d(lookup, 2);
+
+            int16_t xOff = (currentEntity->pos.x >> DECIMAL_BITS)
+                            - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
+            int16_t yOff = (currentEntity->pos.y >> DECIMAL_BITS)
+                            - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
+
+            
+            if (currentEntity->pos.y > 5120)
             {
-                brightness = 0;
-            }
-            else
-            {
-                brightness = (30720 - currentEntity->pos.y) / 5120;
+                if (currentEntity->pos.y > 30720)
+                {
+                    brightness = 0;
+                }
+                else
+                {
+                    brightness = (30720 - currentEntity->pos.y) / 5120;
+                }
             }
         }
+        
 
         if (currentEntity->gameData->entityManager.playerEntity == NULL)
         {
