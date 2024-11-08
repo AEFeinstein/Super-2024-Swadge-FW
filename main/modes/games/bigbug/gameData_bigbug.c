@@ -25,6 +25,7 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
     
     loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);
     loadMidiFile("Big Bug Hurry up.mid", &gameData->hurryUp, true);
+    loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->garbotniksHome, true);
 
     gameData->neighbors[0][0] = -1; // left  neighbor x offset
     gameData->neighbors[0][1] = 0;  // left  neighbor y offset
@@ -46,6 +47,7 @@ void bb_freeGameData(bb_gameData_t* gameData)
 {
     unloadMidiFile(&gameData->bgm);
     unloadMidiFile(&gameData->hurryUp);
+    unloadMidiFile(&gameData->garbotniksHome);
     freeFont(&gameData->font);
 }
 

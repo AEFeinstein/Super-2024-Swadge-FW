@@ -15,9 +15,11 @@ void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
 {
     printf("initializing eggs\n");
 
+    tilemap->fgTiles[TILE_FIELD_WIDTH/2 - 10][0].embed = EGG_EMBED;//tutorial egg
+
     for (int x = 0; x < TILE_FIELD_WIDTH; x++)
     {
-        for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
+        for (int y = 4; y < TILE_FIELD_HEIGHT; y++)
         {
             if (bb_randomInt(0, 1) == 0) //%50 chance
             {

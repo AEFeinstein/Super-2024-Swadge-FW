@@ -74,7 +74,7 @@ static void bb_Reset(void);
 static void bb_SetLeds(void);
 static void bb_UpdateTileSupport(void);
 static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
-static void bb_BgmCb(void);
+static void bb_GarbotniksHomeMusicCb(void);
 
 //==============================================================================
 // Strings
@@ -172,8 +172,7 @@ static void bb_EnterMode(void)
     //play the music!
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiGmOn(player);
-    soundPlayBgmCb(&bigbug->gameData.hurryUp, MIDI_BGM, bb_BgmCb);
-    
+    soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
 
     bb_Reset();
 }
@@ -194,6 +193,8 @@ static void bb_ExitMode(void)
     unloadMidiFile(&bigbug->gameData.bgm);
     
     unloadMidiFile(&bigbug->gameData.hurryUp);
+
+    unloadMidiFile(&bigbug->gameData.garbotniksHome);
 
     bb_freeWsgs(&bigbug->gameData.tilemap);
 
@@ -277,9 +278,11 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @brief Draw the bigbug field to the TFT
  */
 
-static void bb_BgmCb()
+static void bb_GarbotniksHomeMusicCb()
 {
-    soundPlayBgmCb(&bigbug->gameData.bgm, MIDI_BGM, bb_BgmCb);
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
+    soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
 }
 
 static void bb_DrawScene(void)

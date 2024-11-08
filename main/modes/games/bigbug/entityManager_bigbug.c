@@ -191,11 +191,11 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                 }
             }
 
-            if (curEntity->updateFunction != NULL && (!isPaused || curEntity->spriteIndex == OVO_TALK))
+            if (curEntity->updateFunction != NULL && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
             {
                 curEntity->updateFunction(&(entityManager->entities[i]));
             }
-            if (curEntity->updateFarFunction != NULL && (!isPaused || curEntity->spriteIndex == OVO_TALK))
+            if (curEntity->updateFarFunction != NULL && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
             {
                 // 2752 = (140+32) << 4; 2432 = (120+32) << 4
                 if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 2752, .halfHeight = 2432},
@@ -576,6 +576,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 int16_t temp = gData->landingPhrases[i];
                 gData->landingPhrases[i] = gData->landingPhrases[j];
                 gData->landingPhrases[j] = temp;
+            }
+            printf("shuffled:\n");
+            for (int i = 0; i < arraySize; i++) {
+                printf("%d\n", gData->landingPhrases[i]);
             }
 
             bb_setData(entity, gData);

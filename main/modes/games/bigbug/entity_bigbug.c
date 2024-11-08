@@ -147,6 +147,46 @@ void bb_updateRocketLanding(bb_entity_t* self)
         rData->yVel++;
     }
     self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
+
+    //music stuff
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    if((self->pos.y > -73360 && self->pos.y < -60000) || self->pos.y > -3000)
+    {
+        //30 second fade out.
+        //9 = 16383 max volume / (60 fps * 30 seconds);
+        int32_t volume = player->volume;
+        volume -= 22;
+        if(volume < 0)
+        {
+            volume = 0;
+        }
+        player->volume = volume;
+    }
+    
+    for(int channel = 0; channel < MIDI_CHANNEL_COUNT; channel++)
+    {
+        //apply doppler effect to Garbotnik's home
+        midiPitchWheel(player, channel, 0x2000 - rData->yVel * 16);
+        // printf("pos.y %d\n",self->pos.y);
+        if(self->pos.y > -63360)
+        {
+            //get the release
+            int32_t release = (int32_t)midiGetControlValue(player, channel, MCC_SOUND_RELEASE_TIME);
+            //-63360, 0
+            //-43360, -128
+            release -= -127 * self->pos.y / 20000 - 403;
+            if(release < 0)
+            {
+                release = 0;
+            }
+            else if(release > 127)
+            {
+                release = 127;
+            }
+            midiControlChange(player, channel, MCC_SOUND_RELEASE_TIME, (uint8_t)release);
+        }
+        
+    }
 }
 
 void bb_updateHeavyFallingInit(bb_entity_t* self)
@@ -165,6 +205,8 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     self->pos.y = hitInfo.pos.y - self->halfHeight;
     if (hfData->yVel < 50)
     {
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        midiPlayerReset(player);
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
@@ -243,7 +285,7 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
     if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 1)
     {
         self->paused = true;
-        self->gameData->isPaused = false;
+        self->gameData->isPaused = true;
         // deploy garbotnik!!!
         bb_entity_t* garbotnik
             = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
@@ -371,7 +413,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     }
     else
     {
-        gData->yaw.y += (5 * self->gameData->elapsedUs) >> 13;
+        gData->yaw.y += (5 * self->gameData->elapsedUs) >> 12;
     }
     gData->yaw.x += gData->yaw.y;
     if (gData->yaw.x < -1440)
@@ -1329,7 +1371,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
             phraseIdx++;
         }
     }
-    switch(phraseIdx)
+    switch(gData->landingPhrases[phraseIdx])
     {
         case 0:
         {
@@ -1406,6 +1448,11 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
 
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 {
+    globalMidiPlayerSetVolume(MIDI_BGM, 13);
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
+    globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
+    player->loop = true;
     self->gameData->isPaused = false;
 }
 

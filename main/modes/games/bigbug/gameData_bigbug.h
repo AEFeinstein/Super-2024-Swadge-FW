@@ -48,6 +48,7 @@ struct bb_gameData_t
 
     midiFile_t bgm;  ///< Background music
     midiFile_t hurryUp; ///< plays when you have to get back
+    midiFile_t garbotniksHome; ///< tunes for home
 
     bb_camera_t camera;
 
