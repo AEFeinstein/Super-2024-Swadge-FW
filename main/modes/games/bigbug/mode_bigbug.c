@@ -173,6 +173,15 @@ static void bb_EnterMode(void)
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiGmOn(player);
     soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
+    midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrumen 89.
+    midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
+    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME , 60);
+
+    // midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
+    // // Turn on the sustain pedal for channel 1
+    // midiSustain(sfx, 2, 0x7F);
+    // midiSetProgram(sfx, 0, 0);
+
 
     bb_Reset();
 }
@@ -195,6 +204,7 @@ static void bb_ExitMode(void)
     unloadMidiFile(&bigbug->gameData.hurryUp);
 
     unloadMidiFile(&bigbug->gameData.garbotniksHome);
+    deinitGlobalMidiPlayer();
 
     bb_freeWsgs(&bigbug->gameData.tilemap);
 
