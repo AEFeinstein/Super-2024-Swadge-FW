@@ -132,8 +132,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     deathDumpsterSprite->originY     = 100;
 
     bb_sprite_t* attachmentArmSprite = bb_loadSprite("AttachmentArm", 1, 1, &entityManager->sprites[ATTACHMENT_ARM]);
-    attachmentArmSprite->originX     = 3;
-    attachmentArmSprite->originY     = 21;
+    attachmentArmSprite->originX     = 6;
+    attachmentArmSprite->originY     = 20;
 
     bb_loadSprite("ovo_talk", 8, 1, &entityManager->sprites[OVO_TALK]);
 }
@@ -281,15 +281,15 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    if (camera->camera.pos.y < -600 && camera->camera.pos.y > -5386)
+    if (camera->camera.pos.y < -800 && camera->camera.pos.y > -5386)
     {
         int16_t halfWidth  = HALF_WIDTH >> DECIMAL_BITS;
         int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
 
         int skewedChance = 0;
-        if(camera->camera.pos.y > -2000)
+        if(camera->camera.pos.y > -2500)
         {
-            skewedChance = 128*camera->camera.pos.y + 256000;
+            skewedChance = 128*camera->camera.pos.y + 320000;
         }
 
         if (bb_randomInt(1, 13000+skewedChance) < (abs(camera->velocity.x) * camera->camera.height))
@@ -450,7 +450,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
         }
     }
 
-    for (uint8_t i = MAX_ENTITIES - 1; i >= 0; i--)
+    for (uint8_t i = MAX_ENTITIES - 1;; i--)
     {
         bb_entity_t* currentEntity = &entityManager->entities[i];
 
@@ -566,6 +566,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_garbotnikData_t* gData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
             gData->numHarpoons        = 250;
             gData->fuel = 1000 * 60 * 1; // 1 thousand milliseconds in a second. 60 seconds in a minute. 1 minutes.
+            gData->yaw.x = - 1;//So he starts off facing left away from the tutorial egg.
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
             //create sequential numbers of all phrase indices
             for(int16_t i = 0; i < arraySize; i++) gData->landingPhrases[i] = i;
@@ -807,10 +808,18 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case ATTACHMENT_ARM:
         {
             bb_attachmentArmData_t* aData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM);
-            aData->angle = 359;
+            aData->angle = 180 << DECIMAL_BITS;
             bb_setData(entity, aData);
             entity->updateFunction = &bb_updateAttachmentArm;
             entity->drawFunction = &bb_drawAttachmentArm;
+
+            entity->collisions = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionAttachmentArm};
+            push(entity->collisions, (void*)collision);
+
             break;
         }
         default: // FLAME_ANIM and others need nothing set

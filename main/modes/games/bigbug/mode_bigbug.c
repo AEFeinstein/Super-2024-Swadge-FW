@@ -141,7 +141,7 @@ static void bb_EnterMode(void)
 
 
     bb_entity_t* foreground    = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -5146, true, false);
+                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -5146, true, false);
 
     foreground->updateFunction = NULL;
     foreground->drawFunction   = &bb_drawMenuForeground;
@@ -172,6 +172,8 @@ static void bb_EnterMode(void)
     //play the music!
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiGmOn(player);
+    midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
+    midiGmOn(sfx);
     soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
     midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
     midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
@@ -236,21 +238,22 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // accelIntegrate(); only needed if using accelerometer for something
     // SETUP_FOR_TURBO(); only needed if drawing individual pixels
-    if (bigbug->gameData.camera.camera.pos.y >= 100)
+    if (bigbug->gameData.camera.camera.pos.y >= 400)
     {
         fillDisplayArea(x, y, x + w, y + h, c000);
     }
-    else if (bigbug->gameData.camera.camera.pos.y < -400)
+    else if (bigbug->gameData.camera.camera.pos.y < -1200)
     {
-        // Normalize position from 0 (at -2500) to 1 (at -400)
-        float normalizedPos
-            = ((bigbug->gameData.camera.camera.pos.y < -2500 ? -2500 : bigbug->gameData.camera.camera.pos.y) + 2500)
-              / 2100.0f; //2100 is the range between 2500 and 400.
-
-        // Calculate the total number of decrements (since the max RGB is 4, 5, 5)
-        int totalSteps  = 14; // 4 + 5 + 5 = 14 decrement steps
-        int currentStep = (int)(normalizedPos * totalSteps);
-
+        // get steps from 0 (at -4000) to 14 (at -1200)
+        int32_t currentStep = bigbug->gameData.camera.camera.pos.y/200+20;
+        if(currentStep < 0)
+        {
+            currentStep = 0;
+        }
+        else if(currentStep > 14)
+        {
+            currentStep = 14;
+        }
         // Initialize r, g, b to 4, 5, 5
         uint8_t r = 0;
         uint8_t g = 0;

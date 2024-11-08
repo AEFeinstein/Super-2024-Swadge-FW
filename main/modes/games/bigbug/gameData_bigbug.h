@@ -50,6 +50,10 @@ struct bb_gameData_t
     midiFile_t hurryUp; ///< plays when you have to get back
     midiFile_t garbotniksHome; ///< tunes for home
 
+    midiFile_t sfxBump; ///<SFX bump into things
+    midiFile_t sfxHarpoon; ///SFX harpoon
+    midiFile_t sfxDirt; ///SFT dirt crumbling
+
     bb_camera_t camera;
 
     uint8_t gameState;

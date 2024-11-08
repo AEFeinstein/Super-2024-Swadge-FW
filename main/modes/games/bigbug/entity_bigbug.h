@@ -124,7 +124,7 @@ typedef struct
 
 typedef struct
 {
-    int16_t angle; // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
+    int32_t angle; // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
     bb_entity_t* rocket; // a reference to the booster. Notify to take off at angle = 359.
 } bb_attachmentArmData_t;
 
@@ -199,6 +199,7 @@ void bb_clearCollisions(bb_entity_t* self, bool keepCached);
 
 void bb_destroyEntity(bb_entity_t* self, bool caching);
 void bb_updateRocketLanding(bb_entity_t* self);
+void bb_updateRocketLiftoff(bb_entity_t* self);
 void bb_updateHeavyFallingInit(bb_entity_t* self);
 void bb_updateHeavyFalling(bb_entity_t* self);
 void bb_updatePhysicsObject(bb_entity_t* self);
@@ -247,8 +248,9 @@ void bb_afterGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
 void bb_deployBooster(bb_entity_t* self);
 
-bb_dialogueData_t* bb_createDialogueData(int numStrings);
-void bb_setCharacterLine(bb_dialogueData_t* dData, int index, const char* str);
+void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j);
+bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings);
+void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);
 
 #endif
