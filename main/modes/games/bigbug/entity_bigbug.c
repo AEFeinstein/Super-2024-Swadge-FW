@@ -982,16 +982,17 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 
         if(self->gameData->btnDownState & PB_A)
         {
-            midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
-            // Play a random note within an octave at half velocity on channel 1
-            int deepBluesPitches[] = {31, 34, 36, 37, 38, 41, 43, 55, 50};
-            uint8_t pitch = bb_randomInt(0, 8);
-            midiNoteOn(bgm, 12, deepBluesPitches[pitch], 0x40);
-            midiNoteOff(bgm, 12, deepBluesPitches[pitch], 0x7F);
             dData->curString++;
             if(dData->curString < dData->numStrings)
             {
                 self->currentAnimationFrame = bb_randomInt(0,7);
+
+                midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
+                // Play a random note within an octave at half velocity on channel 1
+                int deepBluesPitches[] = {31, 34, 36, 37, 38, 41, 43, 55, 50};
+                uint8_t pitch = bb_randomInt(0, 8);
+                midiNoteOn(bgm, 12, deepBluesPitches[pitch], 0x40);
+                midiNoteOff(bgm, 12, deepBluesPitches[pitch], 0x7F);
             }
         }
     }
