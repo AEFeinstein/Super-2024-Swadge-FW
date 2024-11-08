@@ -132,6 +132,10 @@ static void t48EnterMode(void)
     loadMidiFile("lullaby_in_numbers.mid", &t48->bgm, true);
     loadMidiFile("sndBounce.mid", &t48->click, true);
 
+    // Init sound player
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
+
     // Init Text Entry
     textEntryInit(&t48->font, 4, t48->playerInitials);
     textEntrySetBGColor(c001);
