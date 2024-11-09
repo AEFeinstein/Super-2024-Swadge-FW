@@ -15,6 +15,7 @@
 
 #include "cg_GroveDraw.h"
 #include "cg_Chowa.h"
+#include "cg_GroveItems.h"
 #include <esp_random.h>
 
 //==============================================================================
@@ -22,6 +23,13 @@
 //==============================================================================
 
 #define SECOND 1000000
+
+//==============================================================================
+// Consts
+//==============================================================================
+
+static const char pressAB[]  = "Press A to buy, press B to sell";
+static const char shopText[] = "Chowa Gray Market";
 
 //==============================================================================
 // Function declarations
@@ -80,7 +88,7 @@ static void cg_drawUI(cGrove_t* cg);
  *
  * @param cg Game Data
  */
-void cg_groveDraw(cGrove_t* cg, int64_t elapsedUs)
+void cg_groveDrawField(cGrove_t* cg, int64_t elapsedUs)
 {
     // Get camera offset
 
@@ -107,6 +115,85 @@ void cg_groveDraw(cGrove_t* cg, int64_t elapsedUs)
 
     // Debug draw
     cg_groveDebug(cg);
+}
+
+/**
+ * @brief Draws the Shop menu
+ *
+ * @param cg Game Data
+ * @param idx Index to draw
+ */
+void cg_groveDrawShop(cGrove_t* cg)
+{
+    char buffer[32];
+    // Draw BG
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_WIDTH, c111);
+
+    // Draw Currently selected item and name
+    if (cg->grove.shopSelection == 9 || cg->grove.shopSelection == 10)
+    {
+        drawWsgSimpleScaled(&cg->grove.itemsWSGs[cg->grove.shopSelection],
+                            (TFT_WIDTH - (cg->grove.itemsWSGs[cg->grove.shopSelection].w * 2)) / 2, 40, 2, 2);
+        drawText(&cg->menuFont, c555, shopMenuItems[cg->grove.shopSelection], 16, 155);
+    }
+    else if (cg->grove.shopSelection == 11)
+    {
+        for (int idx = 0; idx < 6; idx++)
+        {
+            drawWsgSimpleScaled(&cg->grove.eggs[idx], 32 + (36 * idx), 80, 2, 2);
+        }
+        drawText(&cg->menuFont, c555, shopMenuItems[cg->grove.shopSelection], 16, 155);
+    }
+    else
+    {
+        paletteColor_t color;
+        if (cg->grove.shopSelection == 7)
+        {
+            color = c500;
+            drawWsgSimpleScaled(&cg->grove.itemsWSGs[cg->grove.shopSelection],
+                                (TFT_WIDTH - (cg->grove.itemsWSGs[cg->grove.shopSelection].w * 4)) / 2, 100, 4, 4);
+        }
+        else
+        {
+            color = c555;
+            drawWsgSimpleScaled(&cg->grove.itemsWSGs[cg->grove.shopSelection],
+                                (TFT_WIDTH - (cg->grove.itemsWSGs[cg->grove.shopSelection].w * 4)) / 2, 60, 4, 4);
+        }
+        drawText(&cg->menuFont, color, shopMenuItems[cg->grove.shopSelection], 16, 155);
+    }
+
+    // Draw arrows
+    int16_t xOffset = (TFT_WIDTH - cg->arrow.w) / 2;
+    drawWsg(&cg->arrow, xOffset, 10, false, false, 0);
+    drawWsg(&cg->arrow, xOffset, TFT_HEIGHT - (cg->arrow.h + 10), false, true, 0);
+
+    // Draw title
+    drawText(&cg->menuFont, c444, shopText, (TFT_WIDTH - textWidth(&cg->menuFont, shopText)) / 2, 32);
+
+    // Draw cost
+    snprintf(buffer, sizeof(buffer) - 1, "Price: %" PRId16, itemPrices[cg->grove.shopSelection]);
+    drawText(&cg->menuFont, c555, buffer, 170, 155);
+
+    // Draw current rings
+    paletteColor_t color;
+    if (cg->grove.inv.money < itemPrices[cg->grove.shopSelection])
+    {
+        color = c500;
+    }
+    else 
+    {
+        color = c555;
+    }
+    drawWsgSimple(&cg->grove.itemsWSGs[11], 12, 165);
+    snprintf(buffer, sizeof(buffer) - 1, "Donut: %" PRId32, cg->grove.inv.money);
+    drawText(&cg->menuFont, color, buffer, 44, 175);
+
+    // Draw current inv count
+    snprintf(buffer, sizeof(buffer) - 1, "Owned: %" PRId16, cg->grove.inv.quantities[cg->grove.shopSelection]);
+    drawText(&cg->menuFont, c555, buffer, 170, 175);
+
+    // Draw help text
+    drawText(&cg->menuFont, c550, pressAB, 16, 195);
 }
 
 //==============================================================================
@@ -156,6 +243,10 @@ static void cg_drawHand(cGrove_t* cg)
 
 static void cg_drawItem(cGrove_t* cg, int8_t idx)
 {
+    if (!cg->grove.items[idx].active)
+    {
+        return;
+    }
     int16_t xOffset = cg->grove.items[idx].aabb.pos.x - cg->grove.camera.pos.x;
     int16_t yOffset = cg->grove.items[idx].aabb.pos.y - cg->grove.camera.pos.y;
     drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);

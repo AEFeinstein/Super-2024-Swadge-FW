@@ -17,6 +17,7 @@
 #include "cg_GroveAI.h"
 #include "cg_GroveDraw.h"
 #include "cg_Items.h"
+#include "cg_GroveItems.h"
 #include <esp_random.h>
 
 //==============================================================================
@@ -57,6 +58,10 @@ static const char* speechBubbleSprites[] = {
     "cg_text3.wsg",
 };
 
+static const char* eggsIntactSprites[] = {
+    "chowa_egg1.wsg", "chowa_egg2.wsg", "chowa_egg3.wsg", "chowa_egg4.wsg", "chowa_egg5.wsg", "chowa_egg6.wsg",
+};
+
 static const char* itemSprites[] = {
     "agi_book.wsg",   "cha_book.wsg", "spd_book.wsg",     "sta_book.wsg", "str_book.wsg", "cg_ball.wsg",
     "cg_crayons.wsg", "cg_knife.wsg", "cg_toy_sword.wsg", "cake.wsg",     "souffle.wsg",  "DonutRing.wsg",
@@ -64,17 +69,8 @@ static const char* itemSprites[] = {
 
 static const char shopMenuTitle[] = "Ring Shop";
 
-static const char* shopMenuItems[] = {
-    "Agility Stat Book",
-    "Charisma Stat Book",
-    "Strength Stat Book",
-    "Stamina Stat Book",
-    "Speed Stat Book",
-    "Souffle",
-    "Ball",
-    "Crayons",
-    "Toy Sword",
-    "Back",
+static const char* menuLabels[] = {
+    "Shop for items", "View inventory", "View Chowa", "Release Chowa", "Tutorial", "Exit Menu", "Exit Grove",
 };
 
 //==============================================================================
@@ -130,7 +126,6 @@ static void cg_bgmCB(void);
 // Variables
 //==============================================================================
 
-bool isBGMPlaying;
 cGrove_t* cgr;
 
 //==============================================================================
@@ -177,11 +172,19 @@ void cg_initGrove(cGrove_t* cg)
     {
         loadWsg(speechBubbleSprites[idx], &cg->grove.speechBubbles[idx], true);
     }
+    // Items
     cg->grove.itemsWSGs = calloc(ARRAY_SIZE(itemSprites), sizeof(wsg_t));
     for (int32_t idx = 0; idx < ARRAY_SIZE(itemSprites); idx++)
     {
         loadWsg(itemSprites[idx], &cg->grove.itemsWSGs[idx], true);
     }
+    // Eggs
+    cg->grove.eggs = calloc(ARRAY_SIZE(eggsIntactSprites), sizeof(wsg_t));
+    for (int32_t idx = 0; idx < ARRAY_SIZE(eggsIntactSprites); idx++)
+    {
+        loadWsg(eggsIntactSprites[idx], &cg->grove.eggs[idx], true);
+    }
+
     // Audio
     loadMidiFile("Chowa_Grove_Meadow.mid", &cg->grove.bgm, true);
 
@@ -248,17 +251,20 @@ void cg_initGrove(cGrove_t* cg)
     cg->grove.ring.aabb.width  = cg->grove.itemsWSGs[11].w;
 
     // Initialize shop menu
-    cg->grove.shop = initMenu(shopMenuTitle, shopMenuCb);
-    for (int idx = 0; idx < ARRAY_SIZE(shopMenuItems); idx++)
+    cg->grove.menu = initMenu(shopMenuTitle, shopMenuCb);
+    for (int idx = 0; idx < ARRAY_SIZE(menuLabels); idx++)
     {
-        addSingleItemToMenu(cg->grove.shop, shopMenuItems[idx]);
+        addSingleItemToMenu(cg->grove.menu, menuLabels[idx]);
     }
     // TODO: Recolor
     cg->grove.renderer = initMenuManiaRenderer(NULL, NULL, NULL);
-    cg->grove.shopOpen = true;
 
     // TODO: Load inventory from NVS
-    cg->grove.inv.money = 0;
+    cg->grove.inv.money = 10000;
+
+    // Set initial state
+    // TODO: Load tutorial if first run
+    cg->grove.state = CG_GROVE_FIELD;
 }
 
 /**
@@ -269,12 +275,17 @@ void cg_initGrove(cGrove_t* cg)
 void cg_deInitGrove(cGrove_t* cg)
 {
     deinitMenuManiaRenderer(cg->grove.renderer);
-    deinitMenu(cg->grove.shop);
+    deinitMenu(cg->grove.menu);
 
     // Unload assets
     // Audio
     unloadMidiFile(&cg->grove.bgm);
     // WSGs
+    for (uint8_t i = 0; i < ARRAY_SIZE(eggsIntactSprites); i++)
+    {
+        freeWsg(&cg->grove.eggs[i]);
+    }
+    free(cg->grove.eggs);
     for (uint8_t i = 0; i < ARRAY_SIZE(itemSprites); i++)
     {
         freeWsg(&cg->grove.itemsWSGs[i]);
@@ -316,69 +327,158 @@ void cg_deInitGrove(cGrove_t* cg)
 void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
 {
     // Play BGM if it's not playing
-    if (!isBGMPlaying)
+    if (!cg->grove.isBGMPlaying)
     {
         soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
-        isBGMPlaying = true;
+        cg->grove.isBGMPlaying = true;
     }
-    if (cg->grove.shopOpen)
+    switch (cg->grove.state)
     {
-        buttonEvt_t evt = {0};
-        while (checkButtonQueueWrapper(&evt))
+        case CG_GROVE_MENU:
         {
-            cg->grove.shop = menuButton(cg->grove.shop, evt);
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                cg->grove.menu = menuButton(cg->grove.menu, evt);
+            }
+            drawMenuMania(cg->grove.menu, cg->grove.renderer, elapsedUS);
+            break;
         }
-        drawMenuMania(cg->grove.shop, cg->grove.renderer, elapsedUS);
-        // TODO: Add ring count to menu
-        // TODO: Draw current inv count over selected item
-        return;
-    }
-    // Input
-    cg_handleInputGarden(cg);
-
-    // Garden Logic
-    if (cg->grove.holdingItem)
-    {
-        cg->grove.heldItem->aabb.pos = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos);
-    }
-    if (cg->grove.holdingChowa)
-    {
-        cg->grove.heldChowa->aabb.pos = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos);
-    }
-
-    // Resurface items dropped in the water
-    vec_t temp;
-    for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
-    {
-        if (&cg->grove.items[idx] != cg->grove.heldItem
-            && rectRectIntersection(cg->grove.items[idx].aabb, cg->grove.boundaries[CG_WATER], &temp))
+        case CG_GROVE_FIELD:
         {
-            cg->grove.items[idx].aabb.pos.x
-                = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[idx].w)));
-            cg->grove.items[idx].aabb.pos.y
-                = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[idx].h)));
+            // Input
+            cg_handleInputGarden(cg);
+
+            // Garden Logic
+            if (cg->grove.holdingItem)
+            {
+                cg->grove.heldItem->aabb.pos = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos);
+            }
+            if (cg->grove.holdingChowa)
+            {
+                cg->grove.heldChowa->aabb.pos = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos);
+            }
+
+            // Resurface items dropped in the water
+            vec_t temp;
+            for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
+            {
+                if (&cg->grove.items[idx] != cg->grove.heldItem
+                    && rectRectIntersection(cg->grove.items[idx].aabb, cg->grove.boundaries[CG_WATER], &temp))
+                {
+                    cg->grove.items[idx].aabb.pos.x
+                        = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[idx].w)));
+                    cg->grove.items[idx].aabb.pos.y
+                        = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[idx].h)));
+                }
+            }
+
+            // Spawn Rings
+            if (esp_random() % 512 == 0)
+            {
+                cg->grove.ring.aabb.pos.x
+                    = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[11].w)));
+                cg->grove.ring.aabb.pos.y
+                    = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[11].h)));
+                cg->grove.ring.active = true;
+            }
+
+            // Chowa AI
+            for (int32_t idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+            {
+                if (cg->grove.chowa[idx].chowa->active)
+                {
+                    cg_GroveAI(cg, &cg->grove.chowa[idx], elapsedUS);
+                }
+            }
+
+            // Draw
+            cg_groveDrawField(cg, elapsedUS);
+            break;
         }
-    }
-
-    // Spawn Rings
-    if (esp_random() % 512 == 0)
-    {
-        cg->grove.ring.aabb.pos.x = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[11].w)));
-        cg->grove.ring.aabb.pos.y = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[11].h)));
-        cg->grove.ring.active     = true;
-    }
-
-    // Chowa AI
-    for (int32_t idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
-    {
-        if (cg->grove.chowa[idx].chowa->active)
+        case CG_GROVE_SHOP:
         {
-            cg_GroveAI(cg, &cg->grove.chowa[idx], elapsedUS);
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && evt.button & PB_DOWN)
+                {
+                    cg->grove.shopSelection += 1;
+                    if (cg->grove.shopSelection >= CG_MAX_TYPE_ITEMS)
+                    {
+                        cg->grove.shopSelection = 0;
+                    }
+                }
+                else if (evt.down && evt.button & PB_UP)
+                {
+                    cg->grove.shopSelection -= 1;
+                    if (cg->grove.shopSelection < 0)
+                    {
+                        cg->grove.shopSelection = CG_MAX_TYPE_ITEMS - 1;
+                    }
+                }
+                else if (evt.down && evt.button & PB_A)
+                {
+                    // Attempt to buy an item
+                    if (cg->grove.inv.money >= itemPrices[cg->grove.shopSelection])
+                    {
+                        cg->grove.inv.money -= itemPrices[cg->grove.shopSelection];
+                        cg->grove.inv.quantities[cg->grove.shopSelection] += 1;
+                    }
+                }
+                else if (evt.down && evt.button & PB_B)
+                {
+                    // Attempt to sell an item
+                    if (cg->grove.inv.quantities[cg->grove.shopSelection] > 0)
+                    {
+                        cg->grove.inv.money += itemPrices[cg->grove.shopSelection];
+                        cg->grove.inv.quantities[cg->grove.shopSelection] -= 1;
+                    }
+                }
+                else if (evt.down)
+                {
+                    cg->grove.state = CG_GROVE_MENU;
+                }
+            }
+            // Draw shop
+            cg_groveDrawShop(cg);
+            break;
+        }
+        case CG_GROVE_INVENTORY:
+        {
+            // View items and quantities
+            // Handle input
+            // Adds item to field, if too many, pull last active item back to inv
+            // Draw
+            // break;
+        }
+        case CG_GROVE_VIEW_STATS:
+        {
+            // Display stats
+            // Handle input, up/down, back, A prompts user to kick guest (only if guest)
+            // Draw Stats
+            // break;
+        }
+        case CG_GROVE_ABANDON:
+        {
+            // Take Chowa behind the shed
+            // Handle input, up/down, back, A for buying plus prompt
+            // Draw kill screen
+            // break;
+        }
+        case CG_GROVE_TUTORIAL:
+        {
+            // Handle input
+            // Draw Tutorial
+            // break;
+        }
+        default:
+        {
+            // Something isn't implemented, so kick back to menu
+            cg->grove.state = CG_GROVE_MENU;
+            break;
         }
     }
-
-    // Draw
-    cg_groveDraw(cg, elapsedUS);
 }
 
 //==============================================================================
@@ -477,7 +577,7 @@ static void cg_handleInputGarden(cGrove_t* cg)
             }
             if (evt.button & PB_START && evt.down)
             {
-                cg->grove.shopOpen = true;
+                cg->grove.state = CG_GROVE_MENU;
             }
         }
     }
@@ -541,7 +641,7 @@ static void cg_handleInputGarden(cGrove_t* cg)
             }
             if (evt.button & PB_START && evt.down)
             {
-                cg->grove.shopOpen = true;
+                cg->grove.state = CG_GROVE_MENU;
             }
         }
     }
@@ -613,58 +713,50 @@ static void cg_setupBorders(cGrove_t* cg)
 
 static void shopMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    // FIXME: implement prices
     if (selected)
     {
-        if (label == shopMenuItems[0])
+        if (label == menuLabels[0])
         {
-            // Agi book
+            // Enter Shop
+            cgr->grove.state = CG_GROVE_SHOP;
         }
-        else if (label == shopMenuItems[1])
+        if (label == menuLabels[2])
         {
-            // Cha book
+            // View inventory, spawn in world
+            // Settings menu, use scrolls to pick item
+            cgr->grove.state = CG_GROVE_INVENTORY;
         }
-        else if (label == shopMenuItems[2])
+        if (label == menuLabels[2])
         {
-            // Spd book
+            // View Stats and Guests, kick guests
+            cgr->grove.state = CG_GROVE_VIEW_STATS;
         }
-        else if (label == shopMenuItems[3])
+        else if (label == menuLabels[3])
         {
-            // Sta book
+            // Release Chowa
+            cgr->grove.state = CG_GROVE_ABANDON;
         }
-        else if (label == shopMenuItems[4])
+        else if (label == menuLabels[3])
         {
-            // Str book
+            // Tutorial
+            cgr->grove.state = CG_GROVE_TUTORIAL;
         }
-        else if (label == shopMenuItems[5])
-        {
-            // Souffle
-        }
-        else if (label == shopMenuItems[6])
-        {
-            // Ball
-        }
-        else if (label == shopMenuItems[7])
-        {
-            // Crayons
-        }
-        else if (label == shopMenuItems[8])
-        {
-            // Toy Sword
-        }
-        else if (label == shopMenuItems[9])
+        else if (label == menuLabels[5])
         {
             // Back
-            cgr->grove.shopOpen = false;
+            cgr->grove.state = CG_GROVE_FIELD;
         }
-        else
+        else if (label == menuLabels[6])
         {
-            // Unset item
+            // Exit Mode
+            cgr->state  = CG_MAIN_MENU;
+            cgr->unload = true;
+            globalMidiPlayerStop(true);
         }
     }
 }
 
 static void cg_bgmCB()
 {
-    isBGMPlaying = false;
+    cgr->grove.isBGMPlaying = false;
 }

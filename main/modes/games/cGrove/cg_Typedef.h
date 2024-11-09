@@ -225,12 +225,22 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_GROVE_MAX_ITEMS       11 ///< Max number of items. Cannot assume unique
+#define CG_GROVE_MAX_ITEMS       10 ///< Max number of items in the grove
 #define CG_GROVE_MAX_GUEST_CHOWA 5  ///< Maximum number of Chowa allowed to be in the grove at once
 
 #define CG_GROVE_SCREEN_BOUNDARY 32 ///< How close the cursor can get to the edge of the screen
 
 // Enum =================================
+typedef enum
+{
+    CG_GROVE_FIELD,
+    CG_GROVE_MENU,
+    CG_GROVE_SHOP,
+    CG_GROVE_INVENTORY,
+    CG_GROVE_VIEW_STATS,
+    CG_GROVE_ABANDON,
+    CG_GROVE_TUTORIAL,
+} cgGroveState_t;
 
 typedef enum
 {
@@ -255,12 +265,29 @@ typedef enum
     CHOWA_PET,      ///< Chowa is being pet
 } cgChowaStateGarden_t;
 
+typedef enum
+{
+    CG_BOOK_AGI,
+    CG_BOOK_CHA,
+    CG_BOOK_SPD,
+    CG_BOOK_STA,
+    CG_BOOK_STR,
+    CG_BALL,
+    CG_CRAYONS,
+    CG_TOY_SWORD,
+    CG_KNIFE,
+    CG_CAKE,
+    CG_SOUFFLE,
+    CG_CHOWA_EGG,
+    CG_MAX_TYPE_ITEMS
+} cgGroveItemEnum_t;
+
 // Structs ==============================
 typedef struct
 {
-    int16_t money;                          ///< Money
-    cgItem_t items[CG_GROVE_MAX_ITEMS];     ///< Item IDs
-    uint8_t quantities[CG_GROVE_MAX_ITEMS]; ///< Item qtys
+    int16_t money;                         ///< Money
+    cgItem_t items[CG_MAX_TYPE_ITEMS];     ///< Item IDs
+    uint8_t quantities[CG_MAX_TYPE_ITEMS]; ///< Item qtys
 } cgInventory_t;
 
 typedef struct
@@ -309,8 +336,12 @@ typedef struct
     wsg_t* notes;          ///< Musical notes
     wsg_t* speechBubbles;  ///< Speech Bubbles for Chowa
     wsg_t* itemsWSGs;      ///< Item sprites
+    wsg_t* eggs;           ///< Uncracked eggs
     // Audio
     midiFile_t bgm; ///< Main BGM for the Grove
+
+    // State
+    cgGroveState_t state; ///< Current state of the grove
 
     // Field data
     cgItem_t items[CG_GROVE_MAX_ITEMS];                            ///< Items present in the Grove
@@ -318,12 +349,15 @@ typedef struct
     cgGroveChowa_t chowa[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA]; ///< List of all chowa in the garden
     bool bgmPlaying;                                               ///< If the BGM is active
     cgInventory_t inv;                                             ///< Inventory struct
-    cgGroveMoney_t ring;                                           ///< Rings available to collect
+    cgGroveMoney_t ring;                                           ///< Ring available to collect
+    bool isBGMPlaying;                                             ///< If the BGM needs to be restarted
 
     // Menu
-    menu_t* shop;                  ///< Shop menu object
+    menu_t* menu;                  ///< Shop menu object
     menuManiaRenderer_t* renderer; ///< Menu renderer
-    bool shopOpen;                 ///< If Shop is open and being drawn or not
+
+    // Shop
+    int8_t shopSelection; ///< Index of the shop currently set
 
     // Player resources
     rectangle_t camera;        ///< In-garden camera viewport
@@ -460,10 +494,10 @@ typedef struct
     wsg_t dojoBG;       ///< Dojo Background image
     wsg_t* dojoBGItems; ///< Dojo BG items
     // UI Sprites
-    wsg_t arrow; ///< Arrow sprite
     // - Punch icon
     // - Kick icon
-    // NPC sprites
+    // - Dodge
+    // - Headbutt
 
     // Fonts
     font_t sparTitleFont;        ///< Font used for larger text
@@ -520,6 +554,8 @@ typedef struct
     // WSGs
     wsg_t* title;                      ///< Title screen sprites
     wsg_t* chowaWSGs[CG_NUM_TYPES][2]; ///< Chowa sprites
+    wsg_t arrow;                       ///< Arrow str
+    // NPC sprites
 
     // Modes
     cgGrove_t grove; ///< Garden data

@@ -118,6 +118,7 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             {
                 c->timeLeft = c->nextTimeLeft;
                 c->gState   = c->nextState;
+                // Update stamina stat
             }
             fastNormVec(&difference.x, &difference.y);
             int16_t angle = getAtan2(difference.y, difference.x);

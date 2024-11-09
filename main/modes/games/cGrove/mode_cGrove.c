@@ -118,16 +118,17 @@ static void cGroveEnterMode(void)
 
     // Load Chowa WSGs
     cg_initChowaWSGs(cg);
-
-    // Load a font
-    loadFont("ibm_vga8.font", &cg->menuFont, true);
-
     // Load title screen
     cg->title = calloc(ARRAY_SIZE(cGroveTitleSprites), sizeof(wsg_t));
     for (int32_t idx = 0; idx < ARRAY_SIZE(cGroveTitleSprites); idx++)
     {
         loadWsg(cGroveTitleSprites[idx], &cg->title[idx], true);
     }
+    // Multi-use
+    loadWsg("cg_Arrow.wsg", &cg->arrow, true);
+
+    // Load a font
+    loadFont("ibm_vga8.font", &cg->menuFont, true);
 
     // Menu
     cg->menu                                   = initMenu(cGroveTitle, cg_menuCB);
@@ -156,7 +157,10 @@ static void cGroveEnterMode(void)
     cg->state       = CG_MAIN_MENU;
     cg->titleActive = true;
 
-    // FIXME: test
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
+
+    // FIXME: test. Load values from NVM
     for (int i = 0; i < CG_MAX_CHOWA; i++)
     {
         cg->chowa[i].active = true;
@@ -226,17 +230,16 @@ static void cGroveExitMode(void)
     deinitMenu(cg->menu);
     deinitMenuManiaRenderer(cg->renderer);
 
+    // Fonts
+    freeFont(&cg->menuFont);
+
     // WSGs
     for (uint8_t i = 0; i < ARRAY_SIZE(cGroveTitleSprites); i++)
     {
         freeWsg(&cg->title[i]);
     }
     free(cg->title);
-
-    // Fonts
-    freeFont(&cg->menuFont);
-
-    // WSGs
+    freeWsg(&cg->arrow);
     cg_deInitChowaWSGs(cg);
 
     // Main
@@ -264,6 +267,7 @@ static void cGroveMainLoop(int64_t elapsedUs)
     if (cg->unload)
     {
         // Resetting back to the menu
+        cg->unload = false;
         switch (cg->state)
         {
             case CG_GROVE:

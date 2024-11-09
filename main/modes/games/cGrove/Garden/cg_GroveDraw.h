@@ -20,4 +20,5 @@
 // Function declarations
 //==============================================================================
 
-void cg_groveDraw(cGrove_t* cg, int64_t elapsedUs);
+void cg_groveDrawField(cGrove_t* cg, int64_t elapsedUs);
+void cg_groveDrawShop(cGrove_t* cg);

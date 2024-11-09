@@ -5,6 +5,7 @@
 - Update menu colors
 - Load data from NVM
 - View recently interacted with players
+- Tutorials play the first time you load a mode, and then can be recalled any time
 
 ## Spar
 - Add BGM
@@ -26,8 +27,10 @@
   - Using item
 - Add menu for buying items
 - Stats can be increased
+- Stats Screen + owner
 - Save and load from NVS
 - Create/Add SFX
+- Eggs/Egg spawn timer
 
 ## Race
 - Build mode

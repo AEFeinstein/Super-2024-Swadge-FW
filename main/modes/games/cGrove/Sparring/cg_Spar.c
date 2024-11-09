@@ -62,7 +62,6 @@ void cg_initSpar(cGrove_t* grove)
     {
         loadWsg(sparDojoSprites[idx], &cg->spar.dojoBGItems[idx], true);
     }
-    loadWsg("cg_Arrow.wsg", &cg->spar.arrow, true);
 
     // Fonts
     loadFont("righteous_150.font", &cg->spar.sparTitleFont, true);
@@ -87,6 +86,7 @@ void cg_initSpar(cGrove_t* grove)
     sparLoadBattleRecords();
 
     // Load the splash screen
+    // TODO: Load tutorial the first time mode is loaded
     cg->spar.state = CG_SPAR_SPLASH;
 }
 
@@ -107,7 +107,6 @@ void cg_deInitSpar()
     freeFont(&cg->spar.sparRegFont);
 
     // Free assets
-    freeWsg(&cg->spar.arrow);
     freeWsg(&cg->spar.dojoBG);
     for (uint8_t i = 0; i < ARRAY_SIZE(sparDojoSprites); i++)
     {
@@ -280,6 +279,7 @@ static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             // Go to main menu
             cg->state      = CG_MAIN_MENU;
+            cg->unload     = true;
             cg->spar.state = CG_SPAR_SPLASH;
         }
         else
