@@ -28,8 +28,14 @@
 // Consts
 //==============================================================================
 
-static const char pressAB[]  = "Press A to buy, press B to sell";
-static const char shopText[] = "Chowa Gray Market";
+static const char pressAB[]        = "Press A to buy, press B to sell";
+static const char shopText[]       = "Chowa Gray Market";
+static const char invText[]        = "Inventory";
+static const char statText[]       = "Chowa Stats";
+static const char kickChowa[]      = "Press A to kick this Chowa";
+static const char slotEmpty[]      = "No guest in this slot";
+static const char confirmKick[]    = "Are you sure you want to kick this Chowa?";
+static const char confirmDefault[] = "Press A to go back, press B to confirm";
 
 //==============================================================================
 // Function declarations
@@ -66,18 +72,33 @@ static void cg_drawRing(cGrove_t* cg);
 static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS);
 
 /**
- * @brief Debug visualization
- *
- * @param cg Game Data
- */
-static void cg_groveDebug(cGrove_t* cg);
-
-/**
  * @brief Draws the UI elements
  *
  * @param cg Game Data
  */
 static void cg_drawUI(cGrove_t* cg);
+
+/**
+ * @brief Draw items in a menu
+ *
+ * @param cg Game Data
+ */
+static void cg_drawItemsMenu(cGrove_t* cg);
+
+/**
+ * @brief Draws a confirmation box in the middle of the screen with a yes/no prompt
+ *
+ * @param cg Game Date
+ * @param string String to print to screen
+ */
+static void cg_drawConfirmBox(cGrove_t* cg, char* string);
+
+/**
+ * @brief Debug visualization
+ *
+ * @param cg Game Data
+ */
+static void cg_groveDebug(cGrove_t* cg);
 
 //==============================================================================
 // Functions
@@ -121,7 +142,6 @@ void cg_groveDrawField(cGrove_t* cg, int64_t elapsedUs)
  * @brief Draws the Shop menu
  *
  * @param cg Game Data
- * @param idx Index to draw
  */
 void cg_groveDrawShop(cGrove_t* cg)
 {
@@ -130,37 +150,7 @@ void cg_groveDrawShop(cGrove_t* cg)
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_WIDTH, c111);
 
     // Draw Currently selected item and name
-    if (cg->grove.shopSelection == 9 || cg->grove.shopSelection == 10)
-    {
-        drawWsgSimpleScaled(&cg->grove.itemsWSGs[cg->grove.shopSelection],
-                            (TFT_WIDTH - (cg->grove.itemsWSGs[cg->grove.shopSelection].w * 2)) / 2, 40, 2, 2);
-        drawText(&cg->menuFont, c555, shopMenuItems[cg->grove.shopSelection], 16, 155);
-    }
-    else if (cg->grove.shopSelection == 11)
-    {
-        for (int idx = 0; idx < 6; idx++)
-        {
-            drawWsgSimpleScaled(&cg->grove.eggs[idx], 32 + (36 * idx), 80, 2, 2);
-        }
-        drawText(&cg->menuFont, c555, shopMenuItems[cg->grove.shopSelection], 16, 155);
-    }
-    else
-    {
-        paletteColor_t color;
-        if (cg->grove.shopSelection == 7)
-        {
-            color = c500;
-            drawWsgSimpleScaled(&cg->grove.itemsWSGs[cg->grove.shopSelection],
-                                (TFT_WIDTH - (cg->grove.itemsWSGs[cg->grove.shopSelection].w * 4)) / 2, 100, 4, 4);
-        }
-        else
-        {
-            color = c555;
-            drawWsgSimpleScaled(&cg->grove.itemsWSGs[cg->grove.shopSelection],
-                                (TFT_WIDTH - (cg->grove.itemsWSGs[cg->grove.shopSelection].w * 4)) / 2, 60, 4, 4);
-        }
-        drawText(&cg->menuFont, color, shopMenuItems[cg->grove.shopSelection], 16, 155);
-    }
+    cg_drawItemsMenu(cg);
 
     // Draw arrows
     int16_t xOffset = (TFT_WIDTH - cg->arrow.w) / 2;
@@ -168,7 +158,7 @@ void cg_groveDrawShop(cGrove_t* cg)
     drawWsg(&cg->arrow, xOffset, TFT_HEIGHT - (cg->arrow.h + 10), false, true, 0);
 
     // Draw title
-    drawText(&cg->menuFont, c444, shopText, (TFT_WIDTH - textWidth(&cg->menuFont, shopText)) / 2, 32);
+    drawText(&cg->largeMenuFont, c444, shopText, (TFT_WIDTH - textWidth(&cg->largeMenuFont, shopText)) >> 1, 30);
 
     // Draw cost
     snprintf(buffer, sizeof(buffer) - 1, "Price: %" PRId16, itemPrices[cg->grove.shopSelection]);
@@ -180,7 +170,7 @@ void cg_groveDrawShop(cGrove_t* cg)
     {
         color = c500;
     }
-    else 
+    else
     {
         color = c555;
     }
@@ -194,6 +184,172 @@ void cg_groveDrawShop(cGrove_t* cg)
 
     // Draw help text
     drawText(&cg->menuFont, c550, pressAB, 16, 195);
+}
+
+/**
+ * @brief Draws the inventory
+ *
+ * @param cg Game Data
+ */
+void cg_groveDrawInv(cGrove_t* cg)
+{
+    // Draw BG
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
+
+    // Draw Title
+    drawText(&cg->largeMenuFont, c225, invText, (TFT_WIDTH - textWidth(&cg->largeMenuFont, invText)) >> 1, 32);
+
+    // Draw Currently selected item and name
+    cg_drawItemsMenu(cg);
+
+    // Draw arrows
+    int16_t xOffset = (TFT_WIDTH - cg->arrow.w) / 2;
+    drawWsg(&cg->arrow, xOffset, 10, false, false, 0);
+    drawWsg(&cg->arrow, xOffset, TFT_HEIGHT - (cg->arrow.h + 10), false, true, 0);
+
+    // Draw owned quantity
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer) - 1, "Owned: %" PRId16, cg->grove.inv.quantities[cg->grove.shopSelection]);
+    drawText(&cg->menuFont, c555, buffer, 16, 175);
+
+    // Draw qty on field
+    int8_t qty = 0;
+    for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
+    {
+        if (strcmp(shopMenuItems[cg->grove.shopSelection], cg->grove.items[idx].name) == 0)
+        {
+            qty++;
+        }
+    }
+    snprintf(buffer, sizeof(buffer) - 1, "Number on field: %" PRId16, qty);
+    drawText(&cg->menuFont, c555, buffer, 16, 195);
+}
+
+void cg_groveDrawStats(cGrove_t* cg)
+{
+    // Draw BG
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c010);
+
+    // Title
+    drawText(&cg->largeMenuFont, c444, statText, 16, 26);
+
+    // Draw arrows
+    int16_t xOffset = (TFT_WIDTH - cg->arrow.w) >> 1;
+    drawWsg(&cg->arrow, xOffset, 10, false, false, 0);
+    drawWsg(&cg->arrow, xOffset, TFT_HEIGHT - (cg->arrow.h + 10), false, true, 0);
+
+    // Get Chowa
+    cgChowa_t* c;
+    if (cg->grove.shopSelection > CG_MAX_CHOWA)
+    {
+        // Is a guest
+        c = &cg->guests[cg->grove.shopSelection - CG_MAX_CHOWA];
+    }
+    else
+    {
+        c = &cg->chowa[cg->grove.shopSelection];
+    }
+
+    // Draw Chowa
+    if (c->active)
+    {
+        wsg_t* spr;
+        spr = cg_getChowaWSG(cg, c, CG_ANIM_WALK_DOWN, 0);
+        drawText(&cg->largeMenuFont, c555, c->name, 16, 50);
+        drawWsgSimpleScaled(spr, 20, 68, 3, 3);
+
+        // Draw stats
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer) - 1, "Owner: %s", c->owner);
+        drawText(&cg->menuFont, c555, buffer, 110, 75);
+
+        // Mood
+        switch (c->mood)
+        {
+            case CG_HAPPY:
+            {
+                drawText(&cg->menuFont, c555, "Mood: Happy", 110, 90);
+                break;
+            }
+            case CG_WORRIED:
+            {
+                drawText(&cg->menuFont, c555, "Mood: Worried", 110, 90);
+                break;
+            }
+            case CG_SAD:
+            {
+                drawText(&cg->menuFont, c555, "Mood: Sad", 110, 90);
+                break;
+            }
+            case CG_ANGRY:
+            {
+                drawText(&cg->menuFont, c555, "Mood: Angry", 110, 90);
+                break;
+            }
+            case CG_CONFUSED:
+            {
+                drawText(&cg->menuFont, c555, "Mood: Confused", 110, 90);
+                break;
+            }
+            case CG_SURPRISED:
+            {
+                drawText(&cg->menuFont, c555, "Mood: Surprised", 110, 90);
+                break;
+            }
+            case CG_SICK:
+            {
+                drawText(&cg->menuFont, c555, "Mood: Sick", 110, 90);
+                break;
+            }
+            case CG_NEUTRAL:
+            default:
+            {
+                drawText(&cg->menuFont, c555, "Mood: Neutral", 110, 90);
+            }
+        }
+
+        // Age
+        if (c->age > CG_ADULT_AGE)
+        {
+            drawText(&cg->menuFont, c555, "Age: Adult", 110, 105);
+        }
+        else
+        {
+            drawText(&cg->menuFont, c555, "Age: Child", 110, 105);
+        }
+
+        // Stats
+        snprintf(buffer, sizeof(buffer) - 1, "Agility: %d", c->stats[CG_AGILITY]);
+        drawText(&cg->menuFont, c555, buffer, 110, 120);
+        snprintf(buffer, sizeof(buffer) - 1, "Charisma: %d", c->stats[CG_CHARISMA]);
+        drawText(&cg->menuFont, c555, buffer, 110, 135);
+        snprintf(buffer, sizeof(buffer) - 1, "Speed: %d", c->stats[CG_SPEED]);
+        drawText(&cg->menuFont, c555, buffer, 110, 150);
+        snprintf(buffer, sizeof(buffer) - 1, "Stamina: %d", c->stats[CG_STAMINA]);
+        drawText(&cg->menuFont, c555, buffer, 110, 165);
+        snprintf(buffer, sizeof(buffer) - 1, "Strength: %d", c->stats[CG_STRENGTH]);
+        drawText(&cg->menuFont, c555, buffer, 110, 180);
+        snprintf(buffer, sizeof(buffer) - 1, "HP: %d", c->stats[CG_HEALTH]);
+        drawText(&cg->menuFont, c555, buffer, 200, 120);
+
+        // Draw kick text for guests
+        if (cg->grove.shopSelection > CG_MAX_CHOWA)
+        {
+            drawText(&cg->menuFont, c550, kickChowa, 16, 195);
+        }
+    }
+    else
+    {
+        // Chowa is inactive
+        drawText(&cg->largeMenuFont, c555, slotEmpty, (TFT_WIDTH - textWidth(&cg->largeMenuFont, slotEmpty)) >> 1,
+                 (TFT_HEIGHT - cg->largeMenuFont.height) >> 1);
+    }
+
+    // Draw confirmation box
+    if (cg->grove.confirm)
+    {
+        cg_drawConfirmBox(cg, confirmKick);
+    }
 }
 
 //==============================================================================
@@ -250,7 +406,10 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx)
     int16_t xOffset = cg->grove.items[idx].aabb.pos.x - cg->grove.camera.pos.x;
     int16_t yOffset = cg->grove.items[idx].aabb.pos.y - cg->grove.camera.pos.y;
     drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);
-    drawText(&cg->menuFont, c555, cg->grove.items[idx].name, xOffset, yOffset - 16);
+    // TODO: Shrink food
+    drawText(&cg->menuFont, c555, cg->grove.items[idx].name,
+             xOffset - (textWidth(&cg->menuFont, cg->grove.items[idx].name) - cg->grove.items[idx].spr.w) / 2,
+             yOffset - 16);
 }
 
 static void cg_drawRing(cGrove_t* cg)
@@ -560,6 +719,54 @@ static void cg_drawUI(cGrove_t* cg)
     char buffer[24];
     snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, cg->grove.inv.money);
     drawText(&cg->menuFont, c555, buffer, 45, 23);
+}
+
+static void cg_drawItemsMenu(cGrove_t* cg)
+{
+    if (cg->grove.shopSelection == 9 || cg->grove.shopSelection == 10)
+    {
+        drawWsgSimpleScaled(&cg->grove.itemsWSGs[cg->grove.shopSelection],
+                            (TFT_WIDTH - (cg->grove.itemsWSGs[cg->grove.shopSelection].w * 2)) / 2, 42, 2, 2);
+        drawText(&cg->menuFont, c555, shopMenuItems[cg->grove.shopSelection], 16, 155);
+    }
+    else if (cg->grove.shopSelection == 11)
+    {
+        for (int idx = 0; idx < 6; idx++)
+        {
+            drawWsgSimpleScaled(&cg->grove.eggs[idx], 32 + (36 * idx), 80, 2, 2);
+        }
+        drawText(&cg->menuFont, c555, shopMenuItems[cg->grove.shopSelection], 16, 155);
+    }
+    else
+    {
+        paletteColor_t color;
+        if (cg->grove.shopSelection == 7)
+        {
+            color = c500;
+            drawWsgSimpleScaled(&cg->grove.itemsWSGs[cg->grove.shopSelection],
+                                (TFT_WIDTH - (cg->grove.itemsWSGs[cg->grove.shopSelection].w * 4)) / 2, 100, 4, 4);
+        }
+        else
+        {
+            color = c555;
+            drawWsgSimpleScaled(&cg->grove.itemsWSGs[cg->grove.shopSelection],
+                                (TFT_WIDTH - (cg->grove.itemsWSGs[cg->grove.shopSelection].w * 4)) / 2, 60, 4, 4);
+        }
+        drawText(&cg->menuFont, color, shopMenuItems[cg->grove.shopSelection], 16, 155);
+    }
+}
+
+static void cg_drawConfirmBox(cGrove_t* cg, char* string)
+{
+    // Draw box
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+
+    // Draw provided text
+    drawText(&cg->menuFont, c555, string, (TFT_WIDTH - textWidth(&cg->menuFont, string)) >> 1, (TFT_HEIGHT - 32) >> 1);
+
+    // Draw yes/no prompt
+    drawText(&cg->menuFont, c555, confirmDefault, (TFT_WIDTH - textWidth(&cg->menuFont, confirmDefault)) >> 1,
+             (TFT_HEIGHT + 32) >> 1);
 }
 
 static void cg_groveDebug(cGrove_t* cg)

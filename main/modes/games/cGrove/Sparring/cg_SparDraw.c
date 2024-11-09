@@ -116,11 +116,10 @@ void cg_drawSparRecord(cGrove_t* cg)
     // Draw Match title + Arrows
     drawText(&cg->spar.sparRegFont, c555, record->matchTitle,
              (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2, 8);
-    drawWsg(&cg->arrow,
-            (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2 - (4 + cg->arrow.w), 4, false,
-            false, 270);
-    drawWsg(&cg->arrow, (TFT_WIDTH + textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2 + 4, 4, false,
-            false, 90);
+    drawWsg(&cg->arrow, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2 - (4 + cg->arrow.w), 4,
+            false, false, 270);
+    drawWsg(&cg->arrow, (TFT_WIDTH + textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2 + 4, 4, false, false,
+            90);
 
     // Player names + vs label
     int16_t vsStart = (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, "VS")) / 2;

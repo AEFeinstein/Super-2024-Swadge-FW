@@ -37,6 +37,7 @@ static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Pe
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
 static const uint32_t cGroveEnabledVals[]       = {true, false};
+static const char johnny[]                      = "Johnny Wycliffe";
 
 static const char* cGroveTitleSprites[] = {"cg_cloud.wsg",          "cg_sky.wsg",
                                            "cg_title_1.wsg",        "cg_title_2.wsg",
@@ -128,7 +129,8 @@ static void cGroveEnterMode(void)
     loadWsg("cg_Arrow.wsg", &cg->arrow, true);
 
     // Load a font
-    loadFont("ibm_vga8.font", &cg->menuFont, true);
+    loadFont("cg_font_body_thin.font", &cg->menuFont, true);
+    loadFont("cg_font_body.font", &cg->largeMenuFont, true);
 
     // Menu
     cg->menu                                   = initMenu(cGroveTitle, cg_menuCB);
@@ -165,6 +167,10 @@ static void cGroveEnterMode(void)
     {
         cg->chowa[i].active = true;
         cg->chowa[i].type   = CG_KING_DONUT;
+        for (int idx = 0; idx < CG_STAT_COUNT; idx++)
+        {
+            cg->chowa[i].stats[idx] = esp_random() % 255;
+        }
         switch (esp_random() % 4)
         {
             case 0:
@@ -181,11 +187,20 @@ static void cGroveEnterMode(void)
                 break;
         }
         cg->chowa[i].playerAffinity = 101;
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", i);
+        strcpy(cg->chowa[i].name, buffer);
+        strcpy(cg->chowa[i].owner, johnny);
     }
     for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
     {
         cg->guests[i].active = true;
         cg->guests[i].type   = CG_KING_DONUT;
+        cg->guests[i].age    = 65;
+        for (int idx = 0; idx < CG_STAT_COUNT; idx++)
+        {
+            cg->guests[i].stats[idx] = esp_random() % 255;
+        }
         switch (esp_random() % 4)
         {
             case 0:
@@ -202,6 +217,11 @@ static void cGroveEnterMode(void)
                 break;
         }
         cg->guests[i].playerAffinity = 1;
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", (i + 5));
+        strcpy(cg->guests[i].name, buffer);
+        snprintf(buffer, sizeof(buffer) - 1, "Owner%d", i);
+        strcpy(cg->guests[i].owner, buffer);
     }
 }
 
@@ -232,6 +252,7 @@ static void cGroveExitMode(void)
 
     // Fonts
     freeFont(&cg->menuFont);
+    freeFont(&cg->largeMenuFont);
 
     // WSGs
     for (uint8_t i = 0; i < ARRAY_SIZE(cGroveTitleSprites); i++)

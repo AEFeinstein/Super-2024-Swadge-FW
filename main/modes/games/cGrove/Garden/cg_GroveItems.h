@@ -4,9 +4,9 @@
  * @brief Item data
  * @version 1.0
  * @date 2024-11-08
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 

@@ -229,23 +229,6 @@ void cg_initGrove(cGrove_t* cg)
         }
     }
 
-    // Initialize items
-    for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
-    {
-        // FIXME: Load from NVS
-        cg->grove.items[idx].active = true;
-        cg->grove.items[idx].spr    = cg->grove.itemsWSGs[idx];
-        cg->grove.items[idx].aabb.pos.x
-            = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[idx].w)));
-        cg->grove.items[idx].aabb.pos.y
-            = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[idx].h)));
-        cg->grove.items[idx].aabb.height = cg->grove.itemsWSGs[idx].h;
-        cg->grove.items[idx].aabb.width  = cg->grove.itemsWSGs[idx].w;
-        char buffer[32];
-        snprintf(buffer, sizeof(buffer) - 1, "Item_%d" PRId16, idx);
-        strcpy(cg->grove.items[idx].name, buffer);
-    }
-
     // Init Ring
     cg->grove.ring.aabb.height = cg->grove.itemsWSGs[11].h;
     cg->grove.ring.aabb.width  = cg->grove.itemsWSGs[11].w;
@@ -329,7 +312,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
     // Play BGM if it's not playing
     if (!cg->grove.isBGMPlaying)
     {
-        soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
+        // soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
         cg->grove.isBGMPlaying = true;
     }
     switch (cg->grove.state)
@@ -448,18 +431,123 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
         {
             // View items and quantities
             // Handle input
-            // Adds item to field, if too many, pull last active item back to inv
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && evt.button & PB_DOWN)
+                {
+                    cg->grove.shopSelection += 1;
+                    if (cg->grove.shopSelection >= CG_GROVE_MAX_ITEMS)
+                    {
+                        cg->grove.shopSelection = 0;
+                    }
+                }
+                else if (evt.down && evt.button & PB_UP)
+                {
+                    cg->grove.shopSelection -= 1;
+                    if (cg->grove.shopSelection < 0)
+                    {
+                        cg->grove.shopSelection = CG_GROVE_MAX_ITEMS - 1;
+                    }
+                }
+                else if (evt.down && evt.button & PB_A)
+                {
+                    // Attempt to add item to field
+                    if (cg->grove.inv.quantities[cg->grove.shopSelection] > 0)
+                    {
+                        cg->grove.items[cg->grove.groveActiveItemIdx].active = true;
+                        cg->grove.items[cg->grove.groveActiveItemIdx].spr
+                            = cg->grove.itemsWSGs[cg->grove.shopSelection];
+                        cg->grove.items[cg->grove.groveActiveItemIdx].aabb.pos.x
+                            = 32
+                              + (esp_random()
+                                 % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[cg->grove.shopSelection].w)));
+                        cg->grove.items[cg->grove.groveActiveItemIdx].aabb.pos.y
+                            = 32
+                              + (esp_random()
+                                 % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[cg->grove.shopSelection].h)));
+                        cg->grove.items[cg->grove.groveActiveItemIdx].aabb.height
+                            = cg->grove.itemsWSGs[cg->grove.shopSelection].h;
+                        cg->grove.items[cg->grove.groveActiveItemIdx].aabb.width
+                            = cg->grove.itemsWSGs[cg->grove.shopSelection].w;
+                        strcpy(cg->grove.items[cg->grove.groveActiveItemIdx].name,
+                               shopMenuItems[cg->grove.shopSelection]);
+                        cg->grove.groveActiveItemIdx++;
+                        cg->grove.inv.quantities[cg->grove.shopSelection] -= 1;
+                        if (cg->grove.groveActiveItemIdx >= CG_GROVE_MAX_ITEMS)
+                        {
+                            cg->grove.groveActiveItemIdx = 0;
+                        }
+                    }
+                }
+                else if (evt.down && evt.button & PB_B)
+                {
+                    // Clear all items from field
+                    for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
+                    {
+                        for (int idx2 = 0; idx2 < CG_MAX_TYPE_ITEMS; idx2++)
+                        {
+                            if (strcmp(cg->grove.items[idx].name, shopMenuItems[idx2]) == 0)
+                            {
+                                cg->grove.inv.quantities[idx2] += 1;
+                            }
+                        }
+                        cg->grove.items[idx].active = false;
+                        strcpy(cg->grove.items[idx].name, "");
+                    }
+                    cg->grove.groveActiveItemIdx = 0;
+                }
+                else if (evt.down)
+                {
+                    cg->grove.state = CG_GROVE_MENU;
+                }
+            }
             // Draw
-            // break;
+            cg_groveDrawInv(cg);
+            break;
         }
         case CG_GROVE_VIEW_STATS:
         {
             // Display stats
             // Handle input, up/down, back, A prompts user to kick guest (only if guest)
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && evt.button & PB_DOWN)
+                {
+                    cg->grove.shopSelection += 1;
+                    if (cg->grove.shopSelection >= CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA)
+                    {
+                        cg->grove.shopSelection = 0;
+                    }
+                }
+                else if (evt.down && evt.button & PB_UP)
+                {
+                    cg->grove.shopSelection -= 1;
+                    if (cg->grove.shopSelection < 0)
+                    {
+                        cg->grove.shopSelection = CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA - 1;
+                    }
+                }
+                else if (evt.down && evt.button & PB_A && cg->grove.shopSelection >= CG_MAX_CHOWA)
+                {
+                    cg->grove.confirm = !cg->grove.confirm;
+                }
+                else if (evt.down && evt.button & PB_B && cg->grove.confirm)
+                {
+                    cg->guests[cg->grove.shopSelection - CG_MAX_CHOWA].active = false;
+                    cg->grove.confirm                                         = false;
+                }
+                else if (evt.down)
+                {
+                    cg->grove.state = CG_GROVE_MENU;
+                }
+            }
             // Draw Stats
-            // break;
+            cg_groveDrawStats(cg);
+            break;
         }
-        case CG_GROVE_ABANDON:
+        /* case CG_GROVE_ABANDON:
         {
             // Take Chowa behind the shed
             // Handle input, up/down, back, A for buying plus prompt
@@ -471,7 +559,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
             // Handle input
             // Draw Tutorial
             // break;
-        }
+        } */
         default:
         {
             // Something isn't implemented, so kick back to menu
@@ -720,7 +808,7 @@ static void shopMenuCb(const char* label, bool selected, uint32_t settingVal)
             // Enter Shop
             cgr->grove.state = CG_GROVE_SHOP;
         }
-        if (label == menuLabels[2])
+        if (label == menuLabels[1])
         {
             // View inventory, spawn in world
             // Settings menu, use scrolls to pick item
@@ -729,7 +817,8 @@ static void shopMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == menuLabels[2])
         {
             // View Stats and Guests, kick guests
-            cgr->grove.state = CG_GROVE_VIEW_STATS;
+            cgr->grove.state         = CG_GROVE_VIEW_STATS;
+            cgr->grove.shopSelection = 0; // To avoid out of bounds errors
         }
         else if (label == menuLabels[3])
         {

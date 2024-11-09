@@ -45,9 +45,10 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_MAX_CHOWA  5 // Max number of Chowa allowed on a swadge
-#define CG_STAT_COUNT 6 // Number of stats
-#define CG_NUM_TYPES  7 // Total number of different types of Chowa
+#define CG_MAX_CHOWA  5  // Max number of Chowa allowed on a swadge
+#define CG_STAT_COUNT 6  // Number of stats
+#define CG_NUM_TYPES  7  // Total number of different types of Chowa
+#define CG_ADULT_AGE  64 // Age before  a chowa becomes an adult
 
 // Enums ===============================
 typedef enum
@@ -61,20 +62,6 @@ typedef enum
     CG_SURPRISED,
     CG_SICK,
 } cgMoodEnum_t;
-
-typedef enum
-{
-    CG_AGGRESSIVE,
-    CG_BORING,
-    CG_BRASH,
-    CG_CARELESS,
-    CG_CRY_BABY,
-    CG_DUMB,
-    CG_KIND,
-    CG_OVERLY_CAUTIOUS,
-    CG_SHY,
-    CG_SMART,
-} cgChowaPersonality_t;
 
 typedef enum
 {
@@ -154,11 +141,10 @@ typedef struct
 
     // Base data
     char name[CG_MAX_STR_LEN];
+    char owner[CG_MAX_STR_LEN];         ///< Name of the owning player
     int8_t age;                         ///< Current age of the Chowa
-    int8_t maxAge;                      ///< Maximum Chowa age. 4 hours of in game time
     uint8_t playerAffinity;             ///< How much Chowa likes the player
     cgMoodEnum_t mood;                  ///< Current mood of the Chowa
-    cgChowaPersonality_t pers;          ///< Chowa's personality
     cgChowaStat_t stats[CG_STAT_COUNT]; ///< Array containing stat information
 
     // Color data
@@ -286,7 +272,6 @@ typedef enum
 typedef struct
 {
     int16_t money;                         ///< Money
-    cgItem_t items[CG_MAX_TYPE_ITEMS];     ///< Item IDs
     uint8_t quantities[CG_MAX_TYPE_ITEMS]; ///< Item qtys
 } cgInventory_t;
 
@@ -336,7 +321,7 @@ typedef struct
     wsg_t* notes;          ///< Musical notes
     wsg_t* speechBubbles;  ///< Speech Bubbles for Chowa
     wsg_t* itemsWSGs;      ///< Item sprites
-    wsg_t* eggs;           ///< Uncracked eggs
+    wsg_t* eggs;           ///< Un-cracked eggs
     // Audio
     midiFile_t bgm; ///< Main BGM for the Grove
 
@@ -355,9 +340,12 @@ typedef struct
     // Menu
     menu_t* menu;                  ///< Shop menu object
     menuManiaRenderer_t* renderer; ///< Menu renderer
-
-    // Shop
-    int8_t shopSelection; ///< Index of the shop currently set
+    // Items
+    int8_t shopSelection;      ///< Index of the shop currently set / CUrrently selected field item
+    int8_t itemSelection;      ///< Selection of what to put on field
+    int8_t groveActiveItemIdx; ///< Index of the next item slot to load item into
+    // Chowa
+    bool confirm; ///< Used to gate accidentally deleting chowa or kicking guests
 
     // Player resources
     rectangle_t camera;        ///< In-garden camera viewport
@@ -549,7 +537,8 @@ typedef struct
     // Assets
     // ========================================================================
     // Fonts
-    font_t menuFont; ///< Main font
+    font_t menuFont;      ///< Main font
+    font_t largeMenuFont; ///< Large font for titles
 
     // WSGs
     wsg_t* title;                      ///< Title screen sprites

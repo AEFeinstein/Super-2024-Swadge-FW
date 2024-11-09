@@ -118,7 +118,7 @@ wsg_t* cg_getChowaWSG(cGrove_t* cg, cgChowa_t* c, cgChowaAnimIdx_t anim, int8_t 
 {
     // Get type and age
     cgChowaAnimAge_t age = CG_CHILD;
-    if (c->age > 64)
+    if (c->age > CG_ADULT_AGE)
     {
         age = CG_ADULT;
     }
