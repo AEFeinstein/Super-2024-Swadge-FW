@@ -364,6 +364,7 @@ void updateCrabdozer(paEntity_t* self)
                 }
             } else if(!(self->gameData->frameCount % 30) && (self->baseSpeed < (self->gameData->enemyInitialSpeed << 1))){
                 self->baseSpeed++;
+                pa_enemyChangeDirection(self, self->facingDirection, self->baseSpeed);
             }
 
             bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE) /*? esp_random() % 2 : false*/;
