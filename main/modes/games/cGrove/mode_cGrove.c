@@ -187,9 +187,9 @@ static void cGroveEnterMode(void)
                 break;
         }
         cg->chowa[i].playerAffinity = 101;
-        char buffer[32];
-        snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", i);
-        strcpy(cg->chowa[i].name, buffer);
+        //char buffer[32];
+        //snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", i);
+        strcpy(cg->chowa[i].name, "Marzipan");
         strcpy(cg->chowa[i].owner, johnny);
     }
     for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)

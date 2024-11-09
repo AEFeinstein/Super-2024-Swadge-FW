@@ -547,14 +547,48 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
             cg_groveDrawStats(cg);
             break;
         }
-        /* case CG_GROVE_ABANDON:
+        case CG_GROVE_ABANDON:
         {
             // Take Chowa behind the shed
             // Handle input, up/down, back, A for buying plus prompt
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && evt.button & PB_DOWN)
+                {
+                    cg->grove.shopSelection += 1;
+                    if (cg->grove.shopSelection >= CG_MAX_CHOWA)
+                    {
+                        cg->grove.shopSelection = 0;
+                    }
+                }
+                else if (evt.down && evt.button & PB_UP)
+                {
+                    cg->grove.shopSelection -= 1;
+                    if (cg->grove.shopSelection < 0)
+                    {
+                        cg->grove.shopSelection = CG_MAX_CHOWA - 1;
+                    }
+                }
+                else if (evt.down && evt.button & PB_A)
+                {
+                    cg->grove.confirm = !cg->grove.confirm;
+                }
+                else if (evt.down && evt.button & PB_B && cg->grove.confirm)
+                {
+                    cg->chowa[cg->grove.shopSelection].active = false;
+                    cg->grove.confirm                         = false;
+                }
+                else if (evt.down)
+                {
+                    cg->grove.state = CG_GROVE_MENU;
+                }
+            }
             // Draw kill screen
-            // break;
+            cg_groveDrawAbandon(cg);
+            break;
         }
-        case CG_GROVE_TUTORIAL:
+        /* case CG_GROVE_TUTORIAL:
         {
             // Handle input
             // Draw Tutorial

@@ -33,9 +33,16 @@ static const char shopText[]       = "Chowa Gray Market";
 static const char invText[]        = "Inventory";
 static const char statText[]       = "Chowa Stats";
 static const char kickChowa[]      = "Press A to kick this Chowa";
-static const char slotEmpty[]      = "No guest in this slot";
-static const char confirmKick[]    = "Are you sure you want to kick this Chowa?";
+static const char slotEmpty[]      = "No Chowa in this slot";
 static const char confirmDefault[] = "Press A to go back, press B to confirm";
+static const char abandonChowa[]   = "Abandon Chowa";
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+static char confirmKick[]    = "Are you sure you want to kick this Chowa?";
+static char confirmAbandon[] = "Are you sure your heart is black enough to kill this Chowa?";
 
 //==============================================================================
 // Function declarations
@@ -225,6 +232,11 @@ void cg_groveDrawInv(cGrove_t* cg)
     drawText(&cg->menuFont, c555, buffer, 16, 195);
 }
 
+/**
+ * @brief Draws the stats of the Chowa currently active
+ * 
+ * @param cg Game Data
+ */
 void cg_groveDrawStats(cGrove_t* cg)
 {
     // Draw BG
@@ -349,6 +361,48 @@ void cg_groveDrawStats(cGrove_t* cg)
     if (cg->grove.confirm)
     {
         cg_drawConfirmBox(cg, confirmKick);
+    }
+}
+
+/**
+ * @brief Draws the abandon Chowa screen. You monster.
+ *
+ * @param cg Game Data
+ */
+void cg_groveDrawAbandon(cGrove_t* cg)
+{
+    // Draw BG
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
+
+    // Draw Title
+    drawText(&cg->largeMenuFont, c225, abandonChowa, (TFT_WIDTH - textWidth(&cg->largeMenuFont, abandonChowa)) >> 1,
+             32);
+
+    // Draw Currently selected Chowa
+    cgChowa_t* c = &cg->chowa[cg->grove.shopSelection];
+    if (c->active)
+    {
+        wsg_t* spr;
+        spr = cg_getChowaWSG(cg, c, CG_ANIM_SAD, 0);
+        drawText(&cg->largeMenuFont, c555, c->name, (TFT_WIDTH - textWidth(&cg->largeMenuFont, c->name)) >> 1, 50);
+        drawWsgSimpleScaled(spr, (TFT_WIDTH - (spr->h * 3)) >> 1, 75, 3, 3);
+
+        // Draw arrows
+        int16_t xOffset = (TFT_WIDTH - cg->arrow.w) >> 1;
+        drawWsg(&cg->arrow, xOffset, 10, false, false, 0);
+        drawWsg(&cg->arrow, xOffset, TFT_HEIGHT - (cg->arrow.h + 10), false, true, 0);
+    }
+    else
+    {
+        // Chowa is inactive
+        drawText(&cg->largeMenuFont, c555, slotEmpty, (TFT_WIDTH - textWidth(&cg->largeMenuFont, slotEmpty)) >> 1,
+                 (TFT_HEIGHT - cg->largeMenuFont.height) >> 1);
+    }
+
+    // Draw confirmation box
+    if (cg->grove.confirm)
+    {
+        cg_drawConfirmBox(cg, confirmAbandon);
     }
 }
 
@@ -759,14 +813,17 @@ static void cg_drawItemsMenu(cGrove_t* cg)
 static void cg_drawConfirmBox(cGrove_t* cg, char* string)
 {
     // Draw box
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    fillDisplayArea(32, (TFT_HEIGHT / 2) - 60, TFT_WIDTH - 32, (TFT_HEIGHT / 2) + 60, c000);
 
     // Draw provided text
-    drawText(&cg->menuFont, c555, string, (TFT_WIDTH - textWidth(&cg->menuFont, string)) >> 1, (TFT_HEIGHT - 32) >> 1);
+    int16_t xOff = 40;
+    int16_t yOff = (TFT_HEIGHT - 100) >> 1;
+    drawTextWordWrap(&cg->menuFont, c555, string, &xOff, &yOff, TFT_WIDTH - 40, TFT_HEIGHT);
 
     // Draw yes/no prompt
-    drawText(&cg->menuFont, c555, confirmDefault, (TFT_WIDTH - textWidth(&cg->menuFont, confirmDefault)) >> 1,
-             (TFT_HEIGHT + 32) >> 1);
+    xOff = 40;
+    yOff = (TFT_HEIGHT + 40) >> 1;
+    drawTextWordWrap(&cg->menuFont, c555, confirmDefault, &xOff, &yOff, TFT_WIDTH - 40, TFT_HEIGHT);
 }
 
 static void cg_groveDebug(cGrove_t* cg)

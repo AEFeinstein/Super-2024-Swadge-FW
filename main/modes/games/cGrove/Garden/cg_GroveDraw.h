@@ -24,3 +24,4 @@ void cg_groveDrawField(cGrove_t* cg, int64_t elapsedUs);
 void cg_groveDrawShop(cGrove_t* cg);
 void cg_groveDrawInv(cGrove_t* cg);
 void cg_groveDrawStats(cGrove_t* cg);
+void cg_groveDrawAbandon(cGrove_t* cg);
