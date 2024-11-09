@@ -346,6 +346,10 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     else if (currentEntity->hasLighting)
     {
         uint8_t brightness = 5;
+        int16_t xOff = (currentEntity->pos.x >> DECIMAL_BITS)
+                            - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
+        int16_t yOff = (currentEntity->pos.y >> DECIMAL_BITS)
+                            - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
         if(entityManager->playerEntity!=NULL)
         {
             vec_t lookup = {
@@ -355,13 +359,6 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
                             + currentEntity->gameData->tilemap.headlampWsg.h};
 
             lookup = divVec2d(lookup, 2);
-
-            int16_t xOff = (currentEntity->pos.x >> DECIMAL_BITS)
-                            - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
-            int16_t yOff = (currentEntity->pos.y >> DECIMAL_BITS)
-                            - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
-
-            
             if (currentEntity->pos.y > 5120)
             {
                 if (currentEntity->pos.y > 30720)
@@ -373,17 +370,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
                     brightness = (30720 - currentEntity->pos.y) / 5120;
                 }
             }
-        }
-        
 
-        if (currentEntity->gameData->entityManager.playerEntity == NULL)
-        {
-            drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
-                                .frames[brightness + currentEntity->currentAnimationFrame * 6],
-                            xOff, yOff);
-        }
-        else
-        {
             drawWsgSimple(
                 &entityManager->sprites[currentEntity->spriteIndex]
                         .frames[bb_midgroundLighting(&(currentEntity->gameData->tilemap.headlampWsg), &lookup,
@@ -393,6 +380,12 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
                                                     brightness)
                                 + currentEntity->currentAnimationFrame * 6],
                 xOff, yOff);
+        }
+        else
+        {
+            drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
+                                .frames[brightness + currentEntity->currentAnimationFrame * 6],
+                            xOff, yOff);
         }
     }
     else

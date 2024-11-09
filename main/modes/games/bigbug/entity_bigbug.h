@@ -205,6 +205,7 @@ void bb_updateHeavyFalling(bb_entity_t* self);
 void bb_updatePhysicsObject(bb_entity_t* self);
 void bb_updateGarbotnikDeploy(bb_entity_t* self);
 void bb_updateGarbotnikFlying(bb_entity_t* self);
+void bb_updateGarbotnikDying(bb_entity_t* self);
 void bb_updateHarpoon(bb_entity_t* self);
 void bb_updateStuckHarpoon(bb_entity_t* self);
 void bb_updateEggLeaves(bb_entity_t* self);
