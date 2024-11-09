@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <inttypes.h>
+#include <esp_heap_caps.h>
 
 #include "waveTables.h"
 #include "midiNoteFreqs.h"
@@ -87,8 +88,8 @@ static const uint8_t oscDither[] = {
 // Represents that no voice has been allocated to the instrument, within the special states bitmap
 #define VOICE_FREE (0x3F)
 
-static bool globalPlayerInit                          = false;
-static midiPlayer_t globalPlayers[NUM_GLOBAL_PLAYERS] = {0};
+static bool globalPlayerInit       = false;
+static midiPlayer_t* globalPlayers = NULL;
 
 static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount);
 static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
@@ -2397,6 +2398,7 @@ void initGlobalMidiPlayer(void)
 {
     if (!globalPlayerInit)
     {
+        globalPlayers    = heap_caps_calloc(NUM_GLOBAL_PLAYERS, sizeof(midiPlayer_t), MALLOC_CAP_8BIT);
         globalPlayerInit = true;
         for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
         {
@@ -2417,6 +2419,7 @@ void deinitGlobalMidiPlayer(void)
         }
 
         globalPlayerInit = false;
+        free(globalPlayers);
     }
 }
 
