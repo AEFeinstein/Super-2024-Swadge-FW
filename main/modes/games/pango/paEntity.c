@@ -346,22 +346,24 @@ void updateCrabdozer(paEntity_t* self)
                 }
             }
 
-            if (self->state != PA_EN_ST_RUNAWAY && self->entityManager->activeEnemies == 1
-                && self->gameData->remainingEnemies == 0)
-            {
-                self->state                       = PA_EN_ST_RUNAWAY;
-                self->entityManager->aggroEnemies = 1;
-                self->baseSpeed                   = 20;
-                self->stateTimer                  = 480; // 8 seconds
-
-                self->targetTileX = (esp_random() % 2) ? 1 : 15;
-                self->targetTileY = (esp_random() % 2) ? 1 : 13;
-            }
-
             if (self->state != PA_EN_ST_RUNAWAY)
-            {
+            {   
                 self->targetTileX = PA_TO_TILECOORDS(self->entityManager->playerEntity->x >> SUBPIXEL_RESOLUTION);
                 self->targetTileY = PA_TO_TILECOORDS(self->entityManager->playerEntity->y >> SUBPIXEL_RESOLUTION);
+
+
+                if (self->entityManager->activeEnemies == 1 && self->gameData->remainingEnemies == 0)
+                {
+                    self->state                       = PA_EN_ST_RUNAWAY;
+                    self->entityManager->aggroEnemies = 1;
+                    self->baseSpeed                   += 4;
+                    self->stateTimer                  = 480; // 8 seconds
+
+                    self->targetTileX = (esp_random() % 2) ? 1 : 15;
+                    self->targetTileY = (esp_random() % 2) ? 1 : 13;
+                }
+            } else if(!(self->gameData->frameCount % 30) && (self->baseSpeed < (self->gameData->enemyInitialSpeed << 1))){
+                self->baseSpeed++;
             }
 
             bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE) /*? esp_random() % 2 : false*/;
