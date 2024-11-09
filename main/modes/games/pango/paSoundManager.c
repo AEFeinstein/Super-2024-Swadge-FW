@@ -10,21 +10,24 @@
 //==============================================================================
 void pa_initializeSoundManager(paSoundManager_t* self)
 {
-    loadMidiFile("bgmCastle.mid", &self->bgmCastle, true);
+    //loadMidiFile("bgmCastle.mid", &self->bgmCastle, true);
     // self->bgmCastle.shouldLoop = true;
 
-    loadMidiFile("bgmDeMAGio.mid", &self->bgmDemagio, true);
+    loadMidiFile("Pango_Main.mid", &self->bgmMain, true);
+    loadMidiFile("Pango_Faster.mid", &self->bgmFast, true);
+
+    //loadMidiFile("bgmDeMAGio.mid", &self->bgmDemagio, true);
     // self->bgmDemagio.shouldLoop = true;
 
     loadMidiFile("bgmGameStart.mid", &self->bgmGameStart, true);
     loadMidiFile("bgmIntro.mid", &self->bgmIntro, true);
-    loadMidiFile("bgmNameEntry.mid", &self->bgmNameEntry, true);
+    loadMidiFile("Pango_High Score.mid", &self->bgmNameEntry, true);
     // self->bgmNameEntry.shouldLoop = true;
 
-    loadMidiFile("bgmSmooth.mid", &self->bgmSmooth, true);
+    //loadMidiFile("bgmSmooth.mid", &self->bgmSmooth, true);
     // self->bgmSmooth.shouldLoop = true;
 
-    loadMidiFile("bgmUnderground.mid", &self->bgmUnderground, true);
+    //loadMidiFile("bgmUnderground.mid", &self->bgmUnderground, true);
     // self->bgmUnderground.shouldLoop = true;
 
     loadMidiFile("snd1up.mid", &self->snd1up, true);
@@ -59,13 +62,13 @@ void pa_initializeSoundManager(paSoundManager_t* self)
 
 void pa_freeSoundManager(paSoundManager_t* self)
 {
-    unloadMidiFile(&self->bgmCastle);
-    unloadMidiFile(&self->bgmDemagio);
+    unloadMidiFile(&self->bgmMain);
+    unloadMidiFile(&self->bgmFast);
     unloadMidiFile(&self->bgmGameStart);
     unloadMidiFile(&self->bgmIntro);
     unloadMidiFile(&self->bgmNameEntry);
-    unloadMidiFile(&self->bgmSmooth);
-    unloadMidiFile(&self->bgmUnderground);
+    //unloadMidiFile(&self->bgmSmooth);
+    //unloadMidiFile(&self->bgmUnderground);
     unloadMidiFile(&self->snd1up);
     unloadMidiFile(&self->sndBreak);
     unloadMidiFile(&self->sndCheckpoint);

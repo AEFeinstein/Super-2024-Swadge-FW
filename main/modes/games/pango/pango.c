@@ -788,6 +788,8 @@ void changeStateGame(pango_t* self)
     }
 
     self->tilemap.executeTileSpawnAll = true;
+    
+    //soundPlayBgm(&(self->soundManager.bgmMain), MIDI_BGM);
 
     self->update = &updateGame;
 }
@@ -848,28 +850,28 @@ void detectBgmChange(pango_t* self)
         case PA_BGM_MAIN:
             if (self->gameData.currentBgm != PA_BGM_MAIN)
             {
-                soundPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
+                //soundPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
             }
             break;
 
         case PA_BGM_ATHLETIC:
             if (self->gameData.currentBgm != PA_BGM_ATHLETIC)
             {
-                soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+                //soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
             }
             break;
 
         case PA_BGM_UNDERGROUND:
             if (self->gameData.currentBgm != PA_BGM_UNDERGROUND)
             {
-                soundPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
+                //soundPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
             }
             break;
 
         case PA_BGM_FORTRESS:
             if (self->gameData.currentBgm != PA_BGM_FORTRESS)
             {
-                soundPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
+                //soundPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
             }
             break;
 
@@ -1064,7 +1066,7 @@ void changeStateGameClear(pango_t* self)
     self->gameData.frameCount = 0;
     self->update              = &updateGameClear;
     pa_resetGameDataLeds(&(self->gameData));
-    soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+    //soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
 }
 
 void updateGameClear(pango_t* self, int64_t elapsedUs)
