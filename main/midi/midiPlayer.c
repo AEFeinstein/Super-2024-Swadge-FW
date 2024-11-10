@@ -602,7 +602,7 @@ static int32_t midiSumSamples(midiPlayer_t* player)
 
         // Same rate for now -- this is the number of times we need to output each source sample
         // in order to maintain the desired speed/pitch ratio
-        uq24_8 sampleRateRatio = (1 << 8) * 32768 / voices[voiceIdx].timbre->sample.rate;
+        uq24_8 sampleRateRatio = (1 << 8) * DAC_SAMPLE_RATE_HZ / voices[voiceIdx].timbre->sample.rate;
         sampleRateRatio *= voices[voiceIdx].timbre->sample.baseNote;
         sampleRateRatio /= bendPitchWheel(voices[voiceIdx].note, player->channels[voices[voiceIdx].channel].pitchBend);
         // Assume C4 is the base note? A4? doesn't really matter
@@ -2108,14 +2108,14 @@ uint8_t midiGetControlValue(midiPlayer_t* player, uint8_t channel, midiControl_t
             return BOOL_TO_MIDI(player->channels[channel].held);
 
         case MCC_SOUND_RELEASE_TIME:
-            return (player->channels[channel].timbre.envelope.releaseTime * 1000 / 32768 / 10) & 0x7F;
+            return (player->channels[channel].timbre.envelope.releaseTime * 1000 / DAC_SAMPLE_RATE_HZ / 10) & 0x7F;
 
         case MCC_SOUND_ATTACK_TIME:
-            return (player->channels[channel].timbre.envelope.attackTime * 1000 / 32768 / 10) & 0x7F;
+            return (player->channels[channel].timbre.envelope.attackTime * 1000 / DAC_SAMPLE_RATE_HZ / 10) & 0x7F;
 
         // Decay (75) (unassigned)
         case MCC_SOUND_CONTROL_6:
-            return (player->channels[channel].timbre.envelope.decayTime * 1000 / 32768 / 10) & 0x7F;
+            return (player->channels[channel].timbre.envelope.decayTime * 1000 / DAC_SAMPLE_RATE_HZ / 10) & 0x7F;
 
         // Sustain (76) (unassigned)
         case MCC_SOUND_CONTROL_7:
