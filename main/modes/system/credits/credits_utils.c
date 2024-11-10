@@ -44,6 +44,7 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
     midiSetFile(player, &credits->song);
 
     // Play the song
+    player->loop = true;
     midiPause(player, false);
 }
 
