@@ -69,7 +69,9 @@ emuExtension_t midiEmuExtension = {
     .fnRenderCb      = NULL,
 };
 
+#ifdef EMU_MACOS
 static char midiPathBuffer[1024];
+#endif
 static const char* midiFile = NULL;
 
 #ifdef EMU_MACOS
