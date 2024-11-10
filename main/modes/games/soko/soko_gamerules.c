@@ -7,7 +7,7 @@
 
 // clang-format off
 // True if the entity CANNOT go on the tile
-bool sokoEntityTileCollision[6][9] = {
+const bool sokoEntityTileCollision[6][9] = {
     // Empty, //floor//wall//goal//noWalk//portal  //l-emit  //l-receive //walked
     {true, false, true, false, true,false,  false, false, false}, // SKE_NONE
     {true, false, true, false, true,false,  false, false, true},  // PLAYER

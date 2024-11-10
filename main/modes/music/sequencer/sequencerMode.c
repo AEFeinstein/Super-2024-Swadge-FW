@@ -58,7 +58,7 @@ static const char str_noteOptions[] = "Note Options";
 const char str_songOptions[] = "Song Options";
 
 static const char str_songTempo[] = "Tempo: ";
-static const char* tempoLabels[]
+static const char* const tempoLabels[]
     = {"60 bpm",  "70 bpm",  "80 bpm",  "90 bpm",  "100 bpm", "110 bpm", "120 bpm", "130 bpm", "140 bpm",
        "150 bpm", "160 bpm", "170 bpm", "180 bpm", "190 bpm", "200 bpm", "210 bpm", "220 bpm", "230 bpm",
        "240 bpm", "250 bpm", "260 bpm", "270 bpm", "280 bpm", "290 bpm", "300 bpm"};
