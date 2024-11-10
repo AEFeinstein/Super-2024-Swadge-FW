@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <inttypes.h>
+#include <esp_heap_caps.h>
 
 #include "waveTables.h"
 #include "midiNoteFreqs.h"
@@ -87,8 +88,8 @@ static const uint8_t oscDither[] = {
 // Represents that no voice has been allocated to the instrument, within the special states bitmap
 #define VOICE_FREE (0x3F)
 
-static bool globalPlayerInit                          = false;
-static midiPlayer_t globalPlayers[NUM_GLOBAL_PLAYERS] = {0};
+static bool globalPlayerInit       = false;
+static midiPlayer_t* globalPlayers = NULL;
 
 static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount);
 static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
@@ -601,7 +602,7 @@ static int32_t midiSumSamples(midiPlayer_t* player)
 
         // Same rate for now -- this is the number of times we need to output each source sample
         // in order to maintain the desired speed/pitch ratio
-        uq24_8 sampleRateRatio = (1 << 8) * 32768 / voices[voiceIdx].timbre->sample.rate;
+        uq24_8 sampleRateRatio = (1 << 8) * DAC_SAMPLE_RATE_HZ / voices[voiceIdx].timbre->sample.rate;
         sampleRateRatio *= voices[voiceIdx].timbre->sample.baseNote;
         sampleRateRatio /= bendPitchWheel(voices[voiceIdx].note, player->channels[voices[voiceIdx].channel].pitchBend);
         // Assume C4 is the base note? A4? doesn't really matter
@@ -2107,14 +2108,14 @@ uint8_t midiGetControlValue(midiPlayer_t* player, uint8_t channel, midiControl_t
             return BOOL_TO_MIDI(player->channels[channel].held);
 
         case MCC_SOUND_RELEASE_TIME:
-            return (player->channels[channel].timbre.envelope.releaseTime * 1000 / 32768 / 10) & 0x7F;
+            return (player->channels[channel].timbre.envelope.releaseTime * 1000 / DAC_SAMPLE_RATE_HZ / 10) & 0x7F;
 
         case MCC_SOUND_ATTACK_TIME:
-            return (player->channels[channel].timbre.envelope.attackTime * 1000 / 32768 / 10) & 0x7F;
+            return (player->channels[channel].timbre.envelope.attackTime * 1000 / DAC_SAMPLE_RATE_HZ / 10) & 0x7F;
 
         // Decay (75) (unassigned)
         case MCC_SOUND_CONTROL_6:
-            return (player->channels[channel].timbre.envelope.decayTime * 1000 / 32768 / 10) & 0x7F;
+            return (player->channels[channel].timbre.envelope.decayTime * 1000 / DAC_SAMPLE_RATE_HZ / 10) & 0x7F;
 
         // Sustain (76) (unassigned)
         case MCC_SOUND_CONTROL_7:
@@ -2397,6 +2398,7 @@ void initGlobalMidiPlayer(void)
 {
     if (!globalPlayerInit)
     {
+        globalPlayers    = heap_caps_calloc(NUM_GLOBAL_PLAYERS, sizeof(midiPlayer_t), MALLOC_CAP_8BIT);
         globalPlayerInit = true;
         for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
         {
@@ -2417,6 +2419,7 @@ void deinitGlobalMidiPlayer(void)
         }
 
         globalPlayerInit = false;
+        free(globalPlayers);
     }
 }
 
