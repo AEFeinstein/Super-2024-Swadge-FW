@@ -636,7 +636,7 @@ static bool parseMidiHeader(midiFile_t* file)
     uint16_t trackChunkCount = (file->data[offset] << 8) | file->data[offset + 1];
     offset += 2;
     file->trackCount = trackChunkCount;
-    file->tracks     = calloc(trackChunkCount, sizeof(midiTrack_t));
+    file->tracks     = heap_caps_calloc(trackChunkCount, sizeof(midiTrack_t), MALLOC_CAP_SPIRAM);
     if (NULL == file->tracks)
     {
         ESP_LOGE("MIDIParser", "Could not allocate data for MIDI file with %" PRIu16 " tracks", trackChunkCount);
@@ -871,7 +871,7 @@ void unloadMidiFile(midiFile_t* file)
 
 bool initMidiParser(midiFileReader_t* reader, const midiFile_t* file)
 {
-    reader->states = calloc(file->trackCount, sizeof(midiTrackState_t));
+    reader->states = heap_caps_calloc(file->trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
     if (NULL == reader->states)
     {
         return false;
@@ -893,7 +893,7 @@ void midiParserSetFile(midiFileReader_t* reader, const midiFile_t* file)
         reader->states = NULL;
     }
 
-    reader->states     = calloc(file->trackCount, sizeof(midiTrackState_t));
+    reader->states     = heap_caps_calloc(file->trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
     reader->stateCount = file->trackCount;
 
     // Initialize the reader's internal per-track parsing states
@@ -1018,7 +1018,7 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
 void* globalMidiSave(void)
 {
     // TODO: There are multiple allocs here, so the return value _can't_ safely be free()'d by others
-    midiSaveState_t* saveState = malloc(NUM_GLOBAL_PLAYERS * sizeof(midiSaveState_t));
+    midiSaveState_t* saveState = heap_caps_calloc(NUM_GLOBAL_PLAYERS, sizeof(midiSaveState_t), MALLOC_CAP_SPIRAM);
 
     for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
     {
@@ -1027,8 +1027,9 @@ void* globalMidiSave(void)
 
         if (player->reader.file != NULL)
         {
-            saveState[i].trackCount  = player->reader.file->trackCount;
-            saveState[i].trackStates = malloc(saveState[i].trackCount * sizeof(midiTrackState_t));
+            saveState[i].trackCount = player->reader.file->trackCount;
+            saveState[i].trackStates
+                = heap_caps_calloc(saveState[i].trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
 
             // Overwrite the copy with the newly allocated pointer, since the current one may be free'd
             saveState[i].player.reader.states = saveState[i].trackStates;
