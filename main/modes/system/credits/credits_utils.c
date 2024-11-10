@@ -34,10 +34,17 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
     credits->entries    = entries;
     credits->numEntries = numEntries;
 
-    // Load and play song
-    loadMidiFile("credits.mid", &credits->song, false);
-    soundGetPlayerBgm()->loop = true;
-    soundPlayBgm(&credits->song, BZR_STEREO);
+    // Init MIDI player is initialized
+    initGlobalMidiPlayer();
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
+
+    // Load the MIDI file
+    loadMidiFile("hd_credits.mid", &credits->song, true);
+    midiSetFile(player, &credits->song);
+
+    // Play the song
+    midiPause(player, false);
 }
 
 /**
@@ -48,6 +55,7 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
 void deinitCredits(credits_t* credits)
 {
     unloadMidiFile(&credits->song);
+    deinitGlobalMidiPlayer();
 }
 
 /**
