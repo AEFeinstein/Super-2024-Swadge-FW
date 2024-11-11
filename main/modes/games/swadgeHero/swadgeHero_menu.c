@@ -34,10 +34,18 @@ static const shSong_t shSongList[] = {
     {
         .name   = "Hotdog Credits",
         .artist = "Newmajoe",
-        .midi   = "s_cred.mid",
-        .easy   = "s_cred_e.cch",
-        .med    = "s_cred_m.cch",
-        .hard   = "s_cred_h.cch",
+        .midi   = "hd_credits.mid",
+        .easy   = "hd_cred_e.cch",
+        .med    = "hd_cred_m.cch",
+        .hard   = "hd_cred_h.cch",
+    },
+    {
+        .name   = "SH Revenge",
+        .artist = "Livingson Rampey",
+        .midi   = "revenge.mid",
+        .easy   = "revenge_e.cch",
+        .med    = "revenge_m.cch",
+        .hard   = "revenge_h.cch",
     },
 };
 
