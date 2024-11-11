@@ -356,4 +356,7 @@ void openQuickSettings(void);
 void setFrameRateUs(uint32_t newFrameRateUs);
 uint32_t getFrameRateUs(void);
 
+void switchToSpeaker(void);
+void switchToMicrophone(void);
+
 #endif
