@@ -15,6 +15,7 @@
 
 #include "cg_GroveAI.h"
 #include "trigonometry.h"
+#include "cg_GroveItems.h"
 #include <esp_random.h>
 #include <math.h>
 
@@ -127,9 +128,40 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             c->aabb.pos.y += difference.y / 128;
             break;
         }
+        case CHOWA_GRAB_ITEM:
+        {
+            // Grab an item
+            if (c->heldItem->active)
+            {
+                c->heldItem->active = false; // disables this item for others
+                c->holdingItem      = true;  // Allows the chowa to use it
+            }
+            else
+            {
+                c->heldItem = NULL;
+            }
+            c->gState = CHOWA_IDLE;
+            break;
+        }
         case CHOWA_USE_ITEM:
         {
             // Wait until item is done being used
+            if (c->timeLeft <= 0)
+            {
+                // Remove item once used
+                // Check if ball, and spawn if so
+                if (strcmp(c->heldItem->name, shopMenuItems[5]) == 0)
+                {
+                    c->heldItem->active = true;
+                    c->heldItem->aabb.pos = c->aabb.pos;
+                    c->ballInAir = true;
+                    c->ballFlip = c->flip;
+                    c->ballAnimFrame = 0;
+                    c->ySpd = -64;
+                }
+                c->gState = CHOWA_IDLE;
+                // Update stats
+            }
             break;
         }
         case CHOWA_BOX:
@@ -321,9 +353,31 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
         return CHOWA_CHASE;
     }
     // Check for held items
-    // - Much more likely to use held items
+    if (c->holdingItem != NULL && esp_random() % 6 == 0)
+    {
+        c->timeLeft = SECOND * (5 + (esp_random() % 6));
+        if (strcmp(c->heldItem->name, shopMenuItems[5]) == 0)
+        {
+            c->timeLeft = SECOND;
+            c->flip     = esp_random() % 2 == 0; // Pick direction
+        }
+        return CHOWA_USE_ITEM;
+    }
     // Check if items present on map
-    // - If item is loose, will more likely go grab it than do anything else
+    if (c->heldItem == NULL)
+    {
+        for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
+        {
+            if (cg->grove.items[idx].active && 0 != strcmp(shopMenuItems[11], cg->grove.items[idx].name))
+            {
+                c->targetPos = cg->grove.items[idx].aabb.pos;
+                c->heldItem  = &cg->grove.items[idx];
+                c->precision = 20.0f;
+                c->nextState = CHOWA_GRAB_ITEM;
+                return CHOWA_WALK;
+            }
+        }
+    }
     // Otherwise, choose randomly
     switch (esp_random() % 3)
     {

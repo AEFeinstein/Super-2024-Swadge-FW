@@ -22,12 +22,10 @@
 - Get icons for punching, kicking, dodging, etc
 
 ## Grove
-- AI
-  - Go to an item
-  - Using item
-- Add menu for buying items
-- Stats can be increased
-- Stats Screen + owner
+- Chowa throw ball
+- Consumables are used up
+- Food items are scaled down
+- Stats increase
 - Save and load from NVS
 - Create/Add SFX
 - Eggs/Egg spawn timer

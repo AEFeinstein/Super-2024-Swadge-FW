@@ -196,7 +196,7 @@ static void cGroveEnterMode(void)
     {
         cg->guests[i].active = true;
         cg->guests[i].type   = CG_KING_DONUT;
-        cg->guests[i].age    = 65;
+        cg->guests[i].age    = 6;
         for (int idx = 0; idx < CG_STAT_COUNT; idx++)
         {
             cg->guests[i].stats[idx] = esp_random() % 255;

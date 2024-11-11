@@ -237,18 +237,19 @@ typedef enum
 
 typedef enum
 {
-    CHOWA_IDLE,     ///< Doing nothing. Get new behavior
-    CHOWA_STATIC,   ///< Standing in place
-    CHOWA_WALK,     ///< Walking, running, swimming, struggling to swim towards a target
-    CHOWA_CHASE,    ///< Follow Other chowa, object, or cursor
-    CHOWA_USE_ITEM, ///< Use an item held in Chowa's possession
-    CHOWA_BOX,      ///< Does sparring type moves
-    CHOWA_SING,     ///< Sings
-    CHOWA_DANCE,    ///< Dancing
-    CHOWA_TALK,     ///< Talks with another Chowa
-    CHOWA_HELD,     ///< Held, cannot move
-    CHOWA_GIFT,     ///< Receiving a gift/head pats
-    CHOWA_PET,      ///< Chowa is being pet
+    CHOWA_IDLE,      ///< Doing nothing. Get new behavior
+    CHOWA_STATIC,    ///< Standing in place
+    CHOWA_WALK,      ///< Walking, running, swimming, struggling to swim towards a target
+    CHOWA_CHASE,     ///< Follow Other chowa, object, or cursor
+    CHOWA_GRAB_ITEM, ///< Grab an item if close enough
+    CHOWA_USE_ITEM,  ///< Use an item held in Chowa's possession
+    CHOWA_BOX,       ///< Does sparring type moves
+    CHOWA_SING,      ///< Sings
+    CHOWA_DANCE,     ///< Dancing
+    CHOWA_TALK,      ///< Talks with another Chowa
+    CHOWA_HELD,      ///< Held, cannot move
+    CHOWA_GIFT,      ///< Receiving a gift/head pats
+    CHOWA_PET,       ///< Chowa is being pet
 } cgChowaStateGarden_t;
 
 typedef enum
@@ -290,7 +291,7 @@ typedef struct
     rectangle_t aabb; ///< Position and bounding box for grabbing
 
     // Items
-    bool holdingItem;   ///< If Chowa is holding an item
+    bool holdingItem;   // FIXME: Can probably use null checking of below instead for cleaner implementation 
     cgItem_t* heldItem; ///< Pointer to the held item
 
     // AI
@@ -302,12 +303,17 @@ typedef struct
     float precision;                ///< How precise the position needs to be
 
     // Animations
-    int16_t angle;      ///< Angle that the Chowa is moving at
-    int8_t animFrame;   ///< Frame that the animation is on
-    int64_t frameTimer; ///< Timer until the next frame triggers
-    int8_t animIdx;     ///< which animation is being played
-    bool flip;          ///< If image needs to be flipped manually
-    bool hasPartner;    ///< If Chowa has a partner for talking or boxing
+    int16_t angle;         ///< Angle that the Chowa is moving at
+    int8_t animFrame;      ///< Frame that the animation is on
+    int64_t frameTimer;    ///< Timer until the next frame triggers
+    int8_t animIdx;        ///< which animation is being played
+    bool flip;             ///< If image needs to be flipped manually
+    bool hasPartner;       ///< If Chowa has a partner for talking or boxing
+    bool ballInAir;        ///< If ball is being thrown.
+    bool ballFlip;         ///< If the ball is going left
+    int64_t ballTimer;     ///< Timer for the ball animations
+    int16_t ballAnimFrame; ///< Why yes, Balls should be their own object.
+    int16_t ySpd;          ///< Y speed of the ball.
 } cgGroveChowa_t;
 
 typedef struct

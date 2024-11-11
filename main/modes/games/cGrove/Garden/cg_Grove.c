@@ -229,6 +229,19 @@ void cg_initGrove(cGrove_t* cg)
         }
     }
 
+    // Items
+    // TODO: load from NVM
+    for (int idx = 0; idx < 10; idx++)
+    {
+        strcpy(cg->grove.items[idx].name, shopMenuItems[5]);
+        cg->grove.items[idx].active                   = true;
+        cg->grove.items[idx].aabb.height = 24;
+        cg->grove.items[idx].aabb.width  = 24;
+        cg->grove.items[idx].aabb.pos.x               = 32 + esp_random() % (cg->grove.groveBG.w - 64);
+        cg->grove.items[idx].aabb.pos.y               = 32 + esp_random() % (cg->grove.groveBG.h - 64);
+        cg->grove.items[idx].spr                      = cg->grove.itemsWSGs[5];
+    }
+
     // Init Ring
     cg->grove.ring.aabb.height = cg->grove.itemsWSGs[11].h;
     cg->grove.ring.aabb.width  = cg->grove.itemsWSGs[11].w;
@@ -437,7 +450,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 if (evt.down && evt.button & PB_DOWN)
                 {
                     cg->grove.shopSelection += 1;
-                    if (cg->grove.shopSelection >= CG_GROVE_MAX_ITEMS)
+                    if (cg->grove.shopSelection >= CG_MAX_TYPE_ITEMS)
                     {
                         cg->grove.shopSelection = 0;
                     }
@@ -447,12 +460,13 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                     cg->grove.shopSelection -= 1;
                     if (cg->grove.shopSelection < 0)
                     {
-                        cg->grove.shopSelection = CG_GROVE_MAX_ITEMS - 1;
+                        cg->grove.shopSelection = CG_MAX_TYPE_ITEMS - 1;
                     }
                 }
                 else if (evt.down && evt.button & PB_A)
                 {
                     // Attempt to add item to field
+                    // FIXME: Can keep adding new items and deletes the old one
                     if (cg->grove.inv.quantities[cg->grove.shopSelection] > 0)
                     {
                         cg->grove.items[cg->grove.groveActiveItemIdx].active = true;
@@ -609,6 +623,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
 
 static void cg_attemptGrab(cGrove_t* cg)
 {
+    // FIXME: Fails on some Chowa. Possibly the guests?
     vec_t collVec;
     cg->grove.heldItem = NULL;
     // Check if over a Chowa

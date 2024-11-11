@@ -17,6 +17,7 @@
 #include "cg_Chowa.h"
 #include "cg_GroveItems.h"
 #include <esp_random.h>
+#include <math.h>
 
 //==============================================================================
 // Defines
@@ -35,14 +36,16 @@ static const char statText[]       = "Chowa Stats";
 static const char kickChowa[]      = "Press A to kick this Chowa";
 static const char slotEmpty[]      = "No Chowa in this slot";
 static const char confirmDefault[] = "Press A to go back, press B to confirm";
-static const char abandonChowa[]   = "Abandon Chowa";
+static const char abandonChowa[]   = "Release Chowa";
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-static char confirmKick[]    = "Are you sure you want to kick this Chowa?";
-static char confirmAbandon[] = "Are you sure your heart is black enough to kill this Chowa?";
+static char confirmKick[] = "Are you sure you want to kick this Chowa? You will need to find their owner before you "
+                            "can play with them again.";
+static char confirmAbandon[]
+    = "Are you sure you want to release this Chowa into the wild? You will not see them again.";
 
 //==============================================================================
 // Function declarations
@@ -142,7 +145,7 @@ void cg_groveDrawField(cGrove_t* cg, int64_t elapsedUs)
     cg_drawUI(cg);
 
     // Debug draw
-    cg_groveDebug(cg);
+    // cg_groveDebug(cg);
 }
 
 /**
@@ -234,7 +237,7 @@ void cg_groveDrawInv(cGrove_t* cg)
 
 /**
  * @brief Draws the stats of the Chowa currently active
- * 
+ *
  * @param cg Game Data
  */
 void cg_groveDrawStats(cGrove_t* cg)
@@ -461,6 +464,7 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx)
     int16_t yOffset = cg->grove.items[idx].aabb.pos.y - cg->grove.camera.pos.y;
     drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);
     // TODO: Shrink food
+    // FIXME: Don't draw ball if in air
     drawText(&cg->menuFont, c555, cg->grove.items[idx].name,
              xOffset - (textWidth(&cg->menuFont, cg->grove.items[idx].name) - cg->grove.items[idx].spr.w) / 2,
              yOffset - 16);
@@ -756,10 +760,97 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 drawWsgSimple(spr, xOffset, yOffset);
                 break;
             }
+            case CHOWA_USE_ITEM:
+            {
+                // Update animation frame if enough time has passed
+                c->frameTimer += elapsedUS;
+                bool reading = strcmp(c->heldItem->name, shopMenuItems[0]) == 0
+                               || strcmp(c->heldItem->name, shopMenuItems[1]) == 0
+                               || strcmp(c->heldItem->name, shopMenuItems[2]) == 0
+                               || strcmp(c->heldItem->name, shopMenuItems[3]) == 0
+                               || strcmp(c->heldItem->name, shopMenuItems[4]) == 0;
+                bool throwing = strcmp(c->heldItem->name, shopMenuItems[5]) == 0;
+                bool sword    = strcmp(c->heldItem->name, shopMenuItems[8]) == 0;
+                if (c->frameTimer > SECOND / 4)
+                {
+                    c->frameTimer = 0;
+                    if (reading || sword || throwing)
+                    {
+                        c->animFrame = (c->animFrame + 1) % 3;
+                    }
+                    else
+                    {
+                        c->animFrame = (c->animFrame + 1) % 4;
+                    }
+                }
+                // Draw appropriate action based on item
+
+                if (reading)
+                {
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_READ, c->animFrame);
+                    drawWsgSimple(spr, xOffset, yOffset);
+                    break;
+                }
+                else if (throwing)
+                {
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_THROW, c->animFrame);
+                    drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
+                    break;
+                }
+                else if (sword)
+                {
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SWORD, c->animFrame);
+                    drawWsgSimple(spr, xOffset, yOffset);
+                    break;
+                }
+                else if (strcmp(c->heldItem->name, shopMenuItems[6]) == 0)
+                {
+                    // Drawing
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_DRAW, c->animFrame >> 1);
+                    drawWsgSimple(spr, xOffset, yOffset);
+                    break;
+                }
+                else
+                {
+                    // Eating
+                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_EAT, c->animFrame);
+                    drawWsgSimple(spr, xOffset, yOffset);
+                    break;
+                }
+            }
             default:
             {
                 spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_DOWN, 0);
                 break;
+            }
+        }
+        // Animate thrown ball
+        if (c->ballInAir)
+        {
+            c->ballTimer += elapsedUS;
+            if (c->ballTimer > SECOND / 30)
+            {
+                c->ballTimer = 0;
+                c->ballAnimFrame += 1;
+            }
+            // if frame is high enough, stop animating
+            // Animated
+            int16_t xOff
+                = (c->heldItem->aabb.pos.x - cg->grove.camera.pos.x) + (c->ballAnimFrame * ((c->ballFlip) ? -3 : 3));
+            c->ySpd += 1;
+            int16_t yOff = (c->heldItem->aabb.pos.y - cg->grove.camera.pos.y) - (12 * c->ballAnimFrame)
+                           + ((int)pow(c->ballAnimFrame, 2.0f) / 2);
+            if (c->ballAnimFrame <= 22)
+            {
+                drawWsgSimple(&cg->grove.itemsWSGs[5], xOff, yOff);
+            }
+            else
+            {
+                c->ballInAir            = false;
+                c->heldItem->aabb.pos.x = xOff + cg->grove.camera.pos.x;
+                c->heldItem->aabb.pos.y = yOff + cg->grove.camera.pos.y;
+                c->heldItem             = NULL;
+                c->holdingItem          = false;
             }
         }
     }
