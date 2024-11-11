@@ -92,7 +92,10 @@
 #define PITCH_BEND_CENTER 0x2000
 
 /// @brief Convert the sample count to MIDI ticks
-#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
+#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((int64_t)(n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
+
+/// @brief Convert a number of MIDI ticks to the offset of the first sample of the
+#define TICKS_TO_SAMPLES(ticks, tempo, div) ((int64_t)(ticks) * DAC_SAMPLE_RATE_HZ / (1000000) * (tempo) / (div))
 
 /// @brief Convert samples to milliseconds
 #define SAMPLES_TO_MS(samp) (((samp) * 1000) / DAC_SAMPLE_RATE_HZ)
