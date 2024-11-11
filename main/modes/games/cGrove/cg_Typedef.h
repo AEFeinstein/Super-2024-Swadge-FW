@@ -303,6 +303,7 @@ typedef struct
     vec_t targetPos;                ///< Position to head to
     float precision;                ///< How precise the position needs to be
     int64_t moodTimer;              ///< How long before mood shifts
+    int64_t ageTimer;               ///< Timer to update age of the Chowa
 
     // Animations
     int16_t angle;         ///< Angle that the Chowa is moving at

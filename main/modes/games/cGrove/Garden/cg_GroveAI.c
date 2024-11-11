@@ -70,6 +70,16 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
     // Update timer
     c->timeLeft -= elapsedUs;
 
+    // Update Age
+    if (c->chowa->age <= 70)
+    {
+        c->ageTimer += elapsedUs;
+        if (c->ageTimer >= SECOND * 60)
+        {
+            c->chowa->age += 1;
+        }
+    }
+
     // Update mood
     c->moodTimer += elapsedUs;
     if (c->moodTimer >= 60 * SECOND)
@@ -335,7 +345,7 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
                     }
                     c->timeLeft = 2 * SECOND;
                 }
-                else 
+                else
                 {
                     c->gState = CHOWA_IDLE;
                 }
@@ -501,7 +511,8 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
     {
         for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
         {
-            if (cg->grove.items[idx].active && 0 != strcmp(shopMenuItems[11], cg->grove.items[idx].name) && !c->ballInAir)
+            if (cg->grove.items[idx].active && 0 != strcmp(shopMenuItems[11], cg->grove.items[idx].name)
+                && !c->ballInAir)
             {
                 c->targetPos = cg->grove.items[idx].aabb.pos;
                 c->heldItem  = &cg->grove.items[idx];
