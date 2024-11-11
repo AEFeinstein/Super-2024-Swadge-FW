@@ -32,6 +32,7 @@ typedef struct
     rectangle_t aabb;          ///< Position and bounding box
     wsg_t spr;                 ///< Spr for item
     bool active;               ///< If item slot is being used
+    int8_t numOfUses;          ///< Number of uses before being used up
 } cgItem_t;
 
 typedef struct
@@ -242,6 +243,7 @@ typedef enum
     CHOWA_WALK,      ///< Walking, running, swimming, struggling to swim towards a target
     CHOWA_CHASE,     ///< Follow Other chowa, object, or cursor
     CHOWA_GRAB_ITEM, ///< Grab an item if close enough
+    CHOWA_DROP_ITEM, ///< Drop an item occasionally
     CHOWA_USE_ITEM,  ///< Use an item held in Chowa's possession
     CHOWA_BOX,       ///< Does sparring type moves
     CHOWA_SING,      ///< Sings
@@ -291,7 +293,6 @@ typedef struct
     rectangle_t aabb; ///< Position and bounding box for grabbing
 
     // Items
-    bool holdingItem;   // FIXME: Can probably use null checking of below instead for cleaner implementation 
     cgItem_t* heldItem; ///< Pointer to the held item
 
     // AI

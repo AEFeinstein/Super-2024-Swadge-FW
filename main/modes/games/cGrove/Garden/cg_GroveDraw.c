@@ -462,9 +462,16 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx)
     }
     int16_t xOffset = cg->grove.items[idx].aabb.pos.x - cg->grove.camera.pos.x;
     int16_t yOffset = cg->grove.items[idx].aabb.pos.y - cg->grove.camera.pos.y;
-    drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);
-    // TODO: Shrink food
-    // FIXME: Don't draw ball if in air
+    if (strcmp(cg->grove.items[idx].name, shopMenuItems[9]) == 0
+        || strcmp(cg->grove.items[idx].name, shopMenuItems[10]) == 0)
+    {
+        drawWsgSimpleHalf(&cg->grove.items[idx].spr, xOffset, yOffset);
+    }
+    else
+    {
+        drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);
+    }
+    // TODO: Only draw text if enabled in options
     drawText(&cg->menuFont, c555, cg->grove.items[idx].name,
              xOffset - (textWidth(&cg->menuFont, cg->grove.items[idx].name) - cg->grove.items[idx].spr.w) / 2,
              yOffset - 16);
@@ -763,6 +770,10 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
             case CHOWA_USE_ITEM:
             {
                 // Update animation frame if enough time has passed
+                if (c->heldItem == NULL)
+                {
+                    c->gState = CHOWA_IDLE;
+                }
                 c->frameTimer += elapsedUS;
                 bool reading = strcmp(c->heldItem->name, shopMenuItems[0]) == 0
                                || strcmp(c->heldItem->name, shopMenuItems[1]) == 0
@@ -825,7 +836,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
             }
         }
         // Animate thrown ball
-        if (c->ballInAir)
+        if (c->ballInAir && c->heldItem != NULL)
         {
             c->ballTimer += elapsedUS;
             if (c->ballTimer > SECOND / 30)
@@ -850,7 +861,6 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 c->heldItem->aabb.pos.x = xOff + cg->grove.camera.pos.x;
                 c->heldItem->aabb.pos.y = yOff + cg->grove.camera.pos.y;
                 c->heldItem             = NULL;
-                c->holdingItem          = false;
             }
         }
     }

@@ -213,7 +213,7 @@ wsg_t* cg_getChowaWSG(cGrove_t* cg, cgChowa_t* c, cgChowaAnimIdx_t anim, int8_t 
         }
         case CG_ANIM_READ:
         {
-            return &spr[41 + idx];
+            return &spr[42 + idx];
         }
         case CG_ANIM_SWORD:
         {

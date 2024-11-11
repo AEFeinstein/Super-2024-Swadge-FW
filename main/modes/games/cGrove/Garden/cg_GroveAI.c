@@ -102,6 +102,14 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             {
                 c->timeLeft = c->nextTimeLeft;
                 c->gState   = c->nextState;
+                if (c->chowa->stats[CG_STAMINA] >= 255)
+                {
+                    c->chowa->stats[CG_STAMINA] += 1;
+                }
+                if (c->chowa->stats[CG_SPEED] >= 255)
+                {
+                    c->chowa->stats[CG_SPEED] += 1;
+                }
             }
             fastNormVec(&difference.x, &difference.y);
             int16_t angle = getAtan2(difference.y, difference.x);
@@ -120,6 +128,10 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
                 c->timeLeft = c->nextTimeLeft;
                 c->gState   = c->nextState;
                 // Update stamina stat
+                if (c->chowa->stats[CG_STAMINA] < 255)
+                {
+                    c->chowa->stats[CG_STAMINA] += 1;
+                }
             }
             fastNormVec(&difference.x, &difference.y);
             int16_t angle = getAtan2(difference.y, difference.x);
@@ -134,7 +146,6 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             if (c->heldItem->active)
             {
                 c->heldItem->active = false; // disables this item for others
-                c->holdingItem      = true;  // Allows the chowa to use it
             }
             else
             {
@@ -143,24 +154,92 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             c->gState = CHOWA_IDLE;
             break;
         }
+        case CHOWA_DROP_ITEM:
+        {
+            c->heldItem->active   = true;
+            c->heldItem->aabb.pos = c->aabb.pos;
+            c->heldItem           = NULL;
+            c->nextState          = CHOWA_IDLE;
+            c->gState             = CHOWA_IDLE;
+            break;
+        }
         case CHOWA_USE_ITEM:
         {
             // Wait until item is done being used
             if (c->timeLeft <= 0)
             {
-                // Remove item once used
                 // Check if ball, and spawn if so
                 if (strcmp(c->heldItem->name, shopMenuItems[5]) == 0)
                 {
-                    c->heldItem->active = true;
-                    c->heldItem->aabb.pos = c->aabb.pos;
-                    c->ballInAir = true;
-                    c->ballFlip = c->flip;
-                    c->ballAnimFrame = 0;
-                    c->ySpd = -64;
+                    c->heldItem->active    = true;
+                    c->heldItem->aabb.pos  = c->aabb.pos;
+                    c->ballInAir           = true;
+                    c->ballFlip            = c->flip;
+                    c->ballAnimFrame       = 0;
+                    c->ySpd                = -64;
+                    c->heldItem->numOfUses = 2; // Never delete the ball
+                }
+                // Update stats
+                if (strcmp(c->heldItem->name, shopMenuItems[0]) == 0)
+                {
+                    if (c->chowa->stats[CG_AGILITY] < 255)
+                    {
+                        c->chowa->stats[CG_AGILITY] += 1;
+                    }
+                }
+                else if (strcmp(c->heldItem->name, shopMenuItems[1]) == 0)
+                {
+                    if (c->chowa->stats[CG_CHARISMA] < 255)
+                    {
+                        c->chowa->stats[CG_CHARISMA] += 1;
+                    }
+                }
+                else if (strcmp(c->heldItem->name, shopMenuItems[2]) == 0)
+                {
+                    if (c->chowa->stats[CG_STRENGTH] < 255)
+                    {
+                        c->chowa->stats[CG_STRENGTH] += 1;
+                    }
+                }
+                else if (strcmp(c->heldItem->name, shopMenuItems[3]) == 0)
+                {
+                    if (c->chowa->stats[CG_STAMINA] < 255)
+                    {
+                        c->chowa->stats[CG_STAMINA] += 1;
+                    }
+                }
+                if (strcmp(c->heldItem->name, shopMenuItems[4]) == 0)
+                {
+                    if (c->chowa->stats[CG_SPEED] < 255)
+                    {
+                        c->chowa->stats[CG_SPEED] += 1;
+                    }
+                }
+                else if (strcmp(c->heldItem->name, shopMenuItems[9]) == 0)
+                {
+                    if (c->chowa->stats[CG_HEALTH] < 255)
+                    {
+                        c->chowa->stats[CG_HEALTH] += 1;
+                    }
+                }
+                else if (strcmp(c->heldItem->name, shopMenuItems[10]) == 0)
+                {
+                    if (c->chowa->stats[CG_HEALTH] < 252)
+                    {
+                        c->chowa->stats[CG_HEALTH] += 3;
+                    }
+                }
+                // Remove item once used
+                if (c->heldItem->numOfUses <= 0)
+                {
+                    strcpy(c->heldItem->name, "");
+                    c->heldItem = NULL;
+                }
+                else
+                {
+                    c->heldItem->numOfUses -= 1;
                 }
                 c->gState = CHOWA_IDLE;
-                // Update stats
             }
             break;
         }
@@ -170,10 +249,14 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             if (c->timeLeft <= 0)
             {
                 c->gState = CHOWA_IDLE;
-            }
-            else
-            {
-                // Update stats
+                if (c->chowa->stats[CG_STRENGTH] < 255)
+                {
+                    c->chowa->stats[CG_STRENGTH] += 1;
+                }
+                if (c->chowa->stats[CG_AGILITY] < 255)
+                {
+                    c->chowa->stats[CG_AGILITY] += 1;
+                }
             }
             break;
         }
@@ -183,10 +266,10 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             if (c->timeLeft <= 0)
             {
                 c->gState = CHOWA_IDLE;
-            }
-            else
-            {
-                // Update stats
+                if (c->chowa->stats[CG_CHARISMA] < 255)
+                {
+                    c->chowa->stats[CG_CHARISMA] += 1;
+                }
             }
             break;
         }
@@ -196,10 +279,10 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             if (c->timeLeft <= 0)
             {
                 c->gState = CHOWA_IDLE;
-            }
-            else
-            {
-                // Update stats
+                if (c->chowa->stats[CG_CHARISMA] < 255)
+                {
+                    c->chowa->stats[CG_CHARISMA] += 1;
+                }
             }
             break;
         }
@@ -209,17 +292,31 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
             if (c->timeLeft <= 0)
             {
                 c->gState = CHOWA_IDLE;
-            }
-            else
-            {
-                // Update stats
+                if (c->chowa->stats[CG_CHARISMA] < 255)
+                {
+                    c->chowa->stats[CG_CHARISMA] += 1;
+                }
             }
             break;
         }
         case CHOWA_HELD:
         {
             // Picked up by player
-            // If held for too long, start losing affinity
+            if (c->timeLeft <= 0)
+            {
+                if (cg->grove.heldChowa == c)
+                {
+                    if (c->chowa->playerAffinity > 0)
+                    {
+                        c->chowa->playerAffinity -= 1;
+                    }
+                    c->timeLeft = 2 * SECOND;
+                }
+                else 
+                {
+                    c->gState = CHOWA_IDLE;
+                }
+            }
             break;
         }
         case CHOWA_GIFT:
@@ -234,6 +331,15 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         case CHOWA_PET:
         {
             // Chowa is being pet
+            if (c->timeLeft <= 0)
+            {
+                c->gState = CHOWA_IDLE;
+                // Update affinity;
+                if (c->chowa->playerAffinity < 255)
+                {
+                    c->chowa->playerAffinity += 1;
+                }
+            }
             break;
         }
         default:
@@ -353,8 +459,12 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
         return CHOWA_CHASE;
     }
     // Check for held items
-    if (c->holdingItem != NULL && esp_random() % 6 == 0)
+    if (c->heldItem != NULL && esp_random() % 6 == 0)
     {
+        if (esp_random() % 3 == 0)
+        {
+            return CHOWA_DROP_ITEM;
+        }
         c->timeLeft = SECOND * (5 + (esp_random() % 6));
         if (strcmp(c->heldItem->name, shopMenuItems[5]) == 0)
         {

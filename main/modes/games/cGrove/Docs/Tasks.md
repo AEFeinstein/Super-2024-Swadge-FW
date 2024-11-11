@@ -22,10 +22,7 @@
 - Get icons for punching, kicking, dodging, etc
 
 ## Grove
-- Chowa throw ball
-- Consumables are used up
-- Food items are scaled down
-- Stats increase
+- Pet Chowa
 - Save and load from NVS
 - Create/Add SFX
 - Eggs/Egg spawn timer

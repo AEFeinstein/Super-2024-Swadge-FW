@@ -199,7 +199,7 @@ static void cGroveEnterMode(void)
         cg->guests[i].age    = 6;
         for (int idx = 0; idx < CG_STAT_COUNT; idx++)
         {
-            cg->guests[i].stats[idx] = esp_random() % 255;
+            cg->guests[i].stats[idx] = 0;
         }
         switch (esp_random() % 4)
         {

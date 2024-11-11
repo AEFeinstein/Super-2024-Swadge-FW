@@ -234,12 +234,12 @@ void cg_initGrove(cGrove_t* cg)
     for (int idx = 0; idx < 10; idx++)
     {
         strcpy(cg->grove.items[idx].name, shopMenuItems[5]);
-        cg->grove.items[idx].active                   = true;
+        cg->grove.items[idx].active      = true;
         cg->grove.items[idx].aabb.height = 24;
         cg->grove.items[idx].aabb.width  = 24;
-        cg->grove.items[idx].aabb.pos.x               = 32 + esp_random() % (cg->grove.groveBG.w - 64);
-        cg->grove.items[idx].aabb.pos.y               = 32 + esp_random() % (cg->grove.groveBG.h - 64);
-        cg->grove.items[idx].spr                      = cg->grove.itemsWSGs[5];
+        cg->grove.items[idx].aabb.pos.x  = 32 + esp_random() % (cg->grove.groveBG.w - 64);
+        cg->grove.items[idx].aabb.pos.y  = 32 + esp_random() % (cg->grove.groveBG.h - 64);
+        cg->grove.items[idx].spr         = cg->grove.itemsWSGs[5];
     }
 
     // Init Ring
@@ -466,9 +466,18 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 else if (evt.down && evt.button & PB_A)
                 {
                     // Attempt to add item to field
-                    // FIXME: Can keep adding new items and deletes the old one
                     if (cg->grove.inv.quantities[cg->grove.shopSelection] > 0)
                     {
+                        if (strcmp(cg->grove.items[cg->grove.groveActiveItemIdx].name, "") != 0)
+                        {
+                            for (int idx = 0; idx < CG_MAX_TYPE_ITEMS; idx++)
+                            {
+                                if (strcmp(cg->grove.items[cg->grove.groveActiveItemIdx].name, shopMenuItems[idx]) == 0)
+                                {
+                                    cg->grove.inv.quantities[idx] += 1;
+                                }
+                            }
+                        }
                         cg->grove.items[cg->grove.groveActiveItemIdx].active = true;
                         cg->grove.items[cg->grove.groveActiveItemIdx].spr
                             = cg->grove.itemsWSGs[cg->grove.shopSelection];
@@ -486,6 +495,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                             = cg->grove.itemsWSGs[cg->grove.shopSelection].w;
                         strcpy(cg->grove.items[cg->grove.groveActiveItemIdx].name,
                                shopMenuItems[cg->grove.shopSelection]);
+                        cg->grove.items[cg->grove.groveActiveItemIdx].numOfUses = 10;
                         cg->grove.groveActiveItemIdx++;
                         cg->grove.inv.quantities[cg->grove.shopSelection] -= 1;
                         if (cg->grove.groveActiveItemIdx >= CG_GROVE_MAX_ITEMS)
@@ -627,9 +637,9 @@ static void cg_attemptGrab(cGrove_t* cg)
     vec_t collVec;
     cg->grove.heldItem = NULL;
     // Check if over a Chowa
-    for (int8_t c = 0; c < CG_MAX_CHOWA; c++)
+    for (int8_t c = 0; c < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; c++)
     {
-        if (cg->chowa[c].active)
+        if (cg->grove.chowa[c].chowa->active)
         {
             rectangle_t translated = {.pos    = subVec2d(cg->grove.chowa[c].aabb.pos, cg->grove.camera.pos),
                                       .height = cg->grove.chowa[c].aabb.height,
@@ -638,7 +648,9 @@ static void cg_attemptGrab(cGrove_t* cg)
             {
                 cg->grove.holdingChowa      = true;
                 cg->grove.heldChowa         = &cg->grove.chowa[c];
+                cg->grove.heldChowa->timeLeft = 2000000;
                 cg->grove.heldChowa->gState = CHOWA_HELD;
+                return;
             }
         }
     }
@@ -654,6 +666,7 @@ static void cg_attemptGrab(cGrove_t* cg)
             {
                 cg->grove.holdingItem = true;
                 cg->grove.heldItem    = &cg->grove.items[item];
+                return;
             }
         }
     }
