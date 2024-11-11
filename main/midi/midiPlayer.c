@@ -499,6 +499,63 @@ static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, ui
     }
 }
 
+static int32_t midiSumOscillators(midiPlayer_t* player)
+{
+    voiceStates_t* states = &player->poolVoiceStates;
+    midiVoice_t* voices   = player->poolVoices;
+
+    int32_t sum = 0;
+
+    uint32_t playingVoices = states->on | states->held | states->sustenuto | states->attack | states->decay
+                             | states->sustain | states->release;
+    while (playingVoices != 0)
+    {
+        uint8_t voiceIdx = __builtin_ctz(playingVoices);
+        playingVoices &= ~(1 << voiceIdx);
+        midiVoice_t* voice = &(voices[voiceIdx]);
+
+        if(!(states[voiceIdx].on || states->held || states->sustenuto || states->attack || states->decay
+                             || states->sustain || states->release) || voice->timbre->type == SAMPLE)
+        {
+            continue;
+        }
+
+        synthOscillator_t* osc = &(voice->oscillators[0]);
+
+         if(osc->tVol == 0 && osc->cVol == 0){
+            continue;
+        }
+
+        // Step the oscillator's accumulator
+        osc->accumulator.accum32 += osc->stepSize;
+
+        // If the oscillator's current volume doesn't match the target volume
+        if (osc->cVol != osc->tVol)
+        {
+            // Either increment or decrement it, depending
+            if (osc->cVol < osc->tVol)
+            {
+                osc->cVol++;
+            }
+            else
+            {
+                osc->cVol--;
+            }
+        }
+
+        // Mix this oscillator's output into the sample
+        uint8_t offset = 0;
+        do
+        {
+            sum += ((osc->waveFunc((osc->accumulator.bytes[2] + oscDither[offset]) % 256, osc->waveFuncData)
+                        * ((int32_t)osc->cVol))
+                       >> 8);
+        } while (offset++ < osc->chorus);
+    }
+
+    return sum;
+}
+
 /**
  * @brief Step each playing percussion note forward by one sample and return the raw sum
  *
@@ -1198,7 +1255,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         return 0;
     }
 
-    bool checkEvents = false;
+    bool checkEvents = true;
     if (player->mode == MIDI_FILE)
     {
         if (!player->eventAvailable)
@@ -1208,11 +1265,11 @@ int32_t midiPlayerStep(midiPlayer_t* player)
 
         if (player->eventAvailable)
         {
-            if (player->pendingEvent.absTime
+            /*if (player->pendingEvent.absTime
                 <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
             {
                 checkEvents = true;
-            }
+            }*/
         }
         else
         {
@@ -1258,7 +1315,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
 
     // TODO: Sample support
     // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
-    int32_t sample = swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
+    int32_t sample = midiSumOscillators(player);//swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
     sample += midiSumPercussion(player);
     sample += midiSumSamples(player);
 
