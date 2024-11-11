@@ -52,8 +52,10 @@ typedef struct
 
 DECL_SETTING(test, 0, 1, 0);
 DECL_SETTING(tutorial, 0, 1, 0);
+#ifdef SW_VOL_CONTROL
 DECL_SETTING(bgm, 0, MAX_VOLUME, MAX_VOLUME);
 DECL_SETTING(sfx, 0, MAX_VOLUME, MAX_VOLUME);
+#endif
 DECL_SETTING(tft_br, 0, MAX_TFT_BRIGHTNESS, MAX_TFT_BRIGHTNESS);
 DECL_SETTING(led_br, 0, MAX_LED_BRIGHTNESS, 5);
 DECL_SETTING(mic, 0, MAX_MIC_GAIN, MAX_MIC_GAIN);
@@ -147,9 +149,11 @@ void readAllSettings(void)
     // Read the tutorial passed setting
     readSetting(&tutorial_setting);
 
+#ifdef SW_VOL_CONTROL
     // Read the buzzer settings
     readSetting(&bgm_setting);
     readSetting(&sfx_setting);
+#endif
 
     // Read the TFT settings
     readSetting(&tft_br_setting);
@@ -177,6 +181,8 @@ void readAllSettings(void)
 }
 
 //==============================================================================
+
+#ifdef SW_VOL_CONTROL
 
 /**
  * @brief Get the current background music volume setting
@@ -251,6 +257,8 @@ bool setSfxVolumeSetting(uint16_t vol)
     }
     return false;
 }
+
+#endif
 
 //==============================================================================
 

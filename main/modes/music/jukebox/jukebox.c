@@ -140,9 +140,11 @@ const char* JK_TAG = "JK";
  *============================================================================*/
 
 // Text
-static const char str_bgm_muted[]  = "Swadge music is muted!";
-static const char str_sfx_muted[]  = "Swadge SFX are muted!";
-static const char str_bgm[]        = "Music";
+#ifdef SW_VOL_CONTROL
+static const char str_bgm_muted[] = "Swadge music is muted!";
+static const char str_sfx_muted[] = "Swadge SFX are muted!";
+#endif
+const char str_bgm[]               = "Music";
 static const char str_sfx[]        = "SFX";
 static const char str_leds[]       = "B: LEDs:";
 static const char str_music_sfx[]  = "Pause: Music/SFX:";
@@ -224,10 +226,12 @@ jukeboxSong_t sfx_mainMenu[] = {
         .filename = "item.mid",
         .name     = "Item",
     },
+#ifdef SW_VOL_CONTROL
     {
         .filename = "jingle.mid",
         .name     = "Jingle",
     },
+#endif
 };
 
 jukeboxSong_t sfx_factoryTest[] = {
@@ -582,6 +586,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
     bool drawNames = false;
     if (jukebox->inMusicSubmode)
     {
+#ifdef SW_VOL_CONTROL
         // Warn the user that the swadge is muted, if that's the case
         if (getBgmVolumeSetting() == getBgmVolumeSettingBounds()->min)
         {
@@ -589,6 +594,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
                      (TFT_WIDTH - textWidth(&jukebox->radiostars, str_bgm_muted)) / 2, TFT_HEIGHT / 2);
         }
         else
+#endif
         {
             categoryName = musicCategories[jukebox->categoryIdx].categoryName;
             songName     = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
@@ -599,6 +605,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
     }
     else
     {
+#ifdef SW_VOL_CONTROL
         // Warn the user that the swadge is muted, if that's the case
         if (getSfxVolumeSetting() == getSfxVolumeSettingBounds()->min)
         {
@@ -606,6 +613,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
                      (TFT_WIDTH - textWidth(&jukebox->radiostars, str_sfx_muted)) / 2, TFT_HEIGHT / 2);
         }
         else
+#endif
         {
             categoryName = sfxCategories[jukebox->categoryIdx].categoryName;
             songName     = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;

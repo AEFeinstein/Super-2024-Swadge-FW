@@ -41,10 +41,12 @@ typedef struct
     menuManiaRenderer_t* renderer;
     font_t font_righteous;
     font_t font_rodin;
-    midiFile_t jingle;
     midiFile_t fanfare;
+#ifdef SW_VOL_CONTROL
+    midiFile_t jingle;
     int32_t lastBgmVol;
     int32_t lastSfxVol;
+#endif
     int32_t cheatCodeIdx;
     bool debugMode;
     bool fanfarePlaying;
@@ -93,11 +95,13 @@ mainMenu_t* mainMenu;
 
 static const char settingsLabel[] = "Settings";
 
-static const char tftSettingLabel[]          = "TFT";
-static const char ledSettingLabel[]          = "LED";
-static const char bgmVolSettingLabel[]       = "BGM";
-static const char sfxVolSettingLabel[]       = "SFX";
-static const char micSettingLabel[]          = "MIC";
+static const char tftSettingLabel[] = "TFT";
+static const char ledSettingLabel[] = "LED";
+#ifdef SW_VOL_CONTROL
+static const char bgmVolSettingLabel[] = "BGM";
+static const char sfxVolSettingLabel[] = "SFX";
+#endif
+const char micSettingLabel[]                 = "MIC";
 static const char screenSaverSettingsLabel[] = "Screensaver: ";
 
 static const int32_t screenSaverSettingsValues[] = {
@@ -145,7 +149,9 @@ static void mainMenuEnterMode(void)
     loadFont("righteous_150.font", &mainMenu->font_righteous, false);
 
     // Load a song for when the volume changes
+#ifdef SW_VOL_CONTROL
     loadMidiFile("jingle.mid", &mainMenu->jingle, false);
+#endif
     loadMidiFile("item.mid", &mainMenu->fanfare, false);
 
     // Allocate the menu
@@ -184,13 +190,17 @@ static void mainMenuEnterMode(void)
     // Get the bounds and current settings to build this menu
     addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
     addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
+#ifdef SW_VOL_CONTROL
     addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
+#endif
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
 
+#ifdef SW_VOL_CONTROL
     // These are just used for playing the sound only when the setting changes
     mainMenu->lastBgmVol = getBgmVolumeSetting();
     mainMenu->lastSfxVol = getSfxVolumeSetting();
+#endif
 
     addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsLabel, screenSaverSettingsOptions,
                                  screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
@@ -208,9 +218,6 @@ static void mainMenuEnterMode(void)
 
     // Initialize menu renderer
     mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
-
-    // Make it smooth
-    setFrameRateUs(1000000 / 60);
 }
 
 /**
@@ -229,7 +236,9 @@ static void mainMenuExitMode(void)
     freeFont(&mainMenu->font_righteous);
 
     // Free the song
+#ifdef SW_VOL_CONTROL
     unloadMidiFile(&mainMenu->jingle);
+#endif
     unloadMidiFile(&mainMenu->fanfare);
 
     // Free mode memory
@@ -433,6 +442,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setLedBrightnessSetting(settingVal);
         }
+#ifdef SW_VOL_CONTROL
         else if (bgmVolSettingLabel == label)
         {
             if (settingVal != mainMenu->lastBgmVol)
@@ -453,6 +463,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
                 mainMenu->fanfarePlaying = false;
             }
         }
+#endif
         else if (micSettingLabel == label)
         {
             setMicGainSetting(settingVal);
