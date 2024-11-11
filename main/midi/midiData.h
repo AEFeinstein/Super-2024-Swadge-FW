@@ -8,7 +8,7 @@ extern const midiTimbre_t* gmTimbres[];
 extern const size_t gmTimbreCount;
 
 extern const midiTimbre_t magfestWaveTimbre;
-extern const midiTimbre_t* magfestTimbres[];
+extern const midiTimbre_t* const magfestTimbres[];
 extern const size_t magfestTimbreCount;
 
 // extern const midiTimbre_t gmInstruments[128];

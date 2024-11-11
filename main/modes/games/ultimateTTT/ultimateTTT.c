@@ -54,7 +54,7 @@ const char tttUnlockKey[]   = "ttt_unlock";
 /**
  * Marker names to load WSGs
  */
-const char* markerNames[NUM_UNLOCKABLE_MARKERS] = {
+const char* const markerNames[NUM_UNLOCKABLE_MARKERS] = {
     "x", "o", "sq", "tri", "banana", "dance", "hand", "hat", "hotdog", "lizard", "pixil", "spock", "swadgeman",
 };
 

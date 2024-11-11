@@ -36,7 +36,7 @@ static const char cGroveTitle[] = "Chowa Grove"; // Game title
 static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Perform", "Player Profiles", "Settings"};
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
-static const uint32_t cGroveEnabledVals[]       = {true, false};
+static const int32_t cGroveEnabledVals[]       = {true, false};
 
 static const char* cGroveTitleSprites[] = {"cg_cloud.wsg",          "cg_sky.wsg",
                                            "cg_title_1.wsg",        "cg_title_2.wsg",
@@ -144,10 +144,10 @@ static void cGroveEnterMode(void)
     cg->menu = startSubMenu(cg->menu, cGroveMenuNames[5]); // Settings
     // FIXME: Load values from NVM
     // TODO: Add more settings
-    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, &cGroveEnabledVals,
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  0); // Enable/disable touch controls
-    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveEnabledOptions, &cGroveEnabledVals,
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  0); // Enable/disable online functions
     cg->menu = endSubMenu(cg->menu);
