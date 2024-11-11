@@ -223,8 +223,8 @@ const jukeboxCategory_t musicCategories[] = {
 
 jukeboxSong_t sfx_mainMenu[] = {
     {
-        .filename = "item.mid",
-        .name     = "Item",
+        .filename = "secret.mid",
+        .name     = "Secret",
     },
 #ifdef SW_VOL_CONTROL
     {

@@ -49,7 +49,9 @@ typedef struct
 #endif
     int32_t cheatCodeIdx;
     bool debugMode;
+#ifdef SW_VOL_CONTROL
     bool fanfarePlaying;
+#endif
     int32_t autoLightDanceTimer;
 } mainMenu_t;
 
@@ -152,7 +154,9 @@ static void mainMenuEnterMode(void)
 #ifdef SW_VOL_CONTROL
     loadMidiFile("jingle.mid", &mainMenu->jingle, false);
 #endif
-    loadMidiFile("item.mid", &mainMenu->fanfare, false);
+    loadMidiFile("secret.mid", &mainMenu->fanfare, true);
+    initGlobalMidiPlayer();
+    midiGmOn(globalMidiPlayerGet(MIDI_BGM));
 
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
@@ -278,9 +282,10 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                 if (mainMenu->cheatCodeIdx >= ARRAY_SIZE(cheatCode))
                 {
                     mainMenu->cheatCodeIdx = 0;
-                    soundPlayBgm(&mainMenu->fanfare, BZR_STEREO);
+                    globalMidiPlayerPlaySong(&mainMenu->fanfare, MIDI_BGM);
+#ifdef SW_VOL_CONTROL
                     mainMenu->fanfarePlaying = true;
-
+#endif
                     // Return to the top level menu
                     while (mainMenu->menu->parentMenu)
                     {
@@ -322,11 +327,13 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
 
+#ifdef SW_VOL_CONTROL
     // Stop the buzzer when changing volume, not for fanfare
     if (false == mainMenu->fanfarePlaying)
     {
         soundStop(true);
     }
+#endif
 
     if (selected)
     {
