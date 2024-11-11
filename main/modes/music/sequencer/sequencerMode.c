@@ -131,9 +131,6 @@ static sequencerVars_t* sv;
  */
 static void sequencerEnterMode(void)
 {
-    // Make it 60fps
-    setFrameRateUs(16667);
-
     // Allocate memory for the mode
     sv = calloc(1, sizeof(sequencerVars_t));
 
