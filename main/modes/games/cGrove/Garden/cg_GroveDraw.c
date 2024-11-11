@@ -347,10 +347,19 @@ void cg_groveDrawStats(cGrove_t* cg)
         snprintf(buffer, sizeof(buffer) - 1, "HP: %d", c->stats[CG_HEALTH]);
         drawText(&cg->menuFont, c555, buffer, 200, 120);
 
-        // Draw kick text for guests
-        if (cg->grove.shopSelection > CG_MAX_CHOWA)
+        // Draw held item
+        if (cg->grove.chowa[cg->grove.shopSelection].heldItem != NULL)
         {
-            drawText(&cg->menuFont, c550, kickChowa, 16, 195);
+            snprintf(buffer, sizeof(buffer) - 1, "Item: %s", cg->grove.chowa[cg->grove.shopSelection].heldItem->name);
+            drawText(&cg->menuFont, c555, buffer, 110, 195);
+        }
+
+        // Draw kick text for guests
+        if (cg->grove.shopSelection >= CG_MAX_CHOWA)
+        {
+            int16_t x = 16;
+            int16_t y = 195;
+            drawTextWordWrap(&cg->menuFont, c550, kickChowa, &x, &y, 120, TFT_HEIGHT);
         }
     }
     else
@@ -467,14 +476,45 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx)
     {
         drawWsgSimpleHalf(&cg->grove.items[idx].spr, xOffset, yOffset);
     }
+    else if (strcmp(cg->grove.items[idx].name, shopMenuItems[5]) == 0)
+    {
+        bool draw = true;
+        for (int idx2 = 0; idx2 < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx2++)
+        {
+            // Check each Chowa to see if this ball belongs to one of them
+            if (&cg->grove.items[idx] == cg->grove.chowa[idx2].heldItem
+                && cg->grove.chowa[idx2].heldItem->active == false)
+            {
+                // Draw nothing
+                draw = false;
+            }
+        }
+        if (draw)
+        {
+            drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);
+        }
+    }
     else
     {
         drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);
     }
-    // TODO: Only draw text if enabled in options
-    drawText(&cg->menuFont, c555, cg->grove.items[idx].name,
-             xOffset - (textWidth(&cg->menuFont, cg->grove.items[idx].name) - cg->grove.items[idx].spr.w) / 2,
-             yOffset - 16);
+    if (cg->itemText)
+    {
+        if (strcmp(cg->grove.items[idx].name, shopMenuItems[9]) == 0
+            || strcmp(cg->grove.items[idx].name, shopMenuItems[10]) == 0)
+        {
+            drawText(&cg->menuFont, c555, cg->grove.items[idx].name,
+                     xOffset
+                         - (textWidth(&cg->menuFont, cg->grove.items[idx].name) - cg->grove.items[idx].spr.w / 2) / 2,
+                     yOffset - 16);
+        }
+        else
+        {
+            drawText(&cg->menuFont, c555, cg->grove.items[idx].name,
+                     xOffset - (textWidth(&cg->menuFont, cg->grove.items[idx].name) - cg->grove.items[idx].spr.w) / 2,
+                     yOffset - 16);
+        }
+    }
 }
 
 static void cg_drawRing(cGrove_t* cg)
@@ -498,6 +538,11 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
         }
         int16_t xOffset = c->aabb.pos.x - cg->grove.camera.pos.x;
         int16_t yOffset = c->aabb.pos.y - cg->grove.camera.pos.y;
+        if (cg->chowaNames)
+        {
+            drawText(&cg->menuFont, c555, cg->grove.chowa[idx].chowa->name,
+                     xOffset - (textWidth(&cg->menuFont, cg->grove.chowa[idx].chowa->name) - 32) / 2, yOffset - 16);
+        }
         wsg_t* spr;
         spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_DOWN, 0);
         switch (c->gState)
@@ -773,6 +818,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 if (c->heldItem == NULL)
                 {
                     c->gState = CHOWA_IDLE;
+                    break;
                 }
                 c->frameTimer += elapsedUS;
                 bool reading = strcmp(c->heldItem->name, shopMenuItems[0]) == 0
@@ -851,7 +897,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
             c->ySpd += 1;
             int16_t yOff = (c->heldItem->aabb.pos.y - cg->grove.camera.pos.y) - (12 * c->ballAnimFrame)
                            + ((int)pow(c->ballAnimFrame, 2.0f) / 2);
-            if (c->ballAnimFrame <= 22)
+            if (c->ballAnimFrame <= 23)
             {
                 drawWsgSimple(&cg->grove.itemsWSGs[5], xOff, yOff);
             }

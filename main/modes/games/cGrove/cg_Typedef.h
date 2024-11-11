@@ -302,6 +302,7 @@ typedef struct
     int64_t nextTimeLeft;           ///< Time left on next state
     vec_t targetPos;                ///< Position to head to
     float precision;                ///< How precise the position needs to be
+    int64_t moodTimer;              ///< How long before mood shifts
 
     // Animations
     int16_t angle;         ///< Angle that the Chowa is moving at
@@ -573,8 +574,10 @@ typedef struct
     menuManiaRenderer_t* renderer; ///< Menu renderer
 
     // Settings
-    bool touch;  ///< Touch controls for Grove
-    bool online; ///< If online features are enabled
+    bool touch;      ///< Touch controls for Grove
+    bool online;     ///< If online features are enabled
+    bool itemText;   ///< If item text should be drawn
+    bool chowaNames; ///< If Chowa's show have their names drawn in Grove
 
     // Chowa
     cgChowa_t chowa[CG_MAX_CHOWA];              ///< List of Chowa

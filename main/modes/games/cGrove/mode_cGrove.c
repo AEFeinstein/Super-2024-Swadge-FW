@@ -34,7 +34,7 @@
 static const char cGroveTitle[] = "Chowa Grove"; // Game title
 
 static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Perform", "Player Profiles", "Settings"};
-static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: "};
+static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
 static const uint32_t cGroveEnabledVals[]       = {true, false};
 static const char johnny[]                      = "Johnny Wycliffe";
@@ -146,13 +146,18 @@ static void cGroveEnterMode(void)
     addSingleItemToMenu(cg->menu, cGroveMenuNames[4]);     // View player profiles
     cg->menu = startSubMenu(cg->menu, cGroveMenuNames[5]); // Settings
     // FIXME: Load values from NVM
-    // TODO: Add more settings
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, &cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  0); // Enable/disable touch controls
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveEnabledOptions, &cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  0); // Enable/disable online functions
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[2], cGroveEnabledOptions, &cGroveEnabledVals,
+                                 ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
+                                 0); // Enable/disable Item names
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[3], cGroveEnabledOptions, &cGroveEnabledVals,
+                                 ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
+                                 0); // Enable/disable Chowa names
     cg->menu = endSubMenu(cg->menu);
 
     // Init
@@ -407,6 +412,16 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
     {
         // Online on or off
         cg->online = settingVal;
+    }
+    else if (label == cGroveSettingOpts[2])
+    {
+        // If Grove items should display text 
+        cg->itemText = settingVal;
+    }
+    else if (label == cGroveSettingOpts[3])
+    {
+        // If Grove items should display text 
+        cg->chowaNames = settingVal;
     }
 }
 

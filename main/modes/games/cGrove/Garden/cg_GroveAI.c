@@ -70,12 +70,35 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
     // Update timer
     c->timeLeft -= elapsedUs;
 
+    // Update mood
+    c->moodTimer += elapsedUs;
+    if (c->moodTimer >= 60 * SECOND)
+    {
+        c->moodTimer = 0;
+        switch (esp_random() % 4)
+        {
+            case 0:
+                c->chowa->mood = CG_HAPPY;
+                break;
+            case 1:
+                c->chowa->mood = CG_SAD;
+                break;
+            case 2:
+                c->chowa->mood = CG_ANGRY;
+                break;
+            case 3:
+                c->chowa->mood = CG_CONFUSED;
+                break;
+        }
+    }
+
     // The MONOLITH
     switch (c->gState)
     {
         case CHOWA_IDLE:
         {
             // Chowa is essentially unset. Look for new behavior
+            c->nextState = CHOWA_IDLE;
             c->gState    = cg_getNewTask(cg, c);
             c->animFrame = 0; // Reset animation frame to avoid displaying garbage data
             break;
@@ -478,7 +501,7 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
     {
         for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
         {
-            if (cg->grove.items[idx].active && 0 != strcmp(shopMenuItems[11], cg->grove.items[idx].name))
+            if (cg->grove.items[idx].active && 0 != strcmp(shopMenuItems[11], cg->grove.items[idx].name) && !c->ballInAir)
             {
                 c->targetPos = cg->grove.items[idx].aabb.pos;
                 c->heldItem  = &cg->grove.items[idx];
