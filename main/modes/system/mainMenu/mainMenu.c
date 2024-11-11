@@ -38,7 +38,6 @@
 typedef struct
 {
     menu_t* menu;
-    menu_t* secretsMenu;
     menuManiaRenderer_t* renderer;
     font_t font_righteous;
     font_t font_rodin;
@@ -49,7 +48,6 @@ typedef struct
     int32_t cheatCodeIdx;
     bool debugMode;
     bool fanfarePlaying;
-    bool resetConfirmShown;
     int32_t autoLightDanceTimer;
 } mainMenu_t;
 
@@ -70,7 +68,7 @@ void addSecretsMenu(void);
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
 const char mainMenuTitle[]                      = "Swadge";
-static const char mainMenuShowSecretsMenuName[] = "ShowOnMenu: ";
+static const char mainMenuShowSecretsMenuName[] = "Secrets In Menu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";
 
@@ -78,8 +76,8 @@ swadgeMode_t mainMenuMode = {
     .modeName                 = mainMenuName,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
-    .usesAccelerometer        = true,
-    .usesThermometer          = true,
+    .usesAccelerometer        = false,
+    .usesThermometer          = false,
     .overrideSelectBtn        = true,
     .fnEnterMode              = mainMenuEnterMode,
     .fnExitMode               = mainMenuExitMode,
@@ -412,16 +410,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&t48Mode);
         }
-        else if (label == factoryResetName)
-        {
-            if (!mainMenu->resetConfirmShown)
-            {
-                mainMenu->resetConfirmShown = true;
-                removeSingleItemFromMenu(mainMenu->menu, mnuBackStr);
-                addSingleItemToMenu(mainMenu->secretsMenu, confirmResetName);
-                addSingleItemToMenu(mainMenu->menu, mnuBackStr);
-            }
-        }
         else if (label == confirmResetName)
         {
             if (eraseNvs())
@@ -473,6 +461,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setScreensaverTimeSetting(settingVal);
         }
+        else if (mainMenuShowSecretsMenuName == label)
+        {
+            setShowSecretsMenuSetting(settingVal);
+        }
     }
 }
 
@@ -480,18 +472,30 @@ void addSecretsMenu(void)
 {
     mainMenu->debugMode = true;
 
+    // Return to the root
+    while (mainMenu->menu->parentMenu)
+    {
+        mainMenu->menu = mainMenu->menu->parentMenu;
+    }
+
     // Add the secrets menu
-    mainMenu->menu        = startSubMenu(mainMenu->menu, "Secrets");
-    mainMenu->secretsMenu = mainMenu->menu;
+    mainMenu->menu = startSubMenu(mainMenu->menu, "Secrets");
+
     addSingleItemToMenu(mainMenu->menu, "Git Hash: " GIT_SHA1);
     addSettingsOptionsItemToMenu(mainMenu->menu, mainMenuShowSecretsMenuName, showSecretsMenuSettingOptions,
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
-    // addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+
     addSingleItemToMenu(mainMenu->menu, keebTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, factoryResetName);
+
+    mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
+    addSingleItemToMenu(mainMenu->menu, confirmResetName);
+    // Back is automatically added
+    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    // End the secrets menu
     mainMenu->menu = endSubMenu(mainMenu->menu);
 }
