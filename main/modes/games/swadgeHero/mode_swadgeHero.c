@@ -65,9 +65,6 @@ shVars_t* getShVars(void)
  */
 static void shEnterMode(void)
 {
-    // 60FPS please
-    setFrameRateUs(16667);
-
     // Allocate mode memory
     shv = calloc(1, sizeof(shVars_t));
 
