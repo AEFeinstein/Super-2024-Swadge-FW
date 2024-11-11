@@ -73,6 +73,8 @@ static const char* menuLabels[] = {
     "Shop for items", "View inventory", "View Chowa", "Release Chowa", "Tutorial", "Exit Menu", "Exit Grove",
 };
 
+static const char* nvsBlobKeys[] = {"chowaGroveItems", "chowaGroveInventory"};
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -230,16 +232,26 @@ void cg_initGrove(cGrove_t* cg)
     }
 
     // Items
-    // TODO: load from NVM
-    for (int idx = 0; idx < 10; idx++)
+    size_t blobLen = sizeof(cgItem_t) * CG_GROVE_MAX_ITEMS;
+    if (!readNvsBlob(nvsBlobKeys[0], cg->grove.items, &blobLen))
     {
-        strcpy(cg->grove.items[idx].name, shopMenuItems[5]);
-        cg->grove.items[idx].active      = true;
-        cg->grove.items[idx].aabb.height = 24;
-        cg->grove.items[idx].aabb.width  = 24;
-        cg->grove.items[idx].aabb.pos.x  = 32 + esp_random() % (cg->grove.groveBG.w - 64);
-        cg->grove.items[idx].aabb.pos.y  = 32 + esp_random() % (cg->grove.groveBG.h - 64);
-        cg->grove.items[idx].spr         = cg->grove.itemsWSGs[5];
+        for (int idx = 0; idx < 10; idx++)
+        {
+            strcpy(cg->grove.items[idx].name, "");
+            cg->grove.items[idx].active = false;
+        }
+    }
+    else
+    {
+        // Reload sprite references
+        for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
+        {
+            for (int idx2 = 0; idx2 < CG_MAX_TYPE_ITEMS; idx2++)
+            {
+                if (strcmp(cg->grove.items[idx].name, shopMenuItems[idx2]) == 0)
+                    cg->grove.items[idx].spr = cg->grove.itemsWSGs[idx2];
+            }
+        }
     }
 
     // Init Ring
@@ -255,8 +267,13 @@ void cg_initGrove(cGrove_t* cg)
     // TODO: Recolor
     cg->grove.renderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
-    // TODO: Load inventory from NVS
-    cg->grove.inv.money = 10000;
+    // Load inventory from NVS
+    blobLen = sizeof(cgInventory_t);
+    if (!readNvsBlob(nvsBlobKeys[1], &cg->grove.inv, &blobLen))
+    {
+        cg->grove.inv.money = 100;
+        cg->grove.inv.quantities[11] = 2;
+    }
 
     // Set initial state
     // TODO: Load tutorial if first run
@@ -335,6 +352,19 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
             buttonEvt_t evt = {0};
             while (checkButtonQueueWrapper(&evt))
             {
+                if (evt.down && (evt.button & PB_START || evt.button & PB_B))
+                {
+                    // Save inv and items
+                    if (!writeNvsBlob(nvsBlobKeys[0], cg->grove.items, sizeof(cgItem_t) * CG_GROVE_MAX_ITEMS))
+                    {
+                        printf("Item failed to save to NVS\n");
+                    }
+                    if (!writeNvsBlob(nvsBlobKeys[1], &cg->grove.inv, sizeof(cgInventory_t)))
+                    {
+                        printf("Inventory failed to save to NVS\n");
+                    }
+                    cg->grove.state = CG_GROVE_FIELD;
+                }
                 cg->grove.menu = menuButton(cg->grove.menu, evt);
             }
             drawMenuMania(cg->grove.menu, cg->grove.renderer, elapsedUS);
@@ -646,10 +676,10 @@ static void cg_attemptGrab(cGrove_t* cg)
                                       .width  = cg->grove.chowa[c].aabb.width};
             if (rectRectIntersection(cg->grove.cursor, translated, &collVec))
             {
-                cg->grove.holdingChowa      = true;
-                cg->grove.heldChowa         = &cg->grove.chowa[c];
+                cg->grove.holdingChowa        = true;
+                cg->grove.heldChowa           = &cg->grove.chowa[c];
                 cg->grove.heldChowa->timeLeft = 2000000;
-                cg->grove.heldChowa->gState = CHOWA_HELD;
+                cg->grove.heldChowa->gState   = CHOWA_HELD;
                 return;
             }
         }

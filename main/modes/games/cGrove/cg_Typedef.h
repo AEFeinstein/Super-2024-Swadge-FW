@@ -288,6 +288,13 @@ typedef struct
 
 typedef struct
 {
+    cgColorType_t type; ///< Used for color data
+    int64_t timer;      ///< us since last stage
+    int16_t stage;      ///< Current stage
+} cgEgg_t;
+
+typedef struct
+{
     // Basic data
     cgChowa_t* chowa; ///< Main Chowa data
     rectangle_t aabb; ///< Position and bounding box for grabbing
@@ -331,6 +338,7 @@ typedef struct
     wsg_t* speechBubbles;  ///< Speech Bubbles for Chowa
     wsg_t* itemsWSGs;      ///< Item sprites
     wsg_t* eggs;           ///< Un-cracked eggs
+    wsg_t* crackedEggs;    ///< Cracked eggs
     // Audio
     midiFile_t bgm; ///< Main BGM for the Grove
 
@@ -345,6 +353,7 @@ typedef struct
     cgInventory_t inv;                                             ///< Inventory struct
     cgGroveMoney_t ring;                                           ///< Ring available to collect
     bool isBGMPlaying;                                             ///< If the BGM needs to be restarted
+    cgEgg_t eggs[CG_MAX_CHOWA];                                    ///< Array of un-hatched eggs
 
     // Menu
     menu_t* menu;                  ///< Shop menu object

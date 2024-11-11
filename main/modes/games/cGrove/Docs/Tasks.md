@@ -22,7 +22,6 @@
 - Get icons for punching, kicking, dodging, etc
 
 ## Grove
-- Save and load from NVS
 - Create/Add SFX
 - Eggs/Egg spawn timer
 
