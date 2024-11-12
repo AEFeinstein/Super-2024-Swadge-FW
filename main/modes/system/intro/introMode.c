@@ -663,14 +663,14 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
 {
     ESP_LOGI("Intro", "'%s' Triggered!", prev->title);
 
-    // TODO fix this
-    if (next == (buttonsSteps + 7))
+    // TODO maybe don't hardcode this
+    if (next == (buttonsSteps + 11))
     {
         ESP_LOGI("Intro", "Oh it's the one we want: %s", next->title);
         iv->quickSettingsOpened = true;
         openQuickSettings();
     }
-    else if (next == (buttonsSteps + 8))
+    else if (next == (buttonsSteps + 12))
     {
         iv->quickSettingsOpened = false;
     }
