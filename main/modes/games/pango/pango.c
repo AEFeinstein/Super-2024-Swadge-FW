@@ -397,6 +397,7 @@ void pangoMainLoop(int64_t elapsedUs)
     }
 
     pango->update(pango, elapsedUs);
+    DRAW_FPS_COUNTER(pango->gameData.scoreFont);
 
     pango->prevBtnState          = pango->btnState;
     pango->gameData.prevBtnState = pango->prevBtnState;
@@ -789,7 +790,7 @@ void changeStateGame(pango_t* self)
 
     self->tilemap.executeTileSpawnAll = true;
     
-    //soundPlayBgm(&(self->soundManager.bgmMain), MIDI_BGM);
+    soundPlayBgm(&(self->soundManager.bgmFast), MIDI_BGM);
 
     self->update = &updateGame;
 }
