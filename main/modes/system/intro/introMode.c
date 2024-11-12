@@ -15,6 +15,8 @@
 #include "shapes.h"
 #include "wsg.h"
 
+#include "embeddedOut.h"
+
 static void introEnterMode(void);
 static void introExitMode(void);
 static void introMainLoop(int64_t elapsedUs);
@@ -290,6 +292,14 @@ typedef struct
 
     menu_t* bgMenu;
     menuManiaRenderer_t* renderer;
+
+    // Microphone test
+    dft32_data dd;
+    embeddedNf_data end;
+    embeddedOut_data eod;
+    uint8_t samplesProcessed;
+    uint16_t maxValue;
+
 } introVars_t;
 
 static introVars_t* iv;
@@ -377,6 +387,10 @@ static void introEnterMode(void)
     iv->playingSound  = false;
     iv->introComplete = false;
 #endif
+
+    // Init CC
+    InitColorChord(&iv->end, &iv->dd);
+    iv->maxValue = 1;
 }
 
 /**
@@ -548,6 +562,34 @@ static void introMainLoop(int64_t elapsedUs)
         ESP_LOGI("Intro", "Remaining text: ...%s", remaining);
         // TODO handle remaining text sensibly
     }
+
+    // Draw the spectrum as a bar graph. Figure out bar and margin size
+    int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
+    int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
+
+    // Find the max value
+    for (uint16_t i = 0; i < FIX_BINS; i++)
+    {
+        if (iv->end.fuzzed_bins[i] > iv->maxValue)
+        {
+            iv->maxValue = iv->end.fuzzed_bins[i];
+        }
+    }
+
+    // Plot the bars
+    int32_t energy = 0;
+    for (uint16_t i = 0; i < FIX_BINS; i++)
+    {
+        energy += iv->end.fuzzed_bins[i];
+        uint8_t height       = ((TFT_HEIGHT / 2) * iv->end.fuzzed_bins[i]) / iv->maxValue;
+        paletteColor_t color = c000;
+        int16_t x0           = binMargin + (i * binWidth);
+        int16_t x1           = binMargin + ((i + 1) * binWidth);
+        // Big enough, fill an area
+        fillDisplayArea(x0, TFT_HEIGHT - height, x1, TFT_HEIGHT, color);
+    }
+
+    tutorialOnSound(&iv->tut, energy);
 }
 
 /**
@@ -558,8 +600,21 @@ static void introMainLoop(int64_t elapsedUs)
  */
 void introAudioCallback(uint16_t* samples, uint32_t sampleCnt)
 {
-    // TODO process samples for loudness or something
-    tutorialOnSound(samples, sampleCnt);
+    // For each sample
+    for (uint32_t idx = 0; idx < sampleCnt; idx++)
+    {
+        // Push to test
+        PushSample32(&iv->dd, samples[idx]);
+
+        // If 128 samples have been pushed
+        iv->samplesProcessed++;
+        if (iv->samplesProcessed >= 128)
+        {
+            // Update LEDs
+            iv->samplesProcessed = 0;
+            HandleFrameInfo(&iv->end, &iv->dd);
+        }
+    }
 }
 
 /**

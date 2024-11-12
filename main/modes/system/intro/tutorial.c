@@ -92,9 +92,13 @@ void tutorialOnMotion(tutorialState_t* state, int16_t x, int16_t y, int16_t z)
 }
 
 // Call when the microphone is sampled
-void tutorialOnSound(uint16_t* samples, uint32_t sampleCnt)
+void tutorialOnSound(tutorialState_t* state, int32_t energy)
 {
-    // TODO figure out why these samples are junk
+    // Check for a pass
+    if (energy > 100000)
+    {
+        state->loudSound = true;
+    }
 }
 
 // Call once per frame, after input handling, to check the current step's triggers

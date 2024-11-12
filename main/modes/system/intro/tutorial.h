@@ -192,7 +192,7 @@ void tutorialOnTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t int
 void tutorialOnMotion(tutorialState_t* state, int16_t x, int16_t y, int16_t z);
 
 // Call when the microphone is sampled
-void tutorialOnSound(uint16_t* samples, uint32_t sampleCnt);
+void tutorialOnSound(tutorialState_t* state, int32_t energy);
 
 // Call once per frame, after input handling, to check the current step's triggers
 void tutorialCheckTriggers(tutorialState_t* state);
