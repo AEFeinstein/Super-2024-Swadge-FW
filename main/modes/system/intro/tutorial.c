@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include <esp_timer.h>
+#include <esp_log.h>
 
 // Static Function Prototypes
 
@@ -45,6 +46,55 @@ void tutorialOnTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t int
     touchJoystick_t zone = getTouchJoystickZones(phi, r, true, true);
     state->allTouchZones |= zone;
     state->curTouchZone = zone;
+
+    if (intensity)
+    {
+        getTouchSpins(&state->spinState, phi, r);
+    }
+    else
+    {
+        memset(&state->spinState, 0, sizeof(touchSpinState_t));
+    }
+}
+
+// Call when motion is detected
+void tutorialOnMotion(tutorialState_t* state, int16_t x, int16_t y, int16_t z)
+{
+    if (x > 240)
+    {
+        state->orientations[0] = true;
+    }
+
+    if (x < -240)
+    {
+        state->orientations[1] = true;
+    }
+
+    if (y > 240)
+    {
+        state->orientations[2] = true;
+    }
+
+    if (y < -240)
+    {
+        state->orientations[3] = true;
+    }
+
+    if (z > 240)
+    {
+        state->orientations[4] = true;
+    }
+
+    if (z < -240)
+    {
+        state->orientations[5] = true;
+    }
+}
+
+// Call when the microphone is sampled
+void tutorialOnSound(uint16_t* samples, uint32_t sampleCnt)
+{
+    // TODO figure out why these samples are junk
 }
 
 // Call once per frame, after input handling, to check the current step's triggers
@@ -72,6 +122,8 @@ void tutorialCheckTriggers(tutorialState_t* state)
             state->stepStartTime     = esp_timer_get_time();
             state->tempMessage       = NULL;
             state->tempMessageExpiry = 0;
+            memset(&state->orientations, false, sizeof(state->orientations));
+            state->loudSound = false;
 
             next = state->curStep;
         }
@@ -145,8 +197,23 @@ static bool tutorialCheckTrigger(tutorialState_t* state, const tutorialTrigger_t
             return (state->curTouchZone & trigger->touchZones) == trigger->touchZones;
 
         case TOUCH_SPIN:
-            // TODO
-            return false;
+            return trigger->intData == state->spinState.spins;
+
+        case IMU_SHAKE:
+        {
+            int32_t orientationsHit = 0;
+            for (int32_t i = 0; i < ARRAY_SIZE(state->orientations); i++)
+            {
+                if (state->orientations[i])
+                {
+                    orientationsHit++;
+                }
+            }
+            return orientationsHit >= 4;
+        }
+
+        case MIC_LOUD:
+            return state->loudSound;
 
         case TIME_PASSED:
             return (state->stepStartTime + trigger->intData) <= esp_timer_get_time();

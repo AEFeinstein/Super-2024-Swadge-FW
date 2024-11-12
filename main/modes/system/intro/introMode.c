@@ -18,7 +18,8 @@
 static void introEnterMode(void);
 static void introExitMode(void);
 static void introMainLoop(int64_t elapsedUs);
-static void introDacCallback(uint8_t* samples, int16_t len);
+static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void introAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 
 // static void introMenuCb(const char*, bool selected, uint32_t settingVal);
 static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
@@ -30,13 +31,7 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
 #define ALL_BUTTONS  (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT)
 #define DPAD_BUTTONS (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)
 
-#define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
-
-typedef struct
-{
-    const tutorialStep_t* steps;
-    size_t count;
-} introSection_t;
+// #define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
 
 static const char startTitle[]        = "Welcome!";
 static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one second to exit.";
@@ -84,6 +79,43 @@ static const tutorialStep_t buttonsSteps[] = {
         },
         .title = "Pause Button",
         .detail = "The Pause button is mode-specific, but usually pauses a game or performs a special function. Give it a try!",
+    },
+    // TODO draw touchpad
+    // TODO write actual text
+    {
+        .trigger = {
+            .type = TOUCH_SPIN,
+            .intData = -2,
+        },
+        .title = "Touchpad",
+        .detail = "Spin clockwise twice!"
+    },
+    // TODO Draw IMU
+    // TODO write actual text
+    {
+        .trigger = {
+            .type = IMU_SHAKE,
+        },
+        .title = "Tilt Controls",
+        .detail = "Wiggle around!"
+    },
+    // TODO microphone
+    {
+        .trigger = {
+            .type = MIC_LOUD,
+        },
+        .title = "Microphone",
+        .detail = "Objetion!",
+    },
+    // TODO speaker
+    // TODO flip to SPK mode
+    {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_A,
+        },
+        .title = "Speaker",
+        .detail = "Try the volume dial, press A when done",
     },
     {
         .trigger = {
@@ -177,36 +209,6 @@ static const tutorialStep_t buttonsSteps[] = {
     },
 };
 
-static const tutorialStep_t touchpadSteps[] = {
-    {
-        .trigger =
-        {
-            .type = TOUCH_ZONE_ALL,
-            .touchZones = ALL_TOUCH,
-        },
-        .title = "Touch the touchpad!",
-        .detail = "go on, do it. spin it, etc.",
-        .cooldown = 5,
-    }
-};
-
-static const introSection_t introSections[] = {
-    {
-        // Buttons
-        .steps = buttonsSteps,
-        .count = ARRAY_SIZE(buttonsSteps),
-    },
-    {
-        // Touchpad
-        .steps = touchpadSteps,
-        .count = ARRAY_SIZE(touchpadSteps),
-    },
-    /*{
-        .steps = accelSteps,
-        .count = ARRAY_SIZE(accelSteps),
-    },*/
-};
-
 static const char introName[] = "Tutorial";
 
 swadgeMode_t introMode = {
@@ -219,12 +221,12 @@ swadgeMode_t introMode = {
     .fnEnterMode              = introEnterMode,
     .fnExitMode               = introExitMode,
     .fnMainLoop               = introMainLoop,
-    .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = NULL,
+    .fnAudioCallback          = introAudioCallback,
+    .fnBackgroundDrawCallback = introBackgroundDrawCallback,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
-    .fnDacCb                  = introDacCallback,
+    .fnDacCb                  = NULL,
 };
 
 typedef struct
@@ -278,16 +280,16 @@ typedef struct
 
     bool quickSettingsOpened;
 
+#ifdef CUSTOM_INTRO_SOUND
     bool playingSound;
     uint8_t* sound;
     size_t soundSize;
     size_t soundProgress;
     bool introComplete;
+#endif
 
     menu_t* bgMenu;
     menuManiaRenderer_t* renderer;
-
-    const introSection_t* curSection;
 } introVars_t;
 
 static introVars_t* iv;
@@ -368,12 +370,13 @@ static void introEnterMode(void)
     iv->swadgeViewWidth  = iv->buttonIcons[5].x + iv->buttonIcons[5].icon->w + 5;
     iv->swadgeViewHeight = iv->buttonIcons[1].y + iv->buttonIcons[1].icon->h + 5;
 
-    iv->curSection = introSections;
-    tutorialSetup(&iv->tut, introTutorialCb, iv->curSection->steps, iv->curSection->count, iv);
+    tutorialSetup(&iv->tut, introTutorialCb, buttonsSteps, ARRAY_SIZE(buttonsSteps), iv);
 
+#ifdef CUSTOM_INTRO_SOUND
     iv->sound         = NULL;
     iv->playingSound  = false;
-    iv->introComplete = true;
+    iv->introComplete = false;
+#endif
 }
 
 /**
@@ -395,10 +398,12 @@ static void introExitMode(void)
     freeWsg(&iv->icon.button.pause);
     freeWsg(&iv->icon.button.up);
 
+#ifdef CUSTOM_INTRO_SOUND
     if (iv->sound != NULL)
     {
         free(iv->sound);
     }
+#endif
 
     free(iv);
 }
@@ -414,6 +419,7 @@ static void introMainLoop(int64_t elapsedUs)
 {
     // clearPxTft();
 
+#ifdef CUSTOM_INTRO_SOUND
     if (iv->playingSound || !iv->introComplete)
     {
         int64_t songTime     = (iv->soundSize * 1000000 + DAC_SAMPLE_RATE_HZ - 1) / DAC_SAMPLE_RATE_HZ;
@@ -458,25 +464,30 @@ static void introMainLoop(int64_t elapsedUs)
             return;
         }
     }
+#endif
 
     // Process button events
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+#ifdef CUSTOM_INTRO_SOUND
         if (!iv->introComplete)
         {
             iv->introComplete = true;
             break;
         }
+#endif
         iv->buttons = evt.state;
 
         tutorialOnButton(&iv->tut, &evt);
     }
 
+#ifdef CUSTOM_INTRO_SOUND
     if (!iv->introComplete)
     {
         return;
     }
+#endif
 
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
@@ -490,6 +501,19 @@ static void introMainLoop(int64_t elapsedUs)
         iv->joysticks = 0;
 
         tutorialOnTouch(&iv->tut, 0, 0, 0);
+    }
+
+    // Declare variables to receive acceleration
+    int16_t a_x, a_y, a_z;
+    // Get the current acceleration
+    if (ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
+    {
+        // Values are roughly -256 to 256
+        tutorialOnMotion(&iv->tut, a_x, a_y, a_z);
+    }
+    else
+    {
+        tutorialOnMotion(&iv->tut, 0, 0, 0);
     }
 
     tutorialCheckTriggers(&iv->tut);
@@ -526,9 +550,37 @@ static void introMainLoop(int64_t elapsedUs)
     }
 }
 
+/**
+ * @brief TODO
+ *
+ * @param samples
+ * @param sampleCnt
+ */
+void introAudioCallback(uint16_t* samples, uint32_t sampleCnt)
+{
+    // TODO process samples for loudness or something
+    tutorialOnSound(samples, sampleCnt);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param x
+ * @param y
+ * @param w
+ * @param h
+ * @param up
+ * @param upNum
+ */
+static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    accelIntegrate();
+}
+
+#ifdef CUSTOM_INTRO_SOUND
 static void introDacCallback(uint8_t* samples, int16_t len)
 {
-#define SPK_SILENCE (INT8_MIN)
+    #define SPK_SILENCE (INT8_MIN)
     if (iv->playingSound)
     {
         if (iv->soundProgress + len >= iv->soundSize)
@@ -549,12 +601,14 @@ static void introDacCallback(uint8_t* samples, int16_t len)
         memset(samples, SPK_SILENCE, len);
     }
 }
+#endif
 
 static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
                             bool backtrack)
 {
     ESP_LOGI("Intro", "'%s' Triggered!", prev->title);
 
+    // TODO fix this
     if (next == (buttonsSteps + 7))
     {
         ESP_LOGI("Intro", "Oh it's the one we want: %s", next->title);
@@ -570,15 +624,6 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
         setTutorialCompletedSetting(true);
         switchToSwadgeMode(&mainMenuMode);
         ESP_LOGI("Intro", "Last trigger entered!");
-
-        /*if (iv->curSection < (introSections + ARRAY_SIZE(introSections)))
-        {
-            iv->curSection++;
-            tutorialSetup(&iv->tut, introTutorialCb, iv->curSection->steps, iv->curSection->count, iv);
-        } else
-        {
-            ESP_LOGI("Intro", "no more sections");
-        }*/
     }
 }
 
