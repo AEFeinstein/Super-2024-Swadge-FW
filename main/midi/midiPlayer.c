@@ -1263,15 +1263,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
             player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
         }
 
-        if (player->eventAvailable)
-        {
-            /*if (player->pendingEvent.absTime
-                <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
-            {
-                checkEvents = true;
-            }*/
-        }
-        else
+        if (!player->eventAvailable)
         {
             ESP_LOGI("MIDI", "Done playing file!");
             midiSongEnd(player);
