@@ -262,7 +262,7 @@ bool pa_needsTransparency(uint8_t tileId)
         case PA_TILE_BG_WALL:
             return false;*/
         default:
-            return true;
+            return false;
     }
 }
 

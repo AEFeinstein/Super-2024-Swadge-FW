@@ -280,7 +280,7 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
                     int colorolor = frameBuffer[(y * TFT_WIDTH) + x];
                     if (colorolor == 216)
                     {
-                        colorolor = c500;
+                        colorolor = c000;
                     }
 
                     uint32_t color = paletteColorsEmu[colorolor];
