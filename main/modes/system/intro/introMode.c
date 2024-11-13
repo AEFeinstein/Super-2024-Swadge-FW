@@ -28,7 +28,11 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
                             bool backtrack);
 static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const tutorialTrigger_t* trigger);
 
-static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons, touchJoystick_t joysticks);
+static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons);
+static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint);
+static void introDrawSwadgeImu(int64_t elapsedUs, int16_t x, int16_t y, int16_t z);
+static void introDrawSwadgeSpeaker(int64_t elapsedUs);
+static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue);
 
 #define ALL_BUTTONS  (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT)
 #define DPAD_BUTTONS (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)
@@ -40,6 +44,11 @@ static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one sec
 static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
                                         "responsibility. Hold SELECT to exit the tutorial and get started!";
+
+static const char spkTitle[]      = "Speaker";
+static const char micTitle[]      = "Microphone";
+static const char touchpadTitle[] = "Touchpad";
+static const char imuTitle[]      = "Tilt Controls";
 
 static const tutorialStep_t buttonsSteps[] = {
     {
@@ -89,8 +98,8 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = TOUCH_SPIN,
             .intData = -2,
         },
-        .title = "Touchpad",
-        .detail = "Spin clockwise twice!"
+        .title = touchpadTitle,
+        .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
     },
     // TODO Draw IMU
     // TODO write actual text
@@ -98,16 +107,16 @@ static const tutorialStep_t buttonsSteps[] = {
         .trigger = {
             .type = IMU_SHAKE,
         },
-        .title = "Tilt Controls",
-        .detail = "Wiggle around!"
+        .title = imuTitle,
+        .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
     },
     // TODO microphone
     {
         .trigger = {
             .type = MIC_LOUD,
         },
-        .title = "Microphone",
-        .detail = "Objetion!",
+        .title = micTitle,
+        .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
     },
     // TODO speaker
     // TODO flip to SPK mode
@@ -116,8 +125,8 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_A,
         },
-        .title = "Speaker",
-        .detail = "Try the volume dial, press A when done",
+        .title = spkTitle,
+        .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
     },
     {
         .trigger = {
@@ -244,6 +253,15 @@ typedef struct
     bool visible;
 } iconPos_t;
 
+typedef enum
+{
+    DRAW_BUTTONS,
+    DRAW_TOUCHPAD,
+    DRAW_IMU,
+    DRAW_SPK,
+    DRAW_MIC,
+} introDrawMode_t;
+
 typedef struct
 {
     font_t smallFont;
@@ -274,7 +292,7 @@ typedef struct
     } icon;
 
     buttonBit_t buttons;
-    touchJoystick_t joysticks;
+    vec_t touch;
 
     iconPos_t buttonIcons[8];
     int16_t swadgeViewWidth;
@@ -292,6 +310,7 @@ typedef struct
 
     menu_t* bgMenu;
     menuManiaRenderer_t* renderer;
+    introDrawMode_t drawMode;
 
     // Microphone test
     dft32_data dd;
@@ -300,6 +319,13 @@ typedef struct
     uint8_t samplesProcessed;
     uint16_t maxValue;
 
+    // Speaker test
+    midiFile_t song;
+
+    // IMU test
+    int16_t a_x;
+    int16_t a_y;
+    int16_t a_z;
 } introVars_t;
 
 static introVars_t* iv;
@@ -388,6 +414,9 @@ static void introEnterMode(void)
     iv->introComplete = false;
 #endif
 
+    // Load the MIDI file
+    loadMidiFile("hd_credits.mid", &iv->song, true);
+
     // Init CC
     InitColorChord(&iv->end, &iv->dd);
     iv->maxValue = 1;
@@ -418,6 +447,7 @@ static void introExitMode(void)
         free(iv->sound);
     }
 #endif
+    unloadMidiFile(&iv->song);
 
     free(iv);
 }
@@ -506,29 +536,38 @@ static void introMainLoop(int64_t elapsedUs)
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
     {
-        iv->joysticks = getTouchJoystickZones(phi, r, true, true);
-
+        getTouchCartesian(phi, r, &iv->touch.x, &iv->touch.y);
         tutorialOnTouch(&iv->tut, phi, r, intensity);
     }
     else
     {
-        iv->joysticks = 0;
-
+        iv->touch.x = 0;
+        iv->touch.y = 0;
         tutorialOnTouch(&iv->tut, 0, 0, 0);
     }
 
-    // Declare variables to receive acceleration
-    int16_t a_x, a_y, a_z;
     // Get the current acceleration
-    if (ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
+    if (ESP_OK != accelGetOrientVec(&iv->a_x, &iv->a_y, &iv->a_z))
     {
-        // Values are roughly -256 to 256
-        tutorialOnMotion(&iv->tut, a_x, a_y, a_z);
+        iv->a_x = 0;
+        iv->a_y = 0;
+        iv->a_z = 0;
     }
-    else
+    // Values are roughly -256 to 256
+    tutorialOnMotion(&iv->tut, iv->a_x, iv->a_y, iv->a_z);
+
+    // Find the overall sound energy
+    int32_t energy = 0;
+    for (uint16_t i = 0; i < FIX_BINS; i++)
     {
-        tutorialOnMotion(&iv->tut, 0, 0, 0);
+        // Find the max value
+        if (iv->end.fuzzed_bins[i] > iv->maxValue)
+        {
+            iv->maxValue = iv->end.fuzzed_bins[i];
+        }
+        energy += iv->end.fuzzed_bins[i];
     }
+    tutorialOnSound(&iv->tut, energy);
 
     tutorialCheckTriggers(&iv->tut);
 
@@ -553,7 +592,35 @@ static void introMainLoop(int64_t elapsedUs)
     int16_t detailY    = detailYmax - detailH;
 
     int16_t viewX = (TFT_WIDTH - iv->swadgeViewWidth) / 2;
-    introDrawSwadge(elapsedUs, viewX, titleY + iv->bigFont.height + 1 + 25, iv->buttons, iv->joysticks);
+    switch (iv->drawMode)
+    {
+        default:
+        case DRAW_BUTTONS:
+        {
+            introDrawSwadgeButtons(elapsedUs, viewX, titleY + iv->bigFont.height + 1 + 25, iv->buttons);
+            break;
+        }
+        case DRAW_TOUCHPAD:
+        {
+            introDrawSwadgeTouchpad(elapsedUs, iv->touch);
+            break;
+        }
+        case DRAW_IMU:
+        {
+            introDrawSwadgeImu(elapsedUs, iv->a_x, iv->a_y, iv->a_z);
+            break;
+        }
+        case DRAW_SPK:
+        {
+            introDrawSwadgeSpeaker(elapsedUs);
+            break;
+        }
+        case DRAW_MIC:
+        {
+            introDrawSwadgeMicrophone(elapsedUs, iv->end.fuzzed_bins, iv->maxValue);
+            break;
+        }
+    }
 
     const char* remaining
         = drawTextWordWrap(&iv->smallFont, c000, detail, &detailX, &detailY, TFT_WIDTH - 5, detailYmax);
@@ -562,34 +629,6 @@ static void introMainLoop(int64_t elapsedUs)
         ESP_LOGI("Intro", "Remaining text: ...%s", remaining);
         // TODO handle remaining text sensibly
     }
-
-    // Draw the spectrum as a bar graph. Figure out bar and margin size
-    int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
-    int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
-
-    // Find the max value
-    for (uint16_t i = 0; i < FIX_BINS; i++)
-    {
-        if (iv->end.fuzzed_bins[i] > iv->maxValue)
-        {
-            iv->maxValue = iv->end.fuzzed_bins[i];
-        }
-    }
-
-    // Plot the bars
-    int32_t energy = 0;
-    for (uint16_t i = 0; i < FIX_BINS; i++)
-    {
-        energy += iv->end.fuzzed_bins[i];
-        uint8_t height       = ((TFT_HEIGHT / 2) * iv->end.fuzzed_bins[i]) / iv->maxValue;
-        paletteColor_t color = c000;
-        int16_t x0           = binMargin + (i * binWidth);
-        int16_t x1           = binMargin + ((i + 1) * binWidth);
-        // Big enough, fill an area
-        fillDisplayArea(x0, TFT_HEIGHT - height, x1, TFT_HEIGHT, color);
-    }
-
-    tutorialOnSound(&iv->tut, energy);
 }
 
 /**
@@ -662,6 +701,42 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
                             bool backtrack)
 {
     ESP_LOGI("Intro", "'%s' Triggered!", prev->title);
+    ESP_LOGI("Intro", "Onto '%s'", next->title);
+
+    // Switch peripherals
+    if (spkTitle == next->title)
+    {
+        switchToSpeaker();
+
+        // Set and play the song
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        midiGmOn(player);
+        midiSetFile(player, &iv->song);
+        player->loop = true;
+        midiPause(player, false);
+
+        iv->drawMode = DRAW_SPK;
+    }
+    else if (micTitle == next->title)
+    {
+        switchToMicrophone();
+        iv->drawMode = DRAW_MIC;
+    }
+    else if (touchpadTitle == next->title)
+    {
+        globalMidiPlayerPauseAll();
+        iv->drawMode = DRAW_TOUCHPAD;
+    }
+    else if (imuTitle == next->title)
+    {
+        globalMidiPlayerPauseAll();
+        iv->drawMode = DRAW_IMU;
+    }
+    else
+    {
+        globalMidiPlayerPauseAll();
+        iv->drawMode = DRAW_BUTTONS;
+    }
 
     // TODO maybe don't hardcode this
     if (next == (buttonsSteps + 11))
@@ -687,7 +762,7 @@ static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const t
     return iv->quickSettingsOpened;
 }
 
-static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons, touchJoystick_t joysticks)
+static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons)
 {
 #define BLINK_ON   550000
 #define BLINK_OFF  200000
@@ -796,5 +871,86 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
                 }
             }
         }
+    }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param elapsedUs
+ * @param touchPoint
+ */
+static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint)
+{
+#define TOUCHPAD_RADIUS 50
+#define TOUCHPAD_X      (TFT_WIDTH / 2)
+#define TOUCHPAD_Y      (TFT_HEIGHT / 2)
+
+    // Draw the pad
+    drawCircleFilled(TOUCHPAD_X, TOUCHPAD_Y, TOUCHPAD_RADIUS, c234);
+    drawCircle(TOUCHPAD_X, TOUCHPAD_Y, TOUCHPAD_RADIUS, c000);
+    drawCircle(TOUCHPAD_X, TOUCHPAD_Y, TOUCHPAD_RADIUS / 2, c000);
+
+    if (0 != touchPoint.x || 0 != touchPoint.y)
+    {
+        // Draw the dot (0 to 1024)
+        vec_t cartesianStart = {
+            .x = TOUCHPAD_X - TOUCHPAD_RADIUS,
+            .y = TOUCHPAD_Y - TOUCHPAD_RADIUS,
+        };
+
+        vec_t drawPoint = addVec2d(cartesianStart, divVec2d(mulVec2d(touchPoint, TOUCHPAD_RADIUS * 2), 1024));
+        drawPoint.y     = TOUCHPAD_Y + (TOUCHPAD_Y - drawPoint.y);
+
+        drawCircleFilled(drawPoint.x, drawPoint.y, 8, c115);
+    }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param elapsedUs
+ * @param x
+ * @param y
+ * @param z
+ */
+static void introDrawSwadgeImu(int64_t elapsedUs, int16_t x, int16_t y, int16_t z)
+{
+    printf("%d, %d, %d", x, y, z);
+    // TODO draw IMU bars
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param elapsedUs
+ */
+static void introDrawSwadgeSpeaker(int64_t elapsedUs)
+{
+    // TODO draw speaker icon
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param elapsedUs
+ * @param fuzzed_bins
+ * @param maxValue
+ */
+static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue)
+{
+    // Draw the spectrum as a bar graph. Figure out bar and margin size
+    int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
+    int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
+
+    // Plot the bars
+    for (uint16_t i = 0; i < FIX_BINS; i++)
+    {
+        uint8_t height       = ((TFT_HEIGHT / 2) * fuzzed_bins[i]) / maxValue;
+        paletteColor_t color = c000;
+        int16_t x0           = binMargin + (i * binWidth);
+        int16_t x1           = binMargin + ((i + 1) * binWidth);
+        // Big enough, fill an area
+        fillDisplayArea(x0, TFT_HEIGHT - height, x1, TFT_HEIGHT, color);
     }
 }
