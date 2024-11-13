@@ -16,6 +16,7 @@
 #include "wsg.h"
 
 #include "embeddedOut.h"
+#include "bunny.h"
 
 static void introEnterMode(void);
 static void introExitMode(void);
@@ -45,6 +46,11 @@ static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
                                         "responsibility. Hold SELECT to exit the tutorial and get started!";
 
+static const char dpadTitle[]     = "The D-Pad";
+static const char aBtnTitle[]     = "A Button";
+static const char bBtnTitle[]     = "B Button";
+static const char mnuBtnTitle[]   = "Menu Button";
+static const char pauseBtnTitle[] = "Pause Button";
 static const char spkTitle[]      = "Speaker";
 static const char micTitle[]      = "Microphone";
 static const char touchpadTitle[] = "Touchpad";
@@ -64,7 +70,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS_ALL,
             .buttons = DPAD_BUTTONS,
         },
-        .title = "The D-Pad",
+        .title = dpadTitle,
         .detail = "These four buttons on the left side of the Swadge are the D-Pad. Use them to navigate. Try them all out!",
     },
     {
@@ -72,7 +78,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_A,
         },
-        .title = "A Button",
+        .title = aBtnTitle,
         .detail = "The A Button is used to select, or trigger a primary action. Give it a try!",
     },
     {
@@ -80,7 +86,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_B,
         },
-        .title = "B Button",
+        .title = bBtnTitle,
         .detail = "The B Button is used to go back, or trigger a secondary action. Back it up!",
     },
     {
@@ -88,10 +94,9 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_START,
         },
-        .title = "Pause Button",
+        .title = pauseBtnTitle,
         .detail = "The Pause button is mode-specific, but usually pauses a game or performs a special function. Give it a try!",
     },
-    // TODO draw touchpad
     // TODO write actual text
     {
         .trigger = {
@@ -101,7 +106,6 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = touchpadTitle,
         .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
     },
-    // TODO Draw IMU
     // TODO write actual text
     {
         .trigger = {
@@ -110,7 +114,7 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = imuTitle,
         .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
     },
-    // TODO microphone
+    // TODO write actual text
     {
         .trigger = {
             .type = MIC_LOUD,
@@ -118,8 +122,7 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = micTitle,
         .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
     },
-    // TODO speaker
-    // TODO flip to SPK mode
+    // TODO write actual text
     {
         .trigger = {
             .type = BUTTON_PRESS,
@@ -133,7 +136,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_SELECT,
         },
-        .title = "Menu Button",
+        .title = mnuBtnTitle,
         .detail = "The Menu button is special! A short press opens up the Quick Settings menu.",
     },
     {
@@ -147,7 +150,7 @@ static const tutorialStep_t buttonsSteps[] = {
         },
         .backtrackSteps = 1,
         .backtrackMessage = "That's too long! Try again!",
-        .title = "Pause Button",
+        .title = mnuBtnTitle,
         .detail = "Now let go!",
     },
     {
@@ -155,7 +158,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = CUSTOM_TRIGGER,
             .custom.checkFn = introCheckQuickSettingsTrigger,
         },
-        .title = "",
+        .title = mnuBtnTitle,
         .detail = "This is the Quick Settings Menu! It's available in all modes, except for the Main Menu and USB Gamepad. Press the Menu button again to close it.",
     },
     {
@@ -283,12 +286,15 @@ typedef struct
             wsg_t up;
         } button;
 
-        struct
-        {
-            wsg_t base;
-            wsg_t joystick;
-            wsg_t spin;
-        } touch;
+        // struct
+        // {
+        //     wsg_t base;
+        //     wsg_t joystick;
+        //     wsg_t spin;
+        // } touch;
+
+        wsg_t speaker;
+        wsg_t touchGem;
     } icon;
 
     buttonBit_t buttons;
@@ -338,16 +344,19 @@ static void introEnterMode(void)
 {
     iv = calloc(1, sizeof(introVars_t));
 
-    loadFont("ibm_vga8.font", &iv->smallFont, false);
-    loadFont("righteous_150.font", &iv->bigFont, false);
-    loadFont("retro_logo.font", &iv->logoFont, false);
-    makeOutlineFont(&iv->logoFont, &iv->logoFontOutline, false);
+    loadFont("ibm_vga8.font", &iv->smallFont, true);
+    loadFont("righteous_150.font", &iv->bigFont, true);
+    loadFont("retro_logo.font", &iv->logoFont, true);
+    makeOutlineFont(&iv->logoFont, &iv->logoFontOutline, true);
 
-    loadWsg("button_a.wsg", &iv->icon.button.a, false);
-    loadWsg("button_b.wsg", &iv->icon.button.b, false);
-    loadWsg("button_menu.wsg", &iv->icon.button.menu, false);
-    loadWsg("button_pause.wsg", &iv->icon.button.pause, false);
-    loadWsg("button_up.wsg", &iv->icon.button.up, false);
+    loadWsg("button_a.wsg", &iv->icon.button.a, true);
+    loadWsg("button_b.wsg", &iv->icon.button.b, true);
+    loadWsg("button_menu.wsg", &iv->icon.button.menu, true);
+    loadWsg("button_pause.wsg", &iv->icon.button.pause, true);
+    loadWsg("button_up.wsg", &iv->icon.button.up, true);
+
+    loadWsg("spk.wsg", &iv->icon.speaker, true);
+    loadWsg("touch-gem.wsg", &iv->icon.touchGem, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
     iv->renderer = initMenuManiaRenderer(&iv->bigFont, NULL, &iv->smallFont);
@@ -440,6 +449,8 @@ static void introExitMode(void)
     freeWsg(&iv->icon.button.menu);
     freeWsg(&iv->icon.button.pause);
     freeWsg(&iv->icon.button.up);
+    freeWsg(&iv->icon.speaker);
+    freeWsg(&iv->icon.touchGem);
 
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->sound != NULL)
@@ -887,9 +898,7 @@ static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint)
 #define TOUCHPAD_Y      (TFT_HEIGHT / 2)
 
     // Draw the pad
-    drawCircleFilled(TOUCHPAD_X, TOUCHPAD_Y, TOUCHPAD_RADIUS, c234);
-    drawCircle(TOUCHPAD_X, TOUCHPAD_Y, TOUCHPAD_RADIUS, c000);
-    drawCircle(TOUCHPAD_X, TOUCHPAD_Y, TOUCHPAD_RADIUS / 2, c000);
+    drawWsgSimple(&iv->icon.touchGem, (TFT_WIDTH - iv->icon.touchGem.w) / 2, (TFT_HEIGHT - iv->icon.touchGem.h) / 2);
 
     if (0 != touchPoint.x || 0 != touchPoint.y)
     {
@@ -916,8 +925,42 @@ static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint)
  */
 static void introDrawSwadgeImu(int64_t elapsedUs, int16_t x, int16_t y, int16_t z)
 {
-    printf("%d, %d, %d", x, y, z);
-    // TODO draw IMU bars
+    // static void accelDrawBunny(void)
+    // Produce a model matrix from a quaternion.
+    float plusx_out[3] = {1, 0, 0};
+    float plusy_out[3] = {0, 1, 0};
+    float plusz_out[3] = {0, 0, 1};
+
+    mathRotateVectorByQuaternion(plusy_out, LSM6DSL.fqQuat, plusy_out);
+    mathRotateVectorByQuaternion(plusx_out, LSM6DSL.fqQuat, plusx_out);
+    mathRotateVectorByQuaternion(plusz_out, LSM6DSL.fqQuat, plusz_out);
+
+    int16_t bunny_verts_out[numBunnyVerts() / 3 * 3];
+    int i, vertices = 0;
+    for (i = 0; i < numBunnyVerts(); i += 3)
+    {
+        // Performingthe transform this way is about 700us.
+        float bx                          = bunny_verts[i + 2];
+        float by                          = bunny_verts[i + 1];
+        float bz                          = -bunny_verts[i + 0];
+        float bunnyvert[3]                = {bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
+                                             bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
+                                             bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2]};
+        bunny_verts_out[vertices * 3 + 0] = bunnyvert[0] / 250 + 280 / 2;
+        // Convert from right-handed to left-handed coordinate frame.
+        bunny_verts_out[vertices * 3 + 1] = -bunnyvert[1] / 250 + 240 / 2;
+        bunny_verts_out[vertices * 3 + 2] = bunnyvert[2];
+        vertices++;
+    }
+
+    int lines = 0;
+    for (i = 0; i < numBunnyLines(); i += 2)
+    {
+        int v1 = bunny_lines[i] * 3;
+        int v2 = bunny_lines[i + 1] * 3;
+        drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1 + 1], bunny_verts_out[v2], bunny_verts_out[v2 + 1], c511);
+        lines++;
+    }
 }
 
 /**
@@ -927,7 +970,8 @@ static void introDrawSwadgeImu(int64_t elapsedUs, int16_t x, int16_t y, int16_t 
  */
 static void introDrawSwadgeSpeaker(int64_t elapsedUs)
 {
-    // TODO draw speaker icon
+    // Draw speaker icon
+    drawWsgSimple(&iv->icon.speaker, (TFT_WIDTH - iv->icon.speaker.w) / 2, MANIA_TITLE_HEIGHT + 8);
 }
 
 /**
@@ -943,14 +987,20 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
     int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
     int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
 
+    int16_t barsTop    = MANIA_TITLE_HEIGHT;
+    int16_t barsBottom = 176;
+    int16_t barsCenter = (barsTop + barsBottom) / 2;
+    int16_t barsHeight = barsBottom - barsTop;
+
     // Plot the bars
     for (uint16_t i = 0; i < FIX_BINS; i++)
     {
-        uint8_t height       = ((TFT_HEIGHT / 2) * fuzzed_bins[i]) / maxValue;
-        paletteColor_t color = c000;
+        uint8_t height       = (barsHeight * fuzzed_bins[i]) / (2 * maxValue);
+        height               = MAX(height, 1);
+        paletteColor_t color = c511;
         int16_t x0           = binMargin + (i * binWidth);
         int16_t x1           = binMargin + ((i + 1) * binWidth);
         // Big enough, fill an area
-        fillDisplayArea(x0, TFT_HEIGHT - height, x1, TFT_HEIGHT, color);
+        fillDisplayArea(x0, barsCenter - height, x1, barsCenter + height, color);
     }
 }
