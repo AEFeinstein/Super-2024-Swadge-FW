@@ -267,7 +267,8 @@ static void accelDrawBunny(void)
     mathRotateVectorByQuaternion(plusx_out, LSM6DSL.fqQuat, plusx_out);
     mathRotateVectorByQuaternion(plusz_out, LSM6DSL.fqQuat, plusz_out);
 
-    int16_t bunny_verts_out[numBunnyVerts() / 3 * 3] = {0};
+    int16_t bunny_verts_out[numBunnyVerts() / 3 * 3];
+    memset(bunny_verts_out, 0, sizeof(bunny_verts_out));
     int i, vertices = 0;
     for (i = 0; i < numBunnyVerts(); i += 3)
     {
