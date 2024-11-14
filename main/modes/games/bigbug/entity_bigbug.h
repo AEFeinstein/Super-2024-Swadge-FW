@@ -91,6 +91,9 @@ typedef struct
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
+    int8_t tileTime; //probably only relevant for Garbotnik's dying scenario. Goes up with every tile collision
+                        //and decrements steadily over time. So it serves to detect when he is steadily sitting
+                        //on the ground and trigger a game over.
 } bb_physicsData_t;
 
 typedef struct

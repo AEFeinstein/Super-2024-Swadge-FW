@@ -289,6 +289,7 @@ void bb_updatePhysicsObject(bb_entity_t* self)
     {
         return;
     }
+    pData->tileTime+=7;
     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
 
@@ -631,7 +632,14 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
 void bb_updateGarbotnikDying(bb_entity_t* self)
 {
+    bb_physicsData_t* physData = (bb_physicsData_t*) self->data;
     bb_updatePhysicsObject(self);
+
+    if(physData->tileTime > 0)
+    {
+        physData->tileTime--;
+    }
+    printf("tileTime: %d\n", physData->tileTime);
 }
 
 void bb_updateHarpoon(bb_entity_t* self)
