@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include <esp_timer.h>
+#include <esp_log.h>
 
 // Static Function Prototypes
 
@@ -45,6 +46,33 @@ void tutorialOnTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t int
     touchJoystick_t zone = getTouchJoystickZones(phi, r, true, true);
     state->allTouchZones |= zone;
     state->curTouchZone = zone;
+
+    if (intensity)
+    {
+        getTouchSpins(&state->spinState, phi, r);
+    }
+    else
+    {
+        memset(&state->spinState, 0, sizeof(touchSpinState_t));
+    }
+}
+
+// Call when motion is detected
+void tutorialOnMotion(tutorialState_t* state, int16_t x, int16_t y, int16_t z)
+{
+    state->orientation[0] = x;
+    state->orientation[1] = y;
+    state->orientation[2] = z;
+}
+
+// Call when the microphone is sampled
+void tutorialOnSound(tutorialState_t* state, int32_t energy)
+{
+    // Check for a pass
+    if (energy > 100000)
+    {
+        state->loudSound = true;
+    }
 }
 
 // Call once per frame, after input handling, to check the current step's triggers
@@ -72,6 +100,8 @@ void tutorialCheckTriggers(tutorialState_t* state)
             state->stepStartTime     = esp_timer_get_time();
             state->tempMessage       = NULL;
             state->tempMessageExpiry = 0;
+            memset(&state->orientation, 0, sizeof(state->orientation));
+            state->loudSound = false;
 
             next = state->curStep;
         }
@@ -145,8 +175,38 @@ static bool tutorialCheckTrigger(tutorialState_t* state, const tutorialTrigger_t
             return (state->curTouchZone & trigger->touchZones) == trigger->touchZones;
 
         case TOUCH_SPIN:
-            // TODO
-            return false;
+            return trigger->intData == state->spinState.spins;
+
+        case IMU_ORIENT:
+        {
+            // For each axis
+            for (int32_t i = 0; i < 3; i++)
+            {
+                // If the trigger is positive
+                if (trigger->orientation[i] > 0)
+                {
+                    // Return false if the state is less than the trigger
+                    if (state->orientation[i] < trigger->orientation[i])
+                    {
+                        return false;
+                    }
+                }
+                // If the trigger is negative
+                else if (trigger->orientation[i] < 0)
+                {
+                    // Return false if the state is greater than the trigger
+                    if (state->orientation[i] > trigger->orientation[i])
+                    {
+                        return false;
+                    }
+                }
+            }
+            // All checks passed
+            return true;
+        }
+
+        case MIC_LOUD:
+            return state->loudSound;
 
         case TIME_PASSED:
             return (state->stepStartTime + trigger->intData) <= esp_timer_get_time();
