@@ -58,7 +58,7 @@ typedef enum
     TOUCH_SPIN,
 
     // Shake the IMU real good
-    IMU_SHAKE,
+    IMU_ORIENT,
 
     // Something loud detected on the mic
     MIC_LOUD,
@@ -90,6 +90,8 @@ struct tutorialTrigger
 
         /// @brief Generic void pointer data
         const void* ptrData;
+
+        int16_t orientation[3];
 
         struct
         {
@@ -158,7 +160,7 @@ typedef struct tutorialState
     touchJoystick_t curTouchZone;
     touchSpinState_t spinState;
 
-    bool orientations[6];
+    int16_t orientation[3];
 
     bool loudSound;
 

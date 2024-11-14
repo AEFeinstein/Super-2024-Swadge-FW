@@ -31,7 +31,7 @@ static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const t
 
 static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons);
 static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint);
-static void introDrawSwadgeImu(int64_t elapsedUs, int16_t x, int16_t y, int16_t z);
+static void introDrawSwadgeImu(int64_t elapsedUs);
 static void introDrawSwadgeSpeaker(int64_t elapsedUs);
 static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue);
 
@@ -97,39 +97,52 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = pauseBtnTitle,
         .detail = "The Pause button is mode-specific, but usually pauses a game or performs a special function. Give it a try!",
     },
-    // TODO write actual text
     {
         .trigger = {
             .type = TOUCH_SPIN,
             .intData = -2,
         },
         .title = touchpadTitle,
-        .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
+        .detail = "The C Gem is a touchpad! Give it a try by spinning around it twice clockwise."
     },
-    // TODO write actual text
     {
         .trigger = {
-            .type = IMU_SHAKE,
+            .type = TOUCH_SPIN,
+            .intData = 2,
+        },
+        .title = touchpadTitle,
+        .detail = "OK, now spin around it twice counter-clockwise. Always remember to unwind the touchpad after use!"
+    },
+    {
+        .trigger = {
+            .type = IMU_ORIENT,
+            .orientation = {0, 0, 245},
         },
         .title = imuTitle,
-        .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
+        .detail = "The Swadge is tilt-sensitive. Here's a wireframe of a cute bunny! Try looking at it top-down by putting the Swadge face up on a flat surface."
     },
-    // TODO write actual text
+    {
+        .trigger = {
+            .type = IMU_ORIENT,
+            .orientation = {0, 0, -245},
+        },
+        .title = imuTitle,
+        .detail = "Now try looking at the bunny from the bottom. You may need to hold the Swadge over your head."
+    },
     {
         .trigger = {
             .type = MIC_LOUD,
         },
         .title = micTitle,
-        .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
+        .detail = "The metal dot to the right of the screen is a microphone. Give a roar (or blow on it) to continue."
     },
-    // TODO write actual text
     {
         .trigger = {
             .type = BUTTON_PRESS,
             .buttons = PB_A,
         },
         .title = spkTitle,
-        .detail = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut"
+        .detail = "The Swadge has a speaker, so enjoy this tune! The volume dial is on the top left next to the headphone jack. Adjust to your liking. Press A to continue."
     },
     {
         .trigger = {
@@ -327,11 +340,6 @@ typedef struct
 
     // Speaker test
     midiFile_t song;
-
-    // IMU test
-    int16_t a_x;
-    int16_t a_y;
-    int16_t a_z;
 } introVars_t;
 
 static introVars_t* iv;
@@ -558,14 +566,17 @@ static void introMainLoop(int64_t elapsedUs)
     }
 
     // Get the current acceleration
-    if (ESP_OK != accelGetOrientVec(&iv->a_x, &iv->a_y, &iv->a_z))
+    int16_t a_x;
+    int16_t a_y;
+    int16_t a_z;
+    if (ESP_OK != accelGetOrientVec(&a_x, &a_y, &a_z))
     {
-        iv->a_x = 0;
-        iv->a_y = 0;
-        iv->a_z = 0;
+        a_x = 0;
+        a_y = 0;
+        a_z = 0;
     }
     // Values are roughly -256 to 256
-    tutorialOnMotion(&iv->tut, iv->a_x, iv->a_y, iv->a_z);
+    tutorialOnMotion(&iv->tut, a_x, a_y, a_z);
 
     // Find the overall sound energy
     int32_t energy = 0;
@@ -618,7 +629,7 @@ static void introMainLoop(int64_t elapsedUs)
         }
         case DRAW_IMU:
         {
-            introDrawSwadgeImu(elapsedUs, iv->a_x, iv->a_y, iv->a_z);
+            introDrawSwadgeImu(elapsedUs);
             break;
         }
         case DRAW_SPK:
@@ -750,13 +761,13 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
     }
 
     // TODO maybe don't hardcode this
-    if (next == (buttonsSteps + 11))
+    if (next == (buttonsSteps + 13))
     {
         ESP_LOGI("Intro", "Oh it's the one we want: %s", next->title);
         iv->quickSettingsOpened = true;
         openQuickSettings();
     }
-    else if (next == (buttonsSteps + 12))
+    else if (next == (buttonsSteps + 14))
     {
         iv->quickSettingsOpened = false;
     }
@@ -919,11 +930,8 @@ static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint)
  * @brief TODO doc
  *
  * @param elapsedUs
- * @param x
- * @param y
- * @param z
  */
-static void introDrawSwadgeImu(int64_t elapsedUs, int16_t x, int16_t y, int16_t z)
+static void introDrawSwadgeImu(int64_t elapsedUs)
 {
     // static void accelDrawBunny(void)
     // Produce a model matrix from a quaternion.
@@ -935,7 +943,7 @@ static void introDrawSwadgeImu(int64_t elapsedUs, int16_t x, int16_t y, int16_t 
     mathRotateVectorByQuaternion(plusx_out, LSM6DSL.fqQuat, plusx_out);
     mathRotateVectorByQuaternion(plusz_out, LSM6DSL.fqQuat, plusz_out);
 
-    int16_t bunny_verts_out[numBunnyVerts() / 3 * 3];
+    int16_t bunny_verts_out[numBunnyVerts() / 3 * 3] = {0};
     int i, vertices = 0;
     for (i = 0; i < numBunnyVerts(); i += 3)
     {

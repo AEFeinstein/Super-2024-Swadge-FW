@@ -60,35 +60,9 @@ void tutorialOnTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t int
 // Call when motion is detected
 void tutorialOnMotion(tutorialState_t* state, int16_t x, int16_t y, int16_t z)
 {
-    if (x > 240)
-    {
-        state->orientations[0] = true;
-    }
-
-    if (x < -240)
-    {
-        state->orientations[1] = true;
-    }
-
-    if (y > 240)
-    {
-        state->orientations[2] = true;
-    }
-
-    if (y < -240)
-    {
-        state->orientations[3] = true;
-    }
-
-    if (z > 240)
-    {
-        state->orientations[4] = true;
-    }
-
-    if (z < -240)
-    {
-        state->orientations[5] = true;
-    }
+    state->orientation[0] = x;
+    state->orientation[1] = y;
+    state->orientation[2] = z;
 }
 
 // Call when the microphone is sampled
@@ -126,7 +100,7 @@ void tutorialCheckTriggers(tutorialState_t* state)
             state->stepStartTime     = esp_timer_get_time();
             state->tempMessage       = NULL;
             state->tempMessageExpiry = 0;
-            memset(&state->orientations, false, sizeof(state->orientations));
+            memset(&state->orientation, 0, sizeof(state->orientation));
             state->loudSound = false;
 
             next = state->curStep;
@@ -203,17 +177,32 @@ static bool tutorialCheckTrigger(tutorialState_t* state, const tutorialTrigger_t
         case TOUCH_SPIN:
             return trigger->intData == state->spinState.spins;
 
-        case IMU_SHAKE:
+        case IMU_ORIENT:
         {
-            int32_t orientationsHit = 0;
-            for (int32_t i = 0; i < ARRAY_SIZE(state->orientations); i++)
+            // For each axis
+            for (int32_t i = 0; i < 3; i++)
             {
-                if (state->orientations[i])
+                // If the trigger is positive
+                if (trigger->orientation[i] > 0)
                 {
-                    orientationsHit++;
+                    // Return false if the state is less than the trigger
+                    if (state->orientation[i] < trigger->orientation[i])
+                    {
+                        return false;
+                    }
+                }
+                // If the trigger is negative
+                else if (trigger->orientation[i] < 0)
+                {
+                    // Return false if the state is greater than the trigger
+                    if (state->orientation[i] > trigger->orientation[i])
+                    {
+                        return false;
+                    }
                 }
             }
-            return orientationsHit >= 4;
+            // All checks passed
+            return true;
         }
 
         case MIC_LOUD:
