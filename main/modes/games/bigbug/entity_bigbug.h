@@ -223,6 +223,7 @@ void bb_updatePOI(bb_entity_t* self);
 void bb_updateFlame(bb_entity_t* self);
 void bb_updateCharacterTalk(bb_entity_t* self);
 void bb_updateAttachmentArm(bb_entity_t* self);
+void bb_updateGameOver(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);

@@ -137,7 +137,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_loadSprite("ovo_talk", 8, 1, &entityManager->sprites[OVO_TALK]);
 
-    bb_loadSprite("GameOver", 1, 1, &entityManager->sprites[BB_GAME_OVER]);
+    bb_loadSprite("GameOver", 2, 1, &entityManager->sprites[BB_GAME_OVER]);
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -800,6 +800,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case OVO_TALK:
         {
             entityManager->sprites[OVO_TALK].originY = -240;
+            
             entity->currentAnimationFrame = bb_randomInt(0,7);
             entity->updateFunction = &bb_updateCharacterTalk;
             entity->drawFunction = &bb_drawCharacterTalk;
@@ -821,6 +822,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(entity->collisions, (void*)collision);
 
             break;
+        }
+        case BB_GAME_OVER:
+        {
+            entity->updateFunction = &bb_updateGameOver;
         }
         default: // FLAME_ANIM and others need nothing set
         {

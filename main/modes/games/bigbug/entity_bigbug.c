@@ -351,6 +351,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
         if (harpoon != NULL)
         {
+            midiAllSoundOff(soundGetPlayerSfx());
             soundPlaySfx(&self->gameData->sfxHarpoon, 1);
             gData->numHarpoons -= 1;
             bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
@@ -1075,6 +1076,69 @@ void bb_updateAttachmentArm(bb_entity_t* self)
     }
 }
 
+void bb_updateGameOver(bb_entity_t* self)
+{
+    if(self->gameData->btnDownState & PB_A)
+    {
+        if(self->currentAnimationFrame == 0)
+        {
+            self->currentAnimationFrame++;
+        }
+        else
+        {
+            bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
+            self->gameData->entityManager.playerEntity = NULL;
+
+            self->gameData->entityManager.activeBooster->currentAnimationFrame++;
+
+            //get the current booster idx
+            int i = 0;
+            while(i < 3)
+            {
+                if(self->gameData->entityManager.boosterEntities[i] != NULL)
+                {
+                    self->gameData->entityManager.boosterEntities[i] = NULL;
+                    break;
+                }
+                i++;
+            }
+
+            self->gameData->entityManager.activeBooster = NULL;
+            i++;
+            if(i == 3)
+            {
+                //IDK it is really really game over here.
+                printf("finish me\n");
+            }
+            else
+            {
+                self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[i];
+                self->gameData->entityManager.viewEntity = self->gameData->entityManager.activeBooster;
+
+                self->gameData->camera.camera.pos = (vec_t) {(self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS)-140, (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)-120};
+
+                bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+
+                bb_dialogueData_t* dData = bb_createDialogueData(2);//29
+
+                strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
+                dData->character[sizeof(dData->character) - 1] = '\0';
+
+                bb_setCharacterLine(dData, 0, "I'm feeling simple and clean, baby!");                                        //V longest possible string here
+                bb_setCharacterLine(dData, 1, "It was a good move taking omega3 fish oils before backing up my brain.\0");
+
+                dData->curString = -1;
+
+                dData->endDialogueCB = &bb_afterGarbotnikIntro;
+
+                bb_setData(ovo, dData);
+
+                bb_destroyEntity(self,false);
+            }
+        }
+    }
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
@@ -1436,7 +1500,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         }
         case 2:
         {
-            bb_setCharacterLine(dData, 0, "Another day, another dumpster full of delectable delights!\0");
+            bb_setCharacterLine(dData, 0, "Another day, another dump full of delectable delights!\0");
             break;
         }
         case 3:
@@ -1594,6 +1658,7 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
                     false, false);
 
     // Play sfx
+    midiAllSoundOff(soundGetPlayerSfx());
     soundPlaySfx(&self->gameData->sfxDirt, 0);
 }
 
