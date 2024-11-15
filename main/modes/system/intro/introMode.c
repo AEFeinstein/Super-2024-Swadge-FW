@@ -29,8 +29,10 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
                             bool backtrack);
 static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const tutorialTrigger_t* trigger);
 
+static vec_t getTouchScreenCoord(vec_t touchPoint);
+
 static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons);
-static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint);
+static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t* touchHist);
 static void introDrawSwadgeImu(int64_t elapsedUs);
 static void introDrawSwadgeSpeaker(int64_t elapsedUs);
 static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue);
@@ -100,18 +102,18 @@ static const tutorialStep_t buttonsSteps[] = {
     {
         .trigger = {
             .type = TOUCH_SPIN,
-            .intData = -2,
+            .intData = -1,
         },
         .title = touchpadTitle,
-        .detail = "The C Gem is a touchpad! Give it a try by spinning around it twice clockwise."
+        .detail = "The C Gem is a touchpad! Give it a try by spinning your finger around it clockwise."
     },
     {
         .trigger = {
             .type = TOUCH_SPIN,
-            .intData = 2,
+            .intData = 1,
         },
         .title = touchpadTitle,
-        .detail = "OK, now spin around it twice counter-clockwise. Always remember to unwind the touchpad after use!"
+        .detail = "OK, now your finger spin around it counter-clockwise. Always remember to unwind the touchpad after use!"
     },
     {
         .trigger = {
@@ -312,6 +314,9 @@ typedef struct
 
     buttonBit_t buttons;
     vec_t touch;
+    list_t touchHist;
+    int32_t angle;
+    int32_t angleTimer;
 
     iconPos_t buttonIcons[8];
     int16_t swadgeViewWidth;
@@ -444,6 +449,8 @@ static void introEnterMode(void)
  */
 static void introExitMode(void)
 {
+    clear(&iv->touchHist);
+
     deinitMenuManiaRenderer(iv->renderer);
     deinitMenu(iv->bgMenu);
 
@@ -557,12 +564,18 @@ static void introMainLoop(int64_t elapsedUs)
     {
         getTouchCartesian(phi, r, &iv->touch.x, &iv->touch.y);
         tutorialOnTouch(&iv->tut, phi, r, intensity);
+
+        // Save this point to draw a trail
+        vec_t screenTouch = getTouchScreenCoord(iv->touch);
+        intptr_t tPoint   = ((screenTouch.x & 0xFFFF) << 16) | (screenTouch.y & 0xFFFF);
+        push(&iv->touchHist, (void*)tPoint);
     }
     else
     {
         iv->touch.x = 0;
         iv->touch.y = 0;
         tutorialOnTouch(&iv->tut, 0, 0, 0);
+        clear(&iv->touchHist);
     }
 
     // Get the current acceleration
@@ -624,7 +637,7 @@ static void introMainLoop(int64_t elapsedUs)
         }
         case DRAW_TOUCHPAD:
         {
-            introDrawSwadgeTouchpad(elapsedUs, iv->touch);
+            introDrawSwadgeTouchpad(elapsedUs, iv->touch, &iv->touchHist);
             break;
         }
         case DRAW_IMU:
@@ -748,6 +761,9 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
     {
         globalMidiPlayerPauseAll();
         iv->drawMode = DRAW_TOUCHPAD;
+        // Reset touch history and spin state
+        clear(&iv->touchHist);
+        memset(&iv->tut.spinState, 0, sizeof(touchSpinState_t));
     }
     else if (imuTitle == next->title)
     {
@@ -896,33 +912,93 @@ static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, butt
     }
 }
 
+#define TOUCHPAD_RADIUS 50
+#define TOUCHPAD_X      (TFT_WIDTH / 2)
+#define TOUCHPAD_Y      (TFT_HEIGHT / 2)
+
+/**
+ * @brief TODO
+ *
+ * @param touchPoint
+ * @return vec_t
+ */
+static vec_t getTouchScreenCoord(vec_t touchPoint)
+{
+    // Draw the dot (0 to 1024)
+    vec_t cartesianStart = {
+        .x = TOUCHPAD_X - TOUCHPAD_RADIUS,
+        .y = TOUCHPAD_Y - TOUCHPAD_RADIUS,
+    };
+
+    vec_t drawPoint = addVec2d(cartesianStart, divVec2d(mulVec2d(touchPoint, TOUCHPAD_RADIUS * 2), 1024));
+    drawPoint.y     = TOUCHPAD_Y + (TOUCHPAD_Y - drawPoint.y);
+    return drawPoint;
+}
+
 /**
  * @brief TODO doc
  *
  * @param elapsedUs
  * @param touchPoint
+ * @param touchHist
  */
-static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint)
+static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t* touchHist)
 {
-#define TOUCHPAD_RADIUS 50
-#define TOUCHPAD_X      (TFT_WIDTH / 2)
-#define TOUCHPAD_Y      (TFT_HEIGHT / 2)
-
     // Draw the pad
     drawWsgSimple(&iv->icon.touchGem, (TFT_WIDTH - iv->icon.touchGem.w) / 2, (TFT_HEIGHT - iv->icon.touchGem.h) / 2);
 
+    // Animate how the user should spin
+    iv->angleTimer += elapsedUs;
+    while (iv->angleTimer > (1000000 / 180))
+    {
+        iv->angleTimer -= (1000000 / 180);
+        iv->angle++;
+        if (360 == iv->angle)
+        {
+            iv->angle = 0;
+        }
+    }
+
+    // Draw a guide
+    for (int32_t a = 0; a < iv->angle; a++)
+    {
+        int32_t x = TOUCHPAD_X;
+        if (iv->tut.curStep->trigger.intData < 0)
+        {
+            x += (TOUCHPAD_RADIUS * 3 * getSin1024(a)) / (1024 * 4);
+        }
+        else
+        {
+            x -= (TOUCHPAD_RADIUS * 3 * getSin1024(a)) / (1024 * 4);
+        }
+        int32_t y = TOUCHPAD_Y - (TOUCHPAD_RADIUS * 3 * getCos1024(a)) / (1024 * 4);
+        drawCircleFilled(x, y, 4, c115);
+    }
+
+    // Draw the touch point
     if (0 != touchPoint.x || 0 != touchPoint.y)
     {
-        // Draw the dot (0 to 1024)
-        vec_t cartesianStart = {
-            .x = TOUCHPAD_X - TOUCHPAD_RADIUS,
-            .y = TOUCHPAD_Y - TOUCHPAD_RADIUS,
+        vec_t drawPoint = getTouchScreenCoord(touchPoint);
+        drawCircleFilled(drawPoint.x, drawPoint.y, 8, c511);
+    }
+
+    // Draw the touch tail
+    node_t* touchNode = touchHist->first;
+    while (touchNode && touchNode->next)
+    {
+        vec_t startPoint = {
+            .x = ((intptr_t)touchNode->val >> 16) & 0xFFFF,
+            .y = ((intptr_t)touchNode->val) & 0xFFFF,
         };
 
-        vec_t drawPoint = addVec2d(cartesianStart, divVec2d(mulVec2d(touchPoint, TOUCHPAD_RADIUS * 2), 1024));
-        drawPoint.y     = TOUCHPAD_Y + (TOUCHPAD_Y - drawPoint.y);
+        vec_t endPoint = {
+            .x = ((intptr_t)touchNode->next->val >> 16) & 0xFFFF,
+            .y = ((intptr_t)touchNode->next->val) & 0xFFFF,
+        };
 
-        drawCircleFilled(drawPoint.x, drawPoint.y, 8, c115);
+        drawLineFast(startPoint.x, startPoint.y, endPoint.x, endPoint.y, c511);
+
+        touchNode = touchNode->next;
     }
 }
 
