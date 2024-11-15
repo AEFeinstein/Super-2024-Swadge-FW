@@ -74,6 +74,7 @@ typedef enum
     BB_DEATH_DUMPSTER, // Garbotnik's evil lair in space
     OVO_TALK,          // Awesome art for dialogue moments. Each frame just provides a different flavor.
     ATTACHMENT_ARM,    // The booster arm that detects the player and latches on.
+    BB_GAME_OVER,
     WILE,              // A metal ball that is thrown
     NO_SPRITE_STAR,    // a single white pixel for aesthetic beauty.
     NO_SPRITE_POI      // Point of interest for the camera to follow in the main menu

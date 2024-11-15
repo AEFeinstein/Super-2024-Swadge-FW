@@ -136,6 +136,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     attachmentArmSprite->originY     = 20;
 
     bb_loadSprite("ovo_talk", 8, 1, &entityManager->sprites[OVO_TALK]);
+
+    bb_loadSprite("GameOver", 1, 1, &entityManager->sprites[BB_GAME_OVER]);
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)

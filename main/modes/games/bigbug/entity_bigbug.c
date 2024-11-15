@@ -640,6 +640,11 @@ void bb_updateGarbotnikDying(bb_entity_t* self)
         physData->tileTime--;
     }
     printf("tileTime: %d\n", physData->tileTime);
+    if(physData->tileTime > 50)
+    {
+        bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GAME_OVER, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+        self->updateFunction = NULL;
+    }
 }
 
 void bb_updateHarpoon(bb_entity_t* self)
