@@ -37,18 +37,20 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
 
 void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t levelIndex)
 {
-    gameData->gameState      = 0;
-    gameData->btnState       = 0;
-    gameData->score          = 0;
-    gameData->extraLifeScore = 10000;
-    gameData->lives          = 3;
-    gameData->levelTime      = 000;
-    gameData->frameCount     = 0;
-    gameData->bgColor        = c000;
-    gameData->currentBgm     = 0;
-    gameData->changeBgm      = 0;
-    gameData->continuesUsed  = (gameData->level == 1) ? false : true;
-    gameData->inGameTimer    = 0;
+    gameData->gameState                = 0;
+    gameData->btnState                 = 0;
+    gameData->score                    = 0;
+    gameData->extraLifeScore           = 10000;
+    gameData->lives                    = 3;
+    gameData->levelTime                = 000;
+    gameData->frameCount               = 0;
+    gameData->bgColor                  = c000;
+    gameData->currentBgm               = 0;
+    gameData->changeBgm                = 0;
+    gameData->continuesUsed            = (gameData->level == 1) ? false : true;
+    gameData->inGameTimer              = 0;
+    gameData->firstBonusItemDispensed  = false;
+    gameData->secondBonusItemDispensed = false;
 
     pa_resetGameDataLeds(gameData);
 }

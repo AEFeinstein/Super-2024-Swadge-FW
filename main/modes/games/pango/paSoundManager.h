@@ -19,11 +19,9 @@
 
 typedef struct
 {
-    midiFile_t bgmDemagio;
+    midiFile_t bgmMain;
+    midiFile_t bgmFast;
     midiFile_t bgmIntro;
-    midiFile_t bgmSmooth;
-    midiFile_t bgmUnderground;
-    midiFile_t bgmCastle;
     midiFile_t bgmGameStart;
     midiFile_t sndDie;
     midiFile_t sndMenuSelect;
