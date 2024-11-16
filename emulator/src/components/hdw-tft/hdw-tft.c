@@ -15,7 +15,7 @@
 
 #if defined(CNFGOGL)
 // RGBA
-static const uint32_t paletteColorsEmu[216] = {
+static const uint32_t paletteColorsEmu[217] = {
     0x000000FF, 0x000033FF, 0x000066FF, 0x000099FF, 0x0000CCFF, 0x0000FFFF, 0x003300FF, 0x003333FF, 0x003366FF,
     0x003399FF, 0x0033CCFF, 0x0033FFFF, 0x006600FF, 0x006633FF, 0x006666FF, 0x006699FF, 0x0066CCFF, 0x0066FFFF,
     0x009900FF, 0x009933FF, 0x009966FF, 0x009999FF, 0x0099CCFF, 0x0099FFFF, 0x00CC00FF, 0x00CC33FF, 0x00CC66FF,
@@ -40,11 +40,12 @@ static const uint32_t paletteColorsEmu[216] = {
     0xFF3399FF, 0xFF33CCFF, 0xFF33FFFF, 0xFF6600FF, 0xFF6633FF, 0xFF6666FF, 0xFF6699FF, 0xFF66CCFF, 0xFF66FFFF,
     0xFF9900FF, 0xFF9933FF, 0xFF9966FF, 0xFF9999FF, 0xFF99CCFF, 0xFF99FFFF, 0xFFCC00FF, 0xFFCC33FF, 0xFFCC66FF,
     0xFFCC99FF, 0xFFCCCCFF, 0xFFCCFFFF, 0xFFFF00FF, 0xFFFF33FF, 0xFFFF66FF, 0xFFFF99FF, 0xFFFFCCFF, 0xFFFFFFFF,
+    0x000000FF,
 };
 
 #else
 // ARGB
-static const uint32_t paletteColorsEmu[216] = {
+static const uint32_t paletteColorsEmu[217] = {
     0xFF000000, 0xFF000033, 0xFF000066, 0xFF000099, 0xFF0000CC, 0xFF0000FF, 0xFF003300, 0xFF003333, 0xFF003366,
     0xFF003399, 0xFF0033CC, 0xFF0033FF, 0xFF006600, 0xFF006633, 0xFF006666, 0xFF006699, 0xFF0066CC, 0xFF0066FF,
     0xFF009900, 0xFF009933, 0xFF009966, 0xFF009999, 0xFF0099CC, 0xFF0099FF, 0xFF00CC00, 0xFF00CC33, 0xFF00CC66,
@@ -69,6 +70,7 @@ static const uint32_t paletteColorsEmu[216] = {
     0xFFFF3399, 0xFFFF33CC, 0xFFFF33FF, 0xFFFF6600, 0xFFFF6633, 0xFFFF6666, 0xFFFF6699, 0xFFFF66CC, 0xFFFF66FF,
     0xFFFF9900, 0xFFFF9933, 0xFFFF9966, 0xFFFF9999, 0xFFFF99CC, 0xFFFF99FF, 0xFFFFCC00, 0xFFFFCC33, 0xFFFFCC66,
     0xFFFFCC99, 0xFFFFCCCC, 0xFFFFCCFF, 0xFFFFFF00, 0xFFFFFF33, 0xFFFFFF66, 0xFFFFFF99, 0xFFFFFFCC, 0xFFFFFFFF,
+    0xFF000000,
 };
 
 #endif
@@ -277,13 +279,14 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
                     int dstY  = ((y * displayMult) + mY);
                     int pxIdx = (dstY * (TFT_WIDTH * displayMult)) + dstX;
 
-                    int colorolor = frameBuffer[(y * TFT_WIDTH) + x];
-                    if (colorolor == 216)
+                    int paletteIdx = frameBuffer[(y * TFT_WIDTH) + x];
+                    // Draw out-of-bounds colors as bright red as a warning
+                    if (paletteIdx >= (sizeof(paletteColorsEmu) / sizeof(paletteColorsEmu[0])))
                     {
-                        colorolor = c000;
+                        paletteIdx = c500;
                     }
 
-                    uint32_t color = paletteColorsEmu[colorolor];
+                    uint32_t color = paletteColorsEmu[paletteIdx];
 
 #if defined(CNFGOGL)
                     // ARGB
