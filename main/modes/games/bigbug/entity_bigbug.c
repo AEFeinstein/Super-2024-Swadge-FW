@@ -1356,6 +1356,10 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     bData->health -= 20;
     if (bData->health < 0)
     {
+        midiPlayer_t* sfx = soundGetPlayerSfx();
+        midiPlayerReset(sfx);
+        soundPlaySfx(&self->gameData->sfxDirt, 0);
+
         bData->health               = 0;
         other->paused               = true;
         bb_physicsData_t* physData  = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
@@ -1678,7 +1682,7 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
     // Play sfx
     midiPlayer_t* sfx = soundGetPlayerSfx();
     midiPlayerReset(sfx);
-    soundPlaySfx(&self->gameData->sfxDirt, 0);
+    soundPlaySfx(&self->gameData->sfxBump, 0);
 }
 
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
