@@ -321,7 +321,8 @@ int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOsci
     {
         synthOscillator_t* osc = oscillators[oscIdx];
 
-        if(osc->tVol == 0 && osc->cVol == 0){
+        if (osc->tVol == 0 && osc->cVol == 0)
+        {
             continue;
         }
 

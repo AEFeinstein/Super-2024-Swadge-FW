@@ -79,8 +79,9 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
         if (currentEntity->type == ENTITY_HIT_BLOCK)
         {
             entityManager->gameData->remainingBlocks--;
-            
-            if(currentEntity->state == PA_TILE_SPAWN_BLOCK_0){
+
+            if (currentEntity->state == PA_TILE_SPAWN_BLOCK_0)
+            {
                 entityManager->gameData->remainingEnemies--;
             }
         }
@@ -279,7 +280,7 @@ paEntity_t* pa_createBonusItem(paEntityManager_t* entityManager, uint16_t x, uin
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
-    entity->scoreValue           = (entityManager->gameData->firstBonusItemDispensed) ? 2000: 1000;
+    entity->scoreValue           = (entityManager->gameData->firstBonusItemDispensed) ? 2000 : 1000;
     entity->stateTimer           = -1;
     entity->tempStateTimer       = -1;
     entity->stateFlag            = false;
@@ -295,8 +296,8 @@ paEntity_t* pa_createBonusItem(paEntityManager_t* entityManager, uint16_t x, uin
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
     entity->drawHandler          = &pa_defaultEntityDrawHandler;
-    entity->targetTileX = 1 + (esp_random() % 14);
-    entity->targetTileY = 1 + (esp_random() % 13);
+    entity->targetTileX          = 1 + (esp_random() % 14);
+    entity->targetTileY          = 1 + (esp_random() % 13);
 
     return entity;
 }
@@ -336,8 +337,9 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->state                = 0;
 
     uint8_t tile = pa_getTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y));
-    
-    if(tile == PA_TILE_BLOCK || tile == PA_TILE_SPAWN_BLOCK_0){
+
+    if (tile == PA_TILE_BLOCK || tile == PA_TILE_SPAWN_BLOCK_0)
+    {
         pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
         entityManager->gameData->remainingBlocks--;
     }

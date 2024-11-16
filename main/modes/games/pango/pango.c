@@ -246,7 +246,7 @@ void pangoEnterMode(void)
     pa_initializeWsgManager(&(pango->wsgManager));
 
     pa_initializeTileMap(&(pango->tilemap), &(pango->wsgManager));
-   
+
     pango->tilemap.mapOffsetX = -4;
 
     pa_initializeSoundManager(&(pango->soundManager));
@@ -499,15 +499,21 @@ void updateGame(pango_t* self, int64_t elapsedUs)
             killPlayer(self->entityManager.playerEntity);
         }
 
-        if (!self->gameData.firstBonusItemDispensed && (self->gameData.remainingBlocks < self->gameData.firstBonusItemDispenseThreshold)){
-            pa_createBonusItem(&(self->entityManager), ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
-                                              ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+        if (!self->gameData.firstBonusItemDispensed
+            && (self->gameData.remainingBlocks < self->gameData.firstBonusItemDispenseThreshold))
+        {
+            pa_createBonusItem(&(self->entityManager),
+                               ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                               ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
             self->gameData.firstBonusItemDispensed = true;
-        } 
-        
-        if (!self->gameData.secondBonusItemDispensed && (self->gameData.remainingBlocks < self->gameData.secondBonusItemDispenseThreshold)){
-            pa_createBonusItem(&(self->entityManager), ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
-                                              ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+        }
+
+        if (!self->gameData.secondBonusItemDispensed
+            && (self->gameData.remainingBlocks < self->gameData.secondBonusItemDispenseThreshold))
+        {
+            pa_createBonusItem(&(self->entityManager),
+                               ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                               ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
             self->gameData.secondBonusItemDispensed = true;
         }
 
@@ -789,7 +795,7 @@ void changeStateGame(pango_t* self)
     }
 
     self->tilemap.executeTileSpawnAll = true;
-    
+
     soundPlayBgm(&(self->soundManager.bgmFast), MIDI_BGM);
 
     self->update = &updateGame;
@@ -851,28 +857,28 @@ void detectBgmChange(pango_t* self)
         case PA_BGM_MAIN:
             if (self->gameData.currentBgm != PA_BGM_MAIN)
             {
-                //soundPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
+                // soundPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
             }
             break;
 
         case PA_BGM_ATHLETIC:
             if (self->gameData.currentBgm != PA_BGM_ATHLETIC)
             {
-                //soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+                // soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
             }
             break;
 
         case PA_BGM_UNDERGROUND:
             if (self->gameData.currentBgm != PA_BGM_UNDERGROUND)
             {
-                //soundPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
+                // soundPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
             }
             break;
 
         case PA_BGM_FORTRESS:
             if (self->gameData.currentBgm != PA_BGM_FORTRESS)
             {
-                //soundPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
+                // soundPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
             }
             break;
 
@@ -886,7 +892,7 @@ void detectBgmChange(pango_t* self)
 
 void changeStateDead(pango_t* self)
 {
-    //self->gameData.frameCount = 0;
+    // self->gameData.frameCount = 0;
     self->gameData.lives--;
 
     soundStop(true);
@@ -901,7 +907,7 @@ void updateDead(pango_t* self, int64_t elapsedUs)
 
     if ((self->gameData.frameCount % 60) == 0)
     {
-        //Keep counting time as a penalty
+        // Keep counting time as a penalty
         self->gameData.levelTime++;
         self->gameData.inGameTimer++;
     }
@@ -910,9 +916,12 @@ void updateDead(pango_t* self, int64_t elapsedUs)
     {
         if (self->gameData.lives > 0)
         {
-            if(self->gameData.remainingBlocks > 0){
+            if (self->gameData.remainingBlocks > 0)
+            {
                 changeStateReadyScreen(self);
-            } else {
+            }
+            else
+            {
                 pa_advanceToNextLevelOrGameClear(self);
                 return;
             }
@@ -928,7 +937,8 @@ void updateDead(pango_t* self, int64_t elapsedUs)
     pa_drawEntities(&(self->entityManager));
     drawPangoHud(&(self->font), &(self->gameData));
 
-    if(self->gameData.remainingBlocks <= 0){
+    if (self->gameData.remainingBlocks <= 0)
+    {
         drawText(&(self->font), c555, "Out of blocks!", 63, 128);
     }
 }
@@ -1067,7 +1077,7 @@ void changeStateGameClear(pango_t* self)
     self->gameData.frameCount = 0;
     self->update              = &updateGameClear;
     pa_resetGameDataLeds(&(self->gameData));
-    //soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+    // soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
 }
 
 void updateGameClear(pango_t* self, int64_t elapsedUs)
@@ -1473,9 +1483,10 @@ void pa_setDifficultyLevel(paWsgManager_t* wsgManager, paGameData_t* gameData, u
         masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + BLOCK_WSG_LOOKUP_OFFSET]);
 }
 
-void pa_advanceToNextLevelOrGameClear(pango_t* self){
-    self->gameData.levelTime = 0;
-    self->gameData.firstBonusItemDispensed = false;
+void pa_advanceToNextLevelOrGameClear(pango_t* self)
+{
+    self->gameData.levelTime                = 0;
+    self->gameData.firstBonusItemDispensed  = false;
     self->gameData.secondBonusItemDispensed = false;
 
     if (self->gameData.level >= MASTER_DIFFICULTY_TABLE_LENGTH)

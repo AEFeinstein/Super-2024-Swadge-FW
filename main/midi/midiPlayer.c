@@ -514,15 +514,17 @@ static int32_t midiSumOscillators(midiPlayer_t* player)
         playingVoices &= ~(1 << voiceIdx);
         midiVoice_t* voice = &(voices[voiceIdx]);
 
-        if(!(states[voiceIdx].on || states->held || states->sustenuto || states->attack || states->decay
-                             || states->sustain || states->release) || voice->timbre->type == SAMPLE)
+        if (!(states[voiceIdx].on || states->held || states->sustenuto || states->attack || states->decay
+              || states->sustain || states->release)
+            || voice->timbre->type == SAMPLE)
         {
             continue;
         }
 
         synthOscillator_t* osc = &(voice->oscillators[0]);
 
-         if(osc->tVol == 0 && osc->cVol == 0){
+        if (osc->tVol == 0 && osc->cVol == 0)
+        {
             continue;
         }
 
@@ -548,8 +550,8 @@ static int32_t midiSumOscillators(midiPlayer_t* player)
         do
         {
             sum += ((osc->waveFunc((osc->accumulator.bytes[2] + oscDither[offset]) % 256, osc->waveFuncData)
-                        * ((int32_t)osc->cVol))
-                       >> 8);
+                     * ((int32_t)osc->cVol))
+                    >> 8);
         } while (offset++ < osc->chorus);
     }
 
@@ -1308,7 +1310,8 @@ int32_t midiPlayerStep(midiPlayer_t* player)
 
     // TODO: Sample support
     // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
-    int32_t sample = midiSumOscillators(player);//swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
+    int32_t sample
+        = midiSumOscillators(player); // swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
     sample += midiSumPercussion(player);
     sample += midiSumSamples(player);
 
