@@ -320,6 +320,12 @@ int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOsci
     for (int32_t oscIdx = 0; oscIdx < numOscillators; oscIdx++)
     {
         synthOscillator_t* osc = oscillators[oscIdx];
+
+        if (osc->tVol == 0 && osc->cVol == 0)
+        {
+            continue;
+        }
+
         // Step the oscillator's accumulator
         osc->accumulator.accum32 += osc->stepSize;
 

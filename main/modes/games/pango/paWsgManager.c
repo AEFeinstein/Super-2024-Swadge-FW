@@ -125,6 +125,8 @@ void pa_loadWsgs(paWsgManager_t* self)
     loadWsg("pa-tile-013.wsg", &self->wsgs[PA_WSG_BLOCK_YELLOW], false);
     loadWsg("pa-tile-014.wsg", &self->wsgs[PA_WSG_BLOCK_GREEN], false);
     loadWsg("pa-tile-015.wsg", &self->wsgs[PA_WSG_BLOCK_TITLESCREEN], false);
+
+    loadWsg("pa-hotdog.wsg", &self->wsgs[PA_WSG_HOTDOG], false);
 }
 
 void pa_initializeSprites(paWsgManager_t* self)
@@ -256,6 +258,10 @@ void pa_initializeSprites(paWsgManager_t* self)
     self->sprites[PA_SP_BLOCK_FRAGMENT].wsg     = &self->wsgs[PA_WSG_BLOCK_FRAGMENT];
     self->sprites[PA_SP_BLOCK_FRAGMENT].originX = 3;
     self->sprites[PA_SP_BLOCK_FRAGMENT].originY = 3;
+
+    self->sprites[PA_SP_HOTDOG].wsg     = &self->wsgs[PA_WSG_HOTDOG];
+    self->sprites[PA_SP_HOTDOG].originX = 8;
+    self->sprites[PA_SP_HOTDOG].originY = 8;
 }
 
 void pa_initializeTiles(paWsgManager_t* self)
