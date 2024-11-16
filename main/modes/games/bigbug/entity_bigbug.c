@@ -351,7 +351,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
         if (harpoon != NULL)
         {
-            midiAllSoundOff(soundGetPlayerSfx());
+            midiPlayer_t* sfx = soundGetPlayerSfx();
+            midiPlayerReset(sfx);
             soundPlaySfx(&self->gameData->sfxHarpoon, 1);
             gData->numHarpoons -= 1;
             bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
@@ -1534,7 +1535,7 @@ void bb_startGarbotnikCloningTalk(bb_entity_t* self)
     strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
     dData->character[sizeof(dData->character) - 1] = '\0';
 
-    bb_setCharacterLine(dData, 0, "I'm feeling simple and clean, baby!");                                        //V longest possible string here
+    bb_setCharacterLine(dData, 0, "I'm feeling fresh, baby!");                                        //V longest possible string here
     bb_setCharacterLine(dData, 1, "It was a good move taking omega3 fish oils before backing up my brain.\0");
 
     dData->curString = -1;
@@ -1554,7 +1555,7 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
     dData->character[sizeof(dData->character) - 1] = '\0';
 
     //Max dialogue string roughly:                                                                         here----V 
-    bb_setCharacterLine(dData, 0, "Oogly Boogly! Look at that dark gelatinous mass!\0");
+    bb_setCharacterLine(dData, 0, "Oooey Gooey! Look at that dark gelatinous mass!\0");
     bb_setCharacterLine(dData, 1, "I can use the directional buttons on my swadge to fly over there.\0");
 
     dData->curString = -1;
@@ -1676,7 +1677,7 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
 
     // Play sfx
     midiPlayer_t* sfx = soundGetPlayerSfx();
-    midiAllSoundOff(soundGetPlayerSfx());
+    midiPlayerReset(sfx);
     soundPlaySfx(&self->gameData->sfxDirt, 0);
 }
 
