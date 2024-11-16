@@ -1267,6 +1267,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         {
             ESP_LOGI("MIDI", "Done playing file!");
             midiSongEnd(player);
+            checkEvents = false;
         }
 
         // Use a while loop since we may need to handle multiple events at the exact same time
