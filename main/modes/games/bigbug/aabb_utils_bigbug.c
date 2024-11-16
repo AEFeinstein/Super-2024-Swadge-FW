@@ -56,7 +56,8 @@ bool bb_boxesCollide(bb_entity_t* unyielding, bb_entity_t* yielding, vec_t* prev
             hitInfo->normal = subVec2d(yielding->pos, unyielding->pos);
         }
         // Snap the offset to an orthogonal direction.
-        if (hitInfo->normal.x < -unyielding->halfWidth || hitInfo->normal.x > unyielding->halfWidth)
+        if (unyielding->pos.y - unyielding->halfHeight < yielding->pos.y
+        && unyielding->pos.y + unyielding->halfHeight > yielding->pos.y)
         {
             if (hitInfo->normal.x > 0)
             {

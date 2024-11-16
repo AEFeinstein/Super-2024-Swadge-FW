@@ -289,7 +289,7 @@ void bb_updatePhysicsObject(bb_entity_t* self)
     {
         return;
     }
-    pData->tileTime+=7;
+    pData->tileTime+=20;
     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
 
@@ -304,7 +304,7 @@ void bb_updatePhysicsObject(bb_entity_t* self)
 
 void bb_updateGarbotnikDeploy(bb_entity_t* self)
 {
-    if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 1)
+    if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 2)
     {
         bb_entity_t* arm = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1, self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
         ((bb_attachmentArmData_t*)arm->data)->rocket = self;
@@ -641,10 +641,20 @@ void bb_updateGarbotnikDying(bb_entity_t* self)
         physData->tileTime--;
     }
     printf("tileTime: %d\n", physData->tileTime);
-    if(physData->tileTime > 50)
+    if(physData->tileTime > 101)
     {
         bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GAME_OVER, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
         self->updateFunction = NULL;
+
+        self->gameData->entityManager.viewEntity
+        = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
+                        (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS), (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS), true, false);
+        bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
+        tData->tracking = self->gameData->entityManager.deathDumpster;
+        tData->midPointSqDist = sqMagVec2d(
+        divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS), (tData->tracking->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)}, 2));
+        tData->executeOnArrival = &bb_startGarbotnikCloningTalk;
+        self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
     }
 }
 
@@ -853,10 +863,11 @@ void bb_updateMenu(bb_entity_t* self)
 
             // create the death dumpster
             bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
-            tData->tracking = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
+            self->gameData->entityManager.deathDumpster = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
                                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) + 400, true, false);
-            tData->midPointSqDist = sqMagVec2d(
-                divVec2d(subVec2d(tData->tracking->pos, self->gameData->entityManager.viewEntity->pos), 2));
+            tData->tracking = self->gameData->entityManager.deathDumpster;
+            tData->midPointSqDist =  sqMagVec2d(
+            divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS), (tData->tracking->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)}, 2));
 
             self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
 
@@ -926,8 +937,8 @@ void bb_updatePOI(bb_entity_t* self)
 {
     bb_goToData* tData = (bb_goToData*)self->data;
     if (tData != NULL)
-    {
-        vec_t ToFrom = subVec2d(tData->tracking->pos, self->pos);
+    {        
+        vec_t ToFrom = (vec_t){(tData->tracking->pos.x >> DECIMAL_BITS) - (self->pos.x >> DECIMAL_BITS), (tData->tracking->pos.y >> DECIMAL_BITS) - (self->pos.y >> DECIMAL_BITS)};
         if (sqMagVec2d(ToFrom) > tData->midPointSqDist)
         {
             tData->speed++;
@@ -944,7 +955,7 @@ void bb_updatePOI(bb_entity_t* self)
                 {
                     self->pos.x += 16;
                     self->gameData->camera.camera.pos.x++;
-                    self->gameData->camera.velocity.x++;
+                    self->gameData->camera.velocity.x = 1;
                 }
                 else if(ToFrom.x <= -16)
                 {
@@ -956,7 +967,7 @@ void bb_updatePOI(bb_entity_t* self)
                 {
                     self->pos.y += 16;
                     self->gameData->camera.camera.pos.y++;
-                    self->gameData->camera.velocity.y++;
+                    self->gameData->camera.velocity.y = 1;
                 }
                 else if(ToFrom.y <= -16)
                 {
@@ -972,12 +983,12 @@ void bb_updatePOI(bb_entity_t* self)
                 return;
             }
         }
-        if(sqMagVec2d(ToFrom) > tData->speed * tData->speed)
+        if(sqMagVec2d(ToFrom) > (tData->speed>>DECIMAL_BITS) * (tData->speed>>DECIMAL_BITS))
         {
             fastNormVec(&ToFrom.x, &ToFrom.y);
-            ToFrom    = mulVec2d(ToFrom, tData->speed);
-            ToFrom.x  = ToFrom.x >> 11;
-            ToFrom.y  = ToFrom.y >> 11;
+            ToFrom    = mulVec2d(ToFrom, tData->speed>>DECIMAL_BITS);
+            ToFrom.x  = ToFrom.x >> 7;
+            ToFrom.y  = ToFrom.y >> 7;
         }
         self->pos = addVec2d(self->pos, ToFrom);
         vec_t previousPos = self->gameData->camera.camera.pos;
@@ -1049,6 +1060,13 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 
 void bb_updateAttachmentArm(bb_entity_t* self)
 {
+    if(self->gameData->entityManager.playerEntity == NULL)
+    {
+        //this is for when garbotnik dies.
+        bb_destroyEntity(self,false);
+        return;
+    }
+
     bb_attachmentArmData_t* aData = (bb_attachmentArmData_t*) self->data;
     self->pos = aData->rocket->pos;
     self->pos.y -= 29 << DECIMAL_BITS;//67 is ok
@@ -1113,25 +1131,6 @@ void bb_updateGameOver(bb_entity_t* self)
             else
             {
                 self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[i];
-                self->gameData->entityManager.viewEntity = self->gameData->entityManager.activeBooster;
-
-                self->gameData->camera.camera.pos = (vec_t) {(self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS)-140, (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)-120};
-
-                bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
-
-                bb_dialogueData_t* dData = bb_createDialogueData(2);//29
-
-                strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
-                dData->character[sizeof(dData->character) - 1] = '\0';
-
-                bb_setCharacterLine(dData, 0, "I'm feeling simple and clean, baby!");                                        //V longest possible string here
-                bb_setCharacterLine(dData, 1, "It was a good move taking omega3 fish oils before backing up my brain.\0");
-
-                dData->curString = -1;
-
-                dData->endDialogueCB = &bb_afterGarbotnikIntro;
-
-                bb_setData(ovo, dData);
 
                 bb_destroyEntity(self,false);
             }
@@ -1314,13 +1313,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
 
-    drawWsgSimple(
-                    &entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
-                    (self->pos.x >> DECIMAL_BITS)
-                        - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-                    (self->pos.y >> DECIMAL_BITS)
-                        - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
-    
+    bb_drawSimple(entityManager, camera, self);
     
     if(dData->curString >= 0 && dData->curString < dData->numStrings)
     {
@@ -1331,6 +1324,12 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
         drawTextWordWrap(&self->gameData->font, c344, dData->strings[dData->curString], &xOff, &yOff,
                              249, 238);
     }
+}
+
+void bb_drawSimple(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
+                    0-entityManager->sprites[self->spriteIndex].originX,0-entityManager->sprites[self->spriteIndex].originY);
 }
 
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -1526,6 +1525,25 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
     bb_setData(ovo, dData);
 }
 
+void bb_startGarbotnikCloningTalk(bb_entity_t* self)
+{
+    bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, 0, 0, true, true);
+
+    bb_dialogueData_t* dData = bb_createDialogueData(2);//29
+
+    strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
+    dData->character[sizeof(dData->character) - 1] = '\0';
+
+    bb_setCharacterLine(dData, 0, "I'm feeling simple and clean, baby!");                                        //V longest possible string here
+    bb_setCharacterLine(dData, 1, "It was a good move taking omega3 fish oils before backing up my brain.\0");
+
+    dData->curString = -1;
+
+    dData->endDialogueCB = &bb_afterGarbotnikIntro;
+
+    bb_setData(ovo, dData);
+}
+
 void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
 {
     bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
@@ -1579,7 +1597,7 @@ void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self)
     bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
     tData->tracking = self->gameData->entityManager.playerEntity;
     tData->midPointSqDist = sqMagVec2d(
-    divVec2d(subVec2d(tData->tracking->pos, self->gameData->entityManager.viewEntity->pos), 2));
+        divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS), (tData->tracking->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)}, 2));
 
     tData->executeOnArrival = &bb_startGarbotnikFuelTutorialTalk;
 
@@ -1597,7 +1615,7 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
             bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
             tData->tracking = self->gameData->entityManager.activeBooster;
             tData->midPointSqDist = sqMagVec2d(
-                divVec2d(subVec2d(tData->tracking->pos, self->gameData->entityManager.viewEntity->pos), 2));
+            divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS), (tData->tracking->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)}, 2));
 
             tData->executeOnArrival = &bb_deployBooster;
 
@@ -1628,11 +1646,10 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
                           (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS), (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS), true, false);
             bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
             tData->tracking = curEntity;
+            
             tData->midPointSqDist = sqMagVec2d(
-            divVec2d(subVec2d(tData->tracking->pos, self->gameData->entityManager.viewEntity->pos), 2));
-
+            divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS), (tData->tracking->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)}, 2));
             tData->executeOnArrival = &bb_startGarbotnikEggTutorialTalk;
-
             self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
         }
     }
@@ -1658,6 +1675,7 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
                     false, false);
 
     // Play sfx
+    midiPlayer_t* sfx = soundGetPlayerSfx();
     midiAllSoundOff(soundGetPlayerSfx());
     soundPlaySfx(&self->gameData->sfxDirt, 0);
 }

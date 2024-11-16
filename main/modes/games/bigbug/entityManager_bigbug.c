@@ -75,7 +75,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bumpSprite->originX     = 37;
     bumpSprite->originY     = 37;
 
-    bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 41, 1, &entityManager->sprites[ROCKET_ANIM]);
+    bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 42, 1, &entityManager->sprites[ROCKET_ANIM]);
     rocketSprite->originX     = 33;
     rocketSprite->originY     = 66;
 
@@ -826,6 +826,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_GAME_OVER:
         {
             entity->updateFunction = &bb_updateGameOver;
+            entity->drawFunction = &bb_drawSimple;
         }
         default: // FLAME_ANIM and others need nothing set
         {

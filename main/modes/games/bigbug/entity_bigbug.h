@@ -236,6 +236,7 @@ void bb_drawStar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 void bb_drawNothing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawMenuBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawSimple(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
@@ -245,6 +246,7 @@ void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 //callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
 void bb_startGarbotnikLandingTalk(bb_entity_t* self);
+void bb_startGarbotnikCloningTalk(bb_entity_t* self);
 void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self);
 void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikFuelTutorialTalk(bb_entity_t* self);
