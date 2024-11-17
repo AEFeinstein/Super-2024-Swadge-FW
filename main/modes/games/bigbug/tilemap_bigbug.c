@@ -18,7 +18,7 @@
 void bb_initializeTileMap(bb_tilemap_t* tilemap)
 {
     wsg_t levelWsg;                           ///< A graphic representing the level data where tiles are pixels.
-    loadWsg("levelNew.wsg", &levelWsg, true); // levelWsg only needed for this brief scope.
+    loadWsg("bb_level.wsg", &levelWsg, true); // levelWsg only needed for this brief scope.
     bb_loadWsgs(tilemap);
 
     // Set all the tiles
@@ -31,14 +31,35 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
             switch (rgbCol & 255)
             {
                 case 0: // 0 in wsg land
+                {
+                    tilemap->fgTiles[i][j].health = 0;
+                    break;
+                }
+                case 51:
+                {
                     tilemap->fgTiles[i][j].health = 1;
                     break;
-                case 153: // 3 in wsg land
+                }
+                case 102:
+                {
                     tilemap->fgTiles[i][j].health = 4;
                     break;
-                case 255: // 5 in wsg land.
+                }
+                case 153:
+                {
                     tilemap->fgTiles[i][j].health = 10;
                     break;
+                }
+                case 204:
+                {
+                    tilemap->fgTiles[i][j].health = 100;
+                    break;
+                }
+                default:
+                {
+                    tilemap->fgTiles[i][j].health = 100;
+                    break;
+                }
             }
 
             // printf("green: %u\n", (rgbCol >> 8) & 255);
@@ -126,6 +147,9 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
 
         snprintf(filename, sizeof(filename), "fore_h_%d.wsg", i);
         loadWsg(filename, &tilemap->fore_h_Wsg[i], true);
+
+        snprintf(filename, sizeof(filename), "fore_b_%d.wsg", i);
+        loadWsg(filename, &tilemap->fore_b_Wsg[i], true);
     }
 }
 
@@ -151,6 +175,7 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
         freeWsg(&tilemap->fore_s_Wsg[i]);
         freeWsg(&tilemap->fore_m_Wsg[i]);
         freeWsg(&tilemap->fore_h_Wsg[i]);
+        freeWsg(&tilemap->fore_b_Wsg[i]);
     }
 }
 
@@ -807,14 +832,6 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
     // freeFont(&ibm);
 }
 
-void bb_drawSolidGround(bb_tilemap_t* tilemap, rectangle_t* camera)
-{
-    // printf("Camera x,y: %d,%d\n", camera->pos.x, camera->pos.y);
-    // drawWsgSimple(&tilemap->fore_h_Wsg[39], 0, 0);
-    // drawWsgSimple(&tilemap->fore_h_Wsg[39], TFT_WIDTH, 0);
-    // drawWsgSimpleScaled(&tilemap->fore_h_Wsg[39], 0, 160, 10, 2);
-}
-
 void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousPos, bb_hitInfo_t* hitInfo)
 {
     // Look up nearest tiles for collision checks
@@ -936,7 +953,11 @@ wsg_t (*bb_GetMidgroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, c
 
 wsg_t (*bb_GetForegroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[240]
 {
-    if (tilemap->fgTiles[i][j].health > 4)
+    if(tilemap->fgTiles[i][j].health > 10)
+    {
+        return &tilemap->fore_b_Wsg;
+    }
+    else if (tilemap->fgTiles[i][j].health > 4)
     {
         return &tilemap->fore_h_Wsg;
     }

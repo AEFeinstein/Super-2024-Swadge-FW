@@ -353,6 +353,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             midiPlayer_t* sfx = soundGetPlayerSfx();
             midiPlayerReset(sfx);
+            midiPitchWheel(sfx, 14, bb_randomInt(14, 1683));
+            
+            midiPitchWheel(sfx, 15, bb_randomInt(15, 1683));
             soundPlaySfx(&self->gameData->sfxHarpoon, 1);
             gData->numHarpoons -= 1;
             bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;

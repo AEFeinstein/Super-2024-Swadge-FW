@@ -17,7 +17,7 @@ void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
 
     tilemap->fgTiles[TILE_FIELD_WIDTH/2 + 2][0].embed = EGG_EMBED;//tutorial egg
 
-    for (int x = 0; x < TILE_FIELD_WIDTH; x++)
+    for (int x = 21; x < TILE_FIELD_WIDTH - 21; x++)
     {
         for (int y = 4; y < TILE_FIELD_HEIGHT; y++)
         {

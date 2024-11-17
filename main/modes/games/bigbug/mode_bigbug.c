@@ -318,7 +318,6 @@ static void bb_DrawScene(void)
         bb_drawTileMap(&bigbug->gameData.tilemap, &bigbug->gameData.camera.camera, &(vec_t){0, 0}, &(vec_t){0, 0},
                        &bigbug->gameData.entityManager);
     }
-    bb_drawSolidGround(&bigbug->gameData.tilemap, &bigbug->gameData.camera.camera);
 
     bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera.camera);
 }
