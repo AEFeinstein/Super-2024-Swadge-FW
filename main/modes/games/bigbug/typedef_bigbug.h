@@ -75,6 +75,7 @@ typedef enum
     OVO_TALK,          // Awesome art for dialogue moments. Each frame just provides a different flavor.
     ATTACHMENT_ARM,    // The booster arm that detects the player and latches on.
     BB_GAME_OVER,
+    BB_WASHING_MACHINE,
     WILE,              // A metal ball that is thrown
     NO_SPRITE_STAR,    // a single white pixel for aesthetic beauty.
     NO_SPRITE_POI      // Point of interest for the camera to follow in the main menu
@@ -84,6 +85,7 @@ typedef enum
 { // The kinds of stuff that may be embedded into a garbage tile.
     NOTHING_EMBED,
     EGG_EMBED,
+    WASHING_MACHINE_EMBED
 } bb_embeddable_t;
 
 typedef enum

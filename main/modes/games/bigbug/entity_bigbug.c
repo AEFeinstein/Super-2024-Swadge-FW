@@ -74,7 +74,8 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         if(self->spriteIndex == OVO_TALK)
         {
             bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
-            for(int i = 0; i<dData->numStrings; i++){
+            for(int i = 0; i<dData->numStrings; i++)
+            {
                 FREE_DBG(dData->strings[i]);
             }
             FREE_DBG(dData->strings);
@@ -402,61 +403,80 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     {
         // up
         case 0b0001:
+        {
             accel.y = -25;
             break;
+        }
         case 0b1101:
+        {
             accel.y = -25;
             break;
-
+        }
         // down
         case 0b0010:
+        {
             accel.y = 25;
             break;
+        }   
         case 0b1110:
+        {
             accel.y = 25;
             break;
-
+        }
         // left
         case 0b0100:
+        {
             accel.x = -25;
             break;
+        }   
         case 0b0111:
+        {
             accel.x = -25;
             break;
-
+        }
         // right
         case 0b1000:
+        {
             accel.x = 25;
             break;
+        }   
         case 0b1011:
+        {
             accel.x = 25;
             break;
-
+        }
         // up,left
         case 0b0101:
+        {
             accel.x = -18; // magnitude is sqrt(1/2) * 100000
             accel.y = -18;
             break;
-
+        }
         // up,right
         case 0b1001:
+        {
             accel.x = 18; // 35 707 7035
             accel.y = -18;
             break;
-
+        }
         // down,right
         case 0b1010:
+        {
             accel.x = 18;
             accel.y = 18;
             break;
-
+        }
         // down,left
         case 0b0110:
+        {
             accel.x = -18;
             accel.y = 18;
             break;
+        }   
         default:
+        {
             break;
+        }
     }
 
     // printf("accel x: %d\n", accel.x);
@@ -622,7 +642,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
         //range is roughly 2600 to 7100
         //printf("dot %d\n", dot);
-        printf("thing: %d\n",sqMagVec2d(gData->vel) * dot);
+        //printf("thing: %d\n",sqMagVec2d(gData->vel) * dot);
         int32_t bounceScalar = 3;
         if(sqMagVec2d(gData->vel) * dot < -360000)
         {

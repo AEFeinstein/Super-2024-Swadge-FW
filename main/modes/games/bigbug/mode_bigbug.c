@@ -131,14 +131,12 @@ static void bb_EnterMode(void)
     drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
     drawDisplayTft(NULL);
 
-    bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
-    bb_initializeTileMap(&(bigbug->gameData.tilemap));
-    bb_initializeEntityManager(&(bigbug->gameData.entityManager), &(bigbug->gameData), &(bigbug->soundManager));
+    bb_initializeGameData(&bigbug->gameData, &bigbug->soundManager);
+    bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData, &bigbug->soundManager);
+    bb_initializeTileMap(&bigbug->gameData.tilemap);
 
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
     //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
-    
-
 
     bb_entity_t* foreground    = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
                                                  (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -5146, true, false);
@@ -229,6 +227,10 @@ static void bb_MainLoop(int64_t elapsedUs)
         {
             // Run the main game loop. This will also process button events
             bb_GameLoop(elapsedUs);
+            break;
+        }
+        default:
+        {
             break;
         }
     }

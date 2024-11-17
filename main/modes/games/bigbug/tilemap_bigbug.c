@@ -4,6 +4,7 @@
 #include <color_utils.h>
 #include "typedef_bigbug.h"
 #include "tilemap_bigbug.h"
+#include "random_bigbug.h"
 #include "entity_bigbug.h"
 #include "lighting_bigbug.h"
 
@@ -30,7 +31,7 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
             // blue value used for foreground tiles
             switch (rgbCol & 255)
             {
-                case 0: // 0 in wsg land
+                case 0:
                 {
                     tilemap->fgTiles[i][j].health = 0;
                     break;
@@ -62,23 +63,43 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
                 }
             }
 
+
             // printf("green: %u\n", (rgbCol >> 8) & 255);
             // green value used for midground tiles
             switch ((rgbCol >> 8) & 255)
             {
                 case 0: // 0 in wsg land
+                {
                     tilemap->mgTiles[i][j] = 0;
                     break;
+                }
                 case 255: // 5 in wsg land
-                    tilemap->mgTiles[i][j] = tilemap->fgTiles[i][j].health;
+                {
+                    int8_t values[] = {1, 4, 10};
+                    tilemap->mgTiles[i][j] = tilemap->fgTiles[i][j].health == 0 ? 
+                         values[bb_randomInt(0, 2)] : 
+                         tilemap->fgTiles[i][j].health;
                     break;
+                }
+                default:
+                {
+                    break;
+                }
             }
 
             switch ((rgbCol >> 16) & 255)
-            { // red value
-                // will use red for spawns
-                default:
+            { // red value used for some spawns (not eggs)
+                case 255:
+                {
+                    tilemap->fgTiles[i][j].health = 0;
+                    tilemap->fgTiles[i][j].embed = WASHING_MACHINE_EMBED;
                     break;
+                }
+                default:
+                {
+                    tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                    break;
+                }
             }
         }
     }
@@ -287,6 +308,16 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             }
                             break;
                         }
+                        case WASHING_MACHINE_EMBED:
+                        {
+                            printf("we here\n");
+                            if(bb_createEntity(entityManager, NO_ANIMATION, true, BB_WASHING_MACHINE, 1,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false) != NULL)
+                            {
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }
                         default:
                         {
                             break;
@@ -344,6 +375,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     switch (sprite_idx & 0b1100)
                     {
                         case 0b1100: // 0 16
+                        {
                             switch (corner_info & 0b1000)
                             {
                                 case 0b1000: // 0
@@ -354,15 +386,22 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     break;
                             }
                             break;
+                        }
                         case 0b1000: // 4
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 4], tilePos.x, tilePos.y);
                             break;
+                        }
                         case 0b0100: // 8
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 8], tilePos.x, tilePos.y);
                             break;
+                        }
                         default: // 0b0000:12
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 12], tilePos.x, tilePos.y);
                             break;
+                        }
                     }
 
                     // Top Right
@@ -378,30 +417,42 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     switch (sprite_idx & 0b110)
                     {
                         case 0b110: // 1 17
+                        {
                             switch (corner_info & 0b0100)
                             {
                                 case 0b0100: // 1
+                                {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 1], tilePos.x + HALF_TILE,
                                                   tilePos.y);
                                     break;
+                                }
                                 default: // 0b0000 17
+                                {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 17], tilePos.x + HALF_TILE,
                                                   tilePos.y);
                                     break;
+                                }
                             }
                             break;
+                        }
                         case 0b010: // 5
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 5], tilePos.x + HALF_TILE,
                                           tilePos.y);
                             break;
+                        }
                         case 0b100: // 9
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 9], tilePos.x + HALF_TILE,
                                           tilePos.y);
                             break;
+                        }
                         default: // 0b0000:13
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 13], tilePos.x + HALF_TILE,
                                           tilePos.y);
                             break;
+                        }
                     }
 
                     // Bottom Left
@@ -418,30 +469,42 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     switch (sprite_idx & 0b1001)
                     {
                         case 0b1001: // 2 18
+                        {
                             switch (corner_info & 0b0010)
                             {
                                 case 0b0010: // 2
+                                {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 2], tilePos.x,
                                                   tilePos.y + HALF_TILE);
                                     break;
+                                }
                                 default: // 0b0000 18
+                                {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 18], tilePos.x,
                                                   tilePos.y + HALF_TILE);
                                     break;
+                                }
                             }
                             break;
+                        }
                         case 0b1000: // 6
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 6], tilePos.x,
                                           tilePos.y + HALF_TILE);
                             break;
+                        }
                         case 0b0001: // 10
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 10], tilePos.x,
                                           tilePos.y + HALF_TILE);
                             break;
+                        }
                         default: // 0b0000:14
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 14], tilePos.x,
                                           tilePos.y + HALF_TILE);
                             break;
+                        }
                     }
 
                     // Bottom Right
@@ -457,30 +520,42 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     switch (sprite_idx & 0b0011)
                     {
                         case 0b11: // 3 19
+                        {
                             switch (corner_info & 0b1)
                             {
                                 case 0b1: // 3
+                                {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 3], tilePos.x + HALF_TILE,
                                                   tilePos.y + HALF_TILE);
                                     break;
+                                }
                                 default: // 0b0000 19
+                                {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 19], tilePos.x + HALF_TILE,
                                                   tilePos.y + HALF_TILE);
                                     break;
+                                }
                             }
                             break;
+                        }
                         case 0b10: // 7
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 7], tilePos.x + HALF_TILE,
                                           tilePos.y + HALF_TILE);
                             break;
+                        }
                         case 0b01: // 11
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 11], tilePos.x + HALF_TILE,
                                           tilePos.y + HALF_TILE);
                             break;
+                        }
                         default: // 0b0000:15
+                        {
                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 15], tilePos.x + HALF_TILE,
                                           tilePos.y + HALF_TILE);
                             break;
+                        }
                     }
                     // char snum[4];
                     // sprintf(snum, "%d", 20*brightness);

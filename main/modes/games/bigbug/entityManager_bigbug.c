@@ -23,7 +23,6 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define SUBPIXEL_RESOLUTION 4
 
 //==============================================================================
 // Functions
@@ -138,6 +137,11 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bb_loadSprite("ovo_talk", 8, 1, &entityManager->sprites[OVO_TALK]);
 
     bb_loadSprite("GameOver", 2, 1, &entityManager->sprites[BB_GAME_OVER]);
+
+    bb_sprite_t* washingMachineSprite = bb_loadSprite("WashingMachine", 1, 6, &entityManager->sprites[BB_WASHING_MACHINE]);
+    washingMachineSprite->originX = 16;
+    washingMachineSprite->originY = 16;
+
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -394,9 +398,9 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     {
         drawWsgSimple(
             &entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
-            (currentEntity->pos.x >> SUBPIXEL_RESOLUTION)
+            (currentEntity->pos.x >> DECIMAL_BITS)
                 - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
-            (currentEntity->pos.y >> SUBPIXEL_RESOLUTION)
+            (currentEntity->pos.y >> DECIMAL_BITS)
                 - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
     }
 
@@ -549,7 +553,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
     entity->active = true;
     entity->forceToFront = forceToFront;
-    entity->pos.x = x << SUBPIXEL_RESOLUTION, entity->pos.y = y << SUBPIXEL_RESOLUTION;
+    entity->pos.x = x << DECIMAL_BITS;
+    entity->pos.y = y << DECIMAL_BITS;
 
     entity->type        = type;
     entity->paused      = paused;
@@ -820,19 +825,30 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_collision_t* collision = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionAttachmentArm};
             push(entity->collisions, (void*)collision);
-
             break;
         }
         case BB_GAME_OVER:
         {
             entity->updateFunction = &bb_updateGameOver;
             entity->drawFunction = &bb_drawSimple;
+            break;
+        }
+        case BB_WASHING_MACHINE:
+        {
+            bb_setData(entity, HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM));
+            entity->halfWidth  = 16 << DECIMAL_BITS;
+            entity->halfHeight = 16 << DECIMAL_BITS;
+            entity->hasLighting                 = true;
+            entity->updateFunction = &bb_updateHeavyFalling;
+            entity->cacheable = true;
+            break;
         }
         default: // FLAME_ANIM and others need nothing set
         {
             break;
         }
     }
+
     entity->cSquared = entity->halfWidth * entity->halfWidth + entity->halfHeight * entity->halfHeight;
 
     entityManager->activeEntities++;
