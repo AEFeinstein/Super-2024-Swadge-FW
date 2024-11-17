@@ -60,6 +60,13 @@ typedef struct
     int16_t minAggroTime;
     int16_t maxAggroTime;
 
+    int16_t levelBlocks;
+    int16_t remainingBlocks;
+    bool firstBonusItemDispensed;
+    bool secondBonusItemDispensed;
+    int16_t firstBonusItemDispenseThreshold;
+    int16_t secondBonusItemDispenseThreshold;
+
     paSoundManager_t* soundManager;
 
     font_t scoreFont;

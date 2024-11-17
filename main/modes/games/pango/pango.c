@@ -57,7 +57,7 @@ static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
 
-const char* characterSelectOptions[] = {"Pango", "Po", "Pixel", "Polly"};
+const char* characterSelectOptions[] = {"Pango", "Po", "Pixel", "Piper"};
 const int32_t characterSelectOptionValues[]
     = {PA_PLAYER_CHARACTER_PANGO, PA_PLAYER_CHARACTER_PO, PA_PLAYER_CHARACTER_PIXEL, PA_PLAYER_CHARACTER_GIRL};
 #define NUM_CHARACTERS 4
@@ -155,6 +155,7 @@ static void pa_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 void drawPangoLogo(font_t* font, int16_t x, int16_t y);
 uint16_t pa_getLevelClearBonus(int16_t elapsedTime);
 void pa_setDifficultyLevel(paWsgManager_t* wsgManager, paGameData_t* gameData, uint16_t levelIndex);
+void pa_advanceToNextLevelOrGameClear(pango_t* self);
 
 //==============================================================================
 // Variables
@@ -245,8 +246,7 @@ void pangoEnterMode(void)
     pa_initializeWsgManager(&(pango->wsgManager));
 
     pa_initializeTileMap(&(pango->tilemap), &(pango->wsgManager));
-    pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
-    pa_generateMaze(&(pango->tilemap));
+
     pango->tilemap.mapOffsetX = -4;
 
     pa_initializeSoundManager(&(pango->soundManager));
@@ -258,6 +258,9 @@ void pangoEnterMode(void)
 
     pango->tilemap.entityManager    = &(pango->entityManager);
     pango->tilemap.tileSpawnEnabled = true;
+
+    pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+    pa_generateMaze(&(pango->tilemap));
 
     setFrameRateUs(16666);
 
@@ -394,6 +397,7 @@ void pangoMainLoop(int64_t elapsedUs)
     }
 
     pango->update(pango, elapsedUs);
+    DRAW_FPS_COUNTER(pango->gameData.scoreFont);
 
     pango->prevBtnState          = pango->btnState;
     pango->gameData.prevBtnState = pango->prevBtnState;
@@ -488,12 +492,30 @@ void updateGame(pango_t* self, int64_t elapsedUs)
         /*if (self->gameData.countdown < 10)
         {
             soundPlayBgm(&(self->soundManager.sndOuttaTime), BZR_STEREO);
-        }
+        }*/
 
-        if (self->gameData.countdown < 0)
+        if (self->gameData.remainingBlocks <= 0)
         {
             killPlayer(self->entityManager.playerEntity);
-        }*/
+        }
+
+        if (!self->gameData.firstBonusItemDispensed
+            && (self->gameData.remainingBlocks < self->gameData.firstBonusItemDispenseThreshold))
+        {
+            pa_createBonusItem(&(self->entityManager),
+                               ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                               ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+            self->gameData.firstBonusItemDispensed = true;
+        }
+
+        if (!self->gameData.secondBonusItemDispensed
+            && (self->gameData.remainingBlocks < self->gameData.secondBonusItemDispenseThreshold))
+        {
+            pa_createBonusItem(&(self->entityManager),
+                               ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                               ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+            self->gameData.secondBonusItemDispensed = true;
+        }
 
         pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
     }
@@ -750,6 +772,7 @@ void changeStateGame(pango_t* self)
                     break;
                 case PA_TILE_BLOCK:
                     pa_setTile(&(self->tilemap), spawnTx, spawnTy, PA_TILE_EMPTY);
+                    self->gameData.remainingBlocks--;
                     break;
                 case PA_TILE_SPAWN_BLOCK_0:
                     skippedEnemyRespawnCount++;
@@ -772,6 +795,8 @@ void changeStateGame(pango_t* self)
     }
 
     self->tilemap.executeTileSpawnAll = true;
+
+    soundPlayBgm(&(self->soundManager.bgmFast), MIDI_BGM);
 
     self->update = &updateGame;
 }
@@ -832,28 +857,28 @@ void detectBgmChange(pango_t* self)
         case PA_BGM_MAIN:
             if (self->gameData.currentBgm != PA_BGM_MAIN)
             {
-                soundPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
+                // soundPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
             }
             break;
 
         case PA_BGM_ATHLETIC:
             if (self->gameData.currentBgm != PA_BGM_ATHLETIC)
             {
-                soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+                // soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
             }
             break;
 
         case PA_BGM_UNDERGROUND:
             if (self->gameData.currentBgm != PA_BGM_UNDERGROUND)
             {
-                soundPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
+                // soundPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
             }
             break;
 
         case PA_BGM_FORTRESS:
             if (self->gameData.currentBgm != PA_BGM_FORTRESS)
             {
-                soundPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
+                // soundPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
             }
             break;
 
@@ -867,7 +892,7 @@ void detectBgmChange(pango_t* self)
 
 void changeStateDead(pango_t* self)
 {
-    self->gameData.frameCount = 0;
+    // self->gameData.frameCount = 0;
     self->gameData.lives--;
 
     soundStop(true);
@@ -879,11 +904,27 @@ void changeStateDead(pango_t* self)
 void updateDead(pango_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
+
+    if ((self->gameData.frameCount % 60) == 0)
+    {
+        // Keep counting time as a penalty
+        self->gameData.levelTime++;
+        self->gameData.inGameTimer++;
+    }
+
     if (self->gameData.frameCount > 179)
     {
         if (self->gameData.lives > 0)
         {
-            changeStateReadyScreen(self);
+            if (self->gameData.remainingBlocks > 0)
+            {
+                changeStateReadyScreen(self);
+            }
+            else
+            {
+                pa_advanceToNextLevelOrGameClear(self);
+                return;
+            }
         }
         else
         {
@@ -895,6 +936,11 @@ void updateDead(pango_t* self, int64_t elapsedUs)
     pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
     drawPangoHud(&(self->font), &(self->gameData));
+
+    if (self->gameData.remainingBlocks <= 0)
+    {
+        drawText(&(self->font), c555, "Out of blocks!", 63, 128);
+    }
 }
 
 void updateGameOver(pango_t* self, int64_t elapsedUs)
@@ -973,65 +1019,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
         else if (self->gameData.frameCount % 120 == 0)
         {
             // Hey look, it's a frame rule!
-            self->gameData.levelTime = 0;
-
-            if (self->gameData.level >= MASTER_DIFFICULTY_TABLE_LENGTH)
-            {
-                // Game Cleared!
-
-                if (!self->gameData.debugMode)
-                {
-                    // Determine achievements
-                    self->unlockables.gameCleared = true;
-
-                    if (!self->gameData.continuesUsed)
-                    {
-                        self->unlockables.oneCreditCleared = true;
-
-                        if (self->gameData.inGameTimer < FAST_TIME)
-                        {
-                            self->unlockables.fastTime = true;
-                        }
-                    }
-
-                    if (self->gameData.score >= BIG_SCORE)
-                    {
-                        self->unlockables.bigScore = true;
-                    }
-
-                    if (self->gameData.score >= BIGGER_SCORE)
-                    {
-                        self->unlockables.biggerScore = true;
-                    }
-                }
-
-                changeStateGameClear(self);
-            }
-            else
-            {
-                // Advance to the next level
-                self->gameData.level++;
-
-                // Unlock the next level
-                if (self->gameData.level > self->unlockables.maxLevelIndexUnlocked)
-                {
-                    self->unlockables.maxLevelIndexUnlocked = self->gameData.level;
-                }
-
-                pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), self->gameData.level);
-                pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
-                pa_generateMaze(&(pango->tilemap));
-                pa_placeEnemySpawns(&(pango->tilemap));
-
-                self->entityManager.activeEnemies = 0;
-
-                changeStateReadyScreen(self);
-            }
-
-            if (!self->gameData.debugMode)
-            {
-                pangoSaveUnlockables(self);
-            }
+            pa_advanceToNextLevelOrGameClear(self);
 
             return;
         }
@@ -1089,7 +1077,7 @@ void changeStateGameClear(pango_t* self)
     self->gameData.frameCount = 0;
     self->update              = &updateGameClear;
     pa_resetGameDataLeds(&(self->gameData));
-    soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+    // soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
 }
 
 void updateGameClear(pango_t* self, int64_t elapsedUs)
@@ -1493,4 +1481,69 @@ void pa_setDifficultyLevel(paWsgManager_t* wsgManager, paGameData_t* gameData, u
     pa_remapBlockTile(
         wsgManager,
         masterDifficulty[((levelIndex - 1) * MASTER_DIFFICULTY_TABLE_ROW_LENGTH) + BLOCK_WSG_LOOKUP_OFFSET]);
+}
+
+void pa_advanceToNextLevelOrGameClear(pango_t* self)
+{
+    self->gameData.levelTime                = 0;
+    self->gameData.firstBonusItemDispensed  = false;
+    self->gameData.secondBonusItemDispensed = false;
+
+    if (self->gameData.level >= MASTER_DIFFICULTY_TABLE_LENGTH)
+    {
+        // Game Cleared!
+
+        if (!self->gameData.debugMode)
+        {
+            // Determine achievements
+            self->unlockables.gameCleared = true;
+
+            if (!self->gameData.continuesUsed)
+            {
+                self->unlockables.oneCreditCleared = true;
+
+                if (self->gameData.inGameTimer < FAST_TIME)
+                {
+                    self->unlockables.fastTime = true;
+                }
+            }
+
+            if (self->gameData.score >= BIG_SCORE)
+            {
+                self->unlockables.bigScore = true;
+            }
+
+            if (self->gameData.score >= BIGGER_SCORE)
+            {
+                self->unlockables.biggerScore = true;
+            }
+        }
+
+        changeStateGameClear(self);
+    }
+    else
+    {
+        // Advance to the next level
+        self->gameData.level++;
+
+        // Unlock the next level
+        if (self->gameData.level > self->unlockables.maxLevelIndexUnlocked)
+        {
+            self->unlockables.maxLevelIndexUnlocked = self->gameData.level;
+        }
+
+        pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), self->gameData.level);
+        pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+        pa_generateMaze(&(pango->tilemap));
+        pa_placeEnemySpawns(&(pango->tilemap));
+
+        self->entityManager.activeEnemies = 0;
+
+        changeStateReadyScreen(self);
+    }
+
+    if (!self->gameData.debugMode)
+    {
+        pangoSaveUnlockables(self);
+    }
 }

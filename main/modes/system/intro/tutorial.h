@@ -54,8 +54,14 @@ typedef enum
     // Touch any one of given zones
     TOUCH_ZONE_ANY,
 
-    // A number of CCW (or CW if negative) spin degrees
+    // A number of CCW (or CW if negative) spins
     TOUCH_SPIN,
+
+    // Shake the IMU real good
+    IMU_ORIENT,
+
+    // Something loud detected on the mic
+    MIC_LOUD,
 
     // An amount of time (in intData) passes
     TIME_PASSED,
@@ -84,6 +90,8 @@ struct tutorialTrigger
 
         /// @brief Generic void pointer data
         const void* ptrData;
+
+        int16_t orientation[3];
 
         struct
         {
@@ -150,8 +158,11 @@ typedef struct tutorialState
 
     touchJoystick_t allTouchZones;
     touchJoystick_t curTouchZone;
+    touchSpinState_t spinState;
 
-    // touchSpinState_t touchSpin;
+    int16_t orientation[3];
+
+    bool loudSound;
 
     int64_t stepStartTime;
 
@@ -178,6 +189,12 @@ void tutorialOnButton(tutorialState_t* state, const buttonEvt_t* evt);
 
 // Call when touch is detected
 void tutorialOnTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t intensity);
+
+// Call when motion is detected
+void tutorialOnMotion(tutorialState_t* state, int16_t x, int16_t y, int16_t z);
+
+// Call when the microphone is sampled
+void tutorialOnSound(tutorialState_t* state, int32_t energy);
 
 // Call once per frame, after input handling, to check the current step's triggers
 void tutorialCheckTriggers(tutorialState_t* state);

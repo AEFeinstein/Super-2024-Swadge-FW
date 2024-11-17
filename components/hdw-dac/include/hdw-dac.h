@@ -76,7 +76,7 @@
 //==============================================================================
 
 /** @brief The sample rate for the DAC */
-#define DAC_SAMPLE_RATE_HZ 32768
+#define DAC_SAMPLE_RATE_HZ 16384
 
 /** The size of each buffer to fill with DAC samples */
 #define DAC_BUF_SIZE 512
