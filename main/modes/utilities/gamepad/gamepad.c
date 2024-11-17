@@ -296,9 +296,6 @@ void gamepadEnterMode(void)
     // Initialize menu renderer
     gamepad->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
-    // We shold go as fast as we can
-    setFrameRateUs(0);
-
     // Set up the IMU
     accelSetRegistersAndReset();
 }

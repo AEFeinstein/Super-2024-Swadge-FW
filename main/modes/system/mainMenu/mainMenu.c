@@ -184,9 +184,9 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
-    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
 
     // Start a submenu for settings

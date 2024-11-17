@@ -88,7 +88,6 @@ static const uint8_t oscDither[] = {
 // Represents that no voice has been allocated to the instrument, within the special states bitmap
 #define VOICE_FREE (0x3F)
 
-static bool globalPlayerInit       = false;
 static midiPlayer_t* globalPlayers = NULL;
 
 static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount);
@@ -2449,10 +2448,9 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
 
 void initGlobalMidiPlayer(void)
 {
-    if (!globalPlayerInit)
+    if (!globalPlayers)
     {
-        globalPlayers    = heap_caps_calloc(NUM_GLOBAL_PLAYERS, sizeof(midiPlayer_t), MALLOC_CAP_8BIT);
-        globalPlayerInit = true;
+        globalPlayers = heap_caps_calloc(NUM_GLOBAL_PLAYERS, sizeof(midiPlayer_t), MALLOC_CAP_8BIT);
         for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
         {
             midiPlayerInit(&globalPlayers[i]);
@@ -2462,7 +2460,7 @@ void initGlobalMidiPlayer(void)
 
 void deinitGlobalMidiPlayer(void)
 {
-    if (globalPlayerInit)
+    if (globalPlayers)
     {
         for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
         {
@@ -2471,14 +2469,14 @@ void deinitGlobalMidiPlayer(void)
             midiPlayerReset(&globalPlayers[i]);
         }
 
-        globalPlayerInit = false;
         free(globalPlayers);
+        globalPlayers = NULL;
     }
 }
 
 void globalMidiPlayerFillBuffer(uint8_t* samples, int16_t len)
 {
-    if (globalPlayerInit)
+    if (globalPlayers)
     {
         midiPlayerFillBufferMulti(globalPlayers, NUM_GLOBAL_PLAYERS, samples, len);
     }
@@ -2492,68 +2490,90 @@ void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx)
 {
     initGlobalMidiPlayer();
 
-    midiPause(&globalPlayers[songIdx], true);
-    globalPlayers[songIdx].sampleCount = 0;
-    midiSetFile(&globalPlayers[songIdx], song);
-    midiPause(&globalPlayers[songIdx], false);
+    if (globalPlayers)
+    {
+        midiPause(&globalPlayers[songIdx], true);
+        globalPlayers[songIdx].sampleCount = 0;
+        midiSetFile(&globalPlayers[songIdx], song);
+        midiPause(&globalPlayers[songIdx], false);
+    }
 }
 
 void globalMidiPlayerPlaySongCb(midiFile_t* song, uint8_t songIdx, songFinishedCbFn cb)
 {
-    globalMidiPlayerPlaySong(song, songIdx);
-    globalPlayers[songIdx].songFinishedCallback = cb;
+    if (globalPlayers)
+    {
+        globalMidiPlayerPlaySong(song, songIdx);
+        globalPlayers[songIdx].songFinishedCallback = cb;
+    }
 }
 
 void globalMidiPlayerSetVolume(uint8_t trackType, int32_t volumeSetting)
 {
-    midiPlayer_t* player = &globalPlayers[trackType];
+    if (globalPlayers)
+    {
+        midiPlayer_t* player = &globalPlayers[trackType];
 
-    if (volumeSetting <= 0)
-    {
-        player->volume = 0;
-    }
-    else if (volumeSetting >= 13)
-    {
-        player->volume = UINT14_MAX;
-    }
-    else
-    {
-        player->volume = (1 << (volumeSetting - 1));
+        if (volumeSetting <= 0)
+        {
+            player->volume = 0;
+        }
+        else if (volumeSetting >= 13)
+        {
+            player->volume = UINT14_MAX;
+        }
+        else
+        {
+            player->volume = (1 << (volumeSetting - 1));
+        }
     }
 }
 
 void globalMidiPlayerPauseAll(void)
 {
-    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    if (globalPlayers)
     {
-        midiPause(&globalPlayers[i], true);
+        for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+        {
+            midiPause(&globalPlayers[i], true);
+        }
     }
 }
 
 void globalMidiPlayerResumeAll(void)
 {
-    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    if (globalPlayers)
     {
-        midiPause(&globalPlayers[i], false);
+        for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+        {
+            midiPause(&globalPlayers[i], false);
+        }
     }
 }
 
 void globalMidiPlayerStop(bool reset)
 {
-    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    if (globalPlayers)
     {
-        midiPause(&globalPlayers[i], true);
-
-        if (reset)
+        for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
         {
-            midiPlayerReset(&globalPlayers[i]);
+            midiPause(&globalPlayers[i], true);
+
+            if (reset)
+            {
+                midiPlayerReset(&globalPlayers[i]);
+            }
+            // TODO: implement seek
+            // midiSeek(&globalPlayers[i], 0);
         }
-        // TODO: implement seek
-        // midiSeek(&globalPlayers[i], 0);
     }
 }
 
 midiPlayer_t* globalMidiPlayerGet(uint8_t songIdx)
 {
-    return &globalPlayers[songIdx];
+    if (globalPlayers)
+    {
+        return &globalPlayers[songIdx];
+    }
+    return NULL;
 }

@@ -1023,23 +1023,26 @@ void* globalMidiSave(void)
     for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
     {
         midiPlayer_t* player = globalMidiPlayerGet(i);
-        memcpy(&saveState[i].player, player, sizeof(midiPlayer_t));
-
-        if (player->reader.file != NULL)
+        if (NULL != player)
         {
-            saveState[i].trackCount = player->reader.file->trackCount;
-            saveState[i].trackStates
-                = heap_caps_calloc(saveState[i].trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
+            memcpy(&saveState[i].player, player, sizeof(midiPlayer_t));
 
-            // Overwrite the copy with the newly allocated pointer, since the current one may be free'd
-            saveState[i].player.reader.states = saveState[i].trackStates;
-
-            for (int trackIdx = 0; trackIdx < saveState[i].trackCount; trackIdx++)
+            if (player->reader.file != NULL)
             {
-                const midiTrackState_t* stateOrig = &player->reader.states[trackIdx];
-                midiTrackState_t* stateCopy       = &saveState[i].trackStates[trackIdx];
+                saveState[i].trackCount = player->reader.file->trackCount;
+                saveState[i].trackStates
+                    = heap_caps_calloc(saveState[i].trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
 
-                memcpy(stateCopy, stateOrig, sizeof(midiTrackState_t));
+                // Overwrite the copy with the newly allocated pointer, since the current one may be free'd
+                saveState[i].player.reader.states = saveState[i].trackStates;
+
+                for (int trackIdx = 0; trackIdx < saveState[i].trackCount; trackIdx++)
+                {
+                    const midiTrackState_t* stateOrig = &player->reader.states[trackIdx];
+                    midiTrackState_t* stateCopy       = &saveState[i].trackStates[trackIdx];
+
+                    memcpy(stateCopy, stateOrig, sizeof(midiTrackState_t));
+                }
             }
         }
     }
@@ -1054,9 +1057,12 @@ void globalMidiRestore(void* data)
     for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
     {
         midiPlayer_t* player = globalMidiPlayerGet(i);
-        midiPlayerReset(player);
+        if (NULL != player)
+        {
+            midiPlayerReset(player);
 
-        memcpy(player, &saveState[i].player, sizeof(midiPlayer_t));
+            memcpy(player, &saveState[i].player, sizeof(midiPlayer_t));
+        }
     }
 
     // Do not free any of the individual save state data, since it's now just the real data

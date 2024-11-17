@@ -131,9 +131,6 @@ static void timerEnterMode(void)
     loadWsg("button_a.wsg", &timerData->aWsg, false);
     loadWsg("button_b.wsg", &timerData->bWsg, false);
 
-    // 100FPS? Sure?
-    setFrameRateUs(1000000 / 100);
-
     // Default to 30s
     timerData->countdownTime = 30 * 1000000;
     timerData->timerState    = STOPPED;
