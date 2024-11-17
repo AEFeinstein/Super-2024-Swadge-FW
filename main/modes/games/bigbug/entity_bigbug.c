@@ -227,7 +227,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     {
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
         midiPlayerReset(player);
-        setBgmVolumeSetting(13);
+        player->volume = 16383;
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
@@ -271,6 +271,30 @@ void bb_updateHeavyFalling(bb_entity_t* self)
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble
         bb_crumbleDirt(self, 3, hitInfo.tile_i, hitInfo.tile_j);
+        if (self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed == EGG_EMBED)
+        {
+            vec_t tilePos = {.x = hitInfo.tile_i * TILE_SIZE + HALF_TILE, .y = hitInfo.tile_j * TILE_SIZE + HALF_TILE};
+            // create a bug
+            bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
+                                               bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
+            if (bug != NULL)
+            {
+                if(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity != NULL)
+                {
+                    // destroy the egg
+                    bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j]
+                                                                .entity->data))
+                                        ->egg,
+                                    false);
+                    // destroy this (eggLeaves)
+                    bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
+                }
+                else
+                {
+                    self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed = NOTHING_EMBED;
+                }
+            }
+        }
     }
     return;
 }
