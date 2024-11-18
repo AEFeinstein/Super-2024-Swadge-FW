@@ -28,30 +28,6 @@
 #define PA_TILE_SET_SIZE 15
 
 //==============================================================================
-// Enums
-//==============================================================================
-typedef enum
-{
-    PA_TILE_EMPTY,
-    PA_TILE_WALL_0,
-    PA_TILE_WALL_1,
-    PA_TILE_WALL_2,
-    PA_TILE_WALL_3,
-    PA_TILE_WALL_4,
-    PA_TILE_WALL_5,
-    PA_TILE_WALL_6,
-    PA_TILE_WALL_7,
-    PA_TILE_BLOCK,
-    PA_TILE_SPAWN_BLOCK_0,
-    PA_TILE_SPAWN_BLOCK_1,
-    PA_TILE_SPAWN_BLOCK_2,
-    PA_TILE_BONUS_BLOCK_0,
-    PA_TILE_BONUS_BLOCK_1,
-    PA_TILE_BONUS_BLOCK_2,
-    PA_TILE_INVISIBLE_BLOCK
-} PA_TILE_Index_t;
-
-//==============================================================================
 // Structs
 //==============================================================================
 typedef struct
@@ -83,9 +59,6 @@ struct paTilemap_t
     bool executeTileSpawnAll;
 
     paEntityManager_t* entityManager;
-
-    uint8_t animationFrame;
-    int16_t animationTimer;
 };
 
 //==============================================================================

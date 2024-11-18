@@ -54,7 +54,7 @@ const char tttUnlockKey[]   = "ttt_unlock";
 /**
  * Marker names to load WSGs
  */
-const char* markerNames[NUM_UNLOCKABLE_MARKERS] = {
+const char* const markerNames[NUM_UNLOCKABLE_MARKERS] = {
     "x", "o", "sq", "tri", "banana", "dance", "hand", "hat", "hotdog", "lizard", "pixil", "spock", "swadgeman",
 };
 
@@ -91,6 +91,9 @@ ultimateTTT_t* ttt;
  */
 static void tttEnterMode(void)
 {
+    // TODO enable speaker if BGM is added
+    setDacShutdown(true);
+
     // Allocate memory for the mode
     ttt = calloc(1, sizeof(ultimateTTT_t));
 

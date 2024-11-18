@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <inttypes.h>
+#include <esp_heap_caps.h>
 
 #include "waveTables.h"
 #include "midiNoteFreqs.h"
@@ -87,8 +88,7 @@ static const uint8_t oscDither[] = {
 // Represents that no voice has been allocated to the instrument, within the special states bitmap
 #define VOICE_FREE (0x3F)
 
-static bool globalPlayerInit                          = false;
-static midiPlayer_t globalPlayers[NUM_GLOBAL_PLAYERS] = {0};
+static midiPlayer_t* globalPlayers = NULL;
 
 static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount);
 static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
@@ -333,9 +333,18 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                 states->on &= ~voiceBit;
                 channels[voice->channel].allocedVoices &= ~voiceBit;
 
-                pressureVol               = 0;
-                voice->transitionStartVol = VOICE_CUR_VOL(voice);
-                voice->targetVol          = 0;
+                pressureVol = 0;
+
+                if (voice->transitionTicksTotal)
+                {
+                    voice->transitionStartVol = VOICE_CUR_VOL(voice);
+                }
+                else
+                {
+                    voice->transitionStartVol = voice->velocity << 1 | 1;
+                }
+
+                voice->targetVol = 0;
 
                 voice->transitionTicksTotal = UINT32_MAX;
                 voice->transitionTicks      = UINT32_MAX;
@@ -489,6 +498,65 @@ static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, ui
     }
 }
 
+static int32_t midiSumOscillators(midiPlayer_t* player)
+{
+    voiceStates_t* states = &player->poolVoiceStates;
+    midiVoice_t* voices   = player->poolVoices;
+
+    int32_t sum = 0;
+
+    uint32_t playingVoices = states->on | states->held | states->sustenuto | states->attack | states->decay
+                             | states->sustain | states->release;
+    while (playingVoices != 0)
+    {
+        uint8_t voiceIdx = __builtin_ctz(playingVoices);
+        playingVoices &= ~(1 << voiceIdx);
+        midiVoice_t* voice = &(voices[voiceIdx]);
+
+        if (!(states[voiceIdx].on || states->held || states->sustenuto || states->attack || states->decay
+              || states->sustain || states->release)
+            || voice->timbre->type == SAMPLE)
+        {
+            continue;
+        }
+
+        synthOscillator_t* osc = &(voice->oscillators[0]);
+
+        if (osc->tVol == 0 && osc->cVol == 0)
+        {
+            continue;
+        }
+
+        // Step the oscillator's accumulator
+        osc->accumulator.accum32 += osc->stepSize;
+
+        // If the oscillator's current volume doesn't match the target volume
+        if (osc->cVol != osc->tVol)
+        {
+            // Either increment or decrement it, depending
+            if (osc->cVol < osc->tVol)
+            {
+                osc->cVol++;
+            }
+            else
+            {
+                osc->cVol--;
+            }
+        }
+
+        // Mix this oscillator's output into the sample
+        uint8_t offset = 0;
+        do
+        {
+            sum += ((osc->waveFunc((osc->accumulator.bytes[2] + oscDither[offset]) % 256, osc->waveFuncData)
+                     * ((int32_t)osc->cVol))
+                    >> 8);
+        } while (offset++ < osc->chorus);
+    }
+
+    return sum;
+}
+
 /**
  * @brief Step each playing percussion note forward by one sample and return the raw sum
  *
@@ -592,7 +660,7 @@ static int32_t midiSumSamples(midiPlayer_t* player)
 
         // Same rate for now -- this is the number of times we need to output each source sample
         // in order to maintain the desired speed/pitch ratio
-        uq24_8 sampleRateRatio = (1 << 8) * 32768 / voices[voiceIdx].timbre->sample.rate;
+        uq24_8 sampleRateRatio = (1 << 8) * DAC_SAMPLE_RATE_HZ / voices[voiceIdx].timbre->sample.rate;
         sampleRateRatio *= voices[voiceIdx].timbre->sample.baseNote;
         sampleRateRatio /= bendPitchWheel(voices[voiceIdx].note, player->channels[voices[voiceIdx].channel].pitchBend);
         // Assume C4 is the base note? A4? doesn't really matter
@@ -1188,7 +1256,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         return 0;
     }
 
-    bool checkEvents = false;
+    bool checkEvents = true;
     if (player->mode == MIDI_FILE)
     {
         if (!player->eventAvailable)
@@ -1196,18 +1264,11 @@ int32_t midiPlayerStep(midiPlayer_t* player)
             player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
         }
 
-        if (player->eventAvailable)
-        {
-            if (player->pendingEvent.absTime
-                <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
-            {
-                checkEvents = true;
-            }
-        }
-        else
+        if (!player->eventAvailable)
         {
             ESP_LOGI("MIDI", "Done playing file!");
             midiSongEnd(player);
+            checkEvents = false;
         }
 
         // Use a while loop since we may need to handle multiple events at the exact same time
@@ -1248,7 +1309,8 @@ int32_t midiPlayerStep(midiPlayer_t* player)
 
     // TODO: Sample support
     // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
-    int32_t sample = swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
+    int32_t sample
+        = midiSumOscillators(player); // swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
     sample += midiSumPercussion(player);
     sample += midiSumSamples(player);
 
@@ -1410,6 +1472,7 @@ void midiGmOn(midiPlayer_t* player)
 
         // Channel 10 (index 9) is reserved for percussion.
         chan->percussion = (9 == chanIdx);
+        chan->bank       = 0;
 
         initTimbre(&chan->timbre, getTimbreForProgram(chan->percussion, 0, chan->program));
     }
@@ -2097,14 +2160,14 @@ uint8_t midiGetControlValue(midiPlayer_t* player, uint8_t channel, midiControl_t
             return BOOL_TO_MIDI(player->channels[channel].held);
 
         case MCC_SOUND_RELEASE_TIME:
-            return (player->channels[channel].timbre.envelope.releaseTime * 1000 / 32768 / 10) & 0x7F;
+            return (player->channels[channel].timbre.envelope.releaseTime * 1000 / DAC_SAMPLE_RATE_HZ / 10) & 0x7F;
 
         case MCC_SOUND_ATTACK_TIME:
-            return (player->channels[channel].timbre.envelope.attackTime * 1000 / 32768 / 10) & 0x7F;
+            return (player->channels[channel].timbre.envelope.attackTime * 1000 / DAC_SAMPLE_RATE_HZ / 10) & 0x7F;
 
         // Decay (75) (unassigned)
         case MCC_SOUND_CONTROL_6:
-            return (player->channels[channel].timbre.envelope.decayTime * 1000 / 32768 / 10) & 0x7F;
+            return (player->channels[channel].timbre.envelope.decayTime * 1000 / DAC_SAMPLE_RATE_HZ / 10) & 0x7F;
 
         // Sustain (76) (unassigned)
         case MCC_SOUND_CONTROL_7:
@@ -2385,9 +2448,9 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
 
 void initGlobalMidiPlayer(void)
 {
-    if (!globalPlayerInit)
+    if (!globalPlayers)
     {
-        globalPlayerInit = true;
+        globalPlayers = heap_caps_calloc(NUM_GLOBAL_PLAYERS, sizeof(midiPlayer_t), MALLOC_CAP_8BIT);
         for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
         {
             midiPlayerInit(&globalPlayers[i]);
@@ -2397,7 +2460,7 @@ void initGlobalMidiPlayer(void)
 
 void deinitGlobalMidiPlayer(void)
 {
-    if (globalPlayerInit)
+    if (globalPlayers)
     {
         for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
         {
@@ -2406,13 +2469,14 @@ void deinitGlobalMidiPlayer(void)
             midiPlayerReset(&globalPlayers[i]);
         }
 
-        globalPlayerInit = false;
+        free(globalPlayers);
+        globalPlayers = NULL;
     }
 }
 
 void globalMidiPlayerFillBuffer(uint8_t* samples, int16_t len)
 {
-    if (globalPlayerInit)
+    if (globalPlayers)
     {
         midiPlayerFillBufferMulti(globalPlayers, NUM_GLOBAL_PLAYERS, samples, len);
     }
@@ -2426,68 +2490,90 @@ void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx)
 {
     initGlobalMidiPlayer();
 
-    midiPause(&globalPlayers[songIdx], true);
-    globalPlayers[songIdx].sampleCount = 0;
-    midiSetFile(&globalPlayers[songIdx], song);
-    midiPause(&globalPlayers[songIdx], false);
+    if (globalPlayers)
+    {
+        midiPause(&globalPlayers[songIdx], true);
+        globalPlayers[songIdx].sampleCount = 0;
+        midiSetFile(&globalPlayers[songIdx], song);
+        midiPause(&globalPlayers[songIdx], false);
+    }
 }
 
 void globalMidiPlayerPlaySongCb(midiFile_t* song, uint8_t songIdx, songFinishedCbFn cb)
 {
-    globalMidiPlayerPlaySong(song, songIdx);
-    globalPlayers[songIdx].songFinishedCallback = cb;
+    if (globalPlayers)
+    {
+        globalMidiPlayerPlaySong(song, songIdx);
+        globalPlayers[songIdx].songFinishedCallback = cb;
+    }
 }
 
 void globalMidiPlayerSetVolume(uint8_t trackType, int32_t volumeSetting)
 {
-    midiPlayer_t* player = &globalPlayers[trackType];
+    if (globalPlayers)
+    {
+        midiPlayer_t* player = &globalPlayers[trackType];
 
-    if (volumeSetting <= 0)
-    {
-        player->volume = 0;
-    }
-    else if (volumeSetting >= 13)
-    {
-        player->volume = UINT14_MAX;
-    }
-    else
-    {
-        player->volume = (1 << (volumeSetting - 1));
+        if (volumeSetting <= 0)
+        {
+            player->volume = 0;
+        }
+        else if (volumeSetting >= 13)
+        {
+            player->volume = UINT14_MAX;
+        }
+        else
+        {
+            player->volume = (1 << (volumeSetting - 1));
+        }
     }
 }
 
 void globalMidiPlayerPauseAll(void)
 {
-    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    if (globalPlayers)
     {
-        midiPause(&globalPlayers[i], true);
+        for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+        {
+            midiPause(&globalPlayers[i], true);
+        }
     }
 }
 
 void globalMidiPlayerResumeAll(void)
 {
-    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    if (globalPlayers)
     {
-        midiPause(&globalPlayers[i], false);
+        for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+        {
+            midiPause(&globalPlayers[i], false);
+        }
     }
 }
 
 void globalMidiPlayerStop(bool reset)
 {
-    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    if (globalPlayers)
     {
-        midiPause(&globalPlayers[i], true);
-
-        if (reset)
+        for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
         {
-            midiPlayerReset(&globalPlayers[i]);
+            midiPause(&globalPlayers[i], true);
+
+            if (reset)
+            {
+                midiPlayerReset(&globalPlayers[i]);
+            }
+            // TODO: implement seek
+            // midiSeek(&globalPlayers[i], 0);
         }
-        // TODO: implement seek
-        // midiSeek(&globalPlayers[i], 0);
     }
 }
 
 midiPlayer_t* globalMidiPlayerGet(uint8_t songIdx)
 {
-    return &globalPlayers[songIdx];
+    if (globalPlayers)
+    {
+        return &globalPlayers[songIdx];
+    }
+    return NULL;
 }

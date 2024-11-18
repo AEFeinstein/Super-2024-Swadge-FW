@@ -15,34 +15,48 @@
 #include "shapes.h"
 #include "wsg.h"
 
+#include "embeddedOut.h"
+#include "bunny.h"
+
 static void introEnterMode(void);
 static void introExitMode(void);
 static void introMainLoop(int64_t elapsedUs);
-static void introDacCallback(uint8_t* samples, int16_t len);
+static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void introAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 
 // static void introMenuCb(const char*, bool selected, uint32_t settingVal);
 static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
                             bool backtrack);
 static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const tutorialTrigger_t* trigger);
 
-static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons, touchJoystick_t joysticks);
+static vec_t getTouchScreenCoord(vec_t touchPoint);
+
+static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons);
+static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t* touchHist);
+static void introDrawSwadgeImu(int64_t elapsedUs);
+static void introDrawSwadgeSpeaker(int64_t elapsedUs);
+static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue);
 
 #define ALL_BUTTONS  (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT)
 #define DPAD_BUTTONS (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)
 
-#define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
-
-typedef struct
-{
-    const tutorialStep_t* steps;
-    size_t count;
-} introSection_t;
+// #define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
 
 static const char startTitle[]        = "Welcome!";
 static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one second to exit.";
 static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
                                         "responsibility. Hold SELECT to exit the tutorial and get started!";
+
+static const char dpadTitle[]     = "The D-Pad";
+static const char aBtnTitle[]     = "A Button";
+static const char bBtnTitle[]     = "B Button";
+static const char mnuBtnTitle[]   = "Menu Button";
+static const char pauseBtnTitle[] = "Pause Button";
+static const char spkTitle[]      = "Speaker";
+static const char micTitle[]      = "Microphone";
+static const char touchpadTitle[] = "Touchpad";
+static const char imuTitle[]      = "Tilt Controls";
 
 static const tutorialStep_t buttonsSteps[] = {
     {
@@ -58,7 +72,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS_ALL,
             .buttons = DPAD_BUTTONS,
         },
-        .title = "The D-Pad",
+        .title = dpadTitle,
         .detail = "These four buttons on the left side of the Swadge are the D-Pad. Use them to navigate. Try them all out!",
     },
     {
@@ -66,7 +80,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_A,
         },
-        .title = "A Button",
+        .title = aBtnTitle,
         .detail = "The A Button is used to select, or trigger a primary action. Give it a try!",
     },
     {
@@ -74,7 +88,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_B,
         },
-        .title = "B Button",
+        .title = bBtnTitle,
         .detail = "The B Button is used to go back, or trigger a secondary action. Back it up!",
     },
     {
@@ -82,15 +96,62 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS,
             .buttons = PB_START,
         },
-        .title = "Pause Button",
+        .title = pauseBtnTitle,
         .detail = "The Pause button is mode-specific, but usually pauses a game or performs a special function. Give it a try!",
+    },
+    {
+        .trigger = {
+            .type = TOUCH_SPIN,
+            .intData = -1,
+        },
+        .title = touchpadTitle,
+        .detail = "The C Gem is a touchpad! Give it a try by spinning your finger around it clockwise."
+    },
+    {
+        .trigger = {
+            .type = TOUCH_SPIN,
+            .intData = 1,
+        },
+        .title = touchpadTitle,
+        .detail = "OK, now your finger spin around it counter-clockwise. Always remember to unwind the touchpad after use!"
+    },
+    {
+        .trigger = {
+            .type = IMU_ORIENT,
+            .orientation = {0, 0, 245},
+        },
+        .title = imuTitle,
+        .detail = "The Swadge is tilt-sensitive. Here's a wireframe of a cute bunny! Try looking at it top-down by putting the Swadge face up on a flat surface."
+    },
+    {
+        .trigger = {
+            .type = IMU_ORIENT,
+            .orientation = {0, 0, -245},
+        },
+        .title = imuTitle,
+        .detail = "Now try looking at the bunny from the bottom. You may need to hold the Swadge over your head."
+    },
+    {
+        .trigger = {
+            .type = MIC_LOUD,
+        },
+        .title = micTitle,
+        .detail = "The metal dot to the right of the screen is a microphone. Give a roar (or blow on it) to continue."
+    },
+    {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_A,
+        },
+        .title = spkTitle,
+        .detail = "The Swadge has a speaker, so enjoy this tune! The volume dial is on the top left next to the headphone jack. Adjust to your liking. Press A to continue."
     },
     {
         .trigger = {
             .type = BUTTON_PRESS,
             .buttons = PB_SELECT,
         },
-        .title = "Menu Button",
+        .title = mnuBtnTitle,
         .detail = "The Menu button is special! A short press opens up the Quick Settings menu.",
     },
     {
@@ -104,7 +165,7 @@ static const tutorialStep_t buttonsSteps[] = {
         },
         .backtrackSteps = 1,
         .backtrackMessage = "That's too long! Try again!",
-        .title = "Pause Button",
+        .title = mnuBtnTitle,
         .detail = "Now let go!",
     },
     {
@@ -112,7 +173,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = CUSTOM_TRIGGER,
             .custom.checkFn = introCheckQuickSettingsTrigger,
         },
-        .title = "",
+        .title = mnuBtnTitle,
         .detail = "This is the Quick Settings Menu! It's available in all modes, except for the Main Menu and USB Gamepad. Press the Menu button again to close it.",
     },
     {
@@ -177,36 +238,6 @@ static const tutorialStep_t buttonsSteps[] = {
     },
 };
 
-static const tutorialStep_t touchpadSteps[] = {
-    {
-        .trigger =
-        {
-            .type = TOUCH_ZONE_ALL,
-            .touchZones = ALL_TOUCH,
-        },
-        .title = "Touch the touchpad!",
-        .detail = "go on, do it. spin it, etc.",
-        .cooldown = 5,
-    }
-};
-
-static const introSection_t introSections[] = {
-    {
-        // Buttons
-        .steps = buttonsSteps,
-        .count = ARRAY_SIZE(buttonsSteps),
-    },
-    {
-        // Touchpad
-        .steps = touchpadSteps,
-        .count = ARRAY_SIZE(touchpadSteps),
-    },
-    /*{
-        .steps = accelSteps,
-        .count = ARRAY_SIZE(accelSteps),
-    },*/
-};
-
 static const char introName[] = "Tutorial";
 
 swadgeMode_t introMode = {
@@ -219,12 +250,12 @@ swadgeMode_t introMode = {
     .fnEnterMode              = introEnterMode,
     .fnExitMode               = introExitMode,
     .fnMainLoop               = introMainLoop,
-    .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = NULL,
+    .fnAudioCallback          = introAudioCallback,
+    .fnBackgroundDrawCallback = introBackgroundDrawCallback,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
-    .fnDacCb                  = introDacCallback,
+    .fnDacCb                  = NULL,
 };
 
 typedef struct
@@ -240,10 +271,21 @@ typedef struct
     bool visible;
 } iconPos_t;
 
+typedef enum
+{
+    DRAW_BUTTONS,
+    DRAW_TOUCHPAD,
+    DRAW_IMU,
+    DRAW_SPK,
+    DRAW_MIC,
+} introDrawMode_t;
+
 typedef struct
 {
     font_t smallFont;
     font_t bigFont;
+    font_t logoFont;
+    font_t logoFontOutline;
 
     // Holds all the internal tutorial state
     tutorialState_t tut;
@@ -259,16 +301,22 @@ typedef struct
             wsg_t up;
         } button;
 
-        struct
-        {
-            wsg_t base;
-            wsg_t joystick;
-            wsg_t spin;
-        } touch;
+        // struct
+        // {
+        //     wsg_t base;
+        //     wsg_t joystick;
+        //     wsg_t spin;
+        // } touch;
+
+        wsg_t speaker;
+        wsg_t touchGem;
     } icon;
 
     buttonBit_t buttons;
-    touchJoystick_t joysticks;
+    vec_t touch;
+    list_t touchHist;
+    int32_t angle;
+    int32_t angleTimer;
 
     iconPos_t buttonIcons[8];
     int16_t swadgeViewWidth;
@@ -276,16 +324,27 @@ typedef struct
 
     bool quickSettingsOpened;
 
+#ifdef CUSTOM_INTRO_SOUND
     bool playingSound;
     uint8_t* sound;
     size_t soundSize;
     size_t soundProgress;
     bool introComplete;
+#endif
 
     menu_t* bgMenu;
     menuManiaRenderer_t* renderer;
+    introDrawMode_t drawMode;
 
-    const introSection_t* curSection;
+    // Microphone test
+    dft32_data dd;
+    embeddedNf_data end;
+    embeddedOut_data eod;
+    uint8_t samplesProcessed;
+    uint16_t maxValue;
+
+    // Speaker test
+    midiFile_t song;
 } introVars_t;
 
 static introVars_t* iv;
@@ -298,14 +357,19 @@ static void introEnterMode(void)
 {
     iv = calloc(1, sizeof(introVars_t));
 
-    loadFont("ibm_vga8.font", &iv->smallFont, false);
-    loadFont("righteous_150.font", &iv->bigFont, false);
+    loadFont("ibm_vga8.font", &iv->smallFont, true);
+    loadFont("righteous_150.font", &iv->bigFont, true);
+    loadFont("retro_logo.font", &iv->logoFont, true);
+    makeOutlineFont(&iv->logoFont, &iv->logoFontOutline, true);
 
-    loadWsg("button_a.wsg", &iv->icon.button.a, false);
-    loadWsg("button_b.wsg", &iv->icon.button.b, false);
-    loadWsg("button_menu.wsg", &iv->icon.button.menu, false);
-    loadWsg("button_pause.wsg", &iv->icon.button.pause, false);
-    loadWsg("button_up.wsg", &iv->icon.button.up, false);
+    loadWsg("button_a.wsg", &iv->icon.button.a, true);
+    loadWsg("button_b.wsg", &iv->icon.button.b, true);
+    loadWsg("button_menu.wsg", &iv->icon.button.menu, true);
+    loadWsg("button_pause.wsg", &iv->icon.button.pause, true);
+    loadWsg("button_up.wsg", &iv->icon.button.up, true);
+
+    loadWsg("spk.wsg", &iv->icon.speaker, true);
+    loadWsg("touch-gem.wsg", &iv->icon.touchGem, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
     iv->renderer = initMenuManiaRenderer(&iv->bigFont, NULL, &iv->smallFont);
@@ -364,12 +428,20 @@ static void introEnterMode(void)
     iv->swadgeViewWidth  = iv->buttonIcons[5].x + iv->buttonIcons[5].icon->w + 5;
     iv->swadgeViewHeight = iv->buttonIcons[1].y + iv->buttonIcons[1].icon->h + 5;
 
-    iv->curSection = introSections;
-    tutorialSetup(&iv->tut, introTutorialCb, iv->curSection->steps, iv->curSection->count, iv);
+    tutorialSetup(&iv->tut, introTutorialCb, buttonsSteps, ARRAY_SIZE(buttonsSteps), iv);
 
+#ifdef CUSTOM_INTRO_SOUND
     iv->sound         = NULL;
     iv->playingSound  = false;
-    iv->introComplete = true;
+    iv->introComplete = false;
+#endif
+
+    // Load the MIDI file
+    loadMidiFile("hd_credits.mid", &iv->song, true);
+
+    // Init CC
+    InitColorChord(&iv->end, &iv->dd);
+    iv->maxValue = 1;
 }
 
 /**
@@ -377,22 +449,31 @@ static void introEnterMode(void)
  */
 static void introExitMode(void)
 {
+    clear(&iv->touchHist);
+
     deinitMenuManiaRenderer(iv->renderer);
     deinitMenu(iv->bgMenu);
 
     freeFont(&iv->smallFont);
     freeFont(&iv->bigFont);
+    freeFont(&iv->logoFont);
+    freeFont(&iv->logoFontOutline);
 
     freeWsg(&iv->icon.button.a);
     freeWsg(&iv->icon.button.b);
     freeWsg(&iv->icon.button.menu);
     freeWsg(&iv->icon.button.pause);
     freeWsg(&iv->icon.button.up);
+    freeWsg(&iv->icon.speaker);
+    freeWsg(&iv->icon.touchGem);
 
+#ifdef CUSTOM_INTRO_SOUND
     if (iv->sound != NULL)
     {
         free(iv->sound);
     }
+#endif
+    unloadMidiFile(&iv->song);
 
     free(iv);
 }
@@ -408,6 +489,7 @@ static void introMainLoop(int64_t elapsedUs)
 {
     // clearPxTft();
 
+#ifdef CUSTOM_INTRO_SOUND
     if (iv->playingSound || !iv->introComplete)
     {
         int64_t songTime     = (iv->soundSize * 1000000 + DAC_SAMPLE_RATE_HZ - 1) / DAC_SAMPLE_RATE_HZ;
@@ -424,11 +506,11 @@ static void introMainLoop(int64_t elapsedUs)
         int64_t titleTicksPerChar = ((animTime) / strlen(title));
         int64_t subTicksPerChar   = ((animTime) / strlen(sub));
 
-        int16_t titleWidth = textWidth(&iv->bigFont, title);
+        int16_t titleWidth = textWidth(&iv->logoFont, title);
         int16_t titleX     = (TFT_WIDTH - titleWidth) / 2;
         int16_t titleY     = (TFT_HEIGHT - iv->bigFont.height - iv->smallFont.height - 6) / 2;
 
-        int16_t subWidth = textWidth(&iv->bigFont, sub);
+        int16_t subWidth = textWidth(&iv->logoFont, sub);
         int16_t subX     = (TFT_WIDTH - subWidth) / 2;
         int16_t subY     = titleY + iv->bigFont.height + 5;
 
@@ -438,11 +520,11 @@ static void introMainLoop(int64_t elapsedUs)
         title[titleLen] = '\0';
         sub[subLen]     = '\0';
 
-        drawText(&iv->bigFont, c555, title, titleX, titleY);
-        drawText(&iv->bigFont, c000, title, titleX - 1, titleY + 1);
+        drawText(&iv->logoFont, c555, title, titleX, titleY);
+        drawText(&iv->logoFont, c000, title, titleX - 1, titleY + 1);
 
-        drawText(&iv->bigFont, c555, sub, subX, subY);
-        drawText(&iv->bigFont, c000, sub, subX - 1, subY + 1);
+        drawText(&iv->logoFont, c555, sub, subX, subY);
+        drawText(&iv->logoFont, c000, sub, subX - 1, subY + 1);
 
         timer += elapsedUs;
 
@@ -452,39 +534,75 @@ static void introMainLoop(int64_t elapsedUs)
             return;
         }
     }
+#endif
 
     // Process button events
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+#ifdef CUSTOM_INTRO_SOUND
         if (!iv->introComplete)
         {
             iv->introComplete = true;
             break;
         }
+#endif
         iv->buttons = evt.state;
 
         tutorialOnButton(&iv->tut, &evt);
     }
 
+#ifdef CUSTOM_INTRO_SOUND
     if (!iv->introComplete)
     {
         return;
     }
+#endif
 
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
     {
-        iv->joysticks = getTouchJoystickZones(phi, r, true, true);
-
+        getTouchCartesian(phi, r, &iv->touch.x, &iv->touch.y);
         tutorialOnTouch(&iv->tut, phi, r, intensity);
+
+        // Save this point to draw a trail
+        vec_t screenTouch = getTouchScreenCoord(iv->touch);
+        intptr_t tPoint   = ((screenTouch.x & 0xFFFF) << 16) | (screenTouch.y & 0xFFFF);
+        push(&iv->touchHist, (void*)tPoint);
     }
     else
     {
-        iv->joysticks = 0;
-
+        iv->touch.x = 0;
+        iv->touch.y = 0;
         tutorialOnTouch(&iv->tut, 0, 0, 0);
+        clear(&iv->touchHist);
     }
+
+    // Get the current acceleration
+    int16_t a_x;
+    int16_t a_y;
+    int16_t a_z;
+    if (ESP_OK != accelGetOrientVec(&a_x, &a_y, &a_z))
+    {
+        a_x = 0;
+        a_y = 0;
+        a_z = 0;
+    }
+    // Values are roughly -256 to 256
+    tutorialOnMotion(&iv->tut, a_x, a_y, a_z);
+
+    // Find the overall sound energy
+    int32_t energy = 0;
+    for (uint16_t i = 0; i < FIX_BINS; i++)
+    {
+        // Find the max value
+        if (iv->end.fuzzed_bins[i] > iv->maxValue)
+        {
+            iv->maxValue = iv->end.fuzzed_bins[i];
+        }
+        energy += iv->end.fuzzed_bins[i];
+    }
+    tutorialOnSound(&iv->tut, energy);
 
     tutorialCheckTriggers(&iv->tut);
 
@@ -509,7 +627,35 @@ static void introMainLoop(int64_t elapsedUs)
     int16_t detailY    = detailYmax - detailH;
 
     int16_t viewX = (TFT_WIDTH - iv->swadgeViewWidth) / 2;
-    introDrawSwadge(elapsedUs, viewX, titleY + iv->bigFont.height + 1 + 25, iv->buttons, iv->joysticks);
+    switch (iv->drawMode)
+    {
+        default:
+        case DRAW_BUTTONS:
+        {
+            introDrawSwadgeButtons(elapsedUs, viewX, titleY + iv->bigFont.height + 1 + 25, iv->buttons);
+            break;
+        }
+        case DRAW_TOUCHPAD:
+        {
+            introDrawSwadgeTouchpad(elapsedUs, iv->touch, &iv->touchHist);
+            break;
+        }
+        case DRAW_IMU:
+        {
+            introDrawSwadgeImu(elapsedUs);
+            break;
+        }
+        case DRAW_SPK:
+        {
+            introDrawSwadgeSpeaker(elapsedUs);
+            break;
+        }
+        case DRAW_MIC:
+        {
+            introDrawSwadgeMicrophone(elapsedUs, iv->end.fuzzed_bins, iv->maxValue);
+            break;
+        }
+    }
 
     const char* remaining
         = drawTextWordWrap(&iv->smallFont, c000, detail, &detailX, &detailY, TFT_WIDTH - 5, detailYmax);
@@ -520,9 +666,50 @@ static void introMainLoop(int64_t elapsedUs)
     }
 }
 
+/**
+ * @brief TODO
+ *
+ * @param samples
+ * @param sampleCnt
+ */
+void introAudioCallback(uint16_t* samples, uint32_t sampleCnt)
+{
+    // For each sample
+    for (uint32_t idx = 0; idx < sampleCnt; idx++)
+    {
+        // Push to test
+        PushSample32(&iv->dd, samples[idx]);
+
+        // If 128 samples have been pushed
+        iv->samplesProcessed++;
+        if (iv->samplesProcessed >= 128)
+        {
+            // Update LEDs
+            iv->samplesProcessed = 0;
+            HandleFrameInfo(&iv->end, &iv->dd);
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param x
+ * @param y
+ * @param w
+ * @param h
+ * @param up
+ * @param upNum
+ */
+static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    accelIntegrate();
+}
+
+#ifdef CUSTOM_INTRO_SOUND
 static void introDacCallback(uint8_t* samples, int16_t len)
 {
-#define SPK_SILENCE (INT8_MIN)
+    #define SPK_SILENCE (INT8_MIN)
     if (iv->playingSound)
     {
         if (iv->soundProgress + len >= iv->soundSize)
@@ -543,19 +730,60 @@ static void introDacCallback(uint8_t* samples, int16_t len)
         memset(samples, SPK_SILENCE, len);
     }
 }
+#endif
 
 static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
                             bool backtrack)
 {
     ESP_LOGI("Intro", "'%s' Triggered!", prev->title);
+    ESP_LOGI("Intro", "Onto '%s'", next->title);
 
-    if (next == (buttonsSteps + 7))
+    // Switch peripherals
+    if (spkTitle == next->title)
+    {
+        switchToSpeaker();
+
+        // Set and play the song
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        midiGmOn(player);
+        midiSetFile(player, &iv->song);
+        player->loop = true;
+        midiPause(player, false);
+
+        iv->drawMode = DRAW_SPK;
+    }
+    else if (micTitle == next->title)
+    {
+        switchToMicrophone();
+        iv->drawMode = DRAW_MIC;
+    }
+    else if (touchpadTitle == next->title)
+    {
+        globalMidiPlayerPauseAll();
+        iv->drawMode = DRAW_TOUCHPAD;
+        // Reset touch history and spin state
+        clear(&iv->touchHist);
+        memset(&iv->tut.spinState, 0, sizeof(touchSpinState_t));
+    }
+    else if (imuTitle == next->title)
+    {
+        globalMidiPlayerPauseAll();
+        iv->drawMode = DRAW_IMU;
+    }
+    else
+    {
+        globalMidiPlayerPauseAll();
+        iv->drawMode = DRAW_BUTTONS;
+    }
+
+    // TODO maybe don't hardcode this
+    if (next == (buttonsSteps + 13))
     {
         ESP_LOGI("Intro", "Oh it's the one we want: %s", next->title);
         iv->quickSettingsOpened = true;
         openQuickSettings();
     }
-    else if (next == (buttonsSteps + 8))
+    else if (next == (buttonsSteps + 14))
     {
         iv->quickSettingsOpened = false;
     }
@@ -564,15 +792,6 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
         setTutorialCompletedSetting(true);
         switchToSwadgeMode(&mainMenuMode);
         ESP_LOGI("Intro", "Last trigger entered!");
-
-        /*if (iv->curSection < (introSections + ARRAY_SIZE(introSections)))
-        {
-            iv->curSection++;
-            tutorialSetup(&iv->tut, introTutorialCb, iv->curSection->steps, iv->curSection->count, iv);
-        } else
-        {
-            ESP_LOGI("Intro", "no more sections");
-        }*/
     }
 }
 
@@ -581,7 +800,7 @@ static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const t
     return iv->quickSettingsOpened;
 }
 
-static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons, touchJoystick_t joysticks)
+static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons)
 {
 #define BLINK_ON   550000
 #define BLINK_OFF  200000
@@ -690,5 +909,183 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
                 }
             }
         }
+    }
+}
+
+#define TOUCHPAD_RADIUS 50
+#define TOUCHPAD_X      (TFT_WIDTH / 2)
+#define TOUCHPAD_Y      (TFT_HEIGHT / 2)
+
+/**
+ * @brief TODO
+ *
+ * @param touchPoint
+ * @return vec_t
+ */
+static vec_t getTouchScreenCoord(vec_t touchPoint)
+{
+    // Draw the dot (0 to 1024)
+    vec_t cartesianStart = {
+        .x = TOUCHPAD_X - TOUCHPAD_RADIUS,
+        .y = TOUCHPAD_Y - TOUCHPAD_RADIUS,
+    };
+
+    vec_t drawPoint = addVec2d(cartesianStart, divVec2d(mulVec2d(touchPoint, TOUCHPAD_RADIUS * 2), 1024));
+    drawPoint.y     = TOUCHPAD_Y + (TOUCHPAD_Y - drawPoint.y);
+    return drawPoint;
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param elapsedUs
+ * @param touchPoint
+ * @param touchHist
+ */
+static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t* touchHist)
+{
+    // Draw the pad
+    drawWsgSimple(&iv->icon.touchGem, (TFT_WIDTH - iv->icon.touchGem.w) / 2, (TFT_HEIGHT - iv->icon.touchGem.h) / 2);
+
+    // Animate how the user should spin
+    iv->angleTimer += elapsedUs;
+    while (iv->angleTimer > (1000000 / 180))
+    {
+        iv->angleTimer -= (1000000 / 180);
+        iv->angle++;
+        if (360 == iv->angle)
+        {
+            iv->angle = 0;
+        }
+    }
+
+    // Draw a guide
+    for (int32_t a = 0; a < iv->angle; a++)
+    {
+        int32_t x = TOUCHPAD_X;
+        if (iv->tut.curStep->trigger.intData < 0)
+        {
+            x += (TOUCHPAD_RADIUS * 3 * getSin1024(a)) / (1024 * 4);
+        }
+        else
+        {
+            x -= (TOUCHPAD_RADIUS * 3 * getSin1024(a)) / (1024 * 4);
+        }
+        int32_t y = TOUCHPAD_Y - (TOUCHPAD_RADIUS * 3 * getCos1024(a)) / (1024 * 4);
+        drawCircleFilled(x, y, 4, c115);
+    }
+
+    // Draw the touch point
+    if (0 != touchPoint.x || 0 != touchPoint.y)
+    {
+        vec_t drawPoint = getTouchScreenCoord(touchPoint);
+        drawCircleFilled(drawPoint.x, drawPoint.y, 8, c511);
+    }
+
+    // Draw the touch tail
+    node_t* touchNode = touchHist->first;
+    while (touchNode && touchNode->next)
+    {
+        vec_t startPoint = {
+            .x = ((intptr_t)touchNode->val >> 16) & 0xFFFF,
+            .y = ((intptr_t)touchNode->val) & 0xFFFF,
+        };
+
+        vec_t endPoint = {
+            .x = ((intptr_t)touchNode->next->val >> 16) & 0xFFFF,
+            .y = ((intptr_t)touchNode->next->val) & 0xFFFF,
+        };
+
+        drawLineFast(startPoint.x, startPoint.y, endPoint.x, endPoint.y, c511);
+
+        touchNode = touchNode->next;
+    }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param elapsedUs
+ */
+static void introDrawSwadgeImu(int64_t elapsedUs)
+{
+    // static void accelDrawBunny(void)
+    // Produce a model matrix from a quaternion.
+    float plusx_out[3] = {1, 0, 0};
+    float plusy_out[3] = {0, 1, 0};
+    float plusz_out[3] = {0, 0, 1};
+
+    mathRotateVectorByQuaternion(plusy_out, LSM6DSL.fqQuat, plusy_out);
+    mathRotateVectorByQuaternion(plusx_out, LSM6DSL.fqQuat, plusx_out);
+    mathRotateVectorByQuaternion(plusz_out, LSM6DSL.fqQuat, plusz_out);
+
+    int16_t bunny_verts_out[numBunnyVerts() / 3 * 3];
+    memset(bunny_verts_out, 0, sizeof(bunny_verts_out));
+    int i, vertices = 0;
+    for (i = 0; i < numBunnyVerts(); i += 3)
+    {
+        // Performingthe transform this way is about 700us.
+        float bx                          = bunny_verts[i + 2];
+        float by                          = bunny_verts[i + 1];
+        float bz                          = -bunny_verts[i + 0];
+        float bunnyvert[3]                = {bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
+                                             bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
+                                             bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2]};
+        bunny_verts_out[vertices * 3 + 0] = bunnyvert[0] / 250 + 280 / 2;
+        // Convert from right-handed to left-handed coordinate frame.
+        bunny_verts_out[vertices * 3 + 1] = -bunnyvert[1] / 250 + 240 / 2;
+        bunny_verts_out[vertices * 3 + 2] = bunnyvert[2];
+        vertices++;
+    }
+
+    int lines = 0;
+    for (i = 0; i < numBunnyLines(); i += 2)
+    {
+        int v1 = bunny_lines[i] * 3;
+        int v2 = bunny_lines[i + 1] * 3;
+        drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1 + 1], bunny_verts_out[v2], bunny_verts_out[v2 + 1], c511);
+        lines++;
+    }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param elapsedUs
+ */
+static void introDrawSwadgeSpeaker(int64_t elapsedUs)
+{
+    // Draw speaker icon
+    drawWsgSimple(&iv->icon.speaker, (TFT_WIDTH - iv->icon.speaker.w) / 2, MANIA_TITLE_HEIGHT + 8);
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param elapsedUs
+ * @param fuzzed_bins
+ * @param maxValue
+ */
+static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue)
+{
+    // Draw the spectrum as a bar graph. Figure out bar and margin size
+    int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
+    int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
+
+    int16_t barsTop    = MANIA_TITLE_HEIGHT;
+    int16_t barsBottom = 176;
+    int16_t barsCenter = (barsTop + barsBottom) / 2;
+    int16_t barsHeight = barsBottom - barsTop;
+
+    // Plot the bars
+    for (uint16_t i = 0; i < FIX_BINS; i++)
+    {
+        uint8_t height       = (barsHeight * fuzzed_bins[i]) / (2 * maxValue);
+        height               = MAX(height, 1);
+        paletteColor_t color = c511;
+        int16_t x0           = binMargin + (i * binWidth);
+        int16_t x1           = binMargin + ((i + 1) * binWidth);
+        // Big enough, fill an area
+        fillDisplayArea(x0, barsCenter - height, x1, barsCenter + height, color);
     }
 }

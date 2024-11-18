@@ -260,7 +260,7 @@ const midiTimbre_t noriTimbre = {
     .name = "Nori",
 };
 
-const midiTimbre_t* magfestTimbres[] = {
+const midiTimbre_t* const magfestTimbres[] = {
     &squareWaveTimbre,   &sineWaveTimbre, &triangleWaveTimbre,  &sawtoothWaveTimbre, &magfestWaveTimbre,
     &magstockWaveTimbre, &noiseTimbre,    &squareHitWaveTimbre, &noiseHitTimbre,     &colossusTimbre,
     &magTimbre,          &festTimbre,     &wilhelmTimbre,       &noriTimbre,

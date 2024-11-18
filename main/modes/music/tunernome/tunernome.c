@@ -40,7 +40,7 @@
 #define NUM_UKULELE_STRINGS          ARRAY_SIZE(ukuleleNoteNames)
 #define NUM_BANJO_STRINGS            ARRAY_SIZE(banjoNoteNames)
 #define GUITAR_OFFSET                0
-#define CHROMATIC_OFFSET             6 // adjust start point by quartertones
+#define CHROMATIC_OFFSET             6 // adjust start point by quarter tones
 #define SENSITIVITY                  5
 #define TONAL_DIFF_IN_TUNE_DEVIATION 10
 
@@ -54,7 +54,6 @@
 #define INITIAL_BPM          120
 #define MAX_BPM              400
 #define MAX_BEATS            16 // I mean, realistically, who's going to have more than 16 beats in a measure?
-#define METRONOME_FLASH_MS   35
 // #define METRONOME_CLICK_MS   35
 #define BPM_CHANGE_FIRST_MS  500
 #define BPM_CHANGE_FAST_MS   2000
@@ -119,6 +118,9 @@ typedef struct
     int32_t usPerBeat;
     uint8_t beatLength;
 
+    int32_t clickTimerUs;
+    uint8_t midiNote;
+
     uint32_t semitone_intensity_filt[NUM_SEMITONES];
     int32_t semitone_diff_filt[NUM_SEMITONES];
     int16_t tonalDiff[NUM_SEMITONES];
@@ -128,9 +130,7 @@ typedef struct
     wsg_t logbookArrowWsg;
     wsg_t flatWsg;
 
-    uint32_t blinkStartUs;
-    uint32_t blinkAccumulatedUs;
-    bool isBlinking;
+    int32_t blinkTimerUs;
     bool isSilent;
     bool isTouched;
 } tunernome_t;
@@ -237,15 +237,11 @@ const uint16_t freqBinIdxsBanjo[] = {
     58  // D
 };
 
-const uint16_t fourNoteStringIdxToLedIdx[] = {2, 3, 4, 5};
+const uint16_t fourNoteStringIdxToLedIdx[] = {1, 3, 5, 8};
 
-const uint16_t fiveNoteStringIdxToLedIdx[] = {0, 2, 3, 4, 5};
+const uint16_t fiveNoteStringIdxToLedIdx[] = {1, 2, 3, 5, 8};
 
-const uint16_t sixNoteStringIdxToLedIdx[] = {0, 2, 3, 4, 5, 7};
-
-const uint16_t twoLedFlashIdxs[] = {0, 7};
-
-const uint16_t fourLedFlashIdxs[] = {1, 3, 4, 6};
+const uint16_t sixNoteStringIdxToLedIdx[] = {0, 1, 3, 4, 5, 8};
 
 const char* const guitarNoteNames[] = {"E2", "A2", "D3", "G3", "B3", "E4"};
 
@@ -339,10 +335,9 @@ void tunernomeEnterMode(void)
 
     InitColorChord(&tunernome->end, &tunernome->dd);
 
-    tunernome->blinkStartUs       = 0;
-    tunernome->blinkAccumulatedUs = 0;
-    tunernome->isBlinking         = false;
-    tunernome->isSilent           = false;
+    tunernome->blinkTimerUs = 0;
+    tunernome->clickTimerUs = 0;
+    tunernome->isSilent     = false;
 }
 
 /**
@@ -354,9 +349,10 @@ void switchToSubmode(tnMode newMode)
     {
         case TN_TUNER:
         {
-            tunernome->mode = newMode;
+            // Disable speaker, enable mic
+            switchToMicrophone();
 
-            soundStop(true);
+            tunernome->mode = newMode;
 
             led_t leds[CONFIG_NUM_LEDS] = {{0}};
             setLeds(leds, CONFIG_NUM_LEDS);
@@ -367,11 +363,21 @@ void switchToSubmode(tnMode newMode)
         }
         case TN_METRONOME:
         {
+            // Disable mic, enable speaker
+            switchToSpeaker();
+
+            // Configure MIDI for streaming
+            midiPlayer_t* player      = globalMidiPlayerGet(MIDI_BGM);
+            player->mode              = MIDI_STREAMING;
+            player->streamingCallback = NULL;
+            midiGmOn(player);
+            midiPause(player, false);
+
             tunernome->mode = newMode;
 
             tunernome->isClockwise = true;
-            tunernome->beatCtr
-                = tunernome->beatLength - 1; // This assures that the first beat is a primary beat/downbeat
+            // This assures that the first beat is a primary beat/downbeat
+            tunernome->beatCtr        = tunernome->beatLength - 1;
             tunernome->tAccumulatedUs = 0;
 
             tunernome->lastBpmButton          = 0;
@@ -379,9 +385,8 @@ void switchToSubmode(tnMode newMode)
             tunernome->bpmButtonStartUs       = 0;
             tunernome->bpmButtonAccumulatedUs = 0;
 
-            tunernome->blinkStartUs       = 0;
-            tunernome->blinkAccumulatedUs = 0;
-            tunernome->isBlinking         = false;
+            tunernome->blinkTimerUs = 0;
+            tunernome->clickTimerUs = 0;
 
             recalcMetronome();
 
@@ -904,24 +909,17 @@ void tunernomeMainLoop(int64_t elapsedUs)
                      TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
 
             // Turn off LEDs after blink is over
-            if (tunernome->isBlinking)
+            if (tunernome->blinkTimerUs > 0)
             {
-                if (tunernome->blinkAccumulatedUs == 0)
-                {
-                    tunernome->blinkAccumulatedUs = esp_timer_get_time() - tunernome->blinkStartUs;
-                }
-                else
-                {
-                    tunernome->blinkAccumulatedUs += elapsedUs;
-                }
-
-                if (tunernome->blinkAccumulatedUs > METRONOME_FLASH_MS * 1000)
+                tunernome->blinkTimerUs -= elapsedUs;
+                if (tunernome->blinkTimerUs <= 0)
                 {
                     led_t leds[CONFIG_NUM_LEDS] = {{0}};
                     setLeds(leds, CONFIG_NUM_LEDS);
                 }
             }
 
+			// Metronome arm reversal logic and blink start logic
             bool shouldBlink = false;
             // If the arm is sweeping clockwise
             if (tunernome->isClockwise)
@@ -933,13 +931,13 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 {
                     // Flip the metronome arm
                     tunernome->isClockwise = false;
-                    // Start counting down by subtacting the excess time from tAccumulatedUs
+                    // Start counting down by subtracting the excess time from tAccumulatedUs
                     tunernome->tAccumulatedUs
                         = tunernome->usPerBeat - (tunernome->tAccumulatedUs - tunernome->usPerBeat);
                     // Blink LED Tick color
                     shouldBlink = true;
-                } // if(tAccumulatedUs >= tunernome->usPerBeat)
-            }     // if(tunernome->isClockwise)
+                }
+            }
             else
             {
                 // Subtract from tAccumulatedUs
@@ -953,8 +951,21 @@ void tunernomeMainLoop(int64_t elapsedUs)
                     tunernome->tAccumulatedUs = -(tunernome->tAccumulatedUs);
                     // Blink LED Tock color
                     shouldBlink = true;
-                } // if(tunernome->tAccumulatedUs <= 0)
-            }     // if(!tunernome->isClockwise)
+                }
+            }
+
+            // Count down a timer to turn the click off
+            if (!tunernome->isSilent)
+            {
+                if (tunernome->clickTimerUs > 0)
+                {
+                    tunernome->clickTimerUs -= elapsedUs;
+                    if (tunernome->clickTimerUs <= 0)
+                    {
+                        midiNoteOff(globalMidiPlayerGet(MIDI_BGM), 0, tunernome->midiNote, 0x7F);
+                    }
+                }
+            }
 
             // Turn LEDs on at start of blink
             if (shouldBlink)
@@ -962,13 +973,12 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 // Add one to the beat counter
                 tunernome->beatCtr = (tunernome->beatCtr + 1) % tunernome->beatLength;
 
-                // const song_t* song;
                 // Start all LEDs as being off
                 led_t leds[CONFIG_NUM_LEDS] = {{0}};
 
                 if (0 == tunernome->beatCtr)
                 {
-                    // song = &metronome_primary;
+                    tunernome->midiNote = 60; // C4
                     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
                     {
                         leds[i].r = 0x40;
@@ -978,23 +988,25 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 }
                 else
                 {
-                    // song = &metronome_secondary;
-                    for (int i = 0; i < 4; i++)
+                    const uint8_t offBeatLeds[] = {1, 3, 5, 8};
+                    tunernome->midiNote         = 69; // A4
+                    for (int i = 0; i < ARRAY_SIZE(offBeatLeds); i++)
                     {
-                        leds[fourLedFlashIdxs[i]].r = 0x40;
-                        leds[fourLedFlashIdxs[i]].g = 0x00;
-                        leds[fourLedFlashIdxs[i]].b = 0xFF;
+                        leds[offBeatLeds[i]].r = 0x40;
+                        leds[offBeatLeds[i]].g = 0x00;
+                        leds[offBeatLeds[i]].b = 0xFF;
                     }
                 }
 
-                /*if (!tunernome->isSilent)
+                if (!tunernome->isSilent)
                 {
-                    soundPlaySfx(song, BZR_STEREO);
-                }*/
+                    // Click  here
+                    midiNoteOn(globalMidiPlayerGet(MIDI_BGM), 0, tunernome->midiNote, 0x7F);
+                    tunernome->clickTimerUs = DEFAULT_FRAME_RATE_US * 3;
+                }
+
                 setLeds(leds, CONFIG_NUM_LEDS);
-                tunernome->isBlinking         = true;
-                tunernome->blinkStartUs       = esp_timer_get_time();
-                tunernome->blinkAccumulatedUs = 0;
+                tunernome->blinkTimerUs = DEFAULT_FRAME_RATE_US * 3;
             }
 
             // Runs after the up or down button is held long enough in metronome mode.
@@ -1057,8 +1069,8 @@ void tunernomeMainLoop(int64_t elapsedUs)
             int y           = round(METRONOME_CENTER_Y - (ABS(intermedY) * METRONOME_RADIUS));
             drawLine(METRONOME_CENTER_X, METRONOME_CENTER_Y, x, y, c555, 0);
             break;
-        } // case TN_METRONOME:
-    }     // switch(tunernome->mode)
+        }
+    }
 }
 
 /**
@@ -1119,10 +1131,10 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                     {
                         break;
                     }
-                } // switch(button)
-            }     // if(down)
+                }
+            }
             break;
-        } // case TN_TUNER:
+        }
         case TN_METRONOME:
         {
             if (evt->down)
@@ -1175,8 +1187,8 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                     {
                         break;
                     }
-                } // switch(button)
-            }     // if(down)
+                }
+            }
             else
             {
                 // Stop button repetition and reset related variables
@@ -1207,7 +1219,7 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                 }
             }
             break;
-        } // case TN_METRONOME:
+        }
     }
 }
 
@@ -1311,64 +1323,68 @@ void tunernomeSampleHandler(uint16_t* samples, uint32_t sampleCnt)
                                                          / (tunernome->intensity[semitone] + 1);
                     }
 
-                    // tonal diff is -32768 to 32767. if its within -10 to 10 (now defined as
-                    // TONAL_DIFF_IN_TUNE_DEVIATION), it's in tune. positive means too sharp, negative means too flat
-                    // intensity is how 'loud' that frequency is, 0 to 255. you'll have to play around with values
-                    int32_t red, grn, blu;
-                    // Is the note in tune, i.e. is the magnitude difference in surrounding bins small?
-                    if ((ABS(tunernome->tonalDiff[tunernome->curTunerMode - SEMITONE_0])
-                         < TONAL_DIFF_IN_TUNE_DEVIATION))
+                    if (tunernome->curTunerMode < LISTENING)
                     {
-                        // Note is in tune, make it white
-                        red = 255;
-                        grn = 255;
-                        blu = 255;
-                    }
-                    else
-                    {
-                        // Check if the note is sharp or flat
-                        if (tunernome->tonalDiff[tunernome->curTunerMode - SEMITONE_0] > 0)
+                        // tonal diff is -32768 to 32767. if its within -10 to 10 (now defined as
+                        // TONAL_DIFF_IN_TUNE_DEVIATION), it's in tune. positive means too sharp, negative means too
+                        // flat intensity is how 'loud' that frequency is, 0 to 255. you'll have to play around with
+                        // values
+                        int32_t red, grn, blu;
+                        // Is the note in tune, i.e. is the magnitude difference in surrounding bins small?
+                        if ((ABS(tunernome->tonalDiff[tunernome->curTunerMode - SEMITONE_0])
+                             < TONAL_DIFF_IN_TUNE_DEVIATION))
                         {
-                            // Note too sharp, make it red
+                            // Note is in tune, make it white
                             red = 255;
-                            grn = blu = 255
-                                        - (tunernome->tonalDiff[tunernome->curTunerMode - SEMITONE_0]
-                                           - TONAL_DIFF_IN_TUNE_DEVIATION)
-                                              * 15;
+                            grn = 255;
+                            blu = 255;
                         }
                         else
                         {
-                            // Note too flat, make it blue
-                            blu = 255;
-                            grn = red = 255
-                                        - (-(tunernome->tonalDiff[tunernome->curTunerMode - SEMITONE_0]
-                                             + TONAL_DIFF_IN_TUNE_DEVIATION))
-                                              * 15;
+                            // Check if the note is sharp or flat
+                            if (tunernome->tonalDiff[tunernome->curTunerMode - SEMITONE_0] > 0)
+                            {
+                                // Note too sharp, make it red
+                                red = 255;
+                                grn = blu = 255
+                                            - (tunernome->tonalDiff[tunernome->curTunerMode - SEMITONE_0]
+                                               - TONAL_DIFF_IN_TUNE_DEVIATION)
+                                                  * 15;
+                            }
+                            else
+                            {
+                                // Note too flat, make it blue
+                                blu = 255;
+                                grn = red = 255
+                                            - (-(tunernome->tonalDiff[tunernome->curTunerMode - SEMITONE_0]
+                                                 + TONAL_DIFF_IN_TUNE_DEVIATION))
+                                                  * 15;
+                            }
+
+                            // Make sure LED output isn't more than 255
+                            red = CLAMP(red, INT_MIN, 255);
+                            grn = CLAMP(grn, INT_MIN, 255);
+                            blu = CLAMP(blu, INT_MIN, 255);
                         }
 
-                        // Make sure LED output isn't more than 255
-                        red = CLAMP(red, INT_MIN, 255);
-                        grn = CLAMP(grn, INT_MIN, 255);
-                        blu = CLAMP(blu, INT_MIN, 255);
-                    }
+                        // Scale each LED's brightness by the filtered intensity for that bin
+                        red = (red >> 3) * (tunernome->intensity[tunernome->curTunerMode - SEMITONE_0] >> 3);
+                        grn = (grn >> 3) * (tunernome->intensity[tunernome->curTunerMode - SEMITONE_0] >> 3);
+                        blu = (blu >> 3) * (tunernome->intensity[tunernome->curTunerMode - SEMITONE_0] >> 3);
 
-                    // Scale each LED's brightness by the filtered intensity for that bin
-                    red = (red >> 3) * (tunernome->intensity[tunernome->curTunerMode - SEMITONE_0] >> 3);
-                    grn = (grn >> 3) * (tunernome->intensity[tunernome->curTunerMode - SEMITONE_0] >> 3);
-                    blu = (blu >> 3) * (tunernome->intensity[tunernome->curTunerMode - SEMITONE_0] >> 3);
-
-                    // Set the LED, ensure each channel is between 0 and 255
-                    uint32_t i;
-                    for (i = 0; i < NUM_GUITAR_STRINGS; i++)
-                    {
-                        colors[i].r = CLAMP(red, 0, 255);
-                        colors[i].g = CLAMP(grn, 0, 255);
-                        colors[i].b = CLAMP(blu, 0, 255);
+                        // Set the LED, ensure each channel is between 0 and 255
+                        uint32_t i;
+                        for (i = 0; i < CONFIG_NUM_LEDS; i++)
+                        {
+                            colors[i].r = CLAMP(red, 0, 255);
+                            colors[i].g = CLAMP(grn, 0, 255);
+                            colors[i].b = CLAMP(blu, 0, 255);
+                        }
                     }
 
                     break;
-                } // default:
-            }     // switch(tunernome->curTunerMode)
+                }
+            }
 
             if (LISTENING != tunernome->curTunerMode)
             {
@@ -1378,5 +1394,5 @@ void tunernomeSampleHandler(uint16_t* samples, uint32_t sampleCnt)
             // Reset the sample count
             tunernome->audioSamplesProcessed = 0;
         }
-    } // if(tunernome-> mode == TN_TUNER)
+    }
 }

@@ -824,3 +824,41 @@ void dacCallback(uint8_t* samples, int16_t len)
         globalMidiPlayerFillBuffer(samples, len);
     }
 }
+
+/**
+ * @brief Enable the speaker (and battery monitor) and disable the microphone
+ */
+void switchToSpeaker(void)
+{
+    // Stop the microphone
+    stopMic();
+    deinitMic();
+
+    // Start the speaker
+    initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+            GPIO_NUM_18, dacCallback);
+    setDacShutdown(false);
+    initGlobalMidiPlayer();
+
+    // Start battery monitoring
+    initBattmon(GPIO_NUM_6);
+}
+
+/**
+ * @brief Enable the microphone and disable the speaker (and battery monitor)
+ */
+void switchToMicrophone(void)
+{
+    // Stop battery monitoring
+    deinitBattmon();
+
+    // Stop the speaker
+    globalMidiPlayerStop(true);
+    deinitGlobalMidiPlayer();
+    setDacShutdown(true);
+    deinitDac();
+
+    // Initialize and start the mic as a continuous ADC
+    initMic(GPIO_NUM_7);
+    startMic();
+}

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include "fs_wsg.h"
 #include "paWsgManager.h"
+#include "pango_typedef.h"
 
 //==============================================================================
 // Functions
@@ -43,7 +44,7 @@ void pa_loadWsgs(paWsgManager_t* self)
     loadWsg("pa-112.wsg", &self->wsgs[PA_WSG_PANGO_PUSH_SIDE_2], false);
     loadWsg("pa-113.wsg", &self->wsgs[PA_WSG_PANGO_HURT], false);
     loadWsg("pa-114.wsg", &self->wsgs[PA_WSG_PANGO_WIN], false);
-    loadWsg("pa-015.wsg", &self->wsgs[PA_WSG_PANGO_ICON], false);
+    loadWsg("pa-115.wsg", &self->wsgs[PA_WSG_PANGO_ICON], false);
     loadWsg("po-000.wsg", &self->wsgs[PA_WSG_PO_SOUTH], false);
     loadWsg("po-001.wsg", &self->wsgs[PA_WSG_PO_WALK_SOUTH], false);
     loadWsg("po-002.wsg", &self->wsgs[PA_WSG_PO_NORTH], false);
@@ -59,7 +60,7 @@ void pa_loadWsgs(paWsgManager_t* self)
     loadWsg("po-012.wsg", &self->wsgs[PA_WSG_PO_PUSH_SIDE_2], false);
     loadWsg("po-013.wsg", &self->wsgs[PA_WSG_PO_HURT], false);
     loadWsg("po-014.wsg", &self->wsgs[PA_WSG_PO_WIN], false);
-    loadWsg("pa-015.wsg", &self->wsgs[PA_WSG_PO_ICON], false);
+    loadWsg("po-015.wsg", &self->wsgs[PA_WSG_PO_ICON], false);
     loadWsg("px-000.wsg", &self->wsgs[PA_WSG_PIXEL_SOUTH], false);
     loadWsg("px-001.wsg", &self->wsgs[PA_WSG_PIXEL_WALK_SOUTH], false);
     loadWsg("px-002.wsg", &self->wsgs[PA_WSG_PIXEL_NORTH], false);
@@ -117,13 +118,15 @@ void pa_loadWsgs(paWsgManager_t* self)
     loadWsg("pa-tile-006.wsg", &self->wsgs[PA_WSG_WALL_5], false);
     loadWsg("pa-tile-007.wsg", &self->wsgs[PA_WSG_WALL_6], false);
     loadWsg("pa-tile-008.wsg", &self->wsgs[PA_WSG_WALL_7], false);
-    loadWsg("pa-tile-009.wsg", &self->wsgs[PA_WSG_BLOCK], false);
-    loadWsg("pa-tile-010.wsg", &self->wsgs[PA_WSG_SPAWN_BLOCK_0], false);
-    loadWsg("pa-tile-011.wsg", &self->wsgs[PA_WSG_SPAWN_BLOCK_1], false);
-    loadWsg("pa-tile-012.wsg", &self->wsgs[PA_WSG_SPAWN_BLOCK_2], false);
-    loadWsg("pa-tile-013.wsg", &self->wsgs[PA_WSG_BONUS_BLOCK_0], false);
-    loadWsg("pa-tile-014.wsg", &self->wsgs[PA_WSG_BONUS_BLOCK_1], false);
-    loadWsg("pa-tile-015.wsg", &self->wsgs[PA_WSG_BONUS_BLOCK_2], false);
+    loadWsg("pa-tile-009.wsg", &self->wsgs[PA_WSG_BLOCK_BLUE], false);
+    loadWsg("pa-tile-010.wsg", &self->wsgs[PA_WSG_BLOCK_MAGENTA], false);
+    loadWsg("pa-tile-011.wsg", &self->wsgs[PA_WSG_BLOCK_RED], false);
+    loadWsg("pa-tile-012.wsg", &self->wsgs[PA_WSG_BLOCK_ORANGE], false);
+    loadWsg("pa-tile-013.wsg", &self->wsgs[PA_WSG_BLOCK_YELLOW], false);
+    loadWsg("pa-tile-014.wsg", &self->wsgs[PA_WSG_BLOCK_GREEN], false);
+    loadWsg("pa-tile-015.wsg", &self->wsgs[PA_WSG_BLOCK_TITLESCREEN], false);
+
+    loadWsg("pa-hotdog.wsg", &self->wsgs[PA_WSG_HOTDOG], false);
 }
 
 void pa_initializeSprites(paWsgManager_t* self)
@@ -192,11 +195,11 @@ void pa_initializeSprites(paWsgManager_t* self)
     self->sprites[PA_SP_PLAYER_ICON].originX = 8;
     self->sprites[PA_SP_PLAYER_ICON].originY = 16;
 
-    self->sprites[PA_SP_BLOCK].wsg     = &self->wsgs[PA_WSG_BLOCK];
+    self->sprites[PA_SP_BLOCK].wsg     = &self->wsgs[PA_WSG_BLOCK_BLUE];
     self->sprites[PA_SP_BLOCK].originX = 8;
     self->sprites[PA_SP_BLOCK].originY = 8;
 
-    self->sprites[PA_SP_BONUS_BLOCK].wsg     = &self->wsgs[PA_WSG_BONUS_BLOCK_0];
+    self->sprites[PA_SP_BONUS_BLOCK].wsg     = &self->wsgs[PA_WSG_BLOCK_RED];
     self->sprites[PA_SP_BONUS_BLOCK].originX = 8;
     self->sprites[PA_SP_BONUS_BLOCK].originY = 8;
 
@@ -255,6 +258,10 @@ void pa_initializeSprites(paWsgManager_t* self)
     self->sprites[PA_SP_BLOCK_FRAGMENT].wsg     = &self->wsgs[PA_WSG_BLOCK_FRAGMENT];
     self->sprites[PA_SP_BLOCK_FRAGMENT].originX = 3;
     self->sprites[PA_SP_BLOCK_FRAGMENT].originY = 3;
+
+    self->sprites[PA_SP_HOTDOG].wsg     = &self->wsgs[PA_WSG_HOTDOG];
+    self->sprites[PA_SP_HOTDOG].originX = 8;
+    self->sprites[PA_SP_HOTDOG].originY = 8;
 }
 
 void pa_initializeTiles(paWsgManager_t* self)
@@ -267,13 +274,13 @@ void pa_initializeTiles(paWsgManager_t* self)
     self->tiles[5]  = &self->wsgs[PA_WSG_WALL_5];
     self->tiles[6]  = &self->wsgs[PA_WSG_WALL_6];
     self->tiles[7]  = &self->wsgs[PA_WSG_WALL_7];
-    self->tiles[8]  = &self->wsgs[PA_WSG_BLOCK];
-    self->tiles[9]  = &self->wsgs[PA_WSG_SPAWN_BLOCK_0];
-    self->tiles[10] = &self->wsgs[PA_WSG_SPAWN_BLOCK_1];
-    self->tiles[11] = &self->wsgs[PA_WSG_SPAWN_BLOCK_2];
-    self->tiles[12] = &self->wsgs[PA_WSG_BONUS_BLOCK_0];
-    self->tiles[13] = &self->wsgs[PA_WSG_BONUS_BLOCK_1];
-    self->tiles[14] = &self->wsgs[PA_WSG_BONUS_BLOCK_2];
+    self->tiles[8]  = &self->wsgs[PA_WSG_BLOCK_BLUE];
+    self->tiles[9]  = &self->wsgs[PA_WSG_BLOCK_RED];
+    self->tiles[10] = &self->wsgs[PA_WSG_BLOCK_ORANGE];
+    self->tiles[11] = &self->wsgs[PA_WSG_BLOCK_YELLOW];
+    self->tiles[12] = &self->wsgs[PA_WSG_BLOCK_GREEN];
+    self->tiles[13] = &self->wsgs[PA_WSG_BLOCK_MAGENTA];
+    self->tiles[14] = &self->wsgs[PA_WSG_BLOCK_TITLESCREEN];
 }
 
 void pa_remapWsgToSprite(paWsgManager_t* self, uint16_t spriteIndex, uint16_t wsgIndex)
@@ -292,4 +299,24 @@ void pa_remapPlayerCharacter(paWsgManager_t* self, uint16_t newBaseIndex)
     {
         pa_remapWsgToSprite(self, i, newBaseIndex + i);
     }
+}
+
+void pa_animateTiles(paWsgManager_t* self)
+{
+    self->globalTileAnimationTimer--;
+    if (self->globalTileAnimationTimer < 0)
+    {
+        // Assumption: all animated tiles have 6 frames of animation
+        self->globalTileAnimationFrame = ((self->globalTileAnimationFrame + 1) % 6);
+
+        pa_remapWsgToTile(self, 9, PA_WSG_BLOCK_BLUE + self->globalTileAnimationFrame);
+
+        self->globalTileAnimationTimer = 6;
+    }
+}
+
+void pa_remapBlockTile(paWsgManager_t* self, uint16_t newBlockWsgIndex)
+{
+    pa_remapWsgToTile(self, 8, newBlockWsgIndex);
+    pa_remapWsgToSprite(self, PA_SP_BLOCK, newBlockWsgIndex);
 }
