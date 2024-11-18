@@ -31,32 +31,32 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
             // blue value used for foreground tiles
             switch (rgbCol & 255)
             {
-                case 0:
+                case 0:  // 0 in wsg land
                 {
                     tilemap->fgTiles[i][j].health = 0;
                     break;
                 }
-                case 51:
+                case 51: // 1 in wsg land
                 {
                     tilemap->fgTiles[i][j].health = 1;
                     break;
                 }
-                case 102:
+                case 102: // 2 in wsg land
                 {
                     tilemap->fgTiles[i][j].health = 4;
                     break;
                 }
-                case 153:
+                case 153: // 3 in wsg land
                 {
                     tilemap->fgTiles[i][j].health = 10;
                     break;
                 }
-                case 204:
+                case 204: // 4 in wsg land
                 {
                     tilemap->fgTiles[i][j].health = 100;
                     break;
                 }
-                default:
+                default: // shouldn't happen
                 {
                     tilemap->fgTiles[i][j].health = 100;
                     break;
@@ -89,7 +89,13 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
 
             switch ((rgbCol >> 16) & 255)
             { // red value used for some spawns (not eggs)
-                case 255:
+                case 51: // 1 in wsg land
+                {
+                    tilemap->fgTiles[i][j].health = 0;
+                    tilemap->fgTiles[i][j].embed = CAR_EMBED;
+                    break;
+                }
+                case 255: // 5 in wsg land
                 {
                     tilemap->fgTiles[i][j].health = 0;
                     tilemap->fgTiles[i][j].embed = WASHING_MACHINE_EMBED;
@@ -310,9 +316,17 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case WASHING_MACHINE_EMBED:
                         {
-                            printf("we here\n");
                             if(bb_createEntity(entityManager, NO_ANIMATION, true, BB_WASHING_MACHINE, 1,
                                                 i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false) != NULL)
+                            {
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }
+                        case CAR_EMBED:
+                        {
+                            if(bb_createEntity(entityManager, NO_ANIMATION, true, BB_CAR_IDLE, 1,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2, false, false) != NULL)
                             {
                                 tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                             }

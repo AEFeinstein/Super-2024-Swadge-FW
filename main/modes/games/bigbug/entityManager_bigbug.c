@@ -142,6 +142,13 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     washingMachineSprite->originX = 16;
     washingMachineSprite->originY = 16;
 
+    bb_sprite_t* carIdleSprite = bb_loadSprite("car_idle", 1, 1, &entityManager->sprites[BB_CAR_IDLE]);
+    carIdleSprite->originX = 31;
+    carIdleSprite->originY = 15;
+
+    bb_sprite_t* carActiveSprite = bb_loadSprite("car_active", 20, 1, &entityManager->sprites[BB_CAR_ACTIVE]);
+    carActiveSprite->originX = 31;
+    carActiveSprite->originY = 15;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -611,7 +618,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             list_t* others     = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             push(others, (void*)GARBOTNIK_FLYING);
             bb_collision_t* collision = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
-            *collision                = (bb_collision_t){others, bb_onCollisionRocket};
+            *collision                = (bb_collision_t){others, bb_onCollisionHeavyFalling};
             push(entity->collisions, (void*)collision);
 
             entity->halfWidth  = 192;
@@ -841,6 +848,38 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->hasLighting                 = true;
             entity->updateFunction = &bb_updateHeavyFalling;
             entity->cacheable = true;
+
+            entity->collisions = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionHeavyFalling};
+            push(entity->collisions, (void*)collision);
+
+            break;
+        }
+        case BB_CAR_IDLE:
+        {
+            entity->halfWidth  = 25 << DECIMAL_BITS;
+            entity->halfHeight = 13 << DECIMAL_BITS;
+            entity->cacheable = true;
+
+            entity->collisions = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionCarIdle};
+            push(entity->collisions, (void*)collision);
+
+            break;
+        }
+        case BB_CAR_ACTIVE:
+        {
+            entity->halfWidth  = 25 << DECIMAL_BITS;
+            entity->halfHeight = 13 << DECIMAL_BITS;
+            bb_carActiveData_t* caData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_carActiveData_t), MALLOC_CAP_SPIRAM);
+            caData->enemiesRemaining = 10;
+            bb_setData(entity, caData);
             break;
         }
         default: // FLAME_ANIM and others need nothing set

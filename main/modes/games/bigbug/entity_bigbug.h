@@ -109,17 +109,6 @@ typedef struct
     bb_entity_t* egg;   // tracks the egg to stimulate it.
 } bb_eggLeavesData_t;
 
-
-typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
-
-typedef struct
-{
-    bb_entity_t* tracking;
-    uint16_t speed;
-    uint32_t midPointSqDist; // The point at which to decelerate.
-    bb_callbackFunction_t executeOnArrival;
-} bb_goToData;
-
 typedef struct
 {
     uint16_t stimulation; // once it reaches 600, it turns into a bug.
@@ -131,7 +120,21 @@ typedef struct
     bb_entity_t* rocket; // a reference to the booster. Notify to take off at angle = 359.
 } bb_attachmentArmData_t;
 
+typedef struct
+{
+    uint8_t enemiesRemaining;
+} bb_carActiveData_t;
 
+
+typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
+
+typedef struct
+{
+    bb_entity_t* tracking;
+    uint16_t speed;
+    uint32_t midPointSqDist; // The point at which to decelerate.
+    bb_callbackFunction_t executeOnArrival;
+} bb_goToData;
 
 typedef struct
 {
@@ -240,7 +243,9 @@ void bb_drawSimple(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
-void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 //callbacks

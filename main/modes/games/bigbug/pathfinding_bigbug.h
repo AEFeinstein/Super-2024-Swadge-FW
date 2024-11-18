@@ -11,8 +11,8 @@
 //==============================================================================
 typedef struct
 {
-    uint8_t x;
-    uint8_t y;
+    uint8_t x;//an index in the tilemap
+    uint8_t y;//an index in the tilemap
     bool z; // true for foreground false for midground
     uint16_t gCost;
     uint16_t hCost;

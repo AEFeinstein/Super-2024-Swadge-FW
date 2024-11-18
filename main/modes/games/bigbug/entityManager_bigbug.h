@@ -18,7 +18,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 200
-#define NUM_SPRITES  20 // The number of bb_sprite_t
+#define NUM_SPRITES  22 // The number of bb_sprite_t last accounted for car_active
 
 //==============================================================================
 // Structs

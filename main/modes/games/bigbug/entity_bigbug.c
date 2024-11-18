@@ -629,7 +629,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         else
         {
             // Create a bump animation
-            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
+            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, bb_randomInt(1,2),
                             hitInfo.pos.x >> DECIMAL_BITS, hitInfo.pos.y >> DECIMAL_BITS, true, false);
         }
 
@@ -1429,7 +1429,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     self->drawFunction   = bb_drawStuckHarpoon;
 }
 
-void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
     other->pos.x              = hitInfo->pos.x + hitInfo->normal.x * other->halfWidth;
@@ -1442,9 +1442,25 @@ void bb_onCollisionRocket(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     {
         gData->vel.x = 0;
     }
+}
+
+void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    bb_onCollisionSimple(self, other, hitInfo);
+    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
     if (hitInfo->normal.y == 1)
     {
         gData->gettingCrushed = true;
+    }
+}
+
+void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    bb_onCollisionSimple(self, other, hitInfo);
+    if(bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_CAR_ACTIVE, 1,
+                       self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false) != NULL)
+    {
+        bb_destroyEntity(self, false);
     }
 }
 

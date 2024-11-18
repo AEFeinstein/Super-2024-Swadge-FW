@@ -56,26 +56,28 @@ typedef struct bb_tileInfo_t bb_tileInfo_t;
 
 typedef enum
 {
-    CRUMBLE_ANIM,     // A particle effect where garbage crumbles
-    BUMP_ANIM,        // A particle effect where you bump things but they don't crumble
-    ROCKET_ANIM,      // A vehicle to enter and depart the level
-    FLAME_ANIM,       // A particle effect at the bottom of the rocket
-    GARBOTNIK_FLYING, // Frames of garbotnik flying
-    HARPOON,          // A harpoon you throw
-    EGG_LEAVES,       // They receive light and stimulate the egg
-    EGG,              // When stimulated enough, they hatch into a bug!
-    BU,
-    BUG, // A bug that walks on the the foreground tile field
-    BUGG,
-    BUGGO,
-    BUGGY,
-    BUTT,
+    CRUMBLE_ANIM,      // A particle effect where garbage crumbles
+    BUMP_ANIM,         // A particle effect where you bump things but they don't crumble
+    ROCKET_ANIM,       // A vehicle to enter and depart the level
+    FLAME_ANIM,        // A particle effect at the bottom of the rocket
+    GARBOTNIK_FLYING,  // Frames of garbotnik flying
+    HARPOON,           // A harpoon you throw
+    EGG_LEAVES,        // They receive light and stimulate the egg
+    EGG,               // When stimulated enough, they hatch into a bug!
+    BU,                // A bug
+    BUG,               // A bug
+    BUGG,              // A bug
+    BUGGO,             // A bug
+    BUGGY,             // A bug
+    BUTT,              // A bug
     BB_MENU,           // Various sprites loaded as frames to create the parallax main menu
     BB_DEATH_DUMPSTER, // Garbotnik's evil lair in space
     OVO_TALK,          // Awesome art for dialogue moments. Each frame just provides a different flavor.
     ATTACHMENT_ARM,    // The booster arm that detects the player and latches on.
     BB_GAME_OVER,
     BB_WASHING_MACHINE,
+    BB_CAR_IDLE,
+    BB_CAR_ACTIVE,
     WILE,              // A metal ball that is thrown
     NO_SPRITE_STAR,    // a single white pixel for aesthetic beauty.
     NO_SPRITE_POI      // Point of interest for the camera to follow in the main menu
@@ -85,7 +87,8 @@ typedef enum
 { // The kinds of stuff that may be embedded into a garbage tile.
     NOTHING_EMBED,
     EGG_EMBED,
-    WASHING_MACHINE_EMBED
+    WASHING_MACHINE_EMBED,
+    CAR_EMBED
 } bb_embeddable_t;
 
 typedef enum
