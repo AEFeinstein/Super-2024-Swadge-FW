@@ -1457,7 +1457,7 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_onCollisionSimple(self, other, hitInfo);
-    if(bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_CAR_ACTIVE, 1,
+    if(bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_CAR_ACTIVE, 6,
                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false) != NULL)
     {
         bb_destroyEntity(self, false);
