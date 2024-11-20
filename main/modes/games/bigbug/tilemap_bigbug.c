@@ -27,6 +27,14 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
     {
         for (int j = 0; j < TILE_FIELD_HEIGHT; j++)
         {
+            tilemap->fgTiles[i][j].x = i;
+            tilemap->fgTiles[i][j].y = j;
+            tilemap->fgTiles[i][j].z = 1;
+
+            tilemap->mgTiles[i][j].x = i;
+            tilemap->mgTiles[i][j].y = j;
+            tilemap->mgTiles[i][j].z = 0;
+
             uint32_t rgbCol = paletteToRGB(levelWsg.px[(j * levelWsg.w) + i]);
             // blue value used for foreground tiles
             switch (rgbCol & 255)
@@ -70,13 +78,13 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
             {
                 case 0: // 0 in wsg land
                 {
-                    tilemap->mgTiles[i][j] = 0;
+                    tilemap->mgTiles[i][j].health = 0;
                     break;
                 }
                 case 255: // 5 in wsg land
                 {
                     int8_t values[] = {1, 4, 10};
-                    tilemap->mgTiles[i][j] = tilemap->fgTiles[i][j].health == 0 ? 
+                    tilemap->mgTiles[i][j].health = tilemap->fgTiles[i][j].health == 0 ? 
                          values[bb_randomInt(0, 2)] : 
                          tilemap->fgTiles[i][j].health;
                     break;
@@ -204,6 +212,46 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
         freeWsg(&tilemap->fore_h_Wsg[i]);
         freeWsg(&tilemap->fore_b_Wsg[i]);
     }
+}
+
+//flags neighbors to check for structural support
+void flagNeighbors(const bb_tileInfo_t* tile, bb_gameData_t* gameData)
+{
+    uint8_t* left = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    left[0] = tile->x - 1;
+    left[1] = tile->y;
+    left[2] = 1;
+    push(&gameData->unsupported, (void*)left);
+
+    if(tile->y > 0)
+    {
+        uint8_t* up = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        up[0] = tile->x;
+        up[1] = tile->y - 1;
+        up[2] = 1;
+        push(&gameData->unsupported, (void*)up);
+    }
+
+    uint8_t* right = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    right[0] = tile->x + 1;
+    right[1] = tile->y;
+    right[2] = 1;
+    push(&gameData->unsupported, (void*)right);
+
+    if(tile->y < TILE_FIELD_HEIGHT)
+    {
+        uint8_t* down = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        down[0] = tile->x;
+        down[1] = tile->y + 1;
+        down[2] = 1;
+        push(&gameData->unsupported, (void*)down);
+    }
+
+    uint8_t* midground = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    midground[0] = tile->x;
+    midground[1] = tile->y;
+    midground[2] = 0;
+    push(&gameData->unsupported, (void*)midground);
 }
 
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation,
@@ -342,34 +390,34 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                 vec_t tilePos = {.x = i * TILE_SIZE - camera->pos.x, .y = j * TILE_SIZE - camera->pos.y};
 
                 // Draw midground  tiles
-                if (tilemap->mgTiles[i][j] > 0)
+                if (tilemap->mgTiles[i][j].health > 0)
                 {
                     wsg_t(*wsgMidgroundArrayPtr)[120] = bb_GetMidgroundWsgArrForCoord(tilemap, i, j);
 
                     // sprite_idx LURD order.
-                    int8_t sprite_idx = 8 * ((i - 1 < 0) ? 0 : (tilemap->mgTiles[i - 1][j] > 0))
-                                        + 4 * ((j - 1 < 0) ? 0 : (tilemap->mgTiles[i][j - 1] > 0))
-                                        + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : (tilemap->mgTiles[i + 1][j] > 0))
-                                        + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : (tilemap->mgTiles[i][j + 1]) > 0);
+                    int8_t sprite_idx = 8 * ((i - 1 < 0) ? 0 : (tilemap->mgTiles[i - 1][j].health > 0))
+                                        + 4 * ((j - 1 < 0) ? 0 : (tilemap->mgTiles[i][j - 1].health > 0))
+                                        + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : tilemap->mgTiles[i + 1][j].health > 0)
+                                        + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : tilemap->mgTiles[i][j + 1].health > 0);
                     // corner_info represents up_left, up_right, down_left, down_right dirt presence (remember >0 is
                     // dirt).
                     int8_t corner_info
                         = 8
                               * ((i - 1 < 0)   ? 0
                                  : (j - 1 < 0) ? 0
-                                               : (tilemap->mgTiles[i - 1][j - 1] > 0))
+                                               : (tilemap->mgTiles[i - 1][j - 1].health > 0))
                           + 4
                                 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0
                                    : (j - 1 < 0)                  ? 0
-                                                                  : (tilemap->mgTiles[i + 1][j - 1] > 0))
+                                                                  : tilemap->mgTiles[i + 1][j - 1].health > 0)
                           + 2
                                 * ((i - 1 < 0)                       ? 0
                                    : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
-                                                                     : (tilemap->mgTiles[i - 1][j + 1] > 0))
+                                                                     : tilemap->mgTiles[i - 1][j + 1].health > 0)
                           + 1
                                 * ((i + 1 > TILE_FIELD_WIDTH - 1)    ? 0
                                    : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
-                                                                     : (tilemap->mgTiles[i + 1][j + 1]) > 0);
+                                                                     : tilemap->mgTiles[i + 1][j + 1].health > 0);
 
                     // Top Left
                     // 0 11xx 1xxx
@@ -1029,11 +1077,11 @@ void bb_collisionCheck(bb_tilemap_t* tilemap, bb_entity_t* ent, vec_t* previousP
 
 wsg_t (*bb_GetMidgroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[120]
 {
-    if (tilemap->mgTiles[i][j] > 4)
+    if (tilemap->mgTiles[i][j].health > 4)
     {
         return &tilemap->mid_h_Wsg;
     }
-    else if (tilemap->mgTiles[i][j] > 1)
+    else if (tilemap->mgTiles[i][j].health > 1)
     {
         return &tilemap->mid_m_Wsg;
     }

@@ -17,6 +17,7 @@
 #include "entity_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "random_bigbug.h"
+#include "pathfinding_bigbug.h"
 #include "esp_heap_caps.h"
 #include "hdw-tft.h"
 #include <math.h>
@@ -416,17 +417,47 @@ static void bb_SetLeds(void)
  */
 static void bb_UpdateTileSupport(void)
 {
+    while(bigbug->gameData.pleaseCheck.first != NULL)
+    {
+        uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.pleaseCheck);
+        if((shiftedVal[2] ? bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health : bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health) > 0)
+        {
+            bigbug->gameData.toggleIteration = !bigbug->gameData.toggleIteration;
+            //pathfind
+            if(!((shiftedVal[2] && pathfindToPerimeter(&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap, bigbug->gameData.toggleIteration)) ||
+                pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap, bigbug->gameData.toggleIteration)))
+            {
+                //trigger a cascading collapse
+                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                *val = *shiftedVal;
+                push(&bigbug->gameData.unsupported, (void*)val);
+            }
+
+            FREE_DBG(shiftedVal);
+            break;
+        }
+        FREE_DBG(shiftedVal);
+    }
+
     if (bigbug->gameData.unsupported.first != NULL)
     {
         for (int i = 0; i < 50; i++) // arbitrarily large loop to get to the dirt tiles.
         {
             // remove the first item from the list
-            uint32_t* shiftedVal = shift(&bigbug->gameData.unsupported);
+            uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.unsupported);
             // check that it's still dirt, because a previous pass may have crumbled it.
-            if (bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health > 0)
+            if ((shiftedVal[2] ? bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health : bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health) > 0)
             {
                 // set it to air
-                bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
+                if(shiftedVal[2])
+                {
+                    bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
+                }
+                else
+                {
+                    bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
+                }
+                
                 // create a crumble animation
                 bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
                                 shiftedVal[0] * 32 + 16, shiftedVal[1] * 32 + 16, true, false);
@@ -435,21 +466,28 @@ static void bb_UpdateTileSupport(void)
                 for (uint8_t neighborIdx = 0; neighborIdx < 4;
                      neighborIdx++) // neighborIdx 0 thru 3 is Left, Up, Right, Down
                 {
-                    if ((int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] >= 0
-                        && (int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] < TILE_FIELD_WIDTH
-                        && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] >= 0
-                        && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] < TILE_FIELD_HEIGHT)
+                    if ((uint8_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] >= 0
+                        && (uint8_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] < TILE_FIELD_WIDTH
+                        && (uint8_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] >= 0
+                        && (uint8_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] < TILE_FIELD_HEIGHT)
                     {
                         // TODO where is this FREE_DBG()'d?
-                        uint32_t* val = HEAP_CAPS_CALLOC_DBG(2, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
+                        // should be done now.
+                        uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
                         val[0]        = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
                         val[1]        = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
-
+                        val[2]        = shiftedVal[2];
                         push(&bigbug->gameData.unsupported, (void*)val);
                     }
                 }
+                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
+                *val = *shiftedVal;
+                push(&bigbug->gameData.unsupported, (void*)val);
+
+                FREE_DBG(shiftedVal);
                 break;
             }
+            FREE_DBG(shiftedVal);
         }
     }
 }

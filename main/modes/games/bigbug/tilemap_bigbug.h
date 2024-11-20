@@ -22,11 +22,18 @@
 //==============================================================================
 struct bb_tileInfo_t
 {
+    uint8_t x;//an index in the tilemap
+    uint8_t y;//an index in the tilemap
+    bool z; // true for foreground false for midground
     int8_t health; // 0 is air, > 0 is garbage. Use an int8_t incase damage decrements lower than zero, then we can snap
                    // to zero.
     bb_embeddable_t embed; // Some kind of something embedded in the garbage tile.
     bb_entity_t* entity;   // Null when the the player player is far away.
                            // Can become null again if the entity is still embed & player leaving.
+    uint16_t gCost;
+    uint16_t hCost;
+    bb_tileInfo_t* parent;
+    bool toggleIteration; //toggles between true and false with every iteration of A*. So there's no need to clear out data in the entire tilemap between iterations.
 };
 
 struct bb_tilemap_t
@@ -49,7 +56,7 @@ struct bb_tilemap_t
 
     bb_tileInfo_t fgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of foreground tiles. The number is the
                                                                 ///< dirt's health. 0 is air.
-    int8_t mgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT];        ///< The array of midground tiles.
+    bb_tileInfo_t mgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of midground tiles.
 };
 
 struct bb_hitInfo_t
@@ -67,6 +74,7 @@ struct bb_hitInfo_t
 void bb_initializeTileMap(bb_tilemap_t* tilemap);
 void bb_loadWsgs(bb_tilemap_t* tilemap);
 void bb_freeWsgs(bb_tilemap_t* tilemap);
+void flagNeighbors(const bb_tileInfo_t* tile, bb_gameData_t* gameData);
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation,
                     bb_entityManager_t* entityManager);
 void bb_DrawForegroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, uint32_t i,

@@ -599,29 +599,34 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // Update the dirt by decrementing it.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= 1;
 
-        if (self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 0
-            && self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed == EGG_EMBED
-            && self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity != NULL)
+        bb_tileInfo_t* tile = &self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
+
+        if (tile->health == 0)
         {
-            vec_t tilePos = {.x = hitInfo.tile_i * TILE_SIZE + HALF_TILE, .y = hitInfo.tile_j * TILE_SIZE + HALF_TILE};
-            // create a bug
-            bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
-                                               bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
-            if (bug != NULL)
+            flagNeighbors(tile, self->gameData);
+
+            if (tile->embed == EGG_EMBED && tile->entity != NULL)
             {
-                // destroy the egg
-                bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j]
-                                                            .entity->data))
-                                     ->egg,
-                                 false);
-                // destroy this (eggLeaves)
-                bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
+                vec_t tilePos = {.x = hitInfo.tile_i * TILE_SIZE + HALF_TILE, .y = hitInfo.tile_j * TILE_SIZE + HALF_TILE};
+                // create a bug
+                bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
+                                                bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
+                if (bug != NULL)
+                {
+                    // destroy the egg
+                    bb_destroyEntity(((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j]
+                                                                .entity->data))
+                                        ->egg,
+                                    false);
+                    // destroy this (eggLeaves)
+                    bb_destroyEntity(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity, false);
+                }
             }
         }
 
-        if (self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 0
-            || self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 1
-            || self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health == 4)
+        
+
+        if (tile->health == 0 || tile->health == 1 || tile->health == 4)
         {
             // Create a crumble
             bb_crumbleDirt(self, 2, hitInfo.tile_i, hitInfo.tile_j);
@@ -629,7 +634,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         else
         {
             // Create a bump animation
-            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, bb_randomInt(1,2),
+            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, bb_randomInt(2,4),
                             hitInfo.pos.x >> DECIMAL_BITS, hitInfo.pos.y >> DECIMAL_BITS, true, false);
         }
 

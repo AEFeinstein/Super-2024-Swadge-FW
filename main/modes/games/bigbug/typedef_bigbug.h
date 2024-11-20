@@ -1,6 +1,8 @@
 #ifndef BIGBUG_TYPEDEF_INCLUDED
 #define BIGBUG_TYPEDEF_INCLUDED
 
+#include <esp_heap_caps.h>
+
 #if defined(DEBUG_ALLOCATIONS)
 
     #include <esp_heap_caps.h>
@@ -15,6 +17,15 @@
 
     #define HEAP_CAPS_CALLOC_DBG(n, s, o) heap_caps_calloc_dbg(n, s, o, __FILE__, __func__, __LINE__)
 
+    static inline void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const char* func, int line)
+    {
+        void* ptr = heap_caps_malloc(size, caps);
+        printf("%s:%d malloc(%ld) in %s -> %p\n", file, line, n * size, func, ptr);
+        return ptr;
+    }
+
+    #define HEAP_CAPS_MALLOC_DBG(n, s, o) heap_caps_malloc_dbg(n, s, o, __FILE__, __func__, __LINE__)
+
     static inline void free_dbg(void* ptr, const char* file, const char* func, int line)
     {
         printf("%s:%d FREE_DBG(%p) in %s\n", file, line, ptr, func);
@@ -26,6 +37,7 @@
 #else
 
     #define HEAP_CAPS_CALLOC_DBG(n, s, o) heap_caps_calloc(n, s, o)
+    #define HEAP_CAPS_MALLOC_DBG(s, o) heap_caps_malloc(s, o)
     #define FREE_DBG(ptr) free(ptr)
 
 #endif
