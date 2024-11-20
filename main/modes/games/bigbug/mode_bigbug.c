@@ -443,6 +443,10 @@ static void bb_UpdateTileSupport(void)
     {
         for (int i = 0; i < 50; i++) // arbitrarily large loop to get to the dirt tiles.
         {
+            if(bigbug->gameData.unsupported.first == NULL)
+            {
+                break;
+            }
             // remove the first item from the list
             uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.unsupported);
             // check that it's still dirt, because a previous pass may have crumbled it.

@@ -81,11 +81,13 @@ bool contains(const list_t* nodeList, const bb_tileInfo_t* tile)
     node_t* cur = nodeList->first;
     while(cur != NULL)
     {
+        printf("contains\n");
         bb_tileInfo_t* curNode = (bb_tileInfo_t*)cur->val;
         if(tile->x == curNode->x && tile->y == curNode->y && tile->z == curNode->z)
         {
             return true;
         }
+        cur = cur->next;
     }
     return false;
 }
@@ -97,6 +99,7 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
     uint16_t halfFieldWidth = TILE_FIELD_WIDTH/2;
     start->gCost = 0;
     start->hCost = 0;
+    start->toggleIteration = toggleIteration;
     //bb_tileInfo_t* start = HEAP_CAPS_MALLOC_DBG(sizeof(bb_tileInfo_t), MALLOC_CAP_SPIRAM);
     // It's like a memcopy
     //*start = *_start;
@@ -116,6 +119,7 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
         node_t* otherNode = currentNode->next;
         while (otherNode != NULL)
         {
+            printf("first loop\n");
             if(fCost((bb_tileInfo_t*)otherNode->val) < fCost((bb_tileInfo_t*)currentNode->val) ||
               (fCost((bb_tileInfo_t*)otherNode->val) == fCost((bb_tileInfo_t*)currentNode->val) &&
               ((bb_tileInfo_t*)otherNode->val)->hCost < ((bb_tileInfo_t*)currentNode->val)->hCost))
@@ -129,6 +133,7 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
         push(closed, (void*)current);
         if(isPerimeterNode(current))
         {
+            printf("path true\n");
             return true;
         }
 
@@ -139,9 +144,10 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
         node_t* neighbor = neighbors->first;
         while (neighbor != NULL)
         {
+            printf("second loop\n");
             bb_tileInfo_t* neighborTile = (bb_tileInfo_t*)neighbor->val;
             //if neighbor is not traversable or if neighbor is in closed
-            if((neighborTile->z && tilemap->fgTiles[neighborTile->x][neighborTile->y].health == 0) || (!neighborTile->z && tilemap->mgTiles[neighborTile->x][neighborTile->y].health > 0) ||
+            if((neighborTile->z && tilemap->fgTiles[neighborTile->x][neighborTile->y].health == 0) || (!neighborTile->z && tilemap->mgTiles[neighborTile->x][neighborTile->y].health == 0) ||
                 contains(closed, neighborTile))
             {
                 //skip to the next neighbor
@@ -163,18 +169,16 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
                 else
                 {
                     neighborTile->hCost = TILE_FIELD_WIDTH - 5 - neighborTile->x;
+                    //set parent of neighbor to current
                     neighborTile->parent = current;
                     
+                    //if neighbor is not in open
                     if(!contains(open, neighborTile))
                     {
+                        //add neighbor to open
                         push(open, (void*)neighborTile);
                     }
                 }
-                //set parent of neighbor to current
-
-                //if neighbor is not in open
-
-                    //add neighbor to open
             }
             neighbor = neighbor->next;
         }
@@ -185,6 +189,6 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
     FREE_DBG(open);
     clear(closed);
     FREE_DBG(closed);
-
+    printf("path false\n");
     return false;
 }

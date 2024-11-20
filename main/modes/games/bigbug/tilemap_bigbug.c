@@ -221,7 +221,7 @@ void flagNeighbors(const bb_tileInfo_t* tile, bb_gameData_t* gameData)
     left[0] = tile->x - 1;
     left[1] = tile->y;
     left[2] = 1;
-    push(&gameData->unsupported, (void*)left);
+    push(&gameData->pleaseCheck, (void*)left);
 
     if(tile->y > 0)
     {
@@ -229,14 +229,14 @@ void flagNeighbors(const bb_tileInfo_t* tile, bb_gameData_t* gameData)
         up[0] = tile->x;
         up[1] = tile->y - 1;
         up[2] = 1;
-        push(&gameData->unsupported, (void*)up);
+        push(&gameData->pleaseCheck, (void*)up);
     }
 
     uint8_t* right = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     right[0] = tile->x + 1;
     right[1] = tile->y;
     right[2] = 1;
-    push(&gameData->unsupported, (void*)right);
+    push(&gameData->pleaseCheck, (void*)right);
 
     if(tile->y < TILE_FIELD_HEIGHT)
     {
@@ -244,14 +244,14 @@ void flagNeighbors(const bb_tileInfo_t* tile, bb_gameData_t* gameData)
         down[0] = tile->x;
         down[1] = tile->y + 1;
         down[2] = 1;
-        push(&gameData->unsupported, (void*)down);
+        push(&gameData->pleaseCheck, (void*)down);
     }
 
     uint8_t* midground = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     midground[0] = tile->x;
     midground[1] = tile->y;
     midground[2] = 0;
-    push(&gameData->unsupported, (void*)midground);
+    push(&gameData->pleaseCheck, (void*)midground);
 }
 
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation,
