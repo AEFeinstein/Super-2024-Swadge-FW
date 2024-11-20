@@ -35,7 +35,7 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
     gameData->playerCharacter = PA_PLAYER_CHARACTER_PANGO;
 }
 
-void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t levelIndex)
+void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData)
 {
     gameData->gameState                = 0;
     gameData->btnState                 = 0;
@@ -83,7 +83,7 @@ void pa_updateLedsShowHighScores(paGameData_t* gameData)
 {
     if (((gameData->frameCount) % 10) == 0)
     {
-        for (int32_t i = 0; i < 8; i++)
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
             if (((gameData->frameCount >> 4) % CONFIG_NUM_LEDS) == i)
             {

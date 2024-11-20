@@ -22,8 +22,8 @@
 
 typedef struct
 {
-    int16_t btnState;
-    int16_t prevBtnState;
+    uint16_t btnState;
+    uint16_t prevBtnState;
     uint8_t gameState;
     uint8_t changeState;
 
@@ -76,7 +76,7 @@ typedef struct
 // Functions
 //==============================================================================
 void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManager);
-void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t levelIndex);
+void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData);
 void pa_scorePoints(paGameData_t* gameData, uint16_t points);
 void pa_resetGameDataLeds(paGameData_t* gameData);
 void pa_updateLedsShowHighScores(paGameData_t* gameData);
