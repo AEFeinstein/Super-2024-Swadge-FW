@@ -424,15 +424,15 @@ static void bb_UpdateTileSupport(void)
         {
             bigbug->gameData.toggleIteration = !bigbug->gameData.toggleIteration;
             //pathfind
-            if(!((shiftedVal[2] && pathfindToPerimeter(&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap, bigbug->gameData.toggleIteration)) ||
+            if(!(shiftedVal[2] ? 
+                pathfindToPerimeter(&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap, bigbug->gameData.toggleIteration):
                 pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap, bigbug->gameData.toggleIteration)))
             {
                 //trigger a cascading collapse
                 uint8_t* val = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-                *val = *shiftedVal;
+                memcpy(val, shiftedVal, 3 * sizeof(uint8_t));
                 push(&bigbug->gameData.unsupported, (void*)val);
             }
-
             FREE_DBG(shiftedVal);
             break;
         }
@@ -463,7 +463,7 @@ static void bb_UpdateTileSupport(void)
                 }
                 
                 // create a crumble animation
-                bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 1,
+                bb_createEntity(&(bigbug->gameData.entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 3,
                                 shiftedVal[0] * 32 + 16, shiftedVal[1] * 32 + 16, true, false);
 
                 // queue neighbors for crumbling
@@ -477,15 +477,17 @@ static void bb_UpdateTileSupport(void)
                     {
                         // TODO where is this FREE_DBG()'d?
                         // should be done now.
-                        uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
+                        uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                         val[0]        = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
                         val[1]        = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
                         val[2]        = shiftedVal[2];
                         push(&bigbug->gameData.unsupported, (void*)val);
                     }
                 }
-                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
-                *val = *shiftedVal;
+                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                val[0] = shiftedVal[0];
+                val[1] = shiftedVal[1];
+                val[2] = !shiftedVal[2];
                 push(&bigbug->gameData.unsupported, (void*)val);
 
                 FREE_DBG(shiftedVal);

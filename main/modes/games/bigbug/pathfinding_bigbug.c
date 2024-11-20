@@ -18,7 +18,7 @@ bool isPerimeterNode(const bb_tileInfo_t* tile)
     return tile->x == 4 || tile->x == TILE_FIELD_WIDTH - 5 || tile->y == TILE_FIELD_HEIGHT - 5;
 }
 
-void getNeighbors(const bb_tileInfo_t* tile, const bb_tileInfo_t* startNode, list_t* neighbors, bb_tilemap_t* tilemap, const bool toggleIteration)
+void getNeighbors(const bb_tileInfo_t* tile, list_t* neighbors, bb_tilemap_t* tilemap, const bool toggleIteration)
 {
     //left neighbor
     uint16_t neighborX = tile->x - 1;
@@ -111,20 +111,20 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
 
     // 3. while the open list is not empty
     // a) find the node with the least f on the open list, call it "current"
-    node_t* currentNode = open->first;
-    while (currentNode != NULL)
+    
+    while (open->first != NULL)
     {
-        node_t* otherNode = currentNode->next;
-        while (otherNode != NULL)
+        node_t* currentNode = open->first;
+        node_t* openNode = open->first;
+        while (openNode != NULL)
         {
-            printf("first loop\n");
-            if(fCost((bb_tileInfo_t*)otherNode->val) < fCost((bb_tileInfo_t*)currentNode->val) ||
-              (fCost((bb_tileInfo_t*)otherNode->val) == fCost((bb_tileInfo_t*)currentNode->val) &&
-              ((bb_tileInfo_t*)otherNode->val)->hCost < ((bb_tileInfo_t*)currentNode->val)->hCost))
+            if(fCost((bb_tileInfo_t*)openNode->val) < fCost((bb_tileInfo_t*)currentNode->val) ||
+              (fCost((bb_tileInfo_t*)openNode->val) < fCost((bb_tileInfo_t*)currentNode->val) &&
+              ((bb_tileInfo_t*)openNode->val)->hCost < ((bb_tileInfo_t*)currentNode->val)->hCost))
             {
-                currentNode = otherNode;
+                currentNode = openNode;
             }
-            otherNode = otherNode->next;
+            openNode = openNode->next;
         }
         // b) remove current from open and add current to closed
         bb_tileInfo_t* current = removeEntry(open,currentNode);
@@ -132,28 +132,27 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
         push(closed, (void*)current);
         if(isPerimeterNode(current))
         {
-            printf("path true\n");
             return true;
         }
 
         list_t* neighbors = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-        getNeighbors(current, start, neighbors, tilemap, toggleIteration);
+        getNeighbors(current, neighbors, tilemap, toggleIteration);
 
-        //foreach neihbor of the current node
+        //foreach neighbor of the current node
         node_t* neighbor = neighbors->first;
         while (neighbor != NULL)
         {
-            printf("second loop\n");
             bb_tileInfo_t* neighborTile = (bb_tileInfo_t*)neighbor->val;
             //if neighbor is not traversable or if neighbor is in closed
-            node_t* temp = closed->first;
+            //node_t* temp = closed->first;
             // while (temp != NULL) {
             //     printf("Node at %p, next: %p\n", (void*)temp, (void*)temp->next);
             //     temp = temp->next;
             // }
 
-            printf("A\n");
-            if((neighborTile->z && tilemap->fgTiles[neighborTile->x][neighborTile->y].health == 0) || (!neighborTile->z && tilemap->mgTiles[neighborTile->x][neighborTile->y].health == 0) ||
+            if((neighborTile->z ?
+                tilemap->fgTiles[neighborTile->x][neighborTile->y].health :
+                tilemap->mgTiles[neighborTile->x][neighborTile->y].health) == 0 ||
                 contains(closed, neighborTile))
             {
                 //skip to the next neighbor
@@ -162,12 +161,11 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
             }
 
             //if new path to neighbor is shorter or neighbor is not in open
-            uint16_t newMovementCostToNeighbor = current->gCost + 1;//simply use + 1 because each neighbor is an orthogonal step
-            printf("B\n");
-            if(newMovementCostToNeighbor < neighborTile->gCost || !contains(open, neighborTile))
+            uint16_t newCostToNeighbor = current->gCost + 1;//simply use + 1 because each neighbor is an orthogonal step
+            if(newCostToNeighbor < neighborTile->gCost || !contains(open, neighborTile))
             {
                 //set fCost of neighbor (we don't set the fCost, we calculate the gCost and hCost)
-                neighborTile->gCost = newMovementCostToNeighbor;
+                neighborTile->gCost = newCostToNeighbor;
                 //manhattan distance from the target
                 if(neighborTile->x < halfFieldWidth)
                 {
@@ -178,21 +176,18 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
                     neighborTile->hCost = TILE_FIELD_WIDTH - 5 - neighborTile->x;
                     //set parent of neighbor to current
                     neighborTile->parent = current;
-                    
-                    //if neighbor is not in open
-                    printf("C\n");
-                    if(!contains(open, neighborTile))
-                    {
-                        //add neighbor to open
-                        push(open, (void*)neighborTile);
-                    }
+                }
+                //if neighbor is not in open
+                if(!contains(open, neighborTile))
+                {
+                    //add neighbor to open
+                    push(open, (void*)neighborTile);
                 }
             }
             neighbor = neighbor->next;
         }
         clear(neighbors);
         FREE_DBG(neighbors);
-        currentNode = currentNode->next;
     } // end (while loop)
     clear(open);
     FREE_DBG(open);

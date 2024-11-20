@@ -350,8 +350,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
 
-    gData->fuel
-        -= self->gameData->elapsedUs >> 10; // Fuel decrements with time. Right shifting by 10 is fairly close to
+    // gData->fuel
+    //     -= self->gameData->elapsedUs >> 10; // Fuel decrements with time. Right shifting by 10 is fairly close to
                                             // converting microseconds to milliseconds without requiring division.
     if (gData->fuel < 0)
     {
