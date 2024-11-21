@@ -260,7 +260,7 @@ void bb_afterGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
 void bb_deployBooster(bb_entity_t* self);
 
-void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j);
+void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j, bool zeroHealth);
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings);
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);
