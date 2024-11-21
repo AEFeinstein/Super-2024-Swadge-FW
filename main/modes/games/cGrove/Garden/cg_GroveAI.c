@@ -382,35 +382,41 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
 
 /**
  * @brief Handles updating the egg
- * 
+ *
  * @param cg Game Data
  * @param elapsedUs Time since last frame
  */
 void cg_GroveEggAI(cGrove_t* cg, int64_t elapsedUs)
 {
-    for (int idx= 0 ; idx < CG_MAX_CHOWA; idx++)
+    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
     {
-        // Reduce the egg timer
-        cg->grove.unhatchedEggs[idx].timer += elapsedUs;
-        if (cg->grove.unhatchedEggs[idx].timer >= SECOND)
+        if (cg->grove.unhatchedEggs[idx].active)
         {
-            cg->grove.unhatchedEggs[idx].timer = 0;
-            cg->grove.unhatchedEggs[idx].stage++;
-        }
-
-        // Hatch if old enough
-        if (cg->grove.unhatchedEggs[idx].stage >= CG_ADULT_AGE){
-            cg->chowa[idx].active = true;
-            cg->chowa[idx].age = 0;
-            cg->chowa[idx].mood = CG_NEUTRAL;
-            for (int idx2 = 0; idx2 < CG_STAT_COUNT; idx2++)
+            // Reduce the egg timer
+            cg->grove.unhatchedEggs[idx].timer += elapsedUs;
+            if (cg->grove.unhatchedEggs[idx].timer >= SECOND)
             {
-                cg->chowa[idx2].stats[idx2] = 10 + esp_random() % 48;
+                cg->grove.unhatchedEggs[idx].timer = 0;
+                cg->grove.unhatchedEggs[idx].stage++;
             }
-            cg->chowa[idx].playerAffinity = 0;
-            strcpy(cg->chowa[idx].owner, cg->player);
-            cg->grove.state = CG_KEYBOARD_WRITE_NAME;
-            cg->grove.hatchIdx = idx;
+
+            // Hatch if old enough
+            if (cg->grove.unhatchedEggs[idx].stage >= (CG_ADULT_AGE / 8))
+            {
+                cg->grove.unhatchedEggs[idx].active = false;
+                cg->chowa[idx].active               = true;
+                cg->chowa[idx].age                  = 0;
+                cg->chowa[idx].mood                 = CG_NEUTRAL;
+                for (int idx2 = 0; idx2 < CG_STAT_COUNT; idx2++)
+                {
+                    cg->chowa[idx2].stats[idx2] = 10 + esp_random() % 48;
+                }
+                cg->chowa[idx].playerAffinity = 0;
+                cg->grove.chowa[idx].aabb.pos = cg->grove.unhatchedEggs[idx].aabb.pos;
+                strcpy(cg->chowa[idx].owner, cg->player);
+                cg->grove.state    = CG_KEYBOARD_WRITE_NAME;
+                cg->grove.hatchIdx = idx;
+            }
         }
     }
 }
