@@ -17,6 +17,7 @@
 #include "cg_Chowa.h"
 #include "cg_Grove.h"
 #include "cg_Spar.h"
+#include "textEntry.h"
 #include <esp_random.h>
 #include <esp_heap_caps.h>
 
@@ -168,7 +169,7 @@ static void cGroveEnterMode(void)
     midiGmOn(player);
 
     // FIXME: test. Load values from NVM
-    for (int i = 0; i < CG_MAX_CHOWA; i++)
+    for (int i = 0; i < CG_MAX_CHOWA -1; i++)
     {
         cg->chowa[i].active = true;
         cg->chowa[i].type   = CG_KING_DONUT;
@@ -228,6 +229,13 @@ static void cGroveEnterMode(void)
         snprintf(buffer, sizeof(buffer) - 1, "Owner%d", i);
         strcpy(cg->guests[i].owner, buffer);
     }
+
+    // Initialize Text Entry
+    textEntryInit(&cg->menuFont, CG_MAX_STR_LEN - 1, cg->buffer);
+    textEntrySetBGTransparent();
+    // TODO: Customize text entry
+
+    // TODO: If first run, do tutorial and get players name
 }
 
 static void cGroveExitMode(void)
@@ -294,6 +302,7 @@ static void cGroveMainLoop(int64_t elapsedUs)
     {
         // Resetting back to the menu
         cg->unload = false;
+        globalMidiPlayerStop(true);
         switch (cg->state)
         {
             case CG_GROVE:

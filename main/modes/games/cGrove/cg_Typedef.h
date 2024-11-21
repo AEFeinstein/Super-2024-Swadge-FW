@@ -48,8 +48,7 @@ typedef struct
 // Defines =============================
 #define CG_MAX_CHOWA  5  // Max number of Chowa allowed on a swadge
 #define CG_STAT_COUNT 6  // Number of stats
-#define CG_NUM_TYPES  7  // Total number of different types of Chowa
-#define CG_ADULT_AGE  64 // Age before  a chowa becomes an adult
+#define CG_ADULT_AGE  64 // Age before a chowa becomes an adult
 
 // Enums ===============================
 typedef enum
@@ -126,8 +125,9 @@ typedef enum
 typedef enum
 {
     CG_NORMAL,
-    CG_CHO,
     CG_KING_DONUT,
+    CG_NUM_TYPES, ///< Move if more get added
+    CG_CHO,
     CG_RED_LUMBERJACK,
     CG_GREEN_LUMBERJACK,
     CG_KOSMO,
@@ -227,6 +227,7 @@ typedef enum
     CG_GROVE_VIEW_STATS,
     CG_GROVE_ABANDON,
     CG_GROVE_TUTORIAL,
+    CG_KEYBOARD_WRITE_NAME,
 } cgGroveState_t;
 
 typedef enum
@@ -288,15 +289,18 @@ typedef struct
 
 typedef struct
 {
+    bool active;        ///< if slot is in use
     cgColorType_t type; ///< Used for color data
     int64_t timer;      ///< us since last stage
     int16_t stage;      ///< Current stage
+    rectangle_t aabb;   ///< Position of the Egg
 } cgEgg_t;
 
 typedef struct
 {
     // Basic data
     cgChowa_t* chowa; ///< Main Chowa data
+    cgEgg_t* egg;     ///< If not null, Egg is in this slot
     rectangle_t aabb; ///< Position and bounding box for grabbing
 
     // Items
@@ -344,6 +348,8 @@ typedef struct
 
     // State
     cgGroveState_t state; ///< Current state of the grove
+    int64_t saveTimer;    ///< How long until CHowa are automatically saved
+    bool tutorial;        ///< If tutorial has been run
 
     // Field data
     cgItem_t items[CG_GROVE_MAX_ITEMS];                            ///< Items present in the Grove
@@ -353,7 +359,8 @@ typedef struct
     cgInventory_t inv;                                             ///< Inventory struct
     cgGroveMoney_t ring;                                           ///< Ring available to collect
     bool isBGMPlaying;                                             ///< If the BGM needs to be restarted
-    cgEgg_t eggs[CG_MAX_CHOWA];                                    ///< Array of un-hatched eggs
+    cgEgg_t unhatchedEggs[CG_MAX_CHOWA];                           ///< Array of un-hatched eggs
+    int8_t hatchIdx;                                               ///< Used for text input
 
     // Menu
     menu_t* menu;                  ///< Shop menu object
@@ -372,6 +379,8 @@ typedef struct
     cgItem_t* heldItem;        ///< The held item
     bool holdingChowa;         ///< If the player is holding a Chowa
     cgGroveChowa_t* heldChowa; ///< The held Chowa
+    bool isPetting;            ///< If the petting gesture should be going on
+    int64_t pettingTimer;      ///< How long before petting resets
 } cgGrove_t;
 
 //==============================================================================
@@ -592,4 +601,10 @@ typedef struct
     // Chowa
     cgChowa_t chowa[CG_MAX_CHOWA];              ///< List of Chowa
     cgChowa_t guests[CG_GROVE_MAX_GUEST_CHOWA]; ///< Guest Chowa
+
+    // Text Entry buffer
+    char buffer[CG_MAX_STR_LEN];
+
+    // Player data
+    char player[CG_MAX_STR_LEN];
 } cGrove_t;

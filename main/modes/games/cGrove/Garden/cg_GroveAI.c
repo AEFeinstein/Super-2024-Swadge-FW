@@ -58,9 +58,6 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c);
  */
 void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
 {
-    // - Go to place/item
-    // - Use item (Must be holding item)
-
     // Abort if not active
     if (!c->chowa->active)
     {
@@ -71,12 +68,13 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
     c->timeLeft -= elapsedUs;
 
     // Update Age
-    if (c->chowa->age <= 70)
+    if (c->chowa->age <= CG_ADULT_AGE)
     {
         c->ageTimer += elapsedUs;
-        if (c->ageTimer >= SECOND * 60)
+        if (c->ageTimer >= (SECOND * 60))
         {
             c->chowa->age += 1;
+            c->ageTimer = 0;
         }
     }
 
@@ -378,6 +376,41 @@ void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* c, int64_t elapsedUs)
         default:
         {
             break;
+        }
+    }
+}
+
+/**
+ * @brief Handles updating the egg
+ * 
+ * @param cg Game Data
+ * @param elapsedUs Time since last frame
+ */
+void cg_GroveEggAI(cGrove_t* cg, int64_t elapsedUs)
+{
+    for (int idx= 0 ; idx < CG_MAX_CHOWA; idx++)
+    {
+        // Reduce the egg timer
+        cg->grove.unhatchedEggs[idx].timer += elapsedUs;
+        if (cg->grove.unhatchedEggs[idx].timer >= SECOND)
+        {
+            cg->grove.unhatchedEggs[idx].timer = 0;
+            cg->grove.unhatchedEggs[idx].stage++;
+        }
+
+        // Hatch if old enough
+        if (cg->grove.unhatchedEggs[idx].stage >= CG_ADULT_AGE){
+            cg->chowa[idx].active = true;
+            cg->chowa[idx].age = 0;
+            cg->chowa[idx].mood = CG_NEUTRAL;
+            for (int idx2 = 0; idx2 < CG_STAT_COUNT; idx2++)
+            {
+                cg->chowa[idx2].stats[idx2] = 10 + esp_random() % 48;
+            }
+            cg->chowa[idx].playerAffinity = 0;
+            strcpy(cg->chowa[idx].owner, cg->player);
+            cg->grove.state = CG_KEYBOARD_WRITE_NAME;
+            cg->grove.hatchIdx = idx;
         }
     }
 }

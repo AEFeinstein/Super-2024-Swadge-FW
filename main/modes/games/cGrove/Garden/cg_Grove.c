@@ -18,6 +18,7 @@
 #include "cg_GroveDraw.h"
 #include "cg_Items.h"
 #include "cg_GroveItems.h"
+#include "textEntry.h"
 #include <esp_random.h>
 
 //==============================================================================
@@ -62,6 +63,11 @@ static const char* eggsIntactSprites[] = {
     "chowa_egg1.wsg", "chowa_egg2.wsg", "chowa_egg3.wsg", "chowa_egg4.wsg", "chowa_egg5.wsg", "chowa_egg6.wsg",
 };
 
+static const char* eggsCrackedSprites[] = {
+    "chowa_egg_hatch1.wsg", "chowa_egg_hatch2.wsg", "chowa_egg_hatch3.wsg",
+    "chowa_egg_hatch4.wsg", "chowa_egg_hatch5.wsg", "chowa_egg_hatch6.wsg",
+};
+
 static const char* itemSprites[] = {
     "agi_book.wsg",   "cha_book.wsg", "spd_book.wsg",     "sta_book.wsg", "str_book.wsg", "cg_ball.wsg",
     "cg_crayons.wsg", "cg_knife.wsg", "cg_toy_sword.wsg", "cake.wsg",     "souffle.wsg",  "DonutRing.wsg",
@@ -73,7 +79,9 @@ static const char* menuLabels[] = {
     "Shop for items", "View inventory", "View Chowa", "Release Chowa", "Tutorial", "Exit Menu", "Exit Grove",
 };
 
-static const char* nvsBlobKeys[] = {"chowaGroveItems", "chowaGroveInventory"};
+static const char* nvsBlobKeys[] = {"chowaGroveItems", "chowaGroveInventory", "chowaGroveEggs"};
+
+static const char nvsTutorialKey[] = "groveTutorialRun";
 
 //==============================================================================
 // Function Declarations
@@ -186,6 +194,11 @@ void cg_initGrove(cGrove_t* cg)
     {
         loadWsg(eggsIntactSprites[idx], &cg->grove.eggs[idx], true);
     }
+    cg->grove.crackedEggs = calloc(ARRAY_SIZE(eggsCrackedSprites), sizeof(wsg_t));
+    for (int32_t idx = 0; idx < ARRAY_SIZE(eggsCrackedSprites); idx++)
+    {
+        loadWsg(eggsCrackedSprites[idx], &cg->grove.crackedEggs[idx], true);
+    }
 
     // Audio
     loadMidiFile("Chowa_Grove_Meadow.mid", &cg->grove.bgm, true);
@@ -268,16 +281,39 @@ void cg_initGrove(cGrove_t* cg)
     cg->grove.renderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     // Load inventory from NVS
-    blobLen = sizeof(cgInventory_t);
+    readNvsBlob(nvsBlobKeys[1], NULL, &blobLen);
     if (!readNvsBlob(nvsBlobKeys[1], &cg->grove.inv, &blobLen))
     {
-        cg->grove.inv.money = 100;
+        cg->grove.inv.money          = 100;
         cg->grove.inv.quantities[11] = 2;
     }
 
+    // Load eggs from NVS
+    readNvsBlob(nvsBlobKeys[2], NULL, &blobLen); // Get len
+    if (!readNvsBlob(nvsBlobKeys[2], &cg->grove.unhatchedEggs, &blobLen))
+    {
+        for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+        {
+            cg->grove.unhatchedEggs[idx].active      = false;
+            cg->grove.unhatchedEggs[idx].aabb.height = 32;
+            cg->grove.unhatchedEggs[idx].aabb.width  = 32;
+        }
+    }
+
     // Set initial state
-    // TODO: Load tutorial if first run
-    cg->grove.state = CG_GROVE_FIELD;
+    int8_t t;
+    readNvs32(nvsTutorialKey, &t);
+    if (t == 0)
+    {
+        cg->grove.state = CG_GROVE_TUTORIAL;
+        t = 1;
+        writeNvs32(nvsTutorialKey, t);
+    }
+    else
+    {
+        cg->grove.state = CG_GROVE_FIELD;
+    }
+    cg->grove.saveTimer = 0;
 }
 
 /**
@@ -287,6 +323,12 @@ void cg_initGrove(cGrove_t* cg)
  */
 void cg_deInitGrove(cGrove_t* cg)
 {
+    // Save data
+    writeNvsBlob(nvsBlobKeys[0], &cg->grove.items, sizeof(cgItem_t) * CG_GROVE_MAX_ITEMS);
+    writeNvsBlob(nvsBlobKeys[1], &cg->grove.inv, sizeof(cgInventory_t));
+    writeNvsBlob(nvsBlobKeys[2], &cg->grove.unhatchedEggs, sizeof(cgEgg_t) * CG_MAX_CHOWA);
+    // TODO: Save Chowa to NVS
+
     deinitMenuManiaRenderer(cg->grove.renderer);
     deinitMenu(cg->grove.menu);
 
@@ -294,6 +336,11 @@ void cg_deInitGrove(cGrove_t* cg)
     // Audio
     unloadMidiFile(&cg->grove.bgm);
     // WSGs
+    for (uint8_t i = 0; i < ARRAY_SIZE(eggsCrackedSprites); i++)
+    {
+        freeWsg(&cg->grove.crackedEggs[i]);
+    }
+    free(cg->grove.crackedEggs);
     for (uint8_t i = 0; i < ARRAY_SIZE(eggsIntactSprites); i++)
     {
         freeWsg(&cg->grove.eggs[i]);
@@ -345,6 +392,14 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
         // soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
         cg->grove.isBGMPlaying = true;
     }
+    // Save timer
+    cg->grove.saveTimer += elapsedUS;
+    if (cg->grove.saveTimer >= (1000000 * 60))
+    {
+        // TODO: Save Chowa to NVS
+        cg->grove.saveTimer = 0;
+    }
+
     switch (cg->grove.state)
     {
         case CG_GROVE_MENU:
@@ -374,6 +429,14 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
         {
             // Input
             cg_handleInputGarden(cg);
+            if (cg->grove.isPetting)
+            {
+                cg->grove.pettingTimer += elapsedUS;
+                if (cg->grove.pettingTimer >= 330000)
+                {
+                    cg->grove.isPetting = false;
+                }
+            }
 
             // Garden Logic
             if (cg->grove.holdingItem)
@@ -417,6 +480,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                     cg_GroveAI(cg, &cg->grove.chowa[idx], elapsedUS);
                 }
             }
+            cg_GroveEggAI(cg, elapsedUS);
 
             // Draw
             cg_groveDrawField(cg, elapsedUS);
@@ -457,13 +521,14 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                     // Attempt to sell an item
                     if (cg->grove.inv.quantities[cg->grove.shopSelection] > 0)
                     {
-                        cg->grove.inv.money += itemPrices[cg->grove.shopSelection];
+                        cg->grove.inv.money += itemPrices[cg->grove.shopSelection] >> 1;
                         cg->grove.inv.quantities[cg->grove.shopSelection] -= 1;
                     }
                 }
                 else if (evt.down)
                 {
                     cg->grove.state = CG_GROVE_MENU;
+                    writeNvsBlob(nvsBlobKeys[1], &cg->grove.inv, sizeof(cgInventory_t));
                 }
             }
             // Draw shop
@@ -496,7 +561,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 else if (evt.down && evt.button & PB_A)
                 {
                     // Attempt to add item to field
-                    if (cg->grove.inv.quantities[cg->grove.shopSelection] > 0)
+                    if (cg->grove.shopSelection != 11 && cg->grove.inv.quantities[cg->grove.shopSelection] > 0)
                     {
                         if (strcmp(cg->grove.items[cg->grove.groveActiveItemIdx].name, "") != 0)
                         {
@@ -533,13 +598,45 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                             cg->grove.groveActiveItemIdx = 0;
                         }
                     }
+                    else if (cg->grove.shopSelection == 11 && cg->grove.inv.quantities[cg->grove.shopSelection] > 0)
+                    {
+                        // Handle spawning an egg.
+                        bool handled = cg_checkFull(cg); // If the grove is already full, bails
+                        for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+                        {
+                            if (handled || cg->grove.chowa[idx].chowa->active || cg->grove.unhatchedEggs[idx].active)
+                            {
+                                continue;
+                            }
+                            // Spawn one egg
+                            cg->grove.inv.quantities[cg->grove.shopSelection]--;
+                            cg->grove.unhatchedEggs[idx].active = true;
+                            cg->grove.unhatchedEggs[idx].stage  = 0;
+                            cg->grove.unhatchedEggs[idx].timer  = 0;
+                            // Random position roughly centered
+                            vec_t temp = {.y = ((cg->grove.groveBG.h - 100) + (esp_random() % 100)) >> 1,
+                                          .x = ((cg->grove.groveBG.w - 100) + (esp_random() % 100)) >> 1};
+                            cg->grove.unhatchedEggs[idx].aabb.pos = temp;
+                            // Random type
+                            cg->grove.unhatchedEggs[idx].type = esp_random() % CG_NUM_TYPES;
+                            // Set up Chowa here as well
+                            cg->grove.chowa[idx].chowa->type = cg->grove.unhatchedEggs[idx].type;
+                            // Save to NVS
+                            writeNvsBlob(nvsBlobKeys[2], &cg->grove.unhatchedEggs, sizeof(cgEgg_t) * CG_MAX_CHOWA);
+                            // Disable loop
+                            handled = true;
+                        }
+                    }
+                    // Save state of items to NVS
+                    writeNvsBlob(nvsBlobKeys[0], &cg->grove.items, sizeof(cgItem_t) * CG_GROVE_MAX_ITEMS);
+                    writeNvsBlob(nvsBlobKeys[1], &cg->grove.inv, sizeof(cgInventory_t));
                 }
                 else if (evt.down && evt.button & PB_B)
                 {
                     // Clear all items from field
                     for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
                     {
-                        for (int idx2 = 0; idx2 < CG_MAX_TYPE_ITEMS; idx2++)
+                        for (int idx2 = 0; idx2 < CG_MAX_TYPE_ITEMS - 1; idx2++)
                         {
                             if (strcmp(cg->grove.items[idx].name, shopMenuItems[idx2]) == 0)
                             {
@@ -642,12 +739,37 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
             cg_groveDrawAbandon(cg);
             break;
         }
-        /* case CG_GROVE_TUTORIAL:
+            /* case CG_GROVE_TUTORIAL:
+            {
+                // Handle input
+                // Draw Tutorial
+                // break;
+            } */
+        case CG_KEYBOARD_WRITE_NAME:
         {
-            // Handle input
-            // Draw Tutorial
-            // break;
-        } */
+            // Run keyboard
+            buttonEvt_t evt = {0};
+            bool done       = false;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                done = !textEntryInput(evt.down, evt.button);
+            }
+            if (done)
+            {
+                // If done, save Chowa data
+                strcpy(cg->chowa[cg->grove.hatchIdx].name, cg->buffer);
+                // Save to NVS
+                writeNvsBlob(nvsBlobKeys[2], &cg->grove.unhatchedEggs, sizeof(cgEgg_t) * CG_MAX_CHOWA);
+                // TODO: Save Chowa to NVS
+                // Go back to grove state
+                cg->grove.state = CG_GROVE_FIELD;
+                // Clear text entry
+                strcpy(cg->buffer, "");
+            }
+            cg_groveDrawField(cg, 0);
+            textEntryDraw(elapsedUS);
+            break;
+        }
         default:
         {
             // Something isn't implemented, so kick back to menu
@@ -657,13 +779,24 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
     }
 }
 
+/**
+ * @brief Clears Grove related NVS keys
+ * 
+ */
+void cg_clearGroveNVSData(){
+    for (int idx = 0; idx < ARRAY_SIZE(nvsBlobKeys); idx++)
+    {
+        eraseNvsKey(nvsBlobKeys[idx]);
+    }
+    eraseNvsKey(nvsTutorialKey);
+}
+
 //==============================================================================
 // Static functions
 //==============================================================================
 
 static void cg_attemptGrab(cGrove_t* cg)
 {
-    // FIXME: Fails on some Chowa. Possibly the guests?
     vec_t collVec;
     cg->grove.heldItem = NULL;
     // Check if over a Chowa
@@ -709,55 +842,76 @@ static void cg_handleInputGarden(cGrove_t* cg)
     if (cg->touch)
     {
         int32_t phi, r, intensity;
-        if (getTouchJoystick(&phi, &r, &intensity))
+        vec_t temp;
+        rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
+                            .height = cg->grove.cursor.height,
+                            .width  = cg->grove.cursor.width};
+        if (!cg->grove.isPetting)
         {
-            int16_t speed = phi >> 5;
-            if (!(speed <= 5))
+            if (getTouchJoystick(&phi, &r, &intensity))
             {
-                printf("touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32 "\n", phi, r, intensity);
-                // Move hand
-                cg->grove.cursor.pos.x += (getCos1024(phi) * speed) / 1024;
-                cg->grove.cursor.pos.y -= (getSin1024(phi) * speed) / 1024;
-            }
-        }
-        while (checkButtonQueueWrapper(&evt))
-        {
-            if (evt.button & PB_A && evt.down)
-            {
-                if (cg->grove.holdingItem)
+                int16_t speed = phi >> 5;
+                if (!(speed <= 5))
                 {
-                    cg->grove.holdingItem = false;
-                    cg->grove.heldItem    = NULL;
-                }
-                else if (cg->grove.holdingChowa)
-                {
-                    cg->grove.holdingChowa      = false;
-                    cg->grove.heldChowa->gState = CHOWA_IDLE;
-                }
-                else
-                {
-                    cg_attemptGrab(cg);
+                    printf("touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32 "\n", phi, r,
+                           intensity);
+                    // Move hand
+                    cg->grove.cursor.pos.x += (getCos1024(phi) * speed) / 1024;
+                    cg->grove.cursor.pos.y -= (getSin1024(phi) * speed) / 1024;
                 }
             }
-            if (evt.button & PB_B && evt.down)
+            while (checkButtonQueueWrapper(&evt))
             {
-                for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+                if ((evt.button & PB_A || evt.button & PB_DOWN) && evt.down)
                 {
-                    vec_t temp;
-                    rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
-                                        .height = cg->grove.cursor.height,
-                                        .width  = cg->grove.cursor.width};
-                    // Chowa
-                    if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
+                    if (cg->grove.holdingItem)
                     {
-                        cg->grove.chowa[idx].gState   = CHOWA_PET;
-                        cg->grove.chowa[idx].timeLeft = 1000000;
+                        cg->grove.holdingItem = false;
+                        cg->grove.heldItem    = NULL;
+                    }
+                    else if (cg->grove.holdingChowa)
+                    {
+                        cg->grove.holdingChowa      = false;
+                        cg->grove.heldChowa->gState = CHOWA_IDLE;
+                    }
+                    else if (cg->grove.ring.active && rectRectIntersection(rect, cg->grove.ring.aabb, &temp))
+                    {
+                        cg->grove.ring.active = false;
+                        cg->grove.inv.money += 1;
+                    }
+                    else
+                    {
+                        cg_attemptGrab(cg);
                     }
                 }
-            }
-            if (evt.button & PB_START && evt.down)
-            {
-                cg->grove.state = CG_GROVE_MENU;
+                if ((evt.button & PB_B || evt.button & PB_RIGHT) && evt.down)
+                {
+                    for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+                    {
+                        // Chowa
+                        if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
+                        {
+                            cg->grove.chowa[idx].gState   = CHOWA_PET;
+                            cg->grove.chowa[idx].timeLeft = 1000000;
+                            cg->grove.isPetting           = true;
+                            cg->grove.pettingTimer        = 0;
+                        }
+                    }
+                    // Eggs
+                    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+                    {
+                        if (rectRectIntersection(rect, cg->grove.unhatchedEggs[idx].aabb, &temp))
+                        {
+                            cg->grove.unhatchedEggs[idx].stage++;
+                            cg->grove.isPetting    = true;
+                            cg->grove.pettingTimer = 0;
+                        }
+                    }
+                }
+                if (evt.button & PB_START && evt.down)
+                {
+                    cg->grove.state = CG_GROVE_MENU;
+                }
             }
         }
     }
@@ -767,61 +921,76 @@ static void cg_handleInputGarden(cGrove_t* cg)
         rectangle_t rect = {.pos    = addVec2d(cg->grove.cursor.pos, cg->grove.camera.pos),
                             .height = cg->grove.cursor.height,
                             .width  = cg->grove.cursor.width};
-        while (checkButtonQueueWrapper(&evt))
+        if (!cg->grove.isPetting)
         {
-            if (evt.button & PB_RIGHT)
+            while (checkButtonQueueWrapper(&evt))
             {
-                cg->grove.cursor.pos.x += CG_CURSOR_SPEED;
-            }
-            else if (evt.button & PB_LEFT)
-            {
-                cg->grove.cursor.pos.x -= CG_CURSOR_SPEED;
-            }
-            if (evt.button & PB_UP)
-            {
-                cg->grove.cursor.pos.y -= CG_CURSOR_SPEED;
-            }
-            else if (evt.button & PB_DOWN)
-            {
-                cg->grove.cursor.pos.y += CG_CURSOR_SPEED;
-            }
-            if (evt.button & PB_A && evt.down)
-            {
-                if (cg->grove.holdingItem)
+                if (evt.button & PB_RIGHT)
                 {
-                    cg->grove.holdingItem = false;
-                    cg->grove.heldItem    = NULL;
+                    cg->grove.cursor.pos.x += CG_CURSOR_SPEED;
                 }
-                else if (cg->grove.holdingChowa)
+                else if (evt.button & PB_LEFT)
                 {
-                    cg->grove.holdingChowa      = false;
-                    cg->grove.heldChowa->gState = CHOWA_IDLE;
+                    cg->grove.cursor.pos.x -= CG_CURSOR_SPEED;
                 }
-                else if (cg->grove.ring.active && rectRectIntersection(rect, cg->grove.ring.aabb, &temp))
+                if (evt.button & PB_UP)
                 {
-                    cg->grove.ring.active = false;
-                    cg->grove.inv.money += 1;
+                    cg->grove.cursor.pos.y -= CG_CURSOR_SPEED;
                 }
-                else
+                else if (evt.button & PB_DOWN)
                 {
-                    cg_attemptGrab(cg);
+                    cg->grove.cursor.pos.y += CG_CURSOR_SPEED;
                 }
-            }
-            if (evt.button & PB_B && evt.down)
-            {
-                for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+                if (evt.button & PB_A && evt.down)
                 {
-                    // Chowa
-                    if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
+                    if (cg->grove.holdingItem)
                     {
-                        cg->grove.chowa[idx].gState   = CHOWA_PET;
-                        cg->grove.chowa[idx].timeLeft = 1000000;
+                        cg->grove.holdingItem = false;
+                        cg->grove.heldItem    = NULL;
+                    }
+                    else if (cg->grove.holdingChowa)
+                    {
+                        cg->grove.holdingChowa      = false;
+                        cg->grove.heldChowa->gState = CHOWA_IDLE;
+                    }
+                    else if (cg->grove.ring.active && rectRectIntersection(rect, cg->grove.ring.aabb, &temp))
+                    {
+                        cg->grove.ring.active = false;
+                        cg->grove.inv.money += 1;
+                    }
+                    else
+                    {
+                        cg_attemptGrab(cg);
                     }
                 }
-            }
-            if (evt.button & PB_START && evt.down)
-            {
-                cg->grove.state = CG_GROVE_MENU;
+                if (evt.button & PB_B && evt.down)
+                {
+                    for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+                    {
+                        // Chowa
+                        if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
+                        {
+                            cg->grove.chowa[idx].gState   = CHOWA_PET;
+                            cg->grove.chowa[idx].timeLeft = 1000000;
+                            cg->grove.isPetting           = true;
+                            cg->grove.pettingTimer        = 0;
+                        }
+                    }
+                    // Eggs
+                    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+                    {
+                        if (rectRectIntersection(rect, cg->grove.unhatchedEggs[idx].aabb, &temp))
+                        {
+                            cg->grove.unhatchedEggs[idx].stage++;
+                            cg->grove.isPetting    = true;
+                            cg->grove.pettingTimer = 0;
+                        }
+                    }
+                }
+                if (evt.button & PB_START && evt.down)
+                {
+                    cg->grove.state = CG_GROVE_MENU;
+                }
             }
         }
     }
@@ -930,9 +1099,7 @@ static void shopMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == menuLabels[6])
         {
             // Exit Mode
-            cgr->state  = CG_MAIN_MENU;
             cgr->unload = true;
-            globalMidiPlayerStop(true);
         }
     }
 }

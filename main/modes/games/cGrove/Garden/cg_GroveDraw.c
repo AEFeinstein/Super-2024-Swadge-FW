@@ -35,6 +35,7 @@ static const char invText[]        = "Inventory";
 static const char statText[]       = "Chowa Stats";
 static const char kickChowa[]      = "Press A to kick this Chowa";
 static const char slotEmpty[]      = "No Chowa in this slot";
+static const char hatchingEgg[]    = "An egg is incubating!";
 static const char confirmDefault[] = "Press A to go back, press B to confirm";
 static const char abandonChowa[]   = "Release Chowa";
 
@@ -72,6 +73,13 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx);
  * @param cg Game Data
  */
 static void cg_drawRing(cGrove_t* cg);
+
+/**
+ * @brief Draws the eggs on the field
+ *
+ * @param cg Game data
+ */
+static void cg_drawEgg(cGrove_t* cg);
 
 /**
  * @brief Draws a Chowa
@@ -136,6 +144,9 @@ void cg_groveDrawField(cGrove_t* cg, int64_t elapsedUs)
     }
 
     cg_drawRing(cg);
+
+    // Draw Egg
+    cg_drawEgg(cg);
 
     // Draw Chowa
     cg_drawChowaGrove(cg, elapsedUs);
@@ -362,6 +373,15 @@ void cg_groveDrawStats(cGrove_t* cg)
             drawTextWordWrap(&cg->menuFont, c550, kickChowa, &x, &y, 120, TFT_HEIGHT);
         }
     }
+    else if (cg->grove.shopSelection < CG_MAX_CHOWA && cg->grove.unhatchedEggs[cg->grove.shopSelection].active)
+    {
+        // Draw an egg instead
+        drawWsgSimpleScaled(&cg->grove.eggs[cg->grove.unhatchedEggs[cg->grove.shopSelection].type], 115, 90, 3, 3);
+
+        // Draw egg text
+        drawText(&cg->largeMenuFont, c555, hatchingEgg, (TFT_WIDTH - textWidth(&cg->largeMenuFont, hatchingEgg)) >> 1,
+                 ((TFT_HEIGHT - cg->largeMenuFont.height) >> 1) + 40);
+    }
     else
     {
         // Chowa is inactive
@@ -418,12 +438,39 @@ void cg_groveDrawAbandon(cGrove_t* cg)
     }
 }
 
+/**
+ * @brief Checks if the grove already have too many chowa + eggs
+ *
+ * @param cg Game data
+ * @return true Grove is full
+ * @return false Grove is not full
+ */
+bool cg_checkFull(cGrove_t* cg)
+{
+    bool full;
+    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+    {
+        if (!cg->chowa[idx].active || !cg->grove.unhatchedEggs[idx].active)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 //==============================================================================
 // Static Functions
 //==============================================================================
 
 static void cg_drawHand(cGrove_t* cg)
 {
+    // If petting
+    if (cg->grove.isPetting)
+    {
+        int8_t idx = 1 + (cg->grove.pettingTimer % 2);
+        drawWsgSimple(&cg->grove.cursors[idx], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
+        return;
+    }
     // If holding
     if (cg->grove.holdingChowa || cg->grove.holdingItem)
     {
@@ -448,6 +495,15 @@ static void cg_drawHand(cGrove_t* cg)
     {
         // Items
         if (rectRectIntersection(rect, cg->grove.items[idx].aabb, &temp))
+        {
+            drawWsgSimple(&cg->grove.cursors[1], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
+            return;
+        }
+    }
+    // Eggs
+    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+    {
+        if (rectRectIntersection(rect, cg->grove.unhatchedEggs[idx].aabb, &temp))
         {
             drawWsgSimple(&cg->grove.cursors[1], cg->grove.cursor.pos.x, cg->grove.cursor.pos.y);
             return;
@@ -524,6 +580,24 @@ static void cg_drawRing(cGrove_t* cg)
     if (cg->grove.ring.active)
     {
         drawWsgSimple(&cg->grove.itemsWSGs[11], xOffset, yOffset);
+    }
+}
+
+static void cg_drawEgg(cGrove_t* cg)
+{
+    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+    {
+        if (cg->grove.unhatchedEggs[idx].active)
+        {
+            wsg_t* spr = &cg->grove.eggs[cg->grove.unhatchedEggs[idx].type];
+            if (cg->grove.unhatchedEggs[idx].stage >= (CG_ADULT_AGE - 10))
+            {
+                cg_getChowaWSG(cg, &cg->chowa[idx], CG_ANIM_FLAIL, 0);
+                spr = &cg->grove.crackedEggs[cg->grove.unhatchedEggs[idx].type];
+            }
+            drawWsgSimpleScaled(spr, cg->grove.unhatchedEggs[idx].aabb.pos.x - cg->grove.camera.pos.x,
+                                cg->grove.unhatchedEggs[idx].aabb.pos.y - cg->grove.camera.pos.y, 2, 2);
+        }
     }
 }
 
@@ -995,6 +1069,16 @@ static void cg_groveDebug(cGrove_t* cg)
             drawCircle(cg->grove.chowa[i].targetPos.x + xOffset, cg->grove.chowa[i].targetPos.y + yOffset, 12, c500);
             drawLineFast(cg->grove.chowa[i].aabb.pos.x + xOffset, cg->grove.chowa[i].aabb.pos.y + yOffset,
                          cg->grove.cursor.pos.x, cg->grove.cursor.pos.y, c505);
+        }
+    }
+    for (int32_t i = 0; i < CG_MAX_CHOWA; i++)
+    {
+        // Draw Chowa info
+        if (cg->grove.unhatchedEggs[i].active)
+        {
+            drawRect(cg->grove.unhatchedEggs[i].aabb.pos.x + xOffset, cg->grove.unhatchedEggs[i].aabb.pos.y + yOffset,
+                     cg->grove.unhatchedEggs[i].aabb.pos.x + cg->grove.unhatchedEggs[i].aabb.width + xOffset,
+                     cg->grove.unhatchedEggs[i].aabb.pos.y + cg->grove.unhatchedEggs[i].aabb.height + yOffset, c500);
         }
     }
 }

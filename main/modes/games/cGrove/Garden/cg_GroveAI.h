@@ -21,3 +21,4 @@
 //==============================================================================
 
 void cg_GroveAI(cGrove_t* cg, cgGroveChowa_t* chowa, int64_t elapsedUs);
+void cg_GroveEggAI(cGrove_t* cg, int64_t elapsedUs);

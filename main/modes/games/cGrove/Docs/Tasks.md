@@ -23,7 +23,6 @@
 
 ## Grove
 - Create/Add SFX
-- Eggs/Egg spawn timer
 
 ## Race
 - Build mode
