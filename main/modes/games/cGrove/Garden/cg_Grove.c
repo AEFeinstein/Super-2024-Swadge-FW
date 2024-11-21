@@ -301,7 +301,7 @@ void cg_initGrove(cGrove_t* cg)
     }
 
     // Set initial state
-    int8_t t;
+    int32_t t;
     readNvs32(nvsTutorialKey, &t);
     if (t == 0)
     {
@@ -327,7 +327,7 @@ void cg_deInitGrove(cGrove_t* cg)
     writeNvsBlob(nvsBlobKeys[0], &cg->grove.items, sizeof(cgItem_t) * CG_GROVE_MAX_ITEMS);
     writeNvsBlob(nvsBlobKeys[1], &cg->grove.inv, sizeof(cgInventory_t));
     writeNvsBlob(nvsBlobKeys[2], &cg->grove.unhatchedEggs, sizeof(cgEgg_t) * CG_MAX_CHOWA);
-    // TODO: Save Chowa to NVS
+    writeNvsBlob(cgNVSKeys[1], cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
 
     deinitMenuManiaRenderer(cg->grove.renderer);
     deinitMenu(cg->grove.menu);
@@ -396,7 +396,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
     cg->grove.saveTimer += elapsedUS;
     if (cg->grove.saveTimer >= (1000000 * 60))
     {
-        // TODO: Save Chowa to NVS
+        writeNvsBlob(cgNVSKeys[1], cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
         cg->grove.saveTimer = 0;
     }
 
@@ -721,7 +721,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                         cg->grove.shopSelection = CG_MAX_CHOWA - 1;
                     }
                 }
-                else if (evt.down && evt.button & PB_A)
+                else if (evt.down && evt.button & PB_A && cg->chowa[cg->grove.shopSelection].active)
                 {
                     cg->grove.confirm = !cg->grove.confirm;
                 }
@@ -729,6 +729,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 {
                     cg->chowa[cg->grove.shopSelection].active = false;
                     cg->grove.confirm                         = false;
+                    writeNvsBlob(cgNVSKeys[1], cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
                 }
                 else if (evt.down)
                 {
@@ -760,7 +761,8 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 strcpy(cg->chowa[cg->grove.hatchIdx].name, cg->buffer);
                 // Save to NVS
                 writeNvsBlob(nvsBlobKeys[2], &cg->grove.unhatchedEggs, sizeof(cgEgg_t) * CG_MAX_CHOWA);
-                // TODO: Save Chowa to NVS
+                // Save Chowa to NVS
+                writeNvsBlob(cgNVSKeys[1], cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
                 // Go back to grove state
                 cg->grove.state = CG_GROVE_FIELD;
                 // Clear text entry
@@ -839,7 +841,7 @@ static void cg_handleInputGarden(cGrove_t* cg)
 {
     buttonEvt_t evt;
     // Touch pad for the hands
-    if (cg->touch)
+    if (cg->settings.touch)
     {
         int32_t phi, r, intensity;
         vec_t temp;

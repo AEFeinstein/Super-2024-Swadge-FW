@@ -33,7 +33,7 @@ static const char pressAB[]        = "Press A to buy, press B to sell";
 static const char shopText[]       = "Chowa Gray Market";
 static const char invText[]        = "Inventory";
 static const char statText[]       = "Chowa Stats";
-static const char kickChowa[]      = "Press A to kick this Chowa";
+static const char kickChowa[]      = "This Chowa is a guest. Press A to kick.";
 static const char slotEmpty[]      = "No Chowa in this slot";
 static const char hatchingEgg[]    = "An egg is incubating!";
 static const char confirmDefault[] = "Press A to go back, press B to confirm";
@@ -369,7 +369,7 @@ void cg_groveDrawStats(cGrove_t* cg)
         if (cg->grove.shopSelection >= CG_MAX_CHOWA)
         {
             int16_t x = 16;
-            int16_t y = 195;
+            int16_t y = 180;
             drawTextWordWrap(&cg->menuFont, c550, kickChowa, &x, &y, 120, TFT_HEIGHT);
         }
     }
@@ -554,7 +554,7 @@ static void cg_drawItem(cGrove_t* cg, int8_t idx)
     {
         drawWsgSimple(&cg->grove.items[idx].spr, xOffset, yOffset);
     }
-    if (cg->itemText)
+    if (cg->settings.itemText)
     {
         if (strcmp(cg->grove.items[idx].name, shopMenuItems[9]) == 0
             || strcmp(cg->grove.items[idx].name, shopMenuItems[10]) == 0)
@@ -612,7 +612,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
         }
         int16_t xOffset = c->aabb.pos.x - cg->grove.camera.pos.x;
         int16_t yOffset = c->aabb.pos.y - cg->grove.camera.pos.y;
-        if (cg->chowaNames)
+        if (cg->settings.chowaNames)
         {
             drawText(&cg->menuFont, c555, cg->grove.chowa[idx].chowa->name,
                      xOffset - (textWidth(&cg->menuFont, cg->grove.chowa[idx].chowa->name) - 32) / 2, yOffset - 16);

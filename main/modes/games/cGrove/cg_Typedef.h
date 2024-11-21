@@ -22,6 +22,12 @@
 #define CG_MAX_STR_LEN 17
 
 //==============================================================================
+// Consts
+//==============================================================================
+
+static const char* cgNVSKeys[] = {"chowaPlayerName", "chowaChowaData", "chowaSettings", "chowaGuestData"};
+
+//==============================================================================
 // Items
 //==============================================================================
 
@@ -556,16 +562,27 @@ typedef enum
     CG_SPAR,
     CG_RACE,
     CG_PERFORMANCE,
+    CG_FIRST_RUN,
+    CG_ERASE,
 } cgMainState_t;
 
 // Structs =============================
+typedef struct
+{
+    bool touch;      ///< Touch controls for Grove
+    bool online;     ///< If online features are enabled
+    bool itemText;   ///< If item text should be drawn
+    bool chowaNames; ///< If Chowa's show have their names drawn in Grove
+} cgSettings_t;
+
 typedef struct
 {
     // Assets
     // ========================================================================
     // Fonts
     font_t menuFont;      ///< Main font
-    font_t largeMenuFont; ///< Large font for titles
+    font_t largeMenuFont; ///< Larger font, same style
+    font_t titleFont;     ///< Font for titles
 
     // WSGs
     wsg_t* title;                      ///< Title screen sprites
@@ -593,10 +610,7 @@ typedef struct
     menuManiaRenderer_t* renderer; ///< Menu renderer
 
     // Settings
-    bool touch;      ///< Touch controls for Grove
-    bool online;     ///< If online features are enabled
-    bool itemText;   ///< If item text should be drawn
-    bool chowaNames; ///< If Chowa's show have their names drawn in Grove
+    cgSettings_t settings; ///< Settings struct
 
     // Chowa
     cgChowa_t chowa[CG_MAX_CHOWA];              ///< List of Chowa
