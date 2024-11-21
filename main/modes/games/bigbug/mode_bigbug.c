@@ -173,7 +173,7 @@ static void bb_EnterMode(void)
     midiGmOn(player);
     midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
     midiGmOn(sfx);
-    soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
+    soundPlayBgmCb(&bigbug->gameData.spaceTravel, MIDI_BGM, bb_GarbotniksHomeMusicCb);
     midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
     midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
     midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME , 60);
@@ -296,7 +296,7 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
 static void bb_GarbotniksHomeMusicCb()
 {
-    soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
+    soundPlayBgmCb(&bigbug->gameData.spaceTravel, MIDI_BGM, bb_GarbotniksHomeMusicCb);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
     midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
