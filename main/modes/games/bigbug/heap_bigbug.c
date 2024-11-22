@@ -15,16 +15,18 @@ void bb_addToHeap(bb_heap_t* heap, bb_heapItem_t* item)
     heap->currentItemCount++;
 }
 
-bb_heapItem_t* bb_removeFirstFromHeap(bb_heap_t* heap)
-{
-    bb_heapItem_t firstItem = heap->items[0];
-    heap->currentItemCount--;
-    heap->items[0].heapIdx = 0;
-    sortDown(heap, &heap->items[0]);
-    return &firstItem;
-}
+// bb_heapItem_t* bb_removeFirstFromHeap(bb_heap_t* heap)
+// {
+//     bb_heapItem_t firstItem = heap->items[0];
+//     heap->currentItemCount--;
+//     heap->items[0].heapIdx = 0;
+//     bb_sortDown(heap, &heap->items[0]);
+//     // TODO you can't return a pointer to a local variable. 
+//     // It won't exist on the heap after returning!
+//     return &firstItem;
+// }
 
-void bb_updateItem(bb_heap_t* heap, const bb_heapItem_t* item)
+void bb_updateItem(bb_heap_t* heap, bb_heapItem_t* item)
 {
     bb_sortUp(heap, item);
 }
@@ -48,7 +50,7 @@ int32_t bb_compareHeapItems(const bb_heapItem_t* itemA, const bb_heapItem_t* ite
     return -compare;
 }
 
-void bb_sortDown(bb_heap_t* heap, const bb_heapItem_t* item)
+void bb_sortDown(bb_heap_t* heap, bb_heapItem_t* item)
 {
     while(true)
     {
@@ -78,9 +80,9 @@ void bb_sortDown(bb_heap_t* heap, const bb_heapItem_t* item)
             return;
         }
     }
-    else{
-        return;
-    }
+    // else{
+    //     return;
+    // }
 }
 
 void bb_sortUp(bb_heap_t* heap, bb_heapItem_t* item)
@@ -92,23 +94,29 @@ void bb_sortUp(bb_heap_t* heap, bb_heapItem_t* item)
         bb_heapItem_t parentItem = heap->items[parentIdx];
         if(bb_compareHeapItems(item, &parentItem) > 0)
         {
-            bb_swap(item, &parentItem);
+            bb_swap(heap, item, &parentItem);
         }
         else
         {
             break;
         }
 
-        parentIndex = (item->heapIdx - 1) / 2;
+        parentIdx = (item->heapIdx - 1) / 2;
     }
 }
 
 void bb_swap(bb_heap_t* heap, bb_heapItem_t* itemA, bb_heapItem_t* itemB)
 {
-    heap->items[itemA->heapIdx] = *itemB;
-    heap->items[itemB->heapIdx] = *itemA;
-    uint16_t itemAIdx = itemA->heapIdx;
-    heap->items[itemA->heapIdx] = itemB->heapIdx;
-    heap->items[itemB->heapIdx] = itemA->heapIdx;
-}
+    // TODO validate this is the correct behavior
 
+    // Swap items
+    bb_heapItem_t tmp;
+    memcpy(&tmp, itemA, sizeof(bb_heapItem_t));
+    memcpy(itemA, itemB, sizeof(bb_heapItem_t));
+    memcpy(itemB, &tmp, sizeof(bb_heapItem_t));
+
+    // Swap indices
+    uint16_t tmpIdx = itemA->heapIdx;
+    itemA->heapIdx = itemB->heapIdx;
+    itemB->heapIdx = tmpIdx;
+}
