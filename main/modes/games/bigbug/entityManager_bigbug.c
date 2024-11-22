@@ -163,13 +163,10 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
     {
         bb_entity_t* curEntity = (bb_entity_t*)currentNode->val;
         node_t* next           = currentNode->next;
-        // Camera diagonal explained
-        // 280 240 tft width x height
-        // 140 120 halfWidth halfHeight
-        // 2240 1920 bit shifted << 4
-        // 5,017,600 3,686,400 squared
-        // 8,704,000 added
-        if (sqMagVec2d(subVec2d(curEntity->pos, shiftedCameraPos)) <= curEntity->cSquared + 8704000)
+
+        //Do a rectangular bounds check that is somewhat larger than the camera itself. So stuff loads in and updates slightly out of view.
+        if(curEntity->pos.x > shiftedCameraPos.x - 3200 && curEntity->pos.x < shiftedCameraPos.x + 3200 &&
+           curEntity->pos.y > shiftedCameraPos.y - 2880 && curEntity->pos.y < shiftedCameraPos.y + 2880)
         { // if it is close
             bb_entity_t* foundSpot = bb_findInactiveEntity(entityManager);
             if (foundSpot != NULL)

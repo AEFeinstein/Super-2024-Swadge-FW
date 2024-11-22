@@ -591,7 +591,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         else
         {
             // Create a bump animation
-            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, bb_randomInt(2,4),
+            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 2,
                             hitInfo.pos.x >> DECIMAL_BITS, hitInfo.pos.y >> DECIMAL_BITS, true, false);
         }
 
