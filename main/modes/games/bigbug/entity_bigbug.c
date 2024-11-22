@@ -1057,12 +1057,12 @@ void bb_updateCharacterTalk(bb_entity_t* self)
             {
                 self->currentAnimationFrame = bb_randomInt(0,7);
 
-                midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
+                midiPlayer_t* sfx = soundGetPlayerSfx();
                 // Play a random note within an octave at half velocity on channel 1
                 int deepBlueseyPitches[] = {31, 34, 36, 37, 38, 41, 43, 54, 55, 50};
                 uint8_t pitch = bb_randomInt(0, 9);
-                midiNoteOn(bgm, 12, deepBlueseyPitches[pitch], 0x40);
-                midiNoteOff(bgm, 12, deepBlueseyPitches[pitch], 0x7F);
+                midiNoteOn(sfx, 1, deepBlueseyPitches[pitch], 0x40);
+                midiNoteOff(sfx, 1, deepBlueseyPitches[pitch], 0x7F);
             }
         }
     }
