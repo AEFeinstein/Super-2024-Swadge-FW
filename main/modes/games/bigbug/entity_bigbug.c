@@ -35,13 +35,15 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
     self->soundManager  = soundManager;
 }
 
-void bb_setData(bb_entity_t* self, void* data)
+void bb_setData(bb_entity_t* self, void* data, bb_data_type_t dataType)
 {
     if (self->data != NULL)
     {
         FREE_DBG(self->data);
+        self->data = NULL;
     }
     self->data = data;
+    self->dataType = dataType;
 }
 
 void bb_clearCollisions(bb_entity_t* self, bool keepCollisionsCached)
@@ -135,7 +137,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
                 bb_heavyFallingData_t* hData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
                 hData->yVel = rData->yVel >> 2;
                 bb_destroyEntity(rData->flame, false);
-                bb_setData(self, hData);
+                bb_setData(self, hData, HEAVY_FALLING_DATA);
                 self->updateFunction                     = bb_updateHeavyFallingInit;
                 return;
             }
@@ -336,7 +338,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         physData->vel               = gData->vel;
         physData->bounceNumerator   = 1; // 25% bounce
         physData->bounceDenominator = 4;
-        bb_setData(self, physData);
+        bb_setData(self, physData, PHYSICS_DATA);
         self->updateFunction = bb_updateGarbotnikDying;
         return;
     }
@@ -690,7 +692,7 @@ void bb_updateHarpoon(bb_entity_t* self)
         vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
         bb_stuckHarpoonData_t* shData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
         shData->floatVel              = normVecFl2d(floatVel);
-        bb_setData(self, shData);
+        bb_setData(self, shData, STUCK_HARPOON_DATA);
 
         bb_clearCollisions(self, false);
         self->updateFunction = bb_updateStuckHarpoon;
@@ -1095,7 +1097,7 @@ void bb_updateAttachmentArm(bb_entity_t* self)
             aData->rocket->pos.x >> DECIMAL_BITS, aData->rocket->pos.y >> DECIMAL_BITS, true, false);
 
         rData->flame->updateFunction = &bb_updateFlame;
-        bb_setData(aData->rocket, rData);
+        bb_setData(aData->rocket, rData, ROCKET_DATA);
         aData->rocket->updateFunction = &bb_updateRocketLiftoff;
 
         bb_destroyEntity(self,false);
@@ -1373,7 +1375,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         physData->vel               = divVec2d(pData->vel, 2);
         physData->bounceNumerator   = 2; // 66% bounce
         physData->bounceDenominator = 3;
-        bb_setData(other, physData);
+        bb_setData(other, physData, PHYSICS_DATA);
         other->updateFunction = bb_updatePhysicsObject;
     }
     vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
@@ -1381,7 +1383,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     shData->parent                = other;
     shData->offset                = subVec2d(self->pos, other->pos);
     shData->floatVel              = normVecFl2d(floatVel);
-    bb_setData(self, shData);
+    bb_setData(self, shData, STUCK_HARPOON_DATA);
 
     bb_clearCollisions(self, false);
 
@@ -1473,7 +1475,7 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
 
         dData->endDialogueCB = &bb_afterGarbotnikIntro;
 
-        bb_setData(ovo, dData);
+        bb_setData(ovo, dData, DIALOGUE_DATA);
 }
 
 void bb_startGarbotnikLandingTalk(bb_entity_t* self)
@@ -1550,7 +1552,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
     dData->curString = -1;
     dData->endDialogueCB = &bb_afterGarbotnikLandingTalk;
 
-    bb_setData(ovo, dData);
+    bb_setData(ovo, dData, DIALOGUE_DATA);
 }
 
 void bb_startGarbotnikCloningTalk(bb_entity_t* self)
@@ -1569,7 +1571,7 @@ void bb_startGarbotnikCloningTalk(bb_entity_t* self)
 
     dData->endDialogueCB = &bb_afterGarbotnikIntro;
 
-    bb_setData(ovo, dData);
+    bb_setData(ovo, dData, DIALOGUE_DATA);
 }
 
 void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
@@ -1588,7 +1590,7 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
     dData->curString = -1;
     dData->endDialogueCB = &bb_afterGarbotnikEggTutorialTalk;
 
-    bb_setData(ovo, dData);
+    bb_setData(ovo, dData, DIALOGUE_DATA);
 }
 
 void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
@@ -1612,7 +1614,7 @@ void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
     dData->curString = -1;
     dData->endDialogueCB = &bb_afterGarbotnikFuelTutorialTalk;
 
-    bb_setData(ovo, dData);
+    bb_setData(ovo, dData, DIALOGUE_DATA);
 }
 
 void bb_afterGarbotnikFuelTutorialTalk(bb_entity_t* self)

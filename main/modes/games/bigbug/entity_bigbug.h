@@ -23,6 +23,26 @@
 // Enums
 //==============================================================================
 
+typedef enum
+{
+    NULL_DATA,
+    ATTACHMENT_ARM_DATA,
+    BUG_DATA,
+    CAR_ACTIVE_DATA,
+    DIALOGUE_DATA,
+    EGG_DATA,
+    EGG_LEAVES_DATA,
+    GARBOTNIK_DATA,
+    GO_TO_DATA,
+    HEAVY_FALLING_DATA,
+    MENU_BUG_DATA,
+    MENU_DATA,
+    PHYSICS_DATA,
+    PROJECTILE_DATA,
+    ROCKET_DATA,
+    STUCK_HARPOON_DATA,
+} bb_data_type_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -166,6 +186,7 @@ struct bb_entity_t
     bool forceToFront;
 
     void* data;
+    bb_data_type_t dataType;
     bb_updateFunction_t updateFunction;       // Only set for entities that need update logic
     bb_updateFarFunction_t updateFarFunction; // Only set for execution when the entity is far from the camera center
     bb_drawFunction_t drawFunction;           // Only set for entities such as Garbotnik that need custom drawing logic
@@ -200,7 +221,7 @@ struct bb_entity_t
 void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData,
                          bb_soundManager_t* soundManager);
 
-void bb_setData(bb_entity_t* self, void* data);
+void bb_setData(bb_entity_t* self, void* data, bb_data_type_t dataType);
 void bb_clearCollisions(bb_entity_t* self, bool keepCached);
 
 void bb_destroyEntity(bb_entity_t* self, bool caching);
