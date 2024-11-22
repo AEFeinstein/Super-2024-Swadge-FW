@@ -79,11 +79,11 @@ static const char* menuLabels[] = {
     "Shop for items", "View inventory", "View Chowa", "Release Chowa", "Tutorial", "Exit Menu", "Exit Grove",
 };
 
-static const char* nvsBlobKeys[] = {"chowaGroveItems", "chowaGroveInventory", "chowaGroveEggs"};
+static const char* nvsBlobKeys[] = {"cgItems", "cgInventory", "cgEggs"};
 
-static const char nvsTutorialKey[] = "groveTutorialRun";
+static const char nvsTutorialKey[] = "cgTutorialRun";
 
-static const char* cgNVSKeys[] = {"chowaPlayerName", "chowaChowaData", "chowaSettings", "chowaGuestData"};
+static const char* cgNVSKeys[] = {"cgPlayerName", "cgChowaData", "cgSettings", "cgGuestData"};
 
 //==============================================================================
 // Function Declarations
