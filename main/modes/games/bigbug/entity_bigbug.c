@@ -614,7 +614,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             bounceScalar = 1;
         } 
-        printf("bounceScalar %d\n", bounceScalar);
+        printf("bounceScalar %"PRId32"\n", bounceScalar);
         gData->vel = mulVec2d(
             subVec2d(gData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(gData->vel, hitInfo.normal)))), bounceScalar);
 
