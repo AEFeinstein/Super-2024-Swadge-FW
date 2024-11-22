@@ -38,6 +38,26 @@ static const char slotEmpty[]      = "No Chowa in this slot";
 static const char hatchingEgg[]    = "An egg is incubating!";
 static const char confirmDefault[] = "Press A to go back, press B to confirm";
 static const char abandonChowa[]   = "Release Chowa";
+static const char startGame[]      = "Press start to open the grove!";
+
+static const char* tutorialText[]
+    = {"Welcome",
+       "Welcome to the Grove! Here you can raise, play with, and feed your Chowa.",
+       "Navigation",
+       "There are two control schemes, using the C stick (default) or the arrow keys. For both, move cursor to edge of "
+       "the screen to scroll.",
+       "Grabbing/Petting",
+       "When the cursor is over a Chowa or an item, press A to pick it up. Press B over a Chowa or an Egg to pet it. "
+       "When using the C Stick, the down and right arrow keys mimic the A and B keys respectively.",
+       "Donuts",
+       "The golden donuts are the main currency for Chowa. They appear randomly, snag them with A when you see them.",
+       "Guests",
+       "Once you've invited some guests over, they will also appear in the garden.",
+       "Grove Menu",
+       "Press start to access the menu. Here you can buy and sell items, take items from the inventory and put them in "
+       "the garden, and manage who's in the Grove.",
+       "Getting started",
+       "Go into the inventory, Add an egg to the grove, and pet the egg to hatch it, and start raising your Chowa!"};
 
 //==============================================================================
 // Variables
@@ -435,6 +455,95 @@ void cg_groveDrawAbandon(cGrove_t* cg)
     if (cg->grove.confirm)
     {
         cg_drawConfirmBox(cg, confirmAbandon);
+    }
+}
+
+/**
+ * @brief Draws the Tutorial
+ *
+ * @param cg Game Data
+ */
+void cg_drawGroveTutorial(cGrove_t* cg)
+{
+    // Blank
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_WIDTH, c000);
+
+    // Text
+    drawText(&cg->largeMenuFont, c555, tutorialText[cg->grove.tutorialPage * 2],
+             (TFT_WIDTH - textWidth(&cg->largeMenuFont, tutorialText[cg->grove.tutorialPage * 2])) >> 1, 10);
+
+    int16_t xOff = 16;
+    int16_t yOff = 32;
+    drawTextWordWrap(&cg->menuFont, c555, tutorialText[(cg->grove.tutorialPage * 2) + 1], &xOff, &yOff, TFT_WIDTH - 16,
+                     TFT_HEIGHT - 16);
+
+    switch (cg->grove.tutorialPage)
+    {
+        case 0:
+        {
+            // Draw the welcome screen
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][13],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][13].h)) >> 1, 100, 3, 3);
+            break;
+        }
+        case 1:
+        {
+            // Navigation
+            drawWsgSimpleScaled(&cg->grove.cursors[0], (TFT_WIDTH - (3 * cg->grove.cursors[0].w)) >> 1, 110, 3.0, 3.0);
+            break;
+        }
+        case 2:
+        {
+            // A & B buttons
+            drawWsgSimpleScaled(&cg->grove.itemsWSGs[2], (TFT_WIDTH - (3 * cg->grove.itemsWSGs[2].w) - 70) >> 1, 130,
+                                3.0, 3.0);
+            drawWsgSimpleScaled(&cg->grove.itemsWSGs[8], (TFT_WIDTH - (3 * cg->grove.itemsWSGs[8].w) + 70) >> 1, 130,
+                                3.0, 3.0);
+            break;
+        }
+        case 3:
+        {
+            // Donuts
+            drawWsgSimpleScaled(&cg->grove.itemsWSGs[11], (TFT_WIDTH - (3 * cg->grove.itemsWSGs[11].w)) >> 1, 110, 3.0,
+                                3.0);
+            break;
+        }
+        case 4:
+        {
+            // Guests
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30].h) - 70) >> 1, 100, 3, 3);
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30].h) + 70) >> 1, 100, 3, 3);
+            break;
+        }
+        case 5:
+        {
+            // Menu
+            break;
+        }
+        case 6:
+        {
+            // Getting started
+            drawWsgSimpleScaled(&cg->grove.eggs[0], (TFT_WIDTH - (4 * cg->grove.eggs[0].w)) >> 1, 110, 4.0, 4.0);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    if (cg->grove.tutorialPage != 0)
+    {
+        drawWsgSimple(&cg->arrow, 8, 180);
+    }
+    if (cg->grove.tutorialPage != 6)
+    {
+        drawWsg(&cg->arrow, 8, 200, false, true, 0);
+    }
+    else
+    {
+        drawText(&cg->menuFont, c550, startGame, 8, 200);
     }
 }
 

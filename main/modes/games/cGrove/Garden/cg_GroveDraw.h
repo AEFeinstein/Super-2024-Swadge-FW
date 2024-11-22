@@ -25,4 +25,5 @@ void cg_groveDrawShop(cGrove_t* cg);
 void cg_groveDrawInv(cGrove_t* cg);
 void cg_groveDrawStats(cGrove_t* cg);
 void cg_groveDrawAbandon(cGrove_t* cg);
+void cg_drawGroveTutorial(cGrove_t* cg);
 bool cg_checkFull(cGrove_t* cg);

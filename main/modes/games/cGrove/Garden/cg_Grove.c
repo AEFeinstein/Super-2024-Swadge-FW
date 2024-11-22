@@ -302,12 +302,9 @@ void cg_initGrove(cGrove_t* cg)
 
     // Set initial state
     int32_t t;
-    readNvs32(nvsTutorialKey, &t);
-    if (t == 0)
+    if (!readNvs32(nvsTutorialKey, &t))
     {
         cg->grove.state = CG_GROVE_TUTORIAL;
-        t = 1;
-        writeNvs32(nvsTutorialKey, t);
     }
     else
     {
@@ -740,12 +737,38 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
             cg_groveDrawAbandon(cg);
             break;
         }
-            /* case CG_GROVE_TUTORIAL:
+        case CG_GROVE_TUTORIAL:
+        {
+            // Handle input
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
             {
-                // Handle input
-                // Draw Tutorial
-                // break;
-            } */
+                if (evt.down && evt.button & PB_DOWN)
+                {
+                    cg->grove.tutorialPage++;
+                    if (cg->grove.tutorialPage > 6)
+                    {
+                        cg->grove.tutorialPage = 6;
+                    }
+                }
+                if (evt.down && evt.button & PB_UP)
+                {
+                    cg->grove.tutorialPage--;
+                    if (cg->grove.tutorialPage < 0)
+                    {
+                        cg->grove.tutorialPage = 0;
+                    }
+                }
+                if (evt.down && evt.button & PB_START && cg->grove.tutorialPage == 6)
+                {
+                    cg->grove.state = CG_GROVE_FIELD;
+                    writeNvs32(nvsTutorialKey, 1);
+                }
+            }
+            // Draw Tutorial
+            cg_drawGroveTutorial(cg);
+            break;
+        }
         case CG_KEYBOARD_WRITE_NAME:
         {
             // Run keyboard
@@ -783,9 +806,10 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
 
 /**
  * @brief Clears Grove related NVS keys
- * 
+ *
  */
-void cg_clearGroveNVSData(){
+void cg_clearGroveNVSData()
+{
     for (int idx = 0; idx < ARRAY_SIZE(nvsBlobKeys); idx++)
     {
         eraseNvsKey(nvsBlobKeys[idx]);
@@ -1088,7 +1112,7 @@ static void shopMenuCb(const char* label, bool selected, uint32_t settingVal)
             // Release Chowa
             cgr->grove.state = CG_GROVE_ABANDON;
         }
-        else if (label == menuLabels[3])
+        else if (label == menuLabels[4])
         {
             // Tutorial
             cgr->grove.state = CG_GROVE_TUTORIAL;

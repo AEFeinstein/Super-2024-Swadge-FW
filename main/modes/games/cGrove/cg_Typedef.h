@@ -387,6 +387,9 @@ typedef struct
     cgGroveChowa_t* heldChowa; ///< The held Chowa
     bool isPetting;            ///< If the petting gesture should be going on
     int64_t pettingTimer;      ///< How long before petting resets
+
+    // Tutorial
+    int8_t tutorialPage; ///< Drawn page
 } cgGrove_t;
 
 //==============================================================================
