@@ -136,4 +136,5 @@ void creditsMainLoop(int64_t elapsedUs)
     }
 
     drawCredits(credits, elapsedUs);
+    // DRAW_FPS_COUNTER(*credits->font);
 }

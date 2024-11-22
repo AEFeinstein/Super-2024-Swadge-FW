@@ -65,7 +65,8 @@ typedef enum
     PA_SP_BREAK_BLOCK_1,
     PA_SP_BREAK_BLOCK_2,
     PA_SP_BREAK_BLOCK_3,
-    PA_SP_BLOCK_FRAGMENT
+    PA_SP_BLOCK_FRAGMENT,
+    PA_SP_HOTDOG
 } pa_spriteDef_t;
 
 typedef enum
@@ -193,7 +194,8 @@ typedef enum
     PA_WSG_BLOCK_ORANGE,
     PA_WSG_BLOCK_YELLOW,
     PA_WSG_BLOCK_GREEN,
-    PA_WSG_BLOCK_TITLESCREEN
+    PA_WSG_BLOCK_TITLESCREEN,
+    PA_WSG_HOTDOG
 } paWsgIndex_t;
 
 #endif

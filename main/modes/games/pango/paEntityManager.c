@@ -76,9 +76,14 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
 
         currentEntity->active = false;
 
-        if (currentEntity->type == ENTITY_HIT_BLOCK && currentEntity->state == PA_TILE_SPAWN_BLOCK_0)
+        if (currentEntity->type == ENTITY_HIT_BLOCK)
         {
-            entityManager->gameData->remainingEnemies--;
+            entityManager->gameData->remainingBlocks--;
+
+            if (currentEntity->state == PA_TILE_SPAWN_BLOCK_0)
+            {
+                entityManager->gameData->remainingEnemies--;
+            }
         }
     }
 
@@ -253,6 +258,50 @@ paEntity_t* createCrabdozer(paEntityManager_t* entityManager, uint16_t x, uint16
     return entity;
 }
 
+paEntity_t* pa_createBonusItem(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    paEntity_t* entity = pa_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = x << SUBPIXEL_RESOLUTION;
+    entity->y       = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = (entityManager->gameData->firstBonusItemDispensed) ? 2000 : 1000;
+    entity->stateTimer           = -1;
+    entity->tempStateTimer       = -1;
+    entity->stateFlag            = false;
+    entity->baseSpeed            = entityManager->gameData->enemyInitialSpeed;
+
+    entity->type                 = PA_ENTITY_BONUS_ITEM;
+    entity->spriteIndex          = PA_SP_HOTDOG;
+    entity->facingDirection      = PA_DIRECTION_NONE;
+    entity->state                = 0;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &pa_updateBonusItem;
+    entity->collisionHandler     = &pa_dummyCollisionHandler;
+    entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
+    entity->targetTileX          = 1 + (esp_random() % 14);
+    entity->targetTileY          = 1 + (esp_random() % 13);
+
+    return entity;
+}
+
 paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
     paEntity_t* entity = pa_findInactiveEntity(entityManager);
@@ -287,7 +336,13 @@ paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, ui
     entity->drawHandler          = &pa_defaultEntityDrawHandler;
     entity->state                = 0;
 
-    pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
+    uint8_t tile = pa_getTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y));
+
+    if (tile == PA_TILE_BLOCK || tile == PA_TILE_SPAWN_BLOCK_0)
+    {
+        pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_EMPTY);
+        entityManager->gameData->remainingBlocks--;
+    }
 
     return entity;
 }
@@ -312,8 +367,8 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
     entity->gravity              = 4;
-    entity->spriteFlipHorizontal = false;
-    entity->spriteFlipVertical   = false;
+    entity->spriteFlipHorizontal = esp_random() % 2;
+    entity->spriteFlipVertical   = esp_random() % 2;
     entity->scoreValue           = 100;
     entity->animationTimer       = 0;
     entity->type                 = PA_ENTITY_BLOCK_FRAGMENT;
@@ -324,6 +379,44 @@ paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x,
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
     entity->drawHandler          = &pa_defaultEntityDrawHandler;
+    entity->stateTimer           = 8;
+
+    return entity;
+}
+
+paEntity_t* pa_createHotDog(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    paEntity_t* entity = pa_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = x << SUBPIXEL_RESOLUTION;
+    entity->y       = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed               = -16 + (esp_random() % 32);
+    entity->yspeed               = -16 + (esp_random() % 32);
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->spriteFlipHorizontal = esp_random() % 2;
+    entity->spriteFlipVertical   = esp_random() % 2;
+    entity->scoreValue           = 100;
+    entity->animationTimer       = 0;
+    entity->type                 = PA_ENTITY_HOTDOG;
+    entity->spriteIndex          = PA_SP_HOTDOG;
+    entity->facingDirection      = PA_DIRECTION_NONE;
+    entity->updateFunction       = &pa_updateBlockFragment;
+    entity->collisionHandler     = &pa_dummyCollisionHandler;
+    entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+    entity->drawHandler          = &pa_defaultEntityDrawHandler;
+    entity->stateTimer           = 32;
 
     return entity;
 }
