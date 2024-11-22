@@ -37,7 +37,7 @@ static const char cGroveTitle[] = "Chowa Grove"; // Game title
 static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Perform", "Player Profiles", "Settings"};
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
-static const uint32_t cGroveEnabledVals[]       = {true, false};
+static const int32_t cGroveEnabledVals[]       = {true, false};
 static const char* cGroveResetData[]
     = {"Reset all game data", "Are you sure you want to reset to factory? All data will be lost.",
        "Press 'Start' to permanently erase all data. Press any other key to return to menu."};
@@ -138,7 +138,7 @@ static void cGroveEnterMode(void)
     // Load a font
     loadFont("cg_font_body_thin.font", &cg->menuFont, true);
     loadFont("cg_font_body.font", &cg->largeMenuFont, true);
-    loadFont("cg_heading_font_q.wsg", &cg->titleFont, true);
+    loadFont("cg_heading_font_1.wsg", &cg->titleFont, true);
 
     // Load settings
     size_t blobLen;
@@ -164,16 +164,16 @@ static void cGroveEnterMode(void)
     addSingleItemToMenu(cg->menu, cGroveMenuNames[3]);     // Go to Performance
     addSingleItemToMenu(cg->menu, cGroveMenuNames[4]);     // View player profiles
     cg->menu = startSubMenu(cg->menu, cGroveMenuNames[5]); // Settings
-    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, &cGroveEnabledVals,
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.touch); // Enable/disable touch controls
-    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveEnabledOptions, &cGroveEnabledVals,
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.online); // Enable/disable online functions
-    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[2], cGroveEnabledOptions, &cGroveEnabledVals,
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[2], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.itemText); // Enable/disable Item names
-    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[3], cGroveEnabledOptions, &cGroveEnabledVals,
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[3], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.chowaNames); // Enable/disable Chowa names
     addSingleItemToMenu(cg->menu, cGroveResetData[0]);
@@ -278,6 +278,7 @@ static void cGroveExitMode(void)
     // Fonts
     freeFont(&cg->menuFont);
     freeFont(&cg->largeMenuFont);
+    freeFont(&cg->titleFont);
 
     // WSGs
     for (uint8_t i = 0; i < ARRAY_SIZE(cGroveTitleSprites); i++)
