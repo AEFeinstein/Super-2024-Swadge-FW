@@ -2,7 +2,7 @@
  * @file cg_GroveAI.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Chowa AI in the garden
- * @version 0.1
+ * @version 1.0
  * @date 2024-10-13
  *
  * @copyright Copyright (c) 2024
@@ -409,7 +409,7 @@ void cg_GroveEggAI(cGrove_t* cg, int64_t elapsedUs)
                 cg->chowa[idx].mood                 = CG_NEUTRAL;
                 for (int idx2 = 0; idx2 < CG_STAT_COUNT; idx2++)
                 {
-                    cg->chowa[idx2].stats[idx2] = 10 + esp_random() % 48;
+                    cg->chowa[idx].stats[idx2] = 10 + esp_random() % 48;
                 }
                 cg->chowa[idx].playerAffinity = 0;
                 cg->grove.chowa[idx].aabb.pos = cg->grove.unhatchedEggs[idx].aabb.pos;

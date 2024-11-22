@@ -2,7 +2,7 @@
  * @file cg_GroveDraw.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Drawing functions for the Grove mode of Chowa Grove
- * @version 0.1
+ * @version 1.0
  * @date 2024-10-09
  *
  * @copyright Copyright (c) 2024
@@ -131,13 +131,6 @@ static void cg_drawItemsMenu(cGrove_t* cg);
  */
 static void cg_drawConfirmBox(cGrove_t* cg, char* string);
 
-/**
- * @brief Debug visualization
- *
- * @param cg Game Data
- */
-static void cg_groveDebug(cGrove_t* cg);
-
 //==============================================================================
 // Functions
 //==============================================================================
@@ -174,9 +167,6 @@ void cg_groveDrawField(cGrove_t* cg, int64_t elapsedUs)
     // Draw UI
     cg_drawHand(cg);
     cg_drawUI(cg);
-
-    // Debug draw
-    // cg_groveDebug(cg);
 }
 
 /**
@@ -216,7 +206,7 @@ void cg_groveDrawShop(cGrove_t* cg)
         color = c555;
     }
     drawWsgSimple(&cg->grove.itemsWSGs[11], 12, 165);
-    snprintf(buffer, sizeof(buffer) - 1, "Donut: %" PRId32, cg->grove.inv.money);
+    snprintf(buffer, sizeof(buffer) - 1, "Donut: %" PRId16, cg->grove.inv.money);
     drawText(&cg->menuFont, color, buffer, 44, 175);
 
     // Draw current inv count
@@ -556,7 +546,6 @@ void cg_drawGroveTutorial(cGrove_t* cg)
  */
 bool cg_checkFull(cGrove_t* cg)
 {
-    bool full;
     for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
     {
         if (!cg->chowa[idx].active || !cg->grove.unhatchedEggs[idx].active)
@@ -1154,40 +1143,4 @@ static void cg_drawConfirmBox(cGrove_t* cg, char* string)
     xOff = 40;
     yOff = (TFT_HEIGHT + 40) >> 1;
     drawTextWordWrap(&cg->menuFont, c555, confirmDefault, &xOff, &yOff, TFT_WIDTH - 40, TFT_HEIGHT);
-}
-
-static void cg_groveDebug(cGrove_t* cg)
-{
-    int16_t xOffset = -cg->grove.camera.pos.x;
-    int16_t yOffset = -cg->grove.camera.pos.y;
-    // draw AABBs for grove
-    for (int32_t i = 0; i < 3; i++)
-    {
-        drawRect(cg->grove.boundaries[i].pos.x + xOffset, cg->grove.boundaries[i].pos.y + yOffset,
-                 cg->grove.boundaries[i].pos.x + cg->grove.boundaries[i].width + xOffset,
-                 cg->grove.boundaries[i].pos.y + cg->grove.boundaries[i].height + yOffset, c500);
-    }
-    for (int32_t i = 0; i < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; i++)
-    {
-        // Draw Chowa info
-        if (cg->grove.chowa[i].chowa->active)
-        {
-            drawRect(cg->grove.chowa[i].aabb.pos.x + xOffset, cg->grove.chowa[i].aabb.pos.y + yOffset,
-                     cg->grove.chowa[i].aabb.pos.x + cg->grove.chowa[i].aabb.width + xOffset,
-                     cg->grove.chowa[i].aabb.pos.y + cg->grove.chowa[i].aabb.height + yOffset, c500);
-            drawCircle(cg->grove.chowa[i].targetPos.x + xOffset, cg->grove.chowa[i].targetPos.y + yOffset, 12, c500);
-            drawLineFast(cg->grove.chowa[i].aabb.pos.x + xOffset, cg->grove.chowa[i].aabb.pos.y + yOffset,
-                         cg->grove.cursor.pos.x, cg->grove.cursor.pos.y, c505);
-        }
-    }
-    for (int32_t i = 0; i < CG_MAX_CHOWA; i++)
-    {
-        // Draw Chowa info
-        if (cg->grove.unhatchedEggs[i].active)
-        {
-            drawRect(cg->grove.unhatchedEggs[i].aabb.pos.x + xOffset, cg->grove.unhatchedEggs[i].aabb.pos.y + yOffset,
-                     cg->grove.unhatchedEggs[i].aabb.pos.x + cg->grove.unhatchedEggs[i].aabb.width + xOffset,
-                     cg->grove.unhatchedEggs[i].aabb.pos.y + cg->grove.unhatchedEggs[i].aabb.height + yOffset, c500);
-        }
-    }
 }

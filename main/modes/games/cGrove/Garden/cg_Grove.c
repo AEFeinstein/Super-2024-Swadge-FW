@@ -2,7 +2,7 @@
  * @file cg_Garden.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief The main interation area with the Chowa
- * @version 0.1
+ * @version 1.0
  * @date 2024-09-07
  *
  * @copyright Copyright (c) 2024
@@ -82,6 +82,8 @@ static const char* menuLabels[] = {
 static const char* nvsBlobKeys[] = {"chowaGroveItems", "chowaGroveInventory", "chowaGroveEggs"};
 
 static const char nvsTutorialKey[] = "groveTutorialRun";
+
+static const char* cgNVSKeys[] = {"chowaPlayerName", "chowaChowaData", "chowaSettings", "chowaGuestData"};
 
 //==============================================================================
 // Function Declarations
@@ -386,7 +388,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
     // Play BGM if it's not playing
     if (!cg->grove.isBGMPlaying)
     {
-        // soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
+        soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
         cg->grove.isBGMPlaying = true;
     }
     // Save timer
