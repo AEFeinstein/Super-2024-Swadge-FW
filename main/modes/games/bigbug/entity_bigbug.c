@@ -1745,7 +1745,7 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
 
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str)
 {
-    dData->strings[index] = HEAP_CAPS_CALLOC_DBG(strlen(str), sizeof(char), MALLOC_CAP_SPIRAM);
+    dData->strings[index] = HEAP_CAPS_CALLOC_DBG(strlen(str) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(dData->strings[index], str);
 }
 
