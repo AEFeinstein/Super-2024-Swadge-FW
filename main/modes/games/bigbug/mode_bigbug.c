@@ -306,7 +306,8 @@ static void bb_GarbotniksHomeMusicCb()
 
 static void bb_DrawScene(void)
 {
-    if (bigbug->gameData.entityManager.playerEntity != NULL)
+    if ((bigbug->gameData.entityManager.playerEntity != NULL) && 
+        (GARBOTNIK_DATA == bigbug->gameData.entityManager.playerEntity->dataType))
     {
         vec_t garbotnikDrawPos = {.x = (bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS)
                                        - bigbug->gameData.camera.camera.pos.x - 18,
@@ -499,7 +500,7 @@ static void bb_UpdateTileSupport(void)
 
 static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
 {
-    if (entityManager->playerEntity != NULL)
+    if ((entityManager->playerEntity != NULL) && (GARBOTNIK_DATA == entityManager->playerEntity->dataType))
     {
         int32_t fuel = ((bb_garbotnikData_t*)entityManager->playerEntity->data)->fuel;
         // Set the LEDs to a display fuel level

@@ -736,7 +736,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
         {
             elData->brightness = 0;
         }
-        else
+        else if(GARBOTNIK_DATA == self->gameData->entityManager.playerEntity->dataType)
         {
             elData->brightness = bb_foregroundLighting(
                 &(self->gameData->tilemap.headlampWsg), &lookup,
@@ -1150,6 +1150,11 @@ void bb_updateGameOver(bb_entity_t* self)
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
+    if(GARBOTNIK_DATA != self->dataType)
+    {
+        return;
+    }
+
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
 
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
