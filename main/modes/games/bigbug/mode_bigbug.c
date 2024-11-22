@@ -440,7 +440,7 @@ static void bb_UpdateTileSupport(void)
         FREE_DBG(shiftedVal);
     }
 
-    if (bigbug->gameData.unsupported.first != NULL)
+    if (bigbug->gameData.unsupported.first != NULL && bb_randomInt(1,10) == 1)//making it happen randomly slowly sounds and looks nicer.
     {
         for (int i = 0; i < 50; i++) // arbitrarily large loop to get to the dirt tiles.
         {
