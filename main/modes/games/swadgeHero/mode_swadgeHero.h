@@ -42,10 +42,7 @@ typedef struct
 {
     const char* name;
     const char* artist;
-    const char* midi;
-    const char* easy;
-    const char* med;
-    const char* hard;
+    const char* fName;
 } shSong_t;
 
 typedef struct

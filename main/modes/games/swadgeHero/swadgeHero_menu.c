@@ -26,26 +26,42 @@ static const shSong_t shSongList[] = {
     {
         .name   = "GShip Credits",
         .artist = "Newmajoe",
-        .midi   = "g_cred.mid",
-        .easy   = "g_cred_e.cch",
-        .med    = "g_cred_m.cch",
-        .hard   = "g_cred_h.cch",
+        .fName  = "g_cred",
     },
     {
         .name   = "Hotdog Credits",
         .artist = "Newmajoe",
-        .midi   = "hd_credits.mid",
-        .easy   = "hd_cred_e.cch",
-        .med    = "hd_cred_m.cch",
-        .hard   = "hd_cred_h.cch",
+        .fName  = "sh_credit",
     },
     {
         .name   = "SH Revenge",
         .artist = "Livingson Rampey",
-        .midi   = "revenge.mid",
-        .easy   = "revenge_e.cch",
-        .med    = "revenge_m.cch",
-        .hard   = "revenge_h.cch",
+        .fName  = "revenge",
+    },
+    {
+        .name   = "Chowa Grove",
+        .artist = "",
+        .fName  = "sh_cgrove",
+    },
+    {
+        .name   = "The Devil's Lullaby",
+        .artist = "Meldecision",
+        .fName  = "sh_devils",
+    },
+    {
+        .name   = "Pango",
+        .artist = "",
+        .fName  = "sh_pango",
+    },
+    {
+        .name   = "Swadge Demo",
+        .artist = "JNWake",
+        .fName  = "sh_demo",
+    },
+    {
+        .name   = "Let it Bleed",
+        .artist = "TheManPF",
+        .fName  = "sh_bleed",
     },
 };
 
@@ -125,7 +141,7 @@ void shSetupMenu(shVars_t* sh)
         {
             // Get the NVS key and try to read the value
             char nvsKey[16];
-            shGetNvsKey(shSongList[sIdx].midi, difficulties[i], nvsKey);
+            shGetNvsKey(shSongList[sIdx].fName, difficulties[i], nvsKey);
             int32_t tmpScore;
             if (readNvs32(nvsKey, &tmpScore))
             {

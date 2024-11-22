@@ -104,13 +104,13 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     sh->songName = song->name;
 
     // Pick variables based on difficulty
-    const char* chartFile;
+    char suffix;
     switch (difficulty)
     {
         default:
         case SH_EASY:
         {
-            chartFile      = song->easy;
+            suffix         = 'e';
             sh->btnToNote  = btnToNote_e;
             sh->noteToBtn  = noteToBtn_e;
             sh->colors     = colors_e;
@@ -119,7 +119,7 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
         }
         case SH_MEDIUM:
         {
-            chartFile      = song->med;
+            suffix         = 'm';
             sh->btnToNote  = btnToNote_m;
             sh->noteToBtn  = noteToBtn_m;
             sh->colors     = colors_m;
@@ -128,7 +128,7 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
         }
         case SH_HARD:
         {
-            chartFile      = song->hard;
+            suffix         = 'h';
             sh->btnToNote  = btnToNote_h;
             sh->noteToBtn  = noteToBtn_h;
             sh->colors     = colors_h;
@@ -138,18 +138,22 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     }
 
     // Load chart data
-    size_t sz    = 0;
+    size_t sz          = 0;
+    char chartFile[64] = {0};
+    snprintf(chartFile, sizeof(chartFile) - 2, "%s_%c.cch", song->fName, suffix);
     sh->numFrets = 1 + shLoadChartData(sh, cnfsGetFile(chartFile, &sz), sz);
 
     // Save the key for the score
-    shGetNvsKey(song->midi, difficulty, sh->hsKey);
+    shGetNvsKey(song->fName, difficulty, sh->hsKey);
 
     // Make sure MIDI player is initialized
     initGlobalMidiPlayer();
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
 
     // Load the MIDI file
-    loadMidiFile(song->midi, &sh->midiSong, true);
+    char midiName[64] = {0};
+    snprintf(midiName, sizeof(midiName) - 2, "%s.mid", song->fName);
+    loadMidiFile(midiName, &sh->midiSong, true);
 
     // Set the file, but don't play yet
     midiPause(player, true);
