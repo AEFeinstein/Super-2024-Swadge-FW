@@ -174,9 +174,9 @@ static void bb_EnterMode(void)
     midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
     midiGmOn(sfx);
     soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
-    midiSetProgram(sfx, 1, 90);//talking sound effects arbitrarily go on channel 1 and use midi instrument 90.
-    midiControlChange(sfx, 1, MCC_SUSTENUTO_PEDAL, 80);
-    midiControlChange(sfx, 1, MCC_SOUND_RELEASE_TIME , 60);
+    midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
+    midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
+    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME , 60);
 
     // midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
     // // Turn on the sustain pedal for channel 1
@@ -298,12 +298,10 @@ static void bb_GarbotniksHomeMusicCb()
 {
     soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    midiPlayer_t* sfx = soundGetPlayerSfx();
-    midiSetProgram(sfx, 1, 90);//talking sound effects arbitrarily go on channel 1 and use midi instrument 90.
-    midiControlChange(sfx, 1, MCC_SUSTENUTO_PEDAL, 80);
-    midiControlChange(sfx, 1, MCC_SOUND_RELEASE_TIME , 60);
+    midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
+    midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
+    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME , 60);
     midiGmOn(player);
-    midiGmOn(sfx);
 }
 
 static void bb_DrawScene(void)
