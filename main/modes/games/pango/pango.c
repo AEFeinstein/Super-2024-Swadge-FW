@@ -315,11 +315,6 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
             pango->gameData.level              = 1;
             pango->entityManager.activeEnemies = 0;
             pa_initializeGameDataFromTitleScreen(&(pango->gameData));
-            /*pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), 1);
-            pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
-            pa_generateMaze(&(pango->tilemap));
-            pa_placeEnemySpawns(&(pango->tilemap));*/
-
             pango->gameData.gameState = PA_ST_READY_SCREEN;
             changeStateDemoControls(pango);
             deinitMenu(pango->menu);

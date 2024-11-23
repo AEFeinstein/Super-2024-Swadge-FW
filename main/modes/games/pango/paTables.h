@@ -154,15 +154,15 @@ static const uint16_t demoControlsScript[DEMO_CONTROLS_SCRIPT_TABLE_LENGTH * DEM
     PB_RIGHT, 32, //
     PB_DOWN, 16, //
     PB_RIGHT, 60, //
-    PB_A, 1, //
+    PB_A, 4, //
     PB_RIGHT, 32, //
-    PB_A, 1, //
+    PB_A, 4, //
     PB_RIGHT, 28, //
     PB_UP, 16, //
     PB_RIGHT, 32, //
     PB_DOWN, 16, //
     PB_LEFT, 4, //
-    PB_A, 1, //
+    PB_A, 4, //
     PB_DOWN, 16, //
     0, 80,
     PB_LEFT, 120, //
