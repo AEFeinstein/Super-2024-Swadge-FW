@@ -156,14 +156,8 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
 
     // Loop over both Chowa
     cg_sparMatchPlayerInput(cg);
-    if (cg->spar.match.online)
-    {
-        // TODO: Get input from other swadge
-    }
-    else
-    {
-        cg_sparMatchAI(cg, elapsedUs);
-    }
+    cg_sparMatchAI(cg, elapsedUs);
+
     cg_sparMatchChowaState(cg, elapsedUs);
 
     // Resolve is both are ready or if one has been ready for a full second

@@ -1,13 +1,10 @@
 # Tasks
 
 ## General
-- Add BGM
-- Update menu colors
 - View recently interacted with players
 - Tutorials play the first time you load a mode, and then can be recalled any time
 
 ## Spar
-- Add BGM
 - Create/Add SFX
 - Add sparring animations
   - Splash screen

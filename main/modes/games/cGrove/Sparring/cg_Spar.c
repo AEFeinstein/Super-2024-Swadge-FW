@@ -32,11 +32,6 @@ static const char sparMenuName[] = "Chowa Sparring!";
 
 static const char* sparMenuNames[] = {"Schedule Match", "View records", "Tutorial", "Settings", "Main Menu"};
 
-static const char* sparDojoSprites[] = {
-    "Dojo_Gong.wsg",
-    "Dojo_PunchingBag.wsg",
-};
-
 //==============================================================================
 // Variables
 //==============================================================================
@@ -57,11 +52,6 @@ void cg_initSpar(cGrove_t* grove)
     cg = grove;
     // WSGs
     loadWsg("DojoBG.wsg", &cg->spar.dojoBG, true);
-    cg->spar.dojoBGItems = calloc(ARRAY_SIZE(sparDojoSprites), sizeof(wsg_t));
-    for (int32_t idx = 0; idx < ARRAY_SIZE(sparDojoSprites); idx++)
-    {
-        loadWsg(sparDojoSprites[idx], &cg->spar.dojoBGItems[idx], true);
-    }
 
     // Audio
     loadMidiFile("Chowa_Battle.mid", &cg->spar.sparBGM, true);
@@ -75,9 +65,9 @@ void cg_initSpar(cGrove_t* grove)
     addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[4]); // Go back to main menu
 
     cg->spar.renderer                          = initMenuManiaRenderer(&cg->titleFont, &cg->titleFontOutline, &cg->menuFont);
-    static const paletteColor_t shadowColors[] = {c110, c210, c220, c320, c330, c430, c330, c320, c220, c210};
-    led_t ledColor                             = {.r = 128, .g = 128, .b = 0};
-    recolorMenuManiaRenderer(cg->spar.renderer, c115, c335, c000, c110, c003, c004, c220, c335, shadowColors,
+    static const paletteColor_t shadowColors[] = {c001, c002, c002, c003, c013, c014, c013, c003, c002, c001};
+    led_t ledColor                             = {.r = 0, .g = 200, .b = 200};
+    recolorMenuManiaRenderer(cg->spar.renderer, c111, c430, c445, c045, c542, c430, c111, c445, shadowColors,
                              ARRAY_SIZE(shadowColors), ledColor);
 
     // Initialize battle record
@@ -104,11 +94,6 @@ void cg_deInitSpar()
 
     // Free assets
     freeWsg(&cg->spar.dojoBG);
-    for (uint8_t i = 0; i < ARRAY_SIZE(sparDojoSprites); i++)
-    {
-        freeWsg(&cg->spar.dojoBGItems[i]);
-    }
-    free(cg->spar.dojoBGItems);
 }
 
 /**

@@ -497,17 +497,11 @@ typedef struct
 
     // BG Sprites
     wsg_t dojoBG;       ///< Dojo Background image
-    wsg_t* dojoBGItems; ///< Dojo BG items
     // UI Sprites
     // - Punch icon
     // - Kick icon
     // - Dodge
     // - Headbutt
-
-    // Fonts
-    /* font_t sparTitleFont;        ///< Font used for larger text
-    font_t sparTitleFontOutline; ///< Outline for title font
-    font_t sparRegFont;          ///< Regular text */
 
     // Music
     midiFile_t sparBGM; ///< Music

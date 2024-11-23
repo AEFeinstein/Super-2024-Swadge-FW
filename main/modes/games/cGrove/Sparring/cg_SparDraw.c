@@ -35,7 +35,6 @@ static const char sparSplashScreenPrompt[] = "Press any button to continue!";
 //==============================================================================
 
 static void cg_drawSparField(cGrove_t* cg);
-static void cg_drawSparBGObject(cGrove_t* cg, int64_t elapsedUs);
 static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs);
 static void cg_drawSparChowaUI(cGrove_t* cg);
 static void cg_drawSparProgBars(cGrove_t* cg, int16_t maxVal, int16_t currVal, int16_t x, int16_t y,
@@ -56,9 +55,6 @@ void cg_drawMatch(cGrove_t* cg, int64_t elapsedUs)
     // Draw dojo
     cg_drawSparField(cg);
 
-    // Draw Objects
-    cg_drawSparBGObject(cg, elapsedUs);
-
     // Draw Chowa
 }
 
@@ -72,32 +68,20 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
 {
     // Draw dojo
     cg_drawSparField(cg);
-    cg_drawSparBGObject(cg, elapsedUs);
 
     // TODO: Draw chowa sparring
 
     // Draw title text
     // Get the text offset
-    int16_t xOff = (TFT_WIDTH - textWidth(&cg->titleFont, sparSplashScreen)) / 2;
-    int16_t yOff = TFT_HEIGHT / 2;
+    int16_t xOff = (TFT_WIDTH - textWidth(&cg->titleFont, sparSplashScreen)) >> 1;
+    int16_t yOff = 20;
 
-    // drawText(&t48->titleFont, color, mode, (TFT_WIDTH - textWidth(&t48->titleFont, mode)) / 2, TFT_HEIGHT / 2 - 12);
     drawText(&cg->titleFont, c555, sparSplashScreen, xOff, yOff);
     drawText(&cg->titleFontOutline, c000, sparSplashScreen, xOff, yOff);
 
-    xOff = 32;
-    yOff = TFT_HEIGHT - 32;
-    // Draw "Press A to continue" prompt
-    cg->spar.timer += elapsedUs;
-    if (cg->spar.timer >= 500000)
-    {
-        cg->spar.timer  = 0;
-        cg->spar.toggle = !cg->spar.toggle;
-    }
-    if (cg->spar.toggle)
-    {
-        drawTextWordWrap(&cg->menuFont, c000, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
-    }
+    xOff = 16;
+    yOff = TFT_HEIGHT - 80;
+    drawTextWordWrap(&cg->largeMenuFont, c000, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
 }
 
 /**
@@ -198,9 +182,6 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     // Draw Chowa
     cg_drawSparChowa(cg, elapsedUs);
 
-    // Draw BG objects
-    cg_drawSparBGObject(cg, elapsedUs);
-
     // Draw UI
     // Buffer
     char buffer[32];
@@ -236,6 +217,10 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     }
 }
 
+//==============================================================================
+// Static Functions
+//==============================================================================
+
 /**
  * @brief Draws the background
  *
@@ -243,26 +228,18 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
  */
 static void cg_drawSparField(cGrove_t* cg)
 {
+    // Draw the sky
+    drawWsgSimple(&cg->title[1], 0, 0);
     // Draw dojo
     drawWsgSimple(&cg->spar.dojoBG, 0, 0);
 }
 
 /**
- * @brief Draws the background objects
+ * @brief Draws the CHowa depending on the sparring state
  *
- * @param cg Game data
+ * @param cg Game Data
  * @param elapsedUs Time since last frame
  */
-static void cg_drawSparBGObject(cGrove_t* cg, int64_t elapsedUs)
-{
-    // If wasCrit == true, setg false and add impulses to items
-    // FIXME: Do bounce thing
-    for (int32_t i = 0; i < 2; i++)
-    {
-        drawWsgSimple(&cg->spar.dojoBGItems[i], 32 * (i + 1), 32 * (i + 1));
-    }
-}
-
 static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
 {
     for (int32_t idx = 0; idx < 2; idx++)
