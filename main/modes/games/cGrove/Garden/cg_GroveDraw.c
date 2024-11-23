@@ -141,9 +141,7 @@ static void cg_drawConfirmBox(cGrove_t* cg, char* string);
  * @param cg Game Data
  */
 void cg_groveDrawField(cGrove_t* cg, int64_t elapsedUs)
-{
-    // Get camera offset
-
+{  
     // Draw BG
     drawWsgSimple(&cg->grove.groveBG, -cg->grove.camera.pos.x, -cg->grove.camera.pos.y);
 
@@ -812,7 +810,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 bool flip = false;
                 vec_t temp;
                 // Check if in the water
-                if (rectRectIntersection(c->aabb, cg->grove.boundaries[CG_WATER], &temp))
+                if (rectRectIntersection(c->aabb, cg->grove.waterBoundary, &temp))
                 {
                     if (c->angle <= 270 && c->angle > 90)
                     {
@@ -1104,9 +1102,12 @@ static void cg_drawItemsMenu(cGrove_t* cg)
     }
     else if (cg->grove.shopSelection == 11)
     {
-        for (int idx = 0; idx < 6; idx++)
+        for (int idx = 0; idx < CG_NUM_TYPES; idx++)
         {
-            drawWsgSimpleScaled(&cg->grove.eggs[idx], 32 + (36 * idx), 80, 2, 2);
+            int16_t xOffset = (TFT_WIDTH - cg->grove.eggs[idx].h);
+            xOffset -= (CG_NUM_TYPES * (cg->grove.eggs[idx].h + 24)) >> 1;
+            xOffset += idx * (cg->grove.eggs[idx].h + 48);
+            drawWsgSimpleScaled(&cg->grove.eggs[idx], xOffset >> 1, 80, 2, 2);
         }
         drawText(&cg->menuFont, c555, shopMenuItems[cg->grove.shopSelection], 16, 155);
     }

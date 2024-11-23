@@ -232,13 +232,6 @@ typedef enum
 
 typedef enum
 {
-    CG_TREE,
-    CG_STUMP,
-    CG_WATER
-} cgBoundary_t;
-
-typedef enum
-{
     CHOWA_IDLE,      ///< Doing nothing. Get new behavior
     CHOWA_STATIC,    ///< Standing in place
     CHOWA_WALK,      ///< Walking, running, swimming, struggling to swim towards a target
@@ -353,7 +346,7 @@ typedef struct
 
     // Field data
     cgItem_t items[CG_GROVE_MAX_ITEMS];                            ///< Items present in the Grove
-    rectangle_t boundaries[3];                                     ///< Boundary boxes
+    rectangle_t waterBoundary;                                     ///< Boundary boxes
     cgGroveChowa_t chowa[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA]; ///< List of all chowa in the garden
     bool bgmPlaying;                                               ///< If the BGM is active
     cgInventory_t inv;                                             ///< Inventory struct
@@ -548,8 +541,6 @@ typedef struct
 //==============================================================================
 // Mode Data
 //==============================================================================
-
-// Defines =============================
 
 // Enums ===============================
 typedef enum

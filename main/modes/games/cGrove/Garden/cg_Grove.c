@@ -38,7 +38,7 @@ static const char* groveCursorSprites[] = {
 };
 
 static const char* questionMarkSprites[] = {
-    "questmk-1.wsg", "questmk-2.wsg", "questmk-3.wsg", "questmk-4.wsg", "questmk-5.wsg", "questmk-6.wsg",
+    "questmk-1.wsg", "questmk-2.wsg",
 };
 
 static const char* angerParticles[] = {
@@ -60,12 +60,13 @@ static const char* speechBubbleSprites[] = {
 };
 
 static const char* eggsIntactSprites[] = {
-    "chowa_egg1.wsg", "chowa_egg2.wsg", "chowa_egg3.wsg", "chowa_egg4.wsg", "chowa_egg5.wsg", "chowa_egg6.wsg",
+    "chowa_egg1.wsg",
+    "chowa_egg2.wsg",
 };
 
 static const char* eggsCrackedSprites[] = {
-    "chowa_egg_hatch1.wsg", "chowa_egg_hatch2.wsg", "chowa_egg_hatch3.wsg",
-    "chowa_egg_hatch4.wsg", "chowa_egg_hatch5.wsg", "chowa_egg_hatch6.wsg",
+    "chowa_egg_hatch1.wsg",
+    "chowa_egg_hatch2.wsg",
 };
 
 static const char* itemSprites[] = {
@@ -81,7 +82,7 @@ static const char* menuLabels[] = {
 
 static const char* nvsBlobKeys[] = {"cgItems", "cgInventory", "cgEggs"};
 
-static const char nvsTutorialKey[] = "cgTutorialRun";
+static const char nvsTutorialKey[] = "cgGroveTut";
 
 static const char* cgNVSKeys[] = {"cgPlayerName", "cgChowaData", "cgSettings", "cgGuestData"};
 
@@ -156,7 +157,7 @@ void cg_initGrove(cGrove_t* cg)
 
     // Load assets
     // WSGs
-    loadWsg("garden_background.wsg", &cg->grove.groveBG, true);
+    loadWsg("garden_background_small.wsg", &cg->grove.groveBG, true);
     // Cursors
     cg->grove.cursors = calloc(ARRAY_SIZE(groveCursorSprites), sizeof(wsg_t));
     for (int32_t idx = 0; idx < ARRAY_SIZE(groveCursorSprites); idx++)
@@ -208,8 +209,8 @@ void cg_initGrove(cGrove_t* cg)
     // Initialize viewport
     cg->grove.camera.height = TFT_HEIGHT; // Used to check what objects should be drawn
     cg->grove.camera.width  = TFT_WIDTH;
-    cg->grove.camera.pos.x  = (cg->grove.groveBG.w - TFT_HEIGHT) >> 1;
-    cg->grove.camera.pos.y  = (cg->grove.groveBG.h - TFT_WIDTH) >> 1;
+    cg->grove.camera.pos.x  = 0;
+    cg->grove.camera.pos.y  = 0;
 
     // Initialize the cursor
     cg->grove.cursor.height = cg->grove.cursors[0].h;
@@ -452,7 +453,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
             for (int idx = 0; idx < CG_GROVE_MAX_ITEMS; idx++)
             {
                 if (&cg->grove.items[idx] != cg->grove.heldItem
-                    && rectRectIntersection(cg->grove.items[idx].aabb, cg->grove.boundaries[CG_WATER], &temp))
+                    && rectRectIntersection(cg->grove.items[idx].aabb, cg->grove.waterBoundary, &temp))
                 {
                     cg->grove.items[idx].aabb.pos.x
                         = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[idx].w)));
@@ -613,8 +614,8 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                             cg->grove.unhatchedEggs[idx].stage  = 0;
                             cg->grove.unhatchedEggs[idx].timer  = 0;
                             // Random position roughly centered
-                            vec_t temp = {.y = ((cg->grove.groveBG.h - 100) + (esp_random() % 100)) >> 1,
-                                          .x = ((cg->grove.groveBG.w - 100) + (esp_random() % 100)) >> 1};
+                            vec_t temp = {.y = ((cg->grove.groveBG.h - 100) + (esp_random() % 50)) >> 1,
+                                          .x = ((cg->grove.groveBG.w - 100) + (esp_random() % 50)) >> 1};
                             cg->grove.unhatchedEggs[idx].aabb.pos = temp;
                             // Random type
                             cg->grove.unhatchedEggs[idx].type = esp_random() % CG_NUM_TYPES;
@@ -1069,23 +1070,11 @@ static void cg_moveCamera(cGrove_t* cg, int16_t xChange, int16_t yChange)
 
 static void cg_setupBorders(cGrove_t* cg)
 {
-    // Tree
-    cg->grove.boundaries[CG_TREE].pos.x  = 0;
-    cg->grove.boundaries[CG_TREE].pos.y  = 10;
-    cg->grove.boundaries[CG_TREE].width  = 106;
-    cg->grove.boundaries[CG_TREE].height = 82;
-
-    // Stump
-    cg->grove.boundaries[CG_STUMP].pos.x  = 492;
-    cg->grove.boundaries[CG_STUMP].pos.y  = 66;
-    cg->grove.boundaries[CG_STUMP].width  = 48;
-    cg->grove.boundaries[CG_STUMP].height = 32;
-
     // Water
-    cg->grove.boundaries[CG_WATER].pos.x  = 32;
-    cg->grove.boundaries[CG_WATER].pos.y  = 350;
-    cg->grove.boundaries[CG_WATER].width  = 280;
-    cg->grove.boundaries[CG_WATER].height = 108;
+    cg->grove.waterBoundary.pos.x  = 16;
+    cg->grove.waterBoundary.pos.y  = 175;
+    cg->grove.waterBoundary.width  = 140;
+    cg->grove.waterBoundary.height = 54;
 }
 
 static void shopMenuCb(const char* label, bool selected, uint32_t settingVal)

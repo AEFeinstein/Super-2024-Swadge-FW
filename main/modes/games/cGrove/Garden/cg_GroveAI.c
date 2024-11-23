@@ -405,6 +405,7 @@ void cg_GroveEggAI(cGrove_t* cg, int64_t elapsedUs)
             {
                 cg->grove.unhatchedEggs[idx].active = false;
                 cg->chowa[idx].active               = true;
+                cg->chowa[idx].type                 = CG_KING_DONUT; // FIXME: Remove when second Chowa is in
                 cg->chowa[idx].age                  = 0;
                 cg->chowa[idx].mood                 = CG_NEUTRAL;
                 for (int idx2 = 0; idx2 < CG_STAT_COUNT; idx2++)
@@ -433,12 +434,8 @@ static void cg_GroveGetRandMovePoint(cGrove_t* cg, cgGroveChowa_t* c)
     vec_t colVec;
 
     // Check if inside an object
-    do
-    {
-        targetPos.pos.x = 32 + (esp_random() % (cg->grove.groveBG.w - 64));
-        targetPos.pos.y = 32 + (esp_random() % (cg->grove.groveBG.h - 64));
-    } while (rectRectIntersection(targetPos, cg->grove.boundaries[CG_TREE], &colVec)
-             || rectRectIntersection(targetPos, cg->grove.boundaries[CG_STUMP], &colVec));
+    targetPos.pos.x = 32 + (esp_random() % (cg->grove.groveBG.w - 64));
+    targetPos.pos.y = 32 + (esp_random() % (cg->grove.groveBG.h - 64));
 
     // Once a position is found, calculate angle and distance to point
     c->targetPos = targetPos.pos;
@@ -448,7 +445,7 @@ static cgChowaStateGarden_t cg_getNewTask(cGrove_t* cg, cgGroveChowa_t* c)
 {
     // If in water, continue moving until outside the water
     vec_t temp;
-    if (rectRectIntersection(c->aabb, cg->grove.boundaries[CG_WATER], &temp))
+    if (rectRectIntersection(c->aabb, cg->grove.waterBoundary, &temp))
     {
         cg_GroveGetRandMovePoint(cg, c);
         c->precision = 10.0f;

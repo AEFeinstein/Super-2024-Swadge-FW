@@ -37,7 +37,7 @@ static const char cGroveTitle[] = "Chowa Grove"; // Game title
 static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Perform", "Player Profiles", "Settings"};
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
-static const int32_t cGroveEnabledVals[]       = {true, false};
+static const int32_t cGroveEnabledVals[]        = {true, false};
 static const char* cGroveResetData[]
     = {"Reset all game data", "Are you sure you want to reset to factory? All data will be lost.",
        "Press 'Start' to permanently erase all data. Press any other key to return to menu."};
@@ -47,7 +47,7 @@ static const char* cGroveTitleSprites[] = {"cg_cloud.wsg",          "cg_sky.wsg"
                                            "cg_title_middle_1.wsg", "cg_title_middle_2.wsg",
                                            "cg_title_middle_3.wsg", "cg_title_middle_4.wsg"};
 
-static const char* cgNVSKeys[] = {"chowaPlayerName", "chowaChowaData", "chowaSettings", "chowaGuestData"};
+static const char* cgNVSKeys[] = {"cgPlayerName", "cgChowaData", "cgSettings", "cgGuestData"};
 
 //==============================================================================
 // Function declarations
@@ -205,10 +205,10 @@ static void cGroveEnterMode(void)
     readNvsBlob(cgNVSKeys[1], NULL, &blobLen);
     if (!readNvsBlob(cgNVSKeys[1], &cg->chowa, &blobLen))
     {
-        // TODO: Set everything to default values
+        /* // TODO: remove when done testing
         for (int i = 0; i < CG_MAX_CHOWA - 1; i++)
         {
-            cg->chowa[i].active = true;
+            cg->chowa[i].active = false;
             cg->chowa[i].type   = CG_KING_DONUT;
             for (int idx = 0; idx < CG_STAT_COUNT; idx++)
             {
@@ -234,7 +234,7 @@ static void cGroveEnterMode(void)
             snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", i);
             strcpy(cg->chowa[i].name, buffer);
             strcpy(cg->chowa[i].owner, cg->player);
-        }
+        } */
         writeNvsBlob(cgNVSKeys[1], &cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
     }
 
@@ -281,10 +281,7 @@ static void cGroveExitMode(void)
     freeFont(&cg->titleFont);
 
     // WSGs
-    for (uint8_t i = 0; i < ARRAY_SIZE(cGroveTitleSprites); i++)
-    {
-        freeWsg(&cg->title[i]);
-    }
+    freeWsg(&cg->title[1]); // Sky wsg, only one not freed earlier
     free(cg->title);
     freeWsg(&cg->arrow);
     cg_deInitChowaWSGs(cg);
@@ -304,6 +301,14 @@ static void cGroveMainLoop(int64_t elapsedUs)
             if (evt.down)
             {
                 cg->titleActive = false;
+                // Clear out the sprites
+                for (uint8_t i = 0; i < ARRAY_SIZE(cGroveTitleSprites); i++)
+                {
+                    if (i != 1) // Keep sky sprite for later
+                    {
+                        freeWsg(&cg->title[i]);
+                    }
+                }
             }
         }
         cg_titleScreen(elapsedUs);
