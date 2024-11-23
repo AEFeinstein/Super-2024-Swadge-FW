@@ -126,6 +126,7 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
 
     loadWsg("baked_Landfill2.wsg", &tilemap->surface1Wsg, true);
     loadWsg("baked_Landfill3.wsg", &tilemap->surface2Wsg, true);
+    loadWsg("landfill_gradient.wsg", &tilemap->landfillGradient, true);
     loadWsg("trash_background.wsg", &tilemap->bgWsg, true);
 
     // TILE MAP shenanigans explained:
@@ -269,7 +270,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
     // printf("camera y: %d\n", camera->pos.y);
 
     // draws background
-    if (camera->pos.y < 170 && camera->pos.y > -907)
+    if (camera->pos.y < 270 && camera->pos.y > -907)
     {
         for (int32_t x = -1; x <= TFT_WIDTH / 400 + 1; x++)
         {
@@ -283,6 +284,15 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
         for (int32_t x = -1; x <= TFT_WIDTH / 400 + 1; x++)
         {
             drawWsgSimple(&tilemap->surface1Wsg, x * 400 - offsetX2, -camera->pos.y / 2);
+        }
+    }
+    //printf("cam y: %d\n", camera->pos.y);
+    // draws the back gradient
+    if (camera->pos.y < 1424 && camera->pos.y > -70)
+    {
+        for (int x = -8+(offsetX2 % 8); x < 280; x += 8)
+        {
+            drawWsgSimple(&tilemap->landfillGradient, x, -camera->pos.y / 2 + 205);
         }
     }
 

@@ -441,7 +441,7 @@ static void bb_UpdateTileSupport(void)
         FREE_DBG(shiftedVal);
     }
 
-    if (bigbug->gameData.unsupported.first != NULL && bb_randomInt(1,10) == 1)//making it happen randomly slowly crumble sounds and looks nicer.
+    if (bigbug->gameData.unsupported.first != NULL && bb_randomInt(1,4) == 1)//making it happen randomly slowly makes crumble sound and looks nicer.
     {
         for (int i = 0; i < 50; i++) // arbitrarily large loop to get to the dirt tiles.
         {

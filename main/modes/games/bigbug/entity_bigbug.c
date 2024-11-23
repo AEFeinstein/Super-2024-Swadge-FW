@@ -1234,9 +1234,9 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     int16_t xOff2 = xOff - floatVel.x * 25;
     int16_t yOff2 = yOff - floatVel.y * 25;
 
-    drawLineFast(xOff, yOff - 1, xOff2, yOff2 - 1, c344);
-    drawLineFast(xOff, yOff,     xOff2, yOff2,     c223);
-    drawLineFast(xOff, yOff + 1, xOff2, yOff2 + 1, c101);
+    drawLineFast(xOff, yOff - 1, xOff2, yOff2 - 1, c455);
+    drawLineFast(xOff, yOff,     xOff2, yOff2,     c123);
+    drawLineFast(xOff, yOff + 1, xOff2, yOff2 + 1, c011);
 
 
     drawWsg(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],

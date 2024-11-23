@@ -52,6 +52,7 @@ struct bb_tilemap_t
 
     wsg_t surface1Wsg; ///< A graphic at the surface of the city dump
     wsg_t surface2Wsg; ///< A graphic at the surface of the city dump
+    wsg_t landfillGradient; ///< A tall gradient repeated acroos the screen under surface1Wsg
     wsg_t bgWsg;       ///< The paralax background for depth
 
     bb_tileInfo_t fgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of foreground tiles. The number is the
