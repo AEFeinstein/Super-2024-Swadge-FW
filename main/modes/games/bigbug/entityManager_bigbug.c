@@ -88,7 +88,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, 1, &entityManager->sprites[HARPOON]);
     harpoonSprite->originX     = 10;
-    harpoonSprite->originY     = 10;
+    harpoonSprite->originY     = 7;
 
     bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES]);
     eggLeavesSprite->originX     = 12;
@@ -775,7 +775,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_menuData_t* mData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
 
             mData->cursor
-                = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 3,
+                = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 2,
                                   (entity->pos.x >> DECIMAL_BITS) - 22, 0, false, false);//y position doesn't matter here. It will be handled in the update loop.
 
             // This will make it draw pointed right

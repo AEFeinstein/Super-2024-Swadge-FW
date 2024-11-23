@@ -21,8 +21,6 @@
 // Constants
 //==============================================================================
 // #define SIGNOF(x) ((x > 0) - (x < 0))
-// #define TILE_FIELD_WIDTH  32  // matches the level wsg graphic width
-// #define TILE_FIELD_HEIGHT 192 // matches the level wsg graphic height
 
 //==============================================================================
 // Functions
@@ -350,7 +348,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     if (gData->fire && gData->numHarpoons > 0)
     {
         // Create a harpoon
-        bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 2,
+        bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
         if (harpoon != NULL)
         {
@@ -542,6 +540,14 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     // Update garbotnik's position
     self->pos.x += (gData->vel.x * self->gameData->elapsedUs) >> 16;
     self->pos.y += (gData->vel.y * self->gameData->elapsedUs) >> 16;
+
+    // printf("Garbotnik X: %d\n", self->pos);
+    // //keep the player in bounds
+    // if(self->pos.x < 2304)
+    // {
+    //     self->pos.x == 2304;
+    // }
+    // else if(self->pos.x > )
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos, &hitInfo);
@@ -1213,7 +1219,7 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     vecFl_t floatVel = {(float)pData->vel.x, (float)pData->vel.y};
 
     int16_t angle = (int16_t)(atan2f(floatVel.y, floatVel.x) * (180.0 / M_PI));
-    angle += 135;
+    angle += 180;
     while (angle < 0)
     {
         angle += 360;
@@ -1225,8 +1231,8 @@ void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
 
     floatVel = normVecFl2d(floatVel);
 
-    int16_t xOff2 = xOff - floatVel.x * 20;
-    int16_t yOff2 = yOff - floatVel.y * 20;
+    int16_t xOff2 = xOff - floatVel.x * 25;
+    int16_t yOff2 = yOff - floatVel.y * 25;
 
     drawLineFast(xOff, yOff - 1, xOff2, yOff2 - 1, c344);
     drawLineFast(xOff, yOff,     xOff2, yOff2,     c223);
