@@ -78,12 +78,12 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
 
     // Draw title text
     // Get the text offset
-    int16_t xOff = (TFT_WIDTH - textWidth(&cg->spar.sparTitleFont, sparSplashScreen)) / 2;
+    int16_t xOff = (TFT_WIDTH - textWidth(&cg->titleFont, sparSplashScreen)) / 2;
     int16_t yOff = TFT_HEIGHT / 2;
 
     // drawText(&t48->titleFont, color, mode, (TFT_WIDTH - textWidth(&t48->titleFont, mode)) / 2, TFT_HEIGHT / 2 - 12);
-    drawText(&cg->spar.sparTitleFont, c555, sparSplashScreen, xOff, yOff);
-    drawText(&cg->spar.sparTitleFontOutline, c000, sparSplashScreen, xOff, yOff);
+    drawText(&cg->titleFont, c555, sparSplashScreen, xOff, yOff);
+    drawText(&cg->titleFontOutline, c000, sparSplashScreen, xOff, yOff);
 
     xOff = 32;
     yOff = TFT_HEIGHT - 32;
@@ -96,7 +96,7 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
     }
     if (cg->spar.toggle)
     {
-        drawTextWordWrap(&cg->spar.sparRegFont, c000, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
+        drawTextWordWrap(&cg->menuFont, c000, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
     }
 }
 
@@ -114,26 +114,24 @@ void cg_drawSparRecord(cGrove_t* cg)
     cgRecord_t* record = &cg->spar.sparRecord[cg->spar.recordSelect];
 
     // Draw Match title + Arrows
-    drawText(&cg->spar.sparRegFont, c555, record->matchTitle,
-             (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2, 8);
-    drawWsg(&cg->arrow, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2 - (4 + cg->arrow.w), 4,
-            false, false, 270);
-    drawWsg(&cg->arrow, (TFT_WIDTH + textWidth(&cg->spar.sparRegFont, record->matchTitle)) / 2 + 4, 4, false, false,
-            90);
+    drawText(&cg->menuFont, c555, record->matchTitle, (TFT_WIDTH - textWidth(&cg->menuFont, record->matchTitle)) / 2,
+             8);
+    drawWsg(&cg->arrow, (TFT_WIDTH - textWidth(&cg->menuFont, record->matchTitle)) / 2 - (4 + cg->arrow.w), 4, false,
+            false, 270);
+    drawWsg(&cg->arrow, (TFT_WIDTH + textWidth(&cg->menuFont, record->matchTitle)) / 2 + 4, 4, false, false, 90);
 
     // Player names + vs label
-    int16_t vsStart = (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, "VS")) / 2;
-    drawText(&cg->spar.sparRegFont, c333, "VS", vsStart, 24);
-    drawText(&cg->spar.sparRegFont, c533, record->playerNames[0],
-             vsStart - (textWidth(&cg->spar.sparRegFont, record->playerNames[0]) + 16), 24);
-    drawText(&cg->spar.sparRegFont, c335, record->playerNames[1], vsStart + textWidth(&cg->spar.sparRegFont, "VS") + 16,
-             24);
+    int16_t vsStart = (TFT_WIDTH - textWidth(&cg->menuFont, "VS")) / 2;
+    drawText(&cg->menuFont, c333, "VS", vsStart, 24);
+    drawText(&cg->menuFont, c533, record->playerNames[0],
+             vsStart - (textWidth(&cg->menuFont, record->playerNames[0]) + 16), 24);
+    drawText(&cg->menuFont, c335, record->playerNames[1], vsStart + textWidth(&cg->menuFont, "VS") + 16, 24);
 
     // Round number and arrows
     char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "Round %d", cg->spar.roundSelect);
     drawWsgSimple(&cg->arrow, (TFT_WIDTH - cg->arrow.w) / 2, 40);
-    drawText(&cg->spar.sparRegFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2, 60);
+    drawText(&cg->menuFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 60);
     drawWsg(&cg->arrow, (TFT_WIDTH - cg->arrow.w) / 2, 76, false, true, 0);
 
     // Draw Chowa
@@ -141,13 +139,13 @@ void cg_drawSparRecord(cGrove_t* cg)
 
     // Draw time
     snprintf(buffer, sizeof(buffer) - 1, "Time: %d", record->timer[cg->spar.roundSelect]);
-    drawText(&cg->spar.sparRegFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2, 188);
+    drawText(&cg->menuFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 188);
 
     // Draw Chowa names
     int8_t offset = cg->spar.roundSelect * 2;
-    drawText(&cg->spar.sparRegFont, c444, record->chowaNames[offset], 8, 204);
-    drawText(&cg->spar.sparRegFont, c444, record->chowaNames[offset + 1],
-             TFT_WIDTH - (8 + textWidth(&cg->spar.sparRegFont, record->chowaNames[offset + 1])), 204);
+    drawText(&cg->menuFont, c444, record->chowaNames[offset], 8, 204);
+    drawText(&cg->menuFont, c444, record->chowaNames[offset + 1],
+             TFT_WIDTH - (8 + textWidth(&cg->menuFont, record->chowaNames[offset + 1])), 204);
 
     // Draw result of the game
     switch (record->result[cg->spar.roundSelect])
@@ -155,21 +153,18 @@ void cg_drawSparRecord(cGrove_t* cg)
         case CG_P1_WIN:
         {
             snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->playerNames[0]);
-            drawText(&cg->spar.sparRegFont, c533, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2,
-                     220);
+            drawText(&cg->menuFont, c533, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 220);
             break;
         }
         case CG_P2_WIN:
         {
             snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->playerNames[1]);
-            drawText(&cg->spar.sparRegFont, c335, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2,
-                     220);
+            drawText(&cg->menuFont, c335, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 220);
             break;
         }
         case CG_DRAW:
         {
-            drawText(&cg->spar.sparRegFont, c333, "Draw", (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, "Draw")) / 2,
-                     220);
+            drawText(&cg->menuFont, c333, "Draw", (TFT_WIDTH - textWidth(&cg->menuFont, "Draw")) / 2, 220);
             break;
         }
     }
@@ -212,7 +207,7 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
 
     // Draw match title
     snprintf(buffer, sizeof(buffer) - 1, "%s, round %d", cg->spar.match.matchName, cg->spar.match.round);
-    drawText(&cg->spar.sparRegFont, c000, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2, 8);
+    drawText(&cg->menuFont, c000, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 8);
 
     // Time
     paletteColor_t color = c000;
@@ -221,7 +216,7 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
         color = c500;
     }
     snprintf(buffer, sizeof(buffer) - 1, "Time: %d", cg->spar.match.maxTime - cg->spar.match.timer);
-    drawText(&cg->spar.sparRegFont, color, buffer, (TFT_WIDTH - textWidth(&cg->spar.sparRegFont, buffer)) / 2, 24);
+    drawText(&cg->menuFont, color, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 24);
 
     // Draw Chowa UI
     cg_drawSparChowaUI(cg);
@@ -229,15 +224,15 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     // If paused, draw pause text
     if (cg->spar.match.paused)
     {
-        drawText(&cg->spar.sparTitleFont, c005, "--PAUSE--",
-                 (TFT_WIDTH - textWidth(&cg->spar.sparTitleFont, "--PAUSE--")) / 2, TFT_HEIGHT / 2 - 16);
+        drawText(&cg->titleFont, c005, "--PAUSE--", (TFT_WIDTH - textWidth(&cg->titleFont, "--PAUSE--")) / 2,
+                 TFT_HEIGHT / 2 - 16);
     }
 
     // Draw match end
     if (cg->spar.match.done)
     {
-        drawText(&cg->spar.sparTitleFont, c005, "FINISHED",
-                 (TFT_WIDTH - textWidth(&cg->spar.sparTitleFont, "FINISHED")) / 2, TFT_HEIGHT / 2 - 16);
+        drawText(&cg->titleFont, c005, "FINISHED", (TFT_WIDTH - textWidth(&cg->titleFont, "FINISHED")) / 2,
+                 TFT_HEIGHT / 2 - 16);
     }
 }
 
@@ -356,45 +351,45 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
             {
                 case CG_SPAR_PUNCH:
                 {
-                    drawText(&cg->spar.sparRegFont, c005, "P1: Punch", 100, 108);
+                    drawText(&cg->menuFont, c005, "P1: Punch", 100, 108);
                     drawWsgSimple(&cg->arrow, 64, 64);
                     break;
                 }
                 case CG_SPAR_FAST_PUNCH:
                 {
-                    drawText(&cg->spar.sparRegFont, c005, "P1: Fast Punch", 100, 108);
+                    drawText(&cg->menuFont, c005, "P1: Fast Punch", 100, 108);
                     drawWsg(&cg->arrow, 64, 64, false, true, 0);
                     break;
                 }
                 case CG_SPAR_KICK:
                 {
-                    drawText(&cg->spar.sparRegFont, c005, "P1: Kick", 100, 108);
+                    drawText(&cg->menuFont, c005, "P1: Kick", 100, 108);
                     drawWsg(&cg->arrow, 64, 64, false, false, 270);
                     break;
                 }
                 case CG_SPAR_JUMP_KICK:
                 {
-                    drawText(&cg->spar.sparRegFont, c005, "P1: Jump Kick", 100, 108);
+                    drawText(&cg->menuFont, c005, "P1: Jump Kick", 100, 108);
                     drawWsg(&cg->arrow, 64, 64, false, false, 90);
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
-                    drawText(&cg->spar.sparRegFont, c005, "P1: Headbutt", 100, 108);
+                    drawText(&cg->menuFont, c005, "P1: Headbutt", 100, 108);
                     drawWsg(&cg->arrow, 64, 64, false, false, 90);
                     drawWsg(&cg->arrow, 64, 64, false, false, 270);
                     break;
                 }
                 case CG_SPAR_DODGE:
                 {
-                    drawText(&cg->spar.sparRegFont, c005, "P1: Dodge", 100, 108);
+                    drawText(&cg->menuFont, c005, "P1: Dodge", 100, 108);
                     drawWsg(&cg->arrow, 64, 64, false, true, 0);
                     drawWsg(&cg->arrow, 64, 64, false, false, 0);
                     break;
                 }
                 default:
                 {
-                    drawText(&cg->spar.sparRegFont, c005, "P1: Unset", 100, 108);
+                    drawText(&cg->menuFont, c005, "P1: Unset", 100, 108);
                     break;
                 }
             }
@@ -428,37 +423,37 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
             {
                 case CG_SPAR_PUNCH:
                 {
-                    drawText(&cg->spar.sparRegFont, c500, "AI: Punch", 100, 128);
+                    drawText(&cg->menuFont, c500, "AI: Punch", 100, 128);
                     break;
                 }
                 case CG_SPAR_FAST_PUNCH:
                 {
-                    drawText(&cg->spar.sparRegFont, c500, "AI: Fast Punch", 100, 128);
+                    drawText(&cg->menuFont, c500, "AI: Fast Punch", 100, 128);
                     break;
                 }
                 case CG_SPAR_KICK:
                 {
-                    drawText(&cg->spar.sparRegFont, c500, "AI: Kick", 100, 128);
+                    drawText(&cg->menuFont, c500, "AI: Kick", 100, 128);
                     break;
                 }
                 case CG_SPAR_JUMP_KICK:
                 {
-                    drawText(&cg->spar.sparRegFont, c500, "AI: Jump Kick", 100, 128);
+                    drawText(&cg->menuFont, c500, "AI: Jump Kick", 100, 128);
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
-                    drawText(&cg->spar.sparRegFont, c500, "AI: Headbutt", 100, 128);
+                    drawText(&cg->menuFont, c500, "AI: Headbutt", 100, 128);
                     break;
                 }
                 case CG_SPAR_DODGE:
                 {
-                    drawText(&cg->spar.sparRegFont, c500, "AI: Dodge", 100, 128);
+                    drawText(&cg->menuFont, c500, "AI: Dodge", 100, 128);
                     break;
                 }
                 default:
                 {
-                    drawText(&cg->spar.sparRegFont, c500, "AI: Unset", 100, 128);
+                    drawText(&cg->menuFont, c500, "AI: Unset", 100, 128);
                     break;
                 }
             }

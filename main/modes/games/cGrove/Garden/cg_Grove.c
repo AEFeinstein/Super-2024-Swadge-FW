@@ -75,7 +75,7 @@ static const char* itemSprites[] = {
     "cg_crayons.wsg", "cg_knife.wsg", "cg_toy_sword.wsg", "cake.wsg",     "souffle.wsg",  "DonutRing.wsg",
 };
 
-static const char shopMenuTitle[] = "Ring Shop";
+static const char shopMenuTitle[] = "Grove Menu";
 
 static const char* menuLabels[] = {
     "Shop for items", "View inventory", "View Chowa", "Release Chowa", "Tutorial", "Exit Menu", "Exit Grove",
@@ -203,12 +203,6 @@ void cg_initGrove(cGrove_t* cg)
     // Load the BGM
     loadMidiFile("Chowa_Meadow.mid", &cg->grove.bgm, true);
 
-    // Play the BGM
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop = true;
-    midiGmOn(player);
-    globalMidiPlayerPlaySong(&cg->grove.bgm, MIDI_BGM);
-
     // Initialize viewport
     cg->grove.camera.height = TFT_HEIGHT; // Used to check what objects should be drawn
     cg->grove.camera.width  = TFT_WIDTH;
@@ -283,8 +277,11 @@ void cg_initGrove(cGrove_t* cg)
     {
         addSingleItemToMenu(cg->grove.menu, menuLabels[idx]);
     }
-    // TODO: Recolor
-    cg->grove.renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    cg->grove.renderer                               = initMenuManiaRenderer(&cg->titleFont, NULL, &cg->menuFont);
+    static const paletteColor_t shadowColors[] = {c001, c002, c002, c003, c013, c014, c013, c003, c002, c001};
+    led_t ledColor                             = {.r = 0, .g = 200, .b = 200};
+    recolorMenuManiaRenderer(cg->grove.renderer, c111, c430, c445, c045, c542, c430, c111, c445, shadowColors,
+                             ARRAY_SIZE(shadowColors), ledColor);
 
     // Load inventory from NVS
     readNvsBlob(nvsBlobKeys[1], NULL, &blobLen);
@@ -317,6 +314,9 @@ void cg_initGrove(cGrove_t* cg)
         cg->grove.state = CG_GROVE_FIELD;
     }
     cg->grove.saveTimer = 0;
+
+    // Play the BGM
+    globalMidiPlayerPlaySong(&cg->grove.bgm, MIDI_BGM);
 }
 
 /**
@@ -1116,6 +1116,8 @@ static void shopMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             // Exit Mode
             cgr->unload = true;
+            globalMidiPlayerStop(true);
+            globalMidiPlayerPlaySong(&cgr->menuBGM, MIDI_BGM);
         }
     }
 }

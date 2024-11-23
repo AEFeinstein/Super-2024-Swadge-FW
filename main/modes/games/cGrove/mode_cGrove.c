@@ -138,7 +138,11 @@ static void cGroveEnterMode(void)
     // Load a font
     loadFont("cg_font_body_thin.font", &cg->menuFont, true);
     loadFont("cg_font_body.font", &cg->largeMenuFont, true);
-    loadFont("cg_heading_font_1.wsg", &cg->titleFont, true);
+    loadFont("cg_heading.font", &cg->titleFont, true);
+    makeOutlineFont(&cg->titleFont, &cg->titleFontOutline, true);
+
+    // Load Midis
+    loadMidiFile("Chowa_Menu.mid", &cg->menuBGM, true);
 
     // Load settings
     size_t blobLen;
@@ -153,10 +157,10 @@ static void cGroveEnterMode(void)
 
     // Menu
     cg->menu                                   = initMenu(cGroveTitle, cg_menuCB);
-    cg->renderer                               = initMenuManiaRenderer(NULL, NULL, NULL);
-    static const paletteColor_t shadowColors[] = {c110, c210, c220, c320, c330, c430, c330, c320, c220, c210};
-    led_t ledColor                             = {.r = 128, .g = 128, .b = 0};
-    recolorMenuManiaRenderer(cg->renderer, c115, c335, c000, c110, c003, c004, c220, c335, shadowColors,
+    cg->renderer                               = initMenuManiaRenderer(&cg->titleFont, NULL, &cg->menuFont);
+    static const paletteColor_t shadowColors[] = {c001, c002, c002, c003, c013, c014, c013, c003, c002, c001};
+    led_t ledColor                             = {.r = 0, .g = 200, .b = 200};
+    recolorMenuManiaRenderer(cg->renderer, c111, c430, c445, c045, c542, c430, c111, c445, shadowColors,
                              ARRAY_SIZE(shadowColors), ledColor);
     addSingleItemToMenu(cg->menu, cGroveMenuNames[0]);     // Go to Grove
     addSingleItemToMenu(cg->menu, cGroveMenuNames[1]);     // Go to Spar
@@ -199,6 +203,7 @@ static void cGroveEnterMode(void)
 
     // Adjust Audio to use correct instruments
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop = true;
     midiGmOn(player);
 
     // Init Chowa
@@ -248,6 +253,7 @@ static void cGroveEnterMode(void)
         }
         writeNvsBlob(cgNVSKeys[3], &cg->guests, sizeof(cgChowa_t) * CG_MAX_CHOWA);
     }
+    globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
 }
 
 static void cGroveExitMode(void)
@@ -276,6 +282,7 @@ static void cGroveExitMode(void)
     deinitMenuManiaRenderer(cg->renderer);
 
     // Fonts
+    freeFont(&cg->titleFontOutline);
     freeFont(&cg->menuFont);
     freeFont(&cg->largeMenuFont);
     freeFont(&cg->titleFont);
@@ -467,12 +474,14 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
         if (label == cGroveMenuNames[0])
         {
             // Start Grove
+            globalMidiPlayerStop(true);
             cg_initGrove(cg);
             cg->state = CG_GROVE;
         }
         else if (label == cGroveMenuNames[1])
         {
             // Start Sparring
+            globalMidiPlayerStop(true);
             cg_initSpar(cg);
             cg->state = CG_SPAR;
         }

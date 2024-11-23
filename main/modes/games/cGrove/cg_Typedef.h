@@ -491,14 +491,9 @@ typedef struct
 {
     // Assets
     // Audio
-    // - BGM, menus
-    // - BGM, match
     // - Combat sounds
     //   - Pain sounds
     //   - Impact sounds
-    //   - Gong crash
-    //   - Countdown noises
-    //   - Cheer noises
 
     // BG Sprites
     wsg_t dojoBG;       ///< Dojo Background image
@@ -510,9 +505,12 @@ typedef struct
     // - Headbutt
 
     // Fonts
-    font_t sparTitleFont;        ///< Font used for larger text
+    /* font_t sparTitleFont;        ///< Font used for larger text
     font_t sparTitleFontOutline; ///< Outline for title font
-    font_t sparRegFont;          ///< Regular text
+    font_t sparRegFont;          ///< Regular text */
+
+    // Music
+    midiFile_t sparBGM; ///< Music
 
     // Spar
     cgSparState_t state; ///< Active state
@@ -570,12 +568,16 @@ typedef struct
     font_t menuFont;      ///< Main font
     font_t largeMenuFont; ///< Larger font, same style
     font_t titleFont;     ///< Font for titles
+    font_t titleFontOutline; ///< OPutline of above
 
     // WSGs
     wsg_t* title;                      ///< Title screen sprites
     wsg_t* chowaWSGs[CG_NUM_TYPES][2]; ///< Chowa sprites
     wsg_t arrow;                       ///< Arrow str
     // NPC sprites
+
+    // Audio
+    midiFile_t menuBGM;
 
     // Modes
     cgGrove_t grove; ///< Garden data

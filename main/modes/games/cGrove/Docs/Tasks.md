@@ -9,7 +9,6 @@
 ## Spar
 - Add BGM
 - Create/Add SFX
-- Add background images that jump on crit
 - Add sparring animations
   - Splash screen
   - Main game
