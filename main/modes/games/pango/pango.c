@@ -414,6 +414,7 @@ void pangoMainLoop(int64_t elapsedUs)
 void pangoChangeStateMainMenu(pango_t* self)
 {
     self->gameData.frameCount = 0;
+    self->gameData.changeState = 0;
     self->update              = &pangoUpdateMainMenu;
     pangoBuildMainMenu(pango);
 }
@@ -573,8 +574,21 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
     if (self->gameData.frameCount > 600)
     {
         // resetGameDataLeds(&(self->gameData));
-        pango->menuSelection = 0;
-        changeStateDemoControls(self);
+        //pango->menuSelection = 0;
+
+        switch(pango->menuSelection){
+            case 0:
+            default:
+                changeStateDemoControls(self);
+                break;
+            case 1:
+                changeStateDemoScoring(self);
+                break;
+            case 2:
+                changeStateAttractMode(self);
+                break;
+        }
+        
 
         return;
     }
@@ -1405,7 +1419,7 @@ void updateShowHighScores(pango_t* self, int64_t elapsedUs)
             || ((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))))
     {
         self->menuState     = 0;
-        self->menuSelection = 0;
+        //self->menuSelection = 0;
         soundStop(true);
         changeStateTitleScreen(self);
     }
@@ -1609,6 +1623,7 @@ void changeStateDemoControls(pango_t* self)
                                                   (7 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
     self->menuState = 0;
     self->frameTimer = 0;
+    self->menuSelection = 1;
 
     pango->update = &updateDemoControls;
 }
@@ -1752,20 +1767,154 @@ void drawDemoControls(uint16_t btnState){
 
 void changeStateDemoScoring(pango_t* self)
 {
+    pa_deactivateAllEntities(&(self->entityManager), false);
+    pango->entityManager.activeEnemies = 0;
+    pa_loadMapFromFile(&(pango->tilemap), "demo02.bin");
+    pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), 6);
+    self->entityManager.playerEntity = pa_createPlayer(&(self->entityManager), (0 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                                                (3 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+    self->menuState = 0;
+    self->frameTimer = 0;
+    self->menuSelection = 2;
 
+    pango->update = &updateDemoScoring;
 }
 
 void updateDemoScoring(pango_t* self, int64_t elapsedUs)
 {
+    if(self->btnState & PB_START){
+        pangoChangeStateMainMenu(self);
+    }
+    
+    self->gameData.btnState = demoScoringScript[self->menuState * DEMO_SCORING_SCRIPT_TABLE_ROW_LENGTH + DEMO_SCORING_BTN_STATE_LOOKUP_OFFSET];
+    
+    self->frameTimer++;
+    if(self->frameTimer > demoScoringScript[self->menuState * DEMO_SCORING_SCRIPT_TABLE_ROW_LENGTH + DEMO_SCORING_DURATION_LOOKUP_OFFSET]){
+        self->menuState++;
 
+        if(self->menuState > DEMO_SCORING_SCRIPT_TABLE_LENGTH){
+            pangoChangeStateShowHighScores(self);
+            self->gameData.btnState = 0;
+            return;
+        }
+
+        self->frameTimer = 0;
+    }
+
+    self->gameData.frameCount++;
+    if(self->gameData.frameCount > 59){
+        self->gameData.frameCount = 0;
+    }
+    
+    pa_updateEntities(&(self->entityManager));
+
+    pa_animateTiles(&(self->wsgManager));
+    pa_drawTileMap(&(self->tilemap));
+    pa_drawEntities(&(self->entityManager));
+    drawDemoControls(self->gameData.btnState);
+    drawText(&(self->font), c555, "Demonstration", 70, 16);
+
+    if ((self->gameData.frameCount % 60) < 30)
+    {
+        drawText(&(self->font), c555, "- Press START button -", 20, 208);    
+    }
+
+    pa_updateLedsTitleScreen(self);
 }
 
 void changeStateAttractMode(pango_t* self)
 {
+    pa_initializeGameDataFromTitleScreen(&(self->gameData));
+    pa_deactivateAllEntities(&(self->entityManager), false);
+    pango->entityManager.activeEnemies = 0;
+    pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), 2);
+    pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+    pa_generateMaze(&(pango->tilemap));
+    pa_placeEnemySpawns(&(pango->tilemap));
+    self->entityManager.playerEntity = pa_createPlayer(&(self->entityManager), (9 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                                                (7 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
 
+    self->menuState = 0;
+    self->frameTimer = 0;
+    self->menuSelection = 0;
+
+    pango->update = &updateAttractMode;
 }
 
 void updateAttractMode(pango_t* self, int64_t elapsedUs)
 {
+    updateBtnStateAttractMode(self);
+    
+    pa_updateEntities(&(self->entityManager));
 
+    pa_animateTiles(&(self->wsgManager));
+    pa_drawTileMap(&(self->tilemap));
+    pa_drawEntities(&(self->entityManager));
+
+    if (((self->btnState & PB_START) && !(self->prevBtnState & PB_START)))
+    {
+        pangoChangeStateMainMenu(self);
+        return;
+    }
+    
+    drawPangoHud(&(self->font), &(self->gameData));
+
+    self->gameData.frameCount++;
+    if (self->gameData.frameCount > 59)
+    {
+        self->gameData.frameCount = 0;
+        self->gameData.levelTime++;
+
+        if (self->gameData.remainingBlocks <= 0)
+        {
+            killPlayer(self->entityManager.playerEntity);
+        }
+
+        if (!self->gameData.firstBonusItemDispensed
+            && (self->gameData.remainingBlocks < self->gameData.firstBonusItemDispenseThreshold))
+        {
+            pa_createBonusItem(&(self->entityManager),
+                               ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                               ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+            self->gameData.firstBonusItemDispensed = true;
+        }
+
+        if (!self->gameData.secondBonusItemDispensed
+            && (self->gameData.remainingBlocks < self->gameData.secondBonusItemDispenseThreshold))
+        {
+            pa_createBonusItem(&(self->entityManager),
+                               ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                               ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+            self->gameData.secondBonusItemDispensed = true;
+        }
+
+        pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
+
+        switch(self->gameData.changeState){
+            case PA_ST_NULL:
+                break;
+            case PA_ST_DEAD:
+                if (!self->entityManager.playerEntity->active)
+                {
+                    pangoChangeStateShowHighScores(self);
+                    self->gameData.playerCharacter = (self->gameData.playerCharacter+1) % NUM_CHARACTERS;
+                    pa_remapPlayerCharacter(&(self->wsgManager), 16 * self->gameData.playerCharacter);
+                    self->gameData.changeState = 0;
+                }
+                break;
+            default:
+                pangoChangeStateShowHighScores(self);
+                self->gameData.changeState = 0;
+                break;
+        }
+    }
+
+    drawText(&(self->font), c000, "Demonstration", 71, 17);
+    drawText(&(self->font), c555, "Demonstration", 70, 16);
+
+    if ((self->gameData.frameCount % 60) < 30)
+    {
+        drawText(&(self->font), c000, "- Press START button -", 21, 209);    
+        drawText(&(self->font), c555, "- Press START button -", 20, 208);    
+    }
 }
