@@ -351,7 +351,6 @@ typedef struct
     bool bgmPlaying;                                               ///< If the BGM is active
     cgInventory_t inv;                                             ///< Inventory struct
     cgGroveMoney_t ring;                                           ///< Ring available to collect
-    bool isBGMPlaying;                                             ///< If the BGM needs to be restarted
     cgEgg_t unhatchedEggs[CG_MAX_CHOWA];                           ///< Array of un-hatched eggs
     int8_t hatchIdx;                                               ///< Used for text input
 

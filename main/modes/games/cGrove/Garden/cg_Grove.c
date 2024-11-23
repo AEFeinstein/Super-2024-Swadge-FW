@@ -132,12 +132,6 @@ static void cg_setupBorders(cGrove_t* cg);
  */
 static void shopMenuCb(const char* label, bool selected, uint32_t settingVal);
 
-/**
- * @brief Callback to restart BGM
- *
- */
-static void cg_bgmCB(void);
-
 //==============================================================================
 // Variables
 //==============================================================================
@@ -206,8 +200,14 @@ void cg_initGrove(cGrove_t* cg)
         loadWsg(eggsCrackedSprites[idx], &cg->grove.crackedEggs[idx], true);
     }
 
-    // Audio
-    loadMidiFile("Chowa_Grove_Meadow.mid", &cg->grove.bgm, true);
+    // Load the BGM
+    loadMidiFile("Chowa_Meadow.mid", &cg->grove.bgm, true);
+
+    // Play the BGM
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop = true;
+    midiGmOn(player);
+    globalMidiPlayerPlaySong(&cg->grove.bgm, MIDI_BGM);
 
     // Initialize viewport
     cg->grove.camera.height = TFT_HEIGHT; // Used to check what objects should be drawn
@@ -337,6 +337,7 @@ void cg_deInitGrove(cGrove_t* cg)
 
     // Unload assets
     // Audio
+    globalMidiPlayerStop(true);
     unloadMidiFile(&cg->grove.bgm);
     // WSGs
     for (uint8_t i = 0; i < ARRAY_SIZE(eggsCrackedSprites); i++)
@@ -389,12 +390,6 @@ void cg_deInitGrove(cGrove_t* cg)
  */
 void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
 {
-    // Play BGM if it's not playing
-    if (!cg->grove.isBGMPlaying)
-    {
-        soundPlayBgmCb(&cg->grove.bgm, MIDI_BGM, cg_bgmCB);
-        cg->grove.isBGMPlaying = true;
-    }
     // Save timer
     cg->grove.saveTimer += elapsedUS;
     if (cg->grove.saveTimer >= (1000000 * 60))
@@ -1123,9 +1118,4 @@ static void shopMenuCb(const char* label, bool selected, uint32_t settingVal)
             cgr->unload = true;
         }
     }
-}
-
-static void cg_bgmCB()
-{
-    cgr->grove.isBGMPlaying = false;
 }
