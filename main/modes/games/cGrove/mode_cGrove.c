@@ -295,6 +295,7 @@ static void cGroveMainLoop(int64_t elapsedUs)
     // Draw title screen
     if (cg->titleActive)
     {
+        cg_titleScreen(elapsedUs);
         buttonEvt_t evt = {0};
         while (checkButtonQueueWrapper(&evt))
         {
@@ -311,7 +312,7 @@ static void cGroveMainLoop(int64_t elapsedUs)
                 }
             }
         }
-        cg_titleScreen(elapsedUs);
+        
         return;
     }
 

@@ -38,7 +38,8 @@ static const char* groveCursorSprites[] = {
 };
 
 static const char* questionMarkSprites[] = {
-    "questmk-1.wsg", "questmk-2.wsg",
+    "questmk-1.wsg",
+    "questmk-2.wsg",
 };
 
 static const char* angerParticles[] = {
@@ -85,6 +86,8 @@ static const char* nvsBlobKeys[] = {"cgItems", "cgInventory", "cgEggs"};
 static const char nvsTutorialKey[] = "cgGroveTut";
 
 static const char* cgNVSKeys[] = {"cgPlayerName", "cgChowaData", "cgSettings", "cgGuestData"};
+
+static char namePrompt[] = "Enter the Chowa's name!";
 
 //==============================================================================
 // Function Declarations
@@ -794,6 +797,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 // Clear text entry
                 strcpy(cg->buffer, "");
             }
+            textEntrySetPrompt(namePrompt);
             cg_groveDrawField(cg, 0);
             textEntryDraw(elapsedUS);
             break;

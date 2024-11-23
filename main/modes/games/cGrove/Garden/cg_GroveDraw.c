@@ -141,7 +141,7 @@ static void cg_drawConfirmBox(cGrove_t* cg, char* string);
  * @param cg Game Data
  */
 void cg_groveDrawField(cGrove_t* cg, int64_t elapsedUs)
-{  
+{
     // Draw BG
     drawWsgSimple(&cg->grove.groveBG, -cg->grove.camera.pos.x, -cg->grove.camera.pos.y);
 
