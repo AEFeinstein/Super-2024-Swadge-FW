@@ -14,6 +14,8 @@
 #ifndef _MODE_BIGBUG_H_
     #define _MODE_BIGBUG_H_
 
+void bb_setupMidi(void);
+
 extern swadgeMode_t bigbugMode;
 
 #endif

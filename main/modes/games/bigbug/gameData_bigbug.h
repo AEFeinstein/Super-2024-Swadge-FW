@@ -87,7 +87,6 @@ struct bb_gameData_t
     bb_entity_t* menuBug; // Featured entity walking through the main menu.
 
     bool exit; //Entities can set it to true, and the mode will exit eventually.
-    bool toggleIteration; //toggles everytime A* pathfinding runs. Means clearing out less data.
 };
 
 //==============================================================================

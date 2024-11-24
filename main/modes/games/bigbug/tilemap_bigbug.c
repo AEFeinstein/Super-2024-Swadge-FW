@@ -195,7 +195,8 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 
     freeWsg(&tilemap->surface1Wsg);
     freeWsg(&tilemap->surface2Wsg);
-    // freeWsg(&tilemap->bgWsg);
+    freeWsg(&tilemap->bgWsg);
+    freeWsg(&tilemap->landfillGradient);
 
     // Midground
     for (int16_t i = 0; i < 120; i++)
@@ -216,7 +217,7 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 }
 
 //flags neighbors to check for structural support
-void flagNeighbors(const bb_tileInfo_t* tile, bb_gameData_t* gameData)
+void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 {
     uint8_t* left = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     left[0] = tile->x - 1;
@@ -290,7 +291,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
     // draws the back gradient
     if (camera->pos.y < 1424 && camera->pos.y > -70)
     {
-        for (int x = -8+(offsetX2 % 8); x < 280; x += 8)
+        for (int x = -(offsetX2 % 8); x < 280; x += 8)
         {
             drawWsgSimple(&tilemap->landfillGradient, x, -camera->pos.y / 2 + 205);
         }

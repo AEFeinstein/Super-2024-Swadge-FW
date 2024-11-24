@@ -12,7 +12,7 @@
 //==============================================================================
 typedef struct 
 {
-    bb_tileInfo_t*  tile;
+    bb_midgroundTileInfo_t*  tile;
     uint16_t heapIdx;
 } bb_heapItem_t;
 
