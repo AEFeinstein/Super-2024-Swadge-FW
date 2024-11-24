@@ -35,7 +35,7 @@ void getNeighbors(const bb_tileInfo_t* tile, list_t* neighbors, bb_tilemap_t* ti
             {
                 neighbor->gCost = 0;
                 neighbor->hCost = 0;
-                neighbor->parent = NULL;
+                //neighbor->parent = NULL;
                 neighbor->toggleIteration = toggleIteration;
             }
             push(neighbors, (void*)neighbor);
@@ -175,7 +175,7 @@ bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool
                 {
                     neighborTile->hCost = TILE_FIELD_WIDTH - 5 - neighborTile->x;
                     //set parent of neighbor to current
-                    neighborTile->parent = current;
+                    // neighborTile->parent = current;
                 }
                 //if neighbor is not in open
                 if(!contains(open, neighborTile))

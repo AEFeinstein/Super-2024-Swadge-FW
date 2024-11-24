@@ -28,11 +28,10 @@ struct bb_tileInfo_t
     int8_t health; // 0 is air, > 0 is garbage. Use an int8_t incase damage decrements lower than zero, then we can snap
                    // to zero.
     bb_embeddable_t embed; // Some kind of something embedded in the garbage tile.
-    bb_entity_t* entity;   // Null when the the player player is far away.
-                           // Can become null again if the entity is still embed & player leaving.
+    bb_entity_t* entity;   // Null when the tile is off screen. Becomes an embedded entity when on screen.
+                           // Tracking for the sake of doing something to it when this tile crumbles.
     uint16_t gCost;
     uint16_t hCost;
-    bb_tileInfo_t* parent;
     bool toggleIteration; //toggles between true and false with every iteration of A*. So there's no need to clear out data in the entire tilemap between iterations.
 };
 

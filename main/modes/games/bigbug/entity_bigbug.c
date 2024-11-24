@@ -1035,7 +1035,7 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
 
-    if(dData->offsetY < -30 && dData->curString < dData->numStrings)
+    if(dData->offsetY < 0 && dData->curString < dData->numStrings)
     {
         dData->offsetY += 3;
     }
@@ -1343,12 +1343,12 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
     
     if(dData->curString >= 0 && dData->curString < dData->numStrings)
     {
-        drawText(&self->gameData->font, c344, dData->character, 31, 184);
+        drawText(&self->gameData->font, c344, dData->character, 13, 152);
 
-        int16_t xOff = 31;
-        int16_t yOff = 201;
+        int16_t xOff = 13;
+        int16_t yOff = 177;
         drawTextWordWrap(&self->gameData->font, c344, dData->strings[dData->curString], &xOff, &yOff,
-                             249, 238);
+                             253, 238);
     }
 }
 
