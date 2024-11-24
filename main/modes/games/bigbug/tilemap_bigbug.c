@@ -290,7 +290,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
     // draws the back gradient
     if (camera->pos.y < 1424 && camera->pos.y > -70)
     {
-        for (int x = -8+(offsetX2 % 8); x < 280; x += 8)
+        for (int x = -(offsetX2 % 8); x < 280; x += 8)
         {
             drawWsgSimple(&tilemap->landfillGradient, x, -camera->pos.y / 2 + 205);
         }

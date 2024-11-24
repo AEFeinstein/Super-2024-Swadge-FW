@@ -79,6 +79,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
                 FREE_DBG(dData->strings[i]);
             }
             FREE_DBG(dData->strings);
+            freeWsg(dData->sprite);
         }
         FREE_DBG(self->data);
     }
@@ -1034,14 +1035,14 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
 
-    if(self->gameData->entityManager.sprites[self->spriteIndex].originY < -30 && dData->curString < dData->numStrings)
+    if(dData->offsetY < -30 && dData->curString < dData->numStrings)
     {
-        self->gameData->entityManager.sprites[self->spriteIndex].originY += 3;
+        dData->offsetY += 3;
     }
     else if(dData->curString >= dData->numStrings)
     {
-        self->gameData->entityManager.sprites[self->spriteIndex].originY -= 3;
-        if(self->gameData->entityManager.sprites[self->spriteIndex].originY <= -240)
+        dData->offsetY -= 3;
+        if(dData->offsetY <= -240)
         {
             dData->endDialogueCB(self);
             bb_destroyEntity(self, false);
@@ -1061,7 +1062,11 @@ void bb_updateCharacterTalk(bb_entity_t* self)
             dData->curString++;
             if(dData->curString < dData->numStrings)
             {
-                self->currentAnimationFrame = bb_randomInt(0,7);
+                dData->loadedIdx = bb_randomInt(0,7);
+                char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
+                                                        // terminator ('\0')
+                snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
+                loadWsg(wsg_name, dData->sprite, true);
 
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
@@ -1334,7 +1339,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
 
-    bb_drawSimple(entityManager, camera, self);
+    drawWsgSimple(dData->sprite, 0,-dData->offsetY);
     
     if(dData->curString >= 0 && dData->curString < dData->numStrings)
     {
@@ -1349,8 +1354,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 
 void bb_drawSimple(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
-                    0-entityManager->sprites[self->spriteIndex].originX,0-entityManager->sprites[self->spriteIndex].originY);
+    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame], -entityManager->sprites[self->spriteIndex].originX,0-entityManager->sprites[self->spriteIndex].originY);
 }
 
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -1752,6 +1756,14 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
 {
     bb_dialogueData_t* dData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings = numStrings;
+    dData->offsetY = -240;
+    dData->loadedIdx = bb_randomInt(0,7);
+    dData->sprite = HEAP_CAPS_CALLOC_DBG(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
+                                             // terminator ('\0')
+    snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
+    loadWsg(wsg_name, dData->sprite, true);
+
     dData->strings = HEAP_CAPS_CALLOC_DBG(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
 }

@@ -134,8 +134,6 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     attachmentArmSprite->originX     = 6;
     attachmentArmSprite->originY     = 20;
 
-    bb_loadSprite("ovo_talk", 8, 1, &entityManager->sprites[OVO_TALK]);
-
     bb_loadSprite("GameOver", 2, 1, &entityManager->sprites[BB_GAME_OVER]);
 
     bb_sprite_t* washingMachineSprite = bb_loadSprite("WashingMachine", 1, 6, &entityManager->sprites[BB_WASHING_MACHINE]);
@@ -808,9 +806,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case OVO_TALK:
         {
-            entityManager->sprites[OVO_TALK].originY = -240;
-            
-            entity->currentAnimationFrame = bb_randomInt(0,7);
             entity->updateFunction = &bb_updateCharacterTalk;
             entity->drawFunction = &bb_drawCharacterTalk;
             break;
