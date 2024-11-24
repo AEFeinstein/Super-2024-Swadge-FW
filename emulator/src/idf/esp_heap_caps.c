@@ -12,6 +12,8 @@ typedef struct
 allocation_t aTable[A_TABLE_SIZE] = {0};
 size_t usedMemory[2]              = {0};
 
+const char memDbgFmtStr[] = "%-6s at %s:%d\n  %7zu / %7zu\n";
+
 /**
  * @brief Allocate a chunk of memory which has the given capabilities
  *
@@ -25,7 +27,7 @@ size_t usedMemory[2]              = {0};
  *
  * @return A pointer to the memory allocated on success, NULL on failure
  */
-void* heap_caps_malloc(size_t size, uint32_t caps __attribute__((unused)))
+void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const char* func, int32_t line)
 {
     int32_t idx = 0;
     while (NULL != aTable[idx].ptr)
@@ -41,7 +43,7 @@ void* heap_caps_malloc(size_t size, uint32_t caps __attribute__((unused)))
         aTable[idx].size = size;
         aTable[idx].caps = caps;
 
-        if(MALLOC_CAP_SPIRAM & caps)
+        if (MALLOC_CAP_SPIRAM & caps)
         {
             usedMemory[1] += aTable[idx].size;
         }
@@ -49,7 +51,7 @@ void* heap_caps_malloc(size_t size, uint32_t caps __attribute__((unused)))
         {
             usedMemory[0] += aTable[idx].size;
         }
-        printf("malloc: %7zu / %7zu\n", usedMemory[0], usedMemory[1]);
+        printf(memDbgFmtStr, "malloc", file, line, usedMemory[0], usedMemory[1]);
     }
     else
     {
@@ -74,7 +76,7 @@ void* heap_caps_malloc(size_t size, uint32_t caps __attribute__((unused)))
  *
  * @return A pointer to the memory allocated on success, NULL on failure
  */
-void* heap_caps_calloc(size_t n, size_t size, uint32_t caps)
+void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* file, const char* func, int32_t line)
 {
     int32_t idx = 0;
     while (NULL != aTable[idx].ptr)
@@ -90,7 +92,7 @@ void* heap_caps_calloc(size_t n, size_t size, uint32_t caps)
         aTable[idx].size = (n * size);
         aTable[idx].caps = caps;
 
-        if(MALLOC_CAP_SPIRAM & caps)
+        if (MALLOC_CAP_SPIRAM & caps)
         {
             usedMemory[1] += aTable[idx].size;
         }
@@ -98,7 +100,7 @@ void* heap_caps_calloc(size_t n, size_t size, uint32_t caps)
         {
             usedMemory[0] += aTable[idx].size;
         }
-        printf("calloc: %7zu / %7zu\n", usedMemory[0], usedMemory[1]);
+        printf(memDbgFmtStr, "calloc", file, line, usedMemory[0], usedMemory[1]);
     }
     else
     {
@@ -107,7 +109,7 @@ void* heap_caps_calloc(size_t n, size_t size, uint32_t caps)
     return aTable[idx].ptr;
 }
 
-void heap_caps_free(void* ptr)
+void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t line)
 {
     int32_t idx = 0;
     while (aTable[idx].ptr != ptr)
@@ -116,7 +118,7 @@ void heap_caps_free(void* ptr)
     }
     if (idx < A_TABLE_SIZE)
     {
-        if(MALLOC_CAP_SPIRAM & aTable[idx].caps)
+        if (MALLOC_CAP_SPIRAM & aTable[idx].caps)
         {
             usedMemory[1] -= aTable[idx].size;
         }
@@ -126,7 +128,7 @@ void heap_caps_free(void* ptr)
         }
         aTable[idx].ptr  = NULL;
         aTable[idx].size = 0;
-        printf("free  : %7zu / %7zu\n", usedMemory[0], usedMemory[1]);
+        printf(memDbgFmtStr, "free", file, line, usedMemory[0], usedMemory[1]);
     }
     free(ptr);
 }

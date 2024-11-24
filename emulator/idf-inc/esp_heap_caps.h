@@ -39,7 +39,10 @@
  *
  * @return A pointer to the memory allocated on success, NULL on failure
  */
-void* heap_caps_malloc(size_t size, uint32_t caps);
+#define heap_caps_malloc(s, c)    heap_caps_malloc_dbg(s, c, __FILE__, __func__, __LINE__)
+
+/** See above, but with function and line debugging */
+void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const char* func, int32_t line);
 
 /**
  * @brief Allocate a chunk of memory which has the given capabilities. The initialized value in the memory is set to
@@ -56,11 +59,17 @@ void* heap_caps_malloc(size_t size, uint32_t caps);
  *
  * @return A pointer to the memory allocated on success, NULL on failure
  */
-void* heap_caps_calloc(size_t n, size_t size, uint32_t caps);
+#define heap_caps_calloc(n, s, c) heap_caps_calloc_dbg(n, s, c, __FILE__, __func__, __LINE__)
+
+/** See above, but with function and line debugging */
+void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* file, const char* func, int32_t line);
 
 /**
  * @brief Custom free to track memory allocation
  * 
  * @param ptr 
  */
-void heap_caps_free(void* ptr);
+#define heap_caps_free(p)         heap_caps_free_dbg(p, __FILE__, __func__, __LINE__)
+
+/** See above, but with function and line debugging */
+void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t line);
