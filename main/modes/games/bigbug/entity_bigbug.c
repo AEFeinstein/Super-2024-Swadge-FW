@@ -6,6 +6,7 @@
 #include <math.h>
 #include <limits.h>
 
+#include "mode_bigbug.h"
 #include "entity_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "gameData_bigbug.h"
@@ -227,9 +228,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     self->pos.y = hitInfo.pos.y - self->halfHeight;
     if (hfData->yVel < 50)
     {
-        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-        midiPlayerReset(player);
-        player->volume = 16383;
+        bb_setupMidi();
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
@@ -1673,12 +1672,7 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
 
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 {
-    globalMidiPlayerSetVolume(MIDI_BGM, 13);
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    midiPlayerReset(player);
-    player->songFinishedCallback = NULL;
-    midiGmOn(player);
-    player->loop = true;
+    bb_setupMidi();
     globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     
     for(uint8_t i = 0; i < MAX_ENTITIES; i++)
