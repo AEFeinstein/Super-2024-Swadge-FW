@@ -17,10 +17,13 @@
 #include "modeTimer.h"
 #include "mode_credits.h"
 #include "mode_bigbug.h"
+#include "mode_swadgeHero.h"
 #include "mode_synth.h"
 #include "ultimateTTT.h"
 #include "pango.h"
+#include "sequencerMode.h"
 #include "soko.h"
+#include "mode_cGrove.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "keebTest.h"
@@ -35,18 +38,20 @@
 typedef struct
 {
     menu_t* menu;
-    menu_t* secretsMenu;
     menuManiaRenderer_t* renderer;
     font_t font_righteous;
     font_t font_rodin;
-    midiFile_t jingle;
     midiFile_t fanfare;
+#ifdef SW_VOL_CONTROL
+    midiFile_t jingle;
     int32_t lastBgmVol;
     int32_t lastSfxVol;
+#endif
     int32_t cheatCodeIdx;
     bool debugMode;
+#ifdef SW_VOL_CONTROL
     bool fanfarePlaying;
-    bool resetConfirmShown;
+#endif
     int32_t autoLightDanceTimer;
 } mainMenu_t;
 
@@ -67,7 +72,7 @@ void addSecretsMenu(void);
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
 const char mainMenuTitle[]                      = "Swadge";
-static const char mainMenuShowSecretsMenuName[] = "ShowOnMenu: ";
+static const char mainMenuShowSecretsMenuName[] = "Secrets In Menu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";
 
@@ -75,8 +80,8 @@ swadgeMode_t mainMenuMode = {
     .modeName                 = mainMenuName,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
-    .usesAccelerometer        = true,
-    .usesThermometer          = true,
+    .usesAccelerometer        = false,
+    .usesThermometer          = false,
     .overrideSelectBtn        = true,
     .fnEnterMode              = mainMenuEnterMode,
     .fnExitMode               = mainMenuExitMode,
@@ -92,11 +97,13 @@ mainMenu_t* mainMenu;
 
 static const char settingsLabel[] = "Settings";
 
-static const char tftSettingLabel[]          = "TFT";
-static const char ledSettingLabel[]          = "LED";
-static const char bgmVolSettingLabel[]       = "BGM";
-static const char sfxVolSettingLabel[]       = "SFX";
-static const char micSettingLabel[]          = "MIC";
+static const char tftSettingLabel[] = "TFT";
+static const char ledSettingLabel[] = "LED";
+#ifdef SW_VOL_CONTROL
+static const char bgmVolSettingLabel[] = "BGM";
+static const char sfxVolSettingLabel[] = "SFX";
+#endif
+const char micSettingLabel[]                 = "MIC";
 static const char screenSaverSettingsLabel[] = "Screensaver: ";
 
 static const int32_t screenSaverSettingsValues[] = {
@@ -144,22 +151,29 @@ static void mainMenuEnterMode(void)
     loadFont("righteous_150.font", &mainMenu->font_righteous, false);
 
     // Load a song for when the volume changes
+#ifdef SW_VOL_CONTROL
     loadMidiFile("jingle.mid", &mainMenu->jingle, false);
-    loadMidiFile("item.mid", &mainMenu->fanfare, false);
+#endif
+    loadMidiFile("secret.mid", &mainMenu->fanfare, true);
+    initGlobalMidiPlayer();
+    midiGmOn(globalMidiPlayerGet(MIDI_BGM));
 
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, cGroveMode.modeName);
     addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
     addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
+    addSingleItemToMenu(mainMenu->menu, sequencerMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
@@ -170,9 +184,9 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
-    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
 
     // Start a submenu for settings
@@ -180,13 +194,17 @@ static void mainMenuEnterMode(void)
     // Get the bounds and current settings to build this menu
     addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
     addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
+#ifdef SW_VOL_CONTROL
     addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
+#endif
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
 
+#ifdef SW_VOL_CONTROL
     // These are just used for playing the sound only when the setting changes
     mainMenu->lastBgmVol = getBgmVolumeSetting();
     mainMenu->lastSfxVol = getSfxVolumeSetting();
+#endif
 
     addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsLabel, screenSaverSettingsOptions,
                                  screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
@@ -204,9 +222,6 @@ static void mainMenuEnterMode(void)
 
     // Initialize menu renderer
     mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
-
-    // Make it smooth
-    setFrameRateUs(1000000 / 60);
 }
 
 /**
@@ -225,7 +240,9 @@ static void mainMenuExitMode(void)
     freeFont(&mainMenu->font_righteous);
 
     // Free the song
+#ifdef SW_VOL_CONTROL
     unloadMidiFile(&mainMenu->jingle);
+#endif
     unloadMidiFile(&mainMenu->fanfare);
 
     // Free mode memory
@@ -265,9 +282,10 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                 if (mainMenu->cheatCodeIdx >= ARRAY_SIZE(cheatCode))
                 {
                     mainMenu->cheatCodeIdx = 0;
-                    soundPlayBgm(&mainMenu->fanfare, BZR_STEREO);
+                    globalMidiPlayerPlaySong(&mainMenu->fanfare, MIDI_BGM);
+#ifdef SW_VOL_CONTROL
                     mainMenu->fanfarePlaying = true;
-
+#endif
                     // Return to the top level menu
                     while (mainMenu->menu->parentMenu)
                     {
@@ -309,11 +327,13 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
 
+#ifdef SW_VOL_CONTROL
     // Stop the buzzer when changing volume, not for fanfare
     if (false == mainMenu->fanfarePlaying)
     {
         soundStop(true);
     }
+#endif
 
     if (selected)
     {
@@ -325,6 +345,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == colorchordMode.modeName)
         {
             switchToSwadgeMode(&colorchordMode);
+        }
+        else if (label == sequencerMode.modeName)
+        {
+            switchToSwadgeMode(&sequencerMode);
         }
         else if (label == synthMode.modeName)
         {
@@ -370,9 +394,17 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&tttMode);
         }
+        else if (label == swadgeHeroMode.modeName)
+        {
+            switchToSwadgeMode(&swadgeHeroMode);
+        }
         else if (label == pangoMode.modeName)
         {
             switchToSwadgeMode(&pangoMode);
+        }
+        else if (label == cGroveMode.modeName)
+        {
+            switchToSwadgeMode(&cGroveMode);
         }
         else if (label == timerMode.modeName)
         {
@@ -393,16 +425,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == t48Mode.modeName)
         {
             switchToSwadgeMode(&t48Mode);
-        }
-        else if (label == factoryResetName)
-        {
-            if (!mainMenu->resetConfirmShown)
-            {
-                mainMenu->resetConfirmShown = true;
-                removeSingleItemFromMenu(mainMenu->menu, mnuBackStr);
-                addSingleItemToMenu(mainMenu->secretsMenu, confirmResetName);
-                addSingleItemToMenu(mainMenu->menu, mnuBackStr);
-            }
         }
         else if (label == confirmResetName)
         {
@@ -427,6 +449,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setLedBrightnessSetting(settingVal);
         }
+#ifdef SW_VOL_CONTROL
         else if (bgmVolSettingLabel == label)
         {
             if (settingVal != mainMenu->lastBgmVol)
@@ -447,6 +470,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
                 mainMenu->fanfarePlaying = false;
             }
         }
+#endif
         else if (micSettingLabel == label)
         {
             setMicGainSetting(settingVal);
@@ -455,6 +479,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setScreensaverTimeSetting(settingVal);
         }
+        else if (mainMenuShowSecretsMenuName == label)
+        {
+            setShowSecretsMenuSetting(settingVal);
+        }
     }
 }
 
@@ -462,18 +490,30 @@ void addSecretsMenu(void)
 {
     mainMenu->debugMode = true;
 
+    // Return to the root
+    while (mainMenu->menu->parentMenu)
+    {
+        mainMenu->menu = mainMenu->menu->parentMenu;
+    }
+
     // Add the secrets menu
-    mainMenu->menu        = startSubMenu(mainMenu->menu, "Secrets");
-    mainMenu->secretsMenu = mainMenu->menu;
+    mainMenu->menu = startSubMenu(mainMenu->menu, "Secrets");
+
     addSingleItemToMenu(mainMenu->menu, "Git Hash: " GIT_SHA1);
     addSettingsOptionsItemToMenu(mainMenu->menu, mainMenuShowSecretsMenuName, showSecretsMenuSettingOptions,
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
-    // addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+
     addSingleItemToMenu(mainMenu->menu, keebTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, factoryResetName);
+
+    mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
+    addSingleItemToMenu(mainMenu->menu, confirmResetName);
+    // Back is automatically added
+    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    // End the secrets menu
     mainMenu->menu = endSubMenu(mainMenu->menu);
 }

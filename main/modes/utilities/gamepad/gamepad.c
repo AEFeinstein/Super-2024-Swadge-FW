@@ -115,9 +115,11 @@ static const char* const accelSettingsOptions[] = {
     "On",
 };
 
-static const int32_t touchSettingsValues[] = {GAMEPAD_TOUCH_L_STICK_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING};
+static const int32_t touchSettingsValues[]
+    = {GAMEPAD_TOUCH_MORE_BUTTONS_SETTING, GAMEPAD_TOUCH_L_STICK_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING};
 
 static const char* const touchSettingsOptions[] = {
+    "More Buttons",
     "StickL",
     "StickR",
 };
@@ -269,6 +271,9 @@ static const tinyusb_config_t ns_tusb_cfg = {
  */
 void gamepadEnterMode(void)
 {
+    // Disable speaker for gamepad
+    setDacShutdown(true);
+
     // Allocate and zero memory
     gamepad = (gamepad_t*)calloc(1, sizeof(gamepad_t));
 
@@ -290,9 +295,6 @@ void gamepadEnterMode(void)
 
     // Initialize menu renderer
     gamepad->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
-
-    // We shold go as fast as we can
-    setFrameRateUs(0);
 
     // Set up the IMU
     accelSetRegistersAndReset();
@@ -760,7 +762,8 @@ void gamepadButtonCb(buttonEvt_t* evt)
             // Build a list of all independent buttons held down
             gamepad->gpNsState.buttons
                 &= ~(GAMEPAD_NS_BUTTON_A | GAMEPAD_NS_BUTTON_B | GAMEPAD_NS_BUTTON_PLUS | GAMEPAD_NS_BUTTON_MINUS
-                     | GAMEPAD_NS_BUTTON_HOME | GAMEPAD_NS_BUTTON_CAPTURE);
+                     | GAMEPAD_NS_BUTTON_HOME | GAMEPAD_NS_BUTTON_CAPTURE | GAMEPAD_NS_BUTTON_X | GAMEPAD_NS_BUTTON_Y
+                     | GAMEPAD_NS_BUTTON_TL | GAMEPAD_NS_BUTTON_TR | GAMEPAD_NS_BUTTON_TL2 | GAMEPAD_NS_BUTTON_TR2);
 
             if (evt->state & PB_A)
             {
@@ -903,16 +906,83 @@ void gamepadReportStateToHost(void)
                 gamepadTouch_t touchSetting = getGamepadTouchSetting();
                 switch (touchSetting)
                 {
+                    case GAMEPAD_TOUCH_MORE_BUTTONS_SETTING:
+                    {
+                        gamepad->gpNsState.buttons
+                            &= ~(GAMEPAD_NS_BUTTON_X | GAMEPAD_NS_BUTTON_Y | GAMEPAD_NS_BUTTON_TL | GAMEPAD_NS_BUTTON_TR
+                                 | GAMEPAD_NS_BUTTON_TL2 | GAMEPAD_NS_BUTTON_TR2);
+                        if (!touched)
+                        {
+                            break;
+                        }
+
+                        touchJoystick_t tdir = getTouchJoystickZones(phi, r, false, true);
+                        switch (tdir)
+                        {
+                            case TB_CENTER:
+                            default:
+                            {
+                                break;
+                            }
+                            case TB_RIGHT:
+                            {
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_X;
+                                break;
+                            }
+                            case TB_UP_RIGHT:
+                            {
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_TR;
+                                break;
+                            }
+                            case TB_UP:
+                            {
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_TR;
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_TL;
+                                break;
+                            }
+                            case TB_UP_LEFT:
+                            {
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_TL;
+                                break;
+                            }
+                            case TB_LEFT:
+                            {
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_Y;
+                                break;
+                            }
+                            case TB_DOWN_LEFT:
+                            {
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_TL2;
+                                break;
+                            }
+                            case TB_DOWN:
+                            {
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_TL2;
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_TR2;
+                                break;
+                            }
+                            case TB_DOWN_RIGHT:
+                            {
+                                gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_TR2;
+                                break;
+                            }
+                        }
+                        break;
+                    }
                     case GAMEPAD_TOUCH_L_STICK_SETTING:
+                    {
                         gamepad->gpNsState.x = x;
                         gamepad->gpNsState.y = y;
                         gamepad->gpNsState.z = z;
                         break;
+                    }
                     case GAMEPAD_TOUCH_R_STICK_SETTING:
+                    {
                         gamepad->gpNsState.rx = x;
                         gamepad->gpNsState.ry = y;
                         gamepad->gpNsState.rz = z;
                         break;
+                    }
                 }
 
                 tud_hid_gamepad_report_ns(HID_ITF_PROTOCOL_NONE, gamepad->gpNsState.x, gamepad->gpNsState.y,

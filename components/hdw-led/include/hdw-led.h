@@ -30,10 +30,6 @@
  * must be flushed before entering light sleep. If they are not, garbage data may be sent after light sleep begins,
  * resulting in indeterminate LED behavior.
  *
- * Even though \c CONFIG_NUM_LEDS declares eight LEDs, there is a ninth LED which is controllable. By default, setting
- * \c CONFIG_NUM_LEDS LEDs will automatically set the ninth to the average of the sixth, seventh, and eighth, which
- * surround it on the PCB. To set the ninth LED, set `CONFIG_NUM_LEDS + 1` LEDs.
- *
  * \section led_example Example
  *
  * Set the LEDs to a rough rainbow:
@@ -55,7 +51,7 @@
 #include <stdint.h>
 
 #include <esp_err.h>
-#include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 
 /// @brief The maximum LED brightness setting
 #define MAX_LED_BRIGHTNESS 8

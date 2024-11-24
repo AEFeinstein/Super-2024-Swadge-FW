@@ -221,8 +221,8 @@
 #include "midiPlayer.h"
 
 #define EXIT_TIME_US 1000000
-/// @brief the default time between drawn frames, in microseconds
-#define DEFAULT_FRAME_RATE_US 40000
+/// @brief the default time between drawn frames, in microseconds (40FPS)
+#define DEFAULT_FRAME_RATE_US (1000000 / 40)
 
 /**
  * @struct swadgeMode_t
@@ -355,5 +355,8 @@ void deinitSystem(void);
 void openQuickSettings(void);
 void setFrameRateUs(uint32_t newFrameRateUs);
 uint32_t getFrameRateUs(void);
+
+void switchToSpeaker(void);
+void switchToMicrophone(void);
 
 #endif

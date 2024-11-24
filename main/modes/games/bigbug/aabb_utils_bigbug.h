@@ -4,16 +4,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <palette.h>
+#include <vector2d.h>
 
 typedef struct
 {
-    int32_t x0;
-    int32_t y0;
-    int32_t x1;
-    int32_t y1;
+    vec_t pos; // at the center
+    int32_t halfWidth;
+    int32_t halfHeight;
 } bb_box_t;
 
-void bb_drawBox(bb_box_t box, paletteColor_t color, bool isFilled, int32_t scalingFactor);
-bool bb_boxesCollide(bb_box_t box0, bb_box_t box1, int32_t scalingFactor);
+void bb_drawBox(bb_box_t* box, paletteColor_t* color, bool isFilled);
+bool bb_boxesCollide(bb_box_t* box0, bb_box_t* box1);
+bool bb_boxesCollideShift(bb_box_t* box0, bb_box_t* box1);
 
 #endif

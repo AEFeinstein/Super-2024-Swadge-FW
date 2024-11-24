@@ -174,6 +174,7 @@
 #include <rom/usb/usb_persist.h>
 #include <rom/usb/chip_usb_dw_wrapper.h>
 #include <soc/rtc_cntl_reg.h>
+#include <soc/gpio_num.h>
 
 #include "advanced_usb_control.h"
 #include "shapes.h"
@@ -192,6 +193,28 @@
 // Define RTC_DATA_ATTR if it doesn't exist
 #ifndef RTC_DATA_ATTR
     #define RTC_DATA_ATTR
+#endif
+
+// Define hardware-specific GPIOs
+#if defined(CONFIG_HARDWARE_WAVEBIRD) || defined(CONFIG_HARDWARE_GUNSHIP)
+    #define GPIO_SAO_1 GPIO_NUM_17
+    #define GPIO_SAO_2 GPIO_NUM_18
+
+    #define GPIO_BTN_UP    GPIO_NUM_0
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_2
+    #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+#elif defined(CONFIG_HARDWARE_HOTDOG)
+    #define GPIO_SAO_1 GPIO_NUM_40
+    #define GPIO_SAO_2 GPIO_NUM_42
+
+    #define GPIO_BTN_UP    GPIO_NUM_1
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_0
+    #define GPIO_BTN_RIGHT GPIO_NUM_2
+#else
+    #error "Define what hardware is being built for"
 #endif
 
 //==============================================================================
@@ -237,10 +260,14 @@ static void dacCallback(uint8_t* samples, int16_t len);
  */
 void app_main(void)
 {
+    // Make sure there isn't a pin conflict
+    if (GPIO_SAO_1 != GPIO_NUM_17)
+    {
 #ifdef CONFIG_DEBUG_OUTPUT_UART_SAO
-    // Redirect UART if configured to do so
-    uart_set_pin(UART_NUM_0, GPIO_NUM_18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+        // Redirect UART if configured and able
+        uart_set_pin(UART_NUM_0, GPIO_SAO_1, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #endif
+    }
 
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
@@ -296,14 +323,14 @@ void app_main(void)
 
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
-        GPIO_NUM_0,  // Up
-        GPIO_NUM_4,  // Down
-        GPIO_NUM_2,  // Left
-        GPIO_NUM_1,  // Right
-        GPIO_NUM_16, // A
-        GPIO_NUM_15, // B
-        GPIO_NUM_8,  // Start
-        GPIO_NUM_5   // Select
+        GPIO_BTN_UP,    // Up
+        GPIO_BTN_DOWN,  // Down
+        GPIO_BTN_LEFT,  // Left
+        GPIO_BTN_RIGHT, // Right
+        GPIO_NUM_16,    // A
+        GPIO_NUM_15,    // B
+        GPIO_NUM_8,     // Start
+        GPIO_NUM_5      // Select
     };
     touch_pad_t touchPads[] = {
         TOUCH_PAD_NUM9,  // GPIO_NUM_9
@@ -332,13 +359,15 @@ void app_main(void)
     initShapes();
 
     // Initialize the RGB LEDs
-    initLeds(GPIO_NUM_39,
-#ifdef CONFIG_DEBUG_OUTPUT_UART_SAO
-             GPIO_NUM_NC,
-#else
-             GPIO_NUM_18,
+    gpio_num_t ledMirrorGpio = GPIO_NUM_NC;
+#ifndef CONFIG_DEBUG_OUTPUT_UART_SAO
+    if (GPIO_SAO_2 != GPIO_NUM_18)
+    {
+        ledMirrorGpio = GPIO_SAO_2;
+    }
 #endif
-             getLedBrightnessSetting());
+
+    initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
@@ -529,13 +558,12 @@ static void initOptionalPeripherals(void)
 #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
         // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
         // so it can't be initialized at the same time as the microphone
-        initDac(dacCallback);
+        initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+                GPIO_NUM_18, dacCallback);
         dacStart();
         initGlobalMidiPlayer();
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-        // Init buzzer. This must be called before initMic()
-        initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
-                   GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
+    #error "Buzzer is no longer supported, get with the times!"
 #endif
     }
 
@@ -795,4 +823,42 @@ void dacCallback(uint8_t* samples, int16_t len)
         // Otherwise use the song player
         globalMidiPlayerFillBuffer(samples, len);
     }
+}
+
+/**
+ * @brief Enable the speaker (and battery monitor) and disable the microphone
+ */
+void switchToSpeaker(void)
+{
+    // Stop the microphone
+    stopMic();
+    deinitMic();
+
+    // Start the speaker
+    initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+            GPIO_NUM_18, dacCallback);
+    setDacShutdown(false);
+    initGlobalMidiPlayer();
+
+    // Start battery monitoring
+    initBattmon(GPIO_NUM_6);
+}
+
+/**
+ * @brief Enable the microphone and disable the speaker (and battery monitor)
+ */
+void switchToMicrophone(void)
+{
+    // Stop battery monitoring
+    deinitBattmon();
+
+    // Stop the speaker
+    globalMidiPlayerStop(true);
+    deinitGlobalMidiPlayer();
+    setDacShutdown(true);
+    deinitDac();
+
+    // Initialize and start the mic as a continuous ADC
+    initMic(GPIO_NUM_7);
+    startMic();
 }

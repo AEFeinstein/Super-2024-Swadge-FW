@@ -34,16 +34,6 @@
 #define UP_ARROW_HEIGHT 10
 #define UP_ARROW_MARGIN 2
 
-#define TITLE_BG_COLOR     c115
-#define TITLE_TEXT_COLOR   c542
-#define TEXT_OUTLINE_COLOR c000
-#define BG_COLOR           c540
-#define OUTER_RING_COLOR   c243
-#define INNER_RING_COLOR   c531
-#define ROW_COLOR          c000
-#define ROW_TEXT_COLOR     c555
-// #define ROW_TEXT_SELECTED_COLOR c533
-
 #define ORBIT_RING_RADIUS_1   26
 #define ORBIT_RING_RADIUS_2   18
 #define RING_STROKE_THICKNESS 8
@@ -55,7 +45,7 @@
 //==============================================================================
 
 /// @brief Colors to cycle through for the selected drop shadow
-static const paletteColor_t selectedShadowColors[] = {
+static const paletteColor_t defaultShadowColors[] = {
     c500, c511, c522, c533, c544, c555, c544, c533, c522, c511,
 };
 
@@ -89,7 +79,25 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
  */
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont)
 {
-    menuManiaRenderer_t* renderer = calloc(1, sizeof(menuManiaRenderer_t));
+    menuManiaRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuManiaRenderer_t), MALLOC_CAP_SPIRAM);
+
+    // Default colors
+    renderer->titleBgColor     = c115;
+    renderer->titleTextColor   = c542;
+    renderer->textOutlineColor = c000;
+    renderer->bgColor          = c540;
+    renderer->outerRingColor   = c243;
+    renderer->innerRingColor   = c531;
+    renderer->rowColor         = c000;
+    renderer->rowTextColor     = c555;
+    renderer->shadowColors     = defaultShadowColors;
+    renderer->shadowColorsLen  = ARRAY_SIZE(defaultShadowColors);
+
+    // LED color
+    uint32_t ledColor        = paletteToRGB(renderer->bgColor);
+    renderer->baseLedColor.r = ((ledColor >> 16) & 0xFF) / 2;
+    renderer->baseLedColor.g = ((ledColor >> 8) & 0xFF) / 2;
+    renderer->baseLedColor.b = ((ledColor >> 0) & 0xFF) / 2;
 
     // Save or allocate title font
     if (NULL == titleFont)
@@ -108,12 +116,12 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
     if (NULL == titleFontOutline)
     {
         renderer->titleFontOutline = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
-        makeOutlineFont(renderer->titleFont, renderer->titleFontOutline, false);
+        makeOutlineFont(renderer->titleFont, renderer->titleFontOutline, true);
         renderer->titleFontOutlineAllocated = true;
     }
     else
     {
-        renderer->titleFontOutline          = titleFont;
+        renderer->titleFontOutline          = titleFontOutline;
         renderer->titleFontOutlineAllocated = false;
     }
 
@@ -141,8 +149,8 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
 
     // Initialize Rings
     const paletteColor_t ringColors[] = {
-        INNER_RING_COLOR,
-        OUTER_RING_COLOR,
+        renderer->innerRingColor,
+        renderer->outerRingColor,
     };
     int32_t ringMinSpeed = 15000;
     int32_t ringMaxSpeed = 20000;
@@ -215,7 +223,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
                          bool leftArrow, bool rightArrow, bool doubleArrows)
 {
     // Pick colors based on selection
-    paletteColor_t textColor = ROW_TEXT_COLOR;
+    paletteColor_t textColor = renderer->rowTextColor;
     if (isSelected)
     {
         // Draw drop shadow for selected item
@@ -225,7 +233,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
                          y + rows + DROP_SHADOW_OFFSET,                                                  //
                          x + PARALLELOGRAM_HEIGHT - rows - 1 + PARALLELOGRAM_WIDTH + DROP_SHADOW_OFFSET, //
                          y + rows + DROP_SHADOW_OFFSET,                                                  //
-                         selectedShadowColors[renderer->selectedShadowIdx]);
+                         renderer->shadowColors[renderer->selectedShadowIdx]);
         }
 
         // Bounce the item
@@ -239,7 +247,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
                      y + rows,                                                  //
                      x + PARALLELOGRAM_HEIGHT - rows - 1 + PARALLELOGRAM_WIDTH, //
                      y + rows,                                                  //
-                     ROW_COLOR);
+                     renderer->rowColor);
     }
 
     // Draw the text
@@ -328,12 +336,13 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
  *
  * @param radius The radius of the ring
  * @param angle The angle of the ring for orbiting circles
- * @param color The color of the ring
+ * @param ringColor The color of the ring
+ * @param bgColor The color of the background
  */
-static void drawManiaRing(int16_t radius, int16_t angle, paletteColor_t color)
+static void drawManiaRing(int16_t radius, int16_t angle, paletteColor_t ringColor, paletteColor_t bgColor)
 {
     // Draw the ring
-    drawCircleOutline(TFT_WIDTH / 2, TFT_HEIGHT / 2, radius, RING_STROKE_THICKNESS, color);
+    drawCircleOutline(TFT_WIDTH / 2, TFT_HEIGHT / 2, radius, RING_STROKE_THICKNESS, ringColor);
 
     // Draw the the smaller ring on the orbit (two filled circles)
     vec_t circlePos = {
@@ -341,14 +350,14 @@ static void drawManiaRing(int16_t radius, int16_t angle, paletteColor_t color)
         .y = -radius + (RING_STROKE_THICKNESS / 2),
     };
     circlePos = rotateVec2d(circlePos, angle);
-    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS_1, color);
+    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS_1, ringColor);
     drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y,
-                     ORBIT_RING_RADIUS_1 - RING_STROKE_THICKNESS, BG_COLOR);
+                     ORBIT_RING_RADIUS_1 - RING_STROKE_THICKNESS, bgColor);
 
     // Draw an opposite filled circle
     circlePos.x = -circlePos.x;
     circlePos.y = -circlePos.y;
-    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS_2, color);
+    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS_2, ringColor);
 }
 
 /**
@@ -376,14 +385,11 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     {
         // Run timer for LED excitation
         renderer->ledExciteTimer += elapsedUs;
-        while (renderer->ledExciteTimer >= 40000 * 8)
+        while (renderer->ledExciteTimer >= 40000 * CONFIG_NUM_LEDS)
         {
-            renderer->ledExciteTimer -= 40000 * 8;
-            uint32_t ledColor                      = paletteToRGB(BG_COLOR);
-            renderer->leds[renderer->currentLed].r = ((ledColor >> 16) & 0xFF) / 2;
-            renderer->leds[renderer->currentLed].g = ((ledColor >> 8) & 0xFF) / 2;
-            renderer->leds[renderer->currentLed].b = ((ledColor >> 0) & 0xFF) / 2;
-            renderer->currentLed                   = (renderer->currentLed + 1) % CONFIG_NUM_LEDS;
+            renderer->ledExciteTimer -= 40000 * CONFIG_NUM_LEDS;
+            renderer->leds[renderer->currentLed] = renderer->baseLedColor;
+            renderer->currentLed                 = (renderer->currentLed + 1) % CONFIG_NUM_LEDS;
         }
 
         // Run timer for LED decay
@@ -443,7 +449,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     while (renderer->selectedShadowTimer > (100000))
     {
         renderer->selectedShadowTimer -= (100000);
-        renderer->selectedShadowIdx = (renderer->selectedShadowIdx + 1) % ARRAY_SIZE(selectedShadowColors);
+        renderer->selectedShadowIdx = (renderer->selectedShadowIdx + 1) % renderer->shadowColorsLen;
     }
 
     // Run a timer to bounce the selected item, when transitioned to
@@ -468,7 +474,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     renderer->selectedMarqueeTimer += elapsedUs;
 
     // Clear the background
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, BG_COLOR);
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, renderer->bgColor);
 
     // Draw the rings
     for (int16_t i = 0; i < ARRAY_SIZE(renderer->rings); i++)
@@ -476,7 +482,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         maniaRing_t* ring  = &renderer->rings[i];
         int16_t ringRadius = (MIN_RING_RADIUS + MAX_RING_RADIUS) / 2
                              + (((MAX_RING_RADIUS - MIN_RING_RADIUS) * getSin1024(ring->diameterAngle)) / 1024);
-        drawManiaRing(ringRadius, ring->orbitAngle, ring->color);
+        drawManiaRing(ringRadius, ring->orbitAngle, ring->color, renderer->bgColor);
     }
 
     // Find the start of the 'page'
@@ -513,18 +519,18 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     int16_t titleBgX1 = (TFT_WIDTH + tWidth) / 2 + 6;
     int16_t titleBgY0 = y;
     int16_t titleBgY1 = y + TITLE_BG_HEIGHT;
-    fillDisplayArea(titleBgX0, titleBgY0, titleBgX1, titleBgY1, TITLE_BG_COLOR);
+    fillDisplayArea(titleBgX0, titleBgY0, titleBgX1, titleBgY1, renderer->titleBgColor);
     drawTriangleOutlined(titleBgX0, titleBgY0, titleBgX0, titleBgY1, titleBgX0 - (TITLE_BG_HEIGHT / 2),
-                         (titleBgY0 + titleBgY1) / 2, TITLE_BG_COLOR, TITLE_BG_COLOR);
+                         (titleBgY0 + titleBgY1) / 2, renderer->titleBgColor, renderer->titleBgColor);
     drawTriangleOutlined(titleBgX1, titleBgY0, titleBgX1, titleBgY1, titleBgX1 + (TITLE_BG_HEIGHT / 2),
-                         (titleBgY0 + titleBgY1) / 2, TITLE_BG_COLOR, TITLE_BG_COLOR);
+                         (titleBgY0 + titleBgY1) / 2, renderer->titleBgColor, renderer->titleBgColor);
 
     // Draw a title
     y += (TITLE_BG_HEIGHT - renderer->titleFont->height) / 2;
     // Draw the menu text
-    drawText(renderer->titleFont, TITLE_TEXT_COLOR, menu->title, (TFT_WIDTH - tWidth) / 2, y);
+    drawText(renderer->titleFont, renderer->titleTextColor, menu->title, (TFT_WIDTH - tWidth) / 2, y);
     // Outline the menu text
-    drawText(renderer->titleFontOutline, TEXT_OUTLINE_COLOR, menu->title, (TFT_WIDTH - tWidth) / 2, y);
+    drawText(renderer->titleFontOutline, renderer->textOutlineColor, menu->title, (TFT_WIDTH - tWidth) / 2, y);
 
     // Move to drawing the rows
     y = titleBgY1 + Y_SECTION_MARGIN;
@@ -537,7 +543,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         {
             drawLineFast(PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_HEIGHT - t + (UP_ARROW_HEIGHT * 2 - 1) / 2, y + t,
                          PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_HEIGHT + t + (UP_ARROW_HEIGHT * 2 - 1) / 2, y + t,
-                         ROW_COLOR);
+                         renderer->rowColor);
         }
         y += (UP_ARROW_HEIGHT);
     }
@@ -598,7 +604,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         {
             drawLineFast(PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_WIDTH - t - (UP_ARROW_HEIGHT * 2) / 2, y - t,
                          PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_WIDTH + t - (UP_ARROW_HEIGHT * 2) / 2, y - t,
-                         ROW_COLOR);
+                         renderer->rowColor);
         }
     }
 
@@ -643,4 +649,41 @@ void setManiaLedsOn(menuManiaRenderer_t* renderer, bool ledsOn)
         memset(renderer->leds, 0, sizeof(renderer->leds));
         setLeds(renderer->leds, CONFIG_NUM_LEDS);
     }
+}
+
+/**
+ * @brief Recolor a menu renderer
+ *
+ * @param renderer The menu renderer to recolor
+ * @param titleBgColor The color of the title background
+ * @param titleTextColor The color of the title text
+ * @param textOutlineColor The color of the title text outline
+ * @param bgColor The color of the screen background
+ * @param outerRingColor The color of the outer rotating ring
+ * @param innerRingColor The color of the inner rotating ring
+ * @param rowColor The color of the row background
+ * @param rowTextColor The color of the row text
+ * @param shadowColors The colors cycled through as the selected shadow
+ * @param shadowColorsLen The number of selected shadow colors to cycle through
+ * @param baseLedColor The color of the LED illumination
+ */
+void recolorMenuManiaRenderer(menuManiaRenderer_t* renderer, paletteColor_t titleBgColor, paletteColor_t titleTextColor,
+                              paletteColor_t textOutlineColor, paletteColor_t bgColor, paletteColor_t outerRingColor,
+                              paletteColor_t innerRingColor, paletteColor_t rowColor, paletteColor_t rowTextColor,
+                              const paletteColor_t* shadowColors, int32_t shadowColorsLen, led_t baseLedColor)
+{
+    renderer->titleBgColor      = titleBgColor;
+    renderer->titleTextColor    = titleTextColor;
+    renderer->textOutlineColor  = textOutlineColor;
+    renderer->bgColor           = bgColor;
+    renderer->outerRingColor    = outerRingColor;
+    renderer->innerRingColor    = innerRingColor;
+    renderer->rings[0].color    = outerRingColor;
+    renderer->rings[1].color    = innerRingColor;
+    renderer->rowColor          = rowColor;
+    renderer->rowTextColor      = rowTextColor;
+    renderer->shadowColors      = shadowColors;
+    renderer->shadowColorsLen   = shadowColorsLen;
+    renderer->selectedShadowIdx = 0;
+    renderer->baseLedColor      = baseLedColor;
 }

@@ -29,7 +29,7 @@
  * \endcode
  */
 
-#include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 
 void initBattmon(gpio_num_t gpio);
 void deinitBattmon(void);

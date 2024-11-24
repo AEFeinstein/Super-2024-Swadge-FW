@@ -14,6 +14,8 @@
 #include "macros.h"
 #include "geometry.h"
 
+#include <esp_heap_caps.h>
+
 #include <inttypes.h>
 #include <string.h>
 
@@ -73,7 +75,7 @@ static int cmpDrawInfo(const void* a, const void* b);
  */
 wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, const rectangle_t* textBox)
 {
-    wheelMenuRenderer_t* renderer = calloc(1, sizeof(wheelMenuRenderer_t));
+    wheelMenuRenderer_t* renderer = heap_caps_calloc(1, sizeof(wheelMenuRenderer_t), MALLOC_CAP_SPIRAM);
 
     renderer->font        = font;
     renderer->anchorAngle = anchorAngle;
@@ -113,6 +115,17 @@ void deinitWheelMenu(wheelMenuRenderer_t* renderer)
 }
 
 /**
+ * @brief Set the text color for the selected item
+ *
+ * @param renderer The wheel menu renderer
+ * @param textColor The text color for the selected item
+ */
+void wheelMenuSetColor(wheelMenuRenderer_t* renderer, paletteColor_t textColor)
+{
+    renderer->textColor = textColor;
+}
+
+/**
  * @brief Sets the icon and ring position for the item with the given label
  *
  * @param renderer The wheel menu renderer
@@ -134,6 +147,18 @@ void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, cons
     {
         renderer->customBack = true;
     }
+}
+
+/**
+ * @brief Set the icon for an item with the given label
+ *
+ * @param renderer The wheel menu renderer
+ * @param label The label of the item to set the icon and position for
+ * @param icon  The icon to use when drawing the menu item
+ */
+void wheelMenuSetItemIcon(wheelMenuRenderer_t* renderer, const char* label, const wsg_t* icon)
+{
+    findOrAddInfo(renderer, label)->icon = icon;
 }
 
 /**
@@ -368,8 +393,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
                     if (!rectRectIntersection(textBox, lastTextBox, NULL))
                     {
-                        drawText(renderer->font, c000, hasOptions ? curItem->options[nextOptIndex] : tickLabel, textX,
-                                 textY);
+                        drawText(renderer->font, renderer->textColor,
+                                 hasOptions ? curItem->options[nextOptIndex] : tickLabel, textX, textY);
                         lastTickAngle = tickAngle;
                         lastTextBox   = textBox;
                     }
@@ -580,7 +605,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         if (info->text)
         {
             uint16_t textW = textWidth(renderer->font, info->text);
-            drawText(renderer->font, c000, info->text, info->x - textW / 2, info->y - (renderer->font->height - 1) / 2);
+            drawText(renderer->font, renderer->textColor, info->text, info->x - textW / 2,
+                     info->y - (renderer->font->height - 1) / 2);
         }
 
         switch (info->shape)
@@ -1050,7 +1076,7 @@ static wheelItemInfo_t* findOrAddInfo(wheelMenuRenderer_t* renderer, const char*
 
     if (NULL == info)
     {
-        info        = calloc(1, sizeof(wheelItemInfo_t));
+        info        = heap_caps_calloc(1, sizeof(wheelItemInfo_t), MALLOC_CAP_SPIRAM);
         info->label = label;
 
         // Defaults for colors
