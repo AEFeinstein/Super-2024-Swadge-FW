@@ -710,6 +710,8 @@ void changeStateReadyScreen(pango_t* self)
 {
     self->gameData.frameCount = 0;
 
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop = false;
     soundPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
 
     pa_resetGameDataLeds(&(self->gameData));
@@ -822,6 +824,8 @@ void changeStateGame(pango_t* self)
 
     self->tilemap.executeTileSpawnAll = true;
 
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop = true;
     soundPlayBgm(&(self->soundManager.bgmFast), MIDI_BGM);
 
     self->update = &updateGame;
@@ -922,7 +926,7 @@ void changeStateDead(pango_t* self)
     self->gameData.lives--;
 
     soundStop(true);
-    soundPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
+    soundPlaySfx(&(self->soundManager.sndDie), BZR_STEREO);
 
     self->update = &updateDead;
 }
@@ -1002,6 +1006,9 @@ void changeStateGameOver(pango_t* self)
 {
     self->gameData.frameCount = 0;
     pa_resetGameDataLeds(&(self->gameData));
+
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop = false;
     soundPlayBgm(&(self->soundManager.bgmGameOver), BZR_STEREO);
     self->update = &updateGameOver;
 }
@@ -1313,6 +1320,8 @@ void changeStateNameEntry(pango_t* self)
         return;
     }
 
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop = true;
     soundPlayBgm(&(self->soundManager.bgmNameEntry), BZR_STEREO);
     self->menuSelection = self->gameData.initials[0];
     self->update        = &updateNameEntry;
@@ -1445,7 +1454,7 @@ void drawShowHighScores(font_t* font, uint8_t menuState)
 
 void changeStatePause(pango_t* self)
 {
-    soundStop(true);
+    globalMidiPlayerPauseAll();
     soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
     self->update = &updatePause;
 }
@@ -1454,6 +1463,7 @@ void updatePause(pango_t* self, int64_t elapsedUs)
 {
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
+        globalMidiPlayerResumeAll();
         soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
         self->gameData.changeBgm  = self->gameData.currentBgm;
         self->gameData.currentBgm = PA_BGM_NULL;
