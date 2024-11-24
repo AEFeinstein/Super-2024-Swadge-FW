@@ -16,6 +16,9 @@ bool sokoEntityTileCollision[6][9] = {
     {true, false, true, false,  true,false, false, false, false}, // STICKY CRATE
     {true, false, true, false,  true,false, false, false, true} // STICKY_TRAIL_CRATE
 };
+
+static const char *victorym[] ={"nice", "good job", "well done", "solved it", "high five!","hooray","brilliant","victory","incredible", "awesome!","superb work","success!"};
+const size_t victorym_count = sizeof(victorym) / sizeof(victorym[0]);
 // clang-format on
 
 uint64_t victoryDanceTimer;
@@ -98,6 +101,9 @@ void sokoConfigGamemode(
 
     // add conditional for alternative variants
     sokoInitHistory(soko);
+
+    //pick a single random victory message. We can't pick during the loop or it will be random every frame.
+    soko->chosen_victory_message = rand() % victorym_count;
 }
 
 void absSokoGameLoop(soko_abs_t* soko, int64_t elapsedUs)
@@ -138,24 +144,23 @@ void absSokoGameLoop(soko_abs_t* soko, int64_t elapsedUs)
         }
     }
 
-    // DEBUG PLACEHOLDER:
-    char str[16] = {0};
+    char str[20] = {0};
     int16_t tWidth;
     if (!soko->allCratesOnGoal)
     {
-        snprintf(str, sizeof(str) - 1, "%s", soko->levelNames[soko->currentLevelIndex]);
+        snprintf(str, sizeof(str) - 1, "%s", soko->levelTitles[soko->currentLevelIndex]);
         // Measure the width of the time string
         tWidth = textWidth(&soko->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
-        drawText(&soko->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+        drawText(&soko->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 2);
     }
     else
     {
-        snprintf(str, sizeof(str) - 1, "sokasuccess");
+        snprintf(str, sizeof(str) - 1, "%s", victorym[soko->chosen_victory_message]);
         // Measure the width of the time string
         tWidth = textWidth(&soko->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
-        drawText(&soko->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+        drawText(&soko->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 2);
     }
     sharedGameLoop(soko);
 }

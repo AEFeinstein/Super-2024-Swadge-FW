@@ -184,6 +184,7 @@ typedef struct soko_abs_s
 
     char* levelFileText;
     char* levelNames[SOKO_LEVEL_COUNT];
+    char* levelTitles[SOKO_LEVEL_COUNT];
     uint16_t levelIndices[SOKO_LEVEL_COUNT];
     bool levelSolved[SOKO_LEVEL_COUNT];
 
@@ -256,6 +257,7 @@ typedef struct soko_abs_s
     uint8_t loadNewLevelIndex;
     soko_var_t loadNewLevelVariant;
 
+    int chosen_victory_message;
 } soko_abs_t;
 
 #endif

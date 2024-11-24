@@ -226,22 +226,6 @@ static void sokoMainLoop(int64_t elapsedUs)
     }
 }
 
-// void freeEntity(soko_abs_t* self, sokoEntity_t* entity) // Free internal entity structures
-// {
-//     if (entity->propFlag)
-//     {
-//         if (entity->properties->targetCount)
-//         {
-//             free(entity->properties->targetX);
-//             free(entity->properties->targetY);
-//         }
-//         free(entity->properties);
-//         entity->propFlag = false;
-//     }
-//     self->currentLevel.entityCount -= 1;
-// }
-
-// placeholder.
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     // Use TURBO drawing mode to draw individual pixels fast
@@ -318,16 +302,10 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 // todo: move to soko_save
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
 {
-    printf("Loading Level List...!\n");
-    // printf("%s\n", self->levelFileText);
-    // printf("%d\n", (int)strlen(self->levelFileText));
-    //  char* a = strstr(self->levelFileText,":");
-    //  char* b = strstr(a,".bin:");
-    //  printf("%d",(int)((int)b-(int)a));
-    //  char* stringPtrs[30];
-    //  memset(stringPtrs,0,30*sizeof(char*));
+   
     char** stringPtrs = soko->levelNames;
     memset(stringPtrs, 0, sizeof(soko->levelNames));
+    memset(soko->levelTitles, 0, sizeof(soko->levelTitles));
     memset(soko->levelIndices, 0, sizeof(soko->levelIndices));
     int intInd       = 0;
     int ind          = 0;
@@ -345,22 +323,31 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
         {
             if (!strpbrk(storageStr, "\n\t\r ") && (strstr(storageStr, ".bin")))
             {
-                // int tokLen = strlen(storageStr);
+                int tokLen = strlen(storageStr);
                 // char* tempPtr = calloc((tokLen + 1), sizeof(char)); // Length plus null teminator
                 // strcpy(tempPtr,storageStr);
                 // stringPtrs[ind] = tempPtr;
+
+                //remove the sk_e_ and .bin from the filename and copy to title.
                 stringPtrs[ind] = storageStr;
-                // printf("%s\n",storageStr);
+                char* title = malloc(tokLen-9);
+                strncpy(title, storageStr+5,tokLen-9);
+                
+                //change _ to spaces
+                for(int i = 0; i < strlen(title); i++)
+                {
+                    if(title[i] == '_'){
+                        title[i] = ' ';
+                    }
+                }
+                //set title
+                soko->levelTitles[ind] = title;
+
                 ind++;
             }
         }
         // printf("This guy!\n");
         storageStr = strtok(NULL, ":");
     }
-    printf("Strings: %d, Ints: %d\n", ind, intInd);
-    printf("Levels and indices:\n");
-    for (int i = ind - 1; i > -1; i--)
-    {
-        printf("Index: %d : %d : %s\n", i, soko->levelIndices[i], stringPtrs[i]);
-    }
+
 }
