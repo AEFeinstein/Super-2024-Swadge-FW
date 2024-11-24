@@ -188,7 +188,7 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
 
     // Draw match title
     snprintf(buffer, sizeof(buffer) - 1, "%s, round %d", cg->spar.match.matchName, cg->spar.match.round);
-    drawText(&cg->menuFont, c000, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 8);
+    drawText(&cg->largeMenuFont, c000, buffer, (TFT_WIDTH - textWidth(&cg->largeMenuFont, buffer)) >> 1, 8);
 
     // Time
     paletteColor_t color = c000;
@@ -197,7 +197,7 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
         color = c500;
     }
     snprintf(buffer, sizeof(buffer) - 1, "Time: %d", cg->spar.match.maxTime - cg->spar.match.timer);
-    drawText(&cg->menuFont, color, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 24);
+    drawText(&cg->largeMenuFont, color, buffer, (TFT_WIDTH - textWidth(&cg->largeMenuFont, buffer)) >> 1, 24);
 
     // Draw Chowa UI
     cg_drawSparChowaUI(cg);
@@ -323,45 +323,42 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
         case CG_SPAR_UNREADY:
         case CG_SPAR_READY:
         {
-            // TODO: Draw attack icon
             switch (cg->spar.match.chowaData[CG_P1].currMove)
             {
                 case CG_SPAR_PUNCH:
                 {
                     drawText(&cg->menuFont, c005, "P1: Punch", 100, 108);
-                    drawWsgSimple(&cg->arrow, 64, 64);
+                    drawWsgSimple(&cg->spar.attackIcons[1], 64, 64);
                     break;
                 }
                 case CG_SPAR_FAST_PUNCH:
                 {
                     drawText(&cg->menuFont, c005, "P1: Fast Punch", 100, 108);
-                    drawWsg(&cg->arrow, 64, 64, false, true, 0);
+                    drawWsgSimple(&cg->spar.attackIcons[2], 64, 64);
                     break;
                 }
                 case CG_SPAR_KICK:
                 {
                     drawText(&cg->menuFont, c005, "P1: Kick", 100, 108);
-                    drawWsg(&cg->arrow, 64, 64, false, false, 270);
+                    drawWsgSimple(&cg->spar.attackIcons[4], 64, 64);
                     break;
                 }
                 case CG_SPAR_JUMP_KICK:
                 {
                     drawText(&cg->menuFont, c005, "P1: Jump Kick", 100, 108);
-                    drawWsg(&cg->arrow, 64, 64, false, false, 90);
+                    drawWsgSimple(&cg->spar.attackIcons[5], 64, 64);
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
                     drawText(&cg->menuFont, c005, "P1: Headbutt", 100, 108);
-                    drawWsg(&cg->arrow, 64, 64, false, false, 90);
-                    drawWsg(&cg->arrow, 64, 64, false, false, 270);
+                    drawWsgSimple(&cg->spar.attackIcons[3], 64, 64);
                     break;
                 }
                 case CG_SPAR_DODGE:
                 {
                     drawText(&cg->menuFont, c005, "P1: Dodge", 100, 108);
-                    drawWsg(&cg->arrow, 64, 64, false, true, 0);
-                    drawWsg(&cg->arrow, 64, 64, false, false, 0);
+                    drawWsgSimple(&cg->spar.attackIcons[0], 64, 64);
                     break;
                 }
                 default:

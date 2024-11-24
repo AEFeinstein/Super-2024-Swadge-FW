@@ -32,6 +32,8 @@ static const char sparMenuName[] = "Chowa Sparring!";
 
 static const char* sparMenuNames[] = {"Schedule Match", "View records", "Tutorial", "Settings", "Main Menu"};
 
+static const char* attackIcons[] = {"Dodge-1.wsg", "Fist-1.wsg", "Fist-2.wsg", "Headbutt-1.wsg", "Kick-1.wsg", "Kick-2.wsg"};
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -52,6 +54,11 @@ void cg_initSpar(cGrove_t* grove)
     cg = grove;
     // WSGs
     loadWsg("DojoBG.wsg", &cg->spar.dojoBG, true);
+    cg->spar.attackIcons = calloc(ARRAY_SIZE(attackIcons), sizeof(wsg_t));
+    for (int idx = 0; idx < ARRAY_SIZE(attackIcons); idx++)
+    {
+        loadWsg(attackIcons[idx], &cg->spar.attackIcons[idx], true);
+    }
 
     // Audio
     loadMidiFile("Chowa_Battle.mid", &cg->spar.sparBGM, true);
@@ -93,6 +100,11 @@ void cg_deInitSpar()
     deinitMenuManiaRenderer(cg->spar.renderer);
 
     // Free assets
+    for (int idx = 0; idx < ARRAY_SIZE(attackIcons); idx++)
+    {
+        freeWsg(&cg->spar.attackIcons[idx]);
+    }
+    free(cg->spar.attackIcons);
     freeWsg(&cg->spar.dojoBG);
 }
 
@@ -232,6 +244,10 @@ void cg_runSpar(int64_t elapsedUs)
         }
     }
 }
+
+//==============================================================================
+// Static Functions
+//==============================================================================
 
 static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
 {

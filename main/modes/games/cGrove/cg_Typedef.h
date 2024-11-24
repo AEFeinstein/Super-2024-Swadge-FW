@@ -510,12 +510,8 @@ typedef struct
     //   - Impact sounds
 
     // BG Sprites
-    wsg_t dojoBG; ///< Dojo Background image
-    // UI Sprites
-    // - Punch icon
-    // - Kick icon
-    // - Dodge
-    // - Headbutt
+    wsg_t dojoBG;       ///< Dojo Background image
+    wsg_t* attackIcons; ///< Attack and dodge icons
 
     // Music
     midiFile_t sparBGM; ///< Music
