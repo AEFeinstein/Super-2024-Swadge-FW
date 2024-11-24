@@ -80,7 +80,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
                 FREE_DBG(dData->strings[i]);
             }
             FREE_DBG(dData->strings);
-            freeWsg(dData->sprite);
+            freeWsg(&dData->sprite);
         }
         FREE_DBG(self->data);
     }
@@ -1065,7 +1065,8 @@ void bb_updateCharacterTalk(bb_entity_t* self)
                 char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                                         // terminator ('\0')
                 snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
-                loadWsg(wsg_name, dData->sprite, true);
+                freeWsg(&dData->sprite);
+                loadWsg(wsg_name, &dData->sprite, true);
 
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
@@ -1338,7 +1339,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
 
-    drawWsgSimple(dData->sprite, 0,-dData->offsetY);
+    drawWsgSimple(&dData->sprite, 0,-dData->offsetY);
     
     if(dData->curString >= 0 && dData->curString < dData->numStrings)
     {
@@ -1752,11 +1753,10 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
     dData->numStrings = numStrings;
     dData->offsetY = -240;
     dData->loadedIdx = bb_randomInt(0,7);
-    dData->sprite = HEAP_CAPS_CALLOC_DBG(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
     char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                              // terminator ('\0')
     snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
-    loadWsg(wsg_name, dData->sprite, true);
+    loadWsg(wsg_name, &dData->sprite, true);
 
     dData->strings = HEAP_CAPS_CALLOC_DBG(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
