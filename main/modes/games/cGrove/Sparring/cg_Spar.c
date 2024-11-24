@@ -64,7 +64,7 @@ void cg_initSpar(cGrove_t* grove)
     addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[3]); // Settings
     addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[4]); // Go back to main menu
 
-    cg->spar.renderer                          = initMenuManiaRenderer(&cg->titleFont, &cg->titleFontOutline, &cg->menuFont);
+    cg->spar.renderer = initMenuManiaRenderer(&cg->titleFont, &cg->titleFontOutline, &cg->menuFont);
     static const paletteColor_t shadowColors[] = {c001, c002, c002, c003, c013, c014, c013, c003, c002, c001};
     led_t ledColor                             = {.r = 0, .g = 200, .b = 200};
     recolorMenuManiaRenderer(cg->spar.renderer, c111, c430, c445, c045, c542, c430, c111, c445, shadowColors,
