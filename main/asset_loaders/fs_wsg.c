@@ -44,7 +44,8 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
     // The rest of the bytes are pixels
-    wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
+    wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h,
+                                                spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
 
     if (NULL != wsg->px)
     {
@@ -63,7 +64,7 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
  * before compilation will be automatically flashed to ROM.
  * You must provide a decoder and decode space to this function. It's useful
  * when creating one decoder & space to decode many consecutive WSGs
- * 
+ *
  * @param name The filename of the WSG to load
  * @param wsg  A handle to load the WSG to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
@@ -77,7 +78,7 @@ bool loadWsgInplace(const char* name, wsg_t* wsg, bool spiRam, uint8_t* decompre
 {
     // Read and decompress file
     uint32_t decompressedSize = 0;
-    decompressedBuf  = readHeatshrinkFileInplace(name, &decompressedSize, decompressedBuf, hsd);
+    decompressedBuf           = readHeatshrinkFileInplace(name, &decompressedSize, decompressedBuf, hsd);
 
     if (NULL == decompressedBuf)
     {
@@ -88,7 +89,8 @@ bool loadWsgInplace(const char* name, wsg_t* wsg, bool spiRam, uint8_t* decompre
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
     // The rest of the bytes are pixels
-    wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
+    wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h,
+                                                spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
 
     if (NULL != wsg->px)
     {

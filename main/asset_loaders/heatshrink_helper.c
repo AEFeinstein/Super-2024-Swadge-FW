@@ -15,9 +15,9 @@
  * @brief Read a heatshrink compressed file from the filesystem into an output array.
  * Files that are in the assets_image folder before compilation and flashing
  * will automatically be included in the firmware.
- * 
+ *
  * You must provide a decoder and decode space for this function
- * 
+ *
  * @param fname   The name of the file to load
  * @param outsize A pointer to a size_t to return how much data was read
  * @param decompressedBuf Memory to store decoded data. This must be as large as the decoded data
@@ -25,7 +25,8 @@
  * @return A pointer to the read data if successful, or NULL if there is a failure
  *         This data must be freed when done
  */
-uint8_t* readHeatshrinkFileInplace(const char* fname, uint32_t* outsize, uint8_t* decompressedBuf, heatshrink_decoder* hsd)
+uint8_t* readHeatshrinkFileInplace(const char* fname, uint32_t* outsize, uint8_t* decompressedBuf,
+                                   heatshrink_decoder* hsd)
 {
     // Read WSG from file
     size_t sz;
@@ -41,7 +42,7 @@ uint8_t* readHeatshrinkFileInplace(const char* fname, uint32_t* outsize, uint8_t
     (*outsize) = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
 
     // Create the decoder
-    size_t copied           = 0;
+    size_t copied = 0;
     heatshrink_decoder_reset(hsd);
 
     // The decompressed filesize is four bytes, so start after that
@@ -128,7 +129,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
     heatshrink_decoder_free(hsd);
 
     // If there was an error, free decompressedBuf
-    if(NULL == data)
+    if (NULL == data)
     {
         free(decompressedBuf);
     }
