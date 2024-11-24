@@ -12,7 +12,6 @@ typedef enum
     SOKO_OVERWORLD   = 0,
     SOKO_CLASSIC     = 1,
     SOKO_EULER       = 2,
-    SOKO_LASERBOUNCE = 3
 } soko_var_t;
 
 typedef enum
@@ -44,10 +43,6 @@ typedef enum
     SKB_WARPINTERNALEXIT  = 206,
     SKB_WARPEXTERNAL      = 207,
     SKB_BUTTON            = 208,
-    SKB_LASEREMITTER      = 209,
-    SKB_LASERRECEIVEROMNI = 210,
-    SKB_LASERRECEIVER     = 211,
-    SKB_LASER90ROTATE     = 212,
     SKB_GHOSTBLOCK        = 213,
     SKB_OBJEND            = 230
 } soko_bin_t; // Binary file byte value decode list
@@ -72,15 +67,6 @@ typedef enum
     SKS_VICTORY,
 } sokoGameState_t;
 
-/*
-typedef enum
-{
-    SOKO_OVERWORLD = 0,
-    SOKO_CLASSIC = 1,
-    SOKO_EULER = 2
-} soko_var_t;
-*/
-
 typedef enum
 {
     SKE_NONE               = 0,
@@ -91,9 +77,6 @@ typedef enum
     SKE_STICKY_TRAIL_CRATE = 5,
     SKE_WARP               = 11,
     SKE_BUTTON             = 6,
-    SKE_LASER_EMIT_UP      = 7,
-    SKE_LASER_RECEIVE_OMNI = 8,
-    SKE_LASER_RECEIVE      = 9,
     SKE_GHOST              = 10
 } sokoEntityType_t;
 
@@ -105,8 +88,6 @@ typedef enum
     SKT_GOAL          = 3,
     SKT_NO_WALK       = 4,
     SKT_PORTAL        = 5,
-    SKT_LASER_EMIT    = 6, // To Be Removed
-    SKT_LASER_RECEIVE = 7, // To Be Removed
     SKT_FLOOR_WALKED  = 8
 } sokoTile_t;
 

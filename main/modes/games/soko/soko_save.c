@@ -497,68 +497,6 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     i += (4 + 2 * hp);
                     break;
                 }
-                case SKB_LASEREMITTER: //[type][flag]
-                {
-                    flagByte  = self->levelBinaryData[i + 2];
-                    direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is
-                                                              // direction bits and P is player push
-                    players = !!(flagByte & (0x1 < 1));
-
-                    self->currentLevel.entities[self->currentLevel.entityCount].type               = SKE_LASER_EMIT_UP;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x                  = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y                  = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].facing             = direction;
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.players = players;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
-                        = calloc(SOKO_MAX_ENTITY_COUNT, sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
-                        = calloc(SOKO_MAX_ENTITY_COUNT, sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = 0;
-                    self->currentLevel.entityCount += 1;
-                    i += 3;
-                    break;
-                }
-                case SKB_LASERRECEIVEROMNI:
-                {
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_LASER_RECEIVE_OMNI;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entityCount += 1;
-                    i += 2;
-                    break;
-                }
-                case SKB_LASERRECEIVER:
-                {
-                    flagByte  = self->levelBinaryData[i + 2];
-                    direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is
-                                                              // direction bits and P is player push
-                    players = !!(flagByte & (0x1 < 1));
-
-                    self->currentLevel.entities[self->currentLevel.entityCount].type   = SKE_LASER_RECEIVE;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x      = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y      = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].facing = direction;
-                    self->currentLevel.entityCount += 1;
-                    i += 3;
-                    break;
-                }
-                case SKB_LASER90ROTATE:
-                {
-                    flagByte  = self->levelBinaryData[i + 2];
-                    direction = !!(flagByte & (0x1 < 0));
-                    players   = !!(flagByte & (0x1 < 1));
-
-                    self->currentLevel.entities[self->currentLevel.entityCount].type               = SKE_LASER_90;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x                  = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y                  = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].facing             = direction;
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.players = players;
-                    self->currentLevel.entityCount += 1;
-                    i += 3;
-                    break;
-                }
                 case SKB_GHOSTBLOCK:
                 {
                     flagByte = self->levelBinaryData[i + 2];
