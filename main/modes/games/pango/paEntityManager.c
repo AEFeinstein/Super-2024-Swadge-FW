@@ -501,7 +501,7 @@ paEntity_t* pa_createScoreDisplay(paEntityManager_t* entityManager, uint16_t x, 
 
 void pa_freeEntityManager(paEntityManager_t* self)
 {
-    free(self->entities);
+    heap_caps_free(self->entities);
 }
 
 paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager)

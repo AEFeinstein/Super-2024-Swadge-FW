@@ -99,7 +99,7 @@ static void deinitSubMenu(menu_t* menu)
         }
 
         // Free the item
-        free(item);
+        heap_caps_free(item);
 
         // Move to the next
         itemNode = itemNode->next;
@@ -108,9 +108,9 @@ static void deinitSubMenu(menu_t* menu)
     // Clear all items in the list
     clear(menu->items);
     // Free the list
-    free(menu->items);
+    heap_caps_free(menu->items);
     // Free the menu
-    free(menu);
+    heap_caps_free(menu);
 }
 
 /**
@@ -235,7 +235,7 @@ void removeSingleItemFromMenu(menu_t* menu, const char* label)
                 }
             }
             removeEntry(menu->items, listNode);
-            free(item);
+            heap_caps_free(item);
             return;
         }
         listNode = listNode->next;
@@ -304,7 +304,7 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
                 }
             }
 
-            free(item);
+            heap_caps_free(item);
             return;
         }
         listNode = listNode->next;
@@ -369,7 +369,7 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
                     menu->currentItem = listNode->prev;
                 }
             }
-            free(item);
+            heap_caps_free(item);
             return;
         }
         listNode = listNode->next;
@@ -467,7 +467,7 @@ void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLa
                     menu->currentItem = listNode->prev;
                 }
             }
-            free(item);
+            heap_caps_free(item);
             return;
         }
         listNode = listNode->next;

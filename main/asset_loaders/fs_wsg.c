@@ -58,12 +58,12 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
     if (NULL != wsg->px)
     {
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
-        free(decompressedBuf);
+        heap_caps_free(decompressedBuf);
         return true;
     }
 
     // all done
-    free(decompressedBuf);
+    heap_caps_free(decompressedBuf);
     return false;
 }
 
@@ -100,14 +100,14 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
     {
         ESP_LOGD("WSG", "Copying %" PRIu32 " pixels into WSG now", decompressedSize - 4);
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
-        free(decompressedBuf);
+        heap_caps_free(decompressedBuf);
         return true;
     }
 
     ESP_LOGE("WSG", "Allocating pixels failed");
 
     // all done
-    free(decompressedBuf);
+    heap_caps_free(decompressedBuf);
     return false;
 }
 
@@ -155,7 +155,7 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
         result = writeNamespaceNvsBlob(namespace, key, output, outputSize);
     }
 
-    free(output);
+    heap_caps_free(output);
     return result;
 }
 
@@ -166,5 +166,5 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
  */
 void freeWsg(wsg_t* wsg)
 {
-    free(wsg->px);
+    heap_caps_free(wsg->px);
 }

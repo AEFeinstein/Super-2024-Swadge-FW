@@ -1,4 +1,16 @@
+#include <stdio.h>
 #include "esp_heap_caps.h"
+
+typedef struct
+{
+    void* ptr;
+    size_t size;
+    int32_t caps;
+} allocation_t;
+
+#define A_TABLE_SIZE 4096
+allocation_t aTable[A_TABLE_SIZE] = {0};
+size_t usedMemory[2]              = {0};
 
 /**
  * @brief Allocate a chunk of memory which has the given capabilities
@@ -15,7 +27,36 @@
  */
 void* heap_caps_malloc(size_t size, uint32_t caps __attribute__((unused)))
 {
-    return malloc(size);
+    int32_t idx = 0;
+    while (NULL != aTable[idx].ptr)
+    {
+        idx++;
+    }
+
+    void* ptr = malloc(size);
+
+    if (idx < A_TABLE_SIZE)
+    {
+        aTable[idx].ptr  = ptr;
+        aTable[idx].size = size;
+        aTable[idx].caps = caps;
+
+        if(MALLOC_CAP_SPIRAM & caps)
+        {
+            usedMemory[1] += aTable[idx].size;
+        }
+        else
+        {
+            usedMemory[0] += aTable[idx].size;
+        }
+        printf("malloc: %7zu / %7zu\n", usedMemory[0], usedMemory[1]);
+    }
+    else
+    {
+        fprintf(stderr, "Allocation table out of space\n");
+    }
+
+    return aTable[idx].ptr;
 }
 
 /**
@@ -35,5 +76,57 @@ void* heap_caps_malloc(size_t size, uint32_t caps __attribute__((unused)))
  */
 void* heap_caps_calloc(size_t n, size_t size, uint32_t caps)
 {
-    return calloc(n, size);
+    int32_t idx = 0;
+    while (NULL != aTable[idx].ptr)
+    {
+        idx++;
+    }
+
+    void* ptr = calloc(n, size);
+
+    if (idx < A_TABLE_SIZE)
+    {
+        aTable[idx].ptr  = ptr;
+        aTable[idx].size = (n * size);
+        aTable[idx].caps = caps;
+
+        if(MALLOC_CAP_SPIRAM & caps)
+        {
+            usedMemory[1] += aTable[idx].size;
+        }
+        else
+        {
+            usedMemory[0] += aTable[idx].size;
+        }
+        printf("calloc: %7zu / %7zu\n", usedMemory[0], usedMemory[1]);
+    }
+    else
+    {
+        fprintf(stderr, "Allocation table out of space\n");
+    }
+    return aTable[idx].ptr;
+}
+
+void heap_caps_free(void* ptr)
+{
+    int32_t idx = 0;
+    while (aTable[idx].ptr != ptr)
+    {
+        idx++;
+    }
+    if (idx < A_TABLE_SIZE)
+    {
+        if(MALLOC_CAP_SPIRAM & aTable[idx].caps)
+        {
+            usedMemory[1] -= aTable[idx].size;
+        }
+        else
+        {
+            usedMemory[0] -= aTable[idx].size;
+        }
+        aTable[idx].ptr  = NULL;
+        aTable[idx].size = 0;
+        printf("free  : %7zu / %7zu\n", usedMemory[0], usedMemory[1]);
+    }
+    free(ptr);
 }

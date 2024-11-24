@@ -246,7 +246,7 @@ static void mainMenuExitMode(void)
     unloadMidiFile(&mainMenu->fanfare);
 
     // Free mode memory
-    free(mainMenu);
+    heap_caps_free(mainMenu);
 }
 
 /**

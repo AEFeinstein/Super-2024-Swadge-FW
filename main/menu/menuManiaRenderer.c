@@ -191,20 +191,20 @@ void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer)
     if (renderer->titleFontAllocated)
     {
         freeFont(renderer->titleFont);
-        free(renderer->titleFont);
+        heap_caps_free(renderer->titleFont);
     }
     if (renderer->titleFontOutlineAllocated)
     {
         freeFont(renderer->titleFontOutline);
-        free(renderer->titleFontOutline);
+        heap_caps_free(renderer->titleFontOutline);
     }
     if (renderer->menuFontAllocated)
     {
         freeFont(renderer->menuFont);
-        free(renderer->menuFont);
+        heap_caps_free(renderer->menuFont);
     }
 
-    free(renderer);
+    heap_caps_free(renderer);
 }
 
 /**

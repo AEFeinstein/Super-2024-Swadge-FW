@@ -418,7 +418,7 @@ void tunernomeExitMode(void)
     freeWsg(&(tunernome->logbookArrowWsg));
     freeWsg(&(tunernome->flatWsg));
 
-    free(tunernome);
+    heap_caps_free(tunernome);
 }
 
 /**

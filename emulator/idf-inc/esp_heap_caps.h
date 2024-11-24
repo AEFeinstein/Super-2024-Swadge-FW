@@ -57,3 +57,10 @@ void* heap_caps_malloc(size_t size, uint32_t caps);
  * @return A pointer to the memory allocated on success, NULL on failure
  */
 void* heap_caps_calloc(size_t n, size_t size, uint32_t caps);
+
+/**
+ * @brief Custom free to track memory allocation
+ * 
+ * @param ptr 
+ */
+void heap_caps_free(void* ptr);

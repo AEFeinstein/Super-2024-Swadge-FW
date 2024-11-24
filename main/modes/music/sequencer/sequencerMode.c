@@ -404,7 +404,7 @@ static void sequencerExitMode(void)
     void* val;
     while ((val = pop(&sv->notes)))
     {
-        free(val);
+        heap_caps_free(val);
     }
 
     freeFont(&sv->font_ibm);
@@ -428,7 +428,7 @@ static void sequencerExitMode(void)
         freeWsg(&sv->instrumentWsgs[i]);
     }
 
-    free(sv);
+    heap_caps_free(sv);
 }
 
 /**
@@ -583,7 +583,7 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
             void* val;
             while ((val = pop(&sv->notes)))
             {
-                free(val);
+                heap_caps_free(val);
             }
             returnToGrid = true;
 
@@ -762,7 +762,7 @@ static void sequencerSaveSong(const char* fname)
     writeNvsBlob(fname, blob, blobSize);
 
     // Free the blob
-    free(blob);
+    heap_caps_free(blob);
 }
 
 /**
@@ -814,7 +814,7 @@ static void sequencerLoadSong(const char* fname)
         void* val;
         while ((val = pop(&sv->notes)))
         {
-            free(val);
+            heap_caps_free(val);
         }
 
         // Read notes from the blob
@@ -827,7 +827,7 @@ static void sequencerLoadSong(const char* fname)
         }
 
         // Free the blob
-        free(blob);
+        heap_caps_free(blob);
     }
 }
 

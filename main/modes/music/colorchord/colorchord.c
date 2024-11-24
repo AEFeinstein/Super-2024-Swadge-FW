@@ -116,10 +116,10 @@ void colorchordExitMode(void)
 {
     if (colorchord->sampleHist)
     {
-        free(colorchord->sampleHist);
+        heap_caps_free(colorchord->sampleHist);
     }
     freeFont(&colorchord->ibm_vga8);
-    free(colorchord);
+    heap_caps_free(colorchord);
 }
 
 /**

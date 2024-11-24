@@ -94,7 +94,7 @@ void* pop(list_t* list)
 
         // Get the last node val, then free it and update length
         retval = target->val;
-        free(target);
+        heap_caps_free(target);
         list->length--;
     }
 
@@ -162,7 +162,7 @@ void* shift(list_t* list)
 
         // Get the first node val, then free it and update length
         retval = target->val;
-        free(target);
+        heap_caps_free(target);
         list->length--;
     }
 
@@ -350,7 +350,7 @@ void* removeIdx(list_t* list, uint16_t index)
         current->next       = target->next;
         current->next->prev = current;
 
-        free(target);
+        heap_caps_free(target);
         target = NULL;
 
         list->length--;
@@ -416,7 +416,7 @@ void* removeEntry(list_t* list, node_t* entry)
     VALIDATE_LIST(__func__, __LINE__, false, list, entry);
 
     // free the memory
-    free(entry);
+    heap_caps_free(entry);
 
     // Return the value
     return retVal;

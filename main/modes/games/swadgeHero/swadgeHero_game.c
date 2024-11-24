@@ -311,7 +311,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         {
             node_t* toRemove = starNode;
             starNode         = starNode->next;
-            free(toRemove->val);
+            heap_caps_free(toRemove->val);
             removeEntry(&sh->starList, toRemove);
         }
         else
@@ -508,7 +508,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             gameNoteNode = gameNoteNode->next;
 
             // Remove the game note
-            free(toRemove->val);
+            heap_caps_free(toRemove->val);
             removeEntry(&sh->gameNotes, toRemove);
 
             // Note that it was missed
@@ -537,7 +537,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         {
             node_t* toRemove = fretLineNode;
             fretLineNode     = fretLineNode->next;
-            free(toRemove->val);
+            heap_caps_free(toRemove->val);
             removeEntry(&sh->fretLines, toRemove);
         }
         else
@@ -803,7 +803,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                         {
                             // No tail, remove the game note
                             node_t* nextNode = gameNoteNode->next;
-                            free(gameNoteNode->val);
+                            heap_caps_free(gameNoteNode->val);
                             removeEntry(&sh->gameNotes, gameNoteNode);
                             gameNoteNode = nextNode;
                         }
@@ -813,7 +813,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                 {
                     // A held note was released. Remove it!
                     node_t* nextNode = gameNoteNode->next;
-                    free(gameNoteNode->val);
+                    heap_caps_free(gameNoteNode->val);
                     removeEntry(&sh->gameNotes, gameNoteNode);
                     gameNoteNode = nextNode;
                 }

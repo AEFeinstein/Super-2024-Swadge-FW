@@ -231,7 +231,7 @@ static void cGroveExitMode(void)
     {
         freeWsg(&cg->title[i]);
     }
-    free(cg->title);
+    heap_caps_free(cg->title);
 
     // Fonts
     freeFont(&cg->menuFont);
@@ -240,7 +240,7 @@ static void cGroveExitMode(void)
     cg_deInitChowaWSGs(cg);
 
     // Main
-    free(cg);
+    heap_caps_free(cg);
 }
 
 static void cGroveMainLoop(int64_t elapsedUs)

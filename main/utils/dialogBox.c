@@ -145,7 +145,7 @@ dialogBox_t* initDialogBox(const char* title, const char* detail, const wsg_t* i
 void deinitDialogBox(dialogBox_t* dialogBox)
 {
     dialogBoxReset(dialogBox);
-    free(dialogBox);
+    heap_caps_free(dialogBox);
 }
 
 /**
@@ -184,7 +184,7 @@ void dialogBoxReset(dialogBox_t* dialogBox)
     dialogBoxOption_t* item = NULL;
     while (NULL != (item = pop(&dialogBox->options)))
     {
-        free(item);
+        heap_caps_free(item);
     }
 }
 

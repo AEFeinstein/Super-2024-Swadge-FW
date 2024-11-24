@@ -177,7 +177,7 @@ static void accelTestExitMode(void)
 {
     // Free the font
     freeFont(&accelTest->ibm);
-    free(accelTest);
+    heap_caps_free(accelTest);
 }
 
 /**

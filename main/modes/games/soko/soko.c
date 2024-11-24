@@ -144,9 +144,9 @@ static void sokoExitMode(void)
     //  euler
     freeWsg(&soko->eulerTheme.crateWSG);
     freeWsg(&soko->eulerTheme.crateOnGoalWSG);
-    free(soko->levelBinaryData); // TODO is this the best place to free?
+    heap_caps_free(soko->levelBinaryData); // TODO is this the best place to free?
     // Free everything else
-    free(soko);
+    heap_caps_free(soko);
 }
 
 static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
@@ -230,10 +230,10 @@ static void sokoMainLoop(int64_t elapsedUs)
 //     {
 //         if (entity->properties->targetCount)
 //         {
-//             free(entity->properties->targetX);
-//             free(entity->properties->targetY);
+//             heap_caps_free(entity->properties->targetX);
+//             heap_caps_free(entity->properties->targetY);
 //         }
-//         free(entity->properties);
+//         heap_caps_free(entity->properties);
 //         entity->propFlag = false;
 //     }
 //     self->currentLevel.entityCount -= 1;

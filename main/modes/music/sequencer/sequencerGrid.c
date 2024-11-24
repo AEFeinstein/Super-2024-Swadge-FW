@@ -155,8 +155,8 @@ void addOrRemoveNote(sequencerVars_t* sv, bool playPreview)
             && (setNote->sixteenthOff) > (newNote->sixteenthOn))
         {
             // Overlap, delete note
-            free(newNote);
-            free(setNote);
+            heap_caps_free(newNote);
+            heap_caps_free(setNote);
             removeEntry(&sv->notes, noteNode);
 
             // Return, nothing to add

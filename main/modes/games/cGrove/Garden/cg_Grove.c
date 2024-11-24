@@ -279,32 +279,32 @@ void cg_deInitGrove(cGrove_t* cg)
     {
         freeWsg(&cg->grove.itemsWSGs[i]);
     }
-    free(cg->grove.itemsWSGs);
+    heap_caps_free(cg->grove.itemsWSGs);
     for (uint8_t i = 0; i < ARRAY_SIZE(speechBubbleSprites); i++)
     {
         freeWsg(&cg->grove.speechBubbles[i]);
     }
-    free(cg->grove.speechBubbles);
+    heap_caps_free(cg->grove.speechBubbles);
     for (uint8_t i = 0; i < ARRAY_SIZE(musicNoteSprites); i++)
     {
         freeWsg(&cg->grove.notes[i]);
     }
-    free(cg->grove.notes);
+    heap_caps_free(cg->grove.notes);
     for (uint8_t i = 0; i < ARRAY_SIZE(questionMarkSprites); i++)
     {
         freeWsg(&cg->grove.questionMarks[i]);
     }
-    free(cg->grove.questionMarks);
+    heap_caps_free(cg->grove.questionMarks);
     for (uint8_t i = 0; i < ARRAY_SIZE(angerParticles); i++)
     {
         freeWsg(&cg->grove.angerParticles[i]);
     }
-    free(cg->grove.angerParticles);
+    heap_caps_free(cg->grove.angerParticles);
     for (uint8_t i = 0; i < ARRAY_SIZE(groveCursorSprites); i++)
     {
         freeWsg(&cg->grove.cursors[i]);
     }
-    free(cg->grove.cursors);
+    heap_caps_free(cg->grove.cursors);
     freeWsg(&cg->grove.groveBG);
 }
 

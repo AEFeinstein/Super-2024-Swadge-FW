@@ -407,7 +407,7 @@ static hashNode_t bucketRemove(hashMap_t* map, hashBucket_t* bucket, hashNode_t*
             }
             result = *value;
         }
-        free(value);
+        heap_caps_free(value);
         value = NULL;
 
         // Un-multi-ify the bucket if its list is empty
@@ -731,13 +731,13 @@ void hashDeinit(hashMap_t* map)
                 hashNode_t* node = NULL;
                 while (NULL != (node = pop(&bucket->multi)))
                 {
-                    free(node);
+                    heap_caps_free(node);
                 }
             }
         }
     }
 
-    free(map->values);
+    heap_caps_free(map->values);
     map->size     = 0;
     map->count    = 0;
     map->eqFunc   = NULL;
@@ -950,7 +950,7 @@ void hashIterReset(hashIterator_t* iterator)
 {
     if (iterator->_state)
     {
-        free(iterator->_state);
+        heap_caps_free(iterator->_state);
     }
 
     iterator->_state = NULL;

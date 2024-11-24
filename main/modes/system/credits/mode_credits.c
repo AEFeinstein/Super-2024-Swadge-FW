@@ -112,11 +112,11 @@ void creditsExitMode(void)
 {
     // Free the font
     freeFont(credits->font);
-    free(credits->font);
+    heap_caps_free(credits->font);
     // Deinitialize credits
     deinitCredits(credits);
     // Free memory for this mode
-    free(credits);
+    heap_caps_free(credits);
 }
 
 /**

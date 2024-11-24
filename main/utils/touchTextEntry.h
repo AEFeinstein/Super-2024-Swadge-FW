@@ -45,7 +45,7 @@
  *
  *     if (mode->textData != NULL)
  *     {
- *         free(mode->textData);
+ *         heap_caps_free(mode->textData);
  *     }
  *     mode->textData = strdup(text);
  * }
@@ -74,7 +74,7 @@
  *
  *     if (modeData->textData != NULL)
  *     {
- *         free(modeData->textData);
+ *         heap_caps_free(modeData->textData);
  *     }
  * }
  *

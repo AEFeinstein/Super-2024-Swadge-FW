@@ -225,7 +225,7 @@ static void keebExitMode(void)
     freeWsg(&kbTest->bg);
 
     // Free mode
-    free(kbTest);
+    heap_caps_free(kbTest);
 }
 
 static void keebMainLoop(int64_t elapsedUs)

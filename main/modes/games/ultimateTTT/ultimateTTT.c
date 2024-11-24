@@ -224,7 +224,7 @@ static void tttExitMode(void)
     // Clear out this list
     while (0 != ttt->instructionHistory.length)
     {
-        free(pop(&ttt->instructionHistory));
+        heap_caps_free(pop(&ttt->instructionHistory));
     }
 
     // Free the menu renderer
@@ -239,7 +239,7 @@ static void tttExitMode(void)
     freeFont(&ttt->font_righteous);
 
     // Free everything
-    free(ttt);
+    heap_caps_free(ttt);
 }
 
 /**

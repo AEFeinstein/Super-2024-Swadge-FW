@@ -52,9 +52,9 @@ void freePortableDance(portableDance_t* dance)
     {
         if (dance->dances != NULL)
         {
-            free(dance->dances);
+            heap_caps_free(dance->dances);
         }
-        free(dance);
+        heap_caps_free(dance);
     }
 }
 

@@ -356,8 +356,8 @@ textEntry_t* initTextEntry(uint16_t x, uint16_t y, uint16_t w, uint16_t length, 
  */
 void freeTextEntry(textEntry_t* textEntry)
 {
-    free(textEntry->value);
-    free(textEntry);
+    heap_caps_free(textEntry->value);
+    heap_caps_free(textEntry);
 }
 
 /**

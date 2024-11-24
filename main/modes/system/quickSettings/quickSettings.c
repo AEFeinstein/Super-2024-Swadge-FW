@@ -139,7 +139,7 @@ swadgeMode_t quickSettingsMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-/// All state information for the Quick Settings mode. This whole struct is heap_caps_calloc()'d and free()'d
+/// All state information for the Quick Settings mode. This whole struct is heap_caps_calloc()'d and heap_caps_free()'d
 /// so that Quick Settings is only using memory while it is active
 quickSettingsMenu_t* quickSettings = NULL;
 
@@ -309,9 +309,9 @@ static void quickSettingsExitMode(void)
     freeWsg(&quickSettings->iconTftOff);
 
     // Free underlying screen
-    free(quickSettings->frozenScreen);
+    heap_caps_free(quickSettings->frozenScreen);
 
-    free(quickSettings);
+    heap_caps_free(quickSettings);
     quickSettings = NULL;
 }
 

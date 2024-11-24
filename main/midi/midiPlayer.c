@@ -2469,7 +2469,7 @@ void deinitGlobalMidiPlayer(void)
             midiPlayerReset(&globalPlayers[i]);
         }
 
-        free(globalPlayers);
+        heap_caps_free(globalPlayers);
         globalPlayers = NULL;
     }
 }

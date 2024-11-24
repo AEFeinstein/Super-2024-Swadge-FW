@@ -139,7 +139,7 @@ bool pa_loadMapFromFile(paTilemap_t* tilemap, const char* name)
 {
     if (tilemap->map != NULL)
     {
-        free(tilemap->map);
+        heap_caps_free(tilemap->map);
     }
 
     size_t sz;
@@ -166,7 +166,7 @@ bool pa_loadMapFromFile(paTilemap_t* tilemap, const char* name)
     tilemap->minMapOffsetY = 0;
     tilemap->maxMapOffsetY = height * PA_TILE_SIZE - PA_TILE_MAP_DISPLAY_HEIGHT_PIXELS;
 
-    free(buf);
+    heap_caps_free(buf);
 
     return true;
 }
@@ -268,7 +268,7 @@ bool pa_needsTransparency(uint8_t tileId)
 
 void pa_freeTilemap(paTilemap_t* tilemap)
 {
-    free(tilemap->map);
+    heap_caps_free(tilemap->map);
 }
 
 void pa_generateMaze(paTilemap_t* tilemap)

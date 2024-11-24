@@ -145,7 +145,7 @@ static void timerExitMode(void)
     freeWsg(&timerData->aWsg);
     freeWsg(&timerData->bWsg);
 
-    free(timerData);
+    heap_caps_free(timerData);
     timerData = NULL;
 }
 

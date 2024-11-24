@@ -254,7 +254,7 @@
  *     hashDeinit(&map);
  *
  *     // Clean up the values
- *     free(wsgs);
+ *     heap_caps_free(wsgs);
  * }
  * \endcode
  *

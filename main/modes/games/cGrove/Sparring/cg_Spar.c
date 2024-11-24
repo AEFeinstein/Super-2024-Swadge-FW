@@ -113,7 +113,7 @@ void cg_deInitSpar()
     {
         freeWsg(&cg->spar.dojoBGItems[i]);
     }
-    free(cg->spar.dojoBGItems);
+    heap_caps_free(cg->spar.dojoBGItems);
 }
 
 /**

@@ -104,7 +104,7 @@ static void shExitMode(void)
     freeWsg(&shv->star);
 
     // Free mode memory
-    free(shv);
+    heap_caps_free(shv);
 }
 
 /**
@@ -213,21 +213,21 @@ void shChangeScreen(shVars_t* sh, shScreen_t newScreen)
             unloadMidiFile(&shv->midiSong);
 
             // Free chart data
-            free(shv->chartNotes);
+            heap_caps_free(shv->chartNotes);
 
             // Free UI data
             void* val;
             while ((val = pop(&shv->gameNotes)))
             {
-                free(val);
+                heap_caps_free(val);
             }
             while ((val = pop(&shv->fretLines)))
             {
-                free(val);
+                heap_caps_free(val);
             }
             while ((val = pop(&shv->starList)))
             {
-                free(val);
+                heap_caps_free(val);
             }
             break;
         }

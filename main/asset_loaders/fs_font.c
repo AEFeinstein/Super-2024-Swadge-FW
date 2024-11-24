@@ -92,7 +92,7 @@ void freeFont(font_t* font)
     {
         if (font->chars[idx].bitmap != NULL)
         {
-            free(font->chars[idx].bitmap);
+            heap_caps_free(font->chars[idx].bitmap);
         }
     }
 }

@@ -127,10 +127,10 @@ void deinitMenuQuickSettingsRenderer(menuQuickSettingsRenderer_t* renderer)
     node_t* info = NULL;
     while ((info = pop(&renderer->iconMap)))
     {
-        free(info);
+        heap_caps_free(info);
     }
 
-    free(renderer);
+    heap_caps_free(renderer);
 }
 
 /**

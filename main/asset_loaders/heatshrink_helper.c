@@ -45,7 +45,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
     }
     else
     {
-        decompressedBuf = (uint8_t*)malloc((*outsize));
+        decompressedBuf = (uint8_t*)heap_caps_malloc((*outsize), MALLOC_CAP_8BIT);
     }
 
     // Create the decoder
@@ -69,7 +69,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
             ESP_LOGE("WSG", "Failed to read %s fault on decode", fname);
             heatshrink_decoder_finish(hsd);
             heatshrink_decoder_free(hsd);
-            free(decompressedBuf);
+            heap_caps_free(decompressedBuf);
             return 0;
         }
 
@@ -113,7 +113,7 @@ uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* out
 
     if (!readNamespaceNvsBlob(namespace, key, buf, &sz))
     {
-        free(buf);
+        heap_caps_free(buf);
         return NULL;
     }
 
@@ -156,7 +156,7 @@ uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* out
     heatshrink_decoder_finish(hsd);
     heatshrink_decoder_free(hsd);
     // Free the bytes read from the file
-    free(buf);
+    heap_caps_free(buf);
 
     // Return the decompressed bytes
     return decompressedBuf;

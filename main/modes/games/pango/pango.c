@@ -289,7 +289,7 @@ void pangoExitMode(void)
     pa_freeTilemap(&(pango->tilemap));
     pa_freeSoundManager(&(pango->soundManager));
     pa_freeEntityManager(&(pango->entityManager));
-    free(pango);
+    heap_caps_free(pango);
 }
 
 /**

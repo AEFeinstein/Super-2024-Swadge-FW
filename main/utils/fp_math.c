@@ -461,7 +461,7 @@ int main(int argc __attribute__((unused)), char** argv __attribute__((unused)))
     }
 
     // Clean up
-    free(results);
+    heap_caps_free(results);
     return 0;
 }
 

@@ -346,7 +346,7 @@ void jukeboxExitMode(void)
     // Free dances
     freePortableDance(jukebox->portableDances);
 
-    free(jukebox);
+    heap_caps_free(jukebox);
 }
 
 /**

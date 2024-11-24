@@ -29,7 +29,7 @@
     static inline void free_dbg(void* ptr, const char* file, const char* func, int line)
     {
         printf("%s:%d FREE_DBG(%p) in %s\n", file, line, ptr, func);
-        free(ptr);
+        heap_caps_free(ptr);
     }
 
     #define FREE_DBG(ptr) free_dbg(ptr, __FILE__, __func__, __LINE__)
@@ -38,7 +38,7 @@
 
     #define HEAP_CAPS_CALLOC_DBG(n, s, o) heap_caps_calloc(n, s, o)
     #define HEAP_CAPS_MALLOC_DBG(s, o) heap_caps_malloc(s, o)
-    #define FREE_DBG(ptr) free(ptr)
+    #define FREE_DBG(ptr) heap_caps_free(ptr)
 
 #endif
 

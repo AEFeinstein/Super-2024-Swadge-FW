@@ -163,25 +163,25 @@ static void t48ExitMode(void)
     {
         freeWsg(&t48->sparkleSprites[i]);
     }
-    free(t48->sparkleSprites);
+    heap_caps_free(t48->sparkleSprites);
 
     for (uint8_t i = 0; i < ARRAY_SIZE(tileSpriteNames); i++)
     {
         freeWsg(&t48->tiles[i]);
     }
-    free(t48->tiles);
+    heap_caps_free(t48->tiles);
 
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(newSparkleSprNames); sIdx++)
     {
         freeWsg(&t48->newSparkles[sIdx]);
     }
-    free(t48->newSparkles);
+    heap_caps_free(t48->newSparkles);
 
     soundStop(true);
     unloadMidiFile(&t48->bgm);
     unloadMidiFile(&t48->click);
 
-    free(t48);
+    heap_caps_free(t48);
 }
 
 /**

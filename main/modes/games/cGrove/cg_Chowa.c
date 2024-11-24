@@ -100,7 +100,7 @@ void cg_deInitChowaWSGs(cGrove_t* cg)
             {
                 freeWsg(&cg->chowaWSGs[idx][idx2][idx3]);
             }
-            free(cg->chowaWSGs[idx][idx2]);
+            heap_caps_free(cg->chowaWSGs[idx][idx2]);
         }
     }
 }

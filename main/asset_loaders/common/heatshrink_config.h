@@ -10,7 +10,7 @@
     /* Optional replacement of malloc/free */
     #include <esp_heap_caps.h>
     #define HEATSHRINK_MALLOC(SZ)  heap_caps_malloc(SZ, MALLOC_CAP_8BIT)
-    #define HEATSHRINK_FREE(P, SZ) free(P)
+    #define HEATSHRINK_FREE(P, SZ) heap_caps_free(P)
 #else
     /* Required parameters for static configuration */
     #define HEATSHRINK_STATIC_INPUT_BUFFER_SIZE 32

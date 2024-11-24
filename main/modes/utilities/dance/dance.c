@@ -221,9 +221,9 @@ void danceExitMode(void)
     deinitMenuManiaRenderer(danceState->menuRenderer);
     deinitMenu(danceState->menu);
 
-    free(danceState->danceNames);
-    free(danceState->danceVals);
-    free(danceState);
+    heap_caps_free(danceState->danceNames);
+    heap_caps_free(danceState->danceVals);
+    heap_caps_free(danceState);
     danceState = NULL;
 }
 

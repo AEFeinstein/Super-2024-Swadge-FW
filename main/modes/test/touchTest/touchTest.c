@@ -111,7 +111,7 @@ static void touchTestExitMode(void)
 {
     // Free the font
     freeFont(&touchTest->ibm);
-    free(touchTest);
+    heap_caps_free(touchTest);
 }
 
 /**

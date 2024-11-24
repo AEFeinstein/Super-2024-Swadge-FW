@@ -167,7 +167,7 @@ void shTeardownMenu(shVars_t* sh)
     void* toFree;
     while ((toFree = pop(&sh->hsStrs)))
     {
-        free(toFree);
+        heap_caps_free(toFree);
     }
     setManiaLedsOn(sh->renderer, false);
     deinitMenuManiaRenderer(sh->renderer);

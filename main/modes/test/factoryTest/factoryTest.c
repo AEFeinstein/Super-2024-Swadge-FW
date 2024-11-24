@@ -201,7 +201,7 @@ void testExitMode(void)
     freeWsg(&test->kd_idle0);
     freeWsg(&test->kd_idle1);
     unloadMidiFile(&test->song);
-    free(test);
+    heap_caps_free(test);
 }
 
 /**

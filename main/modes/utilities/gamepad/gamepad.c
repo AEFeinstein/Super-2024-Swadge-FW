@@ -310,7 +310,7 @@ void gamepadExitMode(void)
     freeFont(&(gamepad->logbookFont));
     freeFont(&(gamepad->ibmFont));
 
-    free(gamepad);
+    heap_caps_free(gamepad);
 }
 
 void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)

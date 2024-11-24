@@ -470,12 +470,12 @@ static void introExitMode(void)
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->sound != NULL)
     {
-        free(iv->sound);
+        heap_caps_free(iv->sound);
     }
 #endif
     unloadMidiFile(&iv->song);
 
-    free(iv);
+    heap_caps_free(iv);
 }
 
 /**
