@@ -29,7 +29,6 @@ struct bb_midgroundTileInfo_t //parent class
                    // to zero.
     uint16_t gCost;
     uint16_t hCost;
-    bool toggleIteration; //toggles between true and false with every iteration of A*. So there's no need to clear out data in the entire tilemap between iterations.
 };
 
 struct bb_foregroundTileInfo_t //child class

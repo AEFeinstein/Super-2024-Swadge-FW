@@ -18,7 +18,7 @@ bool isPerimeterNode(const bb_midgroundTileInfo_t* tile)
     return tile->x == 4 || tile->x == TILE_FIELD_WIDTH - 5 || tile->y == TILE_FIELD_HEIGHT - 5;
 }
 
-void getNeighbors(const bb_midgroundTileInfo_t* tile, list_t* neighbors, bb_tilemap_t* tilemap, const bool toggleIteration)
+void getNeighbors(const bb_midgroundTileInfo_t* tile, list_t* neighbors, bb_tilemap_t* tilemap)
 {
     //left neighbor
     uint16_t neighborX = tile->x - 1;
@@ -31,13 +31,9 @@ void getNeighbors(const bb_midgroundTileInfo_t* tile, list_t* neighbors, bb_tile
         if(neighborX < TILE_FIELD_WIDTH && neighborY < TILE_FIELD_HEIGHT)
         {
             bb_midgroundTileInfo_t* neighbor = neighborZ ? &tilemap->fgTiles[neighborX][neighborY] : &tilemap->mgTiles[neighborX][neighborY];
-            if(neighbor->toggleIteration != toggleIteration)
-            {
-                neighbor->gCost = 0;
-                neighbor->hCost = 0;
-                //neighbor->parent = NULL;
-                neighbor->toggleIteration = toggleIteration;
-            }
+            neighbor->gCost = 0;
+            neighbor->hCost = 0;
+            //neighbor->parent = NULL;
             push(neighbors, (void*)neighbor);
         }
 
@@ -92,12 +88,19 @@ bool contains(const list_t* nodeList, const bb_midgroundTileInfo_t* tile)
 
 // Returns True if there is a way to the perimeter
 // start[0]=x;start[1]=y;start[2]=z
-bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap, const bool toggleIteration)
+bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
 {
     uint16_t halfFieldWidth = TILE_FIELD_WIDTH/2;
     start->gCost = 0;
-    start->hCost = 0;
-    start->toggleIteration = toggleIteration;
+    //manhattan distance from the target
+    if(start->x < halfFieldWidth)
+    {
+        start->hCost = start->x - 4;
+    }
+    else
+    {
+        start->hCost = TILE_FIELD_WIDTH - 5 - start->x;
+    }
     //bb_tileInfo_t* start = HEAP_CAPS_MALLOC_DBG(sizeof(bb_tileInfo_t), MALLOC_CAP_SPIRAM);
     // It's like a memcopy
     //*start = *_start;
@@ -136,7 +139,7 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap, c
         }
 
         list_t* neighbors = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-        getNeighbors(current, neighbors, tilemap, toggleIteration);
+        getNeighbors(current, neighbors, tilemap);
 
         //foreach neighbor of the current node
         node_t* neighbor = neighbors->first;

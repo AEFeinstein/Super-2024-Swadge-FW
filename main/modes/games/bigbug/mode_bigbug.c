@@ -424,11 +424,10 @@ static void bb_UpdateTileSupport(void)
         uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.pleaseCheck);
         if((shiftedVal[2] ? bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health : bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health) > 0)
         {
-            bigbug->gameData.toggleIteration = !bigbug->gameData.toggleIteration;
             //pathfind
             if(!(shiftedVal[2] ? 
-                pathfindToPerimeter(&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap, bigbug->gameData.toggleIteration):
-                pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap, bigbug->gameData.toggleIteration)))
+                pathfindToPerimeter(&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap):
+                pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap)))
             {
                 //trigger a cascading collapse
                 uint8_t* val = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
