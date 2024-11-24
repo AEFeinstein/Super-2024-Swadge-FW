@@ -32,6 +32,7 @@ typedef struct
     rectangle_t aabb;          ///< Position and bounding box
     wsg_t spr;                 ///< Spr for item
     bool active;               ///< If item slot is being used
+    int8_t numOfUses;          ///< Number of uses before being used up
 } cgItem_t;
 
 typedef struct
@@ -45,9 +46,9 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_MAX_CHOWA  5 // Max number of Chowa allowed on a swadge
-#define CG_STAT_COUNT 6 // Number of stats
-#define CG_NUM_TYPES  7 // Total number of different types of Chowa
+#define CG_MAX_CHOWA  5  // Max number of Chowa allowed on a swadge
+#define CG_STAT_COUNT 6  // Number of stats
+#define CG_ADULT_AGE  64 // Age before a chowa becomes an adult
 
 // Enums ===============================
 typedef enum
@@ -61,20 +62,6 @@ typedef enum
     CG_SURPRISED,
     CG_SICK,
 } cgMoodEnum_t;
-
-typedef enum
-{
-    CG_AGGRESSIVE,
-    CG_BORING,
-    CG_BRASH,
-    CG_CARELESS,
-    CG_CRY_BABY,
-    CG_DUMB,
-    CG_KIND,
-    CG_OVERLY_CAUTIOUS,
-    CG_SHY,
-    CG_SMART,
-} cgChowaPersonality_t;
 
 typedef enum
 {
@@ -138,8 +125,9 @@ typedef enum
 typedef enum
 {
     CG_NORMAL,
-    CG_CHO,
     CG_KING_DONUT,
+    CG_NUM_TYPES, ///< Move if more get added
+    CG_CHO,
     CG_RED_LUMBERJACK,
     CG_GREEN_LUMBERJACK,
     CG_KOSMO,
@@ -154,11 +142,10 @@ typedef struct
 
     // Base data
     char name[CG_MAX_STR_LEN];
+    char owner[CG_MAX_STR_LEN];         ///< Name of the owning player
     int8_t age;                         ///< Current age of the Chowa
-    int8_t maxAge;                      ///< Maximum Chowa age. 4 hours of in game time
     uint8_t playerAffinity;             ///< How much Chowa likes the player
     cgMoodEnum_t mood;                  ///< Current mood of the Chowa
-    cgChowaPersonality_t pers;          ///< Chowa's personality
     cgChowaStat_t stats[CG_STAT_COUNT]; ///< Array containing stat information
 
     // Color data
@@ -225,42 +212,64 @@ typedef struct
 //==============================================================================
 
 // Defines =============================
-#define CG_GROVE_MAX_ITEMS       11 ///< Max number of items. Cannot assume unique
+#define CG_GROVE_MAX_ITEMS       10 ///< Max number of items in the grove
 #define CG_GROVE_MAX_GUEST_CHOWA 5  ///< Maximum number of Chowa allowed to be in the grove at once
 
 #define CG_GROVE_SCREEN_BOUNDARY 32 ///< How close the cursor can get to the edge of the screen
 
 // Enum =================================
+typedef enum
+{
+    CG_GROVE_FIELD,
+    CG_GROVE_MENU,
+    CG_GROVE_SHOP,
+    CG_GROVE_INVENTORY,
+    CG_GROVE_VIEW_STATS,
+    CG_GROVE_ABANDON,
+    CG_GROVE_TUTORIAL,
+    CG_KEYBOARD_WRITE_NAME,
+} cgGroveState_t;
 
 typedef enum
 {
-    CG_TREE,
-    CG_STUMP,
-    CG_WATER
-} cgBoundary_t;
-
-typedef enum
-{
-    CHOWA_IDLE,     ///< Doing nothing. Get new behavior
-    CHOWA_STATIC,   ///< Standing in place
-    CHOWA_WALK,     ///< Walking, running, swimming, struggling to swim towards a target
-    CHOWA_CHASE,    ///< Follow Other chowa, object, or cursor
-    CHOWA_USE_ITEM, ///< Use an item held in Chowa's possession
-    CHOWA_BOX,      ///< Does sparring type moves
-    CHOWA_SING,     ///< Sings
-    CHOWA_DANCE,    ///< Dancing
-    CHOWA_TALK,     ///< Talks with another Chowa
-    CHOWA_HELD,     ///< Held, cannot move
-    CHOWA_GIFT,     ///< Receiving a gift/head pats
-    CHOWA_PET,      ///< Chowa is being pet
+    CHOWA_IDLE,      ///< Doing nothing. Get new behavior
+    CHOWA_STATIC,    ///< Standing in place
+    CHOWA_WALK,      ///< Walking, running, swimming, struggling to swim towards a target
+    CHOWA_CHASE,     ///< Follow Other chowa, object, or cursor
+    CHOWA_GRAB_ITEM, ///< Grab an item if close enough
+    CHOWA_DROP_ITEM, ///< Drop an item occasionally
+    CHOWA_USE_ITEM,  ///< Use an item held in Chowa's possession
+    CHOWA_BOX,       ///< Does sparring type moves
+    CHOWA_SING,      ///< Sings
+    CHOWA_DANCE,     ///< Dancing
+    CHOWA_TALK,      ///< Talks with another Chowa
+    CHOWA_HELD,      ///< Held, cannot move
+    CHOWA_GIFT,      ///< Receiving a gift/head pats
+    CHOWA_PET,       ///< Chowa is being pet
 } cgChowaStateGarden_t;
+
+typedef enum
+{
+    CG_BOOK_AGI,
+    CG_BOOK_CHA,
+    CG_BOOK_SPD,
+    CG_BOOK_STA,
+    CG_BOOK_STR,
+    CG_BALL,
+    CG_CRAYONS,
+    CG_TOY_SWORD,
+    CG_KNIFE,
+    CG_CAKE,
+    CG_SOUFFLE,
+    CG_CHOWA_EGG,
+    CG_MAX_TYPE_ITEMS
+} cgGroveItemEnum_t;
 
 // Structs ==============================
 typedef struct
 {
-    int16_t money;                          ///< Money
-    cgItem_t items[CG_GROVE_MAX_ITEMS];     ///< Item IDs
-    uint8_t quantities[CG_GROVE_MAX_ITEMS]; ///< Item qtys
+    int16_t money;                         ///< Money
+    uint8_t quantities[CG_MAX_TYPE_ITEMS]; ///< Item qtys
 } cgInventory_t;
 
 typedef struct
@@ -273,12 +282,21 @@ typedef struct
 
 typedef struct
 {
+    bool active;        ///< if slot is in use
+    cgColorType_t type; ///< Used for color data
+    int64_t timer;      ///< us since last stage
+    int16_t stage;      ///< Current stage
+    rectangle_t aabb;   ///< Position of the Egg
+} cgEgg_t;
+
+typedef struct
+{
     // Basic data
     cgChowa_t* chowa; ///< Main Chowa data
+    cgEgg_t* egg;     ///< If not null, Egg is in this slot
     rectangle_t aabb; ///< Position and bounding box for grabbing
 
     // Items
-    bool holdingItem;   ///< If Chowa is holding an item
     cgItem_t* heldItem; ///< Pointer to the held item
 
     // AI
@@ -288,14 +306,21 @@ typedef struct
     int64_t nextTimeLeft;           ///< Time left on next state
     vec_t targetPos;                ///< Position to head to
     float precision;                ///< How precise the position needs to be
+    int64_t moodTimer;              ///< How long before mood shifts
+    int64_t ageTimer;               ///< Timer to update age of the Chowa
 
     // Animations
-    int16_t angle;      ///< Angle that the Chowa is moving at
-    int8_t animFrame;   ///< Frame that the animation is on
-    int64_t frameTimer; ///< Timer until the next frame triggers
-    int8_t animIdx;     ///< which animation is being played
-    bool flip;          ///< If image needs to be flipped manually
-    bool hasPartner;    ///< If Chowa has a partner for talking or boxing
+    int16_t angle;         ///< Angle that the Chowa is moving at
+    int8_t animFrame;      ///< Frame that the animation is on
+    int64_t frameTimer;    ///< Timer until the next frame triggers
+    int8_t animIdx;        ///< which animation is being played
+    bool flip;             ///< If image needs to be flipped manually
+    bool hasPartner;       ///< If Chowa has a partner for talking or boxing
+    bool ballInAir;        ///< If ball is being thrown.
+    bool ballFlip;         ///< If the ball is going left
+    int64_t ballTimer;     ///< Timer for the ball animations
+    int16_t ballAnimFrame; ///< Why yes, Balls should be their own object.
+    int16_t ySpd;          ///< Y speed of the ball.
 } cgGroveChowa_t;
 
 typedef struct
@@ -309,21 +334,35 @@ typedef struct
     wsg_t* notes;          ///< Musical notes
     wsg_t* speechBubbles;  ///< Speech Bubbles for Chowa
     wsg_t* itemsWSGs;      ///< Item sprites
+    wsg_t* eggs;           ///< Un-cracked eggs
+    wsg_t* crackedEggs;    ///< Cracked eggs
     // Audio
     midiFile_t bgm; ///< Main BGM for the Grove
 
+    // State
+    cgGroveState_t state; ///< Current state of the grove
+    int64_t saveTimer;    ///< How long until CHowa are automatically saved
+    bool tutorial;        ///< If tutorial has been run
+
     // Field data
     cgItem_t items[CG_GROVE_MAX_ITEMS];                            ///< Items present in the Grove
-    rectangle_t boundaries[3];                                     ///< Boundary boxes
+    rectangle_t waterBoundary;                                     ///< Boundary boxes
     cgGroveChowa_t chowa[CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA]; ///< List of all chowa in the garden
     bool bgmPlaying;                                               ///< If the BGM is active
     cgInventory_t inv;                                             ///< Inventory struct
-    cgGroveMoney_t ring;                                           ///< Rings available to collect
+    cgGroveMoney_t ring;                                           ///< Ring available to collect
+    cgEgg_t unhatchedEggs[CG_MAX_CHOWA];                           ///< Array of un-hatched eggs
+    int8_t hatchIdx;                                               ///< Used for text input
 
     // Menu
-    menu_t* shop;                  ///< Shop menu object
+    menu_t* menu;                  ///< Shop menu object
     menuManiaRenderer_t* renderer; ///< Menu renderer
-    bool shopOpen;                 ///< If Shop is open and being drawn or not
+    // Items
+    int8_t shopSelection;      ///< Index of the shop currently set / CUrrently selected field item
+    int8_t itemSelection;      ///< Selection of what to put on field
+    int8_t groveActiveItemIdx; ///< Index of the next item slot to load item into
+    // Chowa
+    bool confirm; ///< Used to gate accidentally deleting chowa or kicking guests
 
     // Player resources
     rectangle_t camera;        ///< In-garden camera viewport
@@ -332,6 +371,11 @@ typedef struct
     cgItem_t* heldItem;        ///< The held item
     bool holdingChowa;         ///< If the player is holding a Chowa
     cgGroveChowa_t* heldChowa; ///< The held Chowa
+    bool isPetting;            ///< If the petting gesture should be going on
+    int64_t pettingTimer;      ///< How long before petting resets
+
+    // Tutorial
+    int8_t tutorialPage; ///< Drawn page
 } cgGrove_t;
 
 //==============================================================================
@@ -447,28 +491,26 @@ typedef struct
 {
     // Assets
     // Audio
-    // - BGM, menus
-    // - BGM, match
     // - Combat sounds
     //   - Pain sounds
     //   - Impact sounds
-    //   - Gong crash
-    //   - Countdown noises
-    //   - Cheer noises
 
     // BG Sprites
     wsg_t dojoBG;       ///< Dojo Background image
     wsg_t* dojoBGItems; ///< Dojo BG items
     // UI Sprites
-    wsg_t arrow; ///< Arrow sprite
     // - Punch icon
     // - Kick icon
-    // NPC sprites
+    // - Dodge
+    // - Headbutt
 
     // Fonts
-    font_t sparTitleFont;        ///< Font used for larger text
+    /* font_t sparTitleFont;        ///< Font used for larger text
     font_t sparTitleFontOutline; ///< Outline for title font
-    font_t sparRegFont;          ///< Regular text
+    font_t sparRegFont;          ///< Regular text */
+
+    // Music
+    midiFile_t sparBGM; ///< Music
 
     // Spar
     cgSparState_t state; ///< Active state
@@ -497,8 +539,6 @@ typedef struct
 // Mode Data
 //==============================================================================
 
-// Defines =============================
-
 // Enums ===============================
 typedef enum
 {
@@ -507,19 +547,37 @@ typedef enum
     CG_SPAR,
     CG_RACE,
     CG_PERFORMANCE,
+    CG_FIRST_RUN,
+    CG_ERASE,
 } cgMainState_t;
 
 // Structs =============================
 typedef struct
 {
+    bool touch;      ///< Touch controls for Grove
+    bool online;     ///< If online features are enabled
+    bool itemText;   ///< If item text should be drawn
+    bool chowaNames; ///< If Chowa's show have their names drawn in Grove
+} cgSettings_t;
+
+typedef struct
+{
     // Assets
     // ========================================================================
     // Fonts
-    font_t menuFont; ///< Main font
+    font_t menuFont;         ///< Main font
+    font_t largeMenuFont;    ///< Larger font, same style
+    font_t titleFont;        ///< Font for titles
+    font_t titleFontOutline; ///< OPutline of above
 
     // WSGs
     wsg_t* title;                      ///< Title screen sprites
     wsg_t* chowaWSGs[CG_NUM_TYPES][2]; ///< Chowa sprites
+    wsg_t arrow;                       ///< Arrow str
+    // NPC sprites
+
+    // Audio
+    midiFile_t menuBGM;
 
     // Modes
     cgGrove_t grove; ///< Garden data
@@ -541,10 +599,15 @@ typedef struct
     menuManiaRenderer_t* renderer; ///< Menu renderer
 
     // Settings
-    bool touch;  ///< Touch controls for Grove
-    bool online; ///< If online features are enabled
+    cgSettings_t settings; ///< Settings struct
 
     // Chowa
     cgChowa_t chowa[CG_MAX_CHOWA];              ///< List of Chowa
     cgChowa_t guests[CG_GROVE_MAX_GUEST_CHOWA]; ///< Guest Chowa
+
+    // Text Entry buffer
+    char buffer[CG_MAX_STR_LEN];
+
+    // Player data
+    char player[CG_MAX_STR_LEN];
 } cGrove_t;
