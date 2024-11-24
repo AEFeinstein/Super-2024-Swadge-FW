@@ -412,10 +412,10 @@ void cg_GroveEggAI(cGrove_t* cg, int64_t elapsedUs)
                 {
                     cg->chowa[idx].stats[idx2] = 10 + esp_random() % 48;
                 }
-                cg->chowa[idx].playerAffinity = 0;
-                cg->grove.chowa[idx].aabb.pos = cg->grove.unhatchedEggs[idx].aabb.pos;
+                cg->chowa[idx].playerAffinity    = 0;
+                cg->grove.chowa[idx].aabb.pos    = cg->grove.unhatchedEggs[idx].aabb.pos;
                 cg->grove.chowa[idx].aabb.height = 32;
-                cg->grove.chowa[idx].aabb.width = 32;
+                cg->grove.chowa[idx].aabb.width  = 32;
                 strcpy(cg->chowa[idx].owner, cg->player);
                 cg->grove.state    = CG_KEYBOARD_WRITE_NAME;
                 cg->grove.hatchIdx = idx;

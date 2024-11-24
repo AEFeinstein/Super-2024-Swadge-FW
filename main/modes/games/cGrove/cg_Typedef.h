@@ -565,9 +565,9 @@ typedef struct
     // Assets
     // ========================================================================
     // Fonts
-    font_t menuFont;      ///< Main font
-    font_t largeMenuFont; ///< Larger font, same style
-    font_t titleFont;     ///< Font for titles
+    font_t menuFont;         ///< Main font
+    font_t largeMenuFont;    ///< Larger font, same style
+    font_t titleFont;        ///< Font for titles
     font_t titleFontOutline; ///< OPutline of above
 
     // WSGs

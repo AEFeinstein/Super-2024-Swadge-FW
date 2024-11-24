@@ -201,7 +201,7 @@ static void cGroveEnterMode(void)
 
     // Adjust Audio to use correct instruments
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop = true;
+    player->loop         = true;
     midiGmOn(player);
 
     // Init Chowa
@@ -317,7 +317,7 @@ static void cGroveMainLoop(int64_t elapsedUs)
                 }
             }
         }
-        
+
         return;
     }
 
