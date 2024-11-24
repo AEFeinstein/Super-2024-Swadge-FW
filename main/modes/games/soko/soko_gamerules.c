@@ -23,9 +23,7 @@ const size_t victorym_count = sizeof(victorym) / sizeof(victorym[0]);
 
 uint64_t victoryDanceTimer;
 
-void sokoConfigGamemode(
-    soko_abs_t* soko,
-    soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
+void sokoConfigGamemode(soko_abs_t* soko, soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
 {
     soko->currentTheme = &soko->sokoDefaultTheme;
     soko->background   = SKBG_GRID;
@@ -468,14 +466,14 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
             {
                 case SKE_PLAYER:
                 {
-                    for (size_t xd = ox + level->entities[i].x * scale; xd < ox + level->entities[i].x * scale + scale; xd++)
-                    {
-                        for (size_t yd = oy +level->entities[i]. y * scale; yd < oy + level->entities[i].y * scale + scale; yd++)
-                        {
-                            TURBO_SET_PIXEL(xd, yd, c211);
-                        }
-                    }
-                    continue;
+                    // for (size_t xd = ox + level->entities[i].x * scale; xd < ox + level->entities[i].x * scale + scale; xd++)
+                    // {
+                    //     for (size_t yd = oy +level->entities[i]. y * scale; yd < oy + level->entities[i].y * scale + scale; yd++)
+                    //     {
+                    //         TURBO_SET_PIXEL(xd, yd, c211);
+                    //     }
+                    // }
+                    // continue;
                     switch (level->entities[i].facing)
                     {
                         case SKD_UP:

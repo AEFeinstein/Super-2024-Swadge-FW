@@ -54,10 +54,10 @@ static void sokoEnterMode(void)
     soko->background                     = SKBG_BLACK;
     // load or set themes...
     //  Default Theme
-    loadWsg("sk_pixel_front.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
-    loadWsg("sk_pixel_back.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
-    loadWsg("sk_pixel_left.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
-    loadWsg("sk_pixel_right.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
+    loadWsg("sk_player1.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
+    loadWsg("sk_player2.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
+    loadWsg("sk_player3.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
+    loadWsg("sk_player4.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
     loadWsg("sk_crate_2.wsg", &soko->sokoDefaultTheme.crateWSG, false);
     loadWsg("sk_crate_ongoal.wsg", &soko->sokoDefaultTheme.crateOnGoalWSG, false);
     loadWsg("sk_sticky_crate.wsg", &soko->sokoDefaultTheme.stickyCrateWSG, false);
