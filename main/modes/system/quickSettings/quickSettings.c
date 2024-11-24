@@ -139,7 +139,7 @@ swadgeMode_t quickSettingsMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-/// All state information for the Quick Settings mode. This whole struct is calloc()'d and free()'d
+/// All state information for the Quick Settings mode. This whole struct is heap_caps_calloc()'d and free()'d
 /// so that Quick Settings is only using memory while it is active
 quickSettingsMenu_t* quickSettings = NULL;
 
@@ -181,8 +181,9 @@ static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t cur
 static void quickSettingsEnterMode(void)
 {
     // Allocate and clear all memory for this mode. All the variables are contained in a single struct for convenience.
-    // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
-    quickSettings = calloc(1, sizeof(quickSettingsMenu_t));
+    // heap_caps_calloc() is used instead of heap_caps_malloc() because heap_caps_calloc() also initializes the
+    // allocated memory to zeros.
+    quickSettings = heap_caps_calloc(1, sizeof(quickSettingsMenu_t), MALLOC_CAP_8BIT);
 
     // Allocate background image and copy framebuffer into it
     quickSettings->frozenScreen = heap_caps_calloc(TFT_WIDTH * TFT_HEIGHT, sizeof(paletteColor_t), MALLOC_CAP_SPIRAM);

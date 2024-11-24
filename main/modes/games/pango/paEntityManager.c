@@ -6,6 +6,8 @@
 #include <esp_log.h>
 #include <string.h>
 
+#include <esp_heap_caps.h>
+
 #include "paEntityManager.h"
 #include "esp_random.h"
 #include "palette.h"
@@ -27,7 +29,7 @@ void pa_initializeEntityManager(paEntityManager_t* entityManager, paWsgManager_t
                                 paGameData_t* gameData, paSoundManager_t* soundManager)
 {
     entityManager->wsgManager = wsgManager;
-    entityManager->entities   = calloc(MAX_ENTITIES, sizeof(paEntity_t));
+    entityManager->entities   = heap_caps_calloc(MAX_ENTITIES, sizeof(paEntity_t), MALLOC_CAP_8BIT);
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {

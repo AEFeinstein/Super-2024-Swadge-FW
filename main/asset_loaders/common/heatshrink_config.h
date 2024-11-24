@@ -8,7 +8,8 @@
 
 #if HEATSHRINK_DYNAMIC_ALLOC
     /* Optional replacement of malloc/free */
-    #define HEATSHRINK_MALLOC(SZ)  malloc(SZ)
+    #include <esp_heap_caps.h>
+    #define HEATSHRINK_MALLOC(SZ)  heap_caps_malloc(SZ, MALLOC_CAP_8BIT)
     #define HEATSHRINK_FREE(P, SZ) free(P)
 #else
     /* Required parameters for static configuration */

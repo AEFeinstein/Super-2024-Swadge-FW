@@ -153,7 +153,7 @@ void danceEnterMode(void)
     // No speaker output for LEDs!
     setDacShutdown(true);
 
-    danceState = calloc(1, sizeof(danceMode_t));
+    danceState = heap_caps_calloc(1, sizeof(danceMode_t), MALLOC_CAP_8BIT);
 
     danceState->danceIdx   = 0;
     danceState->danceSpeed = DANCE_SPEED_MULT;

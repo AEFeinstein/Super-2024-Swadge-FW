@@ -95,10 +95,10 @@ static const creditsEntry_t entries[] = {
 void creditsEnterMode(void)
 {
     // Allocate memory for this mode
-    credits = (credits_t*)calloc(1, sizeof(credits_t));
+    credits = (credits_t*)heap_caps_calloc(1, sizeof(credits_t), MALLOC_CAP_8BIT);
 
     // Load a font
-    font_t* creditsFont = (font_t*)calloc(1, sizeof(font_t));
+    font_t* creditsFont = (font_t*)heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_8BIT);
     loadFont("logbook.font", creditsFont, false);
 
     // Initialize credits

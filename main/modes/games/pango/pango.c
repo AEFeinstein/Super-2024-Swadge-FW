@@ -215,7 +215,7 @@ static const char KEY_UNLOCKS[] = "pa_unlocks";
 void pangoEnterMode(void)
 {
     // Allocate memory for this mode
-    pango = (pango_t*)calloc(1, sizeof(pango_t));
+    pango = (pango_t*)heap_caps_calloc(1, sizeof(pango_t), MALLOC_CAP_8BIT);
     memset(pango, 0, sizeof(pango_t));
 
     pango->menuState     = 0;
@@ -422,7 +422,7 @@ void pangoBuildMainMenu(pango_t* self)
     */
     if (pango->unlockables.maxLevelIndexUnlocked > 1 || pango->gameData.debugMode)
     {
-        pango->levelSelectMenuItem             = calloc(1, sizeof(menuItem_t));
+        pango->levelSelectMenuItem             = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_8BIT);
         pango->levelSelectMenuItem->label      = pangoMenuContinue;
         pango->levelSelectMenuItem->minSetting = 1;
         pango->levelSelectMenuItem->maxSetting

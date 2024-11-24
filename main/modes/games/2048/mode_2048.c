@@ -13,6 +13,8 @@
 // Includes
 //==============================================================================
 
+#include <esp_heap_caps.h>
+
 #include "mode_2048.h"
 #include "2048_game.h"
 #include "2048_menus.h"
@@ -102,7 +104,7 @@ static void t48EnterMode(void)
     setFrameRateUs(16667); // 60 FPS
 
     // Init Mode & resources
-    t48 = calloc(sizeof(t48_t), 1);
+    t48 = heap_caps_calloc(sizeof(t48_t), 1, MALLOC_CAP_8BIT);
 
     // Load fonts
     loadFont("ibm_vga8.font", &t48->font, false);
@@ -110,19 +112,19 @@ static void t48EnterMode(void)
     makeOutlineFont(&t48->titleFont, &t48->titleFontOutline, false);
 
     // Load images
-    t48->tiles = calloc(ARRAY_SIZE(tileSpriteNames), sizeof(wsg_t));
+    t48->tiles = heap_caps_calloc(ARRAY_SIZE(tileSpriteNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t tIdx = 0; tIdx < ARRAY_SIZE(tileSpriteNames); tIdx++)
     {
         loadWsg(tileSpriteNames[tIdx], &t48->tiles[tIdx], true);
     }
 
-    t48->sparkleSprites = calloc(ARRAY_SIZE(sparkleSpriteNames), sizeof(wsg_t));
+    t48->sparkleSprites = heap_caps_calloc(ARRAY_SIZE(sparkleSpriteNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(sparkleSpriteNames); sIdx++)
     {
         loadWsg(sparkleSpriteNames[sIdx], &t48->sparkleSprites[sIdx], true);
     }
 
-    t48->newSparkles = calloc(ARRAY_SIZE(newSparkleSprNames), sizeof(wsg_t));
+    t48->newSparkles = heap_caps_calloc(ARRAY_SIZE(newSparkleSprNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(newSparkleSprNames); sIdx++)
     {
         loadWsg(newSparkleSprNames[sIdx], &t48->newSparkles[sIdx], true);

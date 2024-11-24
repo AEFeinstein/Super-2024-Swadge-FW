@@ -52,7 +52,7 @@
  *
  * void setup(void)
  * {
- *     modeData = calloc(1, sizeof(modeData_t));
+ *     modeData = heap_caps_calloc(1, sizeof(modeData_t), MALLOC_CAP_8BIT);
  *     // Setup function
  *     uint16_t entryW = 160;
  *     uint16_t entryH = 16;

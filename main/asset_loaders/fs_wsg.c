@@ -52,7 +52,7 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
     }
     else
     {
-        wsg->px = (paletteColor_t*)malloc(sizeof(paletteColor_t) * wsg->w * wsg->h);
+        wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h, MALLOC_CAP_8BIT);
     }
 
     if (NULL != wsg->px)
@@ -93,7 +93,7 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
     }
     else
     {
-        wsg->px = (paletteColor_t*)malloc(sizeof(paletteColor_t) * wsg->w * wsg->h);
+        wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h, MALLOC_CAP_8BIT);
     }
 
     if (NULL != wsg->px)

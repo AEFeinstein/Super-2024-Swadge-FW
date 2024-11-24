@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <esp_log.h>
+#include <esp_heap_caps.h>
 
 //==============================================================================
 // Defines
@@ -300,7 +301,7 @@ static hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const void* k
             HASH_LOG("Bucket collision; converting bucket to multi-value");
 
             // Copy the first node itself
-            newNode = malloc(sizeof(hashNode_t));
+            newNode = heap_caps_malloc(sizeof(hashNode_t), MALLOC_CAP_8BIT);
             memcpy(newNode, node, sizeof(hashNode_t));
 
             // Init the list data
@@ -311,7 +312,7 @@ static hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const void* k
             push(&bucket->multi, newNode);
 
             // Now, we should also add an empty node
-            newNode = calloc(1, sizeof(hashNode_t));
+            newNode = heap_caps_calloc(1, sizeof(hashNode_t), MALLOC_CAP_8BIT);
             push(&bucket->multi, newNode);
 
             if (count)
@@ -349,7 +350,7 @@ static hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const void* k
             if (node == NULL)
             {
                 // Gotta add one
-                node = calloc(1, sizeof(hashNode_t));
+                node = heap_caps_calloc(1, sizeof(hashNode_t), MALLOC_CAP_8BIT);
                 push(&bucket->multi, node);
 
                 if (count)
@@ -693,7 +694,7 @@ void hashInit(hashMap_t* map, int initialSize)
 {
     map->count    = 0;
     map->size     = initialSize;
-    map->values   = calloc(map->size, sizeof(hashBucket_t));
+    map->values   = heap_caps_calloc(map->size, sizeof(hashBucket_t), MALLOC_CAP_8BIT);
     map->hashFunc = NULL;
     map->eqFunc   = NULL;
 }
@@ -761,7 +762,7 @@ static bool hashIterNext(const hashMap_t* map, hashIterator_t* iterator)
         if (state == NULL)
         {
             // Start the iteration
-            iterator->_state = state = calloc(1, sizeof(hashIterState_t));
+            iterator->_state = state = heap_caps_calloc(1, sizeof(hashIterState_t), MALLOC_CAP_8BIT);
             state->curBucket         = map->values;
             // Set nextBucket without incrementing curBucket
             // This just sets up the vars for the initial bucket

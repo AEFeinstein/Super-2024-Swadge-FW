@@ -5,6 +5,7 @@
 #include "touchTextEntry.h"
 
 #include <string.h>
+#include <esp_heap_caps.h>
 
 #include "font.h"
 #include "hdw-btn.h"
@@ -322,7 +323,7 @@ static void deleteChar(textEntry_t* entry)
 textEntry_t* initTextEntry(uint16_t x, uint16_t y, uint16_t w, uint16_t length, const font_t* font,
                            textEntryCharMask_t mask, textEntryCb cbFn)
 {
-    textEntry_t* entry = calloc(1, sizeof(textEntry_t));
+    textEntry_t* entry = heap_caps_calloc(1, sizeof(textEntry_t), MALLOC_CAP_8BIT);
 
     entry->minLength = 1;
     entry->maxLength = length;
@@ -331,7 +332,7 @@ textEntry_t* initTextEntry(uint16_t x, uint16_t y, uint16_t w, uint16_t length, 
     entry->y = y;
     entry->w = w;
 
-    entry->value = calloc(1, 32);
+    entry->value = heap_caps_calloc(1, 32, MALLOC_CAP_8BIT);
     entry->size  = 32;
 
     entry->cursor = 0;

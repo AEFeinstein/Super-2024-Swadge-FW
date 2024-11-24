@@ -286,7 +286,7 @@ const jukeboxCategory_t sfxCategories[] = {
 void jukeboxEnterMode()
 {
     // Allocate zero'd memory for the mode
-    jukebox = calloc(1, sizeof(jukebox_t));
+    jukebox = heap_caps_calloc(1, sizeof(jukebox_t), MALLOC_CAP_8BIT);
 
     // Enter music submode
     jukebox->inMusicSubmode = true;

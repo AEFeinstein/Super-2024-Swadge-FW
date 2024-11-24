@@ -95,7 +95,7 @@ static void tttEnterMode(void)
     setDacShutdown(true);
 
     // Allocate memory for the mode
-    ttt = calloc(1, sizeof(ultimateTTT_t));
+    ttt = heap_caps_calloc(1, sizeof(ultimateTTT_t), MALLOC_CAP_8BIT);
 
     // Load markers
     for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(markerNames); pIdx++)

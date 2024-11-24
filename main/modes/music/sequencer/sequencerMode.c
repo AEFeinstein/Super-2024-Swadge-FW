@@ -132,7 +132,7 @@ static sequencerVars_t* sv;
 static void sequencerEnterMode(void)
 {
     // Allocate memory for the mode
-    sv = calloc(1, sizeof(sequencerVars_t));
+    sv = heap_caps_calloc(1, sizeof(sequencerVars_t), MALLOC_CAP_8BIT);
 
     // Load fonts
     loadFont("ibm_vga8.font", &sv->font_ibm, true);

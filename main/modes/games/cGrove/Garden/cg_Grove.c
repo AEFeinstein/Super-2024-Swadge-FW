@@ -151,33 +151,33 @@ void cg_initGrove(cGrove_t* cg)
     // WSGs
     loadWsg("garden_background.wsg", &cg->grove.groveBG, true);
     // Cursors
-    cg->grove.cursors = calloc(ARRAY_SIZE(groveCursorSprites), sizeof(wsg_t));
+    cg->grove.cursors = heap_caps_calloc(ARRAY_SIZE(groveCursorSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(groveCursorSprites); idx++)
     {
         loadWsg(groveCursorSprites[idx], &cg->grove.cursors[idx], true);
     }
     // Emotes
-    cg->grove.angerParticles = calloc(ARRAY_SIZE(angerParticles), sizeof(wsg_t));
+    cg->grove.angerParticles = heap_caps_calloc(ARRAY_SIZE(angerParticles), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(angerParticles); idx++)
     {
         loadWsg(angerParticles[idx], &cg->grove.angerParticles[idx], true);
     }
-    cg->grove.questionMarks = calloc(ARRAY_SIZE(questionMarkSprites), sizeof(wsg_t));
+    cg->grove.questionMarks = heap_caps_calloc(ARRAY_SIZE(questionMarkSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(questionMarkSprites); idx++)
     {
         loadWsg(questionMarkSprites[idx], &cg->grove.questionMarks[idx], true);
     }
-    cg->grove.notes = calloc(ARRAY_SIZE(musicNoteSprites), sizeof(wsg_t));
+    cg->grove.notes = heap_caps_calloc(ARRAY_SIZE(musicNoteSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(musicNoteSprites); idx++)
     {
         loadWsg(musicNoteSprites[idx], &cg->grove.notes[idx], true);
     }
-    cg->grove.speechBubbles = calloc(ARRAY_SIZE(speechBubbleSprites), sizeof(wsg_t));
+    cg->grove.speechBubbles = heap_caps_calloc(ARRAY_SIZE(speechBubbleSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(speechBubbleSprites); idx++)
     {
         loadWsg(speechBubbleSprites[idx], &cg->grove.speechBubbles[idx], true);
     }
-    cg->grove.itemsWSGs = calloc(ARRAY_SIZE(itemSprites), sizeof(wsg_t));
+    cg->grove.itemsWSGs = heap_caps_calloc(ARRAY_SIZE(itemSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(itemSprites); idx++)
     {
         loadWsg(itemSprites[idx], &cg->grove.itemsWSGs[idx], true);

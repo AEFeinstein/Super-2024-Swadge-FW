@@ -94,11 +94,12 @@ swadgeMode_t colorchordMode = {
 void colorchordEnterMode(void)
 {
     // Allocate memory for this mode
-    colorchord = (colorchord_t*)calloc(1, sizeof(colorchord_t));
+    colorchord = (colorchord_t*)heap_caps_calloc(1, sizeof(colorchord_t), MALLOC_CAP_8BIT);
 
     colorchord->sampleHistCount = 512;
-    colorchord->sampleHist      = (uint16_t*)calloc(colorchord->sampleHistCount, sizeof(uint16_t));
-    colorchord->sampleHistHead  = 0;
+    colorchord->sampleHist
+        = (uint16_t*)heap_caps_calloc(colorchord->sampleHistCount, sizeof(uint16_t), MALLOC_CAP_8BIT);
+    colorchord->sampleHistHead = 0;
 
     // Load a font
     loadFont("ibm_vga8.font", &colorchord->ibm_vga8, false);

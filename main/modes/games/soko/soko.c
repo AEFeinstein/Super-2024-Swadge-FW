@@ -40,7 +40,7 @@ soko_abs_t* soko = NULL;
 
 static void sokoEnterMode(void)
 {
-    soko = calloc(1, sizeof(soko_abs_t));
+    soko = heap_caps_calloc(1, sizeof(soko_abs_t), MALLOC_CAP_8BIT);
     // Load a font
     loadFont("ibm_vga8.font", &soko->ibm, false);
 
@@ -344,9 +344,8 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
             if (!strpbrk(storageStr, "\n\t\r ") && (strstr(storageStr, ".bin")))
             {
                 // int tokLen = strlen(storageStr);
-                // char* tempPtr = calloc((tokLen + 1), sizeof(char)); // Length plus null teminator
-                // strcpy(tempPtr,storageStr);
-                // stringPtrs[ind] = tempPtr;
+                // char* tempPtr = heap_caps_calloc((tokLen + 1), sizeof(char), MALLOC_CAP_8BIT); // Length plus null
+                // teminator strcpy(tempPtr,storageStr); stringPtrs[ind] = tempPtr;
                 stringPtrs[ind] = storageStr;
                 // printf("%s\n",storageStr);
                 ind++;

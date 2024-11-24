@@ -192,7 +192,7 @@
  * {
  *     hashInitBin(&map, 16, hashInt, intEq);
  *
- *     wsgs = calloc(8, sizeof(wsgRot_t));
+ *     wsgs = heap_caps_calloc(8, sizeof(wsgRot_t), MALLOC_CAP_8BIT);
  *     wsgRot_t* wsg = wsgs;
  *
  *     // Load up a bunch of WSGs

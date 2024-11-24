@@ -355,7 +355,7 @@ static introVars_t* iv;
  */
 static void introEnterMode(void)
 {
-    iv = calloc(1, sizeof(introVars_t));
+    iv = heap_caps_calloc(1, sizeof(introVars_t), MALLOC_CAP_8BIT);
 
     loadFont("ibm_vga8.font", &iv->smallFont, true);
     loadFont("righteous_150.font", &iv->bigFont, true);

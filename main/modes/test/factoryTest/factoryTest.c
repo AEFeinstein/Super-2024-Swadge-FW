@@ -151,7 +151,7 @@ swadgeMode_t factoryTestMode = {
 void testEnterMode(void)
 {
     // Allocate memory for this mode
-    test = (factoryTest_t*)calloc(1, sizeof(factoryTest_t));
+    test = (factoryTest_t*)heap_caps_calloc(1, sizeof(factoryTest_t), MALLOC_CAP_8BIT);
 
     // Load a font
     loadFont("ibm_vga8.font", &test->ibm_vga8, true);

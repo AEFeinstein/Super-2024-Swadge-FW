@@ -57,7 +57,7 @@ void cg_initSpar(cGrove_t* grove)
     cg = grove;
     // WSGs
     loadWsg("DojoBG.wsg", &cg->spar.dojoBG, true);
-    cg->spar.dojoBGItems = calloc(ARRAY_SIZE(sparDojoSprites), sizeof(wsg_t));
+    cg->spar.dojoBGItems = heap_caps_calloc(ARRAY_SIZE(sparDojoSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(sparDojoSprites); idx++)
     {
         loadWsg(sparDojoSprites[idx], &cg->spar.dojoBGItems[idx], true);

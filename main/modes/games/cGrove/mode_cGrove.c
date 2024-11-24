@@ -123,7 +123,7 @@ static void cGroveEnterMode(void)
     loadFont("ibm_vga8.font", &cg->menuFont, true);
 
     // Load title screen
-    cg->title = calloc(ARRAY_SIZE(cGroveTitleSprites), sizeof(wsg_t));
+    cg->title = heap_caps_calloc(ARRAY_SIZE(cGroveTitleSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(cGroveTitleSprites); idx++)
     {
         loadWsg(cGroveTitleSprites[idx], &cg->title[idx], true);

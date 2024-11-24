@@ -275,7 +275,7 @@ void gamepadEnterMode(void)
     setDacShutdown(true);
 
     // Allocate and zero memory
-    gamepad = (gamepad_t*)calloc(1, sizeof(gamepad_t));
+    gamepad = (gamepad_t*)heap_caps_calloc(1, sizeof(gamepad_t), MALLOC_CAP_8BIT);
 
     // Load the fonts
     loadFont("logbook.font", &(gamepad->logbookFont), false);

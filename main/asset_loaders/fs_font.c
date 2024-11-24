@@ -64,7 +64,7 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
         }
         else
         {
-            this->bitmap = (uint8_t*)malloc(sizeof(uint8_t) * bytes);
+            this->bitmap = (uint8_t*)heap_caps_malloc(sizeof(uint8_t) * bytes, MALLOC_CAP_8BIT);
         }
         memcpy(this->bitmap, &buf[bufIdx], bytes);
         bufIdx += bytes;

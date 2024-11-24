@@ -10,6 +10,7 @@
 #include "fill.h"
 
 #include <stdint.h>
+#include <esp_heap_caps.h>
 
 //==============================================================================
 // Defines
@@ -126,7 +127,7 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
  */
 dialogBox_t* initDialogBox(const char* title, const char* detail, const wsg_t* icon, dialogBoxCbFn_t cbFn)
 {
-    dialogBox_t* dialogBox = calloc(1, sizeof(dialogBox_t));
+    dialogBox_t* dialogBox = heap_caps_calloc(1, sizeof(dialogBox_t), MALLOC_CAP_8BIT);
 
     dialogBox->title  = title;
     dialogBox->detail = detail;
@@ -157,7 +158,7 @@ void deinitDialogBox(dialogBox_t* dialogBox)
  */
 void dialogBoxAddOption(dialogBox_t* dialogBox, const char* label, const wsg_t* icon, dialogOptionHint_t hints)
 {
-    dialogBoxOption_t* option = malloc(sizeof(dialogBoxOption_t));
+    dialogBoxOption_t* option = heap_caps_malloc(sizeof(dialogBoxOption_t), MALLOC_CAP_8BIT);
     option->label             = label;
     option->icon              = icon;
     option->hints             = hints;

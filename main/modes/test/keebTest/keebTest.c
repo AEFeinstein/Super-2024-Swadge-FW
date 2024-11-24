@@ -155,7 +155,7 @@ keebTest_t* kbTest;
 static void keebEnterMode(void)
 {
     // Initialize
-    kbTest = (keebTest_t*)calloc(1, sizeof(keebTest_t));
+    kbTest = (keebTest_t*)heap_caps_calloc(1, sizeof(keebTest_t), MALLOC_CAP_8BIT);
 
     // Get resources
     loadWsg("exampleBG.wsg", &kbTest->bg, false);

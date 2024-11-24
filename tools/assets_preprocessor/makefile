@@ -16,7 +16,7 @@ SRC_DIRS_RECURSIVE = ./src ./src-lib ../../main/asset_loaders/common
 # This is a list of directories to scan for c files not recursively
 SRC_DIRS_FLAT =
 # This is a list of files to compile directly. There's no scanning here
-SRC_FILES =
+SRC_FILES = ../../emulator/src/idf/esp_heap_caps.c
 # This is all the source directories combined
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 # This is all the source files combined
@@ -94,7 +94,7 @@ DEFINES = $(patsubst %, -D%, $(DEFINES_LIST))
 # Look for folders with .h files in these directories, recursively
 INC_DIRS_RECURSIVE = ./src
 # Treat every source directory as one to search for headers in, also add a few more
-INC_DIRS = $(SRC_DIRS) $(shell $(FIND) $(INC_DIRS_RECURSIVE) -type d)
+INC_DIRS = $(SRC_DIRS) $(shell $(FIND) $(INC_DIRS_RECURSIVE) -type d) ../../emulator/idf-inc/
 # Prefix the directories for gcc
 INC = $(patsubst %, -I%, $(INC_DIRS) )
 

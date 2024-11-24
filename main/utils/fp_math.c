@@ -400,7 +400,7 @@ int main(int argc __attribute__((unused)), char** argv __attribute__((unused)))
 
     #define TEST_RANGE 1000
     // Allocate space for test results
-    testResult_t* results = calloc(4 * TEST_RANGE * TEST_RANGE, sizeof(testResult_t));
+    testResult_t* results = heap_caps_calloc(4 * TEST_RANGE * TEST_RANGE, sizeof(testResult_t), MALLOC_CAP_8BIT);
     // Test all vectors in a 1000 x 1000 range
     for (int x = -TEST_RANGE; x < TEST_RANGE; x++)
     {
