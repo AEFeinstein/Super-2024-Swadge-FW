@@ -16,11 +16,11 @@
 // Functions
 //==============================================================================
 
-void bb_initializeTileMap(bb_tilemap_t* tilemap)
+void bb_initializeTileMap(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decodeSpace)
 {
     wsg_t levelWsg;                           ///< A graphic representing the level data where tiles are pixels.
     loadWsg("bb_level.wsg", &levelWsg, true); // levelWsg only needed for this brief scope.
-    bb_loadWsgs(tilemap);
+    bb_loadWsgs(tilemap, hsd, decodeSpace);
 
     // Set all the tiles
     for (int i = 0; i < TILE_FIELD_WIDTH; i++)
@@ -120,14 +120,14 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
     freeWsg(&levelWsg);
 }
 
-void bb_loadWsgs(bb_tilemap_t* tilemap)
+void bb_loadWsgs(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decodeSpace)
 {
-    loadWsg("headlampLookup.wsg", &tilemap->headlampWsg, true); // 122 x 107 pixels
+    loadWsgInplace("headlampLookup.wsg", &tilemap->headlampWsg, true, decodeSpace, hsd); // 122 x 107 pixels
 
-    loadWsg("baked_Landfill2.wsg", &tilemap->surface1Wsg, true);
-    loadWsg("baked_Landfill3.wsg", &tilemap->surface2Wsg, true);
-    loadWsg("landfill_gradient.wsg", &tilemap->landfillGradient, true);
-    loadWsg("trash_background.wsg", &tilemap->bgWsg, true);
+    loadWsgInplace("baked_Landfill2.wsg", &tilemap->surface1Wsg, true, decodeSpace, hsd);
+    loadWsgInplace("baked_Landfill3.wsg", &tilemap->surface2Wsg, true, decodeSpace, hsd);
+    loadWsgInplace("landfill_gradient.wsg", &tilemap->landfillGradient, true, decodeSpace, hsd);
+    // loadWsgInplace("trash_background.wsg", &tilemap->bgWsg, true, decodeSpace, hsd);
 
     // TILE MAP shenanigans explained:
     // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
@@ -162,13 +162,13 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     {
         char filename[20];
         snprintf(filename, sizeof(filename), "mid_s_%d.wsg", i);
-        loadWsg(filename, &tilemap->mid_s_Wsg[i], true);
+        loadWsgInplace(filename, &tilemap->mid_s_Wsg[i], true, decodeSpace, hsd);
 
         snprintf(filename, sizeof(filename), "mid_m_%d.wsg", i);
-        loadWsg(filename, &tilemap->mid_m_Wsg[i], true);
+        loadWsgInplace(filename, &tilemap->mid_m_Wsg[i], true, decodeSpace, hsd);
 
         snprintf(filename, sizeof(filename), "mid_h_%d.wsg", i);
-        loadWsg(filename, &tilemap->mid_h_Wsg[i], true);
+        loadWsgInplace(filename, &tilemap->mid_h_Wsg[i], true, decodeSpace, hsd);
     }
 
     // Foreground
@@ -176,16 +176,16 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     {
         char filename[20];
         snprintf(filename, sizeof(filename), "fore_s_%d.wsg", i);
-        loadWsg(filename, &tilemap->fore_s_Wsg[i], true);
+        loadWsgInplace(filename, &tilemap->fore_s_Wsg[i], true, decodeSpace, hsd);
 
         snprintf(filename, sizeof(filename), "fore_m_%d.wsg", i);
-        loadWsg(filename, &tilemap->fore_m_Wsg[i], true);
+        loadWsgInplace(filename, &tilemap->fore_m_Wsg[i], true, decodeSpace, hsd);
 
         snprintf(filename, sizeof(filename), "fore_h_%d.wsg", i);
-        loadWsg(filename, &tilemap->fore_h_Wsg[i], true);
+        loadWsgInplace(filename, &tilemap->fore_h_Wsg[i], true, decodeSpace, hsd);
 
         snprintf(filename, sizeof(filename), "fore_b_%d.wsg", i);
-        loadWsg(filename, &tilemap->fore_b_Wsg[i], true);
+        loadWsgInplace(filename, &tilemap->fore_b_Wsg[i], true, decodeSpace, hsd);
     }
 }
 
@@ -195,7 +195,7 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 
     freeWsg(&tilemap->surface1Wsg);
     freeWsg(&tilemap->surface2Wsg);
-    freeWsg(&tilemap->bgWsg);
+    // freeWsg(&tilemap->bgWsg);
 
     // Midground
     for (int16_t i = 0; i < 120; i++)

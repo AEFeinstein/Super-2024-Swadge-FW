@@ -42,9 +42,9 @@ typedef struct
 // Prototypes
 //==============================================================================
 void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData,
-                                bb_soundManager_t* soundManager);
-bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite);
-void bb_loadSprites(bb_entityManager_t* entityManager);
+                                bb_soundManager_t* soundManager, heatshrink_decoder* hsd, uint8_t* decodeSpace);
+bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite, heatshrink_decoder* hsd, uint8_t* decodeSpace);
+void bb_loadSprites(bb_entityManager_t* entityManager, heatshrink_decoder* hsd, uint8_t* decodeSpace);
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera);
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera);
 void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer);

@@ -53,7 +53,7 @@ struct bb_tilemap_t
     wsg_t surface1Wsg; ///< A graphic at the surface of the city dump
     wsg_t surface2Wsg; ///< A graphic at the surface of the city dump
     wsg_t landfillGradient; ///< A tall gradient repeated acroos the screen under surface1Wsg
-    wsg_t bgWsg;       ///< The paralax background for depth
+    // wsg_t bgWsg;       ///< The paralax background for depth
 
     bb_tileInfo_t fgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of foreground tiles. The number is the
                                                                 ///< dirt's health. 0 is air.
@@ -72,8 +72,8 @@ struct bb_hitInfo_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void bb_initializeTileMap(bb_tilemap_t* tilemap);
-void bb_loadWsgs(bb_tilemap_t* tilemap);
+void bb_initializeTileMap(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decodeSpace);
+void bb_loadWsgs(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decodeSpace);
 void bb_freeWsgs(bb_tilemap_t* tilemap);
 void flagNeighbors(const bb_tileInfo_t* tile, bb_gameData_t* gameData);
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation,

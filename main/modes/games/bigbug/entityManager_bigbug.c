@@ -28,9 +28,9 @@
 // Functions
 //==============================================================================
 void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData,
-                                bb_soundManager_t* soundManager)
+                                bb_soundManager_t* soundManager, heatshrink_decoder* hsd, uint8_t* decodeSpace)
 {
-    bb_loadSprites(entityManager);
+    bb_loadSprites(entityManager, hsd, decodeSpace);
     entityManager->entities = HEAP_CAPS_CALLOC_DBG(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
@@ -44,7 +44,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
     entityManager->cachedEntities = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
 }
 
-bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite)
+bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite, heatshrink_decoder* hsd, uint8_t* decodeSpace)
 {
     sprite->brightnessLevels = brightnessLevels;
     sprite->numFrames = num_frames;
@@ -57,96 +57,96 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
             char wsg_name[strlen(name) + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" + null
                                              // terminator ('\0')
             snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, brightness * num_frames + i);
-            loadWsg(wsg_name, &sprite->frames[brightness * num_frames + i], true);
+            loadWsgInplace(wsg_name, &sprite->frames[brightness * num_frames + i], true, decodeSpace, hsd);
         }
     }
 
     return sprite;
 }
 
-void bb_loadSprites(bb_entityManager_t* entityManager)
+void bb_loadSprites(bb_entityManager_t* entityManager, heatshrink_decoder* hsd, uint8_t* decodeSpace)
 {
-    bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 24, 1, &entityManager->sprites[CRUMBLE_ANIM]);
+    bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 24, 1, &entityManager->sprites[CRUMBLE_ANIM], hsd, decodeSpace);
     crumbleSprite->originX     = 48;
     crumbleSprite->originY     = 43;
 
-    bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, 1, &entityManager->sprites[BUMP_ANIM]);
+    bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, 1, &entityManager->sprites[BUMP_ANIM], hsd, decodeSpace);
     bumpSprite->originX     = 37;
     bumpSprite->originY     = 37;
 
-    bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 42, 1, &entityManager->sprites[ROCKET_ANIM]);
+    bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 42, 1, &entityManager->sprites[ROCKET_ANIM], hsd, decodeSpace);
     rocketSprite->originX     = 33;
     rocketSprite->originY     = 66;
 
-    bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, 1, &entityManager->sprites[FLAME_ANIM]);
+    bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, 1, &entityManager->sprites[FLAME_ANIM], hsd, decodeSpace);
     flameSprite->originX     = 27;
     flameSprite->originY     = -27;
 
-    bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, 1, &entityManager->sprites[GARBOTNIK_FLYING]);
+    bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, 1, &entityManager->sprites[GARBOTNIK_FLYING], hsd, decodeSpace);
     garbotnikFlyingSprite->originX     = 18;
     garbotnikFlyingSprite->originY     = 17;
 
-    bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, 1, &entityManager->sprites[HARPOON]);
+    bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, 1, &entityManager->sprites[HARPOON], hsd, decodeSpace);
     harpoonSprite->originX     = 10;
     harpoonSprite->originY     = 8;
 
-    bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES]);
+    bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES], hsd, decodeSpace);
     eggLeavesSprite->originX     = 12;
     eggLeavesSprite->originY     = 5;
 
-    bb_sprite_t* eggSprite = bb_loadSprite("egg", 1, 6, &entityManager->sprites[EGG]);
+    bb_sprite_t* eggSprite = bb_loadSprite("egg", 1, 6, &entityManager->sprites[EGG], hsd, decodeSpace);
     eggSprite->originX     = 12;
     eggSprite->originY     = 12;
 
-    bb_sprite_t* buSprite = bb_loadSprite("bu", 4, 6, &entityManager->sprites[BU]);
+    bb_sprite_t* buSprite = bb_loadSprite("bu", 4, 6, &entityManager->sprites[BU], hsd, decodeSpace);
     buSprite->originX     = 13;
     buSprite->originY     = 15;
 
-    bb_sprite_t* bugSprite = bb_loadSprite("bug", 4, 6, &entityManager->sprites[BUG]);
+    bb_sprite_t* bugSprite = bb_loadSprite("bug", 4, 6, &entityManager->sprites[BUG], hsd, decodeSpace);
     bugSprite->originX     = 13;
     bugSprite->originY     = 7;
 
-    bb_sprite_t* buggSprite = bb_loadSprite("bugg", 4, 6, &entityManager->sprites[BUGG]);
+    bb_sprite_t* buggSprite = bb_loadSprite("bugg", 4, 6, &entityManager->sprites[BUGG], hsd, decodeSpace);
     buggSprite->originX     = 11;
     buggSprite->originY     = 11;
 
-    bb_sprite_t* buggoSprite = bb_loadSprite("buggo", 4, 6, &entityManager->sprites[BUGGO]);
+    bb_sprite_t* buggoSprite = bb_loadSprite("buggo", 4, 6, &entityManager->sprites[BUGGO], hsd, decodeSpace);
     buggoSprite->originX     = 12;
     buggoSprite->originY     = 14;
 
-    bb_sprite_t* buggySprite = bb_loadSprite("buggy", 4, 6, &entityManager->sprites[BUGGY]);
+    bb_sprite_t* buggySprite = bb_loadSprite("buggy", 4, 6, &entityManager->sprites[BUGGY], hsd, decodeSpace);
     buggySprite->originX     = 13;
     buggySprite->originY     = 11;
 
-    bb_sprite_t* buttSprite = bb_loadSprite("butt", 4, 6, &entityManager->sprites[BUTT]);
+    bb_sprite_t* buttSprite = bb_loadSprite("butt", 4, 6, &entityManager->sprites[BUTT], hsd, decodeSpace);
     buttSprite->originX     = 14;
     buttSprite->originY     = 6;
 
-    bb_sprite_t* menuSprite = bb_loadSprite("bb_menu", 4, 1, &entityManager->sprites[BB_MENU]);
+    bb_sprite_t* menuSprite = bb_loadSprite("bb_menu", 4, 1, &entityManager->sprites[BB_MENU], hsd, decodeSpace);
     menuSprite->originX     = 140;
     menuSprite->originY     = 354;
 
-    bb_sprite_t* deathDumpsterSprite = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER]);
+    bb_sprite_t* deathDumpsterSprite = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER], hsd, decodeSpace);
     deathDumpsterSprite->originX     = 138;
     deathDumpsterSprite->originY     = 100;
 
-    bb_sprite_t* attachmentArmSprite = bb_loadSprite("AttachmentArm", 1, 1, &entityManager->sprites[ATTACHMENT_ARM]);
+    bb_sprite_t* attachmentArmSprite = bb_loadSprite("AttachmentArm", 1, 1, &entityManager->sprites[ATTACHMENT_ARM], hsd, decodeSpace);
     attachmentArmSprite->originX     = 6;
     attachmentArmSprite->originY     = 20;
 
-    bb_loadSprite("ovo_talk", 8, 1, &entityManager->sprites[OVO_TALK]);
+    bb_loadSprite("ovo_talk", 8, 1, &entityManager->sprites[OVO_TALK], hsd, decodeSpace);
 
-    bb_loadSprite("GameOver", 2, 1, &entityManager->sprites[BB_GAME_OVER]);
+    bb_loadSprite("GameOver", 2, 1, &entityManager->sprites[BB_GAME_OVER], hsd, decodeSpace);
 
-    bb_sprite_t* washingMachineSprite = bb_loadSprite("WashingMachine", 1, 6, &entityManager->sprites[BB_WASHING_MACHINE]);
+    bb_sprite_t* washingMachineSprite = bb_loadSprite("WashingMachine", 1, 6, &entityManager->sprites[BB_WASHING_MACHINE], hsd, decodeSpace);
     washingMachineSprite->originX = 16;
     washingMachineSprite->originY = 16;
 
-    bb_sprite_t* carIdleSprite = bb_loadSprite("car_idle", 1, 1, &entityManager->sprites[BB_CAR_IDLE]);
+    bb_sprite_t* carIdleSprite = bb_loadSprite("car_idle", 1, 1, &entityManager->sprites[BB_CAR_IDLE], hsd, decodeSpace);
     carIdleSprite->originX = 31;
     carIdleSprite->originY = 15;
 
-    bb_sprite_t* carActiveSprite = bb_loadSprite("car_active", 20, 1, &entityManager->sprites[BB_CAR_ACTIVE]);
+    bb_sprite_t* carActiveSprite = bb_loadSprite("car_active", 20, 1, &entityManager->sprites[BB_CAR_ACTIVE], hsd, decodeSpace);
     carActiveSprite->originX = 31;
     carActiveSprite->originY = 15;
 }
