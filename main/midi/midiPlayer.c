@@ -1249,6 +1249,17 @@ void midiPlayerReset(midiPlayer_t* player)
     player->paused = true;
 }
 
+void midiPlayerResetNewSong(midiPlayer_t* player)
+{
+    midiAllSoundOff(player);
+
+    // Set all the relevant bits to 1, meaning not in use
+    player->percSpecialStates = 0b00111111111111111111111111111111; // 0x4fffffff
+
+    player->sampleCount    = 0;
+    player->eventAvailable = false;
+}
+
 int32_t midiPlayerStep(midiPlayer_t* player)
 {
     if (player->paused)
@@ -2493,6 +2504,7 @@ void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx)
     if (globalPlayers)
     {
         midiPause(&globalPlayers[songIdx], true);
+        midiPlayerResetNewSong(&globalPlayers[songIdx]);
         globalPlayers[songIdx].sampleCount = 0;
         midiSetFile(&globalPlayers[songIdx], song);
         midiPause(&globalPlayers[songIdx], false);

@@ -728,6 +728,9 @@ void midiPlayerInit(midiPlayer_t* player);
  */
 void midiPlayerReset(midiPlayer_t* player);
 
+
+void midiPlayerResetNewSong(midiPlayer_t* player);
+
 /**
  * @brief Calculate and return the next MIDI sample, stepping the player state forward by one sample
  *
