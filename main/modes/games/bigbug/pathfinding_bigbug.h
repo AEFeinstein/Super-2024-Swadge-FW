@@ -15,10 +15,10 @@
 //==============================================================================
 // Prototypes
 //==============================================================================
-uint16_t fCost(const bb_tileInfo_t* tile);
-bool isPerimeterNode(const bb_tileInfo_t* tile);
-void getNeighbors(const bb_tileInfo_t* tile, list_t* neighbors, bb_tilemap_t* tilemap, const bool toggleIteration);
-bool contains(const list_t* nodeList, const bb_tileInfo_t* tile);
-bool pathfindToPerimeter(bb_tileInfo_t* start, bb_tilemap_t* tilemap, const bool toggleIteration);
+uint16_t fCost(const bb_midgroundTileInfo_t* tile);
+bool isPerimeterNode(const bb_midgroundTileInfo_t* tile);
+void getNeighbors(const bb_midgroundTileInfo_t* tile, list_t* neighbors, bb_tilemap_t* tilemap, const bool toggleIteration);
+bool contains(const list_t* nodeList, const bb_midgroundTileInfo_t* tile);
+bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap, const bool toggleIteration);
 
 #endif

@@ -216,7 +216,7 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 }
 
 //flags neighbors to check for structural support
-void flagNeighbors(const bb_tileInfo_t* tile, bb_gameData_t* gameData)
+void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 {
     uint8_t* left = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     left[0] = tile->x - 1;
