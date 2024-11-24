@@ -814,9 +814,12 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 {
                     if (c->angle <= 270 && c->angle > 90)
                     {
-                        flip = true;
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SWIM_LEFT, c->animFrame);
                     }
-                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SWIM, c->animFrame);
+                    else
+                    {
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SWIM_RIGHT, c->animFrame);
+                    }
                 }
                 else
                 {
@@ -826,7 +829,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     }
                     else if (c->angle > 135 && c->angle <= 225)
                     {
-                        spr  = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, c->animFrame);
+                        spr  = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_RIGHT, c->animFrame);
                         flip = true;
                     }
                     else if (c->angle > 225 && c->angle <= 315)
@@ -835,7 +838,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     }
                     else
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, c->animFrame);
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_LEFT, c->animFrame);
                     }
                 }
                 drawWsg(spr, xOffset, yOffset, flip, false, 0);
@@ -907,17 +910,17 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 {
                     case 0:
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PUNCH, c->animFrame);
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PUNCH_RIGHT, c->animFrame);
                         break;
                     }
                     case 1:
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_KICK, c->animFrame);
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_KICK_RIGHT, c->animFrame);
                         break;
                     }
                     case 2:
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_HEADBUTT, c->animFrame);
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_HEADBUTT_RIGHT, c->animFrame);
                         break;
                     }
                 }
@@ -957,7 +960,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     c->frameTimer = 0;
                     c->animFrame  = (c->animFrame + 1) % 4;
                 }
-                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, 0);
+                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_RIGHT, 0);
                 drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
                 // Draw Speech bubbles. Only animate if talking to other Chowa
                 if (!c->hasPartner)
@@ -1020,7 +1023,14 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 }
                 else if (throwing)
                 {
-                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_THROW, c->animFrame);
+                    if (c->flip)
+                    {
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_THROW_LEFT, c->animFrame);
+                    }
+                    else
+                    {
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_THROW_RIGHT, c->animFrame);
+                    }
                     drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
                     break;
                 }
