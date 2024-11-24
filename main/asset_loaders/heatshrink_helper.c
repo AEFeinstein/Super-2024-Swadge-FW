@@ -9,9 +9,79 @@
 #include "hdw-nvs.h"
 #include <nvs.h>
 
-#include "heatshrink_decoder.h"
-#include "heatshrink_encoder.h"
 #include "heatshrink_helper.h"
+
+/**
+ * @brief Read a heatshrink compressed file from the filesystem into an output array.
+ * Files that are in the assets_image folder before compilation and flashing
+ * will automatically be included in the firmware.
+ * 
+ * You must provide a decoder and decode space for this function
+ * 
+ * @param fname   The name of the file to load
+ * @param outsize A pointer to a size_t to return how much data was read
+ * @param decompressedBuf Memory to store decoded data. This must be as large as the decoded data
+ * @param hsd A heatshrink decoder
+ * @return A pointer to the read data if successful, or NULL if there is a failure
+ *         This data must be freed when done
+ */
+uint8_t* readHeatshrinkFileInplace(const char* fname, uint32_t* outsize, uint8_t* decompressedBuf, heatshrink_decoder* hsd)
+{
+    // Read WSG from file
+    size_t sz;
+    const uint8_t* buf = cnfsGetFile(fname, &sz);
+    if (NULL == buf)
+    {
+        ESP_LOGE("WSG", "Failed to read %s", fname);
+        (*outsize) = 0;
+        return NULL;
+    }
+
+    // Pick out the decompressed size and create a space for it
+    (*outsize) = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
+
+    // Create the decoder
+    size_t copied           = 0;
+    heatshrink_decoder_reset(hsd);
+
+    // The decompressed filesize is four bytes, so start after that
+    uint32_t inputIdx  = 4;
+    uint32_t outputIdx = 0;
+    // Decode the file in chunks
+    while (inputIdx < sz)
+    {
+        // Decode some data
+        copied = 0;
+        heatshrink_decoder_sink(hsd, &buf[inputIdx], sz - inputIdx, &copied);
+        inputIdx += copied;
+
+        if (copied == 0)
+        {
+            ESP_LOGE("WSG", "Failed to read %s fault on decode", fname);
+            heatshrink_decoder_finish(hsd);
+            return 0;
+        }
+
+        // Save it to the output array
+        copied = 0;
+        heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], (*outsize) - outputIdx, &copied);
+        outputIdx += copied;
+    }
+
+    // Note that it's all done
+    heatshrink_decoder_finish(hsd);
+
+    // Flush any final output
+    copied = 0;
+    heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], (*outsize) - outputIdx, &copied);
+    outputIdx += copied;
+
+    // All done decoding
+    heatshrink_decoder_finish(hsd);
+
+    // Return the decompressed bytes
+    return decompressedBuf;
+}
 
 /**
  * @brief Read a heatshrink compressed file from the filesystem into an output array.
@@ -36,63 +106,35 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
         return NULL;
     }
 
-    // Pick out the decompresed size and create a space for it
-    (*outsize) = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
+    // Pick out the decompressed size and create a space for it
+    int32_t decompressedSize = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
     uint8_t* decompressedBuf;
     if (readToSpiRam)
     {
-        decompressedBuf = (uint8_t*)heap_caps_malloc((*outsize), MALLOC_CAP_SPIRAM);
+        decompressedBuf = (uint8_t*)heap_caps_malloc(decompressedSize, MALLOC_CAP_SPIRAM);
     }
     else
     {
-        decompressedBuf = (uint8_t*)heap_caps_malloc((*outsize), MALLOC_CAP_8BIT);
+        decompressedBuf = (uint8_t*)heap_caps_malloc(decompressedSize, MALLOC_CAP_8BIT);
     }
 
-    // Create the decoder
-    size_t copied           = 0;
+    // Allocate the decoder
     heatshrink_decoder* hsd = heatshrink_decoder_alloc(256, 8, 4);
-    heatshrink_decoder_reset(hsd);
 
-    // The decompressed filesize is four bytes, so start after that
-    uint32_t inputIdx  = 4;
-    uint32_t outputIdx = 0;
-    // Decode the file in chunks
-    while (inputIdx < sz)
-    {
-        // Decode some data
-        copied = 0;
-        heatshrink_decoder_sink(hsd, &buf[inputIdx], sz - inputIdx, &copied);
-        inputIdx += copied;
+    // Decode the file
+    uint8_t* data = readHeatshrinkFileInplace(fname, outsize, decompressedBuf, hsd);
 
-        if (copied == 0)
-        {
-            ESP_LOGE("WSG", "Failed to read %s fault on decode", fname);
-            heatshrink_decoder_finish(hsd);
-            heatshrink_decoder_free(hsd);
-            heap_caps_free(decompressedBuf);
-            return 0;
-        }
-
-        // Save it to the output array
-        copied = 0;
-        heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], (*outsize) - outputIdx, &copied);
-        outputIdx += copied;
-    }
-
-    // Note that it's all done
-    heatshrink_decoder_finish(hsd);
-
-    // Flush any final output
-    copied = 0;
-    heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], (*outsize) - outputIdx, &copied);
-    outputIdx += copied;
-
-    // All done decoding
-    heatshrink_decoder_finish(hsd);
+    // Free the decoder
     heatshrink_decoder_free(hsd);
 
-    // Return the decompressed bytes
-    return decompressedBuf;
+    // If there was an error, free decompressedBuf
+    if(NULL == data)
+    {
+        free(decompressedBuf);
+    }
+
+    // Return the data
+    return data;
 }
 
 uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* outsize, bool spiRam)

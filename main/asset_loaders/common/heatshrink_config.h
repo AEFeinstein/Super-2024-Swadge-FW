@@ -22,6 +22,6 @@
 #define HEATSHRINK_DEBUGGING_LOGS 0
 
 /* Use indexing for faster compression. (This requires additional space.) */
-#define HEATSHRINK_USE_INDEX 1
+#define HEATSHRINK_USE_INDEX 0
 
 #endif
