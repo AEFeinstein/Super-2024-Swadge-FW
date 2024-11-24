@@ -354,7 +354,7 @@ static void cGroveMainLoop(int64_t elapsedUs)
                 break;
             }
         }
-
+        globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
         cg->state = CG_MAIN_MENU;
     }
 

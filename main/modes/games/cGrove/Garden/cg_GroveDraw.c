@@ -841,7 +841,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                         spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_LEFT, c->animFrame);
                     }
                 }
-                drawWsg(spr, xOffset, yOffset, flip, false, 0);
+                drawWsgSimple(spr, xOffset, yOffset);
                 break;
             }
             case CHOWA_SING:
@@ -910,17 +910,38 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 {
                     case 0:
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PUNCH_RIGHT, c->animFrame);
+                        if (c->flip)
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PUNCH_LEFT, c->animFrame);
+                        }
+                        else
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PUNCH_RIGHT, c->animFrame);
+                        }
                         break;
                     }
                     case 1:
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_KICK_RIGHT, c->animFrame);
+                        if (c->flip)
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_KICK_LEFT, c->animFrame);
+                        }
+                        else
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_KICK_RIGHT, c->animFrame);
+                        }
                         break;
                     }
                     case 2:
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_HEADBUTT_RIGHT, c->animFrame);
+                        if (c->flip)
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_HEADBUTT_LEFT, c->animFrame);
+                        }
+                        else
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_HEADBUTT_RIGHT, c->animFrame);
+                        }
                         break;
                     }
                 }
@@ -1031,7 +1052,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     {
                         spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_THROW_RIGHT, c->animFrame);
                     }
-                    drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
+                    drawWsgSimple(spr, xOffset, yOffset);
                     break;
                 }
                 else if (sword)
