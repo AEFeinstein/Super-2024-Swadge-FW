@@ -47,8 +47,6 @@ static const char* cGroveTitleSprites[] = {"cg_cloud.wsg",          "cg_sky.wsg"
                                            "cg_title_middle_1.wsg", "cg_title_middle_2.wsg",
                                            "cg_title_middle_3.wsg", "cg_title_middle_4.wsg"};
 
-static const char* cgNVSKeys[] = {"cgPlayerName", "cgChowaData", "cgSettings", "cgGuestData"};
-
 //==============================================================================
 // Function declarations
 //==============================================================================

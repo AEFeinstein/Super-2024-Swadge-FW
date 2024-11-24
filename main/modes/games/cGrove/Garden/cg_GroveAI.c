@@ -433,7 +433,6 @@ static void cg_GroveGetRandMovePoint(cGrove_t* cg, cgGroveChowa_t* c)
     // Get a random point inside the bounds of the play area
     // - Cannot be on stump/in tree/too close to edge
     rectangle_t targetPos = {.height = 32, .width = 32};
-    vec_t colVec;
 
     // Check if inside an object
     targetPos.pos.x = 32 + (esp_random() % (cg->grove.groveBG.w - 64));

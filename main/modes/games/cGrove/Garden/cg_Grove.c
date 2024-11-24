@@ -85,7 +85,7 @@ static const char* nvsBlobKeys[] = {"cgItems", "cgInventory", "cgEggs"};
 
 static const char nvsTutorialKey[] = "cgGroveTut";
 
-static const char* cgNVSKeys[] = {"cgPlayerName", "cgChowaData", "cgSettings", "cgGuestData"};
+const char* cgNVSKeys[] = {"cgPlayerName", "cgChowaData", "cgSettings", "cgGuestData"};
 
 static char namePrompt[] = "Enter the Chowa's name!";
 
@@ -881,8 +881,8 @@ static void cg_handleInputGarden(cGrove_t* cg)
                 int16_t speed = phi >> 5;
                 if (!(speed <= 5))
                 {
-                    printf("touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32 "\n", phi, r,
-                           intensity);
+                    // printf("touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32 "\n", phi, r,
+                    //        intensity);
                     // Move hand
                     cg->grove.cursor.pos.x += (getCos1024(phi) * speed) / 1024;
                     cg->grove.cursor.pos.y -= (getSin1024(phi) * speed) / 1024;
