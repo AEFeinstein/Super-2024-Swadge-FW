@@ -583,7 +583,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // Update the dirt by decrementing it.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= 1;
 
-        bb_midgroundTileInfo_t* tile = &self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
+        bb_midgroundTileInfo_t* tile = (bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
         if (tile->health == 0)
         {
             flagNeighbors(tile, self->gameData);

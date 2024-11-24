@@ -421,7 +421,7 @@ static void bb_UpdateTileSupport(void)
         {
             //pathfind
             if(!(shiftedVal[2] ? 
-                pathfindToPerimeter(&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap):
+                pathfindToPerimeter((bb_midgroundTileInfo_t*)&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap):
                 pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap)))
             {
                 //trigger a cascading collapse
