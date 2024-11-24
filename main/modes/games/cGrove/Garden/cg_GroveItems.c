@@ -1,5 +1,5 @@
 /**
- * @file cg_GroveItems.h
+ * @file cg_GroveItems.c
  * @author Jeremy Stintzcum
  * @brief Item data
  * @version 1.0
@@ -8,17 +8,32 @@
  * @copyright Copyright (c) 2024
  *
  */
-#pragma once
 
 //==============================================================================
 // Includes
 //==============================================================================
 
-#include "swadge2024.h"
+#include "cg_GroveItems.h"
 
 //==============================================================================
-// Externs
+// Consts
 //==============================================================================
 
-extern const char* const shopMenuItems[];
-extern const int16_t itemPrices[];
+const char* const shopMenuItems[] = {
+    "Agility Stat Book",
+    "Charisma Stat Book",
+    "Strength Stat Book",
+    "Stamina Stat Book",
+    "Speed Stat Book",
+    "Ball",
+    "Crayons",
+    "Real Knife",
+    "Toy Sword",
+    "Cake",
+    "Souffle",
+    "Random Chowa Egg",
+};
+
+const int16_t itemPrices[] = {
+    10, 10, 10, 10, 10, 20, 50, 999, 50, 100, 50, 100,
+};
