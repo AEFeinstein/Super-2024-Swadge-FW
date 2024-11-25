@@ -1066,7 +1066,7 @@ void bb_updateCharacterTalk(bb_entity_t* self)
                                                         // terminator ('\0')
                 snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
                 freeWsg(&dData->sprite);
-                loadWsg(wsg_name, &dData->sprite, true);
+                loadWsg(wsg_name, &dData->sprite, true); // TODO inplace this, global decoder
 
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
@@ -1756,7 +1756,7 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
     char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                              // terminator ('\0')
     snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
-    loadWsg(wsg_name, &dData->sprite, true);
+    loadWsg(wsg_name, &dData->sprite, true); // TODO inplace this, global decoder
 
     dData->strings = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;

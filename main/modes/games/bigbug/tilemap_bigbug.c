@@ -19,7 +19,7 @@
 void bb_initializeTileMap(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decodeSpace)
 {
     wsg_t levelWsg;                           ///< A graphic representing the level data where tiles are pixels.
-    loadWsg("bb_level.wsg", &levelWsg, true); // levelWsg only needed for this brief scope.
+    loadWsgInplace("bb_level.wsg", &levelWsg, true, decodeSpace, hsd); // levelWsg only needed for this brief scope.
     bb_loadWsgs(tilemap, hsd, decodeSpace);
 
     // Set all the tiles
