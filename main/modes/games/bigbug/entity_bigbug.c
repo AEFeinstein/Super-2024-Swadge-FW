@@ -202,9 +202,25 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         self->pos.y = -77136;
         bb_destroyEntity(rData->flame, false);
+        
+        bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                                self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+        bb_dialogueData_t* dData = bb_createDialogueData(5); // 5
+        strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
+        dData->character[sizeof(dData->character) - 1] = '\0';
+        bb_setCharacterLine(dData, 0, "Gaaaash dangit!\0");
+        bb_setCharacterLine(dData, 1, "DARN it!\0");
+        bb_setCharacterLine(dData, 2, "That had a fresh coat of paint!\0");
+        bb_setCharacterLine(dData, 3, "I'll have to patch this up before all the air gets out.\0");
+        bb_setCharacterLine(dData, 4, "And the hardware store closes so early.\0");
+        dData->curString = -1;
+        dData->endDialogueCB = &bb_afterGarbotnikIntro;
+        bb_setData(ovo, dData, DIALOGUE_DATA);
+
         // Create a crumble animation
         bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 3,
                         self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 30, true, false);
+
         self->updateFunction = NULL;
         return;
     }
@@ -1068,6 +1084,8 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
 
+    dData->blinkTimer += 3;
+
     if (dData->offsetY < 0 && dData->curString < dData->numStrings)
     {
         dData->offsetY += 3;
@@ -1094,8 +1112,8 @@ void bb_updateCharacterTalk(bb_entity_t* self)
             dData->curString++;
             if (dData->curString < dData->numStrings)
             {
-                dData->loadedIdx = bb_randomInt(0, 7);
-                char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number +
+                dData->loadedIdx = bb_randomInt(0, 6);
+                char wsg_name[strlen("ovo-talk-") + 9]; // 6 extra characters makes room for up to a 2 digit number +
                                                        // ".wsg" + null terminator ('\0')
                 snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
                 freeWsg(&dData->sprite);
@@ -1374,6 +1392,11 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 
     drawWsgSimple(&dData->sprite, 0, -dData->offsetY);
 
+    if(dData->blinkTimer > 0)
+    {
+        drawWsgSimple(&dData->spriteNext, 258, -dData->offsetY + 170);
+    }
+
     if (dData->curString >= 0 && dData->curString < dData->numStrings)
     {
         drawText(&self->gameData->font, c344, dData->character, 13, 152);
@@ -1481,15 +1504,6 @@ void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 
 void bb_startGarbotnikIntro(bb_entity_t* self)
 {
-    // Force draw a loading screen
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
-
-    const char loadingStr[] = "Loading...";
-    int32_t tWidth          = textWidth(&self->gameData->font, loadingStr);
-    drawText(&self->gameData->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2,
-             (TFT_HEIGHT - self->gameData->font.height) / 2);
-    drawDisplayTft(NULL);
-
     // load all the tile sprites now that menu sprites where unloaded and camera motion has stopped.
     bb_loadWsgs(&self->gameData->tilemap);
 
@@ -1513,7 +1527,7 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
     bb_setCharacterLine(dData, 8, "I'm so hyped to turn on my time machine for the first time!\0");
     bb_setCharacterLine(dData, 9, "Everything's in order.\0");
     bb_setCharacterLine(dData, 10, "Even Pango can't stop me!\0");
-    bb_setCharacterLine(dData, 11, "I just have to attach the chaos core right here.\0");
+    bb_setCharacterLine(dData, 11, "I just have to attach the chaos orb right here.\0");
     bb_setCharacterLine(dData, 12, "Where did I put that core?\0");
     bb_setCharacterLine(dData, 13, "hmmm...\0");
     bb_setCharacterLine(dData, 14, "What about in the freezer?\0");
@@ -1522,7 +1536,7 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
     bb_setCharacterLine(dData, 17, "It must have gone out with the trash last Wednesday.\0");
     bb_setCharacterLine(dData, 18, "Can I get an F in the chat?\0");
     bb_setCharacterLine(dData, 19, "...\0");
-    bb_setCharacterLine(dData, 20, "The chaos core is three times denser than a black hole.\0");
+    bb_setCharacterLine(dData, 20, "The chaos orb is three times denser than a black hole.\0");
     bb_setCharacterLine(dData, 21, "Well if Garbotnik Sanitation Industries took it to the landfill,\0");
     bb_setCharacterLine(dData, 22, "then it is definitely at the VERY BOTTOM of the dump.\0");
     bb_setCharacterLine(dData, 23, "Not a problem.\0");
@@ -1818,11 +1832,12 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
     bb_dialogueData_t* dData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
-    dData->loadedIdx         = bb_randomInt(0, 7);
+    dData->loadedIdx         = bb_randomInt(0, 6);
     char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                            // terminator ('\0')
     snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
     loadWsg(wsg_name, &dData->sprite, true);
+    loadWsg("dialogue_next.wsg\0", &dData->spriteNext, true);
 
     dData->strings = HEAP_CAPS_CALLOC_DBG(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
