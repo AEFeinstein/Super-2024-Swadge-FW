@@ -207,6 +207,10 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
     }
 }
 
+//==============================================================================
+// Static Functions
+//==============================================================================
+
 /**
  * @brief Gets the player's input during the match
  *

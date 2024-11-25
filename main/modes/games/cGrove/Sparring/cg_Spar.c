@@ -460,7 +460,7 @@ static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
                         cg->spar.match.data.timer[idx2]  = 0;
                         cg->spar.match.data.result[idx2] = CG_DRAW;
                     }
-                    cg->spar.state = CG_SPAR_TOURNAMENT_SETUP;
+                    cg->spar.state = CG_SPAR_GUEST_SETUP;
                 }
             }
         }
