@@ -9,7 +9,7 @@
 //==============================================================================
 void bb_addToHeap(bb_heap_t* heap, bb_heapItem_t* item)
 {
-    item->heapIdx = heap->currentItemCount;
+    item->heapIdx              = heap->currentItemCount;
     heap->items[item->heapIdx] = *item;
     bb_sortUp(heap, item);
     heap->currentItemCount++;
@@ -21,7 +21,7 @@ void bb_addToHeap(bb_heap_t* heap, bb_heapItem_t* item)
 //     heap->currentItemCount--;
 //     heap->items[0].heapIdx = 0;
 //     bb_sortDown(heap, &heap->items[0]);
-//     // TODO you can't return a pointer to a local variable. 
+//     // TODO you can't return a pointer to a local variable.
 //     // It won't exist on the heap after returning!
 //     return &firstItem;
 // }
@@ -36,42 +36,42 @@ bool bb_heapContains(bb_heap_t* heap, const bb_heapItem_t* item)
     return heap->items[item->heapIdx].tile == item->tile;
 }
 
-//returns less than zero if A precedes B in the sort order
-//returns zero if A and B are in the same position in the sort order
-//returns greater than zero if A follows B in the sort order
+// returns less than zero if A precedes B in the sort order
+// returns zero if A and B are in the same position in the sort order
+// returns greater than zero if A follows B in the sort order
 int32_t bb_compareHeapItems(const bb_heapItem_t* itemA, const bb_heapItem_t* itemB)
 {
     int32_t compare = (int32_t)fCost(itemA->tile) - (int32_t)fCost(itemB->tile);
-    if(compare == 0)
+    if (compare == 0)
     {
         compare = (int32_t)itemA->tile->hCost - (int32_t)itemB->tile->hCost;
     }
-    //Not really sure if this should be negated.
+    // Not really sure if this should be negated.
     return -compare;
 }
 
 void bb_sortDown(bb_heap_t* heap, bb_heapItem_t* item)
 {
-    while(true)
+    while (true)
     {
         uint16_t childIdxLeft  = item->heapIdx * 2 + 1;
         uint16_t childIdxRight = item->heapIdx * 2 + 2;
-        uint16_t swapIdx = 0;
+        uint16_t swapIdx       = 0;
 
-        if(childIdxLeft < heap->currentItemCount)
+        if (childIdxLeft < heap->currentItemCount)
         {
             swapIdx = childIdxLeft;
 
-            if(childIdxRight < heap->currentItemCount)
+            if (childIdxRight < heap->currentItemCount)
             {
-                if(bb_compareHeapItems(item, &heap->items[childIdxLeft]) < 0)
+                if (bb_compareHeapItems(item, &heap->items[childIdxLeft]) < 0)
                 {
                     swapIdx = childIdxRight;
                 }
             }
         }
 
-        if(bb_compareHeapItems(item, &heap->items[swapIdx]) < 0)
+        if (bb_compareHeapItems(item, &heap->items[swapIdx]) < 0)
         {
             bb_swap(heap, item, &heap->items[swapIdx]);
         }
@@ -89,10 +89,10 @@ void bb_sortUp(bb_heap_t* heap, bb_heapItem_t* item)
 {
     uint16_t parentIdx = (item->heapIdx - 1) / 2;
 
-    while(true)
+    while (true)
     {
         bb_heapItem_t parentItem = heap->items[parentIdx];
-        if(bb_compareHeapItems(item, &parentItem) > 0)
+        if (bb_compareHeapItems(item, &parentItem) > 0)
         {
             bb_swap(heap, item, &parentItem);
         }
@@ -117,6 +117,6 @@ void bb_swap(bb_heap_t* heap, bb_heapItem_t* itemA, bb_heapItem_t* itemB)
 
     // Swap indices
     uint16_t tmpIdx = itemA->heapIdx;
-    itemA->heapIdx = itemB->heapIdx;
-    itemB->heapIdx = tmpIdx;
+    itemA->heapIdx  = itemB->heapIdx;
+    itemB->heapIdx  = tmpIdx;
 }

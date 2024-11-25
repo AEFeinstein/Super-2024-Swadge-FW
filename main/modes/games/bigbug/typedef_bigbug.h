@@ -52,10 +52,10 @@ typedef enum
     BB_CAR_IDLE,
     BB_CAR_ACTIVE,
     // These things are not in the sprites array.
-    WILE,              // A metal ball that is thrown
-    NO_SPRITE_STAR,    // a single white pixel for aesthetic beauty.
-    NO_SPRITE_POI,      // Point of interest for the camera to follow in the main menu
-    OVO_TALK            // Need this enum actually for the entity but not the sprites array.
+    WILE,           // A metal ball that is thrown
+    NO_SPRITE_STAR, // a single white pixel for aesthetic beauty.
+    NO_SPRITE_POI,  // Point of interest for the camera to follow in the main menu
+    OVO_TALK        // Need this enum actually for the entity but not the sprites array.
 } bb_spriteDef_t;
 
 typedef enum

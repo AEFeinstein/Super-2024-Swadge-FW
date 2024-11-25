@@ -22,12 +22,12 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
     gameData->inGameTimer = 0;
 
     gameData->soundManager = soundManager;
-    
+
     loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);
     loadMidiFile("Big Bug Hurry up.mid", &gameData->hurryUp, true);
     loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->garbotniksHome, true);
     loadMidiFile("BigBug_Space Travel.mid", &gameData->spaceTravel, true);
-    
+
     loadMidiFile("Bump.mid", &gameData->sfxBump, true);
     loadMidiFile("Harpoon.mid", &gameData->sfxHarpoon, true);
     loadMidiFile("Dirt_Breaking.mid", &gameData->sfxDirt, true);
@@ -54,16 +54,16 @@ void bb_freeGameData(bb_gameData_t* gameData)
     unloadMidiFile(&gameData->hurryUp);
     unloadMidiFile(&gameData->garbotniksHome);
     unloadMidiFile(&gameData->spaceTravel);
-    
+
     unloadMidiFile(&gameData->sfxBump);
     unloadMidiFile(&gameData->sfxHarpoon);
     unloadMidiFile(&gameData->sfxDirt);
     freeFont(&gameData->font);
-    while(gameData->unsupported.first)
+    while (gameData->unsupported.first)
     {
         heap_caps_free(shift(&gameData->unsupported));
     }
-    while(gameData->pleaseCheck.first)
+    while (gameData->pleaseCheck.first)
     {
         heap_caps_free(shift(&gameData->unsupported));
     }

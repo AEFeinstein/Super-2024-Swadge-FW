@@ -141,7 +141,6 @@ static void bb_EnterMode(void)
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
 
-
     const char loadingStr[] = "Loading...";
     int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
     drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
@@ -152,13 +151,14 @@ static void bb_EnterMode(void)
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
     //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
 
-    bb_entity_t* foreground    = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                                                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -5146, true, false);
+    bb_entity_t* foreground       = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
+                                                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -5146, true, false);
+    foreground->updateFarFunction = &bb_updateFarMenuAndUnload; // This menu will unload menu sprites when it is far.
 
     foreground->updateFunction = NULL;
     foreground->drawFunction   = &bb_drawMenuForeground;
     bb_destroyEntity(((bb_menuData_t*)foreground->data)->cursor, false);
-                                                 
+
     bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
                     (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS), false, false);
 
@@ -193,11 +193,11 @@ void bb_setupMidi(void)
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiPlayerReset(player);
     midiGmOn(player);
-    midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
+    midiSetProgram(player, 12, 90); // talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
     midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
-    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME , 60);
-    player->loop = true;
-    player->volume = 16383;
+    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME, 60);
+    player->loop                 = true;
+    player->volume               = 16383;
     player->songFinishedCallback = NULL;
 
     midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
@@ -224,7 +224,7 @@ static void bb_ExitMode(void)
 
     soundStop(true);
     unloadMidiFile(&bigbug->gameData.bgm);
-    
+
     unloadMidiFile(&bigbug->gameData.hurryUp);
 
     unloadMidiFile(&bigbug->gameData.garbotniksHome);
@@ -271,12 +271,12 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     else if (bigbug->gameData.camera.camera.pos.y < -1200)
     {
         // get steps from 0 (at -4000) to 14 (at -1200)
-        int32_t currentStep = bigbug->gameData.camera.camera.pos.y/200+20;
-        if(currentStep < 0)
+        int32_t currentStep = bigbug->gameData.camera.camera.pos.y / 200 + 20;
+        if (currentStep < 0)
         {
             currentStep = 0;
         }
-        else if(currentStep > 14)
+        else if (currentStep > 14)
         {
             currentStep = 14;
         }
@@ -315,8 +315,8 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
 static void bb_DrawScene(void)
 {
-    if ((bigbug->gameData.entityManager.playerEntity != NULL) && 
-        (GARBOTNIK_DATA == bigbug->gameData.entityManager.playerEntity->dataType))
+    if ((bigbug->gameData.entityManager.playerEntity != NULL)
+        && (GARBOTNIK_DATA == bigbug->gameData.entityManager.playerEntity->dataType))
     {
         vec_t garbotnikDrawPos = {.x = (bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS)
                                        - bigbug->gameData.camera.camera.pos.x - 18,
@@ -344,7 +344,7 @@ static void bb_DrawScene(void)
  */
 static void bb_GameLoop(int64_t elapsedUs)
 {
-    if(bigbug->gameData.exit)
+    if (bigbug->gameData.exit)
     {
         bb_ExitMode();
     }
@@ -354,7 +354,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         // Print the current event
-        //printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
+        // printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
 
         // Save the button state
         bigbug->gameData.btnState = evt.state;
@@ -384,7 +384,6 @@ static void bb_GameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->gameData.isPaused == false)
     {
-
         bb_UpdateTileSupport();
 
         bb_UpdateLEDs(&(bigbug->gameData.entityManager));
@@ -428,18 +427,22 @@ static void bb_SetLeds(void)
  */
 static void bb_UpdateTileSupport(void)
 {
-    while(bigbug->gameData.pleaseCheck.first != NULL)
+    while (bigbug->gameData.pleaseCheck.first != NULL)
     {
         uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.pleaseCheck);
-        if((shiftedVal[2] ? bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health : bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health) > 0)
+        if ((shiftedVal[2] ? bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health
+                           : bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health)
+            > 0)
         {
-            //pathfind
-            if(!(shiftedVal[2] ? 
-                pathfindToPerimeter((bb_midgroundTileInfo_t*)&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap):
-                pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap)))
+            // pathfind
+            if (!(shiftedVal[2] ? pathfindToPerimeter(
+                      (bb_midgroundTileInfo_t*)&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]],
+                      &bigbug->gameData.tilemap)
+                                : pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]],
+                                                      &bigbug->gameData.tilemap)))
             {
-                //trigger a cascading collapse
-                uint8_t* val = heap_caps_calloc(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                // trigger a cascading collapse
+                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                 memcpy(val, shiftedVal, 3 * sizeof(uint8_t));
                 push(&bigbug->gameData.unsupported, (void*)val);
             }
@@ -449,21 +452,24 @@ static void bb_UpdateTileSupport(void)
         heap_caps_free(shiftedVal);
     }
 
-    if (bigbug->gameData.unsupported.first != NULL && bb_randomInt(1,4) == 1)//making it happen randomly slowly makes crumble sound and looks nicer.
+    if (bigbug->gameData.unsupported.first != NULL
+        && bb_randomInt(1, 4) == 1) // making it happen randomly slowly makes crumble sound and looks nicer.
     {
         for (int i = 0; i < 50; i++) // arbitrarily large loop to get to the dirt tiles.
         {
-            if(bigbug->gameData.unsupported.first == NULL)
+            if (bigbug->gameData.unsupported.first == NULL)
             {
                 break;
             }
             // remove the first item from the list
             uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.unsupported);
             // check that it's still dirt, because a previous pass may have crumbled it.
-            if ((shiftedVal[2] ? bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health : bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health) > 0)
+            if ((shiftedVal[2] ? bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health
+                               : bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health)
+                > 0)
             {
                 // set it to air
-                if(shiftedVal[2])
+                if (shiftedVal[2])
                 {
                     bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
                 }
@@ -471,9 +477,10 @@ static void bb_UpdateTileSupport(void)
                 {
                     bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
                 }
-                
+
                 // create a crumble animation
-                bb_crumbleDirt(bigbug->gameData.entityManager.playerEntity, bb_randomInt(2,5), shiftedVal[0], shiftedVal[1], true);
+                bb_crumbleDirt(bigbug->gameData.entityManager.playerEntity, bb_randomInt(2, 5), shiftedVal[0],
+                               shiftedVal[1], true);
 
                 // queue neighbors for crumbling
                 for (uint8_t neighborIdx = 0; neighborIdx < 4;
@@ -486,17 +493,17 @@ static void bb_UpdateTileSupport(void)
                     {
                         // TODO where is this heap_caps_free()'d?
                         // should be done now.
-                        uint8_t* val = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-                        val[0]        = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
-                        val[1]        = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
-                        val[2]        = shiftedVal[2];
+                        uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                        val[0]       = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
+                        val[1]       = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
+                        val[2]       = shiftedVal[2];
                         push(&bigbug->gameData.unsupported, (void*)val);
                     }
                 }
-                uint8_t* val = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-                val[0] = shiftedVal[0];
-                val[1] = shiftedVal[1];
-                val[2] = !shiftedVal[2];
+                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                val[0]       = shiftedVal[0];
+                val[1]       = shiftedVal[1];
+                val[2]       = !shiftedVal[2];
                 push(&bigbug->gameData.unsupported, (void*)val);
 
                 heap_caps_free(shiftedVal);

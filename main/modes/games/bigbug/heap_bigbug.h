@@ -10,18 +10,18 @@
 //==============================================================================
 // Structs
 //==============================================================================
-typedef struct 
+typedef struct
 {
-    bb_midgroundTileInfo_t*  tile;
+    bb_midgroundTileInfo_t* tile;
     uint16_t heapIdx;
 } bb_heapItem_t;
 
 typedef struct
 {
-    bb_heapItem_t items[(TILE_FIELD_WIDTH-8) * (TILE_FIELD_HEIGHT-4) * 2];//Might get away with going even smaller,
-                                                                          //but at least subtract 8 and 4 here because
-                                                                          //the player will never move into the border
-                                                                          //of the level.
+    bb_heapItem_t items[(TILE_FIELD_WIDTH - 8) * (TILE_FIELD_HEIGHT - 4) * 2]; // Might get away with going even
+                                                                               // smaller, but at least subtract 8 and 4
+                                                                               // here because the player will never
+                                                                               // move into the border of the level.
     uint16_t currentItemCount;
 } bb_heap_t;
 

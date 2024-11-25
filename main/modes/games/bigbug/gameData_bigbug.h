@@ -46,14 +46,14 @@ struct bb_gameData_t
     int32_t touchX;
     int32_t touchY;
 
-    midiFile_t bgm;  ///< Background music
-    midiFile_t hurryUp; ///< plays when you have to get back
+    midiFile_t bgm;            ///< Background music
+    midiFile_t hurryUp;        ///< plays when you have to get back
     midiFile_t garbotniksHome; ///< tunes for home
-    midiFile_t spaceTravel; ///< plays for the dive summary
+    midiFile_t spaceTravel;    ///< plays for the dive summary
 
-    midiFile_t sfxBump; ///<SFX bump into things
-    midiFile_t sfxHarpoon; ///SFX harpoon
-    midiFile_t sfxDirt; ///SFT dirt crumbling
+    midiFile_t sfxBump;    ///< SFX bump into things
+    midiFile_t sfxHarpoon; /// SFX harpoon
+    midiFile_t sfxDirt;    /// SFT dirt crumbling
 
     bb_camera_t camera;
 
@@ -86,7 +86,7 @@ struct bb_gameData_t
 
     bb_entity_t* menuBug; // Featured entity walking through the main menu.
 
-    bool exit; //Entities can set it to true, and the mode will exit eventually.
+    bool exit; // Entities can set it to true, and the mode will exit eventually.
 };
 
 //==============================================================================

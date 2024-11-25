@@ -47,8 +47,8 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite, heatshrink_decoder* hsd, uint8_t* decodeSpace)
 {
     sprite->brightnessLevels = brightnessLevels;
-    sprite->numFrames = num_frames;
-    sprite->frames    = heap_caps_calloc(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    sprite->numFrames        = num_frames;
+    sprite->frames           = HEAP_CAPS_CALLOC_DBG(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
 
     for (uint8_t brightness = 0; brightness < brightnessLevels; brightness++)
     {
@@ -136,17 +136,18 @@ void bb_loadSprites(bb_entityManager_t* entityManager, heatshrink_decoder* hsd, 
 
     bb_loadSprite("GameOver", 2, 1, &entityManager->sprites[BB_GAME_OVER], hsd, decodeSpace);
 
-    bb_sprite_t* washingMachineSprite = bb_loadSprite("WashingMachine", 1, 6, &entityManager->sprites[BB_WASHING_MACHINE], hsd, decodeSpace);
+    bb_sprite_t* washingMachineSprite
+        = bb_loadSprite("WashingMachine", 1, 6, &entityManager->sprites[BB_WASHING_MACHINE]);
     washingMachineSprite->originX = 16;
     washingMachineSprite->originY = 16;
 
-    bb_sprite_t* carIdleSprite = bb_loadSprite("car_idle", 1, 1, &entityManager->sprites[BB_CAR_IDLE], hsd, decodeSpace);
-    carIdleSprite->originX = 31;
-    carIdleSprite->originY = 15;
+    bb_sprite_t* carIdleSprite = bb_loadSprite("car_idle", 1, 1, &entityManager->sprites[BB_CAR_IDLE]);
+    carIdleSprite->originX     = 31;
+    carIdleSprite->originY     = 15;
 
-    bb_sprite_t* carActiveSprite = bb_loadSprite("car_active", 20, 1, &entityManager->sprites[BB_CAR_ACTIVE], hsd, decodeSpace);
-    carActiveSprite->originX = 31;
-    carActiveSprite->originY = 15;
+    bb_sprite_t* carActiveSprite = bb_loadSprite("car_active", 20, 1, &entityManager->sprites[BB_CAR_ACTIVE]);
+    carActiveSprite->originX     = 31;
+    carActiveSprite->originY     = 15;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -155,16 +156,17 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
     shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
     shiftedCameraPos.y     = (shiftedCameraPos.y + 120) << DECIMAL_BITS;
     node_t* currentNode    = entityManager->cachedEntities->first;
-    bool isPaused = entityManager->entities[0].gameData->isPaused;
+    bool isPaused          = entityManager->entities[0].gameData->isPaused;
     // This loop loads entities back in if they are close to the camera.
     while (currentNode != NULL && !isPaused)
     {
         bb_entity_t* curEntity = (bb_entity_t*)currentNode->val;
         node_t* next           = currentNode->next;
 
-        //Do a rectangular bounds check that is somewhat larger than the camera itself. So stuff loads in and updates slightly out of view.
-        if(curEntity->pos.x > shiftedCameraPos.x - 3200 && curEntity->pos.x < shiftedCameraPos.x + 3200 &&
-           curEntity->pos.y > shiftedCameraPos.y - 2880 && curEntity->pos.y < shiftedCameraPos.y + 2880)
+        // Do a rectangular bounds check that is somewhat larger than the camera itself. So stuff loads in and updates
+        // slightly out of view.
+        if (curEntity->pos.x > shiftedCameraPos.x - 3200 && curEntity->pos.x < shiftedCameraPos.x + 3200
+            && curEntity->pos.y > shiftedCameraPos.y - 2880 && curEntity->pos.y < shiftedCameraPos.y + 2880)
         { // if it is close
             bb_entity_t* foundSpot = bb_findInactiveEntity(entityManager);
             if (foundSpot != NULL)
@@ -199,11 +201,13 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                 }
             }
 
-            if (curEntity->updateFunction != NULL && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
+            if (curEntity->updateFunction != NULL
+                && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
             {
                 curEntity->updateFunction(&(entityManager->entities[i]));
             }
-            if (curEntity->updateFarFunction != NULL && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
+            if (curEntity->updateFarFunction != NULL
+                && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
             {
                 // 2752 = (140+32) << 4; 2432 = (120+32) << 4
                 if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 2752, .halfHeight = 2432},
@@ -295,18 +299,18 @@ void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
         int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
 
         int skewedChance = 0;
-        if(camera->camera.pos.y > -2500)
+        if (camera->camera.pos.y > -2500)
         {
-            skewedChance = 128*camera->camera.pos.y + 320000;
+            skewedChance = 128 * camera->camera.pos.y + 320000;
         }
 
-        if (bb_randomInt(1, 13000+skewedChance) < (abs(camera->velocity.x) * camera->camera.height))
+        if (bb_randomInt(1, 13000 + skewedChance) < (abs(camera->velocity.x) * camera->camera.height))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
                             camera->velocity.x > 0 ? camera->camera.pos.x + 2 * halfWidth : camera->camera.pos.x,
                             camera->camera.pos.y + halfHeight + bb_randomInt(-halfHeight, halfHeight), false, false);
         }
-        if (bb_randomInt(1, 13000+skewedChance) < (abs(camera->velocity.y) * camera->camera.width))
+        if (bb_randomInt(1, 13000 + skewedChance) < (abs(camera->velocity.y) * camera->camera.width))
         {
             bb_createEntity(entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1,
                             camera->camera.pos.x + halfWidth + bb_randomInt(-halfWidth, halfWidth),
@@ -338,7 +342,7 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePla
 
     // load all cached enemies and destroy them one by one.
     bb_entity_t* curEntity;
-    while(NULL != (curEntity = pop(entityManager->cachedEntities)))
+    while (NULL != (curEntity = pop(entityManager->cachedEntities)))
     {
         bb_destroyEntity(curEntity, false);
         heap_caps_free(curEntity);
@@ -354,17 +358,17 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     else if (currentEntity->hasLighting)
     {
         uint8_t brightness = 5;
-        int16_t xOff = (currentEntity->pos.x >> DECIMAL_BITS)
-                            - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
+        int16_t xOff       = (currentEntity->pos.x >> DECIMAL_BITS)
+                       - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
         int16_t yOff = (currentEntity->pos.y >> DECIMAL_BITS)
-                            - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
-        if(entityManager->playerEntity!=NULL)
+                       - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y;
+        if (entityManager->playerEntity != NULL)
         {
-            vec_t lookup = {
-                    .x = (currentEntity->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
-                            + currentEntity->gameData->tilemap.headlampWsg.w,
-                    .y = (currentEntity->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
-                            + currentEntity->gameData->tilemap.headlampWsg.h};
+            vec_t lookup
+                = {.x = (currentEntity->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
+                        + currentEntity->gameData->tilemap.headlampWsg.w,
+                   .y = (currentEntity->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
+                        + currentEntity->gameData->tilemap.headlampWsg.h};
 
             lookup = divVec2d(lookup, 2);
             if (currentEntity->pos.y > 5120)
@@ -380,30 +384,28 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
             }
 
             drawWsgSimple(
-                &entityManager->sprites[currentEntity->spriteIndex]
-                        .frames[bb_midgroundLighting(&(currentEntity->gameData->tilemap.headlampWsg), &lookup,
-                                                    &(((bb_garbotnikData_t*)currentEntity->gameData->entityManager
-                                                            .playerEntity->data)
-                                                        ->yaw.x),
-                                                    brightness)
-                                + currentEntity->currentAnimationFrame * 6],
+                &entityManager->sprites[currentEntity->spriteIndex].frames
+                     [bb_midgroundLighting(
+                          &(currentEntity->gameData->tilemap.headlampWsg), &lookup,
+                          &(((bb_garbotnikData_t*)currentEntity->gameData->entityManager.playerEntity->data)->yaw.x),
+                          brightness)
+                      + currentEntity->currentAnimationFrame * 6],
                 xOff, yOff);
         }
         else
         {
             drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
-                                .frames[brightness + currentEntity->currentAnimationFrame * 6],
-                            xOff, yOff);
+                               .frames[brightness + currentEntity->currentAnimationFrame * 6],
+                          xOff, yOff);
         }
     }
     else
     {
-        drawWsgSimple(
-            &entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
-            (currentEntity->pos.x >> DECIMAL_BITS)
-                - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
-            (currentEntity->pos.y >> DECIMAL_BITS)
-                - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
+        drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
+                      (currentEntity->pos.x >> DECIMAL_BITS)
+                          - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
+                      (currentEntity->pos.y >> DECIMAL_BITS)
+                          - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
     }
 
     if (currentEntity->paused == false)
@@ -413,8 +415,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
         currentEntity->currentAnimationFrame
             = currentEntity->animationTimer / currentEntity->gameFramesPerAnimationFrame;
         // if frame reached the end of the animation
-        if (currentEntity->currentAnimationFrame
-            >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
+        if (currentEntity->currentAnimationFrame >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
         {
             switch (currentEntity->type)
             {
@@ -464,7 +465,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
         {
             break;
         }
-        if(currentEntity->forceToFront)
+        if (currentEntity->forceToFront)
         {
             bb_drawEntity(currentEntity, entityManager, camera);
         }
@@ -525,7 +526,9 @@ void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera)
     {
         camera->camera.pos.y = ((entity->pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
     }
-    camera->velocity = addVec2d(camera->velocity,subVec2d(camera->camera.pos, previousPos));//velocity is this position minus previous position.
+    camera->velocity
+        = addVec2d(camera->velocity,
+                   subVec2d(camera->camera.pos, previousPos)); // velocity is this position minus previous position.
 }
 
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
@@ -539,11 +542,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     }
 
     bb_entity_t* entity;
-    if(renderFront)
+    if (renderFront)
     {
         entity = bb_findInactiveEntityBackwards(entityManager);
     }
-    else{
+    else
+    {
         entity = bb_findInactiveEntity(entityManager);
     }
 
@@ -553,10 +557,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         return NULL;
     }
 
-    entity->active = true;
+    entity->active       = true;
     entity->forceToFront = forceToFront;
-    entity->pos.x = x << DECIMAL_BITS;
-    entity->pos.y = y << DECIMAL_BITS;
+    entity->pos.x        = x << DECIMAL_BITS;
+    entity->pos.y        = y << DECIMAL_BITS;
 
     entity->type        = type;
     entity->paused      = paused;
@@ -572,21 +576,23 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
             gData->numHarpoons        = 250;
-            gData->fuel = 1000 * 60 * 1; // 1 thousand milliseconds in a second. 60 seconds in a minute. 1 minutes.
-            gData->yaw.x = - 1;//So he starts off facing left away from the tutorial egg.
+            gData->fuel  = 1000 * 60 * 1; // 1 thousand milliseconds in a second. 60 seconds in a minute. 1 minutes.
+            gData->yaw.x = -1;            // So he starts off facing left away from the tutorial egg.
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
-            //create sequential numbers of all phrase indices
-            for(int16_t i = 0; i < arraySize; i++) gData->landingPhrases[i] = i;
-            //shuffle the array
-            for(int16_t i = arraySize - 1; i > 0; i--)
+            // create sequential numbers of all phrase indices
+            for (int16_t i = 0; i < arraySize; i++)
+                gData->landingPhrases[i] = i;
+            // shuffle the array
+            for (int16_t i = arraySize - 1; i > 0; i--)
             {
-                int16_t j = (int16_t)(bb_randomInt(0, INT_MAX) % (i + 1));
-                int16_t temp = gData->landingPhrases[i];
+                int16_t j                = (int16_t)(bb_randomInt(0, INT_MAX) % (i + 1));
+                int16_t temp             = gData->landingPhrases[i];
                 gData->landingPhrases[i] = gData->landingPhrases[j];
                 gData->landingPhrases[j] = temp;
             }
             printf("shuffled:\n");
-            for (int i = 0; i < arraySize; i++) {
+            for (int i = 0; i < arraySize; i++)
+            {
                 printf("%d\n", gData->landingPhrases[i]);
             }
 
@@ -619,7 +625,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfWidth  = 192;
             entity->halfHeight = 448;
 
-            entity->updateFunction    = &bb_updateRocketLanding;
+            entity->updateFunction = &bb_updateRocketLanding;
             break;
         }
         case HARPOON:
@@ -772,9 +778,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_menuData_t* mData = heap_caps_calloc(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
 
-            mData->cursor
-                = bb_createEntity(entityManager, LOOPING_ANIMATION, false, HARPOON, 3,
-                                  (entity->pos.x >> DECIMAL_BITS) - 22, 0, false, false);//y position doesn't matter here. It will be handled in the update loop.
+            mData->cursor = bb_createEntity(
+                entityManager, LOOPING_ANIMATION, false, HARPOON, 3, (entity->pos.x >> DECIMAL_BITS) - 22, 0, false,
+                false); // y position doesn't matter here. It will be handled in the update loop.
 
             // This will make it draw pointed right
             ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};
@@ -786,9 +792,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfWidth  = 140;
             entity->halfHeight = 120;
 
-            entity->updateFunction = &bb_updateMenu;
+            entity->updateFunction    = &bb_updateMenu;
             entity->updateFarFunction = &bb_updateFarMenu;
-            entity->drawFunction   = &bb_drawMenu;
+            entity->drawFunction      = &bb_drawMenu;
             break;
         }
         case NO_SPRITE_STAR:
@@ -799,24 +805,24 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case NO_SPRITE_POI:
         {
-            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM), GO_TO_DATA);
-            //entity->updateFunction = &bb_updatePOI;
-            entity->drawFunction   = &bb_drawNothing;
+            bb_setData(entity, HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM), GO_TO_DATA);
+            // entity->updateFunction = &bb_updatePOI;
+            entity->drawFunction = &bb_drawNothing;
             break;
         }
         case OVO_TALK:
         {
             entity->updateFunction = &bb_updateCharacterTalk;
-            entity->drawFunction = &bb_drawCharacterTalk;
+            entity->drawFunction   = &bb_drawCharacterTalk;
             break;
         }
         case ATTACHMENT_ARM:
         {
-            bb_attachmentArmData_t* aData = heap_caps_calloc(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM);
-            aData->angle = 180 << DECIMAL_BITS;
+            bb_attachmentArmData_t* aData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM);
+            aData->angle                  = 180 << DECIMAL_BITS;
             bb_setData(entity, aData, ATTACHMENT_ARM_DATA);
             entity->updateFunction = &bb_updateAttachmentArm;
-            entity->drawFunction = &bb_drawAttachmentArm;
+            entity->drawFunction   = &bb_drawAttachmentArm;
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
@@ -829,17 +835,18 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_GAME_OVER:
         {
             entity->updateFunction = &bb_updateGameOver;
-            entity->drawFunction = &bb_drawSimple;
+            entity->drawFunction   = &bb_drawSimple;
             break;
         }
         case BB_WASHING_MACHINE:
         {
-            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM), HEAVY_FALLING_DATA);
-            entity->halfWidth  = 16 << DECIMAL_BITS;
-            entity->halfHeight = 16 << DECIMAL_BITS;
-            entity->hasLighting                 = true;
+            bb_setData(entity, HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM),
+                       HEAVY_FALLING_DATA);
+            entity->halfWidth      = 16 << DECIMAL_BITS;
+            entity->halfHeight     = 16 << DECIMAL_BITS;
+            entity->hasLighting    = true;
             entity->updateFunction = &bb_updateHeavyFalling;
-            entity->cacheable = true;
+            entity->cacheable      = true;
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
@@ -854,7 +861,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             entity->halfWidth  = 25 << DECIMAL_BITS;
             entity->halfHeight = 13 << DECIMAL_BITS;
-            entity->cacheable = true;
+            entity->cacheable  = true;
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
@@ -867,10 +874,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_CAR_ACTIVE:
         {
-            entity->halfWidth  = 25 << DECIMAL_BITS;
-            entity->halfHeight = 13 << DECIMAL_BITS;
-            bb_carActiveData_t* caData = heap_caps_calloc(1, sizeof(bb_carActiveData_t), MALLOC_CAP_SPIRAM);
-            caData->enemiesRemaining = 10;
+            entity->halfWidth          = 25 << DECIMAL_BITS;
+            entity->halfHeight         = 13 << DECIMAL_BITS;
+            bb_carActiveData_t* caData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_carActiveData_t), MALLOC_CAP_SPIRAM);
+            caData->enemiesRemaining   = 10;
             bb_setData(entity, caData, CAR_ACTIVE_DATA);
             break;
         }
@@ -894,12 +901,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
 void bb_freeEntityManager(bb_entityManager_t* self)
 {
-    for (uint8_t i = 0; i < NUM_SPRITES; i++)
+    for (int i = 0; i < NUM_SPRITES; i++)
     {
         bb_sprite_t* sprite = &self->sprites[i];
-        for (uint8_t brightness = 0; brightness < sprite->brightnessLevels; brightness++)
+        for (int brightness = 0; brightness < sprite->brightnessLevels; brightness++)
         {
-            for (uint8_t f = 0; f < sprite->numFrames; f++)
+            for (int f = 0; f < sprite->numFrames; f++)
             {
                 freeWsg(&sprite->frames[brightness * sprite->numFrames + f]);
             }
@@ -910,7 +917,7 @@ void bb_freeEntityManager(bb_entityManager_t* self)
     heap_caps_free(self->entities);
 
     bb_entity_t* curEntity;
-    while(NULL != (curEntity = pop(self->cachedEntities)))
+    while (NULL != (curEntity = pop(self->cachedEntities)))
     {
         bb_destroyEntity(curEntity, false);
         heap_caps_free(curEntity);
