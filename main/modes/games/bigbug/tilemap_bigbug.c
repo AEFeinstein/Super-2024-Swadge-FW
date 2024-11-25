@@ -127,7 +127,6 @@ void bb_loadWsgs(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decode
     loadWsgInplace("baked_Landfill2.wsg", &tilemap->surface1Wsg, true, decodeSpace, hsd);
     loadWsgInplace("baked_Landfill3.wsg", &tilemap->surface2Wsg, true, decodeSpace, hsd);
     loadWsgInplace("landfill_gradient.wsg", &tilemap->landfillGradient, true, decodeSpace, hsd);
-    // loadWsgInplace("trash_background.wsg", &tilemap->bgWsg, true, decodeSpace, hsd);
 
     // TILE MAP shenanigans explained:
     // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
@@ -195,7 +194,6 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 
     freeWsg(&tilemap->surface1Wsg);
     freeWsg(&tilemap->surface2Wsg);
-    freeWsg(&tilemap->bgWsg);
     freeWsg(&tilemap->landfillGradient);
 
     // Midground
