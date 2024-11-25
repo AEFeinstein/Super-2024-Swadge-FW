@@ -212,11 +212,12 @@ typedef enum
 // Structs ==============================
 typedef struct
 {
+    bool active;                     ///< If record contains real data
     char matchTitle[CG_MAX_STR_LEN]; ///< Title of the match
     cgChowa_t* chowa[6];             ///< Chowa Data
     cgWinLoss_t result[3];           ///< Results of all three matches
     int16_t timer[3];                ///< Time per round in seconds
-    bool active;                     ///< If record contains real data
+    int8_t numRounds;                ///< How many rounds are in the record
 } cgRecord_t;
 
 //==============================================================================
@@ -404,7 +405,9 @@ typedef enum
 {
     CG_SPAR_SPLASH,
     CG_SPAR_MENU,
-    CG_SPAR_SCHEDULE,
+    CG_SPAR_TOURNAMENT_SETUP,
+    CG_SPAR_PRIVATE_SETUP,
+    CG_SPAR_GUEST_SETUP,
     CG_MATCH_PREP,
     CG_SPAR_MATCH,
     CG_SPAR_MATCH_RESULTS,
@@ -479,20 +482,17 @@ typedef struct
 typedef struct
 {
     // Data
-    char matchName[CG_MAX_STR_LEN]; ///< Name of the current match
-    int8_t round;                   ///< The round of the fight
+    cgRecord_t data;             ///< Match data
+    cgSparChowaData_t* chowa[2]; ///< Shortcut to chowa
+    int8_t round;                ///< The round of the fight
 
     // State
-    cgSparChowaData_t chowaData[2]; ///< Extended Chowa data
-    bool paused;                    ///< If the match is paused
-    bool resolve;                   ///< Marks that the match should be resolved
+    bool paused;  ///< If the match is paused
+    bool resolve; ///< Marks that the match should be resolved
+    bool done;    ///< If match is finished
 
     // AI
     cgSparAI_t ai;
-
-    // Match ended
-    bool done;               ///< If match if finished
-    cgWinLoss_t finalResult; ///< The ultimate result of the match
 
     // Match time
     int64_t usTimer; ///< Microsecond timer
@@ -510,8 +510,6 @@ typedef struct
     // BG Sprites
     wsg_t dojoBG;       ///< Dojo Background image
     wsg_t* attackIcons; ///< Attack and dodge icons
-    // Fonts
-    font_t lMFO; ///< Outline for large menu font
     // Music
     midiFile_t sparBGM; ///< Music
 
@@ -526,6 +524,7 @@ typedef struct
     menuManiaRenderer_t* renderer; ///< Renderer
 
     // Match
+    // cgRecord_t currMatch; ///< The currently in use match data
     cgNPC_t NPCs[4]; ///< NPCs
     cgMatch_t match; ///< Match object
 

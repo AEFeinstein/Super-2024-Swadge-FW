@@ -28,14 +28,11 @@
 // Const Strings
 //==============================================================================
 
-static const char sparSplashScreen[]       = "Chowa Sparring";
-static const char sparSplashScreenPrompt[] = "Press any button to continue!";
-static const char pause[]                  = "--Pause--";
-static const char finished[]               = "FINISHED";
-static const char draw[]                   = "DRAW";
-static const char youWin[]                 = "YOU WIN!";
-static const char youLose[]                = "YOU LOST!";
-static const char noRecord[]               = "No record found";
+static const char* sparSplashScreen[] = {"Chowa Sparring", "Press any button to continue!"};
+static const char* matchText[]        = {"--Pause--", "FINISHED", "DRAW", "YOU LOST!", "YOU WIN!"};
+// static const char* matchSetupText[]   = {""};
+static const char noRecord[] = "No record found in this slot";
+static const char versus[]   = "VS";
 
 //==============================================================================
 // Function Declarations
@@ -50,20 +47,6 @@ static void cg_drawSparProgBars(cGrove_t* cg, int16_t maxVal, int16_t currVal, i
 //==============================================================================
 // Functions
 //==============================================================================
-
-/**
- * @brief Draws the match
- *
- * @param cg Game data
- * @param elapsedUs TIme since last frame
- */
-void cg_drawMatch(cGrove_t* cg, int64_t elapsedUs)
-{
-    // Draw dojo
-    cg_drawSparField(cg);
-
-    // Draw Chowa
-}
 
 /**
  * @brief Draws the splash screen
@@ -100,13 +83,13 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
 
     // Draw title text
     // Get the text offset
-    int16_t xOff = (TFT_WIDTH - textWidth(&cg->titleFont, sparSplashScreen)) >> 1;
+    int16_t xOff = (TFT_WIDTH - textWidth(&cg->titleFont, sparSplashScreen[0])) >> 1;
     int16_t yOff = 110;
-    drawText(&cg->titleFont, c555, sparSplashScreen, xOff, yOff);
-    drawText(&cg->titleFontOutline, c000, sparSplashScreen, xOff, yOff);
+    drawText(&cg->titleFont, c555, sparSplashScreen[0], xOff, yOff);
+    drawText(&cg->titleFontOutline, c000, sparSplashScreen[0], xOff, yOff);
     xOff = 32;
     yOff = 10;
-    drawTextWordWrap(&cg->largeMenuFont, c555, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
+    drawTextWordWrap(&cg->largeMenuFont, c555, sparSplashScreen[1], &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
 }
 
 /**
@@ -125,6 +108,9 @@ void cg_drawSparRecord(cGrove_t* cg)
     // Don't draw if record is empty
     if (!record->active)
     {
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer) - 1, "Record #%" PRId8, cg->spar.recordSelect);
+        drawText(&cg->menuFont, c555, buffer, 16, 16);
         drawText(&cg->titleFont, c555, noRecord, (TFT_WIDTH - textWidth(&cg->titleFont, noRecord)) >> 1,
                  (TFT_HEIGHT - 20) >> 1);
         return;
@@ -138,11 +124,11 @@ void cg_drawSparRecord(cGrove_t* cg)
     drawWsg(&cg->arrow, ((TFT_WIDTH + textWidth(&cg->menuFont, record->matchTitle)) >> 1) + 4, 4, false, false, 90);
 
     // Player names + vs label
-    int16_t vsStart = (TFT_WIDTH - textWidth(&cg->menuFont, "VS")) >> 1;
-    drawText(&cg->menuFont, c333, "VS", vsStart, 24);
+    int16_t vsStart = (TFT_WIDTH - textWidth(&cg->menuFont, versus)) >> 1;
+    drawText(&cg->menuFont, c333, versus, vsStart, 24);
     drawText(&cg->menuFont, c533, record->chowa[0]->owner,
              vsStart - (textWidth(&cg->menuFont, record->chowa[1]->owner) + 16), 24);
-    drawText(&cg->menuFont, c335, record->chowa[1]->owner, vsStart + textWidth(&cg->menuFont, "VS") + 16, 24);
+    drawText(&cg->menuFont, c335, record->chowa[1]->owner, vsStart + textWidth(&cg->menuFont, versus) + 16, 24);
 
     // Round number and arrows
     char buffer[32];
@@ -191,13 +177,36 @@ void cg_drawSparRecord(cGrove_t* cg)
  *
  * @param cg Game data
  */
-void cg_drawSparMatchSetup(cGrove_t* cg)
+void cg_drawSparTournamentSetup(cGrove_t* cg)
 {
-    // Provide options for Tournament, Single match, or online
+    // Player has to pick all Chowa, one per match
+}
 
-    // Secondary selection. chooses a specific tournament, match, or online.
+void cg_drawSparPrivateSetup(cGrove_t* cg)
+{
+    // Player has to pick all Chowa, one per match
 
-    // Allow a player to look at the tutorial
+    // You can see opponent ahead of time (NPCs)
+
+    // If player doesn't have enough Chowa, the number of rounds is reduced
+}
+
+void cg_drawSparGuestSetup(cGrove_t* cg)
+{
+    // Player has to pick all Chowa, one per match
+
+    // You can see opponent ahead of time (Guests)
+
+    // If not guest present, turn player away
+}
+
+void cg_drawSparMatchPrep(cGrove_t* cg)
+{
+    // Draw Match title
+    // Draw round of total rounds
+    // Display both contestants
+    // Press A to continue
+    // Press Start to quit tournament
 }
 
 /**
@@ -219,7 +228,7 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     char buffer[32];
 
     // Draw match title
-    snprintf(buffer, sizeof(buffer) - 1, "%s, round %d", cg->spar.match.matchName, cg->spar.match.round);
+    snprintf(buffer, sizeof(buffer) - 1, "%s, round %d", cg->spar.match.data.matchTitle, cg->spar.match.round);
     drawText(&cg->largeMenuFont, c000, buffer, (TFT_WIDTH - textWidth(&cg->largeMenuFont, buffer)) >> 1, 8);
 
     // Time
@@ -237,44 +246,44 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     // If paused, draw pause text
     if (cg->spar.match.paused)
     {
-        drawText(&cg->titleFont, c555, pause, ((TFT_WIDTH - textWidth(&cg->titleFont, pause)) >> 1),
+        drawText(&cg->titleFont, c555, matchText[0], ((TFT_WIDTH - textWidth(&cg->titleFont, matchText[0])) >> 1),
                  (TFT_HEIGHT >> 1) - 16);
-        drawText(&cg->titleFontOutline, c000, pause, (TFT_WIDTH - textWidth(&cg->titleFont, pause)) >> 1,
+        drawText(&cg->titleFontOutline, c000, matchText[0], (TFT_WIDTH - textWidth(&cg->titleFont, matchText[0])) >> 1,
                  (TFT_HEIGHT >> 1) - 16);
     }
 
     // Draw match end
     if (cg->spar.match.done)
     {
-        drawText(&cg->titleFont, c555, finished, (TFT_WIDTH - textWidth(&cg->titleFontOutline, finished)) >> 1,
+        drawText(&cg->titleFont, c555, matchText[1], (TFT_WIDTH - textWidth(&cg->titleFontOutline, matchText[1])) >> 1,
                  (TFT_HEIGHT >> 1) - 16);
-        drawText(&cg->titleFontOutline, c000, finished, (TFT_WIDTH - textWidth(&cg->titleFontOutline, finished)) >> 1,
-                 (TFT_HEIGHT >> 1) - 16);
+        drawText(&cg->titleFontOutline, c000, matchText[1],
+                 (TFT_WIDTH - textWidth(&cg->titleFontOutline, matchText[1])) >> 1, (TFT_HEIGHT >> 1) - 16);
 
-        switch (cg->spar.match.finalResult)
+        switch (cg->spar.match.data.result[cg->spar.match.round])
         {
             case CG_P1_WIN:
             {
-                drawText(&cg->titleFont, c555, youWin, (TFT_WIDTH - textWidth(&cg->titleFontOutline, youWin)) >> 1,
-                         (TFT_HEIGHT >> 1) + 20);
-                drawText(&cg->titleFontOutline, c000, youWin,
-                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, youWin)) >> 1, (TFT_HEIGHT >> 1) + 20);
+                drawText(&cg->titleFont, c555, matchText[4],
+                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, matchText[4])) >> 1, (TFT_HEIGHT >> 1) + 20);
+                drawText(&cg->titleFontOutline, c000, matchText[4],
+                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, matchText[4])) >> 1, (TFT_HEIGHT >> 1) + 20);
                 break;
             }
             case CG_P2_WIN:
             {
-                drawText(&cg->titleFont, c555, youLose, (TFT_WIDTH - textWidth(&cg->titleFontOutline, youLose)) >> 1,
-                         (TFT_HEIGHT >> 1) + 20);
-                drawText(&cg->titleFontOutline, c000, youLose,
-                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, youLose)) >> 1, (TFT_HEIGHT >> 1) + 20);
+                drawText(&cg->titleFont, c555, matchText[3],
+                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, matchText[3])) >> 1, (TFT_HEIGHT >> 1) + 20);
+                drawText(&cg->titleFontOutline, c000, matchText[3],
+                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, matchText[3])) >> 1, (TFT_HEIGHT >> 1) + 20);
                 break;
             }
             case CG_DRAW:
             {
-                drawText(&cg->titleFont, c555, draw, (TFT_WIDTH - textWidth(&cg->titleFontOutline, draw)) >> 1,
-                         (TFT_HEIGHT >> 1) + 20);
-                drawText(&cg->titleFontOutline, c000, draw, (TFT_WIDTH - textWidth(&cg->titleFontOutline, draw)) >> 1,
-                         (TFT_HEIGHT >> 1) + 20);
+                drawText(&cg->titleFont, c555, matchText[2],
+                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, matchText[2])) >> 1, (TFT_HEIGHT >> 1) + 20);
+                drawText(&cg->titleFontOutline, c000, matchText[2],
+                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, matchText[2])) >> 1, (TFT_HEIGHT >> 1) + 20);
                 break;
             }
         }
@@ -307,8 +316,8 @@ static void cg_drawSparField(cGrove_t* cg)
 static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
 {
     // TODO: Finish animations
-    cgSparChowaData_t* cg1 = &cg->spar.match.chowaData[CG_P1];
-    cgSparChowaData_t* cg2 = &cg->spar.match.chowaData[CG_P2];
+    cgSparChowaData_t* cg1 = cg->spar.match.chowa[CG_P1];
+    cgSparChowaData_t* cg2 = cg->spar.match.chowa[CG_P2];
     cg1->animTimer += elapsedUs;
     cg2->animTimer += elapsedUs;
 
@@ -334,7 +343,7 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
         }
         case CG_SPAR_READY:
         {
-            // Pause on a specific frame
+            // TODO: Walk forward toward center
             switch (cg1->currMove)
             {
                 case CG_SPAR_PUNCH:
@@ -560,11 +569,11 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
     // Draw Chowa
     // - 2x size
     // - Nametags / "You!"
-    if (cg->spar.match.chowaData[0].doneAnimating && cg->spar.match.chowaData[1].doneAnimating)
+    if (cg1->doneAnimating && cg2->doneAnimating)
     {
-        cg->spar.match.chowaData[0].doneAnimating = false;
-        cg->spar.match.chowaData[1].doneAnimating = false;
-        cg->spar.match.animDone                   = true;
+        cg1->doneAnimating      = false;
+        cg2->doneAnimating      = false;
+        cg->spar.match.animDone = true;
     }
 }
 
@@ -577,21 +586,21 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
 {
     // Player 1
     // Draw health bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P1].maxHP, cg->spar.match.chowaData[CG_P1].HP, PADDING,
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P1]->maxHP, cg->spar.match.chowa[CG_P1]->HP, PADDING,
                         STAT_BAR_BASE, c500, 3);
     // Draw stamina bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P1].maxStamina, cg->spar.match.chowaData[CG_P1].stamina,
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P1]->maxStamina, cg->spar.match.chowa[CG_P1]->stamina,
                         1 * (PADDING + STAT_BAR_WIDTH) + PADDING, STAT_BAR_BASE, c550, 1);
     // Draw Readiness bar
-    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowaData[CG_P1].readiness,
+    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowa[CG_P1]->readiness,
                         2 * (PADDING + STAT_BAR_WIDTH) + PADDING, STAT_BAR_BASE, c050, -1);
 
-    switch (cg->spar.match.chowaData[CG_P1].currState)
+    switch (cg->spar.match.chowa[CG_P1]->currState)
     {
         case CG_SPAR_UNREADY:
         case CG_SPAR_READY:
         {
-            switch (cg->spar.match.chowaData[CG_P1].currMove)
+            switch (cg->spar.match.chowa[CG_P1]->currMove)
             {
                 case CG_SPAR_PUNCH:
                 {
@@ -645,22 +654,22 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
 
     // Player 2
     // Draw health bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P2].maxHP, cg->spar.match.chowaData[CG_P2].HP,
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P2]->maxHP, cg->spar.match.chowa[CG_P2]->HP,
                         TFT_WIDTH - PADDING, STAT_BAR_BASE, c500, 3);
     // Draw stamina bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowaData[CG_P2].maxStamina, cg->spar.match.chowaData[CG_P2].stamina,
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P2]->maxStamina, cg->spar.match.chowa[CG_P2]->stamina,
                         TFT_WIDTH - (1 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c550, 1);
     // Draw Readiness bar
-    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowaData[CG_P2].readiness,
+    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowa[CG_P2]->readiness,
                         TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c050, -1);
 
     // FIXME: For debug only
-    switch (cg->spar.match.chowaData[CG_P2].currState)
+    switch (cg->spar.match.chowa[CG_P2]->currState)
     {
         case CG_SPAR_UNREADY:
         case CG_SPAR_READY:
         {
-            switch (cg->spar.match.chowaData[CG_P2].currMove)
+            switch (cg->spar.match.chowa[CG_P2]->currMove)
             {
                 case CG_SPAR_PUNCH:
                 {

@@ -34,7 +34,7 @@
 
 static const char cGroveTitle[] = "Chowa Grove"; // Game title
 
-static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Perform", "Player Profiles", "Settings"};
+static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Perform", "Guest Profiles", "Settings"};
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
 static const int32_t cGroveEnabledVals[]        = {true, false};
@@ -245,9 +245,12 @@ static void cGroveEnterMode(void)
     readNvsBlob(cgNVSKeys[3], NULL, &blobLen);
     if (!readNvsBlob(cgNVSKeys[3], &cg->guests, &blobLen))
     {
-        for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
+        for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA - 1; i++)
         {
-            cg->guests[i].active = false;
+            cg->guests[i].active = true;
+            char buffer[32];
+            snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", i);
+            strcpy(cg->guests[i].name, buffer);
         }
         writeNvsBlob(cgNVSKeys[3], &cg->guests, sizeof(cgChowa_t) * CG_MAX_CHOWA);
     }

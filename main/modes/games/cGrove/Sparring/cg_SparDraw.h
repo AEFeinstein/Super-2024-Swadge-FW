@@ -20,8 +20,10 @@
 // Functions
 //==============================================================================
 
-void cg_drawMatch(cGrove_t* cg, int64_t elapsedUs);
 void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs);
 void cg_drawSparRecord(cGrove_t* cg);
-void cg_drawSparMatchSetup(cGrove_t* cg);
+void cg_drawSparTournamentSetup(cGrove_t* cg);
+void cg_drawSparPrivateSetup(cGrove_t* cg);
+void cg_drawSparGuestSetup(cGrove_t* cg);
+void cg_drawSparMatchPrep(cGrove_t* cg);
 void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs);
