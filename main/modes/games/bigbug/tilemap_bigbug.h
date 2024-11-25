@@ -66,9 +66,9 @@ struct bb_tilemap_t
     wsg_t surface2Wsg;      ///< A graphic at the surface of the city dump
     wsg_t landfillGradient; ///< A tall gradient repeated acroos the screen under surface1Wsg
 
-    bb_foregroundTileInfo_t fgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of foreground tiles. The number
-                                                                          ///< is the dirt's health. 0 is air.
-    bb_midgroundTileInfo_t mgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT];  ///< The array of midground tiles.
+    bb_foregroundTileInfo_t* fgTiles[TILE_FIELD_WIDTH]; ///< The array of foreground tiles. The number
+                                       ///< is the dirt's health. 0 is air.
+    bb_midgroundTileInfo_t* mgTiles[TILE_FIELD_WIDTH];  ///< The array of midground tiles.
 };
 
 struct bb_hitInfo_t

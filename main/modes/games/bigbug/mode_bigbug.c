@@ -128,6 +128,13 @@ static void bb_EnterMode(void)
     // Allocate memory for the game state
     bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
 
+    // calloc the columns in layers separately to avoid a big alloc
+    for(int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
+    {
+        bigbug->gameData.tilemap.fgTiles[w] = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), true);
+        bigbug->gameData.tilemap.mgTiles[w] = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), true);
+    }
+
     // Allocate WSG loading helpers
     bb_hsd = heatshrink_decoder_alloc(256, 8, 4);
     bb_decodeSpace = heap_caps_malloc(102404, MALLOC_CAP_SPIRAM);
@@ -234,6 +241,12 @@ static void bb_ExitMode(void)
     deinitGlobalMidiPlayer();
 
     bb_freeWsgs(&bigbug->gameData.tilemap);
+
+    for(int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
+    {
+        heap_caps_free(bigbug->gameData.tilemap.fgTiles[w]);
+        heap_caps_free(bigbug->gameData.tilemap.mgTiles[w]);
+    }
 
     heap_caps_free(bigbug);
 }
