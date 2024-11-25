@@ -14,6 +14,7 @@
 //==============================================================================
 
 #include "cg_SparDraw.h"
+#include "cg_Chowa.h"
 
 //==============================================================================
 // Defines
@@ -29,6 +30,11 @@
 
 static const char sparSplashScreen[]       = "Chowa Sparring";
 static const char sparSplashScreenPrompt[] = "Press any button to continue!";
+static const char pause[]                  = "--Pause--";
+static const char finished[]               = "FINISHED";
+static const char draw[]                   = "DRAW";
+static const char youWin[]                 = "YOU WIN!";
+static const char youLose[]                = "YOU LOST!";
 
 //==============================================================================
 // Function Declarations
@@ -69,19 +75,37 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
     // Draw dojo
     cg_drawSparField(cg);
 
-    // TODO: Draw chowa sparring
+    // Draw chowa sparring
+    cgChowa_t* example = NULL;
+    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+    {
+        if (cg->chowa[idx].active)
+        {
+            example = &cg->chowa[idx];
+            break;
+        }
+    }
+    if (example != NULL)
+    {
+        cg->spar.timer += elapsedUs;
+        if (cg->spar.timer >= 300000)
+        {
+            cg->spar.timer = 0;
+            cg->spar.animFrame = (cg->spar.animFrame + 1) % 2;
+        }
+        wsg_t* spr = cg_getChowaWSG(cg, example, CG_ANIM_JUMP, cg->spar.animFrame);
+        drawWsgSimpleScaled(spr, (TFT_WIDTH - (spr->w * 2)) >> 1, 153, 2, 2);
+    }
 
     // Draw title text
     // Get the text offset
     int16_t xOff = (TFT_WIDTH - textWidth(&cg->titleFont, sparSplashScreen)) >> 1;
-    int16_t yOff = 20;
-
+    int16_t yOff = 110;
     drawText(&cg->titleFont, c555, sparSplashScreen, xOff, yOff);
     drawText(&cg->titleFontOutline, c000, sparSplashScreen, xOff, yOff);
-
-    xOff = 16;
-    yOff = TFT_HEIGHT - 80;
-    drawTextWordWrap(&cg->largeMenuFont, c000, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
+    xOff = 32;
+    yOff = 10;
+    drawTextWordWrap(&cg->largeMenuFont, c555, sparSplashScreenPrompt, &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
 }
 
 /**
@@ -98,14 +122,14 @@ void cg_drawSparRecord(cGrove_t* cg)
     cgRecord_t* record = &cg->spar.sparRecord[cg->spar.recordSelect];
 
     // Draw Match title + Arrows
-    drawText(&cg->menuFont, c555, record->matchTitle, (TFT_WIDTH - textWidth(&cg->menuFont, record->matchTitle)) / 2,
+    drawText(&cg->menuFont, c555, record->matchTitle, (TFT_WIDTH - textWidth(&cg->menuFont, record->matchTitle)) >> 1,
              8);
-    drawWsg(&cg->arrow, (TFT_WIDTH - textWidth(&cg->menuFont, record->matchTitle)) / 2 - (4 + cg->arrow.w), 4, false,
+    drawWsg(&cg->arrow, ((TFT_WIDTH - textWidth(&cg->menuFont, record->matchTitle)) >> 1) - (4 + cg->arrow.w), 4, false,
             false, 270);
-    drawWsg(&cg->arrow, (TFT_WIDTH + textWidth(&cg->menuFont, record->matchTitle)) / 2 + 4, 4, false, false, 90);
+    drawWsg(&cg->arrow, ((TFT_WIDTH + textWidth(&cg->menuFont, record->matchTitle)) >> 1) + 4, 4, false, false, 90);
 
     // Player names + vs label
-    int16_t vsStart = (TFT_WIDTH - textWidth(&cg->menuFont, "VS")) / 2;
+    int16_t vsStart = (TFT_WIDTH - textWidth(&cg->menuFont, "VS")) >> 1;
     drawText(&cg->menuFont, c333, "VS", vsStart, 24);
     drawText(&cg->menuFont, c533, record->playerNames[0],
              vsStart - (textWidth(&cg->menuFont, record->playerNames[0]) + 16), 24);
@@ -114,16 +138,16 @@ void cg_drawSparRecord(cGrove_t* cg)
     // Round number and arrows
     char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "Round %d", cg->spar.roundSelect);
-    drawWsgSimple(&cg->arrow, (TFT_WIDTH - cg->arrow.w) / 2, 40);
-    drawText(&cg->menuFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 60);
-    drawWsg(&cg->arrow, (TFT_WIDTH - cg->arrow.w) / 2, 76, false, true, 0);
+    drawWsgSimple(&cg->arrow, (TFT_WIDTH - cg->arrow.w) >> 1, 40);
+    drawText(&cg->menuFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 60);
+    drawWsg(&cg->arrow, (TFT_WIDTH - cg->arrow.w) >> 1, 76, false, true, 0);
 
     // Draw Chowa
     // TODO: Draw Chowa
 
     // Draw time
     snprintf(buffer, sizeof(buffer) - 1, "Time: %d", record->timer[cg->spar.roundSelect]);
-    drawText(&cg->menuFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 188);
+    drawText(&cg->menuFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 188);
 
     // Draw Chowa names
     int8_t offset = cg->spar.roundSelect * 2;
@@ -137,18 +161,18 @@ void cg_drawSparRecord(cGrove_t* cg)
         case CG_P1_WIN:
         {
             snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->playerNames[0]);
-            drawText(&cg->menuFont, c533, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 220);
+            drawText(&cg->menuFont, c533, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 220);
             break;
         }
         case CG_P2_WIN:
         {
             snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->playerNames[1]);
-            drawText(&cg->menuFont, c335, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) / 2, 220);
+            drawText(&cg->menuFont, c335, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 220);
             break;
         }
         case CG_DRAW:
         {
-            drawText(&cg->menuFont, c333, "Draw", (TFT_WIDTH - textWidth(&cg->menuFont, "Draw")) / 2, 220);
+            drawText(&cg->menuFont, c333, "Draw", (TFT_WIDTH - textWidth(&cg->menuFont, "Draw")) >> 1, 220);
             break;
         }
     }
@@ -205,15 +229,47 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     // If paused, draw pause text
     if (cg->spar.match.paused)
     {
-        drawText(&cg->titleFont, c005, "--PAUSE--", (TFT_WIDTH - textWidth(&cg->titleFont, "--PAUSE--")) / 2,
-                 TFT_HEIGHT / 2 - 16);
+        drawText(&cg->titleFont, c555, pause, ((TFT_WIDTH - textWidth(&cg->titleFont, pause)) >> 1),
+                 (TFT_HEIGHT >> 1) - 16);
+        drawText(&cg->titleFontOutline, c000, pause, (TFT_WIDTH - textWidth(&cg->titleFont, pause)) >> 1,
+                 (TFT_HEIGHT >> 1) - 16);
     }
 
     // Draw match end
     if (cg->spar.match.done)
     {
-        drawText(&cg->titleFont, c005, "FINISHED", (TFT_WIDTH - textWidth(&cg->titleFont, "FINISHED")) / 2,
-                 TFT_HEIGHT / 2 - 16);
+        drawText(&cg->titleFont, c555, finished, (TFT_WIDTH - textWidth(&cg->titleFontOutline, finished)) >> 1,
+                 (TFT_HEIGHT >> 1) - 16);
+        drawText(&cg->titleFontOutline, c000, finished, (TFT_WIDTH - textWidth(&cg->titleFontOutline, finished)) >> 1,
+                 (TFT_HEIGHT >> 1) - 16);
+
+        switch (cg->spar.match.finalResult)
+        {
+            case CG_P1_WIN:
+            {
+                drawText(&cg->titleFont, c555, youWin, (TFT_WIDTH - textWidth(&cg->titleFontOutline, youWin)) >> 1,
+                         (TFT_HEIGHT >> 1) + 20);
+                drawText(&cg->titleFontOutline, c000, youWin,
+                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, youWin)) >> 1, (TFT_HEIGHT >> 1) + 20);
+                break;
+            }
+            case CG_P2_WIN:
+            {
+                drawText(&cg->titleFont, c555, youLose, (TFT_WIDTH - textWidth(&cg->titleFontOutline, youLose)) >> 1,
+                         (TFT_HEIGHT >> 1) + 20);
+                drawText(&cg->titleFontOutline, c000, youLose,
+                         (TFT_WIDTH - textWidth(&cg->titleFontOutline, youLose)) >> 1, (TFT_HEIGHT >> 1) + 20);
+                break;
+            }
+            case CG_DRAW:
+            {
+                drawText(&cg->titleFont, c555, draw, (TFT_WIDTH - textWidth(&cg->titleFontOutline, draw)) >> 1,
+                         (TFT_HEIGHT >> 1) + 20);
+                drawText(&cg->titleFontOutline, c000, draw, (TFT_WIDTH - textWidth(&cg->titleFontOutline, draw)) >> 1,
+                         (TFT_HEIGHT >> 1) + 20);
+                break;
+            }
+        }
     }
 }
 
@@ -235,69 +291,273 @@ static void cg_drawSparField(cGrove_t* cg)
 }
 
 /**
- * @brief Draws the CHowa depending on the sparring state
+ * @brief Draws the Chowa depending on the sparring state
  *
  * @param cg Game Data
  * @param elapsedUs Time since last frame
  */
 static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
 {
-    for (int32_t idx = 0; idx < 2; idx++)
+    // TODO: Finish animations
+    cgSparChowaData_t* cg1 = &cg->spar.match.chowaData[CG_P1];
+    cgSparChowaData_t* cg2 = &cg->spar.match.chowaData[CG_P2];
+    cg1->animTimer += elapsedUs;
+    cg2->animTimer += elapsedUs;
+
+    // Player 1
+    int16_t xOff = 80;
+    int16_t yOff = 175;
+    if (cg1->chowa->age >= CG_ADULT_AGE)
     {
-        switch (cg->spar.match.chowaData[idx].currState)
+        xOff = 50;
+        yOff = 153;
+    }
+    wsg_t* spr;
+    switch (cg1->currState)
+    {
+        case CG_SPAR_UNREADY:
+        case CG_SPAR_NOTHING:
+        default:
         {
-            case CG_SPAR_UNREADY:
-            case CG_SPAR_NOTHING:
+            // Standing there, menacingly
+            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+        case CG_SPAR_READY:
+        {
+            // Pause on a specific frame
+            switch (cg1->currMove)
             {
-                // Bounce back and forth as ready
-                break;
+                case CG_SPAR_PUNCH:
+                case CG_SPAR_FAST_PUNCH:
+                {
+                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 0);
+                    break;
+                }
+                case CG_SPAR_KICK:
+                case CG_SPAR_JUMP_KICK:
+                case CG_SPAR_DODGE:
+                {
+                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 0);
+                    break;
+                }
+                case CG_SPAR_HEADBUTT:
+                {
+                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HEADBUTT_RIGHT, 0);
+                    break;
+                }
+                default:
+                {
+                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
+                    break;
+                }
             }
-            case CG_SPAR_READY:
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+        case CG_SPAR_EXHAUSTED:
+        {
+            // Sitting on the floor, panting
+            if (cg1->animTimer >= 500000)
             {
-                // Pause on a specific frame
-                break;
+                cg1->animFrame = (cg1->animFrame + 1) % 2;
+                cg1->animTimer = 0;
             }
-            case CG_SPAR_EXHAUSTED:
+            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_SAD, cg1->animFrame);
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+        case CG_SPAR_HIT:
+        {
+            // Chowa falls over when they get hit
+            if (cg1->animTimer < 330000)
             {
-                // Sitting on the floor, panting
-                break;
+                spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HIT_LEFT, 0);
             }
-            case CG_SPAR_HIT:
+            else if (cg1->animTimer < 660000)
             {
-                // Chowa flashes as they get hit
-                break;
+                spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HIT_LEFT, 1);
             }
-            case CG_SPAR_ATTACK:
+            else if (cg1->animTimer >= 660000)
             {
-                // Draw the Chowa attacking
-                break;
+                spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HIT_LEFT, 2);
             }
-            case CG_SPAR_DODGE_ST:
+            if (cg1->animTimer >= 1000000)
             {
-                // Draw chowa dodge
-                break;
+                cg1->doneAnimating = true;
             }
-            case CG_SPAR_WIN:
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+        case CG_SPAR_ATTACK:
+        {
+            // Draw the Chowa attacking
+            break;
+        }
+        case CG_SPAR_DODGE_ST:
+        {
+            // Draw Chowa dodge
+            break;
+        }
+        case CG_SPAR_WIN:
+        {
+            // Draw Chowa cheering
+            if (cg1->animTimer >= 500000)
             {
-                // Draw Chowa cheering
-                break;
+                cg1->animFrame = (cg1->animFrame + 1) % 2;
+                cg1->animTimer = 0;
             }
-            case CG_SPAR_LOSE:
+            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_JUMP, cg1->animFrame);
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+        case CG_SPAR_LOSE:
+        {
+            // Draw Chowa crying
+            if (cg1->animTimer >= 500000)
             {
-                // Draw Chowa crying
-                break;
+                cg1->animFrame = (cg1->animFrame + 1) % 3;
+                cg1->animTimer = 0;
             }
+            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_CRY, cg1->animFrame);
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+    }
+
+    // Player 2
+    wsg_t* widthSpr;
+    widthSpr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
+    xOff     = TFT_WIDTH - (80 + 2 * widthSpr->h);
+    yOff     = 175;
+    if (cg2->chowa->age >= CG_ADULT_AGE)
+    {
+        xOff = TFT_WIDTH - (50 + 2 * widthSpr->h);
+        yOff = 153;
+    }
+    switch (cg2->currState)
+    {
+        case CG_SPAR_UNREADY:
+        case CG_SPAR_NOTHING:
+        default:
+        {
+            // Standing there, menacingly
+            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+        case CG_SPAR_READY:
+        {
+            // Pause on a specific frame
+            switch (cg2->currMove)
+            {
+                case CG_SPAR_PUNCH:
+                case CG_SPAR_FAST_PUNCH:
+                {
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_RIGHT, 0);
+                    break;
+                }
+                case CG_SPAR_KICK:
+                case CG_SPAR_JUMP_KICK:
+                case CG_SPAR_DODGE:
+                {
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_RIGHT, 0);
+                    break;
+                }
+                case CG_SPAR_HEADBUTT:
+                {
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HEADBUTT_RIGHT, 0);
+                    break;
+                }
+                default:
+                {
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_RIGHT, 0);
+                    break;
+                }
+            }
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+        case CG_SPAR_EXHAUSTED:
+        {
+            // Sitting on the floor, panting
+            if (cg2->animTimer >= 500000)
+            {
+                cg2->animFrame = (cg2->animFrame + 1) % 2;
+                cg2->animTimer = 0;
+            }
+            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_SAD, cg2->animFrame);
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+
+            break;
+        }
+        case CG_SPAR_HIT:
+        {
+            // Chowa flashes as they get hit
+            if (cg2->animTimer < 330000)
+            {
+                spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HIT_RIGHT, 0);
+            }
+            else if (cg2->animTimer < 660000)
+            {
+                spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HIT_RIGHT, 1);
+            }
+            else if (cg2->animTimer >= 660000)
+            {
+                spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HIT_RIGHT, 2);
+            }
+            if (cg2->animTimer >= 1000000)
+            {
+                cg2->doneAnimating = true;
+            }
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+        case CG_SPAR_ATTACK:
+        {
+            // Draw the Chowa attacking
+            break;
+        }
+        case CG_SPAR_DODGE_ST:
+        {
+            // Draw chowa dodge
+            break;
+        }
+        case CG_SPAR_WIN:
+        {
+            // Draw Chowa cheering
+            if (cg2->animTimer >= 500000)
+            {
+                cg2->animFrame = (cg2->animFrame + 1) % 2;
+                cg2->animTimer = 0;
+            }
+            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_JUMP, cg2->animFrame);
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
+        }
+        case CG_SPAR_LOSE:
+        {
+            // Draw Chowa crying
+            if (cg2->animTimer >= 500000)
+            {
+                cg2->animFrame = (cg2->animFrame + 1) % 3;
+                cg2->animTimer = 0;
+            }
+            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_CRY, cg2->animFrame);
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
         }
     }
     // Draw Chowa
     // - 2x size
     // - Nametags / "You!"
-    // FIXME: Only set done when actually done
     if (cg->spar.match.chowaData[0].doneAnimating && cg->spar.match.chowaData[1].doneAnimating)
     {
-        cg->spar.match.animDone = true;
+        cg->spar.match.chowaData[0].doneAnimating = false;
+        cg->spar.match.chowaData[1].doneAnimating = false;
+        cg->spar.match.animDone                   = true;
     }
-    //
 }
 
 /**
@@ -328,37 +588,37 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
                 case CG_SPAR_PUNCH:
                 {
                     drawText(&cg->menuFont, c005, "P1: Punch", 100, 108);
-                    drawWsgSimple(&cg->spar.attackIcons[1], 64, 64);
+                    drawWsgSimpleScaled(&cg->spar.attackIcons[1], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_FAST_PUNCH:
                 {
                     drawText(&cg->menuFont, c005, "P1: Fast Punch", 100, 108);
-                    drawWsgSimple(&cg->spar.attackIcons[2], 64, 64);
+                    drawWsgSimpleScaled(&cg->spar.attackIcons[2], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_KICK:
                 {
                     drawText(&cg->menuFont, c005, "P1: Kick", 100, 108);
-                    drawWsgSimple(&cg->spar.attackIcons[4], 64, 64);
+                    drawWsgSimpleScaled(&cg->spar.attackIcons[4], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_JUMP_KICK:
                 {
                     drawText(&cg->menuFont, c005, "P1: Jump Kick", 100, 108);
-                    drawWsgSimple(&cg->spar.attackIcons[5], 64, 64);
+                    drawWsgSimpleScaled(&cg->spar.attackIcons[5], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
                     drawText(&cg->menuFont, c005, "P1: Headbutt", 100, 108);
-                    drawWsgSimple(&cg->spar.attackIcons[3], 64, 64);
+                    drawWsgSimpleScaled(&cg->spar.attackIcons[3], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_DODGE:
                 {
                     drawText(&cg->menuFont, c005, "P1: Dodge", 100, 108);
-                    drawWsgSimple(&cg->spar.attackIcons[0], 64, 64);
+                    drawWsgSimpleScaled(&cg->spar.attackIcons[0], 64, 64, 2, 2);
                     break;
                 }
                 default:
@@ -392,7 +652,6 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
         case CG_SPAR_UNREADY:
         case CG_SPAR_READY:
         {
-            // TODO: Draw attack icon
             switch (cg->spar.match.chowaData[CG_P2].currMove)
             {
                 case CG_SPAR_PUNCH:

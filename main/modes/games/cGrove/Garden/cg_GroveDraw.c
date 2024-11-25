@@ -829,7 +829,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     }
                     else if (c->angle > 135 && c->angle <= 225)
                     {
-                        spr  = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_RIGHT, c->animFrame);
+                        spr  = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_LEFT, c->animFrame);
                         flip = true;
                     }
                     else if (c->angle > 225 && c->angle <= 315)
@@ -838,7 +838,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     }
                     else
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_LEFT, c->animFrame);
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_RIGHT, c->animFrame);
                     }
                 }
                 drawWsgSimple(spr, xOffset, yOffset);

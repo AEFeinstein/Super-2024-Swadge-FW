@@ -80,10 +80,11 @@ void cg_initSparMatch(cGrove_t* cg, char* matchName, cgChowa_t* player1Chowa, cg
     // Initialize
     // Load tournament/match data
     strcpy(cg->spar.match.matchName, matchName);
-    cg->spar.match.round    = round;
-    cg->spar.match.maxTime  = maxTime;
-    cg->spar.match.animDone = false;
-    cg->spar.match.done     = false;
+    cg->spar.match.round        = round;
+    cg->spar.match.maxTime      = maxTime;
+    cg->spar.match.animDone     = false;
+    cg->spar.match.done         = false;
+    cg->spar.match.endGameTimer = 0;
 
     // Timer is set to 0
     cg->spar.match.timer = 0;
@@ -103,6 +104,8 @@ void cg_initSparMatch(cGrove_t* cg, char* matchName, cgChowa_t* player1Chowa, cg
         cg->spar.match.chowaData[i].chowa->stats[CG_AGILITY]  = 128;
         cg->spar.match.chowaData[i].chowa->stats[CG_HEALTH]   = 128;
         cg->spar.match.chowaData[i].chowa->playerAffinity     = 255;
+        cg->spar.match.chowaData[i].chowa->type               = CG_KING_DONUT;
+        cg->spar.match.chowaData[i].chowa->age                = i * 100;
         // Charisma not needed for spar
 
         cg->spar.match.chowaData[i].currState = CG_SPAR_UNREADY;
@@ -130,16 +133,22 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
     // Check if match has ended
     if (cg->spar.match.done == true)
     {
-        // TODO: wait until animations finish, then save data and load next match or show a summary
+        cg->spar.match.endGameTimer += elapsedUs;
+        if (cg->spar.match.endGameTimer >= 5000000)
+        {
+            // Move on
+            cg->spar.state = CG_SPAR_MATCH_RESULTS;
+        }
         return;
     }
 
     // Round timer
     // Timer doesn't accumulate if paused and single player
-    if (!cg->spar.match.paused && !cg->spar.match.online)
+    if (cg->spar.match.paused)
     {
-        cg->spar.match.usTimer += elapsedUs;
+        elapsedUs = 0;
     }
+    cg->spar.match.usTimer += elapsedUs;
     // If enough us have built up, increments seconds timer
     if (cg->spar.match.usTimer >= SECOND)
     {
@@ -149,8 +158,10 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
     // If enough seconds have passed, end match
     if (cg->spar.match.timer >= cg->spar.match.maxTime)
     {
-        cg->spar.match.done        = true;
-        cg->spar.match.finalResult = CG_DRAW;
+        cg->spar.match.done                       = true;
+        cg->spar.match.finalResult                = CG_DRAW;
+        cg->spar.match.chowaData[CG_P1].currState = CG_SPAR_LOSE;
+        cg->spar.match.chowaData[CG_P2].currState = CG_SPAR_LOSE;
         return;
     }
 
@@ -160,7 +171,7 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
 
     cg_sparMatchChowaState(cg, elapsedUs);
 
-    // Resolve is both are ready or if one has been ready for a full second
+    // Resolve if both are ready or if one has been ready for a full second
     if (cg->spar.match.resolve
         || (cg->spar.match.chowaData[0].currState == CG_SPAR_READY
             && cg->spar.match.chowaData[1].currState == CG_SPAR_READY))
@@ -179,21 +190,22 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
     // End game if either health is Zero
     if (cg->spar.match.chowaData[CG_P1].HP <= 0 || cg->spar.match.chowaData[CG_P2].HP <= 0)
     {
-        if (cg->spar.match.chowaData[CG_P1].HP <= 0 && cg->spar.match.chowaData[CG_P2].HP <= 0)
+        if (cg->spar.match.chowaData[CG_P1].HP <= 0)
         {
-            cg->spar.match.finalResult = CG_DRAW;
-        }
-        else if (cg->spar.match.chowaData[CG_P1].HP <= 0)
-        {
-            cg->spar.match.finalResult = CG_P2_WIN;
+            cg->spar.match.finalResult                = CG_P2_WIN;
+            cg->spar.match.chowaData[CG_P1].currState = CG_SPAR_LOSE;
+            cg->spar.match.chowaData[CG_P2].currState = CG_SPAR_WIN;
         }
         else if (cg->spar.match.chowaData[CG_P2].HP <= 0)
         {
-            cg->spar.match.finalResult = CG_P1_WIN;
+            cg->spar.match.finalResult                = CG_P1_WIN;
+            cg->spar.match.chowaData[CG_P1].currState = CG_SPAR_WIN;
+            cg->spar.match.chowaData[CG_P2].currState = CG_SPAR_LOSE;
         }
 
         // End the game
-        cg->spar.match.done = true;
+        cg->spar.match.endGameTimer = 0;
+        cg->spar.match.done         = true;
     }
 }
 
@@ -625,7 +637,7 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
             case CG_SPAR_UNREADY:
             {
                 // Steadily becomes more ready
-                if (!cg->spar.match.paused && !cg->spar.match.online)
+                if (!cg->spar.match.paused)
                 {
                     cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
                 }
@@ -652,7 +664,7 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
             case CG_SPAR_READY:
             {
                 // Runs timer until automatically resolve
-                if (!cg->spar.match.paused && !cg->spar.match.online)
+                if (!cg->spar.match.paused)
                 {
                     cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
                 }
@@ -669,7 +681,7 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
             {
                 // Steadily regain stamina and readiness to stand up
                 // Steadily becomes more ready
-                if (!cg->spar.match.paused && !cg->spar.match.online)
+                if (!cg->spar.match.paused)
                 {
                     cg->spar.match.chowaData[idx].updateTimer += elapsedUs;
                 }
@@ -719,12 +731,10 @@ static void cg_sparMatchResolve(cGrove_t* cg)
     // Unset resolved
     cg->spar.match.resolve = false;
 
-    // FIXME: Only set animation to done when animations finish
-    cg->spar.match.animDone = true;
-
-    // Check if both Chowa are ready
+    // Check if both Chowa are ready6
     for (int32_t idx = 0; idx < 2; idx++)
     {
+        cg->spar.match.chowaData[idx].animTimer = 0;
         if (cg->spar.match.chowaData[idx].currState != CG_SPAR_READY
             && !(cg->spar.match.chowaData[(idx + 1) % 2].currMove == CG_SPAR_DODGE))
         {
@@ -741,7 +751,6 @@ static void cg_sparMatchResolve(cGrove_t* cg)
             // Set state for animations
             cg->spar.match.chowaData[idx].currState           = CG_SPAR_HIT;
             cg->spar.match.chowaData[(idx + 1) % 2].currState = CG_SPAR_ATTACK;
-            cg->spar.match.wasCrit                            = true;
             return;
         }
     }
@@ -825,34 +834,31 @@ int8_t static cg_sparMatchStaminaCost(cgRPSState_t rps)
 void static cg_sparMatchResolveState(cGrove_t* cg)
 {
     // Update AI
-    if (!cg->spar.match.online)
+    cg->spar.match.ai.pickedMove = false;
+    if (cg->spar.match.ai.aiDifficulty == CG_MEDIUM)
     {
-        cg->spar.match.ai.pickedMove = false;
-        if (cg->spar.match.ai.aiDifficulty == CG_MEDIUM)
+        cg->spar.match.ai.prevMoves[1] = cg->spar.match.ai.prevMoves[0];
+        cg->spar.match.ai.prevMoves[0] = cg->spar.match.chowaData[CG_P1].currMove;
+    }
+    else if (cg->spar.match.ai.aiDifficulty == CG_HARD)
+    {
+        for (int32_t idx = 9; idx > 1; idx--)
         {
-            cg->spar.match.ai.prevMoves[1] = cg->spar.match.ai.prevMoves[0];
-            cg->spar.match.ai.prevMoves[0] = cg->spar.match.chowaData[CG_P1].currMove;
+            cg->spar.match.ai.prevMoves[idx] = cg->spar.match.ai.prevMoves[idx - 1];
         }
-        else if (cg->spar.match.ai.aiDifficulty == CG_HARD)
+        cg->spar.match.ai.prevMoves[0] = cg->spar.match.chowaData[CG_P1].currMove;
+    }
+    else if (cg->spar.match.ai.aiDifficulty == CG_VERY_HARD)
+    {
+        for (int32_t idx = 19; idx > 1; idx--)
         {
-            for (int32_t idx = 9; idx > 1; idx--)
-            {
-                cg->spar.match.ai.prevMoves[idx] = cg->spar.match.ai.prevMoves[idx - 1];
-            }
-            cg->spar.match.ai.prevMoves[0] = cg->spar.match.chowaData[CG_P1].currMove;
+            cg->spar.match.ai.prevMoves[idx] = cg->spar.match.ai.prevMoves[idx - 1];
         }
-        else if (cg->spar.match.ai.aiDifficulty == CG_VERY_HARD)
-        {
-            for (int32_t idx = 19; idx > 1; idx--)
-            {
-                cg->spar.match.ai.prevMoves[idx] = cg->spar.match.ai.prevMoves[idx - 1];
-            }
-            cg->spar.match.ai.prevMoves[0] = cg->spar.match.chowaData[CG_P1].currMove;
-        }
-        else if (cg->spar.match.ai.aiDifficulty == CG_EXPERT)
-        {
-            cg->spar.match.ai.movesPicked = 0;
-        }
+        cg->spar.match.ai.prevMoves[0] = cg->spar.match.chowaData[CG_P1].currMove;
+    }
+    else if (cg->spar.match.ai.aiDifficulty == CG_EXPERT)
+    {
+        cg->spar.match.ai.movesPicked = 0;
     }
 
     // Set the state
@@ -989,7 +995,7 @@ void static cg_sparMatchRPS(cGrove_t* cg)
     else
     {
         // Something went wrong
-        printf("Draw propagated to far");
+        printf("Draw propagated too far");
         return;
     }
 
@@ -999,7 +1005,6 @@ void static cg_sparMatchRPS(cGrove_t* cg)
         // Crit
         cg->spar.match.chowaData[loseIdx].HP
             -= MIN_DAMAGE + (cg->spar.match.chowaData[winIdx].chowa->stats[CG_STRENGTH] << 1);
-        cg->spar.match.wasCrit = true;
     }
     else
     {

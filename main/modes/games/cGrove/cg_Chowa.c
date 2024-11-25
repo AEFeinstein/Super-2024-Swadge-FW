@@ -198,11 +198,11 @@ wsg_t* cg_getChowaWSG(cGrove_t* cg, cgChowa_t* c, cgChowaAnimIdx_t anim, int8_t 
         }
         case CG_ANIM_WALK_RIGHT:
         {
-            return &spr[102 + idx];
+            return &spr[106 + idx];
         }
         case CG_ANIM_WALK_LEFT:
         {
-            return &spr[106 + idx];
+            return &spr[102 + idx];
         }
         case CG_ANIM_SWIM_RIGHT:
         {

@@ -60,6 +60,9 @@ void cg_initSpar(cGrove_t* grove)
         loadWsg(attackIcons[idx], &cg->spar.attackIcons[idx], true);
     }
 
+    // Font
+    makeOutlineFont(&cg->largeMenuFont, &cg->spar.lMFO, true);
+
     // Audio
     loadMidiFile("Chowa_Battle.mid", &cg->spar.sparBGM, true);
 
@@ -81,6 +84,7 @@ void cg_initSpar(cGrove_t* grove)
     sparLoadBattleRecords();
 
     // Play BGM
+    midiGmOn(cg->mPlayer);
     globalMidiPlayerPlaySong(&cg->spar.sparBGM, MIDI_BGM);
 
     // Load the splash screen
@@ -98,6 +102,12 @@ void cg_deInitSpar()
     // Free the menu
     deinitMenu(cg->spar.sparMenu);
     deinitMenuManiaRenderer(cg->spar.renderer);
+
+    // Audio
+    unloadMidiFile(&cg->spar.sparBGM);
+
+    // Font
+    freeFont(&cg->spar.lMFO);
 
     // Free assets
     for (int idx = 0; idx < ARRAY_SIZE(attackIcons); idx++)
@@ -150,7 +160,7 @@ void cg_runSpar(int64_t elapsedUs)
             if (true)
             {
                 cg->spar.state = CG_SPAR_MATCH;
-                cg_initSparMatch(cg, "TestMatch", &cg->chowa[0], &cg->chowa[1], 0, 1200, CG_HARD);
+                cg_initSparMatch(cg, "TestMatch", &cg->chowa[0], &cg->chowa[1], 0, 5, CG_HARD);
             }
             break;
         }
@@ -170,6 +180,8 @@ void cg_runSpar(int64_t elapsedUs)
         {
             // TODO: Show match results, save to Swadge
             // Show the final results
+            fillDisplayArea(0,0,TFT_WIDTH, TFT_HEIGHT, c000);
+            drawText(&cg->titleFont, c555, "BLAH", 32, 32);
             break;
         }
         case CG_SPAR_BATTLE_RECORD:

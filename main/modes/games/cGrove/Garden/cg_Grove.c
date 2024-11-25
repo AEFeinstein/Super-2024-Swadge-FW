@@ -316,6 +316,7 @@ void cg_initGrove(cGrove_t* cg)
     cg->grove.saveTimer = 0;
 
     // Play the BGM
+    midiGmOn(cg->mPlayer);
     globalMidiPlayerPlaySong(&cg->grove.bgm, MIDI_BGM);
 }
 

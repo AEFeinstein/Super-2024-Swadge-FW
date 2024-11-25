@@ -200,15 +200,15 @@ static void cGroveEnterMode(void)
     }
 
     // Adjust Audio to use correct instruments
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop         = true;
-    midiGmOn(player);
+    cg->mPlayer = globalMidiPlayerGet(MIDI_BGM);
+    cg->mPlayer->loop         = true;
+    midiGmOn(cg->mPlayer);
 
     // Init Chowa
     readNvsBlob(cgNVSKeys[1], NULL, &blobLen);
     if (!readNvsBlob(cgNVSKeys[1], &cg->chowa, &blobLen))
     {
-        /* // TODO: remove when done testing
+        // TODO: remove when done testing
         for (int i = 0; i < CG_MAX_CHOWA - 1; i++)
         {
             cg->chowa[i].active = false;
@@ -237,7 +237,7 @@ static void cGroveEnterMode(void)
             snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", i);
             strcpy(cg->chowa[i].name, buffer);
             strcpy(cg->chowa[i].owner, cg->player);
-        } */
+        }
         writeNvsBlob(cgNVSKeys[1], &cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
     }
 
@@ -278,6 +278,9 @@ static void cGroveExitMode(void)
     // Menu
     deinitMenu(cg->menu);
     deinitMenuManiaRenderer(cg->renderer);
+
+    // Audio
+    unloadMidiFile(&cg->menuBGM);
 
     // Fonts
     freeFont(&cg->titleFontOutline);
@@ -354,6 +357,7 @@ static void cGroveMainLoop(int64_t elapsedUs)
                 break;
             }
         }
+        midiGmOn(cg->mPlayer);
         globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
         cg->state = CG_MAIN_MENU;
     }

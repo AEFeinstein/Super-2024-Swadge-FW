@@ -452,13 +452,19 @@ typedef struct
     cgChowa_t* chowa;              ///< Chowa object
     cgMatchChowaState_t currState; ///< Current Chowa state
     cgRPSState_t currMove;         ///< Current selected move
-    int16_t maxStamina;            ///< Max stamina of each Chowa
-    int16_t stamina;               ///< Stamina of both Chowa for stamina bars
-    int16_t readiness;             ///< How ready each Chowa is
-    int16_t HP;                    ///< Current HP for this Chowa
-    int16_t maxHP;                 ///< Max HP for this Chowa
-    int32_t updateTimer;           ///< Used for readiness updates
-    bool doneAnimating;            ///< Currently animating
+
+    // Status bars
+    int16_t maxStamina;  ///< Max stamina of each Chowa
+    int16_t stamina;     ///< Stamina of both Chowa for stamina bars
+    int16_t readiness;   ///< How ready each Chowa is
+    int16_t HP;          ///< Current HP for this Chowa
+    int16_t maxHP;       ///< Max HP for this Chowa
+    int32_t updateTimer; ///< Used for readiness updates
+
+    // Animations
+    bool doneAnimating; ///< Currently animating
+    int64_t animTimer;  ///< Used to count miliseconds for animations
+    int8_t animFrame;   ///< Current frame of the animation
 } cgSparChowaData_t;
 
 typedef struct
@@ -481,7 +487,6 @@ typedef struct
     // State
     cgSparChowaData_t chowaData[2]; ///< Extended Chowa data
     bool paused;                    ///< If the match is paused
-    bool online;                    ///< If match is online
     bool resolve;                   ///< Marks that the match should be resolved
 
     // AI
@@ -497,21 +502,19 @@ typedef struct
     int16_t maxTime; ///< Max time allowed for the round
 
     // Animations
-    bool animDone; ///< If Animation is done
-    bool wasCrit;  ///< If Chowa was hit while unready
+    bool animDone;        ///< If Animation is done
+    int64_t endGameTimer; ///< Accumulates until game ends
 } cgMatch_t;
 
 typedef struct
 {
     // Assets
-    // Audio
-    // - Combat sounds
-    //   - Pain sounds
-    //   - Impact sounds
-
     // BG Sprites
     wsg_t dojoBG;       ///< Dojo Background image
     wsg_t* attackIcons; ///< Attack and dodge icons
+
+    // Fonts
+    font_t lMFO; ///< Outline for large menu font
 
     // Music
     midiFile_t sparBGM; ///< Music
@@ -519,6 +522,7 @@ typedef struct
     // Spar
     cgSparState_t state; ///< Active state
     int64_t timer;       ///< Timer for animations
+    int8_t animFrame;    ///< Frame for animations
     bool toggle;         ///< Toggles on timer
 
     // Menu
@@ -581,7 +585,8 @@ typedef struct
     // NPC sprites
 
     // Audio
-    midiFile_t menuBGM;
+    midiPlayer_t* mPlayer; ///< Midi Player
+    midiFile_t menuBGM;    ///< Menu BGM
 
     // Modes
     cgGrove_t grove; ///< Garden data

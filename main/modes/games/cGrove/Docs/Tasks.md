@@ -14,7 +14,6 @@
 - Save and load contest results from NVM
 - Add NPCs
 - Add online functionality
-- Get icons for punching, kicking, dodging, etc
 
 ## Grove
 - Create/Add SFX
@@ -34,4 +33,3 @@
 ## Chowa
 - Add palette swapping to normal chowa (if they get made)
 - Add all new Chowa sprites
-- Prune unused moods, sprites, behaviors, etc
