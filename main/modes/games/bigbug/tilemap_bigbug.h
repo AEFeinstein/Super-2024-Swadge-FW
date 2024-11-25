@@ -67,7 +67,7 @@ struct bb_tilemap_t
     wsg_t landfillGradient; ///< A tall gradient repeated acroos the screen under surface1Wsg
 
     bb_foregroundTileInfo_t* fgTiles[TILE_FIELD_WIDTH]; ///< The array of foreground tiles. The number
-                                       ///< is the dirt's health. 0 is air.
+                                                        ///< is the dirt's health. 0 is air.
     bb_midgroundTileInfo_t* mgTiles[TILE_FIELD_WIDTH];  ///< The array of midground tiles.
 };
 

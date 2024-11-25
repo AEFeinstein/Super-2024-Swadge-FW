@@ -134,9 +134,8 @@ void bb_updateRocketLanding(bb_entity_t* self)
             if (rData->flame->currentAnimationFrame == 0)
             {
                 // animation has played through back to 0
-                bb_heavyFallingData_t* hData
-                    = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
-                hData->yVel = rData->yVel >> 2;
+                bb_heavyFallingData_t* hData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
+                hData->yVel                  = rData->yVel >> 2;
                 bb_destroyEntity(rData->flame, false);
                 bb_setData(self, hData, HEAVY_FALLING_DATA);
                 self->updateFunction = bb_updateHeavyFallingInit;
@@ -202,9 +201,10 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         self->pos.y = -77136;
         bb_destroyEntity(rData->flame, false);
-        
-        bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                                self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+
+        bb_entity_t* ovo
+            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                              self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
         bb_dialogueData_t* dData = bb_createDialogueData(5); // 5
         strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
         dData->character[sizeof(dData->character) - 1] = '\0';
@@ -213,7 +213,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         bb_setCharacterLine(dData, 2, "That had a fresh coat of paint!");
         bb_setCharacterLine(dData, 3, "I'll have to patch this up before all the air gets out.");
         bb_setCharacterLine(dData, 4, "And the hardware store closes so early.");
-        dData->curString = -1;
+        dData->curString     = -1;
         dData->endDialogueCB = &bb_afterGarbotnikIntro;
         bb_setData(ovo, dData, DIALOGUE_DATA);
 
@@ -969,8 +969,8 @@ void bb_updateMenu(bb_entity_t* self)
         self->gameData->menuBug->drawFunction      = &bb_drawMenuBug;
         self->gameData->menuBug->updateFunction    = &bb_updateMenuBug;
         self->gameData->menuBug->updateFarFunction = &bb_updateFarDestroy;
-        bb_menuBugData_t* mbData = heap_caps_calloc(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
-        mbData->xVel             = bb_randomInt(-2, 2);
+        bb_menuBugData_t* mbData                   = heap_caps_calloc(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
+        mbData->xVel                               = bb_randomInt(-2, 2);
         mbData->xVel
             = mbData->xVel == 1 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
         mbData->firstTrip = true;
@@ -1110,10 +1110,11 @@ void bb_updateCharacterTalk(bb_entity_t* self)
             {
                 dData->loadedIdx = bb_randomInt(0, 6);
                 char wsg_name[strlen("ovo-talk-") + 9]; // 6 extra characters makes room for up to a 2 digit number +
-                                                       // ".wsg" + null terminator ('\0')
+                                                        // ".wsg" + null terminator ('\0')
                 snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
                 freeWsg(&dData->sprite);
-                loadWsgInplace(wsg_name, &dData->sprite, true, bb_decodeSpace, bb_hsd); // TODO inplace this, global decoder
+                loadWsgInplace(wsg_name, &dData->sprite, true, bb_decodeSpace,
+                               bb_hsd); // TODO inplace this, global decoder
 
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
@@ -1388,7 +1389,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 
     drawWsgSimple(&dData->sprite, 0, -dData->offsetY);
 
-    if(dData->blinkTimer > 0)
+    if (dData->blinkTimer > 0)
     {
         drawWsgSimple(&dData->spriteNext, 258, -dData->offsetY + 170);
     }

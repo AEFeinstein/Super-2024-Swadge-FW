@@ -19,8 +19,9 @@
 
 void bb_initializeTileMap(bb_tilemap_t* tilemap)
 {
-    wsg_t levelWsg;                           ///< A graphic representing the level data where tiles are pixels.
-    loadWsgInplace("bb_level.wsg", &levelWsg, true, bb_decodeSpace, bb_hsd); // levelWsg only needed for this brief scope.
+    wsg_t levelWsg; ///< A graphic representing the level data where tiles are pixels.
+    loadWsgInplace("bb_level.wsg", &levelWsg, true, bb_decodeSpace,
+                   bb_hsd); // levelWsg only needed for this brief scope.
 
     // Set all the tiles
     for (int i = 0; i < TILE_FIELD_WIDTH; i++)

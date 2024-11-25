@@ -68,7 +68,7 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
 
 void bb_freeSprite(bb_sprite_t* sprite)
 {
-    if(sprite->allocated)
+    if (sprite->allocated)
     {
         for (uint8_t brightness = 0; brightness < sprite->brightnessLevels; brightness++)
         {
