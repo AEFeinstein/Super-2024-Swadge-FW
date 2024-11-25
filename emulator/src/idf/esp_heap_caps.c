@@ -88,7 +88,7 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
         md_fprintf(stderr, "Allocation table out of space\n");
     }
 
-    return aTable[idx].ptr;
+    return ptr;
 #else
     return malloc(size);
 #endif
@@ -153,7 +153,7 @@ void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* fil
     {
         md_fprintf(stderr, "Allocation table out of space\n");
     }
-    return aTable[idx].ptr;
+    return ptr;
 #else
     return calloc(n, size);
 #endif

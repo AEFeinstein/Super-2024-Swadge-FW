@@ -1193,7 +1193,7 @@ void bb_updateGameOver(bb_entity_t* self)
 
             self->gameData->entityManager.activeBooster = NULL;
             i++;
-            if (i == 3)
+            if (i >= 3)
             {
                 // IDK it is really really game over here.
                 printf("finish me\n");
