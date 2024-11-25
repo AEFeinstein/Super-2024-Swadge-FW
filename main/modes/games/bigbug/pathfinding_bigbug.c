@@ -103,12 +103,12 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
     {
         start->hCost = TILE_FIELD_WIDTH - 5 - start->x;
     }
-    // bb_tileInfo_t* start = HEAP_CAPS_MALLOC_DBG(sizeof(bb_tileInfo_t), MALLOC_CAP_SPIRAM);
+    // bb_tileInfo_t* start = heap_caps_malloc(sizeof(bb_tileInfo_t), MALLOC_CAP_SPIRAM);
     //  It's like a memcopy
     //*start = *_start;
 
     // 1. initialize the open list
-    list_t* open = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    list_t* open = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     // 2. initialize the closed list
     list_t* closed = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     // put the starting node on the open list (you can leave its f at zero)

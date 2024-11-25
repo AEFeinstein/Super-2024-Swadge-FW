@@ -135,7 +135,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
             {
                 // animation has played through back to 0
                 bb_heavyFallingData_t* hData
-                    = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
+                    = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
                 hData->yVel = rData->yVel >> 2;
                 bb_destroyEntity(rData->flame, false);
                 bb_setData(self, hData, HEAVY_FALLING_DATA);
@@ -347,7 +347,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     // converting microseconds to milliseconds without requiring division.
     if (gData->fuel < 0)
     {
-        bb_physicsData_t* physData  = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
         physData->vel               = gData->vel;
         physData->bounceNumerator   = 1; // 25% bounce
         physData->bounceDenominator = 4;
@@ -973,12 +973,12 @@ void bb_updateMenu(bb_entity_t* self)
         self->gameData->menuBug->drawFunction      = &bb_drawMenuBug;
         self->gameData->menuBug->updateFunction    = &bb_updateMenuBug;
         self->gameData->menuBug->updateFarFunction = &bb_updateFarDestroy;
-        bb_menuBugData_t* mbData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
+        bb_menuBugData_t* mbData = heap_caps_calloc(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
         mbData->xVel             = bb_randomInt(-2, 2);
         mbData->xVel
             = mbData->xVel == 1 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
         mbData->firstTrip = true;
-        FREE_DBG(self->gameData->menuBug->data);
+        heap_caps_free(self->gameData->menuBug->data);
         self->gameData->menuBug->data                        = mbData;
         self->gameData->menuBug->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
         if (mbData->xVel == 0)
@@ -1117,7 +1117,7 @@ void bb_updateCharacterTalk(bb_entity_t* self)
                                                        // ".wsg" + null terminator ('\0')
                 snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
                 freeWsg(&dData->sprite);
-                loadWsg(wsg_name, &dData->sprite, true); // TODO inplace this, global decoder
+                loadWsgInplace(wsg_name, &dData->sprite, true, bb_decodeSpace, bb_hsd); // TODO inplace this, global decoder
 
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
@@ -1153,7 +1153,7 @@ void bb_updateAttachmentArm(bb_entity_t* self)
         self->gameData->entityManager.viewEntity   = aData->rocket;
         aData->rocket->currentAnimationFrame       = 0;
 
-        bb_rocketData_t* rData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
+        bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
 
         rData->flame
             = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
@@ -1829,15 +1829,15 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
 
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
 {
-    bb_dialogueData_t* dData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
+    bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
     dData->loadedIdx         = bb_randomInt(0, 6);
     char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                            // terminator ('\0')
     snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
-    loadWsg(wsg_name, &dData->sprite, true);
-    loadWsg("dialogue_next.wsg\0", &dData->spriteNext, true);
+    loadWsgInplace(wsg_name, &dData->sprite, true, bb_decodeSpace, bb_hsd);
+    loadWsgInplace("dialogue_next.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
 
     dData->strings = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
@@ -1853,8 +1853,8 @@ void bb_freeDialogueData(bb_dialogueData_t* dData)
 {
     for (int i = 0; i < dData->numStrings; i++)
     {
-        FREE_DBG(dData->strings[i]); // Free each string
+        heap_caps_free(dData->strings[i]); // Free each string
     }
-    FREE_DBG(dData->strings); // Free the array of string pointers
-    FREE_DBG(dData);          // Free the struct itself
+    heap_caps_free(dData->strings); // Free the array of string pointers
+    heap_caps_free(dData);          // Free the struct itself
 }

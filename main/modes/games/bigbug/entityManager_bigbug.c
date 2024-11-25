@@ -7,6 +7,7 @@
 #include <string.h>
 #include <limits.h>
 
+#include "mode_bigbug.h"
 #include "gameData_bigbug.h"
 #include "gameData_bigbug.h"
 #include "entityManager_bigbug.h"
@@ -28,9 +29,9 @@
 // Functions
 //==============================================================================
 void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData,
-                                bb_soundManager_t* soundManager, heatshrink_decoder* hsd, uint8_t* decodeSpace)
+                                bb_soundManager_t* soundManager)
 {
-    bb_loadSprites(entityManager, hsd, decodeSpace);
+    bb_loadSprites(entityManager);
     entityManager->entities = heap_caps_calloc(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
@@ -44,11 +45,11 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
     entityManager->cachedEntities = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
 }
 
-bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite, heatshrink_decoder* hsd, uint8_t* decodeSpace)
+bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite)
 {
     sprite->brightnessLevels = brightnessLevels;
     sprite->numFrames        = num_frames;
-    sprite->frames           = HEAP_CAPS_CALLOC_DBG(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    sprite->frames           = heap_caps_calloc(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
 
     for (uint8_t brightness = 0; brightness < brightnessLevels; brightness++)
     {
@@ -57,84 +58,84 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
             char wsg_name[strlen(name) + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" + null
                                              // terminator ('\0')
             snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, brightness * num_frames + i);
-            loadWsgInplace(wsg_name, &sprite->frames[brightness * num_frames + i], true, decodeSpace, hsd);
+            loadWsgInplace(wsg_name, &sprite->frames[brightness * num_frames + i], true, bb_decodeSpace, bb_hsd);
         }
     }
 
     return sprite;
 }
 
-void bb_loadSprites(bb_entityManager_t* entityManager, heatshrink_decoder* hsd, uint8_t* decodeSpace)
+void bb_loadSprites(bb_entityManager_t* entityManager)
 {
-    bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 24, 1, &entityManager->sprites[CRUMBLE_ANIM], hsd, decodeSpace);
+    bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 24, 1, &entityManager->sprites[CRUMBLE_ANIM]);
     crumbleSprite->originX     = 48;
     crumbleSprite->originY     = 43;
 
-    bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, 1, &entityManager->sprites[BUMP_ANIM], hsd, decodeSpace);
+    bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, 1, &entityManager->sprites[BUMP_ANIM]);
     bumpSprite->originX     = 37;
     bumpSprite->originY     = 37;
 
-    bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 42, 1, &entityManager->sprites[ROCKET_ANIM], hsd, decodeSpace);
+    bb_sprite_t* rocketSprite = bb_loadSprite("rocket", 42, 1, &entityManager->sprites[ROCKET_ANIM]);
     rocketSprite->originX     = 33;
     rocketSprite->originY     = 66;
 
-    bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, 1, &entityManager->sprites[FLAME_ANIM], hsd, decodeSpace);
+    bb_sprite_t* flameSprite = bb_loadSprite("flame", 24, 1, &entityManager->sprites[FLAME_ANIM]);
     flameSprite->originX     = 27;
     flameSprite->originY     = -27;
 
-    bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, 1, &entityManager->sprites[GARBOTNIK_FLYING], hsd, decodeSpace);
+    bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, 1, &entityManager->sprites[GARBOTNIK_FLYING]);
     garbotnikFlyingSprite->originX     = 18;
     garbotnikFlyingSprite->originY     = 17;
 
-    bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, 1, &entityManager->sprites[HARPOON], hsd, decodeSpace);
+    bb_sprite_t* harpoonSprite = bb_loadSprite("harpoon-", 18, 1, &entityManager->sprites[HARPOON]);
     harpoonSprite->originX     = 10;
     harpoonSprite->originY     = 8;
 
-    bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES], hsd, decodeSpace);
+    bb_sprite_t* eggLeavesSprite = bb_loadSprite("eggLeaves", 1, 6, &entityManager->sprites[EGG_LEAVES]);
     eggLeavesSprite->originX     = 12;
     eggLeavesSprite->originY     = 5;
 
-    bb_sprite_t* eggSprite = bb_loadSprite("egg", 1, 6, &entityManager->sprites[EGG], hsd, decodeSpace);
+    bb_sprite_t* eggSprite = bb_loadSprite("egg", 1, 6, &entityManager->sprites[EGG]);
     eggSprite->originX     = 12;
     eggSprite->originY     = 12;
 
-    bb_sprite_t* buSprite = bb_loadSprite("bu", 4, 6, &entityManager->sprites[BU], hsd, decodeSpace);
+    bb_sprite_t* buSprite = bb_loadSprite("bu", 4, 6, &entityManager->sprites[BU]);
     buSprite->originX     = 13;
     buSprite->originY     = 15;
 
-    bb_sprite_t* bugSprite = bb_loadSprite("bug", 4, 6, &entityManager->sprites[BUG], hsd, decodeSpace);
+    bb_sprite_t* bugSprite = bb_loadSprite("bug", 4, 6, &entityManager->sprites[BUG]);
     bugSprite->originX     = 13;
     bugSprite->originY     = 7;
 
-    bb_sprite_t* buggSprite = bb_loadSprite("bugg", 4, 6, &entityManager->sprites[BUGG], hsd, decodeSpace);
+    bb_sprite_t* buggSprite = bb_loadSprite("bugg", 4, 6, &entityManager->sprites[BUGG]);
     buggSprite->originX     = 11;
     buggSprite->originY     = 11;
 
-    bb_sprite_t* buggoSprite = bb_loadSprite("buggo", 4, 6, &entityManager->sprites[BUGGO], hsd, decodeSpace);
+    bb_sprite_t* buggoSprite = bb_loadSprite("buggo", 4, 6, &entityManager->sprites[BUGGO]);
     buggoSprite->originX     = 12;
     buggoSprite->originY     = 14;
 
-    bb_sprite_t* buggySprite = bb_loadSprite("buggy", 4, 6, &entityManager->sprites[BUGGY], hsd, decodeSpace);
+    bb_sprite_t* buggySprite = bb_loadSprite("buggy", 4, 6, &entityManager->sprites[BUGGY]);
     buggySprite->originX     = 13;
     buggySprite->originY     = 11;
 
-    bb_sprite_t* buttSprite = bb_loadSprite("butt", 4, 6, &entityManager->sprites[BUTT], hsd, decodeSpace);
+    bb_sprite_t* buttSprite = bb_loadSprite("butt", 4, 6, &entityManager->sprites[BUTT]);
     buttSprite->originX     = 14;
     buttSprite->originY     = 6;
 
-    bb_sprite_t* menuSprite = bb_loadSprite("bb_menu", 4, 1, &entityManager->sprites[BB_MENU], hsd, decodeSpace);
+    bb_sprite_t* menuSprite = bb_loadSprite("bb_menu", 4, 1, &entityManager->sprites[BB_MENU]);
     menuSprite->originX     = 140;
     menuSprite->originY     = 354;
 
-    bb_sprite_t* deathDumpsterSprite = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER], hsd, decodeSpace);
+    bb_sprite_t* deathDumpsterSprite = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER]);
     deathDumpsterSprite->originX     = 138;
     deathDumpsterSprite->originY     = 100;
 
-    bb_sprite_t* attachmentArmSprite = bb_loadSprite("AttachmentArm", 1, 1, &entityManager->sprites[ATTACHMENT_ARM], hsd, decodeSpace);
+    bb_sprite_t* attachmentArmSprite = bb_loadSprite("AttachmentArm", 1, 1, &entityManager->sprites[ATTACHMENT_ARM]);
     attachmentArmSprite->originX     = 6;
     attachmentArmSprite->originY     = 20;
 
-    bb_loadSprite("GameOver", 2, 1, &entityManager->sprites[BB_GAME_OVER], hsd, decodeSpace);
+    bb_loadSprite("GameOver", 2, 1, &entityManager->sprites[BB_GAME_OVER]);
 
     bb_sprite_t* washingMachineSprite
         = bb_loadSprite("WashingMachine", 1, 6, &entityManager->sprites[BB_WASHING_MACHINE]);
@@ -805,7 +806,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case NO_SPRITE_POI:
         {
-            bb_setData(entity, HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM), GO_TO_DATA);
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_goToData), MALLOC_CAP_SPIRAM), GO_TO_DATA);
             // entity->updateFunction = &bb_updatePOI;
             entity->drawFunction = &bb_drawNothing;
             break;
@@ -818,7 +819,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case ATTACHMENT_ARM:
         {
-            bb_attachmentArmData_t* aData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM);
+            bb_attachmentArmData_t* aData = heap_caps_calloc(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM);
             aData->angle                  = 180 << DECIMAL_BITS;
             bb_setData(entity, aData, ATTACHMENT_ARM_DATA);
             entity->updateFunction = &bb_updateAttachmentArm;
@@ -840,7 +841,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_WASHING_MACHINE:
         {
-            bb_setData(entity, HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM),
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM),
                        HEAVY_FALLING_DATA);
             entity->halfWidth      = 16 << DECIMAL_BITS;
             entity->halfHeight     = 16 << DECIMAL_BITS;
@@ -876,7 +877,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             entity->halfWidth          = 25 << DECIMAL_BITS;
             entity->halfHeight         = 13 << DECIMAL_BITS;
-            bb_carActiveData_t* caData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_carActiveData_t), MALLOC_CAP_SPIRAM);
+            bb_carActiveData_t* caData = heap_caps_calloc(1, sizeof(bb_carActiveData_t), MALLOC_CAP_SPIRAM);
             caData->enemiesRemaining   = 10;
             bb_setData(entity, caData, CAR_ACTIVE_DATA);
             break;

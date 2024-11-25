@@ -18,4 +18,7 @@ void bb_setupMidi(void);
 
 extern swadgeMode_t bigbugMode;
 
+extern heatshrink_decoder* bb_hsd;
+extern uint8_t* bb_decodeSpace;
+
 #endif

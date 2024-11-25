@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 #include <color_utils.h>
+#include "mode_bigbug.h"
 #include "typedef_bigbug.h"
 #include "tilemap_bigbug.h"
 #include "random_bigbug.h"
@@ -16,10 +17,10 @@
 // Functions
 //==============================================================================
 
-void bb_initializeTileMap(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decodeSpace)
+void bb_initializeTileMap(bb_tilemap_t* tilemap)
 {
     wsg_t levelWsg;                           ///< A graphic representing the level data where tiles are pixels.
-    loadWsg("bb_level.wsg", &levelWsg, true); // levelWsg only needed for this brief scope.
+    loadWsgInplace("bb_level.wsg", &levelWsg, true, bb_decodeSpace, bb_hsd); // levelWsg only needed for this brief scope.
 
     // Set all the tiles
     for (int i = 0; i < TILE_FIELD_WIDTH; i++)
@@ -117,13 +118,13 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_
     freeWsg(&levelWsg);
 }
 
-void bb_loadWsgs(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decodeSpace)
+void bb_loadWsgs(bb_tilemap_t* tilemap)
 {
-    loadWsgInplace("headlampLookup.wsg", &tilemap->headlampWsg, true, decodeSpace, hsd); // 122 x 107 pixels
+    loadWsgInplace("headlampLookup.wsg", &tilemap->headlampWsg, true, bb_decodeSpace, bb_hsd); // 122 x 107 pixels
 
-    loadWsg("baked_Landfill2.wsg", &tilemap->surface1Wsg, true);
-    loadWsg("baked_Landfill3.wsg", &tilemap->surface2Wsg, true);
-    loadWsg("landfill_gradient.wsg", &tilemap->landfillGradient, true);
+    loadWsgInplace("baked_Landfill2.wsg", &tilemap->surface1Wsg, true, bb_decodeSpace, bb_hsd);
+    loadWsgInplace("baked_Landfill3.wsg", &tilemap->surface2Wsg, true, bb_decodeSpace, bb_hsd);
+    loadWsgInplace("landfill_gradient.wsg", &tilemap->landfillGradient, true, bb_decodeSpace, bb_hsd);
 
     // TILE MAP shenanigans explained:
     // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
@@ -158,13 +159,13 @@ void bb_loadWsgs(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decode
     {
         char filename[20];
         snprintf(filename, sizeof(filename), "mid_s_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->mid_s_Wsg[i], true, decodeSpace, hsd);
+        loadWsgInplace(filename, &tilemap->mid_s_Wsg[i], true, bb_decodeSpace, bb_hsd);
 
         snprintf(filename, sizeof(filename), "mid_m_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->mid_m_Wsg[i], true, decodeSpace, hsd);
+        loadWsgInplace(filename, &tilemap->mid_m_Wsg[i], true, bb_decodeSpace, bb_hsd);
 
         snprintf(filename, sizeof(filename), "mid_h_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->mid_h_Wsg[i], true, decodeSpace, hsd);
+        loadWsgInplace(filename, &tilemap->mid_h_Wsg[i], true, bb_decodeSpace, bb_hsd);
     }
 
     // Foreground
@@ -172,16 +173,16 @@ void bb_loadWsgs(bb_tilemap_t* tilemap, heatshrink_decoder* hsd, uint8_t* decode
     {
         char filename[20];
         snprintf(filename, sizeof(filename), "fore_s_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->fore_s_Wsg[i], true, decodeSpace, hsd);
+        loadWsgInplace(filename, &tilemap->fore_s_Wsg[i], true, bb_decodeSpace, bb_hsd);
 
         snprintf(filename, sizeof(filename), "fore_m_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->fore_m_Wsg[i], true, decodeSpace, hsd);
+        loadWsgInplace(filename, &tilemap->fore_m_Wsg[i], true, bb_decodeSpace, bb_hsd);
 
         snprintf(filename, sizeof(filename), "fore_h_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->fore_h_Wsg[i], true, decodeSpace, hsd);
+        loadWsgInplace(filename, &tilemap->fore_h_Wsg[i], true, bb_decodeSpace, bb_hsd);
 
         snprintf(filename, sizeof(filename), "fore_b_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->fore_b_Wsg[i], true, decodeSpace, hsd);
+        loadWsgInplace(filename, &tilemap->fore_b_Wsg[i], true, bb_decodeSpace, bb_hsd);
     }
 }
 
@@ -214,7 +215,7 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 // flags neighbors to check for structural support
 void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 {
-    uint8_t* left = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    uint8_t* left = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     left[0]       = tile->x - 1;
     left[1]       = tile->y;
     left[2]       = 1;
@@ -222,14 +223,14 @@ void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 
     if (tile->y > 0)
     {
-        uint8_t* up = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        uint8_t* up = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
         up[0]       = tile->x;
         up[1]       = tile->y - 1;
         up[2]       = 1;
         push(&gameData->pleaseCheck, (void*)up);
     }
 
-    uint8_t* right = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    uint8_t* right = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     right[0]       = tile->x + 1;
     right[1]       = tile->y;
     right[2]       = 1;
@@ -237,14 +238,14 @@ void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 
     if (tile->y < TILE_FIELD_HEIGHT)
     {
-        uint8_t* down = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        uint8_t* down = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
         down[0]       = tile->x;
         down[1]       = tile->y + 1;
         down[2]       = 1;
         push(&gameData->pleaseCheck, (void*)down);
     }
 
-    uint8_t* midground = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    uint8_t* midground = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     midground[0]       = tile->x;
     midground[1]       = tile->y;
     midground[2]       = 0;

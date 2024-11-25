@@ -107,6 +107,13 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
 /// using memory while it is being played
 bb_t* bigbug = NULL;
 
+/// @brief A heatshrink decoder to use for all WSG loads rather than allocate a new one for each WSG
+/// This helps to prevent memory fragmentation in SPIRAM.
+/// Note, this is outside the bb_t struct for easy access to loading fuctions without bb_t references
+heatshrink_decoder* bb_hsd;
+/// @brief A temporary decode space to use for all WSG loads
+uint8_t* bb_decodeSpace;
+
 //==============================================================================
 // Required Functions
 //==============================================================================
@@ -118,25 +125,18 @@ static void bb_EnterMode(void)
     // Force draw a loading screen
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
+    // Allocate memory for the game state
     bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+
+    // Allocate WSG loading helpers
+    bb_hsd = heatshrink_decoder_alloc(256, 8, 4);
+    bb_decodeSpace = heap_caps_malloc(102404, MALLOC_CAP_SPIRAM);
 
     bb_SetLeds();
 
-    // Load WSGs before other assets because it uses large temporary space
-    { // Scope the code that uses hsd and decodeSpace
-        // Create one decoder and decode space for all the WSG decode operations
-        // Note, the decode space was chosen experimentally to store the largest bigbug WSG
-        heatshrink_decoder* hsd = heatshrink_decoder_alloc(256, 8, 4);
-        uint8_t* decodeSpace = heap_caps_malloc(102404, MALLOC_CAP_SPIRAM);
-
-        // Initialize things that require loading WSGs
-        bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData, &bigbug->soundManager, hsd, decodeSpace);
-        bb_initializeTileMap(&bigbug->gameData.tilemap, hsd, decodeSpace);
-
-        // Free the decoder and temporary space
-        heatshrink_decoder_free(hsd);
-        heap_caps_free(decodeSpace);
-    }
+    // Initialize things that require loading WSGs
+    bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData, &bigbug->soundManager);
+    bb_initializeTileMap(&bigbug->gameData.tilemap);
 
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
@@ -212,6 +212,9 @@ void bb_setupMidi(void)
 
 static void bb_ExitMode(void)
 {
+    heatshrink_decoder_free(bb_hsd);
+    heap_caps_free(bb_decodeSpace);
+
     // Destroy menu bug, just in case
     bb_destroyEntity(bigbug->gameData.menuBug, false);
 
@@ -442,7 +445,7 @@ static void bb_UpdateTileSupport(void)
                                                       &bigbug->gameData.tilemap)))
             {
                 // trigger a cascading collapse
-                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                uint8_t* val = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                 memcpy(val, shiftedVal, 3 * sizeof(uint8_t));
                 push(&bigbug->gameData.unsupported, (void*)val);
             }
@@ -493,14 +496,14 @@ static void bb_UpdateTileSupport(void)
                     {
                         // TODO where is this heap_caps_free()'d?
                         // should be done now.
-                        uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                        uint8_t* val = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                         val[0]       = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
                         val[1]       = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
                         val[2]       = shiftedVal[2];
                         push(&bigbug->gameData.unsupported, (void*)val);
                     }
                 }
-                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                uint8_t* val = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                 val[0]       = shiftedVal[0];
                 val[1]       = shiftedVal[1];
                 val[2]       = !shiftedVal[2];
