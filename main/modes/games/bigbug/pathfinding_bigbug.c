@@ -101,14 +101,14 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
     {
         start->hCost = TILE_FIELD_WIDTH - 5 - start->x;
     }
-    //bb_tileInfo_t* start = HEAP_CAPS_MALLOC_DBG(sizeof(bb_tileInfo_t), MALLOC_CAP_SPIRAM);
+    //bb_tileInfo_t* start = heap_caps_malloc(sizeof(bb_tileInfo_t), MALLOC_CAP_SPIRAM);
     // It's like a memcopy
     //*start = *_start;
     
     // 1. initialize the open list
-    list_t* open   = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    list_t* open   = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     // 2. initialize the closed list
-    list_t* closed = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    list_t* closed = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     // put the starting node on the open list (you can leave its f at zero)
     push(open, (void*)start);
 
@@ -138,7 +138,7 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
             return true;
         }
 
-        list_t* neighbors = HEAP_CAPS_CALLOC_DBG(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+        list_t* neighbors = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
         getNeighbors(current, neighbors, tilemap);
 
         //foreach neighbor of the current node
@@ -190,12 +190,12 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
             neighbor = neighbor->next;
         }
         clear(neighbors);
-        FREE_DBG(neighbors);
+        heap_caps_free(neighbors);
     } // end (while loop)
     clear(open);
-    FREE_DBG(open);
+    heap_caps_free(open);
     clear(closed);
-    FREE_DBG(closed);
+    heap_caps_free(closed);
     printf("path false\n");
     return false;
 }

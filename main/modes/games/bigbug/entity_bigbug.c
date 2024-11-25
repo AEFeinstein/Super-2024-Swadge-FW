@@ -38,7 +38,7 @@ void bb_setData(bb_entity_t* self, void* data, bb_data_type_t dataType)
 {
     if (self->data != NULL)
     {
-        FREE_DBG(self->data);
+        heap_caps_free(self->data);
         self->data = NULL;
     }
     self->data = data;
@@ -56,10 +56,10 @@ void bb_clearCollisions(bb_entity_t* self, bool keepCollisionsCached)
             // Remove from head
             bb_collision_t* shiftedCollision = shift(self->collisions);
             clear(shiftedCollision->checkOthers);
-            FREE_DBG(shiftedCollision->checkOthers);
-            FREE_DBG(shiftedCollision);
+            heap_caps_free(shiftedCollision->checkOthers);
+            heap_caps_free(shiftedCollision);
         }
-        FREE_DBG(self->collisions);
+        heap_caps_free(self->collisions);
     }
     self->collisions = NULL;
 }
@@ -77,12 +77,12 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             bb_dialogueData_t* dData = (bb_dialogueData_t*) self->data;
             for(int i = 0; i<dData->numStrings; i++)
             {
-                FREE_DBG(dData->strings[i]);
+                heap_caps_free(dData->strings[i]);
             }
-            FREE_DBG(dData->strings);
+            heap_caps_free(dData->strings);
             freeWsg(&dData->sprite);
         }
-        FREE_DBG(self->data);
+        heap_caps_free(self->data);
     }
     self->data = NULL;
 
@@ -134,7 +134,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
             if (rData->flame->currentAnimationFrame == 0)
             {
                 //animation has played through back to 0
-                bb_heavyFallingData_t* hData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
+                bb_heavyFallingData_t* hData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
                 hData->yVel = rData->yVel >> 2;
                 bb_destroyEntity(rData->flame, false);
                 bb_setData(self, hData, HEAVY_FALLING_DATA);
@@ -332,7 +332,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     if (gData->fuel < 0)
     {
         
-        bb_physicsData_t* physData  = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
         physData->vel               = gData->vel;
         physData->bounceNumerator   = 1; // 25% bounce
         physData->bounceDenominator = 4;
@@ -575,7 +575,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ///////////////////////
 
         // crumble test
-        //  uint32_t* val = HEAP_CAPS_CALLOC_DBG(2,sizeof(uint32_t), MALLOC_CAP_SPIRAM);
+        //  uint32_t* val = heap_caps_calloc(2,sizeof(uint32_t), MALLOC_CAP_SPIRAM);
         //  val[0] = 5;
         //  val[1] = 3;
         //  push(self->gameData->unsupported, (void*)val);
@@ -636,7 +636,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         //     is dirt. if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y <
         //     TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
         //     {
-        //         uint32_t* val = HEAP_CAPS_CALLOC_DBG(4, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
+        //         uint32_t* val = heap_caps_calloc(4, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
         //         val[0] = check_x;
         //         val[1] = check_y;
         //         val[2] = 1; //1 is for foreground. 0 is midground.
@@ -696,7 +696,7 @@ void bb_updateHarpoon(bb_entity_t* self)
     if (hitInfo.hit && pData->prevFrameInAir && pData->vel.y > 0)
     {
         vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
-        bb_stuckHarpoonData_t* shData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
+        bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
         shData->floatVel              = normVecFl2d(floatVel);
         bb_setData(self, shData, STUCK_HARPOON_DATA);
 
@@ -924,12 +924,12 @@ void bb_updateMenu(bb_entity_t* self)
         self->gameData->menuBug->drawFunction      = &bb_drawMenuBug;
         self->gameData->menuBug->updateFunction    = &bb_updateMenuBug;
         self->gameData->menuBug->updateFarFunction = &bb_updateFarDestroy;
-        bb_menuBugData_t* mbData                   = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
+        bb_menuBugData_t* mbData                   = heap_caps_calloc(1, sizeof(bb_menuBugData_t), MALLOC_CAP_SPIRAM);
         mbData->xVel                               = bb_randomInt(-2, 2);
         mbData->xVel
             = mbData->xVel == 1 ? mbData->xVel - 1 : mbData->xVel; // So as not to match the treadmill speed exactly.
         mbData->firstTrip                                    = true;
-        FREE_DBG(self->gameData->menuBug->data);
+        heap_caps_free(self->gameData->menuBug->data);
         self->gameData->menuBug->data                        = mbData;
         self->gameData->menuBug->gameFramesPerAnimationFrame = abs(6 - mbData->xVel);
         if (mbData->xVel == 0)
@@ -1102,7 +1102,7 @@ void bb_updateAttachmentArm(bb_entity_t* self)
         self->gameData->entityManager.viewEntity = aData->rocket;
         aData->rocket->currentAnimationFrame = 0;
 
-        bb_rocketData_t* rData =  HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
+        bb_rocketData_t* rData =  heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
 
         rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
             aData->rocket->pos.x >> DECIMAL_BITS, aData->rocket->pos.y >> DECIMAL_BITS, true, false);
@@ -1386,7 +1386,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
 
         bData->health               = 0;
         other->paused               = true;
-        bb_physicsData_t* physData  = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
         physData->vel               = divVec2d(pData->vel, 2);
         physData->bounceNumerator   = 2; // 66% bounce
         physData->bounceDenominator = 3;
@@ -1394,7 +1394,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         other->updateFunction = bb_updatePhysicsObject;
     }
     vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
-    bb_stuckHarpoonData_t* shData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
+    bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
     shData->parent                = other;
     shData->offset                = subVec2d(self->pos, other->pos);
     shData->floatVel              = normVecFl2d(floatVel);
@@ -1749,7 +1749,7 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
 
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
 {
-    bb_dialogueData_t* dData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
+    bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings = numStrings;
     dData->offsetY = -240;
     dData->loadedIdx = bb_randomInt(0,7);
@@ -1758,21 +1758,21 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
     snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
     loadWsg(wsg_name, &dData->sprite, true);
 
-    dData->strings = HEAP_CAPS_CALLOC_DBG(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
+    dData->strings = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
 }
 
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str)
 {
-    dData->strings[index] = HEAP_CAPS_CALLOC_DBG(strlen(str) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
+    dData->strings[index] = heap_caps_calloc(strlen(str) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(dData->strings[index], str);
 }
 
 void bb_freeDialogueData(bb_dialogueData_t* dData)
 {
     for (int i = 0; i < dData->numStrings; i++) {
-        FREE_DBG(dData->strings[i]);  // Free each string
+        heap_caps_free(dData->strings[i]);  // Free each string
     }
-    FREE_DBG(dData->strings);         // Free the array of string pointers
-    FREE_DBG(dData);                  // Free the struct itself
+    heap_caps_free(dData->strings);         // Free the array of string pointers
+    heap_caps_free(dData);                  // Free the struct itself
 }

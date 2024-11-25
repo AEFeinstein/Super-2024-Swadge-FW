@@ -217,7 +217,7 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 //flags neighbors to check for structural support
 void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 {
-    uint8_t* left = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    uint8_t* left = heap_caps_calloc(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     left[0] = tile->x - 1;
     left[1] = tile->y;
     left[2] = 1;
@@ -225,14 +225,14 @@ void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 
     if(tile->y > 0)
     {
-        uint8_t* up = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        uint8_t* up = heap_caps_calloc(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
         up[0] = tile->x;
         up[1] = tile->y - 1;
         up[2] = 1;
         push(&gameData->pleaseCheck, (void*)up);
     }
 
-    uint8_t* right = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    uint8_t* right = heap_caps_calloc(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     right[0] = tile->x + 1;
     right[1] = tile->y;
     right[2] = 1;
@@ -240,14 +240,14 @@ void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 
     if(tile->y < TILE_FIELD_HEIGHT)
     {
-        uint8_t* down = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        uint8_t* down = heap_caps_calloc(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
         down[0] = tile->x;
         down[1] = tile->y + 1;
         down[2] = 1;
         push(&gameData->pleaseCheck, (void*)down);
     }
 
-    uint8_t* midground = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    uint8_t* midground = heap_caps_calloc(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
     midground[0] = tile->x;
     midground[1] = tile->y;
     midground[2] = 0;

@@ -103,7 +103,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
                            .fnDacCb                  = NULL};
 
-/// All state information for bigbug mode. This whole struct is calloc()'d and FREE_DBG()'d so that bigbug is only
+/// All state information for bigbug mode. This whole struct is calloc()'d and heap_caps_free()'d so that bigbug is only
 /// using memory while it is being played
 bb_t* bigbug = NULL;
 
@@ -118,7 +118,7 @@ static void bb_EnterMode(void)
     // Force draw a loading screen
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
-    bigbug = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+    bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
 
     bb_SetLeds();
 
@@ -232,7 +232,7 @@ static void bb_ExitMode(void)
 
     bb_freeWsgs(&bigbug->gameData.tilemap);
 
-    FREE_DBG(bigbug);
+    heap_caps_free(bigbug);
 }
 
 static void bb_MainLoop(int64_t elapsedUs)
@@ -439,14 +439,14 @@ static void bb_UpdateTileSupport(void)
                 pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap)))
             {
                 //trigger a cascading collapse
-                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                uint8_t* val = heap_caps_calloc(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                 memcpy(val, shiftedVal, 3 * sizeof(uint8_t));
                 push(&bigbug->gameData.unsupported, (void*)val);
             }
-            FREE_DBG(shiftedVal);
+            heap_caps_free(shiftedVal);
             break;
         }
-        FREE_DBG(shiftedVal);
+        heap_caps_free(shiftedVal);
     }
 
     if (bigbug->gameData.unsupported.first != NULL && bb_randomInt(1,4) == 1)//making it happen randomly slowly makes crumble sound and looks nicer.
@@ -484,25 +484,25 @@ static void bb_UpdateTileSupport(void)
                         && (uint8_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] >= 0
                         && (uint8_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] < TILE_FIELD_HEIGHT)
                     {
-                        // TODO where is this FREE_DBG()'d?
+                        // TODO where is this heap_caps_free()'d?
                         // should be done now.
-                        uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                        uint8_t* val = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                         val[0]        = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
                         val[1]        = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
                         val[2]        = shiftedVal[2];
                         push(&bigbug->gameData.unsupported, (void*)val);
                     }
                 }
-                uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+                uint8_t* val = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                 val[0] = shiftedVal[0];
                 val[1] = shiftedVal[1];
                 val[2] = !shiftedVal[2];
                 push(&bigbug->gameData.unsupported, (void*)val);
 
-                FREE_DBG(shiftedVal);
+                heap_caps_free(shiftedVal);
                 break;
             }
-            FREE_DBG(shiftedVal);
+            heap_caps_free(shiftedVal);
         }
     }
 }

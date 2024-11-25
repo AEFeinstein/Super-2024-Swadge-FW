@@ -61,11 +61,11 @@ void bb_freeGameData(bb_gameData_t* gameData)
     freeFont(&gameData->font);
     while(gameData->unsupported.first)
     {
-        FREE_DBG(shift(&gameData->unsupported));
+        heap_caps_free(shift(&gameData->unsupported));
     }
     while(gameData->pleaseCheck.first)
     {
-        FREE_DBG(shift(&gameData->unsupported));
+        heap_caps_free(shift(&gameData->unsupported));
     }
 }
 
