@@ -51,11 +51,11 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
         {
             usedMemory[0] += aTable[idx].size;
         }
-        printf(memDbgFmtStr, "malloc", file, line, usedMemory[0], usedMemory[1]);
+        // printf(memDbgFmtStr, "malloc", file, line, usedMemory[0], usedMemory[1]);
     }
     else
     {
-        fprintf(stderr, "Allocation table out of space\n");
+        // fprintf(stderr, "Allocation table out of space\n");
     }
 
     return aTable[idx].ptr;
@@ -100,11 +100,11 @@ void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* fil
         {
             usedMemory[0] += aTable[idx].size;
         }
-        printf(memDbgFmtStr, "calloc", file, line, usedMemory[0], usedMemory[1]);
+        // printf(memDbgFmtStr, "calloc", file, line, usedMemory[0], usedMemory[1]);
     }
     else
     {
-        fprintf(stderr, "Allocation table out of space\n");
+        // fprintf(stderr, "Allocation table out of space\n");
     }
     return aTable[idx].ptr;
 }
@@ -128,7 +128,7 @@ void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t l
         }
         aTable[idx].ptr  = NULL;
         aTable[idx].size = 0;
-        printf(memDbgFmtStr, "free", file, line, usedMemory[0], usedMemory[1]);
+        // printf(memDbgFmtStr, "free", file, line, usedMemory[0], usedMemory[1]);
     }
     free(ptr);
 }
