@@ -115,7 +115,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
 
     if (self->pos.y > -2600 && rData->flame == NULL)
     {
-        rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 8,
+        rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 16,
                                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
     }
 

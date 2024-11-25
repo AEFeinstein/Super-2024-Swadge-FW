@@ -96,7 +96,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     rocketSprite->originX     = 33;
     rocketSprite->originY     = 66;
 
-    bb_sprite_t* flameSprite = bb_loadSprite("flame", 23, 1, &entityManager->sprites[FLAME_ANIM]);
+    bb_sprite_t* flameSprite = bb_loadSprite("flame", 11, 1, &entityManager->sprites[FLAME_ANIM]);
     flameSprite->originX     = 27;
     flameSprite->originY     = -28;
 
