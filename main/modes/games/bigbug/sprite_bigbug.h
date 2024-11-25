@@ -4,7 +4,9 @@
 //==============================================================================
 // Includes
 //==============================================================================
+
 #include <stdint.h>
+#include <stdbool.h>
 #include "wsg.h"
 #include "aabb_utils_bigbug.h"
 
@@ -18,6 +20,7 @@ typedef struct
     uint8_t numFrames;
     uint8_t brightnessLevels;
     wsg_t* frames; // Can hold 1 or more pointers to wsg's
+    bool allocated;
 } bb_sprite_t;
 
 #endif

@@ -50,6 +50,7 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
     sprite->brightnessLevels = brightnessLevels;
     sprite->numFrames        = num_frames;
     sprite->frames           = heap_caps_calloc(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    sprite->allocated        = true;
 
     for (uint8_t brightness = 0; brightness < brightnessLevels; brightness++)
     {
@@ -63,6 +64,22 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
     }
 
     return sprite;
+}
+
+void bb_freeSprite(bb_sprite_t* sprite)
+{
+    if(sprite->allocated)
+    {
+        for (uint8_t brightness = 0; brightness < sprite->brightnessLevels; brightness++)
+        {
+            for (uint8_t i = 0; i < sprite->numFrames; i++)
+            {
+                freeWsg(&sprite->frames[brightness * sprite->numFrames + i]);
+            }
+        }
+        heap_caps_free(sprite->frames);
+        sprite->allocated = false;
+    }
 }
 
 void bb_loadSprites(bb_entityManager_t* entityManager)
@@ -904,15 +921,7 @@ void bb_freeEntityManager(bb_entityManager_t* self)
 {
     for (int i = 0; i < NUM_SPRITES; i++)
     {
-        bb_sprite_t* sprite = &self->sprites[i];
-        for (int brightness = 0; brightness < sprite->brightnessLevels; brightness++)
-        {
-            for (int f = 0; f < sprite->numFrames; f++)
-            {
-                freeWsg(&sprite->frames[brightness * sprite->numFrames + f]);
-            }
-        }
-        heap_caps_free(sprite->frames);
+        bb_freeSprite(&self->sprites[i]);
     }
     // free and clear
     heap_caps_free(self->entities);

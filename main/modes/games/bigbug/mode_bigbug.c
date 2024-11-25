@@ -131,8 +131,8 @@ static void bb_EnterMode(void)
     // calloc the columns in layers separately to avoid a big alloc
     for(int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
     {
-        bigbug->gameData.tilemap.fgTiles[w] = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), true);
-        bigbug->gameData.tilemap.mgTiles[w] = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), true);
+        bigbug->gameData.tilemap.fgTiles[w] = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM);
+        bigbug->gameData.tilemap.mgTiles[w] = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM);
     }
 
     // Allocate WSG loading helpers

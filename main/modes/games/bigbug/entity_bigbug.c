@@ -208,11 +208,11 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         bb_dialogueData_t* dData = bb_createDialogueData(5); // 5
         strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
         dData->character[sizeof(dData->character) - 1] = '\0';
-        bb_setCharacterLine(dData, 0, "Gaaaash dangit!\0");
-        bb_setCharacterLine(dData, 1, "DARN it!\0");
-        bb_setCharacterLine(dData, 2, "That had a fresh coat of paint!\0");
-        bb_setCharacterLine(dData, 3, "I'll have to patch this up before all the air gets out.\0");
-        bb_setCharacterLine(dData, 4, "And the hardware store closes so early.\0");
+        bb_setCharacterLine(dData, 0, "Gaaaash dangit!");
+        bb_setCharacterLine(dData, 1, "DARN it!");
+        bb_setCharacterLine(dData, 2, "That had a fresh coat of paint!");
+        bb_setCharacterLine(dData, 3, "I'll have to patch this up before all the air gets out.");
+        bb_setCharacterLine(dData, 4, "And the hardware store closes so early.");
         dData->curString = -1;
         dData->endDialogueCB = &bb_afterGarbotnikIntro;
         bb_setData(ovo, dData, DIALOGUE_DATA);
@@ -856,11 +856,7 @@ void bb_updateFarMenuAndUnload(bb_entity_t* self)
     if ((self->pos.y >> DECIMAL_BITS) < self->gameData->camera.camera.pos.y)
     {
         // unload the menu sprites, because I don't foresee ever coming back to the main menu from gameplay.
-        for (int frameIdx = 0; frameIdx < self->gameData->entityManager.sprites[self->spriteIndex].numFrames;
-             frameIdx++)
-        {
-            freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frameIdx]);
-        }
+        bb_freeSprite(&self->gameData->entityManager.sprites[BB_MENU]);
 
         bb_destroyEntity(self, false);
     }
@@ -1516,35 +1512,35 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
     strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
     dData->character[sizeof(dData->character) - 1] = '\0';
 
-    bb_setCharacterLine(dData, 0, "Holy bug farts!\0");
-    bb_setCharacterLine(dData, 1, "After I marketed the chilidog car freshener at MAGFest,\0");
-    bb_setCharacterLine(dData, 2, "Garbotnik Industries' stock went up by 6,969%!\0"); // V longest possible string here
-    bb_setCharacterLine(dData, 3, "I'm going to use my time machine\0");
-    bb_setCharacterLine(dData, 4, "to steal the next big-selling trinket from the future now.\0");
-    bb_setCharacterLine(dData, 5, "That will floor all my stakeholders and make me UNDEFINED money!\0");
-    bb_setCharacterLine(dData, 6, "With that kind of cash, I can recruit 200 professional bassoon players\0");
-    bb_setCharacterLine(dData, 7, "to the MAGFest Community Orchestra.\0");
-    bb_setCharacterLine(dData, 8, "I'm so hyped to turn on my time machine for the first time!\0");
-    bb_setCharacterLine(dData, 9, "Everything's in order.\0");
-    bb_setCharacterLine(dData, 10, "Even Pango can't stop me!\0");
-    bb_setCharacterLine(dData, 11, "I just have to attach the chaos orb right here.\0");
-    bb_setCharacterLine(dData, 12, "Where did I put that core?\0");
-    bb_setCharacterLine(dData, 13, "hmmm...\0");
-    bb_setCharacterLine(dData, 14, "What about in the freezer?\0");
-    bb_setCharacterLine(dData, 15, "I've checked every inch of the death dumpster.\0");
-    bb_setCharacterLine(dData, 16, "Glitch my circuits!\0");
-    bb_setCharacterLine(dData, 17, "It must have gone out with the trash last Wednesday.\0");
-    bb_setCharacterLine(dData, 18, "Can I get an F in the chat?\0");
-    bb_setCharacterLine(dData, 19, "...\0");
-    bb_setCharacterLine(dData, 20, "The chaos orb is three times denser than a black hole.\0");
-    bb_setCharacterLine(dData, 21, "Well if Garbotnik Sanitation Industries took it to the landfill,\0");
-    bb_setCharacterLine(dData, 22, "then it is definitely at the VERY BOTTOM of the dump.\0");
-    bb_setCharacterLine(dData, 23, "Not a problem.\0");
-    bb_setCharacterLine(dData, 24, "We have the technology to retrieve it.\0");
-    bb_setCharacterLine(dData, 25, "Safety first.\0");
-    bb_setCharacterLine(dData, 26, "I've activated my cloning machine up here\0");
-    bb_setCharacterLine(dData, 27, "in case I should perish on that nuclear wasteland.\0");
-    bb_setCharacterLine(dData, 28, "YOLO!\0");
+    bb_setCharacterLine(dData, 0, "Holy bug farts!");
+    bb_setCharacterLine(dData, 1, "After I marketed the chilidog car freshener at MAGFest,");
+    bb_setCharacterLine(dData, 2, "Garbotnik Industries' stock went up by 6,969%!"); // V longest possible string here
+    bb_setCharacterLine(dData, 3, "I'm going to use my time machine");
+    bb_setCharacterLine(dData, 4, "to steal the next big-selling trinket from the future now.");
+    bb_setCharacterLine(dData, 5, "That will floor all my stakeholders and make me UNDEFINED money!");
+    bb_setCharacterLine(dData, 6, "With that kind of cash, I can recruit 200 professional bassoon players");
+    bb_setCharacterLine(dData, 7, "to the MAGFest Community Orchestra.");
+    bb_setCharacterLine(dData, 8, "I'm so hyped to turn on my time machine for the first time!");
+    bb_setCharacterLine(dData, 9, "Everything's in order.");
+    bb_setCharacterLine(dData, 10, "Even Pango can't stop me!");
+    bb_setCharacterLine(dData, 11, "I just have to attach the chaos orb right here.");
+    bb_setCharacterLine(dData, 12, "Where did I put that core?");
+    bb_setCharacterLine(dData, 13, "hmmm...");
+    bb_setCharacterLine(dData, 14, "What about in the freezer?");
+    bb_setCharacterLine(dData, 15, "I've checked every inch of the death dumpster.");
+    bb_setCharacterLine(dData, 16, "Glitch my circuits!");
+    bb_setCharacterLine(dData, 17, "It must have gone out with the trash last Wednesday.");
+    bb_setCharacterLine(dData, 18, "Can I get an F in the chat?");
+    bb_setCharacterLine(dData, 19, "...");
+    bb_setCharacterLine(dData, 20, "The chaos orb is three times denser than a black hole.");
+    bb_setCharacterLine(dData, 21, "Well if Garbotnik Sanitation Industries took it to the landfill,");
+    bb_setCharacterLine(dData, 22, "then it is definitely at the VERY BOTTOM of the dump.");
+    bb_setCharacterLine(dData, 23, "Not a problem.");
+    bb_setCharacterLine(dData, 24, "We have the technology to retrieve it.");
+    bb_setCharacterLine(dData, 25, "Safety first.");
+    bb_setCharacterLine(dData, 26, "I've activated my cloning machine up here");
+    bb_setCharacterLine(dData, 27, "in case I should perish on that nuclear wasteland.");
+    bb_setCharacterLine(dData, 28, "YOLO!");
 
     dData->curString = -1;
 
@@ -1596,27 +1592,27 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         case 0:
         {
             // Max dialogue string roughly: here----V
-            bb_setCharacterLine(dData, 0, "Ah, sweet stench! How I've longed for your orlfactory embrace.\0");
+            bb_setCharacterLine(dData, 0, "Ah, sweet stench! How I've longed for your orlfactory embrace.");
             break;
         }
         case 1:
         {
-            bb_setCharacterLine(dData, 0, "Tonight's special: Beetle Bruschetta with a side of centipede salad!\0");
+            bb_setCharacterLine(dData, 0, "Tonight's special: Beetle Bruschetta with a side of centipede salad!");
             break;
         }
         case 2:
         {
-            bb_setCharacterLine(dData, 0, "Another day, another dump full of delectable delights!\0");
+            bb_setCharacterLine(dData, 0, "Another day, another dump full of delectable delights!");
             break;
         }
         case 3:
         {
-            bb_setCharacterLine(dData, 0, "Step aside, garbage! The doctor is in!\0");
+            bb_setCharacterLine(dData, 0, "Step aside, garbage! The doctor is in!");
             break;
         }
         case 4:
         {
-            bb_setCharacterLine(dData, 0, "I must find that chaos core at all costs!\0");
+            bb_setCharacterLine(dData, 0, "I must find that chaos core at all costs!");
             break;
         }
         default:
@@ -1642,7 +1638,7 @@ void bb_startGarbotnikCloningTalk(bb_entity_t* self)
     dData->character[sizeof(dData->character) - 1] = '\0';
 
     bb_setCharacterLine(dData, 0, "I'm feeling fresh, baby!"); // V longest possible string here
-    bb_setCharacterLine(dData, 1, "It was a good move taking omega3 fish oils before backing up my brain.\0");
+    bb_setCharacterLine(dData, 1, "It was a good move taking omega3 fish oils before backing up my brain.");
 
     dData->curString = -1;
 
@@ -1663,8 +1659,8 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
     dData->character[sizeof(dData->character) - 1] = '\0';
 
     // Max dialogue string roughly:                                                                         here----V
-    bb_setCharacterLine(dData, 0, "Oooey Gooey! Look at that dark gelatinous mass!\0");
-    bb_setCharacterLine(dData, 1, "I can use the directional buttons on my swadge to fly over there.\0");
+    bb_setCharacterLine(dData, 0, "Oooey Gooey! Look at that dark gelatinous mass!");
+    bb_setCharacterLine(dData, 1, "I can use the directional buttons on my swadge to fly over there.");
 
     dData->curString     = -1;
     dData->endDialogueCB = &bb_afterGarbotnikEggTutorialTalk;
@@ -1687,10 +1683,10 @@ void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
     dData->character[sizeof(dData->character) - 1] = '\0';
 
     // Max dialogue string roughly:                                                                         here----V
-    bb_setCharacterLine(dData, 0, "When I travel away from the booster,\0");
-    bb_setCharacterLine(dData, 1, "I've got to keep an eye on my fuel level at all times.\0");
-    bb_setCharacterLine(dData, 2, "Sit back atop the booster before all the lights\0");
-    bb_setCharacterLine(dData, 3, "around the outside of the swadge turn off.\0");
+    bb_setCharacterLine(dData, 0, "When I travel away from the booster,");
+    bb_setCharacterLine(dData, 1, "I've got to keep an eye on my fuel level at all times.");
+    bb_setCharacterLine(dData, 2, "Sit back atop the booster before all the lights");
+    bb_setCharacterLine(dData, 3, "around the outside of the swadge turn off.");
 
     dData->curString     = -1;
     dData->endDialogueCB = &bb_afterGarbotnikFuelTutorialTalk;
