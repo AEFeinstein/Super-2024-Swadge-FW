@@ -1,7 +1,7 @@
 #ifndef _ENTITY_BIGBUG_H_
 #define _ENTITY_BIGBUG_H_
 
-#define sign(a) ( ( (a) < 0 )  ?  -1   : ( (a) > 0 ) )
+#define sign(a) (((a) < 0) ? -1 : ((a) > 0))
 
 //==============================================================================
 // Includes
@@ -61,8 +61,8 @@ typedef struct
     int32_t phi;
     int32_t r;
     int32_t intensity;
-    
-    //dialogue stuff
+
+    // dialogue stuff
     int16_t landingPhrases[5];
 } bb_garbotnikData_t;
 
@@ -109,9 +109,9 @@ typedef struct
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
-    int8_t tileTime; //probably only relevant for Garbotnik's dying scenario. Goes up with every tile collision
-                        //and decrements steadily over time. So it serves to detect when he is steadily sitting
-                        //on the ground and trigger a game over.
+    int8_t tileTime; // probably only relevant for Garbotnik's dying scenario. Goes up with every tile collision
+                     // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                     // on the ground and trigger a game over.
 } bb_physicsData_t;
 
 typedef struct
@@ -134,7 +134,7 @@ typedef struct
 
 typedef struct
 {
-    int32_t angle; // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
+    int32_t angle;       // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
     bb_entity_t* rocket; // a reference to the booster. Notify to take off at angle = 359.
 } bb_attachmentArmData_t;
 
@@ -142,7 +142,6 @@ typedef struct
 {
     uint8_t enemiesRemaining;
 } bb_carActiveData_t;
-
 
 typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
 
@@ -160,10 +159,10 @@ typedef struct
     char** strings;
     int8_t curString;
     char character[8];
-    bb_callbackFunction_t endDialogueCB;// executes when the character is done talking.
-    wsg_t* sprite; //The current talking sprite
-    int8_t loadedIdx; //The current loaded sprite. -1 if none loaded.
-    int16_t offsetY; //Track the sprite sliding up or down on screen.
+    bb_callbackFunction_t endDialogueCB; // executes when the character is done talking.
+    wsg_t* sprite;                       // The current talking sprite
+    int8_t loadedIdx;                    // The current loaded sprite. -1 if none loaded.
+    int16_t offsetY;                     // Track the sprite sliding up or down on screen.
 } bb_dialogueData_t;
 
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
@@ -240,6 +239,7 @@ void bb_updateEggLeaves(bb_entity_t* self);
 void bb_updateFarEggleaves(bb_entity_t* self);
 void bb_updateFarDestroy(bb_entity_t* self);
 void bb_updateFarMenu(bb_entity_t* self);
+void bb_updateFarMenuAndUnload(bb_entity_t* self);
 void bb_updateMenuBug(bb_entity_t* self);
 void bb_updateMoveLeft(bb_entity_t* self);
 void bb_updateBug(bb_entity_t* self);
@@ -270,7 +270,7 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
-//callbacks
+// callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
 void bb_startGarbotnikLandingTalk(bb_entity_t* self);
 void bb_startGarbotnikCloningTalk(bb_entity_t* self);
@@ -282,7 +282,8 @@ void bb_afterGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
 void bb_deployBooster(bb_entity_t* self);
 
-void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j, bool zeroHealth);
+void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
+                    bool zeroHealth);
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings);
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);

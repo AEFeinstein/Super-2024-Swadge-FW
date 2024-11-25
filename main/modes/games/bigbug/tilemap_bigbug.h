@@ -20,30 +20,29 @@
 //==============================================================================
 // Structs
 //==============================================================================
-struct bb_midgroundTileInfo_t //parent class
+struct bb_midgroundTileInfo_t // parent class
 {
-    uint8_t x;//an index in the tilemap
-    uint8_t y;//an index in the tilemap
-    bool z; // true for foreground false for midground
+    uint8_t x;     // an index in the tilemap
+    uint8_t y;     // an index in the tilemap
+    bool z;        // true for foreground false for midground
     int8_t health; // 0 is air, > 0 is garbage. Use an int8_t incase damage decrements lower than zero, then we can snap
                    // to zero.
     uint16_t gCost;
     uint16_t hCost;
 };
 
-struct bb_foregroundTileInfo_t //child class
+struct bb_foregroundTileInfo_t // child class
 {
-    //must be exactly same as bb_midgroundTileInfo_t
-    uint8_t x;//an index in the tilemap
-    uint8_t y;//an index in the tilemap
-    bool z; // true for foreground false for midground
+    // must be exactly same as bb_midgroundTileInfo_t
+    uint8_t x;     // an index in the tilemap
+    uint8_t y;     // an index in the tilemap
+    bool z;        // true for foreground false for midground
     int8_t health; // 0 is air, > 0 is garbage. Use an int8_t incase damage decrements lower than zero, then we can snap
                    // to zero.
     uint16_t gCost;
     uint16_t hCost;
-    bool toggleIteration; //toggles between true and false with every iteration of A*. So there's no need to clear out data in the entire tilemap between iterations.
 
-    //specific to bb_foregroundTileInfo_t
+    // specific to bb_foregroundTileInfo_t
     bb_embeddable_t embed; // Some kind of something embedded in the garbage tile.
     bb_entity_t* entity;   // Null when the tile is off screen. Becomes an embedded entity when on screen.
                            // Tracking for the sake of doing something to it when this tile crumbles.
@@ -63,14 +62,13 @@ struct bb_tilemap_t
     wsg_t fore_h_Wsg[240]; ///< The hard   foreground tiles
     wsg_t fore_b_Wsg[240]; ///< The brick  foreground tiles
 
-    wsg_t surface1Wsg; ///< A graphic at the surface of the city dump
-    wsg_t surface2Wsg; ///< A graphic at the surface of the city dump
+    wsg_t surface1Wsg;      ///< A graphic at the surface of the city dump
+    wsg_t surface2Wsg;      ///< A graphic at the surface of the city dump
     wsg_t landfillGradient; ///< A tall gradient repeated acroos the screen under surface1Wsg
-    wsg_t bgWsg;       ///< The paralax background for depth
 
-    bb_foregroundTileInfo_t fgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of foreground tiles. The number is the
-                                                                ///< dirt's health. 0 is air.
-    bb_midgroundTileInfo_t mgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of midground tiles.
+    bb_foregroundTileInfo_t fgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of foreground tiles. The number
+                                                                          ///< is the dirt's health. 0 is air.
+    bb_midgroundTileInfo_t mgTiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT];  ///< The array of midground tiles.
 };
 
 struct bb_hitInfo_t

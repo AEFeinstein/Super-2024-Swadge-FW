@@ -513,8 +513,8 @@ static int32_t midiSumOscillators(midiPlayer_t* player)
         playingVoices &= ~(1 << voiceIdx);
         midiVoice_t* voice = &(voices[voiceIdx]);
 
-        if (!(states->on || states->held || states->sustenuto || states->attack || states->decay
-              || states->sustain || states->release)
+        if (!(states->on || states->held || states->sustenuto || states->attack || states->decay || states->sustain
+              || states->release)
             || voice->timbre->type == SAMPLE)
         {
             continue;

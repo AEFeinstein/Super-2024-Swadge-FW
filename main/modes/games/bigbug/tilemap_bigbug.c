@@ -20,7 +20,6 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
 {
     wsg_t levelWsg;                           ///< A graphic representing the level data where tiles are pixels.
     loadWsg("bb_level.wsg", &levelWsg, true); // levelWsg only needed for this brief scope.
-    bb_loadWsgs(tilemap);
 
     // Set all the tiles
     for (int i = 0; i < TILE_FIELD_WIDTH; i++)
@@ -39,7 +38,7 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
             // blue value used for foreground tiles
             switch (rgbCol & 255)
             {
-                case 0:  // 0 in wsg land
+                case 0: // 0 in wsg land
                 {
                     tilemap->fgTiles[i][j].health = 0;
                     break;
@@ -71,7 +70,6 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
                 }
             }
 
-
             // printf("green: %u\n", (rgbCol >> 8) & 255);
             // green value used for midground tiles
             switch ((rgbCol >> 8) & 255)
@@ -83,10 +81,9 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
                 }
                 case 255: // 5 in wsg land
                 {
-                    int8_t values[] = {1, 4, 10};
-                    tilemap->mgTiles[i][j].health = tilemap->fgTiles[i][j].health == 0 ? 
-                         values[bb_randomInt(0, 2)] : 
-                         tilemap->fgTiles[i][j].health;
+                    int8_t values[]               = {1, 4, 10};
+                    tilemap->mgTiles[i][j].health = tilemap->fgTiles[i][j].health == 0 ? values[bb_randomInt(0, 2)]
+                                                                                       : tilemap->fgTiles[i][j].health;
                     break;
                 }
                 default:
@@ -96,17 +93,17 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
             }
 
             switch ((rgbCol >> 16) & 255)
-            { // red value used for some spawns (not eggs)
+            {            // red value used for some spawns (not eggs)
                 case 51: // 1 in wsg land
                 {
                     tilemap->fgTiles[i][j].health = 0;
-                    tilemap->fgTiles[i][j].embed = CAR_EMBED;
+                    tilemap->fgTiles[i][j].embed  = CAR_EMBED;
                     break;
                 }
                 case 255: // 5 in wsg land
                 {
                     tilemap->fgTiles[i][j].health = 0;
-                    tilemap->fgTiles[i][j].embed = WASHING_MACHINE_EMBED;
+                    tilemap->fgTiles[i][j].embed  = WASHING_MACHINE_EMBED;
                     break;
                 }
                 default:
@@ -127,7 +124,6 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
     loadWsg("baked_Landfill2.wsg", &tilemap->surface1Wsg, true);
     loadWsg("baked_Landfill3.wsg", &tilemap->surface2Wsg, true);
     loadWsg("landfill_gradient.wsg", &tilemap->landfillGradient, true);
-    loadWsg("trash_background.wsg", &tilemap->bgWsg, true);
 
     // TILE MAP shenanigans explained:
     // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
@@ -195,7 +191,6 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 
     freeWsg(&tilemap->surface1Wsg);
     freeWsg(&tilemap->surface2Wsg);
-    freeWsg(&tilemap->bgWsg);
 
     // Midground
     for (int16_t i = 0; i < 120; i++)
@@ -215,43 +210,43 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
     }
 }
 
-//flags neighbors to check for structural support
+// flags neighbors to check for structural support
 void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 {
-    uint8_t* left = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-    left[0] = tile->x - 1;
-    left[1] = tile->y;
-    left[2] = 1;
+    uint8_t* left = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    left[0]       = tile->x - 1;
+    left[1]       = tile->y;
+    left[2]       = 1;
     push(&gameData->pleaseCheck, (void*)left);
 
-    if(tile->y > 0)
+    if (tile->y > 0)
     {
-        uint8_t* up = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-        up[0] = tile->x;
-        up[1] = tile->y - 1;
-        up[2] = 1;
+        uint8_t* up = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        up[0]       = tile->x;
+        up[1]       = tile->y - 1;
+        up[2]       = 1;
         push(&gameData->pleaseCheck, (void*)up);
     }
 
-    uint8_t* right = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-    right[0] = tile->x + 1;
-    right[1] = tile->y;
-    right[2] = 1;
+    uint8_t* right = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    right[0]       = tile->x + 1;
+    right[1]       = tile->y;
+    right[2]       = 1;
     push(&gameData->pleaseCheck, (void*)right);
 
-    if(tile->y < TILE_FIELD_HEIGHT)
+    if (tile->y < TILE_FIELD_HEIGHT)
     {
-        uint8_t* down = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-        down[0] = tile->x;
-        down[1] = tile->y + 1;
-        down[2] = 1;
+        uint8_t* down = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        down[0]       = tile->x;
+        down[1]       = tile->y + 1;
+        down[2]       = 1;
         push(&gameData->pleaseCheck, (void*)down);
     }
 
-    uint8_t* midground = HEAP_CAPS_CALLOC_DBG(3,sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-    midground[0] = tile->x;
-    midground[1] = tile->y;
-    midground[2] = 0;
+    uint8_t* midground = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    midground[0]       = tile->x;
+    midground[1]       = tile->y;
+    midground[2]       = 0;
     push(&gameData->pleaseCheck, (void*)midground);
 }
 
@@ -286,8 +281,8 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
             drawWsgSimple(&tilemap->surface1Wsg, x * 400 - offsetX2, -camera->pos.y / 2);
         }
     }
-    //printf("cam y: %d\n", camera->pos.y);
-    // draws the back gradient
+    // printf("cam y: %d\n", camera->pos.y);
+    //  draws the back gradient
     if (camera->pos.y < 1424 && camera->pos.y > -70)
     {
         for (int x = -(offsetX2 % 8); x < 280; x += 8)
@@ -358,9 +353,9 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                                   i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false);
                             if (eggLeaves != NULL)
                             {
-                                ((bb_eggLeavesData_t*)eggLeaves->data)->egg
-                                    = bb_createEntity(entityManager, NO_ANIMATION, true, EGG, 1,
-                                                      i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false);
+                                ((bb_eggLeavesData_t*)eggLeaves->data)->egg = bb_createEntity(
+                                    entityManager, NO_ANIMATION, true, EGG, 1, i * TILE_SIZE + HALF_TILE,
+                                    j * TILE_SIZE + HALF_TILE, false, false);
                                 if (((bb_eggLeavesData_t*)eggLeaves->data)->egg == NULL)
                                 {
                                     bb_destroyEntity(eggLeaves, false);
@@ -374,8 +369,9 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case WASHING_MACHINE_EMBED:
                         {
-                            if(bb_createEntity(entityManager, NO_ANIMATION, true, BB_WASHING_MACHINE, 1,
-                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false) != NULL)
+                            if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_WASHING_MACHINE, 1,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
+                                != NULL)
                             {
                                 tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                             }
@@ -383,8 +379,9 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case CAR_EMBED:
                         {
-                            if(bb_createEntity(entityManager, NO_ANIMATION, true, BB_CAR_IDLE, 1,
-                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2, false, false) != NULL)
+                            if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_CAR_IDLE, 1,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2, false, false)
+                                != NULL)
                             {
                                 tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                             }
@@ -405,10 +402,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     wsg_t(*wsgMidgroundArrayPtr)[120] = bb_GetMidgroundWsgArrForCoord(tilemap, i, j);
 
                     // sprite_idx LURD order.
-                    int8_t sprite_idx = 8 * ((i - 1 < 0) ? 0 : (tilemap->mgTiles[i - 1][j].health > 0))
-                                        + 4 * ((j - 1 < 0) ? 0 : (tilemap->mgTiles[i][j - 1].health > 0))
-                                        + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : tilemap->mgTiles[i + 1][j].health > 0)
-                                        + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : tilemap->mgTiles[i][j + 1].health > 0);
+                    int8_t sprite_idx
+                        = 8 * ((i - 1 < 0) ? 0 : (tilemap->mgTiles[i - 1][j].health > 0))
+                          + 4 * ((j - 1 < 0) ? 0 : (tilemap->mgTiles[i][j - 1].health > 0))
+                          + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : tilemap->mgTiles[i + 1][j].health > 0)
+                          + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : tilemap->mgTiles[i][j + 1].health > 0);
                     // corner_info represents up_left, up_right, down_left, down_right dirt presence (remember >0 is
                     // dirt).
                     int8_t corner_info
@@ -1100,7 +1098,7 @@ wsg_t (*bb_GetMidgroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, c
 
 wsg_t (*bb_GetForegroundWsgArrForCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[240]
 {
-    if(tilemap->fgTiles[i][j].health > 10)
+    if (tilemap->fgTiles[i][j].health > 10)
     {
         return &tilemap->fore_b_Wsg;
     }

@@ -8,37 +8,38 @@
     #include <esp_heap_caps.h>
     #include <stdio.h>
 
-    static inline void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* file, const char* func, int line)
-    {
-        void* ptr = heap_caps_calloc(n, size, caps);
-        printf("%s:%d calloc(%ld) in %s -> %p\n", file, line, n * size, func, ptr);
-        return ptr;
-    }
+static inline void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* file, const char* func,
+                                         int line)
+{
+    void* ptr = heap_caps_calloc(n, size, caps);
+    printf("%s:%d calloc(%ld) in %s -> %p\n", file, line, n * size, func, ptr);
+    return ptr;
+}
 
     #define HEAP_CAPS_CALLOC_DBG(n, s, o) heap_caps_calloc_dbg(n, s, o, __FILE__, __func__, __LINE__)
 
-    static inline void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const char* func, int line)
-    {
-        void* ptr = heap_caps_malloc(size, caps);
-        printf("%s:%d malloc(%ld) in %s -> %p\n", file, line, n * size, func, ptr);
-        return ptr;
-    }
+static inline void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const char* func, int line)
+{
+    void* ptr = heap_caps_malloc(size, caps);
+    printf("%s:%d malloc(%ld) in %s -> %p\n", file, line, n * size, func, ptr);
+    return ptr;
+}
 
     #define HEAP_CAPS_MALLOC_DBG(n, s, o) heap_caps_malloc_dbg(n, s, o, __FILE__, __func__, __LINE__)
 
-    static inline void free_dbg(void* ptr, const char* file, const char* func, int line)
-    {
-        printf("%s:%d FREE_DBG(%p) in %s\n", file, line, ptr, func);
-        free(ptr);
-    }
+static inline void free_dbg(void* ptr, const char* file, const char* func, int line)
+{
+    printf("%s:%d FREE_DBG(%p) in %s\n", file, line, ptr, func);
+    free(ptr);
+}
 
     #define FREE_DBG(ptr) free_dbg(ptr, __FILE__, __func__, __LINE__)
 
 #else
 
     #define HEAP_CAPS_CALLOC_DBG(n, s, o) heap_caps_calloc(n, s, o)
-    #define HEAP_CAPS_MALLOC_DBG(s, o) heap_caps_malloc(s, o)
-    #define FREE_DBG(ptr) free(ptr)
+    #define HEAP_CAPS_MALLOC_DBG(s, o)    heap_caps_malloc(s, o)
+    #define FREE_DBG(ptr)                 free(ptr)
 
 #endif
 
@@ -91,10 +92,10 @@ typedef enum
     BB_CAR_IDLE,
     BB_CAR_ACTIVE,
     // These things are not in the sprites array.
-    WILE,              // A metal ball that is thrown
-    NO_SPRITE_STAR,    // a single white pixel for aesthetic beauty.
-    NO_SPRITE_POI,      // Point of interest for the camera to follow in the main menu
-    OVO_TALK            // Need this enum actually for the entity but not the sprites array.
+    WILE,           // A metal ball that is thrown
+    NO_SPRITE_STAR, // a single white pixel for aesthetic beauty.
+    NO_SPRITE_POI,  // Point of interest for the camera to follow in the main menu
+    OVO_TALK        // Need this enum actually for the entity but not the sprites array.
 } bb_spriteDef_t;
 
 typedef enum
