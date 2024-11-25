@@ -35,6 +35,7 @@ static const char finished[]               = "FINISHED";
 static const char draw[]                   = "DRAW";
 static const char youWin[]                 = "YOU WIN!";
 static const char youLose[]                = "YOU LOST!";
+static const char noRecord[]               = "No record found";
 
 //==============================================================================
 // Function Declarations
@@ -75,7 +76,7 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
     // Draw dojo
     cg_drawSparField(cg);
 
-    // Draw chowa sparring
+    // Draw Chowa
     cgChowa_t* example = NULL;
     for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
     {
@@ -90,7 +91,7 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
         cg->spar.timer += elapsedUs;
         if (cg->spar.timer >= 300000)
         {
-            cg->spar.timer = 0;
+            cg->spar.timer     = 0;
             cg->spar.animFrame = (cg->spar.animFrame + 1) % 2;
         }
         wsg_t* spr = cg_getChowaWSG(cg, example, CG_ANIM_JUMP, cg->spar.animFrame);
@@ -121,6 +122,14 @@ void cg_drawSparRecord(cGrove_t* cg)
     // Reference the record
     cgRecord_t* record = &cg->spar.sparRecord[cg->spar.recordSelect];
 
+    // Don't draw if record is empty
+    if (!record->active)
+    {
+        drawText(&cg->titleFont, c555, noRecord, (TFT_WIDTH - textWidth(&cg->titleFont, noRecord)) >> 1,
+                 (TFT_HEIGHT - 20) >> 1);
+        return;
+    }
+
     // Draw Match title + Arrows
     drawText(&cg->menuFont, c555, record->matchTitle, (TFT_WIDTH - textWidth(&cg->menuFont, record->matchTitle)) >> 1,
              8);
@@ -131,9 +140,9 @@ void cg_drawSparRecord(cGrove_t* cg)
     // Player names + vs label
     int16_t vsStart = (TFT_WIDTH - textWidth(&cg->menuFont, "VS")) >> 1;
     drawText(&cg->menuFont, c333, "VS", vsStart, 24);
-    drawText(&cg->menuFont, c533, record->playerNames[0],
-             vsStart - (textWidth(&cg->menuFont, record->playerNames[0]) + 16), 24);
-    drawText(&cg->menuFont, c335, record->playerNames[1], vsStart + textWidth(&cg->menuFont, "VS") + 16, 24);
+    drawText(&cg->menuFont, c533, record->chowa[0]->owner,
+             vsStart - (textWidth(&cg->menuFont, record->chowa[1]->owner) + 16), 24);
+    drawText(&cg->menuFont, c335, record->chowa[1]->owner, vsStart + textWidth(&cg->menuFont, "VS") + 16, 24);
 
     // Round number and arrows
     char buffer[32];
@@ -143,7 +152,6 @@ void cg_drawSparRecord(cGrove_t* cg)
     drawWsg(&cg->arrow, (TFT_WIDTH - cg->arrow.w) >> 1, 76, false, true, 0);
 
     // Draw Chowa
-    // TODO: Draw Chowa
 
     // Draw time
     snprintf(buffer, sizeof(buffer) - 1, "Time: %d", record->timer[cg->spar.roundSelect]);
@@ -151,22 +159,22 @@ void cg_drawSparRecord(cGrove_t* cg)
 
     // Draw Chowa names
     int8_t offset = cg->spar.roundSelect * 2;
-    drawText(&cg->menuFont, c444, record->chowaNames[offset], 8, 204);
-    drawText(&cg->menuFont, c444, record->chowaNames[offset + 1],
-             TFT_WIDTH - (8 + textWidth(&cg->menuFont, record->chowaNames[offset + 1])), 204);
+    drawText(&cg->menuFont, c444, record->chowa[offset]->name, 8, 204);
+    drawText(&cg->menuFont, c444, record->chowa[offset + 1]->name,
+             TFT_WIDTH - (8 + textWidth(&cg->menuFont, record->chowa[offset + 1]->name)), 204);
 
     // Draw result of the game
     switch (record->result[cg->spar.roundSelect])
     {
         case CG_P1_WIN:
         {
-            snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->playerNames[0]);
+            snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->chowa[0]->owner);
             drawText(&cg->menuFont, c533, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 220);
             break;
         }
         case CG_P2_WIN:
         {
-            snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->playerNames[1]);
+            snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->chowa[1]->owner);
             drawText(&cg->menuFont, c335, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 220);
             break;
         }

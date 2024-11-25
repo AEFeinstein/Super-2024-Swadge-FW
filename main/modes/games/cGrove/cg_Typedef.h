@@ -212,13 +212,11 @@ typedef enum
 // Structs ==============================
 typedef struct
 {
-    char matchTitle[CG_MAX_STR_LEN];     ///< Title of the match
-    char playerNames[2][CG_MAX_STR_LEN]; ///< Player names
-    char chowaNames[6][CG_MAX_STR_LEN];  ///< Up to 6 Chowa participate
-    cgColorType_t colorType[6];          ///< Type of Chowa
-    wsgPalette_t palettes[6];            ///< Colors of the Chowa for drawing
-    cgWinLoss_t result[3];               ///< Results of all three matches
-    int16_t timer[3];                    ///< Time per round in seconds
+    char matchTitle[CG_MAX_STR_LEN]; ///< Title of the match
+    cgChowa_t* chowa[6];             ///< Chowa Data
+    cgWinLoss_t result[3];           ///< Results of all three matches
+    int16_t timer[3];                ///< Time per round in seconds
+    bool active;                     ///< If record contains real data
 } cgRecord_t;
 
 //==============================================================================
@@ -512,10 +510,8 @@ typedef struct
     // BG Sprites
     wsg_t dojoBG;       ///< Dojo Background image
     wsg_t* attackIcons; ///< Attack and dodge icons
-
     // Fonts
     font_t lMFO; ///< Outline for large menu font
-
     // Music
     midiFile_t sparBGM; ///< Music
 
@@ -530,17 +526,13 @@ typedef struct
     menuManiaRenderer_t* renderer; ///< Renderer
 
     // Match
+    cgNPC_t NPCs[4]; ///< NPCs
     cgMatch_t match; ///< Match object
 
     // Battle Record
     cgRecord_t sparRecord[CG_SPAR_MAX_RECORDS]; ///< List of battle records
     int8_t recordSelect;                        ///< Which record is currently active
     int8_t roundSelect;                         ///< Which round of the record is currently selected
-
-    // Input
-
-    // LEDs
-
 } cgSpar_t;
 
 //==============================================================================

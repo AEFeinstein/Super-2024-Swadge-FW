@@ -18,13 +18,6 @@
 #include "cg_SparDraw.h"
 
 //==============================================================================
-// Function Declarations
-//==============================================================================
-
-static void sparMenuCb(const char* label, bool selected, uint32_t settingVal);
-static void sparLoadBattleRecords(void);
-
-//==============================================================================
 // Const variables
 //==============================================================================
 
@@ -32,13 +25,26 @@ static const char sparMenuName[] = "Chowa Sparring!";
 
 static const char* sparMenuNames[] = {"Schedule Match", "View records", "Tutorial", "Settings", "Main Menu"};
 
-static const char* attackIcons[] = {"Dodge-1.wsg", "Fist-1.wsg", "Fist-2.wsg", "Headbutt-1.wsg", "Kick-1.wsg", "Kick-2.wsg"};
+static const char* attackIcons[]
+    = {"Dodge-1.wsg", "Fist-1.wsg", "Fist-2.wsg", "Headbutt-1.wsg", "Kick-1.wsg", "Kick-2.wsg"};
+
+static const char* recordKeys[] = {
+    "cgSRecord0", "cgSRecord1", "cgSRecord2", "cgSRecord3", "cgSRecord4",
+    "cgSRecord5", "cgSRecord6", "cgSRecord7", "cgSRecord8", "cgSRecord9",
+};
 
 //==============================================================================
 // Variables
 //==============================================================================
 
 cGrove_t* cg;
+
+//==============================================================================
+// Function Declarations
+//==============================================================================
+
+static void sparMenuCb(const char* label, bool selected, uint32_t settingVal);
+static void sparLoadBattleRecords(void);
 
 //==============================================================================
 // Functions
@@ -180,7 +186,7 @@ void cg_runSpar(int64_t elapsedUs)
         {
             // TODO: Show match results, save to Swadge
             // Show the final results
-            fillDisplayArea(0,0,TFT_WIDTH, TFT_HEIGHT, c000);
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
             drawText(&cg->titleFont, c555, "BLAH", 32, 32);
             break;
         }
@@ -292,95 +298,17 @@ static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
             globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
             cg->spar.state = CG_SPAR_SPLASH;
         }
-        else
-        {
-            // Something went wrong
-        }
     }
 }
 
 static void sparLoadBattleRecords()
 {
-    // FIXME: Load from disk
-    for (int32_t idx = 0; idx < CG_SPAR_MAX_RECORDS; idx++)
+    for (int32_t idx = 0; idx < ARRAY_SIZE(recordKeys); idx++)
     {
-        char buff[32];
-        snprintf(buff, sizeof(buff) - 1, "Match %" PRId32, idx);
-        strcpy(cg->spar.sparRecord[idx].matchTitle, buff);
-        for (int32_t i = 0; i < 2; i++)
+        size_t blobLen =  sizeof(cgRecord_t);
+        if (!readNvsBlob(recordKeys[idx], &cg->spar.sparRecord[idx], &blobLen))
         {
-            snprintf(buff, sizeof(buff) - 1, "Player %" PRId32, i);
-            strcpy(cg->spar.sparRecord[idx].playerNames[i], buff);
-        }
-        for (int32_t i = 0; i < 6; i++)
-        {
-            snprintf(buff, sizeof(buff) - 1, "TestChowa%" PRId32, i);
-            strcpy(cg->spar.sparRecord[idx].chowaNames[i], buff);
-            cg->spar.sparRecord[idx].colorType[i] = i;
-        }
-        for (int32_t i = 0; i < 3; i++)
-        {
-            cg->spar.sparRecord[idx].result[i] = i;
-            cg->spar.sparRecord[idx].timer[i]  = (i + 1) * 50;
+            cg->spar.sparRecord[idx].active = false;
         }
     }
 }
-
-/**
- * @brief Initializes the high scores based either from NVS or predetermined scores to beat
- *
- */
-/* static void t48InitHighScores()
-{
-    // Init High scores
-    for (int8_t i = 0; i < T48_HS_COUNT; i++)
-    {
-        if (!readNvs32(highScoreKey[i], &t48->highScore[i]))
-        {
-            switch (i)
-            {
-                case 0:
-                    t48->highScore[i] = 96880;
-                    break;
-                case 1:
-                    t48->highScore[i] = 69224;
-                    break;
-                case 2:
-                    t48->highScore[i] = 24244;
-                    break;
-                case 3:
-                    t48->highScore[i] = 11020;
-                    break;
-                case 4:
-                    t48->highScore[i] = 5176;
-                    break;
-            }
-            writeNvs32(highScoreKey[i], t48->highScore[i]);
-        }
-        size_t len = 4;
-        if (!readNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], &len))
-        {
-            static char buff[5];
-            switch (i)
-            {
-                case 0:
-                    strcpy(buff, "JW");
-                    break;
-                case 1:
-                    strcpy(buff, "Pan");
-                    break;
-                case 2:
-                    strcpy(buff, "Pix");
-                    break;
-                case 3:
-                    strcpy(buff, "Poe");
-                    break;
-                case 4:
-                    strcpy(buff, "DrG");
-                    break;
-            }
-            strcpy(t48->hsInitials[i], buff);
-            writeNvsBlob(highScoreInitialsKey[i], &t48->hsInitials[i], len);
-        }
-    }
-} */
