@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include "esp_heap_caps.h"
 
+// #define MEMORY_DEBUG 
+#ifdef MEMORY_DEBUG
+
 typedef struct
 {
     void* ptr;
@@ -13,6 +16,8 @@ allocation_t aTable[A_TABLE_SIZE] = {0};
 size_t usedMemory[2]              = {0};
 
 const char memDbgFmtStr[] = "%-6s at %s:%d\n  %7zu / %7zu\n";
+
+#endif
 
 /**
  * @brief Allocate a chunk of memory which has the given capabilities
@@ -29,6 +34,7 @@ const char memDbgFmtStr[] = "%-6s at %s:%d\n  %7zu / %7zu\n";
  */
 void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const char* func, int32_t line)
 {
+#ifdef MEMORY_DEBUG
     int32_t idx = 0;
     while (NULL != aTable[idx].ptr)
     {
@@ -51,14 +57,17 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
         {
             usedMemory[0] += aTable[idx].size;
         }
-        // printf(memDbgFmtStr, "malloc", file, line, usedMemory[0], usedMemory[1]);
+        printf(memDbgFmtStr, "malloc", file, line, usedMemory[0], usedMemory[1]);
     }
     else
     {
-        // fprintf(stderr, "Allocation table out of space\n");
+        fprintf(stderr, "Allocation table out of space\n");
     }
 
     return aTable[idx].ptr;
+#else
+    return malloc(size);
+#endif
 }
 
 /**
@@ -78,6 +87,7 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
  */
 void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* file, const char* func, int32_t line)
 {
+#ifdef MEMORY_DEBUG
     int32_t idx = 0;
     while (NULL != aTable[idx].ptr)
     {
@@ -100,17 +110,21 @@ void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* fil
         {
             usedMemory[0] += aTable[idx].size;
         }
-        // printf(memDbgFmtStr, "calloc", file, line, usedMemory[0], usedMemory[1]);
+        printf(memDbgFmtStr, "calloc", file, line, usedMemory[0], usedMemory[1]);
     }
     else
     {
-        // fprintf(stderr, "Allocation table out of space\n");
+        fprintf(stderr, "Allocation table out of space\n");
     }
     return aTable[idx].ptr;
+#else
+    return calloc(n, size);
+#endif
 }
 
 void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t line)
 {
+#ifdef MEMORY_DEBUG
     int32_t idx = 0;
     while (aTable[idx].ptr != ptr)
     {
@@ -128,7 +142,8 @@ void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t l
         }
         aTable[idx].ptr  = NULL;
         aTable[idx].size = 0;
-        // printf(memDbgFmtStr, "free", file, line, usedMemory[0], usedMemory[1]);
+        printf(memDbgFmtStr, "free", file, line, usedMemory[0], usedMemory[1]);
     }
+#endif
     free(ptr);
 }
