@@ -98,7 +98,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* flameSprite = bb_loadSprite("flame", 23, 1, &entityManager->sprites[FLAME_ANIM]);
     flameSprite->originX     = 27;
-    flameSprite->originY     = -27;
+    flameSprite->originY     = -28;
 
     bb_sprite_t* garbotnikFlyingSprite = bb_loadSprite("garbotnik-", 3, 1, &entityManager->sprites[GARBOTNIK_FLYING]);
     garbotnikFlyingSprite->originX     = 18;
