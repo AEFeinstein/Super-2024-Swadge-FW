@@ -75,7 +75,6 @@ static void bb_Reset(void);
 static void bb_SetLeds(void);
 static void bb_UpdateTileSupport(void);
 static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
-static void bb_GarbotniksHomeMusicCb(void);
 
 //==============================================================================
 // Strings
@@ -168,22 +167,33 @@ static void bb_EnterMode(void)
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
 
-    // play the music!
+    bb_setupMidi();
+    soundPlayBgm(&bigbug->gameData.garbotniksHome, MIDI_BGM);
+
+    bb_Reset();
+}
+
+void bb_setupMidi(void)
+{
+    // Setup MIDI
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiPlayerReset(player);
     midiGmOn(player);
-    midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
-    midiGmOn(sfx);
-    soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
-    midiSetProgram(player, 12, 90); // talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
+    midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
     midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
-    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME, 60);
+    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME , 60);
+    player->loop = true;
+    player->volume = 16383;
+    player->songFinishedCallback = NULL;
+
+    midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
+    midiPlayerReset(sfx);
+    midiGmOn(sfx);
 
     // midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
     // // Turn on the sustain pedal for channel 1
     // midiSustain(sfx, 2, 0x7F);
     // midiSetProgram(sfx, 0, 0);
-
-    bb_Reset();
 }
 
 static void bb_ExitMode(void)
@@ -288,20 +298,6 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 //==============================================================================
 // Big Bug Functions
 //==============================================================================
-
-/**
- * @brief Draw the bigbug field to the TFT
- */
-
-static void bb_GarbotniksHomeMusicCb()
-{
-    soundPlayBgmCb(&bigbug->gameData.garbotniksHome, MIDI_BGM, bb_GarbotniksHomeMusicCb);
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    midiSetProgram(player, 12, 90); // talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
-    midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
-    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME, 60);
-    midiGmOn(player);
-}
 
 static void bb_DrawScene(void)
 {
@@ -424,11 +420,10 @@ static void bb_UpdateTileSupport(void)
                            : bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health)
             > 0)
         {
-            // pathfind
-            if (!(shiftedVal[2] ? pathfindToPerimeter(&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]],
-                                                      &bigbug->gameData.tilemap)
-                                : pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]],
-                                                      &bigbug->gameData.tilemap)))
+            //pathfind
+            if(!(shiftedVal[2] ? 
+                pathfindToPerimeter((bb_midgroundTileInfo_t*)&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap):
+                pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap)))
             {
                 // trigger a cascading collapse
                 uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);

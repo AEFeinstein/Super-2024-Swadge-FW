@@ -191,6 +191,7 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 
     freeWsg(&tilemap->surface1Wsg);
     freeWsg(&tilemap->surface2Wsg);
+    freeWsg(&tilemap->landfillGradient);
 
     // Midground
     for (int16_t i = 0; i < 120; i++)

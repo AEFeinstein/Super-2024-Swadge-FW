@@ -6,6 +6,7 @@
 #include <math.h>
 #include <limits.h>
 
+#include "mode_bigbug.h"
 #include "entity_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "gameData_bigbug.h"
@@ -79,7 +80,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
                 FREE_DBG(dData->strings[i]);
             }
             FREE_DBG(dData->strings);
-            freeWsg(dData->sprite);
+            freeWsg(&dData->sprite);
         }
         FREE_DBG(self->data);
     }
@@ -227,9 +228,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     self->pos.y = hitInfo.pos.y - self->halfHeight;
     if (hfData->yVel < 50)
     {
-        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-        midiPlayerReset(player);
-        player->volume       = 16383;
+        bb_setupMidi();
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
@@ -586,7 +585,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // Update the dirt by decrementing it.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= 1;
 
-        bb_midgroundTileInfo_t* tile = &self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
+        bb_midgroundTileInfo_t* tile = (bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
         if (tile->health == 0)
         {
             flagNeighbors(tile, self->gameData);
@@ -1098,7 +1097,8 @@ void bb_updateCharacterTalk(bb_entity_t* self)
                 char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number +
                                                        // ".wsg" + null terminator ('\0')
                 snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
-                loadWsg(wsg_name, dData->sprite, true);
+                freeWsg(&dData->sprite);
+                loadWsg(wsg_name, &dData->sprite, true);
 
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
@@ -1371,9 +1371,9 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
 
-    drawWsgSimple(dData->sprite, 0, -dData->offsetY);
-
-    if (dData->curString >= 0 && dData->curString < dData->numStrings)
+    drawWsgSimple(dData->sprite, 0,-dData->offsetY);
+    
+    if(dData->curString >= 0 && dData->curString < dData->numStrings)
     {
         drawText(&self->gameData->font, c344, dData->character, 13, 152);
 
@@ -1732,12 +1732,7 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
 
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 {
-    globalMidiPlayerSetVolume(MIDI_BGM, 13);
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    midiPlayerReset(player);
-    player->songFinishedCallback = NULL;
-    midiGmOn(player);
-    player->loop = true;
+    bb_setupMidi();
     globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
@@ -1820,14 +1815,13 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
 {
     bb_dialogueData_t* dData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
-    dData->numStrings        = numStrings;
-    dData->offsetY           = -240;
-    dData->loadedIdx         = bb_randomInt(0, 7);
-    dData->sprite            = HEAP_CAPS_CALLOC_DBG(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    dData->numStrings = numStrings;
+    dData->offsetY = -240;
+    dData->loadedIdx = bb_randomInt(0,7);
     char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                            // terminator ('\0')
     snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
-    loadWsg(wsg_name, dData->sprite, true);
+    loadWsg(wsg_name, &dData->sprite, true);
 
     dData->strings = HEAP_CAPS_CALLOC_DBG(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
