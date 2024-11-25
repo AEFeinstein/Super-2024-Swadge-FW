@@ -585,7 +585,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // Update the dirt by decrementing it.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= 1;
 
-        bb_midgroundTileInfo_t* tile = (bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
+        bb_midgroundTileInfo_t* tile
+            = (bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
         if (tile->health == 0)
         {
             flagNeighbors(tile, self->gameData);
@@ -1371,9 +1372,9 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
 
-    drawWsgSimple(dData->sprite, 0,-dData->offsetY);
-    
-    if(dData->curString >= 0 && dData->curString < dData->numStrings)
+    drawWsgSimple(&dData->sprite, 0, -dData->offsetY);
+
+    if (dData->curString >= 0 && dData->curString < dData->numStrings)
     {
         drawText(&self->gameData->font, c344, dData->character, 13, 152);
 
@@ -1815,9 +1816,9 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
 {
     bb_dialogueData_t* dData = HEAP_CAPS_CALLOC_DBG(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
-    dData->numStrings = numStrings;
-    dData->offsetY = -240;
-    dData->loadedIdx = bb_randomInt(0,7);
+    dData->numStrings        = numStrings;
+    dData->offsetY           = -240;
+    dData->loadedIdx         = bb_randomInt(0, 7);
     char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                            // terminator ('\0')
     snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);

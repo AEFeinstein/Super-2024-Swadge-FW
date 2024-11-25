@@ -179,11 +179,11 @@ void bb_setupMidi(void)
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiPlayerReset(player);
     midiGmOn(player);
-    midiSetProgram(player, 12, 90);//talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
+    midiSetProgram(player, 12, 90); // talking sound effects arbitrarily go on channel 12 and use midi instrument 90.
     midiControlChange(player, 12, MCC_SUSTENUTO_PEDAL, 80);
-    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME , 60);
-    player->loop = true;
-    player->volume = 16383;
+    midiControlChange(player, 12, MCC_SOUND_RELEASE_TIME, 60);
+    player->loop                 = true;
+    player->volume               = 16383;
     player->songFinishedCallback = NULL;
 
     midiPlayer_t* sfx = globalMidiPlayerGet(MIDI_SFX);
@@ -420,10 +420,12 @@ static void bb_UpdateTileSupport(void)
                            : bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health)
             > 0)
         {
-            //pathfind
-            if(!(shiftedVal[2] ? 
-                pathfindToPerimeter((bb_midgroundTileInfo_t*)&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap):
-                pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]], &bigbug->gameData.tilemap)))
+            // pathfind
+            if (!(shiftedVal[2] ? pathfindToPerimeter(
+                      (bb_midgroundTileInfo_t*)&bigbug->gameData.tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]],
+                      &bigbug->gameData.tilemap)
+                                : pathfindToPerimeter(&bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]],
+                                                      &bigbug->gameData.tilemap)))
             {
                 // trigger a cascading collapse
                 uint8_t* val = HEAP_CAPS_CALLOC_DBG(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);

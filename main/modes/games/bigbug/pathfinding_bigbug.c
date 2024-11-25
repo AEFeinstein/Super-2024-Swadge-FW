@@ -30,9 +30,11 @@ void getNeighbors(const bb_midgroundTileInfo_t* tile, list_t* neighbors, bb_tile
     {
         if (neighborX < TILE_FIELD_WIDTH && neighborY < TILE_FIELD_HEIGHT)
         {
-            bb_midgroundTileInfo_t* neighbor = neighborZ ? (bb_midgroundTileInfo_t*)&tilemap->fgTiles[neighborX][neighborY] : &tilemap->mgTiles[neighborX][neighborY];
-            neighbor->gCost = 0;
-            neighbor->hCost = 0;
+            bb_midgroundTileInfo_t* neighbor = neighborZ
+                                                   ? (bb_midgroundTileInfo_t*)&tilemap->fgTiles[neighborX][neighborY]
+                                                   : &tilemap->mgTiles[neighborX][neighborY];
+            neighbor->gCost                  = 0;
+            neighbor->hCost                  = 0;
             // neighbor->parent = NULL;
             push(neighbors, (void*)neighbor);
         }
