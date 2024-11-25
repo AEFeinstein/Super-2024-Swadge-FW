@@ -143,10 +143,6 @@ static void bb_EnterMode(void)
 
     bb_SetLeds();
 
-    // Initialize things that require loading WSGs
-    bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData, &bigbug->soundManager);
-    bb_initializeTileMap(&bigbug->gameData.tilemap);
-
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
 
@@ -156,6 +152,8 @@ static void bb_EnterMode(void)
     drawDisplayTft(NULL);
 
     bb_initializeGameData(&bigbug->gameData, &bigbug->soundManager);
+    bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData, &bigbug->soundManager);
+    bb_initializeTileMap(&bigbug->gameData.tilemap);
 
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
     //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
