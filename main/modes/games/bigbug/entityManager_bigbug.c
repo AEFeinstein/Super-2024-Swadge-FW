@@ -84,9 +84,9 @@ void bb_freeSprite(bb_sprite_t* sprite)
 
 void bb_loadSprites(bb_entityManager_t* entityManager)
 {
-    bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 24, 1, &entityManager->sprites[CRUMBLE_ANIM]);
-    crumbleSprite->originX     = 48;
-    crumbleSprite->originY     = 43;
+    bb_sprite_t* crumbleSprite = bb_loadSprite("crumble", 21, 1, &entityManager->sprites[CRUMBLE_ANIM]);
+    crumbleSprite->originX     = 24;
+    crumbleSprite->originY     = 22;
 
     bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, 1, &entityManager->sprites[BUMP_ANIM]);
     bumpSprite->originX     = 37;
