@@ -16,6 +16,7 @@
         #define md_fprintf(f, ...)
     #endif
 
+    #define A_TABLE_SIZE 16384
 typedef struct
 {
     void* ptr;
@@ -23,7 +24,6 @@ typedef struct
     int32_t caps;
 } allocation_t;
 
-    #define A_TABLE_SIZE 4096
 allocation_t aTable[A_TABLE_SIZE] = {0};
 size_t usedMemory[2]              = {0};
 
@@ -54,7 +54,7 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
     }
 
     int32_t idx = 0;
-    while (NULL != aTable[idx].ptr)
+    while (idx < A_TABLE_SIZE && NULL != aTable[idx].ptr)
     {
         idx++;
     }
@@ -120,7 +120,7 @@ void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* fil
     }
 
     int32_t idx = 0;
-    while (NULL != aTable[idx].ptr)
+    while (idx < A_TABLE_SIZE && NULL != aTable[idx].ptr)
     {
         idx++;
     }
