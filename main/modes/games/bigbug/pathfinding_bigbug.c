@@ -1,6 +1,8 @@
 //==============================================================================
 // Includes
 //==============================================================================
+
+#include "mode_bigbug.h"
 #include "pathfinding_bigbug.h"
 
 //==============================================================================
@@ -134,7 +136,7 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
         }
         // b) remove current from open and add current to closed
         bb_midgroundTileInfo_t* current = removeEntry(open, currentNode);
-        // printf("Is this true?: %d\n", current == (current->z ? &tilemap->fgTiles[current->x][current->y] :
+        // ESP_LOGD(BB_TAG,"Is this true?: %d\n", current == (current->z ? &tilemap->fgTiles[current->x][current->y] :
         // &tilemap->mgTiles[current->x][current->y]));
         push(closed, (void*)current);
         if (isPerimeterNode(current))
@@ -153,7 +155,7 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
             // if neighbor is not traversable or if neighbor is in closed
             // node_t* temp = closed->first;
             //  while (temp != NULL) {
-            //      printf("Node at %p, next: %p\n", (void*)temp, (void*)temp->next);
+            //      ESP_LOGD(BB_TAG,"Node at %p, next: %p\n", (void*)temp, (void*)temp->next);
             //      temp = temp->next;
             //  }
 
@@ -201,6 +203,6 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
     heap_caps_free(open);
     clear(closed);
     heap_caps_free(closed);
-    printf("path false\n");
+    ESP_LOGD(BB_TAG, "path false\n");
     return false;
 }

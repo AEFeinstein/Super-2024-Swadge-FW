@@ -1,6 +1,8 @@
 //==============================================================================
 // Includes
 //==============================================================================
+
+#include "mode_bigbug.h"
 #include "tilemap_bigbug.h"
 #include "entityManager_bigbug.h"
 #include "entity_bigbug.h"
@@ -13,7 +15,7 @@
 //==============================================================================
 void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
 {
-    printf("initializing eggs\n");
+    ESP_LOGD(BB_TAG, "initializing eggs\n");
 
     tilemap->fgTiles[TILE_FIELD_WIDTH / 2 + 2][0].embed = EGG_EMBED; // tutorial egg
 

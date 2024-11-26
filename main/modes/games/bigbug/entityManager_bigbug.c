@@ -549,7 +549,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
-        // printf("Failed entity creation. MAX_ENTITIES exceeded.\n");
+        // ESP_LOGD(BB_TAG,"Failed entity creation. MAX_ENTITIES exceeded.\n");
         return NULL;
     }
 
@@ -565,7 +565,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
     if (entity == NULL)
     {
-        printf("entityManager_bigbug.c YOOOOO! This should never happen.\n");
+        ESP_LOGD(BB_TAG, "entityManager_bigbug.c YOOOOO! This should never happen.\n");
         return NULL;
     }
 
@@ -602,10 +602,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 gData->landingPhrases[i] = gData->landingPhrases[j];
                 gData->landingPhrases[j] = temp;
             }
-            printf("shuffled:\n");
+            ESP_LOGD(BB_TAG, "shuffled:\n");
             for (int i = 0; i < arraySize; i++)
             {
-                printf("%d\n", gData->landingPhrases[i]);
+                ESP_LOGD(BB_TAG, "%d\n", gData->landingPhrases[i]);
             }
 
             bb_setData(entity, gData, GARBOTNIK_DATA);
@@ -920,7 +920,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     if (entityManager->activeEntities > MAX_ENTITIES - 10 || entityManager->activeEntities < 10
         || entityManager->activeEntities % 25 == 0)
     {
-        printf("%d/%d entities ^\n", entityManager->activeEntities, MAX_ENTITIES);
+        ESP_LOGD(BB_TAG, "%d/%d entities ^\n", entityManager->activeEntities, MAX_ENTITIES);
     }
 
     return entity;

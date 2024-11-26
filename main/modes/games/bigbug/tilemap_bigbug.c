@@ -72,7 +72,7 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
                 }
             }
 
-            // printf("green: %u\n", (rgbCol >> 8) & 255);
+            // ESP_LOGD(BB_TAG,"green: %u\n", (rgbCol >> 8) & 255);
             // green value used for midground tiles
             switch ((rgbCol >> 8) & 255)
             {
@@ -269,7 +269,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
     offsetX1 = (offsetX1 < 0) ? offsetX1 + 400 : offsetX1;
     offsetX2 = (offsetX2 < 0) ? offsetX2 + 400 : offsetX2;
 
-    // printf("camera y: %d\n", camera->pos.y);
+    // ESP_LOGD(BB_TAG,"camera y: %d\n", camera->pos.y);
 
     // draws background
     if (camera->pos.y < 270 && camera->pos.y > -907)
@@ -288,7 +288,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
             drawWsgSimple(&tilemap->surface1Wsg, x * 400 - offsetX2, -camera->pos.y / 2);
         }
     }
-    // printf("cam y: %d\n", camera->pos.y);
+    // ESP_LOGD(BB_TAG,"cam y: %d\n", camera->pos.y);
     //  draws the back gradient
     if (camera->pos.y < 1424 && camera->pos.y > -70)
     {
@@ -299,8 +299,8 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
     }
 
     // setting up variables to draw midground & foreground
-    // printf("camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
-    // printf("width: %d\n", FIELD_WIDTH);
+    // ESP_LOGD(BB_TAG,"camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
+    // ESP_LOGD(BB_TAG,"width: %d\n", FIELD_WIDTH);
     int16_t iStart = camera->pos.x / TILE_SIZE;
     int16_t iEnd   = iStart + TFT_WIDTH / TILE_SIZE + 1;
     int16_t jStart = camera->pos.y / TILE_SIZE;
@@ -339,8 +339,8 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
             jEnd = TILE_FIELD_HEIGHT - 1;
         }
 
-        // printf("i: %d-%d j:%d-%d\n", iStart, iEnd, jStart, jEnd);
-        // printf("x tile count: %d y tile count: %d\n", iEnd-iStart, jEnd-jStart);
+        // ESP_LOGD(BB_TAG,"i: %d-%d j:%d-%d\n", iStart, iEnd, jStart, jEnd);
+        // ESP_LOGD(BB_TAG,"x tile count: %d y tile count: %d\n", iEnd-iStart, jEnd-jStart);
 
         int32_t brightness;
 
@@ -444,7 +444,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     tilePos.y + 8 - (garbotnikDrawPos->y + 17) + tilemap->headlampWsg.h};
                     // vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + 16 + tilemap->headlampWsg.w / 2,
                     //                 tilePos.y + 8 - garbotnikDrawPos->y + 17 + tilemap->headlampWsg.h / 2};
-                    // printf("lookup: %d\n",lookup.x);
+                    // ESP_LOGD(BB_TAG,"lookup: %d\n",lookup.x);
                     lookup     = divVec2d(lookup, 2);
                     brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
                                                       5 - (j > 25 ? 25 : j) / 5);

@@ -85,6 +85,9 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
  */
 static const char bigbugName[] = "Big Bug";
 
+// A tag for debug printing
+const char BB_TAG[] = "BB";
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -366,7 +369,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         // Print the current event
-        // printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
+        // ESP_LOGD(BB_TAG,"state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
 
         // Save the button state
         bigbug->gameData.btnState = evt.state;
@@ -405,13 +408,13 @@ static void bb_GameLoop(int64_t elapsedUs)
 
     bb_DrawScene();
 
-    // printf("FPS: %ld\n", 1000000 / elapsedUs);
+    // ESP_LOGD(BB_TAG,"FPS: %ld\n", 1000000 / elapsedUs);
 }
 
 static void bb_Reset(void)
 {
-    printf("The width is: %d\n", FIELD_WIDTH);
-    printf("The height is: %d\n", FIELD_HEIGHT);
+    ESP_LOGD(BB_TAG, "The width is: %d\n", FIELD_WIDTH);
+    ESP_LOGD(BB_TAG, "The height is: %d\n", FIELD_HEIGHT);
 
     bigbug->gameData.camera.camera.width  = FIELD_WIDTH;
     bigbug->gameData.camera.camera.height = FIELD_HEIGHT;
@@ -532,7 +535,7 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
     {
         int32_t fuel = ((bb_garbotnikData_t*)entityManager->playerEntity->data)->fuel;
         // Set the LEDs to a display fuel level
-        // printf("timer %d\n", fuel);
+        // ESP_LOGD(BB_TAG,"timer %d\n", fuel);
         led_t leds[CONFIG_NUM_LEDS] = {0};
         int32_t ledChunk            = 60000 / CONFIG_NUM_LEDS;
         for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)

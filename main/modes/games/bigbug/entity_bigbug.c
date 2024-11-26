@@ -104,7 +104,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     self->overlapTileHandler          = NULL;
 
     self->gameData->entityManager.activeEntities--;
-    // printf("%d/%d entities v\n", self->gameData->entityManager.activeEntities, MAX_ENTITIES);
+    // ESP_LOGD(BB_TAG,"%d/%d entities v\n", self->gameData->entityManager.activeEntities, MAX_ENTITIES);
 }
 
 void bb_updateRocketLanding(bb_entity_t* self)
@@ -173,7 +173,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
     {
         // apply doppler effect to Garbotnik's home
         midiPitchWheel(player, channel, 0x2000 - rData->yVel * 16);
-        // printf("pos.y %d\n",self->pos.y);
+        // ESP_LOGD(BB_TAG,"pos.y %d\n",self->pos.y);
         if (self->pos.y > -63360)
         {
             // get the release
@@ -276,8 +276,8 @@ void bb_updateHeavyFalling(bb_entity_t* self)
     hfData->yVel++;
     self->pos.y += (hfData->yVel * self->gameData->elapsedUs) >> 15;
 
-    // printf("tilemap addr: %p\n", &self->gameData->tilemap);
-    // printf("self    addr: %p\n", self);
+    // ESP_LOGD(BB_TAG,"tilemap addr: %p\n", &self->gameData->tilemap);
+    // ESP_LOGD(BB_TAG,"self    addr: %p\n", self);
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
     if (hitInfo.hit == false)
@@ -481,10 +481,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
     }
 
-    // printf("accel x: %d\n", accel.x);
-    // printf("elapsed: %d", (int32_t) elapsedUs);
-    // printf("offender: %d\n", (int32_t) elapsedUs / 100000);
-    // printf("now   x: %d\n", mulVec2d(accel, elapsedUs) / 100000).x);
+    // ESP_LOGD(BB_TAG,"accel x: %d\n", accel.x);
+    // ESP_LOGD(BB_TAG,"elapsed: %d", (int32_t) elapsedUs);
+    // ESP_LOGD(BB_TAG,"offender: %d\n", (int32_t) elapsedUs / 100000);
+    // ESP_LOGD(BB_TAG,"now   x: %d\n", mulVec2d(accel, elapsedUs) / 100000).x);
 
     gData->accel.x = (accel.x * self->gameData->elapsedUs) >> 16;
     gData->accel.y = (accel.y * self->gameData->elapsedUs) >> 16;
@@ -571,7 +571,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     self->pos.x += (gData->vel.x * self->gameData->elapsedUs) >> 16;
     self->pos.y += (gData->vel.y * self->gameData->elapsedUs) >> 16;
 
-    // printf("Garbotnik X: %d\n", self->pos);
+    // ESP_LOGD(BB_TAG,"Garbotnik X: %d\n", self->pos);
     // //keep the player in bounds
     self->pos.x          = self->pos.x < 2304 ? 2304 : self->pos.x;
     self->pos.x          = self->pos.x > 36240 ? 36240 : self->pos.x;
@@ -632,11 +632,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ////////////////////////////////
         // Reflect the velocity vector along the normal
         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-        // printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(gData->vel));
+        // ESP_LOGD(BB_TAG,"hit squared speed: %" PRId32 "\n", sqMagVec2d(gData->vel));
 
         // range is roughly 2600 to 7100
-        // printf("dot %d\n", dot);
-        // printf("thing: %d\n",sqMagVec2d(gData->vel) * dot);
+        // ESP_LOGD(BB_TAG,"dot %d\n", dot);
+        // ESP_LOGD(BB_TAG,"thing: %d\n",sqMagVec2d(gData->vel) * dot);
         int32_t bounceScalar = 3;
         if (sqMagVec2d(gData->vel) * dot < -360000)
         {
@@ -646,7 +646,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             bounceScalar = 1;
         }
-        printf("bounceScalar %" PRId32 "\n", bounceScalar);
+        ESP_LOGD(BB_TAG, "bounceScalar %" PRId32 "\n", bounceScalar);
         gData->vel = mulVec2d(
             subVec2d(gData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(gData->vel, hitInfo.normal)))), bounceScalar);
 
@@ -829,7 +829,7 @@ void bb_updateFarEggleaves(bb_entity_t* self)
     }
     else
     {
-        printf("entity_bigbug.c this should not happen\n");
+        ESP_LOGD(BB_TAG, "entity_bigbug.c this should not happen\n");
     }
 
     // destroy the egg
@@ -1201,7 +1201,7 @@ void bb_updateGameOver(bb_entity_t* self)
             if (boosterIdx >= 3)
             {
                 // IDK it is really really game over here.
-                printf("finish me\n");
+                ESP_LOGD(BB_TAG, "finish me\n");
             }
             else
             {
