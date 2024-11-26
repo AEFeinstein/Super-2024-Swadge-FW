@@ -236,7 +236,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     == GARBOTNIK_FLYING)
                 {
                     // no need to search all other entities if it's simply something to do with the player.
-                    if (entityManager->playerEntity != NULL)
+                    if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType)
                     {
                         // do a collision check here
                         bb_hitInfo_t hitInfo = {0};
@@ -395,14 +395,18 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
                 }
             }
 
-            drawWsgSimple(
-                &entityManager->sprites[currentEntity->spriteIndex].frames
-                     [bb_midgroundLighting(
-                          &(currentEntity->gameData->tilemap.headlampWsg), &lookup,
-                          &(((bb_garbotnikData_t*)currentEntity->gameData->entityManager.playerEntity->data)->yaw.x),
-                          brightness)
-                      + currentEntity->currentAnimationFrame * 6],
-                xOff, yOff);
+            int32_t midgroundLighting = 0;
+            if (GARBOTNIK_DATA == currentEntity->gameData->entityManager.playerEntity->dataType)
+            {
+                midgroundLighting = bb_midgroundLighting(
+                    &(currentEntity->gameData->tilemap.headlampWsg), &lookup,
+                    &(((bb_garbotnikData_t*)currentEntity->gameData->entityManager.playerEntity->data)->yaw.x),
+                    brightness);
+            }
+
+            drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
+                               .frames[midgroundLighting + currentEntity->currentAnimationFrame * 6],
+                          xOff, yOff);
         }
         else
         {
