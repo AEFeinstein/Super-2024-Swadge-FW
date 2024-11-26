@@ -78,7 +78,16 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
                 heap_caps_free(dData->strings[i]);
             }
             heap_caps_free(dData->strings);
-            freeWsg(&dData->sprite);
+            if (-1 != dData->loadedIdx)
+            {
+                freeWsg(&dData->sprite);
+                dData->loadedIdx = -1;
+            }
+            if (dData->spriteNextLoaded)
+            {
+                freeWsg(&dData->spriteNext);
+                dData->spriteNextLoaded = false;
+            }
         }
         else if (self->spriteIndex == BB_GAME_OVER)
         {
@@ -1118,13 +1127,16 @@ void bb_updateCharacterTalk(bb_entity_t* self)
             dData->curString++;
             if (dData->curString < dData->numStrings)
             {
+                if (-1 != dData->loadedIdx)
+                {
+                    freeWsg(&dData->sprite);
+                    dData->loadedIdx = -1;
+                }
                 dData->loadedIdx = bb_randomInt(0, 6);
                 char wsg_name[strlen("ovo-talk-") + 9]; // 6 extra characters makes room for up to a 2 digit number +
                                                         // ".wsg" + null terminator ('\0')
                 snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
-                freeWsg(&dData->sprite);
-                loadWsgInplace(wsg_name, &dData->sprite, true, bb_decodeSpace,
-                               bb_hsd); // TODO inplace this, global decoder
+                loadWsgInplace(wsg_name, &dData->sprite, true, bb_decodeSpace, bb_hsd);
 
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
@@ -1408,9 +1420,11 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
 
-    drawWsgSimple(&dData->sprite, 0, -dData->offsetY);
-
-    if (dData->blinkTimer > 0)
+    if (-1 != dData->loadedIdx)
+    {
+        drawWsgSimple(&dData->sprite, 0, -dData->offsetY);
+    }
+    if (dData->spriteNextLoaded && dData->blinkTimer > 0)
     {
         drawWsgSimple(&dData->spriteNext, 258, -dData->offsetY + 170);
     }
@@ -1904,7 +1918,8 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
                                            // terminator ('\0')
     snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
     loadWsgInplace(wsg_name, &dData->sprite, true, bb_decodeSpace, bb_hsd);
-    loadWsgInplace("dialogue_next.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
+    loadWsgInplace("dialogue_next.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd); // TODO free
+    dData->spriteNextLoaded = true;
 
     dData->strings = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
