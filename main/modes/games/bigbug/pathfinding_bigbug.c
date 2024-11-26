@@ -110,19 +110,19 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
     //*start = *_start;
 
     // 1. initialize the open list
-    list_t* open = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    list_t open = {0};
     // 2. initialize the closed list
-    list_t* closed = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    list_t closed = {0};
     // put the starting node on the open list (you can leave its f at zero)
-    push(open, (void*)start);
+    push(&open, (void*)start);
 
     // 3. while the open list is not empty
     // a) find the node with the least f on the open list, call it "current"
 
-    while (open->first != NULL)
+    while (open.first != NULL)
     {
-        node_t* currentNode = open->first;
-        node_t* openNode    = open->first;
+        node_t* currentNode = open.first;
+        node_t* openNode    = open.first;
         while (openNode != NULL)
         {
             if (fCost((bb_midgroundTileInfo_t*)openNode->val) < fCost((bb_midgroundTileInfo_t*)currentNode->val)
@@ -135,12 +135,14 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
             openNode = openNode->next;
         }
         // b) remove current from open and add current to closed
-        bb_midgroundTileInfo_t* current = removeEntry(open, currentNode);
+        bb_midgroundTileInfo_t* current = removeEntry(&open, currentNode);
         // ESP_LOGD(BB_TAG,"Is this true?: %d\n", current == (current->z ? &tilemap->fgTiles[current->x][current->y] :
         // &tilemap->mgTiles[current->x][current->y]));
-        push(closed, (void*)current);
+        push(&closed, (void*)current);
         if (isPerimeterNode(current))
         {
+            clear(&open);
+            clear(&closed);
             return true;
         }
 
@@ -153,7 +155,7 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
         {
             bb_midgroundTileInfo_t* neighborTile = (bb_midgroundTileInfo_t*)neighbor->val;
             // if neighbor is not traversable or if neighbor is in closed
-            // node_t* temp = closed->first;
+            // node_t* temp = closed.first;
             //  while (temp != NULL) {
             //      ESP_LOGD(BB_TAG,"Node at %p, next: %p\n", (void*)temp, (void*)temp->next);
             //      temp = temp->next;
@@ -162,7 +164,7 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
             if ((neighborTile->z ? tilemap->fgTiles[neighborTile->x][neighborTile->y].health
                                  : tilemap->mgTiles[neighborTile->x][neighborTile->y].health)
                     == 0
-                || contains(closed, neighborTile))
+                || contains(&closed, neighborTile))
             {
                 // skip to the next neighbor
                 neighbor = neighbor->next;
@@ -172,7 +174,7 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
             // if new path to neighbor is shorter or neighbor is not in open
             uint16_t newCostToNeighbor
                 = current->gCost + 1; // simply use + 1 because each neighbor is an orthogonal step
-            if (newCostToNeighbor < neighborTile->gCost || !contains(open, neighborTile))
+            if (newCostToNeighbor < neighborTile->gCost || !contains(&open, neighborTile))
             {
                 // set fCost of neighbor (we don't set the fCost, we calculate the gCost and hCost)
                 neighborTile->gCost = newCostToNeighbor;
@@ -188,10 +190,10 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
                     //  neighborTile->parent = current;
                 }
                 // if neighbor is not in open
-                if (!contains(open, neighborTile))
+                if (!contains(&open, neighborTile))
                 {
                     // add neighbor to open
-                    push(open, (void*)neighborTile);
+                    push(&open, (void*)neighborTile);
                 }
             }
             neighbor = neighbor->next;
@@ -199,10 +201,8 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
         clear(neighbors);
         heap_caps_free(neighbors);
     } // end (while loop)
-    clear(open);
-    heap_caps_free(open);
-    clear(closed);
-    heap_caps_free(closed);
+    clear(&open);
+    clear(&closed);
     ESP_LOGD(BB_TAG, "path false\n");
     return false;
 }
