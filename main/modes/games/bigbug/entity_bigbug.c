@@ -80,6 +80,15 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             heap_caps_free(dData->strings);
             freeWsg(&dData->sprite);
         }
+        else if (self->spriteIndex == BB_GAME_OVER)
+        {
+            bb_gameOverData_t* goData = (bb_gameOverData_t*)self->data;
+            if (goData->wsgLoaded)
+            {
+                freeWsg(&goData->fullscreenGraphic);
+                goData->wsgLoaded = false;
+            }
+        }
         heap_caps_free(self->data);
     }
     self->data = NULL;
@@ -1174,8 +1183,13 @@ void bb_updateGameOver(bb_entity_t* self)
         if (self->currentAnimationFrame == 0)
         {
             self->currentAnimationFrame++;
-            freeWsg(&goData->fullscreenGraphic);
+            if (goData->wsgLoaded)
+            {
+                freeWsg(&goData->fullscreenGraphic);
+                goData->wsgLoaded = false;
+            }
             loadWsgInplace("GameOver1.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
+            goData->wsgLoaded = true;
         }
         else
         {
@@ -1414,7 +1428,10 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 void bb_drawGameOver(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     bb_gameOverData_t* goData = (bb_gameOverData_t*)self->data;
-    drawWsgSimple(&goData->fullscreenGraphic, 0, 0);
+    if (goData->wsgLoaded)
+    {
+        drawWsgSimple(&goData->fullscreenGraphic, 0, 0);
+    }
 }
 
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)

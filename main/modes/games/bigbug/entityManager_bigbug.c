@@ -848,6 +848,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_gameOverData_t* goData = heap_caps_calloc(1, sizeof(bb_gameOverData_t), MALLOC_CAP_SPIRAM);
             loadWsgInplace("GameOver0.wsg\0", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
+            goData->wsgLoaded = true;
             bb_setData(entity, goData, GAME_OVER_DATA);
 
             entity->currentAnimationFrame = 0;

@@ -175,6 +175,7 @@ typedef struct
 
 typedef struct
 { // There are 3 game over graphics that take turns loading into wsg_t fullscreenGraphic;
+    bool wsgLoaded;
     wsg_t fullscreenGraphic;
 } bb_gameOverData_t;
 
