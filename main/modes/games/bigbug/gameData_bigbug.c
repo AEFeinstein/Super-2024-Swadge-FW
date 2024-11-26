@@ -13,20 +13,18 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundManager)
+void bb_initializeGameData(bb_gameData_t* gameData)
 {
     gameData->gameState = 0;
 
-    gameData->bgColor     = c335;
-    gameData->debugMode   = false;
-    gameData->inGameTimer = 0;
+    gameData->bgColor   = c335;
+    gameData->debugMode = false;
 
-    gameData->soundManager = soundManager;
-
-    loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);
-    loadMidiFile("Big Bug Hurry up.mid", &gameData->hurryUp, true);
-    loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->garbotniksHome, true);
-    loadMidiFile("BigBug_Space Travel.mid", &gameData->spaceTravel, true);
+    loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->bgm, true);
+    // loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);
+    // loadMidiFile("Big Bug Hurry up.mid", &gameData->hurryUp, true);
+    // loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->garbotniksHome, true);
+    // loadMidiFile("BigBug_Space Travel.mid", &gameData->spaceTravel, true);
 
     loadMidiFile("Bump.mid", &gameData->sfxBump, true);
     loadMidiFile("Harpoon.mid", &gameData->sfxHarpoon, true);
@@ -51,9 +49,6 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
 void bb_freeGameData(bb_gameData_t* gameData)
 {
     unloadMidiFile(&gameData->bgm);
-    unloadMidiFile(&gameData->hurryUp);
-    unloadMidiFile(&gameData->garbotniksHome);
-    unloadMidiFile(&gameData->spaceTravel);
 
     unloadMidiFile(&gameData->sfxBump);
     unloadMidiFile(&gameData->sfxHarpoon);
@@ -73,10 +68,9 @@ void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData)
 {
     gameData->gameState = 0;
 
-    gameData->bgColor     = c000;
-    gameData->currentBgm  = 0;
-    gameData->changeBgm   = 0;
-    gameData->inGameTimer = 0;
+    gameData->bgColor    = c000;
+    gameData->currentBgm = 0;
+    gameData->changeBgm  = 0;
 
     bb_resetGameDataLeds(gameData);
 }

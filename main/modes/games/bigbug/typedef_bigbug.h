@@ -47,7 +47,6 @@ typedef enum
     BB_MENU,           // Various sprites loaded as frames to create the parallax main menu
     BB_DEATH_DUMPSTER, // Garbotnik's evil lair in space
     ATTACHMENT_ARM,    // The booster arm that detects the player and latches on.
-    BB_GAME_OVER,
     BB_WASHING_MACHINE,
     BB_CAR_IDLE,
     BB_CAR_ACTIVE,
@@ -55,7 +54,8 @@ typedef enum
     WILE,           // A metal ball that is thrown
     NO_SPRITE_STAR, // a single white pixel for aesthetic beauty.
     NO_SPRITE_POI,  // Point of interest for the camera to follow in the main menu
-    OVO_TALK        // Need this enum actually for the entity but not the sprites array.
+    OVO_TALK,       // Need this enum actually for the entity but not the sprites array.
+    BB_GAME_OVER,
 } bb_spriteDef_t;
 
 typedef enum

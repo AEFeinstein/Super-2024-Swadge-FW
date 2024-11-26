@@ -14,7 +14,6 @@
 #include "tilemap_bigbug.h"
 #include "palette.h"
 #include "linked_list.h"
-#include "soundManager_bigbug.h"
 
 //==============================================================================
 // Constants
@@ -46,10 +45,7 @@ struct bb_gameData_t
     int32_t touchX;
     int32_t touchY;
 
-    midiFile_t bgm;            ///< Background music
-    midiFile_t hurryUp;        ///< plays when you have to get back
-    midiFile_t garbotniksHome; ///< tunes for home
-    midiFile_t spaceTravel;    ///< plays for the dive summary
+    midiFile_t bgm; ///< Background music. Midi files take turns loading in and out based on what is currently played.
 
     midiFile_t sfxBump;    ///< SFX bump into things
     midiFile_t sfxHarpoon; /// SFX harpoon
@@ -71,10 +67,6 @@ struct bb_gameData_t
     uint8_t changeBgm;
     uint8_t currentBgm;
 
-    uint32_t inGameTimer;
-
-    bb_soundManager_t* soundManager;
-
     bb_tilemap_t tilemap;
 
     int8_t neighbors[4][2]; // a handy table of left, up, right, and down offsets
@@ -92,7 +84,7 @@ struct bb_gameData_t
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundManager);
+void bb_initializeGameData(bb_gameData_t* gameData);
 void bb_freeGameData(bb_gameData_t* gameData);
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData);
 void bb_updateLeds(bb_entityManager_t* entityManager, bb_gameData_t* gameData);

@@ -28,15 +28,14 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData,
-                                bb_soundManager_t* soundManager)
+void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData)
 {
     bb_loadSprites(entityManager);
     entityManager->entities = heap_caps_calloc(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
-        bb_initializeEntity(&(entityManager->entities[i]), entityManager, gameData, soundManager);
+        bb_initializeEntity(&(entityManager->entities[i]), entityManager, gameData);
     }
 
     entityManager->activeEntities = 0;
@@ -144,15 +143,9 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     menuSprite->originX     = 140;
     menuSprite->originY     = 354;
 
-    bb_sprite_t* deathDumpsterSprite = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER]);
-    deathDumpsterSprite->originX     = 138;
-    deathDumpsterSprite->originY     = 100;
-
     bb_sprite_t* attachmentArmSprite = bb_loadSprite("AttachmentArm", 1, 1, &entityManager->sprites[ATTACHMENT_ARM]);
     attachmentArmSprite->originX     = 6;
     attachmentArmSprite->originY     = 20;
-
-    bb_loadSprite("GameOver", 2, 1, &entityManager->sprites[BB_GAME_OVER]);
 
     bb_sprite_t* washingMachineSprite
         = bb_loadSprite("WashingMachine", 1, 6, &entityManager->sprites[BB_WASHING_MACHINE]);
@@ -206,7 +199,8 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
         {
             if (curEntity->cacheable)
             {
-                if (sqMagVec2d(subVec2d(curEntity->pos, shiftedCameraPos)) > curEntity->cSquared + 8704000)
+                if (!(curEntity->pos.x > shiftedCameraPos.x - 3200 && curEntity->pos.x < shiftedCameraPos.x + 3200
+                      && curEntity->pos.y > shiftedCameraPos.y - 2880 && curEntity->pos.y < shiftedCameraPos.y + 2880))
                 { // if it is far
                     // This entity gets cached
                     bb_entity_t* cachedEntity = heap_caps_calloc(1, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
@@ -852,8 +846,13 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_GAME_OVER:
         {
-            entity->updateFunction = &bb_updateGameOver;
-            entity->drawFunction   = &bb_drawSimple;
+            bb_gameOverData_t* goData = heap_caps_calloc(1, sizeof(bb_gameOverData_t), MALLOC_CAP_SPIRAM);
+            loadWsgInplace("GameOver0.wsg\0", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
+            bb_setData(entity, goData, GAME_OVER_DATA);
+
+            entity->currentAnimationFrame = 0;
+            entity->updateFunction        = &bb_updateGameOver;
+            entity->drawFunction          = &bb_drawGameOver;
             break;
         }
         case BB_WASHING_MACHINE:
@@ -897,6 +896,16 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_carActiveData_t* caData = heap_caps_calloc(1, sizeof(bb_carActiveData_t), MALLOC_CAP_SPIRAM);
             caData->enemiesRemaining   = 10;
             bb_setData(entity, caData, CAR_ACTIVE_DATA);
+            break;
+        }
+        case BB_DEATH_DUMPSTER:
+        {
+            bb_DeathDumpsterData_t* ddData = heap_caps_calloc(1, sizeof(bb_DeathDumpsterData_t), MALLOC_CAP_SPIRAM);
+
+            ddData->loaded = false;
+            bb_setData(entity, ddData, DEATH_DUMPSTER_DATA);
+
+            entity->drawFunction = &bb_drawDeathDumpster;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

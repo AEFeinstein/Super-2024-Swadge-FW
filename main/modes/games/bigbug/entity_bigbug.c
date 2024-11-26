@@ -26,12 +26,10 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData,
-                         bb_soundManager_t* soundManager)
+void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData)
 {
-    self->active       = false;
-    self->gameData     = gameData;
-    self->soundManager = soundManager;
+    self->active   = false;
+    self->gameData = gameData;
 }
 
 void bb_setData(bb_entity_t* self, void* data, bb_data_type_t dataType)
@@ -149,6 +147,13 @@ void bb_updateRocketLanding(bb_entity_t* self)
     }
     self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
 
+    // load gameplay sprites
+    if (self->pos.y > -50000 && !self->gameData->tilemap.wsgsLoaded)
+    {
+        // load all the tile sprites now that menu sprites where unloaded.
+        bb_loadWsgs(&self->gameData->tilemap);
+    }
+
     // music stuff
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     if ((self->pos.y > -73360 && self->pos.y < -60000) || self->pos.y > -3000)
@@ -208,9 +213,9 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         bb_dialogueData_t* dData = bb_createDialogueData(5); // 5
         strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
         dData->character[sizeof(dData->character) - 1] = '\0';
-        bb_setCharacterLine(dData, 0, "Gaaaash dangit!");
-        bb_setCharacterLine(dData, 1, "DARN it!");
-        bb_setCharacterLine(dData, 2, "That had a fresh coat of paint!");
+        bb_setCharacterLine(dData, 0, "Gaaaash dangit.");
+        bb_setCharacterLine(dData, 1, "DARN IT! DARN IT! DARN IT! DARN IT!");
+        bb_setCharacterLine(dData, 2, "GLITCH MY CIRCUITS!");
         bb_setCharacterLine(dData, 3, "I'll have to patch this up before all the air gets out.");
         bb_setCharacterLine(dData, 4, "And the hardware store closes so early.");
         dData->curString     = -1;
@@ -226,6 +231,11 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
     rData->flame->pos.y = self->pos.y;
+
+    if (self->pos.y < -50000 && self->gameData->tilemap.wsgsLoaded)
+    {
+        bb_freeWsgs(&self->gameData->tilemap);
+    }
 }
 
 void bb_updateHeavyFallingInit(bb_entity_t* self)
@@ -342,9 +352,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
 
-    // gData->fuel
-    //     -= self->gameData->elapsedUs >> 10; // Fuel decrements with time. Right shifting by 10 is fairly close to
+    // Fuel decrements with time. Right shifting by 10 is fairly close to
     // converting microseconds to milliseconds without requiring division.
+    gData->fuel -= self->gameData->elapsedUs >> 10;
     if (gData->fuel < 0)
     {
         bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
@@ -353,6 +363,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         physData->bounceDenominator = 4;
         bb_setData(self, physData, PHYSICS_DATA);
         self->updateFunction = bb_updateGarbotnikDying;
+        self->drawFunction   = NULL;
         return;
     }
 
@@ -562,12 +573,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // printf("Garbotnik X: %d\n", self->pos);
     // //keep the player in bounds
-    // if(self->pos.x < 2304)
-    // {
-    //     self->pos.x == 2304;
-    // }
-    // else if(self->pos.x > )
-
+    self->pos.x          = self->pos.x < 2304 ? 2304 : self->pos.x;
+    self->pos.x          = self->pos.x > 36240 ? 36240 : self->pos.x;
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos, &hitInfo);
 
@@ -674,27 +681,21 @@ void bb_updateGarbotnikDying(bb_entity_t* self)
     {
         physData->tileTime--;
     }
-    printf("tileTime: %d\n", physData->tileTime);
     if (physData->tileTime > 101)
     {
+        bb_freeWsgs(&self->gameData->tilemap);
+
         bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GAME_OVER, 1,
                         self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
         self->updateFunction = NULL;
 
+        self->gameData->camera.camera.pos
+            = (vec_t){(self->gameData->entityManager.deathDumpster->pos.x >> DECIMAL_BITS),
+                      (self->gameData->entityManager.deathDumpster->pos.y >> DECIMAL_BITS)};
+
         self->gameData->entityManager.viewEntity
             = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
-                              (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS),
-                              (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS), true, false);
-        bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
-        tData->tracking    = self->gameData->entityManager.deathDumpster;
-        tData->midPointSqDist
-            = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
-                                              - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
-                                          (tData->tracking->pos.y >> DECIMAL_BITS)
-                                              - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
-                                  2));
-        tData->executeOnArrival                                  = &bb_startGarbotnikCloningTalk;
-        self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
+                              self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, false);
     }
 }
 
@@ -1166,11 +1167,15 @@ void bb_updateAttachmentArm(bb_entity_t* self)
 
 void bb_updateGameOver(bb_entity_t* self)
 {
+    bb_gameOverData_t* goData = (bb_gameOverData_t*)self->data;
+
     if (self->gameData->btnDownState & PB_A)
     {
         if (self->currentAnimationFrame == 0)
         {
             self->currentAnimationFrame++;
+            freeWsg(&goData->fullscreenGraphic);
+            loadWsgInplace("GameOver1.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
         }
         else
         {
@@ -1179,30 +1184,32 @@ void bb_updateGameOver(bb_entity_t* self)
 
             self->gameData->entityManager.activeBooster->currentAnimationFrame++;
 
-            // get the current booster idx
-            int i = 0;
-            while (i < 3)
+            // Tally up the remaining boosters
+            int boosterIdx = 0;
+            while (boosterIdx < 3)
             {
-                if (self->gameData->entityManager.boosterEntities[i] != NULL)
+                if (self->gameData->entityManager.boosterEntities[boosterIdx] != NULL)
                 {
-                    self->gameData->entityManager.boosterEntities[i] = NULL;
+                    self->gameData->entityManager.boosterEntities[boosterIdx] = NULL;
                     break;
                 }
-                i++;
+                boosterIdx++;
             }
 
             self->gameData->entityManager.activeBooster = NULL;
-            i++;
-            if (i >= 3)
+            boosterIdx++;
+            if (boosterIdx >= 3)
             {
                 // IDK it is really really game over here.
                 printf("finish me\n");
             }
             else
             {
-                self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[i];
+                self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
 
                 bb_destroyEntity(self, false);
+
+                bb_startGarbotnikCloningTalk(self->gameData->entityManager.deathDumpster);
             }
         }
     }
@@ -1400,15 +1407,14 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 
         int16_t xOff = 13;
         int16_t yOff = 177;
-        drawTextWordWrap(&self->gameData->font, c344, dData->strings[dData->curString], &xOff, &yOff, 253, 238);
+        drawTextWordWrap(&self->gameData->font, c344, dData->strings[dData->curString], &xOff, &yOff, 253, 230);
     }
 }
 
-void bb_drawSimple(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+void bb_drawGameOver(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
-                  -entityManager->sprites[self->spriteIndex].originX,
-                  0 - entityManager->sprites[self->spriteIndex].originY);
+    bb_gameOverData_t* goData = (bb_gameOverData_t*)self->data;
+    drawWsgSimple(&goData->fullscreenGraphic, 0, 0);
 }
 
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -1418,6 +1424,40 @@ void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera
             (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x - 17,
             (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y + 14,
             false, false, (int16_t)aData->angle >> DECIMAL_BITS);
+}
+
+void bb_drawDeathDumpster(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_DeathDumpsterData_t* ddData = (bb_DeathDumpsterData_t*)self->data;
+    vec_t shiftedCameraPos         = camera->pos;
+    shiftedCameraPos.x             = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
+    shiftedCameraPos.y             = (shiftedCameraPos.y + 120) << DECIMAL_BITS;
+    if (self->pos.x > shiftedCameraPos.x - 3200 && self->pos.x < shiftedCameraPos.x + 3200
+        && self->pos.y > shiftedCameraPos.y - 2880 && self->pos.y < shiftedCameraPos.y + 3520)
+    { // if it is close
+        if (!ddData->loaded)
+        {
+            bb_sprite_t* deathDumpsterSprite
+                = bb_loadSprite("DeathDumpster", 1, 1, &entityManager->sprites[BB_DEATH_DUMPSTER]);
+            deathDumpsterSprite->originX = 138;
+            deathDumpsterSprite->originY = 100;
+
+            ddData->loaded = true;
+        }
+        int16_t xOff
+            = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+        int16_t yOff
+            = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame], xOff, yOff);
+    }
+    else
+    { // if it is far
+        if (ddData->loaded)
+        {
+            bb_freeSprite(&entityManager->sprites[BB_DEATH_DUMPSTER]);
+            ddData->loaded = false;
+        }
+    }
 }
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
@@ -1501,47 +1541,51 @@ void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 
 void bb_startGarbotnikIntro(bb_entity_t* self)
 {
-    // load all the tile sprites now that menu sprites where unloaded and camera motion has stopped.
-    bb_loadWsgs(&self->gameData->tilemap);
-
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-    bb_dialogueData_t* dData = bb_createDialogueData(29); // 29
+    bb_dialogueData_t* dData = bb_createDialogueData(24); // 24
 
     strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
     dData->character[sizeof(dData->character) - 1] = '\0';
 
-    bb_setCharacterLine(dData, 0, "Holy bug farts!");
-    bb_setCharacterLine(dData, 1, "After I marketed the chilidog car freshener at MAGFest,");
-    bb_setCharacterLine(dData, 2, "Garbotnik Industries' stock went up by 6,969%!"); // V longest possible string here
-    bb_setCharacterLine(dData, 3, "I'm going to use my time machine");
-    bb_setCharacterLine(dData, 4, "to steal the next big-selling trinket from the future now.");
-    bb_setCharacterLine(dData, 5, "That will floor all my stakeholders and make me UNDEFINED money!");
-    bb_setCharacterLine(dData, 6, "With that kind of cash, I can recruit 200 professional bassoon players");
-    bb_setCharacterLine(dData, 7, "to the MAGFest Community Orchestra.");
-    bb_setCharacterLine(dData, 8, "I'm so hyped to turn on my time machine for the first time!");
-    bb_setCharacterLine(dData, 9, "Everything's in order.");
-    bb_setCharacterLine(dData, 10, "Even Pango can't stop me!");
-    bb_setCharacterLine(dData, 11, "I just have to attach the chaos orb right here.");
-    bb_setCharacterLine(dData, 12, "Where did I put that core?");
-    bb_setCharacterLine(dData, 13, "hmmm...");
-    bb_setCharacterLine(dData, 14, "What about in the freezer?");
-    bb_setCharacterLine(dData, 15, "I've checked every inch of the death dumpster.");
-    bb_setCharacterLine(dData, 16, "Glitch my circuits!");
-    bb_setCharacterLine(dData, 17, "It must have gone out with the trash last Wednesday.");
-    bb_setCharacterLine(dData, 18, "Can I get an F in the chat?");
-    bb_setCharacterLine(dData, 19, "...");
-    bb_setCharacterLine(dData, 20, "The chaos orb is three times denser than a black hole.");
-    bb_setCharacterLine(dData, 21, "Well if Garbotnik Sanitation Industries took it to the landfill,");
-    bb_setCharacterLine(dData, 22, "then it is definitely at the VERY BOTTOM of the dump.");
-    bb_setCharacterLine(dData, 23, "Not a problem.");
-    bb_setCharacterLine(dData, 24, "We have the technology to retrieve it.");
-    bb_setCharacterLine(dData, 25, "Safety first.");
-    bb_setCharacterLine(dData, 26, "I've activated my cloning machine up here");
-    bb_setCharacterLine(dData, 27, "in case I should perish on that nuclear wasteland.");
-    bb_setCharacterLine(dData, 28, "YOLO!");
+    // longest possible string     " "
+    //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
+    //  A A A A A A A A A A A A A A A A A A A");
+    bb_setCharacterLine(dData, 0, "Holy bug farts!"); //
+    bb_setCharacterLine(
+        dData, 1,
+        "After I marketed the chilidog car freshener at MAGFest, Garbotnik Industries' stock went up by 6,969%!");
+    bb_setCharacterLine(dData, 2,
+                        "I'm going to use my time machine to steal the next big-selling trinket from the future now.");
+    bb_setCharacterLine(dData, 3, "That will floor all my stakeholders and make me UNDEFINED money!");
+    bb_setCharacterLine(
+        dData, 4,
+        "With that kind of cash, I can recruit 200 professional bassoon players to the MAGFest Community Orchestra.");
+    bb_setCharacterLine(dData, 5, "I'm so hyped to turn on my time machine for the first time!");
+    bb_setCharacterLine(dData, 6, "Everything's in order.");
+    bb_setCharacterLine(dData, 7, "Even Pango can't stop me!");
+    bb_setCharacterLine(dData, 8, "I just have to attach the chaos orb right here.");
+    bb_setCharacterLine(dData, 9, "Where did I put that orb?");
+    bb_setCharacterLine(dData, 10, "hmmm...");
+    bb_setCharacterLine(dData, 11, "What about in the freezer?");
+    bb_setCharacterLine(dData, 12, "I've checked every inch of the death dumpster.");
+    bb_setCharacterLine(dData, 13, "Glitch my circuits!");
+    bb_setCharacterLine(dData, 14, "It must have gone out with the trash last Wednesday.");
+    bb_setCharacterLine(dData, 15, "Can I get an F in the chat?");
+    bb_setCharacterLine(dData, 16, "...");
+    bb_setCharacterLine(dData, 17, "The chaos orb is three times denser than a black hole.");
+    bb_setCharacterLine(dData, 18,
+                        "Well if Garbotnik Sanitation Industries took it to the landfill, then it is definitely at the "
+                        "VERY BOTTOM of the dump.");
+    bb_setCharacterLine(dData, 19, "Not a problem.");
+    bb_setCharacterLine(dData, 20, "We have the technology to retrieve it.");
+    bb_setCharacterLine(
+        dData, 21,
+        "\"Safety first.\" Section A: Activate the cloning machine in case I should perish on that nuclear wasteland.");
+    bb_setCharacterLine(dData, 22, "fine.");
+    bb_setCharacterLine(dData, 23, "Stupid safety rules. YOLO!");
 
     dData->curString = -1;
 
@@ -1613,7 +1657,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         }
         case 4:
         {
-            bb_setCharacterLine(dData, 0, "I must find that chaos core at all costs!");
+            bb_setCharacterLine(dData, 0, "I must find that chaos orb at all costs!");
             break;
         }
         default:
@@ -1639,7 +1683,7 @@ void bb_startGarbotnikCloningTalk(bb_entity_t* self)
     dData->character[sizeof(dData->character) - 1] = '\0';
 
     bb_setCharacterLine(dData, 0, "I'm feeling fresh, baby!"); // V longest possible string here
-    bb_setCharacterLine(dData, 1, "It was a good move taking omega3 fish oils before backing up my brain.");
+    bb_setCharacterLine(dData, 1, "It was a good move taking those omega3 fish oils before backing up my brain.");
 
     dData->curString = -1;
 
@@ -1661,7 +1705,7 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
 
     // Max dialogue string roughly:                                                                         here----V
     bb_setCharacterLine(dData, 0, "Oooey Gooey! Look at that dark gelatinous mass!");
-    bb_setCharacterLine(dData, 1, "I can use the directional buttons on my swadge to fly over there.");
+    bb_setCharacterLine(dData, 1, "I can use the directional buttons on my swadge to fly over there and check it out.");
 
     dData->curString     = -1;
     dData->endDialogueCB = &bb_afterGarbotnikEggTutorialTalk;
@@ -1678,16 +1722,23 @@ void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-    bb_dialogueData_t* dData = bb_createDialogueData(4);
+    bb_dialogueData_t* dData = bb_createDialogueData(5);
 
     strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
     dData->character[sizeof(dData->character) - 1] = '\0';
 
-    // Max dialogue string roughly:                                                                         here----V
-    bb_setCharacterLine(dData, 0, "When I travel away from the booster,");
-    bb_setCharacterLine(dData, 1, "I've got to keep an eye on my fuel level at all times.");
-    bb_setCharacterLine(dData, 2, "Sit back atop the booster before all the lights");
-    bb_setCharacterLine(dData, 3, "around the outside of the swadge turn off.");
+    // longest possible string     " "
+    //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
+    //  A A A A A A A A A A A A A A A A A A A");
+    bb_setCharacterLine(dData, 0,
+                        "When I travel away from the booster, I've got to keep an eye on my fuel level at all times.");
+    bb_setCharacterLine(dData, 1,
+                        "Sit back atop the booster before all the lights around the outside of the swadge turn off.");
+    bb_setCharacterLine(dData, 2,
+                        "\"safety first\" Section B: Once back on the rocket, it takes a stupid long time for the "
+                        "launch sequence to initiate.");
+    bb_setCharacterLine(dData, 3, "Too many regulations on equipment these days.");
+    bb_setCharacterLine(dData, 4, "Let a trashman go to space in peace.");
 
     dData->curString     = -1;
     dData->endDialogueCB = &bb_afterGarbotnikFuelTutorialTalk;
@@ -1745,6 +1796,8 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 {
     bb_setupMidi();
+    unloadMidiFile(&self->gameData->bgm);
+    loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
     globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)

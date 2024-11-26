@@ -50,7 +50,6 @@ struct bb_t
     bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
-    bb_soundManager_t soundManager;
 
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
@@ -151,8 +150,8 @@ static void bb_EnterMode(void)
     drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
     drawDisplayTft(NULL);
 
-    bb_initializeGameData(&bigbug->gameData, &bigbug->soundManager);
-    bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData, &bigbug->soundManager);
+    bb_initializeGameData(&bigbug->gameData);
+    bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
     bb_initializeTileMap(&bigbug->gameData.tilemap);
 
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
@@ -189,7 +188,7 @@ static void bb_EnterMode(void)
     bigbug->screen = BIGBUG_GAME;
 
     bb_setupMidi();
-    soundPlayBgm(&bigbug->gameData.garbotniksHome, MIDI_BGM);
+    soundPlayBgm(&bigbug->gameData.bgm, MIDI_BGM);
 
     bb_Reset();
 }
@@ -235,9 +234,6 @@ static void bb_ExitMode(void)
     soundStop(true);
     unloadMidiFile(&bigbug->gameData.bgm);
 
-    unloadMidiFile(&bigbug->gameData.hurryUp);
-
-    unloadMidiFile(&bigbug->gameData.garbotniksHome);
     deinitGlobalMidiPlayer();
 
     bb_freeWsgs(&bigbug->gameData.tilemap);

@@ -185,6 +185,8 @@ void bb_loadWsgs(bb_tilemap_t* tilemap)
         snprintf(filename, sizeof(filename), "fore_b_%d.wsg", i);
         loadWsgInplace(filename, &tilemap->fore_b_Wsg[i], true, bb_decodeSpace, bb_hsd);
     }
+
+    tilemap->wsgsLoaded = true;
 }
 
 void bb_freeWsgs(bb_tilemap_t* tilemap)
@@ -211,6 +213,8 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
         freeWsg(&tilemap->fore_h_Wsg[i]);
         freeWsg(&tilemap->fore_b_Wsg[i]);
     }
+
+    tilemap->wsgsLoaded = false;
 }
 
 // flags neighbors to check for structural support

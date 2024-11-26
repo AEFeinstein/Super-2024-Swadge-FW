@@ -11,14 +11,13 @@
 #include "hdw-tft.h"
 #include "linked_list.h"
 #include "sprite_bigbug.h"
-#include "soundManager_bigbug.h"
 #include "swadge2024.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 200
-#define NUM_SPRITES  21 // The number of bb_sprite_t last accounted for car_active
+#define NUM_SPRITES  20 // The number of bb_sprite_t last accounted for car_active
 
 //==============================================================================
 // Structs
@@ -41,8 +40,7 @@ typedef struct
 //==============================================================================
 // Prototypes
 //==============================================================================
-void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData,
-                                bb_soundManager_t* soundManager);
+void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData);
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite);
 void bb_freeSprite(bb_sprite_t* sprite);
 void bb_loadSprites(bb_entityManager_t* entityManager);

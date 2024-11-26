@@ -50,6 +50,7 @@ struct bb_foregroundTileInfo_t // child class
 
 struct bb_tilemap_t
 {
+    bool wsgsLoaded;   ///< True when the following wsgs are all loaded
     wsg_t headlampWsg; ///< Some data about lighting. Red channel is left facing. Green channel is center facing. Blue
                        ///< channel is right facing.
 

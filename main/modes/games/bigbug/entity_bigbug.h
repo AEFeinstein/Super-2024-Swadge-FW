@@ -11,7 +11,6 @@
 
 #include "gameData_bigbug.h"
 #include "entityManager_bigbug.h"
-#include "soundManager_bigbug.h"
 #include "sprite_bigbug.h"
 
 #include "linked_list.h"
@@ -27,9 +26,11 @@ typedef enum
     ATTACHMENT_ARM_DATA,
     BUG_DATA,
     CAR_ACTIVE_DATA,
+    DEATH_DUMPSTER_DATA,
     DIALOGUE_DATA,
     EGG_DATA,
     EGG_LEAVES_DATA,
+    GAME_OVER_DATA,
     GARBOTNIK_DATA,
     GO_TO_DATA,
     HEAVY_FALLING_DATA,
@@ -167,6 +168,16 @@ typedef struct
     int8_t blinkTimer;
 } bb_dialogueData_t;
 
+typedef struct
+{
+    bool loaded; // tracks wether or not the death dumpster sprite is loaded
+} bb_DeathDumpsterData_t;
+
+typedef struct
+{ // There are 3 game over graphics that take turns loading into wsg_t fullscreenGraphic;
+    wsg_t fullscreenGraphic;
+} bb_gameOverData_t;
+
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
 typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -206,7 +217,6 @@ struct bb_entity_t
     uint8_t currentAnimationFrame;
 
     bb_gameData_t* gameData;
-    bb_soundManager_t* soundManager;
 
     int16_t halfWidth;  // Distance from the origin to the side edge (for AABB physics)
     int16_t halfHeight; // Distance from the origin to the top edge (for AABB physics)
@@ -220,8 +230,7 @@ struct bb_entity_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData,
-                         bb_soundManager_t* soundManager);
+void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData);
 
 void bb_setData(bb_entity_t* self, void* data, bb_data_type_t dataType);
 void bb_clearCollisions(bb_entity_t* self, bool keepCached);
@@ -263,8 +272,9 @@ void bb_drawStar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 void bb_drawNothing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawMenuBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-void bb_drawSimple(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawGameOver(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawDeathDumpster(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
