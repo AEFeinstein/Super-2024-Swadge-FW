@@ -121,100 +121,106 @@ void bb_initializeTileMap(bb_tilemap_t* tilemap)
 
 void bb_loadWsgs(bb_tilemap_t* tilemap)
 {
-    loadWsgInplace("headlampLookup.wsg", &tilemap->headlampWsg, true, bb_decodeSpace, bb_hsd); // 122 x 107 pixels
-
-    loadWsgInplace("baked_Landfill2.wsg", &tilemap->surface1Wsg, true, bb_decodeSpace, bb_hsd);
-    loadWsgInplace("baked_Landfill3.wsg", &tilemap->surface2Wsg, true, bb_decodeSpace, bb_hsd);
-    loadWsgInplace("landfill_gradient.wsg", &tilemap->landfillGradient, true, bb_decodeSpace, bb_hsd);
-
-    // TILE MAP shenanigans explained:
-    // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
-    // bin  dec  wsg
-    // LURD
-    // 0010 2    0
-    // 1010 10   1
-    // 1000 8    2
-    // 0000 0    3
-
-    // 0011 3    4
-    // 1011 11   5
-    // 1001 9    6
-    // 0001 1    7
-
-    // 0111 7    8
-    // 1111 15   9
-    // 1101 13   10
-    // 0101 5    11
-
-    // 0110 6    12
-    // 1110 14   13
-    // 1100 12   14
-    // 0100 4    15
-
-    // The index of bigbug->fore_s_Wsg is the LURD neighbor info.
-    // The value within is the wsg graphic.
-    // [3,7,0,4,15,11,12,8,2,6,1,5,14,10,13,9]
-
-    // Midground
-    for (int16_t i = 0; i < 120; i++)
+    if (false == tilemap->wsgsLoaded)
     {
-        char filename[20];
-        snprintf(filename, sizeof(filename), "mid_s_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->mid_s_Wsg[i], true, bb_decodeSpace, bb_hsd);
+        loadWsgInplace("headlampLookup.wsg", &tilemap->headlampWsg, true, bb_decodeSpace, bb_hsd); // 122 x 107 pixels
 
-        snprintf(filename, sizeof(filename), "mid_m_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->mid_m_Wsg[i], true, bb_decodeSpace, bb_hsd);
+        loadWsgInplace("baked_Landfill2.wsg", &tilemap->surface1Wsg, true, bb_decodeSpace, bb_hsd);
+        loadWsgInplace("baked_Landfill3.wsg", &tilemap->surface2Wsg, true, bb_decodeSpace, bb_hsd);
+        loadWsgInplace("landfill_gradient.wsg", &tilemap->landfillGradient, true, bb_decodeSpace, bb_hsd);
 
-        snprintf(filename, sizeof(filename), "mid_h_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->mid_h_Wsg[i], true, bb_decodeSpace, bb_hsd);
+        // TILE MAP shenanigans explained:
+        // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
+        // bin  dec  wsg
+        // LURD
+        // 0010 2    0
+        // 1010 10   1
+        // 1000 8    2
+        // 0000 0    3
+
+        // 0011 3    4
+        // 1011 11   5
+        // 1001 9    6
+        // 0001 1    7
+
+        // 0111 7    8
+        // 1111 15   9
+        // 1101 13   10
+        // 0101 5    11
+
+        // 0110 6    12
+        // 1110 14   13
+        // 1100 12   14
+        // 0100 4    15
+
+        // The index of bigbug->fore_s_Wsg is the LURD neighbor info.
+        // The value within is the wsg graphic.
+        // [3,7,0,4,15,11,12,8,2,6,1,5,14,10,13,9]
+
+        // Midground
+        for (int16_t i = 0; i < 120; i++)
+        {
+            char filename[20];
+            snprintf(filename, sizeof(filename), "mid_s_%d.wsg", i);
+            loadWsgInplace(filename, &tilemap->mid_s_Wsg[i], true, bb_decodeSpace, bb_hsd);
+
+            snprintf(filename, sizeof(filename), "mid_m_%d.wsg", i);
+            loadWsgInplace(filename, &tilemap->mid_m_Wsg[i], true, bb_decodeSpace, bb_hsd);
+
+            snprintf(filename, sizeof(filename), "mid_h_%d.wsg", i);
+            loadWsgInplace(filename, &tilemap->mid_h_Wsg[i], true, bb_decodeSpace, bb_hsd);
+        }
+
+        // Foreground
+        for (int16_t i = 0; i < 240; i++)
+        {
+            char filename[20];
+            snprintf(filename, sizeof(filename), "fore_s_%d.wsg", i);
+            loadWsgInplace(filename, &tilemap->fore_s_Wsg[i], true, bb_decodeSpace, bb_hsd);
+
+            snprintf(filename, sizeof(filename), "fore_m_%d.wsg", i);
+            loadWsgInplace(filename, &tilemap->fore_m_Wsg[i], true, bb_decodeSpace, bb_hsd);
+
+            snprintf(filename, sizeof(filename), "fore_h_%d.wsg", i);
+            loadWsgInplace(filename, &tilemap->fore_h_Wsg[i], true, bb_decodeSpace, bb_hsd);
+
+            snprintf(filename, sizeof(filename), "fore_b_%d.wsg", i);
+            loadWsgInplace(filename, &tilemap->fore_b_Wsg[i], true, bb_decodeSpace, bb_hsd);
+        }
+
+        tilemap->wsgsLoaded = true;
     }
-
-    // Foreground
-    for (int16_t i = 0; i < 240; i++)
-    {
-        char filename[20];
-        snprintf(filename, sizeof(filename), "fore_s_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->fore_s_Wsg[i], true, bb_decodeSpace, bb_hsd);
-
-        snprintf(filename, sizeof(filename), "fore_m_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->fore_m_Wsg[i], true, bb_decodeSpace, bb_hsd);
-
-        snprintf(filename, sizeof(filename), "fore_h_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->fore_h_Wsg[i], true, bb_decodeSpace, bb_hsd);
-
-        snprintf(filename, sizeof(filename), "fore_b_%d.wsg", i);
-        loadWsgInplace(filename, &tilemap->fore_b_Wsg[i], true, bb_decodeSpace, bb_hsd);
-    }
-
-    tilemap->wsgsLoaded = true;
 }
 
 void bb_freeWsgs(bb_tilemap_t* tilemap)
 {
-    freeWsg(&tilemap->headlampWsg); // 122 x 107 pixels
-
-    freeWsg(&tilemap->surface1Wsg);
-    freeWsg(&tilemap->surface2Wsg);
-    freeWsg(&tilemap->landfillGradient);
-
-    // Midground
-    for (int16_t i = 0; i < 120; i++)
+    if (true == tilemap->wsgsLoaded)
     {
-        freeWsg(&tilemap->mid_s_Wsg[i]);
-        freeWsg(&tilemap->mid_m_Wsg[i]);
-        freeWsg(&tilemap->mid_h_Wsg[i]);
-    }
+        freeWsg(&tilemap->headlampWsg); // 122 x 107 pixels
 
-    // Foreground
-    for (int16_t i = 0; i < 240; i++)
-    {
-        freeWsg(&tilemap->fore_s_Wsg[i]);
-        freeWsg(&tilemap->fore_m_Wsg[i]);
-        freeWsg(&tilemap->fore_h_Wsg[i]);
-        freeWsg(&tilemap->fore_b_Wsg[i]);
-    }
+        freeWsg(&tilemap->surface1Wsg);
+        freeWsg(&tilemap->surface2Wsg);
+        freeWsg(&tilemap->landfillGradient);
 
-    tilemap->wsgsLoaded = false;
+        // Midground
+        for (int16_t i = 0; i < 120; i++)
+        {
+            freeWsg(&tilemap->mid_s_Wsg[i]);
+            freeWsg(&tilemap->mid_m_Wsg[i]);
+            freeWsg(&tilemap->mid_h_Wsg[i]);
+        }
+
+        // Foreground
+        for (int16_t i = 0; i < 240; i++)
+        {
+            freeWsg(&tilemap->fore_s_Wsg[i]);
+            freeWsg(&tilemap->fore_m_Wsg[i]);
+            freeWsg(&tilemap->fore_h_Wsg[i]);
+            freeWsg(&tilemap->fore_b_Wsg[i]);
+        }
+
+        tilemap->wsgsLoaded = false;
+    }
 }
 
 // flags neighbors to check for structural support
