@@ -185,7 +185,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                 // like a memcopy
                 *foundSpot = *curEntity;
                 entityManager->activeEntities++;
-                removeEntry(entityManager->cachedEntities, currentNode);
+                heap_caps_free(removeEntry(entityManager->cachedEntities, currentNode));
             }
         }
         currentNode = next;
