@@ -291,7 +291,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
     {
         for (int32_t x = -1; x <= TFT_WIDTH / 400 + 1; x++)
         {
-            drawWsgSimple(&tilemap->surface1Wsg, x * 400 - offsetX2, -camera->pos.y / 2);
+            drawWsgTile(&tilemap->surface1Wsg, x * 400 - offsetX2, -camera->pos.y / 2);
         }
     }
     // ESP_LOGD(BB_TAG,"cam y: %d\n", camera->pos.y);
