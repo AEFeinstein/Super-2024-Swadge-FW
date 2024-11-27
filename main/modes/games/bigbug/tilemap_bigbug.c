@@ -266,44 +266,6 @@ void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnikDrawPos, vec_t* garbotnikRotation,
                     bb_entityManager_t* entityManager)
 {
-    // font_t ibm;
-    // loadFont("ibm_vga8.font", &ibm, false);
-
-    int32_t offsetX1 = (camera->pos.x / 3) % 400;
-    int32_t offsetX2 = (camera->pos.x / 2) % 400;
-
-    offsetX1 = (offsetX1 < 0) ? offsetX1 + 400 : offsetX1;
-    offsetX2 = (offsetX2 < 0) ? offsetX2 + 400 : offsetX2;
-
-    // ESP_LOGD(BB_TAG,"camera y: %d\n", camera->pos.y);
-
-    // draws background
-    if (camera->pos.y < 270 && camera->pos.y > -907)
-    {
-        for (int32_t x = -1; x <= TFT_WIDTH / 400 + 1; x++)
-        {
-            drawWsgSimple(&tilemap->surface2Wsg, x * 400 - offsetX1, -64 - camera->pos.y / 3);
-        }
-    }
-
-    // draws the closer background
-    if (camera->pos.y < 1014 && camera->pos.y > -480)
-    {
-        for (int32_t x = -1; x <= TFT_WIDTH / 400 + 1; x++)
-        {
-            drawWsgSimple(&tilemap->surface1Wsg, x * 400 - offsetX2, -camera->pos.y / 2);
-        }
-    }
-    // ESP_LOGD(BB_TAG,"cam y: %d\n", camera->pos.y);
-    //  draws the back gradient
-    if (camera->pos.y < 1424 && camera->pos.y > -70)
-    {
-        for (int x = -(offsetX2 % 8); x < 280; x += 8)
-        {
-            drawWsgSimple(&tilemap->landfillGradient, x, -camera->pos.y / 2 + 205);
-        }
-    }
-
     // setting up variables to draw midground & foreground
     // ESP_LOGD(BB_TAG,"camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
     // ESP_LOGD(BB_TAG,"width: %d\n", FIELD_WIDTH);
