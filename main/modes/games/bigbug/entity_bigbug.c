@@ -1851,6 +1851,7 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
                                       2));
             tData->executeOnArrival                                  = &bb_startGarbotnikEggTutorialTalk;
             self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
+            break;
         }
     }
 }
