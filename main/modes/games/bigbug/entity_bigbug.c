@@ -1614,7 +1614,7 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
     bb_setCharacterLine(dData, 20, "We have the technology to retrieve it.");
     bb_setCharacterLine(
         dData, 21,
-        "\"Safety first.\" Section A: Activate the cloning machine in case I should perish on that nuclear wasteland.");
+        "Safety first. Activate the cloning machine in case I should perish on that nuclear wasteland.");
     bb_setCharacterLine(dData, 22, "fine.");
     bb_setCharacterLine(dData, 23, "Stupid safety rules. YOLO!");
 
@@ -1766,7 +1766,7 @@ void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
     bb_setCharacterLine(dData, 1,
                         "Sit back atop the booster before all the lights around the outside of the swadge turn off.");
     bb_setCharacterLine(dData, 2,
-                        "\"safety first\" Section B: Once back on the rocket, it takes a stupid long time for the "
+                        "safety first. Once back on the rocket, it takes a stupid long time for the "
                         "launch sequence to initiate.");
     bb_setCharacterLine(dData, 3, "Too many regulations on equipment these days.");
     bb_setCharacterLine(dData, 4, "Let a trashman go to space in peace.");

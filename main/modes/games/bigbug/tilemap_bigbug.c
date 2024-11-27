@@ -409,240 +409,321 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
 
                 vec_t tilePos = {.x = i * TILE_SIZE - camera->pos.x, .y = j * TILE_SIZE - camera->pos.y};
 
-                // Draw midground  tiles
-                if (tilemap->mgTiles[i][j].health > 0)
+                // Figure out which midground tile quadrants are worth drawing
+                // to cut down on overdraw
+                
+                
+                
+                if(tilemap->mgTiles[i][j].health > 0)
                 {
-                    wsg_t(*wsgMidgroundArrayPtr)[120] = bb_GetMidgroundWsgArrForCoord(tilemap, i, j);
-
-                    // sprite_idx LURD order.
-                    int8_t sprite_idx
-                        = 8 * ((i - 1 < 0) ? 0 : (tilemap->mgTiles[i - 1][j].health > 0))
-                          + 4 * ((j - 1 < 0) ? 0 : (tilemap->mgTiles[i][j - 1].health > 0))
-                          + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : tilemap->mgTiles[i + 1][j].health > 0)
-                          + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : tilemap->mgTiles[i][j + 1].health > 0);
-                    // corner_info represents up_left, up_right, down_left, down_right dirt presence (remember >0 is
-                    // dirt).
-                    int8_t corner_info
-                        = 8
-                              * ((i - 1 < 0)   ? 0
-                                 : (j - 1 < 0) ? 0
-                                               : (tilemap->mgTiles[i - 1][j - 1].health > 0))
-                          + 4
-                                * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0
-                                   : (j - 1 < 0)                  ? 0
-                                                                  : tilemap->mgTiles[i + 1][j - 1].health > 0)
-                          + 2
-                                * ((i - 1 < 0)                       ? 0
-                                   : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
-                                                                     : tilemap->mgTiles[i - 1][j + 1].health > 0)
-                          + 1
-                                * ((i + 1 > TILE_FIELD_WIDTH - 1)    ? 0
-                                   : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
-                                                                     : tilemap->mgTiles[i + 1][j + 1].health > 0);
-
-                    // Top Left
-                    // 0 11xx 1xxx
-                    // 4 10xx xxxx
-                    // 8 01xx xxxx
-                    // 12 00xx xxxx
-                    // 16 11xx 0xxx
-                    vec_t lookup = {tilePos.x + 8 - (garbotnikDrawPos->x + 18) + tilemap->headlampWsg.w,
-                                    tilePos.y + 8 - (garbotnikDrawPos->y + 17) + tilemap->headlampWsg.h};
-                    // vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + 16 + tilemap->headlampWsg.w / 2,
-                    //                 tilePos.y + 8 - garbotnikDrawPos->y + 17 + tilemap->headlampWsg.h / 2};
-                    // ESP_LOGD(BB_TAG,"lookup: %d\n",lookup.x);
-                    lookup     = divVec2d(lookup, 2);
-                    brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                      5 - (j > 25 ? 25 : j) / 5);
-
-                    switch (sprite_idx & 0b1100)
+                    //Just don't draw it if it is on the very edge, because I am lazy to handle those cases.
+                    if(i && (i != TILE_FIELD_WIDTH - 1) && j && (j != TILE_FIELD_HEIGHT - 1))
                     {
-                        case 0b1100: // 0 16
+                        //drawMidground variable explained
+                        //0b00001000 means draw top    left  mg
+                        //0b00000100 means draw top    right mg
+                        //0b00000010 means draw bottom left  mg
+                        //0b00000001 means draw bottom right mg
+                        uint8_t drawMidground = 0;
+                        if(tilemap->fgTiles[i][j].health > 0)//if there is fg
                         {
-                            switch (corner_info & 0b1000)
-                            {
-                                case 0b1000: // 0
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 0], tilePos.x, tilePos.y);
-                                    break;
-                                default: // 0b0000 16
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 16], tilePos.x, tilePos.y);
-                                    break;
-                            }
-                            break;
-                        }
-                        case 0b1000: // 4
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 4], tilePos.x, tilePos.y);
-                            break;
-                        }
-                        case 0b0100: // 8
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 8], tilePos.x, tilePos.y);
-                            break;
-                        }
-                        default: // 0b0000:12
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 12], tilePos.x, tilePos.y);
-                            break;
-                        }
-                    }
+                            //top left stuff
+                            drawMidground |= ((
+                                //mg going left & fg isn't
+                                ((tilemap->mgTiles[i-1][j].health > 0) && (tilemap->fgTiles[i-1][j].health == 0)) ||
+                                //mg going up & fg isn't
+                                ((tilemap->mgTiles[i][j-1].health > 0) && (tilemap->fgTiles[i][j-1].health == 0)) ||
+                                //mg going diagonal and fg isn't at diagonal
+                                ((tilemap->mgTiles[i-1][j].health > 0) && (tilemap->mgTiles[i][j-1].health > 0) && (tilemap->mgTiles[i-1][j-1].health > 0) && (tilemap->fgTiles[i-1][j-1].health == 0)))
+                                << 3);// set the 3rd bit
 
-                    // Top Right
-                    // 1 x11x x1xx
-                    // 5 x01x xxxx
-                    // 9 x10x xxxx
-                    // 13 x00x xxxx
-                    // 17 x11x x0xx
-                    lookup.x += 8;
-                    brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                      5 - (j > 25 ? 25 : j) / 5);
+                            //top right stuff
+                            drawMidground |= ((
+                                //mg going right & fg isn't
+                                ((tilemap->mgTiles[i+1][j].health > 0) && (tilemap->fgTiles[i+1][j].health == 0)) ||
+                                //mg going up & fg isn't
+                                ((tilemap->mgTiles[i][j-1].health > 0) && (tilemap->fgTiles[i][j-1].health == 0)) ||
+                                //mg going diagonal and fg isn't at diagonal
+                                ((tilemap->mgTiles[i+1][j].health > 0) && (tilemap->mgTiles[i][j-1].health > 0) && (tilemap->mgTiles[i+1][j-1].health > 0) && (tilemap->fgTiles[i+1][j-1].health == 0)))
+                                << 2);// set the 2nd bit
 
-                    switch (sprite_idx & 0b110)
-                    {
-                        case 0b110: // 1 17
+                            //bottom left stuff
+                            drawMidground |= ((
+                                //mg going left & fg isn't
+                                ((tilemap->mgTiles[i-1][j].health > 0) && (tilemap->fgTiles[i-1][j].health == 0)) ||
+                                //mg going down & fg isn't
+                                ((tilemap->mgTiles[i][j+1].health > 0) && (tilemap->fgTiles[i][j+1].health == 0)) ||
+                                //mg going diagonal and fg isn't at diagonal
+                                ((tilemap->mgTiles[i-1][j].health > 0) && (tilemap->mgTiles[i][j+1].health > 0) && (tilemap->mgTiles[i-1][j+1].health > 0) && (tilemap->fgTiles[i-1][j+1].health == 0)))
+                                << 1);// set the 1st bit
+
+                            //bottom right stuff
+                            drawMidground |= ((
+                                //mg going right & fg isn't
+                                ((tilemap->mgTiles[i+1][j].health > 0) && (tilemap->fgTiles[i+1][j].health == 0)) ||
+                                //mg going down & fg isn't
+                                ((tilemap->mgTiles[i][j+1].health > 0) && (tilemap->fgTiles[i][j+1].health == 0)) ||
+                                //mg going diagonal and fg isn't at diagonal
+                                ((tilemap->mgTiles[i+1][j].health > 0) && (tilemap->mgTiles[i][j+1].health > 0) && (tilemap->mgTiles[i+1][j+1].health > 0) && (tilemap->fgTiles[i+1][j+1].health == 0)))
+                                << 0);// set the 0th bit
+                        }
+                        else
                         {
-                            switch (corner_info & 0b0100)
+                            drawMidground = 0b00001111;
+                        }
+
+                        // Draw midground tiles
+                        wsg_t(*wsgMidgroundArrayPtr)[120] = bb_GetMidgroundWsgArrForCoord(tilemap, i, j);
+
+                        // sprite_idx LURD order.
+                        int8_t sprite_idx
+                            = 8 * ((i - 1 < 0) ? 0 : (tilemap->mgTiles[i - 1][j].health > 0))
+                            + 4 * ((j - 1 < 0) ? 0 : (tilemap->mgTiles[i][j - 1].health > 0))
+                            + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : tilemap->mgTiles[i + 1][j].health > 0)
+                            + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : tilemap->mgTiles[i][j + 1].health > 0);
+                        // corner_info represents up_left, up_right, down_left, down_right dirt presence (remember >0 is
+                        // dirt).
+                        int8_t corner_info
+                            = 8
+                                * ((i - 1 < 0)   ? 0
+                                    : (j - 1 < 0) ? 0
+                                                : (tilemap->mgTiles[i - 1][j - 1].health > 0))
+                            + 4
+                                    * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0
+                                    : (j - 1 < 0)                  ? 0
+                                                                    : tilemap->mgTiles[i + 1][j - 1].health > 0)
+                            + 2
+                                    * ((i - 1 < 0)                       ? 0
+                                    : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
+                                                                        : tilemap->mgTiles[i - 1][j + 1].health > 0)
+                            + 1
+                                    * ((i + 1 > TILE_FIELD_WIDTH - 1)    ? 0
+                                    : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
+                                                                        : tilemap->mgTiles[i + 1][j + 1].health > 0);
+
+                        vec_t lookup = {tilePos.x + 8 - (garbotnikDrawPos->x + 18) + tilemap->headlampWsg.w,
+                                        tilePos.y + 8 - (garbotnikDrawPos->y + 17) + tilemap->headlampWsg.h};
+                        lookup     = divVec2d(lookup, 2);
+
+                        if(drawMidground & 0b00001000)
+                        {
+                            // Top Left
+                            // 0 11xx 1xxx
+                            // 4 10xx xxxx
+                            // 8 01xx xxxx
+                            // 12 00xx xxxx
+                            // 16 11xx 0xxx
+                                                    // vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + 16 + tilemap->headlampWsg.w / 2,
+                            //                 tilePos.y + 8 - garbotnikDrawPos->y + 17 + tilemap->headlampWsg.h / 2};
+                            // ESP_LOGD(BB_TAG,"lookup: %d\n",lookup.x);
+                            
+
+                            brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
+                                                            5 - (j > 25 ? 25 : j) / 5);
+
+                            switch (sprite_idx & 0b1100)
                             {
-                                case 0b0100: // 1
+                                case 0b1100: // 0 16
                                 {
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 1], tilePos.x + HALF_TILE,
-                                                  tilePos.y);
+                                    switch (corner_info & 0b1000)
+                                    {
+                                        case 0b1000: // 0
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 0], tilePos.x, tilePos.y);
+                                            break;
+                                        default: // 0b0000 16
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 16], tilePos.x, tilePos.y);
+                                            break;
+                                    }
                                     break;
                                 }
-                                default: // 0b0000 17
+                                case 0b1000: // 4
                                 {
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 17], tilePos.x + HALF_TILE,
-                                                  tilePos.y);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 4], tilePos.x, tilePos.y);
                                     break;
                                 }
-                            }
-                            break;
-                        }
-                        case 0b010: // 5
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 5], tilePos.x + HALF_TILE,
-                                          tilePos.y);
-                            break;
-                        }
-                        case 0b100: // 9
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 9], tilePos.x + HALF_TILE,
-                                          tilePos.y);
-                            break;
-                        }
-                        default: // 0b0000:13
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 13], tilePos.x + HALF_TILE,
-                                          tilePos.y);
-                            break;
-                        }
-                    }
-
-                    // Bottom Left
-                    // 2 1xx1 xx1x
-                    // 6 1xx0 xxxx
-                    // 10 0xx1 xxxx
-                    // 14 0xx0 xxxx
-                    // 18 1xx1 xx0x
-                    lookup.x -= 8;
-                    lookup.y += 8;
-                    brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                      5 - (j > 25 ? 25 : j) / 5);
-
-                    switch (sprite_idx & 0b1001)
-                    {
-                        case 0b1001: // 2 18
-                        {
-                            switch (corner_info & 0b0010)
-                            {
-                                case 0b0010: // 2
+                                case 0b0100: // 8
                                 {
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 2], tilePos.x,
-                                                  tilePos.y + HALF_TILE);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 8], tilePos.x, tilePos.y);
                                     break;
                                 }
-                                default: // 0b0000 18
+                                default: // 0b0000:12
                                 {
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 18], tilePos.x,
-                                                  tilePos.y + HALF_TILE);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 12], tilePos.x, tilePos.y);
                                     break;
                                 }
                             }
-                            break;
-                        }
-                        case 0b1000: // 6
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 6], tilePos.x,
-                                          tilePos.y + HALF_TILE);
-                            break;
-                        }
-                        case 0b0001: // 10
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 10], tilePos.x,
-                                          tilePos.y + HALF_TILE);
-                            break;
-                        }
-                        default: // 0b0000:14
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 14], tilePos.x,
-                                          tilePos.y + HALF_TILE);
-                            break;
-                        }
-                    }
 
-                    // Bottom Right
-                    // 3 xx11 xxx1
-                    // 7 xx10 xxxx
-                    // 11 xx01 xxxx
-                    // 15 xx00 xxxx
-                    // 19 xx11 xxx0
-                    lookup.x += 8;
-                    brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                      5 - (j > 25 ? 25 : j) / 5);
+                        }
+                        
+                        lookup.x += 8;
 
-                    switch (sprite_idx & 0b0011)
-                    {
-                        case 0b11: // 3 19
+                        if(drawMidground & 0b000000100)
                         {
-                            switch (corner_info & 0b1)
+                            // Top Right
+                            // 1 x11x x1xx
+                            // 5 x01x xxxx
+                            // 9 x10x xxxx
+                            // 13 x00x xxxx
+                            // 17 x11x x0xx
+                            brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
+                                                            5 - (j > 25 ? 25 : j) / 5);
+
+                            switch (sprite_idx & 0b110)
                             {
-                                case 0b1: // 3
+                                case 0b110: // 1 17
                                 {
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 3], tilePos.x + HALF_TILE,
-                                                  tilePos.y + HALF_TILE);
+                                    switch (corner_info & 0b0100)
+                                    {
+                                        case 0b0100: // 1
+                                        {
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 1], tilePos.x + HALF_TILE,
+                                                        tilePos.y);
+                                            break;
+                                        }
+                                        default: // 0b0000 17
+                                        {
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 17], tilePos.x + HALF_TILE,
+                                                        tilePos.y);
+                                            break;
+                                        }
+                                    }
                                     break;
                                 }
-                                default: // 0b0000 19
+                                case 0b010: // 5
                                 {
-                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 19], tilePos.x + HALF_TILE,
-                                                  tilePos.y + HALF_TILE);
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 5], tilePos.x + HALF_TILE,
+                                                tilePos.y);
+                                    break;
+                                }
+                                case 0b100: // 9
+                                {
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 9], tilePos.x + HALF_TILE,
+                                                tilePos.y);
+                                    break;
+                                }
+                                default: // 0b0000:13
+                                {
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 13], tilePos.x + HALF_TILE,
+                                                tilePos.y);
                                     break;
                                 }
                             }
-                            break;
                         }
-                        case 0b10: // 7
+                        
+                        lookup.x -= 8;
+                        lookup.y += 8;
+
+                        if(drawMidground & 0b00000010)
                         {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 7], tilePos.x + HALF_TILE,
-                                          tilePos.y + HALF_TILE);
-                            break;
+                            // Bottom Left
+                            // 2 1xx1 xx1x
+                            // 6 1xx0 xxxx
+                            // 10 0xx1 xxxx
+                            // 14 0xx0 xxxx
+                            // 18 1xx1 xx0x
+                            brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
+                                                            5 - (j > 25 ? 25 : j) / 5);
+
+                            switch (sprite_idx & 0b1001)
+                            {
+                                case 0b1001: // 2 18
+                                {
+                                    switch (corner_info & 0b0010)
+                                    {
+                                        case 0b0010: // 2
+                                        {
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 2], tilePos.x,
+                                                        tilePos.y + HALF_TILE);
+                                            break;
+                                        }
+                                        default: // 0b0000 18
+                                        {
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 18], tilePos.x,
+                                                        tilePos.y + HALF_TILE);
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                }
+                                case 0b1000: // 6
+                                {
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 6], tilePos.x,
+                                                tilePos.y + HALF_TILE);
+                                    break;
+                                }
+                                case 0b0001: // 10
+                                {
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 10], tilePos.x,
+                                                tilePos.y + HALF_TILE);
+                                    break;
+                                }
+                                default: // 0b0000:14
+                                {
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 14], tilePos.x,
+                                                tilePos.y + HALF_TILE);
+                                    break;
+                                }
+                            }
                         }
-                        case 0b01: // 11
+
+                        lookup.x += 8;
+                        if(drawMidground & 0b00000001)
                         {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 11], tilePos.x + HALF_TILE,
-                                          tilePos.y + HALF_TILE);
-                            break;
+                            // Bottom Right
+                            // 3 xx11 xxx1
+                            // 7 xx10 xxxx
+                            // 11 xx01 xxxx
+                            // 15 xx00 xxxx
+                            // 19 xx11 xxx0
+                            brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
+                                                            5 - (j > 25 ? 25 : j) / 5);
+
+                            switch (sprite_idx & 0b0011)
+                            {
+                                case 0b11: // 3 19
+                                {
+                                    switch (corner_info & 0b1)
+                                    {
+                                        case 0b1: // 3
+                                        {
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 3], tilePos.x + HALF_TILE,
+                                                        tilePos.y + HALF_TILE);
+                                            break;
+                                        }
+                                        default: // 0b0000 19
+                                        {
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 19], tilePos.x + HALF_TILE,
+                                                        tilePos.y + HALF_TILE);
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                }
+                                case 0b10: // 7
+                                {
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 7], tilePos.x + HALF_TILE,
+                                                tilePos.y + HALF_TILE);
+                                    break;
+                                }
+                                case 0b01: // 11
+                                {
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 11], tilePos.x + HALF_TILE,
+                                                tilePos.y + HALF_TILE);
+                                    break;
+                                }
+                                default: // 0b0000:15
+                                {
+                                    drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 15], tilePos.x + HALF_TILE,
+                                                tilePos.y + HALF_TILE);
+                                    break;
+                                }
+                            }
                         }
-                        default: // 0b0000:15
-                        {
-                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 15], tilePos.x + HALF_TILE,
-                                          tilePos.y + HALF_TILE);
-                            break;
-                        }
+
+                        // char snum[4];
+                        // sprintf(snum, "%d", 20*brightness);
+                        // drawText(&ibm, c555, snum, tilePos.x, tilePos.y);
                     }
-                    // char snum[4];
-                    // sprintf(snum, "%d", 20*brightness);
-                    // drawText(&ibm, c555, snum, tilePos.x, tilePos.y);
                 }
 
                 // Draw foreground tiles
