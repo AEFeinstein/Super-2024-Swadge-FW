@@ -296,8 +296,7 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     if (tilemap->wsgsLoaded)
     {
         // Lookup table of background colors from dark to light
-        const paletteColor_t skyColors[] =
-        {
+        const paletteColor_t skyColors[] = {
             c000, c001, c011, //
             c111, c112, c122, //
             c222, c223, c233, //
@@ -306,8 +305,8 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         };
         // get steps from 0 (at -4000) to 14 (at -1200)
         int32_t skyStep = cameraPos->y / 200 + 20;
-        skyStep = CLAMP(skyStep, 0, ARRAY_SIZE(skyColors) - 1);
-        bgColor = skyColors[skyStep];
+        skyStep         = CLAMP(skyStep, 0, ARRAY_SIZE(skyColors) - 1);
+        bgColor         = skyColors[skyStep];
     }
 
     // Fill the flat background color
@@ -318,30 +317,27 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     bb_tilemap_t* tilemap = &bigbug->gameData.tilemap;
     if (tilemap->wsgsLoaded)
     {
-        // Check what layers should be drawn
-        // TODO reevaluate this
-        bool drawS2 = (cameraPos->y < 270 && cameraPos->y > -907);
-        bool drawS1 = (cameraPos->y < 1014 && cameraPos->y > -480);
-        bool drawGr = (cameraPos->y < 1424 && cameraPos->y > -70);
-
-        // Exit if there's nothing to do
-        if (!drawS1 && !drawS2 && !drawGr)
+        // Quick check to see if any background is drawn
+        if (cameraPos->y < -906 || cameraPos->y > 1022)
         {
             return;
         }
 
         // Convenience widths
-        int32_t bgWidth  = tilemap->surface1Wsg.w;
-        int32_t grWidth  = tilemap->landfillGradient.w;
+        int32_t bgWidth = tilemap->surface1Wsg.w;
+        int32_t grWidth = tilemap->landfillGradient.w;
 
-        // Calculate X offsets
-        int32_t offsetX1 = ((cameraPos->x / 2) % bgWidth);
+        // Calculate furthest background offset
         int32_t offsetX2 = ((cameraPos->x / 3) % bgWidth);
+        int32_t offsetY2 = -(cameraPos->y / 3) - 64;
 
-        // TODO calculate Y offsets
-        int32_t offsetY1 = -cameraPos->y / 2;
-        int32_t offsetY2 = -64 - cameraPos->y / 3;
-        int32_t offsetYGr = -cameraPos->y / 2 + 205;
+        // Calculate nearer background offset
+        int32_t offsetX1 = ((cameraPos->x / 2) % bgWidth);
+        int32_t offsetY1 = -(cameraPos->y / 2);
+
+        // Calculate gradient offset (under nearer background)
+        int32_t offsetXG = offsetX1 % grWidth;
+        int32_t offsetYG = offsetY1 + tilemap->surface1Wsg.h;
 
         // setup fast pixel drawing with TURBO_SET_PIXEL()
         SETUP_FOR_TURBO();
@@ -350,44 +346,44 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         for (int32_t iY = y; iY < y + h; iY++)
         {
             // Calculate source row pointers
-            int32_t s2row = (iY - offsetY2);
-            bool drawS2row = (0 <= s2row && s2row < tilemap->surface2Wsg.h);
-            paletteColor_t* surface2px = &tilemap->surface2Wsg.px[bgWidth * s2row];
-
-            int32_t s1row = (iY - offsetY1);
-            bool drawS1row = (0 <= s1row && s1row < tilemap->surface1Wsg.h);
+            int32_t s1row              = (iY - offsetY1);
+            bool drawS1row             = (0 <= s1row && s1row < tilemap->surface1Wsg.h);
             paletteColor_t* surface1px = &tilemap->surface1Wsg.px[bgWidth * s1row];
 
-            int32_t grRow = (iY - offsetYGr);
-            bool drawGrRow = (0 <= grRow && grRow < tilemap->landfillGradient.h);
+            int32_t s2row              = (iY - offsetY2);
+            bool drawS2row             = (0 <= s2row && s2row < tilemap->surface2Wsg.h);
+            paletteColor_t* surface2px = &tilemap->surface2Wsg.px[bgWidth * s2row];
+
+            int32_t grRow              = (iY - offsetYG);
+            bool drawGrRow             = (0 <= grRow && grRow < tilemap->landfillGradient.h);
             paletteColor_t* gradientPx = &tilemap->landfillGradient.px[grWidth * grRow];
 
             // Start indices at X offsets
             int32_t s1idx = offsetX1;
             int32_t s2idx = offsetX2;
-            int32_t gridx = 0;
+            int32_t gridx = offsetXG;
 
             // For each pixel in the row
             for (int32_t iX = x; iX < x + w; iX++)
             {
                 // Draw appropriate pixel
-                if (drawS1 && drawS1row && cTransparent != surface1px[s1idx])
+                if (drawS1row && cTransparent != surface1px[s1idx])
                 {
                     TURBO_SET_PIXEL(iX, iY, surface1px[s1idx]);
                 }
-                else if (drawS2 && drawS2row && cTransparent != surface2px[s2idx])
-                {
-                    TURBO_SET_PIXEL(iX, iY, surface2px[s2idx]);
-                }
-                else if (drawGr && drawGrRow)
+                else if (drawGrRow) // No transparency check
                 {
                     TURBO_SET_PIXEL(iX, iY, gradientPx[gridx]);
                 }
+                else if (drawS2row && cTransparent != surface2px[s2idx])
+                {
+                    TURBO_SET_PIXEL(iX, iY, surface2px[s2idx]);
+                }
 
                 // Increment with modulo
-                gridx = (gridx + 1) % grWidth;
                 s1idx = (s1idx + 1) % bgWidth;
                 s2idx = (s2idx + 1) % bgWidth;
+                gridx = (gridx + 1) % grWidth;
             }
         }
     }
