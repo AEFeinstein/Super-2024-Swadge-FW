@@ -287,13 +287,7 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         // Deep underground is black
         bgColor = c000;
     }
-
-    // Fill the flat background color
-    memset(&frameBuf[(y * TFT_WIDTH) + x], bgColor, sizeof(paletteColor_t) * w * h);
-
-    // Maybe draw some background
-    bb_tilemap_t* tilemap = &bigbug->gameData.tilemap;
-    if (tilemap->wsgsLoaded)
+    else
     {
         // Lookup table of background colors from dark to light
         const paletteColor_t skyColors[] = {
@@ -315,14 +309,8 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
     // Maybe draw some background
     bb_tilemap_t* tilemap = &bigbug->gameData.tilemap;
-    if (tilemap->wsgsLoaded)
+    if (tilemap->wsgsLoaded && -906 <= cameraPos->y && cameraPos->y <= 1022)
     {
-        // Quick check to see if any background is drawn
-        if (cameraPos->y < -906 || cameraPos->y > 1022)
-        {
-            return;
-        }
-
         // Convenience widths
         int32_t bgWidth = tilemap->surface1Wsg.w;
         int32_t grWidth = tilemap->landfillGradient.w;
