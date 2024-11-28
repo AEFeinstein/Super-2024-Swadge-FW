@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include "esp_heap_caps.h"
 
-#define SPIRAM_SIZE          2093904
-#define SPIRAM_LARGEST_BLOCK 2064384
-
 #define MEMORY_DEBUG
 #ifdef MEMORY_DEBUG
+
+    #define SPIRAM_SIZE          2093904
+    #define SPIRAM_LARGEST_BLOCK 2064384
 
     // #define MEMORY_DEBUG_PRINT
     #ifdef MEMORY_DEBUG_PRINT
