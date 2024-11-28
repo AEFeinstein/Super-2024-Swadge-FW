@@ -363,7 +363,7 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
                 {
                     TURBO_SET_PIXEL(iX, iY, gradientPx[gridx]);
                 }
-                else if (drawS2row && cTransparent != surface2px[s2idx])
+                else if (drawS2row) // No transparency check
                 {
                     TURBO_SET_PIXEL(iX, iY, surface2px[s2idx]);
                 }
