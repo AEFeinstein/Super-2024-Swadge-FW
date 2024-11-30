@@ -335,7 +335,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
 
                 // remove the sk_e_ and .bin from the filename and copy to title.
                 stringPtrs[ind] = storageStr;
-                char* title     = malloc(tokLen - 9);
+                char* title     = calloc(tokLen - 8, sizeof(char));
                 strncpy(title, storageStr + 5, tokLen - 9);
 
                 // change _ to spaces
