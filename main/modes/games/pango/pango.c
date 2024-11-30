@@ -1662,7 +1662,6 @@ void updateDemoControls(pango_t* self, int64_t elapsedUs)
 
                 changeStateReadyScreen(self);
                 return;
-                break;
         }
     }
 
@@ -1700,7 +1699,6 @@ void updateDemoControls(pango_t* self, int64_t elapsedUs)
 
                     changeStateReadyScreen(self);
                     return;
-                    break;
             }
 
             self->gameData.btnState = 0;
