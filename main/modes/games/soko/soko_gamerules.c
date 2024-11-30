@@ -23,6 +23,8 @@ const size_t victorym_count = sizeof(victorym) / sizeof(victorym[0]);
 
 uint64_t victoryDanceTimer;
 
+const char key_sk_overworldPos[] = "sk_ovwPos";
+
 void sokoConfigGamemode(
     soko_abs_t* soko,
     soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
@@ -32,7 +34,7 @@ void sokoConfigGamemode(
 
     if (variant == SOKO_CLASSIC) // standard gamemode. Check 'variant' variable
     {
-        ESP_LOGD(SOKO_TAG, "Config Soko to Classic\n");
+        ESP_LOGD(SOKO_TAG, "Config Soko to Classic");
         soko->maxPush                          = 1; // set to 1 for "traditional" sokoban.
         soko->gameLoopFunc                     = absSokoGameLoop;
         soko->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
@@ -43,7 +45,7 @@ void sokoConfigGamemode(
     }
     else if (variant == SOKO_EULER) // standard gamemode. Check 'variant' variable
     {
-        ESP_LOGD(SOKO_TAG, "Config Soko to Euler\n");
+        ESP_LOGD(SOKO_TAG, "Config Soko to Euler");
         soko->maxPush                          = 0; // set to 0 for infinite push.
         soko->gameLoopFunc                     = absSokoGameLoop;
         soko->sokoTryPlayerMovementFunc        = eulerSokoTryPlayerMovement;
@@ -66,7 +68,7 @@ void sokoConfigGamemode(
     }
     else if (variant == SOKO_OVERWORLD)
     {
-        ESP_LOGD(SOKO_TAG, "Config Soko to Overworld\n");
+        ESP_LOGD(SOKO_TAG, "Config Soko to Overworld");
         soko->maxPush                          = 0; // set to 0 for infinite push.
         soko->gameLoopFunc                     = overworldSokoGameLoop;
         soko->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
@@ -97,7 +99,7 @@ void sokoConfigGamemode(
 
     // save overworld position.
     uint32_t overworldData = (soko->overworld_playerY << 16) | soko->overworld_playerX;
-    writeNvs32("sk_overworldPos", overworldData);
+    writeNvs32(key_sk_overworldPos, overworldData);
 
     // add conditional for alternative variants
     sokoInitHistory(soko);
@@ -360,8 +362,6 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
         screenMaxY = level->height;
     }
 
-    SETUP_FOR_TURBO();
-
     // Tile Drawing (bg layer)
     for (size_t x = screenMinX; x < screenMaxX; x++)
     {
@@ -411,18 +411,14 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
             // none of this matters it's all getting replaced with drawwsg later.
             if (color != cTransparent)
             {
-                for (size_t xd = ox + x * scale; xd < ox + x * scale + scale; xd++)
-                {
-                    for (size_t yd = oy + y * scale; yd < oy + y * scale + scale; yd++)
-                    {
-                        TURBO_SET_PIXEL(xd, yd, color);
-                    }
-                }
+                int32_t xd = ox + x * scale;
+                int32_t yd = oy + y * scale;
+                fillDisplayArea(xd, yd, xd + scale, yd + scale, color);
             }
 
             if (level->tiles[x][y] == SKT_GOAL)
             {
-                drawWsg(&self->currentTheme->goalWSG, ox + x * scale, oy + y * scale, false, false, 0);
+                drawWsgSimple(&self->currentTheme->goalWSG, ox + x * scale, oy + y * scale);
             }
 
             // DEBUG_DRAW_COUNT++;
@@ -433,7 +429,6 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
 
     // draw portal in overworld before entities.
     // hypothetically, we can get rid of the overworld check, and there just won't be other portals? but there could be?
-    // sprint("a\n");
     if (self->currentLevel.gameMode == SOKO_OVERWORLD)
     {
         self->allSolved = true;
@@ -790,7 +785,7 @@ void restartCurrentLevel(soko_abs_t* self)
 
 void exitToOverworld(soko_abs_t* soko)
 {
-    ESP_LOGD(SOKO_TAG, "Exit to Overworld\n");
+    ESP_LOGD(SOKO_TAG, "Exit to Overworld");
     // save. todo: skip if victory.
     if (soko->currentLevel.gameMode == SOKO_EULER)
     {

@@ -54,7 +54,7 @@ void sokoAddEntityMoveToHistory(soko_abs_t* soko, sokoEntity_t* entity, uint16_t
     {
         moveID += 1;
         soko->historyNewMove = false;
-        // ESP_LOGD(SOKO_TAG, "first invalid move (oldest) %i\n",soko->historyOldestValidMoveID);
+        // ESP_LOGD(SOKO_TAG, "first invalid move (oldest) %i",soko->historyOldestValidMoveID);
     }
 
     soko->historyCurrent++;

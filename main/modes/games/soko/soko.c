@@ -17,6 +17,8 @@ const char sokoModeName[]             = "Hunter's Puzzles";
 static const char sokoPlayGameLabel[] = "Play";
 const char SOKO_TAG[]                 = "SB";
 
+extern const char key_sk_overworldPos[];
+
 // create the mode
 swadgeMode_t sokoMode = {
     .modeName                 = sokoModeName,
@@ -121,6 +123,13 @@ static void sokoEnterMode(void)
 
 static void sokoExitMode(void)
 {
+    for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(soko->levelTitles); lIdx++)
+    {
+        if (soko->levelTitles[lIdx])
+        {
+            free(soko->levelTitles[lIdx]);
+        }
+    }
     // Deinitialize the menu
     deinitMenu(soko->menu);
     deinitMenuManiaRenderer(soko->menuManiaRenderer);
@@ -159,7 +168,7 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == sokoPlayGameLabel)
         {
             int32_t overworld_player;
-            if (readNvs32("sk_overworldPos", &overworld_player))
+            if (readNvs32(key_sk_overworldPos, &overworld_player))
             {
                 soko->overworld_playerX
                     = (uint16_t)(overworld_player
@@ -171,7 +180,7 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
                 soko->overworld_playerX = 0;
                 soko->overworld_playerY = 0;
             }
-            ESP_LOGD(SOKO_TAG, "Load Overworld: %" PRIu16 ",%" PRIu16 " - {%" PRId32 "}\n", soko->overworld_playerX,
+            ESP_LOGD(SOKO_TAG, "Load Overworld: %" PRIu16 ",%" PRIu16 " - {%" PRId32 "}", soko->overworld_playerX,
                      soko->overworld_playerY, overworld_player);
 
             // if x == 0 && y == 0, then put the player somewhere else.
@@ -225,7 +234,7 @@ static void sokoMainLoop(int64_t elapsedUs)
         {
             sokoLoadGameplay(soko, soko->loadNewLevelIndex, soko->loadNewLevelFlag);
             sokoInitNewLevel(soko, soko->currentLevel.gameMode);
-            ESP_LOGD(SOKO_TAG, "Go to gameplay\n");
+            ESP_LOGD(SOKO_TAG, "Go to gameplay");
             soko->loadNewLevelFlag = false; // reset flag.
             soko->screen           = SOKO_LEVELPLAY;
         }
@@ -321,7 +330,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
         if (!(strstr(storageStr, ".bin"))) // Make sure you're not accidentally reading a number from a filename
         {
             soko->levelIndices[intInd] = (int)strtol(storageStr, NULL, 10);
-            // ESP_LOGD(SOKO_TAG, "NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
+            // ESP_LOGD(SOKO_TAG, "NumberThing: %s :: %d",storageStr,(int)strtol(storageStr,NULL,10));
             intInd++;
         }
         else
@@ -351,7 +360,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
                 ind++;
             }
         }
-        // ESP_LOGD(SOKO_TAG, "This guy!\n");
+        // ESP_LOGD(SOKO_TAG, "This guy!");
         storageStr = strtok(NULL, ":");
     }
 }
