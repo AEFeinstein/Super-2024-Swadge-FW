@@ -40,7 +40,7 @@ soko_abs_t* soko = NULL;
 
 static void sokoEnterMode(void)
 {
-    soko = calloc(1, sizeof(soko_abs_t));
+    soko = heap_caps_calloc(1, sizeof(soko_abs_t), MALLOC_CAP_SPIRAM);
     // Load a font
     loadFont("ibm_vga8.font", &soko->ibm, false);
 
@@ -329,13 +329,12 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
             if (!strpbrk(storageStr, "\n\t\r ") && (strstr(storageStr, ".bin")))
             {
                 int tokLen = strlen(storageStr);
-                // char* tempPtr = calloc((tokLen + 1), sizeof(char)); // Length plus null teminator
-                // strcpy(tempPtr,storageStr);
-                // stringPtrs[ind] = tempPtr;
+                // char* tempPtr = heap_caps_malloc((tokLen + 1), sizeof(char), MALLOC_CAP_SPIRAM) ; // Length plus null
+                // teminator strcpy(tempPtr,storageStr); stringPtrs[ind] = tempPtr;
 
                 // remove the sk_e_ and .bin from the filename and copy to title.
                 stringPtrs[ind] = storageStr;
-                char* title     = calloc(tokLen - 8, sizeof(char));
+                char* title     = heap_caps_calloc(tokLen - 8, sizeof(char), MALLOC_CAP_SPIRAM);
                 strncpy(title, storageStr + 5, tokLen - 9);
 
                 // change _ to spaces

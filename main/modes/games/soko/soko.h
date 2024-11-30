@@ -2,6 +2,7 @@
 #define _SOKO_MODE_H_
 
 #include <esp_log.h>
+#include <esp_heap_caps.h>
 #include "swadge2024.h"
 #include "soko_input.h"
 #include "soko_consts.h"

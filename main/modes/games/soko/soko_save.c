@@ -164,7 +164,7 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko)
 
     // if each entity is 4 bytes, then we can save (adjust) all entities as a single blob, always, since it's a
     // pre-allocated array.
-    char* entities = calloc(soko->currentLevel.entityCount * 4, sizeof(char));
+    char* entities = heap_caps_calloc(soko->currentLevel.entityCount * 4, sizeof(char), MALLOC_CAP_SPIRAM);
 
     for (int i = 0; i < soko->currentLevel.entityCount; i++)
     {
@@ -189,7 +189,7 @@ void sokoLoadCurrentLevelEntities(soko_abs_t* soko)
 {
     ESP_LOGD(SOKO_TAG, "loading current level entities.\n");
 
-    char* entities = calloc(soko->currentLevel.entityCount * 4, sizeof(char));
+    char* entities = heap_caps_calloc(soko->currentLevel.entityCount * 4, sizeof(char), MALLOC_CAP_SPIRAM);
     size_t size    = sizeof(char) * (soko->currentLevel.entityCount * 4);
     readNvsBlob("sk_ents", entities, &size);
 
@@ -210,7 +210,7 @@ void sokoSaveEulerTiles(soko_abs_t* soko)
     sokoTile_t prevTile = SKT_FLOOR;
     int w               = soko->currentLevel.width;
     uint16_t i          = 0;
-    char* blops         = (char*)calloc(255, sizeof(char));
+    char* blops         = (char*)heap_caps_calloc(255, sizeof(char), MALLOC_CAP_SPIRAM);
     for (uint16_t y = 0; y < soko->currentLevel.height; y++)
     {
         for (uint16_t x = 0; x < w; x++)
@@ -254,7 +254,7 @@ void sokoLoadEulerTiles(soko_abs_t* soko)
     size_t size = sizeof(uint16_t);
     readNvsBlob("sk_e_t_c", &total, &size);
 
-    char* blops = calloc(total, sizeof(char));
+    char* blops = heap_caps_calloc(total, sizeof(char), MALLOC_CAP_SPIRAM);
     size        = sizeof(char) * total;
     readNvsBlob("sk_e_ts", blops, &size);
 
@@ -431,9 +431,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.crates = crates;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.hp     = hp;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
-                        = malloc(sizeof(uint8_t));
+                        = heap_caps_malloc(sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetY
-                        = malloc(sizeof(uint8_t));
+                        = heap_caps_malloc(sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = 1;
                     self->currentLevel.entityCount += 1;
                     i += 6;
@@ -473,9 +473,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entities[self->currentLevel.entityCount].y        = objY;
                     self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
-                        = malloc(sizeof(uint8_t) * hp);
+                        = heap_caps_malloc(sizeof(uint8_t) * hp, MALLOC_CAP_SPIRAM);
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetY
-                        = malloc(sizeof(uint8_t) * hp);
+                        = heap_caps_malloc(sizeof(uint8_t) * hp, MALLOC_CAP_SPIRAM);
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.crates      = crates;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.players     = players;
