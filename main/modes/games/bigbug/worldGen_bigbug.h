@@ -8,6 +8,6 @@
 //==============================================================================
 // Prototypes
 //==============================================================================
-void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap);
+void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap);
 
 #endif

@@ -13,20 +13,109 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_initializeEggs(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
+void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
 {
-    ESP_LOGD(BB_TAG, "initializing eggs\n");
+    //There are 6 handcrafted levels that get chosen randomly.
+    uint8_t level = bb_randomInt(0,5);
+    wsg_t levelWsg; ///< A graphic representing the level data where tiles are pixels.
+
+    char wsg_name[13];
+    snprintf(wsg_name, sizeof(wsg_name), "level%d.wsg", level);
+    loadWsgInplace(wsg_name, &levelWsg, true, bb_decodeSpace,
+                bb_hsd); // levelWsg only needed for this brief scope.
+    
+    int8_t midgroundHealhValues[] = {1, 4, 10};
+
+    // Set all the tiles
+    for (int i = 0; i < TILE_FIELD_WIDTH; i++)
+    {
+        for (int j = 0; j < TILE_FIELD_HEIGHT; j++)
+        {
+            tilemap->fgTiles[i][j].x = i;
+            tilemap->fgTiles[i][j].y = j;
+            tilemap->fgTiles[i][j].z = 1;
+
+            tilemap->mgTiles[i][j].x = i;
+            tilemap->mgTiles[i][j].y = j;
+            tilemap->mgTiles[i][j].z = 0;
+
+            uint32_t rgbCol = paletteToRGB(levelWsg.px[(j * levelWsg.w) + i]);
+
+            // red value used for foreground tiles
+            switch ((rgbCol >> 16) & 255)
+            {
+                case 102:
+                {
+                    tilemap->fgTiles[i][j].health = 1;
+                    break;
+                }
+                case 153:
+                {
+                    tilemap->fgTiles[i][j].health = 4;
+                    break;
+                }
+                case 204:
+                {
+                    tilemap->fgTiles[i][j].health = 10;
+                    break;
+                }
+                case 255:
+                {
+                    tilemap->fgTiles[i][j].health = 100;
+                    break;
+                }
+                default://case 0
+                {
+                    // blue value used for washing machines, cars
+                    switch (rgbCol & 255)
+                    {
+                        case 51:
+                        {
+                            tilemap->fgTiles[i][j].embed  = CAR_EMBED;
+                            break;
+                        }
+                        case 102:
+                        {
+                            tilemap->fgTiles[i][j].embed  = CAR_EMBED;
+                            break;
+                        }
+                        case 153:
+                        {
+                            tilemap->fgTiles[i][j].embed  = WASHING_MACHINE_EMBED;
+                            break;
+                        }
+                        default:
+                        {
+                            tilemap->fgTiles[i][j].embed  = NOTHING_EMBED;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            // green value used for midground tiles
+            if(((rgbCol >> 8) & 255) == 51)
+            {
+                tilemap->mgTiles[i][j].health = tilemap->fgTiles[i][j].health == 0 ? midgroundHealhValues[bb_randomInt(0, 2)]
+                                                                                       : tilemap->fgTiles[i][j].health;
+            }
+
+            //blue channel is also for enemy density where there are foreground tiles.
+            if (tilemap->fgTiles[i][j].health > 0)
+            {
+                if(bb_randomInt(0,99) <  (((rgbCol & 255)/51)*20))
+                {
+                    tilemap->fgTiles[i][j].embed = EGG_EMBED;
+                }
+            }
+
+        }
+    }
+
+
 
     tilemap->fgTiles[TILE_FIELD_WIDTH / 2 + 2][0].embed = EGG_EMBED; // tutorial egg
 
-    for (int x = 21; x < TILE_FIELD_WIDTH - 21; x++)
-    {
-        for (int y = 4; y < TILE_FIELD_HEIGHT; y++)
-        {
-            if (tilemap->fgTiles[x][y].health > 0 && bb_randomInt(0, 1) == 0) //%50 chance
-            {
-                tilemap->fgTiles[x][y].embed = EGG_EMBED;
-            }
-        }
-    }
+    freeWsg(&levelWsg);
 }

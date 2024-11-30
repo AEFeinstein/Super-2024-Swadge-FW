@@ -84,7 +84,6 @@ struct bb_hitInfo_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void bb_initializeTileMap(bb_tilemap_t* tilemap);
 void bb_loadWsgs(bb_tilemap_t* tilemap);
 void bb_freeWsgs(bb_tilemap_t* tilemap);
 void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData);

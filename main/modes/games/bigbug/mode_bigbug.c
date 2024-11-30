@@ -156,7 +156,6 @@ static void bb_EnterMode(void)
 
     bb_initializeGameData(&bigbug->gameData);
     bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
-    bb_initializeTileMap(&bigbug->gameData.tilemap);
 
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
     //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
@@ -181,7 +180,7 @@ static void bb_EnterMode(void)
     bigbug->gameData.camera.camera.pos.x = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
     bigbug->gameData.camera.camera.pos.y = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
 
-    bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
+    bb_generateWorld(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
     // Player
     //  bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
@@ -232,7 +231,6 @@ static void bb_EnterModeSkipIntro(void)
 
     bb_initializeGameData(&bigbug->gameData);
     bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
-    bb_initializeTileMap(&bigbug->gameData.tilemap);
 
     // create the death dumpster
     bigbug->gameData.entityManager.deathDumpster
@@ -284,7 +282,7 @@ static void bb_EnterModeSkipIntro(void)
 
     bigbug->gameData.entityManager.playerEntity = bigbug->gameData.entityManager.viewEntity;
 
-    bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
+    bb_generateWorld(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
