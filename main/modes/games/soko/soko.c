@@ -13,7 +13,7 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
 
 // strings
-static const char sokoModeName[]      = "Hunter's Block Puzzles";
+const char sokoModeName[]             = "Hunter's Puzzles";
 static const char sokoPlayGameLabel[] = "Play";
 const char SOKO_TAG[]                 = "SB";
 
@@ -102,7 +102,7 @@ static void sokoEnterMode(void)
 
     // Initialize the menu
     soko->menu              = initMenu(sokoModeName, sokoMenuCb);
-    soko->menuManiaRenderer = initMenuManiaRenderer(&soko->ibm, NULL, NULL);
+    soko->menuManiaRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     // addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
     addSingleItemToMenu(soko->menu, sokoPlayGameLabel);

@@ -262,5 +262,5 @@ typedef struct soko_abs_s
 } soko_abs_t;
 
 extern const char SOKO_TAG[];
-
+extern const char sokoModeName[];
 #endif

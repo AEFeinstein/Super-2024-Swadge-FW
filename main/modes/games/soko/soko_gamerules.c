@@ -750,7 +750,7 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
     int16_t tWidth;
     if (!self->allSolved)
     {
-        snprintf(str, sizeof(str) - 1, "Hunter's Block Puzzles");
+        snprintf(str, sizeof(str) - 1, "%s", sokoModeName);
         // Measure the width of the time string
         tWidth = textWidth(&self->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
