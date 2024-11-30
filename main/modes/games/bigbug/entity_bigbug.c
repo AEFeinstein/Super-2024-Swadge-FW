@@ -591,8 +591,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // ESP_LOGD(BB_TAG,"Garbotnik X: %d\n", self->pos);
     // //keep the player in bounds
-    self->pos.x          = self->pos.x < 2304 ? 2304 : self->pos.x;
-    self->pos.x          = self->pos.x > 36240 ? 36240 : self->pos.x;
+    self->pos.x          = self->pos.x < 2560 ? 2560 : self->pos.x;
+    self->pos.x          = self->pos.x > 35216 ? 35216 : self->pos.x;
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos, &hitInfo);
 
