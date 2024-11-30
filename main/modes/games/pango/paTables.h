@@ -143,56 +143,53 @@ static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DI
     PA_WSG_BLOCK_MAGENTA, 42, 10, 13, 100, 400, 1, 2, //
 };
 
-#define DEMO_CONTROLS_SCRIPT_TABLE_LENGTH 17
+#define DEMO_CONTROLS_SCRIPT_TABLE_LENGTH     17
 #define DEMO_CONTROLS_BTN_STATE_LOOKUP_OFFSET 0
-#define DEMO_CONTROLS_DURATION_LOOKUP_OFFSET 1
+#define DEMO_CONTROLS_DURATION_LOOKUP_OFFSET  1
 #define DEMO_CONTROLS_SCRIPT_TABLE_ROW_LENGTH 2
 
 static const uint16_t demoControlsScript[DEMO_CONTROLS_SCRIPT_TABLE_LENGTH * DEMO_CONTROLS_SCRIPT_TABLE_ROW_LENGTH] = {
-    PB_RIGHT, 54, //
-    PB_UP, 16, //
-    PB_RIGHT, 32, //
-    PB_DOWN, 16, //
-    PB_RIGHT, 60, //
-    PB_A, 4, //
-    PB_RIGHT, 32, //
-    PB_A, 4, //
-    PB_RIGHT, 28, //
-    PB_UP, 16, //
-    PB_RIGHT, 32, //
-    PB_DOWN, 16, //
-    PB_LEFT, 4, //
-    PB_A, 4, //
-    PB_DOWN, 16, //
-    0, 80,
-    PB_LEFT, 120, //
+    PB_RIGHT, 54,               //
+    PB_UP,    16,               //
+    PB_RIGHT, 32,               //
+    PB_DOWN,  16,               //
+    PB_RIGHT, 60,               //
+    PB_A,     4,                //
+    PB_RIGHT, 32,               //
+    PB_A,     4,                //
+    PB_RIGHT, 28,               //
+    PB_UP,    16,               //
+    PB_RIGHT, 32,               //
+    PB_DOWN,  16,               //
+    PB_LEFT,  4,                //
+    PB_A,     4,                //
+    PB_DOWN,  16,               //
+    0,        80, PB_LEFT, 120, //
 };
 
-#define DEMO_SCORING_SCRIPT_TABLE_LENGTH 17
+#define DEMO_SCORING_SCRIPT_TABLE_LENGTH     17
 #define DEMO_SCORING_BTN_STATE_LOOKUP_OFFSET 0
-#define DEMO_SCORING_DURATION_LOOKUP_OFFSET 1
+#define DEMO_SCORING_DURATION_LOOKUP_OFFSET  1
 #define DEMO_SCORING_SCRIPT_TABLE_ROW_LENGTH 2
 
 static const uint16_t demoScoringScript[DEMO_SCORING_SCRIPT_TABLE_LENGTH * DEMO_SCORING_SCRIPT_TABLE_ROW_LENGTH] = {
-    PB_RIGHT, 54, //
-    PB_A, 6, //
-    PB_DOWN, 30, //
-    PB_RIGHT, 4, //
-    PB_A, 6, //
-    PB_RIGHT, 36, //
-    PB_A, 6, //
-    PB_DOWN, 36, //
-    PB_RIGHT, 4, //
-    PB_A, 6, //
-    PB_RIGHT, 54, //
-    PB_A, 6, //
-    0, 4, //
-    0, 1, //
-    PB_DOWN, 16, //
-    0, 80,
-    PB_LEFT, 120, //
+    PB_RIGHT, 54,               //
+    PB_A,     6,                //
+    PB_DOWN,  30,               //
+    PB_RIGHT, 4,                //
+    PB_A,     6,                //
+    PB_RIGHT, 36,               //
+    PB_A,     6,                //
+    PB_DOWN,  36,               //
+    PB_RIGHT, 4,                //
+    PB_A,     6,                //
+    PB_RIGHT, 54,               //
+    PB_A,     6,                //
+    0,        4,                //
+    0,        1,                //
+    PB_DOWN,  16,               //
+    0,        80, PB_LEFT, 120, //
 };
-
 
 static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
 

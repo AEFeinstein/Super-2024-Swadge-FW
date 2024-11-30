@@ -728,7 +728,6 @@ void midiPlayerInit(midiPlayer_t* player);
  */
 void midiPlayerReset(midiPlayer_t* player);
 
-
 void midiPlayerResetNewSong(midiPlayer_t* player);
 
 /**
