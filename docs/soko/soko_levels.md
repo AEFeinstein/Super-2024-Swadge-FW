@@ -19,7 +19,6 @@ The player entity should contain a 'gamemode' custom property, set to one of the
 - SOKO_OVERWORLD
 - SOKO_CLASSIC
 - SOKO_EULER
-- SOKO_LASERBOUNCE
 
 #### Configuring the Overworld
 The overworld level is where we will add connections between levels. The structure of the game is flat: the player must return to the overworld after they complete a level. There are not multiple overworlds (zones, world 2-2, etc).

@@ -1,6 +1,8 @@
 #ifndef _SOKO_MODE_H_
 #define _SOKO_MODE_H_
 
+#include <esp_log.h>
+#include <esp_heap_caps.h>
 #include "swadge2024.h"
 #include "soko_input.h"
 #include "soko_consts.h"
@@ -9,10 +11,9 @@ extern swadgeMode_t sokoMode;
 
 typedef enum
 {
-    SOKO_OVERWORLD   = 0,
-    SOKO_CLASSIC     = 1,
-    SOKO_EULER       = 2,
-    SOKO_LASERBOUNCE = 3
+    SOKO_OVERWORLD = 0,
+    SOKO_CLASSIC   = 1,
+    SOKO_EULER     = 2,
 } soko_var_t;
 
 typedef enum
@@ -31,25 +32,21 @@ typedef enum
 
 typedef enum
 {
-    SKB_EMPTY             = 0,
-    SKB_WALL              = 1,
-    SKB_FLOOR             = 2,
-    SKB_GOAL              = 3,
-    SKB_NO_WALK           = 4,
-    SKB_OBJSTART          = 201, // Object and Signal Bytes are over 200
-    SKB_COMPRESS          = 202,
-    SKB_PLAYER            = 203,
-    SKB_CRATE             = 204,
-    SKB_WARPINTERNAL      = 205,
-    SKB_WARPINTERNALEXIT  = 206,
-    SKB_WARPEXTERNAL      = 207,
-    SKB_BUTTON            = 208,
-    SKB_LASEREMITTER      = 209,
-    SKB_LASERRECEIVEROMNI = 210,
-    SKB_LASERRECEIVER     = 211,
-    SKB_LASER90ROTATE     = 212,
-    SKB_GHOSTBLOCK        = 213,
-    SKB_OBJEND            = 230
+    SKB_EMPTY            = 0,
+    SKB_WALL             = 1,
+    SKB_FLOOR            = 2,
+    SKB_GOAL             = 3,
+    SKB_NO_WALK          = 4,
+    SKB_OBJSTART         = 201, // Object and Signal Bytes are over 200
+    SKB_COMPRESS         = 202,
+    SKB_PLAYER           = 203,
+    SKB_CRATE            = 204,
+    SKB_WARPINTERNAL     = 205,
+    SKB_WARPINTERNALEXIT = 206,
+    SKB_WARPEXTERNAL     = 207,
+    SKB_BUTTON           = 208,
+    SKB_GHOSTBLOCK       = 213,
+    SKB_OBJEND           = 230
 } soko_bin_t; // Binary file byte value decode list
 typedef struct soko_portal_s
 {
@@ -72,15 +69,6 @@ typedef enum
     SKS_VICTORY,
 } sokoGameState_t;
 
-/*
-typedef enum
-{
-    SOKO_OVERWORLD = 0,
-    SOKO_CLASSIC = 1,
-    SOKO_EULER = 2
-} soko_var_t;
-*/
-
 typedef enum
 {
     SKE_NONE               = 0,
@@ -91,23 +79,18 @@ typedef enum
     SKE_STICKY_TRAIL_CRATE = 5,
     SKE_WARP               = 11,
     SKE_BUTTON             = 6,
-    SKE_LASER_EMIT_UP      = 7,
-    SKE_LASER_RECEIVE_OMNI = 8,
-    SKE_LASER_RECEIVE      = 9,
     SKE_GHOST              = 10
 } sokoEntityType_t;
 
 typedef enum
 {
-    SKT_EMPTY         = 0,
-    SKT_FLOOR         = 1,
-    SKT_WALL          = 2,
-    SKT_GOAL          = 3,
-    SKT_NO_WALK       = 4,
-    SKT_PORTAL        = 5,
-    SKT_LASER_EMIT    = 6, // To Be Removed
-    SKT_LASER_RECEIVE = 7, // To Be Removed
-    SKT_FLOOR_WALKED  = 8
+    SKT_EMPTY        = 0,
+    SKT_FLOOR        = 1,
+    SKT_WALL         = 2,
+    SKT_GOAL         = 3,
+    SKT_NO_WALK      = 4,
+    SKT_PORTAL       = 5,
+    SKT_FLOOR_WALKED = 8
 } sokoTile_t;
 
 typedef struct
@@ -168,6 +151,7 @@ typedef struct
     wsg_t playerRightWSG;
     wsg_t playerLeftWSG;
     wsg_t playerDownWSG;
+    wsg_t playerCenterWSG;
     wsg_t goalWSG;
     wsg_t crateWSG;
     wsg_t crateOnGoalWSG;
@@ -203,6 +187,7 @@ typedef struct soko_abs_s
 
     char* levelFileText;
     char* levelNames[SOKO_LEVEL_COUNT];
+    char* levelTitles[SOKO_LEVEL_COUNT];
     uint16_t levelIndices[SOKO_LEVEL_COUNT];
     bool levelSolved[SOKO_LEVEL_COUNT];
 
@@ -220,6 +205,7 @@ typedef struct soko_abs_s
     // level
     char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if
                                     ///< I need level names like picross.
+    bool allSolved;
     // wsg_t levelWSG;                 ///< Current level
     uint8_t* levelBinaryData;
 
@@ -274,6 +260,9 @@ typedef struct soko_abs_s
     uint8_t loadNewLevelIndex;
     soko_var_t loadNewLevelVariant;
 
+    int chosen_victory_message;
 } soko_abs_t;
 
+extern const char SOKO_TAG[];
+extern const char sokoModeName[];
 #endif
