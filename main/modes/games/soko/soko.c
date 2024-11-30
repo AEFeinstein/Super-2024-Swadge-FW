@@ -13,9 +13,9 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
 
 // strings
-static const char sokoModeName[]        = "Hunter's Block Puzzles";
+static const char sokoModeName[]      = "Hunter's Block Puzzles";
 static const char sokoPlayGameLabel[] = "Play";
-const char SOKO_TAG[] = "SB";
+const char SOKO_TAG[]                 = "SB";
 
 // create the mode
 swadgeMode_t sokoMode = {
@@ -104,7 +104,7 @@ static void sokoEnterMode(void)
     soko->menu              = initMenu(sokoModeName, sokoMenuCb);
     soko->menuManiaRenderer = initMenuManiaRenderer(&soko->ibm, NULL, NULL);
 
-    //addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
+    // addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
     addSingleItemToMenu(soko->menu, sokoPlayGameLabel);
 
     // Set the mode to menu mode
@@ -159,17 +159,22 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == sokoPlayGameLabel)
         {
             int32_t overworld_player;
-            if(readNvs32("sk_overworldPos", &overworld_player))
+            if (readNvs32("sk_overworldPos", &overworld_player))
             {
-                soko->overworld_playerX = (uint16_t)(overworld_player & 0b1111111111111111);//okay so the cast to uint16 just does this right?
+                soko->overworld_playerX
+                    = (uint16_t)(overworld_player
+                                 & 0b1111111111111111); // okay so the cast to uint16 just does this right?
                 soko->overworld_playerY = (uint16_t)(overworld_player >> 16);
-            }else{
+            }
+            else
+            {
                 soko->overworld_playerX = 0;
                 soko->overworld_playerY = 0;
             }
-            ESP_LOGD(SOKO_TAG, "Load Overworld: %"PRIu16",%"PRIu16" - {%"PRId32"}\n", soko->overworld_playerX, soko->overworld_playerY, overworld_player);
+            ESP_LOGD(SOKO_TAG, "Load Overworld: %" PRIu16 ",%" PRIu16 " - {%" PRId32 "}\n", soko->overworld_playerX,
+                     soko->overworld_playerY, overworld_player);
 
-            //if x == 0 && y == 0, then put the player somewhere else.
+            // if x == 0 && y == 0, then put the player somewhere else.
 
             sokoLoadGameplay(soko, 0, false);
             sokoInitGameBin(soko);
@@ -303,7 +308,6 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 // todo: move to soko_save
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
 {
-   
     char** stringPtrs = soko->levelNames;
     memset(stringPtrs, 0, sizeof(soko->levelNames));
     memset(soko->levelTitles, 0, sizeof(soko->levelTitles));
@@ -329,19 +333,20 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
                 // strcpy(tempPtr,storageStr);
                 // stringPtrs[ind] = tempPtr;
 
-                //remove the sk_e_ and .bin from the filename and copy to title.
+                // remove the sk_e_ and .bin from the filename and copy to title.
                 stringPtrs[ind] = storageStr;
-                char* title = malloc(tokLen-9);
-                strncpy(title, storageStr+5,tokLen-9);
-                
-                //change _ to spaces
-                for(int i = 0; i < strlen(title); i++)
+                char* title     = malloc(tokLen - 9);
+                strncpy(title, storageStr + 5, tokLen - 9);
+
+                // change _ to spaces
+                for (int i = 0; i < strlen(title); i++)
                 {
-                    if(title[i] == '_'){
+                    if (title[i] == '_')
+                    {
                         title[i] = ' ';
                     }
                 }
-                //set title
+                // set title
                 soko->levelTitles[ind] = title;
 
                 ind++;
@@ -350,5 +355,4 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
         // ESP_LOGD(SOKO_TAG, "This guy!\n");
         storageStr = strtok(NULL, ":");
     }
-
 }

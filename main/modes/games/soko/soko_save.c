@@ -84,7 +84,7 @@ void sokoLoadLevelSolvedState(soko_abs_t* soko)
 
 void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved)
 {
-    ESP_LOGD(SOKO_TAG, "save level solved status %"PRIu16"\n", levelIndex);
+    ESP_LOGD(SOKO_TAG, "save level solved status %" PRIu16 "\n", levelIndex);
     // todo: changes a single levels bool in the sokoSolved array,
     soko->levelSolved[levelIndex] = true;
 
@@ -297,7 +297,7 @@ void sokoLoadEulerTiles(soko_abs_t* soko)
 // Level loading
 void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
 {
-    ESP_LOGD(SOKO_TAG, "load bin level %"PRIu16", %s\n", levelIndex, soko->levelNames[levelIndex]);
+    ESP_LOGD(SOKO_TAG, "load bin level %" PRIu16 ", %s\n", levelIndex, soko->levelNames[levelIndex]);
     soko->state = SKS_INIT;
     size_t fileSize;
     if (soko->levelBinaryData)
@@ -343,7 +343,7 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     }
 
     ESP_LOGD(SOKO_TAG, "Loaded level w: %i, h %i, entities: %i\n", soko->currentLevel.width, soko->currentLevel.height,
-           soko->currentLevel.entityCount);
+             soko->currentLevel.entityCount);
 }
 
 // todo: rename self to soko

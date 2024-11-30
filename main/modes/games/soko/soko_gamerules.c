@@ -23,7 +23,9 @@ const size_t victorym_count = sizeof(victorym) / sizeof(victorym[0]);
 
 uint64_t victoryDanceTimer;
 
-void sokoConfigGamemode(soko_abs_t* soko, soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
+void sokoConfigGamemode(
+    soko_abs_t* soko,
+    soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
 {
     soko->currentTheme = &soko->sokoDefaultTheme;
     soko->background   = SKBG_GRID;
@@ -75,7 +77,7 @@ void sokoConfigGamemode(soko_abs_t* soko, soko_var_t variant) // This should be 
         soko->currentTheme                     = &soko->overworldTheme;
         // set position to previous overworld positon when re-entering the overworld
         // but like... not an infinite loop?
-        
+
         soko->soko_player->x = soko->overworld_playerX;
         soko->soko_player->y = soko->overworld_playerY;
         soko->background     = SKBG_BLACK;
@@ -93,14 +95,14 @@ void sokoConfigGamemode(soko_abs_t* soko, soko_var_t variant) // This should be 
         ESP_LOGD(SOKO_TAG, "invalid gamemode.");
     }
 
-    //save overworld position.
-    uint32_t overworldData =  (soko->overworld_playerY << 16) | soko->overworld_playerX;
+    // save overworld position.
+    uint32_t overworldData = (soko->overworld_playerY << 16) | soko->overworld_playerX;
     writeNvs32("sk_overworldPos", overworldData);
 
     // add conditional for alternative variants
     sokoInitHistory(soko);
 
-    //pick a single random victory message. We can't pick during the loop or it will be random every frame.
+    // pick a single random victory message. We can't pick during the loop or it will be random every frame.
     soko->chosen_victory_message = rand() % victorym_count;
 }
 
@@ -333,7 +335,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
         {
             screenMaxX = level->width;
         }
-        
+
         screenMinY = self->camY - self->camHeight / 2 - 1;
         if (screenMinY < 0)
         {
@@ -434,7 +436,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
     // sprint("a\n");
     if (self->currentLevel.gameMode == SOKO_OVERWORLD)
     {
-        self->allSolved=true;
+        self->allSolved = true;
         for (int i = 0; i < self->portalCount; i++)
         {
             if (self->portals[i].x >= screenMinX && self->portals[i].x <= screenMaxX && self->portals[i].y >= screenMinY
@@ -466,9 +468,11 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
             {
                 case SKE_PLAYER:
                 {
-                    // for (size_t xd = ox + level->entities[i].x * scale; xd < ox + level->entities[i].x * scale + scale; xd++)
+                    // for (size_t xd = ox + level->entities[i].x * scale; xd < ox + level->entities[i].x * scale +
+                    // scale; xd++)
                     // {
-                    //     for (size_t yd = oy +level->entities[i]. y * scale; yd < oy + level->entities[i].y * scale + scale; yd++)
+                    //     for (size_t yd = oy +level->entities[i]. y * scale; yd < oy + level->entities[i].y * scale +
+                    //     scale; yd++)
                     //     {
                     //         TURBO_SET_PIXEL(xd, yd, c211);
                     //     }
@@ -607,7 +611,6 @@ sokoVec_t sokoGridToPix(soko_abs_t* self, sokoVec_t grid) // Convert grid positi
     return retVec;
 }
 
-
 sokoVec_t sokoAddCoord(sokoVec_t op1, sokoVec_t op2)
 {
     sokoVec_t retVal;
@@ -711,7 +714,7 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
         self->allCratesOnGoal = self->isVictoryConditionFunc(self);
         if (self->allCratesOnGoal)
         {
-            self->state = SKS_VICTORY;
+            self->state       = SKS_VICTORY;
             victoryDanceTimer = 0;
         }
         // draw level
@@ -732,9 +735,9 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
             }
         }
 
-        //int32_t data = self->overworld_playerY << 16;
-        //data = data | self->overworld_playerX;
-       // writeNvs32("sk_over_pos",data);
+        // int32_t data = self->overworld_playerY << 16;
+        // data = data | self->overworld_playerX;
+        // writeNvs32("sk_over_pos",data);
 
         self->loadNewLevelIndex = targetWorldIndex;
         self->loadNewLevelFlag  = false; // load saved data.
