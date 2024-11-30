@@ -1,6 +1,7 @@
 #ifndef _SOKO_MODE_H_
 #define _SOKO_MODE_H_
 
+#include <esp_log.h>
 #include "swadge2024.h"
 #include "soko_input.h"
 #include "soko_consts.h"
@@ -259,5 +260,7 @@ typedef struct soko_abs_s
 
     int chosen_victory_message;
 } soko_abs_t;
+
+extern const char SOKO_TAG[];
 
 #endif

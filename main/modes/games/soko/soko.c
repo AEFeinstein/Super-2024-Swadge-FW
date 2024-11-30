@@ -15,6 +15,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
 // strings
 static const char sokoModeName[]        = "Hunter's Block Puzzles";
 static const char sokoPlayGameLabel[] = "Play";
+const char SOKO_TAG[] = "SB";
 
 // create the mode
 swadgeMode_t sokoMode = {
@@ -166,7 +167,7 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
                 soko->overworld_playerX = 0;
                 soko->overworld_playerY = 0;
             }
-            printf("Load Overworld: %d,%d - {%d}\n", soko->overworld_playerX, soko->overworld_playerY, overworld_player);
+            ESP_LOGD(SOKO_TAG, "Load Overworld: %"PRIu16",%"PRIu16" - {%"PRId32"}\n", soko->overworld_playerX, soko->overworld_playerY, overworld_player);
 
             //if x == 0 && y == 0, then put the player somewhere else.
 
@@ -219,7 +220,7 @@ static void sokoMainLoop(int64_t elapsedUs)
         {
             sokoLoadGameplay(soko, soko->loadNewLevelIndex, soko->loadNewLevelFlag);
             sokoInitNewLevel(soko, soko->currentLevel.gameMode);
-            printf("Go to gameplay\n");
+            ESP_LOGD(SOKO_TAG, "Go to gameplay\n");
             soko->loadNewLevelFlag = false; // reset flag.
             soko->screen           = SOKO_LEVELPLAY;
         }
@@ -316,7 +317,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
         if (!(strstr(storageStr, ".bin"))) // Make sure you're not accidentally reading a number from a filename
         {
             soko->levelIndices[intInd] = (int)strtol(storageStr, NULL, 10);
-            // printf("NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
+            // ESP_LOGD(SOKO_TAG, "NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
             intInd++;
         }
         else
@@ -346,7 +347,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
                 ind++;
             }
         }
-        // printf("This guy!\n");
+        // ESP_LOGD(SOKO_TAG, "This guy!\n");
         storageStr = strtok(NULL, ":");
     }
 

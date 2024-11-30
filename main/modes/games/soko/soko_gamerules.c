@@ -30,7 +30,7 @@ void sokoConfigGamemode(soko_abs_t* soko, soko_var_t variant) // This should be 
 
     if (variant == SOKO_CLASSIC) // standard gamemode. Check 'variant' variable
     {
-        printf("Config Soko to Classic\n");
+        ESP_LOGD(SOKO_TAG, "Config Soko to Classic\n");
         soko->maxPush                          = 1; // set to 1 for "traditional" sokoban.
         soko->gameLoopFunc                     = absSokoGameLoop;
         soko->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
@@ -41,7 +41,7 @@ void sokoConfigGamemode(soko_abs_t* soko, soko_var_t variant) // This should be 
     }
     else if (variant == SOKO_EULER) // standard gamemode. Check 'variant' variable
     {
-        printf("Config Soko to Euler\n");
+        ESP_LOGD(SOKO_TAG, "Config Soko to Euler\n");
         soko->maxPush                          = 0; // set to 0 for infinite push.
         soko->gameLoopFunc                     = absSokoGameLoop;
         soko->sokoTryPlayerMovementFunc        = eulerSokoTryPlayerMovement;
@@ -64,7 +64,7 @@ void sokoConfigGamemode(soko_abs_t* soko, soko_var_t variant) // This should be 
     }
     else if (variant == SOKO_OVERWORLD)
     {
-        printf("Config Soko to Overworld\n");
+        ESP_LOGD(SOKO_TAG, "Config Soko to Overworld\n");
         soko->maxPush                          = 0; // set to 0 for infinite push.
         soko->gameLoopFunc                     = overworldSokoGameLoop;
         soko->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
@@ -90,7 +90,7 @@ void sokoConfigGamemode(soko_abs_t* soko, soko_var_t variant) // This should be 
     }
     else
     {
-        printf("invalid gamemode.");
+        ESP_LOGD(SOKO_TAG, "invalid gamemode.");
     }
 
     //save overworld position.
@@ -787,7 +787,7 @@ void restartCurrentLevel(soko_abs_t* self)
 
 void exitToOverworld(soko_abs_t* soko)
 {
-    printf("Exit to Overworld\n");
+    ESP_LOGD(SOKO_TAG, "Exit to Overworld\n");
     // save. todo: skip if victory.
     if (soko->currentLevel.gameMode == SOKO_EULER)
     {

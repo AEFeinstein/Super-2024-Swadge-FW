@@ -25,7 +25,7 @@ void sokoLoadGameplay(soko_abs_t* soko, uint16_t levelIndex, bool loadNew)
     sokoLoadBinLevel(soko, levelIndex);
     if (levelIndex == lastSaved && !loadNew)
     {
-        printf("Load Saved Data for level %i\n", lastSaved);
+        ESP_LOGD(SOKO_TAG, "Load Saved Data for level %i\n", lastSaved);
         // current level entity positions
         sokoLoadCurrentLevelEntities(soko);
 
@@ -38,7 +38,7 @@ void sokoLoadGameplay(soko_abs_t* soko, uint16_t levelIndex, bool loadNew)
 
 void sokoSaveGameplay(soko_abs_t* soko)
 {
-    printf("Save Gameplay\n");
+    ESP_LOGD(SOKO_TAG, "Save Gameplay\n");
 
     // save current level
     if (soko->currentLevelIndex == 0)
@@ -84,7 +84,7 @@ void sokoLoadLevelSolvedState(soko_abs_t* soko)
 
 void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved)
 {
-    printf("save level solved status %d\n", levelIndex);
+    ESP_LOGD(SOKO_TAG, "save level solved status %"PRIu16"\n", levelIndex);
     // todo: changes a single levels bool in the sokoSolved array,
     soko->levelSolved[levelIndex] = true;
 
@@ -187,7 +187,7 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko)
 /// @param soko
 void sokoLoadCurrentLevelEntities(soko_abs_t* soko)
 {
-    printf("loading current level entities.\n");
+    ESP_LOGD(SOKO_TAG, "loading current level entities.\n");
 
     char* entities = calloc(soko->currentLevel.entityCount * 4, sizeof(char));
     size_t size    = sizeof(char) * (soko->currentLevel.entityCount * 4);
@@ -205,7 +205,7 @@ void sokoLoadCurrentLevelEntities(soko_abs_t* soko)
 
 void sokoSaveEulerTiles(soko_abs_t* soko)
 {
-    printf("encoding euler tiles.\n");
+    ESP_LOGD(SOKO_TAG, "encoding euler tiles.\n");
 
     sokoTile_t prevTile = SKT_FLOOR;
     int w               = soko->currentLevel.width;
@@ -229,7 +229,7 @@ void sokoSaveEulerTiles(soko_abs_t* soko)
                     blops[i] = blops[i] + 1;
                     if (i > 255)
                     {
-                        printf("ERROR This level is too big to save for euler???\n");
+                        ESP_LOGD(SOKO_TAG, "ERROR This level is too big to save for euler???\n");
                         break;
                     }
                 }
@@ -245,7 +245,7 @@ void sokoSaveEulerTiles(soko_abs_t* soko)
 
 void sokoLoadEulerTiles(soko_abs_t* soko)
 {
-    printf("Load Euler Tiles\n");
+    ESP_LOGD(SOKO_TAG, "Load Euler Tiles\n");
     sokoTile_t runningTile = SKT_FLOOR;
     uint16_t w             = soko->currentLevel.width;
     uint16_t total         = 0;
@@ -297,7 +297,7 @@ void sokoLoadEulerTiles(soko_abs_t* soko)
 // Level loading
 void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
 {
-    printf("load bin level %d, %s\n", levelIndex, soko->levelNames[levelIndex]);
+    ESP_LOGD(SOKO_TAG, "load bin level %"PRIu16", %s\n", levelIndex, soko->levelNames[levelIndex]);
     soko->state = SKS_INIT;
     size_t fileSize;
     if (soko->levelBinaryData)
@@ -315,9 +315,9 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     soko->currentLevel.gameMode = (soko_var_t)soko->levelBinaryData[2];
     // for(int i = 0; i < fileSize; i++)
     //{
-    //     printf("%d, ",soko->levelBinaryData[i]);
+    //     ESP_LOGD(SOKO_TAG, "%"PRIu8", ",soko->levelBinaryData[i]);
     // }
-    // printf("\n");
+    // ESP_LOGD(SOKO_TAG, "\n");
     soko->currentLevelIndex       = levelIndex;
     soko->currentLevel.levelScale = 16;
     soko->camWidth                = TFT_WIDTH / (soko->currentLevel.levelScale);
@@ -336,13 +336,13 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     {
         if (soko->overworld_playerX == 0 && soko->overworld_playerY == 0)
         {
-            printf("resetting player position from loaded entity\n");
+            ESP_LOGD(SOKO_TAG, "resetting player position from loaded entity\n");
             soko->overworld_playerX = soko->soko_player->x;
             soko->overworld_playerY = soko->soko_player->y;
         }
     }
 
-    printf("Loaded level w: %i, h %i, entities: %i\n", soko->currentLevel.width, soko->currentLevel.height,
+    ESP_LOGD(SOKO_TAG, "Loaded level w: %i, h %i, entities: %i\n", soko->currentLevel.width, soko->currentLevel.height,
            soko->currentLevel.entityCount);
 }
 
@@ -364,10 +364,10 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
         {
             int objX = (tileIndex - 1) % (self->currentLevel.width); // Look at the previous
             int objY = (tileIndex - 1) / (self->currentLevel.width);
-            uint8_t flagByte, direction;
+            uint8_t flagByte;
             bool players, crates, sticky, trail, inverted;
             int hp; //, targetX, targetY;
-            // printf("reading object byte after start: %i,%i:%i\n",objX,objY,self->levelBinaryData[i+1]);
+            // ESP_LOGD(SOKO_TAG, "reading object byte after start: %i,%i:%i\n",objX,objY,self->levelBinaryData[i+1]);
 
             switch (self->levelBinaryData[i + 1]) // On creating entities, index should be advanced to the SKB_OBJEND
                                                   // byte so the post-increment moves to the next tile.
@@ -595,8 +595,13 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
             }
             self->currentLevel.tiles[tileX][tileY] = tileType;
             prevTileType                           = tileType;
-            // printf("BinData@%d: %d Tile: %d at (%d,%d)
-            // index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
+            // ESP_LOGD(SOKO_TAG, "BinData@%d: %"PRIu8" Tile: %d at (%d,%d) index:%d\n",
+            //     i,
+            //     self->levelBinaryData[i],
+            //     tileType,
+            //     tileX,
+            //     tileY,
+            //     tileIndex);
             tileIndex++;
         }
     }
