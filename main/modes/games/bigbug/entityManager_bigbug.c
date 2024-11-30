@@ -640,8 +640,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             entity->halfWidth  = 192;
             entity->halfHeight = 448;
-
-            entity->updateFunction = &bb_updateRocketLanding;
             break;
         }
         case HARPOON:

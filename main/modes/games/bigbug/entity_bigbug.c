@@ -372,7 +372,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // Fuel decrements with time. Right shifting by 10 is fairly close to
     // converting microseconds to milliseconds without requiring division.
-    gData->fuel -= self->gameData->elapsedUs >> 10;
+    //gData->fuel -= self->gameData->elapsedUs >> 10;
     if (gData->fuel < 0)
     {
         bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
@@ -953,8 +953,6 @@ void bb_updateMenu(bb_entity_t* self)
                     = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 8,
                                       (self->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
                                       (self->pos.y >> DECIMAL_BITS) + 375, true, false);
-
-                self->gameData->entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 
                 bb_rocketData_t* rData
                     = (bb_rocketData_t*)self->gameData->entityManager.boosterEntities[rocketIdx]->data;

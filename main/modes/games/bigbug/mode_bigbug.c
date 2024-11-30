@@ -62,6 +62,7 @@ struct bb_t
 
 // required by adam
 static void bb_EnterMode(void);
+static void bb_EnterModeSkipIntro(void);
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
 static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -99,7 +100,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .usesThermometer          = true,
                            .overrideSelectBtn        = false,
                            .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterMode,
+                           .fnEnterMode              = bb_EnterModeSkipIntro,
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -195,6 +196,107 @@ static void bb_EnterMode(void)
 
     bb_Reset();
 }
+
+static void bb_EnterModeSkipIntro(void)
+{
+    setFrameRateUs(16667); // 60 FPS
+
+    // Force draw a loading screen
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
+
+    // Allocate memory for the game state
+    bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+
+    // calloc the columns in layers separately to avoid a big alloc
+    for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
+    {
+        bigbug->gameData.tilemap.fgTiles[w]
+            = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM);
+        bigbug->gameData.tilemap.mgTiles[w]
+            = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM);
+    }
+
+    // Allocate WSG loading helpers
+    bb_hsd         = heatshrink_decoder_alloc(256, 8, 4);
+    bb_decodeSpace = heap_caps_malloc(102404, MALLOC_CAP_SPIRAM);
+
+    bb_SetLeds();
+
+    // Load font
+    loadFont("ibm_vga8.font", &bigbug->font, false);
+
+    const char loadingStr[] = "Loading...";
+    int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
+    drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
+    drawDisplayTft(NULL);
+
+    bb_initializeGameData(&bigbug->gameData);
+    bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
+    bb_initializeTileMap(&bigbug->gameData.tilemap);
+
+    // create the death dumpster
+    bigbug->gameData.entityManager.deathDumpster
+        = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
+                            (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -4746, true, false);
+
+    // create 3 rockets
+    for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
+    {
+        bigbug->gameData.entityManager.boosterEntities[rocketIdx]
+            = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 8,
+                                (bigbug->gameData.entityManager.deathDumpster->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
+                                (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS) + 375, true, false);
+
+        //bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
+
+        if(rocketIdx>=1)
+        {
+            bb_rocketData_t* rData
+                = (bb_rocketData_t*)bigbug->gameData.entityManager.boosterEntities[rocketIdx]->data;
+
+            rData->flame = bb_createEntity(
+                &(bigbug->gameData.entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
+                bigbug->gameData.entityManager.boosterEntities[rocketIdx]->pos.x >> DECIMAL_BITS,
+                bigbug->gameData.entityManager.boosterEntities[rocketIdx]->pos.y >> DECIMAL_BITS, true, false);
+
+            rData->flame->updateFunction = &bb_updateFlame;
+        }
+        else // rocketIdx == 0
+        {
+            bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
+            bigbug->gameData.entityManager.activeBooster->currentAnimationFrame = 40;
+            bigbug->gameData.entityManager.activeBooster->pos.y = 50;
+            bb_heavyFallingData_t* hData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
+            bb_setData(bigbug->gameData.entityManager.activeBooster, hData, HEAVY_FALLING_DATA);
+            bigbug->gameData.entityManager.activeBooster->updateFunction = bb_updateHeavyFalling;
+            bb_entity_t* arm
+            = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
+                              bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS, (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, false, false);
+            ((bb_attachmentArmData_t*)arm->data)->rocket = bigbug->gameData.entityManager.activeBooster;
+        }
+    }
+
+    bb_loadWsgs(&bigbug->gameData.tilemap);
+
+    bigbug->gameData.entityManager.viewEntity
+        = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+                            bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS, (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 90, true, false);
+
+    bigbug->gameData.entityManager.playerEntity = bigbug->gameData.entityManager.viewEntity;
+
+    bb_initializeEggs(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
+
+    // Set the mode to game mode
+    bigbug->screen = BIGBUG_GAME;
+
+    bb_setupMidi();
+    unloadMidiFile(&bigbug->gameData.bgm);
+    loadMidiFile("BigBugExploration.mid", &bigbug->gameData.bgm, true);
+    globalMidiPlayerPlaySong(&bigbug->gameData.bgm, MIDI_BGM);
+
+    bb_Reset();
+}
+
 
 void bb_setupMidi(void)
 {
