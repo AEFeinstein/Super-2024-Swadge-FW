@@ -729,6 +729,14 @@ void midiPlayerInit(midiPlayer_t* player);
 void midiPlayerReset(midiPlayer_t* player);
 
 /**
+ * @brief Reset the MIDI player state by only doing the bare minimum.
+ * This is useful when playing multiple sound effects in quick succession.
+ *
+ * @param player The MIDI player to reset
+ */
+void midiPlayerResetNewSong(midiPlayer_t* player);
+
+/**
  * @brief Calculate and return the next MIDI sample, stepping the player state forward by one sample
  *
  * @param player The player to step forward
