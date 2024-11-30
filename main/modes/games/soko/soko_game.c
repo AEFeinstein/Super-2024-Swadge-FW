@@ -246,8 +246,10 @@ void drawTiles(sokoLevel_t* level)
                         drawWsg(&s->playerLeftWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
                         break;
                     case SKD_DOWN:
-                    default:
                         drawWsg(&s->playerDownWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                    case SKD_NONE:
+                    default:
+                        drawWsg(&s->playerCenterWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
                         break;
                 }
 

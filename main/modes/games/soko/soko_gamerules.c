@@ -494,9 +494,15 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                             break;
                         }
                         case SKD_DOWN:
-                        default:
                         {
                             drawWsg(&self->currentTheme->playerDownWSG, ox + level->entities[i].x * scale,
+                                    oy + level->entities[i].y * scale, false, false, 0);
+                            break;
+                        }
+                        case SKD_NONE:
+                        default:
+                        {
+                            drawWsg(&self->currentTheme->playerCenterWSG, ox + level->entities[i].x * scale,
                                     oy + level->entities[i].y * scale, false, false, 0);
                             break;
                         }

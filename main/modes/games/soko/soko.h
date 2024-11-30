@@ -151,6 +151,7 @@ typedef struct
     wsg_t playerRightWSG;
     wsg_t playerLeftWSG;
     wsg_t playerDownWSG;
+    wsg_t playerCenterWSG;
     wsg_t goalWSG;
     wsg_t crateWSG;
     wsg_t crateOnGoalWSG;

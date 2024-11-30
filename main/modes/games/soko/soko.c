@@ -61,6 +61,7 @@ static void sokoEnterMode(void)
     loadWsg("sk_player2.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
     loadWsg("sk_player3.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
     loadWsg("sk_player4.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
+    loadWsg("sk_player5.wsg", &soko->sokoDefaultTheme.playerCenterWSG, false);
     loadWsg("sk_crate_2.wsg", &soko->sokoDefaultTheme.crateWSG, false);
     loadWsg("sk_crate_ongoal.wsg", &soko->sokoDefaultTheme.crateOnGoalWSG, false);
     loadWsg("sk_sticky_crate.wsg", &soko->sokoDefaultTheme.stickyCrateWSG, false);
@@ -77,6 +78,7 @@ static void sokoEnterMode(void)
     soko->overworldTheme.playerUpWSG          = soko->sokoDefaultTheme.playerUpWSG;
     soko->overworldTheme.playerLeftWSG        = soko->sokoDefaultTheme.playerLeftWSG;
     soko->overworldTheme.playerRightWSG       = soko->sokoDefaultTheme.playerRightWSG;
+    soko->overworldTheme.playerCenterWSG      = soko->sokoDefaultTheme.playerCenterWSG;
     soko->overworldTheme.crateWSG             = soko->sokoDefaultTheme.crateWSG;
     soko->overworldTheme.goalWSG              = soko->sokoDefaultTheme.goalWSG;
     soko->overworldTheme.crateOnGoalWSG       = soko->sokoDefaultTheme.crateOnGoalWSG;
@@ -87,11 +89,12 @@ static void sokoEnterMode(void)
     soko->overworldTheme.floorColor           = c444;
 
     // Euler Theme
-    soko->eulerTheme.playerDownWSG  = soko->sokoDefaultTheme.playerDownWSG;
-    soko->eulerTheme.playerUpWSG    = soko->sokoDefaultTheme.playerUpWSG;
-    soko->eulerTheme.playerLeftWSG  = soko->sokoDefaultTheme.playerLeftWSG;
-    soko->eulerTheme.playerRightWSG = soko->sokoDefaultTheme.playerRightWSG;
-    soko->eulerTheme.goalWSG        = soko->sokoDefaultTheme.goalWSG;
+    soko->eulerTheme.playerDownWSG   = soko->sokoDefaultTheme.playerDownWSG;
+    soko->eulerTheme.playerUpWSG     = soko->sokoDefaultTheme.playerUpWSG;
+    soko->eulerTheme.playerLeftWSG   = soko->sokoDefaultTheme.playerLeftWSG;
+    soko->eulerTheme.playerRightWSG  = soko->sokoDefaultTheme.playerRightWSG;
+    soko->eulerTheme.playerCenterWSG = soko->sokoDefaultTheme.playerCenterWSG;
+    soko->eulerTheme.goalWSG         = soko->sokoDefaultTheme.goalWSG;
 
     loadWsg("sk_e_crate.wsg", &soko->eulerTheme.crateWSG, false);
     loadWsg("sk_sticky_trail_crate.wsg", &soko->eulerTheme.crateOnGoalWSG, false);
@@ -146,6 +149,7 @@ static void sokoExitMode(void)
     freeWsg(&soko->sokoDefaultTheme.playerDownWSG);
     freeWsg(&soko->sokoDefaultTheme.playerLeftWSG);
     freeWsg(&soko->sokoDefaultTheme.playerRightWSG);
+    freeWsg(&soko->sokoDefaultTheme.playerCenterWSG);
     freeWsg(&soko->sokoDefaultTheme.crateWSG);
     freeWsg(&soko->sokoDefaultTheme.crateOnGoalWSG);
     freeWsg(&soko->sokoDefaultTheme.stickyCrateWSG);
