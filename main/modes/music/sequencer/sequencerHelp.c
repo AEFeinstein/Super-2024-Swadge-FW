@@ -28,7 +28,7 @@ typedef struct
 // Const data
 //==============================================================================
 
-const seqHelpPage_t helpPages[] = {
+static const seqHelpPage_t helpPages[] = {
     {
         .title = sequencerName,
         .text  = "Welcome to the Sequencer. Let's learn how to make some music!",
