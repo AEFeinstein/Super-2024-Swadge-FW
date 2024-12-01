@@ -22,20 +22,59 @@ typedef struct
 {
     const char* title;
     const char* text;
-} seqHelpPage_t;
+} sokoHelpPage_t;
 
 //==============================================================================
 // Const data
 //==============================================================================
 
-static const seqHelpPage_t helpPages[] = {
+static const char controlTitle[] = "Controls";
+static const char boxTitle[]     = "Boxes";
+
+static const sokoHelpPage_t helpPages[] = {
     {
         .title = sokoModeName,
-        .text  = "Welcome to the Soko. Let's learn how to make some music!",
+        .text  = "You are an Eye and your job is to paint the floors in twenty two rooms. Don't ask questions.",
+    },
+    {
+        .title = controlTitle,
+        .text  = "Use the D-Pad to walk around the main hallway, enter rooms, and paint the floors.",
+    },
+    {
+        .title = controlTitle,
+        .text  = "When painting a floor, you absolutely MUST NOT step on wet paint. If you do, you won't get paid.",
+    },
+    {
+        .title = controlTitle,
+        .text  = "If you make a small mistake, you can press A to undo one step before anyone notices.",
+    },
+    {
+        .title = controlTitle,
+        .text
+        = "If you make a big mistake, you can press B to reset the entire room. Your boss will probably notice though.",
+    },
+    {
+        .title = controlTitle,
+        .text = "If you're frustrated and need a break from a room, you can press Start to return to the main hallway.",
+    },
+    {
+        .title = boxTitle,
+        .text  = "Some jerk left orange boxes are on some floors. You can push them around to make sure all the floor "
+                 "is painted.",
+    },
+    {
+        .title = boxTitle,
+        .text  = "Purple boxes are like orange boxes, but sticky and gross. In the unlikely event that one is stuck to "
+                 "you, try scraping it off.",
+    },
+    {
+        .title = boxTitle,
+        .text  = "Red & purple boxes are highly toxic to touch. You can't push them directly, but maybe you can with "
+                 "something else. Safety first.",
     },
     {
         .title = sokoModeName,
-        .text  = "First off, pressing the Pause button always switches between viewing the menu and the grid.",
+        .text  = "Good luck and get painting!",
     },
 };
 
@@ -58,16 +97,13 @@ void drawSokoHelp(soko_abs_t* soko, int32_t elapsedUs)
     drawMenuMania(soko->bgMenu, soko->menuManiaRenderer, 0);
 
     // Draw text
-    paletteColor_t textColor    = c555;
-    paletteColor_t outlineColor = c000;
-    int16_t xOff                = TEXT_MARGIN_L;
-    int16_t yOff                = MANIA_TITLE_HEIGHT + 8;
+    paletteColor_t textColor = c000;
+    int16_t xOff             = TEXT_MARGIN_L;
+    int16_t yOff             = MANIA_TITLE_HEIGHT + 8;
     drawTextWordWrap(&soko->font_rodin, textColor, helpPages[soko->helpIdx].text, &xOff, &yOff,
                      TFT_WIDTH - TEXT_MARGIN_R, TFT_HEIGHT);
     xOff = TEXT_MARGIN_L;
     yOff = MANIA_TITLE_HEIGHT + 8;
-    drawTextWordWrap(&soko->font_rodin_outline, outlineColor, helpPages[soko->helpIdx].text, &xOff, &yOff,
-                     TFT_WIDTH - TEXT_MARGIN_R, TFT_HEIGHT);
 
     // Draw page numbers
     char pageText[32];
@@ -76,8 +112,6 @@ void drawSokoHelp(soko_abs_t* soko, int32_t elapsedUs)
 
     int16_t tWidth = textWidth(&soko->font_rodin, pageText);
     drawText(&soko->font_rodin, textColor, pageText, TFT_WIDTH - 30 - tWidth, TFT_HEIGHT - soko->font_rodin.height + 2);
-    drawText(&soko->font_rodin_outline, outlineColor, pageText, TFT_WIDTH - 30 - tWidth,
-             TFT_HEIGHT - soko->font_rodin_outline.height + 2);
 
     // Blink the arrows
     soko->arrowBlinkTimer += elapsedUs;
@@ -93,8 +127,6 @@ void drawSokoHelp(soko_abs_t* soko, int32_t elapsedUs)
         {
             // Draw left arrow if not on the first page
             drawText(&soko->font_rodin, textColor, "<", 0, (TFT_HEIGHT - soko->font_rodin.height) / 2);
-            drawText(&soko->font_rodin_outline, outlineColor, "<", 0,
-                     (TFT_HEIGHT - soko->font_rodin_outline.height) / 2);
         }
 
         if ((ARRAY_SIZE(helpPages) - 1) != soko->helpIdx)
@@ -102,8 +134,6 @@ void drawSokoHelp(soko_abs_t* soko, int32_t elapsedUs)
             // Draw right arrow if not on the last page
             drawText(&soko->font_rodin, textColor, ">", TFT_WIDTH - textWidth(&soko->font_rodin, ">"),
                      (TFT_HEIGHT - soko->font_rodin.height) / 2);
-            drawText(&soko->font_rodin_outline, outlineColor, ">", TFT_WIDTH - textWidth(&soko->font_rodin, ">"),
-                     (TFT_HEIGHT - soko->font_rodin_outline.height) / 2);
         }
     }
 }
