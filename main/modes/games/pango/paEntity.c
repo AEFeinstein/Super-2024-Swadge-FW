@@ -159,11 +159,6 @@ void pa_updatePlayer(paEntity_t* self)
                 self->animationTimer--;
             }
 
-            if (((self->gameData->btnState & PB_START) && !(self->gameData->prevBtnState & PB_START)))
-            {
-                self->gameData->changeState = PA_ST_PAUSE;
-            }
-
             switch (self->facingDirection)
             {
                 case PA_DIRECTION_WEST:

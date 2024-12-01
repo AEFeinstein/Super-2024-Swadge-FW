@@ -57,6 +57,8 @@ static void sokoEnterMode(void)
 
     soko->allSolved = false;
 
+    soko->allSolved = false;
+
     // load sprite assets
     // set pointer
     soko->currentTheme                   = &soko->sokoDefaultTheme;
