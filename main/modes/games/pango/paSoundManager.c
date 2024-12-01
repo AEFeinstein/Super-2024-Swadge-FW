@@ -4,38 +4,21 @@
 
 #include <stdlib.h>
 #include "paSoundManager.h"
+#include "soundFuncs.h"
 
 //==============================================================================
 // Functions
 //==============================================================================
 void pa_initializeSoundManager(paSoundManager_t* self)
 {
-    // loadMidiFile("bgmCastle.mid", &self->bgmCastle, true);
-    //  self->bgmCastle.shouldLoop = true;
-
-    loadMidiFile("Pango_Main.mid", &self->bgmMain, true);
-    loadMidiFile("Pango_Faster.mid", &self->bgmFast, true);
-
-    // loadMidiFile("bgmDeMAGio.mid", &self->bgmDemagio, true);
-    //  self->bgmDemagio.shouldLoop = true;
-
-    loadMidiFile("bgmGameStart.mid", &self->bgmGameStart, true);
-    loadMidiFile("bgmIntro.mid", &self->bgmIntro, true);
-    loadMidiFile("Pango_High Score.mid", &self->bgmNameEntry, true);
-    // self->bgmNameEntry.shouldLoop = true;
-
-    // loadMidiFile("bgmSmooth.mid", &self->bgmSmooth, true);
-    //  self->bgmSmooth.shouldLoop = true;
-
-    // loadMidiFile("bgmUnderground.mid", &self->bgmUnderground, true);
-    //  self->bgmUnderground.shouldLoop = true;
+   self->currentBgmIndex = PA_BGM_NULL;
 
     loadMidiFile("snd1up.mid", &self->snd1up, true);
     // loadMidiFile("sndBreak.mid", &self->sndBreak, true);
     loadMidiFile("sndCheckpoint.mid", &self->sndCheckpoint, true);
     loadMidiFile("sndBlockCombo.mid", &self->sndCoin, true);
     loadMidiFile("sndDie.mid", &self->sndDie, true);
-    loadMidiFile("bgmGameOver.mid", &self->bgmGameOver, true);
+    loadMidiFile("Pango_Game Over.mid", &self->bgmGameOver, true);
     loadMidiFile("sndBlockStop.mid", &self->sndHit, true);
     loadMidiFile("sndSquish.mid", &self->sndHurt, true);
     loadMidiFile("sndJump1.mid", &self->sndJump1, true);
@@ -62,11 +45,7 @@ void pa_initializeSoundManager(paSoundManager_t* self)
 
 void pa_freeSoundManager(paSoundManager_t* self)
 {
-    unloadMidiFile(&self->bgmMain);
-    unloadMidiFile(&self->bgmFast);
-    unloadMidiFile(&self->bgmGameStart);
-    unloadMidiFile(&self->bgmIntro);
-    unloadMidiFile(&self->bgmNameEntry);
+
     // unloadMidiFile(&self->bgmSmooth);
     // unloadMidiFile(&self->bgmUnderground);
     unloadMidiFile(&self->snd1up);
@@ -97,4 +76,34 @@ void pa_freeSoundManager(paSoundManager_t* self)
     unloadMidiFile(&self->sndWaveBall);
 
     unloadMidiFile(&self->sndSpawn);
+
+    if (self->currentBgmIndex != PA_BGM_NULL)
+    {
+        unloadMidiFile(&self->currentBgm);
+    }
+}
+
+void pa_setBgm(paSoundManager_t* self, uint16_t newBgmIndex){
+    if (self->currentBgmIndex == newBgmIndex)
+    {
+        return;
+    }
+
+    if (self->currentBgmIndex != PA_BGM_NULL)
+    {
+        soundStop(true);
+        unloadMidiFile(&self->currentBgm);
+    }
+
+    if (newBgmIndex != PA_BGM_NULL)
+    {
+        loadMidiFile(PANGO_BGMS[newBgmIndex - 1], &self->currentBgm, true);
+
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        player->loop         = true;
+
+        soundPlayBgm(&(self->currentBgm), MIDI_BGM);
+    }
+
+    self->currentBgmIndex = newBgmIndex;
 }

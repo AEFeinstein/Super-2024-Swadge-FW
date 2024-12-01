@@ -711,11 +711,10 @@ void changeStateReadyScreen(pango_t* self)
 {
     self->gameData.frameCount = 0;
 
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop         = false;
-    soundPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
-
     pa_resetGameDataLeds(&(self->gameData));
+
+    pa_setBgm(&(self->soundManager), 2 + (self->gameData.level % 3));
+    soundPlayBgm(&self->soundManager.currentBgm, MIDI_BGM);
 
     self->update = &updateReadyScreen;
 }
@@ -725,7 +724,7 @@ void updateReadyScreen(pango_t* self, int64_t elapsedUs)
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 179)
     {
-        soundStop(true);
+        //soundStop(true);
         changeStateGame(self);
     }
 
@@ -824,11 +823,6 @@ void changeStateGame(pango_t* self)
     }
 
     self->tilemap.executeTileSpawnAll = true;
-
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop         = true;
-    soundPlayBgm(&(self->soundManager.bgmFast), MIDI_BGM);
-
     self->update = &updateGame;
 }
 
@@ -871,7 +865,7 @@ void detectGameStateChange(pango_t* self)
 
 void detectBgmChange(pango_t* self)
 {
-    if (!self->gameData.changeBgm)
+    /*if (!self->gameData.changeBgm)
     {
         return;
     }
@@ -918,7 +912,7 @@ void detectBgmChange(pango_t* self)
     }
 
     self->gameData.currentBgm = self->gameData.changeBgm;
-    self->gameData.changeBgm  = 0;
+    self->gameData.changeBgm  = 0;*/
 }
 
 void changeStateDead(pango_t* self)
@@ -1026,8 +1020,16 @@ void changeStateTitleScreen(pango_t* self)
     pa_generateMaze(&(pango->tilemap));
 
     self->gameData.frameCount = 0;
+
+    if(self->gameData.gameState != PA_ST_TITLE_SCREEN){
+        pa_setBgm(&(self->soundManager), PA_BGM_MAIN);
+        soundPlayBgm(&self->soundManager.currentBgm, MIDI_BGM);
+    }
+
     self->gameData.gameState  = PA_ST_TITLE_SCREEN;
     pa_remapBlockTile(&(pango->wsgManager), PA_WSG_BLOCK_TITLESCREEN);
+
+
     self->update = &updateTitleScreen;
 }
 
@@ -1321,9 +1323,7 @@ void changeStateNameEntry(pango_t* self)
         return;
     }
 
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop         = true;
-    soundPlayBgm(&(self->soundManager.bgmNameEntry), BZR_STEREO);
+    pa_setBgm(&(self->soundManager), PA_BGM_HIGH_SCORE);
     self->menuSelection = self->gameData.initials[0];
     self->update        = &updateNameEntry;
 }
