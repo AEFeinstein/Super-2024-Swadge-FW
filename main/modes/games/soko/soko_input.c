@@ -12,6 +12,7 @@ void sokoInitInput(sokoGameplayInput_t* input)
     input->firstDASTime      = 500000;
     input->DASActive         = false;
     input->prevHoldingDir    = SKD_NONE;
+    input->btnState          = 0;
     input->prevBtnState      = 0;
     input->playerInputDeltaX = 0;
     input->playerInputDeltaY = 0;

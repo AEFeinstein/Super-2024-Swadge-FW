@@ -175,6 +175,7 @@ void sharedGameLoop(soko_abs_t* self)
     }
     else if (self->input.exitToOverworld)
     {
+        self->input.exitToOverworld = false;
         exitToOverworld(self);
     }
 }
@@ -764,6 +765,12 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
         tWidth = textWidth(&self->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
         drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 3);
+    }
+
+    if (self->input.exitToOverworld)
+    {
+        self->input.exitToOverworld = false;
+        self->screen                = SOKO_MENU;
     }
 }
 
