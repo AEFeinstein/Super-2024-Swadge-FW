@@ -372,7 +372,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // Fuel decrements with time. Right shifting by 10 is fairly close to
     // converting microseconds to milliseconds without requiring division.
-    //gData->fuel -= self->gameData->elapsedUs >> 10;
+    gData->fuel -= self->gameData->elapsedUs >> 10;
     if (gData->fuel < 0)
     {
         bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
@@ -781,11 +781,8 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     + self->gameData->tilemap.headlampWsg.h};
 
         lookup = divVec2d(lookup, 2);
-        if (self->gameData->entityManager.playerEntity == NULL)
-        {
-            elData->brightness = 0;
-        }
-        else if (GARBOTNIK_DATA == self->gameData->entityManager.playerEntity->dataType)
+
+        if (GARBOTNIK_DATA == self->gameData->entityManager.playerEntity->dataType)
         {
             elData->brightness = bb_foregroundLighting(
                 &(self->gameData->tilemap.headlampWsg), &lookup,
@@ -1357,6 +1354,33 @@ void bb_drawEgg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
                   xOff, yOff);
 }
 
+void bb_drawBasicEmbed(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    if (self->gameData->entityManager.playerEntity != NULL)
+    {
+        vec_t lookup
+            = {.x = (self->pos.x >> DECIMAL_BITS) - (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS)
+                    + self->gameData->tilemap.headlampWsg.w,
+               .y = (self->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS)
+                    + self->gameData->tilemap.headlampWsg.h};
+
+        lookup = divVec2d(lookup, 2);
+        uint8_t brightness = 0;
+        if (GARBOTNIK_DATA == self->gameData->entityManager.playerEntity->dataType)
+        {
+            brightness = bb_foregroundLighting(
+                &(self->gameData->tilemap.headlampWsg), &lookup,
+                &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x));
+        }
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex]
+                               .frames[brightness],
+                          (self->pos.x >> DECIMAL_BITS)
+                       - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                       (self->pos.y >> DECIMAL_BITS)
+                       - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    }
+}
+
 void bb_drawMenu(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     int16_t xDrawPos
@@ -1553,7 +1577,7 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
 
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    bb_onCollisionSimple(self, other, hitInfo);
+    //bb_onCollisionSimple(self, other, hitInfo);
     if (bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_CAR_ACTIVE, 6,
                         self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false)
         != NULL)
@@ -1566,6 +1590,13 @@ void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 {
     bb_attachmentArmData_t* aData = (bb_attachmentArmData_t*)self->data;
     aData->angle += 18;
+}
+
+void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
+    gData->fuel += 30000;
+    bb_destroyEntity(self, false);
 }
 
 void bb_startGarbotnikIntro(bb_entity_t* self)
@@ -1881,27 +1912,46 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
 
     if (zeroHealth)
     {
-        if (self->gameData->tilemap.fgTiles[tile_i][tile_j].embed == EGG_EMBED)
+        switch(self->gameData->tilemap.fgTiles[tile_i][tile_j].embed)
         {
-            vec_t tilePos = {.x = tile_i * TILE_SIZE + HALF_TILE, .y = tile_j * TILE_SIZE + HALF_TILE};
-            // create a bug
-            bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
-                                               bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
-            if (bug != NULL)
+            case EGG_EMBED:
             {
-                if (self->gameData->tilemap.fgTiles[tile_i][tile_j].entity != NULL)
+                vec_t tilePos = {.x = tile_i * TILE_SIZE + HALF_TILE, .y = tile_j * TILE_SIZE + HALF_TILE};
+                // create a bug
+                bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
+                                               bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
+                if (bug != NULL)
                 {
-                    bb_entity_t* egg
-                        = ((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity->data))->egg;
-                    if (egg != NULL)
+                    if (self->gameData->tilemap.fgTiles[tile_i][tile_j].entity != NULL)
                     {
-                        // destroy the egg
-                        bb_destroyEntity(egg, false);
+                        bb_entity_t* egg
+                            = ((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity->data))->egg;
+                        if (egg != NULL)
+                        {
+                            // destroy the egg
+                            bb_destroyEntity(egg, false);
+                        }
+                        // destroy this (eggLeaves)
+                        bb_destroyEntity(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity, false);
                     }
-                    // destroy this (eggLeaves)
-                    bb_destroyEntity(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity, false);
+                    self->gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
                 }
+                break;
+            }
+            case SKELETON_EMBED:
+            {
+                vec_t tilePos = {.x = tile_i * TILE_SIZE + HALF_TILE, .y = tile_j * TILE_SIZE + HALF_TILE};
+                bb_destroyEntity(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity, false);
                 self->gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
+
+                // create fuel
+                bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
+                                               BB_FUEL, 10, tilePos.x, tilePos.y, false, false);
+                break;
+            }
+            default:
+            {
+                break;
             }
         }
     }

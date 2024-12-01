@@ -104,12 +104,15 @@ void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
             //blue channel is also for enemy density where there are foreground tiles.
             if (tilemap->fgTiles[i][j].health > 0)
             {
-                if(bb_randomInt(0,99) <  (((rgbCol & 255)/51)*20))
+                if(bb_randomInt(0,999) < 15 && i > 20 && i < 52)
+                {
+                    tilemap->fgTiles[i][j].embed = SKELETON_EMBED;
+                }
+                else if(bb_randomInt(0,99) <  (((rgbCol & 255)/51)*20))
                 {
                     tilemap->fgTiles[i][j].embed = EGG_EMBED;
                 }
             }
-
         }
     }
 

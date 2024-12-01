@@ -47,23 +47,29 @@ typedef enum
     BB_MENU,           // Various sprites loaded as frames to create the parallax main menu
     BB_DEATH_DUMPSTER, // Garbotnik's evil lair in space
     ATTACHMENT_ARM,    // The booster arm that detects the player and latches on.
-    BB_WASHING_MACHINE,
-    BB_CAR_IDLE,
-    BB_CAR_ACTIVE,
-    // These things are not in the sprites array.
-    WILE,           // A metal ball that is thrown
+    BB_WASHING_MACHINE,// It's heavy, and it has gravity
+    BB_CAR_IDLE,       // A car with a nice reward inside.
+    BB_CAR_ACTIVE,     // The car alarm going crazy drawing a horde encounter
+    BB_SKELETON,       // Some dino bones embedded in garbage. Drops fuel.
+    BB_FUEL,           // A zero-g glob of relish or crude dinosaur juice.
+
+    // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
+    // Some may have wsgs, but they cleverly load and unload their own WSGs.
     NO_SPRITE_STAR, // a single white pixel for aesthetic beauty.
-    NO_SPRITE_POI,  // Point of interest for the camera to follow in the main menu
+    NO_SPRITE_POI,  // Point of interest for the camera to follow in various cutscenes
     OVO_TALK,       // Need this enum actually for the entity but not the sprites array.
-    BB_GAME_OVER,
+    BB_GAME_OVER,   // A screen after you fail.
+    WILE            // A metal ball that is thrown (not implemented)
+
 } bb_spriteDef_t;
 
 typedef enum
-{ // The kinds of stuff that may be embedded into a garbage tile.
+{ // The kinds of stuff that may be embedded into a garbage tile. Heck, now they can be in air too (car & washing machine)
     NOTHING_EMBED,
     EGG_EMBED,
     WASHING_MACHINE_EMBED,
-    CAR_EMBED
+    CAR_EMBED,
+    SKELETON_EMBED
 } bb_embeddable_t;
 
 typedef enum

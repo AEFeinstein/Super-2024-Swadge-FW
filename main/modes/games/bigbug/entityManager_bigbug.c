@@ -159,6 +159,14 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bb_sprite_t* carActiveSprite = bb_loadSprite("car_active", 20, 1, &entityManager->sprites[BB_CAR_ACTIVE]);
     carActiveSprite->originX     = 31;
     carActiveSprite->originY     = 15;
+
+    bb_sprite_t* skeletonSprite = bb_loadSprite("skeleton", 1, 6, &entityManager->sprites[BB_SKELETON]);
+    skeletonSprite->originX = 14;
+    skeletonSprite->originY = 14;
+
+    bb_sprite_t* fuelSprite = bb_loadSprite("fuel", 5, 1, &entityManager->sprites[BB_FUEL]);
+    fuelSprite->originX = 7;
+    fuelSprite->originY = 5;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -905,10 +913,28 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_DeathDumpsterData_t* ddData = heap_caps_calloc(1, sizeof(bb_DeathDumpsterData_t), MALLOC_CAP_SPIRAM);
 
-            ddData->loaded = false;
+            ddData->loaded = false;//the wsg is not loaded
             bb_setData(entity, ddData, DEATH_DUMPSTER_DATA);
 
             entity->drawFunction = &bb_drawDeathDumpster;
+            break;
+        }
+        case BB_SKELETON:
+        {
+            entity->hasLighting = true;
+            entity->drawFunction = &bb_drawBasicEmbed;
+            break;
+        }
+        case BB_FUEL:
+        {
+            entity->cacheable = true;
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionFuel};
+            push(entity->collisions, (void*)collision);
             break;
         }
         default: // FLAME_ANIM and others need nothing set
