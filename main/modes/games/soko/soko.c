@@ -148,6 +148,7 @@ static void sokoExitMode(void)
     }
     // Deinitialize the menu
     deinitMenu(soko->menu);
+    deinitMenu(soko->bgMenu);
     deinitMenuManiaRenderer(soko->menuManiaRenderer);
 
     // Free the font
