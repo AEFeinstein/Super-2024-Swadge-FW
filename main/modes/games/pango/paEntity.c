@@ -1709,6 +1709,8 @@ void pa_updateBonusItem(paEntity_t* self)
             pa_moveEntityWithTileCollisions(self);
             break;
     }
+
+    pa_detectEntityCollisions(self);
 }
 
 uint16_t pa_getBonusItemValue(int16_t elapsedTime)

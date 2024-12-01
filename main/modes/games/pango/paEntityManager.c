@@ -292,7 +292,7 @@ paEntity_t* pa_createBonusItem(paEntityManager_t* entityManager, uint16_t x, uin
     entity->state                = 0;
     entity->stateTimer           = 0;
     entity->updateFunction       = &pa_updateBonusItem;
-    entity->collisionHandler     = &pa_dummyCollisionHandler;
+    entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
     entity->drawHandler          = &pa_defaultEntityDrawHandler;
