@@ -713,7 +713,7 @@ void changeStateReadyScreen(pango_t* self)
 
     pa_resetGameDataLeds(&(self->gameData));
 
-    pa_setBgm(&(self->soundManager), ((self->gameData.level >> 2) + 1) % 4);
+    pa_setBgm(&(self->soundManager), 1 + (self->gameData.level >> 2) % 4);
     soundPlayBgm(&self->soundManager.currentBgm, MIDI_BGM);
 
     self->update = &updateReadyScreen;
