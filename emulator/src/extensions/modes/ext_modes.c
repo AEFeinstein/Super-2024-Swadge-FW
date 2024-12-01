@@ -27,6 +27,7 @@
 #include "mainMenu.h"
 #include "mode_2048.h"
 #include "mode_bigbug.h"
+#include "mode_cGrove.h"
 #include "mode_credits.h"
 #include "mode_swadgeHero.h"
 #include "mode_synth.h"
@@ -65,6 +66,7 @@ static swadgeMode_t* getRandomSwadgeMode(void);
 static swadgeMode_t* allSwadgeModes[] = {
     &accelTestMode,
     &bigbugMode,
+    &cGroveMode,
     &colorchordMode,
     &danceMode,
     &factoryTestMode,

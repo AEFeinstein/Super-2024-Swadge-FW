@@ -10,11 +10,12 @@
 31:sk_e_harmonica.bin:
 32:sk_e_spine.bin:
 33:sk_e_a-frame.bin:
-34:sk_e_curlingiron.bin:
-35:sk_e_copymachine.bin:
+34:sk_e_curling_iron.bin:
+35:sk_e_copy_machine.bin:
 36:sk_e_spiral.bin:
-37:sk_e_steeringwheel.bin:
+37:sk_e_steering_wheel.bin:
 38:sk_e_casette.bin:
+100:sk_e_spywork.bin:
 101:sk_e_apollo.bin:
 102:sk_e_waterwheel.bin:
 103:sk_e_feint.bin:

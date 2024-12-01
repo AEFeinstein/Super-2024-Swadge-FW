@@ -9,6 +9,13 @@ void sokoSaveEulerTiles(soko_abs_t* soko);
 void sokoLoadEulerTiles(soko_abs_t* soko);
 void sokoSaveCurrentLevelEntities(soko_abs_t* soko);
 
+const char key_sk_data[]  = "sk_data";
+const char key_sklv1[]    = "sklv1";
+const char key_sklv2[]    = "sklv2";
+const char key_sk_ents[]  = "sk_ents";
+const char key_sk_e_t_c[] = "sk_e_t_c";
+const char key_sk_e_ts[]  = "sk_e_ts";
+
 /// @brief Called on 'resume' from the menu.
 /// @param soko
 void sokoLoadGameplay(soko_abs_t* soko, uint16_t levelIndex, bool loadNew)
@@ -17,15 +24,18 @@ void sokoLoadGameplay(soko_abs_t* soko, uint16_t levelIndex, bool loadNew)
     sokoSaveGameplay(soko);
 
     // load current level
-    int32_t data = 0;
-    readNvs32("sk_data", &data);
-    // bitshift, etc, as needed.
-    uint16_t lastSaved = (uint16_t)data;
+    int32_t data       = 0;
+    uint16_t lastSaved = 0xFFFF;
+    if (readNvs32(key_sk_data, &data))
+    {
+        // bitshift, etc, as needed.
+        lastSaved = (uint16_t)data;
+    }
 
     sokoLoadBinLevel(soko, levelIndex);
     if (levelIndex == lastSaved && !loadNew)
     {
-        printf("Load Saved Data for level %i\n", lastSaved);
+        ESP_LOGD(SOKO_TAG, "Load Saved Data for level %i", lastSaved);
         // current level entity positions
         sokoLoadCurrentLevelEntities(soko);
 
@@ -38,7 +48,7 @@ void sokoLoadGameplay(soko_abs_t* soko, uint16_t levelIndex, bool loadNew)
 
 void sokoSaveGameplay(soko_abs_t* soko)
 {
-    printf("Save Gameplay\n");
+    ESP_LOGD(SOKO_TAG, "Save Gameplay");
 
     // save current level
     if (soko->currentLevelIndex == 0)
@@ -50,7 +60,7 @@ void sokoSaveGameplay(soko_abs_t* soko)
     // current level entity positions
     uint32_t data = current;
     // what other data gets encoded? we can also save the sk_tiles count.
-    writeNvs32("sk_data", data);
+    writeNvs32(key_sk_data, data);
 
     sokoSaveCurrentLevelEntities(soko);
 
@@ -65,18 +75,22 @@ void sokoLoadLevelSolvedState(soko_abs_t* soko)
     // todo: automatically split for >32, >64 levels using 2 loops.
 
     int32_t lvs = 0;
-    readNvs32("sklv1", &lvs);
-    // i<32...
-    for (size_t i = 0; i < SOKO_LEVEL_COUNT; i++)
+    if (readNvs32(key_sklv1, &lvs))
     {
-        soko->levelSolved[i] = (1 & lvs >> i) == 1;
+        // i<32...
+        for (size_t i = 0; i < SOKO_LEVEL_COUNT; i++)
+        {
+            soko->levelSolved[i] = (1 & lvs >> i) == 1;
+        }
     }
     // now the next 32 bytes!
-    //  readNvs32("sklv2",&lvs);
-    //  for (size_t i = 32; i < SOKO_LEVEL_COUNT || i < 64; i++)
-    //  {
-    //      soko->levelSolved[i] = (1 & lvs>>i) == 1;
-    //  }
+    // if (readNvs32(key_sklv2, &lvs))
+    // {
+    //     for (size_t i = 32; i < SOKO_LEVEL_COUNT || i < 64; i++)
+    //     {
+    //         soko->levelSolved[i] = (1 & lvs >> i) == 1;
+    //     }
+    // }
 
     // etc. Probably won't bother cleaning it into nested loop until over 32*4 levels...
     // so .. never?
@@ -84,7 +98,7 @@ void sokoLoadLevelSolvedState(soko_abs_t* soko)
 
 void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved)
 {
-    printf("save level solved status %d\n", levelIndex);
+    ESP_LOGD(SOKO_TAG, "save level solved status %" PRIu16 "", levelIndex);
     // todo: changes a single levels bool in the sokoSolved array,
     soko->levelSolved[levelIndex] = true;
 
@@ -94,11 +108,17 @@ void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved)
 
     if (section == 0)
     {
-        readNvs32("sklv1", &lvs);
+        if (!readNvs32(key_sklv1, &lvs))
+        {
+            lvs = 0;
+        }
     }
     else if (section == 1)
     {
-        readNvs32("sklv2", &lvs);
+        if (!readNvs32(key_sklv2, &lvs))
+        {
+            lvs = 0;
+        }
         index -= 32;
     } // else, 64,
 
@@ -117,11 +137,11 @@ void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved)
     // write the bit out to data.
     if (section == 0)
     {
-        writeNvs32("sklv1", lvs);
+        writeNvs32(key_sklv1, lvs);
     }
     else if (section == 1)
     {
-        writeNvs32("sklv2", lvs);
+        writeNvs32(key_sklv2, lvs);
     }
 }
 
@@ -164,7 +184,7 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko)
 
     // if each entity is 4 bytes, then we can save (adjust) all entities as a single blob, always, since it's a
     // pre-allocated array.
-    char* entities = calloc(soko->currentLevel.entityCount * 4, sizeof(char));
+    char* entities = heap_caps_calloc(soko->currentLevel.entityCount * 4, sizeof(char), MALLOC_CAP_SPIRAM);
 
     for (int i = 0; i < soko->currentLevel.entityCount; i++)
     {
@@ -177,7 +197,7 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko)
         entities[i * 4 + 3] = soko->currentLevel.entities[i].facing;
     }
     size_t size = sizeof(char) * (soko->currentLevel.entityCount) * 4;
-    writeNvsBlob("sk_ents", entities, size);
+    writeNvsBlob(key_sk_ents, entities, size);
     free(entities);
 }
 // todo: there is no clean place to return to the main menu right now, so gotta write that function/flow so this can get
@@ -187,30 +207,31 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko)
 /// @param soko
 void sokoLoadCurrentLevelEntities(soko_abs_t* soko)
 {
-    printf("loading current level entities.\n");
+    ESP_LOGD(SOKO_TAG, "loading current level entities.");
 
-    char* entities = calloc(soko->currentLevel.entityCount * 4, sizeof(char));
+    char* entities = heap_caps_calloc(soko->currentLevel.entityCount * 4, sizeof(char), MALLOC_CAP_SPIRAM);
     size_t size    = sizeof(char) * (soko->currentLevel.entityCount * 4);
-    readNvsBlob("sk_ents", entities, &size);
-
-    for (int i = 0; i < soko->currentLevel.entityCount; i++)
+    if (readNvsBlob(key_sk_ents, entities, &size))
     {
-        // todo: wait, if all entities are the same length, we don't actually need to save the index...
-        soko->currentLevel.entities[i].x      = entities[i * 4 + 1];
-        soko->currentLevel.entities[i].y      = entities[i * 4 + 2];
-        soko->currentLevel.entities[i].facing = entities[i * 4 + 3];
+        for (int i = 0; i < soko->currentLevel.entityCount; i++)
+        {
+            // todo: wait, if all entities are the same length, we don't actually need to save the index...
+            soko->currentLevel.entities[i].x      = entities[i * 4 + 1];
+            soko->currentLevel.entities[i].y      = entities[i * 4 + 2];
+            soko->currentLevel.entities[i].facing = entities[i * 4 + 3];
+        }
     }
     free(entities);
 }
 
 void sokoSaveEulerTiles(soko_abs_t* soko)
 {
-    printf("encoding euler tiles.\n");
+    ESP_LOGD(SOKO_TAG, "encoding euler tiles.");
 
     sokoTile_t prevTile = SKT_FLOOR;
     int w               = soko->currentLevel.width;
     uint16_t i          = 0;
-    char* blops         = (char*)calloc(255, sizeof(char));
+    char* blops         = (char*)heap_caps_calloc(255, sizeof(char), MALLOC_CAP_SPIRAM);
     for (uint16_t y = 0; y < soko->currentLevel.height; y++)
     {
         for (uint16_t x = 0; x < w; x++)
@@ -229,7 +250,7 @@ void sokoSaveEulerTiles(soko_abs_t* soko)
                     blops[i] = blops[i] + 1;
                     if (i > 255)
                     {
-                        printf("ERROR This level is too big to save for euler???\n");
+                        ESP_LOGD(SOKO_TAG, "ERROR This level is too big to save for euler???");
                         break;
                     }
                 }
@@ -237,67 +258,69 @@ void sokoSaveEulerTiles(soko_abs_t* soko)
         }
     }
     i++;
-    writeNvsBlob("sk_e_t_c", &i, sizeof(uint16_t));
-    writeNvsBlob("sk_e_ts", blops, sizeof(char) * i);
+    writeNvsBlob(key_sk_e_t_c, &i, sizeof(uint16_t));
+    writeNvsBlob(key_sk_e_ts, blops, sizeof(char) * i);
 
     free(blops);
 }
 
 void sokoLoadEulerTiles(soko_abs_t* soko)
 {
-    printf("Load Euler Tiles\n");
+    ESP_LOGD(SOKO_TAG, "Load Euler Tiles");
     sokoTile_t runningTile = SKT_FLOOR;
     uint16_t w             = soko->currentLevel.width;
     uint16_t total         = 0;
     // i don't think i need to calloc before reading the blob?
 
     size_t size = sizeof(uint16_t);
-    readNvsBlob("sk_e_t_c", &total, &size);
-
-    char* blops = calloc(total, sizeof(char));
-    size        = sizeof(char) * total;
-    readNvsBlob("sk_e_ts", blops, &size);
-
-    uint16_t bi = 0;
-    if (blops[0] == 0)
+    if (readNvsBlob(key_sk_e_t_c, &total, &size))
     {
-        // pre-flip, basically...
-        runningTile = SKT_FLOOR_WALKED;
-        bi          = 1; // doesn't mess up our count, because 0 counts for 0 tiles.
-    }
-    for (size_t y = 0; y < soko->currentLevel.height; y++)
-    {
-        for (size_t x = 0; x < w; x++)
+        char* blops = heap_caps_calloc(total, sizeof(char), MALLOC_CAP_SPIRAM);
+        size        = sizeof(char) * total;
+        if (readNvsBlob(key_sk_e_ts, blops, &size))
         {
-            sokoTile_t t = soko->currentLevel.tiles[x][y];
-            if (t == SKT_FLOOR || t == SKT_FLOOR_WALKED)
+            uint16_t bi = 0;
+            if (blops[0] == 0)
             {
-                soko->currentLevel.tiles[x][y] = runningTile;
-                blops[bi]                      = blops[bi] - 1;
-
-                if (blops[bi] == 0)
+                // pre-flip, basically...
+                runningTile = SKT_FLOOR_WALKED;
+                bi          = 1; // doesn't mess up our count, because 0 counts for 0 tiles.
+            }
+            for (size_t y = 0; y < soko->currentLevel.height; y++)
+            {
+                for (size_t x = 0; x < w; x++)
                 {
-                    bi++;
-                    // flop
-                    if (runningTile == SKT_FLOOR)
+                    sokoTile_t t = soko->currentLevel.tiles[x][y];
+                    if (t == SKT_FLOOR || t == SKT_FLOOR_WALKED)
                     {
-                        runningTile = SKT_FLOOR_WALKED;
-                    }
-                    else if (runningTile == SKT_FLOOR_WALKED)
-                    {
-                        runningTile = SKT_FLOOR;
+                        soko->currentLevel.tiles[x][y] = runningTile;
+                        blops[bi]                      = blops[bi] - 1;
+
+                        if (blops[bi] == 0)
+                        {
+                            bi++;
+                            // flop
+                            if (runningTile == SKT_FLOOR)
+                            {
+                                runningTile = SKT_FLOOR_WALKED;
+                            }
+                            else if (runningTile == SKT_FLOOR_WALKED)
+                            {
+                                runningTile = SKT_FLOOR;
+                            }
+                        }
                     }
                 }
             }
         }
+        free(blops);
     }
-    free(blops);
 }
 
 // Level loading
 void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
 {
-    printf("load bin level %d, %s\n", levelIndex, soko->levelNames[levelIndex]);
+    ESP_LOGD(SOKO_TAG, "load bin level %" PRIu16 ", %s", levelIndex, soko->levelNames[levelIndex]);
     soko->state = SKS_INIT;
     size_t fileSize;
     if (soko->levelBinaryData)
@@ -315,9 +338,8 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     soko->currentLevel.gameMode = (soko_var_t)soko->levelBinaryData[2];
     // for(int i = 0; i < fileSize; i++)
     //{
-    //     printf("%d, ",soko->levelBinaryData[i]);
+    //     ESP_LOGD(SOKO_TAG, "%"PRIu8", ",soko->levelBinaryData[i]);
     // }
-    // printf("\n");
     soko->currentLevelIndex       = levelIndex;
     soko->currentLevel.levelScale = 16;
     soko->camWidth                = TFT_WIDTH / (soko->currentLevel.levelScale);
@@ -336,14 +358,14 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     {
         if (soko->overworld_playerX == 0 && soko->overworld_playerY == 0)
         {
-            printf("resetting player position from loaded entity\n");
+            ESP_LOGD(SOKO_TAG, "resetting player position from loaded entity");
             soko->overworld_playerX = soko->soko_player->x;
             soko->overworld_playerY = soko->soko_player->y;
         }
     }
 
-    printf("Loaded level w: %i, h %i, entities: %i\n", soko->currentLevel.width, soko->currentLevel.height,
-           soko->currentLevel.entityCount);
+    ESP_LOGD(SOKO_TAG, "Loaded level w: %i, h %i, entities: %i", soko->currentLevel.width, soko->currentLevel.height,
+             soko->currentLevel.entityCount);
 }
 
 // todo: rename self to soko
@@ -364,10 +386,10 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
         {
             int objX = (tileIndex - 1) % (self->currentLevel.width); // Look at the previous
             int objY = (tileIndex - 1) / (self->currentLevel.width);
-            uint8_t flagByte, direction;
+            uint8_t flagByte;
             bool players, crates, sticky, trail, inverted;
             int hp; //, targetX, targetY;
-            // printf("reading object byte after start: %i,%i:%i\n",objX,objY,self->levelBinaryData[i+1]);
+            // ESP_LOGD(SOKO_TAG, "reading object byte after start: %i,%i:%i",objX,objY,self->levelBinaryData[i+1]);
 
             switch (self->levelBinaryData[i + 1]) // On creating entities, index should be advanced to the SKB_OBJEND
                                                   // byte so the post-increment moves to the next tile.
@@ -431,9 +453,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.crates = crates;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.hp     = hp;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
-                        = malloc(sizeof(uint8_t));
+                        = heap_caps_malloc(sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetY
-                        = malloc(sizeof(uint8_t));
+                        = heap_caps_malloc(sizeof(uint8_t), MALLOC_CAP_SPIRAM);
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = 1;
                     self->currentLevel.entityCount += 1;
                     i += 6;
@@ -473,9 +495,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entities[self->currentLevel.entityCount].y        = objY;
                     self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
-                        = malloc(sizeof(uint8_t) * hp);
+                        = heap_caps_malloc(sizeof(uint8_t) * hp, MALLOC_CAP_SPIRAM);
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetY
-                        = malloc(sizeof(uint8_t) * hp);
+                        = heap_caps_malloc(sizeof(uint8_t) * hp, MALLOC_CAP_SPIRAM);
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.crates      = crates;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.players     = players;
@@ -495,68 +517,6 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entities[self->currentLevel.entityCount].properties.sticky      = sticky;
                     self->currentLevel.entityCount += 1;
                     i += (4 + 2 * hp);
-                    break;
-                }
-                case SKB_LASEREMITTER: //[type][flag]
-                {
-                    flagByte  = self->levelBinaryData[i + 2];
-                    direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is
-                                                              // direction bits and P is player push
-                    players = !!(flagByte & (0x1 < 1));
-
-                    self->currentLevel.entities[self->currentLevel.entityCount].type               = SKE_LASER_EMIT_UP;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x                  = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y                  = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].facing             = direction;
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.players = players;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
-                        = calloc(SOKO_MAX_ENTITY_COUNT, sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetX
-                        = calloc(SOKO_MAX_ENTITY_COUNT, sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.targetCount = 0;
-                    self->currentLevel.entityCount += 1;
-                    i += 3;
-                    break;
-                }
-                case SKB_LASERRECEIVEROMNI:
-                {
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_LASER_RECEIVE_OMNI;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entityCount += 1;
-                    i += 2;
-                    break;
-                }
-                case SKB_LASERRECEIVER:
-                {
-                    flagByte  = self->levelBinaryData[i + 2];
-                    direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is
-                                                              // direction bits and P is player push
-                    players = !!(flagByte & (0x1 < 1));
-
-                    self->currentLevel.entities[self->currentLevel.entityCount].type   = SKE_LASER_RECEIVE;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x      = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y      = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].facing = direction;
-                    self->currentLevel.entityCount += 1;
-                    i += 3;
-                    break;
-                }
-                case SKB_LASER90ROTATE:
-                {
-                    flagByte  = self->levelBinaryData[i + 2];
-                    direction = !!(flagByte & (0x1 < 0));
-                    players   = !!(flagByte & (0x1 < 1));
-
-                    self->currentLevel.entities[self->currentLevel.entityCount].type               = SKE_LASER_90;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x                  = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y                  = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].facing             = direction;
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties.players = players;
-                    self->currentLevel.entityCount += 1;
-                    i += 3;
                     break;
                 }
                 case SKB_GHOSTBLOCK:
@@ -657,8 +617,13 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
             }
             self->currentLevel.tiles[tileX][tileY] = tileType;
             prevTileType                           = tileType;
-            // printf("BinData@%d: %d Tile: %d at (%d,%d)
-            // index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
+            // ESP_LOGD(SOKO_TAG, "BinData@%d: %"PRIu8" Tile: %d at (%d,%d) index:%d",
+            //     i,
+            //     self->levelBinaryData[i],
+            //     tileType,
+            //     tileX,
+            //     tileY,
+            //     tileIndex);
             tileIndex++;
         }
     }
