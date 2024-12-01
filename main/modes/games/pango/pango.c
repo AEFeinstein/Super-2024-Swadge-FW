@@ -722,7 +722,7 @@ void changeStateReadyScreen(pango_t* self)
 void updateReadyScreen(pango_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
-    if (self->gameData.frameCount > 179)
+    if (self->gameData.frameCount > 159)
     {
         //soundStop(true);
         changeStateGame(self);
