@@ -713,7 +713,7 @@ void changeStateReadyScreen(pango_t* self)
 
     pa_resetGameDataLeds(&(self->gameData));
 
-    pa_setBgm(&(self->soundManager), 2 + (self->gameData.level % 3));
+    pa_setBgm(&(self->soundManager), ((self->gameData.level >> 2) + 1) % 4);
     soundPlayBgm(&self->soundManager.currentBgm, MIDI_BGM);
 
     self->update = &updateReadyScreen;
@@ -1020,11 +1020,6 @@ void changeStateTitleScreen(pango_t* self)
     pa_generateMaze(&(pango->tilemap));
 
     self->gameData.frameCount = 0;
-
-    if(self->gameData.gameState != PA_ST_TITLE_SCREEN){
-        pa_setBgm(&(self->soundManager), PA_BGM_MAIN);
-        soundPlayBgm(&self->soundManager.currentBgm, MIDI_BGM);
-    }
 
     self->gameData.gameState  = PA_ST_TITLE_SCREEN;
     pa_remapBlockTile(&(pango->wsgManager), PA_WSG_BLOCK_TITLESCREEN);
