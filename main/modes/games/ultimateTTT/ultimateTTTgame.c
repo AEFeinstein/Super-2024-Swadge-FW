@@ -93,7 +93,7 @@ void tttBeginGame(ultimateTTT_t* ttt)
     tttShowUi(TUI_GAME);
 
     // Randomly determine play order for single player
-    if (ttt->game.singlePlayer)
+    if (ttt->game.singleSystem)
     {
         ttt->game.singlePlayerPlayOrder = (esp_random() % 2) ? GOING_FIRST : GOING_SECOND;
     }
@@ -108,12 +108,15 @@ void tttBeginGame(ultimateTTT_t* ttt)
         // Send it to the second player
         tttSendMarker(ttt, ttt->game.p1MarkerIdx);
 
-        if (ttt->game.singlePlayer)
+        if (ttt->game.singleSystem)
         {
-            ttt->game.state     = TGS_PLACING_MARKER;
-            ttt->game.cpu.state = TCPU_INACTIVE;
+            ttt->game.state = TGS_PLACING_MARKER;
+            if (!ttt->game.passAndPlay)
+            {
+                ttt->game.cpu.state = TCPU_INACTIVE;
+            }
 
-            // Randomize CPU marker to be not the players
+            // Randomize markers to be not match
             ttt->game.p2MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
             // While the markers match
             while (ttt->game.p1MarkerIdx == ttt->game.p2MarkerIdx)
@@ -123,12 +126,19 @@ void tttBeginGame(ultimateTTT_t* ttt)
             }
         }
     }
-    else if (ttt->game.singlePlayer)
+    else if (ttt->game.singleSystem)
     {
-        ttt->game.state     = TGS_WAITING;
-        ttt->game.cpu.state = TCPU_THINKING;
+        if (ttt->game.passAndPlay)
+        {
+            ttt->game.state = TGS_PLACING_MARKER;
+        }
+        else
+        {
+            ttt->game.state     = TGS_WAITING;
+            ttt->game.cpu.state = TCPU_THINKING;
+        }
 
-        // Randomize CPU marker to be not the players
+        // Randomize markers to be not match
         ttt->game.p1MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
         // While the markers match
         while (ttt->game.p1MarkerIdx == ttt->game.p2MarkerIdx)
@@ -528,10 +538,13 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
  */
 void tttSendPlacedMarker(ultimateTTT_t* ttt)
 {
-    if (ttt->game.singlePlayer)
+    if (ttt->game.singleSystem)
     {
-        ttt->game.state     = TGS_WAITING;
-        ttt->game.cpu.state = TCPU_THINKING;
+        ttt->game.state = TGS_WAITING;
+        if (!ttt->game.passAndPlay)
+        {
+            ttt->game.cpu.state = TCPU_THINKING;
+        }
     }
     else if (ttt->game.p2p.cnc.isConnected)
     {
@@ -712,7 +725,7 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
             ttt->lastResult = TTR_DRAW;
         }
 
-        if (!ttt->game.singlePlayer)
+        if (!ttt->game.singleSystem)
         {
             // Stop p2p
             p2pDeinit(&ttt->game.p2p);
@@ -845,7 +858,7 @@ tttPlayer_t tttCheckSubgameWinner(tttSubgame_t* subgame)
  */
 static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt)
 {
-    if (ttt->game.singlePlayer)
+    if (ttt->game.singleSystem)
     {
         return ttt->game.singlePlayerPlayOrder;
     }
@@ -1002,9 +1015,28 @@ void tttDrawGame(ultimateTTT_t* ttt)
         }
     }
 
-    if (ttt->game.singlePlayer && ttt->game.state == TGS_WAITING)
+    if (ttt->game.singleSystem && ttt->game.state == TGS_WAITING)
     {
-        tttCpuNextMove(ttt);
+        if (!ttt->game.passAndPlay)
+        {
+            // Let CPU make the next move
+            tttCpuNextMove(ttt);
+        }
+        else
+        {
+            // Flip the active player
+            if (GOING_FIRST == ttt->game.singlePlayerPlayOrder)
+            {
+                ttt->game.singlePlayerPlayOrder = GOING_SECOND;
+            }
+            else
+            {
+                ttt->game.singlePlayerPlayOrder = GOING_FIRST;
+            }
+
+            // Let the active player place a marker
+            ttt->game.state = TGS_PLACING_MARKER;
+        }
     }
 }
 
