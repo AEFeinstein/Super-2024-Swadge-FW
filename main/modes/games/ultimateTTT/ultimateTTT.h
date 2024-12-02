@@ -110,7 +110,8 @@ typedef struct
 
 typedef struct
 {
-    bool singlePlayer;
+    bool singleSystem;
+    bool passAndPlay;
     playOrder_t singlePlayerPlayOrder;
     p2pInfo p2p;
     tttGameState_t state;
