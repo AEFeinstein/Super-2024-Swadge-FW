@@ -8,6 +8,8 @@
 // Variables
 //==============================================================================
 
+static const char redStr[]          = "Red wins!";
+static const char blueStr[]         = "Blue wins!";
 static const char winStr[]          = "A winner is you!";
 static const char lossStr[]         = "You lost :(";
 static const char drawStr[]         = "It is a draw.";
@@ -60,7 +62,21 @@ void tttDrawResult(ultimateTTT_t* ttt, int64_t elapsedUs)
     {
         case TTR_WIN:
         {
-            resultStr = winStr;
+            if (ttt->game.singleSystem)
+            {
+                if (GOING_FIRST == ttt->game.singlePlayerPlayOrder)
+                {
+                    resultStr = redStr;
+                }
+                else
+                {
+                    resultStr = blueStr;
+                }
+            }
+            else
+            {
+                resultStr = winStr;
+            }
             break;
         }
         case TTR_LOSE:

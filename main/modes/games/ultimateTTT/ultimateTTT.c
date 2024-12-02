@@ -30,18 +30,19 @@ static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char tttName[]          = "Ultimate TTT";
-static const char tttMultiStr[]      = "Wireless Connect";
-static const char tttMultiShortStr[] = "Connect";
-static const char tttSingleStr[]     = "Single Player";
-static const char tttDiffEasyStr[]   = "Easy";
-static const char tttDiffMediumStr[] = "Medium";
-static const char tttDiffHardStr[]   = "Hard";
-static const char tttMarkerSelStr[]  = "Marker Select";
-static const char tttHowToStr[]      = "How To Play";
-static const char tttResultStr[]     = "Result";
-static const char tttRecordsStr[]    = "Records";
-static const char tttExit[]          = "Exit";
+static const char tttName[]           = "Ultimate TTT";
+static const char tttMultiStr[]       = "Wireless Connect";
+static const char tttPassAndPlayStr[] = "Pass and Play";
+static const char tttMultiShortStr[]  = "Connect";
+static const char tttSingleStr[]      = "Single Player";
+static const char tttDiffEasyStr[]    = "Easy";
+static const char tttDiffMediumStr[]  = "Medium";
+static const char tttDiffHardStr[]    = "Hard";
+static const char tttMarkerSelStr[]   = "Marker Select";
+static const char tttHowToStr[]       = "How To Play";
+static const char tttResultStr[]      = "Result";
+static const char tttRecordsStr[]     = "Records";
+static const char tttExit[]           = "Exit";
 
 // NVS keys
 const char tttWinKey[]      = "ttt_win";
@@ -124,6 +125,7 @@ static void tttEnterMode(void)
     // Initialize the main menu
     ttt->menu = initMenu(tttName, tttMenuCb);
     addSingleItemToMenu(ttt->menu, tttMultiStr);
+    addSingleItemToMenu(ttt->menu, tttPassAndPlayStr);
 
     ttt->menu = startSubMenu(ttt->menu, tttSingleStr);
     addSingleItemToMenu(ttt->menu, tttDiffEasyStr);
@@ -338,29 +340,40 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (tttMultiStr == label)
         {
-            ttt->game.singlePlayer = false;
+            ttt->game.singleSystem = false;
+            ttt->game.passAndPlay  = false;
             // Show connection UI
             tttShowUi(TUI_CONNECTING);
             // Start multiplayer
             p2pStartConnection(&ttt->game.p2p);
         }
+        else if (tttPassAndPlayStr == label)
+        {
+            ttt->game.singleSystem = true;
+            ttt->game.passAndPlay  = true;
+            tttBeginGame(ttt);
+            tttShowUi(TUI_GAME);
+        }
         else if (tttDiffEasyStr == label)
         {
-            ttt->game.singlePlayer   = true;
+            ttt->game.singleSystem   = true;
+            ttt->game.passAndPlay    = false;
             ttt->game.cpu.difficulty = TDIFF_EASY;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);
         }
         else if (tttDiffMediumStr == label)
         {
-            ttt->game.singlePlayer   = true;
+            ttt->game.singleSystem   = true;
+            ttt->game.passAndPlay    = false;
             ttt->game.cpu.difficulty = TDIFF_MEDIUM;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);
         }
         else if (tttDiffHardStr == label)
         {
-            ttt->game.singlePlayer   = true;
+            ttt->game.singleSystem   = true;
+            ttt->game.passAndPlay    = false;
             ttt->game.cpu.difficulty = TDIFF_HARD;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);
