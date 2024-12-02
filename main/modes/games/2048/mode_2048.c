@@ -32,6 +32,7 @@ static paletteColor_t t48_generateRainbow(void);
 static void t48_fadeLEDs(int32_t elapsedUs);
 static void t48_chaseLEDs(int32_t elapseUs);
 static led_t t48_randColor(void);
+static void t48BackgroundDraw(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 //==============================================================================
 // Const Variables
@@ -75,14 +76,14 @@ swadgeMode_t t48Mode = {
     .modeName                 = modeName,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
-    .usesAccelerometer        = false,
+    .usesAccelerometer        = true,
     .usesThermometer          = false,
     .overrideSelectBtn        = false,
     .fnEnterMode              = t48EnterMode,
     .fnExitMode               = t48ExitMode,
     .fnMainLoop               = t48MainLoop,
     .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = NULL,
+    .fnBackgroundDrawCallback = t48BackgroundDraw,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
@@ -212,10 +213,45 @@ static void t48MainLoop(int64_t elapsedUs)
             // Get inputs
             while (checkButtonQueueWrapper(&evt))
             {
-                if (evt.down)
+                bool isDpad = (PB_UP == evt.button) ||   //
+                              (PB_DOWN == evt.button) || //
+                              (PB_LEFT == evt.button) || //
+                              (PB_RIGHT == evt.button);
+                // Accept buttons if it's not tilt, or not D-Pad
+                if (evt.down && (!t48->tiltControls || !isDpad))
                 {
-                    // Process inputs
                     t48_gameInput(t48, evt.button);
+                }
+            }
+
+            // Take accel input if cells aren't moving
+            if (t48->tiltControls && !t48->cellsAnimating)
+            {
+                int16_t ox, oy, oz;
+                if (ESP_OK == accelGetOrientVec(&ox, &oy, &oz))
+                {
+                    if (ABS(ox) > ABS(oy))
+                    {
+                        if (ox > 128)
+                        {
+                            t48_gameInput(t48, PB_LEFT);
+                        }
+                        else if (ox < -128)
+                        {
+                            t48_gameInput(t48, PB_RIGHT);
+                        }
+                    }
+                    else
+                    {
+                        if (oy > 128)
+                        {
+                            t48_gameInput(t48, PB_DOWN);
+                        }
+                        else if (oy < -128)
+                        {
+                            t48_gameInput(t48, PB_UP);
+                        }
+                    }
                 }
             }
 
@@ -228,10 +264,10 @@ static void t48MainLoop(int64_t elapsedUs)
             // Check any button is pressed
             while (checkButtonQueueWrapper(&evt))
             {
-                if (evt.down)
+                if (evt.down && (PB_A == evt.button || PB_B == evt.button))
                 {
                     soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48_gameInit(t48);
+                    t48_gameInit(t48, PB_B == evt.button);
                     t48->state = T48_IN_GAME;
                 }
             }
@@ -499,4 +535,24 @@ led_t t48_randColor()
     col.g     = 128 + (esp_random() % 127);
     col.b     = 128 + (esp_random() % 127);
     return col;
+}
+
+/**
+ * @brief Integrate the accelerometer in the background
+ *
+ * @param x Unused
+ * @param y  Unused
+ * @param w  Unused
+ * @param h  Unused
+ * @param up  Unused
+ * @param upNum  Unused
+ */
+static void t48BackgroundDraw(int16_t x __attribute__((unused)), int16_t y __attribute__((unused)),
+                              int16_t w __attribute__((unused)), int16_t h __attribute__((unused)),
+                              int16_t up __attribute__((unused)), int16_t upNum __attribute__((unused)))
+{
+    if (t48->tiltControls)
+    {
+        accelIntegrate();
+    }
 }
