@@ -55,22 +55,27 @@ For the script to actually flash firmware, the following files must be in the sa
 | ``bootloader.bin`` | ``../build/bootloader/bootloader.bin`` |
 | ``swadge2024.bin`` | ``../build/swadge2024.bin`` |
 | ``partition-table.bin`` | ``../build/partition_table/partition-table.bin`` |
-| ``storage.bin`` | ``../build/storage.bin`` |
 
-Assuming you've checked out the whole repository, set up the IDF, and are in the `Super-2023-Swadge-FW` folder, then this should build and place the files:
+Assuming you've checked out the whole repository, set up the IDF, and are in the `Super-2024-Swadge-FW` folder, then this should build and place the files:
 
 ```bash
 idf.py build
-cp ./build/bootloader/bootloader.bin ./build/swadge2024.bin ./build/partition_table/partition-table.bin ./build/storage.bin ./pyFlashGui/
+cp ./build/bootloader/bootloader.bin ./build/swadge2024.bin ./build/partition_table/partition-table.bin ./pyFlashGui/
 ```
 
 # Instructions
 
 1. Download and install the dependencies
-1. Download the final Swadge firmware from the Releases tab: https://github.com/AEFeinstein/Super-2023-Swadge-FW/releases/
+    * [Python](https://www.python.org/downloads/)
+    * ```bash
+      python -m pip install -r requirements.txt
+      ```
+    * [Tkinter Installation](https://tkdocs.com/tutorial/install.html) (may not be necessary)
+1. Download the final Swadge firmware from the Releases tab: https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases/
 1. Run the programmer script (``python3 pyFlashGui.py`` from a terminal)
 1. Switch the Swadge's power to USB (right position)
 1. Hold the PGM button down (Up on the directional pad)
+    * Note, for the first Hot Dog Prototype revision, the PGM button is Left, not Up
 1. Plug the Swadge into the computer with a USB-C cable
 1. Wait for the GUI to flash green, then you're done.
 
