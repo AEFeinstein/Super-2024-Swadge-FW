@@ -147,7 +147,7 @@ void drawSequencerHelp(sequencerVars_t* sv, int32_t elapsedUs)
     drawMenuMania(sv->bgMenu, sv->menuRenderer, 0);
 
     // Draw text
-    paletteColor_t textColor    = c555;
+    paletteColor_t textColor    = c000;
     paletteColor_t outlineColor = c000;
     int16_t xOff                = TEXT_MARGIN_L;
     int16_t yOff                = MANIA_TITLE_HEIGHT + 8;
