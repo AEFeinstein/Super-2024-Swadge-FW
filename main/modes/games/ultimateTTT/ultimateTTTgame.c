@@ -95,7 +95,14 @@ void tttBeginGame(ultimateTTT_t* ttt)
     // Randomly determine play order for single player
     if (ttt->game.singleSystem)
     {
-        ttt->game.singlePlayerPlayOrder = (esp_random() % 2) ? GOING_FIRST : GOING_SECOND;
+        if (ttt->game.passAndPlay)
+        {
+            ttt->game.singlePlayerPlayOrder = GOING_FIRST;
+        }
+        else
+        {
+            ttt->game.singlePlayerPlayOrder = (esp_random() % 2) ? GOING_FIRST : GOING_SECOND;
+        }
     }
 
     // Set the cursor mode
