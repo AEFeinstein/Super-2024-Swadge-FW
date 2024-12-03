@@ -292,6 +292,7 @@ void pangoExitMode(void)
     deinitMenuManiaRenderer(pango->menuRenderer);
 
     freeFont(&pango->font);
+    freeFont(&pango->gameData.scoreFont);
     pa_freeWsgManager(&(pango->wsgManager));
     pa_freeTilemap(&(pango->tilemap));
     pa_freeSoundManager(&(pango->soundManager));
