@@ -771,6 +771,8 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
     {
         self->input.exitToOverworld = false;
         self->screen                = SOKO_MENU;
+        setManiaLedsOn(self->menuManiaRenderer, true);
+        setManiaDrawRings(self->menuManiaRenderer, true);
     }
 }
 

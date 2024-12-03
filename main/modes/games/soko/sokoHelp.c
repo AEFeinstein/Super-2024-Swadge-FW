@@ -159,6 +159,8 @@ void buttonSokoHelp(soko_abs_t* soko, buttonEvt_t* evt)
                 else
                 {
                     soko->screen = SOKO_MENU;
+                    setManiaLedsOn(soko->menuManiaRenderer, true);
+                    setManiaDrawRings(soko->menuManiaRenderer, true);
                 }
                 break;
             }
@@ -171,6 +173,8 @@ void buttonSokoHelp(soko_abs_t* soko, buttonEvt_t* evt)
                 else
                 {
                     soko->screen = SOKO_MENU;
+                    setManiaLedsOn(soko->menuManiaRenderer, true);
+                    setManiaDrawRings(soko->menuManiaRenderer, true);
                 }
                 break;
             }
