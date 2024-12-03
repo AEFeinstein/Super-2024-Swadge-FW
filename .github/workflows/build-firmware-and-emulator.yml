@@ -132,12 +132,12 @@ jobs:
         path: |
           build/swadge2024.elf
           build/swadge2024.bin
-          build/storage.bin
           build/dfu.bin
           build/bootloader/bootloader.bin
           build/partition_table/partition-table.bin
           version.txt
           tools/pyFlashGui/pyFlashGui.py
+          tools/pyFlashGui/requirements.txt
 
     #### Platform-specific Emulator Builds
     - name: Install msys64 packages
