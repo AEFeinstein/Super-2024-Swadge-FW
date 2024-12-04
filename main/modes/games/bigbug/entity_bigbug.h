@@ -34,6 +34,7 @@ typedef enum
     GARBOTNIK_DATA,
     GO_TO_DATA,
     HEAVY_FALLING_DATA,
+    RADAR_PING_DATA,
     MENU_BUG_DATA,
     MENU_DATA,
     PHYSICS_DATA,
@@ -180,6 +181,22 @@ typedef struct
     wsg_t fullscreenGraphic;
 } bb_gameOverData_t;
 
+typedef struct
+{
+    vec_t pos;
+    uint16_t radius;
+} pingCircle;
+
+
+typedef struct
+{
+    uint16_t radius;
+    uint8_t reflectionIdx;
+    uint16_t timer;
+    pingCircle reflections[20];
+} bb_radarPingData_t;
+
+
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
 typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -262,6 +279,7 @@ void bb_updateFlame(bb_entity_t* self);
 void bb_updateCharacterTalk(bb_entity_t* self);
 void bb_updateAttachmentArm(bb_entity_t* self);
 void bb_updateGameOver(bb_entity_t* self);
+void bb_updateRadarPing(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -278,6 +296,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 void bb_drawGameOver(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawDeathDumpster(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);

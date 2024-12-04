@@ -59,6 +59,7 @@ typedef enum
     NO_SPRITE_POI,  // Point of interest for the camera to follow in various cutscenes
     OVO_TALK,       // Need this enum actually for the entity but not the sprites array.
     BB_GAME_OVER,   // A screen after you fail.
+    BB_RADAR_PING,  // Expanding circles when you press pause.
     WILE            // A metal ball that is thrown (not implemented)
 
 } bb_spriteDef_t;

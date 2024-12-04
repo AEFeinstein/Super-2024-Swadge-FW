@@ -937,6 +937,16 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(entity->collisions, (void*)collision);
             break;
         }
+        case BB_RADAR_PING:
+        {
+            bb_radarPingData_t* rpData = (bb_radarPingData_t*) heap_caps_calloc(1, sizeof(bb_radarPingData_t), MALLOC_CAP_SPIRAM);
+            rpData->timer = 500;
+            bb_setData(entity, rpData, RADAR_PING_DATA);
+            
+            entity->updateFunction = &bb_updateRadarPing;
+            entity->drawFunction = &bb_drawRadarPing;
+            break;
+        }
         default: // FLAME_ANIM and others need nothing set
         {
             break;

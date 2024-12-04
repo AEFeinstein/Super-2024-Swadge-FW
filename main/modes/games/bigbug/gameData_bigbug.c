@@ -15,9 +15,9 @@
 //==============================================================================
 void bb_initializeGameData(bb_gameData_t* gameData)
 {
-    gameData->gameState = 0;
+    // Set the mode to game mode
+    gameData->screen = BIGBUG_GAME;
 
-    gameData->bgColor   = c335;
     gameData->debugMode = false;
 
     loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->bgm, true);
@@ -66,9 +66,6 @@ void bb_freeGameData(bb_gameData_t* gameData)
 
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData)
 {
-    gameData->gameState = 0;
-
-    gameData->bgColor    = c000;
     gameData->currentBgm = 0;
     gameData->changeBgm  = 0;
 

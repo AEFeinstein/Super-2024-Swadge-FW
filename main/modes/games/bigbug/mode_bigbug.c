@@ -30,15 +30,6 @@
 // Enums
 //==============================================================================
 
-/**
- * @brief Enum of screens that may be shown in bigbug mode
- */
-typedef enum
-{
-    BIGBUG_MENU,
-    BIGBUG_GAME,
-} bb_screen_t;
-
 //==============================================================================
 // Structs
 //==============================================================================
@@ -47,7 +38,7 @@ struct bb_t
 {
     menu_t* menu;       ///< The menu structure
     font_t font;        ///< The font used in the menu and game
-    bb_screen_t screen; ///< The screen being displayed
+    //bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
 
@@ -65,11 +56,14 @@ static void bb_EnterMode(void);
 static void bb_EnterModeSkipIntro(void);
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
+static void bb_BackgroundDrawCallbackRadar(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 // big bug logic
 // static void bb_LoadScreenDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void bb_DrawScene(void);
+static void bb_DrawScene_Radar(void);
+static void bb_GameLoop_Radar(int64_t elapsedUs);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
@@ -187,9 +181,6 @@ static void bb_EnterMode(void)
     //          5 * 32 + 16,
     //          -110);
 
-    // Set the mode to game mode
-    bigbug->screen = BIGBUG_GAME;
-
     bb_setupMidi();
     soundPlayBgm(&bigbug->gameData.bgm, MIDI_BGM);
 
@@ -285,7 +276,7 @@ static void bb_EnterModeSkipIntro(void)
     bb_generateWorld(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
 
     // Set the mode to game mode
-    bigbug->screen = BIGBUG_GAME;
+    bigbug->gameData.screen = BIGBUG_GAME;
 
     bb_setupMidi();
     unloadMidiFile(&bigbug->gameData.bgm);
@@ -356,10 +347,15 @@ static void bb_MainLoop(int64_t elapsedUs)
     bigbug->gameData.elapsedUs = elapsedUs;
 
     // Pick what runs and draws depending on the screen being displayed
-    switch (bigbug->screen)
+    switch (bigbug->gameData.screen)
     {
-        case BIGBUG_MENU:
+        case BIGBUG_RADAR_SCREEN:
         {
+            if(bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
+            {
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackRadar;
+            }
+            bb_GameLoop_Radar(elapsedUs);
             break;
         }
         case BIGBUG_GAME:
@@ -368,11 +364,21 @@ static void bb_MainLoop(int64_t elapsedUs)
             bb_GameLoop(elapsedUs);
             break;
         }
+        case BIGBUG_GAME_PINGING:
+        {
+            bb_GameLoop(elapsedUs);
+            break;
+        }
         default:
         {
             break;
         }
     }
+}
+
+static void bb_BackgroundDrawCallbackRadar(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    fillDisplayArea(x, y, x + w, y + h, c000);
 }
 
 static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
@@ -504,6 +510,104 @@ static void bb_DrawScene(void)
     DRAW_FPS_COUNTER(bigbug->font);
 }
 
+static void bb_DrawScene_Radar(void)
+{
+    bigbug->gameData.radar.cam.y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
+    
+    for(int xIdx = 1; xIdx < TILE_FIELD_WIDTH-4; xIdx++)
+    {
+        for(int yIdx = bigbug->gameData.radar.cam.y / 4 < 0 ? 0 : bigbug->gameData.radar.cam.y / 4;
+        yIdx < (bigbug->gameData.radar.cam.y / 4 < 0 ? FIELD_HEIGHT / 4 : bigbug->gameData.radar.cam.y / 4 + FIELD_HEIGHT / 4);
+        yIdx++)
+        {
+            uint16_t radarTileColor = bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 0 ? c333 : c000;
+            if(true)//unlockable upgrade
+            {
+                if(bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health>0 && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health<4)
+                {
+                    radarTileColor = c222;
+                }
+                else if(bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health>3 && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health<10)
+                {
+                    radarTileColor = c333;
+                }
+                else if(bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health>9 && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health<100)
+                {
+                    radarTileColor = c444;
+                }
+                else if(bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health>99)
+                {
+                    radarTileColor = c555;
+                }
+            }
+            drawRectFilled(xIdx * 4 - 4,yIdx * 4 - bigbug->gameData.radar.cam.y,xIdx * 4,yIdx * 4 + 4 - bigbug->gameData.radar.cam.y,radarTileColor);
+        }
+    }
+    //garbotnik
+    vec_t garbotnikPos = (vec_t) {(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                                    bigbug->gameData.radar.cam.y + 120};
+    
+    drawCircleFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, 3, c515);
+    //garbotnik pings
+    for(int i = 0; i < 254; i += 51)
+    {
+        bigbug->gameData.radar.playerPingRadius += i;
+        drawCircle(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, bigbug->gameData.radar.playerPingRadius, c404);
+    }
+    
+    //booster radar rect
+    garbotnikPos.x = (bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 4;
+    garbotnikPos.y = (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 4;
+    drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2, garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c440);
+
+    
+    DRAW_FPS_COUNTER(bigbug->font);
+}
+
+/**
+ * @brief This function is called periodically and frequently. It runs the actual game, including processing inputs,
+ * physics updates and drawing to the display.
+ *
+ * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
+ */
+static void bb_GameLoop_Radar(int64_t elapsedUs)
+{
+    bigbug->gameData.btnDownState = 0b0;
+    // Always process button events, regardless of control scheme, so the main menu button can be captured
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Print the current event
+        // ESP_LOGD(BB_TAG,"state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
+
+        // Save the button state
+        bigbug->gameData.btnState = evt.state;
+
+        // Check if the pause button was pressed
+        if (evt.down)
+        {
+            bigbug->gameData.btnDownState += evt.button;
+            // PB_UP     = 0x0001, //!< The up button's bit
+            // PB_DOWN   = 0x0002, //!< The down button's bit
+            // PB_LEFT   = 0x0004, //!< The left button's bit
+            // PB_RIGHT  = 0x0008, //!< The right button's bit
+            // PB_A      = 0x0010, //!< The A button's bit
+            // PB_B      = 0x0020, //!< The B button's bit
+            // PB_START  = 0x0040, //!< The start button's bit
+            // PB_SELECT = 0x0080, //!< The select button's bit
+            if (evt.button == PB_START)
+            {
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
+                bigbug->gameData.screen = BIGBUG_GAME;
+            }
+        }
+    }
+
+    bigbug->gameData.radar.playerPingRadius+=3;
+
+    bb_DrawScene_Radar();
+}
+
 /**
  * @brief This function is called periodically and frequently. It runs the actual game, including processing inputs,
  * physics updates and drawing to the display.
@@ -539,10 +643,10 @@ static void bb_GameLoop(int64_t elapsedUs)
             // PB_B      = 0x0020, //!< The B button's bit
             // PB_START  = 0x0040, //!< The start button's bit
             // PB_SELECT = 0x0080, //!< The select button's bit
-            if (evt.button == PB_START)
+            if (evt.button == PB_START && !bigbug->gameData.isPaused && bigbug->gameData.screen == BIGBUG_GAME && bigbug->gameData.entityManager.playerEntity != NULL)
             {
-                // Toggle pause
-                bigbug->gameData.isPaused = !bigbug->gameData.isPaused;
+                bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1, bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS, bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS, true, false);
+                bigbug->gameData.screen = BIGBUG_GAME_PINGING;
             }
         }
     }

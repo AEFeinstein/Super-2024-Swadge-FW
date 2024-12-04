@@ -1236,6 +1236,32 @@ void bb_updateGameOver(bb_entity_t* self)
     }
 }
 
+void bb_updateRadarPing(bb_entity_t* self)
+{
+    bb_radarPingData_t* rpData = (bb_radarPingData_t*) self->data;
+    rpData->timer -= self->gameData->elapsedUs >> 10;
+    // printf("timer: %d\n", rpData->timer);
+    if((rpData->timer < 100) && (rpData->reflectionIdx < (sizeof(rpData->reflections)/sizeof(rpData->reflections[0]))))
+    {
+        rpData->timer = bb_randomInt(150,250);
+        rpData->reflections[rpData->reflectionIdx].pos = addVec2d(self->pos, rotateVec2d((vec_t){rpData->radius << DECIMAL_BITS, 0}, bb_randomInt(0,359)));
+        rpData->reflectionIdx++;
+        printf("reflectionIdx: %d\n", rpData->reflectionIdx);
+    }
+
+    for(int reflectionIdx = 0; reflectionIdx < rpData->reflectionIdx; reflectionIdx++)
+    {
+        rpData->reflections[reflectionIdx].radius += 4;
+    }
+
+    rpData->radius += 6;
+    if(rpData->radius > 1300)
+    {
+        self->gameData->screen = BIGBUG_RADAR_SCREEN;
+        bb_destroyEntity(self, false);
+    }
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     if (GARBOTNIK_DATA != self->dataType)
@@ -1512,6 +1538,21 @@ void bb_drawDeathDumpster(bb_entityManager_t* entityManager, rectangle_t* camera
         }
     }
 }
+
+void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_radarPingData_t* rpData = (bb_radarPingData_t*) self->data;
+
+    for(int reflectionIdx = 0; reflectionIdx < rpData->reflectionIdx; reflectionIdx++)
+    {
+        drawCircle((rpData->reflections[reflectionIdx].pos.x >> DECIMAL_BITS) - camera->pos.x, (rpData->reflections[reflectionIdx].pos.y >> DECIMAL_BITS) - camera->pos.y, rpData->reflections[reflectionIdx].radius, c415);
+    }
+
+    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y, rpData->radius, c415);
+    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y, rpData->radius * 3 / 4, c415);
+
+}
+
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {

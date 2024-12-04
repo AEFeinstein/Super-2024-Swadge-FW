@@ -29,6 +29,22 @@ struct bb_camera_t
     vec_t velocity; // stored retroactivelly to drive the starfield
 };
 
+/**
+ * @brief Enum of screens that may be shown in bigbug mode
+ */
+enum bb_screen_t
+{
+    BIGBUG_RADAR_SCREEN,
+    BIGBUG_GAME,
+    BIGBUG_GAME_PINGING,//While game is still playing, but radar is pinging. Don't allow new radar pings.
+};
+
+struct bb_radarScreenData_t
+{
+    vec_t cam;// x and y offsets for use in the radar (pause) screen.
+    uint8_t playerPingRadius;//animates a circle to help the tiny player dot be seen.
+};
+
 struct bb_gameData_t
 {
     int32_t elapsedUs;
@@ -53,14 +69,9 @@ struct bb_gameData_t
 
     bb_camera_t camera;
 
-    uint8_t gameState;
-    uint8_t changeState;
-
     bb_entityManager_t entityManager;
 
     led_t leds[CONFIG_NUM_LEDS];
-
-    paletteColor_t bgColor;
 
     bool debugMode;
 
@@ -79,6 +90,10 @@ struct bb_gameData_t
     bb_entity_t* menuBug; // Featured entity walking through the main menu.
 
     bool exit; // Entities can set it to true, and the mode will exit eventually.
+
+    enum bb_screen_t screen; ///< The screen being displayed
+
+    struct bb_radarScreenData_t radar;
 };
 
 //==============================================================================
