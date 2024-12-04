@@ -66,11 +66,17 @@ void tttDrawResult(ultimateTTT_t* ttt, int64_t elapsedUs)
             {
                 if (GOING_FIRST == ttt->game.singlePlayerPlayOrder)
                 {
-                    resultStr = redStr;
+                    resultStr                         = redStr;
+                    ttt->menuRenderer->baseLedColor.r = 0xFF;
+                    ttt->menuRenderer->baseLedColor.g = 0x00;
+                    ttt->menuRenderer->baseLedColor.b = 0x00;
                 }
                 else
                 {
-                    resultStr = blueStr;
+                    resultStr                         = blueStr;
+                    ttt->menuRenderer->baseLedColor.r = 0x00;
+                    ttt->menuRenderer->baseLedColor.g = 0x00;
+                    ttt->menuRenderer->baseLedColor.b = 0xFF;
                 }
             }
             else

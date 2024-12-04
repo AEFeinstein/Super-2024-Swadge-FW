@@ -52,6 +52,12 @@ const char tttMarkerKey[]   = "ttt_marker";
 const char tttTutorialKey[] = "ttt_tutor";
 const char tttUnlockKey[]   = "ttt_unlock";
 
+static const led_t utttLedMenuColor = {
+    .r = 0xFF,
+    .g = 0x99,
+    .b = 0xCC,
+};
+
 /**
  * Marker names to load WSGs
  */
@@ -122,18 +128,13 @@ static void tttEnterMode(void)
     // Initialize a menu renderer
     ttt->menuRenderer = initMenuManiaRenderer(&ttt->font_righteous, NULL, &ttt->font_rodin);
     // Color the menu like Poe
-    led_t menuColor = {
-        .r = 0xFF,
-        .g = 0x00,
-        .b = 0x00,
-    };
     static const paletteColor_t shadowColors[] = {c500, c511, c522, c533, c544, c555, c544, c533, c522, c511};
     recolorMenuManiaRenderer(ttt->menuRenderer, //
                              c500, c555, c111,  // titleBgColor, titleTextColor, textOutlineColor
                              c333,              // bgColor
                              c534, c544,        // outerRingColor, innerRingColor
                              c212, c555,        // rowColor, rowTextColor
-                             shadowColors, ARRAY_SIZE(shadowColors), menuColor);
+                             shadowColors, ARRAY_SIZE(shadowColors), utttLedMenuColor);
 
     // Initialize the main menu
     ttt->menu = initMenu(tttName, tttMenuCb);
@@ -488,6 +489,7 @@ void tttShowUi(tttUi_t ui)
 
     // Assume menu LEDs should be on
     setManiaLedsOn(ttt->menuRenderer, true);
+    ttt->menuRenderer->baseLedColor = utttLedMenuColor;
     setManiaDrawRings(ttt->menuRenderer, true);
 
     // Initialize the new UI
