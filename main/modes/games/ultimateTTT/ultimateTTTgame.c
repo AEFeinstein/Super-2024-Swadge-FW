@@ -145,6 +145,9 @@ void tttBeginGame(ultimateTTT_t* ttt)
             ttt->game.cpu.state = TCPU_THINKING;
         }
 
+        // Set own marker type
+        ttt->game.p2MarkerIdx = ttt->activeMarkerIdx;
+
         // Randomize markers to be not match
         ttt->game.p1MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
         // While the markers match
@@ -882,7 +885,16 @@ static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt)
  */
 void tttDrawGame(ultimateTTT_t* ttt)
 {
+    // LED setting for wireless & pass and play
     bool isP1 = (GOING_FIRST == tttGetPlayOrder(ttt));
+
+    // Override for CPU matches during the CPU's turn
+    if ((true == ttt->game.singleSystem) && //
+        (false == ttt->game.passAndPlay) && //
+        (ttt->game.state == TGS_WAITING))
+    {
+        isP1 = !isP1;
+    }
 
     // Light LEDs for p1/p2
     led_t leds[CONFIG_NUM_LEDS] = {0};
