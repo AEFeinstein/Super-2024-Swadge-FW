@@ -1251,10 +1251,10 @@ void bb_updateRadarPing(bb_entity_t* self)
 
     for(int reflectionIdx = 0; reflectionIdx < rpData->reflectionIdx; reflectionIdx++)
     {
-        rpData->reflections[reflectionIdx].radius += 4;
+        rpData->reflections[reflectionIdx].radius += 5;
     }
 
-    rpData->radius += 6;
+    rpData->radius += 5;
     if(rpData->radius > 1300)
     {
         self->gameData->screen = BIGBUG_RADAR_SCREEN;
