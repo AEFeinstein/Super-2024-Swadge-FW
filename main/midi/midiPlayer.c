@@ -578,17 +578,10 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
         playingVoices &= ~(1 << voiceIdx);
 
         bool done = false;
-        sum += voices[voiceIdx].timbre->percussion.playFunc(voices[voiceIdx].note, voices[voiceIdx].sampleTick, &done,
+        sum += voices[voiceIdx].timbre->percussion.playFunc(voices[voiceIdx].note, voices[voiceIdx].sampleTick++, &done,
                                                             voices[voiceIdx].percScratch,
                                                             voices[voiceIdx].timbre->percussion.data)
                * voices[voiceIdx].velocity / 127;
-
-        /* Note that defaultDrumkitFunc() and donutDrumkitFunc() define everything
-         * in terms of samples, and expect a sampling rate of 32768hz. Because our
-         * sampling rate is 16384hz, double the tick rate to match. This was easier
-         * than adjusting the drumkit functions to be defined by DAC_SAMPLE_RATE_HZ
-         */
-        voices[voiceIdx].sampleTick += (32768 / DAC_SAMPLE_RATE_HZ);
 
         if (done)
         {
