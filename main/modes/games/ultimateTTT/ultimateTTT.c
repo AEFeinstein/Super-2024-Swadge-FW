@@ -53,9 +53,9 @@ const char tttTutorialKey[] = "ttt_tutor";
 const char tttUnlockKey[]   = "ttt_unlock";
 
 static const led_t utttLedMenuColor = {
-    .r = 0xFF,
-    .g = 0x99,
-    .b = 0xCC,
+    .r = 0x66,
+    .g = 0x00,
+    .b = 0x66,
 };
 
 /**
@@ -128,12 +128,14 @@ static void tttEnterMode(void)
     // Initialize a menu renderer
     ttt->menuRenderer = initMenuManiaRenderer(&ttt->font_righteous, NULL, &ttt->font_rodin);
     // Color the menu like Poe
-    static const paletteColor_t shadowColors[] = {c500, c511, c522, c533, c544, c555, c544, c533, c522, c511};
+    static const paletteColor_t shadowColors[] = {
+        c540, c541, c542, c553, c554, c555, c554, c553, c542, c541,
+    };
     recolorMenuManiaRenderer(ttt->menuRenderer, //
-                             c500, c555, c111,  // titleBgColor, titleTextColor, textOutlineColor
-                             c333,              // bgColor
-                             c534, c544,        // outerRingColor, innerRingColor
-                             c212, c555,        // rowColor, rowTextColor
+                             c202, c540, c000,  // titleBgColor, titleTextColor, textOutlineColor
+                             c315,              // bgColor
+                             c213, c035,        // outerRingColor, innerRingColor
+                             c000, c555,        // rowColor, rowTextColor
                              shadowColors, ARRAY_SIZE(shadowColors), utttLedMenuColor);
 
     // Initialize the main menu
