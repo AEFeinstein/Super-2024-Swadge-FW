@@ -19,7 +19,7 @@ typedef struct tutorialState tutorialState_t;
  * @param next The new current tutorial step to be checked
  * @param backtrack Whether the activated trigger was a backtracking trigger or not
  */
-typedef void (*tutorialStepCb)(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
+typedef void (*tutorialStepCb)(tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
                                bool backtrack);
 
 /**
