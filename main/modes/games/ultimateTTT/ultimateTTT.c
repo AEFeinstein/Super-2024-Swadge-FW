@@ -189,9 +189,6 @@ static void tttEnterMode(void)
         writeNvs32(tttTutorialKey, ttt->tutorialRead);
     }
 
-    // Initialize p2p
-    p2pInitialize(&ttt->game.p2p, 0x25, tttConCb, tttMsgRxCb, -70);
-
     // Measure the display
     ttt->gameSize    = MIN(TFT_WIDTH, TFT_HEIGHT);
     ttt->cellSize    = ttt->gameSize / 9;
@@ -354,6 +351,9 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (tttMultiStr == label)
         {
+            // Initialize p2p
+            p2pInitialize(&ttt->game.p2p, 0x25, tttConCb, tttMsgRxCb, -70);
+
             ttt->game.singleSystem = false;
             ttt->game.passAndPlay  = false;
             // Show connection UI
@@ -527,6 +527,9 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_RESULT:
         {
+            // Game over, deinitialize p2p just in case
+            p2pDeinit(&ttt->game.p2p);
+
             if (TTR_RECORDS == ttt->lastResult)
             {
                 ttt->bgMenu->title = tttRecordsStr;

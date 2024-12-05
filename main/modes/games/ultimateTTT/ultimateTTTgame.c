@@ -82,12 +82,7 @@ void tttBeginGame(ultimateTTT_t* ttt)
     ttt->showingInstructions = false;
 
     /// Clear any CPU data
-    ttt->game.cpu.state         = TCPU_INACTIVE;
-    ttt->game.cpu.destSubgame.x = 0;
-    ttt->game.cpu.destSubgame.y = 0;
-    ttt->game.cpu.destCell.x    = 0;
-    ttt->game.cpu.destCell.y    = 0;
-    ttt->game.cpu.delayTime     = 0;
+    memset(&ttt->game.cpu, 0, sizeof(ttt->game.cpu));
 
     // Show the game UI
     tttShowUi(TUI_GAME);
