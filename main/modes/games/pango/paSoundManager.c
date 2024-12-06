@@ -83,10 +83,14 @@ void pa_freeSoundManager(paSoundManager_t* self)
     }
 }
 
-void pa_setBgm(paSoundManager_t* self, uint16_t newBgmIndex){
+/*
+    Loads the indexed BGM into memory.
+    Returns true if the BGM was actually changed, otherwise false
+*/
+bool pa_setBgm(paSoundManager_t* self, uint16_t newBgmIndex){
     if (self->currentBgmIndex == newBgmIndex)
     {
-        return;
+        return false;
     }
 
     if (self->currentBgmIndex != PA_BGM_NULL)
@@ -101,9 +105,8 @@ void pa_setBgm(paSoundManager_t* self, uint16_t newBgmIndex){
 
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
         player->loop         = true;
-
-        soundPlayBgm(&(self->currentBgm), MIDI_BGM);
     }
 
     self->currentBgmIndex = newBgmIndex;
+    return true;
 }

@@ -71,6 +71,6 @@ typedef struct
 //==============================================================================
 void pa_initializeSoundManager(paSoundManager_t* self);
 void pa_freeSoundManager(paSoundManager_t* self);
-void pa_setBgm(paSoundManager_t* self, uint16_t newBgmIndex);
+bool pa_setBgm(paSoundManager_t* self, uint16_t newBgmIndex);
 
 #endif

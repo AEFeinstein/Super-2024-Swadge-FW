@@ -713,9 +713,20 @@ void changeStateReadyScreen(pango_t* self)
 
     pa_resetGameDataLeds(&(self->gameData));
 
-    pa_setBgm(&(self->soundManager), 1 + (self->gameData.level >> 2) % 4);
-    soundPlayBgm(&self->soundManager.currentBgm, MIDI_BGM);
+    bool songChanged = pa_setBgm(&(self->soundManager), 1 + (self->gameData.level >> 2) % 4);
 
+    switch(self->gameData.gameState){
+        case PA_ST_DEAD:
+        default:
+            soundPlayBgm(&(self->soundManager.currentBgm), MIDI_BGM);
+            break;
+        case PA_ST_LEVEL_CLEAR:
+            if(songChanged){
+                 soundPlayBgm(&(self->soundManager.currentBgm), MIDI_BGM);
+            }
+            break;
+    }
+    
     self->update = &updateReadyScreen;
 }
 
@@ -823,6 +834,7 @@ void changeStateGame(pango_t* self)
     }
 
     self->tilemap.executeTileSpawnAll = true;
+    self->gameData.gameState  = PA_ST_GAME;
     self->update = &updateGame;
 }
 
@@ -923,6 +935,7 @@ void changeStateDead(pango_t* self)
     soundStop(true);
     soundPlaySfx(&(self->soundManager.sndDie), BZR_STEREO);
 
+    self->gameData.gameState = PA_ST_DEAD;
     self->update = &updateDead;
 }
 
@@ -1035,6 +1048,7 @@ void changeStateLevelClear(pango_t* self)
 
     self->gameData.bonusScore = pa_getLevelClearBonus(self->gameData.levelTime);
 
+    self->gameData.gameState  = PA_ST_LEVEL_CLEAR;
     self->update = &updateLevelClear;
 }
 
@@ -1109,7 +1123,7 @@ void drawLevelClear(font_t* font, paGameData_t* gameData)
 void changeStateGameClear(pango_t* self)
 {
     self->gameData.frameCount = 0;
-    self->gameData.gameState  = PA_ST_GAME;
+    self->gameData.gameState  = PA_ST_GAME_CLEAR;
     self->update              = &updateGameClear;
     pa_resetGameDataLeds(&(self->gameData));
     // soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
@@ -1319,6 +1333,8 @@ void changeStateNameEntry(pango_t* self)
     }
 
     pa_setBgm(&(self->soundManager), PA_BGM_HIGH_SCORE);
+    soundPlayBgm(&(self->soundManager.currentBgm), MIDI_BGM);
+
     self->menuSelection = self->gameData.initials[0];
     self->update        = &updateNameEntry;
 }
