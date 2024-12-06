@@ -320,6 +320,10 @@ void sokoLoadEulerTiles(soko_abs_t* soko)
 // Level loading
 void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
 {
+    if (levelIndex >= SOKO_LEVEL_COUNT)
+    {
+        return;
+    }
     ESP_LOGD(SOKO_TAG, "load bin level %" PRIu16 ", %s", levelIndex, soko->levelNames[levelIndex]);
     soko->state = SKS_INIT;
     size_t fileSize;

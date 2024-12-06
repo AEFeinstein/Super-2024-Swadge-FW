@@ -4,6 +4,8 @@
 #include "soko_game.h"
 #include "soko_gamerules.h"
 #include "soko_save.h"
+#include "sokoHelp.h"
+#include "mainMenu.h"
 
 static void sokoMainLoop(int64_t elapsedUs);
 static void sokoEnterMode(void);
@@ -15,7 +17,10 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
 // strings
 const char sokoModeName[]             = "Hunter's Puzzles";
 static const char sokoPlayGameLabel[] = "Play";
-const char SOKO_TAG[]                 = "SB";
+static const char sokoHelpLabel[]     = "Instructions";
+static const char sokoExitLabel[]     = "Exit";
+
+const char SOKO_TAG[] = "SB";
 
 extern const char key_sk_overworldPos[];
 
@@ -44,7 +49,13 @@ static void sokoEnterMode(void)
 {
     soko = heap_caps_calloc(1, sizeof(soko_abs_t), MALLOC_CAP_SPIRAM);
     // Load a font
-    loadFont("ibm_vga8.font", &soko->ibm, false);
+    loadFont("ibm_vga8.font", &soko->ibm, true);
+    loadFont("rodin_eb.font", &soko->font_rodin, true);
+    makeOutlineFont(&soko->font_rodin, &soko->font_rodin_outline, true);
+    loadFont("righteous_150.font", &soko->font_righteous, true);
+    makeOutlineFont(&soko->font_righteous, &soko->font_righteous_outline, true);
+
+    soko->allSolved = false;
 
     soko->allSolved = false;
 
@@ -106,15 +117,35 @@ static void sokoEnterMode(void)
     soko->eulerTheme.altFloorColor        = c433; // painted tiles color.
 
     // Initialize the menu
-    soko->menu              = initMenu(sokoModeName, sokoMenuCb);
-    soko->menuManiaRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    soko->menu   = initMenu(sokoModeName, sokoMenuCb);
+    soko->bgMenu = initMenu(sokoModeName, NULL);
+    soko->menuManiaRenderer
+        = initMenuManiaRenderer(&soko->font_righteous, &soko->font_righteous_outline, &soko->font_rodin);
+
+    // Color the menu
+    led_t menuColor = {
+        .r = 0xFF,
+        .g = 0xCC,
+        .b = 0x00,
+    };
+    static const paletteColor_t shadowColors[] = {c103, c213, c224, c334, c445, c555, c445, c334, c224, c213};
+    recolorMenuManiaRenderer(soko->menuManiaRenderer, //
+                             c401, c554, c522,        // titleBgColor, titleTextColor, textOutlineColor
+                             c444,                    // bgColor
+                             c433, c334,              // outerRingColor, innerRingColor
+                             c111, c555,              // rowColor, rowTextColor
+                             shadowColors, ARRAY_SIZE(shadowColors), menuColor);
 
     // addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
     addSingleItemToMenu(soko->menu, sokoPlayGameLabel);
+    addSingleItemToMenu(soko->menu, sokoHelpLabel);
+    addSingleItemToMenu(soko->menu, sokoExitLabel);
 
     // Set the mode to menu mode
     soko->screen = SOKO_MENU;
     soko->state  = SKS_INIT;
+    setManiaLedsOn(soko->menuManiaRenderer, true);
+    setManiaDrawRings(soko->menuManiaRenderer, true);
 
     // load up the level list.
     soko->levelFileText = loadTxt("SK_LEVEL_LIST.txt", true);
@@ -135,10 +166,15 @@ static void sokoExitMode(void)
     }
     // Deinitialize the menu
     deinitMenu(soko->menu);
+    deinitMenu(soko->bgMenu);
     deinitMenuManiaRenderer(soko->menuManiaRenderer);
 
     // Free the font
     freeFont(&soko->ibm);
+    freeFont(&soko->font_rodin);
+    freeFont(&soko->font_rodin_outline);
+    freeFont(&soko->font_righteous);
+    freeFont(&soko->font_righteous_outline);
 
     // free the level name file
     freeTxt(soko->levelFileText);
@@ -193,6 +229,17 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
         }
+        else if (sokoHelpLabel == label)
+        {
+            soko->helpIdx = 0;
+            soko->screen  = SOKO_HELP;
+            setManiaLedsOn(soko->menuManiaRenderer, false);
+            setManiaDrawRings(soko->menuManiaRenderer, false);
+        }
+        else if (sokoExitLabel == label)
+        {
+            switchToSwadgeMode(&mainMenuMode);
+        }
     }
 }
 
@@ -217,6 +264,10 @@ static void sokoMainLoop(int64_t elapsedUs)
         }
         case SOKO_LEVELPLAY:
         {
+            // Turn LEDs off
+            led_t offLeds[CONFIG_NUM_LEDS] = {0};
+            setLeds(offLeds, CONFIG_NUM_LEDS);
+
             // pass along to other gameplay, in other file
             //  Always process button events, regardless of control scheme, so the main menu button can be captured
             buttonEvt_t evt = {0};
@@ -236,11 +287,29 @@ static void sokoMainLoop(int64_t elapsedUs)
         }
         case SOKO_LOADNEWLEVEL:
         {
+            // Turn LEDs off
+            led_t offLeds[CONFIG_NUM_LEDS] = {0};
+            setLeds(offLeds, CONFIG_NUM_LEDS);
+
             sokoLoadGameplay(soko, soko->loadNewLevelIndex, soko->loadNewLevelFlag);
             sokoInitNewLevel(soko, soko->currentLevel.gameMode);
             ESP_LOGD(SOKO_TAG, "Go to gameplay");
             soko->loadNewLevelFlag = false; // reset flag.
             soko->screen           = SOKO_LEVELPLAY;
+            break;
+        }
+        case SOKO_HELP:
+        {
+            // Turn LEDs off
+            led_t offLeds[CONFIG_NUM_LEDS] = {0};
+            setLeds(offLeds, CONFIG_NUM_LEDS);
+
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                buttonSokoHelp(soko, &evt);
+            }
+            drawSokoHelp(soko, elapsedUs);
         }
     }
 }

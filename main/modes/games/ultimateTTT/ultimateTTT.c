@@ -492,6 +492,7 @@ void tttShowUi(tttUi_t ui)
     // Assume menu LEDs should be on
     setManiaLedsOn(ttt->menuRenderer, true);
     ttt->menuRenderer->baseLedColor = utttLedMenuColor;
+    setManiaDrawRings(ttt->menuRenderer, true);
 
     // Initialize the new UI
     switch (ttt->ui)
@@ -522,6 +523,7 @@ void tttShowUi(tttUi_t ui)
         {
             // Turn LEDs off for reading
             setManiaLedsOn(ttt->menuRenderer, false);
+            setManiaDrawRings(ttt->menuRenderer, false);
             ttt->bgMenu->title   = tttHowToStr;
             ttt->pageIdx         = 0;
             ttt->arrowBlinkTimer = 0;

@@ -70,6 +70,7 @@ typedef struct
     wsg_t batt[4];                  ///< Images for the battery levels
 
     maniaRing_t rings[2];
+    bool drawRings;
 
     int32_t ledDecayTimer;  ///< Timer to decay LEDs
     int32_t ledExciteTimer; ///< Timer to excite LEDs
@@ -101,6 +102,7 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
 void setManiaLedsOn(menuManiaRenderer_t* renderer, bool ledsOn);
+void setManiaDrawRings(menuManiaRenderer_t* renderer, bool ringsOn);
 void recolorMenuManiaRenderer(menuManiaRenderer_t* renderer, paletteColor_t titleBgColor, paletteColor_t titleTextColor,
                               paletteColor_t textOutlineColor, paletteColor_t bgColor, paletteColor_t outerRingColor,
                               paletteColor_t innerRingColor, paletteColor_t rowColor, paletteColor_t rowTextColor,
