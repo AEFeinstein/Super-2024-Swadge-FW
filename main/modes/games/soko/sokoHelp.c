@@ -34,7 +34,7 @@ static const char boxTitle[]     = "Boxes";
 static const sokoHelpPage_t helpPages[] = {
     {
         .title = sokoModeName,
-        .text  = "You are an Eye and your job is to paint the floors in twenty two rooms. Don't ask questions.",
+        .text  = "You are an Eye. Your job is to paint the floors in twenty two rooms. Don't ask questions.",
     },
     {
         .title = controlTitle,
@@ -42,7 +42,7 @@ static const sokoHelpPage_t helpPages[] = {
     },
     {
         .title = controlTitle,
-        .text  = "When painting a floor, you absolutely MUST NOT step on wet paint. If you do, you won't get paid.",
+        .text  = "When painting a floor, you can't step on wet paint. \nNo returning to a spot you've already been",
     },
     {
         .title = controlTitle,
@@ -51,20 +51,21 @@ static const sokoHelpPage_t helpPages[] = {
     {
         .title = controlTitle,
         .text
-        = "If you make a big mistake, you can press B to reset the entire room. Your boss will probably notice though.",
+        = "If you make a big mistake, you can press B to reset the entire room. Hunter will probably notice though.",
     },
     {
         .title = controlTitle,
         .text = "If you're frustrated and need a break from a room, you can press Start to return to the main hallway.",
+        //progress on the last room you entered is saved when you leave.
     },
     {
         .title = boxTitle,
-        .text  = "Some jerk left orange boxes are on some floors. You can push them around to make sure all the floor "
+        .text  = "Hunter, frustratingly, left orange boxes in some rooms. Push them around to make sure the entire floor "
                  "is painted.",
     },
     {
         .title = boxTitle,
-        .text  = "Purple boxes are like orange boxes, but sticky and gross. In the unlikely event that one is stuck to "
+        .text  = "Purple boxes are like orange boxes, but sticky and gross. In the event that one is stuck to "
                  "you, try scraping it off.",
     },
     {
@@ -74,7 +75,7 @@ static const sokoHelpPage_t helpPages[] = {
     },
     {
         .title = sokoModeName,
-        .text  = "Good luck and get painting!",
+        .text  = "Good luck and get painting! \n\n'I hope you enjoy my puzzles'\n - Hunter",
     },
 };
 
