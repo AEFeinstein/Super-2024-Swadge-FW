@@ -463,10 +463,10 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
             }
         }
     }
-    // drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-    //           ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
-    //           ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-    //           ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+    drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+              ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+              ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+              ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
 }
 
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
@@ -698,6 +698,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
+            bData->gravity = BB_DOWN;
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
@@ -715,6 +716,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
+            bData->gravity = BB_DOWN;
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
@@ -732,6 +734,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
+            bData->gravity = BB_DOWN;
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
@@ -749,6 +752,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
+            bData->gravity = BB_DOWN;
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
@@ -766,6 +770,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
+            bData->gravity = BB_DOWN;
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
@@ -783,6 +788,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
+            bData->gravity = BB_DOWN;
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;

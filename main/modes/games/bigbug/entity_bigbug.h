@@ -43,6 +43,14 @@ typedef enum
     STUCK_HARPOON_DATA,
 } bb_data_type_t;
 
+typedef enum
+{
+    BB_DOWN,
+    BB_LEFT,
+    BB_UP,
+    BB_RIGHT
+} bb_direction_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -78,6 +86,9 @@ typedef struct
 
 typedef struct
 {
+    bool faceLeft;
+    bb_direction_t gravity;
+    uint8_t speed;
     int8_t health;
 } bb_bugData_t;
 

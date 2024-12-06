@@ -903,6 +903,119 @@ void bb_updateMoveLeft(bb_entity_t* self)
 
 void bb_updateBug(bb_entity_t* self)
 {
+    bb_bugData_t* bData = (bb_bugData_t*)self->data;
+    bData->speed++;
+    printf("gravity %d speed %d\n", bData->gravity, bData->speed);
+    if(bData->speed > 10)
+    {
+        bData->gravity = BB_DOWN;
+    }
+
+    switch(bData->gravity)
+    {
+        case BB_DOWN:
+        {
+            self->pos.y +=  bData->speed;
+            break;
+        }
+        case BB_LEFT:
+        {
+            self->pos.x -= bData->speed;
+            break;
+        }
+        case BB_UP:
+        {
+            self->pos.y -= bData->speed;
+            break;
+        }
+        default: //right:
+        {
+            self->pos.x += bData->speed;
+            break;
+        }
+    }
+    bb_hitInfo_t hitInfo = {0};
+    bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+    if (hitInfo.hit == true)
+    {
+        self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
+        self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
+        switch(bData->gravity)
+        {
+            case BB_DOWN:
+            {
+                printf("hitInfo.normal.x %d\n", hitInfo.normal.x);
+                if(hitInfo.normal.x == -1)
+                {
+                    //transition right
+                    bData->gravity = BB_RIGHT;
+                }
+                else if(hitInfo.normal.x == 1)
+                {
+                    //transition left
+                    bData->gravity = BB_LEFT;
+                }
+                else
+                {
+                    self->pos.x += bData->faceLeft * -2 + 1;
+                    bData->speed = 0;
+                }
+                break;
+            }
+            case BB_LEFT:
+            {
+                if(hitInfo.normal.y == -1)
+                {
+                    bData->gravity = BB_UP;
+                }
+                else if(hitInfo.normal.y == 1)
+                {
+                    bData->gravity = BB_DOWN;
+                }
+                else
+                {
+                    self->pos.y -= bData->faceLeft * -2 + 1;
+                    bData->speed = 0;
+
+                }
+                break;
+            }
+            case BB_UP:
+            {
+                if(hitInfo.normal.x == -1)
+                {
+                    bData->gravity = BB_RIGHT;
+                }
+                else if(hitInfo.normal.x == 1)
+                {
+                    bData->gravity = BB_LEFT;
+                }
+                else
+                {
+                    self->pos.x -= bData->faceLeft * -2 + 1;
+                    bData->speed = 0;
+                }
+                break;
+            }
+            default: //right
+            {
+                if(hitInfo.normal.y == -1)
+                {
+                    bData->gravity = BB_DOWN;
+                }
+                else if(hitInfo.normal.y == 1)
+                {
+                    bData->gravity = BB_UP;
+                }
+                else
+                {
+                    self->pos.y -= bData->faceLeft * -2 + 1;
+                    bData->speed = 0;
+                }
+                break;
+            }
+        }
+    }
 }
 
 void bb_updateMenu(bb_entity_t* self)
