@@ -699,10 +699,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
+            bData->walkSpeed = 10 * bb_randomInt(1,5);
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
+            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
 
             entity->cacheable = true;
 
@@ -717,10 +718,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
+            bData->walkSpeed = 10 * bb_randomInt(1,5);
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
+            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
 
             entity->cacheable = true;
 
@@ -735,10 +737,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
+            bData->walkSpeed = 10 * bb_randomInt(1,5);
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
+            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
 
             entity->cacheable = true;
 
@@ -753,10 +756,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
+            bData->walkSpeed = 10 * bb_randomInt(1,5);
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
+            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
 
             entity->cacheable = true;
 
@@ -771,10 +775,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
+            bData->walkSpeed = 10 * bb_randomInt(1,5);
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
+            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
 
             entity->cacheable = true;
 
@@ -789,10 +794,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
+            bData->walkSpeed = 10 * bb_randomInt(1,5);
             bb_setData(entity, bData, BUG_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = bb_randomInt(4, 10);
+            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
 
             entity->cacheable = true;
 

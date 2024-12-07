@@ -89,6 +89,7 @@ typedef struct
     bool faceLeft;
     bb_direction_t gravity;
     uint8_t speed;
+    uint8_t walkSpeed;
     int8_t health;
 } bb_bugData_t;
 
@@ -283,6 +284,7 @@ void bb_updateFarMenu(bb_entity_t* self);
 void bb_updateFarMenuAndUnload(bb_entity_t* self);
 void bb_updateMenuBug(bb_entity_t* self);
 void bb_updateMoveLeft(bb_entity_t* self);
+void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations);
 void bb_updateBug(bb_entity_t* self);
 void bb_updateMenu(bb_entity_t* self);
 void bb_updatePOI(bb_entity_t* self);
