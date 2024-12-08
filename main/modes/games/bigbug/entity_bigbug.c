@@ -911,17 +911,16 @@ void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations)
         self->halfHeight = self->halfWidth;
         self->halfWidth = temp;
     }
-    bb_bugData_t* bData = (bb_bugData_t*) self->data;
+    bb_buData_t* bData = (bb_buData_t*) self->data;
     //keep gravity in range 0 through 3 for down, left, up, right
     bData->gravity = ((bData->gravity + orthogonalRotations) % 4 + 4) % 4;
 }
 
 void bb_updateBug(bb_entity_t* self)
 {
-    bb_bugData_t* bData = (bb_bugData_t*)self->data;
-    if(bData->speed > 20)
+    bb_buData_t* bData = (bb_buData_t*)self->data;
+    if(bData->fallSpeed > 19)
     {
-        bData->speed = 0;
         switch (bData->gravity)
         {
             case BB_LEFT:
@@ -938,31 +937,31 @@ void bb_updateBug(bb_entity_t* self)
         }
         bData->gravity = BB_DOWN;
     }
-    if(bData->speed < 30)
+    if(bData->fallSpeed < 30)
     {
-        bData->speed++;
+        bData->fallSpeed++;
     }
 
     switch(bData->gravity)
     {
         case BB_DOWN:
         {
-            self->pos.y +=  bData->speed;
+            self->pos.y +=  bData->fallSpeed;
             break;
         }
         case BB_LEFT:
         {
-            self->pos.x -= bData->speed;
+            self->pos.x -= bData->fallSpeed;
             break;
         }
         case BB_UP:
         {
-            self->pos.y -= bData->speed;
+            self->pos.y -= bData->fallSpeed;
             break;
         }
         default: //right:
         {
-            self->pos.x += bData->speed;
+            self->pos.x += bData->fallSpeed;
             break;
         }
     }
@@ -970,7 +969,7 @@ void bb_updateBug(bb_entity_t* self)
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
     if (hitInfo.hit == true)
     {
-        bData->speed = 0;
+        bData->fallSpeed = 0;
         switch(bData->gravity)
         {
             case BB_DOWN:
@@ -997,7 +996,7 @@ void bb_updateBug(bb_entity_t* self)
                 else
                 {
                     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
-                    self->pos.x += (bData->faceLeft * -2 + 1) * bData->walkSpeed;
+                    self->pos.x += (bData->faceLeft * -2 + 1) * bData->speed;
                 }
                 self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
                 break;
@@ -1026,7 +1025,7 @@ void bb_updateBug(bb_entity_t* self)
                 else
                 {
                     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
-                    self->pos.y += (bData->faceLeft * -2 + 1) * bData->walkSpeed;
+                    self->pos.y += (bData->faceLeft * -2 + 1) * bData->speed;
                 }
                 self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
                 break;
@@ -1055,7 +1054,7 @@ void bb_updateBug(bb_entity_t* self)
                 else
                 {
                     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
-                    self->pos.x -= (bData->faceLeft * -2 + 1) * bData->walkSpeed;
+                    self->pos.x -= (bData->faceLeft * -2 + 1) * bData->speed;
                 }
                 self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
                 break;
@@ -1084,17 +1083,47 @@ void bb_updateBug(bb_entity_t* self)
                 else
                 {
                     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
-                    self->pos.y -= (bData->faceLeft * -2 + 1) * bData->walkSpeed;
+                    self->pos.y -= (bData->faceLeft * -2 + 1) * bData->speed;
                 }
                 self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
                 break;
             }
         }
     }
-    // else if(bData->gravity == BB_DOWN && bData->speed == 1)
-    // {
-    //     bb_rotateBug(self, bData->faceLeft * -2 + 1);
-    // }
+    else if(bData->fallSpeed == 18)
+    {
+        bb_rotateBug(self, bData->faceLeft * -2 + 1);
+        switch(bData->gravity)
+        {
+            case BB_DOWN:
+                self->pos.y += abs(self->halfWidth - self->halfHeight) + bData->fallSpeed;
+                break;
+            case BB_LEFT:
+                self->pos.x -= abs(self->halfWidth - self->halfHeight) + bData->fallSpeed;
+                break;
+            case BB_UP:
+                self->pos.y -= abs(self->halfWidth - self->halfHeight) + bData->fallSpeed;
+                break;
+            default://BB_RIGHT
+                self->pos.x += abs(self->halfWidth - self->halfHeight) + bData->fallSpeed;
+                break;
+        }
+    }
+}
+
+void bb_updateBuggo(bb_entity_t* self)
+{
+    bb_buggoData_t* bData = (bb_buggoData_t*) self->data;
+    vec_t previousPos = self->pos;
+    self->pos = addVec2d(self->pos, mulVec2d(bData->direction, self->gameData->elapsedUs >> 11));
+    bb_hitInfo_t hitInfo = {0};
+    bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+    if (hitInfo.hit == true)
+    {
+        self->pos = previousPos;
+        bData->direction = rotateVec2d(divVec2d((vec_t){0,bData->speed*200},800), bb_randomInt(0,359));
+        bData->faceLeft = bData->direction.x < 0;
+    }
 }
 
 void bb_updateMenu(bb_entity_t* self)
@@ -1742,45 +1771,149 @@ void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 
     drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y, rpData->radius, c415);
     drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y, rpData->radius * 3 / 4, c415);
+}
 
+void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    uint8_t brightness = 5;
+    int16_t xOff       = (self->pos.x >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS)
+                    - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+    if (entityManager->playerEntity != NULL)
+    {
+        vec_t lookup
+            = {.x = (self->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
+                    + self->gameData->tilemap.headlampWsg.w,
+                .y = (self->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
+                    + self->gameData->tilemap.headlampWsg.h};
+
+        lookup = divVec2d(lookup, 2);
+        if (self->pos.y > 5120)
+        {
+            if (self->pos.y > 30720)
+            {
+                brightness = 0;
+            }
+            else
+            {
+                brightness = (30720 - self->pos.y) / 5120;
+            }
+        }
+
+        if (GARBOTNIK_DATA == self->gameData->entityManager.playerEntity->dataType)
+        {
+            brightness = bb_midgroundLighting(
+                &(self->gameData->tilemap.headlampWsg), &lookup,
+                &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x),
+                brightness);
+        }
+    }
+    if(self->dataType == BU_DATA)
+    {
+        bb_buData_t* bData = (bb_buData_t*)self->data;
+        switch(bData->gravity)
+        {
+            case BB_DOWN:
+                drawWsg(&entityManager->sprites[self->spriteIndex]
+                            .frames[brightness + self->currentAnimationFrame * 6],
+                        xOff, yOff, bData->faceLeft, false, 0);
+                break;
+            case BB_LEFT:
+                drawWsg(&entityManager->sprites[self->spriteIndex]
+                            .frames[brightness + self->currentAnimationFrame * 6],
+                        xOff, yOff, bData->faceLeft, false, 90);
+                break;
+            case BB_UP:
+                drawWsg(&entityManager->sprites[self->spriteIndex]
+                            .frames[brightness + self->currentAnimationFrame * 6],
+                        xOff, yOff, bData->faceLeft, false, 180);
+                break;
+            default: //BB_RIGHT
+                drawWsg(&entityManager->sprites[self->spriteIndex]
+                            .frames[brightness + self->currentAnimationFrame * 6],
+                        xOff, yOff, bData->faceLeft, false, 270);
+                break;
+        }
+    }
+    else if(self->dataType == BUGGO_DATA)
+    {
+        bb_buggoData_t* bData = (bb_buggoData_t*)self->data;
+        drawWsg(&entityManager->sprites[self->spriteIndex]
+                            .frames[brightness + self->currentAnimationFrame * 6],
+                        xOff, yOff, bData->faceLeft, false, 0);
+    }
 }
 
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
-    bb_bugData_t* bData        = (bb_bugData_t*)other->data;
-    // pause the harpoon animation as the tip will no longer even be rendered.
-    self->paused = true;
-
-    // Bug got stabbed
-    bData->health -= 20;
-    if (bData->health < 0)
+    if(other->dataType == EGG_DATA)
     {
-        midiPlayer_t* sfx = soundGetPlayerSfx();
-        midiPlayerReset(sfx);
-        soundPlaySfx(&self->gameData->sfxDirt, 0);
-
-        bData->health               = 0;
-        other->paused               = true;
-        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
-        physData->vel               = divVec2d(pData->vel, 2);
-        physData->bounceNumerator   = 2; // 66% bounce
-        physData->bounceDenominator = 3;
-        bb_setData(other, physData, PHYSICS_DATA);
-        other->updateFunction = bb_updatePhysicsObject;
+        //pop that egg
+        int32_t tile_i = (other->pos.x>>DECIMAL_BITS)/32;
+        int32_t tile_j = (other->pos.y>>DECIMAL_BITS)/32;
+        self->gameData->tilemap.fgTiles[tile_i][tile_j].health = 0;
+        bb_crumbleDirt(other, 2, tile_i, tile_j, true);
+        //destroy this harpoon
+        bb_destroyEntity(self, false);
     }
-    vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
-    bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
-    shData->parent                = other;
-    shData->offset                = subVec2d(self->pos, other->pos);
-    shData->floatVel              = normVecFl2d(floatVel);
-    bb_setData(self, shData, STUCK_HARPOON_DATA);
+    else
+    {
+        bb_bugData_t* bData = (bb_bugData_t*)other->data;
+        // pause the harpoon animation as the tip will no longer even be rendered.
+        self->paused = true;
 
-    bb_clearCollisions(self, false);
+        // Bug got stabbed
+        bData->health -= 20;
+        if (bData->health < 0)
+        {
+            if(self->dataType == BU_DATA)
+            {
+                bb_buData_t* buData = (bb_buData_t*)self->data;
+                switch (buData->gravity)
+                {
+                    case BB_LEFT:
+                        bb_rotateBug(self, -1);
+                        break;
+                    case BB_UP:
+                        bb_rotateBug(self, 2);
+                        break;
+                    case BB_RIGHT:
+                        bb_rotateBug(self, 1);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            other->drawFunction = NULL;
 
-    self->updateFunction = bb_updateStuckHarpoon;
-    self->drawFunction   = bb_drawStuckHarpoon;
+            midiPlayer_t* sfx = soundGetPlayerSfx();
+            midiPlayerReset(sfx);
+            soundPlaySfx(&self->gameData->sfxDirt, 0);
+
+            bData->health               = 0;
+            other->paused               = true;
+            bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+            physData->vel               = divVec2d(pData->vel, 2);
+            physData->bounceNumerator   = 2; // 66% bounce
+            physData->bounceDenominator = 3;
+            bb_setData(other, physData, PHYSICS_DATA);
+            other->updateFunction = bb_updatePhysicsObject;
+        }
+        vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
+        bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
+        shData->parent                = other;
+        shData->offset                = subVec2d(self->pos, other->pos);
+        shData->floatVel              = normVecFl2d(floatVel);
+        bb_setData(self, shData, STUCK_HARPOON_DATA);
+
+        bb_clearCollisions(self, false);
+
+        self->updateFunction = bb_updateStuckHarpoon;
+        self->drawFunction   = bb_drawStuckHarpoon;
+    }
 }
 
 void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)

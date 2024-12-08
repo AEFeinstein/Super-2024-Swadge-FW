@@ -403,25 +403,17 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
                 }
             }
 
-            int32_t midgroundLighting = 0;
             if (GARBOTNIK_DATA == currentEntity->gameData->entityManager.playerEntity->dataType)
             {
-                midgroundLighting = bb_midgroundLighting(
+                brightness = bb_midgroundLighting(
                     &(currentEntity->gameData->tilemap.headlampWsg), &lookup,
                     &(((bb_garbotnikData_t*)currentEntity->gameData->entityManager.playerEntity->data)->yaw.x),
                     brightness);
             }
-
-            drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
-                               .frames[midgroundLighting + currentEntity->currentAnimationFrame * 6],
-                          xOff, yOff);
         }
-        else
-        {
-            drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
-                               .frames[brightness + currentEntity->currentAnimationFrame * 6],
-                          xOff, yOff);
-        }
+        drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
+                            .frames[brightness + currentEntity->currentAnimationFrame * 6],
+                        xOff, yOff);
     }
     else
     {
@@ -463,10 +455,10 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
             }
         }
     }
-    drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-              ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
-              ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-              ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+    // drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+    //           ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+    //           ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+    //           ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
 }
 
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
@@ -667,6 +659,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(others, (void*)BUGGO);
             push(others, (void*)BUGGY);
             push(others, (void*)BUTT);
+            push(others, (void*)EGG);
 
             bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionHarpoon};
@@ -688,22 +681,25 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case EGG:
         {
-            bb_eggData_t* eData = heap_caps_calloc(1, sizeof(bb_eggData_t), MALLOC_CAP_SPIRAM);
-            entity->data        = eData;
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_eggData_t), MALLOC_CAP_SPIRAM), EGG_DATA);
+
+            entity->halfWidth  = 140;
+            entity->halfHeight = 165;
 
             entity->drawFunction = &bb_drawEgg;
             break;
         }
         case BU:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
-            bData->walkSpeed = 10 * bb_randomInt(1,5);
-            bb_setData(entity, bData, BUG_DATA);
+            bData->speed = 4 * bb_randomInt(3,6);
+            bData->faceLeft = bb_randomInt(0,1);
+            bb_setData(entity, bData, BU_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
+            entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
 
@@ -711,18 +707,20 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 104;
 
             entity->updateFunction = &bb_updateBug;
+            entity->drawFunction = &bb_drawBug;
             break;
         }
         case BUG:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
-            bData->walkSpeed = 10 * bb_randomInt(1,5);
-            bb_setData(entity, bData, BUG_DATA);
+            bData->speed = 4 * bb_randomInt(1,5);
+            bData->faceLeft = bb_randomInt(0,1);
+            bb_setData(entity, bData, BU_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
+            entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
 
@@ -730,56 +728,62 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 48;
 
             entity->updateFunction = &bb_updateBug;
+            entity->drawFunction = &bb_drawBug;
             break;
         }
         case BUGG:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_buggoData_t* bData = heap_caps_calloc(1, sizeof(bb_buggoData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
-            bData->gravity = BB_DOWN;
-            bData->walkSpeed = 10 * bb_randomInt(1,5);
-            bb_setData(entity, bData, BUG_DATA);
+            bData->speed = 4 * bb_randomInt(1,5);
+            bData->direction = rotateVec2d(divVec2d((vec_t){0,bData->speed*200},800), bb_randomInt(0,359));
+            bData->faceLeft = bData->direction.x < 0;
+            bb_setData(entity, bData, BUGGO_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
+            entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
 
             entity->halfWidth  = 120;
             entity->halfHeight = 104;
 
-            entity->updateFunction = &bb_updateBug;
+            entity->updateFunction = &bb_updateBuggo;
+            entity->drawFunction = &bb_drawBug;
             break;
         }
         case BUGGO:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_buggoData_t* bData = heap_caps_calloc(1, sizeof(bb_buggoData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
-            bData->gravity = BB_DOWN;
-            bData->walkSpeed = 10 * bb_randomInt(1,5);
-            bb_setData(entity, bData, BUG_DATA);
+            bData->speed = 4 * bb_randomInt(3,4);
+            bData->direction = rotateVec2d(divVec2d((vec_t){0,bData->speed*200},800), bb_randomInt(0,359));
+            bData->faceLeft = bData->direction.x < 0;
+            bb_setData(entity, bData, BUGGO_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
+            entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
 
             entity->halfWidth  = 144;
             entity->halfHeight = 144;
 
-            entity->updateFunction = &bb_updateBug;
+            entity->updateFunction = &bb_updateBuggo;
+            entity->drawFunction = &bb_drawBug;
             break;
         }
         case BUGGY:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
-            bData->walkSpeed = 10 * bb_randomInt(1,5);
-            bb_setData(entity, bData, BUG_DATA);
+            bData->speed = 4 * bb_randomInt(1,5);
+            bData->faceLeft = bb_randomInt(0,1);
+            bb_setData(entity, bData, BU_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
+            entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
 
@@ -787,18 +791,20 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 64;
 
             entity->updateFunction = &bb_updateBug;
+            entity->drawFunction = &bb_drawBug;
             break;
         }
         case BUTT:
         {
-            bb_bugData_t* bData = heap_caps_calloc(1, sizeof(bb_bugData_t), MALLOC_CAP_SPIRAM);
+            bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
             bData->health       = 100;
             bData->gravity = BB_DOWN;
-            bData->walkSpeed = 10 * bb_randomInt(1,5);
-            bb_setData(entity, bData, BUG_DATA);
+            bData->speed = 4 * bb_randomInt(1,5);
+            bData->faceLeft = bb_randomInt(0,1);
+            bb_setData(entity, bData, BU_DATA);
 
             entity->hasLighting                 = true;
-            entity->gameFramesPerAnimationFrame = (90 - bData->walkSpeed) / 10;
+            entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
 
@@ -806,6 +812,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 88;
 
             entity->updateFunction = &bb_updateBug;
+            entity->drawFunction = &bb_drawBug;
             break;
         }
         case BB_MENU:

@@ -24,7 +24,8 @@ typedef enum
 {
     NULL_DATA,
     ATTACHMENT_ARM_DATA,
-    BUG_DATA,
+    BU_DATA,
+    BUGGO_DATA,
     CAR_ACTIVE_DATA,
     DEATH_DUMPSTER_DATA,
     DIALOGUE_DATA,
@@ -84,14 +85,34 @@ typedef struct
     vecFl_t floatVel;
 } bb_stuckHarpoonData_t;
 
-typedef struct
+typedef struct//parent class
 {
-    bool faceLeft;
-    bb_direction_t gravity;
-    uint8_t speed;
-    uint8_t walkSpeed;
-    int8_t health;
+    bool faceLeft;//flip the sprite if true
+    uint8_t speed;//randomized on creation. Used for walking or flying.
+    int8_t health;//bug dies at negative numbers
 } bb_bugData_t;
+
+typedef struct//child class
+{
+    bool faceLeft;//flip the sprite if true
+    uint8_t speed;//randomized on creation. Used for walking or flying.
+    int8_t health;//bug dies at negative numbers
+    //-----------------------------------------------
+    bb_direction_t gravity;//to walk on the walls & ceiling: local gravity switches
+    uint8_t fallSpeed;//increments in free fall
+} bb_buData_t;
+
+typedef struct//child class
+{
+    bool faceLeft;//flip the sprite if true
+    uint8_t walkSpeed;//randomized on creation. Used for walking or flying.
+    int8_t health;//bug dies at negative numbers
+    //-----------------------------------------------
+    bool trackingPlayer;//toggles between moving toward the player and moving in a random direction.
+    vec_t direction;//buggo moves in the direction vector.
+    uint8_t speed;
+} bb_buggoData_t;
+
 
 typedef struct
 {
@@ -286,6 +307,7 @@ void bb_updateMenuBug(bb_entity_t* self);
 void bb_updateMoveLeft(bb_entity_t* self);
 void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations);
 void bb_updateBug(bb_entity_t* self);
+void bb_updateBuggo(bb_entity_t* self);
 void bb_updateMenu(bb_entity_t* self);
 void bb_updatePOI(bb_entity_t* self);
 void bb_updateFlame(bb_entity_t* self);
@@ -310,6 +332,7 @@ void bb_drawGameOver(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawDeathDumpster(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
