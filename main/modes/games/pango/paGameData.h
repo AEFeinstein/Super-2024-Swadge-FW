@@ -83,5 +83,7 @@ void pa_updateLedsShowHighScores(paGameData_t* gameData);
 void pa_updateLedsLevelClear(paGameData_t* gameData);
 void pa_updateLedsGameClear(paGameData_t* gameData);
 void pa_updateLedsGameOver(paGameData_t* gameData);
+void pa_updateLedsInGame(paGameData_t* gameData);
+void pa_fadeLeds(paGameData_t* gameData);
 
 #endif

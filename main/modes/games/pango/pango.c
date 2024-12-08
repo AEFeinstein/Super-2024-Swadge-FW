@@ -515,6 +515,7 @@ void updateGame(pango_t* self, int64_t elapsedUs)
                                ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
                                ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
             self->gameData.firstBonusItemDispensed = true;
+            self->gameData.leds[0].b = 0xFF;
         }
 
         if (!self->gameData.secondBonusItemDispensed
@@ -524,10 +525,13 @@ void updateGame(pango_t* self, int64_t elapsedUs)
                                ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
                                ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
             self->gameData.secondBonusItemDispensed = true;
+            self->gameData.leds[0].b = 0xFF;
         }
 
         pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
     }
+
+    pa_updateLedsInGame(&(self->gameData));
 }
 
 void drawPangoHud(font_t* font, paGameData_t* gameData)
@@ -711,8 +715,6 @@ void changeStateReadyScreen(pango_t* self)
 {
     self->gameData.frameCount = 0;
 
-    pa_resetGameDataLeds(&(self->gameData));
-
     bool songChanged = pa_setBgm(&(self->soundManager), 1 + (self->gameData.level >> 2) % 4);
 
     switch(self->gameData.gameState){
@@ -740,6 +742,7 @@ void updateReadyScreen(pango_t* self, int64_t elapsedUs)
     }
 
     drawReadyScreen(&(self->font), &(self->gameData));
+    pa_fadeLeds(&(self->gameData));
 }
 
 void drawReadyScreen(font_t* font, paGameData_t* gameData)
@@ -979,6 +982,8 @@ void updateDead(pango_t* self, int64_t elapsedUs)
     {
         drawText(&(self->font), c555, "Out of blocks!", 63, 128);
     }
+
+    pa_fadeLeds(&(self->gameData));
 }
 
 void updateGameOver(pango_t* self, int64_t elapsedUs)
@@ -1068,6 +1073,8 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
             
             if(self->gameData.frameCount % 2){
                 soundPlaySfx(&(self->soundManager.sndTally), 0);
+                //self->gameData.leds[0].r = (esp_random() % 2) ? 0xEF : 0;
+                //self->gameData.leds[0].g = (esp_random() % 2) ? 0xEF : 0;
             }
         }
         else if (self->gameData.frameCount % 120 == 0)
@@ -1088,6 +1095,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
     pa_drawEntities(&(self->entityManager));
     drawPangoHud(&(self->font), &(self->gameData));
     drawLevelClear(&(self->font), &(self->gameData));
+    //pa_updateLedsInGame(&(self->gameData));
     pa_updateLedsLevelClear(&(self->gameData));
 }
 

@@ -63,6 +63,9 @@ void pa_scorePoints(paGameData_t* gameData, uint16_t points)
     {
         gameData->lives++;
         gameData->extraLifeScore += 10000; //(gameData->extraLifeScore + 2000);
+        gameData->leds[0].r = 0xFF;
+        gameData->leds[0].g = 0xFF;
+        gameData->leds[0].b = 0xFF;
         soundPlaySfx(&(gameData->soundManager->snd1up), MIDI_SFX);
     }
 }
@@ -189,6 +192,78 @@ void pa_updateLedsGameClear(paGameData_t* gameData)
             if (gameData->leds[i].b > 0)
             {
                 gameData->leds[i].b -= 0x10;
+            }
+        }
+    }
+    setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}
+
+void pa_updateLedsInGame(paGameData_t* gameData){
+    if (((gameData->frameCount) % 4) == 0)
+    {
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            if (gameData->leds[i].r > 0xF)
+            {
+                gameData->leds[i].r -= 0x10;
+
+                if((gameData->leds[i].r >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
+                    gameData->leds[i+1].r = 0xF0;
+                }
+            } else {
+                gameData->leds[i].r = 0;
+            }
+
+            if (gameData->leds[i].g > 0xF)
+            {
+                gameData->leds[i].g -= 0x10;
+
+                if((gameData->leds[i].g >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
+                    gameData->leds[i+1].g = 0xF0;
+                }
+            } else {
+                gameData->leds[i].g = 0;
+            }
+
+            if (gameData->leds[i].b > 0xF)
+            {
+                gameData->leds[i].b -= 0x10;
+
+                if((gameData->leds[i].b >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
+                gameData->leds[i+1].b = 0xF0;
+                }
+            } else {
+                gameData->leds[i].b = 0;
+            }
+        }
+    }
+    setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}
+
+void pa_fadeLeds(paGameData_t* gameData){
+    if (((gameData->frameCount) % 10) == 0)
+    {
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            if (gameData->leds[i].r > 0xF)
+            {
+                gameData->leds[i].r -= 0x10;
+            } else {
+                gameData->leds[i].r = 0;
+            }
+
+            if (gameData->leds[i].g > 0xF)
+            {
+                gameData->leds[i].g -= 0x10;
+            } else {
+                gameData->leds[i].g = 0;
+            }
+
+            if (gameData->leds[i].b > 0xF)
+            {
+                gameData->leds[i].b -= 0x10;
+            } else {
+                gameData->leds[i].b = 0;
             }
         }
     }
