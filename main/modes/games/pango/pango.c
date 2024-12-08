@@ -1064,8 +1064,13 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
 
+     if(self->gameData.frameCount % 30 == 0){
+        self->gameData.leds[0].g = (esp_random() % 2) ? 0xD0 : 0;
+        self->gameData.leds[0].b = (esp_random() % 2) ? 0xD0 : 0;
+    }
+
     if (self->gameData.frameCount > 100)
-    {
+    {   
         if (self->gameData.bonusScore > 0)
         {
             pa_scorePoints(&(pango->gameData), 100);
@@ -1073,8 +1078,6 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
             
             if(self->gameData.frameCount % 2){
                 soundPlaySfx(&(self->soundManager.sndTally), 0);
-                //self->gameData.leds[0].r = (esp_random() % 2) ? 0xEF : 0;
-                //self->gameData.leds[0].g = (esp_random() % 2) ? 0xEF : 0;
             }
         }
         else if (self->gameData.frameCount % 120 == 0)
@@ -1095,8 +1098,8 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
     pa_drawEntities(&(self->entityManager));
     drawPangoHud(&(self->font), &(self->gameData));
     drawLevelClear(&(self->font), &(self->gameData));
-    //pa_updateLedsInGame(&(self->gameData));
-    pa_updateLedsLevelClear(&(self->gameData));
+    pa_updateLedsInGame(&(self->gameData));
+    //pa_updateLedsLevelClear(&(self->gameData));
 }
 
 void drawLevelClear(font_t* font, paGameData_t* gameData)
@@ -1990,4 +1993,6 @@ void updateAttractMode(pango_t* self, int64_t elapsedUs)
         drawText(&(self->font), c000, "- Press START button -", 21, 209);
         drawText(&(self->font), c555, "- Press START button -", 20, 208);
     }
+
+    pa_updateLedsTitleScreen(self);
 }
