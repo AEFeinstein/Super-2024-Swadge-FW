@@ -4,11 +4,11 @@
 // it through eventually.
 typedef enum
 {
+    SKD_NONE,
     SKD_UP,
     SKD_DOWN,
     SKD_RIGHT,
     SKD_LEFT,
-    SKD_NONE
 } sokoDirection_t;
 
 typedef struct

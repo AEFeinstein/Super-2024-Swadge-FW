@@ -30,18 +30,19 @@ static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char tttName[]          = "Ultimate TTT";
-static const char tttMultiStr[]      = "Wireless Connect";
-static const char tttMultiShortStr[] = "Connect";
-static const char tttSingleStr[]     = "Single Player";
-static const char tttDiffEasyStr[]   = "Easy";
-static const char tttDiffMediumStr[] = "Medium";
-static const char tttDiffHardStr[]   = "Hard";
-static const char tttMarkerSelStr[]  = "Marker Select";
-static const char tttHowToStr[]      = "How To Play";
-static const char tttResultStr[]     = "Result";
-static const char tttRecordsStr[]    = "Records";
-static const char tttExit[]          = "Exit";
+static const char tttName[]           = "Ultimate TTT";
+static const char tttMultiStr[]       = "Wireless Connect";
+static const char tttPassAndPlayStr[] = "Pass and Play";
+static const char tttMultiShortStr[]  = "Connect";
+static const char tttSingleStr[]      = "Single Player";
+static const char tttDiffEasyStr[]    = "Easy";
+static const char tttDiffMediumStr[]  = "Medium";
+static const char tttDiffHardStr[]    = "Hard";
+static const char tttMarkerSelStr[]   = "Marker Select";
+static const char tttHowToStr[]       = "How To Play";
+static const char tttResultStr[]      = "Result";
+static const char tttRecordsStr[]     = "Records";
+static const char tttExit[]           = "Exit";
 
 // NVS keys
 const char tttWinKey[]      = "ttt_win";
@@ -50,6 +51,12 @@ const char tttDrawKey[]     = "ttt_draw";
 const char tttMarkerKey[]   = "ttt_marker";
 const char tttTutorialKey[] = "ttt_tutor";
 const char tttUnlockKey[]   = "ttt_unlock";
+
+static const led_t utttLedMenuColor = {
+    .r = 0x66,
+    .g = 0x00,
+    .b = 0x66,
+};
 
 /**
  * Marker names to load WSGs
@@ -120,10 +127,21 @@ static void tttEnterMode(void)
 
     // Initialize a menu renderer
     ttt->menuRenderer = initMenuManiaRenderer(&ttt->font_righteous, NULL, &ttt->font_rodin);
+    // Color the menu like Poe
+    static const paletteColor_t shadowColors[] = {
+        c540, c541, c542, c553, c554, c555, c554, c553, c542, c541,
+    };
+    recolorMenuManiaRenderer(ttt->menuRenderer, //
+                             c202, c540, c000,  // titleBgColor, titleTextColor, textOutlineColor
+                             c315,              // bgColor
+                             c213, c035,        // outerRingColor, innerRingColor
+                             c000, c555,        // rowColor, rowTextColor
+                             shadowColors, ARRAY_SIZE(shadowColors), utttLedMenuColor);
 
     // Initialize the main menu
     ttt->menu = initMenu(tttName, tttMenuCb);
     addSingleItemToMenu(ttt->menu, tttMultiStr);
+    addSingleItemToMenu(ttt->menu, tttPassAndPlayStr);
 
     ttt->menu = startSubMenu(ttt->menu, tttSingleStr);
     addSingleItemToMenu(ttt->menu, tttDiffEasyStr);
@@ -172,9 +190,6 @@ static void tttEnterMode(void)
         ttt->tutorialRead = false;
         writeNvs32(tttTutorialKey, ttt->tutorialRead);
     }
-
-    // Initialize p2p
-    p2pInitialize(&ttt->game.p2p, 0x25, tttConCb, tttMsgRxCb, -70);
 
     // Measure the display
     ttt->gameSize    = MIN(TFT_WIDTH, TFT_HEIGHT);
@@ -338,29 +353,43 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (tttMultiStr == label)
         {
-            ttt->game.singlePlayer = false;
+            // Initialize p2p
+            p2pInitialize(&ttt->game.p2p, 0x25, tttConCb, tttMsgRxCb, -70);
+
+            ttt->game.singleSystem = false;
+            ttt->game.passAndPlay  = false;
             // Show connection UI
             tttShowUi(TUI_CONNECTING);
             // Start multiplayer
             p2pStartConnection(&ttt->game.p2p);
         }
+        else if (tttPassAndPlayStr == label)
+        {
+            ttt->game.singleSystem = true;
+            ttt->game.passAndPlay  = true;
+            tttBeginGame(ttt);
+            tttShowUi(TUI_GAME);
+        }
         else if (tttDiffEasyStr == label)
         {
-            ttt->game.singlePlayer   = true;
+            ttt->game.singleSystem   = true;
+            ttt->game.passAndPlay    = false;
             ttt->game.cpu.difficulty = TDIFF_EASY;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);
         }
         else if (tttDiffMediumStr == label)
         {
-            ttt->game.singlePlayer   = true;
+            ttt->game.singleSystem   = true;
+            ttt->game.passAndPlay    = false;
             ttt->game.cpu.difficulty = TDIFF_MEDIUM;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);
         }
         else if (tttDiffHardStr == label)
         {
-            ttt->game.singlePlayer   = true;
+            ttt->game.singleSystem   = true;
+            ttt->game.passAndPlay    = false;
             ttt->game.cpu.difficulty = TDIFF_HARD;
             tttBeginGame(ttt);
             tttShowUi(TUI_GAME);
@@ -462,6 +491,8 @@ void tttShowUi(tttUi_t ui)
 
     // Assume menu LEDs should be on
     setManiaLedsOn(ttt->menuRenderer, true);
+    ttt->menuRenderer->baseLedColor = utttLedMenuColor;
+    setManiaDrawRings(ttt->menuRenderer, true);
 
     // Initialize the new UI
     switch (ttt->ui)
@@ -492,6 +523,7 @@ void tttShowUi(tttUi_t ui)
         {
             // Turn LEDs off for reading
             setManiaLedsOn(ttt->menuRenderer, false);
+            setManiaDrawRings(ttt->menuRenderer, false);
             ttt->bgMenu->title   = tttHowToStr;
             ttt->pageIdx         = 0;
             ttt->arrowBlinkTimer = 0;
@@ -499,6 +531,9 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_RESULT:
         {
+            // Game over, deinitialize p2p just in case
+            p2pDeinit(&ttt->game.p2p);
+
             if (TTR_RECORDS == ttt->lastResult)
             {
                 ttt->bgMenu->title = tttRecordsStr;

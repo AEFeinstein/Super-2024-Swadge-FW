@@ -75,8 +75,9 @@ static const int32_t sparkleIndices[] = {
  * @brief Initialize the game state
  *
  * @param t48 The game data to initialize
+ * @param tiltControls true to use tilt controls, false to use D-Pad
  */
-void t48_gameInit(t48_t* t48)
+void t48_gameInit(t48_t* t48, bool tiltControls)
 {
     // Clear the board
     memset(t48->board, 0, sizeof(t48->board));
@@ -92,6 +93,7 @@ void t48_gameInit(t48_t* t48)
 
     // Accept input
     t48->acceptGameInput = true;
+    t48->tiltControls    = tiltControls;
 }
 
 /**
@@ -141,7 +143,8 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
     drawText(&t48->font, c555, textBuffer, T48_SIDE_MARGIN, 4);
 
     // Check if anything is animating
-    bool animationInProgress = false;
+    t48->cellsAnimating    = false;
+    bool sparklesAnimating = false;
 
     // Draw new tile third
     if (t48->nTile.active)
@@ -166,7 +169,7 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
             // Draw the tile(s) for this cell
             if (t48_drawCellTiles(t48, x, y, elapsedUs))
             {
-                animationInProgress = true;
+                t48->cellsAnimating = true;
             }
             else if (cell->drawnTiles[1].value)
             {
@@ -199,13 +202,13 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
             // Draw sparkles for this cell
             if (t48_drawSparkles(&t48->board[x][y], elapsedUs))
             {
-                animationInProgress = true;
+                sparklesAnimating = true;
             }
         }
     }
 
     // When the animation is done
-    if (!t48->acceptGameInput && !animationInProgress)
+    if (!t48->acceptGameInput && !(t48->cellsAnimating || sparklesAnimating))
     {
         // Check if game has been won
         if (!t48->alreadyWon && t48_checkWin(t48))

@@ -205,7 +205,16 @@
     #define GPIO_BTN_LEFT  GPIO_NUM_2
     #define GPIO_BTN_RIGHT GPIO_NUM_1
 
-#elif defined(CONFIG_HARDWARE_HOTDOG)
+#elif defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION)
+    #define GPIO_SAO_1 GPIO_NUM_40
+    #define GPIO_SAO_2 GPIO_NUM_42
+
+    #define GPIO_BTN_UP    GPIO_NUM_0
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_2
+    #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+#elif defined(CONFIG_HARDWARE_HOTDOG_PROTO)
     #define GPIO_SAO_1 GPIO_NUM_40
     #define GPIO_SAO_2 GPIO_NUM_42
 

@@ -853,6 +853,7 @@ void setSequencerScreen(sequencerScreen_t screen)
     {
         // Turn off LEDs for help
         setManiaLedsOn(sv->menuRenderer, false);
+        setManiaDrawRings(sv->menuRenderer, false);
         led_t leds[CONFIG_NUM_LEDS] = {0};
         setLeds(leds, CONFIG_NUM_LEDS);
     }
@@ -860,5 +861,6 @@ void setSequencerScreen(sequencerScreen_t screen)
     {
         // Turn on LEDs for other screens
         setManiaLedsOn(sv->menuRenderer, true);
+        setManiaDrawRings(sv->menuRenderer, true);
     }
 }

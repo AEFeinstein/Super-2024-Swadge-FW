@@ -507,8 +507,8 @@ static int32_t midiSumOscillators(midiPlayer_t* player)
         playingVoices &= ~(1 << voiceIdx);
         midiVoice_t* voice = &(voices[voiceIdx]);
 
-        if (!(states[voiceIdx].on || states->held || states->sustenuto || states->attack || states->decay
-              || states->sustain || states->release)
+        if (!(states->on || states->held || states->sustenuto || states->attack || states->decay || states->sustain
+              || states->release)
             || voice->timbre->type == SAMPLE)
         {
             continue;
@@ -1241,6 +1241,17 @@ void midiPlayerReset(midiPlayer_t* player)
 
     deinitMidiParser(&player->reader);
     player->paused = true;
+}
+
+void midiPlayerResetNewSong(midiPlayer_t* player)
+{
+    midiAllSoundOff(player);
+
+    // Set all the relevant bits to 1, meaning not in use
+    player->percSpecialStates = 0b00111111111111111111111111111111; // 0x4fffffff
+
+    player->sampleCount    = 0;
+    player->eventAvailable = false;
 }
 
 int32_t midiPlayerStep(midiPlayer_t* player)
@@ -2487,6 +2498,7 @@ void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx)
     if (globalPlayers)
     {
         midiPause(&globalPlayers[songIdx], true);
+        midiPlayerResetNewSong(&globalPlayers[songIdx]);
         globalPlayers[songIdx].sampleCount = 0;
         midiSetFile(&globalPlayers[songIdx], song);
         midiPause(&globalPlayers[songIdx], false);
