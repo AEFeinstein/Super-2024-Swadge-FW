@@ -722,7 +722,7 @@ void changeStateReadyScreen(pango_t* self)
             break;
         case PA_ST_LEVEL_CLEAR:
             if(songChanged){
-                 soundPlayBgm(&(self->soundManager.currentBgm), MIDI_BGM);
+                soundPlayBgm(&(self->soundManager.currentBgm), MIDI_BGM);
             }
             break;
     }
@@ -1048,6 +1048,9 @@ void changeStateLevelClear(pango_t* self)
 
     self->gameData.bonusScore = pa_getLevelClearBonus(self->gameData.levelTime);
 
+    //globalMidiPlayerStop(false);
+    //soundPlaySfx(&(self->soundManager.sndLevelClearA), MIDI_SFX);
+
     self->gameData.gameState  = PA_ST_LEVEL_CLEAR;
     self->update = &updateLevelClear;
 }
@@ -1062,7 +1065,10 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
         {
             pa_scorePoints(&(pango->gameData), 100);
             self->gameData.bonusScore -= 100;
-            soundPlaySfx(&(self->soundManager.sndTally), 0);
+            
+            if(self->gameData.frameCount % 2){
+                soundPlaySfx(&(self->soundManager.sndTally), 0);
+            }
         }
         else if (self->gameData.frameCount % 120 == 0)
         {

@@ -24,7 +24,7 @@ void pa_initializeSoundManager(paSoundManager_t* self)
     loadMidiFile("sndJump1.mid", &self->sndJump1, true);
     loadMidiFile("sndJump2.mid", &self->sndJump2, true);
     loadMidiFile("sndJump3.mid", &self->sndJump3, true);
-    loadMidiFile("sndLevelClearA.mid", &self->sndLevelClearA, true);
+    loadMidiFile("Pango_Level Clear.mid", &self->sndLevelClearA, true);
     loadMidiFile("sndLevelClearB.mid", &self->sndLevelClearB, true);
     loadMidiFile("sndLevelClearC.mid", &self->sndLevelClearC, true);
     loadMidiFile("sndLevelClearD.mid", &self->sndLevelClearD, true);
