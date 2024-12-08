@@ -150,6 +150,9 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     initGlobalMidiPlayer();
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
 
+    // Disable channel 15
+    player->channels[MIDI_CHANNEL_COUNT - 1].ignore = true;
+
     // Load the MIDI file
     char midiName[64] = {0};
     snprintf(midiName, sizeof(midiName) - 2, "%s.mid", song->fName);
