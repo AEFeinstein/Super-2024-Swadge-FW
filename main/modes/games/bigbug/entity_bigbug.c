@@ -591,8 +591,63 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // ESP_LOGD(BB_TAG,"Garbotnik X: %d\n", self->pos);
     // //keep the player in bounds
-    self->pos.x          = self->pos.x < 2560 ? 2560 : self->pos.x;
-    self->pos.x          = self->pos.x > 35216 ? 35216 : self->pos.x;
+    self->pos.x = self->pos.x < 2560 ? 2560 : self->pos.x;
+    self->pos.x = self->pos.x > 35216 ? 35216 : self->pos.x;
+
+    // tow cable stuff
+    // unhook far towed entities
+    node_t* current = gData->towedEntities.first;
+    while (current != NULL)
+    {
+        bb_entity_t* curEntity = (bb_entity_t*)current->val;
+        // if more than 100px away
+        if ((uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> DECIMAL_BITS,
+                                         (curEntity->pos.y - self->pos.y) >> DECIMAL_BITS})
+            > 10000)
+        {
+            node_t* next = current->next;
+            removeEntry(&gData->towedEntities, current);
+            current = next;
+        }
+        else
+        {
+            current = current->next;
+        }
+    }
+
+    // if b button down
+    if ((self->gameData->btnState & 0b10000) >> 4)
+    {
+        int16_t best_i     = -1;     // negative 1 means no valid candidates found
+        uint16_t best_dist = 0xFFFF; // the distance of the best_i
+        for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+        {
+            bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
+            // if it is a bug and it is dead i.e. PHYSICS_DATA
+            if (curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13 && curEntity->dataType == PHYSICS_DATA)
+            {
+                uint16_t dist = (uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> DECIMAL_BITS,
+                                                             (curEntity->pos.y - self->pos.y) >> DECIMAL_BITS});
+                // if the bug is within 50px of garbotnik
+                if (dist < 2500 && dist < best_dist)
+                {
+                    // new best candidate found!
+                    best_i    = i;
+                    best_dist = dist;
+                }
+            }
+        }
+        if (best_i != -1)
+        {
+            push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
+        }
+        else
+        {
+            // unhook entities;
+            printf("FINISH ME!!!\n");
+        }
+    }
+
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos, &hitInfo);
 
@@ -678,42 +733,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         //         push(self->gameData->pleaseCheck, (void*)val);
         //     }
         // }
-    }
-
-    // tow cable if b button down
-    if ((self->gameData->btnState & 0b10000) >> 4)
-    {
-        printf("button pressed\n");
-        int16_t best_i     = -1;     // negative 1 means no valid candidates found
-        uint16_t best_dist = 0xFFFF; // the distance of the best_i
-        for (uint8_t i = 0; i < MAX_ENTITIES; i++)
-        {
-            bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
-            // if it is a bug and it is dead i.e. PHYSICS_DATA
-            if (curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13 && curEntity->dataType == PHYSICS_DATA)
-            {
-                uint16_t dist = (uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> DECIMAL_BITS,
-                                                             (curEntity->pos.y - self->pos.y) >> DECIMAL_BITS});
-                printf("dist: %d\n", dist);
-                // if the bug is within 50px of garbotnik
-                if (dist < 2500 && dist < best_dist)
-                {
-                    // new best candidate found!
-                    best_i    = i;
-                    best_dist = dist;
-                }
-            }
-        }
-        if (best_i != -1)
-        {
-            printf("towed an entity\n");
-            push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
-        }
-        else
-        {
-            // unhook entities;
-            printf("FINISH ME!!!\n");
-        }
     }
 }
 
