@@ -24,24 +24,29 @@ static void shMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static const shSong_t shSongList[] = {
     {
-        .name   = "GShip Credits",
-        .artist = "Newmajoe",
-        .fName  = "g_cred",
-    },
-    {
-        .name   = "Hotdog Credits",
-        .artist = "Newmajoe",
-        .fName  = "sh_credit",
-    },
-    {
-        .name   = "SH Revenge",
-        .artist = "Livingson Rampey",
-        .fName  = "revenge",
+        .name   = "Let It Bleed",
+        .artist = "TheManPF",
+        .fName  = "sh_bleed",
     },
     {
         .name   = "Chowa Grove",
-        .artist = "",
+        .artist = "???",
         .fName  = "sh_cgrove",
+    },
+    {
+        .name   = "Chowa Race",
+        .artist = "???",
+        .fName  = "sh_crace",
+    },
+    {
+        .name   = "Credits",
+        .artist = "newmajoe",
+        .fName  = "sh_credits",
+    },
+    {
+        .name   = "The Dance of the Cremulons",
+        .artist = "???",
+        .fName  = "sh_cremulons",
     },
     {
         .name   = "The Devil's Lullaby",
@@ -49,19 +54,24 @@ static const shSong_t shSongList[] = {
         .fName  = "sh_devils",
     },
     {
+        .name   = "Swadge City Ocean 1989",
+        .artist = "Carrie",
+        .fName  = "sh_ocean",
+    },
+    {
         .name   = "Pango",
-        .artist = "",
+        .artist = "???",
         .fName  = "sh_pango",
     },
     {
-        .name   = "Swadge Demo",
-        .artist = "JNWake",
-        .fName  = "sh_demo",
+        .name   = "Revenge",
+        .artist = "Rampey",
+        .fName  = "sh_revenge",
     },
     {
-        .name   = "Let it Bleed",
-        .artist = "TheManPF",
-        .fName  = "sh_bleed",
+        .name   = "Wake Man Stage",
+        .artist = "JnWake",
+        .fName  = "sh_wakeman",
     },
 };
 
