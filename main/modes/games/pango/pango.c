@@ -269,9 +269,6 @@ void pangoEnterMode(void)
     pango->tilemap.entityManager    = &(pango->entityManager);
     pango->tilemap.tileSpawnEnabled = true;
 
-    pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
-    pa_generateMaze(&(pango->tilemap));
-
     setFrameRateUs(16666);
 
     pango->menu = NULL;
