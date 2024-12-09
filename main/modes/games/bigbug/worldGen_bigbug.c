@@ -15,15 +15,15 @@
 //==============================================================================
 void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
 {
-    //There are 6 handcrafted levels that get chosen randomly.
-    uint8_t level = bb_randomInt(0,5);
+    // There are 6 handcrafted levels that get chosen randomly.
+    uint8_t level = bb_randomInt(0, 5);
     wsg_t levelWsg; ///< A graphic representing the level data where tiles are pixels.
 
     char wsg_name[13];
     snprintf(wsg_name, sizeof(wsg_name), "level%d.wsg", level);
     loadWsgInplace(wsg_name, &levelWsg, true, bb_decodeSpace,
-                bb_hsd); // levelWsg only needed for this brief scope.
-    
+                   bb_hsd); // levelWsg only needed for this brief scope.
+
     int8_t midgroundHealhValues[] = {1, 4, 10};
 
     // Set all the tiles
@@ -64,29 +64,29 @@ void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
                     tilemap->fgTiles[i][j].health = 100;
                     break;
                 }
-                default://case 0
+                default: // case 0
                 {
                     // blue value used for washing machines, cars
                     switch (rgbCol & 255)
                     {
                         case 51:
                         {
-                            tilemap->fgTiles[i][j].embed  = CAR_EMBED;
+                            tilemap->fgTiles[i][j].embed = CAR_EMBED;
                             break;
                         }
                         case 102:
                         {
-                            tilemap->fgTiles[i][j].embed  = CAR_EMBED;
+                            tilemap->fgTiles[i][j].embed = CAR_EMBED;
                             break;
                         }
                         case 153:
                         {
-                            tilemap->fgTiles[i][j].embed  = WASHING_MACHINE_EMBED;
+                            tilemap->fgTiles[i][j].embed = WASHING_MACHINE_EMBED;
                             break;
                         }
                         default:
                         {
-                            tilemap->fgTiles[i][j].embed  = NOTHING_EMBED;
+                            tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                             break;
                         }
                     }
@@ -95,28 +95,27 @@ void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
             }
 
             // green value used for midground tiles
-            if(((rgbCol >> 8) & 255) == 51)
+            if (((rgbCol >> 8) & 255) == 51)
             {
-                tilemap->mgTiles[i][j].health = tilemap->fgTiles[i][j].health == 0 ? midgroundHealhValues[bb_randomInt(0, 2)]
-                                                                                       : tilemap->fgTiles[i][j].health;
+                tilemap->mgTiles[i][j].health = tilemap->fgTiles[i][j].health == 0
+                                                    ? midgroundHealhValues[bb_randomInt(0, 2)]
+                                                    : tilemap->fgTiles[i][j].health;
             }
 
-            //blue channel is also for enemy density where there are foreground tiles.
+            // blue channel is also for enemy density where there are foreground tiles.
             if (tilemap->fgTiles[i][j].health > 0)
             {
-                if(bb_randomInt(0,999) < 15 && i > 20 && i < 52)
+                if (bb_randomInt(0, 999) < 15 && i > 20 && i < 52)
                 {
                     tilemap->fgTiles[i][j].embed = SKELETON_EMBED;
                 }
-                else if(bb_randomInt(0,99) <  (((rgbCol & 255)/51)*20))
+                else if (bb_randomInt(0, 99) < (((rgbCol & 255) / 51) * 20))
                 {
                     tilemap->fgTiles[i][j].embed = EGG_EMBED;
                 }
             }
         }
     }
-
-
 
     tilemap->fgTiles[TILE_FIELD_WIDTH / 2 + 2][0].embed = EGG_EMBED; // tutorial egg
 

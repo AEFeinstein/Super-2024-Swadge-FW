@@ -161,12 +161,12 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     carActiveSprite->originY     = 15;
 
     bb_sprite_t* skeletonSprite = bb_loadSprite("skeleton", 1, 6, &entityManager->sprites[BB_SKELETON]);
-    skeletonSprite->originX = 14;
-    skeletonSprite->originY = 14;
+    skeletonSprite->originX     = 14;
+    skeletonSprite->originY     = 14;
 
     bb_sprite_t* fuelSprite = bb_loadSprite("fuel", 5, 1, &entityManager->sprites[BB_FUEL]);
-    fuelSprite->originX = 7;
-    fuelSprite->originY = 5;
+    fuelSprite->originX     = 7;
+    fuelSprite->originY     = 5;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -412,8 +412,8 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
             }
         }
         drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex]
-                            .frames[brightness + currentEntity->currentAnimationFrame * 6],
-                        xOff, yOff);
+                           .frames[brightness + currentEntity->currentAnimationFrame * 6],
+                      xOff, yOff);
     }
     else
     {
@@ -594,6 +594,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             gData->numHarpoons        = 250;
             gData->fuel  = 1000 * 60 * 3; // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes.
             gData->yaw.x = -1;            // So he starts off facing left away from the tutorial egg.
+            memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
             // create sequential numbers of all phrase indices
             for (int16_t i = 0; i < arraySize; i++)
@@ -692,10 +693,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BU:
         {
             bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
-            bData->health       = 100;
-            bData->gravity = BB_DOWN;
-            bData->speed = 4 * bb_randomInt(3,6);
-            bData->faceLeft = bb_randomInt(0,1);
+            bData->health      = 100;
+            bData->gravity     = BB_DOWN;
+            bData->speed       = 4 * bb_randomInt(3, 6);
+            bData->faceLeft    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->hasLighting                 = true;
@@ -707,16 +708,16 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 104;
 
             entity->updateFunction = &bb_updateBug;
-            entity->drawFunction = &bb_drawBug;
+            entity->drawFunction   = &bb_drawBug;
             break;
         }
         case BUG:
         {
             bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
-            bData->health       = 100;
-            bData->gravity = BB_DOWN;
-            bData->speed = 4 * bb_randomInt(1,5);
-            bData->faceLeft = bb_randomInt(0,1);
+            bData->health      = 100;
+            bData->gravity     = BB_DOWN;
+            bData->speed       = 4 * bb_randomInt(1, 5);
+            bData->faceLeft    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->hasLighting                 = true;
@@ -728,16 +729,16 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 48;
 
             entity->updateFunction = &bb_updateBug;
-            entity->drawFunction = &bb_drawBug;
+            entity->drawFunction   = &bb_drawBug;
             break;
         }
         case BUGG:
         {
             bb_buggoData_t* bData = heap_caps_calloc(1, sizeof(bb_buggoData_t), MALLOC_CAP_SPIRAM);
-            bData->health       = 100;
-            bData->speed = 4 * bb_randomInt(1,5);
-            bData->direction = rotateVec2d(divVec2d((vec_t){0,bData->speed*200},800), bb_randomInt(0,359));
-            bData->faceLeft = bData->direction.x < 0;
+            bData->health         = 100;
+            bData->speed          = 4 * bb_randomInt(1, 5);
+            bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
+            bData->faceLeft       = bData->direction.x < 0;
             bb_setData(entity, bData, BUGGO_DATA);
 
             entity->hasLighting                 = true;
@@ -749,16 +750,16 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 104;
 
             entity->updateFunction = &bb_updateBuggo;
-            entity->drawFunction = &bb_drawBug;
+            entity->drawFunction   = &bb_drawBug;
             break;
         }
         case BUGGO:
         {
             bb_buggoData_t* bData = heap_caps_calloc(1, sizeof(bb_buggoData_t), MALLOC_CAP_SPIRAM);
-            bData->health       = 100;
-            bData->speed = 4 * bb_randomInt(3,4);
-            bData->direction = rotateVec2d(divVec2d((vec_t){0,bData->speed*200},800), bb_randomInt(0,359));
-            bData->faceLeft = bData->direction.x < 0;
+            bData->health         = 100;
+            bData->speed          = 4 * bb_randomInt(3, 4);
+            bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
+            bData->faceLeft       = bData->direction.x < 0;
             bb_setData(entity, bData, BUGGO_DATA);
 
             entity->hasLighting                 = true;
@@ -770,16 +771,16 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 144;
 
             entity->updateFunction = &bb_updateBuggo;
-            entity->drawFunction = &bb_drawBug;
+            entity->drawFunction   = &bb_drawBug;
             break;
         }
         case BUGGY:
         {
             bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
-            bData->health       = 100;
-            bData->gravity = BB_DOWN;
-            bData->speed = 4 * bb_randomInt(1,5);
-            bData->faceLeft = bb_randomInt(0,1);
+            bData->health      = 100;
+            bData->gravity     = BB_DOWN;
+            bData->speed       = 4 * bb_randomInt(1, 5);
+            bData->faceLeft    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->hasLighting                 = true;
@@ -791,16 +792,16 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 64;
 
             entity->updateFunction = &bb_updateBug;
-            entity->drawFunction = &bb_drawBug;
+            entity->drawFunction   = &bb_drawBug;
             break;
         }
         case BUTT:
         {
             bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
-            bData->health       = 100;
-            bData->gravity = BB_DOWN;
-            bData->speed = 4 * bb_randomInt(1,5);
-            bData->faceLeft = bb_randomInt(0,1);
+            bData->health      = 100;
+            bData->gravity     = BB_DOWN;
+            bData->speed       = 4 * bb_randomInt(1, 5);
+            bData->faceLeft    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->hasLighting                 = true;
@@ -812,7 +813,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight = 88;
 
             entity->updateFunction = &bb_updateBug;
-            entity->drawFunction = &bb_drawBug;
+            entity->drawFunction   = &bb_drawBug;
             break;
         }
         case BB_MENU:
@@ -932,7 +933,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_DeathDumpsterData_t* ddData = heap_caps_calloc(1, sizeof(bb_DeathDumpsterData_t), MALLOC_CAP_SPIRAM);
 
-            ddData->loaded = false;//the wsg is not loaded
+            ddData->loaded = false; // the wsg is not loaded
             bb_setData(entity, ddData, DEATH_DUMPSTER_DATA);
 
             entity->drawFunction = &bb_drawDeathDumpster;
@@ -940,7 +941,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_SKELETON:
         {
-            entity->hasLighting = true;
+            entity->hasLighting  = true;
             entity->drawFunction = &bb_drawBasicEmbed;
             break;
         }
@@ -958,12 +959,13 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_RADAR_PING:
         {
-            bb_radarPingData_t* rpData = (bb_radarPingData_t*) heap_caps_calloc(1, sizeof(bb_radarPingData_t), MALLOC_CAP_SPIRAM);
+            bb_radarPingData_t* rpData
+                = (bb_radarPingData_t*)heap_caps_calloc(1, sizeof(bb_radarPingData_t), MALLOC_CAP_SPIRAM);
             rpData->timer = 500;
             bb_setData(entity, rpData, RADAR_PING_DATA);
-            
+
             entity->updateFunction = &bb_updateRadarPing;
-            entity->drawFunction = &bb_drawRadarPing;
+            entity->drawFunction   = &bb_drawRadarPing;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

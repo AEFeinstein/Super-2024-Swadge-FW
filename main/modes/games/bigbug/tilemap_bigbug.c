@@ -281,61 +281,86 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
 
                 // Figure out which midground tile quadrants are worth drawing
                 // to cut down on overdraw
-                
-                
-                
-                if(tilemap->mgTiles[i][j].health > 0)
+                if (tilemap->mgTiles[i][j].health > 0)
                 {
-                    //Just don't draw it if it is on the very edge, because I am lazy to handle those cases.
-                    if(i && (i != TILE_FIELD_WIDTH - 1) && j && (j != TILE_FIELD_HEIGHT - 1))
+                    // Just don't draw it if it is on the very edge, because I am lazy to handle those cases.
+                    if (i && (i != TILE_FIELD_WIDTH - 1) && j && (j != TILE_FIELD_HEIGHT - 1))
                     {
-                        //drawMidground variable explained
-                        //0b00001000 means draw top    left  mg
-                        //0b00000100 means draw top    right mg
-                        //0b00000010 means draw bottom left  mg
-                        //0b00000001 means draw bottom right mg
+                        // drawMidground variable explained
+                        // 0b00001000 means draw top    left  mg
+                        // 0b00000100 means draw top    right mg
+                        // 0b00000010 means draw bottom left  mg
+                        // 0b00000001 means draw bottom right mg
                         uint8_t drawMidground = 0;
-                        if(tilemap->fgTiles[i][j].health > 0)//if there is fg
+                        if (tilemap->fgTiles[i][j].health > 0) // if there is fg
                         {
-                            //top left stuff
+                            // top left stuff
                             drawMidground |= ((
-                                //mg going left & fg isn't
-                                ((tilemap->mgTiles[i-1][j].health > 0) && (tilemap->fgTiles[i-1][j].health == 0)) ||
-                                //mg going up & fg isn't
-                                ((tilemap->mgTiles[i][j-1].health > 0) && (tilemap->fgTiles[i][j-1].health == 0)) ||
-                                //mg going diagonal and fg isn't at diagonal
-                                ((tilemap->mgTiles[i-1][j].health > 0) && (tilemap->mgTiles[i][j-1].health > 0) && (tilemap->mgTiles[i-1][j-1].health > 0) && (tilemap->fgTiles[i-1][j-1].health == 0)))
-                                << 3);// set the 3rd bit
+                                                  // mg going left & fg isn't
+                                                  ((tilemap->mgTiles[i - 1][j].health > 0)
+                                                   && (tilemap->fgTiles[i - 1][j].health == 0))
+                                                  ||
+                                                  // mg going up & fg isn't
+                                                  ((tilemap->mgTiles[i][j - 1].health > 0)
+                                                   && (tilemap->fgTiles[i][j - 1].health == 0))
+                                                  ||
+                                                  // mg going diagonal and fg isn't at diagonal
+                                                  ((tilemap->mgTiles[i - 1][j].health > 0)
+                                                   && (tilemap->mgTiles[i][j - 1].health > 0)
+                                                   && (tilemap->mgTiles[i - 1][j - 1].health > 0)
+                                                   && (tilemap->fgTiles[i - 1][j - 1].health == 0)))
+                                              << 3); // set the 3rd bit
 
-                            //top right stuff
+                            // top right stuff
                             drawMidground |= ((
-                                //mg going right & fg isn't
-                                ((tilemap->mgTiles[i+1][j].health > 0) && (tilemap->fgTiles[i+1][j].health == 0)) ||
-                                //mg going up & fg isn't
-                                ((tilemap->mgTiles[i][j-1].health > 0) && (tilemap->fgTiles[i][j-1].health == 0)) ||
-                                //mg going diagonal and fg isn't at diagonal
-                                ((tilemap->mgTiles[i+1][j].health > 0) && (tilemap->mgTiles[i][j-1].health > 0) && (tilemap->mgTiles[i+1][j-1].health > 0) && (tilemap->fgTiles[i+1][j-1].health == 0)))
-                                << 2);// set the 2nd bit
+                                                  // mg going right & fg isn't
+                                                  ((tilemap->mgTiles[i + 1][j].health > 0)
+                                                   && (tilemap->fgTiles[i + 1][j].health == 0))
+                                                  ||
+                                                  // mg going up & fg isn't
+                                                  ((tilemap->mgTiles[i][j - 1].health > 0)
+                                                   && (tilemap->fgTiles[i][j - 1].health == 0))
+                                                  ||
+                                                  // mg going diagonal and fg isn't at diagonal
+                                                  ((tilemap->mgTiles[i + 1][j].health > 0)
+                                                   && (tilemap->mgTiles[i][j - 1].health > 0)
+                                                   && (tilemap->mgTiles[i + 1][j - 1].health > 0)
+                                                   && (tilemap->fgTiles[i + 1][j - 1].health == 0)))
+                                              << 2); // set the 2nd bit
 
-                            //bottom left stuff
+                            // bottom left stuff
                             drawMidground |= ((
-                                //mg going left & fg isn't
-                                ((tilemap->mgTiles[i-1][j].health > 0) && (tilemap->fgTiles[i-1][j].health == 0)) ||
-                                //mg going down & fg isn't
-                                ((tilemap->mgTiles[i][j+1].health > 0) && (tilemap->fgTiles[i][j+1].health == 0)) ||
-                                //mg going diagonal and fg isn't at diagonal
-                                ((tilemap->mgTiles[i-1][j].health > 0) && (tilemap->mgTiles[i][j+1].health > 0) && (tilemap->mgTiles[i-1][j+1].health > 0) && (tilemap->fgTiles[i-1][j+1].health == 0)))
-                                << 1);// set the 1st bit
+                                                  // mg going left & fg isn't
+                                                  ((tilemap->mgTiles[i - 1][j].health > 0)
+                                                   && (tilemap->fgTiles[i - 1][j].health == 0))
+                                                  ||
+                                                  // mg going down & fg isn't
+                                                  ((tilemap->mgTiles[i][j + 1].health > 0)
+                                                   && (tilemap->fgTiles[i][j + 1].health == 0))
+                                                  ||
+                                                  // mg going diagonal and fg isn't at diagonal
+                                                  ((tilemap->mgTiles[i - 1][j].health > 0)
+                                                   && (tilemap->mgTiles[i][j + 1].health > 0)
+                                                   && (tilemap->mgTiles[i - 1][j + 1].health > 0)
+                                                   && (tilemap->fgTiles[i - 1][j + 1].health == 0)))
+                                              << 1); // set the 1st bit
 
-                            //bottom right stuff
+                            // bottom right stuff
                             drawMidground |= ((
-                                //mg going right & fg isn't
-                                ((tilemap->mgTiles[i+1][j].health > 0) && (tilemap->fgTiles[i+1][j].health == 0)) ||
-                                //mg going down & fg isn't
-                                ((tilemap->mgTiles[i][j+1].health > 0) && (tilemap->fgTiles[i][j+1].health == 0)) ||
-                                //mg going diagonal and fg isn't at diagonal
-                                ((tilemap->mgTiles[i+1][j].health > 0) && (tilemap->mgTiles[i][j+1].health > 0) && (tilemap->mgTiles[i+1][j+1].health > 0) && (tilemap->fgTiles[i+1][j+1].health == 0)))
-                                << 0);// set the 0th bit
+                                                  // mg going right & fg isn't
+                                                  ((tilemap->mgTiles[i + 1][j].health > 0)
+                                                   && (tilemap->fgTiles[i + 1][j].health == 0))
+                                                  ||
+                                                  // mg going down & fg isn't
+                                                  ((tilemap->mgTiles[i][j + 1].health > 0)
+                                                   && (tilemap->fgTiles[i][j + 1].health == 0))
+                                                  ||
+                                                  // mg going diagonal and fg isn't at diagonal
+                                                  ((tilemap->mgTiles[i + 1][j].health > 0)
+                                                   && (tilemap->mgTiles[i][j + 1].health > 0)
+                                                   && (tilemap->mgTiles[i + 1][j + 1].health > 0)
+                                                   && (tilemap->fgTiles[i + 1][j + 1].health == 0)))
+                                              << 0); // set the 0th bit
                         }
                         else
                         {
@@ -348,34 +373,34 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         // sprite_idx LURD order.
                         int8_t sprite_idx
                             = 8 * ((i - 1 < 0) ? 0 : (tilemap->mgTiles[i - 1][j].health > 0))
-                            + 4 * ((j - 1 < 0) ? 0 : (tilemap->mgTiles[i][j - 1].health > 0))
-                            + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : tilemap->mgTiles[i + 1][j].health > 0)
-                            + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : tilemap->mgTiles[i][j + 1].health > 0);
+                              + 4 * ((j - 1 < 0) ? 0 : (tilemap->mgTiles[i][j - 1].health > 0))
+                              + 2 * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0 : tilemap->mgTiles[i + 1][j].health > 0)
+                              + 1 * ((j + 1 > TILE_FIELD_HEIGHT - 1) ? 0 : tilemap->mgTiles[i][j + 1].health > 0);
                         // corner_info represents up_left, up_right, down_left, down_right dirt presence (remember >0 is
                         // dirt).
                         int8_t corner_info
                             = 8
-                                * ((i - 1 < 0)   ? 0
-                                    : (j - 1 < 0) ? 0
-                                                : (tilemap->mgTiles[i - 1][j - 1].health > 0))
-                            + 4
+                                  * ((i - 1 < 0)   ? 0
+                                     : (j - 1 < 0) ? 0
+                                                   : (tilemap->mgTiles[i - 1][j - 1].health > 0))
+                              + 4
                                     * ((i + 1 > TILE_FIELD_WIDTH - 1) ? 0
-                                    : (j - 1 < 0)                  ? 0
-                                                                    : tilemap->mgTiles[i + 1][j - 1].health > 0)
-                            + 2
+                                       : (j - 1 < 0)                  ? 0
+                                                                      : tilemap->mgTiles[i + 1][j - 1].health > 0)
+                              + 2
                                     * ((i - 1 < 0)                       ? 0
-                                    : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
-                                                                        : tilemap->mgTiles[i - 1][j + 1].health > 0)
-                            + 1
+                                       : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
+                                                                         : tilemap->mgTiles[i - 1][j + 1].health > 0)
+                              + 1
                                     * ((i + 1 > TILE_FIELD_WIDTH - 1)    ? 0
-                                    : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
-                                                                        : tilemap->mgTiles[i + 1][j + 1].health > 0);
+                                       : (j + 1 > TILE_FIELD_HEIGHT - 1) ? 0
+                                                                         : tilemap->mgTiles[i + 1][j + 1].health > 0);
 
                         vec_t lookup = {tilePos.x + 8 - (garbotnikDrawPos->x + 18) + tilemap->headlampWsg.w,
                                         tilePos.y + 8 - (garbotnikDrawPos->y + 17) + tilemap->headlampWsg.h};
-                        lookup     = divVec2d(lookup, 2);
+                        lookup       = divVec2d(lookup, 2);
 
-                        if(drawMidground & 0b00001000)
+                        if (drawMidground & 0b00001000)
                         {
                             // Top Left
                             // 0 11xx 1xxx
@@ -383,13 +408,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             // 8 01xx xxxx
                             // 12 00xx xxxx
                             // 16 11xx 0xxx
-                                                    // vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + 16 + tilemap->headlampWsg.w / 2,
+                            // vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + 16 + tilemap->headlampWsg.w / 2,
                             //                 tilePos.y + 8 - garbotnikDrawPos->y + 17 + tilemap->headlampWsg.h / 2};
                             // ESP_LOGD(BB_TAG,"lookup: %d\n",lookup.x);
-                            
 
                             brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                            5 - (j > 25 ? 25 : j) / 5);
+                                                              5 - (j > 25 ? 25 : j) / 5);
 
                             switch (sprite_idx & 0b1100)
                             {
@@ -398,10 +422,12 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     switch (corner_info & 0b1000)
                                     {
                                         case 0b1000: // 0
-                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 0], tilePos.x, tilePos.y);
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 0], tilePos.x,
+                                                          tilePos.y);
                                             break;
                                         default: // 0b0000 16
-                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 16], tilePos.x, tilePos.y);
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 16], tilePos.x,
+                                                          tilePos.y);
                                             break;
                                     }
                                     break;
@@ -422,12 +448,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     break;
                                 }
                             }
-
                         }
-                        
+
                         lookup.x += 8;
 
-                        if(drawMidground & 0b000000100)
+                        if (drawMidground & 0b000000100)
                         {
                             // Top Right
                             // 1 x11x x1xx
@@ -436,7 +461,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             // 13 x00x xxxx
                             // 17 x11x x0xx
                             brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                            5 - (j > 25 ? 25 : j) / 5);
+                                                              5 - (j > 25 ? 25 : j) / 5);
 
                             switch (sprite_idx & 0b110)
                             {
@@ -446,14 +471,14 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     {
                                         case 0b0100: // 1
                                         {
-                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 1], tilePos.x + HALF_TILE,
-                                                        tilePos.y);
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 1],
+                                                          tilePos.x + HALF_TILE, tilePos.y);
                                             break;
                                         }
                                         default: // 0b0000 17
                                         {
-                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 17], tilePos.x + HALF_TILE,
-                                                        tilePos.y);
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 17],
+                                                          tilePos.x + HALF_TILE, tilePos.y);
                                             break;
                                         }
                                     }
@@ -462,28 +487,28 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 case 0b010: // 5
                                 {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 5], tilePos.x + HALF_TILE,
-                                                tilePos.y);
+                                                  tilePos.y);
                                     break;
                                 }
                                 case 0b100: // 9
                                 {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 9], tilePos.x + HALF_TILE,
-                                                tilePos.y);
+                                                  tilePos.y);
                                     break;
                                 }
                                 default: // 0b0000:13
                                 {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 13], tilePos.x + HALF_TILE,
-                                                tilePos.y);
+                                                  tilePos.y);
                                     break;
                                 }
                             }
                         }
-                        
+
                         lookup.x -= 8;
                         lookup.y += 8;
 
-                        if(drawMidground & 0b00000010)
+                        if (drawMidground & 0b00000010)
                         {
                             // Bottom Left
                             // 2 1xx1 xx1x
@@ -492,7 +517,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             // 14 0xx0 xxxx
                             // 18 1xx1 xx0x
                             brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                            5 - (j > 25 ? 25 : j) / 5);
+                                                              5 - (j > 25 ? 25 : j) / 5);
 
                             switch (sprite_idx & 0b1001)
                             {
@@ -503,13 +528,13 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                         case 0b0010: // 2
                                         {
                                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 2], tilePos.x,
-                                                        tilePos.y + HALF_TILE);
+                                                          tilePos.y + HALF_TILE);
                                             break;
                                         }
                                         default: // 0b0000 18
                                         {
                                             drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 18], tilePos.x,
-                                                        tilePos.y + HALF_TILE);
+                                                          tilePos.y + HALF_TILE);
                                             break;
                                         }
                                     }
@@ -518,26 +543,26 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 case 0b1000: // 6
                                 {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 6], tilePos.x,
-                                                tilePos.y + HALF_TILE);
+                                                  tilePos.y + HALF_TILE);
                                     break;
                                 }
                                 case 0b0001: // 10
                                 {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 10], tilePos.x,
-                                                tilePos.y + HALF_TILE);
+                                                  tilePos.y + HALF_TILE);
                                     break;
                                 }
                                 default: // 0b0000:14
                                 {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 14], tilePos.x,
-                                                tilePos.y + HALF_TILE);
+                                                  tilePos.y + HALF_TILE);
                                     break;
                                 }
                             }
                         }
 
                         lookup.x += 8;
-                        if(drawMidground & 0b00000001)
+                        if (drawMidground & 0b00000001)
                         {
                             // Bottom Right
                             // 3 xx11 xxx1
@@ -546,7 +571,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             // 15 xx00 xxxx
                             // 19 xx11 xxx0
                             brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                            5 - (j > 25 ? 25 : j) / 5);
+                                                              5 - (j > 25 ? 25 : j) / 5);
 
                             switch (sprite_idx & 0b0011)
                             {
@@ -556,14 +581,14 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     {
                                         case 0b1: // 3
                                         {
-                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 3], tilePos.x + HALF_TILE,
-                                                        tilePos.y + HALF_TILE);
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 3],
+                                                          tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
                                             break;
                                         }
                                         default: // 0b0000 19
                                         {
-                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 19], tilePos.x + HALF_TILE,
-                                                        tilePos.y + HALF_TILE);
+                                            drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 19],
+                                                          tilePos.x + HALF_TILE, tilePos.y + HALF_TILE);
                                             break;
                                         }
                                     }
@@ -572,19 +597,19 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 case 0b10: // 7
                                 {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 7], tilePos.x + HALF_TILE,
-                                                tilePos.y + HALF_TILE);
+                                                  tilePos.y + HALF_TILE);
                                     break;
                                 }
                                 case 0b01: // 11
                                 {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 11], tilePos.x + HALF_TILE,
-                                                tilePos.y + HALF_TILE);
+                                                  tilePos.y + HALF_TILE);
                                     break;
                                 }
                                 default: // 0b0000:15
                                 {
                                     drawWsgSimple(&(*wsgMidgroundArrayPtr)[20 * brightness + 15], tilePos.x + HALF_TILE,
-                                                tilePos.y + HALF_TILE);
+                                                  tilePos.y + HALF_TILE);
                                     break;
                                 }
                             }

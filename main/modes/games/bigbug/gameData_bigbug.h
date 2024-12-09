@@ -36,13 +36,13 @@ enum bb_screen_t
 {
     BIGBUG_RADAR_SCREEN,
     BIGBUG_GAME,
-    BIGBUG_GAME_PINGING,//While game is still playing, but radar is pinging. Don't allow new radar pings.
+    BIGBUG_GAME_PINGING, // While game is still playing, but radar is pinging. Don't allow new radar pings.
 };
 
 struct bb_radarScreenData_t
 {
-    vec_t cam;// x and y offsets for use in the radar (pause) screen.
-    uint8_t playerPingRadius;//animates a circle to help the tiny player dot be seen.
+    vec_t cam;                // x and y offsets for use in the radar (pause) screen.
+    uint8_t playerPingRadius; // animates a circle to help the tiny player dot be seen.
 };
 
 struct bb_gameData_t

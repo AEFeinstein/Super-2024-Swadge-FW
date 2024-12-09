@@ -419,7 +419,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     vec_t accel = {.x = 0, .y = 0};
 
     // Update garbotnik's velocity if a button is currently down
-    switch (self->gameData->btnState)
+    switch (self->gameData->btnState & 0b1111)
     {
         // up
         case 0b0001:
@@ -610,6 +610,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
 
+    // Check for digging
     int32_t dot = dotVec2d(gData->vel, hitInfo.normal);
     if (dot < -40)
     { // velocity angle is opposing garbage normal vector. Tweak number for different threshold.
@@ -617,21 +618,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // digging detected! //
         ///////////////////////
 
-        // crumble test
-        //  uint32_t* val = heap_caps_calloc(2,sizeof(uint32_t), MALLOC_CAP_SPIRAM);
-        //  val[0] = 5;
-        //  val[1] = 3;
-        //  push(self->gameData->unsupported, (void*)val);
-
         // Update the dirt by decrementing it.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= 1;
 
         bb_midgroundTileInfo_t* tile
             = (bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
-        if (tile->health == 0)
-        {
-            flagNeighbors(tile, self->gameData);
-        }
 
         if (tile->health == 0 || tile->health == 1 || tile->health == 4)
         {
@@ -687,6 +678,42 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         //         push(self->gameData->pleaseCheck, (void*)val);
         //     }
         // }
+    }
+
+    // tow cable if b button down
+    if ((self->gameData->btnState & 0b10000) >> 4)
+    {
+        printf("button pressed\n");
+        int16_t best_i     = -1;     // negative 1 means no valid candidates found
+        uint16_t best_dist = 0xFFFF; // the distance of the best_i
+        for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+        {
+            bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
+            // if it is a bug and it is dead i.e. PHYSICS_DATA
+            if (curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13 && curEntity->dataType == PHYSICS_DATA)
+            {
+                uint16_t dist = (uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> DECIMAL_BITS,
+                                                             (curEntity->pos.y - self->pos.y) >> DECIMAL_BITS});
+                printf("dist: %d\n", dist);
+                // if the bug is within 50px of garbotnik
+                if (dist < 2500 && dist < best_dist)
+                {
+                    // new best candidate found!
+                    best_i    = i;
+                    best_dist = dist;
+                }
+            }
+        }
+        if (best_i != -1)
+        {
+            printf("towed an entity\n");
+            push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
+        }
+        else
+        {
+            // unhook entities;
+            printf("FINISH ME!!!\n");
+        }
     }
 }
 
@@ -901,25 +928,25 @@ void bb_updateMoveLeft(bb_entity_t* self)
     self->pos.x -= 1 << 3;
 }
 
-//1 for 90 degrees clockwise. -2 for 180 degrees counterclockwise, etc...
+// 1 for 90 degrees clockwise. -2 for 180 degrees counterclockwise, etc...
 void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations)
 {
-    if(orthogonalRotations & 1)//if odd
+    if (orthogonalRotations & 1) // if odd
     {
-        //rotate hitbox
-        int16_t temp = self->halfHeight;
+        // rotate hitbox
+        int16_t temp     = self->halfHeight;
         self->halfHeight = self->halfWidth;
-        self->halfWidth = temp;
+        self->halfWidth  = temp;
     }
-    bb_buData_t* bData = (bb_buData_t*) self->data;
-    //keep gravity in range 0 through 3 for down, left, up, right
+    bb_buData_t* bData = (bb_buData_t*)self->data;
+    // keep gravity in range 0 through 3 for down, left, up, right
     bData->gravity = ((bData->gravity + orthogonalRotations) % 4 + 4) % 4;
 }
 
 void bb_updateBug(bb_entity_t* self)
 {
     bb_buData_t* bData = (bb_buData_t*)self->data;
-    if(bData->fallSpeed > 19)
+    if (bData->fallSpeed > 19)
     {
         switch (bData->gravity)
         {
@@ -937,16 +964,16 @@ void bb_updateBug(bb_entity_t* self)
         }
         bData->gravity = BB_DOWN;
     }
-    if(bData->fallSpeed < 30)
+    if (bData->fallSpeed < 30)
     {
         bData->fallSpeed++;
     }
 
-    switch(bData->gravity)
+    switch (bData->gravity)
     {
         case BB_DOWN:
         {
-            self->pos.y +=  bData->fallSpeed;
+            self->pos.y += bData->fallSpeed;
             break;
         }
         case BB_LEFT:
@@ -959,7 +986,7 @@ void bb_updateBug(bb_entity_t* self)
             self->pos.y -= bData->fallSpeed;
             break;
         }
-        default: //right:
+        default: // right:
         {
             self->pos.x += bData->fallSpeed;
             break;
@@ -970,27 +997,29 @@ void bb_updateBug(bb_entity_t* self)
     if (hitInfo.hit == true)
     {
         bData->fallSpeed = 0;
-        switch(bData->gravity)
+        switch (bData->gravity)
         {
             case BB_DOWN:
             {
-                if(self->pos.y > ((hitInfo.tile_j * TILE_SIZE + 16)<<DECIMAL_BITS))
-                {   
-                    if(hitInfo.normal.x == 1)
+                if (self->pos.y > ((hitInfo.tile_j * TILE_SIZE + 16) << DECIMAL_BITS))
+                {
+                    if (hitInfo.normal.x == 1)
                     {
-                        if(bData->faceLeft)
+                        if (bData->faceLeft)
                         {
                             bb_rotateBug(self, 1);
                         }
-                        self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE)<<DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
+                        self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
+                                      + hitInfo.normal.x * self->halfWidth;
                     }
-                    else if(hitInfo.normal.x == -1)
+                    else if (hitInfo.normal.x == -1)
                     {
-                        if(!bData->faceLeft)
+                        if (!bData->faceLeft)
                         {
                             bb_rotateBug(self, -1);
                         }
-                        self->pos.x = ((hitInfo.tile_i * TILE_SIZE)<<DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
+                        self->pos.x
+                            = ((hitInfo.tile_i * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
                     }
                 }
                 else
@@ -1003,23 +1032,25 @@ void bb_updateBug(bb_entity_t* self)
             }
             case BB_LEFT:
             {
-                if(self->pos.x < ((hitInfo.tile_i * TILE_SIZE + 16)<<DECIMAL_BITS))
+                if (self->pos.x < ((hitInfo.tile_i * TILE_SIZE + 16) << DECIMAL_BITS))
                 {
-                    if(hitInfo.normal.y == 1)
+                    if (hitInfo.normal.y == 1)
                     {
-                        if(bData->faceLeft)
+                        if (bData->faceLeft)
                         {
                             bb_rotateBug(self, 1);
                         }
-                        self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE)<<DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
+                        self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
+                                      + hitInfo.normal.y * self->halfHeight;
                     }
-                    else if(hitInfo.normal.y == -1)
+                    else if (hitInfo.normal.y == -1)
                     {
-                        if(!bData->faceLeft)
+                        if (!bData->faceLeft)
                         {
                             bb_rotateBug(self, -1);
                         }
-                        self->pos.y = ((hitInfo.tile_j * TILE_SIZE)<<DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
+                        self->pos.y
+                            = ((hitInfo.tile_j * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
                     }
                 }
                 else
@@ -1032,23 +1063,25 @@ void bb_updateBug(bb_entity_t* self)
             }
             case BB_UP:
             {
-                if(self->pos.y < ((hitInfo.tile_j * TILE_SIZE + 16)<<DECIMAL_BITS))
+                if (self->pos.y < ((hitInfo.tile_j * TILE_SIZE + 16) << DECIMAL_BITS))
                 {
-                    if(hitInfo.normal.x == -1)
+                    if (hitInfo.normal.x == -1)
                     {
-                        if(bData->faceLeft)
+                        if (bData->faceLeft)
                         {
                             bb_rotateBug(self, 1);
                         }
-                        self->pos.x = ((hitInfo.tile_i * TILE_SIZE)<<DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
+                        self->pos.x
+                            = ((hitInfo.tile_i * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
                     }
-                    else if(hitInfo.normal.x == 1)
+                    else if (hitInfo.normal.x == 1)
                     {
-                        if(!bData->faceLeft)
+                        if (!bData->faceLeft)
                         {
                             bb_rotateBug(self, -1);
                         }
-                        self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE)<<DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
+                        self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
+                                      + hitInfo.normal.x * self->halfWidth;
                     }
                 }
                 else
@@ -1059,25 +1092,27 @@ void bb_updateBug(bb_entity_t* self)
                 self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
                 break;
             }
-            default: //right
+            default: // right
             {
-                if(self->pos.x > ((hitInfo.tile_i * TILE_SIZE + 16)<<DECIMAL_BITS))
+                if (self->pos.x > ((hitInfo.tile_i * TILE_SIZE + 16) << DECIMAL_BITS))
                 {
-                    if(hitInfo.normal.y == -1)
+                    if (hitInfo.normal.y == -1)
                     {
-                        if(bData->faceLeft)
+                        if (bData->faceLeft)
                         {
                             bb_rotateBug(self, 1);
                         }
-                        self->pos.y = ((hitInfo.tile_j * TILE_SIZE)<<DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
+                        self->pos.y
+                            = ((hitInfo.tile_j * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
                     }
-                    else if(hitInfo.normal.y == 1)
+                    else if (hitInfo.normal.y == 1)
                     {
-                        if(!bData->faceLeft)
+                        if (!bData->faceLeft)
                         {
                             bb_rotateBug(self, -1);
                         }
-                        self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE)<<DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
+                        self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
+                                      + hitInfo.normal.y * self->halfHeight;
                     }
                 }
                 else
@@ -1090,10 +1125,10 @@ void bb_updateBug(bb_entity_t* self)
             }
         }
     }
-    else if(bData->fallSpeed == 18)
+    else if (bData->fallSpeed == 18)
     {
         bb_rotateBug(self, bData->faceLeft * -2 + 1);
-        switch(bData->gravity)
+        switch (bData->gravity)
         {
             case BB_DOWN:
                 self->pos.y += abs(self->halfWidth - self->halfHeight) + bData->fallSpeed;
@@ -1104,7 +1139,7 @@ void bb_updateBug(bb_entity_t* self)
             case BB_UP:
                 self->pos.y -= abs(self->halfWidth - self->halfHeight) + bData->fallSpeed;
                 break;
-            default://BB_RIGHT
+            default: // BB_RIGHT
                 self->pos.x += abs(self->halfWidth - self->halfHeight) + bData->fallSpeed;
                 break;
         }
@@ -1113,16 +1148,16 @@ void bb_updateBug(bb_entity_t* self)
 
 void bb_updateBuggo(bb_entity_t* self)
 {
-    bb_buggoData_t* bData = (bb_buggoData_t*) self->data;
-    vec_t previousPos = self->pos;
-    self->pos = addVec2d(self->pos, mulVec2d(bData->direction, self->gameData->elapsedUs >> 11));
-    bb_hitInfo_t hitInfo = {0};
+    bb_buggoData_t* bData = (bb_buggoData_t*)self->data;
+    vec_t previousPos     = self->pos;
+    self->pos             = addVec2d(self->pos, mulVec2d(bData->direction, self->gameData->elapsedUs >> 11));
+    bb_hitInfo_t hitInfo  = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
     if (hitInfo.hit == true)
     {
-        self->pos = previousPos;
-        bData->direction = rotateVec2d(divVec2d((vec_t){0,bData->speed*200},800), bb_randomInt(0,359));
-        bData->faceLeft = bData->direction.x < 0;
+        self->pos        = previousPos;
+        bData->direction = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
+        bData->faceLeft  = bData->direction.x < 0;
     }
 }
 
@@ -1459,24 +1494,26 @@ void bb_updateGameOver(bb_entity_t* self)
 
 void bb_updateRadarPing(bb_entity_t* self)
 {
-    bb_radarPingData_t* rpData = (bb_radarPingData_t*) self->data;
+    bb_radarPingData_t* rpData = (bb_radarPingData_t*)self->data;
     rpData->timer -= self->gameData->elapsedUs >> 10;
     // printf("timer: %d\n", rpData->timer);
-    if((rpData->timer < 100) && (rpData->reflectionIdx < (sizeof(rpData->reflections)/sizeof(rpData->reflections[0]))))
+    if ((rpData->timer < 100)
+        && (rpData->reflectionIdx < (sizeof(rpData->reflections) / sizeof(rpData->reflections[0]))))
     {
-        rpData->timer = bb_randomInt(150,250);
-        rpData->reflections[rpData->reflectionIdx].pos = addVec2d(self->pos, rotateVec2d((vec_t){rpData->radius << DECIMAL_BITS, 0}, bb_randomInt(0,359)));
+        rpData->timer = bb_randomInt(150, 250);
+        rpData->reflections[rpData->reflectionIdx].pos
+            = addVec2d(self->pos, rotateVec2d((vec_t){rpData->radius << DECIMAL_BITS, 0}, bb_randomInt(0, 359)));
         rpData->reflectionIdx++;
         printf("reflectionIdx: %d\n", rpData->reflectionIdx);
     }
 
-    for(int reflectionIdx = 0; reflectionIdx < rpData->reflectionIdx; reflectionIdx++)
+    for (int reflectionIdx = 0; reflectionIdx < rpData->reflectionIdx; reflectionIdx++)
     {
         rpData->reflections[reflectionIdx].radius += 5;
     }
 
     rpData->radius += 5;
-    if(rpData->radius > 1300)
+    if (rpData->radius > 1300)
     {
         self->gameData->screen = BIGBUG_RADAR_SCREEN;
         bb_destroyEntity(self, false);
@@ -1491,6 +1528,16 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
     }
 
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
+
+    node_t* current = gData->towedEntities.first;
+    while (current != NULL)
+    {
+        bb_entity_t* curEntity = (bb_entity_t*)current->val;
+        drawLineFast((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
+                     (curEntity->pos.x >> DECIMAL_BITS) - camera->pos.x,
+                     (curEntity->pos.y >> DECIMAL_BITS) - camera->pos.y, c425);
+        current = current->next;
+    }
 
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
@@ -1611,7 +1658,7 @@ void bb_drawBasicEmbed(bb_entityManager_t* entityManager, rectangle_t* camera, b
                .y = (self->pos.y >> DECIMAL_BITS) - (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS)
                     + self->gameData->tilemap.headlampWsg.h};
 
-        lookup = divVec2d(lookup, 2);
+        lookup             = divVec2d(lookup, 2);
         uint8_t brightness = 0;
         if (GARBOTNIK_DATA == self->gameData->entityManager.playerEntity->dataType)
         {
@@ -1619,12 +1666,10 @@ void bb_drawBasicEmbed(bb_entityManager_t* entityManager, rectangle_t* camera, b
                 &(self->gameData->tilemap.headlampWsg), &lookup,
                 &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x));
         }
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex]
-                               .frames[brightness],
-                          (self->pos.x >> DECIMAL_BITS)
-                       - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-                       (self->pos.y >> DECIMAL_BITS)
-                       - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[brightness],
+                      (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                      (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
+                          - camera->pos.y);
     }
 }
 
@@ -1762,31 +1807,32 @@ void bb_drawDeathDumpster(bb_entityManager_t* entityManager, rectangle_t* camera
 
 void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    bb_radarPingData_t* rpData = (bb_radarPingData_t*) self->data;
+    bb_radarPingData_t* rpData = (bb_radarPingData_t*)self->data;
 
-    for(int reflectionIdx = 0; reflectionIdx < rpData->reflectionIdx; reflectionIdx++)
+    for (int reflectionIdx = 0; reflectionIdx < rpData->reflectionIdx; reflectionIdx++)
     {
-        drawCircle((rpData->reflections[reflectionIdx].pos.x >> DECIMAL_BITS) - camera->pos.x, (rpData->reflections[reflectionIdx].pos.y >> DECIMAL_BITS) - camera->pos.y, rpData->reflections[reflectionIdx].radius, c415);
+        drawCircle((rpData->reflections[reflectionIdx].pos.x >> DECIMAL_BITS) - camera->pos.x,
+                   (rpData->reflections[reflectionIdx].pos.y >> DECIMAL_BITS) - camera->pos.y,
+                   rpData->reflections[reflectionIdx].radius, c415);
     }
 
-    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y, rpData->radius, c415);
-    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y, rpData->radius * 3 / 4, c415);
+    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
+               rpData->radius, c415);
+    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
+               rpData->radius * 3 / 4, c415);
 }
 
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     uint8_t brightness = 5;
-    int16_t xOff       = (self->pos.x >> DECIMAL_BITS)
-                    - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
-    int16_t yOff = (self->pos.y >> DECIMAL_BITS)
-                    - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+    int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
     if (entityManager->playerEntity != NULL)
     {
-        vec_t lookup
-            = {.x = (self->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
-                    + self->gameData->tilemap.headlampWsg.w,
-                .y = (self->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
-                    + self->gameData->tilemap.headlampWsg.h};
+        vec_t lookup = {.x = (self->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
+                             + self->gameData->tilemap.headlampWsg.w,
+                        .y = (self->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
+                             + self->gameData->tilemap.headlampWsg.h};
 
         lookup = divVec2d(lookup, 2);
         if (self->pos.y > 5120)
@@ -1805,58 +1851,51 @@ void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
         {
             brightness = bb_midgroundLighting(
                 &(self->gameData->tilemap.headlampWsg), &lookup,
-                &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x),
-                brightness);
+                &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x), brightness);
         }
     }
-    if(self->dataType == BU_DATA)
+    if (self->dataType == BU_DATA)
     {
         bb_buData_t* bData = (bb_buData_t*)self->data;
-        switch(bData->gravity)
+        switch (bData->gravity)
         {
             case BB_DOWN:
-                drawWsg(&entityManager->sprites[self->spriteIndex]
-                            .frames[brightness + self->currentAnimationFrame * 6],
+                drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
                         xOff, yOff, bData->faceLeft, false, 0);
                 break;
             case BB_LEFT:
-                drawWsg(&entityManager->sprites[self->spriteIndex]
-                            .frames[brightness + self->currentAnimationFrame * 6],
+                drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
                         xOff, yOff, bData->faceLeft, false, 90);
                 break;
             case BB_UP:
-                drawWsg(&entityManager->sprites[self->spriteIndex]
-                            .frames[brightness + self->currentAnimationFrame * 6],
+                drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
                         xOff, yOff, bData->faceLeft, false, 180);
                 break;
-            default: //BB_RIGHT
-                drawWsg(&entityManager->sprites[self->spriteIndex]
-                            .frames[brightness + self->currentAnimationFrame * 6],
+            default: // BB_RIGHT
+                drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
                         xOff, yOff, bData->faceLeft, false, 270);
                 break;
         }
     }
-    else if(self->dataType == BUGGO_DATA)
+    else if (self->dataType == BUGGO_DATA)
     {
         bb_buggoData_t* bData = (bb_buggoData_t*)self->data;
-        drawWsg(&entityManager->sprites[self->spriteIndex]
-                            .frames[brightness + self->currentAnimationFrame * 6],
-                        xOff, yOff, bData->faceLeft, false, 0);
+        drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff,
+                yOff, bData->faceLeft, false, 0);
     }
 }
-
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
-    if(other->dataType == EGG_DATA)
+    if (other->dataType == EGG_DATA)
     {
-        //pop that egg
-        int32_t tile_i = (other->pos.x>>DECIMAL_BITS)/32;
-        int32_t tile_j = (other->pos.y>>DECIMAL_BITS)/32;
+        // pop that egg
+        int32_t tile_i                                         = (other->pos.x >> DECIMAL_BITS) / 32;
+        int32_t tile_j                                         = (other->pos.y >> DECIMAL_BITS) / 32;
         self->gameData->tilemap.fgTiles[tile_i][tile_j].health = 0;
         bb_crumbleDirt(other, 2, tile_i, tile_j, true);
-        //destroy this harpoon
+        // destroy this harpoon
         bb_destroyEntity(self, false);
     }
     else
@@ -1869,7 +1908,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         bData->health -= 20;
         if (bData->health < 0)
         {
-            if(self->dataType == BU_DATA)
+            if (self->dataType == BU_DATA)
             {
                 bb_buData_t* buData = (bb_buData_t*)self->data;
                 switch (buData->gravity)
@@ -1943,7 +1982,7 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
 
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    //bb_onCollisionSimple(self, other, hitInfo);
+    // bb_onCollisionSimple(self, other, hitInfo);
     if (bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_CAR_ACTIVE, 6,
                         self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false)
         != NULL)
@@ -2008,8 +2047,7 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
     bb_setCharacterLine(dData, 19, "Not a problem.");
     bb_setCharacterLine(dData, 20, "We have the technology to retrieve it.");
     bb_setCharacterLine(
-        dData, 21,
-        "Safety first. Activate the cloning machine in case I should perish on that nuclear wasteland.");
+        dData, 21, "Safety first. Activate the cloning machine in case I should perish on that nuclear wasteland.");
     bb_setCharacterLine(dData, 22, "fine.");
     bb_setCharacterLine(dData, 23, "Stupid safety rules. YOLO!");
 
@@ -2226,6 +2264,7 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
     loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
     globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
+    // find the tutorial egg on screen
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
@@ -2278,20 +2317,22 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
 
     if (zeroHealth)
     {
-        switch(self->gameData->tilemap.fgTiles[tile_i][tile_j].embed)
+        flagNeighbors((bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[tile_i][tile_j], self->gameData);
+        switch (self->gameData->tilemap.fgTiles[tile_i][tile_j].embed)
         {
             case EGG_EMBED:
             {
                 vec_t tilePos = {.x = tile_i * TILE_SIZE + HALF_TILE, .y = tile_j * TILE_SIZE + HALF_TILE};
                 // create a bug
                 bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
-                                               bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
+                                                   bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
                 if (bug != NULL)
                 {
                     if (self->gameData->tilemap.fgTiles[tile_i][tile_j].entity != NULL)
                     {
                         bb_entity_t* egg
-                            = ((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity->data))->egg;
+                            = ((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity->data))
+                                  ->egg;
                         if (egg != NULL)
                         {
                             // destroy the egg
@@ -2311,8 +2352,8 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
                 self->gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
 
                 // create fuel
-                bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
-                                               BB_FUEL, 10, tilePos.x, tilePos.y, false, false);
+                bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_FUEL, 10, tilePos.x,
+                                tilePos.y, false, false);
                 break;
             }
             default:

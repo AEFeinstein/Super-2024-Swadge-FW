@@ -36,9 +36,9 @@
 
 struct bb_t
 {
-    menu_t* menu;       ///< The menu structure
-    font_t font;        ///< The font used in the menu and game
-    //bb_screen_t screen; ///< The screen being displayed
+    menu_t* menu; ///< The menu structure
+    font_t font;  ///< The font used in the menu and game
+    // bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
 
@@ -226,22 +226,21 @@ static void bb_EnterModeSkipIntro(void)
     // create the death dumpster
     bigbug->gameData.entityManager.deathDumpster
         = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
-                            (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -4746, true, false);
+                          (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -4746, true, false);
 
     // create 3 rockets
     for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
     {
-        bigbug->gameData.entityManager.boosterEntities[rocketIdx]
-            = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 8,
-                                (bigbug->gameData.entityManager.deathDumpster->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
-                                (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS) + 375, true, false);
+        bigbug->gameData.entityManager.boosterEntities[rocketIdx] = bb_createEntity(
+            &bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 8,
+            (bigbug->gameData.entityManager.deathDumpster->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
+            (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS) + 375, true, false);
 
-        //bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
+        // bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 
-        if(rocketIdx>=1)
+        if (rocketIdx >= 1)
         {
-            bb_rocketData_t* rData
-                = (bb_rocketData_t*)bigbug->gameData.entityManager.boosterEntities[rocketIdx]->data;
+            bb_rocketData_t* rData = (bb_rocketData_t*)bigbug->gameData.entityManager.boosterEntities[rocketIdx]->data;
 
             rData->flame = bb_createEntity(
                 &(bigbug->gameData.entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
@@ -254,13 +253,14 @@ static void bb_EnterModeSkipIntro(void)
         {
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
             bigbug->gameData.entityManager.activeBooster->currentAnimationFrame = 40;
-            bigbug->gameData.entityManager.activeBooster->pos.y = 50;
+            bigbug->gameData.entityManager.activeBooster->pos.y                 = 50;
             bb_heavyFallingData_t* hData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
             bb_setData(bigbug->gameData.entityManager.activeBooster, hData, HEAVY_FALLING_DATA);
             bigbug->gameData.entityManager.activeBooster->updateFunction = bb_updateHeavyFalling;
-            bb_entity_t* arm
-            = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
-                              bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS, (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, false, false);
+            bb_entity_t* arm                                             = bb_createEntity(
+                &bigbug->gameData.entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
+                bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
+                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, false, false);
             ((bb_attachmentArmData_t*)arm->data)->rocket = bigbug->gameData.entityManager.activeBooster;
         }
     }
@@ -269,7 +269,8 @@ static void bb_EnterModeSkipIntro(void)
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
-                            bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS, (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 90, true, false);
+                          bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
+                          (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 90, true, false);
 
     bigbug->gameData.entityManager.playerEntity = bigbug->gameData.entityManager.viewEntity;
 
@@ -285,7 +286,6 @@ static void bb_EnterModeSkipIntro(void)
 
     bb_Reset();
 }
-
 
 void bb_setupMidi(void)
 {
@@ -351,7 +351,7 @@ static void bb_MainLoop(int64_t elapsedUs)
     {
         case BIGBUG_RADAR_SCREEN:
         {
-            if(bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
+            if (bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
             {
                 bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackRadar;
             }
@@ -513,54 +513,60 @@ static void bb_DrawScene(void)
 static void bb_DrawScene_Radar(void)
 {
     bigbug->gameData.radar.cam.y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
-    
-    for(int xIdx = 1; xIdx < TILE_FIELD_WIDTH-4; xIdx++)
+
+    for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 4; xIdx++)
     {
-        for(int yIdx = bigbug->gameData.radar.cam.y / 4 < 0 ? 0 : bigbug->gameData.radar.cam.y / 4;
-        yIdx < (bigbug->gameData.radar.cam.y / 4 < 0 ? FIELD_HEIGHT / 4 : bigbug->gameData.radar.cam.y / 4 + FIELD_HEIGHT / 4);
-        yIdx++)
+        for (int yIdx = bigbug->gameData.radar.cam.y / 4 < 0 ? 0 : bigbug->gameData.radar.cam.y / 4;
+             yIdx < (bigbug->gameData.radar.cam.y / 4 < 0 ? FIELD_HEIGHT / 4
+                                                          : bigbug->gameData.radar.cam.y / 4 + FIELD_HEIGHT / 4);
+             yIdx++)
         {
             uint16_t radarTileColor = bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 0 ? c333 : c000;
-            if(true)//unlockable upgrade
+            if (true) // unlockable upgrade
             {
-                if(bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health>0 && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health<4)
+                if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 0
+                    && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health < 4)
                 {
                     radarTileColor = c222;
                 }
-                else if(bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health>3 && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health<10)
+                else if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 3
+                         && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health < 10)
                 {
                     radarTileColor = c333;
                 }
-                else if(bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health>9 && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health<100)
+                else if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 9
+                         && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health < 100)
                 {
                     radarTileColor = c444;
                 }
-                else if(bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health>99)
+                else if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 99)
                 {
                     radarTileColor = c555;
                 }
             }
-            drawRectFilled(xIdx * 4 - 4,yIdx * 4 - bigbug->gameData.radar.cam.y,xIdx * 4,yIdx * 4 + 4 - bigbug->gameData.radar.cam.y,radarTileColor);
+            drawRectFilled(xIdx * 4 - 4, yIdx * 4 - bigbug->gameData.radar.cam.y, xIdx * 4,
+                           yIdx * 4 + 4 - bigbug->gameData.radar.cam.y, radarTileColor);
         }
     }
-    //garbotnik
-    vec_t garbotnikPos = (vec_t) {(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                    bigbug->gameData.radar.cam.y + 120};
-    
+    // garbotnik
+    vec_t garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                                 bigbug->gameData.radar.cam.y + 120};
+
     drawCircleFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, 3, c515);
-    //garbotnik pings
-    for(int i = 0; i < 254; i += 51)
+    // garbotnik pings
+    for (int i = 0; i < 254; i += 51)
     {
         bigbug->gameData.radar.playerPingRadius += i;
-        drawCircle(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, bigbug->gameData.radar.playerPingRadius, c404);
+        drawCircle(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y,
+                   bigbug->gameData.radar.playerPingRadius, c404);
     }
-    
-    //booster radar rect
+
+    // booster radar rect
     garbotnikPos.x = (bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 4;
     garbotnikPos.y = (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 4;
-    drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2, garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c440);
+    drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2,
+                   garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c440);
 
-    
     DRAW_FPS_COUNTER(bigbug->font);
 }
 
@@ -598,12 +604,12 @@ static void bb_GameLoop_Radar(int64_t elapsedUs)
             if (evt.button == PB_START)
             {
                 bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
-                bigbug->gameData.screen = BIGBUG_GAME;
+                bigbug->gameData.screen             = BIGBUG_GAME;
             }
         }
     }
 
-    bigbug->gameData.radar.playerPingRadius+=3;
+    bigbug->gameData.radar.playerPingRadius += 3;
 
     bb_DrawScene_Radar();
 }
@@ -643,9 +649,12 @@ static void bb_GameLoop(int64_t elapsedUs)
             // PB_B      = 0x0020, //!< The B button's bit
             // PB_START  = 0x0040, //!< The start button's bit
             // PB_SELECT = 0x0080, //!< The select button's bit
-            if (evt.button == PB_START && !bigbug->gameData.isPaused && bigbug->gameData.screen == BIGBUG_GAME && bigbug->gameData.entityManager.playerEntity != NULL)
+            if (evt.button == PB_START && !bigbug->gameData.isPaused && bigbug->gameData.screen == BIGBUG_GAME
+                && bigbug->gameData.entityManager.playerEntity != NULL)
             {
-                bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1, bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS, bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS, true, false);
+                bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
+                                bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS,
+                                bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS, true, false);
                 bigbug->gameData.screen = BIGBUG_GAME_PINGING;
             }
         }

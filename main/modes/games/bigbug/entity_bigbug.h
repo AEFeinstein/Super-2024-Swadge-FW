@@ -58,13 +58,14 @@ typedef enum
 
 typedef struct
 {
-    vec_t vel;           // velocity
-    vec_t accel;         // acceleration
-    vec_t previousPos;   // position from the previous frame
-    vec_t yaw;           //.x is the yaw, .y is the change in yaw over time. Gravitates toward left or right.
-    uint8_t numHarpoons; // number of harpoons
-    int32_t fuel;        // garbotnik's remaining fuel. Like a level timer that can be influenced.
-    bool gettingCrushed; // Set to true when a heavy falling object is pushing Garbotnik down.
+    vec_t vel;            // velocity
+    vec_t accel;          // acceleration
+    vec_t previousPos;    // position from the previous frame
+    vec_t yaw;            //.x is the yaw, .y is the change in yaw over time. Gravitates toward left or right.
+    uint8_t numHarpoons;  // number of harpoons
+    int32_t fuel;         // garbotnik's remaining fuel. Like a level timer that can be influenced.
+    bool gettingCrushed;  // Set to true when a heavy falling object is pushing Garbotnik down.
+    list_t towedEntities; // A list of entities attached via tow cable.
 
     // touchpad stuff
     bool touching;
@@ -85,34 +86,33 @@ typedef struct
     vecFl_t floatVel;
 } bb_stuckHarpoonData_t;
 
-typedef struct//parent class
+typedef struct // parent class
 {
-    bool faceLeft;//flip the sprite if true
-    uint8_t speed;//randomized on creation. Used for walking or flying.
-    int8_t health;//bug dies at negative numbers
+    bool faceLeft; // flip the sprite if true
+    uint8_t speed; // randomized on creation. Used for walking or flying.
+    int8_t health; // bug dies at negative numbers
 } bb_bugData_t;
 
-typedef struct//child class
+typedef struct // child class
 {
-    bool faceLeft;//flip the sprite if true
-    uint8_t speed;//randomized on creation. Used for walking or flying.
-    int8_t health;//bug dies at negative numbers
+    bool faceLeft; // flip the sprite if true
+    uint8_t speed; // randomized on creation. Used for walking or flying.
+    int8_t health; // bug dies at negative numbers
     //-----------------------------------------------
-    bb_direction_t gravity;//to walk on the walls & ceiling: local gravity switches
-    uint8_t fallSpeed;//increments in free fall
+    bb_direction_t gravity; // to walk on the walls & ceiling: local gravity switches
+    uint8_t fallSpeed;      // increments in free fall
 } bb_buData_t;
 
-typedef struct//child class
+typedef struct // child class
 {
-    bool faceLeft;//flip the sprite if true
-    uint8_t walkSpeed;//randomized on creation. Used for walking or flying.
-    int8_t health;//bug dies at negative numbers
+    bool faceLeft;     // flip the sprite if true
+    uint8_t walkSpeed; // randomized on creation. Used for walking or flying.
+    int8_t health;     // bug dies at negative numbers
     //-----------------------------------------------
-    bool trackingPlayer;//toggles between moving toward the player and moving in a random direction.
-    vec_t direction;//buggo moves in the direction vector.
+    bool trackingPlayer; // toggles between moving toward the player and moving in a random direction.
+    vec_t direction;     // buggo moves in the direction vector.
     uint8_t speed;
 } bb_buggoData_t;
-
 
 typedef struct
 {
@@ -220,7 +220,6 @@ typedef struct
     uint16_t radius;
 } pingCircle;
 
-
 typedef struct
 {
     uint16_t radius;
@@ -228,7 +227,6 @@ typedef struct
     uint16_t timer;
     pingCircle reflections[20];
 } bb_radarPingData_t;
-
 
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
