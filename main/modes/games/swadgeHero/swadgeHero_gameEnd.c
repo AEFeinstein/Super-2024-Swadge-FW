@@ -9,23 +9,23 @@
 // Defines
 //==============================================================================
 
-//==============================================================================
-// Const Variables
-//==============================================================================
-
-//==============================================================================
-// Function Declarations
-//==============================================================================
+// Space between lines
+#define TEXT_Y_SPACING 8
+// Spacing for the fail chart
+#define Y_MARGIN   8
+#define Y_HEIGHT   50
+#define X_MARGIN   ((TFT_WIDTH - NUM_FAIL_METER_SAMPLES) / 2)
+#define BOX_MARGIN 2
 
 //==============================================================================
 // Functions
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Handle input for the game end screen
  *
- * @param sh
- * @param evt
+ * @param sh The Swadge Hero game state
+ * @param evt The button event
  */
 void shGameEndInput(shVars_t* sh, buttonEvt_t* evt)
 {
@@ -35,6 +35,7 @@ void shGameEndInput(shVars_t* sh, buttonEvt_t* evt)
         {
             case PB_A:
             {
+                // TODO add a timer to not allow this for a second or two after switching
                 shChangeScreen(sh, SH_MENU);
                 break;
             }
@@ -47,25 +48,17 @@ void shGameEndInput(shVars_t* sh, buttonEvt_t* evt)
 }
 
 /**
- * @brief TODO doc
+ * @brief Draw the game end screen with statistics
  *
- * @param sh
- * @param elapsedUs
+ * @param sh The Swadge Hero game state
+ * @param elapsedUs The time elapsed since the last time this function was called.
  */
 void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
 {
-// Space between lines
-#define TEXT_Y_SPACING 8
-// Spacing for the fail chart
-#define Y_MARGIN   8
-#define Y_HEIGHT   50
-#define X_MARGIN   ((TFT_WIDTH - NUM_FAIL_METER_SAMPLES) / 2)
-#define BOX_MARGIN 2
-
-    // Draw background
-    fillDisplayArea(0, 0, TFT_WIDTH, 2 * Y_MARGIN + sh->rodin.height, c000);
+    // Draw background for the body
     fillDisplayArea(0, 2 * Y_MARGIN + sh->rodin.height, TFT_WIDTH, TFT_HEIGHT, c111);
 
+    // Start here
     int32_t yOff = Y_MARGIN;
 
     // Draw the name

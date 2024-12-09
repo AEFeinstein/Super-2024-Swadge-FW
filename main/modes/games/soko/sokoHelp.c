@@ -56,12 +56,13 @@ static const sokoHelpPage_t helpPages[] = {
     {
         .title = controlTitle,
         .text = "If you're frustrated and need a break from a room, you can press Start to return to the main hallway.",
-        //progress on the last room you entered is saved when you leave.
+        // progress on the last room you entered is saved when you leave.
     },
     {
         .title = boxTitle,
-        .text  = "Hunter, frustratingly, left orange boxes in some rooms. Push them around to make sure the entire floor "
-                 "is painted.",
+        .text
+        = "Hunter, frustratingly, left orange boxes in some rooms. Push them around to make sure the entire floor "
+          "is painted.",
     },
     {
         .title = boxTitle,
