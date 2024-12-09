@@ -66,6 +66,7 @@ typedef struct
     int32_t fuel;         // garbotnik's remaining fuel. Like a level timer that can be influenced.
     bool gettingCrushed;  // Set to true when a heavy falling object is pushing Garbotnik down.
     list_t towedEntities; // A list of entities attached via tow cable.
+    int16_t towTimer;     // Overflows to negative to detach a towed entity. Then resets to zero.
 
     // touchpad stuff
     bool touching;

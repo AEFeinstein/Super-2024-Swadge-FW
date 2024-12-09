@@ -595,22 +595,61 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     self->pos.x = self->pos.x > 35216 ? 35216 : self->pos.x;
 
     // tow cable stuff
-    // unhook far towed entities
+    // apply spring force and unhook far towed entities
     node_t* current = gData->towedEntities.first;
     while (current != NULL)
     {
         bb_entity_t* curEntity = (bb_entity_t*)current->val;
+        vec_t toFrom = subVec2d(self->pos, curEntity->pos);
+        int32_t dist = sqMagVec2d(toFrom);
         // if more than 100px away
-        if ((uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> DECIMAL_BITS,
-                                         (curEntity->pos.y - self->pos.y) >> DECIMAL_BITS})
-            > 10000)
+        if (dist > 2560000)
         {
+            //detach
             node_t* next = current->next;
             removeEntry(&gData->towedEntities, current);
             current = next;
         }
         else
         {
+            // apply the spring force
+            // Spring and damping coefficients
+            const int32_t SPRING_CONSTANT = 250000; // Adjust for desired springiness
+            const int32_t DAMPING_CONSTANT = 40; // Adjust for desired damping
+
+            bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
+
+            // Displacement vector (toFrom = curEntity - player position)
+            toFrom.x = curEntity->pos.x - self->pos.x;
+            toFrom.y = curEntity->pos.y - self->pos.y;
+
+            // Distance squared
+            int64_t distSquared = (int64_t)toFrom.x * toFrom.x + (int64_t)toFrom.y * toFrom.y;
+
+            // Avoid divide by zero and unnecessary calculations for close entities
+            if (distSquared > 64) {
+                // Compute distance and normalize displacement vector
+                dist = sqrt(distSquared);
+                fastNormVec(&toFrom.x, &toFrom.y);
+
+                // Spring force: F_spring = -k * displacement
+                int32_t springForceX = -(toFrom.x * dist) / SPRING_CONSTANT;
+                int32_t springForceY = -(toFrom.y * dist) / SPRING_CONSTANT;
+
+                // Damping force: F_damping = -b * relative_velocity
+                int32_t dampingForceX = -(pData->vel.x - gData->vel.x) / DAMPING_CONSTANT;
+                int32_t dampingForceY = -(pData->vel.y - gData->vel.y) / DAMPING_CONSTANT;
+
+                // Total force = F_spring + F_damping
+                int32_t totalForceX = springForceX + dampingForceX;
+                int32_t totalForceY = springForceY + dampingForceY;
+
+                // Apply the force
+                pData->vel.x += totalForceX;
+                pData->vel.y += totalForceY;
+            }
+
+            
             current = current->next;
         }
     }
