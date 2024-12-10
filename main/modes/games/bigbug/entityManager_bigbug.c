@@ -643,8 +643,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             *collision                = (bb_collision_t){others, bb_onCollisionHeavyFalling};
             push(entity->collisions, (void*)collision);
 
-            entity->halfWidth  = 192;
-            entity->halfHeight = 448;
+            entity->halfWidth    = 192;
+            entity->halfHeight   = 448;
+            entity->drawFunction = &bb_drawRocket;
             break;
         }
         case HARPOON:

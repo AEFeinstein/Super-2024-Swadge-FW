@@ -41,6 +41,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
 
     // Load font
     loadFont("ibm_vga8.font", &gameData->font, false);
+    loadFont("tiny_numbers.font", &gameData->tinyNumbers, false);
 
     memset(&gameData->pleaseCheck, 0, sizeof(list_t));
     memset(&gameData->unsupported, 0, sizeof(list_t));

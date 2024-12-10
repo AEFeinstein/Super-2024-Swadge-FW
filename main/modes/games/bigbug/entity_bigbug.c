@@ -1624,6 +1624,8 @@ void bb_updateGrabbyHand(bb_entity_t* self)
         bb_destroyEntity(ghData->grabbed, false);
         ghData->grabbed = NULL;
 
+        ((bb_rocketData_t*)ghData->rocket->data)->numBugs++;
+
         self->currentAnimationFrame = 0;
         self->paused                = true;
     }
@@ -1995,6 +1997,52 @@ void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
         bb_buggoData_t* bData = (bb_buggoData_t*)self->data;
         drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff,
                 yOff, bData->faceLeft, false, 0);
+    }
+}
+
+void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
+    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
+                  (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                  (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+
+    char bugCountText[6];
+    snprintf(bugCountText, sizeof(bugCountText), "%02d", rData->numBugs);
+
+    int32_t tWidth = textWidth(&self->gameData->font, bugCountText);
+    drawText(&self->gameData->tinyNumbers, c140, bugCountText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 8);
+
+    if (self->paused == false)
+    {
+        // increment the frame counter
+        self->animationTimer += 1;
+        self->currentAnimationFrame = self->animationTimer / self->gameFramesPerAnimationFrame;
+        // if frame reached the end of the animation
+        if (self->currentAnimationFrame >= entityManager->sprites[self->spriteIndex].numFrames)
+        {
+            switch (self->type)
+            {
+                case ONESHOT_ANIMATION:
+                {
+                    // destroy the entity
+                    bb_destroyEntity(self, false);
+                    break;
+                }
+                case LOOPING_ANIMATION:
+                {
+                    // reset the animation
+                    self->animationTimer        = 0;
+                    self->currentAnimationFrame = 0;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+        }
     }
 }
 

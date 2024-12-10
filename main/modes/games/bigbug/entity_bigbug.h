@@ -133,6 +133,7 @@ typedef struct
 {
     bb_entity_t* flame; // tracks the flame to update position like a child object
     int32_t yVel;
+    uint16_t numBugs; // number of bugs in the booster
 } bb_rocketData_t;
 
 typedef struct
@@ -340,6 +341,7 @@ void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera
 void bb_drawDeathDumpster(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
