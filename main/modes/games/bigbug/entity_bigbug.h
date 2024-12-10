@@ -235,6 +235,8 @@ typedef struct
     uint8_t reflectionIdx;
     uint16_t timer;
     pingCircle reflections[20];
+    paletteColor_t color;
+    bb_callbackFunction_t executeAfterPing;
 } bb_radarPingData_t;
 
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
@@ -362,6 +364,8 @@ void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
 void bb_deployBooster(bb_entity_t* self);
+void bb_openMap(bb_entity_t* self);
+void bb_upgradeRadar(bb_entity_t* self);
 
 void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth);

@@ -656,10 +656,14 @@ static void bb_GameLoop(int64_t elapsedUs)
             if (evt.button == PB_START && !bigbug->gameData.isPaused && bigbug->gameData.screen == BIGBUG_GAME
                 && bigbug->gameData.entityManager.playerEntity != NULL)
             {
-                bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
-                                bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS,
-                                bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS, true, false);
-                bigbug->gameData.screen = BIGBUG_GAME_PINGING;
+                bb_entity_t* radarPing
+                    = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
+                                      bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS,
+                                      bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS, true, false);
+                bigbug->gameData.screen    = BIGBUG_GAME_PINGING;
+                bb_radarPingData_t* rpData = (bb_radarPingData_t*)radarPing->data;
+                rpData->color              = c415;
+                rpData->executeAfterPing   = &bb_openMap;
             }
         }
     }

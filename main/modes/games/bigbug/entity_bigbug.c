@@ -1577,7 +1577,7 @@ void bb_updateRadarPing(bb_entity_t* self)
     rpData->radius += 5;
     if (rpData->radius > 1300)
     {
-        self->gameData->screen = BIGBUG_RADAR_SCREEN;
+        rpData->executeAfterPing(self);
         bb_destroyEntity(self, false);
     }
 }
@@ -1623,7 +1623,17 @@ void bb_updateGrabbyHand(bb_entity_t* self)
         bb_destroyEntity(ghData->grabbed, false);
         ghData->grabbed = NULL;
 
-        ((bb_rocketData_t*)ghData->rocket->data)->numBugs++;
+        bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
+        rData->numBugs++;
+        if (rData->numBugs % 10 == 0)
+        {
+            bb_entity_t* radarPing
+                = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
+                                  self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, false);
+            bb_radarPingData_t* rpData = (bb_radarPingData_t*)radarPing->data;
+            rpData->color              = c541;
+            rpData->executeAfterPing   = &bb_upgradeRadar;
+        }
 
         self->currentAnimationFrame = 0;
         self->paused                = true;
@@ -1927,13 +1937,13 @@ void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb
     {
         drawCircle((rpData->reflections[reflectionIdx].pos.x >> DECIMAL_BITS) - camera->pos.x,
                    (rpData->reflections[reflectionIdx].pos.y >> DECIMAL_BITS) - camera->pos.y,
-                   rpData->reflections[reflectionIdx].radius, c415);
+                   rpData->reflections[reflectionIdx].radius, rpData->color);
     }
 
     drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
-               rpData->radius, c415);
+               rpData->radius, rpData->color);
     drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
-               rpData->radius * 3 / 4, c415);
+               rpData->radius * 3 / 4, rpData->color);
 }
 
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -2574,6 +2584,15 @@ void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in
     rData->flame = NULL;
 
     self->gameData->entityManager.activeBooster->updateFunction = &bb_updateRocketLanding;
+}
+
+void bb_openMap(bb_entity_t* self)
+{
+    self->gameData->screen = BIGBUG_RADAR_SCREEN;
+}
+
+void bb_upgradeRadar(bb_entity_t* self)
+{
 }
 
 void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
