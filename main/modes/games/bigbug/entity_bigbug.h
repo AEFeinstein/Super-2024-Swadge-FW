@@ -34,6 +34,7 @@ typedef enum
     GAME_OVER_DATA,
     GARBOTNIK_DATA,
     GO_TO_DATA,
+    GRABBY_HAND_DATA,
     HEAVY_FALLING_DATA,
     RADAR_PING_DATA,
     MENU_BUG_DATA,
@@ -76,7 +77,7 @@ typedef struct
     int32_t intensity;
 
     // dialogue stuff
-    int16_t landingPhrases[5];
+    int16_t landingPhrases[22];
 } bb_garbotnikData_t;
 
 typedef struct
@@ -171,8 +172,14 @@ typedef struct
 typedef struct
 {
     int32_t angle;       // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
-    bb_entity_t* rocket; // a reference to the booster. Notify to take off at angle = 359.
+    bb_entity_t* rocket; // a reference to the booster. To reposition self and Notify to take off at angle = 359.
 } bb_attachmentArmData_t;
+
+typedef struct
+{
+    bb_entity_t* grabbed; // a bug that is tragically grabbed into the booster
+    bb_entity_t* rocket;  // a reference to the booster. To reposition self.
+} bb_grabbyHandData_t;
 
 typedef struct
 {
@@ -314,6 +321,7 @@ void bb_updateCharacterTalk(bb_entity_t* self);
 void bb_updateAttachmentArm(bb_entity_t* self);
 void bb_updateGameOver(bb_entity_t* self);
 void bb_updateRadarPing(bb_entity_t* self);
+void bb_updateGrabbyHand(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -339,6 +347,7 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);

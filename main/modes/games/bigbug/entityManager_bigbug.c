@@ -167,6 +167,10 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bb_sprite_t* fuelSprite = bb_loadSprite("fuel", 5, 1, &entityManager->sprites[BB_FUEL]);
     fuelSprite->originX     = 7;
     fuelSprite->originY     = 5;
+
+    bb_sprite_t* grabSprite = bb_loadSprite("grab", 3, 1, &entityManager->sprites[BB_GRABBY_HAND]);
+    grabSprite->originX     = 15;
+    grabSprite->originY     = -120;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -955,6 +959,30 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionFuel};
             push(entity->collisions, (void*)collision);
+            break;
+        }
+        case BB_GRABBY_HAND:
+        {
+            bb_grabbyHandData_t* ghData
+                = (bb_grabbyHandData_t*)heap_caps_calloc(1, sizeof(bb_grabbyHandData_t), MALLOC_CAP_SPIRAM);
+            bb_setData(entity, ghData, GRABBY_HAND_DATA);
+
+            entity->cacheable  = true;
+            entity->halfHeight = 40 << DECIMAL_BITS;
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)BU);
+            push(others, (void*)BUG);
+            push(others, (void*)BUGG);
+            push(others, (void*)BUGGO);
+            push(others, (void*)BUGGY);
+            push(others, (void*)BUTT);
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionGrabbyHand};
+            push(entity->collisions, (void*)collision);
+
+            entity->updateFunction = &bb_updateGrabbyHand;
             break;
         }
         case BB_RADAR_PING:

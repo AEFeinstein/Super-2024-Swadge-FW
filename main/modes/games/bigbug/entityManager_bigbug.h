@@ -17,7 +17,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 200
-#define NUM_SPRITES  22 // The number of bb_sprite_t last accounted for skeleton
+#define NUM_SPRITES  23 // The number of bb_sprite_t last accounted for grabby hand
 
 //==============================================================================
 // Structs

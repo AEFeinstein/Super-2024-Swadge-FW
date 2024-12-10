@@ -354,6 +354,11 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
         ((bb_attachmentArmData_t*)arm->data)->rocket = self;
 
+        bb_entity_t* grabbyHand
+            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 3,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 106, false, false);
+        ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
+
         self->paused             = true;
         self->gameData->isPaused = true;
         // deploy garbotnik!!!
@@ -600,12 +605,12 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     while (current != NULL)
     {
         bb_entity_t* curEntity = (bb_entity_t*)current->val;
-        vec_t toFrom = subVec2d(self->pos, curEntity->pos);
-        int32_t dist = sqMagVec2d(toFrom);
+        vec_t toFrom           = subVec2d(self->pos, curEntity->pos);
+        int32_t dist           = sqMagVec2d(toFrom);
         // if more than 100px away
         if (dist > 2560000)
         {
-            //detach
+            // detach
             node_t* next = current->next;
             removeEntry(&gData->towedEntities, current);
             current = next;
@@ -614,8 +619,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             // apply the spring force
             // Spring and damping coefficients
-            const int32_t SPRING_CONSTANT = 250000; // Adjust for desired springiness
-            const int32_t DAMPING_CONSTANT = 40; // Adjust for desired damping
+            const int32_t SPRING_CONSTANT  = 250000; // Adjust for desired springiness
+            const int32_t DAMPING_CONSTANT = 40;     // Adjust for desired damping
 
             bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
 
@@ -627,7 +632,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int64_t distSquared = (int64_t)toFrom.x * toFrom.x + (int64_t)toFrom.y * toFrom.y;
 
             // Avoid divide by zero and unnecessary calculations for close entities
-            if (distSquared > 64) {
+            if (distSquared > 64)
+            {
                 // Compute distance and normalize displacement vector
                 dist = sqrt(distSquared);
                 fastNormVec(&toFrom.x, &toFrom.y);
@@ -649,7 +655,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                 pData->vel.y += totalForceY;
             }
 
-            
             current = current->next;
         }
     }
@@ -1562,7 +1567,7 @@ void bb_updateRadarPing(bb_entity_t* self)
         rpData->reflections[rpData->reflectionIdx].pos
             = addVec2d(self->pos, rotateVec2d((vec_t){rpData->radius << DECIMAL_BITS, 0}, bb_randomInt(0, 359)));
         rpData->reflectionIdx++;
-        printf("reflectionIdx: %d\n", rpData->reflectionIdx);
+        // printf("reflectionIdx: %d\n", rpData->reflectionIdx);
     }
 
     for (int reflectionIdx = 0; reflectionIdx < rpData->reflectionIdx; reflectionIdx++)
@@ -1575,6 +1580,46 @@ void bb_updateRadarPing(bb_entity_t* self)
     {
         self->gameData->screen = BIGBUG_RADAR_SCREEN;
         bb_destroyEntity(self, false);
+    }
+}
+
+void bb_updateGrabbyHand(bb_entity_t* self)
+{
+    bb_grabbyHandData_t* ghData = (bb_grabbyHandData_t*)self->data;
+    self->pos.y                 = ghData->rocket->pos.y - 1696; // that is 106 << 4
+
+    // retreat into the booster
+    if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -120)
+    {
+        self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY -= 2;
+    }
+    else if (ghData->grabbed != NULL)
+    {
+        if (self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+        {
+            // iterate towed entities
+            bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
+            node_t* current           = gData->towedEntities.first;
+            while (current != NULL)
+            {
+                if (current->val == ghData->grabbed)
+                {
+                    // detach tow cable
+                    node_t* next = current->next;
+                    removeEntry(&gData->towedEntities, current);
+                    current = next;
+                }
+                else
+                {
+                    current = current->next;
+                }
+            }
+        }
+        bb_destroyEntity(ghData->grabbed, false);
+        ghData->grabbed = NULL;
+
+        self->currentAnimationFrame = 0;
+        self->paused                = true;
     }
 }
 
@@ -2062,6 +2107,24 @@ void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
     bb_destroyEntity(self, false);
 }
 
+void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    // extend from the booster
+    if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY < 3)
+    {
+        self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY += 4;
+    }
+
+    // if nothing grabbed yet and there is something in hand to grab
+    if (self->currentAnimationFrame == 0
+        && self->pos.y + self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY < other->pos.y - 12)
+    {
+        self->paused                = false;
+        bb_grabbyHandData_t* ghData = (bb_grabbyHandData_t*)self->data;
+        ghData->grabbed             = other;
+    }
+}
+
 void bb_startGarbotnikIntro(bb_entity_t* self)
 {
     bb_entity_t* ovo
@@ -2180,6 +2243,96 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         case 4:
         {
             bb_setCharacterLine(dData, 0, "I must find that chaos orb at all costs!");
+            break;
+        }
+        case 5:
+        {
+            bb_setCharacterLine(dData, 0, "The Pango pest must be stopped!");
+            break;
+        }
+        case 6:
+        {
+            bb_setCharacterLine(dData, 0, "I'll get you next time Pango! NEXT TIME!");
+            break;
+        }
+        case 7:
+        {
+            bb_setCharacterLine(dData, 0, "Would you look at the time… It's GARBAGE DAY!");
+            break;
+        }
+        case 8:
+        {
+            bb_setCharacterLine(dData, 0, "Did I remember to wax my moustache today?");
+            break;
+        }
+        case 9:
+        {
+            bb_setCharacterLine(dData, 0, "Is it spelled “moustache” or “mustache?” Better look it up…");
+            break;
+        }
+        case 10:
+        {
+            bb_setCharacterLine(dData, 0, "I wonder how my buddy Hank Waddle is holding up…");
+            break;
+        }
+        case 11:
+        {
+            bb_setCharacterLine(dData, 0, "Man, I sure hope I see some cool bugs today!");
+            break;
+        }
+        case 12:
+        {
+            bb_setCharacterLine(dData, 0, "I'm here to take in the trash.");
+            break;
+        }
+        case 13:
+        {
+            bb_setCharacterLine(dData, 0,
+                                "I must remember to research what dastardly technology this dump used to ensure new "
+                                "arrivals wind up at the bottom...");
+            break;
+        }
+        case 14:
+        {
+            bb_setCharacterLine(dData, 0,
+                                "I promise, this is perfectly sanitary, the Chaos Orb has antimicrobial properties.");
+            break;
+        }
+        case 15:
+        {
+            bb_setCharacterLine(dData, 0, "Of course you can trust me; I'm a doctor.");
+            break;
+        }
+        case 16:
+        {
+            bb_setCharacterLine(dData, 0, "Come on and jump and welcome to the dump");
+            break;
+        }
+        case 17:
+        {
+            bb_setCharacterLine(dData, 0, "Oh, I'd been looking for that garbage ray!");
+            break;
+        }
+        case 18:
+        {
+            bb_setCharacterLine(
+                dData, 0,
+                "If you ask me what I have a degree in one more time, I'm asking the Internet to draw fanart of you.");
+            break;
+        }
+        case 19:
+        {
+            bb_setCharacterLine(dData, 0, "Oh, I'd been looking for that garbage ray!");
+            break;
+        }
+        case 20:
+        {
+            bb_setCharacterLine(dData, 0, "Did I remember to turn off the disintegrator before I left the lab?");
+            break;
+        }
+        case 21:
+        {
+            bb_setCharacterLine(dData, 0, "Oooh piece of candy!");
             break;
         }
         default:
