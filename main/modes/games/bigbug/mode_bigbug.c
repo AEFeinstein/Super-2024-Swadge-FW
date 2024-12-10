@@ -254,10 +254,8 @@ static void bb_EnterModeSkipIntro(void)
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
             bigbug->gameData.entityManager.activeBooster->currentAnimationFrame = 40;
             bigbug->gameData.entityManager.activeBooster->pos.y                 = 50;
-            bb_heavyFallingData_t* hData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
-            bb_setData(bigbug->gameData.entityManager.activeBooster, hData, HEAVY_FALLING_DATA);
-            bigbug->gameData.entityManager.activeBooster->updateFunction = bb_updateHeavyFalling;
-            bb_entity_t* arm                                             = bb_createEntity(
+            bigbug->gameData.entityManager.activeBooster->updateFunction        = bb_updateHeavyFalling;
+            bb_entity_t* arm                                                    = bb_createEntity(
                 &bigbug->gameData.entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                 bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
                 (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, false, false);

@@ -634,6 +634,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
             rData->flame           = NULL;
             rData->yVel            = 0;
+            rData->armAngle        = 2880; // That is 180 << DECIMAL_BITS
             bb_setData(entity, rData, ROCKET_DATA);
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
@@ -865,9 +866,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case ATTACHMENT_ARM:
         {
-            bb_attachmentArmData_t* aData = heap_caps_calloc(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM);
-            aData->angle                  = 180 << DECIMAL_BITS;
-            bb_setData(entity, aData, ATTACHMENT_ARM_DATA);
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_attachmentArmData_t), MALLOC_CAP_SPIRAM),
+                       ATTACHMENT_ARM_DATA);
             entity->updateFunction = &bb_updateAttachmentArm;
             entity->drawFunction   = &bb_drawAttachmentArm;
 

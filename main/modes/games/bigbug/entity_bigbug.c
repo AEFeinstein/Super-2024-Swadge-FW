@@ -153,7 +153,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
                 bb_heavyFallingData_t* hData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
                 hData->yVel                  = rData->yVel >> 2;
                 bb_destroyEntity(rData->flame, false);
-                bb_setData(self, hData, HEAVY_FALLING_DATA);
+                rData->flame         = NULL;
                 self->updateFunction = bb_updateHeavyFallingInit;
                 return;
             }
@@ -1473,20 +1473,19 @@ void bb_updateAttachmentArm(bb_entity_t* self)
     }
 
     bb_attachmentArmData_t* aData = (bb_attachmentArmData_t*)self->data;
+    bb_rocketData_t* rData        = (bb_rocketData_t*)aData->rocket->data;
     self->pos                     = aData->rocket->pos;
-    self->pos.y -= 29 << DECIMAL_BITS; // 67 is ok
-    if (aData->angle > 180 << DECIMAL_BITS)
+    self->pos.y -= 464;         // that is 29 << DECIMAL_BITS
+    if (rData->armAngle > 2880) // that is 180 << DECIMAL_BITS
     {
-        aData->angle -= 1 << DECIMAL_BITS;
+        rData->armAngle -= 16; // that is 1 << DECIMAL_BITS
     }
-    if (aData->angle >= 359 << DECIMAL_BITS)
+    if (rData->armAngle >= 5744) // that is 359 << DECIMAL_BITS
     {
         bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
         self->gameData->entityManager.playerEntity = NULL;
         self->gameData->entityManager.viewEntity   = aData->rocket;
         aData->rocket->currentAnimationFrame       = 0;
-
-        bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
 
         rData->flame
             = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
@@ -1879,11 +1878,11 @@ void bb_drawGameOver(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
 
 void bb_drawAttachmentArm(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    bb_attachmentArmData_t* aData = (bb_attachmentArmData_t*)self->data;
+    bb_rocketData_t* rData = (bb_rocketData_t*)((bb_attachmentArmData_t*)self->data)->rocket->data;
     drawWsg(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
             (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x - 17,
             (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y + 14,
-            false, false, (int16_t)aData->angle >> DECIMAL_BITS);
+            false, false, (int16_t)rData->armAngle >> DECIMAL_BITS);
 }
 
 void bb_drawDeathDumpster(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -2007,12 +2006,17 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
                   (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                   (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
 
-    char bugCountText[6];
-    snprintf(bugCountText, sizeof(bugCountText), "%02d", rData->numBugs);
-
-    int32_t tWidth = textWidth(&self->gameData->font, bugCountText);
-    drawText(&self->gameData->tinyNumbers, c140, bugCountText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
+    char monitorText[4];
+    snprintf(monitorText, sizeof(monitorText), "%02d", rData->numBugs % 100);
+    drawText(&self->gameData->tinyNumbers, c140, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
              (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 8);
+    if (rData->armAngle > 2880) // that is 180 << DECIMAL_BITS
+    {
+        snprintf(monitorText, sizeof(monitorText), "%02d",
+                 (uint8_t)(30 - ((rData->armAngle >> DECIMAL_BITS) - 180) / 6));
+        drawText(&self->gameData->tinyNumbers, c410, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 2);
+    }
 
     if (self->paused == false)
     {
@@ -2154,8 +2158,8 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
 
 void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    bb_attachmentArmData_t* aData = (bb_attachmentArmData_t*)self->data;
-    aData->angle += 18;
+    bb_rocketData_t* rData = (bb_rocketData_t*)((bb_attachmentArmData_t*)self->data)->rocket->data;
+    rData->armAngle += 18;
 }
 
 void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)

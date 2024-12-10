@@ -131,9 +131,10 @@ typedef struct
 
 typedef struct
 {
-    bb_entity_t* flame; // tracks the flame to update position like a child object
     int32_t yVel;
-    uint16_t numBugs; // number of bugs in the booster
+    bb_entity_t* flame; // tracks the flame to update position like a child object
+    uint16_t numBugs;   // number of bugs in the booster
+    int32_t armAngle;   // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
 } bb_rocketData_t;
 
 typedef struct
@@ -172,7 +173,6 @@ typedef struct
 
 typedef struct
 {
-    int32_t angle;       // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
     bb_entity_t* rocket; // a reference to the booster. To reposition self and Notify to take off at angle = 359.
 } bb_attachmentArmData_t;
 
