@@ -264,9 +264,9 @@ static void bb_EnterModeSkipIntro(void)
             ((bb_attachmentArmData_t*)arm->data)->rocket = bigbug->gameData.entityManager.activeBooster;
 
             bb_entity_t* grabbyHand = bb_createEntity(
-                &bigbug->gameData.entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 3,
+                &bigbug->gameData.entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 5,
                 bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
-                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 106, false, false);
+                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 53, false, false);
             ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = bigbug->gameData.entityManager.activeBooster;
         }
     }

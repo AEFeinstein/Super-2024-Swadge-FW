@@ -355,8 +355,8 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
         ((bb_attachmentArmData_t*)arm->data)->rocket = self;
 
         bb_entity_t* grabbyHand
-            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 3,
-                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 106, false, false);
+            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 5,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, false, false);
         ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
 
         self->paused             = true;
@@ -1586,12 +1586,18 @@ void bb_updateRadarPing(bb_entity_t* self)
 void bb_updateGrabbyHand(bb_entity_t* self)
 {
     bb_grabbyHandData_t* ghData = (bb_grabbyHandData_t*)self->data;
-    self->pos.y                 = ghData->rocket->pos.y - 1696; // that is 106 << 4
+    self->pos.y                 = ghData->rocket->pos.y - 880; // that is 66 << 4
 
     // retreat into the booster
-    if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -120)
+    if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
     {
         self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY -= 2;
+        if (ghData->grabbed != NULL)
+        {
+            ghData->grabbed->pos.x = self->pos.x;
+            ghData->grabbed->pos.y
+                = self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS);
+        }
     }
     else if (ghData->grabbed != NULL)
     {
@@ -1620,6 +1626,10 @@ void bb_updateGrabbyHand(bb_entity_t* self)
 
         self->currentAnimationFrame = 0;
         self->paused                = true;
+    }
+    if (self->currentAnimationFrame == 2)
+    {
+        self->paused = true;
     }
 }
 
@@ -2109,19 +2119,20 @@ void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
 
 void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
+    bb_grabbyHandData_t* ghData = (bb_grabbyHandData_t*)self->data;
     // extend from the booster
-    if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY < 3)
+    if (ghData->grabbed == NULL && self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY < 28)
     {
         self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY += 4;
     }
 
     // if nothing grabbed yet and there is something in hand to grab
     if (self->currentAnimationFrame == 0
-        && self->pos.y + self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY < other->pos.y - 12)
+        && self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS)
+               < other->pos.y - 128)
     {
-        self->paused                = false;
-        bb_grabbyHandData_t* ghData = (bb_grabbyHandData_t*)self->data;
-        ghData->grabbed             = other;
+        self->paused    = false;
+        ghData->grabbed = other;
     }
 }
 

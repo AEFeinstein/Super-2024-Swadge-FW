@@ -170,7 +170,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_sprite_t* grabSprite = bb_loadSprite("grab", 3, 1, &entityManager->sprites[BB_GRABBY_HAND]);
     grabSprite->originX     = 15;
-    grabSprite->originY     = -120;
+    grabSprite->originY     = -26;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -968,7 +968,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_setData(entity, ghData, GRABBY_HAND_DATA);
 
             entity->cacheable  = true;
-            entity->halfHeight = 40 << DECIMAL_BITS;
+            entity->halfWidth  = 5 << DECIMAL_BITS;
+            entity->halfHeight = 26 << DECIMAL_BITS;
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
