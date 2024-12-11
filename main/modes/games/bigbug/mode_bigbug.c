@@ -527,9 +527,7 @@ static void bb_DrawScene(void)
 
 static void bb_DrawScene_Radar(void)
 {
-    bigbug->gameData.radar.cam.y = (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
-
-    for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 4; xIdx++)
+    for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
     {
         for (int yIdx = bigbug->gameData.radar.cam.y / 4 < 0 ? 0 : bigbug->gameData.radar.cam.y / 4;
              yIdx < (bigbug->gameData.radar.cam.y / 4 < 0 ? FIELD_HEIGHT / 4
@@ -537,7 +535,7 @@ static void bb_DrawScene_Radar(void)
              yIdx++)
         {
             uint16_t radarTileColor = bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 0 ? c333 : c000;
-            if (true) // unlockable upgrade
+            if ((bigbug->gameData.radar.upgrades >> BIGBUG_GARBAGE_DENSITY) & 1)
             {
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 0
                     && bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health < 4)
@@ -565,7 +563,7 @@ static void bb_DrawScene_Radar(void)
     }
     // garbotnik
     vec_t garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                 bigbug->gameData.radar.cam.y + 120};
+                                 (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 3};
 
     drawCircleFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, 3, c515);
     // garbotnik pings
@@ -576,11 +574,41 @@ static void bb_DrawScene_Radar(void)
                    bigbug->gameData.radar.playerPingRadius, c404);
     }
 
-    // booster radar rect
-    garbotnikPos.x = (bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 4;
-    garbotnikPos.y = (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 4;
-    drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2,
-                   garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c440);
+    if ((bigbug->gameData.radar.upgrades >> BIGBUG_OLD_BOOSTERS) & 1)
+    {
+        for (int boosterIdx = 0; boosterIdx < 4; boosterIdx++)
+        {
+            if (bigbug->gameData.entityManager.activeBooster
+                != bigbug->gameData.entityManager.boosterEntities[boosterIdx])
+            {
+                // booster radar rect
+                garbotnikPos.x
+                    = (bigbug->gameData.entityManager.boosterEntities[boosterIdx]->pos.x >> DECIMAL_BITS) / 8 - 4;
+                garbotnikPos.y
+                    = (bigbug->gameData.entityManager.boosterEntities[boosterIdx]->pos.y >> DECIMAL_BITS) / 8 - 4;
+                drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2,
+                               garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c430);
+            }
+        }
+    }
+
+    if ((bigbug->gameData.radar.upgrades >> BIGBUG_ACTIVE_BOOSTER) & 1)
+    {
+        // booster radar rect
+        garbotnikPos.x = (bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 4;
+        garbotnikPos.y = (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 4;
+        drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2,
+                       garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c250);
+    }
+
+    if ((bigbug->gameData.radar.upgrades >> BIGBUG_INFINITE_RANGE) & 1)
+    {
+        if ((bigbug->gameData.radar.playerPingRadius % 51) < 26)
+        {
+            drawTriangleOutlined(140, 2, 148, 10, 132, 10, c222, c555);
+            drawTriangleOutlined(132, 230, 148, 230, 140, 238, c222, c555);
+        }
+    }
 
     DRAW_FPS_COUNTER(bigbug->font);
 }
@@ -608,7 +636,8 @@ static void bb_DrawScene_Radar_Upgrade(void)
     }
     else
     {
-        drawText(&bigbug->gameData.font, c132, "Pick one radar upgrade:", 10, 120);
+        drawText(&bigbug->gameData.font, c132, "Tune radar for:", 10, 120);
+        drawText(&bigbug->gameData.font, c122, "(pick one)", 138, 120);
     }
 
     drawCircleFilledQuadrants(29, 166 + bigbug->gameData.radar.playerPingRadius * 30, 10, bb_randomInt(0, 8),
@@ -628,23 +657,26 @@ static void bb_DrawScene_Radar_Upgrade(void)
                 break;
             case BIGBUG_WASHING_MACHINES:
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "washing machines", 45, 160 + i * 30);
+                         "washing machine locations", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
                 break;
             case BIGBUG_ENEMIES:
-                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "enemies",
-                         45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
+                         "enemy locations", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
                 break;
             case BIGBUG_ACTIVE_BOOSTER:
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "active booster", 45, 160 + i * 30);
+                         "active booster location", 45, 160 + i * 30);
                 break;
             case BIGBUG_OLD_BOOSTERS:
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "old boosters", 45, 160 + i * 30);
+                         "old booster location", 45, 160 + i * 30);
                 break;
             case BIGBUG_POINTS_OF_INTEREST:
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "more points of interest", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
                 break;
             case BIGBUG_REFILL_AMMO:
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
@@ -690,12 +722,25 @@ static void bb_GameLoop_Radar(int64_t elapsedUs)
             // PB_B      = 0x0020, //!< The B button's bit
             // PB_START  = 0x0040, //!< The start button's bit
             // PB_SELECT = 0x0080, //!< The select button's bit
-            if (evt.button == PB_START)
-            {
-                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
-                bigbug->gameData.screen             = BIGBUG_GAME;
-            }
         }
+    }
+
+    if ((bigbug->gameData.radar.upgrades >> BIGBUG_INFINITE_RANGE) & 1)
+    {
+        if (bigbug->gameData.btnState & 1) // up
+        {
+            bigbug->gameData.radar.cam.y--;
+        }
+        if ((bigbug->gameData.btnState >> 1) & 1) // down
+        {
+            bigbug->gameData.radar.cam.y++;
+        }
+    }
+
+    if ((bigbug->gameData.btnDownState >> 6) & 1) // start
+    {
+        bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
+        bigbug->gameData.screen             = BIGBUG_GAME;
     }
 
     bigbug->gameData.radar.playerPingRadius += 3;
@@ -728,12 +773,7 @@ static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs)
             // PB_B      = 0x0020, //!< The B button's bit
             // PB_START  = 0x0040, //!< The start button's bit
             // PB_SELECT = 0x0080, //!< The select button's bit
-            if (evt.button == PB_START)
-            {
-                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
-                bigbug->gameData.screen             = BIGBUG_GAME;
-            }
-            else if (evt.button == PB_UP)
+            if (evt.button == PB_UP)
             {
                 bigbug->gameData.radar.playerPingRadius--; // using it as a selection idx in this screen to save space.
             }

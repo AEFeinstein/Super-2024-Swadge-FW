@@ -1625,7 +1625,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
 
         bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
         rData->numBugs++;
-        if (rData->numBugs % 10 == 0)
+        if (rData->numBugs % 10 == 0) // set to % 1 for quick testing the entire radar tech tree
         {
             bb_entity_t* radarPing
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
@@ -2588,7 +2588,8 @@ void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in
 
 void bb_openMap(bb_entity_t* self)
 {
-    self->gameData->screen = BIGBUG_RADAR_SCREEN;
+    self->gameData->radar.cam.y = (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
+    self->gameData->screen      = BIGBUG_RADAR_SCREEN;
 }
 
 void bb_upgradeRadar(bb_entity_t* self)
@@ -2610,7 +2611,7 @@ void bb_upgradeRadar(bb_entity_t* self)
     {
         while (self->gameData->radar.choices[0] == BIGBUG_REFILL_AMMO)
         {
-            enum bb_radarUpgrade_t candidate = (enum bb_radarUpgrade_t)bb_randomInt(0, 7);
+            enum bb_radarUpgrade_t candidate = (enum bb_radarUpgrade_t)bb_randomInt(0, 6);
             if (((self->gameData->radar.upgrades & 1 << candidate) >> candidate) == 0)
             {
                 self->gameData->radar.choices[0] = (int8_t)candidate;
@@ -2622,7 +2623,7 @@ void bb_upgradeRadar(bb_entity_t* self)
     {
         while (self->gameData->radar.choices[1] == -1)
         {
-            enum bb_radarUpgrade_t candidate = (enum bb_radarUpgrade_t)bb_randomInt(0, 7);
+            enum bb_radarUpgrade_t candidate = (enum bb_radarUpgrade_t)bb_randomInt(0, 6);
             if ((candidate != self->gameData->radar.choices[0])
                 && (((self->gameData->radar.upgrades & 1 << candidate) >> candidate) == 0))
             {
