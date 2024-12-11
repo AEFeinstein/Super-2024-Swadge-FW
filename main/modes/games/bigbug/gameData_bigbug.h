@@ -65,7 +65,7 @@ struct bb_radarScreenData_t
                               // 0b100000  old boosters     1 << 5
                               // 0b1000000 more points of interest 1 << 6
                               // 0b10000000 refill ammo     1 << 7
-    int8_t choices[2]; // the choices presented to the player. -1 means no choice.
+    int8_t choices[2];        // the choices presented to the player. -1 means no choice.
 };
 
 struct bb_gameData_t

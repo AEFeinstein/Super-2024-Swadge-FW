@@ -589,20 +589,20 @@ static void bb_DrawScene_Radar_Upgrade(void)
 {
     drawRect(1, 1, 279, 239, c132);
     drawRect(3, 3, 277, 237, c141);
-    drawCircleQuadrants(238,41, 40, false, false, false, true, c132);
-    drawCircleQuadrants(236,43, 40, false, false, false, true, c141);
+    drawCircleQuadrants(238, 41, 40, false, false, false, true, c132);
+    drawCircleQuadrants(236, 43, 40, false, false, false, true, c141);
 
     drawCircleQuadrants(41, 41, 40, false, false, true, false, c132);
     drawCircleQuadrants(43, 43, 40, false, false, true, false, c141);
 
-    drawCircleQuadrants(41, 198,40, false, true, false, false, c132);
-    drawCircleQuadrants(43, 196,40, false, true, false, false, c141);
+    drawCircleQuadrants(41, 198, 40, false, true, false, false, c132);
+    drawCircleQuadrants(43, 196, 40, false, true, false, false, c141);
 
-    drawCircleQuadrants(238,198,40, true, false, false, false, c132);
-    drawCircleQuadrants(236,196,40, true, false, false, false, c141);
-    
+    drawCircleQuadrants(238, 198, 40, true, false, false, false, c132);
+    drawCircleQuadrants(236, 196, 40, true, false, false, false, c141);
+
     drawText(&bigbug->gameData.sevenSegment, c141, "bugnology", 10, 40);
-    if(bigbug->gameData.radar.choices[0] == BIGBUG_REFILL_AMMO)
+    if (bigbug->gameData.radar.choices[0] == BIGBUG_REFILL_AMMO)
     {
         drawText(&bigbug->gameData.font, c301, "No radar upgrades available...", 10, 120);
     }
@@ -611,45 +611,52 @@ static void bb_DrawScene_Radar_Upgrade(void)
         drawText(&bigbug->gameData.font, c132, "Pick one radar upgrade:", 10, 120);
     }
 
-    drawCircleFilledQuadrants(29, 166 + bigbug->gameData.radar.playerPingRadius * 30, 10, bb_randomInt(0,8),bb_randomInt(0,1),bb_randomInt(-8,1),bb_randomInt(-20,1),c132);
+    drawCircleFilledQuadrants(29, 166 + bigbug->gameData.radar.playerPingRadius * 30, 10, bb_randomInt(0, 8),
+                              bb_randomInt(0, 1), bb_randomInt(-8, 1), bb_randomInt(-20, 1), c132);
 
-    
-    for(int i = 0; i < 2; i++)
+    for (int i = 0; i < 2; i++)
     {
-        switch(bigbug->gameData.radar.choices[i])
+        switch (bigbug->gameData.radar.choices[i])
         {
             case BIGBUG_GARBAGE_DENSITY:
-                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "garbage density", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
+                         "garbage density", 45, 160 + i * 30);
                 break;
             case BIGBUG_INFINITE_RANGE:
-                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "infinite range", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
+                         "infinite range", 45, 160 + i * 30);
                 break;
             case BIGBUG_WASHING_MACHINES:
-                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "washing machines", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
+                         "washing machines", 45, 160 + i * 30);
                 break;
             case BIGBUG_ENEMIES:
-                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "enemies", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "enemies",
+                         45, 160 + i * 30);
                 break;
             case BIGBUG_ACTIVE_BOOSTER:
-                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "active booster", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
+                         "active booster", 45, 160 + i * 30);
                 break;
             case BIGBUG_OLD_BOOSTERS:
-                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "old boosters", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
+                         "old boosters", 45, 160 + i * 30);
                 break;
             case BIGBUG_POINTS_OF_INTEREST:
-                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "more points of interest", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
+                         "more points of interest", 45, 160 + i * 30);
                 break;
             case BIGBUG_REFILL_AMMO:
-                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132, "refill ammo", 45, 160 + i * 30);
+                drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
+                         "refill ammo", 45, 160 + i * 30);
                 break;
             default:
                 break;
         }
     }
-    
-    //no upgrades left...
-    //refill ammo
 
+    // no upgrades left...
+    // refill ammo
 }
 
 /**
@@ -726,27 +733,29 @@ static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs)
                 bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
                 bigbug->gameData.screen             = BIGBUG_GAME;
             }
-            else if(evt.button == PB_UP)
+            else if (evt.button == PB_UP)
             {
-                bigbug->gameData.radar.playerPingRadius--;//using it as a selection idx in this screen to save space.
+                bigbug->gameData.radar.playerPingRadius--; // using it as a selection idx in this screen to save space.
             }
-            else if(evt.button == PB_DOWN)
+            else if (evt.button == PB_DOWN)
             {
-                bigbug->gameData.radar.playerPingRadius++;//using it as a selection idx in this screen to save space.
+                bigbug->gameData.radar.playerPingRadius++; // using it as a selection idx in this screen to save space.
             }
-            else if(evt.button == PB_A)
+            else if (evt.button == PB_A)
             {
-                if(bigbug->gameData.radar.choices[bigbug->gameData.radar.playerPingRadius] == BIGBUG_REFILL_AMMO)
+                if (bigbug->gameData.radar.choices[bigbug->gameData.radar.playerPingRadius] == BIGBUG_REFILL_AMMO)
                 {
-                    if(bigbug->gameData.entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+                    if (bigbug->gameData.entityManager.playerEntity->dataType == GARBOTNIK_DATA)
                     {
-                        bb_garbotnikData_t* gData = (bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data;
+                        bb_garbotnikData_t* gData
+                            = (bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data;
                         gData->numHarpoons = 250;
                     }
                 }
                 else
                 {
-                    bigbug->gameData.radar.upgrades += 1 << bigbug->gameData.radar.choices[bigbug->gameData.radar.playerPingRadius];
+                    bigbug->gameData.radar.upgrades
+                        += 1 << bigbug->gameData.radar.choices[bigbug->gameData.radar.playerPingRadius];
                 }
                 bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
                 bigbug->gameData.screen             = BIGBUG_GAME;
@@ -754,10 +763,11 @@ static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs)
         }
     }
 
-    //keep the selection wrapped in range of available choices.
+    // keep the selection wrapped in range of available choices.
     uint8_t numChoices = 1 + (uint8_t)(bigbug->gameData.radar.choices[1] > -1);
-    bigbug->gameData.radar.playerPingRadius = (bigbug->gameData.radar.playerPingRadius % numChoices + numChoices) % numChoices;
-    
+    bigbug->gameData.radar.playerPingRadius
+        = (bigbug->gameData.radar.playerPingRadius % numChoices + numChoices) % numChoices;
+
     bb_DrawScene_Radar_Upgrade();
 }
 
