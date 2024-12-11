@@ -35,14 +35,37 @@ struct bb_camera_t
 enum bb_screen_t
 {
     BIGBUG_RADAR_SCREEN,
+    BIGBUG_RADAR_UPGRADE_SCREEN,
     BIGBUG_GAME,
     BIGBUG_GAME_PINGING, // While game is still playing, but radar is pinging. Don't allow new radar pings.
+};
+
+enum bb_radarUpgrade_t
+{
+    BIGBUG_GARBAGE_DENSITY,
+    BIGBUG_INFINITE_RANGE,
+    BIGBUG_WASHING_MACHINES,
+    BIGBUG_ENEMIES,
+    BIGBUG_ACTIVE_BOOSTER,
+    BIGBUG_OLD_BOOSTERS,
+    BIGBUG_POINTS_OF_INTEREST,
+    BIGBUG_REFILL_AMMO,
 };
 
 struct bb_radarScreenData_t
 {
     vec_t cam;                // x and y offsets for use in the radar (pause) screen.
     uint8_t playerPingRadius; // animates a circle to help the tiny player dot be seen.
+    uint8_t upgrades;         // the radar upgrade bools are bitpacked into this
+                              // 0b1       garbage density  1 << 0
+                              // 0b10      infinite range   1 << 1
+                              // 0b100     washing machines 1 << 2
+                              // 0b1000    enemies          1 << 3
+                              // 0b10000   active booster   1 << 4
+                              // 0b100000  old boosters     1 << 5
+                              // 0b1000000 more points of interest 1 << 6
+                              // 0b10000000 refill ammo     1 << 7
+    int8_t choices[2]; // the choices presented to the player. -1 means no choice.
 };
 
 struct bb_gameData_t
@@ -87,6 +110,7 @@ struct bb_gameData_t
 
     font_t font;
     font_t tinyNumbers;
+    font_t sevenSegment;
 
     bb_entity_t* menuBug; // Featured entity walking through the main menu.
 

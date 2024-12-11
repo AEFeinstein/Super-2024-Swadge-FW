@@ -1585,7 +1585,7 @@ void bb_updateRadarPing(bb_entity_t* self)
 void bb_updateGrabbyHand(bb_entity_t* self)
 {
     bb_grabbyHandData_t* ghData = (bb_grabbyHandData_t*)self->data;
-    self->pos.y                 = ghData->rocket->pos.y - 880; // that is 66 << 4
+    self->pos.y                 = ghData->rocket->pos.y - 848; // that is 53 << 4
 
     // retreat into the booster
     if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
@@ -2593,6 +2593,42 @@ void bb_openMap(bb_entity_t* self)
 
 void bb_upgradeRadar(bb_entity_t* self)
 {
+    self->gameData->radar.playerPingRadius = 0;//just using this as a selection idx to save some space.
+    self->gameData->radar.choices[0] = (int8_t)BIGBUG_REFILL_AMMO; //refill ammo
+    self->gameData->radar.choices[1] = -1; //no choice available
+
+    uint8_t zeroCount = 0; //zero count represent the number of upgrades not yet gotten.
+    for (int i = 0; i < 7; i++) {
+        if ((self->gameData->radar.upgrades & (1 << i)) == 0) { // Check if the bit at position i is 0
+            zeroCount++;
+        }
+    }
+
+    if(zeroCount > 0)
+    {
+        while(self->gameData->radar.choices[0] == BIGBUG_REFILL_AMMO)
+        {
+            enum bb_radarUpgrade_t candidate = (enum bb_radarUpgrade_t)bb_randomInt(0,7);
+            if (((self->gameData->radar.upgrades & 1 << candidate)>>candidate) == 0)
+            {
+                self->gameData->radar.choices[0] = (int8_t) candidate;
+            }
+        }
+    }
+
+    if(zeroCount > 1)
+    {
+        while(self->gameData->radar.choices[1] == -1)
+        {
+            enum bb_radarUpgrade_t candidate = (enum bb_radarUpgrade_t)bb_randomInt(0,7);
+            if((candidate != self->gameData->radar.choices[0]) && (((self->gameData->radar.upgrades & 1 << candidate)>>candidate) == 0))
+            {
+                self->gameData->radar.choices[1] = (int8_t) candidate;
+            }
+        }
+    }
+    
+    self->gameData->screen = BIGBUG_RADAR_UPGRADE_SCREEN;
 }
 
 void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
