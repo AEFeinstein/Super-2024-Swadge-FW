@@ -619,8 +619,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             // apply the spring force
             // Spring and damping coefficients
-            const int32_t SPRING_CONSTANT  = 35000; // Adjust for desired springiness
-            const int32_t DAMPING_CONSTANT = 20;     // Adjust for desired damping
+            const int32_t SPRING_CONSTANT  = 40000; // Adjust for desired springiness
+            const int32_t DAMPING_CONSTANT = 30;     // Adjust for desired damping
 
             bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
 
@@ -652,7 +652,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
                 // Apply the force
                 pData->vel.x += totalForceX;
-                pData->vel.y += totalForceY + 6;
+                pData->vel.y += totalForceY + 4;
             }
 
             current = current->next;
@@ -703,7 +703,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     if (gData->gettingCrushed)
     {
-        gData->fuel -= 2000;
+        gData->fuel -= 80000;
     }
 
     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
@@ -1523,13 +1523,12 @@ void bb_updateGameOver(bb_entity_t* self)
 
             self->gameData->entityManager.activeBooster->currentAnimationFrame++;
 
-            // Tally up the remaining boosters
-            int boosterIdx = 0;
+
+            uint8_t boosterIdx = 0;
             while (boosterIdx < 3)
             {
-                if (self->gameData->entityManager.boosterEntities[boosterIdx] != NULL)
+                if (self->gameData->entityManager.boosterEntities[boosterIdx]->currentAnimationFrame != 41)
                 {
-                    self->gameData->entityManager.boosterEntities[boosterIdx] = NULL;
                     break;
                 }
                 boosterIdx++;
@@ -2546,7 +2545,7 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
 {
     for (int i = 0; i < 3; i++)
     {
-        if (self->gameData->entityManager.boosterEntities[i] != NULL)
+        if (self->gameData->entityManager.boosterEntities[i]->currentAnimationFrame != 41)
         {
             self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[i];
 

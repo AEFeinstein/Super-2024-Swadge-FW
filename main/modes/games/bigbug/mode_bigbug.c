@@ -961,7 +961,7 @@ static void bb_UpdateTileSupport(void)
                 }
 
                 // create a crumble animation
-                bb_crumbleDirt(bigbug->gameData.entityManager.playerEntity, bb_randomInt(2, 5), shiftedVal[0],
+                bb_crumbleDirt(&bigbug->gameData.entityManager.entities[MAX_ENTITIES-1], bb_randomInt(2, 5), shiftedVal[0],
                                shiftedVal[1], true);
 
                 // queue neighbors for crumbling
