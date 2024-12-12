@@ -30,22 +30,22 @@ static const shSong_t shSongList[] = {
     },
     {
         .name   = "Chowa Grove",
-        .artist = "???",
+        .artist = "Newmajoe",
         .fName  = "sh_cgrove",
     },
     {
         .name   = "Chowa Race",
-        .artist = "???",
+        .artist = "Tuck",
         .fName  = "sh_crace",
     },
     {
-        .name   = "Credits",
-        .artist = "newmajoe",
+        .name   = "Hot Dog Credits",
+        .artist = "Newmajoe",
         .fName  = "sh_credits",
     },
     {
         .name   = "The Dance of the Cremulons",
-        .artist = "???",
+        .artist = "Mattmattat",
         .fName  = "sh_cremulons",
     },
     {
@@ -55,18 +55,23 @@ static const shSong_t shSongList[] = {
     },
     {
         .name   = "Swadge City Ocean 1989",
-        .artist = "Carrie",
+        .artist = "Carrie Wood",
         .fName  = "sh_ocean",
     },
     {
         .name   = "Pango",
-        .artist = "???",
+        .artist = "Newmajoe",
         .fName  = "sh_pango",
     },
     {
         .name   = "Revenge",
         .artist = "Rampey",
         .fName  = "sh_revenge",
+    },
+    {
+        .name   = "Pain",
+        .artist = "Rampey",
+        .fName  = "sh_pain",
     },
     {
         .name   = "Wake Man Stage",
