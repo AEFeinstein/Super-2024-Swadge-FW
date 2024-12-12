@@ -171,6 +171,10 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bb_sprite_t* grabSprite = bb_loadSprite("grab", 3, 1, &entityManager->sprites[BB_GRABBY_HAND]);
     grabSprite->originX     = 15;
     grabSprite->originY     = -26;
+
+    bb_sprite_t* doorSprite = bb_loadSprite("door", 2, 1, &entityManager->sprites[BB_DOOR]);
+    doorSprite->originX     = 16;
+    doorSprite->originY     = 48;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -996,6 +1000,14 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             entity->updateFunction = &bb_updateRadarPing;
             entity->drawFunction   = &bb_drawRadarPing;
+            break;
+        }
+        case BB_DOOR:
+        {
+            entity->halfWidth      = 12 << DECIMAL_BITS;
+            entity->halfHeight     = 48 << DECIMAL_BITS;
+            entity->cacheable      = true;
+            entity->updateFunction = &bb_updateDoor;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

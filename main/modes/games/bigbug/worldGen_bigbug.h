@@ -4,10 +4,11 @@
 // Includes
 //==============================================================================
 #include "swadge2024.h"
+#include "gameData_bigbug.h"
 
 //==============================================================================
 // Prototypes
 //==============================================================================
-void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap);
+void bb_generateWorld(bb_tilemap_t* tilemap);
 
 #endif

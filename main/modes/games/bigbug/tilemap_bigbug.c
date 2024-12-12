@@ -270,6 +270,16 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             }
                             break;
                         }
+                        case DOOR_EMBED:
+                        {
+                            if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_DOOR, 1,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
+                                != NULL)
+                            {
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }
                         default:
                         {
                             break;

@@ -4,8 +4,8 @@
 
 #include "mode_bigbug.h"
 #include "tilemap_bigbug.h"
-#include "entityManager_bigbug.h"
-#include "entity_bigbug.h"
+// #include "entityManager_bigbug.h"
+// #include "entity_bigbug.h"
 #include "worldGen_bigbug.h"
 #include "random_bigbug.h"
 #include "typedef_bigbug.h"
@@ -13,7 +13,7 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
+void bb_generateWorld(bb_tilemap_t* tilemap)
 {
     // There are 6 handcrafted levels that get chosen randomly.
     uint8_t level = bb_randomInt(0, 5);
@@ -24,7 +24,7 @@ void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
     loadWsgInplace(wsg_name, &levelWsg, true, bb_decodeSpace,
                    bb_hsd); // levelWsg only needed for this brief scope.
 
-    int8_t midgroundHealhValues[] = {1, 4, 10};
+    int8_t midgroundHealthValues[] = {1, 4, 10};
 
     // Set all the tiles
     for (int i = 0; i < TILE_FIELD_WIDTH; i++)
@@ -94,12 +94,25 @@ void bb_generateWorld(bb_entityManager_t* entityManager, bb_tilemap_t* tilemap)
                 }
             }
 
-            // green value used for midground tiles
-            if (((rgbCol >> 8) & 255) == 51)
+            // green value used for midground tiles and doors
+            switch ((rgbCol >> 8) & 255)
             {
-                tilemap->mgTiles[i][j].health = tilemap->fgTiles[i][j].health == 0
-                                                    ? midgroundHealhValues[bb_randomInt(0, 2)]
-                                                    : tilemap->fgTiles[i][j].health;
+                case 51:
+                {
+                    tilemap->mgTiles[i][j].health = tilemap->fgTiles[i][j].health == 0
+                                                        ? midgroundHealthValues[bb_randomInt(0, 2)]
+                                                        : tilemap->fgTiles[i][j].health;
+                    break;
+                }
+                case 102:
+                {
+                    tilemap->fgTiles[i][j].embed = DOOR_EMBED;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
 
             // blue channel is also for enemy density where there are foreground tiles.

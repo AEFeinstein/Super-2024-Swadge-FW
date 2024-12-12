@@ -1644,6 +1644,32 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     }
 }
 
+void bb_updateDoor(bb_entity_t* self)
+{
+    if (self->gameData->carFightState == 0) // no fight
+    {
+        self->currentAnimationFrame = 0;
+        if (self->collisions != NULL)
+        {
+            bb_clearCollisions(self, false);
+        }
+    }
+    else // fight
+    {
+        self->currentAnimationFrame = 1;
+
+        if (self->collisions == NULL)
+        {
+            self->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others   = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionHeavyFalling};
+            push(self->collisions, (void*)collision);
+        }
+    }
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     if (GARBOTNIK_DATA != self->dataType)
@@ -2162,6 +2188,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                         self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false)
         != NULL)
     {
+        self->gameData->carFightState = 20;
         bb_destroyEntity(self, false);
     }
 }

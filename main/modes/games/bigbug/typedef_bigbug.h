@@ -53,6 +53,7 @@ typedef enum
     BB_SKELETON,        // Some dino bones embedded in garbage. Drops fuel.
     BB_FUEL,            // A zero-g glob of relish or crude dinosaur juice.
     BB_GRABBY_HAND,     // A hand in the booster that grabs bugs.
+    BB_DOOR,
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.
@@ -72,7 +73,8 @@ typedef enum
     EGG_EMBED,
     WASHING_MACHINE_EMBED,
     CAR_EMBED,
-    SKELETON_EMBED
+    SKELETON_EMBED,
+    DOOR_EMBED,
 } bb_embeddable_t;
 
 typedef enum

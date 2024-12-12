@@ -44,7 +44,7 @@ enum bb_radarUpgrade_t
 {
     BIGBUG_GARBAGE_DENSITY,
     BIGBUG_INFINITE_RANGE,
-    BIGBUG_WASHING_MACHINES,
+    BIGBUG_FUEL,
     BIGBUG_ENEMIES,
     BIGBUG_ACTIVE_BOOSTER,
     BIGBUG_OLD_BOOSTERS,
@@ -59,7 +59,7 @@ struct bb_radarScreenData_t
     uint8_t upgrades;         // the radar upgrade bools are bitpacked into this
                               // 0b1       garbage density  1 << 0
                               // 0b10      infinite range   1 << 1
-                              // 0b100     washing machines 1 << 2
+                              // 0b100     fuel             1 << 2
                               // 0b1000    enemies          1 << 3
                               // 0b10000   active booster   1 << 4
                               // 0b100000  old boosters     1 << 5
@@ -119,6 +119,8 @@ struct bb_gameData_t
     enum bb_screen_t screen; ///< The screen being displayed
 
     struct bb_radarScreenData_t radar;
+
+    uint8_t carFightState; ///< 0 means no active car fight, greater than 0 means number of kills remaining
 };
 
 //==============================================================================

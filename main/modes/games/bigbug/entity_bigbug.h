@@ -325,6 +325,7 @@ void bb_updateAttachmentArm(bb_entity_t* self);
 void bb_updateGameOver(bb_entity_t* self);
 void bb_updateRadarPing(bb_entity_t* self);
 void bb_updateGrabbyHand(bb_entity_t* self);
+void bb_updateDoor(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);

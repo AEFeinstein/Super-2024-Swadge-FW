@@ -176,7 +176,7 @@ static void bb_EnterMode(void)
     bigbug->gameData.camera.camera.pos.x = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
     bigbug->gameData.camera.camera.pos.y = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
 
-    bb_generateWorld(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
+    bb_generateWorld(&(bigbug->gameData.tilemap));
 
     // Player
     //  bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
@@ -280,7 +280,7 @@ static void bb_EnterModeSkipIntro(void)
 
     bigbug->gameData.entityManager.playerEntity = bigbug->gameData.entityManager.viewEntity;
 
-    bb_generateWorld(&(bigbug->gameData.entityManager), &(bigbug->gameData.tilemap));
+    bb_generateWorld(&(bigbug->gameData.tilemap));
 
     // Set the mode to game mode
     bigbug->gameData.screen = BIGBUG_GAME;
@@ -655,9 +655,9 @@ static void bb_DrawScene_Radar_Upgrade(void)
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "infinite range", 45, 160 + i * 30);
                 break;
-            case BIGBUG_WASHING_MACHINES:
+            case BIGBUG_FUEL:
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "washing machine locations", 45, 160 + i * 30);
+                         "fuel locations", 45, 160 + i * 30);
                 drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
                 break;
             case BIGBUG_ENEMIES:
