@@ -667,11 +667,11 @@ static void bb_DrawScene_Radar_Upgrade(void)
                 break;
             case BIGBUG_ACTIVE_BOOSTER:
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "active booster location", 45, 160 + i * 30);
+                         "booster location", 45, 160 + i * 30);
                 break;
             case BIGBUG_OLD_BOOSTERS:
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "old booster location", 45, 160 + i * 30);
+                         "old booster locations", 45, 160 + i * 30);
                 break;
             case BIGBUG_POINTS_OF_INTEREST:
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,

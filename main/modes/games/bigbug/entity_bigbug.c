@@ -619,8 +619,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             // apply the spring force
             // Spring and damping coefficients
-            const int32_t SPRING_CONSTANT  = 250000; // Adjust for desired springiness
-            const int32_t DAMPING_CONSTANT = 40;     // Adjust for desired damping
+            const int32_t SPRING_CONSTANT  = 35000; // Adjust for desired springiness
+            const int32_t DAMPING_CONSTANT = 20;     // Adjust for desired damping
 
             bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
 
@@ -652,7 +652,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
                 // Apply the force
                 pData->vel.x += totalForceX;
-                pData->vel.y += totalForceY;
+                pData->vel.y += totalForceY + 6;
             }
 
             current = current->next;
