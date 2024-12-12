@@ -35,7 +35,7 @@ static const shSong_t shSongList[] = {
     },
     {
         .name   = "Chowa Race",
-        .artist = "???",
+        .artist = "Tuck",
         .fName  = "sh_crace",
     },
     {
@@ -45,7 +45,7 @@ static const shSong_t shSongList[] = {
     },
     {
         .name   = "The Dance of the Cremulons",
-        .artist = "MattMattat",
+        .artist = "Mattmattat",
         .fName  = "sh_cremulons",
     },
     {
