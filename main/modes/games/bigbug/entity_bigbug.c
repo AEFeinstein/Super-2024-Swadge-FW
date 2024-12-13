@@ -98,6 +98,13 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
                 goData->wsgLoaded = false;
             }
         }
+        else if (self->spriteIndex >= 8 && self->spriteIndex <= 13)//bug
+        {
+            if(self->gameData->carFightState>0)
+            {
+                self->gameData->carFightState--;
+            }
+        }
         heap_caps_free(self->data);
     }
     self->data = NULL;
@@ -283,7 +290,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
         // Update the dirt to air.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble
-        bb_crumbleDirt(self, 3, hitInfo.tile_i, hitInfo.tile_j, true);
+        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true);
     }
     return;
 }
@@ -315,7 +322,7 @@ void bb_updateHeavyFalling(bb_entity_t* self)
         // Update the dirt to air.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         // Create a crumble
-        bb_crumbleDirt(self, 3, hitInfo.tile_i, hitInfo.tile_j, true);
+        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true);
     }
     return;
 }
@@ -726,7 +733,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         if (tile->health == 0 || tile->health == 1 || tile->health == 4)
         {
             // Create a crumble
-            bb_crumbleDirt(self, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health);
+            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health);
         }
         else
         {
@@ -915,7 +922,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed  = NOTHING_EMBED;
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
                     // Create a crumble
-                    bb_crumbleDirt(self, 2, hitInfo.tile_i, hitInfo.tile_j, false);
+                    bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true);
                 }
                 // destroy this
                 bb_destroyEntity(self, false);
@@ -2091,10 +2098,10 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     if (other->dataType == EGG_DATA)
     {
         // pop that egg
-        int32_t tile_i                                         = (other->pos.x >> DECIMAL_BITS) / 32;
-        int32_t tile_j                                         = (other->pos.y >> DECIMAL_BITS) / 32;
+        int32_t tile_i                                         = other->pos.x >> 9; //4 decimal bits and 5 bitshifts is divide by 32.
+        int32_t tile_j                                         = other->pos.y >> 9; //4 decimal bits and 5 bitshifts is divide by 32.
         self->gameData->tilemap.fgTiles[tile_i][tile_j].health = 0;
-        bb_crumbleDirt(other, 2, tile_i, tile_j, true);
+        bb_crumbleDirt(other->gameData, 2, tile_i, tile_j, true);
         // destroy this harpoon
         bb_destroyEntity(self, false);
     }
@@ -2183,11 +2190,145 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     // bb_onCollisionSimple(self, other, hitInfo);
-    if (bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_CAR_ACTIVE, 6,
-                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false)
-        != NULL)
+    bb_entity_t* carActive = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_CAR_ACTIVE, 6,
+                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+    
+    bb_carActiveData_t* cData = (bb_carActiveData_t*)carActive->data;
+    if (carActive != NULL)
     {
-        self->gameData->carFightState = 20;
+        //number of bugs to fight. More risk at greater depths.
+        self->gameData->carFightState = (3*(self->pos.y>>9)/20)+5;
+
+        //complex way to spawn bugs that adapts to any arena
+        for(int bugSpawn = 0; bugSpawn < self->gameData->carFightState; bugSpawn++)
+        {
+            bool success = false; //when this loop is done, a bug is spawned.
+            while(success == false)
+            {
+                uint8_t spawnPosStartIdx = bb_randomInt(0,3);//top left, top right, bottom left, bottom right
+                uint8_t spawnDirection = bb_randomInt(0,2);//down, sideways, up
+                //in terms of tile indices...
+                vec_t spawnPos = {0}; // Set all fields to 0
+                if(self->pos.x > 18944)//if it's on the right half of the map (74/2)<<9
+                {
+                    spawnPos.x = (self->pos.x>>9) - 2 - (spawnPosStartIdx % 2) * 3;
+                }
+                else
+                {
+                    spawnPos.x = (self->pos.x>>9) + 2 + (spawnPosStartIdx % 2) * 3;
+                }
+                spawnPos.y = (self->pos.y>>9) - 5 + (spawnPosStartIdx > 1) * 3;
+                //make sure there are 3 consecutive blocks of garbage enclosed in garbage.
+                uint8_t consecutiveGarbage = 0;
+                while(true)
+                {
+                    switch(spawnDirection)
+                    {
+                        case 0://down
+                        {
+                            spawnPos.y++;
+                            break;
+                        }
+                        case 1://sideways
+                        {
+                            spawnPos.x += ((self->pos.x > 18944) << 1) - 1;
+                            break;
+                        }
+                        default://case 2://up
+                        {
+                            spawnPos.y--;
+                            break;
+                        }
+                    }
+                    if(spawnPos.x - 1 >= 0 && spawnPos.y - 1>= 0 && spawnPos.x + 1 < TILE_FIELD_WIDTH && spawnPos.y + 1 < TILE_FIELD_HEIGHT)
+                    {
+                        if(self->gameData->tilemap.fgTiles[spawnPos.x][spawnPos.y].health>0 && 
+                        self->gameData->tilemap.fgTiles[spawnPos.x - 1][spawnPos.y].health>0 && 
+                        self->gameData->tilemap.fgTiles[spawnPos.x][spawnPos.y - 1].health>0 &&
+                        self->gameData->tilemap.fgTiles[spawnPos.x + 1][spawnPos.y].health>0 &&
+                        self->gameData->tilemap.fgTiles[spawnPos.x][spawnPos.y + 1].health>0)
+                        {
+                            consecutiveGarbage++;
+                        }
+                        else if(consecutiveGarbage>0)
+                        {
+                            consecutiveGarbage = 0;
+                        }
+                    }
+                    else//invalid
+                    {
+                        break;
+                    }
+                    if(consecutiveGarbage == 3)
+                    {
+                        bb_entity_t* jankyBugDig = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_JANKY_BUG_DIG, 1, (spawnPos.x << 5)+16, (spawnPos.y << 5)+16, false, false);
+                        
+                        if(jankyBugDig == NULL)
+                        {
+                            bb_destroyEntity(carActive, false);
+                            return;
+                        }
+
+                        bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
+                                  (spawnPos.x << 5)+16, (spawnPos.y << 5)+16, false, false);
+                        //spawn a bug
+                        if(bug != NULL)
+                        {
+                            success = true;
+                            bug->cacheable = false;//car fight bugs don't cache so they may dig in from off screen.
+
+                            uint8_t jankyBugDigIdx = 0;
+                            if((spawnPosStartIdx == 0 || spawnPosStartIdx == 2) && spawnDirection == 0)
+                            {
+                                ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_UP;
+                            }
+                            else if((spawnPosStartIdx == 1 || spawnPosStartIdx == 3) && spawnDirection == 0)
+                            {
+                                ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_UP;
+                                jankyBugDigIdx = 1;
+                            }
+                            else if((spawnPosStartIdx == 0 || spawnPosStartIdx == 1) && spawnDirection == 1)
+                            {
+                                ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = self->pos.x > 18944 ? BB_LEFT : BB_RIGHT;
+                                jankyBugDigIdx = 2;
+                            }
+                            else if((spawnPosStartIdx == 2 || spawnPosStartIdx == 3) && spawnDirection == 1)
+                            {
+                                ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = self->pos.x > 18944 ? BB_LEFT : BB_RIGHT;
+                                jankyBugDigIdx = 3;
+                            }
+                            else if((spawnPosStartIdx == 0 || spawnPosStartIdx == 2) && spawnDirection == 2)
+                            {
+                                ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_DOWN;
+                                jankyBugDigIdx = 4;
+                            }
+                            else if((spawnPosStartIdx == 1 || spawnPosStartIdx == 3) && spawnDirection == 2)
+                            {
+                                ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_DOWN;
+                                jankyBugDigIdx = 5;
+                            }
+
+                            if(cData->jankyBugDig[jankyBugDigIdx] == NULL)
+                            {
+                                cData->jankyBugDig[jankyBugDigIdx] = jankyBugDig;
+                            }
+                            else
+                            {
+                                bb_destroyEntity(jankyBugDig, false);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        for(int jankyBugDigIdx = 0; jankyBugDigIdx < 6; jankyBugDigIdx++)
+        {
+            if(cData->jankyBugDig[jankyBugDigIdx] != NULL)
+            {
+                self->gameData->tilemap.fgTiles[cData->jankyBugDig[jankyBugDigIdx]->pos.x >> 9][cData->jankyBugDig[jankyBugDigIdx]->pos.y >> 9].health = 0;
+            }
+        }
         bb_destroyEntity(self, false);
     }
 }
@@ -2221,6 +2362,66 @@ void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
     {
         self->paused    = false;
         ghData->grabbed = other;
+    }
+}
+
+void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    bb_jankyBugDigData_t* jData = (bb_jankyBugDigData_t*)self->data;
+    vec_t tilePos = {.x = self->pos.x >> 9, .y = self->pos.y >> 9};
+    switch(jData->arena)
+    {
+        case BB_DOWN:
+        {
+            tilePos.y++;
+            break;
+        }
+        case BB_LEFT:
+        {
+            tilePos.x--;
+            break;
+        }
+        case BB_UP:
+        {
+            tilePos.y--;
+            break;
+        }
+        default: //BB_RIGHT:
+        {
+            tilePos.x++;
+            break;
+        }
+    }
+    if(self->gameData->tilemap.fgTiles[tilePos.x][tilePos.y].health > 0)
+    {
+        self->gameData->tilemap.fgTiles[tilePos.x][tilePos.y].health = 0;
+        bb_crumbleDirt(self->gameData, 2, tilePos.x, tilePos.y, true);
+    }
+    self->pos.x = tilePos.x<<9;
+    self->pos.y = tilePos.y<<9;
+
+    switch(jData->arena)
+    {
+        case BB_DOWN:
+        {
+            self->pos.y += (13<<DECIMAL_BITS);
+            break;
+        }
+        case BB_LEFT:
+        {
+            self->pos.x -= (13<<DECIMAL_BITS);
+            break;
+        }
+        case BB_UP:
+        {
+            self->pos.y -= (13<<DECIMAL_BITS);
+            break;
+        }
+        default: //BB_RIGHT
+        {
+            self->pos.x += (13<<DECIMAL_BITS);
+            break;
+        }
     }
 }
 
@@ -2661,36 +2862,36 @@ void bb_upgradeRadar(bb_entity_t* self)
     self->gameData->screen = BIGBUG_RADAR_UPGRADE_SCREEN;
 }
 
-void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
+void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth)
 {
     // Create a crumble animation
-    bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM,
+    bb_createEntity(&gameData->entityManager, ONESHOT_ANIMATION, false, CRUMBLE_ANIM,
                     gameFramesPerAnimationFrame, tile_i * TILE_SIZE + HALF_TILE, tile_j * TILE_SIZE + HALF_TILE, false,
                     false);
 
     // Play sfx
     midiPlayer_t* sfx = soundGetPlayerSfx();
     midiPlayerReset(sfx);
-    soundPlaySfx(&self->gameData->sfxBump, 0);
+    soundPlaySfx(&gameData->sfxBump, 0);
 
     if (zeroHealth)
     {
-        flagNeighbors((bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[tile_i][tile_j], self->gameData);
-        switch (self->gameData->tilemap.fgTiles[tile_i][tile_j].embed)
+        flagNeighbors((bb_midgroundTileInfo_t*)&gameData->tilemap.fgTiles[tile_i][tile_j], gameData);
+        switch (gameData->tilemap.fgTiles[tile_i][tile_j].embed)
         {
             case EGG_EMBED:
             {
                 vec_t tilePos = {.x = tile_i * TILE_SIZE + HALF_TILE, .y = tile_j * TILE_SIZE + HALF_TILE};
                 // create a bug
-                bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false,
+                bb_entity_t* bug = bb_createEntity(&gameData->entityManager, LOOPING_ANIMATION, false,
                                                    bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
                 if (bug != NULL)
                 {
-                    if (self->gameData->tilemap.fgTiles[tile_i][tile_j].entity != NULL)
+                    if (gameData->tilemap.fgTiles[tile_i][tile_j].entity != NULL)
                     {
                         bb_entity_t* egg
-                            = ((bb_eggLeavesData_t*)(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity->data))
+                            = ((bb_eggLeavesData_t*)(gameData->tilemap.fgTiles[tile_i][tile_j].entity->data))
                                   ->egg;
                         if (egg != NULL)
                         {
@@ -2698,20 +2899,20 @@ void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint
                             bb_destroyEntity(egg, false);
                         }
                         // destroy this (eggLeaves)
-                        bb_destroyEntity(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity, false);
+                        bb_destroyEntity(gameData->tilemap.fgTiles[tile_i][tile_j].entity, false);
                     }
-                    self->gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
+                    gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
                 }
                 break;
             }
             case SKELETON_EMBED:
             {
                 vec_t tilePos = {.x = tile_i * TILE_SIZE + HALF_TILE, .y = tile_j * TILE_SIZE + HALF_TILE};
-                bb_destroyEntity(self->gameData->tilemap.fgTiles[tile_i][tile_j].entity, false);
-                self->gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
+                bb_destroyEntity(gameData->tilemap.fgTiles[tile_i][tile_j].entity, false);
+                gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
 
                 // create fuel
-                bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_FUEL, 10, tilePos.x,
+                bb_createEntity(&gameData->entityManager, LOOPING_ANIMATION, false, BB_FUEL, 10, tilePos.x,
                                 tilePos.y, false, false);
                 break;
             }

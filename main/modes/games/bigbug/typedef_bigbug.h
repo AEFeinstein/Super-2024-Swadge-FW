@@ -62,6 +62,7 @@ typedef enum
     OVO_TALK,       // Need this enum actually for the entity but not the sprites array.
     BB_GAME_OVER,   // A screen after you fail.
     BB_RADAR_PING,  // Expanding circles when you press pause.
+    BB_JANKY_BUG_DIG,//used in the car fights. When bugs touch this the dirt "digs" toward the car fight arena.
     WILE            // A metal ball that is thrown (not implemented)
 
 } bb_spriteDef_t;

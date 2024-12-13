@@ -36,6 +36,7 @@ typedef enum
     GO_TO_DATA,
     GRABBY_HAND_DATA,
     HEAVY_FALLING_DATA,
+    JANKY_BUG_DIG_DATA,
     RADAR_PING_DATA,
     MENU_BUG_DATA,
     MENU_DATA,
@@ -184,7 +185,7 @@ typedef struct
 
 typedef struct
 {
-    uint8_t enemiesRemaining;
+    bb_entity_t* jankyBugDig[6]; //When a bug collides with this, the dirt "digs" toward the car fight arena
 } bb_carActiveData_t;
 
 typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
@@ -222,6 +223,12 @@ typedef struct
     bool wsgLoaded;
     wsg_t fullscreenGraphic;
 } bb_gameOverData_t;
+
+typedef struct
+{
+    bb_direction_t arena;//The direction to dig towards the car fight arena.
+}
+bb_jankyBugDigData_t;
 
 typedef struct
 {
@@ -353,6 +360,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
 void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
@@ -368,8 +376,7 @@ void bb_deployBooster(bb_entity_t* self);
 void bb_openMap(bb_entity_t* self);
 void bb_upgradeRadar(bb_entity_t* self);
 
-void bb_crumbleDirt(bb_entity_t* self, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
-                    bool zeroHealth);
+void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j, bool zeroHealth);
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings);
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);

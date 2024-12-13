@@ -933,9 +933,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             entity->halfWidth          = 25 << DECIMAL_BITS;
             entity->halfHeight         = 13 << DECIMAL_BITS;
-            bb_carActiveData_t* caData = heap_caps_calloc(1, sizeof(bb_carActiveData_t), MALLOC_CAP_SPIRAM);
-            caData->enemiesRemaining   = 10;
-            bb_setData(entity, caData, CAR_ACTIVE_DATA);
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_carActiveData_t), MALLOC_CAP_SPIRAM), CAR_ACTIVE_DATA);
             break;
         }
         case BB_DEATH_DUMPSTER:
@@ -1008,6 +1006,29 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight     = 48 << DECIMAL_BITS;
             entity->cacheable      = true;
             entity->updateFunction = &bb_updateDoor;
+            break;
+        }
+        case BB_JANKY_BUG_DIG:
+        {
+            entity->halfHeight = 3;
+            entity->halfWidth = 3;
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_jankyBugDigData_t), MALLOC_CAP_SPIRAM), JANKY_BUG_DIG_DATA);
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+
+            push(others, (void*)BU);
+            push(others, (void*)BUG);
+            push(others, (void*)BUGG);
+            push(others, (void*)BUGGO);
+            push(others, (void*)BUGGY);
+            push(others, (void*)BUTT);
+
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionJankyBugDig};
+            push(entity->collisions, (void*)collision);
+
+            entity->drawFunction = &bb_drawNothing;
             break;
         }
         default: // FLAME_ANIM and others need nothing set
