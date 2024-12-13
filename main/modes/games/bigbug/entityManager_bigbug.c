@@ -1028,7 +1028,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             *collision                = (bb_collision_t){others, bb_onCollisionJankyBugDig};
             push(entity->collisions, (void*)collision);
 
-            entity->drawFunction = &bb_drawNothing;
+            //entity->drawFunction = &bb_drawNothing;
+            entity->drawFunction = &bb_drawRect;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

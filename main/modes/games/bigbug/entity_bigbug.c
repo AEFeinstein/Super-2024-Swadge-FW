@@ -98,13 +98,6 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
                 goData->wsgLoaded = false;
             }
         }
-        else if (self->spriteIndex >= 8 && self->spriteIndex <= 13)//bug
-        {
-            if(self->gameData->carFightState>0)
-            {
-                self->gameData->carFightState--;
-            }
-        }
         heap_caps_free(self->data);
     }
     self->data = NULL;
@@ -1652,6 +1645,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
 
 void bb_updateDoor(bb_entity_t* self)
 {
+    printf("fight state: %d\n", self->gameData->carFightState);
     if (self->gameData->carFightState == 0) // no fight
     {
         self->currentAnimationFrame = 0;
@@ -2092,6 +2086,14 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
     }
 }
 
+void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+              ((self->pos.y - self->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+              ((self->pos.x + self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+              ((self->pos.y + self->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+}
+
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_projectileData_t* pData = (bb_projectileData_t*)self->data;
@@ -2117,6 +2119,11 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         {
             if (self->dataType == BU_DATA)
             {
+                if(self->gameData->carFightState>0)
+                {
+                    self->gameData->carFightState--;
+                }
+
                 bb_buData_t* buData = (bb_buData_t*)self->data;
                 switch (buData->gravity)
                 {
@@ -2368,6 +2375,12 @@ void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
 void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_jankyBugDigData_t* jData = (bb_jankyBugDigData_t*)self->data;
+    jData->numberOfDigs++;
+    if(jData->numberOfDigs == 2)
+    {
+        bb_destroyEntity(self, false);
+        return;
+    }
     vec_t tilePos = {.x = self->pos.x >> 9, .y = self->pos.y >> 9};
     switch(jData->arena)
     {
@@ -2397,8 +2410,8 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
         self->gameData->tilemap.fgTiles[tilePos.x][tilePos.y].health = 0;
         bb_crumbleDirt(self->gameData, 2, tilePos.x, tilePos.y, true);
     }
-    self->pos.x = tilePos.x<<9;
-    self->pos.y = tilePos.y<<9;
+    self->pos.x = (tilePos.x<<9)+(16<<DECIMAL_BITS);
+    self->pos.y = (tilePos.y<<9)+(16<<DECIMAL_BITS);
 
     switch(jData->arena)
     {
