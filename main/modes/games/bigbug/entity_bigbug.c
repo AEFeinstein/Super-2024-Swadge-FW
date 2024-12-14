@@ -670,14 +670,30 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             // if it is a bug and it is dead i.e. PHYSICS_DATA
             if (curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13 && curEntity->dataType == PHYSICS_DATA)
             {
-                uint16_t dist = (uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> DECIMAL_BITS,
-                                                             (curEntity->pos.y - self->pos.y) >> DECIMAL_BITS});
-                // if the bug is within 50px of garbotnik
-                if (dist < 2500 && dist < best_dist)
+                // if it is not already towed
+                bool isTowed = false;
+                node_t* cur = gData->towedEntities.first;
+                while (cur != NULL)
                 {
-                    // new best candidate found!
-                    best_i    = i;
-                    best_dist = dist;
+                    void* curNode = (bb_midgroundTileInfo_t*)cur->val;
+                    if (curNode == curEntity)
+                    {
+                        isTowed = true;
+                        break;
+                    }
+                    cur = cur->next;
+                }
+                if(!isTowed)
+                {
+                    uint16_t dist = (uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> DECIMAL_BITS,
+                                                             (curEntity->pos.y - self->pos.y) >> DECIMAL_BITS});
+                    // if the bug is within 50px of garbotnik
+                    if (dist < 2500 && dist < best_dist)
+                    {
+                        // new best candidate found!
+                        best_i    = i;
+                        best_dist = dist;
+                    }
                 }
             }
         }
@@ -1009,6 +1025,10 @@ void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations)
 void bb_updateBug(bb_entity_t* self)
 {
     bb_buData_t* bData = (bb_buData_t*)self->data;
+    if(!self->cacheable && self->gameData->carFightState == 0)
+    {
+        self->cacheable = true;
+    }
     if (bData->fallSpeed > 19)
     {
         switch (bData->gravity)
@@ -1630,7 +1650,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
 
         bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
         rData->numBugs++;
-        if (rData->numBugs % 1 == 0) // set to % 1 for quick testing the entire radar tech tree
+        if (rData->numBugs % 10 == 0) // set to % 1 for quick testing the entire radar tech tree
         {
             bb_entity_t* radarPing
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
@@ -1653,31 +1673,11 @@ void bb_updateDoor(bb_entity_t* self)
 {
     if (self->gameData->carFightState == 0) // no fight
     {
+        self->cacheable = true;
         self->currentAnimationFrame = 0;
         if (self->collisions != NULL)
         {
             bb_clearCollisions(self, false);
-        }
-    }
-    else // fight
-    {
-        //close the door
-        self->currentAnimationFrame = 1;
-
-        if (self->collisions == NULL)
-        {
-            self->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-            list_t* others   = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-            push(others, (void*)GARBOTNIK_FLYING);
-            push(others, (void*)BU);
-            push(others, (void*)BUG);
-            push(others, (void*)BUGG);
-            push(others, (void*)BUGGO);
-            push(others, (void*)BUGGY);
-            push(others, (void*)BUTT);
-            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
-            *collision                = (bb_collision_t){others, bb_onCollisionSimple};
-            push(self->collisions, (void*)collision);
         }
     }
 }
@@ -2140,13 +2140,13 @@ void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
 
 }
 
-void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
-{
-    drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-              ((self->pos.y - self->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
-              ((self->pos.x + self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-              ((self->pos.y + self->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
-}
+// void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+// {
+//     drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+//               ((self->pos.y - self->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+//               ((self->pos.x + self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+//               ((self->pos.y + self->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+// }
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
@@ -2163,52 +2163,62 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     }
     else
     {
-        bb_bugData_t* bData = (bb_bugData_t*)other->data;
         // pause the harpoon animation as the tip will no longer even be rendered.
         self->paused = true;
 
-        // Bug got stabbed
-        bData->health -= 20;
-        if (bData->health < 0)
+        if(other->dataType != PHYSICS_DATA)
         {
-            if (self->dataType == BU_DATA)
+            bb_bugData_t* bData = (bb_bugData_t*)other->data;
+            // Bug got stabbed
+            if (bData->health - 20 <= 0)//bug just died
             {
                 if(self->gameData->carFightState>0)
                 {
                     self->gameData->carFightState--;
                 }
-
-                bb_buData_t* buData = (bb_buData_t*)self->data;
-                switch (buData->gravity)
+                if (self->dataType == BU_DATA)
                 {
-                    case BB_LEFT:
-                        bb_rotateBug(self, -1);
-                        break;
-                    case BB_UP:
-                        bb_rotateBug(self, 2);
-                        break;
-                    case BB_RIGHT:
-                        bb_rotateBug(self, 1);
-                        break;
-                    default:
-                        break;
+                    bb_buData_t* buData = (bb_buData_t*)self->data;
+                    switch (buData->gravity)
+                    {
+                        case BB_LEFT:
+                            bb_rotateBug(self, -1);
+                            break;
+                        case BB_UP:
+                            bb_rotateBug(self, 2);
+                            break;
+                        case BB_RIGHT:
+                            bb_rotateBug(self, 1);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                other->drawFunction = NULL;
+
+                midiPlayer_t* sfx = soundGetPlayerSfx();
+                midiPlayerReset(sfx);
+                soundPlaySfx(&self->gameData->sfxDirt, 0);
+
+                bData->health               = 0;
+                other->paused               = true;
+                bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+                physData->vel               = divVec2d(pData->vel, 2);
+                physData->bounceNumerator   = 2; // 66% bounce
+                physData->bounceDenominator = 3;
+                bb_setData(other, physData, PHYSICS_DATA);
+                other->updateFunction = bb_updatePhysicsObject;
+            }
+            else
+            {
+                bData->health -= 20;
+                if(bData->health < 0)
+                {
+                    bData->health = 0;
                 }
             }
-            other->drawFunction = NULL;
-
-            midiPlayer_t* sfx = soundGetPlayerSfx();
-            midiPlayerReset(sfx);
-            soundPlaySfx(&self->gameData->sfxDirt, 0);
-
-            bData->health               = 0;
-            other->paused               = true;
-            bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
-            physData->vel               = divVec2d(pData->vel, 2);
-            physData->bounceNumerator   = 2; // 66% bounce
-            physData->bounceDenominator = 3;
-            bb_setData(other, physData, PHYSICS_DATA);
-            other->updateFunction = bb_updatePhysicsObject;
         }
+
         vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
         bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
         shData->parent                = other;
@@ -2228,7 +2238,7 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     other->pos.x              = hitInfo->pos.x + hitInfo->normal.x * other->halfWidth;
     other->pos.y              = hitInfo->pos.y + hitInfo->normal.y * other->halfHeight;
     
-    if(other->data == GARBOTNIK_DATA)
+    if(other->dataType == GARBOTNIK_DATA)
     {
         bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
         if (hitInfo->normal.x == 0)
@@ -2239,6 +2249,11 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
         {
             gData->vel.x = 0;
         }
+    }
+    else if(other->dataType == BU_DATA || other->dataType == BUGGO_DATA)
+    {
+        bb_bugData_t* bData = (bb_bugData_t*)other->data;
+        bData->faceLeft = !bData->faceLeft;
     }
 }
 
@@ -2254,6 +2269,57 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
 
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
+    //close the door and make it not cacheable so bugs don't walk out offscreen.
+    node_t* checkEntity = self->gameData->entityManager.cachedEntities->first;
+    while(checkEntity != NULL)
+    {
+        bb_entity_t* cachedEntityVal = (bb_entity_t*)checkEntity->val;
+        if(cachedEntityVal->spriteIndex == BB_DOOR)//it's a door
+        {
+            if(abs(cachedEntityVal->pos.x - self->pos.x)+abs(cachedEntityVal->pos.y - self->pos.y) < 8704)//eh close enough
+            {
+                bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
+                if (foundSpot != NULL)
+                {
+                    // like a memcopy
+                    *foundSpot = *cachedEntityVal;
+                    self->gameData->entityManager.activeEntities++;
+                    heap_caps_free(removeEntry(self->gameData->entityManager.cachedEntities, checkEntity));
+                }
+            }
+        }
+        checkEntity = checkEntity->next;
+    }
+
+    for(int checkIdx = 0; checkIdx < MAX_ENTITIES; checkIdx++)
+    {
+        bb_entity_t* entityPointer = &self->gameData->entityManager.entities[checkIdx];
+        if(entityPointer->spriteIndex == BB_DOOR)//it's a door
+        {
+            if(abs(entityPointer->pos.x - self->pos.x)+abs(entityPointer->pos.y - self->pos.y) < 8704)//eh close enough
+            {
+                entityPointer->cacheable = false;
+                entityPointer->currentAnimationFrame = 1;
+                if (entityPointer->collisions == NULL)
+                {
+                    entityPointer->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+                    list_t* others   = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+                    push(others, (void*)GARBOTNIK_FLYING);
+                    push(others, (void*)BU);
+                    push(others, (void*)BUG);
+                    push(others, (void*)BUGG);
+                    push(others, (void*)BUGGO);
+                    push(others, (void*)BUGGY);
+                    push(others, (void*)BUTT);
+                    bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+                    *collision                = (bb_collision_t){others, bb_onCollisionSimple};
+                    push(entityPointer->collisions, (void*)collision);
+                }
+            }
+        }
+    }
+
+
     bb_carData_t* cData = (bb_carData_t*)self->data;
 
     //number of bugs to fight. More risk at greater depths.
@@ -2428,10 +2494,8 @@ void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
 void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     // do a collision check again to verify, because often times another bug has already incremented the position on the same frame.
-    bb_hitInfo_t foo = {0};
-    if (!bb_boxesCollide(self, other, NULL, &foo))
+    if (!bb_boxesCollide(self, other, NULL, NULL))
     {
-        foo.hit = false;//Just set something so the unused variable warning goes away.
         return;
     }
 

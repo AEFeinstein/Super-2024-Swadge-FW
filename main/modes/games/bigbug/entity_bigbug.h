@@ -109,12 +109,11 @@ typedef struct // child class
 typedef struct // child class
 {
     bool faceLeft;     // flip the sprite if true
-    uint8_t walkSpeed; // randomized on creation. Used for walking or flying.
+    uint8_t speed; // randomized on creation. Used for walking or flying.
     int8_t health;     // bug dies at negative numbers
     //-----------------------------------------------
     bool trackingPlayer; // toggles between moving toward the player and moving in a random direction.
     vec_t direction;     // buggo moves in the direction vector.
-    uint8_t speed;
 } bb_buggoData_t;
 
 typedef struct
@@ -356,7 +355,7 @@ void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+// void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);

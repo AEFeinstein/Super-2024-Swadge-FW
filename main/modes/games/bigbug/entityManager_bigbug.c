@@ -245,21 +245,17 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
             if (curEntity->collisions != NULL)
             {
                 node_t* firstNode = curEntity->collisions->first;
-                if ((bb_spriteDef_t)(((bb_collision_t*)firstNode->val)->checkOthers->first)->val
-                    == GARBOTNIK_FLYING && ((bb_collision_t*)firstNode->val)->checkOthers->first->next == NULL)
+                if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType && ((bb_collision_t*)firstNode->val)->checkOthers->first->next == NULL)
                 {
                     // no need to search all other entities if it's simply something to do with the player.
-                    if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType)
+                    // do a collision check here
+                    bb_hitInfo_t hitInfo = {0};
+                    if (bb_boxesCollide(curEntity, entityManager->playerEntity,
+                                        &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
+                                        &hitInfo))
                     {
-                        // do a collision check here
-                        bb_hitInfo_t hitInfo = {0};
-                        if (bb_boxesCollide(curEntity, entityManager->playerEntity,
-                                            &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
-                                            &hitInfo))
-                        {
-                            ((bb_collision_t*)firstNode->val)
-                                ->function(curEntity, entityManager->playerEntity, &hitInfo);
-                        }
+                        ((bb_collision_t*)firstNode->val)
+                            ->function(curEntity, entityManager->playerEntity, &hitInfo);
                     }
                 }
                 else
@@ -279,10 +275,11 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                                 if (collisionCandidate->spriteIndex == (bb_spriteDef_t)currentOtherType->val)
                                 {
                                     // do a collision check here
-                                    if (bb_boxesCollide(collisionCandidate, curEntity, NULL, NULL))
+                                    bb_hitInfo_t hitInfo = {0};
+                                    if (bb_boxesCollide(curEntity, collisionCandidate, &collisionCandidate->pos, &hitInfo))
                                     {
                                         ((bb_collision_t*)currentCollisionCheck->val)
-                                            ->function(curEntity, collisionCandidate, NULL);
+                                            ->function(curEntity, collisionCandidate, &hitInfo);
                                     }
                                     break;
                                 }
@@ -1023,8 +1020,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             *collision                = (bb_collision_t){others, bb_onCollisionJankyBugDig};
             push(entity->collisions, (void*)collision);
 
-            //entity->drawFunction = &bb_drawNothing;
-            entity->drawFunction = &bb_drawRect;
+            entity->drawFunction = &bb_drawNothing;
+            // entity->drawFunction = &bb_drawRect;
             break;
         }
         default: // FLAME_ANIM and others need nothing set
