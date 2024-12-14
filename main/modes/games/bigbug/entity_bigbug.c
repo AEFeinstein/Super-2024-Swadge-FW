@@ -1645,7 +1645,6 @@ void bb_updateGrabbyHand(bb_entity_t* self)
 
 void bb_updateDoor(bb_entity_t* self)
 {
-    printf("fight state: %d\n", self->gameData->carFightState);
     if (self->gameData->carFightState == 0) // no fight
     {
         self->currentAnimationFrame = 0;
@@ -2266,7 +2265,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                     {
                         break;
                     }
-                    if(consecutiveGarbage == 3)
+                    if(consecutiveGarbage == 2)
                     {
                         bb_entity_t* jankyBugDig = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_JANKY_BUG_DIG, 1, (spawnPos.x << 5)+16, (spawnPos.y << 5)+16, false, false);
                         
@@ -2374,13 +2373,16 @@ void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
 
 void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    bb_jankyBugDigData_t* jData = (bb_jankyBugDigData_t*)self->data;
-    jData->numberOfDigs++;
-    if(jData->numberOfDigs == 2)
+    // do a collision check again to verify, because often times another bug has already incremented the position on the same frame.
+    bb_hitInfo_t foo = {0};
+    if (!bb_boxesCollide(self, other, NULL, &foo))
     {
-        bb_destroyEntity(self, false);
+        foo.hit = false;//Just set something so the unused variable warning goes away.
         return;
     }
+
+    //the purpose of this function is to dig one tile toward the arena and increment position toward the arena.
+    bb_jankyBugDigData_t* jData = (bb_jankyBugDigData_t*)self->data;
     vec_t tilePos = {.x = self->pos.x >> 9, .y = self->pos.y >> 9};
     switch(jData->arena)
     {
@@ -2435,6 +2437,11 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
             self->pos.x += (13<<DECIMAL_BITS);
             break;
         }
+    }
+    jData->numberOfDigs++;
+    if(jData->numberOfDigs == 2)
+    {
+        bb_destroyEntity(self, false);
     }
 }
 

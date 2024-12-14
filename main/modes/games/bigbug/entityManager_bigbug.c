@@ -1012,7 +1012,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             entity->halfHeight = 3;
             entity->halfWidth = 3;
-            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_jankyBugDigData_t), MALLOC_CAP_SPIRAM), JANKY_BUG_DIG_DATA);
+            bb_jankyBugDigData_t* jData = heap_caps_calloc(1, sizeof(bb_jankyBugDigData_t), MALLOC_CAP_SPIRAM);
+            jData->numberOfDigs = 0;
+            bb_setData(entity, jData, JANKY_BUG_DIG_DATA);
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);

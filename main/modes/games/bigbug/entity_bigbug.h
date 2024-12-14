@@ -227,7 +227,7 @@ typedef struct
 typedef struct
 {
     bb_direction_t arena;//The direction to dig towards the car fight arena.
-    uint8_t numberOfDigs;//Increments with each dig. Destroy self at 4.
+    uint8_t numberOfDigs;//Increments with each dig. Destroy self at 2. That's three digs when you count 0.
 }
 bb_jankyBugDigData_t;
 
