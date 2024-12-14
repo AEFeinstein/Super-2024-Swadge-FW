@@ -152,13 +152,9 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     washingMachineSprite->originX = 16;
     washingMachineSprite->originY = 16;
 
-    bb_sprite_t* carIdleSprite = bb_loadSprite("car_idle", 1, 1, &entityManager->sprites[BB_CAR_IDLE]);
-    carIdleSprite->originX     = 31;
-    carIdleSprite->originY     = 15;
-
-    bb_sprite_t* carActiveSprite = bb_loadSprite("car_active", 20, 1, &entityManager->sprites[BB_CAR_ACTIVE]);
-    carActiveSprite->originX     = 31;
-    carActiveSprite->originY     = 15;
+    bb_sprite_t* carSprite = bb_loadSprite("car", 60, 1, &entityManager->sprites[BB_CAR]);
+    carSprite->originX = 31;
+    carSprite->originY = 15;
 
     bb_sprite_t* skeletonSprite = bb_loadSprite("skeleton", 1, 6, &entityManager->sprites[BB_SKELETON]);
     skeletonSprite->originX     = 14;
@@ -248,8 +244,9 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
             if (curEntity->collisions != NULL)
             {
-                if ((bb_spriteDef_t)(((bb_collision_t*)curEntity->collisions->first->val)->checkOthers->first)->val
-                    == GARBOTNIK_FLYING)
+                node_t* firstNode = curEntity->collisions->first;
+                if ((bb_spriteDef_t)(((bb_collision_t*)firstNode->val)->checkOthers->first)->val
+                    == GARBOTNIK_FLYING && ((bb_collision_t*)firstNode->val)->checkOthers->first->next == NULL)
                 {
                     // no need to search all other entities if it's simply something to do with the player.
                     if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType)
@@ -260,7 +257,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                                             &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
                                             &hitInfo))
                         {
-                            ((bb_collision_t*)curEntity->collisions->first->val)
+                            ((bb_collision_t*)firstNode->val)
                                 ->function(curEntity, entityManager->playerEntity, &hitInfo);
                         }
                     }
@@ -914,8 +911,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             break;
         }
-        case BB_CAR_IDLE:
+        case BB_CAR:
         {
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_carData_t), MALLOC_CAP_SPIRAM), CAR_ACTIVE_DATA);
             entity->halfWidth  = 25 << DECIMAL_BITS;
             entity->halfHeight = 13 << DECIMAL_BITS;
             entity->cacheable  = true;
@@ -927,13 +925,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             *collision                = (bb_collision_t){others, bb_onCollisionCarIdle};
             push(entity->collisions, (void*)collision);
 
-            break;
-        }
-        case BB_CAR_ACTIVE:
-        {
-            entity->halfWidth          = 25 << DECIMAL_BITS;
-            entity->halfHeight         = 13 << DECIMAL_BITS;
-            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_carActiveData_t), MALLOC_CAP_SPIRAM), CAR_ACTIVE_DATA);
+            entity->drawFunction = &bb_drawCar;
+
             break;
         }
         case BB_DEATH_DUMPSTER:

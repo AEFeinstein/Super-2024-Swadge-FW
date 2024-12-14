@@ -186,7 +186,7 @@ typedef struct
 typedef struct
 {
     bb_entity_t* jankyBugDig[6]; //When a bug collides with this, the dirt "digs" toward the car fight arena
-} bb_carActiveData_t;
+} bb_carData_t;
 
 typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
 
@@ -334,6 +334,8 @@ void bb_updateGameOver(bb_entity_t* self);
 void bb_updateRadarPing(bb_entity_t* self);
 void bb_updateGrabbyHand(bb_entity_t* self);
 void bb_updateDoor(bb_entity_t* self);
+void bb_updateCarActive(bb_entity_t* self);
+void bb_updateCarOpen(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -353,6 +355,7 @@ void bb_drawDeathDumpster(bb_entityManager_t* entityManager, rectangle_t* camera
 void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);

@@ -251,10 +251,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case CAR_EMBED:
                         {
-                            if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_CAR_IDLE, 1,
-                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2, false, false)
-                                != NULL)
+                            bb_entity_t* car = bb_createEntity(entityManager, ONESHOT_ANIMATION, true, BB_CAR, 6,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2, false, false);
+                            if (car != NULL)
                             {
+                                car->currentAnimationFrame = 1;
                                 tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                             }
                             break;

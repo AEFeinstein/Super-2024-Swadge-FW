@@ -48,8 +48,7 @@ typedef enum
     BB_DEATH_DUMPSTER,  // Garbotnik's evil lair in space
     ATTACHMENT_ARM,     // The booster arm that detects the player and latches on.
     BB_WASHING_MACHINE, // It's heavy, and it has gravity
-    BB_CAR_IDLE,        // A car with a nice reward inside.
-    BB_CAR_ACTIVE,      // The car alarm going crazy drawing a horde encounter
+    BB_CAR,
     BB_SKELETON,        // Some dino bones embedded in garbage. Drops fuel.
     BB_FUEL,            // A zero-g glob of relish or crude dinosaur juice.
     BB_GRABBY_HAND,     // A hand in the booster that grabs bugs.
