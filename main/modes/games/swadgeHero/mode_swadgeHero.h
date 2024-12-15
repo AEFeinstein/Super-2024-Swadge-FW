@@ -88,6 +88,7 @@ typedef struct
     int32_t leadInUs;
     char hsKey[16];
     const char* songName;
+    bool paused;
 
     // Chart data
     int32_t numChartNotes;

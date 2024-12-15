@@ -321,6 +321,11 @@ void shTeardownGame(shVars_t* sh)
  */
 bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 {
+    if (sh->paused)
+    {
+        return true;
+    }
+
     // If the game end flag is raised
     if (sh->gameEnd)
     {
@@ -740,6 +745,13 @@ void shDrawGame(shVars_t* sh)
         }
     }
 
+    if (sh->paused)
+    {
+        const char pStr[] = "Paused";
+        int16_t tWidth    = textWidth(&sh->righteous, pStr);
+        drawText(&sh->righteous, c555, pStr, (TFT_WIDTH - tWidth) / 2, 150);
+    }
+
     int32_t textMargin    = 12;
     int32_t failBarHeight = 8;
 
@@ -807,6 +819,32 @@ static int32_t getXOffset(shVars_t* sh, int32_t note)
  */
 void shGameInput(shVars_t* sh, buttonEvt_t* evt)
 {
+    // Save the button state
+    sh->btnState = evt->state;
+
+    // This pauses and unpauses
+    if (PB_B < evt->button)
+    {
+        if (evt->down)
+        {
+            if (sh->paused)
+            {
+                // Resume
+                sh->paused = false;
+                globalMidiPlayerResumeAll();
+            }
+            else
+            {
+                // Pause
+                sh->paused = true;
+                globalMidiPlayerPauseAll();
+            }
+        }
+
+        // No further processing
+        return;
+    }
+
     // Get the position of the song and when the next event is, in ms
     int32_t songUs;
     if (sh->leadInUs > 0)
@@ -816,15 +854,6 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     else
     {
         songUs = SAMPLES_TO_US(globalMidiPlayerGet(MIDI_BGM)->sampleCount);
-    }
-
-    // Save the button state
-    sh->btnState = evt->state;
-
-    if (PB_B < evt->button)
-    {
-        // TODO handle non-face buttons
-        return;
     }
 
     // Find the note that corresponds to this button press
