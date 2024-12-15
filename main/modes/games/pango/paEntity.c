@@ -326,6 +326,10 @@ void updateCrabdozer(paEntity_t* self)
             {
                 if (self->state == PA_EN_ST_RUNAWAY)
                 {
+                    soundPlaySfx(&(self->soundManager->sndHurt), 2);
+                    self->spriteIndex = PA_SP_ENEMY_STUN;
+                    self->yspeed = -32;
+                    self->gravity = 4;
                     killEnemy(self);
                     break;
                 }
