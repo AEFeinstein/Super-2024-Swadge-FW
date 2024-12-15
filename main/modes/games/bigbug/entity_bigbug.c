@@ -151,7 +151,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
             {
                 // animation has played through back to 0
                 bb_heavyFallingData_t* hData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
-                hData->yVel                  = rData->yVel >> 2;
+                hData->yVel                  = rData->yVel >> 4;
                 bb_destroyEntity(rData->flame, false);
                 rData->flame         = NULL;
                 self->updateFunction = bb_updateHeavyFallingInit;
@@ -747,7 +747,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         else
         {
             // Create a bump animation
-            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 2,
+            bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 4,
                             hitInfo.pos.x >> DECIMAL_BITS, hitInfo.pos.y >> DECIMAL_BITS, true, false);
         }
 
@@ -2274,7 +2274,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     while(checkEntity != NULL)
     {
         bb_entity_t* cachedEntityVal = (bb_entity_t*)checkEntity->val;
-        if(cachedEntityVal->spriteIndex == BB_DOOR)//it's a door
+        if(cachedEntityVal != NULL && cachedEntityVal->spriteIndex == BB_DOOR)//it's a door
         {
             if(abs(cachedEntityVal->pos.x - self->pos.x)+abs(cachedEntityVal->pos.y - self->pos.y) < 8704)//eh close enough
             {

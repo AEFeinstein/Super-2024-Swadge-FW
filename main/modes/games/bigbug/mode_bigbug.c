@@ -648,47 +648,62 @@ static void bb_DrawScene_Radar_Upgrade(void)
         switch (bigbug->gameData.radar.choices[i])
         {
             case BIGBUG_GARBAGE_DENSITY:
+            {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "garbage density", 45, 160 + i * 30);
                 break;
+            }
             case BIGBUG_INFINITE_RANGE:
+            {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "infinite range", 45, 160 + i * 30);
                 break;
+            }
             case BIGBUG_FUEL:
+            {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "fuel locations", 45, 160 + i * 30);
                 drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
                 break;
+            }
             case BIGBUG_ENEMIES:
+            {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "enemy locations", 45, 160 + i * 30);
                 drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
                 break;
+            }
             case BIGBUG_ACTIVE_BOOSTER:
+            {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "booster location", 45, 160 + i * 30);
                 break;
+            }
             case BIGBUG_OLD_BOOSTERS:
+            {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "old booster locations", 45, 160 + i * 30);
                 break;
+            }
             case BIGBUG_POINTS_OF_INTEREST:
+            {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "more points of interest", 45, 160 + i * 30);
                 drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
                 break;
+            }
             case BIGBUG_REFILL_AMMO:
+            {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
                          "refill ammo", 45, 160 + i * 30);
                 break;
+            }
             default:
+            {
                 break;
+            }
         }
     }
-
-    // no upgrades left...
-    // refill ammo
 }
 
 /**

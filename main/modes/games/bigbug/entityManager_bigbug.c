@@ -87,7 +87,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     crumbleSprite->originX     = 48;
     crumbleSprite->originY     = 22;
 
-    bb_sprite_t* bumpSprite = bb_loadSprite("hit", 8, 1, &entityManager->sprites[BUMP_ANIM]);
+    bb_sprite_t* bumpSprite = bb_loadSprite("hit", 7, 1, &entityManager->sprites[BUMP_ANIM]);
     bumpSprite->originX     = 37;
     bumpSprite->originY     = 37;
 
