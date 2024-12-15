@@ -572,7 +572,7 @@ static void bb_DrawScene_Radar(void)
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_OLD_BOOSTERS) & 1)
     {
-        for (int boosterIdx = 0; boosterIdx < 4; boosterIdx++)
+        for (int boosterIdx = 0; boosterIdx < 3; boosterIdx++)
         {
             if (bigbug->gameData.entityManager.activeBooster
                 != bigbug->gameData.entityManager.boosterEntities[boosterIdx])
