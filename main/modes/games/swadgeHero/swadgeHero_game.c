@@ -378,8 +378,9 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         {
             // Lead in is over, start the song
             globalMidiPlayerPlaySongCb(&sh->midiSong, MIDI_BGM, shSongOver);
-            sh->leadInUs = 0;
-            songUs       = 0;
+            sh->songStartUs = esp_timer_get_time();
+            sh->leadInUs    = 0;
+            songUs          = 0;
         }
     }
     else
@@ -815,7 +816,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     }
     else
     {
-        songUs = SAMPLES_TO_US(globalMidiPlayerGet(MIDI_BGM)->sampleCount);
+        songUs = evt->time - sh->songStartUs;
     }
 
     // Save the button state
