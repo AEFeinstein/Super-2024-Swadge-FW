@@ -193,6 +193,11 @@ void pa_updatePlayer(paEntity_t* self)
                     {
                         pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
                         newHitBlock->state = t;
+                        
+                        if(t == PA_TILE_SPAWN_BLOCK_0){
+                            newHitBlock->spriteIndex = PA_SP_BONUS_BLOCK;
+                        }
+
                         switch (self->facingDirection)
                         {
                             case PA_DIRECTION_WEST:
