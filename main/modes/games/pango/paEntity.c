@@ -832,6 +832,21 @@ void pa_enemyBreakBlock(paEntity_t* self, uint16_t newDirection, int16_t speed, 
 
 void pa_animateEnemy(paEntity_t* self)
 {
+    bool useAggressiveSprites = false;
+    switch(self->state){
+        case PA_EN_ST_NORMAL:
+        default:
+            useAggressiveSprites = false;
+            break;
+        case PA_EN_ST_AGGRESSIVE:
+        case PA_EN_ST_BREAK_BLOCK:
+            useAggressiveSprites = true;
+            break;
+        case PA_EN_ST_RUNAWAY:
+            useAggressiveSprites = (self->gameData->frameCount % 2);
+            break;
+    }
+    
     if (self->xspeed != 0)
     {
         if ((self->xspeed < 0) || (self->xspeed > 0))
@@ -842,7 +857,7 @@ void pa_animateEnemy(paEntity_t* self)
             if (self->gameData->frameCount % 5 == 0)
             {
                 self->spriteIndex
-                    = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+                    = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + (useAggressiveSprites ? 4 : 0);
                 self->facingDirection = self->spriteFlipHorizontal ? PA_DIRECTION_WEST : PA_DIRECTION_EAST;
             }
         }
@@ -855,7 +870,7 @@ void pa_animateEnemy(paEntity_t* self)
     {
         if (self->gameData->frameCount % 5 == 0)
         {
-            self->spriteIndex          = PA_SP_ENEMY_SOUTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+            self->spriteIndex          = PA_SP_ENEMY_SOUTH + (useAggressiveSprites ? 4 : 0);
             self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
             self->facingDirection      = PA_DIRECTION_SOUTH;
         }
@@ -864,7 +879,7 @@ void pa_animateEnemy(paEntity_t* self)
     {
         if (self->gameData->frameCount % 5 == 0)
         {
-            self->spriteIndex          = PA_SP_ENEMY_NORTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+            self->spriteIndex          = PA_SP_ENEMY_NORTH + (useAggressiveSprites ? 4 : 0);
             self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
             self->facingDirection      = PA_DIRECTION_NORTH;
         }
