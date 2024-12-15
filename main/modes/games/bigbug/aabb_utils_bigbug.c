@@ -30,7 +30,7 @@ bool bb_boxesCollide(bb_entity_t* unyielding, bb_entity_t* yielding, vec_t* prev
         || !(unyielding->pos.y - unyielding->halfHeight < yielding->pos.y + yielding->halfHeight)
         || !(unyielding->pos.y + unyielding->halfHeight > yielding->pos.y - yielding->halfHeight))
     {
-        //no collision
+        // no collision
         return false;
     }
     /////////////////////////

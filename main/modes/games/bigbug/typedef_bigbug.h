@@ -49,20 +49,20 @@ typedef enum
     ATTACHMENT_ARM,     // The booster arm that detects the player and latches on.
     BB_WASHING_MACHINE, // It's heavy, and it has gravity
     BB_CAR,
-    BB_SKELETON,        // Some dino bones embedded in garbage. Drops fuel.
-    BB_FUEL,            // A zero-g glob of relish or crude dinosaur juice.
-    BB_GRABBY_HAND,     // A hand in the booster that grabs bugs.
+    BB_SKELETON,    // Some dino bones embedded in garbage. Drops fuel.
+    BB_FUEL,        // A zero-g glob of relish or crude dinosaur juice.
+    BB_GRABBY_HAND, // A hand in the booster that grabs bugs.
     BB_DOOR,
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.
-    NO_SPRITE_STAR, // a single white pixel for aesthetic beauty.
-    NO_SPRITE_POI,  // Point of interest for the camera to follow in various cutscenes
-    OVO_TALK,       // Need this enum actually for the entity but not the sprites array.
-    BB_GAME_OVER,   // A screen after you fail.
-    BB_RADAR_PING,  // Expanding circles when you press pause.
-    BB_JANKY_BUG_DIG,//used in the car fights. When bugs touch this the dirt "digs" toward the car fight arena.
-    WILE            // A metal ball that is thrown (not implemented)
+    NO_SPRITE_STAR,   // a single white pixel for aesthetic beauty.
+    NO_SPRITE_POI,    // Point of interest for the camera to follow in various cutscenes
+    OVO_TALK,         // Need this enum actually for the entity but not the sprites array.
+    BB_GAME_OVER,     // A screen after you fail.
+    BB_RADAR_PING,    // Expanding circles when you press pause.
+    BB_JANKY_BUG_DIG, // used in the car fights. When bugs touch this the dirt "digs" toward the car fight arena.
+    WILE              // A metal ball that is thrown (not implemented)
 
 } bb_spriteDef_t;
 

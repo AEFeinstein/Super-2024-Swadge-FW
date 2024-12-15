@@ -41,10 +41,6 @@ struct bb_t
     // bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
-
-    led_t ledL;           ///< The left LED color
-    led_t ledR;           ///< The right LED color
-    int32_t ledFadeTimer; ///< The timer to fade LEDs
 };
 
 //==============================================================================
@@ -236,7 +232,7 @@ static void bb_EnterModeSkipIntro(void)
         bigbug->gameData.entityManager.boosterEntities[rocketIdx] = bb_createEntity(
             &bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 8,
             (bigbug->gameData.entityManager.deathDumpster->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
-            (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS) + 375, true, false);
+            (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS), true, false);
 
         // bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 
@@ -910,10 +906,11 @@ static void bb_SetLeds(void)
     // Create an array for all LEDs
     led_t leds[CONFIG_NUM_LEDS];
     // Copy the LED colors for left and right to the whole array
-    for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {
-        leds[i]                         = bigbug->ledL;
-        leds[i + (CONFIG_NUM_LEDS / 2)] = bigbug->ledR;
+        leds[i].r = 0;
+        leds[i].g = 0;
+        leds[i].b = 0;
     }
     // Set the LED output
     setLeds(leds, CONFIG_NUM_LEDS);
@@ -976,8 +973,7 @@ static void bb_UpdateTileSupport(void)
                 }
 
                 // create a crumble animation
-                bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0],
-                               shiftedVal[1], true);
+                bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0], shiftedVal[1], true);
 
                 // queue neighbors for crumbling
                 for (uint8_t neighborIdx = 0; neighborIdx < 4;
@@ -1015,28 +1011,107 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
 {
     if ((entityManager->playerEntity != NULL) && (GARBOTNIK_DATA == entityManager->playerEntity->dataType))
     {
-        int32_t fuel = ((bb_garbotnikData_t*)entityManager->playerEntity->data)->fuel;
-        // Set the LEDs to a display fuel level
+        const uint8_t condimentIndices[] = {5, 4, 6, 7, 0, 8};
+        int32_t fuel                     = ((bb_garbotnikData_t*)entityManager->playerEntity->data)->fuel;
+        uint8_t colorStyle               = fuel / 60000;
+
+        // Set the LEDs to display fuel level
         // ESP_LOGD(BB_TAG,"timer %d\n", fuel);
         led_t leds[CONFIG_NUM_LEDS] = {0};
-        int32_t ledChunk            = 180000 / CONFIG_NUM_LEDS;
-        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        int32_t ledChunk            = 60000 / 6;
+        for (uint8_t i = 0; i < 6; i++)
         {
-            leds[i].r = 0;
-            if (fuel >= (i + 1) * ledChunk)
+            if (fuel - colorStyle * 60000 >= (i + 1) * ledChunk)
             {
-                leds[i].g = 255;
+                switch (colorStyle)
+                {
+                    case 0:
+                    {
+                        leds[condimentIndices[i]].r = 255;
+                        leds[condimentIndices[i]].g = 0;
+                        break;
+                    }
+                    case 1:
+                    {
+                        leds[condimentIndices[i]].r = 255;
+                        leds[condimentIndices[i]].g = 255;
+                        break;
+                    }
+                    default: // 2
+                    {
+                        leds[condimentIndices[i]].r = 0;
+                        leds[condimentIndices[i]].g = 255;
+                        break;
+                    }
+                }
             }
-            else if (fuel < i * ledChunk)
+            else if (fuel - colorStyle * 60000 < i * ledChunk)
             {
-                leds[i].g = 0;
+                switch (colorStyle)
+                {
+                    case 0:
+                    {
+                        leds[condimentIndices[i]].r = 0;
+                        leds[condimentIndices[i]].g = 0;
+                        break;
+                    }
+                    case 1:
+                    {
+                        leds[condimentIndices[i]].r = 255;
+                        leds[condimentIndices[i]].g = 0;
+                        break;
+                    }
+                    default: // 2
+                    {
+                        leds[condimentIndices[i]].r = 255;
+                        leds[condimentIndices[i]].g = 255;
+                        break;
+                    }
+                }
             }
             else
             {
-                leds[i].g = ((fuel - i * ledChunk) * 255) / ledChunk;
+                switch (colorStyle)
+                {
+                    case 0:
+                    {
+                        leds[condimentIndices[i]].r = ((fuel - i * ledChunk) * 255) / ledChunk;
+                        leds[condimentIndices[i]].g = 0;
+                        break;
+                    }
+                    case 1:
+                    {
+                        leds[condimentIndices[i]].r = 255;
+                        leds[condimentIndices[i]].g = ((fuel - 60000 - i * ledChunk) * 255) / ledChunk;
+                        break;
+                    }
+                    default: // 2
+                    {
+                        leds[condimentIndices[i]].r = 255 - ((fuel - 120000 - i * ledChunk) * 255) / ledChunk;
+                        leds[condimentIndices[i]].g = 255;
+                        break;
+                    }
+                }
             }
-            leds[i].b = 0;
+            leds[condimentIndices[i]].b = 0;
         }
+
+        for (int topLED = 1; topLED < 4; topLED++)
+        {
+            if (fuel < 20000)
+            {
+                leds[topLED].r = (fuel % 500) * 51 / 100;
+                if ((fuel / 500) % 2 == 1)
+                {
+                    leds[topLED].r = 255 - leds[topLED].r;
+                }
+            }
+            else if (fuel < 60000)
+            {
+                leds[topLED].r = 0;
+            }
+        }
+
         setLeds(leds, CONFIG_NUM_LEDS);
     }
 }

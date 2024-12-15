@@ -78,7 +78,7 @@ typedef struct
     int32_t intensity;
 
     // dialogue stuff
-    int16_t landingPhrases[22];
+    int16_t landingPhrases[29];
 } bb_garbotnikData_t;
 
 typedef struct
@@ -108,9 +108,9 @@ typedef struct // child class
 
 typedef struct // child class
 {
-    bool faceLeft;     // flip the sprite if true
+    bool faceLeft; // flip the sprite if true
     uint8_t speed; // randomized on creation. Used for walking or flying.
-    int8_t health;     // bug dies at negative numbers
+    int8_t health; // bug dies at negative numbers
     //-----------------------------------------------
     bool trackingPlayer; // toggles between moving toward the player and moving in a random direction.
     vec_t direction;     // buggo moves in the direction vector.
@@ -184,7 +184,7 @@ typedef struct
 
 typedef struct
 {
-    bb_entity_t* jankyBugDig[6]; //When a bug collides with this, the dirt "digs" toward the car fight arena
+    bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
 } bb_carData_t;
 
 typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
@@ -225,10 +225,9 @@ typedef struct
 
 typedef struct
 {
-    bb_direction_t arena;//The direction to dig towards the car fight arena.
-    uint8_t numberOfDigs;//Increments with each dig. Destroy self at 2. That's three digs when you count 0.
-}
-bb_jankyBugDigData_t;
+    bb_direction_t arena; // The direction to dig towards the car fight arena.
+    uint8_t numberOfDigs; // Increments with each dig. Destroy self at 2. That's three digs when you count 0.
+} bb_jankyBugDigData_t;
 
 typedef struct
 {
@@ -379,8 +378,10 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
 void bb_deployBooster(bb_entity_t* self);
 void bb_openMap(bb_entity_t* self);
 void bb_upgradeRadar(bb_entity_t* self);
+void bb_triggerGameOver(bb_entity_t* self);
 
-void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j, bool zeroHealth);
+void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
+                    bool zeroHealth);
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings);
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);

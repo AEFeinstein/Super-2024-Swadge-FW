@@ -153,8 +153,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     washingMachineSprite->originY = 16;
 
     bb_sprite_t* carSprite = bb_loadSprite("car", 60, 1, &entityManager->sprites[BB_CAR]);
-    carSprite->originX = 31;
-    carSprite->originY = 15;
+    carSprite->originX     = 31;
+    carSprite->originY     = 15;
 
     bb_sprite_t* skeletonSprite = bb_loadSprite("skeleton", 1, 6, &entityManager->sprites[BB_SKELETON]);
     skeletonSprite->originX     = 14;
@@ -245,7 +245,8 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
             if (curEntity->collisions != NULL)
             {
                 node_t* firstNode = curEntity->collisions->first;
-                if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType && ((bb_collision_t*)firstNode->val)->checkOthers->first->next == NULL)
+                if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType
+                    && ((bb_collision_t*)firstNode->val)->checkOthers->first->next == NULL)
                 {
                     // no need to search all other entities if it's simply something to do with the player.
                     // do a collision check here
@@ -254,8 +255,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                                         &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
                                         &hitInfo))
                     {
-                        ((bb_collision_t*)firstNode->val)
-                            ->function(curEntity, entityManager->playerEntity, &hitInfo);
+                        ((bb_collision_t*)firstNode->val)->function(curEntity, entityManager->playerEntity, &hitInfo);
                     }
                 }
                 else
@@ -276,7 +276,8 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                                 {
                                     // do a collision check here
                                     bb_hitInfo_t hitInfo = {0};
-                                    if (bb_boxesCollide(curEntity, collisionCandidate, &collisionCandidate->pos, &hitInfo))
+                                    if (bb_boxesCollide(curEntity, collisionCandidate, &collisionCandidate->pos,
+                                                        &hitInfo))
                                     {
                                         ((bb_collision_t*)currentCollisionCheck->val)
                                             ->function(curEntity, collisionCandidate, &hitInfo);
@@ -1000,10 +1001,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_JANKY_BUG_DIG:
         {
-            entity->halfHeight = 3;
-            entity->halfWidth = 3;
+            entity->halfHeight          = 3;
+            entity->halfWidth           = 3;
             bb_jankyBugDigData_t* jData = heap_caps_calloc(1, sizeof(bb_jankyBugDigData_t), MALLOC_CAP_SPIRAM);
-            jData->numberOfDigs = 0;
+            jData->numberOfDigs         = 0;
             bb_setData(entity, jData, JANKY_BUG_DIG_DATA);
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
