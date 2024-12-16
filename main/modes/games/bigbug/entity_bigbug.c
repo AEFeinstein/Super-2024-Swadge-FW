@@ -2171,7 +2171,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             // Bug got stabbed
             if (bData->health - 20 <= 0) // bug just died
             {
-                //no damage effect unfortunately because physics data doesn't have the effect timer.
+                // no damage effect unfortunately because physics data doesn't have the effect timer.
                 if (self->gameData->carFightState > 0)
                 {
                     self->gameData->carFightState--;
@@ -2218,10 +2218,11 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                 }
             }
         }
-        if (other->dataType == PHYSICS_DATA)//leave as "if" not else if, because the last block may have converted it to physics data
+        if (other->dataType
+            == PHYSICS_DATA) // leave as "if" not else if, because the last block may have converted it to physics data
         {
             bb_physicsData_t* physData = (bb_physicsData_t*)other->data;
-            physData->vel               = addVec2d(physData->vel, pData->vel);
+            physData->vel              = addVec2d(physData->vel, pData->vel);
         }
         vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
         bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);

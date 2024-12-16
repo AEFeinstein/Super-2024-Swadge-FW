@@ -16,7 +16,7 @@
 void bb_generateWorld(bb_tilemap_t* tilemap)
 {
     // There are 6 handcrafted levels that get chosen randomly.
-    uint8_t level = 0;//bb_randomInt(0, 5);
+    uint8_t level = bb_randomInt(0, 5);
     wsg_t levelWsg; ///< A graphic representing the level data where tiles are pixels.
 
     char wsg_name[13];
@@ -25,6 +25,10 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                    bb_hsd); // levelWsg only needed for this brief scope.
 
     int8_t midgroundHealthValues[] = {1, 4, 10};
+
+    // keep track of the washing machine spawns. Don't allow them at the same x position or at positions 34, 37, 40
+    // (booster positions).
+    uint8_t washingMachineXPositions[35] = {0};
 
     // Set all the tiles
     for (int i = 0; i < TILE_FIELD_WIDTH; i++)
@@ -81,7 +85,22 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                         }
                         case 153:
                         {
-                            tilemap->fgTiles[i][j].embed = WASHING_MACHINE_EMBED;
+                            if (i != 34 && i != 37 && i != 39)
+                            {
+                                for (int lookupIdx = 0; lookupIdx < 35; lookupIdx++)
+                                {
+                                    if (washingMachineXPositions[lookupIdx] == i)
+                                    {
+                                        break;
+                                    }
+                                    else if (washingMachineXPositions[lookupIdx] == 0)
+                                    {
+                                        washingMachineXPositions[lookupIdx] = i;
+                                        tilemap->fgTiles[i][j].embed        = WASHING_MACHINE_EMBED;
+                                        break;
+                                    }
+                                }
+                            }
                             break;
                         }
                         default:
