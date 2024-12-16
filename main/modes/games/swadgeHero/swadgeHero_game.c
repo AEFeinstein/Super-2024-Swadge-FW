@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <esp_log.h>
 #include <limits.h>
 #include "swadgeHero_game.h"
 #include "swadgeHero_menu.h"
@@ -170,7 +171,8 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     globalMidiPlayerStop(true);
 
     // Set the lead-in timer
-    sh->leadInUs = sh->scrollTime;
+    sh->leadInUs  = sh->scrollTime;
+    sh->leadOutUs = 0;
 
     // Start with one fret line at t=0
     sh->lastFretLineUs     = 0;
@@ -256,6 +258,9 @@ uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
         // Tye type of note
         sh->chartNotes[nIdx].note = data[dIdx++];
 
+#ifdef SH_NOTE_DBG
+        ESP_LOGI("SH", "Load note %" PRId32 ", %" PRId32, sh->chartNotes[nIdx].note & 0x7F, sh->chartNotes[nIdx].tick);
+#endif
         // Keep track of the max fret. The top bit indicates a hold note
         if ((sh->chartNotes[nIdx].note & 0x7F) > maxFret)
         {
@@ -273,11 +278,18 @@ uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size)
                                         (data[dIdx + 1] << 0);
             dIdx += 2;
 
+#ifdef SH_NOTE_DBG
+            ESP_LOGI("SH", "Load hold %" PRId32 ", %" PRId32, sh->chartNotes[nIdx].note,
+                     sh->chartNotes[nIdx].tick + sh->chartNotes[nIdx].hold);
+#endif
             // Increment this, because hold notes count as two for the letter ranking
             sh->totalHitNotes++;
         }
     }
 
+#ifdef SH_NOTE_DBG
+    ESP_LOGI("SH", "Total %" PRId32, sh->totalHitNotes);
+#endif
     // Return the number of frets used
     return maxFret;
 }
@@ -324,6 +336,16 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     if (sh->paused)
     {
         return true;
+    }
+
+    // Run a lead out timer to catch any stragglers
+    if (sh->leadOutUs)
+    {
+        sh->leadOutUs -= elapsedUs;
+        if (sh->leadOutUs <= 0)
+        {
+            sh->gameEnd = true;
+        }
     }
 
     // If the game end flag is raised
@@ -542,7 +564,9 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 
             // Save when the note should be hit
             ni->headTimeUs = nextEventUs;
-
+#ifdef SH_NOTE_DBG
+            ni->headTick = sh->chartNotes[sh->currentChartNote].tick;
+#endif
             // If this is a hold note
             if (sh->chartNotes[sh->currentChartNote].hold)
             {
@@ -553,6 +577,9 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
                 int32_t tailTick = sh->chartNotes[sh->currentChartNote].tick + //
                                    sh->chartNotes[sh->currentChartNote].hold;
                 ni->tailTimeUs = MIDI_TICKS_TO_US(tailTick, player->tempo, player->reader.division);
+#ifdef SH_NOTE_DBG
+                ni->tailTick = tailTick;
+#endif
             }
             else
             {
@@ -616,6 +643,9 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 
                     // Note was held all the way, so score it.
                     shHitNote(sh, 5);
+#ifdef SH_NOTE_DBG
+                    ESP_LOGI("SH", "Hit hold %" PRId32 ", %" PRId32, gameNote->note, gameNote->tailTick);
+#endif
                 }
             }
             else if (gameNote->tailPosY < 0)
@@ -645,11 +675,6 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             // Remove the game note
             free(toRemove->val);
             removeEntry(&sh->gameNotes, toRemove);
-
-            // Note that it was missed
-            sh->hitText = timings[ARRAY_SIZE(timings) - 1].label;
-            // Set a timer to not show the text forever
-            sh->textTimerUs = SH_TEXT_TIME;
         }
         else
         {
@@ -872,7 +897,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
             shGameNote_t* gameNote = gameNoteNode->val;
 
             // If the game note matches the button
-            if (gameNote->note == notePressed)
+            if (gameNote->note == notePressed && !gameNote->held)
             {
                 // Button event matches a note on screen somewhere
                 noteMatch = true;
@@ -899,6 +924,9 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                         if (usOff <= timings[tIdx].timing)
                         {
                             sh->hitText = timings[tIdx].label;
+                            // Set a timer to not show the text forever
+                            sh->textTimerUs = SH_TEXT_TIME;
+
                             if (INT32_MAX != timings[tIdx].timing)
                             {
                                 // Note hit
@@ -914,14 +942,13 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                         }
                     }
 
-                    // Set a timer to not show the text forever
-                    sh->textTimerUs = SH_TEXT_TIME;
-
                     // If it was close enough to hit
                     if (gameNoteHit)
                     {
                         shHitNote(sh, baseScore);
-
+#ifdef SH_NOTE_DBG
+                        ESP_LOGI("SH", "Hit note %" PRId32 ", %" PRId32, gameNote->note, gameNote->headTick);
+#endif
                         // Draw a star for a moment
                         drawStar_t* ds = heap_caps_calloc(1, sizeof(drawStar_t), MALLOC_CAP_SPIRAM);
                         ds->x          = getXOffset(sh, gameNote->note) - sh->star.w / 2;
@@ -990,7 +1017,6 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
         if (false == noteMatch && evt->down)
         {
             // Total miss
-            sh->hitText = timings[ARRAY_SIZE(timings) - 1].label;
             shMissNote(sh);
         }
     }
@@ -1014,8 +1040,8 @@ static int32_t getMultiplier(shVars_t* sh)
  */
 static void shSongOver(void)
 {
-    // Set a flag, end the game synchronously
-    getShVars()->gameEnd = true;
+    // Start a lead-out timer
+    getShVars()->leadOutUs = 1000000;
 }
 
 /**
@@ -1056,6 +1082,11 @@ static void shHitNote(shVars_t* sh, int32_t baseScore)
  */
 static void shMissNote(shVars_t* sh)
 {
+    // Note that it was missed
+    sh->hitText = timings[ARRAY_SIZE(timings) - 1].label;
+    // Set a timer to not show the text forever
+    sh->textTimerUs = SH_TEXT_TIME;
+
     // Tally this as a miss in the histogram
     sh->noteHistogram[ARRAY_SIZE(timings) - 1]++;
 
