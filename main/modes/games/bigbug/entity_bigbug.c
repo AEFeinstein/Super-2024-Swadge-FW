@@ -1763,7 +1763,7 @@ void bb_updateSpit(bb_entity_t* self)
     }
 
     // Update spits's position
-    self->pos = addVec2d(self->pos, mulVec2d(sData->vel, (self->gameData->elapsedUs >> 12)));
+    self->pos = addVec2d(self->pos, mulVec2d(sData->vel, (self->gameData->elapsedUs >> 13)));
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
@@ -2242,7 +2242,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         {
             bb_bugData_t* bData = (bb_bugData_t*)other->data;
             // Bug got stabbed
-            if (bData->health - 20 <= 0) // bug just died
+            if (bData->health - 34 <= 0) // bug just died
             {
                 // no damage effect unfortunately because physics data doesn't have the effect timer.
                 if (self->gameData->carFightState > 0)
@@ -2284,7 +2284,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             else
             {
                 bData->damageEffect = 100;
-                bData->health -= 20;
+                bData->health -= 34;
                 if (bData->health < 0)
                 {
                     bData->health = 0;
