@@ -94,7 +94,7 @@ void cg_deInitChowaWSGs(cGrove_t* cg)
 {
     for (int32_t idx = 0; idx < CG_NUM_TYPES; idx++)
     {
-        for (int32_t idx2 = 0; idx < 2; idx++)
+        for (int32_t idx2 = 0; idx2 < 2; idx2++)
         {
             for (int idx3 = 0; idx3 < ARRAY_SIZE(imageStrings); idx3++)
             {
@@ -118,7 +118,7 @@ wsg_t* cg_getChowaWSG(cGrove_t* cg, cgChowa_t* c, cgChowaAnimIdx_t anim, int8_t 
 {
     // Get type and age
     cgChowaAnimAge_t age = CG_CHILD;
-    if (c->age > 64)
+    if (c->age > CG_ADULT_AGE)
     {
         age = CG_ADULT;
     }

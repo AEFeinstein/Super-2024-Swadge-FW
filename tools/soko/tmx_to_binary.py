@@ -121,8 +121,9 @@ def convertTMX(file_path):
 
     # output now is a list of tiles. 
 
-    output2 = compress(output)
-    #output2 = output
+    #output2 = compress(output)
+    output2 = output
+
     rawsize = len(output)
     compsize = len(output2)
     rawBytesc = bytearray(output2)

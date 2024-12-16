@@ -13,10 +13,14 @@ menu "Swadge Configuration"
 			bool "HARDWARE_GUNSHIP"
 			help
 				Build for the Gunship Swadge (2024)
-		config HARDWARE_HOTDOG
-			bool "HARDWARE_HOTDOG"
+		config HARDWARE_HOTDOG_PROTO
+			bool "HARDWARE_HOTDOG_PROTO"
 			help
-				Build for the Hotdog Swadge (2025)
+				Build for the Protoype Hotdog Swadge (2025)
+		config HARDWARE_HOTDOG_PRODUCTION
+			bool "HARDWARE_HOTDOG_PRODUCTION"
+			help
+				Build for the Production Hotdog Swadge (2025)		
 	endchoice
 	choice DEBUG_OUTPUT_TYPE
 		prompt "Select Debug Output"

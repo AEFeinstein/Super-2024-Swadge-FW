@@ -38,12 +38,6 @@ static const uint8_t oscDither[] = {
 // For MIDI values with coarse and fine bytes, each 7 bits
 #define UINT14_MAX (0x3FFF)
 
-/// @brief Convert the sample count to MIDI ticks
-#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
-
-/// @brief Convert a number of MIDI ticks to the offset of the first sample of the
-#define TICKS_TO_SAMPLES(ticks, tempo, div) ((ticks) * DAC_SAMPLE_RATE_HZ / (1000000) * (tempo) / (div))
-
 #define VS_ANY(statePtr) ((statePtr)->on)
 
 #define VOICE_CUR_VOL(voice)                                                                     \
@@ -1249,6 +1243,17 @@ void midiPlayerReset(midiPlayer_t* player)
     player->paused = true;
 }
 
+void midiPlayerResetNewSong(midiPlayer_t* player)
+{
+    midiAllSoundOff(player);
+
+    // Set all the relevant bits to 1, meaning not in use
+    player->percSpecialStates = 0b00111111111111111111111111111111; // 0x4fffffff
+
+    player->sampleCount    = 0;
+    player->eventAvailable = false;
+}
+
 int32_t midiPlayerStep(midiPlayer_t* player)
 {
     if (player->paused)
@@ -2391,10 +2396,10 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
         // Once the tick is up-to-date, update the sample count
         // Done!
 
-        ESP_LOGD("MIDI", "Seeking to %" PRIu32 "\n", ticks);
+        ESP_LOGD("MIDI", "Seeking to %" PRIu32, ticks);
 
         uint32_t curTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
-        ESP_LOGD("MIDI", "Current tick is %" PRIu32 "\n", curTick);
+        ESP_LOGD("MIDI", "Current tick is %" PRIu32, curTick);
 
         while (curTick < ticks)
         {
@@ -2405,7 +2410,7 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
 
             if (!player->eventAvailable || player->pendingEvent.absTime > ticks)
             {
-                ESP_LOGD("MIDI", "No more events between start and end time\n");
+                ESP_LOGD("MIDI", "No more events between start and end time");
                 if ((META_EVENT == player->pendingEvent.type) && (END_OF_TRACK == player->pendingEvent.meta.type))
                 {
                     curTick = player->pendingEvent.absTime;
@@ -2418,7 +2423,7 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
             }
 
             curTick = player->pendingEvent.absTime;
-            ESP_LOGD("MIDI", "Next event is at tick %" PRIu32 "\n", curTick);
+            ESP_LOGD("MIDI", "Next event is at tick %" PRIu32, curTick);
             player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
             handleEvent(player, &player->pendingEvent);
             player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
@@ -2498,6 +2503,7 @@ void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx)
     if (globalPlayers)
     {
         midiPause(&globalPlayers[songIdx], true);
+        midiPlayerResetNewSong(&globalPlayers[songIdx]);
         globalPlayers[songIdx].sampleCount = 0;
         midiSetFile(&globalPlayers[songIdx], song);
         midiPause(&globalPlayers[songIdx], false);

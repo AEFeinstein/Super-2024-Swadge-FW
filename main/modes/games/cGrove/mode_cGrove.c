@@ -17,6 +17,7 @@
 #include "cg_Chowa.h"
 #include "cg_Grove.h"
 #include "cg_Spar.h"
+#include "textEntry.h"
 #include <esp_random.h>
 #include <esp_heap_caps.h>
 
@@ -34,9 +35,12 @@
 static const char cGroveTitle[] = "Chowa Grove"; // Game title
 
 static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Perform", "Player Profiles", "Settings"};
-static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: "};
+static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
 static const int32_t cGroveEnabledVals[]        = {true, false};
+static const char* cGroveResetData[]
+    = {"Reset all game data", "Are you sure you want to reset to factory? All data will be lost.",
+       "Press 'Start' to permanently erase all data. Press any other key to return to menu."};
 
 static const char* cGroveTitleSprites[] = {"cg_cloud.wsg",          "cg_sky.wsg",
                                            "cg_title_1.wsg",        "cg_title_2.wsg",
@@ -106,6 +110,8 @@ swadgeMode_t cGroveMode = {
 
 static cGrove_t* cg = NULL;
 
+static char cgTextPrompt[] = "Enter your username:";
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -118,23 +124,41 @@ static void cGroveEnterMode(void)
 
     // Load Chowa WSGs
     cg_initChowaWSGs(cg);
-
-    // Load a font
-    loadFont("ibm_vga8.font", &cg->menuFont, true);
-
     // Load title screen
     cg->title = heap_caps_calloc(ARRAY_SIZE(cGroveTitleSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(cGroveTitleSprites); idx++)
     {
         loadWsg(cGroveTitleSprites[idx], &cg->title[idx], true);
     }
+    // Multi-use
+    loadWsg("cg_Arrow.wsg", &cg->arrow, true);
+
+    // Load a font
+    loadFont("cg_font_body_thin.font", &cg->menuFont, true);
+    loadFont("cg_font_body.font", &cg->largeMenuFont, true);
+    loadFont("cg_heading.font", &cg->titleFont, true);
+    makeOutlineFont(&cg->titleFont, &cg->titleFontOutline, true);
+
+    // Load Midis
+    loadMidiFile("Chowa_Menu.mid", &cg->menuBGM, true);
+
+    // Load settings
+    size_t blobLen;
+    readNvsBlob(cgNVSKeys[2], NULL, &blobLen);
+    if (!readNvsBlob(cgNVSKeys[2], &cg->settings, &blobLen))
+    {
+        cg->settings.touch      = true;
+        cg->settings.online     = false;
+        cg->settings.itemText   = true;
+        cg->settings.chowaNames = true;
+    }
 
     // Menu
     cg->menu                                   = initMenu(cGroveTitle, cg_menuCB);
-    cg->renderer                               = initMenuManiaRenderer(NULL, NULL, NULL);
-    static const paletteColor_t shadowColors[] = {c110, c210, c220, c320, c330, c430, c330, c320, c220, c210};
-    led_t ledColor                             = {.r = 128, .g = 128, .b = 0};
-    recolorMenuManiaRenderer(cg->renderer, c115, c335, c000, c110, c003, c004, c220, c335, shadowColors,
+    cg->renderer                               = initMenuManiaRenderer(&cg->titleFont, NULL, &cg->menuFont);
+    static const paletteColor_t shadowColors[] = {c001, c002, c002, c003, c013, c014, c013, c003, c002, c001};
+    led_t ledColor                             = {.r = 0, .g = 200, .b = 200};
+    recolorMenuManiaRenderer(cg->renderer, c111, c430, c445, c045, c542, c430, c111, c445, shadowColors,
                              ARRAY_SIZE(shadowColors), ledColor);
     addSingleItemToMenu(cg->menu, cGroveMenuNames[0]);     // Go to Grove
     addSingleItemToMenu(cg->menu, cGroveMenuNames[1]);     // Go to Spar
@@ -142,63 +166,92 @@ static void cGroveEnterMode(void)
     addSingleItemToMenu(cg->menu, cGroveMenuNames[3]);     // Go to Performance
     addSingleItemToMenu(cg->menu, cGroveMenuNames[4]);     // View player profiles
     cg->menu = startSubMenu(cg->menu, cGroveMenuNames[5]); // Settings
-    // FIXME: Load values from NVM
-    // TODO: Add more settings
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
-                                 0); // Enable/disable touch controls
+                                 cg->settings.touch); // Enable/disable touch controls
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
-                                 0); // Enable/disable online functions
+                                 cg->settings.online); // Enable/disable online functions
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[2], cGroveEnabledOptions, cGroveEnabledVals,
+                                 ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
+                                 cg->settings.itemText); // Enable/disable Item names
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[3], cGroveEnabledOptions, cGroveEnabledVals,
+                                 ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
+                                 cg->settings.chowaNames); // Enable/disable Chowa names
+    addSingleItemToMenu(cg->menu, cGroveResetData[0]);
     cg->menu = endSubMenu(cg->menu);
 
-    // Init
+    // Initialize Text Entry
+    textEntryInit(&cg->menuFont, CG_MAX_STR_LEN, cg->buffer);
+    textEntrySetBGTransparent();
+    textEntrySetShadowboxColor(true, c111);
+    textEntrySetNounMode();
+
+    // Init State
     cg->state       = CG_MAIN_MENU;
     cg->titleActive = true;
 
-    // FIXME: test
-    for (int i = 0; i < CG_MAX_CHOWA; i++)
+    // If first run, do tutorial and get players name
+    readNvsBlob(cgNVSKeys[0], NULL, &blobLen);
+    if (!readNvsBlob(cgNVSKeys[0], &cg->player, &blobLen))
     {
-        cg->chowa[i].active = true;
-        cg->chowa[i].type   = CG_KING_DONUT;
-        switch (esp_random() % 4)
-        {
-            case 0:
-                cg->chowa[i].mood = CG_HAPPY;
-                break;
-            case 1:
-                cg->chowa[i].mood = CG_SAD;
-                break;
-            case 2:
-                cg->chowa[i].mood = CG_ANGRY;
-                break;
-            case 3:
-                cg->chowa[i].mood = CG_CONFUSED;
-                break;
-        }
-        cg->chowa[i].playerAffinity = 101;
+        cg->state = CG_FIRST_RUN;
+        textEntrySetPrompt(cgTextPrompt);
     }
-    for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
+
+    // Adjust Audio to use correct instruments
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
+    midiGmOn(player);
+
+    // Init Chowa
+    readNvsBlob(cgNVSKeys[1], NULL, &blobLen);
+    if (!readNvsBlob(cgNVSKeys[1], &cg->chowa, &blobLen))
     {
-        cg->guests[i].active = true;
-        cg->guests[i].type   = CG_KING_DONUT;
-        switch (esp_random() % 4)
+        /* // TODO: remove when done testing
+        for (int i = 0; i < CG_MAX_CHOWA - 1; i++)
         {
-            case 0:
-                cg->guests[i].mood = CG_HAPPY;
-                break;
-            case 1:
-                cg->guests[i].mood = CG_SAD;
-                break;
-            case 2:
-                cg->guests[i].mood = CG_ANGRY;
-                break;
-            case 3:
-                cg->guests[i].mood = CG_CONFUSED;
-                break;
-        }
-        cg->guests[i].playerAffinity = 1;
+            cg->chowa[i].active = false;
+            cg->chowa[i].type   = CG_KING_DONUT;
+            for (int idx = 0; idx < CG_STAT_COUNT; idx++)
+            {
+                cg->chowa[i].stats[idx] = esp_random() % 255;
+            }
+            switch (esp_random() % 4)
+            {
+                case 0:
+                    cg->chowa[i].mood = CG_HAPPY;
+                    break;
+                case 1:
+                    cg->chowa[i].mood = CG_SAD;
+                    break;
+                case 2:
+                    cg->chowa[i].mood = CG_ANGRY;
+                    break;
+                case 3:
+                    cg->chowa[i].mood = CG_CONFUSED;
+                    break;
+            }
+            cg->chowa[i].playerAffinity = 101;
+            char buffer[32];
+            snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", i);
+            strcpy(cg->chowa[i].name, buffer);
+            strcpy(cg->chowa[i].owner, cg->player);
+        } */
+        writeNvsBlob(cgNVSKeys[1], &cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
     }
+
+    // Guests
+    readNvsBlob(cgNVSKeys[3], NULL, &blobLen);
+    if (!readNvsBlob(cgNVSKeys[3], &cg->guests, &blobLen))
+    {
+        for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
+        {
+            cg->guests[i].active = false;
+        }
+        writeNvsBlob(cgNVSKeys[3], &cg->guests, sizeof(cgChowa_t) * CG_MAX_CHOWA);
+    }
+    globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
 }
 
 static void cGroveExitMode(void)
@@ -226,17 +279,16 @@ static void cGroveExitMode(void)
     deinitMenu(cg->menu);
     deinitMenuManiaRenderer(cg->renderer);
 
-    // WSGs
-    for (uint8_t i = 0; i < ARRAY_SIZE(cGroveTitleSprites); i++)
-    {
-        freeWsg(&cg->title[i]);
-    }
-    heap_caps_free(cg->title);
-
     // Fonts
+    freeFont(&cg->titleFontOutline);
     freeFont(&cg->menuFont);
+    freeFont(&cg->largeMenuFont);
+    freeFont(&cg->titleFont);
 
     // WSGs
+    freeWsg(&cg->title[1]); // Sky wsg, only one not freed earlier
+    free(cg->title);
+    freeWsg(&cg->arrow);
     cg_deInitChowaWSGs(cg);
 
     // Main
@@ -248,15 +300,24 @@ static void cGroveMainLoop(int64_t elapsedUs)
     // Draw title screen
     if (cg->titleActive)
     {
+        cg_titleScreen(elapsedUs);
         buttonEvt_t evt = {0};
         while (checkButtonQueueWrapper(&evt))
         {
             if (evt.down)
             {
                 cg->titleActive = false;
+                // Clear out the sprites
+                for (uint8_t i = 0; i < ARRAY_SIZE(cGroveTitleSprites); i++)
+                {
+                    if (i != 1) // Keep sky sprite for later
+                    {
+                        freeWsg(&cg->title[i]);
+                    }
+                }
             }
         }
-        cg_titleScreen(elapsedUs);
+
         return;
     }
 
@@ -264,6 +325,8 @@ static void cGroveMainLoop(int64_t elapsedUs)
     if (cg->unload)
     {
         // Resetting back to the menu
+        cg->unload = false;
+        globalMidiPlayerStop(true);
         switch (cg->state)
         {
             case CG_GROVE:
@@ -330,6 +393,71 @@ static void cGroveMainLoop(int64_t elapsedUs)
             // Performance
             break;
         }
+        case CG_FIRST_RUN:
+        {
+            buttonEvt_t evt = {0};
+            bool done       = false;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                done = !textEntryInput(evt.down, evt.button);
+            }
+            if (done)
+            {
+                textEntrySoftReset();
+                strcpy(cg->player, cg->buffer);
+                strcpy(cg->buffer, "");
+                writeNvsBlob(cgNVSKeys[0], cg->player, sizeof(cg->player));
+                cg->state = CG_MAIN_MENU;
+            }
+            textEntryDraw(elapsedUs);
+            break;
+        }
+        case CG_ERASE:
+        {
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && evt.button & PB_START)
+                {
+                    // Player name, Chowa
+                    eraseNvsKey(cgNVSKeys[0]);
+                    eraseNvsKey(cgNVSKeys[1]);
+                    eraseNvsKey(cgNVSKeys[2]);
+
+                    // Deactivate all Chowa
+                    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+                    {
+                        cg->chowa[idx].active = false;
+                    }
+                    for (int idx = 0; idx < CG_GROVE_MAX_GUEST_CHOWA; idx++)
+                    {
+                        cg->guests[idx].active = false;
+                    }
+
+                    // Individual modes
+                    cg_clearGroveNVSData();
+
+                    // Move to name entry
+                    cg->state = CG_FIRST_RUN;
+                    textEntrySetPrompt(cgTextPrompt);
+                }
+                else if (evt.down)
+                {
+                    cg->state = CG_MAIN_MENU;
+                }
+            }
+
+            // Draw
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            int16_t xOff = 16;
+            int16_t yOff = 48;
+            drawText(&cg->largeMenuFont, c500, cGroveResetData[0], xOff, yOff);
+            yOff += 30;
+            drawTextWordWrap(&cg->menuFont, c555, cGroveResetData[1], &xOff, &yOff, TFT_WIDTH - 16, 200);
+            xOff = 16;
+            yOff = 120;
+            drawTextWordWrap(&cg->menuFont, c555, cGroveResetData[2], &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
+        }
         default:
         {
             break;
@@ -344,12 +472,14 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
         if (label == cGroveMenuNames[0])
         {
             // Start Grove
+            globalMidiPlayerStop(true);
             cg_initGrove(cg);
             cg->state = CG_GROVE;
         }
         else if (label == cGroveMenuNames[1])
         {
             // Start Sparring
+            globalMidiPlayerStop(true);
             cg_initSpar(cg);
             cg->state = CG_SPAR;
         }
@@ -368,6 +498,11 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
             // View saved players
             // TODO: View recently interacted players
         }
+        else if (label == cGroveResetData[0])
+        {
+            // Erase data
+            cg->state = CG_ERASE;
+        }
         else
         {
             // Something went wrong
@@ -376,12 +511,26 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
     else if (label == cGroveSettingOpts[0])
     {
         // Grove C stick or buttons
-        cg->touch = settingVal;
+        cg->settings.touch = settingVal;
+        writeNvsBlob(cgNVSKeys[2], &cg->settings, sizeof(cgSettings_t));
     }
     else if (label == cGroveSettingOpts[1])
     {
         // Online on or off
-        cg->online = settingVal;
+        cg->settings.online = settingVal;
+        writeNvsBlob(cgNVSKeys[2], &cg->settings, sizeof(cgSettings_t));
+    }
+    else if (label == cGroveSettingOpts[2])
+    {
+        // If Grove items should display text
+        cg->settings.itemText = settingVal;
+        writeNvsBlob(cgNVSKeys[2], &cg->settings, sizeof(cgSettings_t));
+    }
+    else if (label == cGroveSettingOpts[3])
+    {
+        // If Grove items should display text
+        cg->settings.chowaNames = settingVal;
+        writeNvsBlob(cgNVSKeys[2], &cg->settings, sizeof(cgSettings_t));
     }
 }
 

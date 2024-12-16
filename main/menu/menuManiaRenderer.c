@@ -167,6 +167,7 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
         ringDir                = (ringDir == 1) ? -1 : 1;
         ring->color            = ringColors[i];
     }
+    renderer->drawRings = true;
 
     // LEDs on by default
     renderer->ledsOn = true;
@@ -476,13 +477,16 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     // Clear the background
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, renderer->bgColor);
 
-    // Draw the rings
-    for (int16_t i = 0; i < ARRAY_SIZE(renderer->rings); i++)
+    if (renderer->drawRings)
     {
-        maniaRing_t* ring  = &renderer->rings[i];
-        int16_t ringRadius = (MIN_RING_RADIUS + MAX_RING_RADIUS) / 2
-                             + (((MAX_RING_RADIUS - MIN_RING_RADIUS) * getSin1024(ring->diameterAngle)) / 1024);
-        drawManiaRing(ringRadius, ring->orbitAngle, ring->color, renderer->bgColor);
+        // Draw the rings
+        for (int16_t i = 0; i < ARRAY_SIZE(renderer->rings); i++)
+        {
+            maniaRing_t* ring  = &renderer->rings[i];
+            int16_t ringRadius = (MIN_RING_RADIUS + MAX_RING_RADIUS) / 2
+                                 + (((MAX_RING_RADIUS - MIN_RING_RADIUS) * getSin1024(ring->diameterAngle)) / 1024);
+            drawManiaRing(ringRadius, ring->orbitAngle, ring->color, renderer->bgColor);
+        }
     }
 
     // Find the start of the 'page'
@@ -649,6 +653,17 @@ void setManiaLedsOn(menuManiaRenderer_t* renderer, bool ledsOn)
         memset(renderer->leds, 0, sizeof(renderer->leds));
         setLeds(renderer->leds, CONFIG_NUM_LEDS);
     }
+}
+
+/**
+ * @brief Set if the rings should be drawn
+ *
+ * @param renderer The renderer to set
+ * @param ringsOn true to draw rings, false to not
+ */
+void setManiaDrawRings(menuManiaRenderer_t* renderer, bool ringsOn)
+{
+    renderer->drawRings = ringsOn;
 }
 
 /**

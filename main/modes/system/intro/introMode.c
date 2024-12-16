@@ -25,7 +25,7 @@ static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
 static void introAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 
 // static void introMenuCb(const char*, bool selected, uint32_t settingVal);
-static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
+static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
                             bool backtrack);
 static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const tutorialTrigger_t* trigger);
 
@@ -145,6 +145,14 @@ static const tutorialStep_t buttonsSteps[] = {
         },
         .title = spkTitle,
         .detail = "The Swadge has a speaker, so enjoy this tune! The volume dial is on the top left next to the headphone jack. Adjust to your liking. Press A to continue."
+    },
+    {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_A,
+        },
+        .title = spkTitle,
+        .detail = "If the speaker sounds a little fuzzy at high volumes, that's OK. It just means it's happy! Press A to continue."
     },
     {
         .trigger = {
@@ -732,7 +740,7 @@ static void introDacCallback(uint8_t* samples, int16_t len)
 }
 #endif
 
-static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
+static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
                             bool backtrack)
 {
     ESP_LOGI("Intro", "'%s' Triggered!", prev->title);
@@ -741,16 +749,26 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
     // Switch peripherals
     if (spkTitle == next->title)
     {
-        switchToSpeaker();
+        if (DRAW_SPK != iv->drawMode)
+        {
+            switchToSpeaker();
 
-        // Set and play the song
-        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-        midiGmOn(player);
-        midiSetFile(player, &iv->song);
-        player->loop = true;
-        midiPause(player, false);
+            // Set and play the song
+            midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+            midiGmOn(player);
+            midiSetFile(player, &iv->song);
+            player->loop = true;
+            midiPause(player, false);
 
-        iv->drawMode = DRAW_SPK;
+            iv->drawMode = DRAW_SPK;
+        }
+        else
+        {
+            state->lastButton     = 0;
+            state->lastButtonDown = 0;
+            state->curButtons     = 0;
+            state->allButtons     = 0;
+        }
     }
     else if (micTitle == next->title)
     {
@@ -777,13 +795,13 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
     }
 
     // TODO maybe don't hardcode this
-    if (next == (buttonsSteps + 13))
+    if (next == (buttonsSteps + 14))
     {
         ESP_LOGI("Intro", "Oh it's the one we want: %s", next->title);
         iv->quickSettingsOpened = true;
         openQuickSettings();
     }
-    else if (next == (buttonsSteps + 14))
+    else if (next == (buttonsSteps + 15))
     {
         iv->quickSettingsOpened = false;
     }
