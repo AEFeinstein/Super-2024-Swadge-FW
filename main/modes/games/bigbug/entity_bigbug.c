@@ -1020,7 +1020,7 @@ void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations)
 
 void bb_updateBugShooting(bb_entity_t* self)
 {
-    if (bb_randomInt(0, 600) < 1)
+    if (bb_randomInt(0, 100) < 1)
     {
         // call it paused and update frames in it's own update function because this one uses another spriteIdx.
         bb_entity_t* spit = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_SPIT, 10,
