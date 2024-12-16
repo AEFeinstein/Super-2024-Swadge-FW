@@ -430,7 +430,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     if (currentEntity->paused == false)
     {
         // increment the frame counter
-        currentEntity->animationTimer += 1;
+        currentEntity->animationTimer++;
         currentEntity->currentAnimationFrame
             = currentEntity->animationTimer / currentEntity->gameFramesPerAnimationFrame;
         // if frame reached the end of the animation
@@ -710,7 +710,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfWidth  = 192;
             entity->halfHeight = 104;
 
-            entity->updateFunction = &bb_updateBug;
+            entity->updateFunction = &bb_updateWalkingBug;
             entity->drawFunction   = &bb_drawBug;
             break;
         }
@@ -730,7 +730,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfWidth  = 176;
             entity->halfHeight = 48;
 
-            entity->updateFunction = &bb_updateBug;
+            entity->updateFunction = &bb_updateWalkingBug;
             entity->drawFunction   = &bb_drawBug;
             break;
         }
@@ -750,7 +750,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfWidth  = 120;
             entity->halfHeight = 104;
 
-            entity->updateFunction = &bb_updateBuggo;
+            entity->updateFunction = &bb_updateFlyingBug;
             entity->drawFunction   = &bb_drawBug;
             break;
         }
@@ -770,7 +770,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfWidth  = 144;
             entity->halfHeight = 144;
 
-            entity->updateFunction = &bb_updateBuggo;
+            entity->updateFunction = &bb_updateFlyingBug;
             entity->drawFunction   = &bb_drawBug;
             break;
         }
@@ -790,7 +790,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfWidth  = 184;
             entity->halfHeight = 64;
 
-            entity->updateFunction = &bb_updateBug;
+            entity->updateFunction = &bb_updateWalkingBug;
             entity->drawFunction   = &bb_drawBug;
             break;
         }
@@ -810,7 +810,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfWidth  = 184;
             entity->halfHeight = 88;
 
-            entity->updateFunction = &bb_updateBug;
+            entity->updateFunction = &bb_updateWalkingBug;
             entity->drawFunction   = &bb_drawBug;
             break;
         }
@@ -1014,6 +1014,25 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             entity->drawFunction = &bb_drawNothing;
             // entity->drawFunction = &bb_drawRect;
+            break;
+        }
+        case BB_SPIT:
+        {
+            bb_spitData_t* sData = heap_caps_calloc(1, sizeof(bb_spitData_t), MALLOC_CAP_SPIRAM);
+            sData->lifetime      = 0;
+            bb_setData(entity, sData, SPIT_DATA);
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+
+            push(others, (void*)GARBOTNIK_DATA);
+
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionSpit};
+            push(entity->collisions, (void*)collision);
+
+            entity->updateFunction = &bb_updateSpit;
+            entity->drawFunction   = &bb_drawSpit;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

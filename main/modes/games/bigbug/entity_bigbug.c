@@ -714,11 +714,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
         }
-        else
-        {
-            // unhook entities;
-            printf("FINISH ME!!!\n");
-        }
     }
 
     bb_hitInfo_t hitInfo = {0};
@@ -1023,7 +1018,24 @@ void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations)
     bData->gravity = ((bData->gravity + orthogonalRotations) % 4 + 4) % 4;
 }
 
-void bb_updateBug(bb_entity_t* self)
+void bb_updateBugShooting(bb_entity_t* self)
+{
+    if (bb_randomInt(0, 600) < 1)
+    {
+        // call it paused and update frames in it's own update function because this one uses another spriteIdx.
+        bb_entity_t* spit = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_SPIT, 10,
+                                            self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, false);
+        if (self->gameData->entityManager.playerEntity != NULL)
+        {
+            bb_spitData_t* sData = (bb_spitData_t*)spit->data;
+            sData->vel           = subVec2d(self->gameData->entityManager.playerEntity->pos, spit->pos);
+            fastNormVec(&sData->vel.x, &sData->vel.y);
+            sData->vel = (vec_t){sData->vel.x >> 5, sData->vel.y >> 5};
+        }
+    }
+}
+
+void bb_updateWalkingBug(bb_entity_t* self)
 {
     bb_buData_t* bData = (bb_buData_t*)self->data;
 
@@ -1234,9 +1246,10 @@ void bb_updateBug(bb_entity_t* self)
                 break;
         }
     }
+    bb_updateBugShooting(self);
 }
 
-void bb_updateBuggo(bb_entity_t* self)
+void bb_updateFlyingBug(bb_entity_t* self)
 {
     bb_buggoData_t* bData = (bb_buggoData_t*)self->data;
     if (bData->damageEffect > 0)
@@ -1254,6 +1267,8 @@ void bb_updateBuggo(bb_entity_t* self)
         bData->direction = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
         bData->faceLeft  = bData->direction.x < 0;
     }
+
+    bb_updateBugShooting(self);
 }
 
 void bb_updateMenu(bb_entity_t* self)
@@ -1724,6 +1739,40 @@ void bb_updateCarOpen(bb_entity_t* self)
     }
 }
 
+void bb_updateSpit(bb_entity_t* self)
+{
+    // increment the frame counter
+    self->animationTimer++;
+    self->currentAnimationFrame = self->animationTimer / self->gameFramesPerAnimationFrame;
+    // if frame reached the end of the animation
+    if (self->currentAnimationFrame >= self->gameData->entityManager.sprites[BB_FUEL].numFrames)
+    {
+        // reset the animation
+        self->animationTimer        = 0;
+        self->currentAnimationFrame = 0;
+    }
+
+    bb_spitData_t* sData = (bb_spitData_t*)self->data;
+
+    // Update spits's lifetime. I think not using elapsed time is good enough.
+    sData->lifetime++;
+    if (sData->lifetime > 1000)
+    {
+        bb_destroyEntity(self, false);
+        return;
+    }
+
+    // Update spits's position
+    self->pos = addVec2d(self->pos, mulVec2d(sData->vel, (self->gameData->elapsedUs >> 12)));
+
+    bb_hitInfo_t hitInfo = {0};
+    bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+    if (hitInfo.hit)
+    {
+        bb_destroyEntity(self, false);
+    }
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     if (GARBOTNIK_DATA != self->dataType)
@@ -2137,6 +2186,30 @@ void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
     drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
                   (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                   (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+}
+
+void bb_drawSpit(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_spitData_t* sData = (bb_spitData_t*)self->data;
+    uint16_t rotation    = 0;
+    if (abs(sData->vel.x) > abs(sData->vel.y))
+    {
+        if (sData->vel.x < 0)
+        {
+            rotation = 90;
+        }
+        else
+        {
+            rotation = 270;
+        }
+    }
+    else if (sData->vel.y < 0)
+    {
+        rotation = 180;
+    }
+    drawWsgPalette(&entityManager->sprites[BB_FUEL].frames[self->currentAnimationFrame],
+                   (self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
+                   &self->gameData->damagePalette, false, false, rotation);
 }
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -2598,6 +2671,20 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
     {
         bb_destroyEntity(self, false);
     }
+}
+
+void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    bb_spitData_t* sData      = (bb_spitData_t*)self->data;
+    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
+    gData->vel                = addVec2d(gData->vel, (vec_t){sData->vel.x << 5, sData->vel.y << 5});
+    gData->fuel -= 10000;
+    if (gData->fuel < 0)
+    {
+        gData->fuel
+            = 1; // It'll decrement soon anyways. Keeps more of the game over code on Garbotnik's side of the fence.
+    }
+    bb_destroyEntity(self, false);
 }
 
 void bb_startGarbotnikIntro(bb_entity_t* self)

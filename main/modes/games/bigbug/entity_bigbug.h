@@ -44,6 +44,7 @@ typedef enum
     PROJECTILE_DATA,
     ROCKET_DATA,
     STUCK_HARPOON_DATA,
+    SPIT_DATA,
 } bb_data_type_t;
 
 typedef enum
@@ -151,7 +152,7 @@ typedef struct
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
-    int8_t tileTime; // probably only relevant for Garbotnik's dying scenario. Goes up with every tile collision
+    int8_t tileTime; // Only relevant for Garbotnik's dying scenario. Goes up with every tile collision
                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
                      // on the ground and trigger a game over.
 } bb_physicsData_t;
@@ -189,6 +190,12 @@ typedef struct
 {
     bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
 } bb_carData_t;
+
+typedef struct
+{
+    vec_t vel;
+    uint16_t lifetime;
+} bb_spitData_t;
 
 typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
 
@@ -299,6 +306,7 @@ void bb_setData(bb_entity_t* self, void* data, bb_data_type_t dataType);
 void bb_clearCollisions(bb_entity_t* self, bool keepCached);
 
 void bb_destroyEntity(bb_entity_t* self, bool caching);
+
 void bb_updateRocketLanding(bb_entity_t* self);
 void bb_updateRocketLiftoff(bb_entity_t* self);
 void bb_updateHeavyFallingInit(bb_entity_t* self);
@@ -317,8 +325,9 @@ void bb_updateFarMenuAndUnload(bb_entity_t* self);
 void bb_updateMenuBug(bb_entity_t* self);
 void bb_updateMoveLeft(bb_entity_t* self);
 void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations);
-void bb_updateBug(bb_entity_t* self);
-void bb_updateBuggo(bb_entity_t* self);
+void bb_updateBugShooting(bb_entity_t* self);
+void bb_updateWalkingBug(bb_entity_t* self);
+void bb_updateFlyingBug(bb_entity_t* self);
 void bb_updateMenu(bb_entity_t* self);
 void bb_updatePOI(bb_entity_t* self);
 void bb_updateFlame(bb_entity_t* self);
@@ -330,6 +339,7 @@ void bb_updateGrabbyHand(bb_entity_t* self);
 void bb_updateDoor(bb_entity_t* self);
 void bb_updateCarActive(bb_entity_t* self);
 void bb_updateCarOpen(bb_entity_t* self);
+void bb_updateSpit(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -350,6 +360,7 @@ void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawSpit(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
@@ -360,6 +371,7 @@ void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
