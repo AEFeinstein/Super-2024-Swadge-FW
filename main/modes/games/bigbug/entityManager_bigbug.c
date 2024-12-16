@@ -378,7 +378,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     {
         currentEntity->drawFunction(entityManager, camera, currentEntity);
     }
-    else if (currentEntity->hasLighting)
+    else if (entityManager->sprites[currentEntity->spriteIndex].brightnessLevels == 6)
     {
         uint8_t brightness = 5;
         int16_t xOff       = (currentEntity->pos.x >> DECIMAL_BITS)
@@ -586,8 +586,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     entity->spriteIndex = spriteIndex;
 
     entity->gameFramesPerAnimationFrame = gameFramesPerAnimationFrame;
-    // entity->collisionHandler     = &dummyCollisionHandler;
-    // entity->tileCollisionHandler = &ballTileCollisionHandler;
 
     switch (spriteIndex)
     {
@@ -705,7 +703,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->faceLeft    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
-            entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
@@ -726,7 +723,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->faceLeft    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
-            entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
@@ -747,7 +743,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->faceLeft       = bData->direction.x < 0;
             bb_setData(entity, bData, BUGGO_DATA);
 
-            entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
@@ -768,7 +763,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->faceLeft       = bData->direction.x < 0;
             bb_setData(entity, bData, BUGGO_DATA);
 
-            entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
@@ -789,7 +783,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->faceLeft    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
-            entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
@@ -810,7 +803,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->faceLeft    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
-            entity->hasLighting                 = true;
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
             entity->cacheable = true;
@@ -897,7 +889,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                        HEAVY_FALLING_DATA);
             entity->halfWidth      = 16 << DECIMAL_BITS;
             entity->halfHeight     = 16 << DECIMAL_BITS;
-            entity->hasLighting    = true;
             entity->updateFunction = &bb_updateHeavyFalling;
             entity->cacheable      = true;
 
@@ -940,7 +931,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_SKELETON:
         {
-            entity->hasLighting  = true;
             entity->drawFunction = &bb_drawBasicEmbed;
             break;
         }

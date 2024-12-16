@@ -111,15 +111,12 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     self->type                        = 0;
     self->spriteIndex                 = 0;
     self->paused                      = false;
-    self->hasLighting                 = false;
     self->animationTimer              = 0;
     self->gameFramesPerAnimationFrame = 1;
     self->currentAnimationFrame       = 0;
     self->halfWidth                   = 0;
     self->halfHeight                  = 0;
     self->cSquared                    = 0;
-    self->tileCollisionHandler        = NULL;
-    self->overlapTileHandler          = NULL;
 
     self->gameData->entityManager.activeEntities--;
     // ESP_LOGD(BB_TAG,"%d/%d entities v\n", self->gameData->entityManager.activeEntities, MAX_ENTITIES);
@@ -2174,6 +2171,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             // Bug got stabbed
             if (bData->health - 20 <= 0) // bug just died
             {
+                //no damage effect unfortunately because physics data doesn't have the effect timer.
                 if (self->gameData->carFightState > 0)
                 {
                     self->gameData->carFightState--;
@@ -2205,7 +2203,6 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                 bData->health               = 0;
                 other->paused               = true;
                 bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
-                physData->vel               = divVec2d(pData->vel, 2);
                 physData->bounceNumerator   = 2; // 66% bounce
                 physData->bounceDenominator = 3;
                 bb_setData(other, physData, PHYSICS_DATA);
@@ -2221,7 +2218,11 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                 }
             }
         }
-
+        if (other->dataType == PHYSICS_DATA)//leave as "if" not else if, because the last block may have converted it to physics data
+        {
+            bb_physicsData_t* physData = (bb_physicsData_t*)other->data;
+            physData->vel               = addVec2d(physData->vel, pData->vel);
+        }
         vecFl_t floatVel              = {(float)pData->vel.x, (float)pData->vel.y};
         bb_stuckHarpoonData_t* shData = heap_caps_calloc(1, sizeof(bb_stuckHarpoonData_t), MALLOC_CAP_SPIRAM);
         shData->parent                = other;

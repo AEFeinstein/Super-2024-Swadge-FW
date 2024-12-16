@@ -258,9 +258,6 @@ typedef struct
                          // the harpoon.
     bb_collisionHandler_t function; // Triggers on collision enter with any of the checkOthers.
 } bb_collision_t;
-typedef bool (*bb_tileCollisionHandler_t)(bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-typedef void (*bb_fallOffTileHandler_t)(bb_entity_t* self);
-typedef void (*bb_overlapTileHandler_t)(bb_entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 
 struct bb_entity_t
 {
@@ -280,7 +277,6 @@ struct bb_entity_t
     bb_animationType_t type;
     bb_spriteDef_t spriteIndex;
     bool paused;
-    bool hasLighting; // True if it has 6 lighting versions per frame
 
     uint16_t animationTimer;
     uint8_t gameFramesPerAnimationFrame;
@@ -292,9 +288,6 @@ struct bb_entity_t
     int16_t halfHeight; // Distance from the origin to the top edge (for AABB physics)
     int32_t cSquared;   // Squared distance from the sprite origin to the corner of the AABB hitbox. Used for collision
                         // optimization.
-
-    bb_tileCollisionHandler_t tileCollisionHandler;
-    bb_overlapTileHandler_t overlapTileHandler;
 };
 
 //==============================================================================
