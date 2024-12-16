@@ -64,6 +64,27 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
 /** See above, but with function and line debugging */
 void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* file, const char* func, int32_t line);
 
+
+/**
+ * @brief Reallocate memory previously allocated via heap_caps_malloc() or heap_caps_realloc().
+ * 
+ * Equivalent semantics to libc realloc(), for capability-aware memory.
+ * 
+ * In IDF, realloc(p, s) is equivalent to heap_caps_realloc(p, s, MALLOC_CAP_8BIT).
+ * 
+ * 'caps' parameter can be different to the capabilities that any original 'ptr' was allocated with. In this way, realloc can be used to "move" a buffer if necessary to ensure it meets a new set of capabilities.
+ *
+ * @param ptr Pointer to previously allocated memory, or NULL for a new allocation.
+ * @param size Size of the new buffer requested, or 0 to free the buffer.
+ * @param caps Bitwise OR of MALLOC_CAP_* flags indicating the type of memory desired for the new allocation.
+ *
+ * @return Pointer to a new buffer of size 'size' with capabilities 'caps', or NULL if allocation failed.
+ */
+#define heap_caps_realloc(p, s, c) heap_caps_realloc_dbg(p, s, c, __FILE__, __func__, __LINE__)
+
+/** See above, but with function and line debugging */
+void *heap_caps_realloc_dbg(void *ptr, size_t size, uint32_t caps, const char* file, const char* func, int32_t line);
+
 /**
  * @brief Custom free to track memory allocation
  * 

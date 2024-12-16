@@ -188,3 +188,64 @@ void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t l
 #endif
     free(ptr);
 }
+
+void* heap_caps_realloc_dbg(void* ptr, size_t size, uint32_t caps, const char* file, const char* func, int32_t line)
+{
+#ifdef MEMORY_DEBUG
+
+    if (size >= SPIRAM_LARGEST_BLOCK)
+    {
+        fprintf(stderr, memDbgFmtStr, "Too large alloc!", file, line, usedMemory[0], usedMemory[1], NULL);
+        exit(-1);
+    }
+
+    int32_t idx = 0;
+    while (idx < A_TABLE_SIZE && ptr != aTable[idx].ptr)
+    {
+        idx++;
+    }
+
+    void* rPtr = realloc(ptr, size);
+
+    if (idx < A_TABLE_SIZE)
+    {
+        // Remove old size
+        if (MALLOC_CAP_SPIRAM & caps)
+        {
+            usedMemory[1] -= aTable[idx].size;
+        }
+        else
+        {
+            usedMemory[0] -= aTable[idx].size;
+        }
+
+        aTable[idx].ptr  = rPtr;
+        aTable[idx].size = size;
+        aTable[idx].caps = caps;
+
+        // Add new size
+        if (MALLOC_CAP_SPIRAM & caps)
+        {
+            usedMemory[1] += aTable[idx].size;
+        }
+        else
+        {
+            usedMemory[0] += aTable[idx].size;
+        }
+        md_printf(memDbgFmtStr, "realloc", file, line, usedMemory[0], usedMemory[1], rPtr);
+
+        if (usedMemory[1] >= SPIRAM_SIZE)
+        {
+            fprintf(stderr, memDbgFmtStr, "Out of SPIRAM!", file, line, usedMemory[0], usedMemory[1], NULL);
+            exit(-1);
+        }
+    }
+    else
+    {
+        md_fprintf(stderr, "Allocation table out of space\n");
+    }
+    return rPtr;
+#else
+    return realloc(ptr, size);
+#endif
+}

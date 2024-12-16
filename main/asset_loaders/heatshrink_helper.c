@@ -131,7 +131,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
     // If there was an error, free decompressedBuf
     if (NULL == data)
     {
-        free(decompressedBuf);
+        heap_caps_free(decompressedBuf);
     }
 
     // Return the data

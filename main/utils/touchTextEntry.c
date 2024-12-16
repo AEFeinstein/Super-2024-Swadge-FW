@@ -135,7 +135,7 @@ static void checkBuffer(textEntry_t* entry)
     if (entry->cursor + 2 >= entry->size)
     {
         entry->size *= 2;
-        entry->value = realloc(entry->value, entry->size);
+        entry->value = heap_caps_realloc(entry->value, entry->size, MALLOC_CAP_8BIT);
 
         // Zero out the remainder of the memory
         for (char* chr = entry->value + strlen(entry->value); chr < entry->value + entry->size; ++chr)
@@ -389,7 +389,7 @@ void textEntrySetText(textEntry_t* textEntry, const char* text)
 
     if (resized)
     {
-        textEntry->value = realloc(textEntry->value, textEntry->size);
+        textEntry->value = heap_caps_realloc(textEntry->value, textEntry->size, MALLOC_CAP_8BIT);
     }
 
     strncpy(textEntry->value, text, textEntry->size);

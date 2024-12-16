@@ -183,18 +183,18 @@ void cg_initGrove(cGrove_t* cg)
         loadWsg(speechBubbleSprites[idx], &cg->grove.speechBubbles[idx], true);
     }
     // Items
-    cg->grove.itemsWSGs = calloc(ARRAY_SIZE(itemSprites), sizeof(wsg_t));
+    cg->grove.itemsWSGs = heap_caps_calloc(ARRAY_SIZE(itemSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(itemSprites); idx++)
     {
         loadWsg(itemSprites[idx], &cg->grove.itemsWSGs[idx], true);
     }
     // Eggs
-    cg->grove.eggs = calloc(ARRAY_SIZE(eggsIntactSprites), sizeof(wsg_t));
+    cg->grove.eggs = heap_caps_calloc(ARRAY_SIZE(eggsIntactSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(eggsIntactSprites); idx++)
     {
         loadWsg(eggsIntactSprites[idx], &cg->grove.eggs[idx], true);
     }
-    cg->grove.crackedEggs = calloc(ARRAY_SIZE(eggsCrackedSprites), sizeof(wsg_t));
+    cg->grove.crackedEggs = heap_caps_calloc(ARRAY_SIZE(eggsCrackedSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(eggsCrackedSprites); idx++)
     {
         loadWsg(eggsCrackedSprites[idx], &cg->grove.crackedEggs[idx], true);
@@ -344,12 +344,12 @@ void cg_deInitGrove(cGrove_t* cg)
     {
         freeWsg(&cg->grove.crackedEggs[i]);
     }
-    free(cg->grove.crackedEggs);
+    heap_caps_free(cg->grove.crackedEggs);
     for (uint8_t i = 0; i < ARRAY_SIZE(eggsIntactSprites); i++)
     {
         freeWsg(&cg->grove.eggs[i]);
     }
-    free(cg->grove.eggs);
+    heap_caps_free(cg->grove.eggs);
     for (uint8_t i = 0; i < ARRAY_SIZE(itemSprites); i++)
     {
         freeWsg(&cg->grove.itemsWSGs[i]);

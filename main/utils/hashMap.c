@@ -111,7 +111,7 @@ static void hashCheckSize(hashMap_t* map)
     {
         int size = map->size * 2;
         HASH_LOG("Resizing backing array from %d to %d (count=%d)", map->size, size, map->count);
-        hashBucket_t* newArray = realloc(map->values, size * sizeof(hashBucket_t));
+        hashBucket_t* newArray = heap_caps_realloc(map->values, size * sizeof(hashBucket_t), MALLOC_CAP_8BIT);
 
         if (newArray != NULL)
         {

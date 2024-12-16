@@ -294,21 +294,21 @@ void shTeardownGame(shVars_t* sh)
     unloadMidiFile(&sh->midiSong);
 
     // Free chart data
-    free(sh->chartNotes);
+    heap_caps_free(sh->chartNotes);
 
     // Free game UI data
     void* val;
     while ((val = pop(&sh->gameNotes)))
     {
-        free(val);
+        heap_caps_free(val);
     }
     while ((val = pop(&sh->fretLines)))
     {
-        free(val);
+        heap_caps_free(val);
     }
     while ((val = pop(&sh->starList)))
     {
-        free(val);
+        heap_caps_free(val);
     }
 }
 
@@ -456,7 +456,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         {
             node_t* toRemove = fretLineNode;
             fretLineNode     = fretLineNode->next;
-            free(toRemove->val);
+            heap_caps_free(toRemove->val);
             removeEntry(&sh->fretLines, toRemove);
         }
         else

@@ -198,7 +198,7 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko)
     }
     size_t size = sizeof(char) * (soko->currentLevel.entityCount) * 4;
     writeNvsBlob(key_sk_ents, entities, size);
-    free(entities);
+    heap_caps_free(entities);
 }
 // todo: there is no clean place to return to the main menu right now, so gotta write that function/flow so this can get
 // called.
@@ -313,7 +313,7 @@ void sokoLoadEulerTiles(soko_abs_t* soko)
                 }
             }
         }
-        free(blops);
+        heap_caps_free(blops);
     }
 }
 

@@ -161,7 +161,7 @@ static void sokoExitMode(void)
     {
         if (soko->levelTitles[lIdx])
         {
-            free(soko->levelTitles[lIdx]);
+            heap_caps_free(soko->levelTitles[lIdx]);
         }
     }
     // Deinitialize the menu

@@ -287,7 +287,7 @@ static void cGroveExitMode(void)
 
     // WSGs
     freeWsg(&cg->title[1]); // Sky wsg, only one not freed earlier
-    free(cg->title);
+    heap_caps_free(cg->title);
     freeWsg(&cg->arrow);
     cg_deInitChowaWSGs(cg);
 
