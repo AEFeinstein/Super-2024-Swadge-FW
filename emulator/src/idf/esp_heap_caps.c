@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "esp_heap_caps.h"
+#include <inttypes.h>
 
 #define MEMORY_DEBUG
 #ifdef MEMORY_DEBUG
@@ -27,7 +28,7 @@ typedef struct
 allocation_t aTable[A_TABLE_SIZE] = {0};
 size_t usedMemory[2]              = {0};
 
-const char memDbgFmtStr[] = "%-6s at %s:%d\n  %7zu / %7zu (%p)\n";
+const char memDbgFmtStr[] = "%-6s at %s:%d\n  %7" PRIu32 " / %7" PRIu32 " (%p)\n";
 
 #endif
 
@@ -49,7 +50,8 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
 #ifdef MEMORY_DEBUG
     if (size >= SPIRAM_LARGEST_BLOCK)
     {
-        fprintf(stderr, memDbgFmtStr, "Too large alloc!", file, line, usedMemory[0], usedMemory[1], NULL);
+        fprintf(stderr, memDbgFmtStr, "Too large alloc!", file, line, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1],
+                NULL);
         exit(-1);
     }
 
@@ -75,11 +77,12 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
         {
             usedMemory[0] += aTable[idx].size;
         }
-        md_printf(memDbgFmtStr, "malloc", file, line, usedMemory[0], usedMemory[1], ptr);
+        md_printf(memDbgFmtStr, "malloc", file, line, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1], ptr);
 
         if (usedMemory[1] >= SPIRAM_SIZE)
         {
-            fprintf(stderr, memDbgFmtStr, "Out of SPIRAM!", file, line, usedMemory[0], usedMemory[1], NULL);
+            fprintf(stderr, memDbgFmtStr, "Out of SPIRAM!", file, line, (uint32_t)usedMemory[0],
+                    (uint32_t)usedMemory[1], NULL);
             exit(-1);
         }
     }
@@ -115,7 +118,8 @@ void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* fil
 
     if (n * size >= SPIRAM_LARGEST_BLOCK)
     {
-        fprintf(stderr, memDbgFmtStr, "Too large alloc!", file, line, usedMemory[0], usedMemory[1], NULL);
+        fprintf(stderr, memDbgFmtStr, "Too large alloc!", file, line, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1],
+                NULL);
         exit(-1);
     }
 
@@ -141,11 +145,12 @@ void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* fil
         {
             usedMemory[0] += aTable[idx].size;
         }
-        md_printf(memDbgFmtStr, "calloc", file, line, usedMemory[0], usedMemory[1], ptr);
+        md_printf(memDbgFmtStr, "calloc", file, line, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1], ptr);
 
         if (usedMemory[1] >= SPIRAM_SIZE)
         {
-            fprintf(stderr, memDbgFmtStr, "Out of SPIRAM!", file, line, usedMemory[0], usedMemory[1], NULL);
+            fprintf(stderr, memDbgFmtStr, "Out of SPIRAM!", file, line, (uint32_t)usedMemory[0],
+                    (uint32_t)usedMemory[1], NULL);
             exit(-1);
         }
     }
@@ -179,11 +184,12 @@ void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t l
         }
         aTable[idx].ptr  = NULL;
         aTable[idx].size = 0;
-        md_printf(memDbgFmtStr, "free", file, line, usedMemory[0], usedMemory[1], ptr);
+        md_printf(memDbgFmtStr, "free", file, line, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1], ptr);
     }
     else
     {
-        fprintf(stderr, memDbgFmtStr, "Probable double-free!", file, line, usedMemory[0], usedMemory[1], ptr);
+        fprintf(stderr, memDbgFmtStr, "Probable double-free!", file, line, (uint32_t)usedMemory[0],
+                (uint32_t)usedMemory[1], ptr);
     }
 #endif
     free(ptr);
@@ -195,7 +201,8 @@ void* heap_caps_realloc_dbg(void* ptr, size_t size, uint32_t caps, const char* f
 
     if (size >= SPIRAM_LARGEST_BLOCK)
     {
-        fprintf(stderr, memDbgFmtStr, "Too large alloc!", file, line, usedMemory[0], usedMemory[1], NULL);
+        fprintf(stderr, memDbgFmtStr, "Too large alloc!", file, line, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1],
+                NULL);
         exit(-1);
     }
 
@@ -232,11 +239,12 @@ void* heap_caps_realloc_dbg(void* ptr, size_t size, uint32_t caps, const char* f
         {
             usedMemory[0] += aTable[idx].size;
         }
-        md_printf(memDbgFmtStr, "realloc", file, line, usedMemory[0], usedMemory[1], rPtr);
+        md_printf(memDbgFmtStr, "realloc", file, line, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1], rPtr);
 
         if (usedMemory[1] >= SPIRAM_SIZE)
         {
-            fprintf(stderr, memDbgFmtStr, "Out of SPIRAM!", file, line, usedMemory[0], usedMemory[1], NULL);
+            fprintf(stderr, memDbgFmtStr, "Out of SPIRAM!", file, line, (uint32_t)usedMemory[0],
+                    (uint32_t)usedMemory[1], NULL);
             exit(-1);
         }
     }
