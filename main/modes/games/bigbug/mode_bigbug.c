@@ -92,7 +92,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .usesThermometer          = true,
                            .overrideSelectBtn        = false,
                            .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterMode,//SkipIntro,
+                           .fnEnterMode              = bb_EnterModeSkipIntro,
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -1112,6 +1112,11 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager)
             }
         }
 
+        setLeds(leds, CONFIG_NUM_LEDS);
+    }
+    else
+    {
+        led_t leds[CONFIG_NUM_LEDS] = {0};
         setLeds(leds, CONFIG_NUM_LEDS);
     }
 }

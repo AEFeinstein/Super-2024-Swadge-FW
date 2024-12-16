@@ -14,6 +14,7 @@
 #include "tilemap_bigbug.h"
 #include "palette.h"
 #include "linked_list.h"
+#include "wsgPalette.h"
 
 //==============================================================================
 // Constants
@@ -121,6 +122,8 @@ struct bb_gameData_t
     struct bb_radarScreenData_t radar;
 
     uint8_t carFightState; ///< 0 means no active car fight, greater than 0 means number of kills remaining
+
+    wsgPalette_t damagePalette; ///< More vibrant reddish colors to use when something takes damage.
 };
 
 //==============================================================================

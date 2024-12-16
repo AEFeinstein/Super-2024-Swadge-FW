@@ -75,7 +75,7 @@ void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* 
             for (int32_t srcX = 0; srcX != wsgw; srcX++)
             {
                 // Draw if not transparent
-                uint8_t color = palette->newColors[linein[srcX]];
+                uint8_t color = palette->newColors[linein[readX]];
                 if (cTransparent != color)
                 {
                     uint16_t tx = localX;

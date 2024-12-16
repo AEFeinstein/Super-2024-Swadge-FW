@@ -1029,6 +1029,12 @@ void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations)
 void bb_updateBug(bb_entity_t* self)
 {
     bb_buData_t* bData = (bb_buData_t*)self->data;
+
+    if (bData->damageEffect > 0)
+    {
+        bData->damageEffect -= self->gameData->elapsedUs >> 11;
+    }
+
     if (!self->cacheable && self->gameData->carFightState == 0)
     {
         self->cacheable = true;
@@ -1236,9 +1242,14 @@ void bb_updateBug(bb_entity_t* self)
 void bb_updateBuggo(bb_entity_t* self)
 {
     bb_buggoData_t* bData = (bb_buggoData_t*)self->data;
-    vec_t previousPos     = self->pos;
-    self->pos             = addVec2d(self->pos, mulVec2d(bData->direction, self->gameData->elapsedUs >> 11));
-    bb_hitInfo_t hitInfo  = {0};
+    if (bData->damageEffect > 0)
+    {
+        bData->damageEffect -= self->gameData->elapsedUs >> 11;
+    }
+
+    vec_t previousPos    = self->pos;
+    self->pos            = addVec2d(self->pos, mulVec2d(bData->direction, self->gameData->elapsedUs >> 11));
+    bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
     if (hitInfo.hit == true)
     {
@@ -2050,34 +2061,17 @@ void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
                 &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x), brightness);
         }
     }
-    if (self->dataType == BU_DATA)
+    bb_buData_t* bData = (bb_buData_t*)self->data;
+    if (bData->damageEffect > 70 || (bData->damageEffect > 0 && bb_randomInt(0, 1)))
     {
-        bb_buData_t* bData = (bb_buData_t*)self->data;
-        switch (bData->gravity)
-        {
-            case BB_DOWN:
-                drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
-                        xOff, yOff, bData->faceLeft, false, 0);
-                break;
-            case BB_LEFT:
-                drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
-                        xOff, yOff, bData->faceLeft, false, 90);
-                break;
-            case BB_UP:
-                drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
-                        xOff, yOff, bData->faceLeft, false, 180);
-                break;
-            default: // BB_RIGHT
-                drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
-                        xOff, yOff, bData->faceLeft, false, 270);
-                break;
-        }
+        drawWsgPalette(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
+                       xOff, yOff, &self->gameData->damagePalette, bData->faceLeft, false,
+                       (self->dataType == BU_DATA) * 90 * bData->gravity);
     }
-    else if (self->dataType == BUGGO_DATA)
+    else
     {
-        bb_buggoData_t* bData = (bb_buggoData_t*)self->data;
         drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff,
-                yOff, bData->faceLeft, false, 0);
+                yOff, bData->faceLeft, false, (self->dataType == BU_DATA) * 90 * bData->gravity);
     }
 }
 
@@ -2219,6 +2213,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             }
             else
             {
+                bData->damageEffect = 100;
                 bData->health -= 20;
                 if (bData->health < 0)
                 {
@@ -2264,7 +2259,7 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
         if (hitInfo->normal.x == 0)
         {
             pData->vel.y = 0;
-            if (other->updateFunction == &bb_updateGarbotnikDying)
+            if (other->updateFunction == &bb_updateGarbotnikDying && self->spriteIndex == BB_WASHING_MACHINE)
             {
                 bb_triggerGameOver(self);
             }
@@ -2503,6 +2498,11 @@ void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
     gData->fuel += 30000;
+    if (gData->fuel > 180000) // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes. //also set in
+                              // bb_createEntity()
+    {
+        gData->fuel = 180000;
+    }
     bb_destroyEntity(self, false);
 }
 

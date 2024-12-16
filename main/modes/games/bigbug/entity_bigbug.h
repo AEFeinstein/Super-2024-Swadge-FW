@@ -91,16 +91,18 @@ typedef struct
 
 typedef struct // parent class
 {
-    bool faceLeft; // flip the sprite if true
-    uint8_t speed; // randomized on creation. Used for walking or flying.
-    int8_t health; // bug dies at negative numbers
+    bool faceLeft;       // flip the sprite if true
+    uint8_t speed;       // randomized on creation. Used for walking or flying.
+    int8_t health;       // bug dies at negative numbers
+    int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
 } bb_bugData_t;
 
 typedef struct // child class
 {
-    bool faceLeft; // flip the sprite if true
-    uint8_t speed; // randomized on creation. Used for walking or flying.
-    int8_t health; // bug dies at negative numbers
+    bool faceLeft;       // flip the sprite if true
+    uint8_t speed;       // randomized on creation. Used for walking or flying.
+    int8_t health;       // bug dies at negative numbers
+    int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
     //-----------------------------------------------
     bb_direction_t gravity; // to walk on the walls & ceiling: local gravity switches
     uint8_t fallSpeed;      // increments in free fall
@@ -108,9 +110,10 @@ typedef struct // child class
 
 typedef struct // child class
 {
-    bool faceLeft; // flip the sprite if true
-    uint8_t speed; // randomized on creation. Used for walking or flying.
-    int8_t health; // bug dies at negative numbers
+    bool faceLeft;       // flip the sprite if true
+    uint8_t speed;       // randomized on creation. Used for walking or flying.
+    int8_t health;       // bug dies at negative numbers
+    int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
     //-----------------------------------------------
     bool trackingPlayer; // toggles between moving toward the player and moving in a random direction.
     vec_t direction;     // buggo moves in the direction vector.

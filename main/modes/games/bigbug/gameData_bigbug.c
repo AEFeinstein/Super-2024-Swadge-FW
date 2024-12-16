@@ -46,6 +46,40 @@ void bb_initializeGameData(bb_gameData_t* gameData)
 
     memset(&gameData->pleaseCheck, 0, sizeof(list_t));
     memset(&gameData->unsupported, 0, sizeof(list_t));
+
+    // Palette setup
+    wsgPaletteReset(&gameData->damagePalette);
+    for (int color = 0; color < 215; color++)
+    {
+        uint32_t rgbCol = paletteToRGB((paletteColor_t)color);
+        // don't modify blue channel
+        //  int16_t newChannelColor = (rgbCol >> 16) & 255;
+        //  newChannelColor += 51;
+        //  if(newChannelColor > 255)
+        //  {
+        //      newChannelColor = 255;
+        //  }
+        //  rgbCol = (rgbCol & 0x00FFFF) | (newChannelColor << 16);
+
+        // decrement green by 51
+        int16_t newChannelColor = (rgbCol >> 8) & 255;
+        newChannelColor -= 51;
+        if (newChannelColor < 0)
+        {
+            newChannelColor = 0;
+        }
+        rgbCol = (rgbCol & 0xFF00FF) | (newChannelColor << 8);
+
+        // increment red by 102
+        newChannelColor = rgbCol & 255;
+        newChannelColor += 102;
+        if (newChannelColor > 255)
+        {
+            newChannelColor = 255;
+        }
+        rgbCol = (rgbCol & 0x00FFFF) | newChannelColor;
+        wsgPaletteSet(&gameData->damagePalette, (paletteColor_t)color, RGBtoPalette(rgbCol));
+    }
 }
 
 void bb_freeGameData(bb_gameData_t* gameData)
