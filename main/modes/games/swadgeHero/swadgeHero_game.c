@@ -351,7 +351,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         }
 
         // Write the new high score to NVS if it's larger
-        if (sh->score > oldHs)
+        if (sh->score > (oldHs & 0x0FFFFFFF))
         {
             // four top bits are letter, bottom 28 bits are score
             int32_t nvsScore = ((gradeIdx & 0x0F) << 28) | (sh->score & 0x0FFFFFFF);
