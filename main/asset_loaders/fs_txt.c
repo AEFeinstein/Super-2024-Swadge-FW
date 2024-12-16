@@ -48,5 +48,5 @@ char* loadTxt(const char* name, bool spiRam)
  */
 void freeTxt(char* txtStr)
 {
-    free(txtStr);
+    heap_caps_free(txtStr);
 }

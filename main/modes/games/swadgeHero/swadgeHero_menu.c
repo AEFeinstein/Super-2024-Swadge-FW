@@ -221,7 +221,7 @@ void shTeardownMenu(shVars_t* sh)
     void* toFree;
     while ((toFree = pop(&sh->hsStrs)))
     {
-        free(toFree);
+        heap_caps_free(toFree);
     }
 
     // Turn LEDs off

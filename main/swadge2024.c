@@ -554,12 +554,16 @@ static void initOptionalPeripherals(void)
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
     {
+        setDacShutdown(true);
+
         // Initialize and start the mic as a continuous ADC
         initMic(GPIO_NUM_7);
         startMic();
     }
     else
     {
+        setDacShutdown(false);
+
         // Otherwise initialize the battery monitor as a oneshot ADC
         initBattmon(GPIO_NUM_6);
 

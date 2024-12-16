@@ -39,8 +39,11 @@
 #include "palette.h"
 
 #include "wsg.h"
+#include "heatshrink_helper.h"
+#include "heatshrink_encoder.h"
 
 bool loadWsg(const char* name, wsg_t* wsg, bool spiRam);
+bool loadWsgInplace(const char* name, wsg_t* wsg, bool spiRam, uint8_t* decompressedBuf, heatshrink_decoder* hsd);
 bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam);
 bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg);
 void freeWsg(wsg_t* wsg);

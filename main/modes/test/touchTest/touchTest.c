@@ -96,8 +96,9 @@ touchTest_t* touchTest = NULL;
 static void touchTestEnterMode(void)
 {
     // Allocate and clear all memory for this mode. All the variables are contained in a single struct for convenience.
-    // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
-    touchTest = calloc(1, sizeof(touchTest_t));
+    // heap_caps_calloc() is used instead of heap_caps_malloc() because heap_caps_calloc() also initializes the
+    // allocated memory to zeros.
+    touchTest = heap_caps_calloc(1, sizeof(touchTest_t), MALLOC_CAP_8BIT);
 
     // Load a font
     loadFont("ibm_vga8.font", &touchTest->ibm, false);
@@ -110,7 +111,7 @@ static void touchTestExitMode(void)
 {
     // Free the font
     freeFont(&touchTest->ibm);
-    free(touchTest);
+    heap_caps_free(touchTest);
 }
 
 /**

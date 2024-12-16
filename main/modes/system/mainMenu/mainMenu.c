@@ -144,7 +144,7 @@ static const char* const showSecretsMenuSettingOptions[] = {
 static void mainMenuEnterMode(void)
 {
     // Allocate memory for the mode
-    mainMenu = calloc(1, sizeof(mainMenu_t));
+    mainMenu = heap_caps_calloc(1, sizeof(mainMenu_t), MALLOC_CAP_8BIT);
 
     // Load a font
     loadFont("rodin_eb.font", &mainMenu->font_rodin, false);
@@ -246,7 +246,7 @@ static void mainMenuExitMode(void)
     unloadMidiFile(&mainMenu->fanfare);
 
     // Free mode memory
-    free(mainMenu);
+    heap_caps_free(mainMenu);
 }
 
 /**

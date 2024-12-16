@@ -66,7 +66,7 @@ shVars_t* getShVars(void)
 static void shEnterMode(void)
 {
     // Allocate mode memory
-    shv = calloc(1, sizeof(shVars_t));
+    shv = heap_caps_calloc(1, sizeof(shVars_t), MALLOC_CAP_8BIT);
 
     // Load fonts
     loadFont("ibm_vga8.font", &shv->ibm, true);
@@ -123,7 +123,7 @@ static void shExitMode(void)
     freeWsg(&shv->star);
 
     // Free mode memory
-    free(shv);
+    heap_caps_free(shv);
 }
 
 /**

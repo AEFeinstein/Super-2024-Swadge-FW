@@ -96,8 +96,8 @@ void deinitButtons(void)
     ESP_ERROR_CHECK(touch_pad_deinit());
 
     vQueueDelete(btn_evt_queue);
-    free(touchPads);
-    free(baseOffsets);
+    heap_caps_free(touchPads);
+    heap_caps_free(baseOffsets);
 }
 
 /**
@@ -284,7 +284,7 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
     if (NULL == touchPads)
     {
         numTouchPads = _numTouchPads;
-        touchPads    = malloc(sizeof(touch_pad_t) * numTouchPads);
+        touchPads    = heap_caps_malloc(sizeof(touch_pad_t) * numTouchPads, MALLOC_CAP_8BIT);
         memcpy(touchPads, _touchPads, (sizeof(touch_pad_t) * numTouchPads));
     }
 
@@ -419,7 +419,7 @@ int getBaseTouchVals(int32_t* data, int count)
     // curVals is valid.
     if (NULL == baseOffsets)
     {
-        baseOffsets = malloc(sizeof(baseOffsets[0]) * numTouchPads);
+        baseOffsets = heap_caps_malloc(sizeof(baseOffsets[0]) * numTouchPads, MALLOC_CAP_8BIT);
         for (int i = 0; i < numTouchPads; i++)
         {
             baseOffsets[i] = curVals[i] << 8;
