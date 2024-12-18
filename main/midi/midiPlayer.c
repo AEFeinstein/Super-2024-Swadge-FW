@@ -1802,6 +1802,7 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
     midiChannel_t* chan   = &player->channels[channel];
     voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
     midiVoice_t* voices   = chan->percussion ? player->percVoices : player->poolVoices;
+    int32_t maxVoices     = chan->percussion ? ARRAY_SIZE(player->percVoices) : ARRAY_SIZE(player->poolVoices);
 
     // check the bitmaps to see if there's any note to release
     uint32_t playingVoices = VS_ANY(states) & chan->allocedVoices;
@@ -1828,7 +1829,11 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
     // Find the channel playing this note
     while (playingVoices != 0)
     {
-        uint8_t voiceIdx  = __builtin_ctz(playingVoices);
+        uint8_t voiceIdx = __builtin_ctz(playingVoices);
+        if (voiceIdx >= maxVoices)
+        {
+            break;
+        }
         uint32_t voiceBit = (1 << voiceIdx);
 
         if (voices[voiceIdx].note == note)
@@ -2474,7 +2479,7 @@ void deinitGlobalMidiPlayer(void)
             midiPlayerReset(&globalPlayers[i]);
         }
 
-        free(globalPlayers);
+        heap_caps_free(globalPlayers);
         globalPlayers = NULL;
     }
 }

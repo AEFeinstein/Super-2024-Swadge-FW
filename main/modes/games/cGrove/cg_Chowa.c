@@ -79,7 +79,7 @@ void cg_initChowaWSGs(cGrove_t* cg)
     {
         for (int32_t idx2 = 0; idx2 < 2; idx2++)
         {
-            cg->chowaWSGs[idx][idx2] = calloc(ARRAY_SIZE(imageStrings), sizeof(wsg_t));
+            cg->chowaWSGs[idx][idx2] = heap_caps_calloc(ARRAY_SIZE(imageStrings), sizeof(wsg_t), MALLOC_CAP_8BIT);
         }
     }
     cg_initByPrefix(cg, CG_KING_DONUT, CG_CHILD, "ckd");
@@ -100,7 +100,7 @@ void cg_deInitChowaWSGs(cGrove_t* cg)
             {
                 freeWsg(&cg->chowaWSGs[idx][idx2][idx3]);
             }
-            free(cg->chowaWSGs[idx][idx2]);
+            heap_caps_free(cg->chowaWSGs[idx][idx2]);
         }
     }
 }

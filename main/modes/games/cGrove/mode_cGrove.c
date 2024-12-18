@@ -125,7 +125,7 @@ static void cGroveEnterMode(void)
     // Load Chowa WSGs
     cg_initChowaWSGs(cg);
     // Load title screen
-    cg->title = calloc(ARRAY_SIZE(cGroveTitleSprites), sizeof(wsg_t));
+    cg->title = heap_caps_calloc(ARRAY_SIZE(cGroveTitleSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(cGroveTitleSprites); idx++)
     {
         loadWsg(cGroveTitleSprites[idx], &cg->title[idx], true);
@@ -287,12 +287,12 @@ static void cGroveExitMode(void)
 
     // WSGs
     freeWsg(&cg->title[1]); // Sky wsg, only one not freed earlier
-    free(cg->title);
+    heap_caps_free(cg->title);
     freeWsg(&cg->arrow);
     cg_deInitChowaWSGs(cg);
 
     // Main
-    free(cg);
+    heap_caps_free(cg);
 }
 
 static void cGroveMainLoop(int64_t elapsedUs)

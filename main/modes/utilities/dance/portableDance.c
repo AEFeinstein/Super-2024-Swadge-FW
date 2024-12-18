@@ -22,8 +22,8 @@ void portableDanceLoadSetting(portableDance_t* dance);
  */
 portableDance_t* initPortableDance(const char* nvsKey)
 {
-    portableDance_t* dance = calloc(1, sizeof(portableDance_t));
-    dance->dances          = calloc(1, sizeof(ledDanceOpt_t) * getNumDances());
+    portableDance_t* dance = heap_caps_calloc(1, sizeof(portableDance_t), MALLOC_CAP_8BIT);
+    dance->dances          = heap_caps_calloc(1, sizeof(ledDanceOpt_t) * getNumDances(), MALLOC_CAP_8BIT);
     for (uint8_t i = 0; i < getNumDances(); i++)
     {
         dance->dances[i].dance  = ledDances + i;
@@ -52,9 +52,9 @@ void freePortableDance(portableDance_t* dance)
     {
         if (dance->dances != NULL)
         {
-            free(dance->dances);
+            heap_caps_free(dance->dances);
         }
-        free(dance);
+        heap_caps_free(dance);
     }
 }
 

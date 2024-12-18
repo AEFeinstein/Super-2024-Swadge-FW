@@ -198,7 +198,7 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko)
     }
     size_t size = sizeof(char) * (soko->currentLevel.entityCount) * 4;
     writeNvsBlob(key_sk_ents, entities, size);
-    free(entities);
+    heap_caps_free(entities);
 }
 // todo: there is no clean place to return to the main menu right now, so gotta write that function/flow so this can get
 // called.
@@ -221,7 +221,7 @@ void sokoLoadCurrentLevelEntities(soko_abs_t* soko)
             soko->currentLevel.entities[i].facing = entities[i * 4 + 3];
         }
     }
-    free(entities);
+    heap_caps_free(entities);
 }
 
 void sokoSaveEulerTiles(soko_abs_t* soko)
@@ -261,7 +261,7 @@ void sokoSaveEulerTiles(soko_abs_t* soko)
     writeNvsBlob(key_sk_e_t_c, &i, sizeof(uint16_t));
     writeNvsBlob(key_sk_e_ts, blops, sizeof(char) * i);
 
-    free(blops);
+    heap_caps_free(blops);
 }
 
 void sokoLoadEulerTiles(soko_abs_t* soko)
@@ -313,7 +313,7 @@ void sokoLoadEulerTiles(soko_abs_t* soko)
                 }
             }
         }
-        free(blops);
+        heap_caps_free(blops);
     }
 }
 
@@ -329,12 +329,12 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     size_t fileSize;
     if (soko->levelBinaryData)
     {
-        free(soko->levelBinaryData);
+        heap_caps_free(soko->levelBinaryData);
     }
     soko->levelBinaryData
         = cnfsReadFile(soko->levelNames[levelIndex], &fileSize, true); // Heap CAPS malloc/calloc allocation for SPI RAM
 
-    // The pointer returned by spiffsReadFile can be freed with free() with no additional steps.
+    // The pointer returned by spiffsReadFile can be freed with heap_caps_free() with no additional steps.
     soko->currentLevel.width = soko->levelBinaryData[0];  // first two bytes of a level's data always describe the
                                                           // bounding width and height of the tilemap.
     soko->currentLevel.height = soko->levelBinaryData[1]; // Max Theoretical Level Bounding Box Size is 255x255, though

@@ -161,7 +161,7 @@ static void sokoExitMode(void)
     {
         if (soko->levelTitles[lIdx])
         {
-            free(soko->levelTitles[lIdx]);
+            heap_caps_free(soko->levelTitles[lIdx]);
         }
     }
     // Deinitialize the menu
@@ -195,9 +195,9 @@ static void sokoExitMode(void)
     //  euler
     freeWsg(&soko->eulerTheme.crateWSG);
     freeWsg(&soko->eulerTheme.crateOnGoalWSG);
-    free(soko->levelBinaryData); // TODO is this the best place to free?
+    heap_caps_free(soko->levelBinaryData); // TODO is this the best place to free?
     // Free everything else
-    free(soko);
+    heap_caps_free(soko);
 }
 
 static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)

@@ -102,7 +102,7 @@ static void tttEnterMode(void)
     setDacShutdown(true);
 
     // Allocate memory for the mode
-    ttt = calloc(1, sizeof(ultimateTTT_t));
+    ttt = heap_caps_calloc(1, sizeof(ultimateTTT_t), MALLOC_CAP_8BIT);
 
     // Load markers
     for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(markerNames); pIdx++)
@@ -239,7 +239,7 @@ static void tttExitMode(void)
     // Clear out this list
     while (0 != ttt->instructionHistory.length)
     {
-        free(pop(&ttt->instructionHistory));
+        heap_caps_free(pop(&ttt->instructionHistory));
     }
 
     // Free the menu renderer
@@ -254,7 +254,7 @@ static void tttExitMode(void)
     freeFont(&ttt->font_righteous);
 
     // Free everything
-    free(ttt);
+    heap_caps_free(ttt);
 }
 
 /**

@@ -275,7 +275,7 @@ void gamepadEnterMode(void)
     setDacShutdown(true);
 
     // Allocate and zero memory
-    gamepad = (gamepad_t*)calloc(1, sizeof(gamepad_t));
+    gamepad = (gamepad_t*)heap_caps_calloc(1, sizeof(gamepad_t), MALLOC_CAP_8BIT);
 
     // Load the fonts
     loadFont("logbook.font", &(gamepad->logbookFont), false);
@@ -310,7 +310,7 @@ void gamepadExitMode(void)
     freeFont(&(gamepad->logbookFont));
     freeFont(&(gamepad->ibmFont));
 
-    free(gamepad);
+    heap_caps_free(gamepad);
 }
 
 void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
