@@ -647,14 +647,13 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             // detach
             node_t* next = current->next;
 
-            if(self->spriteIndex == BB_DONUT)
-            {
-                //turn off physics for the donut when not towed.
-                heap_caps_free(self->data);
-                self->data = NULL;
-                ((bb_entity_t*)current->val)->updateFunction = NULL;
-            }
-            
+            // if(self->spriteIndex == BB_DONUT)
+            // {
+            //     //turn off physics for the donut when not towed.
+            //     heap_caps_free(self->data);
+            //     self->data = NULL;
+            //     ((bb_entity_t*)current->val)->updateFunction = NULL;
+            // }
             
             removeEntry(&gData->towedEntities, current);
             current = next;
@@ -739,15 +738,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         if (best_i != -1)
         {
             bb_entity_t* bestEntity = &self->gameData->entityManager.entities[best_i];
-            if (bestEntity->spriteIndex == BB_DONUT)
-            {
-                // Give the donut NJIMEIA PHYSX when it is tethered.
-                bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
-                physData->bounceNumerator   = 2; // 66% bounce
-                physData->bounceDenominator = 3;
-                bb_setData(bestEntity, physData, PHYSICS_DATA);
-                bestEntity->updateFunction = bb_updatePhysicsObject;
-            }
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
         }
     }
@@ -1771,7 +1761,7 @@ void bb_updateCarOpen(bb_entity_t* self)
     {
         // spawn a donut as a reward for completing the fight
         bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
-                        (self->pos.x >> DECIMAL_BITS) + 20, (self->pos.y >> DECIMAL_BITS) - 30, true, false);
+                        (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
         self->paused = true;
     }
 }

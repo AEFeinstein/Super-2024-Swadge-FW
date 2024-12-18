@@ -1031,7 +1031,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
             list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
 
-            push(others, (void*)GARBOTNIK_DATA);
+            push(others, (void*)GARBOTNIK_FLYING);
 
             bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionSpit};
@@ -1043,6 +1043,15 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_DONUT:
         {
+            // Give the donut NJIMEIA PHYSX when it is tethered.
+            bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+            physData->bounceNumerator   = 2; // 66% bounce
+            physData->bounceDenominator = 3;
+            physData->vel.y = -60;
+            physData->vel.x = 60;
+            bb_setData(entity, physData, PHYSICS_DATA);
+            entity->updateFunction = bb_updatePhysicsObject;
+            break;
         }
         default: // FLAME_ANIM and others need nothing set
         {
