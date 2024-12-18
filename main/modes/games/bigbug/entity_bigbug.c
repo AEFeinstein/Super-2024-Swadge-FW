@@ -412,8 +412,12 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
     gData->fire     = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
-    if (gData->fire && gData->numHarpoons > 0)
+
+    gData->harpoonCooldown -= self->gameData->elapsedUs >> 11;
+
+    if (gData->touching && gData->harpoonCooldown < 0 && gData->numHarpoons > 0)
     {
+        gData->harpoonCooldown = gData->fireTime;
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
@@ -677,7 +681,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
     }
 
-    // if b button down
+    // if b button down, tether another entity if it's close enough
     if ((self->gameData->btnState & 0b10000) >> 4)
     {
         int16_t best_i     = -1;     // negative 1 means no valid candidates found
@@ -685,8 +689,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         for (uint8_t i = 0; i < MAX_ENTITIES; i++)
         {
             bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
-            // if it is a bug and it is dead i.e. PHYSICS_DATA
-            if (curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13 && curEntity->dataType == PHYSICS_DATA)
+            // if it is a bug or a donut
+            if ((curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13) || curEntity->spriteIndex == BB_DONUT)
             {
                 // if it is not already towed
                 bool isTowed = false;
@@ -717,6 +721,16 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
         if (best_i != -1)
         {
+            bb_entity_t* bestEntity = &self->gameData->entityManager.entities[best_i];
+            if(bestEntity->spriteIndex == BB_DONUT)
+            {
+                //Give the donut NJIMEIA PHYSX when it is tethered.
+                bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+                physData->bounceNumerator   = 2; // 66% bounce
+                physData->bounceDenominator = 3;
+                bb_setData(bestEntity, physData, PHYSICS_DATA);
+                bestEntity->updateFunction = bb_updatePhysicsObject;
+            }
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
         }
     }
@@ -1739,7 +1753,7 @@ void bb_updateCarOpen(bb_entity_t* self)
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
         // spawn a donut as a reward for completing the fight
-        // FINISH ME!!!
+        bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1, (self->pos.x >> DECIMAL_BITS) + 20, (self->pos.y >> DECIMAL_BITS) + 30, true, false);
         self->paused = true;
     }
 }
