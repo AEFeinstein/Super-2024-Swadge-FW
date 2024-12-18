@@ -53,6 +53,7 @@ typedef enum
     BB_FUEL,        // A zero-g glob of relish or crude dinosaur juice.
     BB_GRABBY_HAND, // A hand in the booster that grabs bugs.
     BB_DOOR,
+    BB_DONUT,
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.

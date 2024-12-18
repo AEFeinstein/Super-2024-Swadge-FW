@@ -171,6 +171,10 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bb_sprite_t* doorSprite = bb_loadSprite("door", 2, 1, &entityManager->sprites[BB_DOOR]);
     doorSprite->originX     = 16;
     doorSprite->originY     = 48;
+
+    bb_sprite_t* donutSprite = bb_loadSprite("donut", 1, 1, &entityManager->sprites[BB_DONUT]);
+    donutSprite->originX = 15;
+    donutSprite->originY = 15;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -596,6 +600,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             gData->fuel = 1000 * 60 * 3; // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes.
                                          // //also set in bb_onCollisionFuel()
             gData->yaw.x = -1;           // So he starts off facing left away from the tutorial egg.
+            gData->fireTime = 200;
             memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
             // create sequential numbers of all phrase indices
@@ -964,6 +969,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(others, (void*)BUGGO);
             push(others, (void*)BUGGY);
             push(others, (void*)BUTT);
+            push(others, (void*)BB_DONUT);
             bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionGrabbyHand};
             push(entity->collisions, (void*)collision);
@@ -1034,6 +1040,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->updateFunction = &bb_updateSpit;
             entity->drawFunction   = &bb_drawSpit;
             break;
+        }
+        case BB_DONUT:
+        {
+
         }
         default: // FLAME_ANIM and others need nothing set
         {

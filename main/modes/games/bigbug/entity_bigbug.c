@@ -372,6 +372,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
 
+    if (gData->damageEffect > 0)
+    {
+        gData->damageEffect -= self->gameData->elapsedUs >> 11;
+    }
+
     // Fuel decrements with time. Right shifting by 10 is fairly close to
     // converting microseconds to milliseconds without requiring division.
     gData->fuel -= self->gameData->elapsedUs >> 10;
@@ -407,8 +412,12 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
     gData->fire     = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
-    if (gData->fire && gData->numHarpoons > 0)
+
+    gData->harpoonCooldown -= self->gameData->elapsedUs >> 11;
+
+    if (gData->touching && gData->harpoonCooldown < 0 && gData->numHarpoons > 0)
     {
+        gData->harpoonCooldown = gData->fireTime;
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
@@ -672,7 +681,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
     }
 
-    // if b button down
+    // if b button down, tether another entity if it's close enough
     if ((self->gameData->btnState & 0b10000) >> 4)
     {
         int16_t best_i     = -1;     // negative 1 means no valid candidates found
@@ -680,8 +689,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         for (uint8_t i = 0; i < MAX_ENTITIES; i++)
         {
             bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
-            // if it is a bug and it is dead i.e. PHYSICS_DATA
-            if (curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13 && curEntity->dataType == PHYSICS_DATA)
+            // if it is a bug or a donut
+            if ((curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13) || curEntity->spriteIndex == BB_DONUT)
             {
                 // if it is not already towed
                 bool isTowed = false;
@@ -712,6 +721,16 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
         if (best_i != -1)
         {
+            bb_entity_t* bestEntity = &self->gameData->entityManager.entities[best_i];
+            if(bestEntity->spriteIndex == BB_DONUT)
+            {
+                //Give the donut NJIMEIA PHYSX when it is tethered.
+                bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+                physData->bounceNumerator   = 2; // 66% bounce
+                physData->bounceDenominator = 3;
+                bb_setData(bestEntity, physData, PHYSICS_DATA);
+                bestEntity->updateFunction = bb_updatePhysicsObject;
+            }
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
         }
     }
@@ -1734,7 +1753,7 @@ void bb_updateCarOpen(bb_entity_t* self)
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
         // spawn a donut as a reward for completing the fight
-        // FINISH ME!!!
+        bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1, (self->pos.x >> DECIMAL_BITS) + 20, (self->pos.y >> DECIMAL_BITS) + 30, true, false);
         self->paused = true;
     }
 }
@@ -1782,6 +1801,7 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
 
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
 
+    // draw the tow cables
     node_t* current = gData->towedEntities.first;
     while (current != NULL)
     {
@@ -1795,26 +1815,46 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
 
-    // Draw garbotnik
+    uint8_t frameIndex;
+    bool useSimple = true;
+
+    // Determine frameIndex and draw style
     if (gData->yaw.x < -1400)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0], xOff, yOff);
+        frameIndex = 0;
     }
     else if (gData->yaw.x < -400)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[1], xOff, yOff);
+        frameIndex = 1;
     }
     else if (gData->yaw.x < 400)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[2], xOff, yOff);
+        frameIndex = 2;
     }
     else if (gData->yaw.x < 1400)
     {
-        drawWsg(&entityManager->sprites[self->spriteIndex].frames[1], xOff, yOff, true, false, 0);
+        frameIndex = 1;
+        useSimple  = false;
     }
     else
     {
-        drawWsg(&entityManager->sprites[self->spriteIndex].frames[0], xOff, yOff, true, false, 0);
+        frameIndex = 0;
+        useSimple  = false;
+    }
+
+    // Draw the sprite
+    if (gData->damageEffect > 70 || (gData->damageEffect > 0 && bb_randomInt(0, 1)))
+    {
+        drawWsgPalette(&entityManager->sprites[self->spriteIndex].frames[frameIndex], xOff, yOff,
+                       &self->gameData->damagePalette, !useSimple, false, 0);
+    }
+    else if (useSimple)
+    {
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[frameIndex], xOff, yOff);
+    }
+    else
+    {
+        drawWsg(&entityManager->sprites[self->spriteIndex].frames[frameIndex], xOff, yOff, true, false, 0);
     }
 
     if (gData->touching)
@@ -2196,11 +2236,11 @@ void bb_drawSpit(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
     {
         if (sData->vel.x < 0)
         {
-            rotation = 90;
+            rotation = 270;
         }
         else
         {
-            rotation = 270;
+            rotation = 90;
         }
     }
     else if (sData->vel.y < 0)
@@ -2210,6 +2250,15 @@ void bb_drawSpit(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
     drawWsgPalette(&entityManager->sprites[BB_FUEL].frames[self->currentAnimationFrame],
                    (self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
                    &self->gameData->damagePalette, false, false, rotation);
+}
+
+void bb_drawHitEffect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    drawWsgPaletteSimple(
+        &entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
+        (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+        (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y,
+        &self->gameData->damagePalette);
 }
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -2244,7 +2293,12 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             // Bug got stabbed
             if (bData->health - 34 <= 0) // bug just died
             {
-                // no damage effect unfortunately because physics data doesn't have the effect timer.
+                // use a bump animation but tweak its graphics
+                bb_entity_t* hitEffect
+                    = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
+                                      hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+                hitEffect->drawFunction = &bb_drawHitEffect;
+
                 if (self->gameData->carFightState > 0)
                 {
                     self->gameData->carFightState--;
@@ -2677,7 +2731,8 @@ void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
 {
     bb_spitData_t* sData      = (bb_spitData_t*)self->data;
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
-    gData->vel                = addVec2d(gData->vel, (vec_t){sData->vel.x << 5, sData->vel.y << 5});
+    gData->vel                = addVec2d(gData->vel, (vec_t){sData->vel.x << 4, sData->vel.y << 4});
+    gData->damageEffect       = 100;
     gData->fuel -= 10000;
     if (gData->fuel < 0)
     {

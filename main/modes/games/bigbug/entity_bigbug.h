@@ -80,6 +80,10 @@ typedef struct
 
     // dialogue stuff
     int16_t landingPhrases[29];
+
+    int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
+    int16_t harpoonCooldown; // decrements over time. Fires if < 0 and resets to fireTime.
+    int16_t fireTime;
 } bb_garbotnikData_t;
 
 typedef struct
@@ -361,6 +365,7 @@ void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
 void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawSpit(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawHitEffect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
