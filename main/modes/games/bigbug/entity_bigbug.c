@@ -710,8 +710,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                 {
                     uint16_t dist = (uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> DECIMAL_BITS,
                                                                  (curEntity->pos.y - self->pos.y) >> DECIMAL_BITS});
-                    // if the bug is within 50px of garbotnik
-                    if (dist < 2500 && dist < best_dist)
+                    // if the bug is within 70px of garbotnik
+                    if (dist < 4900 && dist < best_dist)
                     {
                         // new best candidate found!
                         best_i    = i;
