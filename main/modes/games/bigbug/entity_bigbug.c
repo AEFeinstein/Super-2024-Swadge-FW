@@ -411,13 +411,13 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     // touchpad stuff
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
-    //The outer half of the circle launches the same velocity so you don't have to touch at the very edge.
-    if(gData->r > 561)
+    // The outer half of the circle launches the same velocity so you don't have to touch at the very edge.
+    if (gData->r > 561)
     {
         gData->r = 561;
     }
 
-    gData->fire     = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
+    gData->fire = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
 
     gData->harpoonCooldown -= self->gameData->elapsedUs >> 11;
 
@@ -666,22 +666,17 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t dampingForceX = (pData->vel.x - gData->vel.x) / DAMPING_CONSTANT;
             int32_t dampingForceY = (pData->vel.y - gData->vel.y) / DAMPING_CONSTANT;
 
-            // Total force = F_spring + F_damping
-            int32_t totalForceX = springForceX + dampingForceX;
-            int32_t totalForceY = springForceY + dampingForceY;
-
             // Apply the force
-            if(curEntity->updateFunction == &bb_updatePhysicsObject)//dead bug or donut
+            if (curEntity->updateFunction == &bb_updatePhysicsObject) // dead bug or donut
             {
                 pData->vel.x += springForceX - dampingForceX;
-                pData->vel.y += springForceY - dampingForceY+ 4;
+                pData->vel.y += springForceY - dampingForceY + 4;
             }
-            else //live bug applies force to garbotnik
+            else // live bug applies force to garbotnik
             {
                 gData->vel.x -= springForceX;
                 gData->vel.y -= springForceY;
             }
-            
 
             current = current->next;
         }
@@ -728,9 +723,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         if (best_i != -1)
         {
             bb_entity_t* bestEntity = &self->gameData->entityManager.entities[best_i];
-            if(bestEntity->spriteIndex == BB_DONUT)
+            if (bestEntity->spriteIndex == BB_DONUT)
             {
-                //Give the donut NJIMEIA PHYSX when it is tethered.
+                // Give the donut NJIMEIA PHYSX when it is tethered.
                 bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
                 physData->bounceNumerator   = 2; // 66% bounce
                 physData->bounceDenominator = 3;
@@ -1759,7 +1754,8 @@ void bb_updateCarOpen(bb_entity_t* self)
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
         // spawn a donut as a reward for completing the fight
-        bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1, (self->pos.x >> DECIMAL_BITS) + 20, (self->pos.y >> DECIMAL_BITS) + 30, true, false);
+        bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
+                        (self->pos.x >> DECIMAL_BITS) + 20, (self->pos.y >> DECIMAL_BITS) + 30, true, false);
         self->paused = true;
     }
 }

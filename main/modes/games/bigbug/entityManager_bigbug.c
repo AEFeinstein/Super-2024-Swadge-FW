@@ -173,8 +173,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     doorSprite->originY     = 48;
 
     bb_sprite_t* donutSprite = bb_loadSprite("donut", 1, 1, &entityManager->sprites[BB_DONUT]);
-    donutSprite->originX = 15;
-    donutSprite->originY = 15;
+    donutSprite->originX     = 15;
+    donutSprite->originY     = 15;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -599,7 +599,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             gData->numHarpoons        = 250;
             gData->fuel = 1000 * 60 * 3; // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes.
                                          // //also set in bb_onCollisionFuel()
-            gData->yaw.x = -1;           // So he starts off facing left away from the tutorial egg.
+            gData->yaw.x    = -1;        // So he starts off facing left away from the tutorial egg.
             gData->fireTime = 200;
             memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
@@ -1043,7 +1043,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_DONUT:
         {
-
         }
         default: // FLAME_ANIM and others need nothing set
         {
