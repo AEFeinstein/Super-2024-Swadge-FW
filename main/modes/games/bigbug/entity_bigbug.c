@@ -624,8 +624,14 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // ESP_LOGD(BB_TAG,"Garbotnik X: %d\n", self->pos);
     // //keep the player in bounds
-    self->pos.x = self->pos.x < 2560 ? 2560 : self->pos.x;
-    self->pos.x = self->pos.x > 35216 ? 35216 : self->pos.x;
+    if(self->pos.x < 2560)
+    {
+        self->pos.x = 2560;
+    }
+    else if(self->pos.x > 35216)
+    {
+        self->pos.x = 35216;
+    }
 
     // tow cable stuff
     // apply spring force and unhook far towed entities
@@ -640,6 +646,16 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             // detach
             node_t* next = current->next;
+
+            if(self->spriteIndex == BB_DONUT)
+            {
+                //turn off physics for the donut when not towed.
+                heap_caps_free(self->data);
+                self->data = NULL;
+                ((bb_entity_t*)current->val)->updateFunction = NULL;
+            }
+            
+            
             removeEntry(&gData->towedEntities, current);
             current = next;
         }
@@ -1755,7 +1771,7 @@ void bb_updateCarOpen(bb_entity_t* self)
     {
         // spawn a donut as a reward for completing the fight
         bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
-                        (self->pos.x >> DECIMAL_BITS) + 20, (self->pos.y >> DECIMAL_BITS) + 30, true, false);
+                        (self->pos.x >> DECIMAL_BITS) + 20, (self->pos.y >> DECIMAL_BITS) - 30, true, false);
         self->paused = true;
     }
 }
