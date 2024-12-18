@@ -624,11 +624,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // ESP_LOGD(BB_TAG,"Garbotnik X: %d\n", self->pos);
     // //keep the player in bounds
-    if(self->pos.x < 2560)
+    if (self->pos.x < 2560)
     {
         self->pos.x = 2560;
     }
-    else if(self->pos.x > 35216)
+    else if (self->pos.x > 35216)
     {
         self->pos.x = 35216;
     }
@@ -654,7 +654,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             //     self->data = NULL;
             //     ((bb_entity_t*)current->val)->updateFunction = NULL;
             // }
-            
+
             removeEntry(&gData->towedEntities, current);
             current = next;
         }

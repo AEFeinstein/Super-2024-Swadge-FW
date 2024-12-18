@@ -248,9 +248,11 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
             if (curEntity->collisions != NULL)
             {
-                node_t* firstNode = curEntity->collisions->first;
+                node_t* currentCollisionCheck = curEntity->collisions->first;
+                bb_collision_t* collisionInfo = (bb_collision_t*)currentCollisionCheck->val;
                 if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType
-                    && ((bb_collision_t*)firstNode->val)->checkOthers->first->next == NULL)
+                    && ((bb_spriteDef_t)collisionInfo->checkOthers->first->val) == GARBOTNIK_FLYING
+                    && collisionInfo->checkOthers->first->next == NULL)
                 {
                     // no need to search all other entities if it's simply something to do with the player.
                     // do a collision check here
@@ -259,7 +261,8 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                                         &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
                                         &hitInfo))
                     {
-                        ((bb_collision_t*)firstNode->val)->function(curEntity, entityManager->playerEntity, &hitInfo);
+                        ((bb_collision_t*)currentCollisionCheck->val)
+                            ->function(curEntity, entityManager->playerEntity, &hitInfo);
                     }
                 }
                 else
@@ -268,7 +271,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     {
                         bb_entity_t* collisionCandidate = &entityManager->entities[j];
                         // Iterate over all nodes
-                        node_t* currentCollisionCheck = curEntity->collisions->first;
+                        currentCollisionCheck = curEntity->collisions->first;
                         while (currentCollisionCheck != NULL)
                         {
                             node_t* currentOtherType
@@ -1047,8 +1050,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
             physData->bounceNumerator   = 2; // 66% bounce
             physData->bounceDenominator = 3;
-            physData->vel.y = -60;
-            physData->vel.x = 60;
+            physData->vel.y             = -60;
+            physData->vel.x             = 60;
             bb_setData(entity, physData, PHYSICS_DATA);
             entity->updateFunction = bb_updatePhysicsObject;
             break;
