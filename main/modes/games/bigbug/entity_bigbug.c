@@ -411,6 +411,12 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     // touchpad stuff
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
+    //The outer half of the circle launches the same velocity so you don't have to touch at the very edge.
+    if(gData->r > 561)
+    {
+        gData->r = 561;
+    }
+
     gData->fire     = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
 
     gData->harpoonCooldown -= self->gameData->elapsedUs >> 11;
@@ -435,8 +441,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t y;
             getTouchCartesian(gData->phi, gData->r, &x, &y);
             // Set harpoon's velocity
-            pData->vel.x = (x - 512) >> 4;
-            pData->vel.y = (-y + 512) >> 4;
+            pData->vel.x = (x - 512) >> 3;
+            pData->vel.y = (-y + 512) >> 3;
         }
     }
 
@@ -627,7 +633,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     while (current != NULL)
     {
         bb_entity_t* curEntity = (bb_entity_t*)current->val;
-        vec_t toFrom           = subVec2d(self->pos, curEntity->pos);
+        vec_t toFrom           = subVec2d(curEntity->pos, self->pos);
         int32_t dist           = sqMagVec2d(toFrom);
         // if more than 100px away
         if (dist > 2560000)
@@ -646,36 +652,36 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
             bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
 
-            // Displacement vector (toFrom = curEntity - player position)
-            toFrom.x = curEntity->pos.x - self->pos.x;
-            toFrom.y = curEntity->pos.y - self->pos.y;
-
             // Distance squared
             int64_t distSquared = (int64_t)toFrom.x * toFrom.x + (int64_t)toFrom.y * toFrom.y;
+            // Compute distance and normalize displacement vector
+            dist = sqrt(distSquared);
+            fastNormVec(&toFrom.x, &toFrom.y);
 
-            // Avoid divide by zero and unnecessary calculations for close entities
-            if (distSquared > 64)
+            // Spring force: F_spring = -k * displacement
+            int32_t springForceX = -(toFrom.x * dist) / SPRING_CONSTANT;
+            int32_t springForceY = -(toFrom.y * dist) / SPRING_CONSTANT;
+
+            // Damping force: F_damping = -b * relative_velocity
+            int32_t dampingForceX = (pData->vel.x - gData->vel.x) / DAMPING_CONSTANT;
+            int32_t dampingForceY = (pData->vel.y - gData->vel.y) / DAMPING_CONSTANT;
+
+            // Total force = F_spring + F_damping
+            int32_t totalForceX = springForceX + dampingForceX;
+            int32_t totalForceY = springForceY + dampingForceY;
+
+            // Apply the force
+            if(curEntity->updateFunction == &bb_updatePhysicsObject)//dead bug or donut
             {
-                // Compute distance and normalize displacement vector
-                dist = sqrt(distSquared);
-                fastNormVec(&toFrom.x, &toFrom.y);
-
-                // Spring force: F_spring = -k * displacement
-                int32_t springForceX = -(toFrom.x * dist) / SPRING_CONSTANT;
-                int32_t springForceY = -(toFrom.y * dist) / SPRING_CONSTANT;
-
-                // Damping force: F_damping = -b * relative_velocity
-                int32_t dampingForceX = -(pData->vel.x - gData->vel.x) / DAMPING_CONSTANT;
-                int32_t dampingForceY = -(pData->vel.y - gData->vel.y) / DAMPING_CONSTANT;
-
-                // Total force = F_spring + F_damping
-                int32_t totalForceX = springForceX + dampingForceX;
-                int32_t totalForceY = springForceY + dampingForceY;
-
-                // Apply the force
-                pData->vel.x += totalForceX;
-                pData->vel.y += totalForceY + 4;
+                pData->vel.x += springForceX - dampingForceX;
+                pData->vel.y += springForceY - dampingForceY+ 4;
             }
+            else //live bug applies force to garbotnik
+            {
+                gData->vel.x -= springForceX;
+                gData->vel.y -= springForceY;
+            }
+            
 
             current = current->next;
         }
