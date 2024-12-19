@@ -10,7 +10,7 @@
 //==============================================================================
 
 // Space between lines
-#define TEXT_Y_SPACING 8
+#define TEXT_Y_SPACING 9
 // Spacing for the fail chart
 #define Y_MARGIN   8
 #define Y_HEIGHT   50
@@ -105,6 +105,10 @@ void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
         }
         yOff += sh->ibm.height + TEXT_Y_SPACING;
     }
+
+    // Draw a line between hits and misses
+    int16_t lineY = yOff - (sh->ibm.height + TEXT_Y_SPACING) - ((TEXT_Y_SPACING + 1) / 2);
+    drawLineFast(TEXT_Y_SPACING, lineY, maxXoff, lineY, timingColors[NUM_NOTE_TIMINGS - 1]);
 
     // Vertically center the three score parts
     yOff = textAreaTop + ((textAreaBottom - textAreaTop) - (3 * sh->rodin.height) - (2 * TEXT_Y_SPACING)) / 2;
