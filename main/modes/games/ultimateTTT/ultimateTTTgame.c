@@ -15,9 +15,9 @@
 
 #define P1_COLOR             c500
 #define P2_COLOR             c005
-#define MAIN_GRID_COLOR      c010
-#define SUB_GRID_COLOR       c020
-#define WAITING_PLAYER_COLOR c222
+#define MAIN_GRID_COLOR      c444
+#define SUB_GRID_COLOR       c222
+#define WAITING_PLAYER_COLOR c111
 
 #define CURSOR_STROKE 4
 
@@ -910,8 +910,8 @@ void tttDrawGame(ultimateTTT_t* ttt)
     clearPxTft();
 
     // Draw some borders to indicate who you are
-    fillDisplayArea(0, 0, ttt->gameOffset.x - 4, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
-    fillDisplayArea(ttt->gameOffset.x + ttt->gameSize + 4, 0, TFT_WIDTH, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
+    fillDisplayArea(0, 0, ttt->gameOffset.x - 3, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
+    fillDisplayArea(ttt->gameOffset.x + ttt->gameSize + 2, 0, TFT_WIDTH, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
 
     // Draw the main grid lines
     tttDrawGrid(ttt->gameOffset.x, ttt->gameOffset.y, ttt->gameOffset.x + ttt->gameSize - 1,
@@ -927,6 +927,14 @@ void tttDrawGame(ultimateTTT_t* ttt)
             int16_t sY0 = ttt->gameOffset.y + (subY * ttt->subgameSize);
             int16_t sX1 = sX0 + ttt->subgameSize - 1;
             int16_t sY1 = sY0 + ttt->subgameSize - 1;
+
+            // Checkerboard the background
+            paletteColor_t fillColor = c110;
+            if (subX % 2 == subY % 2)
+            {
+                fillColor = c011;
+            }
+            fillDisplayArea(sX0, sY0, sX1, sY1, fillColor);
 
             // Draw the subgame grid lines
             tttDrawGrid(sX0, sY0, sX1, sY1, 4, SUB_GRID_COLOR);
