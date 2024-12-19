@@ -93,6 +93,7 @@ typedef struct
     int32_t leadOutUs;
     char hsKey[16];
     const char* songName;
+    uint32_t songTimeUs;
     bool paused;
 
     // Chart data
