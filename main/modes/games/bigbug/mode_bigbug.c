@@ -340,6 +340,12 @@ static void bb_ExitMode(void)
         heap_caps_free(bigbug->gameData.tilemap.mgTiles[w]);
     }
 
+    while (bigbug->gameData.unsupported.first != NULL)
+    {
+        uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.unsupported);
+        heap_caps_free(shiftedVal);
+    }
+
     heap_caps_free(bigbug);
 }
 
