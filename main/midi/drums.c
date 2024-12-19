@@ -801,7 +801,7 @@ void bakeDrums(void)
             if (!done)
             {
                 printf("%" PRId8 ", ", sample);
-                idx += 2;
+                idx++;
             }
         }
         printf("};\n\n");
@@ -819,7 +819,7 @@ void bakeDrums(void)
     printf("const int32_t bakedDrumsLens[] = {\n");
     for (percussionNote_t n = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM; n <= OPEN_TRIANGLE; n++)
     {
-        printf("%" PRId32 ", ", lengths[n - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM] / 2);
+        printf("%" PRId32 ", ", lengths[n - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]);
     }
     printf("};\n");
 
