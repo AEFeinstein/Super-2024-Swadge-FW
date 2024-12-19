@@ -70,7 +70,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                 }
                 default: // case 0
                 {
-                    // blue value used for washing machines, cars
+                    // blue value used for washing machines, cars, swadges
                     switch (rgbCol & 255)
                     {
                         case 51:
@@ -80,7 +80,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                         }
                         case 102:
                         {
-                            tilemap->fgTiles[i][j].embed = CAR_EMBED;
+                            tilemap->fgTiles[i][j].embed = SWADGE_EMBED;
                             break;
                         }
                         case 153:

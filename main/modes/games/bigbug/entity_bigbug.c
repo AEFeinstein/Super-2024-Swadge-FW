@@ -2750,6 +2750,13 @@ void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
     bb_destroyEntity(self, false);
 }
 
+void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    // give a choice of upgrades
+    //FINISH ME!!!
+    bb_destroyEntity(self, false);
+}
+
 void bb_startGarbotnikIntro(bb_entity_t* self)
 {
     bb_entity_t* ovo

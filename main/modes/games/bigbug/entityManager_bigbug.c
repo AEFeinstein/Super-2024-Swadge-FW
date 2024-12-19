@@ -175,6 +175,10 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     bb_sprite_t* donutSprite = bb_loadSprite("donut", 1, 1, &entityManager->sprites[BB_DONUT]);
     donutSprite->originX     = 15;
     donutSprite->originY     = 15;
+
+    bb_sprite_t* swadgeSprite = bb_loadSprite("swadge", 12, 1, &entityManager->sprites[BB_SWADGE]);
+    swadgeSprite->originX     = 16;
+    swadgeSprite->originY     = 9;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -1052,9 +1056,21 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             physData->bounceDenominator = 3;
             physData->vel.y             = -60;
             physData->vel.x             = 60;
+            entity->cacheable = true;
             bb_setData(entity, physData, PHYSICS_DATA);
             entity->updateFunction = bb_updatePhysicsObject;
             break;
+        }
+        case BB_SWADGE:
+        {
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+
+            push(others, (void*)GARBOTNIK_FLYING);
+
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionSwadge};
+            push(entity->collisions, (void*)collision);
         }
         default: // FLAME_ANIM and others need nothing set
         {

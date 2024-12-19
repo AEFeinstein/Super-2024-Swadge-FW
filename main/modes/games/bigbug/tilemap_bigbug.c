@@ -261,6 +261,16 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             }
                             break;
                         }
+                        case SWADGE_EMBED:
+                        {
+                            if (bb_createEntity(entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
+                                != NULL)
+                            {
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }   
                         case SKELETON_EMBED:
                         {
                             bb_entity_t* skeleton
