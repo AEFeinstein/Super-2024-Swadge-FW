@@ -363,7 +363,7 @@ static introVars_t* iv;
  */
 static void introEnterMode(void)
 {
-    iv = calloc(1, sizeof(introVars_t));
+    iv = heap_caps_calloc(1, sizeof(introVars_t), MALLOC_CAP_8BIT);
 
     loadFont("ibm_vga8.font", &iv->smallFont, true);
     loadFont("righteous_150.font", &iv->bigFont, true);
@@ -478,12 +478,12 @@ static void introExitMode(void)
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->sound != NULL)
     {
-        free(iv->sound);
+        heap_caps_free(iv->sound);
     }
 #endif
     unloadMidiFile(&iv->song);
 
-    free(iv);
+    heap_caps_free(iv);
 }
 
 /**

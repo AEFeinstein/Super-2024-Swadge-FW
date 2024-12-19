@@ -802,6 +802,7 @@ void startRecording(const char* filename)
             modeEntry.modeName = tmpStr;
 
             writeEntry(&modeEntry);
+            free(tmpStr);
         }
 
         if (emulatorArgs.seed)

@@ -59,6 +59,10 @@ typedef struct
     int32_t tailTimeUs;
     int32_t headPosY;
     int32_t tailPosY;
+#ifdef SH_NOTE_DBG
+    int32_t headTick;
+    int32_t tailTick;
+#endif
     bool held;
 } shGameNote_t;
 
@@ -86,9 +90,11 @@ typedef struct
     // Song being played
     midiFile_t midiSong;
     int32_t leadInUs;
+    int32_t leadOutUs;
     char hsKey[16];
     const char* songName;
     uint32_t songStartUs;
+    bool paused;
 
     // Chart data
     int32_t numChartNotes;

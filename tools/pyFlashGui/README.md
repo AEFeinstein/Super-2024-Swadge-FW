@@ -60,7 +60,7 @@ Assuming you've checked out the whole repository, set up the IDF, and are in the
 
 ```bash
 idf.py build
-cp ./build/bootloader/bootloader.bin ./build/swadge2024.bin ./build/partition_table/partition-table.bin ./pyFlashGui/
+cp ./build/bootloader/bootloader.bin ./build/swadge2024.bin ./build/partition_table/partition-table.bin ./tools/pyFlashGui/
 ```
 
 # Instructions

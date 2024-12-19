@@ -108,10 +108,10 @@ void deinitWheelMenu(wheelMenuRenderer_t* renderer)
     wheelItemInfo_t* info = NULL;
     while ((info = pop(&renderer->itemInfos)))
     {
-        free(info);
+        heap_caps_free(info);
     }
 
-    free(renderer);
+    heap_caps_free(renderer);
 }
 
 /**
