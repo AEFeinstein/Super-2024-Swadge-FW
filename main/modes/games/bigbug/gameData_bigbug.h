@@ -39,6 +39,7 @@ enum bb_screen_t
     BIGBUG_RADAR_UPGRADE_SCREEN,
     BIGBUG_GAME,
     BIGBUG_GAME_PINGING, // While game is still playing, but radar is pinging. Don't allow new radar pings.
+    BIGBUG_GARBOTNIK_UPGRADE_SCREEN,
 };
 
 enum bb_radarUpgrade_t
@@ -67,6 +68,22 @@ struct bb_radarScreenData_t
                               // 0b1000000 more points of interest 1 << 6
                               // 0b10000000 refill ammo     1 << 7
     int8_t choices[2];        // the choices presented to the player. -1 means no choice.
+};
+
+enum bb_garbotnikUpgrade_t
+{
+    GARBOTNIK_REDUCED_FUEL_CONSUMPTION,
+    GARBOTNIK_FASTER_FIRE_RATE,
+    GARBOTNIK_MORE_DIGGING_STRENGTH,
+};
+
+struct bb_garbotnikUpgradeScreenData_t
+{
+    uint8_t upgrades;            // the garbotnik upgrade bools are bitpacked into this
+                                 // 0b1       reduced fuel consumption  1 << 0
+                                 // 0b10      faster fire rate          1 << 1
+                                 // 0b100     more digging strength     1 << 2
+    uint8_t choices[2]; // the choices presented to the player. -1 means no choice.
 };
 
 struct bb_gameData_t
@@ -120,6 +137,7 @@ struct bb_gameData_t
     enum bb_screen_t screen; ///< The screen being displayed
 
     struct bb_radarScreenData_t radar;
+    struct bb_garbotnikUpgradeScreenData_t garbotnikUpgrade;
 
     uint8_t carFightState; ///< 0 means no active car fight, greater than 0 means number of kills remaining
 

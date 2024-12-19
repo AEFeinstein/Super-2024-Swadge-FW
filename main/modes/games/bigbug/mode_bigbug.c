@@ -52,7 +52,7 @@ static void bb_EnterMode(void);
 static void bb_EnterModeSkipIntro(void);
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
-static void bb_BackgroundDrawCallbackRadar(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void bb_BackgroundDrawCallbackBlack(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 // big bug logic
@@ -62,6 +62,8 @@ static void bb_DrawScene_Radar(void);
 static void bb_DrawScene_Radar_Upgrade(void);
 static void bb_GameLoop_Radar(int64_t elapsedUs);
 static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs);
+static void bb_DrawScene_Garbotnik_Upgrade(void);
+static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
@@ -361,7 +363,7 @@ static void bb_MainLoop(int64_t elapsedUs)
         {
             if (bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
             {
-                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackRadar;
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackBlack;
             }
             bb_GameLoop_Radar(elapsedUs);
             break;
@@ -370,9 +372,18 @@ static void bb_MainLoop(int64_t elapsedUs)
         {
             if (bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
             {
-                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackRadar;
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackBlack;
             }
             bb_GameLoop_Radar_Upgrade(elapsedUs);
+            break;
+        }
+        case BIGBUG_GARBOTNIK_UPGRADE_SCREEN:
+        {
+            if (bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
+            {
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackBlack;
+            }
+            bb_GameLoop_Garbotnik_Upgrade(elapsedUs);
             break;
         }
         case BIGBUG_GAME:
@@ -393,7 +404,7 @@ static void bb_MainLoop(int64_t elapsedUs)
     }
 }
 
-static void bb_BackgroundDrawCallbackRadar(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+static void bb_BackgroundDrawCallbackBlack(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     fillDisplayArea(x, y, x + w, y + h, c000);
 }
@@ -763,6 +774,99 @@ static void bb_GameLoop_Radar(int64_t elapsedUs)
     bigbug->gameData.radar.playerPingRadius += 3;
 
     bb_DrawScene_Radar();
+}
+
+static void bb_DrawScene_Garbotnik_Upgrade(void)
+{
+    // Draw the upgrade options
+    drawText(&bigbug->gameData.font, c441, "Choose a swadge upgrade:", 45, 20);
+
+    //vertical line always the same
+    drawLineFast(29, 0, 29, 239, c331);
+
+    //left side of a horizontal line
+    drawLineFast(0, 60 + bigbug->gameData.radar.playerPingRadius * 30, 43, 60 + bigbug->gameData.radar.playerPingRadius * 30,
+                 c331);
+
+    //a PLUS graphic
+    drawLineScaled(21, 60 + bigbug->gameData.radar.playerPingRadius * 30, 38, 60 + bigbug->gameData.radar.playerPingRadius * 30,
+                 c431, 3, 0, 0, 1, 1);
+    drawLineScaled(29, 51 + bigbug->gameData.radar.playerPingRadius * 30, 29, 69 + bigbug->gameData.radar.playerPingRadius * 30,
+                c431, 3, 0, 0, 1, 1);
+
+    for (int i = 0; i < 2; i++)
+    {
+        char upgradetext[32];
+        switch (bigbug->gameData.garbotnikUpgrade.choices[i])
+        {
+            int32_t tWidth = 0;
+            case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
+            {
+                strcpy(upgradetext, "reduced fuel consumption");
+                tWidth = textWidth(&bigbug->gameData.font, upgradetext);
+                
+                drawText(&bigbug->gameData.font, c113, "Wait a second. Consumption can be negative???", 45, 72 + i * 30);
+                break;
+            }
+            case GARBOTNIK_FASTER_FIRE_RATE:
+            {
+                strcpy(upgradetext, "faster fire rate");
+                tWidth = textWidth(&bigbug->gameData.font, upgradetext);
+                drawText(&bigbug->gameData.font, c113, "This is some text.", 45, 72 + i * 30);
+                break;
+            }
+            case GARBOTNIK_MORE_DIGGING_STRENGTH:
+            {
+                strcpy(upgradetext, "more digging strength");
+                tWidth = textWidth(&bigbug->gameData.font, upgradetext);
+                drawText(&bigbug->gameData.font, c113, "This is some text.", 45, 72 + i * 30);     
+                break;
+            }
+        }
+        drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c414 : c304,
+                         upgradetext, 45, 60 + i * 30);
+        //draw the right side of the horizonal line
+        drawLineFast(45 + textWidth + 2, 60 + bigbug->gameData.radar.playerPingRadius * 30, 279, 60 + bigbug->gameData.radar.playerPingRadius * 30,
+                 c331);
+    }
+}
+
+static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
+{
+    bigbug->gameData.btnDownState = 0b0;
+    // Always process button events, regardless of control scheme, so the main menu button can be captured
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        bigbug->gameData.btnState = evt.state;
+
+        // Check if the pause button was pressed
+        if (evt.down)
+        {
+            bigbug->gameData.btnDownState += evt.button;
+            if (evt.button == PB_UP)
+            {
+                bigbug->gameData.radar.playerPingRadius--; // using it as a selection idx in this screen to save space.
+            }
+            else if (evt.button == PB_DOWN)
+            {
+                bigbug->gameData.radar.playerPingRadius++; // using it as a selection idx in this screen to save space.
+            }
+            else if (evt.button == PB_A)
+            {
+                bigbug->gameData.garbotnikUpgrade.upgrades
+                    += 1 << bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius];
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
+                bigbug->gameData.screen = BIGBUG_GAME;
+            }
+        }
+    }
+
+    // keep the selection wrapped in range of available choices.
+    bigbug->gameData.radar.playerPingRadius = (bigbug->gameData.radar.playerPingRadius % 2 + 2) % 2;
+
+    bb_DrawScene_Garbotnik_Upgrade();
 }
 
 static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs)

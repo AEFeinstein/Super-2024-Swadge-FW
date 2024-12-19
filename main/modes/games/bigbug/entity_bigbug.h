@@ -393,6 +393,7 @@ void bb_deployBooster(bb_entity_t* self);
 void bb_openMap(bb_entity_t* self);
 void bb_upgradeRadar(bb_entity_t* self);
 void bb_triggerGameOver(bb_entity_t* self);
+void bb_upgradeGarbotnik(bb_entity_t* self);
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth);

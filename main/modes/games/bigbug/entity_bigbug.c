@@ -737,7 +737,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
         if (best_i != -1)
         {
-            bb_entity_t* bestEntity = &self->gameData->entityManager.entities[best_i];
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
         }
     }
@@ -2752,9 +2751,9 @@ void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
 
 void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    // give a choice of upgrades
-    //FINISH ME!!!
     bb_destroyEntity(self, false);
+    // give a choice of upgrades
+    self->gameData->screen      = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
 }
 
 void bb_startGarbotnikIntro(bb_entity_t* self)
@@ -3206,7 +3205,7 @@ void bb_upgradeRadar(bb_entity_t* self)
         while (self->gameData->radar.choices[0] == BIGBUG_REFILL_AMMO)
         {
             enum bb_radarUpgrade_t candidate = (enum bb_radarUpgrade_t)bb_randomInt(0, 6);
-            if (((self->gameData->radar.upgrades & 1 << candidate) >> candidate) == 0)
+            if (((self->gameData->radar.upgrades & (1 << candidate)) >> candidate) == 0)
             {
                 self->gameData->radar.choices[0] = (int8_t)candidate;
             }
@@ -3248,6 +3247,37 @@ void bb_triggerGameOver(bb_entity_t* self)
     self->gameData->entityManager.viewEntity
         = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, false);
+}
+
+void bb_upgradeGarbotnik(bb_entity_t* self)
+{
+    self->gameData->radar.playerPingRadius = 0; // just using this as a selection idx to save some space.
+    self->gameData->garbotnikUpgrade.choices[0] = (int8_t)GARBOTNIK_REDUCED_FUEL_CONSUMPTION; // default choice
+    self->gameData->garbotnikUpgrade.choices[1] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH; // 2nd default choice
+    uint8_t zeroCount = 0; // zero count represent the number of upgrades not yet maxed out.
+    for (int i = 0; i < 3; i++)
+    {
+        if ((self->gameData->garbotnikUpgrade.upgrades & (1 << i)) == 0)
+        { // Check if the bit at position i is 0
+            zeroCount++;
+        }
+    }
+    if (zeroCount > 2)
+    {
+        enum bb_garbotnikUpgrade_t candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
+        while(((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1)
+        {
+            candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
+        }
+        self->gameData->garbotnikUpgrade.choices[0] = (int8_t)candidate;
+        candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
+        while(((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1 || candidate == self->gameData->garbotnikUpgrade.choices[0])
+        {
+            candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
+        }
+        self->gameData->garbotnikUpgrade.choices[1] = (int8_t)candidate;
+    }
+    self->gameData->screen = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
 }
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
