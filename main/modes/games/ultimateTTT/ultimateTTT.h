@@ -10,6 +10,8 @@
 
 #define ARROW_BLINK_PERIOD 1000000
 
+#define ROTATE_TIME 1000000
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -116,6 +118,8 @@ typedef struct
     p2pInfo p2p;
     tttGameState_t state;
     tttSubgame_t subgames[3][3];
+    int32_t gameTimers[3][3];
+    int32_t cellTimers[3][3][3][3];
     vec_t cursor;
     vec_t selectedSubgame;
     tttCursorMode_t cursorMode;

@@ -11,7 +11,7 @@
 //==============================================================================
 
 void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt);
-void tttDrawGame(ultimateTTT_t* ttt);
+void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs);
 void tttDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t m, paletteColor_t color);
 
 void tttBeginGame(ultimateTTT_t* ttt);

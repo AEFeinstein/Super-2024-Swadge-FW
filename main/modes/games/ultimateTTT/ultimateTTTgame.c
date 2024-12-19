@@ -594,6 +594,9 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
     // Place the marker
     ttt->game.subgames[subgame->x][subgame->y].game[cell->x][cell->y] = marker;
 
+    // Start anim timer
+    ttt->game.cellTimers[subgame->x][subgame->y][cell->x][cell->y] = ROTATE_TIME;
+
     // Check the board
     bool won  = false;
     bool lost = false;
@@ -754,7 +757,12 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
     {
         for (uint16_t x = 0; x < 3; x++)
         {
-            tttCheckSubgameWinner(&ttt->game.subgames[x][y]);
+            tttPlayer_t oldWinner = ttt->game.subgames[x][y].winner;
+            if (oldWinner != tttCheckSubgameWinner(&ttt->game.subgames[x][y]))
+            {
+                // Start anim timer
+                ttt->game.gameTimers[x][y] = ROTATE_TIME;
+            }
         }
     }
 
@@ -877,8 +885,9 @@ static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt)
  * @brief Draw the Ultimate TTT game UI
  *
  * @param ttt The entire game state
+ * @param elapsedUs The time elapsed since this was last called
  */
-void tttDrawGame(ultimateTTT_t* ttt)
+void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
 {
     // LED setting for wireless & pass and play
     bool isP1 = (GOING_FIRST == tttGetPlayOrder(ttt));
@@ -905,6 +914,39 @@ void tttDrawGame(ultimateTTT_t* ttt)
         }
     }
     setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Run animation timers
+    for (int32_t y = 0; y < 3; y++)
+    {
+        for (int32_t x = 0; x < 3; x++)
+        {
+            // Check animation timers for the subgame winners
+            if (ttt->game.gameTimers[x][y] > 0)
+            {
+                ttt->game.gameTimers[x][y] -= elapsedUs;
+            }
+            else
+            {
+                ttt->game.gameTimers[x][y] = 0;
+            }
+
+            for (int32_t sy = 0; sy < 3; sy++)
+            {
+                for (int32_t sx = 0; sx < 3; sx++)
+                {
+                    // Check animation timers for the subgame cells
+                    if (ttt->game.cellTimers[x][y][sx][sy] > 0)
+                    {
+                        ttt->game.cellTimers[x][y][sx][sy] -= elapsedUs;
+                    }
+                    else
+                    {
+                        ttt->game.cellTimers[x][y][sx][sy] = 0;
+                    }
+                }
+            }
+        }
+    }
 
     // Clear before drawing
     clearPxTft();
@@ -967,7 +1009,9 @@ void tttDrawGame(ultimateTTT_t* ttt)
                 case TTT_P2:
                 {
                     // Draw a big marker for a winner
-                    drawWsgSimple(getMarkerWsg(ttt, ttt->game.subgames[subX][subY].winner, true), sX0, sY0);
+                    int32_t rotate = (360 * ttt->game.gameTimers[subX][subY]) / ROTATE_TIME;
+                    drawWsg(getMarkerWsg(ttt, ttt->game.subgames[subX][subY].winner, true), sX0, sY0, false, false,
+                            rotate);
                     break;
                 }
                 default:
@@ -996,9 +1040,10 @@ void tttDrawGame(ultimateTTT_t* ttt)
                                 case TTT_P2:
                                 {
                                     // Draw a small marker
-                                    drawWsgSimple(
-                                        getMarkerWsg(ttt, ttt->game.subgames[subX][subY].game[cellX][cellY], false),
-                                        cX0, cY0);
+                                    int32_t rotate
+                                        = (360 * ttt->game.cellTimers[subX][subY][cellX][cellY]) / ROTATE_TIME;
+                                    drawWsg(getMarkerWsg(ttt, ttt->game.subgames[subX][subY].game[cellX][cellY], false),
+                                            cX0, cY0, false, false, rotate);
                                     break;
                                 }
                             }

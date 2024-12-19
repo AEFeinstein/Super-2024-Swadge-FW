@@ -319,7 +319,7 @@ static void tttMainLoop(int64_t elapsedUs)
         }
         case TUI_GAME:
         {
-            tttDrawGame(ttt);
+            tttDrawGame(ttt, elapsedUs);
             break;
         }
         case TUI_MARKER_SELECT:
