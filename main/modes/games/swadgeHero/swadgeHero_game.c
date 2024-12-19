@@ -405,15 +405,19 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
         {
             // Lead in is over, start the song
             globalMidiPlayerPlaySongCb(&sh->midiSong, MIDI_BGM, shSongOver);
-            sh->songStartUs = esp_timer_get_time();
-            sh->leadInUs    = 0;
-            songUs          = 0;
+            sh->songTimeUs = 0;
+            sh->leadInUs   = 0;
+            songUs         = 0;
         }
     }
     else
     {
-        // Song is playing, Get the position of the song and when the next event is, in microseconds
-        songUs = SAMPLES_TO_US(player->sampleCount);
+        // Song is playing, increment the timer and use it
+        sh->songTimeUs += elapsedUs;
+        songUs = sh->songTimeUs;
+
+        // Note, this used to work before timestamped notes were introduced
+        // songUs = SAMPLES_TO_US(player->sampleCount);
     }
 
     // Run a timer for pop-up text
@@ -879,7 +883,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     }
     else
     {
-        songUs = evt->time - sh->songStartUs;
+        songUs = sh->songTimeUs;
     }
 
     // Find the note that corresponds to this button press
