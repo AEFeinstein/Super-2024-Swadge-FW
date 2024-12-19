@@ -785,25 +785,27 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
     drawLineFast(29, 0, 29, 239, c331);
 
     //left side of a horizontal line
-    drawLineFast(0, 60 + bigbug->gameData.radar.playerPingRadius * 30, 43, 60 + bigbug->gameData.radar.playerPingRadius * 30,
+    drawLineFast(0, 65 + bigbug->gameData.radar.playerPingRadius * 30, 43, 65 + bigbug->gameData.radar.playerPingRadius * 30,
                  c331);
 
     //a PLUS graphic
-    drawLineScaled(21, 60 + bigbug->gameData.radar.playerPingRadius * 30, 38, 60 + bigbug->gameData.radar.playerPingRadius * 30,
-                 c431, 3, 0, 0, 1, 1);
-    drawLineScaled(29, 51 + bigbug->gameData.radar.playerPingRadius * 30, 29, 69 + bigbug->gameData.radar.playerPingRadius * 30,
-                c431, 3, 0, 0, 1, 1);
+    drawRectFilled(21, 64 + bigbug->gameData.radar.playerPingRadius * 30, 38, 67 + bigbug->gameData.radar.playerPingRadius * 30, c545);
+    drawRectFilled(28, 56 + bigbug->gameData.radar.playerPingRadius * 30, 31, 73 + bigbug->gameData.radar.playerPingRadius * 30, c545);
 
+
+    int32_t tWidth = 0;
     for (int i = 0; i < 2; i++)
     {
         char upgradetext[32];
         switch (bigbug->gameData.garbotnikUpgrade.choices[i])
         {
-            int32_t tWidth = 0;
             case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
             {
                 strcpy(upgradetext, "reduced fuel consumption");
-                tWidth = textWidth(&bigbug->gameData.font, upgradetext);
+                if(i == bigbug->gameData.radar.playerPingRadius)
+                {
+                    tWidth = textWidth(&bigbug->gameData.font, upgradetext);
+                }
                 
                 drawText(&bigbug->gameData.font, c113, "Wait a second. Consumption can be negative???", 45, 72 + i * 30);
                 break;
@@ -811,24 +813,30 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
             case GARBOTNIK_FASTER_FIRE_RATE:
             {
                 strcpy(upgradetext, "faster fire rate");
-                tWidth = textWidth(&bigbug->gameData.font, upgradetext);
+                if(i == bigbug->gameData.radar.playerPingRadius)
+                {
+                    tWidth = textWidth(&bigbug->gameData.font, upgradetext);
+                }
                 drawText(&bigbug->gameData.font, c113, "This is some text.", 45, 72 + i * 30);
                 break;
             }
             case GARBOTNIK_MORE_DIGGING_STRENGTH:
             {
                 strcpy(upgradetext, "more digging strength");
-                tWidth = textWidth(&bigbug->gameData.font, upgradetext);
+                if(i == bigbug->gameData.radar.playerPingRadius)
+                {
+                    tWidth = textWidth(&bigbug->gameData.font, upgradetext);
+                }
                 drawText(&bigbug->gameData.font, c113, "This is some text.", 45, 72 + i * 30);     
                 break;
             }
         }
-        drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c414 : c304,
+        drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c515 : c304,
                          upgradetext, 45, 60 + i * 30);
-        //draw the right side of the horizonal line
-        drawLineFast(45 + textWidth + 2, 60 + bigbug->gameData.radar.playerPingRadius * 30, 279, 60 + bigbug->gameData.radar.playerPingRadius * 30,
-                 c331);
     }
+    //draw the right side of the horizonal line
+    drawLineFast(45 + tWidth + 2, 65 + bigbug->gameData.radar.playerPingRadius * 30, 279, 65 + bigbug->gameData.radar.playerPingRadius * 30,
+                c331);
 }
 
 static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
@@ -855,6 +863,15 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
             }
             else if (evt.button == PB_A)
             {
+                if (bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius] == GARBOTNIK_FASTER_FIRE_RATE)
+                {
+                    if (bigbug->gameData.entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+                    {
+                        bb_garbotnikData_t* gData
+                            = (bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data;
+                        gData->fireTime = gData->fireTime > 75 ? gData->fireTime - 50 : 25;
+                    }
+                }
                 bigbug->gameData.garbotnikUpgrade.upgrades
                     += 1 << bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius];
                 bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;

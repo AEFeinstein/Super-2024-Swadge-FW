@@ -2758,6 +2758,7 @@ void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
 {
     bb_destroyEntity(self, false);
     // give a choice of upgrades
+    bb_upgradeGarbotnik(self);
     self->gameData->screen      = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
 }
 
