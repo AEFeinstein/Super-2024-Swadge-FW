@@ -64,6 +64,11 @@ void bb_clearCollisions(bb_entity_t* self, bool keepCollisionsCached)
 
 void bb_destroyEntity(bb_entity_t* self, bool caching)
 {
+    if (NULL == self)
+    {
+        return;
+    }
+
     // Zero out most info (but not references to manager type things) for entity to be reused.
     self->active    = false;
     self->cacheable = false;
