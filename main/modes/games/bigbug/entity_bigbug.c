@@ -1591,9 +1591,6 @@ void bb_updateGameOver(bb_entity_t* self)
         }
         else
         {
-            bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
-            self->gameData->entityManager.playerEntity = NULL;
-
             // increment booster frame to look destroyed
             self->gameData->entityManager.activeBooster->currentAnimationFrame++;
             // this booster's grabby hand will destroy itself next time in it's own update loop.
@@ -2415,12 +2412,14 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
     bb_onCollisionSimple(self, other, hitInfo);
     if(hitInfo->normal.y == 1)
     {
-        bb_hitInfo_t hitInfo = {0};
-        bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
-
-        if (hitInfo.hit == true && hitInfo.normal.y == 1)
+        bb_hitInfo_t localHitInfo = {0};
+        bb_collisionCheck(&self->gameData->tilemap, other, NULL, &localHitInfo);
+        if (localHitInfo.hit == true)
         {
-            bb_triggerGameOver(self);
+            if(localHitInfo.normal.y == -1)
+            {
+                bb_triggerGameOver(self);
+            }
         }
     }
 }
@@ -3259,6 +3258,8 @@ void bb_triggerGameOver(bb_entity_t* self)
         return;
     }
     bb_freeWsgs(&self->gameData->tilemap);
+    bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
+    self->gameData->entityManager.playerEntity = NULL;
 
     bb_setupMidi();
     unloadMidiFile(&self->gameData->bgm);
