@@ -79,10 +79,10 @@ enum bb_garbotnikUpgrade_t
 
 struct bb_garbotnikUpgradeScreenData_t
 {
-    uint8_t upgrades;            // the garbotnik upgrade bools are bitpacked into this
-                                 // 0b1       reduced fuel consumption  1 << 0
-                                 // 0b10      faster fire rate          1 << 1
-                                 // 0b100     more digging strength     1 << 2
+    uint8_t upgrades;   // the garbotnik upgrade bools are bitpacked into this
+                        // 0b1       reduced fuel consumption  1 << 0
+                        // 0b10      faster fire rate          1 << 1
+                        // 0b100     more digging strength     1 << 2
     uint8_t choices[2]; // the choices presented to the player. -1 means no choice.
 };
 

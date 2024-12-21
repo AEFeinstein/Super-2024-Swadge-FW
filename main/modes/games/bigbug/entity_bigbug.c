@@ -1573,7 +1573,7 @@ void bb_updateAttachmentArm(bb_entity_t* self)
             = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
                               aData->rocket->pos.x >> DECIMAL_BITS, aData->rocket->pos.y >> DECIMAL_BITS, true, false);
 
-        rData->flame->updateFunction = &bb_updateFlame;
+        rData->flame->updateFunction  = &bb_updateFlame;
         aData->rocket->updateFunction = &bb_updateRocketLiftoff;
 
         bb_destroyEntity(self, false);
@@ -1602,9 +1602,9 @@ void bb_updateGameOver(bb_entity_t* self)
             bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
             self->gameData->entityManager.playerEntity = NULL;
 
-            //increment booster frame to look destroyed
+            // increment booster frame to look destroyed
             self->gameData->entityManager.activeBooster->currentAnimationFrame++;
-            //this booster's grabby hand will destroy itself next time in it's own update loop.
+            // this booster's grabby hand will destroy itself next time in it's own update loop.
 
             uint8_t boosterIdx = 0;
             while (boosterIdx < 3)
@@ -2436,7 +2436,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     while (checkEntity != NULL)
     {
         bb_entity_t* cachedEntityVal = (bb_entity_t*)checkEntity->val;
-        node_t* next           = checkEntity->next;
+        node_t* next                 = checkEntity->next;
         if (cachedEntityVal != NULL && cachedEntityVal->spriteIndex == BB_DOOR) // it's a door
         {
             if (abs(cachedEntityVal->pos.x - self->pos.x) + abs(cachedEntityVal->pos.y - self->pos.y)
@@ -2744,8 +2744,8 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
 
 void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    bb_spitData_t* sData      = (bb_spitData_t*)self->data;
-    if(other->dataType == GARBOTNIK_DATA)
+    bb_spitData_t* sData = (bb_spitData_t*)self->data;
+    if (other->dataType == GARBOTNIK_DATA)
     {
         bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
         gData->vel                = addVec2d(gData->vel, (vec_t){sData->vel.x << 4, sData->vel.y << 4});
@@ -2757,7 +2757,7 @@ void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
                 = 1; // It'll decrement soon anyways. Keeps more of the game over code on Garbotnik's side of the fence.
         }
     }
-    else //PHYSICS_DATA
+    else // PHYSICS_DATA
     {
         bb_physicsData_t* pData = (bb_physicsData_t*)other->data;
         pData->vel              = addVec2d(pData->vel, (vec_t){sData->vel.x << 4, sData->vel.y << 4});
@@ -2770,7 +2770,7 @@ void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     bb_destroyEntity(self, false);
     // give a choice of upgrades
     bb_upgradeGarbotnik(self);
-    self->gameData->screen      = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
+    self->gameData->screen = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
 }
 
 void bb_startGarbotnikIntro(bb_entity_t* self)
@@ -3268,10 +3268,10 @@ void bb_triggerGameOver(bb_entity_t* self)
 
 void bb_upgradeGarbotnik(bb_entity_t* self)
 {
-    self->gameData->radar.playerPingRadius = 0; // just using this as a selection idx to save some space.
+    self->gameData->radar.playerPingRadius      = 0; // just using this as a selection idx to save some space.
     self->gameData->garbotnikUpgrade.choices[0] = (int8_t)GARBOTNIK_REDUCED_FUEL_CONSUMPTION; // default choice
-    self->gameData->garbotnikUpgrade.choices[1] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH; // 2nd default choice
-    uint8_t zeroCount = 0; // zero count represent the number of upgrades not yet maxed out.
+    self->gameData->garbotnikUpgrade.choices[1] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH;    // 2nd default choice
+    uint8_t zeroCount                           = 0; // zero count represent the number of upgrades not yet maxed out.
     for (int i = 0; i < 3; i++)
     {
         if ((self->gameData->garbotnikUpgrade.upgrades & (1 << i)) == 0)
@@ -3282,13 +3282,14 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
     if (zeroCount > 2)
     {
         enum bb_garbotnikUpgrade_t candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
-        while(((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1)
+        while (((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1)
         {
             candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
         }
         self->gameData->garbotnikUpgrade.choices[0] = (int8_t)candidate;
-        candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
-        while(((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1 || candidate == self->gameData->garbotnikUpgrade.choices[0])
+        candidate                                   = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
+        while (((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1
+               || candidate == self->gameData->garbotnikUpgrade.choices[0])
         {
             candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
         }

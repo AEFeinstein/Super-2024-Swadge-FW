@@ -1056,7 +1056,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             physData->bounceDenominator = 3;
             physData->vel.y             = -60;
             physData->vel.x             = 60;
-            entity->cacheable = true;
+            entity->cacheable           = true;
             bb_setData(entity, physData, PHYSICS_DATA);
             entity->updateFunction = bb_updatePhysicsObject;
             break;

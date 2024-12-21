@@ -270,7 +270,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                             }
                             break;
-                        }   
+                        }
                         case SKELETON_EMBED:
                         {
                             bb_entity_t* skeleton
