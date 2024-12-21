@@ -1588,7 +1588,7 @@ void bb_updateGameOver(bb_entity_t* self)
     {
         if (self->currentAnimationFrame == 0)
         {
-            self->currentAnimationFrame++;
+            self->currentAnimationFrame = 1;
             if (goData->wsgLoaded)
             {
                 freeWsg(&goData->fullscreenGraphic);
@@ -1628,7 +1628,6 @@ void bb_updateGameOver(bb_entity_t* self)
                 self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
 
                 bb_destroyEntity(self, false);
-
                 bb_startGarbotnikCloningTalk(self->gameData->entityManager.deathDumpster);
             }
         }
@@ -2922,7 +2921,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         }
         case 7:
         {
-            bb_setCharacterLine(dData, 0, "Would you look at the time… It's GARBAGE DAY!");
+            bb_setCharacterLine(dData, 0, "Would you look at the time... It's GARBAGE DAY!");
             break;
         }
         case 8:
@@ -3079,7 +3078,7 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
     dData->character[sizeof(dData->character) - 1] = '\0';
 
     // Max dialogue string roughly:                                                                         here----V
-    bb_setCharacterLine(dData, 0, "Oooey Gooey! Look at that dark gelatinous mass!");
+    bb_setCharacterLine(dData, 0, "Oooey Gooey! Look at that egg sack!");
     bb_setCharacterLine(dData, 1, "I can use the directional buttons on my swadge to fly over there and check it out.");
 
     dData->curString     = -1;
@@ -3264,6 +3263,11 @@ void bb_upgradeRadar(bb_entity_t* self)
 
 void bb_triggerGameOver(bb_entity_t* self)
 {
+    //music is home 2, this function was already triggered. early return.
+    if (self->gameData->bgm.length == 9715)
+    {
+        return;
+    }
     bb_freeWsgs(&self->gameData->tilemap);
 
     bb_setupMidi();
