@@ -1574,7 +1574,6 @@ void bb_updateAttachmentArm(bb_entity_t* self)
                               aData->rocket->pos.x >> DECIMAL_BITS, aData->rocket->pos.y >> DECIMAL_BITS, true, false);
 
         rData->flame->updateFunction = &bb_updateFlame;
-        bb_setData(aData->rocket, rData, ROCKET_DATA);
         aData->rocket->updateFunction = &bb_updateRocketLiftoff;
 
         bb_destroyEntity(self, false);
