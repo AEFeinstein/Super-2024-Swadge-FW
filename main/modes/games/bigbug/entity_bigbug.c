@@ -2422,10 +2422,17 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
 void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_onCollisionSimple(self, other, hitInfo);
-    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
-    if (hitInfo->normal.y == 1)
+    if(hitInfo->normal.y == 1)
     {
-        gData->gettingCrushed = true;
+        if (other->dataType == GARBOTNIK_DATA)
+        {
+            bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
+            gData->gettingCrushed = true;
+        }
+        else if(other->updateFunction == &bb_updateGarbotnikDying)
+        {
+            bb_triggerGameOver(self);
+        }
     }
 }
 
@@ -2640,10 +2647,20 @@ void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 
 void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
+    if(other->dataType == PHYSICS_DATA)
+    {
+        //Turn dying garbotnik back into playable garbotnik.
+        vec_t vel = ((bb_physicsData_t*)other->data)->vel;
+        bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
+        gData->vel = vel;
+        other->updateFunction = &bb_updateGarbotnikFlying;
+        other->drawFunction = &bb_drawGarbotnikFlying;
+        bb_setData(other, gData, GARBOTNIK_DATA);
+    }
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
     gData->fuel += 30000;
     if (gData->fuel > 180000) // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes. //also set in
-                              // bb_createEntity()
+                            // bb_createEntity()
     {
         gData->fuel = 180000;
     }
