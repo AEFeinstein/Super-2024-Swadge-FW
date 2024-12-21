@@ -748,18 +748,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos, &hitInfo);
-
-    if (hitInfo.hit == false)
+    if(hitInfo.hit == false)
     {
-        gData->gettingCrushed = false;
         return;
     }
-
-    if (gData->gettingCrushed)
-    {
-        gData->fuel -= 80000;
-    }
-
     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
 
@@ -2423,12 +2415,10 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
     bb_onCollisionSimple(self, other, hitInfo);
     if(hitInfo->normal.y == 1)
     {
-        if (other->dataType == GARBOTNIK_DATA)
-        {
-            bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
-            gData->gettingCrushed = true;
-        }
-        else if(other->updateFunction == &bb_updateGarbotnikDying)
+        bb_hitInfo_t hitInfo = {0};
+        bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+
+        if (hitInfo.hit == true && hitInfo.normal.y == 1)
         {
             bb_triggerGameOver(self);
         }

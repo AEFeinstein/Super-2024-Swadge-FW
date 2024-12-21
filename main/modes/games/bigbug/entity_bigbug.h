@@ -67,7 +67,6 @@ typedef struct
     vec_t yaw;            //.x is the yaw, .y is the change in yaw over time. Gravitates toward left or right.
     uint8_t numHarpoons;  // number of harpoons
     int32_t fuel;         // garbotnik's remaining fuel. Like a level timer that can be influenced.
-    bool gettingCrushed;  // Set to true when a heavy falling object is pushing Garbotnik down.
     list_t towedEntities; // A list of entities attached via tow cable.
     int16_t towTimer;     // Overflows to negative to detach a towed entity. Then resets to zero.
 
