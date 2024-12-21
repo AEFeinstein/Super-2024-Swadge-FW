@@ -1602,7 +1602,9 @@ void bb_updateGameOver(bb_entity_t* self)
             bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
             self->gameData->entityManager.playerEntity = NULL;
 
+            //increment booster frame to look destroyed
             self->gameData->entityManager.activeBooster->currentAnimationFrame++;
+            //this booster's grabby hand will destroy itself next time in it's own update loop.
 
             uint8_t boosterIdx = 0;
             while (boosterIdx < 3)
@@ -1668,6 +1670,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     if (ghData->rocket->currentAnimationFrame == 41)
     {
         bb_destroyEntity(self, false);
+        return;
     }
 
     self->pos.y = ghData->rocket->pos.y - 848; // that is 53 << 4
@@ -2433,6 +2436,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     while (checkEntity != NULL)
     {
         bb_entity_t* cachedEntityVal = (bb_entity_t*)checkEntity->val;
+        node_t* next           = checkEntity->next;
         if (cachedEntityVal != NULL && cachedEntityVal->spriteIndex == BB_DOOR) // it's a door
         {
             if (abs(cachedEntityVal->pos.x - self->pos.x) + abs(cachedEntityVal->pos.y - self->pos.y)
@@ -2448,7 +2452,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                 }
             }
         }
-        checkEntity = checkEntity->next;
+        checkEntity = next;
     }
 
     for (int checkIdx = 0; checkIdx < MAX_ENTITIES; checkIdx++)
@@ -2741,14 +2745,22 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
 void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_spitData_t* sData      = (bb_spitData_t*)self->data;
-    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
-    gData->vel                = addVec2d(gData->vel, (vec_t){sData->vel.x << 4, sData->vel.y << 4});
-    gData->damageEffect       = 100;
-    gData->fuel -= 10000;
-    if (gData->fuel < 0)
+    if(other->dataType == GARBOTNIK_DATA)
     {
-        gData->fuel
-            = 1; // It'll decrement soon anyways. Keeps more of the game over code on Garbotnik's side of the fence.
+        bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
+        gData->vel                = addVec2d(gData->vel, (vec_t){sData->vel.x << 4, sData->vel.y << 4});
+        gData->damageEffect       = 100;
+        gData->fuel -= 10000;
+        if (gData->fuel < 0)
+        {
+            gData->fuel
+                = 1; // It'll decrement soon anyways. Keeps more of the game over code on Garbotnik's side of the fence.
+        }
+    }
+    else //PHYSICS_DATA
+    {
+        bb_physicsData_t* pData = (bb_physicsData_t*)other->data;
+        pData->vel              = addVec2d(pData->vel, (vec_t){sData->vel.x << 4, sData->vel.y << 4});
     }
     bb_destroyEntity(self, false);
 }

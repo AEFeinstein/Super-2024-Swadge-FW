@@ -543,8 +543,8 @@ static void bb_DrawScene_Radar(void)
     for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
     {
         for (int yIdx = bigbug->gameData.radar.cam.y / 4 < 0 ? 0 : bigbug->gameData.radar.cam.y / 4;
-             yIdx < (bigbug->gameData.radar.cam.y / 4 < 0 ? FIELD_HEIGHT / 4
-                                                          : bigbug->gameData.radar.cam.y / 4 + FIELD_HEIGHT / 4);
+             yIdx < (bigbug->gameData.radar.cam.y / 4 < 0 ? TILE_FIELD_HEIGHT / 4
+                                                          : bigbug->gameData.radar.cam.y / 4 + TILE_FIELD_HEIGHT / 4);
              yIdx++)
         {
             uint16_t radarTileColor = bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 0 ? c333 : c000;
