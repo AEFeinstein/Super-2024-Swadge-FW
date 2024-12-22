@@ -240,10 +240,29 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         rData->yVel = -300;
     }
+    if(!rData->pauseIllusion)
+    {
+        self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
+    }
+    else
+    {
+        self->gameData->camera.velocity.y = (rData->yVel * self->gameData->elapsedUs) >> 17;
+        //iterate all entities
+        for (int i = 0; i < MAX_ENTITIES; i++)
+        {
+            bb_entity_t* curEntity = &(self->gameData->entityManager.entities[i]);
+            if (curEntity->active && curEntity->spriteIndex == NO_SPRITE_STAR)
+            {
+                curEntity->pos.y -= self->gameData->camera.velocity.y;
+            }
+        }
+    }
+    rData->flame->pos.y = self->pos.y;
+
     if (self->pos.y < -77136)
     {
         self->pos.y = -77136;
-        bb_destroyEntity(rData->flame, false);
+        rData->yVel = 0;
 
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
@@ -260,6 +279,11 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         dData->endDialogueCB = &bb_afterGarbotnikIntro;
         bb_setData(ovo, dData, DIALOGUE_DATA);
 
+        bb_loadSprite("pangoFriends", 2, 1, &self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS]);
+        self->gameData->entityManager.viewEntity
+        = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
+                          self->gameData->camera.camera.pos.x + 140, self->gameData->camera.camera.pos.y + 120, true, false);
+
         // Create a crumble animation
         bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 3,
                         self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 30, true, false);
@@ -267,12 +291,16 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         self->updateFunction = NULL;
         return;
     }
-    self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
-    rData->flame->pos.y = self->pos.y;
 
     if (self->pos.y < -50000 && self->gameData->tilemap.wsgsLoaded)
     {
         bb_freeWsgs(&self->gameData->tilemap);
+    }
+    else if(self->pos.y < -60000 && !rData->pauseIllusion)
+    {
+        rData->pauseIllusion = true;
+        bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, BB_PANGO_AND_FRIENDS, 3,
+                        (self->pos.x >> DECIMAL_BITS) - 77, (self->pos.y >> DECIMAL_BITS) - 100, false, false);
     }
 }
 
@@ -1013,6 +1041,11 @@ void bb_updateFarEggleaves(bb_entity_t* self)
 
 void bb_updateFarDestroy(bb_entity_t* self)
 {
+    if(self->spriteIndex == BB_PANGO_AND_FRIENDS)
+    {
+        freeWsg(&self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].frames[0]);
+        freeWsg(&self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].frames[1]);
+    }
     bb_destroyEntity(self, false);
 }
 
@@ -1438,6 +1471,12 @@ void bb_updatePOI(bb_entity_t* self)
         {
             tData->speed++;
         }
+        else if (tData->midPointSqDist == 0)
+        {
+            self->updateFunction = NULL;
+            tData->executeOnArrival(self);
+            return;
+        }
         else if (tData->speed > 0)
         {
             tData->speed--;
@@ -1810,7 +1849,7 @@ void bb_updateCarOpen(bb_entity_t* self)
             {
                 // spawn a swadge as a reward for completing the fight
                 bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
-                                (self->pos.x >> DECIMAL_BITS) + 7, (self->pos.y >> DECIMAL_BITS) - 8, true, false);
+                                (self->pos.x >> DECIMAL_BITS) + 40, (self->pos.y >> DECIMAL_BITS) - 32, true, false);
                 break;
             }
         }
@@ -1849,6 +1888,14 @@ void bb_updateSpit(bb_entity_t* self)
     if (hitInfo.hit)
     {
         bb_destroyEntity(self, false);
+    }
+}
+
+void bb_updatePangoAndFriends(bb_entity_t* self)
+{
+    if(self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].originY < 0)
+    {
+        self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].originY += 2;
     }
 }
 
@@ -3526,3 +3573,4 @@ void bb_freeDialogueData(bb_dialogueData_t* dData)
     heap_caps_free(dData->strings); // Free the array of string pointers
     heap_caps_free(dData);          // Free the struct itself
 }
+

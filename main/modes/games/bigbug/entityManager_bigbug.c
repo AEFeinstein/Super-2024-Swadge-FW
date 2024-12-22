@@ -1074,6 +1074,15 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             *collision                = (bb_collision_t){others, bb_onCollisionSwadge};
             push(entity->collisions, (void*)collision);
         }
+        case BB_PANGO_AND_FRIENDS:
+        {
+            bb_sprite_t* pfSprite = bb_loadSprite("pangoFriends", 2, 1, &entityManager->sprites[BB_PANGO_AND_FRIENDS]);
+            pfSprite->originX     = 29;
+            pfSprite->originY     = -240;
+            entity->updateFunction = &bb_updatePangoAndFriends;
+            entity->updateFarFunction = &bb_updateFarDestroy;
+            break;
+        }
         default: // FLAME_ANIM and others need nothing set
         {
             break;

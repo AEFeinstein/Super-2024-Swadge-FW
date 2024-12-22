@@ -17,7 +17,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 200
-#define NUM_SPRITES  25 // The number of bb_sprite_t last accounted for BB_SWADGE
+#define NUM_SPRITES  26 // The number of bb_sprite_t last accounted for BB_PANGO_AND_FRIENDS
 
 //==============================================================================
 // Structs

@@ -55,6 +55,7 @@ typedef enum
     BB_DOOR,
     BB_DONUT,  // May be towed back to the booster to purchase WILES between dives.
     BB_SWADGE, // Gives an immediate upgrade choice to the player when touched.
+    BB_PANGO_AND_FRIENDS, // A sprite that flies up next to the rocket for a dialogue moment.
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.

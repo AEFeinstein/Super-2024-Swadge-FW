@@ -144,6 +144,7 @@ typedef struct
     bb_entity_t* flame; // tracks the flame to update position like a child object
     uint16_t numBugs;   // number of bugs in the booster
     int32_t armAngle;   // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
+    bool pauseIllusion; // Set to true to keep the rocket in place, but keep scrolling the star field.
 } bb_rocketData_t;
 
 typedef struct
@@ -349,6 +350,7 @@ void bb_updateDoor(bb_entity_t* self);
 void bb_updateCarActive(bb_entity_t* self);
 void bb_updateCarOpen(bb_entity_t* self);
 void bb_updateSpit(bb_entity_t* self);
+void bb_updatePangoAndFriends(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
