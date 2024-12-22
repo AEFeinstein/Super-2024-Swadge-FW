@@ -267,14 +267,13 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
-        bb_dialogueData_t* dData = bb_createDialogueData(5); // 5
-        strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
-        dData->character[sizeof(dData->character) - 1] = '\0';
-        bb_setCharacterLine(dData, 0, "Gaaaash dangit.");
-        bb_setCharacterLine(dData, 1, "DARN IT! DARN IT! DARN IT! DARN IT!");
-        bb_setCharacterLine(dData, 2, "GLITCH MY CIRCUITS!");
-        bb_setCharacterLine(dData, 3, "I'll have to patch this up before all the air gets out.");
-        bb_setCharacterLine(dData, 4, "And the hardware store closes so early.");
+        bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
+        
+        bb_setCharacterLine(dData, 0, "Ovo", "Gaaaash dangit.");
+        bb_setCharacterLine(dData, 1, "Ovo", "DARN IT! DARN IT! DARN IT! DARN IT!");
+        bb_setCharacterLine(dData, 2, "Ovo", "GLITCH MY CIRCUITS!");
+        bb_setCharacterLine(dData, 3, "Ovo", "I'll have to patch this up before all the air gets out.");
+        bb_setCharacterLine(dData, 4, "Ovo", "And the hardware store closes so early.");
         dData->curString     = -1;
         dData->endDialogueCB = &bb_afterGarbotnikIntro;
         bb_setData(ovo, dData, DIALOGUE_DATA);
@@ -1587,7 +1586,24 @@ void bb_updateCharacterTalk(bb_entity_t* self)
                     freeWsg(&dData->sprite);
                     dData->loadedIdx = -1;
                 }
-                dData->loadedIdx = bb_randomInt(0, 6);
+
+                if(strcmp(dData->characters[dData->curString], "Ovo") == 0)
+                {
+                    dData->loadedIdx         = bb_randomInt(0, 6);
+                }
+                else if(strcmp(dData->characters[dData->curString], "Pixel") == 0)
+                {
+                    dData->loadedIdx        = bb_randomInt(7, 8);
+                }
+                else if(strcmp(dData->characters[dData->curString], "Pango") == 0)
+                {
+                    dData->loadedIdx        = bb_randomInt(9, 10);
+                }
+                else if(strcmp(dData->characters[dData->curString], "Po") == 0)
+                {
+                    dData->loadedIdx        = bb_randomInt(11, 13);
+                }
+
                 char wsg_name[strlen("ovo-talk-") + 9]; // 6 extra characters makes room for up to a 2 digit number +
                                                         // ".wsg" + null terminator ('\0')
                 snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
@@ -1897,6 +1913,41 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
     {
         self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].originY += 2;
     }
+    else
+    {
+        bb_entity_t* ovo
+        = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+
+        bb_dialogueData_t* dData = bb_createDialogueData(24, "Pixel");
+
+        // longest possible string     " "
+        //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
+        //  A A A A A A A A A A A A A A A A A A A");
+        bb_setCharacterLine(dData, 0, "Pixel", "huff... huff... we actually caught up to it!");
+        bb_setCharacterLine(dData, 1, "Pixel", "ugfhh, my hair is starting to hurt. Can you make this quick, Pango?");
+        bb_setCharacterLine(dData, 2, "Pixel", "Hey, it looks like it's Garbotnik after all!");
+        bb_setCharacterLine(dData, 3, "Po", "That's a cool ride, bro.");
+        bb_setCharacterLine(dData, 4, "Ovo", "What could you idiots possibly want?");
+        bb_setCharacterLine(dData, 5, "Pango", "We were fascinated with your shiny metal tube falling from space this morning.");
+        bb_setCharacterLine(dData, 6, "Po", "Yeah, we were wondering if you could give us a ride.");
+        bb_setCharacterLine(dData, 7, "Ovo", "I'm not a taxi service.");
+        bb_setCharacterLine(dData, 8, "Pixel", "We'll pay you in swadges.");
+        bb_setCharacterLine(dData, 9, "Po", "What are you doing at the landfill, anyway?");
+        bb_setCharacterLine(dData, 10, "Ovo", "None of your business!");
+        bb_setCharacterLine(dData, 11, "Ovo", "Get off my freaking back!");
+        bb_setCharacterLine(dData, 12, "Ovo", "I have a dive summary to review.");
+        bb_setCharacterLine(dData, 13, "Pixel", "What's a dive summary?");
+        bb_setCharacterLine(dData, 14, "Ovo", "It tells me how many bugs I annihilated.");
+        bb_setCharacterLine(dData, 15, "Pixel", "Hmm... That sounds like he's up to no good.");
+        bb_setCharacterLine(dData, 16, "Ovo", "Bug off!");
+        bb_setCharacterLine(dData, 17, "Ovo", "Filthy peasants.");
+
+        dData->curString     = -1;
+        bb_setData(ovo, dData, DIALOGUE_DATA);
+
+        self->updateFunction = NULL;
+    }
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -2134,6 +2185,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
 
+    //if it's loaded
     if (-1 != dData->loadedIdx)
     {
         drawWsgSimple(&dData->sprite, 0, -dData->offsetY);
@@ -2145,11 +2197,24 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 
     if (dData->curString >= 0 && dData->curString < dData->numStrings)
     {
-        drawText(&self->gameData->font, c344, dData->character, 13, 152);
+        paletteColor_t textColor = 414;//garbotnik
+        if(strcmp(dData->characters[dData->curString], "Pixel") == 0)
+        {
+            textColor = c302;
+        }
+        else if(strcmp(dData->characters[dData->curString], "Pango") == 0)
+        {
+            textColor = c551;
+        }
+        else if(strcmp(dData->characters[dData->curString], "Po") == 0)
+        {
+            textColor = c400;
+        }
+        drawText(&self->gameData->font, textColor, dData->characters[dData->curString], 13, 152);
 
         int16_t xOff = 13;
         int16_t yOff = 177;
-        drawTextWordWrap(&self->gameData->font, c344, dData->strings[dData->curString], &xOff, &yOff, 253, 230);
+        drawTextWordWrap(&self->gameData->font, textColor, dData->strings[dData->curString], &xOff, &yOff, 253, 230);
     }
 }
 
@@ -2921,46 +2986,43 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-    bb_dialogueData_t* dData = bb_createDialogueData(24); // 24
-
-    strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
-    dData->character[sizeof(dData->character) - 1] = '\0';
+    bb_dialogueData_t* dData = bb_createDialogueData(24, "Ovo");
 
     // longest possible string     " "
     //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
     //  A A A A A A A A A A A A A A A A A A A");
-    bb_setCharacterLine(dData, 0, "Holy bug farts!"); //
+    bb_setCharacterLine(dData, 0, "Ovo", "Holy bug farts!"); //
     bb_setCharacterLine(
-        dData, 1,
+        dData, 1, "Ovo", 
         "After I marketed the chilidog car freshener at MAGFest, Garbotnik Industries' stock went up by 6,969%!");
-    bb_setCharacterLine(dData, 2,
+    bb_setCharacterLine(dData, 2, "Ovo", 
                         "I'm going to use my time machine to steal the next big-selling trinket from the future now.");
-    bb_setCharacterLine(dData, 3, "That will floor all my stakeholders and make me UNDEFINED money!");
+    bb_setCharacterLine(dData, 3, "Ovo", "That will floor all my stakeholders and make me UNDEFINED money!");
     bb_setCharacterLine(
-        dData, 4,
+        dData, 4, "Ovo", 
         "With that kind of cash, I can recruit 200 professional bassoon players to the MAGFest Community Orchestra.");
-    bb_setCharacterLine(dData, 5, "I'm so hyped to turn on my time machine for the first time!");
-    bb_setCharacterLine(dData, 6, "Everything's in order.");
-    bb_setCharacterLine(dData, 7, "Even Pango can't stop me!");
-    bb_setCharacterLine(dData, 8, "I just have to attach the chaos orb right here.");
-    bb_setCharacterLine(dData, 9, "Where did I put that orb?");
-    bb_setCharacterLine(dData, 10, "hmmm...");
-    bb_setCharacterLine(dData, 11, "What about in the freezer?");
-    bb_setCharacterLine(dData, 12, "I've checked every inch of the death dumpster.");
-    bb_setCharacterLine(dData, 13, "Glitch my circuits!");
-    bb_setCharacterLine(dData, 14, "It must have gone out with the trash last Wednesday.");
-    bb_setCharacterLine(dData, 15, "Can I get an F in the chat?");
-    bb_setCharacterLine(dData, 16, "...");
-    bb_setCharacterLine(dData, 17, "The chaos orb is three times denser than a black hole.");
-    bb_setCharacterLine(dData, 18,
+    bb_setCharacterLine(dData, 5, "Ovo", "I'm so hyped to turn on my time machine for the first time!");
+    bb_setCharacterLine(dData, 6, "Ovo", "Everything's in order.");
+    bb_setCharacterLine(dData, 7, "Ovo", "Even Pango can't stop me!");
+    bb_setCharacterLine(dData, 8, "Ovo", "I just have to attach the chaos orb right here.");
+    bb_setCharacterLine(dData, 9, "Ovo", "Where did I put that orb?");
+    bb_setCharacterLine(dData, 10, "Ovo", "hmmm...");
+    bb_setCharacterLine(dData, 11, "Ovo", "What about in the freezer?");
+    bb_setCharacterLine(dData, 12, "Ovo", "I've checked every inch of the death dumpster.");
+    bb_setCharacterLine(dData, 13, "Ovo", "Glitch my circuits!");
+    bb_setCharacterLine(dData, 14, "Ovo", "It must have gone out with the trash last Wednesday.");
+    bb_setCharacterLine(dData, 15, "Ovo", "Can I get an F in the chat?");
+    bb_setCharacterLine(dData, 16, "Ovo", "...");
+    bb_setCharacterLine(dData, 17, "Ovo", "The chaos orb is three times denser than a black hole.");
+    bb_setCharacterLine(dData, 18, "Ovo", 
                         "Well if Garbotnik Sanitation Industries took it to the landfill, then it is definitely at the "
                         "VERY BOTTOM of the dump.");
-    bb_setCharacterLine(dData, 19, "Not a problem.");
-    bb_setCharacterLine(dData, 20, "We have the technology to retrieve it.");
+    bb_setCharacterLine(dData, 19, "Ovo", "Not a problem.");
+    bb_setCharacterLine(dData, 20, "Ovo", "We have the technology to retrieve it.");
     bb_setCharacterLine(
-        dData, 21, "Safety first. Activate the cloning machine in case I should perish on that nuclear wasteland.");
-    bb_setCharacterLine(dData, 22, "fine.");
-    bb_setCharacterLine(dData, 23, "Stupid safety rules. YOLO!");
+        dData, 21, "Ovo", "Safety first. Activate the cloning machine in case I should perish on that nuclear wasteland.");
+    bb_setCharacterLine(dData, 22, "Ovo", "fine.");
+    bb_setCharacterLine(dData, 23, "Ovo", "Stupid safety rules. YOLO!");
 
     dData->curString = -1;
 
@@ -2977,10 +3039,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-    bb_dialogueData_t* dData = bb_createDialogueData(1);
-
-    strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
-    dData->character[sizeof(dData->character) - 1] = '\0';
+    bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
 
     int16_t phraseIdx = 0;
     int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
@@ -3012,152 +3071,152 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         case 0:
         {
             // Max dialogue string roughly: here----V
-            bb_setCharacterLine(dData, 0, "Ah, sweet stench! How I've longed for your orlfactory embrace.");
+            bb_setCharacterLine(dData, 0, "Ovo", "Ah, sweet stench! How I've longed for your orlfactory embrace.");
             break;
         }
         case 1:
         {
-            bb_setCharacterLine(dData, 0, "Tonight's special: Beetle Bruschetta with a side of centipede salad!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Tonight's special: Beetle Bruschetta with a side of centipede salad!");
             break;
         }
         case 2:
         {
-            bb_setCharacterLine(dData, 0, "Another day, another dump full of delectable delights!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Another day, another dump full of delectable delights!");
             break;
         }
         case 3:
         {
-            bb_setCharacterLine(dData, 0, "Step aside, garbage! The doctor is in!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Step aside, garbage! The doctor is in!");
             break;
         }
         case 4:
         {
-            bb_setCharacterLine(dData, 0, "I must find that chaos orb at all costs!");
+            bb_setCharacterLine(dData, 0, "Ovo", "I must find that chaos orb at all costs!");
             break;
         }
         case 5:
         {
-            bb_setCharacterLine(dData, 0, "The Pango pest must be stopped!");
+            bb_setCharacterLine(dData, 0, "Ovo", "The Pango pest must be stopped!");
             break;
         }
         case 6:
         {
-            bb_setCharacterLine(dData, 0, "I'll get you next time Pango! NEXT TIME!");
+            bb_setCharacterLine(dData, 0, "Ovo", "I'll get you next time Pango! NEXT TIME!");
             break;
         }
         case 7:
         {
-            bb_setCharacterLine(dData, 0, "Would you look at the time... It's GARBAGE DAY!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Would you look at the time... It's GARBAGE DAY!");
             break;
         }
         case 8:
         {
-            bb_setCharacterLine(dData, 0, "Did I remember to wax my moustache today?");
+            bb_setCharacterLine(dData, 0, "Ovo", "Did I remember to wax my moustache today?");
             break;
         }
         case 9:
         {
-            bb_setCharacterLine(dData, 0, "Is it spelled \"moustache\" or \"mustache?\" Better look it up...");
+            bb_setCharacterLine(dData, 0, "Ovo", "Is it spelled \"moustache\" or \"mustache?\" Better look it up...");
             break;
         }
         case 10:
         {
-            bb_setCharacterLine(dData, 0, "I wonder how my buddy Hank Waddle is holding up...");
+            bb_setCharacterLine(dData, 0, "Ovo", "I wonder how my buddy Hank Waddle is holding up...");
             break;
         }
         case 11:
         {
-            bb_setCharacterLine(dData, 0, "Man, I sure hope I see some cool bugs today!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Man, I sure hope I see some cool bugs today!");
             break;
         }
         case 12:
         {
-            bb_setCharacterLine(dData, 0, "I'm here to take in the trash.");
+            bb_setCharacterLine(dData, 0, "Ovo", "I'm here to take in the trash.");
             break;
         }
         case 13:
         {
-            bb_setCharacterLine(dData, 0,
+            bb_setCharacterLine(dData, 0, "Ovo", 
                                 "I must remember to research what dastardly technology this dump used to ensure new "
                                 "arrivals wind up at the bottom...");
             break;
         }
         case 14:
         {
-            bb_setCharacterLine(dData, 0,
+            bb_setCharacterLine(dData, 0, "Ovo", 
                                 "I promise, this is perfectly sanitary, the Chaos Orb has antimicrobial properties.");
             break;
         }
         case 15:
         {
-            bb_setCharacterLine(dData, 0, "Of course you can trust me; I'm a doctor.");
+            bb_setCharacterLine(dData, 0, "Ovo", "Of course you can trust me; I'm a doctor.");
             break;
         }
         case 16:
         {
-            bb_setCharacterLine(dData, 0, "Come on and jump and welcome to the dump!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Come on and jump and welcome to the dump!");
             break;
         }
         case 17:
         {
-            bb_setCharacterLine(dData, 0, "Oh, I'd been looking for that garbage ray!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Oh, I'd been looking for that garbage ray!");
             break;
         }
         case 18:
         {
             bb_setCharacterLine(
-                dData, 0,
+                dData, 0, "Ovo", 
                 "If you ask me what I have a degree in one more time, I'm asking the Internet to draw fanart of you.");
             break;
         }
         case 19:
         {
-            bb_setCharacterLine(dData, 0, "Oh, I'd been looking for that garbage ray!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Oh, I'd been looking for that garbage ray!");
             break;
         }
         case 20:
         {
-            bb_setCharacterLine(dData, 0, "Did I remember to turn off the disintegrator before I left the lab?");
+            bb_setCharacterLine(dData, 0, "Ovo", "Did I remember to turn off the disintegrator before I left the lab?");
             break;
         }
         case 21:
         {
-            bb_setCharacterLine(dData, 0, "Oooh piece of candy!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Oooh piece of candy!");
             break;
         }
         case 22:
         {
-            bb_setCharacterLine(dData, 0, "If they beat this game fast enough, does that mean I too have to strip?");
+            bb_setCharacterLine(dData, 0, "Ovo", "If they beat this game fast enough, does that mean I too have to strip?");
             break;
         }
         case 23:
         {
-            bb_setCharacterLine(dData, 0, "Sluuurrrrrrrrrrp");
+            bb_setCharacterLine(dData, 0, "Ovo", "Sluuurrrrrrrrrrp");
             break;
         }
         case 24:
         {
-            bb_setCharacterLine(dData, 0, "A chili dog? No no, I've already had my... FILL.");
+            bb_setCharacterLine(dData, 0, "Ovo", "A chili dog? No no, I've already had my... FILL.");
             break;
         }
         case 25:
         {
-            bb_setCharacterLine(dData, 0, "CHAOS... CONT.... oh, I appear to have been sent a C&D.");
+            bb_setCharacterLine(dData, 0, "Ovo", "CHAOS... CONT.... oh, I appear to have been sent a C&D.");
             break;
         }
         case 26:
         {
-            bb_setCharacterLine(dData, 0, "I didn't like Clone #61 much anyway.");
+            bb_setCharacterLine(dData, 0, "Ovo", "I didn't like Clone #61 much anyway.");
             break;
         }
         case 27:
         {
-            bb_setCharacterLine(dData, 0, "Remember, Ovo is pronounced like 'oooh-voo' with a wink at the end.");
+            bb_setCharacterLine(dData, 0, "Ovo", "Remember, Ovo is pronounced like 'oooh-voo' with a wink at the end.");
             break;
         }
         case 28:
         {
-            bb_setCharacterLine(dData, 0, "You don't have enough badge ribbons to train me.");
+            bb_setCharacterLine(dData, 0, "Ovo", "You don't have enough badge ribbons to train me.");
             break;
         }
         default:
@@ -3177,13 +3236,10 @@ void bb_startGarbotnikCloningTalk(bb_entity_t* self)
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, 0, 0, true, true);
 
-    bb_dialogueData_t* dData = bb_createDialogueData(2); // 29
+    bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo"); // 29
 
-    strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
-    dData->character[sizeof(dData->character) - 1] = '\0';
-
-    bb_setCharacterLine(dData, 0, "I'm feeling fresh, baby!"); // V longest possible string here
-    bb_setCharacterLine(dData, 1, "It was a good move taking those omega3 fish oils before backing up my brain.");
+    bb_setCharacterLine(dData, 0, "Ovo", "I'm feeling fresh, baby!"); // V longest possible string here
+    bb_setCharacterLine(dData, 1, "Ovo", "It was a good move taking those omega3 fish oils before backing up my brain.");
 
     dData->curString = -1;
 
@@ -3198,14 +3254,11 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-    bb_dialogueData_t* dData = bb_createDialogueData(2);
-
-    strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
-    dData->character[sizeof(dData->character) - 1] = '\0';
+    bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo");
 
     // Max dialogue string roughly:                                                                         here----V
-    bb_setCharacterLine(dData, 0, "Oooey Gooey! Look at that egg sack!");
-    bb_setCharacterLine(dData, 1, "I can use the directional buttons on my swadge to fly over there and check it out.");
+    bb_setCharacterLine(dData, 0, "Ovo", "Oooey Gooey! Look at that egg sack!");
+    bb_setCharacterLine(dData, 1, "Ovo", "I can use the directional buttons on my swadge to fly over there and check it out.");
 
     dData->curString     = -1;
     dData->endDialogueCB = &bb_afterGarbotnikEggTutorialTalk;
@@ -3222,23 +3275,20 @@ void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-    bb_dialogueData_t* dData = bb_createDialogueData(5);
-
-    strncpy(dData->character, "Dr. Ovo", sizeof(dData->character) - 1);
-    dData->character[sizeof(dData->character) - 1] = '\0';
+    bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
 
     // longest possible string     " "
     //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
     //  A A A A A A A A A A A A A A A A A A A");
-    bb_setCharacterLine(dData, 0,
+    bb_setCharacterLine(dData, 0, "Ovo", 
                         "When I travel away from the booster, I've got to keep an eye on my fuel level at all times.");
-    bb_setCharacterLine(dData, 1,
+    bb_setCharacterLine(dData, 1, "Ovo", 
                         "Sit back atop the booster before all the lights around the outside of the swadge turn off.");
-    bb_setCharacterLine(dData, 2,
+    bb_setCharacterLine(dData, 2, "Ovo", 
                         "safety first. Once back on the rocket, it takes a stupid long time for the "
                         "launch sequence to initiate.");
-    bb_setCharacterLine(dData, 3, "Too many regulations on equipment these days.");
-    bb_setCharacterLine(dData, 4, "Let a trashman go to space in peace.");
+    bb_setCharacterLine(dData, 3, "Ovo", "Too many regulations on equipment these days.");
+    bb_setCharacterLine(dData, 4, "Ovo", "Let a trashman go to space in peace.");
 
     dData->curString     = -1;
     dData->endDialogueCB = &bb_afterGarbotnikFuelTutorialTalk;
@@ -3541,12 +3591,30 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
     }
 }
 
-bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
+bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter)
 {
     bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
-    dData->loadedIdx         = bb_randomInt(0, 6);
+    if(strcmp(firstCharacter, "Ovo") == 0)
+    {
+        dData->loadedIdx         = bb_randomInt(0, 6);
+    }
+    else if(strcmp(firstCharacter, "Pixel") == 0)
+    {
+        dData->loadedIdx        = bb_randomInt(7, 8);
+    }
+    else if(strcmp(firstCharacter, "Pango") == 0)
+    {
+        dData->loadedIdx        = bb_randomInt(9, 10);
+    }
+    else if(strcmp(firstCharacter, "Po") == 0)
+    {
+        dData->loadedIdx        = bb_randomInt(11, 13);
+    }
+    //Add dr. Ovo indices
+    //FINISH ME!!!
+
     char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                            // terminator ('\0')
     snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
@@ -3555,13 +3623,16 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings)
     dData->spriteNextLoaded = true;
 
     dData->strings = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
+    dData->characters = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
 }
 
-void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str)
+void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* character, const char* str)
 {
     dData->strings[index] = heap_caps_calloc(strlen(str) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
+    dData->characters[index] = heap_caps_calloc(strlen(character) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(dData->strings[index], str);
+    strcpy(dData->characters[index], character);
 }
 
 void bb_freeDialogueData(bb_dialogueData_t* dData)

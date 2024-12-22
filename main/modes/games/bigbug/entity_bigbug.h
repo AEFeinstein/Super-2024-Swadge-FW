@@ -220,9 +220,9 @@ typedef struct
 typedef struct
 {
     uint8_t numStrings;
-    char** strings;
+    char** strings; // the list of strings to be spoken in order.
     int8_t curString;
-    char character[8];
+    char** characters; // the list of characters who are speaking in order.
     bb_callbackFunction_t endDialogueCB; // executes when the character is done talking.
     wsg_t sprite;                        // the current talking sprite
     wsg_t spriteNext;                    // a blinking triangle right of the dialogue
@@ -405,8 +405,8 @@ void bb_playCarAlarm(bb_entity_t* self);
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth);
-bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings);
-void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str);
+bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter);
+void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* character, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);
 
 #endif
