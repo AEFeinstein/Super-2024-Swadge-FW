@@ -95,6 +95,11 @@ void tttBeginGame(ultimateTTT_t* ttt)
     // Clean up after showing instructions
     ttt->showingInstructions = false;
 
+    // Reset animation timers
+    ttt->game.moveAnimTimer = MOVE_ANIM_TIME;
+    memset(ttt->game.cellTimers, 0, sizeof(ttt->game.cellTimers));
+    memset(ttt->game.gameTimers, 0, sizeof(ttt->game.gameTimers));
+
     /// Clear any CPU data
     memset(&ttt->game.cpu, 0, sizeof(ttt->game.cpu));
 
