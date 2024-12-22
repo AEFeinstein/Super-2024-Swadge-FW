@@ -130,7 +130,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs);
 void drawLevelClear(font_t* font, paGameData_t* gameData);
 void changeStateGameClear(pango_t* self);
 void updateGameClear(pango_t* self, int64_t elapsedUs);
-void drawGameClear(font_t* font, paGameData_t* gameData);
+void drawGameClear(font_t* font, paWsgManager_t* wsgManager, paGameData_t* gameData, uint8_t page);
 void pangoInitializeHighScores(pango_t* self);
 void loadPangoHighScores(pango_t* self);
 void pangoSaveHighScores(pango_t* self);
@@ -1141,70 +1141,136 @@ void changeStateGameClear(pango_t* self)
 {
     self->gameData.frameCount = 0;
     self->gameData.gameState  = PA_ST_GAME_CLEAR;
+    self->menuState           = 0;
     self->update              = &updateGameClear;
     pa_resetGameDataLeds(&(self->gameData));
-    // soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+    soundStop(true);
 }
 
 void updateGameClear(pango_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
 
-    if (self->gameData.frameCount > 450)
+    switch (self->menuState)
     {
-        if (self->gameData.lives > 0)
-        {
-            if (self->gameData.frameCount % 60 == 0)
-            {
-                self->gameData.lives--;
-                self->gameData.score += 200000;
-                soundPlaySfx(&(self->soundManager.snd1up), BZR_STEREO);
+        case 0:
+            if (self->gameData.frameCount == 360){
+                 pa_setBgm(&(self->soundManager), PA_BGM_HIGH_SCORE);
+                 soundPlayBgm(&(self->soundManager.currentBgm), MIDI_BGM);
             }
-        }
-        else if (self->gameData.frameCount % 960 == 0)
-        {
-            changeStateGameOver(self);
-        }
+
+            if (self->gameData.frameCount > 540)
+            {
+                if (self->gameData.lives > 0)
+                {
+                    if (self->gameData.frameCount % 60 == 0)
+                    {
+                        self->gameData.lives--;
+                        self->gameData.score += 10000;
+                        soundPlaySfx(&(self->soundManager.snd1up), MIDI_SFX);
+                    }
+                }
+                else if (self->gameData.frameCount % 960 == 0)
+                {
+                    self->menuState           = 1;
+                    self->gameData.frameCount = 0;
+                }
+            }
+
+            pa_updateLedsGameOver(&(self->gameData));
+            break;
+        case 1:
+        default:
+            if (self->gameData.frameCount % 1320 == 0)
+            {
+                changeStateGameOver(self);
+            }
+            pa_updateLedsGameClear(&(self->gameData));
+            break;
     }
 
     drawPangoHud(&(self->font), &(self->gameData));
-    drawGameClear(&(self->font), &(self->gameData));
-    pa_updateLedsGameClear(&(self->gameData));
+    drawGameClear(&(self->font), &(self->wsgManager), &(self->gameData), self->menuState);
+    
 }
 
-void drawGameClear(font_t* font, paGameData_t* gameData)
+void drawGameClear(font_t* font, paWsgManager_t* wsgManager, paGameData_t* gameData, uint8_t page)
 {
     drawPangoHud(font, gameData);
 
-    char timeStr[32];
-    snprintf(timeStr, sizeof(timeStr) - 1, "in %06" PRIu32 " seconds!", gameData->inGameTimer);
+    switch(page){
+        case 0:
+            drawText(font, c555, "You've reached the", 36, 48);
+            drawText(font, redColors[(gameData->frameCount >> 3) % 4], "KILL SCREEN!", 72, 60);
 
-    drawText(font, yellowColors[(gameData->frameCount >> 3) % 4], str_congrats,
-             (TFT_WIDTH - textWidth(font, str_congrats)) / 2, 48);
+            if (gameData->frameCount > 60 && gameData->frameCount < 300)
+            {
+                drawWsg(&wsgManager->wsgs[PA_WSG_PANGO_SOUTH], 132, 128, false, false, 0);
+            }
 
-    if (gameData->frameCount > 120)
-    {
-        drawText(font, c555, "Many more battle scenes", 8, 80);
-        drawText(font, c555, "will soon be available", 8, 96);
+            if (gameData->frameCount > 120)
+            {
+                drawText(font, c555, "PANGO.EXE will now", 36, 84);
+                drawText(font, c555, "take your lives...", 36, 96);                
+            }
+
+            if (gameData->frameCount > 240)
+            {
+                drawWsgSimpleScaled(&wsgManager->wsgs[PA_WSG_PANGO_ICON], 96, 112, 5, 5);
+            }
+
+            if (gameData->frameCount > 300)
+            {
+                drawText(font, (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555,
+                        "for 10000pts each!", 36, 192);
+            }
+
+            break;
+            
+        case 1:
+        default:
+
+            if (gameData->frameCount > 60)
+            {
+                drawWsgSimpleScaled(&wsgManager->wsgs[PA_WSG_PANGO_WIN], 76, 44, 2, 2);
+            }
+
+            if (gameData->frameCount > 120)
+            {
+                drawWsgSimpleScaled(&wsgManager->wsgs[PA_WSG_PO_WIN],108, 44, 2, 2);
+            }
+
+            if (gameData->frameCount > 180)
+            {
+                drawWsgSimpleScaled(&wsgManager->wsgs[PA_WSG_PIXEL_WIN], 140, 44, 2, 2);
+            }
+
+            if (gameData->frameCount > 240)
+            {
+                drawWsgSimpleScaled(&wsgManager->wsgs[PA_WSG_GIRL_WIN], 172, 44, 2, 2);
+            }
+
+            if (gameData->frameCount > 360)
+            {
+                drawText(font, c555, "We can't believe", 48, 108);
+                drawText(font, c555, "you made it this far!", 24, 120);
+            }
+
+            if (gameData->frameCount > 540)
+            {
+                drawText(font, yellowColors[(gameData->frameCount >> 3) % 4], "Thanks for playing!", 36, 144);
+            }
+
+            if (gameData->frameCount > 680)
+            {
+                drawText(font, c555, "-Pango & Co.", 112, 194);
+            }
+
+            break;
     }
 
-    if (gameData->frameCount > 180)
-    {
-        drawText(font, (gameData->inGameTimer < FAST_TIME) ? cyanColors[(gameData->frameCount >> 3) % 4] : c555,
-                 timeStr, (TFT_WIDTH - textWidth(font, timeStr)) / 2, 112);
-    }
-
-    if (gameData->frameCount > 300)
-    {
-        drawText(font, c555, "The Swadge staff", 8, 144);
-        drawText(font, c555, "thanks you for playing!", 8, 160);
-    }
-
-    if (gameData->frameCount > 420)
-    {
-        drawText(font, (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555,
-                 "Bonus 200000pts per life!", (TFT_WIDTH - textWidth(font, "Bonus 100000pts per life!")) / 2, 192);
-    }
+   
+    
 
     /*
     drawText(font, c555, "Thanks for playing.", 24, 48);
