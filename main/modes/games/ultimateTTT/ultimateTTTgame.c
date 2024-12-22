@@ -460,6 +460,8 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
         // Send cursor movement to the other Swadge
         if (cursorMoved)
         {
+            globalMidiPlayerStop(true);
+            globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_BGM);
             tttSendCursor(ttt);
         }
     }
@@ -548,6 +550,10 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
     ttt->game.cursorMode      = msg->cursorMode;
     ttt->game.selectedSubgame = msg->selectedSubgame;
     ttt->game.cursor          = msg->cursor;
+
+    // Play SFX
+    globalMidiPlayerStop(true);
+    globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_BGM);
 }
 
 /**
@@ -611,6 +617,10 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
     // Start anim timer
     ttt->game.cellTimers[subgame->x][subgame->y][cell->x][cell->y] = ROTATE_TIME;
 
+    // Play SFX
+    globalMidiPlayerStop(true);
+    globalMidiPlayerPlaySong(&ttt->sfxPlaceMarker, MIDI_SFX);
+
     // Check the board
     bool won  = false;
     bool lost = false;
@@ -624,6 +634,10 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
         }
         case TTT_P1:
         {
+            // Play SFX
+            globalMidiPlayerStop(true);
+            globalMidiPlayerPlaySong(&ttt->sfxWinGame, MIDI_SFX);
+
             // Player 1 won, figure out who that is
             if (GOING_FIRST == tttGetPlayOrder(ttt))
             {
@@ -637,6 +651,10 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
         }
         case TTT_P2:
         {
+            // Play SFX
+            globalMidiPlayerStop(true);
+            globalMidiPlayerPlaySong(&ttt->sfxWinGame, MIDI_SFX);
+
             // Player 2 won, figure out who that is
             if (GOING_SECOND == tttGetPlayOrder(ttt))
             {
@@ -790,6 +808,10 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
             tttPlayer_t oldWinner = ttt->game.subgames[x][y].winner;
             if (oldWinner != tttCheckSubgameWinner(&ttt->game.subgames[x][y]))
             {
+                // Play SFX
+                globalMidiPlayerStop(true);
+                globalMidiPlayerPlaySong(&ttt->sfxWinSubgame, MIDI_SFX);
+
                 // Start anim timer
                 ttt->game.gameTimers[x][y] = ROTATE_TIME;
             }

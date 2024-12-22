@@ -121,6 +121,13 @@ static void tttEnterMode(void)
         loadWsg(assetName, &ttt->markerWsg[pIdx].red.large, true);
     }
 
+    // Load SFX
+    loadMidiFile("uttt_cursor.mid", &ttt->sfxMoveCursor, true);
+    loadMidiFile("uttt_marker.mid", &ttt->sfxPlaceMarker, true);
+    loadMidiFile("uttt_win_s.mid", &ttt->sfxWinSubgame, true);
+    loadMidiFile("uttt_win_g.mid", &ttt->sfxWinGame, true);
+    initGlobalMidiPlayer();
+
     // Load some fonts
     loadFont("rodin_eb.font", &ttt->font_rodin, false);
     loadFont("righteous_150.font", &ttt->font_righteous, false);
@@ -235,6 +242,14 @@ static void tttExitMode(void)
         freeWsg(&ttt->markerWsg[pIdx].red.small);
         freeWsg(&ttt->markerWsg[pIdx].red.large);
     }
+
+    // Free MIDI
+    globalMidiPlayerStop(true);
+    deinitGlobalMidiPlayer();
+    unloadMidiFile(&ttt->sfxMoveCursor);
+    unloadMidiFile(&ttt->sfxPlaceMarker);
+    unloadMidiFile(&ttt->sfxWinSubgame);
+    unloadMidiFile(&ttt->sfxWinGame);
 
     // Clear out this list
     while (0 != ttt->instructionHistory.length)

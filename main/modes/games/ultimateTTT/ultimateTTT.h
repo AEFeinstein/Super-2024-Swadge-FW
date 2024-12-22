@@ -172,6 +172,11 @@ typedef struct
     list_t instructionHistory;
     bool showingInstructions;
     arrow_t instructionArrow;
+    // MIDIs
+    midiFile_t sfxMoveCursor;
+    midiFile_t sfxPlaceMarker;
+    midiFile_t sfxWinSubgame;
+    midiFile_t sfxWinGame;
 } ultimateTTT_t;
 
 typedef struct
