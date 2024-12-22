@@ -152,8 +152,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
             if (rData->flame->currentAnimationFrame == 0)
             {
                 // animation has played through back to 0
-                bb_heavyFallingData_t* hData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
-                hData->yVel                  = rData->yVel >> 4;
+                rData->yVel = rData->yVel >> 4;
                 bb_destroyEntity(rData->flame, false);
                 rData->flame         = NULL;
                 self->updateFunction = bb_updateHeavyFallingInit;
@@ -384,7 +383,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // Fuel decrements with time. Right shifting by 10 is fairly close to
     // converting microseconds to milliseconds without requiring division.
-    gData->fuel -= self->gameData->elapsedUs >> 10;
+    gData->fuel -= (((self->gameData->elapsedUs >> 10) * gData->fuelConsumptionRate)>>2);
     if (gData->fuel < 0)
     {
         bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
@@ -425,6 +424,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     gData->fire = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
 
     gData->harpoonCooldown -= self->gameData->elapsedUs >> 11;
+    if(gData->harpoonCooldown < -250)
+    {
+        gData->harpoonCooldown = -250;
+    }
 
     if (gData->touching && gData->harpoonCooldown < 0 && gData->numHarpoons > 0)
     {
@@ -764,12 +767,16 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ///////////////////////
 
         // Update the dirt by decrementing it.
-        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= 1;
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= gData->diggingStrength;
+        if(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health < 0)
+        {
+            self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
+        }
 
         bb_midgroundTileInfo_t* tile
             = (bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
 
-        if (tile->health == 0 || tile->health == 1 || tile->health == 4)
+        if (tile->health == 0 || tile->health == 1 || (tile->health < 5 && tile->health + gData->diggingStrength >= 5))
         {
             // Create a crumble
             bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health);
@@ -1591,8 +1598,12 @@ void bb_updateGameOver(bb_entity_t* self)
         }
         else
         {
-            // increment booster frame to look destroyed
+            // increment booster animation frame to look destroyed
             self->gameData->entityManager.activeBooster->currentAnimationFrame++;
+            bb_heavyFallingData_t* hfData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
+            hfData->yVel = ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->yVel;
+            bb_setData(self->gameData->entityManager.activeBooster, hfData, HEAVY_FALLING_DATA);
+            self->gameData->entityManager.activeBooster->drawFunction = NULL;
             // this booster's grabby hand will destroy itself next time in it's own update loop.
 
             uint8_t boosterIdx = 0;
@@ -1606,8 +1617,7 @@ void bb_updateGameOver(bb_entity_t* self)
             }
 
             self->gameData->entityManager.activeBooster = NULL;
-            boosterIdx++;
-            if (boosterIdx >= 3)
+            if (boosterIdx > 2)
             {
                 // IDK it is really really game over here.
                 ESP_LOGD(BB_TAG, "finish me\n");
@@ -1753,9 +1763,23 @@ void bb_updateCarOpen(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
-        // spawn a donut as a reward for completing the fight
-        bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
-                        (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
+        switch(((bb_carData_t*)self->data)->reward)
+        {
+            case BB_DONUT:
+            {
+                // spawn a donut as a reward for completing the fight
+                bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
+                                (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
+                break;
+            }
+            default: // BB_SWADGE
+            {
+                // spawn a swadge as a reward for completing the fight
+                bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
+                                (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
+                break;
+            }
+        }
         self->paused = true;
     }
 }
@@ -2172,11 +2196,8 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
 
     char monitorText[4];
     snprintf(monitorText, sizeof(monitorText), "%02d", rData->numBugs % 100);
-    if (self->currentAnimationFrame < 41)
-    {
-        drawText(&self->gameData->tinyNumbers, c140, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 8);
-    }
+    drawText(&self->gameData->tinyNumbers, c140, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
+                (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 8);
     if (rData->armAngle > 2880) // that is 180 << DECIMAL_BITS
     {
         snprintf(monitorText, sizeof(monitorText), "%02d",
@@ -2414,12 +2435,9 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
     {
         bb_hitInfo_t localHitInfo = {0};
         bb_collisionCheck(&self->gameData->tilemap, other, NULL, &localHitInfo);
-        if (localHitInfo.hit == true)
+        if (localHitInfo.hit == true && localHitInfo.normal.y == -1)
         {
-            if(localHitInfo.normal.y == -1)
-            {
-                bb_triggerGameOver(self);
-            }
+            bb_triggerGameOver(self);
         }
     }
 }
@@ -3268,7 +3286,6 @@ void bb_triggerGameOver(bb_entity_t* self)
 
     bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GAME_OVER, 1,
                     self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
-    self->updateFunction = NULL;
 
     self->gameData->camera.camera.pos = (vec_t){(self->gameData->entityManager.deathDumpster->pos.x >> DECIMAL_BITS),
                                                 (self->gameData->entityManager.deathDumpster->pos.y >> DECIMAL_BITS)};
@@ -3281,8 +3298,7 @@ void bb_triggerGameOver(bb_entity_t* self)
 void bb_upgradeGarbotnik(bb_entity_t* self)
 {
     self->gameData->radar.playerPingRadius      = 0; // just using this as a selection idx to save some space.
-    self->gameData->garbotnikUpgrade.choices[0] = (int8_t)GARBOTNIK_REDUCED_FUEL_CONSUMPTION; // default choice
-    self->gameData->garbotnikUpgrade.choices[1] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH;    // 2nd default choice
+    self->gameData->garbotnikUpgrade.choices[0] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH;    // default choice
     uint8_t zeroCount                           = 0; // zero count represent the number of upgrades not yet maxed out.
     for (int i = 0; i < 3; i++)
     {
@@ -3291,7 +3307,7 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
             zeroCount++;
         }
     }
-    if (zeroCount > 2)
+    if (zeroCount > 1)
     {
         enum bb_garbotnikUpgrade_t candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
         while (((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1)

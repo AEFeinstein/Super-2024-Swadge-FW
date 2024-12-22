@@ -83,6 +83,8 @@ typedef struct
     int8_t damageEffect;     // decrements over time. Render damagePalette color swap if > 0.
     int16_t harpoonCooldown; // decrements over time. Fires if < 0 and resets to fireTime.
     int16_t fireTime;
+    uint8_t diggingStrength; // Starts at 1. Can increment indefinetly.
+    uint8_t fuelConsumptionRate; // Starts at 4. Can decrement to 0.
 } bb_garbotnikData_t;
 
 typedef struct
@@ -192,6 +194,7 @@ typedef struct
 typedef struct
 {
     bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
+    bb_spriteDef_t reward;      // The sprite to spawn when the car trunk opens
 } bb_carData_t;
 
 typedef struct

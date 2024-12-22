@@ -75,10 +75,12 @@ typedef enum
     NOTHING_EMBED,
     EGG_EMBED,
     WASHING_MACHINE_EMBED,
-    CAR_EMBED,
+    BB_CAR_WITH_DONUT_EMBED,
+    BB_CAR_WITH_SWADGE_EMBED,
     SKELETON_EMBED,
     DOOR_EMBED,
     SWADGE_EMBED,
+    DONUT_EMBED
 } bb_embeddable_t;
 
 typedef enum

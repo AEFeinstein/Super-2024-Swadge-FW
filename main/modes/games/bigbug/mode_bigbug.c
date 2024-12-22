@@ -850,7 +850,6 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
         // Save the button state
         bigbug->gameData.btnState = evt.state;
 
-        // Check if the pause button was pressed
         if (evt.down)
         {
             bigbug->gameData.btnDownState += evt.button;
@@ -864,14 +863,35 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
             }
             else if (evt.button == PB_A)
             {
-                if (bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius]
-                    == GARBOTNIK_FASTER_FIRE_RATE)
+                if (bigbug->gameData.entityManager.playerEntity->dataType == GARBOTNIK_DATA)
                 {
-                    if (bigbug->gameData.entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+                    bb_garbotnikData_t* gData
+                        = (bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data;
+                    switch (bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius])
                     {
-                        bb_garbotnikData_t* gData
-                            = (bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data;
-                        gData->fireTime = gData->fireTime > 75 ? gData->fireTime - 50 : 25;
+                        case GARBOTNIK_FASTER_FIRE_RATE:
+                        {
+                            gData->fireTime = gData->fireTime > 75 ? gData->fireTime - 50 : 25;
+                            if(gData->fireTime == 25)
+                            {
+                                //fireTime is maxed out. Take it out of the pool.
+                                bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_FASTER_FIRE_RATE);
+                            }
+                        }
+                        case GARBOTNIK_MORE_DIGGING_STRENGTH:
+                        {
+                            gData->diggingStrength++;
+                            break;
+                        }
+                        case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
+                        {
+                            gData->fuelConsumptionRate--;
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
                     }
                 }
                 bigbug->gameData.garbotnikUpgrade.upgrades

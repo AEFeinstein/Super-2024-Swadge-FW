@@ -115,7 +115,6 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
             freeWsg(&tilemap->fore_h_Wsg[i]);
             freeWsg(&tilemap->fore_b_Wsg[i]);
         }
-
         tilemap->wsgsLoaded = false;
     }
 }
@@ -249,11 +248,25 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             }
                             break;
                         }
-                        case CAR_EMBED:
+                        case BB_CAR_WITH_DONUT_EMBED:
                         {
                             bb_entity_t* car = bb_createEntity(entityManager, ONESHOT_ANIMATION, true, BB_CAR, 6,
                                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2,
                                                                false, false);
+                            ((bb_carData_t*)car->data)->reward = BB_DONUT;
+                            if (car != NULL)
+                            {
+                                car->currentAnimationFrame   = 1;
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }
+                        case BB_CAR_WITH_SWADGE_EMBED:
+                        {
+                            bb_entity_t* car = bb_createEntity(entityManager, ONESHOT_ANIMATION, true, BB_CAR, 6,
+                                                               i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2,
+                                                               false, false);
+                            ((bb_carData_t*)car->data)->reward = BB_SWADGE;
                             if (car != NULL)
                             {
                                 car->currentAnimationFrame   = 1;
@@ -264,9 +277,21 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         case SWADGE_EMBED:
                         {
                             if (bb_createEntity(entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
-                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, true, false)
                                 != NULL)
                             {
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }
+                        case DONUT_EMBED:
+                        {
+                            bb_entity_t* donut = bb_createEntity(entityManager, NO_ANIMATION, false, BB_DONUT, 1,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, true, false);
+                            if (donut != NULL)
+                            {
+                                //zero out the velocity that was intended for coming out of the car trunk.
+                                ((bb_physicsData_t*)donut->data)->vel = (vec_t){0};
                                 tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                             }
                             break;

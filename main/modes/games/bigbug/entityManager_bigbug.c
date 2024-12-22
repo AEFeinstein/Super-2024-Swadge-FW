@@ -608,6 +608,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                                          // //also set in bb_onCollisionFuel()
             gData->yaw.x    = -1;        // So he starts off facing left away from the tutorial egg.
             gData->fireTime = 200;
+            gData->diggingStrength = 1;
+            gData->fuelConsumptionRate = 4;
             memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
             // create sequential numbers of all phrase indices
@@ -1050,7 +1052,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_DONUT:
         {
-            // Give the donut NJIMEIA PHYSX when it is tethered.
+            // Give the donut NJIMEIA PHYSX for when it is tethered.
             bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
             physData->bounceNumerator   = 2; // 66% bounce
             physData->bounceDenominator = 3;
