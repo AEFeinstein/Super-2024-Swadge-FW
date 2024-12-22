@@ -750,10 +750,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                 }
                 if (!isTowed)
                 {
-                    uint16_t dist = (uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> DECIMAL_BITS,
-                                                                 (curEntity->pos.y - self->pos.y) >> DECIMAL_BITS});
+                    uint16_t dist = (uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> 5,
+                                                                 (curEntity->pos.y - self->pos.y) >> 5});
                     // if the bug is within 70px of garbotnik
-                    if (dist < 4900 && dist < best_dist)
+                    if (dist < 1225 && dist < best_dist)
                     {
                         // new best candidate found!
                         best_i    = i;
@@ -2503,7 +2503,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         if (cachedEntityVal != NULL && cachedEntityVal->spriteIndex == BB_DOOR) // it's a door
         {
             if (abs(cachedEntityVal->pos.x - self->pos.x) + abs(cachedEntityVal->pos.y - self->pos.y)
-                < 10200) // eh close enough
+                < 10250) // eh close enough
             {
                 bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
                 if (foundSpot != NULL)
