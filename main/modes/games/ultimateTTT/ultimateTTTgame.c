@@ -42,6 +42,20 @@ static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt);
 //==============================================================================
 
 /**
+ * @brief Linearly interpolate between two numbers
+ *
+ * @param start The start number
+ * @param end The end number
+ * @param tTime The total time for this interpolation
+ * @param t The current time for this interpolation
+ * @return The value interpolated between start and end for this time
+ */
+static inline int32_t linInterp(int32_t start, int32_t end, int32_t tTime, int32_t t)
+{
+    return start + ((end - start) * t) / tTime;
+}
+
+/**
  * @brief Start a multiplayer game. This is called after a connection is established
  *
  * @param ttt The entire game state
@@ -636,9 +650,25 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
         }
         case TTT_NONE:
         {
+            // Save the source animation rectangle
+            int16_t sX0                  = ttt->gameOffset.x + (ttt->game.selectedSubgame.x * ttt->subgameSize);
+            int16_t sY0                  = ttt->gameOffset.y + (ttt->game.selectedSubgame.y * ttt->subgameSize);
+            ttt->game.priorCellAnim[0].x = sX0 + (cell->x * ttt->cellSize);
+            ttt->game.priorCellAnim[0].y = sY0 + (cell->y * ttt->cellSize);
+            ttt->game.priorCellAnim[1].x = ttt->game.priorCellAnim[0].x + ttt->cellSize - 1;
+            ttt->game.priorCellAnim[1].y = ttt->game.priorCellAnim[0].y + ttt->cellSize - 1;
+
             // Next move should be in the subgame indicated by the cell
             ttt->game.selectedSubgame = *cell;
             ttt->game.cursorMode      = SELECT_CELL_LOCKED;
+
+            // Save the destination animation rectangle
+            ttt->game.nextSubgameAnim[0].x = ttt->gameOffset.x + (ttt->game.selectedSubgame.x * ttt->subgameSize);
+            ttt->game.nextSubgameAnim[0].y = ttt->gameOffset.y + (ttt->game.selectedSubgame.y * ttt->subgameSize);
+            ttt->game.nextSubgameAnim[1].x = ttt->game.nextSubgameAnim[0].x + ttt->subgameSize - 1;
+            ttt->game.nextSubgameAnim[1].y = ttt->game.nextSubgameAnim[0].y + ttt->subgameSize - 1;
+
+            ttt->game.moveAnimTimer = 0;
 
             // If that subgame is already won
             if (TTT_NONE != ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y].winner)
@@ -948,6 +978,12 @@ void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
         }
     }
 
+    // Run up the movement animation timer
+    if (ttt->game.moveAnimTimer < MOVE_ANIM_TIME)
+    {
+        ttt->game.moveAnimTimer += elapsedUs;
+    }
+
     // Clear before drawing
     clearPxTft();
 
@@ -1080,6 +1116,21 @@ void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
                 }
             }
         }
+    }
+
+    // If the movement animation timer is active
+    if (ttt->game.moveAnimTimer <= MOVE_ANIM_TIME)
+    {
+        // Draw the interpolated rectangle
+        drawRect(linInterp(ttt->game.priorCellAnim[0].x, ttt->game.nextSubgameAnim[0].x, MOVE_ANIM_TIME,
+                           ttt->game.moveAnimTimer),
+                 linInterp(ttt->game.priorCellAnim[0].y, ttt->game.nextSubgameAnim[0].y, MOVE_ANIM_TIME,
+                           ttt->game.moveAnimTimer),
+                 linInterp(ttt->game.priorCellAnim[1].x, ttt->game.nextSubgameAnim[1].x, MOVE_ANIM_TIME,
+                           ttt->game.moveAnimTimer),
+                 linInterp(ttt->game.priorCellAnim[1].y, ttt->game.nextSubgameAnim[1].y, MOVE_ANIM_TIME,
+                           ttt->game.moveAnimTimer),
+                 c440);
     }
 
     if (ttt->game.singleSystem && ttt->game.state == TGS_WAITING)

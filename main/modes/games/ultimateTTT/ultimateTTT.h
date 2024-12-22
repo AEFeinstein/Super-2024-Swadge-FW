@@ -10,7 +10,8 @@
 
 #define ARROW_BLINK_PERIOD 1000000
 
-#define ROTATE_TIME 1000000
+#define ROTATE_TIME    1000000
+#define MOVE_ANIM_TIME 1000000
 
 //==============================================================================
 // Enums
@@ -127,6 +128,9 @@ typedef struct
     int32_t p1MarkerIdx;
     int32_t p2MarkerIdx;
     tttCpuData_t cpu;
+    int32_t moveAnimTimer;
+    vec_t priorCellAnim[2];
+    vec_t nextSubgameAnim[2];
 } tttGameData_t;
 
 typedef struct
