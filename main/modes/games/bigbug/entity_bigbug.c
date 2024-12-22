@@ -75,32 +75,51 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
 
     if (self->data != NULL && caching == false)
     {
-        if (self->spriteIndex == OVO_TALK)
+        switch (self->dataType)
         {
-            bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
-            for (int i = 0; i < dData->numStrings; i++)
+            case DIALOGUE_DATA:
             {
-                heap_caps_free(dData->strings[i]);
+                bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
+                for (int i = 0; i < dData->numStrings; i++)
+                {
+                    heap_caps_free(dData->strings[i]);
+                }
+                heap_caps_free(dData->strings);
+                if (-1 != dData->loadedIdx)
+                {
+                    freeWsg(&dData->sprite);
+                    dData->loadedIdx = -1;
+                }
+                if (dData->spriteNextLoaded)
+                {
+                    freeWsg(&dData->spriteNext);
+                    dData->spriteNextLoaded = false;
+                }
+                break;
             }
-            heap_caps_free(dData->strings);
-            if (-1 != dData->loadedIdx)
+            case GAME_OVER_DATA:
             {
-                freeWsg(&dData->sprite);
-                dData->loadedIdx = -1;
+                bb_gameOverData_t* goData = (bb_gameOverData_t*)self->data;
+                if (goData->wsgLoaded)
+                {
+                    freeWsg(&goData->fullscreenGraphic);
+                    goData->wsgLoaded = false;
+                }
+                break;
             }
-            if (dData->spriteNextLoaded)
+            case CAR_DATA:
             {
-                freeWsg(&dData->spriteNext);
-                dData->spriteNextLoaded = false;
+                bb_carData_t* cData = (bb_carData_t*)self->data;
+                if(cData->midiLoaded)
+                {
+                    unloadMidiFile(&cData->alarm);
+                    cData->midiLoaded = false;
+                }
+                break;
             }
-        }
-        else if (self->spriteIndex == BB_GAME_OVER)
-        {
-            bb_gameOverData_t* goData = (bb_gameOverData_t*)self->data;
-            if (goData->wsgLoaded)
+            default:
             {
-                freeWsg(&goData->fullscreenGraphic);
-                goData->wsgLoaded = false;
+                break;
             }
         }
         heap_caps_free(self->data);
@@ -745,6 +764,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
         if (best_i != -1)
         {
+            //attach a tow cable
+            midiPlayer_t* sfx = soundGetPlayerSfx();
+            midiPlayerReset(sfx);
+            soundPlaySfx(&self->gameData->sfxTether, 0);
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
         }
     }
@@ -957,6 +980,9 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
                     // Create a crumble
                     bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true);
+                    midiPlayer_t* sfx = soundGetPlayerSfx();
+                    midiPlayerReset(sfx);
+                    soundPlaySfx(&self->gameData->sfxEgg, 0);
                 }
                 // destroy this
                 bb_destroyEntity(self, false);
@@ -1711,6 +1737,9 @@ void bb_updateGrabbyHand(bb_entity_t* self)
 
         bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
         rData->numBugs++;
+        midiPlayer_t* sfx = soundGetPlayerSfx();
+        midiPlayerReset(sfx);
+        soundPlaySfx(&self->gameData->sfxCollection, 0);
         if (rData->numBugs % 10 == 0) // set to % 1 for quick testing the entire radar tech tree
         {
             bb_entity_t* radarPing
@@ -1745,6 +1774,11 @@ void bb_updateDoor(bb_entity_t* self)
 
 void bb_updateCarActive(bb_entity_t* self)
 {
+    if(bb_randomInt(0, 100) == 0)
+    {
+        bb_playCarAlarm(self);
+    }
+
     if (self->currentAnimationFrame == 22)
     {
         self->currentAnimationFrame = 2;
@@ -1776,7 +1810,7 @@ void bb_updateCarOpen(bb_entity_t* self)
             {
                 // spawn a swadge as a reward for completing the fight
                 bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
-                                (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
+                                (self->pos.x >> DECIMAL_BITS) + 7, (self->pos.y >> DECIMAL_BITS) - 8, true, false);
                 break;
             }
         }
@@ -2249,6 +2283,22 @@ void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
     drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
                   (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                   (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+
+    if(self->updateFunction != &bb_updateCarActive)
+    {
+        return;
+    }
+    bb_carData_t* cData = (bb_carData_t*)self->data;
+    cData->textTimer -= self->gameData->elapsedUs >> 8;
+    if((cData->textTimer / 3000) % 2 == 0)
+    {
+        char screenText[30] = "Car Alarm!";
+        if(cData->textTimer < 32737)
+        {
+            snprintf(screenText, sizeof(screenText), "Kill %d bugs!", self->gameData->carFightState);
+        }
+        drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 2);
+    }
 }
 
 void bb_drawSpit(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -2453,7 +2503,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         if (cachedEntityVal != NULL && cachedEntityVal->spriteIndex == BB_DOOR) // it's a door
         {
             if (abs(cachedEntityVal->pos.x - self->pos.x) + abs(cachedEntityVal->pos.y - self->pos.y)
-                < 8704) // eh close enough
+                < 10200) // eh close enough
             {
                 bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
                 if (foundSpot != NULL)
@@ -2497,8 +2547,10 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         }
     }
 
-    bb_carData_t* cData = (bb_carData_t*)self->data;
+    bb_playCarAlarm(self);
 
+    bb_carData_t* cData = (bb_carData_t*)self->data;
+    
     // number of bugs to fight. More risk at greater depths.
     self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 5;
 
@@ -2577,9 +2629,14 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                     bb_entity_t* bug
                         = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13),
                                           1, (spawnPos.x << 5) + 16, (spawnPos.y << 5) + 16, false, false);
+
                     // spawn a bug
                     if (bug != NULL)
                     {
+                        midiPlayer_t* sfx = soundGetPlayerSfx();
+                        midiPlayerReset(sfx);
+                        soundPlaySfx(&self->gameData->sfxEgg, 0);
+
                         success        = true;
                         bug->cacheable = false; // car fight bugs don't cache so they may dig in from off screen.
 
@@ -2665,6 +2722,9 @@ void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
     }
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
     gData->fuel += 30000;
+    midiPlayer_t* sfx = soundGetPlayerSfx();
+    midiPlayerReset(sfx);
+    soundPlaySfx(&self->gameData->sfxHealth, 0);
     if (gData->fuel > 180000) // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes. //also set in
                             // bb_createEntity()
     {
@@ -2774,6 +2834,9 @@ void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
         gData->vel                = addVec2d(gData->vel, (vec_t){sData->vel.x << 4, sData->vel.y << 4});
         gData->damageEffect       = 100;
         gData->fuel -= 10000;
+        midiPlayer_t* sfx = soundGetPlayerSfx();
+        midiPlayerReset(sfx);
+        soundPlaySfx(&self->gameData->sfxDamage, 0);
         if (gData->fuel < 0)
         {
             gData->fuel
@@ -2790,6 +2853,9 @@ void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
 
 void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
+    midiPlayer_t* sfx = soundGetPlayerSfx();
+    midiPlayerReset(sfx);
+    soundPlaySfx(&self->gameData->sfxCollection, 0);
     bb_destroyEntity(self, false);
     // give a choice of upgrades
     bb_upgradeGarbotnik(self);
@@ -3326,6 +3392,38 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
     self->gameData->screen = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
 }
 
+void bb_playCarAlarm(bb_entity_t* self)
+{
+    bb_carData_t* cData = (bb_carData_t*)self->data;
+    if (cData->midiLoaded)
+    {
+        unloadMidiFile(&cData->alarm);
+    }
+    switch(bb_randomInt(1,3))
+    {
+        case 1:
+        {
+            loadMidiFile("BigBug - Car 1.mid", &cData->alarm, true);
+            break;
+        }
+        case 2:
+        {
+            loadMidiFile("BigBug - Car 2.mid", &cData->alarm, true);
+            break;
+        }
+        default: //case 3
+        {
+            loadMidiFile("BigBug - Car 3.mid", &cData->alarm, true);
+            break;
+        }
+    }
+    cData->midiLoaded = true;
+    // Play sfx
+    midiPlayer_t* sfx = soundGetPlayerSfx();
+    midiPlayerReset(sfx);
+    soundPlaySfx(&cData->alarm, 0);
+}
+
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth)
 {
@@ -3349,8 +3447,12 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
                 // create a bug
                 bb_entity_t* bug = bb_createEntity(&gameData->entityManager, LOOPING_ANIMATION, false,
                                                    bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
+                
                 if (bug != NULL)
                 {
+                    midiPlayerReset(sfx);
+                    soundPlaySfx(&gameData->sfxEgg, 0);
+
                     if (gameData->tilemap.fgTiles[tile_i][tile_j].entity != NULL)
                     {
                         bb_entity_t* egg

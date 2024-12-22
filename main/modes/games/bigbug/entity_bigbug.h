@@ -26,7 +26,7 @@ typedef enum
     ATTACHMENT_ARM_DATA,
     BU_DATA,
     BUGGO_DATA,
-    CAR_ACTIVE_DATA,
+    CAR_DATA,
     DEATH_DUMPSTER_DATA,
     DIALOGUE_DATA,
     EGG_DATA,
@@ -195,6 +195,9 @@ typedef struct
 {
     bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
     bb_spriteDef_t reward;      // The sprite to spawn when the car trunk opens
+    midiFile_t alarm;         // The midi file to play when the car is active. Can be 1 of 3 files.
+    bool midiLoaded;          // True if the midi file is loaded, false otherwise.
+    uint16_t textTimer;        // The timer for the text to appear on screen.
 } bb_carData_t;
 
 typedef struct
@@ -396,6 +399,7 @@ void bb_openMap(bb_entity_t* self);
 void bb_upgradeRadar(bb_entity_t* self);
 void bb_triggerGameOver(bb_entity_t* self);
 void bb_upgradeGarbotnik(bb_entity_t* self);
+void bb_playCarAlarm(bb_entity_t* self);
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth);

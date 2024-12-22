@@ -106,7 +106,12 @@ struct bb_gameData_t
 
     midiFile_t sfxBump;    ///< SFX bump into things
     midiFile_t sfxHarpoon; /// SFX harpoon
-    midiFile_t sfxDirt;    /// SFT dirt crumbling
+    midiFile_t sfxDirt;    /// SFX dirt crumbling
+    midiFile_t sfxEgg;    /// SFX egg hatching
+    midiFile_t sfxDamage;    /// SFX egg hatching alternate
+    midiFile_t sfxCollection;         /// SFX collection of items
+    midiFile_t sfxTether;             /// SFX when something becomes tethered with the tow cable
+    midiFile_t sfxHealth;             /// SFX when health is increased
 
     bb_camera_t camera;
 

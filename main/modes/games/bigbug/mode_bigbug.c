@@ -877,6 +877,7 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                                 //fireTime is maxed out. Take it out of the pool.
                                 bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_FASTER_FIRE_RATE);
                             }
+                            break;
                         }
                         case GARBOTNIK_MORE_DIGGING_STRENGTH:
                         {

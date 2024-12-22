@@ -917,7 +917,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_CAR:
         {
-            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_carData_t), MALLOC_CAP_SPIRAM), CAR_ACTIVE_DATA);
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_carData_t), MALLOC_CAP_SPIRAM), CAR_DATA);
             entity->halfWidth  = 25 << DECIMAL_BITS;
             entity->halfHeight = 13 << DECIMAL_BITS;
             entity->cacheable  = true;
