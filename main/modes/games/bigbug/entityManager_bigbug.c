@@ -1073,6 +1073,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionSwadge};
             push(entity->collisions, (void*)collision);
+            break;
         }
         case BB_PANGO_AND_FRIENDS:
         {
