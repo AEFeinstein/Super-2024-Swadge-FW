@@ -2197,7 +2197,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 
     if (dData->curString >= 0 && dData->curString < dData->numStrings)
     {
-        paletteColor_t textColor = 414;//garbotnik
+        paletteColor_t textColor = c414;//garbotnik
         if(strcmp(dData->characters[dData->curString], "Pixel") == 0)
         {
             textColor = c302;
