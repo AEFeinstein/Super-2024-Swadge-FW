@@ -1774,7 +1774,7 @@ void bb_updateDoor(bb_entity_t* self)
 
 void bb_updateCarActive(bb_entity_t* self)
 {
-    if(bb_randomInt(0, 100) == 0)
+    if(bb_randomInt(0, 60) == 0)
     {
         bb_playCarAlarm(self);
     }
@@ -2238,6 +2238,14 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
                  (uint8_t)(30 - ((rData->armAngle >> DECIMAL_BITS) - 180) / 6));
         drawText(&self->gameData->tinyNumbers, c410, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 2);
+        if((rData->armAngle >> 6) % 2 == 0)
+        {
+            char screenText[30] = "Hang tight!";
+            drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 2);
+            snprintf(screenText, sizeof(screenText), "pre-flight check in progress");
+            drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 215);
+        }
+        
     }
 
     if (self->paused == false)
@@ -2293,11 +2301,9 @@ void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
     if((cData->textTimer / 3000) % 2 == 0)
     {
         char screenText[30] = "Car Alarm!";
-        if(cData->textTimer < 32737)
-        {
-            snprintf(screenText, sizeof(screenText), "Kill %d bugs!", self->gameData->carFightState);
-        }
         drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 2);
+        snprintf(screenText, sizeof(screenText), "Kill %d bugs!", self->gameData->carFightState);
+        drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 215);
     }
 }
 
@@ -2503,7 +2509,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         if (cachedEntityVal != NULL && cachedEntityVal->spriteIndex == BB_DOOR) // it's a door
         {
             if (abs(cachedEntityVal->pos.x - self->pos.x) + abs(cachedEntityVal->pos.y - self->pos.y)
-                < 10250) // eh close enough
+                < 11250) // eh close enough
             {
                 bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
                 if (foundSpot != NULL)
@@ -2524,7 +2530,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         if (entityPointer->spriteIndex == BB_DOOR) // it's a door
         {
             if (abs(entityPointer->pos.x - self->pos.x) + abs(entityPointer->pos.y - self->pos.y)
-                < 8704) // eh close enough
+                < 11250) // eh close enough
             {
                 entityPointer->cacheable             = false;
                 entityPointer->currentAnimationFrame = 1;
