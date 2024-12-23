@@ -196,7 +196,6 @@ static const char str_set[]          = "Set...";
 static const char str_pango[]        = "PANGO!";
 static const char str_game_over[]    = "Game Over";
 static const char str_well_done[]    = "Nice Clear!";
-static const char str_congrats[]     = "Congratulations!";
 static const char str_initials[]     = "Enter your initials!";
 static const char str_hbd[]          = "Happy Birthday, Evelyn!";
 static const char str_registrated[]  = "Your name registrated.";
