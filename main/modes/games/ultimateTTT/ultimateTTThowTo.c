@@ -586,7 +586,7 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
         case INSTRUCTION_NOP:
         {
             // Render the game board
-            tttDrawGame(ttt);
+            tttDrawGame(ttt, elapsedUs);
             textColor = c555;
             break;
         }
