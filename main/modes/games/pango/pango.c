@@ -977,6 +977,7 @@ void updateDead(pango_t* self, int64_t elapsedUs)
     pa_updateEntities(&(self->entityManager));
     pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
+    pa_animateTiles(&(self->wsgManager));
     drawPangoHud(&(self->font), &(self->gameData));
 
     if (self->gameData.remainingBlocks <= 0)
