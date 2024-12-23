@@ -141,7 +141,6 @@ typedef struct
     bb_entity_t* flame; // tracks the flame to update position like a child object
     uint16_t numBugs;   // number of bugs in the booster
     int32_t armAngle;   // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
-    bool pauseIllusion; // Set to true to keep the rocket in place, but keep scrolling the star field.
 } bb_rocketData_t;
 
 typedef struct
@@ -348,6 +347,7 @@ void bb_updateCarActive(bb_entity_t* self);
 void bb_updateCarOpen(bb_entity_t* self);
 void bb_updateSpit(bb_entity_t* self);
 void bb_updatePangoAndFriends(bb_entity_t* self);
+void bb_updateDiveSummary(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -370,6 +370,8 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
 void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawSpit(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHitEffect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
@@ -393,6 +395,7 @@ void bb_afterGarbotnikFuelTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
+void bb_afterLiftoffInteraction(bb_entity_t* self);
 void bb_deployBooster(bb_entity_t* self);
 void bb_openMap(bb_entity_t* self);
 void bb_upgradeRadar(bb_entity_t* self);

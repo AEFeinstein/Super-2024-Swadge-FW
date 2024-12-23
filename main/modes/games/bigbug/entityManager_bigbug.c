@@ -982,6 +982,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(entity->collisions, (void*)collision);
 
             entity->updateFunction = &bb_updateGrabbyHand;
+            entity->drawFunction = &bb_drawGrabbyHand;
             break;
         }
         case BB_RADAR_PING:
@@ -1079,6 +1080,13 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             pfSprite->originX     = 29;
             pfSprite->originY     = -240;
             entity->updateFunction = &bb_updatePangoAndFriends;
+            entity->updateFarFunction = &bb_updateFarDestroy;
+            break;
+        }
+        case BB_DIVE_SUMMARY:
+        {
+            entity->updateFunction = &bb_updateDiveSummary;
+            entity->drawFunction   = &bb_drawDiveSummary;
             entity->updateFarFunction = &bb_updateFarDestroy;
             break;
         }

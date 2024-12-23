@@ -240,7 +240,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         rData->yVel = -300;
     }
-    if(!rData->pauseIllusion)
+    if(!(self->gameData->endDayChecks & (1<<0)))//if the pause illusion bit is not set
     {
         self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
     }
@@ -264,6 +264,9 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         self->pos.y = -77136;
         rData->yVel = 0;
 
+        freeFont(&self->gameData->cgFont);
+        freeFont(&self->gameData->cgThinFont);
+
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
@@ -278,7 +281,6 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         dData->endDialogueCB = &bb_afterGarbotnikIntro;
         bb_setData(ovo, dData, DIALOGUE_DATA);
 
-        bb_loadSprite("pangoFriends", 2, 1, &self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS]);
         self->gameData->entityManager.viewEntity
         = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                           self->gameData->camera.camera.pos.x + 140, self->gameData->camera.camera.pos.y + 120, true, false);
@@ -290,16 +292,25 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         self->updateFunction = NULL;
         return;
     }
-
-    if (self->pos.y < -50000 && self->gameData->tilemap.wsgsLoaded)
+    else if(self->pos.y < -68000 && !(self->gameData->endDayChecks & (1<<0)) && !(self->gameData->endDayChecks & (1<<2)))//if not pause illusion and dive summary hasn't shown yet.
+    {
+        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0);//set the pause illusion bit.
+        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 2);//set the dive summary bit.
+        bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, BB_DIVE_SUMMARY, 1,
+                        (self->pos.x >> DECIMAL_BITS) - 105, (self->pos.y >> DECIMAL_BITS) + 150, true, true);
+        loadFont("cg_font_body.font",       &self->gameData->cgFont, false);
+        loadFont("cg_font_body_thin.font", &self->gameData->cgThinFont, false);
+    }
+    else if(self->pos.y < -52000 && !(self->gameData->endDayChecks & (1<<0)) && !(self->gameData->endDayChecks & (1<<1)))//if not pause illusion and pangos have not spoken
+    {
+        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0);//set the pause illusion bit.
+        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 1);//set the pango has spoken bit.
+        bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, BB_PANGO_AND_FRIENDS, 3,
+                        (self->pos.x >> DECIMAL_BITS) - 77, (self->pos.y >> DECIMAL_BITS) - 100, true, false);
+    }
+    else if (self->pos.y < -40000 && self->gameData->tilemap.wsgsLoaded)
     {
         bb_freeWsgs(&self->gameData->tilemap);
-    }
-    else if(self->pos.y < -60000 && !rData->pauseIllusion)
-    {
-        rData->pauseIllusion = true;
-        bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, BB_PANGO_AND_FRIENDS, 3,
-                        (self->pos.x >> DECIMAL_BITS) - 77, (self->pos.y >> DECIMAL_BITS) - 100, false, false);
     }
 }
 
@@ -477,7 +488,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     if (gData->touching && gData->harpoonCooldown < 0 && gData->numHarpoons > 0)
     {
-        gData->harpoonCooldown = self->gameData->garbotnikStat_fireTime;
+        gData->harpoonCooldown = self->gameData->GarbotnikStat_fireTime;
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
@@ -1841,6 +1852,8 @@ void bb_updateCarActive(bb_entity_t* self)
     }
     if (self->gameData->carFightState == 0) // all the arena bugs are dead
     {
+        //make it cacheable again.
+        self->cacheable = true;
         // transition to car opening
         self->currentAnimationFrame = 22;
         self->animationTimer        = self->currentAnimationFrame * self->gameFramesPerAnimationFrame;
@@ -1911,7 +1924,7 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
 {
     if(self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].originY < 0)
     {
-        self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].originY += 2;
+        self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].originY++;
     }
     else
     {
@@ -1919,34 +1932,104 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-        bb_dialogueData_t* dData = bb_createDialogueData(24, "Pixel");
+        if(self->gameData->day == 0)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(18, "Pixel");
 
-        // longest possible string     " "
-        //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
-        //  A A A A A A A A A A A A A A A A A A A");
-        bb_setCharacterLine(dData, 0, "Pixel", "huff... huff... we actually caught up to it!");
-        bb_setCharacterLine(dData, 1, "Pixel", "ugfhh, my hair is starting to hurt. Can you make this quick, Pango?");
-        bb_setCharacterLine(dData, 2, "Pixel", "Hey, it looks like it's Garbotnik after all!");
-        bb_setCharacterLine(dData, 3, "Po", "That's a cool ride, bro.");
-        bb_setCharacterLine(dData, 4, "Ovo", "What could you idiots possibly want?");
-        bb_setCharacterLine(dData, 5, "Pango", "We were fascinated with your shiny metal tube falling from space this morning.");
-        bb_setCharacterLine(dData, 6, "Po", "Yeah, we were wondering if you could give us a ride.");
-        bb_setCharacterLine(dData, 7, "Ovo", "I'm not a taxi service.");
-        bb_setCharacterLine(dData, 8, "Pixel", "We'll pay you in swadges.");
-        bb_setCharacterLine(dData, 9, "Po", "What are you doing at the landfill, anyway?");
-        bb_setCharacterLine(dData, 10, "Ovo", "None of your business!");
-        bb_setCharacterLine(dData, 11, "Ovo", "Get off my freaking back!");
-        bb_setCharacterLine(dData, 12, "Ovo", "I have a dive summary to review.");
-        bb_setCharacterLine(dData, 13, "Pixel", "What's a dive summary?");
-        bb_setCharacterLine(dData, 14, "Ovo", "It tells me how many bugs I annihilated.");
-        bb_setCharacterLine(dData, 15, "Pixel", "Hmm... That sounds like he's up to no good.");
-        bb_setCharacterLine(dData, 16, "Ovo", "Bug off!");
-        bb_setCharacterLine(dData, 17, "Ovo", "Filthy peasants.");
+            // longest possible string     " "
+            //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
+            //  A A A A A A A A A A A A A A A A A A A");
+            bb_setCharacterLine(dData, 0, "Pixel", "huff... huff... we actually caught up to it!");
+            bb_setCharacterLine(dData, 1, "Pixel", "ugfhh, my hair is starting to hurt. Can you make this quick, Pango?");
+            bb_setCharacterLine(dData, 2, "Pixel", "Hey, it looks like it's Garbotnik after all!");
+            bb_setCharacterLine(dData, 3, "Po", "That's a cool ride, bro.");
+            bb_setCharacterLine(dData, 4, "Ovo", "What could you idiots possibly want?");
+            bb_setCharacterLine(dData, 5, "Pango", "We were fascinated with your shiny metal tube falling from space this morning.");
+            bb_setCharacterLine(dData, 6, "Po", "Yeah, we were wondering if you could give us a ride.");
+            bb_setCharacterLine(dData, 7, "Ovo", "I'm not a taxi service.");
+            bb_setCharacterLine(dData, 8, "Pixel", "We'll pay you in swadges.");
+            bb_setCharacterLine(dData, 9, "Po", "What are you doing at the landfill, anyway?");
+            bb_setCharacterLine(dData, 10, "Ovo", "None of your business!");
+            bb_setCharacterLine(dData, 11, "Ovo", "Get off my freaking back!");
+            bb_setCharacterLine(dData, 12, "Ovo", "I have a dive summary to review.");
+            bb_setCharacterLine(dData, 13, "Pixel", "What's a dive summary?");
+            bb_setCharacterLine(dData, 14, "Ovo", "It tells me how many bugs I annihilated.");
+            bb_setCharacterLine(dData, 15, "Pixel", "Hmm... That sounds like he's up to no good.");
+            bb_setCharacterLine(dData, 16, "Ovo", "Bug off!");
+            bb_setCharacterLine(dData, 17, "Ovo", "Filthy peasants.");
 
-        dData->curString     = -1;
-        bb_setData(ovo, dData, DIALOGUE_DATA);
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterLiftoffInteraction;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        else if(self->gameData->day == 1)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(10, "Pixel");
 
+            bb_setCharacterLine(dData, 0, "Pixel", "Hey, Mr. Garbotnik! I really love the color of your umbrella so much!");
+            bb_setCharacterLine(dData, 1, "Ovo", "Glitch my circuits!");
+            bb_setCharacterLine(dData, 2, "Ovo", "Now I have to find a new one!");
+            bb_setCharacterLine(dData, 3, "Po", "What's your problem, dude? Pink is a great color!");
+            bb_setCharacterLine(dData, 4, "Pango", "Nobody spends their Thursdays at the dump for leisure.");
+            bb_setCharacterLine(dData, 5, "Pango", "We're going to find out what you're up to here.");
+            bb_setCharacterLine(dData, 6, "Ovo", "Oh, bug off!");
+            bb_setCharacterLine(dData, 7, "Ovo", "Don't you have anything better to do?");
+            bb_setCharacterLine(dData, 8, "Ovo", "Lousy ingrates.");
+            bb_setCharacterLine(dData, 9, "Pixel", "That man doesn't know the meaning of friendship.");
+
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterLiftoffInteraction;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        else if(self->gameData->day == 99)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(3, "Pango");
+
+            bb_setCharacterLine(dData, 0, "Pango", "You're completely unhinged.");
+            bb_setCharacterLine(dData, 1, "Ovo", "Aaaaaaaand...");
+            bb_setCharacterLine(dData, 2, "Ovo", "You're not?");
+
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterLiftoffInteraction;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        else
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(3, "Po");
+
+            bb_setCharacterLine(dData, 0, "Po", "Still looking?");
+            char pangosLine[34];
+            snprintf(pangosLine, sizeof(pangosLine), "It's been %d days at the dump.", self->gameData->day+1);
+            bb_setCharacterLine(dData, 1, "Pango", pangosLine);
+            bb_setCharacterLine(dData, 2, "Pixel", "I guess that means you're having no luck.");
+            bb_setCharacterLine(dData, 2, "Ovo", "Glitch my circuits!");
+            bb_setCharacterLine(dData, 2, "Ovo", "I. know.");
+            bb_setCharacterLine(dData, 2, "Ovo", "Bug off!");
+
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterLiftoffInteraction;
+            bb_setData(ovo, dData, DIALOGUE_DATA);    
+        }
         self->updateFunction = NULL;
+    }
+}
+
+void bb_updateDiveSummary(bb_entity_t* self)
+{
+    //decrement y pos until it is 1500 units lower than active booster y.
+    if (self->pos.y > self->gameData->entityManager.activeBooster->pos.y - 1500)
+    {
+        self->pos.y -= 16;
+    }
+    else
+    {
+        //if 'a' is pressed, set the update function to NULL.
+        if (self->gameData->btnDownState & PB_A)
+        {
+            //set the active booster's pause illusion to false.
+            self->gameData->endDayChecks = self->gameData->endDayChecks & ~(1 << 0); //set the pause illusion bit to false.
+            self->updateFunction = NULL;
+        }
     }
 }
 
@@ -2342,13 +2425,13 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
 
     char monitorText[4];
     snprintf(monitorText, sizeof(monitorText), "%02d", rData->numBugs % 100);
-    drawText(&self->gameData->tinyNumbers, c140, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
+    drawText(&self->gameData->tinyNumbersFont, c140, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 8);
     if (rData->armAngle > 2880) // that is 180 << DECIMAL_BITS
     {
         snprintf(monitorText, sizeof(monitorText), "%02d",
-                 (uint8_t)(30 - ((rData->armAngle >> DECIMAL_BITS) - 180) / 6));
-        drawText(&self->gameData->tinyNumbers, c410, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
+                 (uint8_t)(29 - ((rData->armAngle >> DECIMAL_BITS) - 180) / 6));
+        drawText(&self->gameData->tinyNumbersFont, c410, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 2);
         if((rData->armAngle >> 6) % 2 == 0)
         {
@@ -2450,6 +2533,136 @@ void bb_drawHitEffect(bb_entityManager_t* entityManager, rectangle_t* camera, bb
         (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
         (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y,
         &self->gameData->damagePalette);
+}
+
+void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    //don't draw the hand if it is fully retracted. Cuts down on overdraw a lot of the time.
+    if(self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
+    {
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0],
+                  (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                  (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    }
+}
+
+void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    //draw a notepad paper
+    drawRectFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x,
+            (self->pos.y >> DECIMAL_BITS)  - camera->pos.y,
+            (self->pos.x >> DECIMAL_BITS)  - camera->pos.x + 200,
+            (self->pos.y >> DECIMAL_BITS)  - camera->pos.y + 230, c554);
+    
+    drawRectFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 33,
+            (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 200,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 35, c335);
+    
+    for(int blueLine = 4; blueLine < 23; blueLine++)
+    {
+        drawLineFast((self->pos.x >> DECIMAL_BITS) - camera->pos.x,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + blueLine * 11,
+            (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 199,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + blueLine * 11, c335);
+    }
+
+    drawCircleFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 12,
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 50, 5, c000);
+
+    drawCircleFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 12,
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 125, 5, c000);
+    drawCircleFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 12,
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 200, 5, c000);
+    
+    drawLineFast((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 25,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
+            (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 25,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 230, c522);
+
+    drawText(&self->gameData->cgFont, c002, "Dive Summary", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+            (self->pos.y >> DECIMAL_BITS)  - camera->pos.y + 1);
+
+    //snprintf to for a date string based on self->gameData->day
+    char date[30];
+    //array of days of the week
+    char* days[] = {"Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Monday", "Tuesday", };
+    snprintf(date, sizeof(date), "%s Jan. %d, 2024", days[self->gameData->day % 7], 22+self->gameData->day);
+    
+    drawText(&self->gameData->cgThinFont, c002, date, (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
+                (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 20);
+    drawText(&self->gameData->cgFont, c500, "A+", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 100,
+            (self->pos.y >> DECIMAL_BITS)  - camera->pos.y + 140);
+    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 110,
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 150, 14, c500);
+
+    drawText(&self->gameData->cgThinFont, c002, "Booster Depth:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 33);
+    // 0b1000     booster depth flavor text      1 << 3
+    if(self->gameData->endDayChecks & (1<<3))
+    {
+        drawText(&self->gameData->cgThinFont, c500, "really far", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 126, 
+                (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 33);
+    }
+    drawText(&self->gameData->cgThinFont, c002, "Trash Pod Depth:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 44);
+    drawText(&self->gameData->cgThinFont, c002, "Bugs Killed:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 55);
+    // 0b100000   bugs killed flavor text        1 << 4
+    if(self->gameData->endDayChecks & (1<<4))
+    {
+        drawText(&self->gameData->cgThinFont, c500, "a lot", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 100, 
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 55);
+    }
+
+    drawText(&self->gameData->cgThinFont, c002, "Bugs Collected:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 66);
+    drawText(&self->gameData->cgThinFont, c002, "Places Discovered:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 77);
+    // 0b100000   places discoverd flavor text        1 << 5
+    if(self->gameData->endDayChecks & (1<<5))
+    {
+        drawText(&self->gameData->cgThinFont, c500, "IDK", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 147,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 77);
+    }
+    drawText(&self->gameData->cgThinFont, c002, "Donuts Collected:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 88);
+    // 0b1000000  donuts collected flavor text   1 << 6
+    if(self->gameData->endDayChecks & (1<<6))
+    {
+        drawText(&self->gameData->cgThinFont, c500, "I hungry", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 140,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 88);
+    }
+    drawText(&self->gameData->cgThinFont, c002, "Trash Pod upgrades:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 99); 
+    drawText(&self->gameData->cgThinFont, c002, "Time Spent:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
+    // 0b10000000 time spent flavor text         1 << 7
+    if(self->gameData->endDayChecks & (1<<7))
+    {
+        drawText(&self->gameData->cgThinFont, c500, "one day", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 110,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
+    }
+
+    if(self->gameData->day % 7 == 1 || self->gameData->day % 7 == 4 || self->gameData->day % 7 == 6)
+    {
+        drawText(&self->gameData->cgThinFont, c500, "Tomorrow is trash day!", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c002, "So expect the landfill", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c002, "to be filled in.", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        
+    }
+    else
+    {
+        drawText(&self->gameData->cgThinFont, c002, "I didn't have enough time", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176); 
+        drawText(&self->gameData->cgThinFont, c002, "to fill this out", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 187);
+        drawText(&self->gameData->cgThinFont, c002, "but I'd give myself an A+", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+    }
 }
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -2666,6 +2879,8 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     }
 
     bb_playCarAlarm(self);
+    //make an active car not cacheable so it keeps beeping from off screen.
+    self->cacheable = false;
 
     bb_carData_t* cData = (bb_carData_t*)self->data;
     
@@ -3376,8 +3591,22 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
     }
 }
 
+void bb_afterLiftoffInteraction(bb_entity_t* self)
+{
+    //set the pause illusion bit to 0.
+    self->gameData->endDayChecks = self->gameData->endDayChecks & ~(1 << 0);
+}
+
 void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in orbit.
 {
+    self->gameData->endDayChecks = 0;
+    self->gameData->day++;
+    //dive summary flavor text gets filled in randomly for the day.
+    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 3);
+    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 4);
+    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 5);
+    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 6);
+    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 7);
     bb_destroyEntity(self->gameData->entityManager.viewEntity, false);
     self->gameData->entityManager.viewEntity = self->gameData->entityManager.activeBooster;
 

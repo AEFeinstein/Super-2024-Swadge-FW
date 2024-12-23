@@ -641,7 +641,7 @@ static void bb_DrawScene_Radar_Upgrade(void)
     drawCircleQuadrants(238, 198, 40, true, false, false, false, c132);
     drawCircleQuadrants(236, 196, 40, true, false, false, false, c141);
 
-    drawText(&bigbug->gameData.sevenSegment, c141, "bugnology", 10, 40);
+    drawText(&bigbug->gameData.sevenSegmentFont, c141, "bugnology", 10, 40);
     if (bigbug->gameData.radar.choices[0] == BIGBUG_REFILL_AMMO)
     {
         drawText(&bigbug->gameData.font, c301, "No radar upgrades available...", 10, 120);
@@ -863,36 +863,31 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
             }
             else if (evt.button == PB_A)
             {
-                if (bigbug->gameData.entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+                switch (bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius])
                 {
-                    bb_garbotnikData_t* gData
-                        = (bb_garbotnikData_t*)bigbug->gameData.entityManager.playerEntity->data;
-                    switch (bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius])
+                    case GARBOTNIK_FASTER_FIRE_RATE:
                     {
-                        case GARBOTNIK_FASTER_FIRE_RATE:
+                        bigbug->gameData.GarbotnikStat_fireTime = bigbug->gameData.GarbotnikStat_fireTime > 75 ? bigbug->gameData.GarbotnikStat_fireTime - 50 : 25;
+                        if(bigbug->gameData.GarbotnikStat_fireTime == 25)
                         {
-                            bigbug->gameData.GarbotnikStat_fireTime = bigbug->gameData.GarbotnikStat_fireTime > 75 ? bigbug->gameData.GarbotnikStat_fireTime - 50 : 25;
-                            if(bigbug->gameData.GarbotnikStat_fireTime == 25)
-                            {
-                                //fireTime is maxed out. Take it out of the pool.
-                                bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_FASTER_FIRE_RATE);
-                            }
-                            break;
+                            //fireTime is maxed out. Take it out of the pool.
+                            bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_FASTER_FIRE_RATE);
                         }
-                        case GARBOTNIK_MORE_DIGGING_STRENGTH:
-                        {
-                            bigbug->gameData.GarbotnikStat_diggingStrength++;
-                            break;
-                        }
-                        case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
-                        {
-                            bigbug->gameData.GarbotnikStat_fuelConsumptionRate--;
-                            break;
-                        }
-                        default:
-                        {
-                            break;
-                        }
+                        break;
+                    }
+                    case GARBOTNIK_MORE_DIGGING_STRENGTH:
+                    {
+                        bigbug->gameData.GarbotnikStat_diggingStrength++;
+                        break;
+                    }
+                    case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
+                    {
+                        bigbug->gameData.GarbotnikStat_fuelConsumptionRate--;
+                        break;
+                    }
+                    default:
+                    {
+                        break;
                     }
                 }
                 bigbug->gameData.garbotnikUpgrade.upgrades

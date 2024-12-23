@@ -132,8 +132,10 @@ struct bb_gameData_t
     list_t unsupported; // a list of tiles that flood-fill crumble.
 
     font_t font;
-    font_t tinyNumbers;
-    font_t sevenSegment;
+    font_t tinyNumbersFont;
+    font_t sevenSegmentFont;
+    font_t cgFont;
+    font_t cgThinFont;
 
     bb_entity_t* menuBug; // Featured entity walking through the main menu.
 
@@ -147,6 +149,17 @@ struct bb_gameData_t
     uint8_t carFightState; ///< 0 means no active car fight, greater than 0 means number of kills remaining
 
     wsgPalette_t damagePalette; ///< More vibrant reddish colors to use when something takes damage.
+
+    uint8_t day; //starts at 0. Increments every day.
+    uint8_t endDayChecks;   // Things to do at the end of the day bitpacked into this
+                            // 0b1       Pause Illusion. Set to keep the rocket in place, but keep scrolling the star field. 1 << 0
+                            // 0b10       pango and friends have spoken  1 << 1
+                            // 0b100      dive summary has been viewed   1 << 2
+                            // 0b1000     booster depth flavor text      1 << 3
+                            // 0b10000    bugs killed flavor text        1 << 4
+                            // 0b100000   places visited flavor text     1 << 5
+                            // 0b1000000  donuts collected flavor text   1 << 6
+                            // 0b10000000 time spent flavor text         1 << 7
 
     int16_t GarbotnikStat_fireTime;        // The time between harpoon shots.
     uint8_t GarbotnikStat_diggingStrength; // Starts at 1. Can increment indefinetly.

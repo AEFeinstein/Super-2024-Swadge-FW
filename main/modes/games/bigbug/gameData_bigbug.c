@@ -50,8 +50,8 @@ void bb_initializeGameData(bb_gameData_t* gameData)
 
     // Load font
     loadFont("ibm_vga8.font", &gameData->font, false);
-    loadFont("tiny_numbers.font", &gameData->tinyNumbers, false);
-    loadFont("seven_segment.font", &gameData->sevenSegment, false);
+    loadFont("tiny_numbers.font", &gameData->tinyNumbersFont, false);
+    loadFont("seven_segment.font", &gameData->sevenSegmentFont, false);
 
     memset(&gameData->pleaseCheck, 0, sizeof(list_t));
     memset(&gameData->unsupported, 0, sizeof(list_t));
@@ -104,6 +104,10 @@ void bb_freeGameData(bb_gameData_t* gameData)
     unloadMidiFile(&gameData->sfxTether);
     unloadMidiFile(&gameData->sfxHealth);
     freeFont(&gameData->font);
+    freeFont(&gameData->tinyNumbersFont);
+    freeFont(&gameData->sevenSegmentFont);
+    freeFont(&gameData->cgFont);
+    freeFont(&gameData->cgThinFont);
     while (gameData->unsupported.first)
     {
         heap_caps_free(shift(&gameData->unsupported));
