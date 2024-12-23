@@ -347,7 +347,7 @@ void updateCrabdozer(paEntity_t* self)
                     self->entityManager->aggroEnemies--;
                     self->baseSpeed -= 2;
                     self->stateTimer = pa_enemySetAggroStateTimer(self);
-                    self->gameData->leds[0].r = 0xFF;
+                    self->gameData->leds[ledRemap[0]].r = 0xFF;
                 }
             }
 
@@ -1225,7 +1225,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
         case PA_ENTITY_BONUS_ITEM:
         {
             pa_scorePoints(self->gameData, other->scoreValue);
-            self->gameData->leds[0].g = 0xFF;
+            self->gameData->leds[ledRemap[0]].g = 0xFF;
 
             soundPlaySfx(&self->soundManager->sndCoin, MIDI_SFX);
 
@@ -1525,8 +1525,8 @@ void pa_updateBreakBlock(paEntity_t* self)
 
                     pa_scorePoints(self->gameData, pointsScored);
                     soundPlaySfx(&(self->soundManager->sndCoin), BZR_STEREO);
-                    self->gameData->leds[0].r = 0xFF;
-                    self->gameData->leds[0].g = 0xFF;
+                    self->gameData->leds[4].r = 0xFF;
+                    self->gameData->leds[4].g = 0xFF;
 
                     self->entityManager->gameData->remainingEnemies--;
 

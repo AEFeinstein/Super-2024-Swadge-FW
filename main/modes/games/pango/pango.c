@@ -515,7 +515,7 @@ void updateGame(pango_t* self, int64_t elapsedUs)
                                ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
                                ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
             self->gameData.firstBonusItemDispensed = true;
-            self->gameData.leds[0].b = 0xFF;
+            self->gameData.leds[ledRemap[0]].b = 0xFF;
         }
 
         if (!self->gameData.secondBonusItemDispensed
@@ -525,7 +525,7 @@ void updateGame(pango_t* self, int64_t elapsedUs)
                                ((1 + esp_random() % 15) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
                                ((1 + esp_random() % 13) << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
             self->gameData.secondBonusItemDispensed = true;
-            self->gameData.leds[0].b = 0xFF;
+            self->gameData.leds[ledRemap[0]].b = 0xFF;
         }
 
         pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
@@ -1065,8 +1065,8 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
     self->gameData.frameCount++;
 
      if(self->gameData.frameCount % 30 == 0){
-        self->gameData.leds[0].g = (esp_random() % 2) ? 0xD0 : 0;
-        self->gameData.leds[0].b = (esp_random() % 2) ? 0xD0 : 0;
+        self->gameData.leds[ledRemap[0]].g = (esp_random() % 2) ? 0xD0 : 0;
+        self->gameData.leds[ledRemap[0]].b = (esp_random() % 2) ? 0xD0 : 0;
     }
 
     if (self->gameData.frameCount > 100)

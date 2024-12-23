@@ -63,9 +63,9 @@ void pa_scorePoints(paGameData_t* gameData, uint16_t points)
     {
         gameData->lives++;
         gameData->extraLifeScore += 10000; //(gameData->extraLifeScore + 2000);
-        gameData->leds[0].r = 0xFF;
-        gameData->leds[0].g = 0xFF;
-        gameData->leds[0].b = 0xFF;
+        gameData->leds[ledRemap[0]].r = 0xFF;
+        gameData->leds[ledRemap[0]].g = 0xFF;
+        gameData->leds[ledRemap[0]].b = 0xFF;
         soundPlaySfx(&(gameData->soundManager->snd1up), MIDI_SFX);
     }
 }
@@ -209,37 +209,40 @@ void pa_updateLedsInGame(paGameData_t* gameData){
     {
         for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            if (gameData->leds[i].r > 0xF)
-            {
-                gameData->leds[i].r -= 0x10;
+            uint8_t mappedLed = ledRemap[i];
+            uint8_t nextLed = ledRemap[(i + 1) % CONFIG_NUM_LEDS];
 
-                if((gameData->leds[i].r >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
-                    gameData->leds[i+1].r = 0xF0;
+            if (gameData->leds[mappedLed].r > 0xF)
+            {
+                gameData->leds[mappedLed].r -= 0x10;
+
+                if((gameData->leds[mappedLed].r >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
+                    gameData->leds[nextLed].r = 0xF0;
                 }
             } else {
-                gameData->leds[i].r = 0;
+                gameData->leds[mappedLed].r = 0;
             }
 
-            if (gameData->leds[i].g > 0xF)
+            if (gameData->leds[mappedLed].g > 0xF)
             {
-                gameData->leds[i].g -= 0x10;
+                gameData->leds[mappedLed].g -= 0x10;
 
-                if((gameData->leds[i].g >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
-                    gameData->leds[i+1].g = 0xF0;
+                if((gameData->leds[mappedLed].g >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
+                    gameData->leds[nextLed].g = 0xF0;
                 }
             } else {
-                gameData->leds[i].g = 0;
+                gameData->leds[mappedLed].g = 0;
             }
 
-            if (gameData->leds[i].b > 0xF)
+            if (gameData->leds[mappedLed].b > 0xF)
             {
-                gameData->leds[i].b -= 0x10;
+                gameData->leds[mappedLed].b -= 0x10;
 
-                if((gameData->leds[i].b >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
-                gameData->leds[i+1].b = 0xF0;
+                if((gameData->leds[mappedLed].b >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
+                gameData->leds[nextLed].b = 0xF0;
                 }
             } else {
-                gameData->leds[i].b = 0;
+                gameData->leds[mappedLed].b = 0;
             }
         }
     }
