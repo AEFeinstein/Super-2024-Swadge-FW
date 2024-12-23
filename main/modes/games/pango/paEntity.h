@@ -196,5 +196,6 @@ uint16_t pa_correctPlayerFacingDirection(int16_t btnState, uint16_t currentFacin
 void pa_enemyDecideDirection(paEntity_t* self, bool doAgression);
 void pa_updateBonusItem(paEntity_t* self);
 uint16_t pa_getBonusItemValue(int16_t elapsedTime);
+void pa_attractPlayerCollisionHandler(paEntity_t* self, paEntity_t* other);
 
 #endif

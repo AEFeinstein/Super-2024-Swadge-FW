@@ -166,6 +166,7 @@ void updateDemoScoring(pango_t* self, int64_t elapsedUs);
 void changeStateAttractMode(pango_t* self);
 void updateAttractMode(pango_t* self, int64_t elapsedUs);
 void updateBtnStateAttractMode(pango_t* self);
+uint16_t getAttractPlayerRandomDirection();
 
 //==============================================================================
 // Variables
@@ -1685,40 +1686,49 @@ void pa_advanceToNextLevelOrGameClear(pango_t* self)
 
 void updateBtnStateAttractMode(pango_t* self)
 {
+    uint8_t t = pa_getTile(&(self->tilemap), self->entityManager.playerEntity->targetTileX, self->entityManager.playerEntity->targetTileY);
+    if(t == PA_TILE_BLOCK || t == PA_TILE_SPAWN_BLOCK_0)
+    {
+        self->gameData.btnState |= PB_A;
+    }
+    else
+    { 
+        self->gameData.btnState &= ~PB_A;
+    }
+    
     if (!(self->gameData.frameCount % 16))
     {
-        if ((esp_random() % 10) > 6)
+        if ((t && t <= PA_TILE_WALL_7) || (esp_random() % 10) > 6)
         {
             self->gameData.btnState &= ~15;
             self->gameData.btnState
-                |= (((esp_random() % 2) << (esp_random() % 2)) + ((esp_random() % 2) << 2 << (esp_random() % 2)));
-        }
-
-        if ((esp_random() % 10) > 8)
-        {
-            self->gameData.btnState |= PB_A;
-        }
-        else
-        {
-            self->gameData.btnState &= ~PB_A;
+                |= getAttractPlayerRandomDirection(); //(((esp_random() % 2) << (esp_random() % 2)) + ((esp_random() % 2) << 2 << (esp_random() % 2)));
         }
     }
 }
 
-/*
-uint16_t getRandomDirection(){
+uint16_t getAttractPlayerRandomDirection(){
     switch(esp_random() % 8){
         case 0:
+        default:
             return PA_DIRECTION_NORTH;
         case 1:
             return PA_DIRECTION_SOUTH;
         case 2:
             return PA_DIRECTION_WEST;
         case 3:
-            return PA_DIRECTION_EAST
+            return PA_DIRECTION_NORTHWEST;
+        case 4:
+            return PA_DIRECTION_SOUTHWEST;
+        case 5:
+            return PA_DIRECTION_EAST;
+        case 6:
+            return PA_DIRECTION_NORTHEAST;
+        case 7:
+            return PA_DIRECTION_SOUTHEAST;
     }
 }
-*/
+
 
 void changeStateDemoControls(pango_t* self)
 {
@@ -1974,6 +1984,7 @@ void changeStateAttractMode(pango_t* self)
     self->entityManager.playerEntity
         = pa_createPlayer(&(self->entityManager), (9 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
                           (7 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
+    self->entityManager.playerEntity->collisionHandler = &pa_attractPlayerCollisionHandler;
 
     self->menuState     = 0;
     self->frameTimer    = 0;
