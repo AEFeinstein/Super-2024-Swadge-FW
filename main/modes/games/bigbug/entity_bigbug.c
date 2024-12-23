@@ -2602,7 +2602,7 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
     char* days[] = {
         "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Monday", "Tuesday",
     };
-    snprintf(date, sizeof(date), "%s Jan. %d, 2024", days[self->gameData->day % 7], 22 + self->gameData->day);
+    snprintf(date, sizeof(date), "%s Jan. %d, 2025", days[self->gameData->day % 7], 22 + self->gameData->day);
 
     drawText(&self->gameData->cgThinFont, c002, date, (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
              (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 20);
