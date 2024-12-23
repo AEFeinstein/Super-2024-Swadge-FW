@@ -22,9 +22,11 @@
 //==============================================================================
 struct bb_midgroundTileInfo_t // parent class
 {
-    uint8_t x;     // an index in the tilemap
-    uint8_t y;     // an index in the tilemap
-    bool z;        // true for foreground false for midground
+    uint16_t pos;  // bitpacked x,y,z
+                   // x is bits 0 through 6
+                   // y is bits 7 through 14
+                   // z is bit 15
+                   // x and y are indices in the tilemap. z is true for foreground false for midground.
     int8_t health; // 0 is air, > 0 is garbage. Use an int8_t incase damage decrements lower than zero, then we can snap
                    // to zero.
     uint16_t gCost;
@@ -34,9 +36,11 @@ struct bb_midgroundTileInfo_t // parent class
 struct bb_foregroundTileInfo_t // child class
 {
     // must be exactly same as bb_midgroundTileInfo_t
-    uint8_t x;     // an index in the tilemap
-    uint8_t y;     // an index in the tilemap
-    bool z;        // true for foreground false for midground
+    uint16_t pos;  // bitpacked x,y,z
+                   // x is bits 0 through 6
+                   // y is bits 7 through 14
+                   // z is bit 15
+                   // x and y are indices in the tilemap. z is true for foreground false for midground.
     int8_t health; // 0 is air, > 0 is garbage. Use an int8_t incase damage decrements lower than zero, then we can snap
                    // to zero.
     uint16_t gCost;

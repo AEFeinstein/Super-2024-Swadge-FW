@@ -267,10 +267,10 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         freeFont(&self->gameData->cgFont);
         freeFont(&self->gameData->cgThinFont);
 
-        bb_setupMidi();
-        unloadMidiFile(&self->gameData->bgm);
-        loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &self->gameData->bgm, true);
-        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
+        // bb_setupMidi();
+        // unloadMidiFile(&self->gameData->bgm);
+        // loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &self->gameData->bgm, true);
+        // globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
