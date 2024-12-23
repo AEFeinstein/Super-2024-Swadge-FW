@@ -75,8 +75,8 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                     {
                         case 51:
                         {
-                            
-                            tilemap->fgTiles[i][j].embed = bb_randomInt(0,1) == 0 ? BB_CAR_WITH_DONUT_EMBED : BB_CAR_WITH_SWADGE_EMBED;
+                            tilemap->fgTiles[i][j].embed
+                                = bb_randomInt(0, 1) == 0 ? BB_CAR_WITH_DONUT_EMBED : BB_CAR_WITH_SWADGE_EMBED;
                             break;
                         }
                         case 102:

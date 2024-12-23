@@ -867,11 +867,14 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                 {
                     case GARBOTNIK_FASTER_FIRE_RATE:
                     {
-                        bigbug->gameData.GarbotnikStat_fireTime = bigbug->gameData.GarbotnikStat_fireTime > 75 ? bigbug->gameData.GarbotnikStat_fireTime - 50 : 25;
-                        if(bigbug->gameData.GarbotnikStat_fireTime == 25)
+                        bigbug->gameData.GarbotnikStat_fireTime = bigbug->gameData.GarbotnikStat_fireTime > 75
+                                                                      ? bigbug->gameData.GarbotnikStat_fireTime - 50
+                                                                      : 25;
+                        if (bigbug->gameData.GarbotnikStat_fireTime == 25)
                         {
-                            //fireTime is maxed out. Take it out of the pool.
-                            bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_FASTER_FIRE_RATE);
+                            // fireTime is maxed out. Take it out of the pool.
+                            bigbug->gameData.garbotnikUpgrade.upgrades
+                                = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_FASTER_FIRE_RATE);
                         }
                         break;
                     }

@@ -606,7 +606,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             gData->numHarpoons        = 250;
             gData->fuel = 1000 * 60 * 3; // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes.
                                          // //also set in bb_onCollisionFuel()
-            gData->yaw.x    = -1;        // So he starts off facing left away from the tutorial egg.
+            gData->yaw.x = -1;           // So he starts off facing left away from the tutorial egg.
 
             memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
@@ -982,7 +982,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(entity->collisions, (void*)collision);
 
             entity->updateFunction = &bb_updateGrabbyHand;
-            entity->drawFunction = &bb_drawGrabbyHand;
+            entity->drawFunction   = &bb_drawGrabbyHand;
             break;
         }
         case BB_RADAR_PING:
@@ -1076,17 +1076,17 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_PANGO_AND_FRIENDS:
         {
-            bb_sprite_t* pfSprite = bb_loadSprite("pangoFriends", 2, 1, &entityManager->sprites[BB_PANGO_AND_FRIENDS]);
-            pfSprite->originX     = 29;
-            pfSprite->originY     = -240;
+            bb_sprite_t* pfSprite  = bb_loadSprite("pangoFriends", 2, 1, &entityManager->sprites[BB_PANGO_AND_FRIENDS]);
+            pfSprite->originX      = 29;
+            pfSprite->originY      = -240;
             entity->updateFunction = &bb_updatePangoAndFriends;
             entity->updateFarFunction = &bb_updateFarDestroy;
             break;
         }
         case BB_DIVE_SUMMARY:
         {
-            entity->updateFunction = &bb_updateDiveSummary;
-            entity->drawFunction   = &bb_drawDiveSummary;
+            entity->updateFunction    = &bb_updateDiveSummary;
+            entity->drawFunction      = &bb_drawDiveSummary;
             entity->updateFarFunction = &bb_updateFarDestroy;
             break;
         }

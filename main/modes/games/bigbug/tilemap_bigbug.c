@@ -286,13 +286,14 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case DONUT_EMBED:
                         {
-                            bb_entity_t* donut = bb_createEntity(entityManager, NO_ANIMATION, false, BB_DONUT, 1,
-                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, true, false);
+                            bb_entity_t* donut
+                                = bb_createEntity(entityManager, NO_ANIMATION, false, BB_DONUT, 1,
+                                                  i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, true, false);
                             if (donut != NULL)
                             {
-                                //zero out the velocity that was intended for coming out of the car trunk.
+                                // zero out the velocity that was intended for coming out of the car trunk.
                                 ((bb_physicsData_t*)donut->data)->vel = (vec_t){0};
-                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                                tilemap->fgTiles[i][j].embed          = NOTHING_EMBED;
                             }
                             break;
                         }

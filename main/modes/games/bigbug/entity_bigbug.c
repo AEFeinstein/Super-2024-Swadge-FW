@@ -110,7 +110,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             case CAR_DATA:
             {
                 bb_carData_t* cData = (bb_carData_t*)self->data;
-                if(cData->midiLoaded)
+                if (cData->midiLoaded)
                 {
                     unloadMidiFile(&cData->alarm);
                     cData->midiLoaded = false;
@@ -240,14 +240,14 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         rData->yVel = -300;
     }
-    if(!(self->gameData->endDayChecks & (1<<0)))//if the pause illusion bit is not set
+    if (!(self->gameData->endDayChecks & (1 << 0))) // if the pause illusion bit is not set
     {
         self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
     }
     else
     {
         self->gameData->camera.velocity.y = (rData->yVel * self->gameData->elapsedUs) >> 17;
-        //iterate all entities
+        // iterate all entities
         for (int i = 0; i < MAX_ENTITIES; i++)
         {
             bb_entity_t* curEntity = &(self->gameData->entityManager.entities[i]);
@@ -276,7 +276,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
         bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
-        
+
         bb_setCharacterLine(dData, 0, "Ovo", "Gaaaash dangit.");
         bb_setCharacterLine(dData, 1, "Ovo", "DARN IT! DARN IT! DARN IT! DARN IT!");
         bb_setCharacterLine(dData, 2, "Ovo", "GLITCH MY CIRCUITS!");
@@ -286,9 +286,9 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         dData->endDialogueCB = &bb_afterGarbotnikIntro;
         bb_setData(ovo, dData, DIALOGUE_DATA);
 
-        self->gameData->entityManager.viewEntity
-        = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
-                          self->gameData->camera.camera.pos.x + 140, self->gameData->camera.camera.pos.y + 120, true, false);
+        self->gameData->entityManager.viewEntity = bb_createEntity(
+            &(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
+            self->gameData->camera.camera.pos.x + 140, self->gameData->camera.camera.pos.y + 120, true, false);
 
         // Create a crumble animation
         bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 3,
@@ -297,19 +297,21 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         self->updateFunction = NULL;
         return;
     }
-    else if(self->pos.y < -68000 && !(self->gameData->endDayChecks & (1<<0)) && !(self->gameData->endDayChecks & (1<<2)))//if not pause illusion and dive summary hasn't shown yet.
+    else if (self->pos.y < -68000 && !(self->gameData->endDayChecks & (1 << 0))
+             && !(self->gameData->endDayChecks & (1 << 2))) // if not pause illusion and dive summary hasn't shown yet.
     {
-        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0);//set the pause illusion bit.
-        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 2);//set the dive summary bit.
+        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0); // set the pause illusion bit.
+        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 2); // set the dive summary bit.
         bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, BB_DIVE_SUMMARY, 1,
                         (self->pos.x >> DECIMAL_BITS) - 105, (self->pos.y >> DECIMAL_BITS) + 150, true, true);
-        loadFont("cg_font_body.font",       &self->gameData->cgFont, false);
+        loadFont("cg_font_body.font", &self->gameData->cgFont, false);
         loadFont("cg_font_body_thin.font", &self->gameData->cgThinFont, false);
     }
-    else if(self->pos.y < -52000 && !(self->gameData->endDayChecks & (1<<0)) && !(self->gameData->endDayChecks & (1<<1)))//if not pause illusion and pangos have not spoken
+    else if (self->pos.y < -52000 && !(self->gameData->endDayChecks & (1 << 0))
+             && !(self->gameData->endDayChecks & (1 << 1))) // if not pause illusion and pangos have not spoken
     {
-        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0);//set the pause illusion bit.
-        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 1);//set the pango has spoken bit.
+        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0); // set the pause illusion bit.
+        self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 1); // set the pango has spoken bit.
         bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, BB_PANGO_AND_FRIENDS, 3,
                         (self->pos.x >> DECIMAL_BITS) - 77, (self->pos.y >> DECIMAL_BITS) - 100, true, false);
     }
@@ -445,7 +447,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // Fuel decrements with time. Right shifting by 10 is fairly close to
     // converting microseconds to milliseconds without requiring division.
-    gData->fuel -= (((self->gameData->elapsedUs >> 10) * self->gameData->GarbotnikStat_fuelConsumptionRate)>>2);
+    gData->fuel -= (((self->gameData->elapsedUs >> 10) * self->gameData->GarbotnikStat_fuelConsumptionRate) >> 2);
     if (gData->fuel < 0)
     {
         bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
@@ -486,7 +488,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     gData->fire = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
 
     gData->harpoonCooldown -= self->gameData->elapsedUs >> 11;
-    if(gData->harpoonCooldown < -250)
+    if (gData->harpoonCooldown < -250)
     {
         gData->harpoonCooldown = -250;
     }
@@ -793,8 +795,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                 }
                 if (!isTowed)
                 {
-                    uint16_t dist = (uint16_t)sqMagVec2d((vec_t){(curEntity->pos.x - self->pos.x) >> 5,
-                                                                 (curEntity->pos.y - self->pos.y) >> 5});
+                    uint16_t dist = (uint16_t)sqMagVec2d(
+                        (vec_t){(curEntity->pos.x - self->pos.x) >> 5, (curEntity->pos.y - self->pos.y) >> 5});
                     // if the bug is within 70px of garbotnik
                     if (dist < 1225 && dist < best_dist)
                     {
@@ -807,7 +809,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
         if (best_i != -1)
         {
-            //attach a tow cable
+            // attach a tow cable
             midiPlayer_t* sfx = soundGetPlayerSfx();
             midiPlayerReset(sfx);
             soundPlaySfx(&self->gameData->sfxTether, 0);
@@ -817,7 +819,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos, &hitInfo);
-    if(hitInfo.hit == false)
+    if (hitInfo.hit == false)
     {
         return;
     }
@@ -833,8 +835,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ///////////////////////
 
         // Update the dirt by decrementing it.
-        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= self->gameData->GarbotnikStat_diggingStrength;
-        if(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health < 0)
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health
+            -= self->gameData->GarbotnikStat_diggingStrength;
+        if (self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health < 0)
         {
             self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
         }
@@ -842,7 +845,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         bb_midgroundTileInfo_t* tile
             = (bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
 
-        if (tile->health == 0 || tile->health == 1 || (tile->health < 5 && tile->health + self->gameData->GarbotnikStat_diggingStrength >= 5))
+        if (tile->health == 0 || tile->health == 1
+            || (tile->health < 5 && tile->health + self->gameData->GarbotnikStat_diggingStrength >= 5))
         {
             // Create a crumble
             bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health);
@@ -1056,7 +1060,7 @@ void bb_updateFarEggleaves(bb_entity_t* self)
 
 void bb_updateFarDestroy(bb_entity_t* self)
 {
-    if(self->spriteIndex == BB_PANGO_AND_FRIENDS)
+    if (self->spriteIndex == BB_PANGO_AND_FRIENDS)
     {
         freeWsg(&self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].frames[0]);
         freeWsg(&self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].frames[1]);
@@ -1603,21 +1607,21 @@ void bb_updateCharacterTalk(bb_entity_t* self)
                     dData->loadedIdx = -1;
                 }
 
-                if(strcmp(dData->characters[dData->curString], "Ovo") == 0)
+                if (strcmp(dData->characters[dData->curString], "Ovo") == 0)
                 {
-                    dData->loadedIdx         = bb_randomInt(0, 6);
+                    dData->loadedIdx = bb_randomInt(0, 6);
                 }
-                else if(strcmp(dData->characters[dData->curString], "Pixel") == 0)
+                else if (strcmp(dData->characters[dData->curString], "Pixel") == 0)
                 {
-                    dData->loadedIdx        = bb_randomInt(7, 8);
+                    dData->loadedIdx = bb_randomInt(7, 8);
                 }
-                else if(strcmp(dData->characters[dData->curString], "Pango") == 0)
+                else if (strcmp(dData->characters[dData->curString], "Pango") == 0)
                 {
-                    dData->loadedIdx        = bb_randomInt(9, 10);
+                    dData->loadedIdx = bb_randomInt(9, 10);
                 }
-                else if(strcmp(dData->characters[dData->curString], "Po") == 0)
+                else if (strcmp(dData->characters[dData->curString], "Po") == 0)
                 {
-                    dData->loadedIdx        = bb_randomInt(11, 13);
+                    dData->loadedIdx = bb_randomInt(11, 13);
                 }
 
                 char wsg_name[strlen("ovo-talk-") + 9]; // 6 extra characters makes room for up to a 2 digit number +
@@ -1698,7 +1702,7 @@ void bb_updateGameOver(bb_entity_t* self)
             // increment booster animation frame to look destroyed
             self->gameData->entityManager.activeBooster->currentAnimationFrame++;
             bb_heavyFallingData_t* hfData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
-            hfData->yVel = ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->yVel;
+            hfData->yVel                  = ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->yVel;
             bb_setData(self->gameData->entityManager.activeBooster, hfData, HEAVY_FALLING_DATA);
             self->gameData->entityManager.activeBooster->drawFunction = NULL;
             // this booster's grabby hand will destroy itself next time in it's own update loop.
@@ -1845,7 +1849,7 @@ void bb_updateDoor(bb_entity_t* self)
 
 void bb_updateCarActive(bb_entity_t* self)
 {
-    if(bb_randomInt(0, 60) == 0)
+    if (bb_randomInt(0, 60) == 0)
     {
         bb_playCarAlarm(self);
     }
@@ -1857,7 +1861,7 @@ void bb_updateCarActive(bb_entity_t* self)
     }
     if (self->gameData->carFightState == 0) // all the arena bugs are dead
     {
-        //make it cacheable again.
+        // make it cacheable again.
         self->cacheable = true;
         // transition to car opening
         self->currentAnimationFrame = 22;
@@ -1870,7 +1874,7 @@ void bb_updateCarOpen(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
-        switch(((bb_carData_t*)self->data)->reward)
+        switch (((bb_carData_t*)self->data)->reward)
         {
             case BB_DONUT:
             {
@@ -1927,29 +1931,31 @@ void bb_updateSpit(bb_entity_t* self)
 
 void bb_updatePangoAndFriends(bb_entity_t* self)
 {
-    if(self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].originY < 0)
+    if (self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].originY < 0)
     {
         self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].originY++;
     }
     else
     {
         bb_entity_t* ovo
-        = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                              self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-        if(self->gameData->day == 0)
+        if (self->gameData->day == 0)
         {
             bb_dialogueData_t* dData = bb_createDialogueData(18, "Pixel");
 
             // longest possible string     " "
-            //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
-            //  A A A A A A A A A A A A A A A A A A A");
+            //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
+            //  A A A A A A A A A A A A A A A A A A A A A A A");
             bb_setCharacterLine(dData, 0, "Pixel", "huff... huff... we actually caught up to it!");
-            bb_setCharacterLine(dData, 1, "Pixel", "ugfhh, my hair is starting to hurt. Can you make this quick, Pango?");
+            bb_setCharacterLine(dData, 1, "Pixel",
+                                "ugfhh, my hair is starting to hurt. Can you make this quick, Pango?");
             bb_setCharacterLine(dData, 2, "Pixel", "Hey, it looks like it's Garbotnik after all!");
             bb_setCharacterLine(dData, 3, "Po", "That's a cool ride, bro.");
             bb_setCharacterLine(dData, 4, "Ovo", "What could you idiots possibly want?");
-            bb_setCharacterLine(dData, 5, "Pango", "We were fascinated with your shiny metal tube falling from space this morning.");
+            bb_setCharacterLine(dData, 5, "Pango",
+                                "We were fascinated with your shiny metal tube falling from space this morning.");
             bb_setCharacterLine(dData, 6, "Po", "Yeah, we were wondering if you could give us a ride.");
             bb_setCharacterLine(dData, 7, "Ovo", "I'm not a taxi service.");
             bb_setCharacterLine(dData, 8, "Pixel", "We'll pay you in swadges.");
@@ -1967,11 +1973,12 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
             dData->endDialogueCB = &bb_afterLiftoffInteraction;
             bb_setData(ovo, dData, DIALOGUE_DATA);
         }
-        else if(self->gameData->day == 1)
+        else if (self->gameData->day == 1)
         {
             bb_dialogueData_t* dData = bb_createDialogueData(10, "Pixel");
 
-            bb_setCharacterLine(dData, 0, "Pixel", "Hey, Mr. Garbotnik! I really love the color of your umbrella so much!");
+            bb_setCharacterLine(dData, 0, "Pixel",
+                                "Hey, Mr. Garbotnik! I really love the color of your umbrella so much!");
             bb_setCharacterLine(dData, 1, "Ovo", "Glitch my circuits!");
             bb_setCharacterLine(dData, 2, "Ovo", "Now I have to find a new one!");
             bb_setCharacterLine(dData, 3, "Po", "What's your problem, dude? Pink is a great color!");
@@ -1986,7 +1993,7 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
             dData->endDialogueCB = &bb_afterLiftoffInteraction;
             bb_setData(ovo, dData, DIALOGUE_DATA);
         }
-        else if(self->gameData->day == 99)
+        else if (self->gameData->day == 99)
         {
             bb_dialogueData_t* dData = bb_createDialogueData(3, "Pango");
 
@@ -2004,7 +2011,7 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
 
             bb_setCharacterLine(dData, 0, "Po", "Still looking?");
             char pangosLine[34];
-            snprintf(pangosLine, sizeof(pangosLine), "It's been %d days at the dump.", self->gameData->day+1);
+            snprintf(pangosLine, sizeof(pangosLine), "It's been %d days at the dump.", self->gameData->day + 1);
             bb_setCharacterLine(dData, 1, "Pango", pangosLine);
             bb_setCharacterLine(dData, 2, "Pixel", "I guess that means you're having no luck.");
             bb_setCharacterLine(dData, 2, "Ovo", "Glitch my circuits!");
@@ -2013,7 +2020,7 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
 
             dData->curString     = -1;
             dData->endDialogueCB = &bb_afterLiftoffInteraction;
-            bb_setData(ovo, dData, DIALOGUE_DATA);    
+            bb_setData(ovo, dData, DIALOGUE_DATA);
         }
         self->updateFunction = NULL;
     }
@@ -2021,18 +2028,19 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
 
 void bb_updateDiveSummary(bb_entity_t* self)
 {
-    //decrement y pos until it is 1500 units lower than active booster y.
+    // decrement y pos until it is 1500 units lower than active booster y.
     if (self->pos.y > self->gameData->entityManager.activeBooster->pos.y - 1500)
     {
         self->pos.y -= 16;
     }
     else
     {
-        //if 'a' is pressed, set the update function to NULL.
+        // if 'a' is pressed, set the update function to NULL.
         if (self->gameData->btnDownState & PB_A)
         {
-            //set the active booster's pause illusion to false.
-            self->gameData->endDayChecks = self->gameData->endDayChecks & ~(1 << 0); //set the pause illusion bit to false.
+            // set the active booster's pause illusion to false.
+            self->gameData->endDayChecks
+                = self->gameData->endDayChecks & ~(1 << 0); // set the pause illusion bit to false.
             self->updateFunction = NULL;
         }
     }
@@ -2273,7 +2281,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
 
-    //if it's loaded
+    // if it's loaded
     if (-1 != dData->loadedIdx)
     {
         drawWsgSimple(&dData->sprite, 0, -dData->offsetY);
@@ -2285,16 +2293,16 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 
     if (dData->curString >= 0 && dData->curString < dData->numStrings)
     {
-        paletteColor_t textColor = c414;//garbotnik
-        if(strcmp(dData->characters[dData->curString], "Pixel") == 0)
+        paletteColor_t textColor = c414; // garbotnik
+        if (strcmp(dData->characters[dData->curString], "Pixel") == 0)
         {
             textColor = c302;
         }
-        else if(strcmp(dData->characters[dData->curString], "Pango") == 0)
+        else if (strcmp(dData->characters[dData->curString], "Pango") == 0)
         {
             textColor = c551;
         }
-        else if(strcmp(dData->characters[dData->curString], "Po") == 0)
+        else if (strcmp(dData->characters[dData->curString], "Po") == 0)
         {
             textColor = c400;
         }
@@ -2431,21 +2439,22 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
     char monitorText[4];
     snprintf(monitorText, sizeof(monitorText), "%02d", rData->numBugs % 100);
     drawText(&self->gameData->tinyNumbersFont, c140, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
-                (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 8);
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 8);
     if (rData->armAngle > 2880) // that is 180 << DECIMAL_BITS
     {
         snprintf(monitorText, sizeof(monitorText), "%02d",
                  (uint8_t)(29 - ((rData->armAngle >> DECIMAL_BITS) - 180) / 6));
         drawText(&self->gameData->tinyNumbersFont, c410, monitorText, (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 4,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 2);
-        if((rData->armAngle >> 6) % 2 == 0)
+        if ((rData->armAngle >> 6) % 2 == 0)
         {
             char screenText[30] = "Hang tight!";
-            drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 2);
+            drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1),
+                     2);
             snprintf(screenText, sizeof(screenText), "pre-flight check in progress");
-            drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 215);
+            drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1),
+                     215);
         }
-        
     }
 
     if (self->paused == false)
@@ -2492,18 +2501,19 @@ void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
                   (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                   (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
 
-    if(self->updateFunction != &bb_updateCarActive)
+    if (self->updateFunction != &bb_updateCarActive)
     {
         return;
     }
     bb_carData_t* cData = (bb_carData_t*)self->data;
     cData->textTimer -= self->gameData->elapsedUs >> 8;
-    if((cData->textTimer / 3000) % 2 == 0)
+    if ((cData->textTimer / 3000) % 2 == 0)
     {
         char screenText[30] = "Car Alarm!";
         drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 2);
         snprintf(screenText, sizeof(screenText), "Kill %d bugs!", self->gameData->carFightState);
-        drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 215);
+        drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1),
+                 215);
     }
 }
 
@@ -2542,131 +2552,138 @@ void bb_drawHitEffect(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 
 void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    //don't draw the hand if it is fully retracted. Cuts down on overdraw a lot of the time.
-    if(self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
+    // don't draw the hand if it is fully retracted. Cuts down on overdraw a lot of the time.
+    if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
     {
         drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0],
-                  (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-                  (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+                      (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                      (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
+                          - camera->pos.y);
     }
 }
 
 void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    //draw a notepad paper
-    drawRectFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x,
-            (self->pos.y >> DECIMAL_BITS)  - camera->pos.y,
-            (self->pos.x >> DECIMAL_BITS)  - camera->pos.x + 200,
-            (self->pos.y >> DECIMAL_BITS)  - camera->pos.y + 230, c554);
-    
-    drawRectFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 33,
-            (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 200,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 35, c335);
-    
-    for(int blueLine = 4; blueLine < 23; blueLine++)
+    // draw a notepad paper
+    drawRectFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
+                   (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 200,
+                   (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 230, c554);
+
+    drawRectFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 33,
+                   (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 200,
+                   (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 35, c335);
+
+    for (int blueLine = 4; blueLine < 23; blueLine++)
     {
         drawLineFast((self->pos.x >> DECIMAL_BITS) - camera->pos.x,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + blueLine * 11,
-            (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 199,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + blueLine * 11, c335);
+                     (self->pos.y >> DECIMAL_BITS) - camera->pos.y + blueLine * 11,
+                     (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 199,
+                     (self->pos.y >> DECIMAL_BITS) - camera->pos.y + blueLine * 11, c335);
     }
 
     drawCircleFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 12,
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 50, 5, c000);
+                     (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 50, 5, c000);
 
     drawCircleFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 12,
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 125, 5, c000);
+                     (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 125, 5, c000);
     drawCircleFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 12,
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 200, 5, c000);
-    
-    drawLineFast((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 25,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
-            (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 25,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 230, c522);
+                     (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 200, 5, c000);
+
+    drawLineFast((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 25, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 25,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 230, c522);
 
     drawText(&self->gameData->cgFont, c002, "Dive Summary", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-            (self->pos.y >> DECIMAL_BITS)  - camera->pos.y + 1);
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 1);
 
-    //snprintf to for a date string based on self->gameData->day
+    // snprintf to for a date string based on self->gameData->day
     char date[30];
-    //array of days of the week
-    char* days[] = {"Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Monday", "Tuesday", };
-    snprintf(date, sizeof(date), "%s Jan. %d, 2024", days[self->gameData->day % 7], 22+self->gameData->day);
-    
-    drawText(&self->gameData->cgThinFont, c002, date, (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
-                (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 20);
+    // array of days of the week
+    char* days[] = {
+        "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Monday", "Tuesday",
+    };
+    snprintf(date, sizeof(date), "%s Jan. %d, 2024", days[self->gameData->day % 7], 22 + self->gameData->day);
+
+    drawText(&self->gameData->cgThinFont, c002, date, (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 20);
     drawText(&self->gameData->cgFont, c500, "A+", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 100,
-            (self->pos.y >> DECIMAL_BITS)  - camera->pos.y + 140);
-    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 110,
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 150, 14, c500);
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 140);
+    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x + 110, (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 150,
+               14, c500);
 
-    drawText(&self->gameData->cgThinFont, c002, "Booster Depth:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 33);
+    drawText(&self->gameData->cgThinFont, c002, "Booster Depth:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 33);
     // 0b1000     booster depth flavor text      1 << 3
-    if(self->gameData->endDayChecks & (1<<3))
+    if (self->gameData->endDayChecks & (1 << 3))
     {
-        drawText(&self->gameData->cgThinFont, c500, "really far", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 126, 
-                (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 33);
+        drawText(&self->gameData->cgThinFont, c500, "really far", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 126,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 33);
     }
-    drawText(&self->gameData->cgThinFont, c002, "Trash Pod Depth:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 44);
-    drawText(&self->gameData->cgThinFont, c002, "Bugs Killed:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 55);
+    drawText(&self->gameData->cgThinFont, c002, "Trash Pod Depth:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 44);
+    drawText(&self->gameData->cgThinFont, c002, "Bugs Killed:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 55);
     // 0b100000   bugs killed flavor text        1 << 4
-    if(self->gameData->endDayChecks & (1<<4))
+    if (self->gameData->endDayChecks & (1 << 4))
     {
-        drawText(&self->gameData->cgThinFont, c500, "a lot", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 100, 
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 55);
+        drawText(&self->gameData->cgThinFont, c500, "a lot", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 100,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 55);
     }
 
-    drawText(&self->gameData->cgThinFont, c002, "Bugs Collected:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30, 
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 66);
-    drawText(&self->gameData->cgThinFont, c002, "Places Discovered:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 77);
+    drawText(&self->gameData->cgThinFont, c002, "Bugs Collected:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 66);
+    drawText(&self->gameData->cgThinFont, c002,
+             "Places Discovered:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 77);
     // 0b100000   places discoverd flavor text        1 << 5
-    if(self->gameData->endDayChecks & (1<<5))
+    if (self->gameData->endDayChecks & (1 << 5))
     {
         drawText(&self->gameData->cgThinFont, c500, "IDK", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 147,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 77);
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 77);
     }
     drawText(&self->gameData->cgThinFont, c002, "Donuts Collected:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 88);
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 88);
     // 0b1000000  donuts collected flavor text   1 << 6
-    if(self->gameData->endDayChecks & (1<<6))
+    if (self->gameData->endDayChecks & (1 << 6))
     {
         drawText(&self->gameData->cgThinFont, c500, "I hungry", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 140,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 88);
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 88);
     }
-    drawText(&self->gameData->cgThinFont, c002, "Trash Pod upgrades:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 99); 
+    drawText(&self->gameData->cgThinFont, c002,
+             "Trash Pod upgrades:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 99);
     drawText(&self->gameData->cgThinFont, c002, "Time Spent:", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-        (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
+             (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
     // 0b10000000 time spent flavor text         1 << 7
-    if(self->gameData->endDayChecks & (1<<7))
+    if (self->gameData->endDayChecks & (1 << 7))
     {
         drawText(&self->gameData->cgThinFont, c500, "one day", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 110,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
     }
 
-    if(self->gameData->day % 7 == 1 || self->gameData->day % 7 == 4 || self->gameData->day % 7 == 6)
+    if (self->gameData->day % 7 == 1 || self->gameData->day % 7 == 4 || self->gameData->day % 7 == 6)
     {
-        drawText(&self->gameData->cgThinFont, c500, "Tomorrow is trash day!", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
-        drawText(&self->gameData->cgThinFont, c002, "So expect the landfill", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
-        drawText(&self->gameData->cgThinFont, c002, "to be filled in.", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
-        
+        drawText(&self->gameData->cgThinFont, c500, "Tomorrow is trash day!",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c002, "So expect the landfill",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c002, "to be filled in.",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
     }
     else
     {
-        drawText(&self->gameData->cgThinFont, c002, "I didn't have enough time", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176); 
-        drawText(&self->gameData->cgThinFont, c002, "to fill this out", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 187);
-        drawText(&self->gameData->cgThinFont, c002, "but I'd give myself an A+", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-            (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        drawText(&self->gameData->cgThinFont, c002, "I didn't have enough time",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c002, "to fill this out",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 187);
+        drawText(&self->gameData->cgThinFont, c002, "but I'd give myself an A+",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
     }
 }
 
@@ -2817,7 +2834,7 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
 void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_onCollisionSimple(self, other, hitInfo);
-    if(hitInfo->normal.y == 1)
+    if (hitInfo->normal.y == 1)
     {
         bb_hitInfo_t localHitInfo = {0};
         bb_collisionCheck(&self->gameData->tilemap, other, NULL, &localHitInfo);
@@ -2884,11 +2901,11 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     }
 
     bb_playCarAlarm(self);
-    //make an active car not cacheable so it keeps beeping from off screen.
+    // make an active car not cacheable so it keeps beeping from off screen.
     self->cacheable = false;
 
     bb_carData_t* cData = (bb_carData_t*)self->data;
-    
+
     // number of bugs to fight. More risk at greater depths.
     self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 5;
 
@@ -3048,14 +3065,14 @@ void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 
 void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    if(other->dataType == PHYSICS_DATA)
+    if (other->dataType == PHYSICS_DATA)
     {
-        //Turn dying garbotnik back into playable garbotnik.
-        vec_t vel = ((bb_physicsData_t*)other->data)->vel;
+        // Turn dying garbotnik back into playable garbotnik.
+        vec_t vel                 = ((bb_physicsData_t*)other->data)->vel;
         bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
-        gData->vel = vel;
-        other->updateFunction = &bb_updateGarbotnikFlying;
-        other->drawFunction = &bb_drawGarbotnikFlying;
+        gData->vel                = vel;
+        other->updateFunction     = &bb_updateGarbotnikFlying;
+        other->drawFunction       = &bb_drawGarbotnikFlying;
         bb_setData(other, gData, GARBOTNIK_DATA);
     }
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
@@ -3064,7 +3081,7 @@ void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
     midiPlayerReset(sfx);
     soundPlaySfx(&self->gameData->sfxHealth, 0);
     if (gData->fuel > 180000) // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes. //also set in
-                            // bb_createEntity()
+                              // bb_createEntity()
     {
         gData->fuel = 180000;
     }
@@ -3213,13 +3230,13 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
     //  A A A A A A A A A A A A A A A A A A A");
     bb_setCharacterLine(dData, 0, "Ovo", "Holy bug farts!"); //
     bb_setCharacterLine(
-        dData, 1, "Ovo", 
+        dData, 1, "Ovo",
         "After I marketed the chilidog car freshener at MAGFest, Garbotnik Industries' stock went up by 6,969%!");
-    bb_setCharacterLine(dData, 2, "Ovo", 
+    bb_setCharacterLine(dData, 2, "Ovo",
                         "I'm going to use my time machine to steal the next big-selling trinket from the future now.");
     bb_setCharacterLine(dData, 3, "Ovo", "That will floor all my stakeholders and make me UNDEFINED money!");
     bb_setCharacterLine(
-        dData, 4, "Ovo", 
+        dData, 4, "Ovo",
         "With that kind of cash, I can recruit 200 professional bassoon players to the MAGFest Community Orchestra.");
     bb_setCharacterLine(dData, 5, "Ovo", "I'm so hyped to turn on my time machine for the first time!");
     bb_setCharacterLine(dData, 6, "Ovo", "Everything's in order.");
@@ -3234,13 +3251,14 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
     bb_setCharacterLine(dData, 15, "Ovo", "Can I get an F in the chat?");
     bb_setCharacterLine(dData, 16, "Ovo", "...");
     bb_setCharacterLine(dData, 17, "Ovo", "The chaos orb is three times denser than a black hole.");
-    bb_setCharacterLine(dData, 18, "Ovo", 
+    bb_setCharacterLine(dData, 18, "Ovo",
                         "Well if Garbotnik Sanitation Industries took it to the landfill, then it is definitely at the "
                         "VERY BOTTOM of the dump.");
     bb_setCharacterLine(dData, 19, "Ovo", "Not a problem.");
     bb_setCharacterLine(dData, 20, "Ovo", "We have the technology to retrieve it.");
     bb_setCharacterLine(
-        dData, 21, "Ovo", "Safety first. Activate the cloning machine in case I should perish on that nuclear wasteland.");
+        dData, 21, "Ovo",
+        "Safety first. Activate the cloning machine in case I should perish on that nuclear wasteland.");
     bb_setCharacterLine(dData, 22, "Ovo", "fine.");
     bb_setCharacterLine(dData, 23, "Ovo", "Stupid safety rules. YOLO!");
 
@@ -3296,7 +3314,8 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         }
         case 1:
         {
-            bb_setCharacterLine(dData, 0, "Ovo", "Tonight's special: Beetle Bruschetta with a side of centipede salad!");
+            bb_setCharacterLine(dData, 0, "Ovo",
+                                "Tonight's special: Beetle Bruschetta with a side of centipede salad!");
             break;
         }
         case 2:
@@ -3356,14 +3375,14 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         }
         case 13:
         {
-            bb_setCharacterLine(dData, 0, "Ovo", 
+            bb_setCharacterLine(dData, 0, "Ovo",
                                 "I must remember to research what dastardly technology this dump used to ensure new "
                                 "arrivals wind up at the bottom...");
             break;
         }
         case 14:
         {
-            bb_setCharacterLine(dData, 0, "Ovo", 
+            bb_setCharacterLine(dData, 0, "Ovo",
                                 "I promise, this is perfectly sanitary, the Chaos Orb has antimicrobial properties.");
             break;
         }
@@ -3385,7 +3404,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         case 18:
         {
             bb_setCharacterLine(
-                dData, 0, "Ovo", 
+                dData, 0, "Ovo",
                 "If you ask me what I have a degree in one more time, I'm asking the Internet to draw fanart of you.");
             break;
         }
@@ -3406,7 +3425,8 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         }
         case 22:
         {
-            bb_setCharacterLine(dData, 0, "Ovo", "If they beat this game fast enough, does that mean I too have to strip?");
+            bb_setCharacterLine(dData, 0, "Ovo",
+                                "If they beat this game fast enough, does that mean I too have to strip?");
             break;
         }
         case 23:
@@ -3459,7 +3479,8 @@ void bb_startGarbotnikCloningTalk(bb_entity_t* self)
     bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo"); // 29
 
     bb_setCharacterLine(dData, 0, "Ovo", "I'm feeling fresh, baby!"); // V longest possible string here
-    bb_setCharacterLine(dData, 1, "Ovo", "It was a good move taking those omega3 fish oils before backing up my brain.");
+    bb_setCharacterLine(dData, 1, "Ovo",
+                        "It was a good move taking those omega3 fish oils before backing up my brain.");
 
     dData->curString = -1;
 
@@ -3478,7 +3499,8 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
 
     // Max dialogue string roughly:                                                                         here----V
     bb_setCharacterLine(dData, 0, "Ovo", "Oooey Gooey! Look at that egg sack!");
-    bb_setCharacterLine(dData, 1, "Ovo", "I can use the directional buttons on my swadge to fly over there and check it out.");
+    bb_setCharacterLine(dData, 1, "Ovo",
+                        "I can use the directional buttons on my swadge to fly over there and check it out.");
 
     dData->curString     = -1;
     dData->endDialogueCB = &bb_afterGarbotnikEggTutorialTalk;
@@ -3500,11 +3522,11 @@ void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
     // longest possible string     " "
     //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
     //  A A A A A A A A A A A A A A A A A A A");
-    bb_setCharacterLine(dData, 0, "Ovo", 
+    bb_setCharacterLine(dData, 0, "Ovo",
                         "When I travel away from the booster, I've got to keep an eye on my fuel level at all times.");
-    bb_setCharacterLine(dData, 1, "Ovo", 
+    bb_setCharacterLine(dData, 1, "Ovo",
                         "Sit back atop the booster before all the lights around the outside of the swadge turn off.");
-    bb_setCharacterLine(dData, 2, "Ovo", 
+    bb_setCharacterLine(dData, 2, "Ovo",
                         "safety first. Once back on the rocket, it takes a stupid long time for the "
                         "launch sequence to initiate.");
     bb_setCharacterLine(dData, 3, "Ovo", "Too many regulations on equipment these days.");
@@ -3598,7 +3620,7 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 
 void bb_afterLiftoffInteraction(bb_entity_t* self)
 {
-    //set the pause illusion bit to 0.
+    // set the pause illusion bit to 0.
     self->gameData->endDayChecks = self->gameData->endDayChecks & ~(1 << 0);
 }
 
@@ -3606,12 +3628,12 @@ void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in
 {
     self->gameData->endDayChecks = 0;
     self->gameData->day++;
-    //dive summary flavor text gets filled in randomly for the day.
-    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 3);
-    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 4);
-    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 5);
-    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 6);
-    self->gameData->endDayChecks += bb_randomInt(0,1) * (1 << 7);
+    // dive summary flavor text gets filled in randomly for the day.
+    self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 3);
+    self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 4);
+    self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 5);
+    self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 6);
+    self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 7);
     bb_destroyEntity(self->gameData->entityManager.viewEntity, false);
     self->gameData->entityManager.viewEntity = self->gameData->entityManager.activeBooster;
 
@@ -3673,7 +3695,7 @@ void bb_upgradeRadar(bb_entity_t* self)
 
 void bb_triggerGameOver(bb_entity_t* self)
 {
-    //music is home 2, this function was already triggered. early return.
+    // music is home 2, this function was already triggered. early return.
     if (self->gameData->bgm.length == 9715)
     {
         return;
@@ -3701,7 +3723,7 @@ void bb_triggerGameOver(bb_entity_t* self)
 void bb_upgradeGarbotnik(bb_entity_t* self)
 {
     self->gameData->radar.playerPingRadius      = 0; // just using this as a selection idx to save some space.
-    self->gameData->garbotnikUpgrade.choices[0] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH;    // default choice
+    self->gameData->garbotnikUpgrade.choices[0] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH; // default choice
     uint8_t zeroCount                           = 0; // zero count represent the number of upgrades not yet maxed out.
     for (int i = 0; i < 3; i++)
     {
@@ -3736,7 +3758,7 @@ void bb_playCarAlarm(bb_entity_t* self)
     {
         unloadMidiFile(&cData->alarm);
     }
-    switch(bb_randomInt(1,3))
+    switch (bb_randomInt(1, 3))
     {
         case 1:
         {
@@ -3748,7 +3770,7 @@ void bb_playCarAlarm(bb_entity_t* self)
             loadMidiFile("BigBug - Car 2.mid", &cData->alarm, true);
             break;
         }
-        default: //case 3
+        default: // case 3
         {
             loadMidiFile("BigBug - Car 3.mid", &cData->alarm, true);
             break;
@@ -3784,7 +3806,7 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
                 // create a bug
                 bb_entity_t* bug = bb_createEntity(&gameData->entityManager, LOOPING_ANIMATION, false,
                                                    bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
-                
+
                 if (bug != NULL)
                 {
                     midiPlayerReset(sfx);
@@ -3830,24 +3852,24 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
-    if(strcmp(firstCharacter, "Ovo") == 0)
+    if (strcmp(firstCharacter, "Ovo") == 0)
     {
-        dData->loadedIdx         = bb_randomInt(0, 6);
+        dData->loadedIdx = bb_randomInt(0, 6);
     }
-    else if(strcmp(firstCharacter, "Pixel") == 0)
+    else if (strcmp(firstCharacter, "Pixel") == 0)
     {
-        dData->loadedIdx        = bb_randomInt(7, 8);
+        dData->loadedIdx = bb_randomInt(7, 8);
     }
-    else if(strcmp(firstCharacter, "Pango") == 0)
+    else if (strcmp(firstCharacter, "Pango") == 0)
     {
-        dData->loadedIdx        = bb_randomInt(9, 10);
+        dData->loadedIdx = bb_randomInt(9, 10);
     }
-    else if(strcmp(firstCharacter, "Po") == 0)
+    else if (strcmp(firstCharacter, "Po") == 0)
     {
-        dData->loadedIdx        = bb_randomInt(11, 13);
+        dData->loadedIdx = bb_randomInt(11, 13);
     }
-    //Add dr. Ovo indices
-    //FINISH ME!!!
+    // Add dr. Ovo indices
+    // FINISH ME!!!
 
     char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                            // terminator ('\0')
@@ -3856,14 +3878,14 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     loadWsgInplace("dialogue_next.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd); // TODO free
     dData->spriteNextLoaded = true;
 
-    dData->strings = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
+    dData->strings    = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     dData->characters = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     return dData;
 }
 
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* character, const char* str)
 {
-    dData->strings[index] = heap_caps_calloc(strlen(str) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
+    dData->strings[index]    = heap_caps_calloc(strlen(str) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     dData->characters[index] = heap_caps_calloc(strlen(character) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(dData->strings[index], str);
     strcpy(dData->characters[index], character);
@@ -3878,4 +3900,3 @@ void bb_freeDialogueData(bb_dialogueData_t* dData)
     heap_caps_free(dData->strings); // Free the array of string pointers
     heap_caps_free(dData);          // Free the struct itself
 }
-
