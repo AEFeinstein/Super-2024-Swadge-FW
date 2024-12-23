@@ -81,10 +81,7 @@ typedef struct
     int16_t landingPhrases[29];
 
     int8_t damageEffect;     // decrements over time. Render damagePalette color swap if > 0.
-    int16_t harpoonCooldown; // decrements over time. Fires if < 0 and resets to fireTime.
-    int16_t fireTime;
-    uint8_t diggingStrength; // Starts at 1. Can increment indefinetly.
-    uint8_t fuelConsumptionRate; // Starts at 4. Can decrement to 0.
+    int16_t harpoonCooldown; // decrements over time. Fires if < 0 and resets to GameData's GarbotnikStat_fireTime.
 } bb_garbotnikData_t;
 
 typedef struct

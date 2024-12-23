@@ -429,7 +429,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // Fuel decrements with time. Right shifting by 10 is fairly close to
     // converting microseconds to milliseconds without requiring division.
-    gData->fuel -= (((self->gameData->elapsedUs >> 10) * gData->fuelConsumptionRate)>>2);
+    gData->fuel -= (((self->gameData->elapsedUs >> 10) * self->gameData->GarbotnikStat_fuelConsumptionRate)>>2);
     if (gData->fuel < 0)
     {
         bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
@@ -477,7 +477,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     if (gData->touching && gData->harpoonCooldown < 0 && gData->numHarpoons > 0)
     {
-        gData->harpoonCooldown = gData->fireTime;
+        gData->harpoonCooldown = self->gameData->garbotnikStat_fireTime;
         // Create a harpoon
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
@@ -817,7 +817,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ///////////////////////
 
         // Update the dirt by decrementing it.
-        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= gData->diggingStrength;
+        self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health -= self->gameData->GarbotnikStat_diggingStrength;
         if(self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health < 0)
         {
             self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
@@ -826,7 +826,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         bb_midgroundTileInfo_t* tile
             = (bb_midgroundTileInfo_t*)&self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j];
 
-        if (tile->health == 0 || tile->health == 1 || (tile->health < 5 && tile->health + gData->diggingStrength >= 5))
+        if (tile->health == 0 || tile->health == 1 || (tile->health < 5 && tile->health + self->gameData->GarbotnikStat_diggingStrength >= 5))
         {
             // Create a crumble
             bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health);

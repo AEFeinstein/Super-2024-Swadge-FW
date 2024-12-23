@@ -607,9 +607,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             gData->fuel = 1000 * 60 * 3; // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes.
                                          // //also set in bb_onCollisionFuel()
             gData->yaw.x    = -1;        // So he starts off facing left away from the tutorial egg.
-            gData->fireTime = 200;
-            gData->diggingStrength = 1;
-            gData->fuelConsumptionRate = 4;
+
             memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
             // create sequential numbers of all phrase indices

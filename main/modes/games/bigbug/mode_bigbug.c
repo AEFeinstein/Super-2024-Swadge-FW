@@ -871,8 +871,8 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                     {
                         case GARBOTNIK_FASTER_FIRE_RATE:
                         {
-                            gData->fireTime = gData->fireTime > 75 ? gData->fireTime - 50 : 25;
-                            if(gData->fireTime == 25)
+                            bigbug->gameData.GarbotnikStat_fireTime = bigbug->gameData.GarbotnikStat_fireTime > 75 ? bigbug->gameData.GarbotnikStat_fireTime - 50 : 25;
+                            if(bigbug->gameData.GarbotnikStat_fireTime == 25)
                             {
                                 //fireTime is maxed out. Take it out of the pool.
                                 bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_FASTER_FIRE_RATE);
@@ -881,12 +881,12 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                         }
                         case GARBOTNIK_MORE_DIGGING_STRENGTH:
                         {
-                            gData->diggingStrength++;
+                            bigbug->gameData.GarbotnikStat_diggingStrength++;
                             break;
                         }
                         case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
                         {
-                            gData->fuelConsumptionRate--;
+                            bigbug->gameData.GarbotnikStat_fuelConsumptionRate--;
                             break;
                         }
                         default:

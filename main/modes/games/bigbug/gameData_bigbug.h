@@ -147,6 +147,10 @@ struct bb_gameData_t
     uint8_t carFightState; ///< 0 means no active car fight, greater than 0 means number of kills remaining
 
     wsgPalette_t damagePalette; ///< More vibrant reddish colors to use when something takes damage.
+
+    int16_t GarbotnikStat_fireTime;        // The time between harpoon shots.
+    uint8_t GarbotnikStat_diggingStrength; // Starts at 1. Can increment indefinetly.
+    uint8_t GarbotnikStat_fuelConsumptionRate; // Starts at 4. Can decrement to 0.
 };
 
 //==============================================================================
