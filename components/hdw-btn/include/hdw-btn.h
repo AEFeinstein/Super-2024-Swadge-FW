@@ -118,6 +118,7 @@ typedef struct
     uint16_t state;     //!< A bitmask for the state of all buttons
     buttonBit_t button; //!< The button that caused this event
     bool down;          //!< True if the button was pressed, false if it was released
+    uint32_t time;      ///!< The time of this event, in us since boot
 } buttonEvt_t;
 
 void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads);

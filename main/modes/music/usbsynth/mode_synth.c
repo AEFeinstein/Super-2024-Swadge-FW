@@ -3628,6 +3628,7 @@ static void handleButtonTimer(int64_t* timer, int64_t interval, int64_t elapsedU
         evt.state  = sd->lastButtonState;
         evt.down   = true;
         evt.button = button;
+        evt.time   = 0;
         synthHandleButton(evt);
 
         *timer += interval;
