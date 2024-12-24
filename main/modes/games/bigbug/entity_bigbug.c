@@ -335,7 +335,9 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     self->pos.y = hitInfo.pos.y - self->halfHeight;
     if (hfData->yVel < 50)
     {
-        bb_setupMidi();
+        bb_setupMidi();//stops the music
+        
+        bb_loadSprite("rocket", 42, 1, &self->gameData->entityManager.sprites[ROCKET_ANIM]);
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
@@ -415,6 +417,7 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
         bb_entity_t* arm
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
+        ((bb_rocketData_t*)self->data)->armAngle = 2880; //That is 180 down position.
         ((bb_attachmentArmData_t*)arm->data)->rocket = self;
 
         bb_entity_t* grabbyHand
@@ -1870,6 +1873,11 @@ void bb_updateCarOpen(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
+        //free most previous car frames.
+        for (int i = 1; i < 59; i++)
+        {
+            freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[i]);
+        }
         switch(((bb_carData_t*)self->data)->reward)
         {
             case BB_DONUT:
@@ -2844,6 +2852,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                 bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
                 if (foundSpot != NULL)
                 {
+                    bb_loadSprite("door", 2, 1, &self->gameData->entityManager.sprites[BB_DOOR]);
                     // like a memcopy
                     *foundSpot = *cachedEntityVal;
                     self->gameData->entityManager.activeEntities++;
