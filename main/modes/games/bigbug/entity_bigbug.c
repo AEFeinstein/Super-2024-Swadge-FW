@@ -3688,6 +3688,14 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
     loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
     globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
+    self->gameData->isPaused = false;
+
+    if(self->gameData->day)
+    {
+        return;
+    }
+
+    self->gameData->isPaused = false;
     // find the tutorial egg on screen
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
