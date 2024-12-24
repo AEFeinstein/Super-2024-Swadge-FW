@@ -45,6 +45,7 @@ typedef enum
     ROCKET_DATA,
     STUCK_HARPOON_DATA,
     SPIT_DATA,
+    FOOD_CART_DATA,
 } bb_data_type_t;
 
 typedef enum
@@ -202,6 +203,15 @@ typedef struct
     vec_t vel;
     uint16_t lifetime;
 } bb_spitData_t;
+
+typedef struct
+{
+    bb_entity_t* partner; // the other piece of the food cart
+    bool isCached;        // tracking this to only unload sprites when both pieces are cached.
+    bb_spriteDef_t reward;      // The sprite to spawn when the food cart is destroyed.
+    int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the zero animation frame because the cart background gets not graphical effect.
+} bb_foodCartData_t;
+
 
 typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
 
@@ -372,7 +382,8 @@ void bb_drawSpit(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 void bb_drawHitEffect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
-// void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
@@ -384,6 +395,7 @@ void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
 void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);

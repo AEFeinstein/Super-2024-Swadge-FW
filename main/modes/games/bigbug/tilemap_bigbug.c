@@ -274,25 +274,59 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             }
                             break;
                         }
-                        case SWADGE_EMBED:
+                        case BB_FOOD_CART_WITH_DONUT_EMBED:
                         {
-                            if (bb_createEntity(entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
-                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, true, false)
-                                != NULL)
+                            //background piece, also with collision on the umbrella
+                            bb_entity_t* foodCartBG = bb_createEntity(entityManager, NO_ANIMATION, true, BB_FOOD_CART, 1,
+                                                               i * TILE_SIZE + HALF_TILE + 1, j * TILE_SIZE + HALF_TILE - 58,
+                                                               false, false);
+                            if (foodCartBG != NULL)
                             {
-                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                                //main piece
+                                bb_entity_t* foodCart = bb_createEntity(entityManager, NO_ANIMATION, true, BB_FOOD_CART, 1,
+                                                               i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE - 13,
+                                                               false, false);
+                                if (foodCart != NULL)
+                                {
+                                    ((bb_foodCartData_t*)foodCart->data)->partner = foodCartBG;
+                                    ((bb_foodCartData_t*)foodCartBG->data)->partner = foodCart;
+                                                               
+                                    ((bb_foodCartData_t*)foodCart->data)->reward = BB_DONUT;
+                                    foodCart->currentAnimationFrame   = 11;//Also used as health for the food cart. It takes 10 hits to destroy.
+                                    tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                                }
+                                else
+                                {
+                                    bb_destroyEntity(foodCartBG, false);
+                                }
                             }
                             break;
                         }
-                        case DONUT_EMBED:
+                        case BB_FOOD_CART_WITH_SWADGE_EMBED:
                         {
-                            bb_entity_t* donut = bb_createEntity(entityManager, NO_ANIMATION, false, BB_DONUT, 1,
-                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, true, false);
-                            if (donut != NULL)
+                            //background piece, also with collision on the umbrella
+                            bb_entity_t* foodCartBG = bb_createEntity(entityManager, NO_ANIMATION, true, BB_FOOD_CART, 1,
+                                                               i * TILE_SIZE + HALF_TILE + 1, j * TILE_SIZE + HALF_TILE - 58,
+                                                               false, false);
+                            if (foodCartBG != NULL)
                             {
-                                //zero out the velocity that was intended for coming out of the car trunk.
-                                ((bb_physicsData_t*)donut->data)->vel = (vec_t){0};
-                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                                //main piece
+                                bb_entity_t* foodCart = bb_createEntity(entityManager, NO_ANIMATION, true, BB_FOOD_CART, 1,
+                                                               i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE - 13,
+                                                               false, false);
+                                if (foodCart != NULL)
+                                {
+                                    ((bb_foodCartData_t*)foodCart->data)->partner = foodCartBG;
+                                    ((bb_foodCartData_t*)foodCartBG->data)->partner = foodCart;
+                                                               
+                                    ((bb_foodCartData_t*)foodCart->data)->reward = BB_SWADGE;
+                                    foodCart->currentAnimationFrame   = 10;//functions as health for the food cart
+                                    tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                                }
+                                else
+                                {
+                                    bb_destroyEntity(foodCartBG, false);
+                                }
                             }
                             break;
                         }

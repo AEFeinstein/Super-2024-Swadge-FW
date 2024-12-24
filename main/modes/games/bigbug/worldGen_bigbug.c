@@ -16,7 +16,7 @@
 void bb_generateWorld(bb_tilemap_t* tilemap)
 {
     // There are 6 handcrafted levels that get chosen randomly.
-    uint8_t level = bb_randomInt(0, 5);
+    uint8_t level = 4;//bb_randomInt(0, 5);
     wsg_t levelWsg; ///< A graphic representing the level data where tiles are pixels.
 
     char wsg_name[13];
@@ -81,7 +81,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                         }
                         case 102:
                         {
-                            tilemap->fgTiles[i][j].embed = bb_randomInt(0, 1) == 0 ? SWADGE_EMBED : DONUT_EMBED;
+                            tilemap->fgTiles[i][j].embed = bb_randomInt(0, 1) == 0 ? BB_FOOD_CART_WITH_DONUT_EMBED : BB_FOOD_CART_WITH_SWADGE_EMBED;
                             break;
                         }
                         case 153:

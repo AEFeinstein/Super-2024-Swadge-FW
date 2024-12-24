@@ -879,26 +879,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ESP_LOGD(BB_TAG, "bounceScalar %" PRId32 "\n", bounceScalar);
         gData->vel = mulVec2d(
             subVec2d(gData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(gData->vel, hitInfo.normal)))), bounceScalar);
-
-        /////////////////////////////////
-        // check neighbors for stability//
-        /////////////////////////////////
-        // for(uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
-        // {
-        //     uint32_t check_x = hitInfo.tile_i + self->gameData->neighbors[neighborIdx][0];
-        //     uint32_t check_y = hitInfo.tile_j + self->gameData->neighbors[neighborIdx][1];
-        //     //Check if neighbor is in bounds of map (also not on left, right, or bottom, perimiter) and if it
-        //     is dirt. if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y > 0 && check_y <
-        //     TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
-        //     {
-        //         uint32_t* val = heap_caps_calloc(4, sizeof(uint32_t), MALLOC_CAP_SPIRAM);
-        //         val[0] = check_x;
-        //         val[1] = check_y;
-        //         val[2] = 1; //1 is for foreground. 0 is midground.
-        //         val[3] = 0; //f value used in pathfinding.
-        //         push(self->gameData->pleaseCheck, (void*)val);
-        //     }
-        // }
     }
 }
 
@@ -2678,13 +2658,43 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
     }
 }
 
-// void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
-// {
-//     drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-//               ((self->pos.y - self->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
-//               ((self->pos.x + self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-//               ((self->pos.y + self->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
-// }
+void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    if(self->currentAnimationFrame == 0)
+    {
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
+                    (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x - 1,
+                    (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y + 45);
+    }
+    else
+    {
+        bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
+        if(fcData->damageEffect > 0)
+        {
+            fcData->damageEffect -= self->gameData->elapsedUs >> 11;
+        }
+        if (fcData->damageEffect > 70 || (fcData->damageEffect > 0 && bb_randomInt(0, 1)))
+        {
+            drawWsgPaletteSimple(&entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
+                        (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                    (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, &self->gameData->damagePalette);
+        }
+        else
+        {
+            drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
+                    (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                    (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+        }
+    }
+}
+
+void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+              ((self->pos.y - self->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+              ((self->pos.x + self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+              ((self->pos.y + self->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+}
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
@@ -3207,6 +3217,107 @@ void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     // give a choice of upgrades
     bb_upgradeGarbotnik(self);
     self->gameData->screen = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
+}
+
+void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
+    if(other->dataType == GARBOTNIK_DATA)
+    {
+        //Apply bounce back to garbotnik same as digging a tile.
+        bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
+
+        //get hitInfo flipped around and positioned right.
+        //hitInfo->normal = mulVec2d(hitInfo->normal, -1);
+
+        if(hitInfo->normal.y == 0)
+        {
+            other->pos.x = hitInfo->pos.x + hitInfo->normal.x * other->halfWidth;
+        }
+        else//hitInfo->normal.x == 0
+        {
+            other->pos.y = hitInfo->pos.y + hitInfo->normal.y * other->halfHeight;
+        }
+
+        // Check for digging
+        int32_t dot = dotVec2d(gData->vel, hitInfo->normal);
+        if (dot < -40)
+        { // velocity angle is opposing food cart normal vector. Tweak number for different threshold.
+            ////////////////////////////
+            // cart digging detected! //
+            ////////////////////////////
+            bb_entity_t* mainCart = self;
+            if(self->currentAnimationFrame == 0)
+            {
+                mainCart = fcData->partner;
+            }
+            bb_foodCartData_t* mcData = (bb_foodCartData_t*)mainCart->data;
+            // Update the main cart by decrementing it's animation frame. Using animation frame as health to save space.
+            mainCart->currentAnimationFrame--;
+            if(mainCart->currentAnimationFrame == 1)
+            {
+                //Destroy the food cart and spawn a reward.
+                //free sprites
+                freeWsg(&mainCart->gameData->entityManager.sprites[BB_FOOD_CART].frames[0]);
+                freeWsg(&mainCart->gameData->entityManager.sprites[BB_FOOD_CART].frames[1]);
+                
+                bb_destroyEntity(mcData->partner, false);
+
+                switch(mcData->reward)
+                {
+                    case BB_DONUT:
+                    {
+                        // spawn a donut as a reward for completing the fight
+                        bb_createEntity(&mainCart->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
+                                        (mainCart->pos.x >> DECIMAL_BITS), (mainCart->pos.y >> DECIMAL_BITS), true, false);
+                        break;
+                    }
+                    default: // BB_SWADGE
+                    {
+                        // spawn a swadge as a reward for completing the fight
+                        bb_createEntity(&mainCart->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
+                                        (mainCart->pos.x >> DECIMAL_BITS), (mainCart->pos.y >> DECIMAL_BITS), true, false);
+                        break;
+                    }
+                }
+                bb_destroyEntity(mainCart, false);
+                // use a bump animation but tweak its graphics
+                bb_entity_t* hitEffect
+                    = bb_createEntity(&(mainCart->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
+                                        hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+                hitEffect->drawFunction = &bb_drawHitEffect;
+            }
+            else
+            {
+                // Create a bump animation
+                bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 4,
+                                hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+                mcData->damageEffect = 100;
+            }
+
+            ////////////////////////////////
+            // Mirror garbotnik's velocity//
+            ////////////////////////////////
+            int32_t bounceScalar = 3;
+            if (sqMagVec2d(gData->vel) * dot < -360000)
+            {
+                bounceScalar = 2;
+            }
+            if (sqMagVec2d(gData->vel) * dot < -550000)
+            {
+                bounceScalar = 1;
+            }
+            if(self->currentAnimationFrame == 0 && hitInfo->normal.y == -1)
+            {
+                //The umbrella is extra bouncy upwards.
+                bounceScalar *= 4;
+            }
+            gData->vel = mulVec2d(
+            subVec2d(gData->vel, mulVec2d(hitInfo->normal, (2 * dotVec2d(gData->vel, hitInfo->normal)))), bounceScalar);
+        }
+    }
+    
+
 }
 
 void bb_startGarbotnikIntro(bb_entity_t* self)

@@ -190,6 +190,11 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     //bb_loadSprite("swadge", 12, 1, &entityManager->sprites[BB_SWADGE]);
     entityManager->sprites[BB_SWADGE].originX     = 16;
     entityManager->sprites[BB_SWADGE].originY     = 9;
+
+    //food cart is unloaded until needed.
+    //bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
+    entityManager->sprites[BB_FOOD_CART].originX     = 36;
+    entityManager->sprites[BB_FOOD_CART].originY     = 56;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -213,7 +218,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
             bb_entity_t* foundSpot = bb_findInactiveEntity(entityManager);
             if (foundSpot != NULL)
             {
-                //load sprites if it is a car, door, or swadge
+                //load sprites if it is a car, grabbyHand, door, swadge, or foodCart
                 switch(curEntity->spriteIndex)
                 {
                     case BB_CAR:
@@ -234,6 +239,11 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     case BB_SWADGE:
                     {
                         bb_loadSprite("swadge", 12, 1, &entityManager->sprites[BB_SWADGE]);
+                        break;
+                    }
+                    case BB_FOOD_CART:
+                    {
+                        bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
                         break;
                     }
                     default:
@@ -294,6 +304,19 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                             for(int i = 0; i < 12; i++)
                             {
                                 freeWsg(&entityManager->sprites[BB_SWADGE].frames[i]);
+                            }
+                            break;
+                        }
+                        case BB_FOOD_CART:
+                        {
+                            bb_foodCartData_t* fcData = (bb_foodCartData_t*)curEntity->data;
+                            fcData->isCached = true;
+                            if(((bb_foodCartData_t*)fcData->partner)->isCached)
+                            {
+                                for(int i = 0; i < 2; i++)
+                                {
+                                    freeWsg(&entityManager->sprites[BB_FOOD_CART].frames[i]);
+                                }
                             }
                             break;
                         }
@@ -550,10 +573,10 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
             }
         }
     }
-    // drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-    //           ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
-    //           ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-    //           ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+    drawRect (((currentEntity->pos.x - currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+              ((currentEntity->pos.y - currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+              ((currentEntity->pos.x + currentEntity->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+              ((currentEntity->pos.y + currentEntity->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
 }
 
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
@@ -1148,7 +1171,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             physData->vel.x             = 60;
             entity->cacheable           = true;
             bb_setData(entity, physData, PHYSICS_DATA);
-            entity->updateFunction = bb_updatePhysicsObject;
+            entity->updateFunction = &bb_updatePhysicsObject;
             break;
         }
         case BB_SWADGE:
@@ -1178,6 +1201,27 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->updateFunction = &bb_updateDiveSummary;
             entity->drawFunction   = &bb_drawDiveSummary;
             entity->updateFarFunction = &bb_updateFarDestroy;
+            break;
+        }
+        case BB_FOOD_CART:
+        {
+            entity->halfWidth  = 22 << DECIMAL_BITS;
+            entity->halfHeight = 9 << DECIMAL_BITS;
+            entity->cacheable  = true;
+
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_foodCartData_t), MALLOC_CAP_SPIRAM), FOOD_CART_DATA);
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionFoodCart};
+            push(entity->collisions, (void*)collision);
+
+            entity->drawFunction = &bb_drawFoodCart;
+
+            //sprites loaded just-in-time
+            bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
             break;
         }
         default: // FLAME_ANIM and others need nothing set
