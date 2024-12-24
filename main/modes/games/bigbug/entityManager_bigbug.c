@@ -243,6 +243,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     }
                     case BB_FOOD_CART:
                     {
+                        ((bb_foodCartData_t*)curEntity->data)->isCached = false;
                         bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
                         break;
                     }
