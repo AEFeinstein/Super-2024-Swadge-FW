@@ -1984,8 +1984,6 @@ void changeStateAttractMode(pango_t* self)
     self->entityManager.playerEntity
         = pa_createPlayer(&(self->entityManager), (9 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
                           (7 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
-    self->entityManager.playerEntity->collisionHandler = &pa_attractPlayerCollisionHandler;
-
     self->menuState     = 0;
     self->frameTimer    = 0;
     self->menuSelection = 0;
