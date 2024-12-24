@@ -277,33 +277,33 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     {
                         case BB_CAR:
                         {
-                            for (int i = 0; i < 60; i++)
+                            for (int frame = 0; frame < 60; frame++)
                             {
-                                freeWsg(&entityManager->sprites[BB_CAR].frames[i]);
+                                freeWsg(&entityManager->sprites[BB_CAR].frames[frame]);
                             }
                             break;
                         }
                         case BB_GRABBY_HAND:
                         {
-                            for(int i = 0; i < 3; i++)
+                            for(int frame = 0; frame < 3; frame++)
                             {
-                                freeWsg(&entityManager->sprites[BB_GRABBY_HAND].frames[i]);
+                                freeWsg(&entityManager->sprites[BB_GRABBY_HAND].frames[frame]);
                             }
                             break;
                         }
                         case BB_DOOR:
                         {
-                            for(int i = 0; i < 2; i++)
+                            for(int frame = 0; frame < 2; frame++)
                             {
-                                freeWsg(&entityManager->sprites[BB_DOOR].frames[i]);
+                                freeWsg(&entityManager->sprites[BB_DOOR].frames[frame]);
                             }
                             break;
                         }
                         case BB_SWADGE:
                         {
-                            for(int i = 0; i < 12; i++)
+                            for(int frame = 0; frame < 12; frame++)
                             {
-                                freeWsg(&entityManager->sprites[BB_SWADGE].frames[i]);
+                                freeWsg(&entityManager->sprites[BB_SWADGE].frames[frame]);
                             }
                             break;
                         }
