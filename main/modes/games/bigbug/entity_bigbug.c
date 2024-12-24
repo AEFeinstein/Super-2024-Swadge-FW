@@ -267,10 +267,10 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         freeFont(&self->gameData->cgFont);
         freeFont(&self->gameData->cgThinFont);
 
-        // bb_setupMidi();
-        // unloadMidiFile(&self->gameData->bgm);
-        // loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &self->gameData->bgm, true);
-        // globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
+        bb_setupMidi();
+        unloadMidiFile(&self->gameData->bgm);
+        loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &self->gameData->bgm, true);
+        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
@@ -1403,7 +1403,7 @@ void bb_updateMenu(bb_entity_t* self)
             for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
             {
                 self->gameData->entityManager.boosterEntities[rocketIdx]
-                    = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 8,
+                    = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
                                       (self->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
                                       (self->pos.y >> DECIMAL_BITS) + 375, true, false);
 
@@ -2281,18 +2281,18 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 
     if (dData->curString >= 0 && dData->curString < dData->numStrings)
     {
-        paletteColor_t textColor = c414; // garbotnik
+        paletteColor_t textColor = c525; // garbotnik
         if (strcmp(dData->characters[dData->curString], "Pixel") == 0)
         {
-            textColor = c302;
+            textColor = c402;
         }
         else if (strcmp(dData->characters[dData->curString], "Pango") == 0)
         {
-            textColor = c551;
+            textColor = c552;
         }
         else if (strcmp(dData->characters[dData->curString], "Po") == 0)
         {
-            textColor = c400;
+            textColor = c544;
         }
         drawText(&self->gameData->font, textColor, dData->characters[dData->curString], 13, 152);
 
@@ -2450,30 +2450,6 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
         // increment the frame counter
         self->animationTimer += 1;
         self->currentAnimationFrame = self->animationTimer / self->gameFramesPerAnimationFrame;
-        // if frame reached the end of the animation
-        if (self->currentAnimationFrame >= entityManager->sprites[self->spriteIndex].numFrames)
-        {
-            switch (self->type)
-            {
-                case ONESHOT_ANIMATION:
-                {
-                    // destroy the entity
-                    bb_destroyEntity(self, false);
-                    break;
-                }
-                case LOOPING_ANIMATION:
-                {
-                    // reset the animation
-                    self->animationTimer        = 0;
-                    self->currentAnimationFrame = 0;
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
-        }
     }
 }
 
