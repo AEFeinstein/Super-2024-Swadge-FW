@@ -16,7 +16,7 @@
 void bb_generateWorld(bb_tilemap_t* tilemap)
 {
     // There are 6 handcrafted levels that get chosen randomly.
-    uint8_t level = 4;//bb_randomInt(0, 5);
+    uint8_t level = bb_randomInt(0, 5);
     wsg_t levelWsg; ///< A graphic representing the level data where tiles are pixels.
 
     char wsg_name[13];

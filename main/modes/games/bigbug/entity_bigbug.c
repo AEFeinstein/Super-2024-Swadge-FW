@@ -2688,13 +2688,13 @@ void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
     }
 }
 
-void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
-{
-    drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-              ((self->pos.y - self->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
-              ((self->pos.x + self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
-              ((self->pos.y + self->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
-}
+// void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+// {
+//     drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+//               ((self->pos.y - self->halfHeight)>>DECIMAL_BITS) - camera->pos.y,
+//               ((self->pos.x + self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
+//               ((self->pos.y + self->halfHeight)>>DECIMAL_BITS) - camera->pos.y, c500);
+// }
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
