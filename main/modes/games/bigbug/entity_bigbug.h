@@ -192,10 +192,10 @@ typedef struct
 typedef struct
 {
     bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
-    bb_spriteDef_t reward;      // The sprite to spawn when the car trunk opens
-    midiFile_t alarm;         // The midi file to play when the car is active. Can be 1 of 3 files.
-    bool midiLoaded;          // True if the midi file is loaded, false otherwise.
-    uint16_t textTimer;        // The timer for the text to appear on screen.
+    bb_spriteDef_t reward;       // The sprite to spawn when the car trunk opens
+    midiFile_t alarm;            // The midi file to play when the car is active. Can be 1 of 3 files.
+    bool midiLoaded;             // True if the midi file is loaded, false otherwise.
+    uint16_t textTimer;          // The timer for the text to appear on screen.
 } bb_carData_t;
 
 typedef struct
@@ -228,7 +228,7 @@ typedef struct
     uint8_t numStrings;
     char** strings; // the list of strings to be spoken in order.
     int8_t curString;
-    char** characters; // the list of characters who are speaking in order.
+    char** characters;                   // the list of characters who are speaking in order.
     bb_callbackFunction_t endDialogueCB; // executes when the character is done talking.
     wsg_t sprite;                        // the current talking sprite
     wsg_t spriteNext;                    // a blinking triangle right of the dialogue

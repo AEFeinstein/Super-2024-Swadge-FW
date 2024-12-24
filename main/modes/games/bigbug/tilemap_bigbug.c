@@ -16,6 +16,23 @@
 //==============================================================================
 // Functions
 //==============================================================================
+//static inline function to get bits 0-6 of pos
+static inline uint8_t getX(const bb_midgroundTileInfo_t* tile)
+{
+    return tile->pos & 0x7F;
+}
+
+//static inline function to get bits 7-14 of pos
+static inline uint8_t getY(const bb_midgroundTileInfo_t* tile)
+{
+    return (tile->pos >> 7) & 0xFF;
+}
+
+static inline uint16_t fCost(const bb_midgroundTileInfo_t* tile)
+{
+    return tile->gCost + tile->hCost;
+}
+
 void bb_loadWsgs(bb_tilemap_t* tilemap)
 {
     if (false == tilemap->wsgsLoaded)
@@ -123,38 +140,38 @@ void bb_freeWsgs(bb_tilemap_t* tilemap)
 void flagNeighbors(const bb_midgroundTileInfo_t* tile, bb_gameData_t* gameData)
 {
     uint8_t* left = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-    left[0]       = tile->x - 1;
-    left[1]       = tile->y;
+    left[0]       = getX(tile) - 1;
+    left[1]       = getY(tile);
     left[2]       = 1;
     push(&gameData->pleaseCheck, (void*)left);
 
-    if (tile->y > 0)
+    if (getY(tile) > 0)
     {
         uint8_t* up = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-        up[0]       = tile->x;
-        up[1]       = tile->y - 1;
+        up[0]       = getX(tile);
+        up[1]       = getY(tile) - 1;
         up[2]       = 1;
         push(&gameData->pleaseCheck, (void*)up);
     }
 
     uint8_t* right = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-    right[0]       = tile->x + 1;
-    right[1]       = tile->y;
+    right[0]       = getX(tile) + 1;
+    right[1]       = getY(tile);
     right[2]       = 1;
     push(&gameData->pleaseCheck, (void*)right);
 
-    if (tile->y < TILE_FIELD_HEIGHT)
+    if (getY(tile) < TILE_FIELD_HEIGHT)
     {
         uint8_t* down = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-        down[0]       = tile->x;
-        down[1]       = tile->y + 1;
+        down[0]       = getX(tile);
+        down[1]       = getY(tile) + 1;
         down[2]       = 1;
         push(&gameData->pleaseCheck, (void*)down);
     }
 
     uint8_t* midground = heap_caps_calloc(3, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-    midground[0]       = tile->x;
-    midground[1]       = tile->y;
+    midground[0]       = getX(tile);
+    midground[1]       = getY(tile);
     midground[2]       = 0;
     push(&gameData->pleaseCheck, (void*)midground);
 }
