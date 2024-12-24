@@ -322,18 +322,25 @@ void updateCrabdozer(paEntity_t* self)
         case PA_EN_ST_RUNAWAY:
         {
             self->stateTimer--;
-            if (self->stateTimer < 0 || self->entityManager->aggroEnemies < self->gameData->minAggroEnemies)
+
+            if (self->state == PA_EN_ST_RUNAWAY && self->stateTimer < 0)
             {
-                if (self->state == PA_EN_ST_RUNAWAY)
-                {
-                    soundPlaySfx(&(self->soundManager->sndHurt), 2);
-                    self->spriteIndex = PA_SP_ENEMY_STUN;
-                    self->yspeed = -32;
-                    self->gravity = 4;
-                    killEnemy(self);
-                    break;
-                }
-                else if (self->state == PA_EN_ST_NORMAL
+                soundPlaySfx(&(self->soundManager->sndHurt), 2);
+                self->spriteIndex = PA_SP_ENEMY_STUN;
+                self->yspeed = -32;
+                self->gravity = 4;
+                killEnemy(self);
+                break;
+            }
+            // The aggroEnemies < minAggroEnemies in the below condition is actually a bug.
+            // It was originally intended to apply at any time when he enemy is in NORMAL state only.
+            // This bug results in enemies "panicking" when there are fewer than minAggroEnemies active.
+            // Similar to the RUNAWAY state, enemies cannot break blocks in this unintended state.
+            // It gives the player a break in the later levels if they can maintain these conditions.
+            // It looks cool and feels good to pull off, so I hereby decleare this bug a "feature".
+            else if (self->stateTimer < 0 || self->entityManager->aggroEnemies < self->gameData->minAggroEnemies)
+            {
+                if (self->state == PA_EN_ST_NORMAL
                          && (self->entityManager->aggroEnemies < self->gameData->maxAggroEnemies))
                 {
                     self->state = PA_EN_ST_AGGRESSIVE;
