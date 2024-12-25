@@ -726,18 +726,23 @@ void updateReadyScreen(pango_t* self, int64_t elapsedUs)
 void drawReadyScreen(font_t* font, paGameData_t* gameData)
 {
     drawPangoHud(font, gameData);
+    
+    char scoreStr[32];
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "Extra Life at:%7.0" PRIu32, gameData->extraLifeScore);
 
-    drawText(font, c555, str_ready, 80, 96);
+    drawText(font, c555, str_ready, 80, 64);
 
     if (gameData->frameCount > 60)
     {
-        drawText(font, c555, str_set, 112, 128);
+        drawText(font, c555, str_set, 112, 96);
     }
 
     if (gameData->frameCount > 120)
     {
-        drawText(font, c555, str_pango, 144, 160);
+        drawText(font, c555, str_pango, 144, 128);
     }
+
+     drawText(font, c555, scoreStr, 24, 192);
 
 }
 
