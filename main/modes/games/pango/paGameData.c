@@ -60,7 +60,7 @@ void pa_scorePoints(paGameData_t* gameData, uint16_t points)
         gameData->lives++;
         gameData->extraLifeScore += 10000; //(gameData->extraLifeScore + 2000);
 
-        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i+=2)
+        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i += 2)
         {
             gameData->leds[ledRemap[i]].r = 0xFF;
             gameData->leds[ledRemap[i]].g = 0xFF;
@@ -99,21 +99,27 @@ void pa_updateLedsShowHighScores(paGameData_t* gameData)
             if (gameData->leds[i].r > 0x05)
             {
                 gameData->leds[i].r -= 0x05;
-            } else {
+            }
+            else
+            {
                 gameData->leds[i].r -= 0;
             }
 
             if (gameData->leds[i].g > 0x10)
             {
                 gameData->leds[i].g -= 0x10;
-            }else {
+            }
+            else
+            {
                 gameData->leds[i].g -= 0;
             }
 
             if (gameData->leds[i].b > 0x40)
             {
                 gameData->leds[i].b -= 0x40;
-            }else {
+            }
+            else
+            {
                 gameData->leds[i].b = 0;
             }
         }
@@ -205,22 +211,26 @@ void pa_updateLedsGameClear(paGameData_t* gameData)
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void pa_updateLedsInGame(paGameData_t* gameData){
+void pa_updateLedsInGame(paGameData_t* gameData)
+{
     if (((gameData->frameCount) % 4) == 0)
     {
         for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
             uint8_t mappedLed = ledRemap[i];
-            uint8_t nextLed = ledRemap[(i + 1) % CONFIG_NUM_LEDS];
+            uint8_t nextLed   = ledRemap[(i + 1) % CONFIG_NUM_LEDS];
 
             if (gameData->leds[mappedLed].r > 0xF)
             {
                 gameData->leds[mappedLed].r -= 0x10;
 
-                if((gameData->leds[mappedLed].r >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
+                if ((gameData->leds[mappedLed].r >> 4) == 0xC && (i < CONFIG_NUM_LEDS - 1))
+                {
                     gameData->leds[nextLed].r = 0xF0;
                 }
-            } else {
+            }
+            else
+            {
                 gameData->leds[mappedLed].r = 0;
             }
 
@@ -228,10 +238,13 @@ void pa_updateLedsInGame(paGameData_t* gameData){
             {
                 gameData->leds[mappedLed].g -= 0x10;
 
-                if((gameData->leds[mappedLed].g >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
+                if ((gameData->leds[mappedLed].g >> 4) == 0xC && (i < CONFIG_NUM_LEDS - 1))
+                {
                     gameData->leds[nextLed].g = 0xF0;
                 }
-            } else {
+            }
+            else
+            {
                 gameData->leds[mappedLed].g = 0;
             }
 
@@ -239,10 +252,13 @@ void pa_updateLedsInGame(paGameData_t* gameData){
             {
                 gameData->leds[mappedLed].b -= 0x10;
 
-                if((gameData->leds[mappedLed].b >> 4) == 0xC && (i < CONFIG_NUM_LEDS-1)){
-                gameData->leds[nextLed].b = 0xF0;
+                if ((gameData->leds[mappedLed].b >> 4) == 0xC && (i < CONFIG_NUM_LEDS - 1))
+                {
+                    gameData->leds[nextLed].b = 0xF0;
                 }
-            } else {
+            }
+            else
+            {
                 gameData->leds[mappedLed].b = 0;
             }
         }
@@ -250,7 +266,8 @@ void pa_updateLedsInGame(paGameData_t* gameData){
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void pa_fadeLeds(paGameData_t* gameData){
+void pa_fadeLeds(paGameData_t* gameData)
+{
     if (((gameData->frameCount) % 10) == 0)
     {
         for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
@@ -258,21 +275,27 @@ void pa_fadeLeds(paGameData_t* gameData){
             if (gameData->leds[i].r > 0xF)
             {
                 gameData->leds[i].r -= 0x10;
-            } else {
+            }
+            else
+            {
                 gameData->leds[i].r = 0;
             }
 
             if (gameData->leds[i].g > 0xF)
             {
                 gameData->leds[i].g -= 0x10;
-            } else {
+            }
+            else
+            {
                 gameData->leds[i].g = 0;
             }
 
             if (gameData->leds[i].b > 0xF)
             {
                 gameData->leds[i].b -= 0x10;
-            } else {
+            }
+            else
+            {
                 gameData->leds[i].b = 0;
             }
         }

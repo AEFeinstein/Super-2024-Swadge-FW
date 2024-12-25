@@ -55,7 +55,8 @@ void pa_freeSoundManager(paSoundManager_t* self)
     Loads the indexed BGM into memory.
     Returns true if the BGM was actually changed, otherwise false
 */
-bool pa_setBgm(paSoundManager_t* self, uint16_t newBgmIndex){
+bool pa_setBgm(paSoundManager_t* self, uint16_t newBgmIndex)
+{
     if (self->currentBgmIndex == newBgmIndex)
     {
         return false;

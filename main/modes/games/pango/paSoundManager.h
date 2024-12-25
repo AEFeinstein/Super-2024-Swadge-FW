@@ -13,8 +13,8 @@
 // Constants
 //==============================================================================
 
-static const char* const PANGO_BGMS[] = {"Pango_Main.mid",  "Pango_Faster.mid",  "Pango_Speed.mid",
-                                         "Pango_Jump Start.mid", "Pango_High Score.mid"};
+static const char* const PANGO_BGMS[]
+    = {"Pango_Main.mid", "Pango_Faster.mid", "Pango_Speed.mid", "Pango_Jump Start.mid", "Pango_High Score.mid"};
 
 typedef enum
 {
@@ -32,7 +32,6 @@ typedef enum
 
 typedef struct
 {
-   
     midiFile_t sndDie;
     midiFile_t sndMenuSelect;
     midiFile_t sndMenuConfirm;

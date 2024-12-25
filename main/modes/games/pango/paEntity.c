@@ -192,8 +192,9 @@ void pa_updatePlayer(paEntity_t* self)
                     {
                         pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
                         newHitBlock->state = t;
-                        
-                        if(t == PA_TILE_SPAWN_BLOCK_0){
+
+                        if (t == PA_TILE_SPAWN_BLOCK_0)
+                        {
                             newHitBlock->spriteIndex = PA_SP_BONUS_BLOCK;
                         }
 
@@ -294,8 +295,8 @@ void updateCrabdozer(paEntity_t* self)
             if (self->stateTimer < 0)
             {
                 self->facingDirection = PA_DIRECTION_NONE;
-                self->state      = PA_EN_ST_NORMAL;
-                self->stateTimer = pa_enemySetAggroStateTimer(self);
+                self->state           = PA_EN_ST_NORMAL;
+                self->stateTimer      = pa_enemySetAggroStateTimer(self);
             }
             else
             {
@@ -318,8 +319,8 @@ void updateCrabdozer(paEntity_t* self)
             {
                 soundPlaySfx(&(self->soundManager->sndSquish), 2);
                 self->spriteIndex = PA_SP_ENEMY_STUN;
-                self->yspeed = -32;
-                self->gravity = 4;
+                self->yspeed      = -32;
+                self->gravity     = 4;
                 killEnemy(self);
                 break;
             }
@@ -332,7 +333,7 @@ void updateCrabdozer(paEntity_t* self)
             else if (self->stateTimer < 0 || self->entityManager->aggroEnemies < self->gameData->minAggroEnemies)
             {
                 if (self->state == PA_EN_ST_NORMAL
-                         && (self->entityManager->aggroEnemies < self->gameData->maxAggroEnemies))
+                    && (self->entityManager->aggroEnemies < self->gameData->maxAggroEnemies))
                 {
                     self->state = PA_EN_ST_AGGRESSIVE;
                     self->entityManager->aggroEnemies++;
@@ -344,7 +345,7 @@ void updateCrabdozer(paEntity_t* self)
                     self->state = PA_EN_ST_NORMAL;
                     self->entityManager->aggroEnemies--;
                     self->baseSpeed -= 2;
-                    self->stateTimer = pa_enemySetAggroStateTimer(self);
+                    self->stateTimer                    = pa_enemySetAggroStateTimer(self);
                     self->gameData->leds[ledRemap[0]].r = 0xFF;
                 }
             }
@@ -816,7 +817,8 @@ void pa_enemyBreakBlock(paEntity_t* self, uint16_t newDirection, int16_t speed, 
 void pa_animateEnemy(paEntity_t* self)
 {
     bool useAggressiveSprites = false;
-    switch(self->state){
+    switch (self->state)
+    {
         case PA_EN_ST_NORMAL:
         default:
             useAggressiveSprites = false;
@@ -829,7 +831,7 @@ void pa_animateEnemy(paEntity_t* self)
             useAggressiveSprites = (self->gameData->frameCount % 2);
             break;
     }
-    
+
     if (self->xspeed != 0)
     {
         if ((self->xspeed < 0) || (self->xspeed > 0))
@@ -839,8 +841,7 @@ void pa_animateEnemy(paEntity_t* self)
 
             if (self->gameData->frameCount % 5 == 0)
             {
-                self->spriteIndex
-                    = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + (useAggressiveSprites ? 4 : 0);
+                self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + (useAggressiveSprites ? 4 : 0);
                 self->facingDirection = self->spriteFlipHorizontal ? PA_DIRECTION_WEST : PA_DIRECTION_EAST;
             }
         }
@@ -1286,7 +1287,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 self->yspeed = 0;
                 break;
             case 4: // DOWN
-                self->yspeed  = 0;
+                self->yspeed = 0;
                 break;
             default: // Should never hit
                 return false;
@@ -1314,7 +1315,7 @@ bool pa_enemyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, 
                 self->yspeed = 0;
                 break;
             case 4: // DOWN
-                self->yspeed  = 0;
+                self->yspeed = 0;
                 break;
             default: // Should never hit
                 return false;

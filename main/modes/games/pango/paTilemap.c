@@ -62,7 +62,7 @@ void pa_drawTileMap(paTilemap_t* tilemap)
             if (tile > 0 && tile < 13)
             {
                 drawWsgTile(tilemap->wsgManager->tiles[tile - 1], x * PA_TILE_SIZE - tilemap->mapOffsetX,
-                                y * PA_TILE_SIZE - tilemap->mapOffsetY);
+                            y * PA_TILE_SIZE - tilemap->mapOffsetY);
             }
             else if (tile > 127 && tilemap->tileSpawnEnabled
                      && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y
