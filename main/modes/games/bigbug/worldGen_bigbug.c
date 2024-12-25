@@ -37,7 +37,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
         {
             tilemap->fgTiles[i][j].pos = i | (j << 7) | (1 << 15);
 
-            tilemap->mgTiles[i][j].pos = i | (j << 7);//z is implicitly zero
+            tilemap->mgTiles[i][j].pos = i | (j << 7); // z is implicitly zero
 
             uint32_t rgbCol = paletteToRGB(levelWsg.px[(j * levelWsg.w) + i]);
 
@@ -77,7 +77,8 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                         }
                         case 102:
                         {
-                            tilemap->fgTiles[i][j].embed = bb_randomInt(0, 1) == 0 ? BB_FOOD_CART_WITH_DONUT_EMBED : BB_FOOD_CART_WITH_SWADGE_EMBED;
+                            tilemap->fgTiles[i][j].embed = bb_randomInt(0, 1) == 0 ? BB_FOOD_CART_WITH_DONUT_EMBED
+                                                                                   : BB_FOOD_CART_WITH_SWADGE_EMBED;
                             break;
                         }
                         case 153:

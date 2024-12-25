@@ -337,8 +337,8 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     self->pos.y = hitInfo.pos.y - self->halfHeight;
     if (hfData->yVel < 50)
     {
-        bb_setupMidi();//stops the music
-        
+        bb_setupMidi(); // stops the music
+
         bb_loadSprite("rocket", 42, 1, &self->gameData->entityManager.sprites[ROCKET_ANIM]);
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
@@ -419,7 +419,7 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
         bb_entity_t* arm
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
-        ((bb_rocketData_t*)self->data)->armAngle = 2880; //That is 180 down position.
+        ((bb_rocketData_t*)self->data)->armAngle     = 2880; // That is 180 down position.
         ((bb_attachmentArmData_t*)arm->data)->rocket = self;
 
         bb_entity_t* grabbyHand
@@ -1658,6 +1658,8 @@ void bb_updateAttachmentArm(bb_entity_t* self)
 
         rData->flame->updateFunction  = &bb_updateFlame;
         aData->rocket->updateFunction = &bb_updateRocketLiftoff;
+        
+        self->gameData->day++;
 
         bb_destroyEntity(self, false);
     }
@@ -1857,12 +1859,12 @@ void bb_updateCarOpen(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
-        //free most previous car frames.
+        // free most previous car frames.
         for (int i = 1; i < 59; i++)
         {
             freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[i]);
         }
-        switch(((bb_carData_t*)self->data)->reward)
+        switch (((bb_carData_t*)self->data)->reward)
         {
             case BB_DONUT:
             {
@@ -2653,30 +2655,34 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
 
 void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    if(self->currentAnimationFrame == 0)
+    if (self->currentAnimationFrame == 0)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
-                    (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x - 1,
-                    (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y + 45);
+        drawWsgSimple(
+            &entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
+            (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x - 1,
+            (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y + 45);
     }
     else
     {
         bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
-        if(fcData->damageEffect > 0)
+        if (fcData->damageEffect > 0)
         {
             fcData->damageEffect -= self->gameData->elapsedUs >> 11;
         }
         if (fcData->damageEffect > 70 || (fcData->damageEffect > 0 && bb_randomInt(0, 1)))
         {
-            drawWsgPaletteSimple(&entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
-                        (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-                    (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, &self->gameData->damagePalette);
+            drawWsgPaletteSimple(
+                &entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
+                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y,
+                &self->gameData->damagePalette);
         }
         else
         {
-            drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
-                    (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-                    (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+            drawWsgSimple(
+                &entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
+                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
         }
     }
 }
@@ -3215,19 +3221,19 @@ void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
 void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
-    if(other->dataType == GARBOTNIK_DATA)
+    if (other->dataType == GARBOTNIK_DATA)
     {
-        //Apply bounce back to garbotnik same as digging a tile.
+        // Apply bounce back to garbotnik same as digging a tile.
         bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
 
-        //get hitInfo flipped around and positioned right.
-        //hitInfo->normal = mulVec2d(hitInfo->normal, -1);
+        // get hitInfo flipped around and positioned right.
+        // hitInfo->normal = mulVec2d(hitInfo->normal, -1);
 
-        if(hitInfo->normal.y == 0)
+        if (hitInfo->normal.y == 0)
         {
             other->pos.x = hitInfo->pos.x + hitInfo->normal.x * other->halfWidth;
         }
-        else//hitInfo->normal.x == 0
+        else // hitInfo->normal.x == 0
         {
             other->pos.y = hitInfo->pos.y + hitInfo->normal.y * other->halfHeight;
         }
@@ -3240,36 +3246,38 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
             // cart digging detected! //
             ////////////////////////////
             bb_entity_t* mainCart = self;
-            if(self->currentAnimationFrame == 0)
+            if (self->currentAnimationFrame == 0)
             {
                 mainCart = fcData->partner;
             }
             bb_foodCartData_t* mcData = (bb_foodCartData_t*)mainCart->data;
             // Update the main cart by decrementing it's animation frame. Using animation frame as health to save space.
             mainCart->currentAnimationFrame--;
-            if(mainCart->currentAnimationFrame == 1)
+            if (mainCart->currentAnimationFrame == 1)
             {
-                //Destroy the food cart and spawn a reward.
-                //free sprites
+                // Destroy the food cart and spawn a reward.
+                // free sprites
                 freeWsg(&mainCart->gameData->entityManager.sprites[BB_FOOD_CART].frames[0]);
                 freeWsg(&mainCart->gameData->entityManager.sprites[BB_FOOD_CART].frames[1]);
-                
+
                 bb_destroyEntity(mcData->partner, false);
 
-                switch(mcData->reward)
+                switch (mcData->reward)
                 {
                     case BB_DONUT:
                     {
                         // spawn a donut as a reward for completing the fight
                         bb_createEntity(&mainCart->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
-                                        (mainCart->pos.x >> DECIMAL_BITS), (mainCart->pos.y >> DECIMAL_BITS), true, false);
+                                        (mainCart->pos.x >> DECIMAL_BITS), (mainCart->pos.y >> DECIMAL_BITS), true,
+                                        false);
                         break;
                     }
                     default: // BB_SWADGE
                     {
                         // spawn a swadge as a reward for completing the fight
                         bb_createEntity(&mainCart->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
-                                        (mainCart->pos.x >> DECIMAL_BITS), (mainCart->pos.y >> DECIMAL_BITS), true, false);
+                                        (mainCart->pos.x >> DECIMAL_BITS), (mainCart->pos.y >> DECIMAL_BITS), true,
+                                        false);
                         break;
                     }
                 }
@@ -3277,7 +3285,7 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
                 // use a bump animation but tweak its graphics
                 bb_entity_t* hitEffect
                     = bb_createEntity(&(mainCart->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
-                                        hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+                                      hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
                 hitEffect->drawFunction = &bb_drawHitEffect;
             }
             else
@@ -3300,17 +3308,16 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
             {
                 bounceScalar = 1;
             }
-            if(self->currentAnimationFrame == 0 && hitInfo->normal.y == -1)
+            if (self->currentAnimationFrame == 0 && hitInfo->normal.y == -1)
             {
-                //The umbrella is extra bouncy upwards.
+                // The umbrella is extra bouncy upwards.
                 bounceScalar *= 4;
             }
-            gData->vel = mulVec2d(
-            subVec2d(gData->vel, mulVec2d(hitInfo->normal, (2 * dotVec2d(gData->vel, hitInfo->normal)))), bounceScalar);
+            gData->vel
+                = mulVec2d(subVec2d(gData->vel, mulVec2d(hitInfo->normal, (2 * dotVec2d(gData->vel, hitInfo->normal)))),
+                           bounceScalar);
         }
     }
-    
-
 }
 
 void bb_startGarbotnikIntro(bb_entity_t* self)
@@ -3690,7 +3697,7 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 
     self->gameData->isPaused = false;
 
-    if(self->gameData->day)
+    if (self->gameData->day)
     {
         return;
     }
@@ -3731,7 +3738,6 @@ void bb_afterLiftoffInteraction(bb_entity_t* self)
 void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in orbit.
 {
     self->gameData->endDayChecks = 0;
-    self->gameData->day++;
     // dive summary flavor text gets filled in randomly for the day.
     self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 3);
     self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 4);

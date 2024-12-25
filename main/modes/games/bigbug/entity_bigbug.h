@@ -206,12 +206,12 @@ typedef struct
 
 typedef struct
 {
-    bb_entity_t* partner; // the other piece of the food cart
-    bool isCached;        // tracking this to only unload sprites when both pieces are cached.
-    bb_spriteDef_t reward;      // The sprite to spawn when the food cart is destroyed.
-    int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the zero animation frame because the cart background gets not graphical effect.
+    bb_entity_t* partner;  // the other piece of the food cart
+    bool isCached;         // tracking this to only unload sprites when both pieces are cached.
+    bb_spriteDef_t reward; // The sprite to spawn when the food cart is destroyed.
+    int8_t damageEffect;   // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the
+                           // zero animation frame because the cart background gets not graphical effect.
 } bb_foodCartData_t;
-
 
 typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
 

@@ -8,19 +8,19 @@
 //==============================================================================
 // Functions
 //==============================================================================
-//static inline function to get bits 0-6 of pos
+// static inline function to get bits 0-6 of pos
 static inline uint8_t getX(const bb_midgroundTileInfo_t* tile)
 {
     return tile->pos & 0x7F;
 }
 
-//static inline function to get bits 7-14 of pos
+// static inline function to get bits 7-14 of pos
 static inline uint8_t getY(const bb_midgroundTileInfo_t* tile)
 {
     return (tile->pos >> 7) & 0xFF;
 }
 
-//static inline function to get bit 15 of pos
+// static inline function to get bit 15 of pos
 static inline bool getZ(const bb_midgroundTileInfo_t* tile)
 {
     return (tile->pos >> 15) & 0x1;
@@ -180,7 +180,7 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
             //  }
 
             if ((getZ(neighborTile) ? tilemap->fgTiles[getX(neighborTile)][getY(neighborTile)].health
-                                 : tilemap->mgTiles[getX(neighborTile)][getY(neighborTile)].health)
+                                    : tilemap->mgTiles[getX(neighborTile)][getY(neighborTile)].health)
                     == 0
                 || contains(&closed, neighborTile))
             {
