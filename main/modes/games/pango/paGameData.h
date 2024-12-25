@@ -44,11 +44,7 @@ typedef struct
     uint8_t rank;
     bool debugMode;
 
-    uint8_t changeBgm;
-    uint8_t currentBgm;
-
     bool continuesUsed;
-    uint32_t inGameTimer;
 
     uint8_t playerCharacter;
 

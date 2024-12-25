@@ -38,10 +38,6 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define BIG_SCORE    4000000UL
-#define BIGGER_SCORE 10000000UL
-#define FAST_TIME    1500 // 25 minutes
-
 const char pangoName[] = "Pango";
 
 static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055};
@@ -488,7 +484,6 @@ void updateGame(pango_t* self, int64_t elapsedUs)
     {
         self->gameData.frameCount = 0;
         self->gameData.levelTime++;
-        self->gameData.inGameTimer++;
 
         if (self->gameData.remainingBlocks <= 0)
         {
@@ -746,7 +741,6 @@ void drawReadyScreen(font_t* font, paGameData_t* gameData)
 void changeStateGame(pango_t* self)
 {
     self->gameData.frameCount = 0;
-    self->gameData.currentBgm = 0;
     pa_resetGameDataLeds(&(self->gameData));
 
     pa_deactivateAllEntities(&(self->entityManager), false);
@@ -864,7 +858,6 @@ void updateDead(pango_t* self, int64_t elapsedUs)
     {
         // Keep counting time as a penalty
         self->gameData.levelTime++;
-        self->gameData.inGameTimer++;
     }
 
     if (self->gameData.frameCount > 179)
@@ -907,17 +900,6 @@ void updateGameOver(pango_t* self, int64_t elapsedUs)
     if (self->gameData.frameCount > 179)
     {
         // Handle unlockables
-
-        if (self->gameData.score >= BIG_SCORE)
-        {
-            self->unlockables.bigScore = true;
-        }
-
-        if (self->gameData.score >= BIGGER_SCORE)
-        {
-            self->unlockables.biggerScore = true;
-        }
-
         if (!self->gameData.debugMode)
         {
             pangoSaveUnlockables(self);
@@ -1231,9 +1213,6 @@ void pangoInitializeUnlockables(pango_t* self)
     self->unlockables.maxLevelIndexUnlocked = 0;
     self->unlockables.gameCleared           = false;
     self->unlockables.oneCreditCleared      = false;
-    self->unlockables.bigScore              = false;
-    self->unlockables.fastTime              = false;
-    self->unlockables.biggerScore           = false;
 }
 
 void loadPangoUnlockables(pango_t* self)
@@ -1467,8 +1446,6 @@ void updatePause(pango_t* self, int64_t elapsedUs)
     {
         globalMidiPlayerResumeAll();
         soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
-        self->gameData.changeBgm  = self->gameData.currentBgm;
-        self->gameData.currentBgm = PA_BGM_NULL;
         self->update              = &updateGame;
     }
 
@@ -1543,21 +1520,6 @@ void pa_advanceToNextLevelOrGameClear(pango_t* self)
             if (!self->gameData.continuesUsed)
             {
                 self->unlockables.oneCreditCleared = true;
-
-                if (self->gameData.inGameTimer < FAST_TIME)
-                {
-                    self->unlockables.fastTime = true;
-                }
-            }
-
-            if (self->gameData.score >= BIG_SCORE)
-            {
-                self->unlockables.bigScore = true;
-            }
-
-            if (self->gameData.score >= BIGGER_SCORE)
-            {
-                self->unlockables.biggerScore = true;
             }
         }
 
@@ -1634,7 +1596,6 @@ uint16_t getAttractPlayerRandomDirection(){
             return PA_DIRECTION_SOUTHEAST;
     }
 }
-
 
 void changeStateDemoControls(pango_t* self)
 {

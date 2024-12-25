@@ -30,7 +30,6 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
     gameData->rank            = 5;
     gameData->debugMode       = false;
     gameData->continuesUsed   = false;
-    gameData->inGameTimer     = 0;
     gameData->soundManager    = soundManager;
     gameData->playerCharacter = PA_PLAYER_CHARACTER_PANGO;
 }
@@ -45,10 +44,7 @@ void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData)
     gameData->levelTime                = 000;
     gameData->frameCount               = 0;
     gameData->bgColor                  = c000;
-    gameData->currentBgm               = 0;
-    gameData->changeBgm                = 0;
     gameData->continuesUsed            = (gameData->level == 1) ? false : true;
-    gameData->inGameTimer              = 0;
     gameData->firstBonusItemDispensed  = false;
     gameData->secondBonusItemDispensed = false;
 
