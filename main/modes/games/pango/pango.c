@@ -394,7 +394,10 @@ void pangoMainLoop(int64_t elapsedUs)
     }
 
     pango->update(pango, elapsedUs);
-    DRAW_FPS_COUNTER(pango->gameData.scoreFont);
+
+    if(pango->gameData.debugMode){
+        DRAW_FPS_COUNTER(pango->gameData.scoreFont);
+    }
 
     pango->prevBtnState          = pango->btnState;
     pango->gameData.prevBtnState = pango->gameData.btnState;
