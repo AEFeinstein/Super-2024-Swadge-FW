@@ -314,7 +314,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                             fcData->isCached          = true;
                             if (((bb_foodCartData_t*)fcData->partner)->isCached)
                             {
-                                for (int i = 0; i < 2; i++)
+                                for (int frame = 0; frame < 2; frame++)
                                 {
                                     freeWsg(&entityManager->sprites[BB_FOOD_CART].frames[i]);
                                 }
