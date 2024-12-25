@@ -466,7 +466,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
         if (cursorMoved)
         {
             globalMidiPlayerStop(true);
-            globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_BGM);
+            globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_SFX);
             tttSendCursor(ttt);
         }
     }
@@ -558,7 +558,7 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
 
     // Play SFX
     globalMidiPlayerStop(true);
-    globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_BGM);
+    globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_SFX);
 }
 
 /**
