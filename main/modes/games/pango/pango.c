@@ -1054,8 +1054,12 @@ void changeStateLevelClear(pango_t* self)
 
     self->gameData.bonusScore = pa_getLevelClearBonus(self->gameData.levelTime);
 
-    //globalMidiPlayerStop(false);
-    //soundPlaySfx(&(self->soundManager.sndLevelClearA), MIDI_SFX);
+    if(self->soundManager.currentBgmIndex != (1 + ((self->gameData.level+1) >> 2) % 4))
+    {
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        player->loop         = false;
+        soundPlayBgm(&(self->soundManager.sndLevelClearA), BZR_STEREO);
+    }
 
     self->gameData.gameState  = PA_ST_LEVEL_CLEAR;
     self->update = &updateLevelClear;
@@ -1081,7 +1085,7 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
                 soundPlaySfx(&(self->soundManager.sndTally), 0);
             }
         }
-        else if (self->gameData.frameCount % 120 == 0)
+        else if (self->gameData.frameCount > 180 && (self->gameData.frameCount % 120 == 0))
         {
             // Hey look, it's a frame rule!
             pa_advanceToNextLevelOrGameClear(self);
