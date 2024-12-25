@@ -1244,7 +1244,9 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             self->xspeed = other->xspeed * 2;
             self->yspeed = other->yspeed * 2;
 
-            uint16_t pointsScored = hitBlockComboScores[(other->scoreValue < SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1) ? other->scoreValue : SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1];
+            uint16_t pointsScored = hitBlockComboScores[(other->scoreValue < SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1)
+                                                            ? other->scoreValue
+                                                            : SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1];
             pa_scorePoints(self->gameData, pointsScored);
             other->scoreValue++;
 
@@ -1379,7 +1381,10 @@ void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty, uint16_
             {
                 pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
                 self->gameData->remainingBlocks--;
-                pa_scorePoints(self->gameData, spawnBlockComboScores[(self->scoreValue < SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1) ? self->scoreValue : SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1]);
+                pa_scorePoints(self->gameData,
+                               spawnBlockComboScores[(self->scoreValue < SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1)
+                                                         ? self->scoreValue
+                                                         : SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1]);
                 self->entityManager->gameData->remainingEnemies--;
             }
             else
