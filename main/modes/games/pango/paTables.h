@@ -254,8 +254,7 @@ static const uint16_t demoControlsScript[DEMO_CONTROLS_SCRIPT_TABLE_LENGTH * DEM
     PB_LEFT,  4,                //
     PB_A,     4,                //
     PB_DOWN,  16,               //
-    0,        80,               //
-    PB_LEFT,  1024,             //
+    0,        80, PB_LEFT, 120, //
 };
 
 #define DEMO_SCORING_SCRIPT_TABLE_LENGTH     17
@@ -279,8 +278,7 @@ static const uint16_t demoScoringScript[DEMO_SCORING_SCRIPT_TABLE_LENGTH * DEMO_
     0,        4,                //
     0,        1,                //
     PB_DOWN,  16,               //
-    0,        80,               //
-    PB_LEFT,  1024,             //
+    0,        80, PB_LEFT, 120, //
 };
 
 static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
