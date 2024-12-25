@@ -272,6 +272,8 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &self->gameData->bgm, true);
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
+        self->gameData->day++;
+
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
@@ -1658,8 +1660,6 @@ void bb_updateAttachmentArm(bb_entity_t* self)
 
         rData->flame->updateFunction  = &bb_updateFlame;
         aData->rocket->updateFunction = &bb_updateRocketLiftoff;
-        
-        self->gameData->day++;
 
         bb_destroyEntity(self, false);
     }
@@ -3334,7 +3334,7 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
     bb_setCharacterLine(dData, 0, "Ovo", "Holy bug farts!"); //
     bb_setCharacterLine(
         dData, 1, "Ovo",
-        "After I marketed the chilidog car freshener at MAGFest, Garbotnik Industries' stock went up by 6,969%!");
+        "After I sold the chilidog car fresheners to MAGFest, Garbotnik Industries' stock went up by 6,969%!");
     bb_setCharacterLine(dData, 2, "Ovo",
                         "I'm going to use my time machine to steal the next big-selling trinket from the future now.");
     bb_setCharacterLine(dData, 3, "Ovo", "That will floor all my stakeholders and make me UNDEFINED money!");
