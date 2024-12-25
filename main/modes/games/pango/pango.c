@@ -160,7 +160,7 @@ void updateDemoScoring(pango_t* self, int64_t elapsedUs);
 void changeStateAttractMode(pango_t* self);
 void updateAttractMode(pango_t* self, int64_t elapsedUs);
 void updateBtnStateAttractMode(pango_t* self);
-uint16_t getAttractPlayerRandomDirection();
+uint16_t getAttractPlayerRandomDirection(void);
 
 //==============================================================================
 // Variables
@@ -1587,7 +1587,7 @@ void updateBtnStateAttractMode(pango_t* self)
     }
 }
 
-uint16_t getAttractPlayerRandomDirection()
+uint16_t getAttractPlayerRandomDirection(void)
 {
     switch (esp_random() % 8)
     {
