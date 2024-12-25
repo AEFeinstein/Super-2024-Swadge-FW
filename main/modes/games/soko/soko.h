@@ -20,7 +20,8 @@ typedef enum
 {
     SOKO_MENU,
     SOKO_LEVELPLAY,
-    SOKO_LOADNEWLEVEL
+    SOKO_LOADNEWLEVEL,
+    SOKO_HELP,
 } sokoScreen_t;
 
 typedef enum
@@ -181,9 +182,14 @@ typedef struct soko_abs_s
 {
     // meta
     menu_t* menu;                           ///< The menu structure
+    menu_t* bgMenu;                         ///< The menu structure
     menuManiaRenderer_t* menuManiaRenderer; ///< Renderer for the menu
     font_t ibm;                             ///< The font used in the menu and game
-    sokoScreen_t screen;                    ///< The screen being displayed
+    font_t font_rodin;
+    font_t font_rodin_outline;
+    font_t font_righteous;
+    font_t font_righteous_outline;
+    sokoScreen_t screen; ///< The screen being displayed
 
     char* levelFileText;
     char* levelNames[SOKO_LEVEL_COUNT];
@@ -261,6 +267,10 @@ typedef struct soko_abs_s
     soko_var_t loadNewLevelVariant;
 
     int chosen_victory_message;
+
+    // Help page
+    uint32_t helpIdx;
+    uint32_t arrowBlinkTimer;
 } soko_abs_t;
 
 extern const char SOKO_TAG[];

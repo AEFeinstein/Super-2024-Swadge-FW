@@ -205,7 +205,16 @@
     #define GPIO_BTN_LEFT  GPIO_NUM_2
     #define GPIO_BTN_RIGHT GPIO_NUM_1
 
-#elif defined(CONFIG_HARDWARE_HOTDOG)
+#elif defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION)
+    #define GPIO_SAO_1 GPIO_NUM_40
+    #define GPIO_SAO_2 GPIO_NUM_42
+
+    #define GPIO_BTN_UP    GPIO_NUM_0
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_2
+    #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+#elif defined(CONFIG_HARDWARE_HOTDOG_PROTO)
     #define GPIO_SAO_1 GPIO_NUM_40
     #define GPIO_SAO_2 GPIO_NUM_42
 
@@ -275,6 +284,7 @@ void app_main(void)
     // Read settings from NVS
     readAllSettings();
 
+#ifdef CONFIG_FACTORY_TEST_NORMAL
     // If test mode was passed
     if (getTutorialCompletedSetting())
     {
@@ -286,6 +296,14 @@ void app_main(void)
         // Start the out-of-box experience / tutorial
         cSwadgeMode = &introMode;
     }
+#else
+    // If test mode was passed
+    if (getTestModePassedSetting())
+    {
+        // Show the main menu
+        cSwadgeMode = &mainMenuMode;
+    }
+#endif
     else
     {
         // Otherwise enter test mode
@@ -545,12 +563,16 @@ static void initOptionalPeripherals(void)
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
     {
+        setDacShutdown(true);
+
         // Initialize and start the mic as a continuous ADC
         initMic(GPIO_NUM_7);
         startMic();
     }
     else
     {
+        setDacShutdown(false);
+
         // Otherwise initialize the battery monitor as a oneshot ADC
         initBattmon(GPIO_NUM_6);
 

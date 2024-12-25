@@ -27,7 +27,7 @@ static uq16_16 tremolo(uint32_t tick, uint32_t period, uq16_16 freq, int8_t cent
 static int8_t linearNoiseImpulse(uint32_t length, uint32_t idx, bool* done)
 {
     int vol = ((length - 1) - idx) / (length >> 8);
-    if (done && idx == (length - 1))
+    if (done && idx >= (length - 1))
     {
         *done = true;
     }
@@ -57,7 +57,7 @@ static int8_t linearWaveImpulse(oscillatorShape_t shape, uq16_16 freq, uint32_t 
     uint8_t sampleAt = (idx * (freq / (DAC_SAMPLE_RATE_HZ >> 8)) >> 16) & 0xFF;
     int8_t wave      = swSynthSampleWave(shape, sampleAt);
     int vol          = ((length - 1) - idx) / (length >> 8);
-    if (done && idx == (length - 1))
+    if (done && idx >= (length - 1))
     {
         *done = true;
     }
@@ -189,8 +189,17 @@ static inline int8_t finishAt(uint32_t finishTime, uint32_t idx, bool* done)
         + adrLerp(idx, 128, ((len)-128), sineVol, 0) * sampleWaveAt(idx, SHAPE_SINE, freq) / 256 \
         + finishAt(len, idx, done)
 
+/* defaultDrumkitFunc() defines values in terms of samples at 32768hz
+ * The actual sample rate is half that, so we double the sample index to match
+ */
+#define DRUMKIT_SAMPLE_RATE_HZ 32768
+#define DRUMKIT_SAMPLE_FACTOR  (DRUMKIT_SAMPLE_RATE_HZ / DAC_SAMPLE_RATE_HZ)
+
 int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data)
 {
+    // Speed up the IDX to match the actual sample rate
+    idx *= DRUMKIT_SAMPLE_FACTOR;
+
     // Good for a lazer sound:
     // return adrLerp(idx, 128, (8192-128), 256, 0) * swSynthSampleWave(NOISE, idx) + finishAt(8192, idx, done);
     switch (drum)

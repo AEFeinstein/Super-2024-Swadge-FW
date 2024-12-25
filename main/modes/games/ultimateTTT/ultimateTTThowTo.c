@@ -408,7 +408,7 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
                         {
                             tttGameData_t* priorState = pop(&ttt->instructionHistory);
                             memcpy(&ttt->game, priorState, sizeof(tttGameData_t));
-                            free(priorState);
+                            heap_caps_free(priorState);
                         }
                         case INSTRUCTION_NOP:
                         case INSTRUCTION_TEXT:
@@ -586,7 +586,7 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
         case INSTRUCTION_NOP:
         {
             // Render the game board
-            tttDrawGame(ttt);
+            tttDrawGame(ttt, elapsedUs);
             textColor = c555;
             break;
         }

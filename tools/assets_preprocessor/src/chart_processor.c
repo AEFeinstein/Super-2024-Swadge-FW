@@ -49,6 +49,8 @@ void process_chart(const char* infile, const char* outdir)
 
             char line[512]        = {0};
             char sectionName[512] = {0};
+            int lastTick = -1;
+            int lastNote = -1;
             while (NULL != fgets(line, sizeof(line), fp))
             {
                 int tick, note, length;
@@ -89,6 +91,14 @@ void process_chart(const char* infile, const char* outdir)
                 else if (inSection && (CS_NOTES == section) && //
                          sscanf(line, "%d = N %d %d", &tick, &note, &length))
                 {
+                    if(lastTick == tick && lastNote == note)
+                    {
+                        // Don't allow overlapping notes
+                        continue;
+                    }
+                    lastTick = tick;
+                    lastNote = note;
+
                     noteCount++;
 
                     tmpSpace[tmpIdx++] = (tick >> 24) & 0xFF;

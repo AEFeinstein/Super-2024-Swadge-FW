@@ -86,7 +86,8 @@ jobs:
     - name: Install apt packages
       if: matrix.family == 'linux'
       run: |
-        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
+        sudo apt update
+        sudo apt install --fix-missing build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
 
     ## Firmware
     - name: Restore IDF Cache
@@ -132,12 +133,12 @@ jobs:
         path: |
           build/swadge2024.elf
           build/swadge2024.bin
-          build/storage.bin
           build/dfu.bin
           build/bootloader/bootloader.bin
           build/partition_table/partition-table.bin
           version.txt
           tools/pyFlashGui/pyFlashGui.py
+          tools/pyFlashGui/requirements.txt
 
     #### Platform-specific Emulator Builds
     - name: Install msys64 packages

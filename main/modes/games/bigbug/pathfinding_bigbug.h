@@ -5,23 +5,20 @@
 // Includes
 //==============================================================================
 #include "swadge2024.h"
+#include "typedef_bigbug.h"
+#include "tilemap_bigbug.h"
 
 //==============================================================================
 // Structs
 //==============================================================================
-typedef struct
-{
-    uint8_t x;
-    uint8_t y;
-    bool z; // true for foreground false for midground
-    uint16_t gCost;
-    uint16_t hCost;
-} bb_node_t;
 
 //==============================================================================
 // Prototypes
 //==============================================================================
-uint16_t fCost(const bb_node_t* node);
-bool pathfindToPerimeter(bb_node_t* start);
+uint16_t fCost(const bb_midgroundTileInfo_t* tile);
+bool isPerimeterNode(const bb_midgroundTileInfo_t* tile);
+void getNeighbors(const bb_midgroundTileInfo_t* tile, list_t* neighbors, bb_tilemap_t* tilemap);
+bool contains(const list_t* nodeList, const bb_midgroundTileInfo_t* tile);
+bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap);
 
 #endif

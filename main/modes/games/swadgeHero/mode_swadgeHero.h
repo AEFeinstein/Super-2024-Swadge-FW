@@ -12,6 +12,8 @@
 //==============================================================================
 
 #define NUM_NOTE_TIMINGS 6
+#define NUM_NOTES        6
+#define NUM_NOTE_FRAMES  2
 
 //==============================================================================
 // Enums
@@ -38,11 +40,9 @@ typedef enum
 
 typedef struct
 {
-    char* name;
-    char* midi;
-    char* easy;
-    char* med;
-    char* hard;
+    const char* name;
+    const char* artist;
+    const char* fName;
 } shSong_t;
 
 typedef struct
@@ -59,6 +59,10 @@ typedef struct
     int32_t tailTimeUs;
     int32_t headPosY;
     int32_t tailPosY;
+#ifdef SH_NOTE_DBG
+    int32_t headTick;
+    int32_t tailTick;
+#endif
     bool held;
 } shGameNote_t;
 
@@ -86,8 +90,11 @@ typedef struct
     // Song being played
     midiFile_t midiSong;
     int32_t leadInUs;
+    int32_t leadOutUs;
     char hsKey[16];
     const char* songName;
+    uint32_t songTimeUs;
+    bool paused;
 
     // Chart data
     int32_t numChartNotes;
@@ -113,7 +120,7 @@ typedef struct
     int32_t combo;
     int32_t maxCombo;
     bool gameEnd;
-    int32_t totalNotes;
+    int32_t totalHitNotes; ///< Similar to numChartNotes, but counts holds as two notes (on and off)
     int32_t notesHit;
     const char* grade;
     int32_t noteHistogram[NUM_NOTE_TIMINGS];
@@ -136,7 +143,11 @@ typedef struct
     const char* hitText;
     const char* timingText;
     int32_t textTimerUs;
-    wsg_t icons[6];
+    wsg_t icons[NUM_NOTES][NUM_NOTE_FRAMES];
+    wsg_t outlines[NUM_NOTES];
+    wsg_t pressed[NUM_NOTES];
+    int32_t iconIdx;
+    int32_t iconTimerUs;
     wsg_t star;
     list_t starList;
 

@@ -15,9 +15,9 @@
 
 #define P1_COLOR             c500
 #define P2_COLOR             c005
-#define MAIN_GRID_COLOR      c010
-#define SUB_GRID_COLOR       c020
-#define WAITING_PLAYER_COLOR c222
+#define MAIN_GRID_COLOR      c444
+#define SUB_GRID_COLOR       c222
+#define WAITING_PLAYER_COLOR c111
 
 #define CURSOR_STROKE 4
 
@@ -40,6 +40,20 @@ static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt);
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * @brief Linearly interpolate between two numbers
+ *
+ * @param start The start number
+ * @param end The end number
+ * @param tTime The total time for this interpolation
+ * @param t The current time for this interpolation
+ * @return The value interpolated between start and end for this time
+ */
+static inline int32_t linInterp(int32_t start, int32_t end, int32_t tTime, int32_t t)
+{
+    return start + ((end - start) * t) / tTime;
+}
 
 /**
  * @brief Start a multiplayer game. This is called after a connection is established
@@ -81,21 +95,28 @@ void tttBeginGame(ultimateTTT_t* ttt)
     // Clean up after showing instructions
     ttt->showingInstructions = false;
 
+    // Reset animation timers
+    ttt->game.moveAnimTimer = MOVE_ANIM_TIME;
+    memset(ttt->game.cellTimers, 0, sizeof(ttt->game.cellTimers));
+    memset(ttt->game.gameTimers, 0, sizeof(ttt->game.gameTimers));
+
     /// Clear any CPU data
-    ttt->game.cpu.state         = TCPU_INACTIVE;
-    ttt->game.cpu.destSubgame.x = 0;
-    ttt->game.cpu.destSubgame.y = 0;
-    ttt->game.cpu.destCell.x    = 0;
-    ttt->game.cpu.destCell.y    = 0;
-    ttt->game.cpu.delayTime     = 0;
+    memset(&ttt->game.cpu, 0, sizeof(ttt->game.cpu));
 
     // Show the game UI
     tttShowUi(TUI_GAME);
 
     // Randomly determine play order for single player
-    if (ttt->game.singlePlayer)
+    if (ttt->game.singleSystem)
     {
-        ttt->game.singlePlayerPlayOrder = (esp_random() % 2) ? GOING_FIRST : GOING_SECOND;
+        if (ttt->game.passAndPlay)
+        {
+            ttt->game.singlePlayerPlayOrder = GOING_FIRST;
+        }
+        else
+        {
+            ttt->game.singlePlayerPlayOrder = (esp_random() % 2) ? GOING_FIRST : GOING_SECOND;
+        }
     }
 
     // Set the cursor mode
@@ -108,12 +129,15 @@ void tttBeginGame(ultimateTTT_t* ttt)
         // Send it to the second player
         tttSendMarker(ttt, ttt->game.p1MarkerIdx);
 
-        if (ttt->game.singlePlayer)
+        if (ttt->game.singleSystem)
         {
-            ttt->game.state     = TGS_PLACING_MARKER;
-            ttt->game.cpu.state = TCPU_INACTIVE;
+            ttt->game.state = TGS_PLACING_MARKER;
+            if (!ttt->game.passAndPlay)
+            {
+                ttt->game.cpu.state = TCPU_INACTIVE;
+            }
 
-            // Randomize CPU marker to be not the players
+            // Randomize markers to be not match
             ttt->game.p2MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
             // While the markers match
             while (ttt->game.p1MarkerIdx == ttt->game.p2MarkerIdx)
@@ -123,12 +147,22 @@ void tttBeginGame(ultimateTTT_t* ttt)
             }
         }
     }
-    else if (ttt->game.singlePlayer)
+    else if (ttt->game.singleSystem)
     {
-        ttt->game.state     = TGS_WAITING;
-        ttt->game.cpu.state = TCPU_THINKING;
+        if (ttt->game.passAndPlay)
+        {
+            ttt->game.state = TGS_PLACING_MARKER;
+        }
+        else
+        {
+            ttt->game.state     = TGS_WAITING;
+            ttt->game.cpu.state = TCPU_THINKING;
+        }
 
-        // Randomize CPU marker to be not the players
+        // Set own marker type
+        ttt->game.p2MarkerIdx = ttt->activeMarkerIdx;
+
+        // Randomize markers to be not match
         ttt->game.p1MarkerIdx = esp_random() % ttt->numUnlockedMarkers;
         // While the markers match
         while (ttt->game.p1MarkerIdx == ttt->game.p2MarkerIdx)
@@ -431,6 +465,8 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
         // Send cursor movement to the other Swadge
         if (cursorMoved)
         {
+            globalMidiPlayerStop(true);
+            globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_BGM);
             tttSendCursor(ttt);
         }
     }
@@ -519,6 +555,10 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
     ttt->game.cursorMode      = msg->cursorMode;
     ttt->game.selectedSubgame = msg->selectedSubgame;
     ttt->game.cursor          = msg->cursor;
+
+    // Play SFX
+    globalMidiPlayerStop(true);
+    globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_BGM);
 }
 
 /**
@@ -528,10 +568,13 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
  */
 void tttSendPlacedMarker(ultimateTTT_t* ttt)
 {
-    if (ttt->game.singlePlayer)
+    if (ttt->game.singleSystem)
     {
-        ttt->game.state     = TGS_WAITING;
-        ttt->game.cpu.state = TCPU_THINKING;
+        ttt->game.state = TGS_WAITING;
+        if (!ttt->game.passAndPlay)
+        {
+            ttt->game.cpu.state = TCPU_THINKING;
+        }
     }
     else if (ttt->game.p2p.cnc.isConnected)
     {
@@ -576,6 +619,13 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
     // Place the marker
     ttt->game.subgames[subgame->x][subgame->y].game[cell->x][cell->y] = marker;
 
+    // Start anim timer
+    ttt->game.cellTimers[subgame->x][subgame->y][cell->x][cell->y] = ROTATE_TIME;
+
+    // Play SFX
+    globalMidiPlayerStop(true);
+    globalMidiPlayerPlaySong(&ttt->sfxPlaceMarker, MIDI_SFX);
+
     // Check the board
     bool won  = false;
     bool lost = false;
@@ -589,6 +639,10 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
         }
         case TTT_P1:
         {
+            // Play SFX
+            globalMidiPlayerStop(true);
+            globalMidiPlayerPlaySong(&ttt->sfxWinGame, MIDI_SFX);
+
             // Player 1 won, figure out who that is
             if (GOING_FIRST == tttGetPlayOrder(ttt))
             {
@@ -602,6 +656,10 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
         }
         case TTT_P2:
         {
+            // Play SFX
+            globalMidiPlayerStop(true);
+            globalMidiPlayerPlaySong(&ttt->sfxWinGame, MIDI_SFX);
+
             // Player 2 won, figure out who that is
             if (GOING_SECOND == tttGetPlayOrder(ttt))
             {
@@ -615,9 +673,25 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
         }
         case TTT_NONE:
         {
+            // Save the source animation rectangle
+            int16_t sX0                  = ttt->gameOffset.x + (ttt->game.selectedSubgame.x * ttt->subgameSize);
+            int16_t sY0                  = ttt->gameOffset.y + (ttt->game.selectedSubgame.y * ttt->subgameSize);
+            ttt->game.priorCellAnim[0].x = sX0 + (cell->x * ttt->cellSize);
+            ttt->game.priorCellAnim[0].y = sY0 + (cell->y * ttt->cellSize);
+            ttt->game.priorCellAnim[1].x = ttt->game.priorCellAnim[0].x + ttt->cellSize - 1;
+            ttt->game.priorCellAnim[1].y = ttt->game.priorCellAnim[0].y + ttt->cellSize - 1;
+
             // Next move should be in the subgame indicated by the cell
             ttt->game.selectedSubgame = *cell;
             ttt->game.cursorMode      = SELECT_CELL_LOCKED;
+
+            // Save the destination animation rectangle
+            ttt->game.nextSubgameAnim[0].x = ttt->gameOffset.x + (ttt->game.selectedSubgame.x * ttt->subgameSize);
+            ttt->game.nextSubgameAnim[0].y = ttt->gameOffset.y + (ttt->game.selectedSubgame.y * ttt->subgameSize);
+            ttt->game.nextSubgameAnim[1].x = ttt->game.nextSubgameAnim[0].x + ttt->subgameSize - 1;
+            ttt->game.nextSubgameAnim[1].y = ttt->game.nextSubgameAnim[0].y + ttt->subgameSize - 1;
+
+            ttt->game.moveAnimTimer = 0;
 
             // If that subgame is already won
             if (TTT_NONE != ttt->game.subgames[ttt->game.selectedSubgame.x][ttt->game.selectedSubgame.y].winner)
@@ -712,7 +786,7 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
             ttt->lastResult = TTR_DRAW;
         }
 
-        if (!ttt->game.singlePlayer)
+        if (!ttt->game.singleSystem)
         {
             // Stop p2p
             p2pDeinit(&ttt->game.p2p);
@@ -736,7 +810,16 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
     {
         for (uint16_t x = 0; x < 3; x++)
         {
-            tttCheckSubgameWinner(&ttt->game.subgames[x][y]);
+            tttPlayer_t oldWinner = ttt->game.subgames[x][y].winner;
+            if (oldWinner != tttCheckSubgameWinner(&ttt->game.subgames[x][y]))
+            {
+                // Play SFX
+                globalMidiPlayerStop(true);
+                globalMidiPlayerPlaySong(&ttt->sfxWinSubgame, MIDI_SFX);
+
+                // Start anim timer
+                ttt->game.gameTimers[x][y] = ROTATE_TIME;
+            }
         }
     }
 
@@ -845,7 +928,7 @@ tttPlayer_t tttCheckSubgameWinner(tttSubgame_t* subgame)
  */
 static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt)
 {
-    if (ttt->game.singlePlayer)
+    if (ttt->game.singleSystem)
     {
         return ttt->game.singlePlayerPlayOrder;
     }
@@ -859,10 +942,20 @@ static playOrder_t tttGetPlayOrder(ultimateTTT_t* ttt)
  * @brief Draw the Ultimate TTT game UI
  *
  * @param ttt The entire game state
+ * @param elapsedUs The time elapsed since this was last called
  */
-void tttDrawGame(ultimateTTT_t* ttt)
+void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
 {
+    // LED setting for wireless & pass and play
     bool isP1 = (GOING_FIRST == tttGetPlayOrder(ttt));
+
+    // Override for CPU matches during the CPU's turn
+    if ((true == ttt->game.singleSystem) && //
+        (false == ttt->game.passAndPlay) && //
+        (ttt->game.state == TGS_WAITING))
+    {
+        isP1 = !isP1;
+    }
 
     // Light LEDs for p1/p2
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -879,12 +972,51 @@ void tttDrawGame(ultimateTTT_t* ttt)
     }
     setLeds(leds, CONFIG_NUM_LEDS);
 
+    // Run animation timers
+    for (int32_t y = 0; y < 3; y++)
+    {
+        for (int32_t x = 0; x < 3; x++)
+        {
+            // Check animation timers for the subgame winners
+            if (ttt->game.gameTimers[x][y] > 0)
+            {
+                ttt->game.gameTimers[x][y] -= elapsedUs;
+            }
+            else
+            {
+                ttt->game.gameTimers[x][y] = 0;
+            }
+
+            for (int32_t sy = 0; sy < 3; sy++)
+            {
+                for (int32_t sx = 0; sx < 3; sx++)
+                {
+                    // Check animation timers for the subgame cells
+                    if (ttt->game.cellTimers[x][y][sx][sy] > 0)
+                    {
+                        ttt->game.cellTimers[x][y][sx][sy] -= elapsedUs;
+                    }
+                    else
+                    {
+                        ttt->game.cellTimers[x][y][sx][sy] = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    // Run up the movement animation timer
+    if (ttt->game.moveAnimTimer < MOVE_ANIM_TIME)
+    {
+        ttt->game.moveAnimTimer += elapsedUs;
+    }
+
     // Clear before drawing
     clearPxTft();
 
     // Draw some borders to indicate who you are
-    fillDisplayArea(0, 0, ttt->gameOffset.x - 4, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
-    fillDisplayArea(ttt->gameOffset.x + ttt->gameSize + 4, 0, TFT_WIDTH, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
+    fillDisplayArea(0, 0, ttt->gameOffset.x - 3, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
+    fillDisplayArea(ttt->gameOffset.x + ttt->gameSize + 2, 0, TFT_WIDTH, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
 
     // Draw the main grid lines
     tttDrawGrid(ttt->gameOffset.x, ttt->gameOffset.y, ttt->gameOffset.x + ttt->gameSize - 1,
@@ -900,6 +1032,14 @@ void tttDrawGame(ultimateTTT_t* ttt)
             int16_t sY0 = ttt->gameOffset.y + (subY * ttt->subgameSize);
             int16_t sX1 = sX0 + ttt->subgameSize - 1;
             int16_t sY1 = sY0 + ttt->subgameSize - 1;
+
+            // Checkerboard the background
+            paletteColor_t fillColor = c110;
+            if (subX % 2 == subY % 2)
+            {
+                fillColor = c011;
+            }
+            fillDisplayArea(sX0, sY0, sX1, sY1, fillColor);
 
             // Draw the subgame grid lines
             tttDrawGrid(sX0, sY0, sX1, sY1, 4, SUB_GRID_COLOR);
@@ -932,7 +1072,9 @@ void tttDrawGame(ultimateTTT_t* ttt)
                 case TTT_P2:
                 {
                     // Draw a big marker for a winner
-                    drawWsgSimple(getMarkerWsg(ttt, ttt->game.subgames[subX][subY].winner, true), sX0, sY0);
+                    int32_t rotate = (360 * ttt->game.gameTimers[subX][subY]) / ROTATE_TIME;
+                    drawWsg(getMarkerWsg(ttt, ttt->game.subgames[subX][subY].winner, true), sX0, sY0, false, false,
+                            rotate);
                     break;
                 }
                 default:
@@ -961,9 +1103,10 @@ void tttDrawGame(ultimateTTT_t* ttt)
                                 case TTT_P2:
                                 {
                                     // Draw a small marker
-                                    drawWsgSimple(
-                                        getMarkerWsg(ttt, ttt->game.subgames[subX][subY].game[cellX][cellY], false),
-                                        cX0, cY0);
+                                    int32_t rotate
+                                        = (360 * ttt->game.cellTimers[subX][subY][cellX][cellY]) / ROTATE_TIME;
+                                    drawWsg(getMarkerWsg(ttt, ttt->game.subgames[subX][subY].game[cellX][cellY], false),
+                                            cX0, cY0, false, false, rotate);
                                     break;
                                 }
                             }
@@ -1002,9 +1145,43 @@ void tttDrawGame(ultimateTTT_t* ttt)
         }
     }
 
-    if (ttt->game.singlePlayer && ttt->game.state == TGS_WAITING)
+    // If the movement animation timer is active
+    if (ttt->game.moveAnimTimer <= MOVE_ANIM_TIME)
     {
-        tttCpuNextMove(ttt);
+        // Draw the interpolated rectangle
+        drawRect(linInterp(ttt->game.priorCellAnim[0].x, ttt->game.nextSubgameAnim[0].x, MOVE_ANIM_TIME,
+                           ttt->game.moveAnimTimer),
+                 linInterp(ttt->game.priorCellAnim[0].y, ttt->game.nextSubgameAnim[0].y, MOVE_ANIM_TIME,
+                           ttt->game.moveAnimTimer),
+                 linInterp(ttt->game.priorCellAnim[1].x, ttt->game.nextSubgameAnim[1].x, MOVE_ANIM_TIME,
+                           ttt->game.moveAnimTimer),
+                 linInterp(ttt->game.priorCellAnim[1].y, ttt->game.nextSubgameAnim[1].y, MOVE_ANIM_TIME,
+                           ttt->game.moveAnimTimer),
+                 c440);
+    }
+
+    if (ttt->game.singleSystem && ttt->game.state == TGS_WAITING)
+    {
+        if (!ttt->game.passAndPlay)
+        {
+            // Let CPU make the next move
+            tttCpuNextMove(ttt);
+        }
+        else
+        {
+            // Flip the active player
+            if (GOING_FIRST == ttt->game.singlePlayerPlayOrder)
+            {
+                ttt->game.singlePlayerPlayOrder = GOING_SECOND;
+            }
+            else
+            {
+                ttt->game.singlePlayerPlayOrder = GOING_FIRST;
+            }
+
+            // Let the active player place a marker
+            ttt->game.state = TGS_PLACING_MARKER;
+        }
     }
 }
 

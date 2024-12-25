@@ -13,15 +13,22 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundManager)
+void bb_initializeGameData(bb_gameData_t* gameData)
 {
-    gameData->gameState = 0;
+    // Set the mode to game mode
+    gameData->screen = BIGBUG_GAME;
 
-    gameData->bgColor     = c335;
-    gameData->debugMode   = false;
-    gameData->inGameTimer = 0;
+    gameData->debugMode = false;
 
-    gameData->soundManager = soundManager;
+    loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->bgm, true);
+    // loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);
+    // loadMidiFile("Big Bug Hurry up.mid", &gameData->hurryUp, true);
+    // loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->garbotniksHome, true);
+    // loadMidiFile("BigBug_Space Travel.mid", &gameData->spaceTravel, true);
+
+    loadMidiFile("Bump.mid", &gameData->sfxBump, true);
+    loadMidiFile("Harpoon.mid", &gameData->sfxHarpoon, true);
+    loadMidiFile("Dirt_Breaking.mid", &gameData->sfxDirt, true);
 
     gameData->neighbors[0][0] = -1; // left  neighbor x offset
     gameData->neighbors[0][1] = 0;  // left  neighbor y offset
@@ -34,19 +41,69 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
 
     // Load font
     loadFont("ibm_vga8.font", &gameData->font, false);
+    loadFont("tiny_numbers.font", &gameData->tinyNumbers, false);
+    loadFont("seven_segment.font", &gameData->sevenSegment, false);
 
     memset(&gameData->pleaseCheck, 0, sizeof(list_t));
     memset(&gameData->unsupported, 0, sizeof(list_t));
+
+    // Palette setup
+    wsgPaletteReset(&gameData->damagePalette);
+    for (int color = 0; color < 215; color++)
+    {
+        uint32_t rgbCol = paletteToRGB((paletteColor_t)color);
+        // don't modify blue channel
+        //  int16_t newChannelColor = (rgbCol >> 16) & 255;
+        //  newChannelColor += 51;
+        //  if(newChannelColor > 255)
+        //  {
+        //      newChannelColor = 255;
+        //  }
+        //  rgbCol = (rgbCol & 0x00FFFF) | (newChannelColor << 16);
+
+        // decrement green by 51
+        int16_t newChannelColor = (rgbCol >> 8) & 255;
+        newChannelColor -= 51;
+        if (newChannelColor < 0)
+        {
+            newChannelColor = 0;
+        }
+        rgbCol = (rgbCol & 0xFF00FF) | (newChannelColor << 8);
+
+        // increment red by 102
+        newChannelColor = rgbCol & 255;
+        newChannelColor += 102;
+        if (newChannelColor > 255)
+        {
+            newChannelColor = 255;
+        }
+        rgbCol = (rgbCol & 0x00FFFF) | newChannelColor;
+        wsgPaletteSet(&gameData->damagePalette, (paletteColor_t)color, RGBtoPalette(rgbCol));
+    }
+}
+
+void bb_freeGameData(bb_gameData_t* gameData)
+{
+    unloadMidiFile(&gameData->bgm);
+
+    unloadMidiFile(&gameData->sfxBump);
+    unloadMidiFile(&gameData->sfxHarpoon);
+    unloadMidiFile(&gameData->sfxDirt);
+    freeFont(&gameData->font);
+    while (gameData->unsupported.first)
+    {
+        heap_caps_free(shift(&gameData->unsupported));
+    }
+    while (gameData->pleaseCheck.first)
+    {
+        heap_caps_free(shift(&gameData->unsupported));
+    }
 }
 
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData)
 {
-    gameData->gameState = 0;
-
-    gameData->bgColor     = c000;
-    gameData->currentBgm  = 0;
-    gameData->changeBgm   = 0;
-    gameData->inGameTimer = 0;
+    gameData->currentBgm = 0;
+    gameData->changeBgm  = 0;
 
     bb_resetGameDataLeds(gameData);
 }

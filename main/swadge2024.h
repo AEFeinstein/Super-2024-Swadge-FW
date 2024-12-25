@@ -170,6 +170,10 @@
 #include <stdio.h>
 #include <string.h>
 
+// Useful ESP things
+#include <esp_heap_caps.h>
+#include <esp_log.h>
+
 // Hardware interfaces
 #include "crashwrap.h"
 #include "hdw-imu.h"

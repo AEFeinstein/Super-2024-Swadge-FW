@@ -113,6 +113,8 @@ typedef struct
     t48cell_t board[T48_GRID_SIZE][T48_GRID_SIZE]; ///< The board with cells, tiles, and sparkles
     int32_t score;                                 ///< The current score
     bool acceptGameInput;                          ///< true if the game accepts input, false if it is animating
+    bool tiltControls;                             ///< true if tilt controls are used instead of buttons
+    bool cellsAnimating;                           ///< true if cells are in motion, false if at rest
     bool paused;                                   ///< If the game is paused
     bool alreadyWon;                               ///< If the win screen has already displayed
     t48ModeStateEnum_t state;                      ///< Where in the game sequence we are

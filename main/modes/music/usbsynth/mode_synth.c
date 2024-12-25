@@ -1544,7 +1544,7 @@ static void synthEnterMode(void)
             else
             {
                 ESP_LOGI("Synth", "Failed to load filename");
-                free(sd->filenameBuf);
+                heap_caps_free(sd->filenameBuf);
                 sd->filenameBuf = NULL;
             }
         }
@@ -1666,7 +1666,7 @@ static void synthExitMode(void)
     midiTextInfo_t* textInfo = NULL;
     while (NULL != (textInfo = pop(&sd->midiTexts)))
     {
-        free(textInfo);
+        heap_caps_free(textInfo);
     }
 
     freeWsg(&sd->fileImage);
@@ -1720,26 +1720,26 @@ static void synthExitMode(void)
     // Unload the filename if it was dynamic
     if (sd->filenameBuf)
     {
-        free(sd->filenameBuf);
+        heap_caps_free(sd->filenameBuf);
         sd->filenameBuf = NULL;
     }
 
     synthControlConfig_t* control;
     while (NULL != (control = pop(&sd->controllerSettings)))
     {
-        free(control);
+        heap_caps_free(control);
     }
 
     char* customFilename;
     while (NULL != (customFilename = pop(&sd->customFiles)))
     {
-        free(customFilename);
+        heap_caps_free(customFilename);
     }
 
     freeFont(&sd->betterOutline);
     freeFont(&sd->betterFont);
     freeFont(&sd->font);
-    free(sd);
+    heap_caps_free(sd);
     sd = NULL;
 }
 
@@ -1867,7 +1867,7 @@ static void synthMainLoop(int64_t elapsedUs)
             }
             else
             {
-                free(sd->filenameBuf);
+                heap_caps_free(sd->filenameBuf);
                 sd->filenameBuf = NULL;
                 sd->fileMode    = false;
                 sd->filename    = NULL;
@@ -1957,7 +1957,7 @@ static void synthMainLoop(int64_t elapsedUs)
                 midiTextInfo_t* removed = removeEntry(&sd->midiTexts, curNode);
                 if (removed)
                 {
-                    free(removed);
+                    heap_caps_free(removed);
                 }
                 curNode = tmp;
             }
@@ -2633,7 +2633,7 @@ static void unloadLyrics(karaokeInfo_t* karInfo)
     void* textInfo = NULL;
     while (NULL != (textInfo = pop(&karInfo->lyrics)))
     {
-        free(textInfo);
+        heap_caps_free(textInfo);
     }
 }
 
@@ -2648,7 +2648,7 @@ static void synthSetFile(const char* filename)
     midiTextInfo_t* textInfo = NULL;
     while (NULL != (textInfo = pop(&sd->midiTexts)))
     {
-        free(textInfo);
+        heap_caps_free(textInfo);
     }
 
     unloadLyrics(&sd->karaoke);
@@ -3628,6 +3628,7 @@ static void handleButtonTimer(int64_t* timer, int64_t interval, int64_t elapsedU
         evt.state  = sd->lastButtonState;
         evt.down   = true;
         evt.button = button;
+        evt.time   = 0;
         synthHandleButton(evt);
 
         *timer += interval;
@@ -4064,7 +4065,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                         // Loading was successful
                         if (sd->filenameBuf)
                         {
-                            free(sd->filenameBuf);
+                            heap_caps_free(sd->filenameBuf);
                             sd->filenameBuf = NULL;
                         }
 
@@ -4272,7 +4273,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             synthControlConfig_t* control;
             while (NULL != (control = pop(&sd->controllerSettings)))
             {
-                free(control);
+                heap_caps_free(control);
             }
             synthApplyConfig();
             sd->updateMenu = true;
@@ -4298,7 +4299,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             synthControlConfig_t* control;
             while (NULL != (control = pop(&sd->controllerSettings)))
             {
-                free(control);
+                heap_caps_free(control);
             }
 
             sd->gmMode = value;

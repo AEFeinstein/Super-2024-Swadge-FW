@@ -20,7 +20,8 @@
 //==============================================================================
 
 const char mode[]             = "2048";
-static const char pressKey[]  = "Press any key to play";
+static const char pressKeyA[] = "Press A to play with D-Pad";
+static const char pressKeyB[] = "Press B to play with Tilt Controls";
 static const char highScore[] = "You got a high score!";
 static const char pressAB[]   = "Press A or B to reset the game";
 
@@ -109,11 +110,16 @@ void t48_drawStartScreen(t48_t* t48, paletteColor_t color, int32_t elapsedUs)
 
     // Draw current High Score
     static char textBuffer[20];
-    snprintf(textBuffer, sizeof(textBuffer) - 1, "High score: %" PRIu32, t48->highScore[0]);
-    drawText(&t48->font, c444, textBuffer, (TFT_WIDTH - textWidth(&t48->font, textBuffer)) / 2, TFT_HEIGHT - 32);
+    int16_t yOff = TFT_HEIGHT - 64;
 
-    // Press any key...
-    drawText(&t48->font, c555, pressKey, (TFT_WIDTH - textWidth(&t48->font, pressKey)) / 2, TFT_HEIGHT - 64);
+    // Press button to start
+    drawText(&t48->font, c555, pressKeyA, (TFT_WIDTH - textWidth(&t48->font, pressKeyA)) / 2, yOff);
+    yOff += t48->font.height + 9;
+    drawText(&t48->font, c555, pressKeyB, (TFT_WIDTH - textWidth(&t48->font, pressKeyB)) / 2, yOff);
+    yOff += t48->font.height + 9;
+
+    snprintf(textBuffer, sizeof(textBuffer) - 1, "High score: %" PRIu32, t48->highScore[0]);
+    drawText(&t48->font, c444, textBuffer, (TFT_WIDTH - textWidth(&t48->font, textBuffer)) / 2, yOff);
 }
 
 /**

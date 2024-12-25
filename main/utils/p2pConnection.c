@@ -202,7 +202,15 @@ void p2pDeinit(p2pInfo* p2p)
         esp_timer_stop(p2p->tmr.TxRetry);
         esp_timer_stop(p2p->tmr.Reinit);
         esp_timer_stop(p2p->tmr.TxAllRetries);
+
+        esp_timer_delete(p2p->tmr.TxRetry);
+        esp_timer_delete(p2p->tmr.TxAllRetries);
+        esp_timer_delete(p2p->tmr.Reinit);
+        esp_timer_delete(p2p->tmr.Connection);
     }
+
+    // Clear out for good measure
+    memset(p2p, 0, sizeof(p2pInfo));
 }
 
 /**

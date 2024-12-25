@@ -122,7 +122,7 @@ uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     }
     else
     {
-        output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
+        output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_8BIT);
     }
     memcpy(output, fptr, *outsize);
     return output;
