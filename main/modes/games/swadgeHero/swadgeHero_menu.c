@@ -78,6 +78,16 @@ static const shSong_t shSongList[] = {
         .artist = "JnWake",
         .fName  = "sh_wakeman",
     },
+    {
+        .name   = "Gunship Credits",
+        .artist = "Newmajoe",
+        .fName  = "sh_gs_credits",
+    },
+    {
+        .name   = "Starfest Magway",
+        .artist = "Ronin Op F",
+        .fName  = "sh_starfest",
+    },
 };
 
 static const char strSongSelect[] = "Song Select";

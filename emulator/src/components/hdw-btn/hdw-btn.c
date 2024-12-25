@@ -12,6 +12,7 @@
 #include "trigonometry.h"
 #include "linked_list.h"
 #include "touchUtils.h"
+#include "esp_timer.h"
 
 //==============================================================================
 // Variables
@@ -191,6 +192,7 @@ void emulatorInjectButton(buttonBit_t button, bool down)
     evt->button      = button;
     evt->down        = down;
     evt->state       = buttonState;
+    evt->time        = esp_timer_get_time();
 
     // Add the event to the list
     push(buttonQueue, evt);

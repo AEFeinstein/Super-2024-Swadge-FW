@@ -24,16 +24,6 @@ typedef enum
 
 typedef enum
 {
-    PA_BGM_NO_CHANGE,
-    PA_BGM_MAIN,
-    PA_BGM_ATHLETIC,
-    PA_BGM_UNDERGROUND,
-    PA_BGM_FORTRESS,
-    PA_BGM_NULL
-} pa_bgmEnum_t;
-
-typedef enum
-{
     PA_SP_PLAYER_SOUTH,
     PA_SP_PLAYER_WALK_SOUTH,
     PA_SP_PLAYER_NORTH,

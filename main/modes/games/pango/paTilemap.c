@@ -14,12 +14,6 @@
 #include "cnfs.h"
 
 //==============================================================================
-// Function Prototypes
-//==============================================================================
-
-// bool isInteractive(uint8_t tileId);
-
-//==============================================================================
 // Functions
 //==============================================================================
 
@@ -67,18 +61,8 @@ void pa_drawTileMap(paTilemap_t* tilemap)
             // Draw only non-garbage tiles
             if (tile > 0 && tile < 13)
             {
-                if (pa_needsTransparency(tile))
-                {
-                    // drawWsgSimpleFast(&tilemap->tiles[tile - 32], x * PA_TILE_SIZE - tilemap->mapOffsetX, y *
-                    // PA_TILE_SIZE - tilemap->mapOffsetY);
-                    drawWsgSimple(tilemap->wsgManager->tiles[tile - 1], x * PA_TILE_SIZE - tilemap->mapOffsetX,
-                                  y * PA_TILE_SIZE - tilemap->mapOffsetY);
-                }
-                else
-                {
-                    drawWsgTile(tilemap->wsgManager->tiles[tile - 1], x * PA_TILE_SIZE - tilemap->mapOffsetX,
-                                y * PA_TILE_SIZE - tilemap->mapOffsetY);
-                }
+                drawWsgTile(tilemap->wsgManager->tiles[tile - 1], x * PA_TILE_SIZE - tilemap->mapOffsetX,
+                            y * PA_TILE_SIZE - tilemap->mapOffsetY);
             }
             else if (tile > 127 && tilemap->tileSpawnEnabled
                      && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y
@@ -187,15 +171,12 @@ void pa_tileSpawnEntity(paTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, u
 
 uint8_t pa_getTile(paTilemap_t* tilemap, uint8_t tx, uint8_t ty)
 {
-    // ty = CLAMP(ty, 0, tilemap->mapHeight - 1);
-
-    if (/*ty < 0 ||*/ ty >= tilemap->mapHeight)
+    if (ty >= tilemap->mapHeight)
     {
-        // ty = 0;
         return 0;
     }
 
-    if (/*tx < 0 ||*/ tx >= tilemap->mapWidth)
+    if (tx >= tilemap->mapWidth)
     {
         return 0;
     }
@@ -205,8 +186,6 @@ uint8_t pa_getTile(paTilemap_t* tilemap, uint8_t tx, uint8_t ty)
 
 void pa_setTile(paTilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId)
 {
-    // ty = CLAMP(ty, 0, tilemap->mapHeight - 1);
-
     if (ty >= tilemap->mapHeight || tx >= tilemap->mapWidth)
     {
         return;
@@ -234,36 +213,6 @@ void pa_unlockScrolling(paTilemap_t* tilemap)
 
     tilemap->minMapOffsetY = 0;
     tilemap->maxMapOffsetY = tilemap->mapHeight * PA_TILE_SIZE - PA_TILE_MAP_DISPLAY_HEIGHT_PIXELS;
-}
-
-bool pa_needsTransparency(uint8_t tileId)
-{
-    // TODO
-    // Currently, all tiles need transparency.
-    // So get rid of this then?
-
-    switch (tileId)
-    {
-        /*case PA_TILE_BOUNCE_BLOCK:
-        case PA_TILE_GIRDER:
-        case PA_TILE_CONTAINER_1 ... PA_TILE_CONTAINER_3:
-        case PA_TILE_COIN_1 ... PA_TILE_COIN_3:
-        case PA_TILE_LADDER:
-        case PA_TILE_BG_GOAL_ZONE ... PA_TILE_BG_CLOUD_D:
-            return true;
-        case PA_TILE_BG_CLOUD:
-            return false;
-        case PA_TILE_BG_TALL_GRASS ... PA_TILE_BG_MOUNTAIN_R:
-            return true;
-        case PA_TILE_BG_MOUNTAIN ... PA_TILE_BG_METAL:
-            return false;
-        case PA_TILE_BG_CHAINS:
-            return true;
-        case PA_TILE_BG_WALL:
-            return false;*/
-        default:
-            return false;
-    }
 }
 
 void pa_freeTilemap(paTilemap_t* tilemap)
