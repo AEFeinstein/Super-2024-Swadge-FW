@@ -316,7 +316,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                             {
                                 for (int frame = 0; frame < 2; frame++)
                                 {
-                                    freeWsg(&entityManager->sprites[BB_FOOD_CART].frames[i]);
+                                    freeWsg(&entityManager->sprites[BB_FOOD_CART].frames[frame]);
                                 }
                             }
                             break;
