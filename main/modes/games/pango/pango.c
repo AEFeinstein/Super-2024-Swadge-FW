@@ -52,7 +52,6 @@ static const paletteColor_t yellowColors[4] = {c550, c331, c550, c555};
 
 static const paletteColor_t cyanColors[4]   = {c055, c455, c055, c033};
 static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
-// static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
 
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
@@ -118,7 +117,6 @@ void updateReadyScreen(pango_t* self, int64_t elapsedUs);
 void drawReadyScreen(font_t* font, paGameData_t* gameData);
 void changeStateGame(pango_t* self);
 void detectGameStateChange(pango_t* self);
-void detectBgmChange(pango_t* self);
 void changeStateDead(pango_t* self);
 void updateDead(pango_t* self, int64_t elapsedUs);
 void changeStateGameOver(pango_t* self);
@@ -347,12 +345,12 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pangoMenuResetScores)
         {
             pangoInitializeHighScores(pango);
-            // soundPlaySfx(&(pango->soundManager.detonate), BZR_STEREO);
+            soundPlaySfx(&(pango->soundManager.sndSquish), MIDI_SFX);
         }
         else if (label == pangoMenuResetProgress)
         {
             pangoInitializeUnlockables(pango);
-            // soundPlaySfx(&(pango->soundManager.die), BZR_STEREO);
+            soundPlaySfx(&(pango->soundManager.sndDie), MIDI_SFX);
         }
         else if (label == pangoMenuSaveAndExit)
         {
@@ -477,8 +475,6 @@ void updateGame(pango_t* self, int64_t elapsedUs)
     pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
 
-    // drawEntityTargetTile(self->entityManager.playerEntity);
-
     if (((self->btnState & PB_START) && !(self->prevBtnState & PB_START)))
     {
         self->gameData.changeState = PA_ST_PAUSE;
@@ -486,9 +482,6 @@ void updateGame(pango_t* self, int64_t elapsedUs)
 
     detectGameStateChange(self);
     detectBgmChange(self);
-
-    // self->gameData.coins = self->gameData.remainingEnemies;
-    // self->gameData.coins = self->entityManager.aggroEnemies;
     drawPangoHud(&(self->font), &(self->gameData));
 
     self->gameData.frameCount++;
@@ -497,11 +490,6 @@ void updateGame(pango_t* self, int64_t elapsedUs)
         self->gameData.frameCount = 0;
         self->gameData.levelTime++;
         self->gameData.inGameTimer++;
-
-        /*if (self->gameData.countdown < 10)
-        {
-            soundPlayBgm(&(self->soundManager.sndOuttaTime), BZR_STEREO);
-        }*/
 
         if (self->gameData.remainingBlocks <= 0)
         {
@@ -572,9 +560,6 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
 
     if (self->gameData.frameCount > 600)
     {
-        // resetGameDataLeds(&(self->gameData));
-        // pango->menuSelection = 0;
-
         switch (pango->menuSelection)
         {
             case 0:
@@ -602,11 +587,7 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
             pango->menuSelection      = 0;
             pango->menuState          = 1;
             pango->gameData.debugMode = true;
-            // soundPlaySfx(&(pango->soundManager.levelClear), BZR_STEREO);
-        }
-        else
-        {
-            // soundPlaySfx(&(pango->soundManager.hit3), BZR_STEREO);
+            soundPlaySfx(&(pango->soundManager.bgmLevelClear), MIDI_SFX);
         }
     }
 
@@ -618,7 +599,7 @@ void updateTitleScreen(pango_t* self, int64_t elapsedUs)
 
         if (!pango->gameData.debugMode)
         {
-            // soundPlaySfx(&(pango->soundManager.launch), BZR_STEREO);
+            soundPlaySfx(&(pango->soundManager.sndSlide), BZR_STEREO);
         }
 
         pangoChangeStateMainMenu(self);
@@ -761,11 +742,6 @@ void drawReadyScreen(font_t* font, paGameData_t* gameData)
         drawText(font, c555, str_pango, 144, 160);
     }
 
-    /*if (getLevelIndex(gameData->world, gameData->level) == 0)
-    {
-        drawText(font, c555, "A: Jump", xOff, 128 + (font->height + 3) * 3);
-        drawText(font, c555, "B: Run / Fire", xOff, 128 + (font->height + 3) * 4);
-    }*/
 }
 
 void changeStateGame(pango_t* self)
@@ -790,8 +766,6 @@ void changeStateGame(pango_t* self)
     }
     else
     {
-        // uint16_t randomAggroEnemy = esp_random() % self->gameData.maxActiveEnemies;
-
         int16_t skippedEnemyRespawnCount = 0;
 
         for (uint16_t i = 0; i < entityManager->activeEnemies; i++)
@@ -822,15 +796,9 @@ void changeStateGame(pango_t* self)
                     break;
             }
 
-            /*paEntity_t* newEnemy = */ createCrabdozer(&(self->entityManager),
+            createCrabdozer(&(self->entityManager),
                                                         (spawnTx << PA_TILE_SIZE_IN_POWERS_OF_2) + 8,
                                                         (spawnTy << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
-
-            /*if(newEnemy != NULL && i == randomAggroEnemy){
-                newEnemy->stateFlag = true;
-                newEnemy->state = PA_EN_ST_STUN;
-                newEnemy->stateTimer = 1;
-            }*/
         }
 
         entityManager->activeEnemies -= skippedEnemyRespawnCount;
@@ -878,61 +846,8 @@ void detectGameStateChange(pango_t* self)
     self->gameData.changeState = 0;
 }
 
-void detectBgmChange(pango_t* self)
-{
-    /*if (!self->gameData.changeBgm)
-    {
-        return;
-    }
-
-    switch (self->gameData.changeBgm)
-    {
-        case PA_BGM_NULL:
-            if (self->gameData.currentBgm != PA_BGM_NULL)
-            {
-                soundStop(true);
-            }
-            break;
-
-        case PA_BGM_MAIN:
-            if (self->gameData.currentBgm != PA_BGM_MAIN)
-            {
-                // soundPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
-            }
-            break;
-
-        case PA_BGM_ATHLETIC:
-            if (self->gameData.currentBgm != PA_BGM_ATHLETIC)
-            {
-                // soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
-            }
-            break;
-
-        case PA_BGM_UNDERGROUND:
-            if (self->gameData.currentBgm != PA_BGM_UNDERGROUND)
-            {
-                // soundPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
-            }
-            break;
-
-        case PA_BGM_FORTRESS:
-            if (self->gameData.currentBgm != PA_BGM_FORTRESS)
-            {
-                // soundPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
-            }
-            break;
-
-        default:
-            break;
-    }
-
-    self->gameData.currentBgm = self->gameData.changeBgm;
-    self->gameData.changeBgm  = 0;*/
-}
-
 void changeStateDead(pango_t* self)
 {
-    // self->gameData.frameCount = 0;
     self->gameData.lives--;
 
     soundStop(true);
@@ -1099,12 +1014,10 @@ void updateLevelClear(pango_t* self, int64_t elapsedUs)
     }
 
     pa_updateEntities(&(self->entityManager));
-    // pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
     drawPangoHud(&(self->font), &(self->gameData));
     drawLevelClear(&(self->font), &(self->gameData));
     pa_updateLedsInGame(&(self->gameData));
-    //pa_updateLedsLevelClear(&(self->gameData));
 }
 
 void drawLevelClear(font_t* font, paGameData_t* gameData)
@@ -1273,16 +1186,6 @@ void drawGameClear(font_t* font, paWsgManager_t* wsgManager, paGameData_t* gameD
 
             break;
     }
-
-   
-    
-
-    /*
-    drawText(font, c555, "Thanks for playing.", 24, 48);
-    drawText(font, c555, "Many more battle scenes", 8, 96);
-    drawText(font, c555, "will soon be available!", 8, 112);
-    drawText(font, c555, "Bonus 100000pts per life!", 8, 160);
-    */
 }
 
 void pangoInitializeHighScores(pango_t* self)
@@ -1706,7 +1609,7 @@ void updateBtnStateAttractMode(pango_t* self)
         {
             self->gameData.btnState &= ~15;
             self->gameData.btnState
-                |= getAttractPlayerRandomDirection(); //(((esp_random() % 2) << (esp_random() % 2)) + ((esp_random() % 2) << 2 << (esp_random() % 2)));
+                |= getAttractPlayerRandomDirection();
         }
     }
 }

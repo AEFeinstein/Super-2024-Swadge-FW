@@ -10,7 +10,6 @@
 #include "soundFuncs.h"
 #include "hdw-btn.h"
 #include "esp_random.h"
-// #include "aabb_utils.h"
 #include "trigonometry.h"
 #include <esp_log.h>
 #include "soundFuncs.h"
@@ -295,16 +294,8 @@ void updateCrabdozer(paEntity_t* self)
             if (self->stateTimer < 0)
             {
                 self->facingDirection = PA_DIRECTION_NONE;
-
-                /*if(self->stateFlag){
-                    self->state = PA_EN_ST_AGGRESSIVE;
-                    self->stateTimer = 32767; //effectively always aggressive
-                    self->entityManager->aggroEnemies++;
-                } else*/
-                {
-                    self->state      = PA_EN_ST_NORMAL;
-                    self->stateTimer = pa_enemySetAggroStateTimer(self);
-                }
+                self->state      = PA_EN_ST_NORMAL;
+                self->stateTimer = pa_enemySetAggroStateTimer(self);
             }
             else
             {
@@ -380,7 +371,7 @@ void updateCrabdozer(paEntity_t* self)
                 pa_enemyChangeDirection(self, self->facingDirection, self->baseSpeed);
             }
 
-            bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE) /*? esp_random() % 2 : false*/;
+            bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE);
 
             pa_enemyDecideDirection(self, doAgression);
 
@@ -398,25 +389,6 @@ void updateCrabdozer(paEntity_t* self)
         }
         case PA_EN_ST_BREAK_BLOCK:
         {
-            /*//Need to force a speed value because
-            //tile collision will stop the enemy before we get here
-            switch(self->facingDirection){
-                case PA_DIRECTION_WEST:
-                    self->xspeed = -8;
-                    break;
-                case PA_DIRECTION_EAST:
-                    self->xspeed = 8;
-                    break;
-                case PA_DIRECTION_NORTH:
-                    self->yspeed = -8;
-                    break;
-                case PA_DIRECTION_SOUTH:
-                    self->yspeed = 8;
-                    break;
-                default:
-                    break;
-            }*/
-
             self->x += self->xspeed;
             self->y += self->yspeed;
 
@@ -1099,12 +1071,6 @@ void despawnWhenOffscreen(paEntity_t* self)
 
 void pa_destroyEntity(paEntity_t* self, bool respawn)
 {
-    /*if (respawn && !(self->homeTileX == 0 && self->homeTileY == 0))
-    {
-        self->tilemap->map[self->homeTileY * self->tilemap->mapWidth + self->homeTileX] = self->type + 128;
-    }*/
-
-    // self->entityManager->activeEntities--;
     self->active = false;
 }
 
@@ -1306,27 +1272,6 @@ void pa_dummyCollisionHandler(paEntity_t* self, paEntity_t* other)
 
 bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
-    /*switch (tileId)
-    {
-        case PA_TILE_COIN_1 ... PA_TILE_COIN_3:
-        {
-            pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
-            addCoins(self->gameData, 1);
-            pa_scorePoints(self->gameData, 50);
-            break;
-        }
-        case PA_TILE_LADDER:
-        {
-            self->gravityEnabled = false;
-            self->falling = false;
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }*/
-
     if (pa_isSolid(tileId))
     {
         switch (direction)
@@ -1341,8 +1286,6 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 self->yspeed = 0;
                 break;
             case 4: // DOWN
-                // Landed on platform
-                self->falling = false;
                 self->yspeed  = 0;
                 break;
             default: // Should never hit
@@ -1357,51 +1300,6 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
 
 bool pa_enemyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
-    /*switch (tileId)
-    {
-        case PA_TILE_BOUNCE_BLOCK:
-        {
-            switch (direction)
-            {
-                case 0:
-                    // hitBlock->xspeed = -64;
-                    if (tileId == PA_TILE_BOUNCE_BLOCK)
-                    {
-                        self->xspeed = 48;
-                    }
-                    break;
-                case 1:
-                    // hitBlock->xspeed = 64;
-                    if (tileId == PA_TILE_BOUNCE_BLOCK)
-                    {
-                        self->xspeed = -48;
-                    }
-                    break;
-                case 2:
-                    // hitBlock->yspeed = -128;
-                    if (tileId == PA_TILE_BOUNCE_BLOCK)
-                    {
-                        self->yspeed = 48;
-                    }
-                    break;
-                case 4:
-                    // hitBlock->yspeed = (tileId == PA_TILE_BRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PA_TILE_BOUNCE_BLOCK)
-                    {
-                        self->yspeed = -48;
-                    }
-                    break;
-                default:
-                    break;
-            }
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }*/
-
     if (pa_isSolid(tileId))
     {
         switch (direction)
@@ -1416,8 +1314,6 @@ bool pa_enemyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, 
                 self->yspeed = 0;
                 break;
             case 4: // DOWN
-                // Landed on platform
-                self->falling = false;
                 self->yspeed  = 0;
                 break;
             default: // Should never hit
@@ -1552,11 +1448,6 @@ void pa_updateBreakBlock(paEntity_t* self)
 
                     createdEntity = pa_createHotDog(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
                                                     (self->y >> SUBPIXEL_RESOLUTION) - 4);
-
-                    /*createdEntity
-                        = pa_createBonusItem(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
-                                                (self->y >> SUBPIXEL_RESOLUTION) - 4);*/
-
                     break;
                 }
                 default:
@@ -1576,13 +1467,6 @@ void pa_updateBreakBlock(paEntity_t* self)
             pa_destroyEntity(self, false);
         }
     }
-
-    /*if(self->scoreValue > 0){
-        char scoreStr[32];
-        snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32, self->scoreValue);
-        drawText(&(self->gameData->scoreFont), c050, scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >>
-    SUBPIXEL_RESOLUTION);
-    }*/
 }
 
 void updateEntityDead(paEntity_t* self)
@@ -1646,39 +1530,7 @@ void killEnemy(paEntity_t* target)
 
 void pa_playerOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
 {
-    /*switch (tileId)
-    {
-        case PA_TILE_COIN_1 ... PA_TILE_COIN_3:
-        {
-            pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
-            addCoins(self->gameData, 1);
-            pa_scorePoints(self->gameData, 50);
-            break;
-        }
-        case PA_TILE_LADDER:
-        {
-            if (self->gravityEnabled)
-            {
-                self->gravityEnabled = false;
-                self->xspeed         = 0;
-            }
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
-
-    if (!self->gravityEnabled && tileId != PA_TILE_LADDER)
-    {
-        self->gravityEnabled = true;
-        self->falling        = true;
-        if (self->yspeed < 0)
-        {
-            self->yspeed = -32;
-        }
-    }*/
+    // Nothing to do.
 }
 
 void pa_defaultOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
