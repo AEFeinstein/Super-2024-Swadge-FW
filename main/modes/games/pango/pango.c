@@ -481,7 +481,6 @@ void updateGame(pango_t* self, int64_t elapsedUs)
     }
 
     detectGameStateChange(self);
-    detectBgmChange(self);
     drawPangoHud(&(self->font), &(self->gameData));
 
     self->gameData.frameCount++;
