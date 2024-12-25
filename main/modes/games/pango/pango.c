@@ -1058,7 +1058,7 @@ void changeStateLevelClear(pango_t* self)
     {
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
         player->loop         = false;
-        soundPlayBgm(&(self->soundManager.sndLevelClearA), BZR_STEREO);
+        soundPlayBgm(&(self->soundManager.bgmLevelClear), BZR_STEREO);
     }
 
     self->gameData.gameState  = PA_ST_LEVEL_CLEAR;
@@ -1478,7 +1478,7 @@ void updateNameEntry(pango_t* self, int64_t elapsedUs)
                                       self->gameData.playerCharacter, self->gameData.rank);
             pangoSaveHighScores(self);
             pangoChangeStateShowHighScores(self);
-            soundPlaySfx(&(self->soundManager.sndPowerUp), BZR_STEREO);
+            soundPlaySfx(&(self->soundManager.snd1up), BZR_STEREO);
         }
         else
         {

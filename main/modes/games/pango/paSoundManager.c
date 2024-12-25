@@ -11,70 +11,38 @@
 //==============================================================================
 void pa_initializeSoundManager(paSoundManager_t* self)
 {
-   self->currentBgmIndex = PA_BGM_NULL;
+    self->currentBgmIndex = PA_BGM_NULL;
 
     loadMidiFile("snd1up.mid", &self->snd1up, true);
-    // loadMidiFile("sndBreak.mid", &self->sndBreak, true);
-    loadMidiFile("sndCheckpoint.mid", &self->sndCheckpoint, true);
-    loadMidiFile("sndBlockCombo.mid", &self->sndCoin, true);
+    loadMidiFile("sndBlockCombo.mid", &self->sndBonus, true);
     loadMidiFile("sndDie.mid", &self->sndDie, true);
     loadMidiFile("Pango_Game Over.mid", &self->bgmGameOver, true);
-    loadMidiFile("sndBlockStop.mid", &self->sndHit, true);
-    loadMidiFile("sndSquish.mid", &self->sndHurt, true);
-    loadMidiFile("sndJump1.mid", &self->sndJump1, true);
-    loadMidiFile("sndJump2.mid", &self->sndJump2, true);
-    loadMidiFile("sndJump3.mid", &self->sndJump3, true);
-    loadMidiFile("Pango_Level Clear.mid", &self->sndLevelClearA, true);
-    loadMidiFile("sndLevelClearB.mid", &self->sndLevelClearB, true);
-    loadMidiFile("sndLevelClearC.mid", &self->sndLevelClearC, true);
-    loadMidiFile("sndLevelClearD.mid", &self->sndLevelClearD, true);
-    loadMidiFile("sndLevelClearS.mid", &self->sndLevelClearS, true);
+    loadMidiFile("sndBlockStop.mid", &self->sndBlockStop, true);
+    loadMidiFile("sndSquish.mid", &self->sndSquish, true);
+    loadMidiFile("Pango_Level Clear.mid", &self->bgmLevelClear, true);
     loadMidiFile("sndMenuConfirm.mid", &self->sndMenuConfirm, true);
     loadMidiFile("sndMenuDeny.mid", &self->sndMenuDeny, true);
     loadMidiFile("sndMenuSelect.mid", &self->sndMenuSelect, true);
-    loadMidiFile("sndOutOfTime.mid", &self->sndOuttaTime, true);
     loadMidiFile("sndPause.mid", &self->sndPause, true);
-    loadMidiFile("sndPowerUp.mid", &self->sndPowerUp, true);
-    loadMidiFile("sndSlide.mid", &self->sndSquish, true);
+    loadMidiFile("sndSlide.mid", &self->sndSlide, true);
     loadMidiFile("sndTally.mid", &self->sndTally, true);
-    loadMidiFile("sndWarp.mid", &self->sndWarp, true);
-    loadMidiFile("sndWaveBall.mid", &self->sndWaveBall, true);
-
     loadMidiFile("sndSpawn.mid", &self->sndSpawn, true);
 }
 
 void pa_freeSoundManager(paSoundManager_t* self)
 {
-
-    // unloadMidiFile(&self->bgmSmooth);
-    // unloadMidiFile(&self->bgmUnderground);
     unloadMidiFile(&self->snd1up);
-    unloadMidiFile(&self->sndBreak);
-    unloadMidiFile(&self->sndCheckpoint);
-    unloadMidiFile(&self->sndCoin);
+    unloadMidiFile(&self->sndBonus);
     unloadMidiFile(&self->sndDie);
     unloadMidiFile(&self->bgmGameOver);
-    unloadMidiFile(&self->sndHit);
-    unloadMidiFile(&self->sndHurt);
-    unloadMidiFile(&self->sndJump1);
-    unloadMidiFile(&self->sndJump2);
-    unloadMidiFile(&self->sndJump3);
-    unloadMidiFile(&self->sndLevelClearA);
-    unloadMidiFile(&self->sndLevelClearB);
-    unloadMidiFile(&self->sndLevelClearC);
-    unloadMidiFile(&self->sndLevelClearD);
-    unloadMidiFile(&self->sndLevelClearS);
+    unloadMidiFile(&self->sndBlockStop);
+    unloadMidiFile(&self->sndSquish);
     unloadMidiFile(&self->sndMenuConfirm);
     unloadMidiFile(&self->sndMenuDeny);
     unloadMidiFile(&self->sndMenuSelect);
-    unloadMidiFile(&self->sndOuttaTime);
     unloadMidiFile(&self->sndPause);
-    unloadMidiFile(&self->sndPowerUp);
     unloadMidiFile(&self->sndSquish);
     unloadMidiFile(&self->sndTally);
-    unloadMidiFile(&self->sndWarp);
-    unloadMidiFile(&self->sndWaveBall);
-
     unloadMidiFile(&self->sndSpawn);
 
     if (self->currentBgmIndex != PA_BGM_NULL)

@@ -38,28 +38,14 @@ typedef struct
     midiFile_t sndMenuConfirm;
     midiFile_t sndMenuDeny;
     midiFile_t sndPause;
-    midiFile_t sndHit;
+    midiFile_t sndBlockStop;
+    midiFile_t sndSlide;
+    midiFile_t sndBonus;
     midiFile_t sndSquish;
-    midiFile_t sndBreak;
-    midiFile_t sndCoin;
-    midiFile_t sndPowerUp;
-    midiFile_t sndJump1;
-    midiFile_t sndJump2;
-    midiFile_t sndJump3;
-    midiFile_t sndWarp;
-    midiFile_t sndHurt;
-    midiFile_t sndWaveBall;
     midiFile_t snd1up;
-    midiFile_t sndCheckpoint;
-    midiFile_t sndLevelClearD;
-    midiFile_t sndLevelClearC;
-    midiFile_t sndLevelClearB;
-    midiFile_t sndLevelClearA;
-    midiFile_t sndLevelClearS;
+    midiFile_t bgmLevelClear;
     midiFile_t sndTally;
     midiFile_t bgmGameOver;
-    midiFile_t sndOuttaTime;
-
     midiFile_t sndSpawn;
 
     midiFile_t currentBgm;

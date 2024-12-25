@@ -214,7 +214,7 @@ void pa_updatePlayer(paEntity_t* self)
                                 newHitBlock->yspeed = 64;
                                 break;
                         }
-                        soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
+                        soundPlaySfx(&(self->soundManager->sndSlide), BZR_LEFT);
                     }
                 }
 
@@ -325,7 +325,7 @@ void updateCrabdozer(paEntity_t* self)
 
             if (self->state == PA_EN_ST_RUNAWAY && self->stateTimer < 0)
             {
-                soundPlaySfx(&(self->soundManager->sndHurt), 2);
+                soundPlaySfx(&(self->soundManager->sndSquish), 2);
                 self->spriteIndex = PA_SP_ENEMY_STUN;
                 self->yspeed = -32;
                 self->gravity = 4;
@@ -1199,7 +1199,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
                 {
                     self->xspeed = 0;
                     self->yspeed = 0;
-                    soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
+                    soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
                 }
             }
 
@@ -1234,7 +1234,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
             pa_scorePoints(self->gameData, other->scoreValue);
             self->gameData->leds[ledRemap[0]].g = 0xFF;
 
-            soundPlaySfx(&self->soundManager->sndCoin, MIDI_SFX);
+            soundPlaySfx(&self->soundManager->sndBonus, MIDI_SFX);
 
             paEntity_t* createdEntity = pa_createScoreDisplay(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
                                                               (self->y >> SUBPIXEL_RESOLUTION) - 4);
@@ -1288,7 +1288,7 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
                 createdEntity->scoreValue = pointsScored;
             }
 
-            soundPlaySfx(&(self->soundManager->sndHurt), 2);
+            soundPlaySfx(&(self->soundManager->sndSquish), 2);
             killEnemy(self);
             break;
         }
@@ -1439,7 +1439,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
 {
     if (pa_isSolid(tileId))
     {
-        soundPlaySfx(&(self->soundManager->sndHit), 1);
+        soundPlaySfx(&(self->soundManager->sndBlockStop), 1);
 
         self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth
                            + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)]
@@ -1531,7 +1531,7 @@ void pa_updateBreakBlock(paEntity_t* self)
                     pointsScored = spawnBlockComboScores[self->scoreValue];
 
                     pa_scorePoints(self->gameData, pointsScored);
-                    soundPlaySfx(&(self->soundManager->sndCoin), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager->sndBonus), BZR_STEREO);
                     self->gameData->leds[4].r = 0xFF;
                     self->gameData->leds[4].g = 0xFF;
 
