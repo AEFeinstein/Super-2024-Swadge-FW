@@ -59,9 +59,14 @@ void pa_scorePoints(paGameData_t* gameData, uint16_t points)
     {
         gameData->lives++;
         gameData->extraLifeScore += 10000; //(gameData->extraLifeScore + 2000);
-        gameData->leds[ledRemap[0]].r = 0xFF;
-        gameData->leds[ledRemap[0]].g = 0xFF;
-        gameData->leds[ledRemap[0]].b = 0xFF;
+
+        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i+=2)
+        {
+            gameData->leds[ledRemap[i]].r = 0xFF;
+            gameData->leds[ledRemap[i]].g = 0xFF;
+            gameData->leds[ledRemap[i]].b = 0xFF;
+        }
+
         soundPlaySfx(&(gameData->soundManager->snd1up), MIDI_SFX);
     }
 }
