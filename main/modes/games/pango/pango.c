@@ -1654,7 +1654,7 @@ void updateDemoControls(pango_t* self, int64_t elapsedUs)
                             (7 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
         }
 
-        if (self->menuState > DEMO_CONTROLS_SCRIPT_TABLE_LENGTH)
+        if (self->menuState >= DEMO_CONTROLS_SCRIPT_TABLE_LENGTH)
         {
             switch (self->gameData.gameState)
             {
@@ -1810,7 +1810,7 @@ void updateDemoScoring(pango_t* self, int64_t elapsedUs)
     {
         self->menuState++;
 
-        if (self->menuState > DEMO_SCORING_SCRIPT_TABLE_LENGTH)
+        if (self->menuState >= DEMO_SCORING_SCRIPT_TABLE_LENGTH)
         {
             pangoChangeStateShowHighScores(self);
             self->gameData.btnState = 0;
