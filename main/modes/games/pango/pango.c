@@ -698,7 +698,7 @@ void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
 
     if ((gameData->frameCount % 60) < 30)
     {
-        drawText(font, c555, "- Press START button -", 20, 208);
+        drawText(font, c555, "- Press PAUSE button -", 20, 208);
     }
 }
 
@@ -1841,10 +1841,10 @@ void updateDemoControls(pango_t* self, int64_t elapsedUs)
         {
             case PA_ST_TITLE_SCREEN:
             default:
-                drawText(&(self->font), c555, "- Press START button -", 20, 208);
+                drawText(&(self->font), c555, "- Press PAUSE button -", 20, 208);
                 break;
             case PA_ST_READY_SCREEN:
-                drawText(&(self->font), c555, "- Press START to skip -", 10, 208);
+                drawText(&(self->font), c555, "- Press PAUSE to skip -", 10, 208);
                 break;
         }
     }
@@ -1970,7 +1970,7 @@ void updateDemoScoring(pango_t* self, int64_t elapsedUs)
 
     if ((self->gameData.frameCount % 60) < 30)
     {
-        drawText(&(self->font), c555, "- Press START button -", 20, 208);
+        drawText(&(self->font), c555, "- Press PAUSE button -", 20, 208);
     }
 
     pa_updateLedsTitleScreen(self);
@@ -2069,8 +2069,8 @@ void updateAttractMode(pango_t* self, int64_t elapsedUs)
 
     if ((self->gameData.frameCount % 60) < 30)
     {
-        drawText(&(self->font), c000, "- Press START button -", 21, 209);
-        drawText(&(self->font), c555, "- Press START button -", 20, 208);
+        drawText(&(self->font), c000, "- Press PAUSE button -", 21, 209);
+        drawText(&(self->font), c555, "- Press PAUSE button -", 20, 208);
     }
 
     pa_updateLedsTitleScreen(self);
