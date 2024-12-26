@@ -458,8 +458,8 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         // Calculate gradient offset (under nearer background)
         int32_t offsetYG = offsetY1 + tilemap->surface1Wsg.h;
 
-        // setup fast pixel drawing with TURBO_SET_PIXEL()
-        SETUP_FOR_TURBO();
+        // Get a pointer to the framebuffer for fast pixel setting
+        paletteColor_t* fb = &getPxTftFramebuffer()[TFT_WIDTH * y + x];
 
         // For each row
         for (int32_t iY = y; iY < y + h; iY++)
@@ -483,15 +483,15 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
                 // Draw appropriate pixel
                 if (drawS1row && cTransparent != surface1px[iX])
                 {
-                    TURBO_SET_PIXEL(iX, iY, surface1px[iX]);
+                    *(fb++) = surface1px[iX];
                 }
                 else if (drawGrRow) // No transparency check
                 {
-                    TURBO_SET_PIXEL(iX, iY, gradientPx[iX % grWidth]);
+                    *(fb++) = gradientPx[iX % grWidth];
                 }
                 else if (drawS2row) // No transparency check
                 {
-                    TURBO_SET_PIXEL(iX, iY, surface2px[iX]);
+                    *(fb++) = surface2px[iX];
                 }
             }
         }
