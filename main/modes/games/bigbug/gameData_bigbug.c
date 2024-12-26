@@ -23,6 +23,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->GarbotnikStat_fireTime            = 200;
     gameData->GarbotnikStat_diggingStrength     = 1;
     gameData->GarbotnikStat_fuelConsumptionRate = 4;
+    gameData->GarbotnikStat_maxTowCables        = 2;
 
     loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->bgm, true);
     // loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);

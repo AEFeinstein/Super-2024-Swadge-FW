@@ -75,6 +75,9 @@ enum bb_garbotnikUpgrade_t
     GARBOTNIK_REDUCED_FUEL_CONSUMPTION,
     GARBOTNIK_FASTER_FIRE_RATE,
     GARBOTNIK_MORE_DIGGING_STRENGTH,
+    GARBOTNIK_MORE_TOW_CABLES,
+    GARBOTNIK_BUG_WHISPERER,
+    GARBOTNIK_EXTRA_CHOICE,
 };
 
 struct bb_garbotnikUpgradeScreenData_t
@@ -159,8 +162,9 @@ struct bb_gameData_t
                           // donuts collected flavor text   1 << 6 0b10000000 time spent flavor text         1 << 7
 
     int16_t GarbotnikStat_fireTime;            // The time between harpoon shots.
-    uint8_t GarbotnikStat_diggingStrength;     // Starts at 1. Can increment indefinetly.
+    uint8_t GarbotnikStat_diggingStrength;     // Starts at 1. Can increment indefinetly by 1.
     uint8_t GarbotnikStat_fuelConsumptionRate; // Starts at 4. Can decrement to 0.
+    uint8_t GarbotnikStat_maxTowCables;        // Starts at 2. Can increment indefintely by 3.
 };
 
 //==============================================================================

@@ -796,44 +796,55 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
     int32_t tWidth = 0;
     for (int i = 0; i < 2; i++)
     {
-        char upgradetext[32];
+        char upgradeText[32];
+        char detailText[32];
         switch (bigbug->gameData.garbotnikUpgrade.choices[i])
         {
             case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
             {
-                strcpy(upgradetext, "reduced fuel consumption");
-                if (i == bigbug->gameData.radar.playerPingRadius)
-                {
-                    tWidth = textWidth(&bigbug->gameData.font, upgradetext);
-                }
-
-                drawText(&bigbug->gameData.font, c113, "Wait a second. Consumption can be negative???", 45,
-                         72 + i * 30);
+                strcpy(upgradeText, "reduced fuel consumption");
+                snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_fuelConsumptionRate, bigbug->gameData.GarbotnikStat_fuelConsumptionRate - 1);
                 break;
             }
             case GARBOTNIK_FASTER_FIRE_RATE:
             {
-                strcpy(upgradetext, "faster fire rate");
-                if (i == bigbug->gameData.radar.playerPingRadius)
-                {
-                    tWidth = textWidth(&bigbug->gameData.font, upgradetext);
-                }
-                drawText(&bigbug->gameData.font, c113, "This is some text.", 45, 72 + i * 30);
+                strcpy(upgradeText, "faster fire rate");
+                snprintf(detailText, sizeof(detailText), "cooldown: %d -> %d", bigbug->gameData.GarbotnikStat_fireTime, bigbug->gameData.GarbotnikStat_fireTime > 75
+                                                                      ? bigbug->gameData.GarbotnikStat_fireTime - 50
+                                                                      : 25);
                 break;
             }
             case GARBOTNIK_MORE_DIGGING_STRENGTH:
             {
-                strcpy(upgradetext, "more digging strength");
-                if (i == bigbug->gameData.radar.playerPingRadius)
-                {
-                    tWidth = textWidth(&bigbug->gameData.font, upgradetext);
-                }
-                drawText(&bigbug->gameData.font, c113, "This is some text.", 45, 72 + i * 30);
+                strcpy(upgradeText, "more digging strength");
+                snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_diggingStrength, bigbug->gameData.GarbotnikStat_diggingStrength+1);
+                break;
+            }
+            case GARBOTNIK_MORE_TOW_CABLES:
+            {
+                strcpy(upgradeText, "more tow cables");
+                snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_maxTowCables, bigbug->gameData.GarbotnikStat_maxTowCables+2);
+                break;
+            }
+            case GARBOTNIK_BUG_WHISPERER:
+            {
+                strcpy(upgradeText, "bug whisperer");
+                strcpy(detailText, "towed bugs won't shoot back");
+                break;
+            }
+            default:
+            {
                 break;
             }
         }
-        drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c515 : c304, upgradetext, 45,
-                 60 + i * 30);
+        if (i == bigbug->gameData.radar.playerPingRadius)
+        {
+            tWidth = textWidth(&bigbug->gameData.font, upgradeText);
+        }
+        drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c515 : c304, upgradeText, 45,
+                60 + i * 30);
+        drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c225 : c113, detailText , 45,
+                72 + i * 30);
     }
     // draw the right side of the horizonal line
     drawLineFast(45 + tWidth + 2, 65 + bigbug->gameData.radar.playerPingRadius * 30, 279,
@@ -886,6 +897,11 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                     case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
                     {
                         bigbug->gameData.GarbotnikStat_fuelConsumptionRate--;
+                        break;
+                    }
+                    case GARBOTNIK_MORE_TOW_CABLES:
+                    {
+                        bigbug->gameData.GarbotnikStat_maxTowCables+=3;
                         break;
                     }
                     default:
