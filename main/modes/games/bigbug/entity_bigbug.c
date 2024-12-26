@@ -69,6 +69,61 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         return;
     }
 
+    // some particular entities get sprites freed.
+    switch (self->spriteIndex)
+    {
+        case BB_CAR:
+        {
+            for (int frame = 0; frame < 60; frame++)
+            {
+                freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[frame]);
+            }
+            break;
+        }
+        case BB_GRABBY_HAND:
+        {
+            for (int frame = 0; frame < 3; frame++)
+            {
+                freeWsg(&self->gameData->entityManager.sprites[BB_GRABBY_HAND].frames[frame]);
+            }
+            break;
+        }
+        case BB_DOOR:
+        {
+            for (int frame = 0; frame < 2; frame++)
+            {
+                freeWsg(&self->gameData->entityManager.sprites[BB_DOOR].frames[frame]);
+            }
+            break;
+        }
+        case BB_SWADGE:
+        {
+            for (int frame = 0; frame < 12; frame++)
+            {
+                freeWsg(&self->gameData->entityManager.sprites[BB_SWADGE].frames[frame]);
+            }
+            break;
+        }
+        case BB_FOOD_CART:
+        {
+            bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
+            //The food cart needs to track its own caching status to communicate just-in-time loading between both pieces.
+            fcData->isCached          = caching;
+            if (((bb_foodCartData_t*)fcData->partner)->isCached)
+            {
+                for (int frame = 0; frame < 2; frame++)
+                {
+                    freeWsg(&self->gameData->entityManager.sprites[BB_FOOD_CART].frames[frame]);
+                }
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
     // Zero out most info (but not references to manager type things) for entity to be reused.
     self->active    = false;
     self->cacheable = false;
@@ -236,7 +291,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
     }
-    else
+    else //this will fake the starfield scrolling during character talk.
     {
         self->gameData->camera.velocity.y = (rData->yVel * self->gameData->elapsedUs) >> 17;
         // iterate all entities
@@ -251,7 +306,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -77136)
+    if (self->pos.y < -77136)//reached the death dumpster
     {
         self->pos.y = -77136;
         rData->yVel = 0;

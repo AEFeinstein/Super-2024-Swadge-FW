@@ -273,60 +273,6 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                 if (!(curEntity->pos.x > shiftedCameraPos.x - 3200 && curEntity->pos.x < shiftedCameraPos.x + 3200
                       && curEntity->pos.y > shiftedCameraPos.y - 2880 && curEntity->pos.y < shiftedCameraPos.y + 2880))
                 { // if it is far
-                    // some particular entities get sprites freed.
-                    switch (curEntity->spriteIndex)
-                    {
-                        case BB_CAR:
-                        {
-                            for (int frame = 0; frame < 60; frame++)
-                            {
-                                freeWsg(&entityManager->sprites[BB_CAR].frames[frame]);
-                            }
-                            break;
-                        }
-                        case BB_GRABBY_HAND:
-                        {
-                            for (int frame = 0; frame < 3; frame++)
-                            {
-                                freeWsg(&entityManager->sprites[BB_GRABBY_HAND].frames[frame]);
-                            }
-                            break;
-                        }
-                        case BB_DOOR:
-                        {
-                            for (int frame = 0; frame < 2; frame++)
-                            {
-                                freeWsg(&entityManager->sprites[BB_DOOR].frames[frame]);
-                            }
-                            break;
-                        }
-                        case BB_SWADGE:
-                        {
-                            for (int frame = 0; frame < 12; frame++)
-                            {
-                                freeWsg(&entityManager->sprites[BB_SWADGE].frames[frame]);
-                            }
-                            break;
-                        }
-                        case BB_FOOD_CART:
-                        {
-                            bb_foodCartData_t* fcData = (bb_foodCartData_t*)curEntity->data;
-                            fcData->isCached          = true;
-                            if (((bb_foodCartData_t*)fcData->partner)->isCached)
-                            {
-                                for (int frame = 0; frame < 2; frame++)
-                                {
-                                    freeWsg(&entityManager->sprites[BB_FOOD_CART].frames[frame]);
-                                }
-                            }
-                            break;
-                        }
-                        default:
-                        {
-                            break;
-                        }
-                    }
-
                     // This entity gets cached
                     bb_entity_t* cachedEntity = heap_caps_calloc(1, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
                     // It's like a memcopy
