@@ -1695,6 +1695,16 @@ void bb_updateAttachmentArm(bb_entity_t* self)
     }
     if (rData->armAngle >= 5744) // that is 359 << DECIMAL_BITS
     {
+        //find the grabby hand and destroy it.
+        for (int entityIdx = 0; entityIdx < MAX_ENTITIES; entityIdx++)
+        {
+            if (self->gameData->entityManager.entities[entityIdx].active
+                && self->gameData->entityManager.entities[entityIdx].dataType == GRABBY_HAND_DATA)
+            {
+                bb_destroyEntity(&self->gameData->entityManager.entities[entityIdx], false);
+                break;
+            }
+        }
         bb_setupMidi();
         unloadMidiFile(&self->gameData->bgm);
         loadMidiFile("BigBug_Space Travel.mid", &self->gameData->bgm, true);
