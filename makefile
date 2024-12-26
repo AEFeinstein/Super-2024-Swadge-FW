@@ -336,7 +336,7 @@ $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 # To create the c file with assets, run these tools
 $(CNFS_FILE):
 # Sokoban .tmx to bin preprocessor
-	python ./tools/soko/soko_tmx_preprocessor.py ./assets/soko/ ./assets_image/
+	python3 ./tools/soko/soko_tmx_preprocessor.py ./assets/soko/ ./assets_image/
 	
 	$(MAKE) -C ./tools/assets_preprocessor/
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
