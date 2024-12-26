@@ -109,7 +109,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
             //The food cart needs to track its own caching status to communicate just-in-time loading between both pieces.
             fcData->isCached          = caching;
-            if (((bb_foodCartData_t*)fcData->partner)->isCached)
+            if (fcData->isCached && fcData->partner != NULL && ((bb_foodCartData_t*)fcData->partner)->isCached)
             {
                 for (int frame = 0; frame < 2; frame++)
                 {
@@ -1920,11 +1920,6 @@ void bb_updateCarOpen(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
-        // free most previous car frames.
-        for (int i = 1; i < 59; i++)
-        {
-            freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[i]);
-        }
         switch (((bb_carData_t*)self->data)->reward)
         {
             case BB_DONUT:
@@ -3868,6 +3863,17 @@ void bb_triggerGameOver(bb_entity_t* self)
     {
         return;
     }
+
+    //find the grabby hand and destroy it.
+    for (int i = 0; i < MAX_ENTITIES; i++)
+    {
+        if (self->gameData->entityManager.entities[i].spriteIndex == BB_GRABBY_HAND)
+        {
+            bb_destroyEntity(&self->gameData->entityManager.entities[i], false);
+            break;
+        }
+    }
+
     bb_freeWsgs(&self->gameData->tilemap);
     bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
     self->gameData->entityManager.playerEntity = NULL;
