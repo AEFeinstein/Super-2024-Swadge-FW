@@ -450,15 +450,12 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         int32_t grWidth = tilemap->landfillGradient.w;
 
         // Calculate furthest background offset
-        int32_t offsetX2 = ((cameraPos->x / 3) % bgWidth);
         int32_t offsetY2 = -(cameraPos->y / 3) - 64;
 
         // Calculate nearer background offset
-        int32_t offsetX1 = ((cameraPos->x / 2) % bgWidth);
         int32_t offsetY1 = -(cameraPos->y / 2);
 
         // Calculate gradient offset (under nearer background)
-        int32_t offsetXG = offsetX1 % grWidth;
         int32_t offsetYG = offsetY1 + tilemap->surface1Wsg.h;
 
         // setup fast pixel drawing with TURBO_SET_PIXEL()
@@ -480,32 +477,22 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
             bool drawGrRow             = (0 <= grRow && grRow < tilemap->landfillGradient.h);
             paletteColor_t* gradientPx = &tilemap->landfillGradient.px[grWidth * grRow];
 
-            // Start indices at X offsets
-            int32_t s1idx = offsetX1;
-            int32_t s2idx = offsetX2;
-            int32_t gridx = offsetXG;
-
             // For each pixel in the row
             for (int32_t iX = x; iX < x + w; iX++)
             {
                 // Draw appropriate pixel
-                if (drawS1row && cTransparent != surface1px[s1idx])
+                if (drawS1row && cTransparent != surface1px[iX])
                 {
-                    TURBO_SET_PIXEL(iX, iY, surface1px[s1idx]);
+                    TURBO_SET_PIXEL(iX, iY, surface1px[iX]);
                 }
                 else if (drawGrRow) // No transparency check
                 {
-                    TURBO_SET_PIXEL(iX, iY, gradientPx[gridx]);
+                    TURBO_SET_PIXEL(iX, iY, gradientPx[iX % grWidth]);
                 }
                 else if (drawS2row) // No transparency check
                 {
-                    TURBO_SET_PIXEL(iX, iY, surface2px[s2idx]);
+                    TURBO_SET_PIXEL(iX, iY, surface2px[iX]);
                 }
-
-                // Increment with modulo
-                s1idx = (s1idx + 1) % bgWidth;
-                s2idx = (s2idx + 1) % bgWidth;
-                gridx = (gridx + 1) % grWidth;
             }
         }
     }
