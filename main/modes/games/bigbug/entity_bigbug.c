@@ -85,16 +85,8 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
                     heap_caps_free(dData->strings[i]);
                 }
                 heap_caps_free(dData->strings);
-                if (-1 != dData->loadedIdx)
-                {
-                    freeWsg(&dData->sprite);
-                    dData->loadedIdx = -1;
-                }
-                if (dData->spriteNextLoaded)
-                {
-                    freeWsg(&dData->spriteNext);
-                    dData->spriteNextLoaded = false;
-                }
+                freeWsg(&dData->sprite);
+                freeWsg(&dData->spriteNext);
                 break;
             }
             case GAME_OVER_DATA:
@@ -1586,32 +1578,36 @@ void bb_updateCharacterTalk(bb_entity_t* self)
             dData->curString++;
             if (dData->curString < dData->numStrings)
             {
-                if (-1 != dData->loadedIdx)
-                {
-                    freeWsg(&dData->sprite);
-                    dData->loadedIdx = -1;
-                }
-
+                freeWsg(&dData->sprite);
+                freeWsg(&dData->spriteNext);
+                int8_t characterSprite = 0;
                 if (strcmp(dData->characters[dData->curString], "Ovo") == 0)
                 {
-                    dData->loadedIdx = bb_randomInt(0, 6);
+                    characterSprite = bb_randomInt(0, 6);
+                    loadWsgInplace("dialogue_next.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd); // TODO free
                 }
                 else if (strcmp(dData->characters[dData->curString], "Pixel") == 0)
                 {
-                    dData->loadedIdx = bb_randomInt(7, 8);
+                    characterSprite = bb_randomInt(7, 8);
+                    //borrow sprite from UTT
+                    loadWsgInplace("pixil_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
                 else if (strcmp(dData->characters[dData->curString], "Pango") == 0)
                 {
-                    dData->loadedIdx = bb_randomInt(9, 10);
+                    characterSprite = bb_randomInt(9, 10);
+                    //borrow sprite from UTT
+                    loadWsgInplace("hotdog_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
                 else if (strcmp(dData->characters[dData->curString], "Po") == 0)
                 {
-                    dData->loadedIdx = bb_randomInt(11, 13);
+                    characterSprite = bb_randomInt(11, 13);
+                    //borrow sprite from UTT
+                    loadWsgInplace("hand_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
 
                 char wsg_name[strlen("ovo-talk-") + 9]; // 6 extra characters makes room for up to a 2 digit number +
                                                         // ".wsg" + null terminator ('\0')
-                snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
+                snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", characterSprite);
                 loadWsgInplace(wsg_name, &dData->sprite, true, bb_decodeSpace, bb_hsd);
 
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
@@ -2271,15 +2267,7 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
 
-    // if it's loaded
-    if (-1 != dData->loadedIdx)
-    {
-        drawWsgSimple(&dData->sprite, 0, -dData->offsetY);
-    }
-    if (dData->spriteNextLoaded && dData->blinkTimer > 0)
-    {
-        drawWsgSimple(&dData->spriteNext, 258, -dData->offsetY + 170);
-    }
+    drawWsgSimple(&dData->sprite, 0, -dData->offsetY);
 
     if (dData->curString >= 0 && dData->curString < dData->numStrings)
     {
@@ -2295,6 +2283,11 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
         else if (strcmp(dData->characters[dData->curString], "Po") == 0)
         {
             textColor = c544;
+        }
+        if (dData->blinkTimer > 0)
+        {
+            //The sprites I took from UTT need to be drawn a little more to the left.
+            drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186 );
         }
         drawText(&self->gameData->font, textColor, dData->characters[dData->curString], 13, 152);
 
@@ -3962,31 +3955,37 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
+    int8_t characterSprite = 0;
     if (strcmp(firstCharacter, "Ovo") == 0)
     {
-        dData->loadedIdx = bb_randomInt(0, 6);
+        characterSprite = bb_randomInt(0, 6);
+        loadWsgInplace("dialogue_next.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd); // TODO free
     }
     else if (strcmp(firstCharacter, "Pixel") == 0)
     {
-        dData->loadedIdx = bb_randomInt(7, 8);
+        characterSprite = bb_randomInt(7, 8);
+        //borrow sprite from UTT
+        loadWsgInplace("pixil_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     else if (strcmp(firstCharacter, "Pango") == 0)
     {
-        dData->loadedIdx = bb_randomInt(9, 10);
+        characterSprite = bb_randomInt(9, 10);
+        //borrow sprite from UTT
+        loadWsgInplace("hotdog_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     else if (strcmp(firstCharacter, "Po") == 0)
     {
-        dData->loadedIdx = bb_randomInt(11, 13);
+        characterSprite = bb_randomInt(11, 13);
+        //borrow sprite from UTT
+        loadWsgInplace("hand_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     // Add dr. Ovo indices
     // FINISH ME!!!
 
     char wsg_name[strlen("ovo_talk") + 9]; // 6 extra characters makes room for up to a 2 digit number + ".wsg" + null
                                            // terminator ('\0')
-    snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", dData->loadedIdx);
+    snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "ovo_talk", characterSprite);
     loadWsgInplace(wsg_name, &dData->sprite, true, bb_decodeSpace, bb_hsd);
-    loadWsgInplace("dialogue_next.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd); // TODO free
-    dData->spriteNextLoaded = true;
 
     dData->strings    = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);
     dData->characters = heap_caps_calloc(numStrings, sizeof(char*), MALLOC_CAP_SPIRAM);

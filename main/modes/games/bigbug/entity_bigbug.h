@@ -232,8 +232,6 @@ typedef struct
     bb_callbackFunction_t endDialogueCB; // executes when the character is done talking.
     wsg_t sprite;                        // the current talking sprite
     wsg_t spriteNext;                    // a blinking triangle right of the dialogue
-    bool spriteNextLoaded;               // True if the next sprite is loaded, false otherwise
-    int8_t loadedIdx;                    // The current loaded sprite. -1 if none loaded.
     int16_t offsetY;                     // Track the sprite sliding up or down on screen.
     int8_t blinkTimer;
 } bb_dialogueData_t;
