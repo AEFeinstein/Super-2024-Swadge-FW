@@ -810,7 +810,7 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
     drawRectFilled(28, 56 + bigbug->gameData.radar.playerPingRadius * 30, 31,
                    73 + bigbug->gameData.radar.playerPingRadius * 30, c545);
 
-    int32_t tWidth = 0;
+    uint16_t tWidth = 0;
     for (int i = 0; i < 2; i++)
     {
         char upgradeText[32];
@@ -887,25 +887,33 @@ static void bb_DrawScene_Loadout_Select(void)
     drawCircleQuadrants(238, 198, 40, true, false, false, false, c220);
     drawCircleQuadrants(236, 196, 40, true, false, false, false, c440);
 
-    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT], 190, 4);
+
     
     char donuts[15];
-    snprintf(donuts, sizeof(donuts), "%d donuts", ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts);
+    uint8_t numDonuts = ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts;
+    snprintf(donuts, sizeof(donuts), "%d donut%s", numDonuts, numDonuts == 1 ? "" : "s");
+    uint8_t donutLeft = bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2 + textWidth(&bigbug->gameData.font, donuts);
+    donutLeft = (TFT_WIDTH >> 1) - (donutLeft >> 1);
+    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], donutLeft, 4);
+    drawText(&bigbug->gameData.font, c550, donuts, donutLeft + bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2, 16);
 
-    drawText(&bigbug->gameData.font, c550, donuts, 230, 4);
+    uint16_t tWidth = textWidth(&bigbug->gameData.sevenSegmentFont, "loadout");
+    drawText(&bigbug->gameData.sevenSegmentFont, c304, "loadout", (TFT_WIDTH >> 1) - (tWidth >> 1), 30);
+    tWidth = textWidth(&bigbug->gameData.font, "primary wile");
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c021, "primary wile", (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
+    tWidth = textWidth(&bigbug->gameData.font, "secondary wile");
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c021, "secondary wile", (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
 
-    drawText(&bigbug->gameData.sevenSegmentFont, c404, "loadout", 30, 30);
-    drawText(&bigbug->gameData.font, c232, "primary wile", 30, 90);
-    drawText(&bigbug->gameData.font, c232, "secondary wile", 210, 90);
+    drawLineScaled(30, 200, 40, 200, c323, 3, 0, 0, 3, 3);
+    drawRectScaled(30,210,40,220,c555,0,0,3,3);
+    drawTriangleOutlined(25, 175, 15, 170, 25, 165, c323, c555);
+    drawTriangleOutlined(255, 175, 265, 170, 255, 165, c323, c555);
 
-    drawRectScaled(30,210,250,260,c555,0,0,3,3);
-    drawTriangleOutlined(25, 240, 15, 235, 25, 230, c323, c555);
-    drawTriangleOutlined(255, 240, 265, 235, 255, 230, c323, c555);
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c021, "Faulty Wile", 35, 155);
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c304 : c102, "This is some text.", 35, 170);
 
-    drawText(&bigbug->gameData.font, c555, "Faulty Wile", 35, 215);
-    drawText(&bigbug->gameData.font, c404, "This is some text.", 35, 235);
-
-    drawText(&bigbug->gameData.font, c232, "Prime the Trash Pod", 30, 260);
+    tWidth = textWidth(&bigbug->gameData.font, "prime the trash pod");
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 3 ? c555 : c021, "prime the trash pod", (TFT_WIDTH >> 1) - (tWidth >> 1), 225);
 
 
 }
