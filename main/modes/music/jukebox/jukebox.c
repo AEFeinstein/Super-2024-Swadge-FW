@@ -35,6 +35,7 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "midiPlayer.h"
+#include "esp_random.h"
 
 /*==============================================================================
  * Defines
@@ -43,6 +44,19 @@
 #define CORNER_OFFSET           14
 #define JUKEBOX_SPRITE_Y_OFFSET 3
 #define LINE_BREAK_Y            8
+
+#define NUM_DECORATION_WSGS 8
+#define MAX_DECORATIONS_ON_SCREEN 10
+#define MIN_DECORATION_DELAY_US_PAUSED 1000000
+#define MAX_DECORATION_DELAY_US_PAUSED 4000000
+#define MIN_DECORATION_DELAY_US_PLAYING 200000
+#define MAX_DECORATION_DELAY_US_PLAYING 600000
+#define MIN_DECORATION_SPEED_PAUSED 24 //pixels to rise per second
+#define MAX_DECORATION_SPEED_PAUSED 48
+#define MIN_DECORATION_SPEED_PLAYING 96
+#define MAX_DECORATION_SPEED_PLAYING 144
+#define MAX_DECORATION_ROTATE_DEG 30
+
 
 /*==============================================================================
  * Enums
@@ -71,6 +85,15 @@ typedef struct
 
 typedef struct
 {
+    wsg_t* graphic;
+    int16_t x;
+    double y;
+    int16_t rotateDeg;
+    uint8_t speed; // pixels to move up per second
+} jukeboxDecoration_t;
+
+typedef struct
+{
     // Fonts
     font_t ibm_vga8;
     font_t radiostars;
@@ -92,6 +115,20 @@ typedef struct
     uint8_t songIdx;
     bool inMusicSubmode;
     bool isPlaying;
+
+    // Screen Decorations
+    jukeboxDecoration_t decorations[MAX_DECORATIONS_ON_SCREEN];
+    int64_t usSinceLastDecoration;
+    uint32_t usBetweenDecorations;
+    wsg_t quaver;
+    wsg_t doubleQuaver;
+    wsg_t fClef;
+    wsg_t halfNote;
+    wsg_t taillessQuaver;
+    wsg_t trebleClef;
+    wsg_t twoTailQuaver;
+    wsg_t wholeNote;
+    // if you add more decoration wsgs, increment NUM_DECORATION_WSGS
 } jukebox_t;
 
 jukebox_t* jukebox;
@@ -109,6 +146,9 @@ void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
 void jukeboxBzrDoneCb(void);
 void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories, bool shouldLoop);
 void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories);
+
+wsg_t* jukeboxGetDecorationGraphic(uint8_t i);
+bool jukeboxIsDecorationUpsideDownable(uint8_t i);
 
 /*==============================================================================
  * Variables
@@ -299,6 +339,15 @@ void jukeboxEnterMode()
     loadWsg("arrow10.wsg", &jukebox->arrow, false);
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
+    loadWsg("quaver.wsg", &jukebox->quaver, false);
+    loadWsg("doubleQuaver.wsg", &jukebox->doubleQuaver, false);
+    loadWsg("fClef.wsg", &jukebox->fClef, false);
+    loadWsg("halfNote.wsg", &jukebox->halfNote, false);
+    loadWsg("taillessQuaver.wsg", &jukebox->taillessQuaver, false);
+    loadWsg("trebleClef.wsg", &jukebox->trebleClef, false);
+    loadWsg("twoTailQuaver.wsg", &jukebox->twoTailQuaver, false);
+    loadWsg("wholeNote.wsg", &jukebox->wholeNote, false);
+
     // Load midis
     jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories), true);
     jukeboxLoadCategories(sfxCategories, ARRAY_SIZE(sfxCategories), false);
@@ -338,6 +387,15 @@ void jukeboxExitMode(void)
     // Free images
     freeWsg(&jukebox->arrow);
     freeWsg(&jukebox->jukeboxSprite);
+
+    freeWsg(&jukebox->quaver);
+    freeWsg(&jukebox->doubleQuaver);
+    freeWsg(&jukebox->fClef);
+    freeWsg(&jukebox->halfNote);
+    freeWsg(&jukebox->taillessQuaver);
+    freeWsg(&jukebox->trebleClef);
+    freeWsg(&jukebox->twoTailQuaver);
+    freeWsg(&jukebox->wholeNote);
 
     // Free allocated midis
     jukeboxFreeCategories(musicCategories, ARRAY_SIZE(musicCategories));
@@ -393,6 +451,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                                    jukeboxBzrDoneCb);
                 }
                 jukebox->isPlaying = true;
+                jukebox->usBetweenDecorations = 0;
             }
             break;
         }
@@ -533,6 +592,80 @@ void jukeboxMainLoop(int64_t elapsedUs)
 
     portableDanceMainLoop(jukebox->portableDances, elapsedUs);
 
+    // Plot background decorations (music notes)
+    bool spawnDecoration = false;
+    jukebox->usSinceLastDecoration += elapsedUs;
+
+    if(jukebox->usSinceLastDecoration >= jukebox->usBetweenDecorations)
+    {
+        spawnDecoration = true;
+
+        if(jukebox->isPlaying)
+        {
+            jukebox->usBetweenDecorations = MIN_DECORATION_DELAY_US_PLAYING + (esp_random() % (MAX_DECORATION_DELAY_US_PLAYING - MIN_DECORATION_DELAY_US_PLAYING));
+        }
+        else
+        {
+            jukebox->usBetweenDecorations = MIN_DECORATION_DELAY_US_PAUSED + (esp_random() % (MAX_DECORATION_DELAY_US_PAUSED - MIN_DECORATION_DELAY_US_PAUSED));
+        }
+        
+    }
+
+    for(uint8_t i = 0; i < MAX_DECORATIONS_ON_SCREEN; i++)
+    {
+        jukeboxDecoration_t* decoration = &jukebox->decorations[i];
+        bool spawnedDecoration = false;
+        if(spawnDecoration && decoration->graphic == 0)
+        {
+            uint8_t index = esp_random() % NUM_DECORATION_WSGS;
+            decoration->graphic = jukeboxGetDecorationGraphic(index);
+            decoration->x = (esp_random() % TFT_WIDTH) - (decoration->graphic->w / 2);
+            decoration->y = TFT_HEIGHT - 1;
+            decoration->rotateDeg = (esp_random() % (MAX_DECORATION_ROTATE_DEG * 2 + 1)) - MAX_DECORATION_ROTATE_DEG;
+
+            if(jukeboxIsDecorationUpsideDownable(index) && (esp_random() % 4) == 0)
+            {
+                decoration->rotateDeg += 180;
+            }
+
+            if(decoration->rotateDeg < 0)
+            {
+                decoration->rotateDeg += 360;
+            }
+            
+            if(jukebox->isPlaying)
+            {
+                decoration->speed = MIN_DECORATION_SPEED_PLAYING + (esp_random() % (MAX_DECORATION_SPEED_PLAYING - MIN_DECORATION_SPEED_PLAYING + 1));
+            }
+            else
+            {
+                decoration->speed = MIN_DECORATION_SPEED_PAUSED + (esp_random() % (MAX_DECORATION_SPEED_PAUSED - MIN_DECORATION_SPEED_PAUSED + 1));
+            }
+            jukebox->usSinceLastDecoration = 0;
+            spawnDecoration = false;
+            spawnedDecoration = true;
+        }
+        
+        if(decoration->graphic != 0)
+        {
+            if(!spawnedDecoration)
+            {
+                decoration->y -= decoration->speed * (elapsedUs / 1000000.0);
+            }
+
+            drawWsg(decoration->graphic, decoration->x, round(decoration->y), false, false, decoration->rotateDeg);
+
+            if(decoration->y < -decoration->graphic->h)
+            {
+                decoration->graphic = 0;
+                decoration->x = 0;
+                decoration->y = 0;
+                decoration->rotateDeg = 0;
+                decoration->speed = 0;
+            }
+        }
+    }
+
     // Plot jukebox sprite
     int16_t spriteWidth = jukebox->jukeboxSprite.w;
     drawWsg(&jukebox->jukeboxSprite, (TFT_WIDTH - spriteWidth) / 2,
@@ -542,7 +675,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
     // LEDs
     drawText(&jukebox->radiostars, c555, str_leds, CORNER_OFFSET, CORNER_OFFSET);
     // Light dance name
-    drawText(&(jukebox->radiostars), c111, portableDanceGetName(jukebox->portableDances),
+    drawText(&(jukebox->radiostars), c444, portableDanceGetName(jukebox->portableDances),
              TFT_WIDTH - CORNER_OFFSET - textWidth(&jukebox->radiostars, portableDanceGetName(jukebox->portableDances)),
              CORNER_OFFSET);
 
@@ -551,7 +684,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
              CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
     // "Music" or "SFX"
     const char* curMusicSfxStr = jukebox->inMusicSubmode ? str_bgm : str_sfx;
-    drawText(&(jukebox->radiostars), c111, curMusicSfxStr,
+    drawText(&(jukebox->radiostars), c444, curMusicSfxStr,
              TFT_WIDTH - CORNER_OFFSET - textWidth(&jukebox->radiostars, curMusicSfxStr),
              CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
 
@@ -560,15 +693,15 @@ void jukeboxMainLoop(int64_t elapsedUs)
              CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
     char text[32];
     snprintf(text, sizeof(text), "%d", getLedBrightnessSetting());
-    drawText(&jukebox->radiostars, c111, text, TFT_WIDTH - textWidth(&jukebox->radiostars, text) - CORNER_OFFSET,
+    drawText(&jukebox->radiostars, c444, text, TFT_WIDTH - textWidth(&jukebox->radiostars, text) - CORNER_OFFSET,
              CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
 
     // Assume not playing
-    paletteColor_t color = c141;
+    paletteColor_t color = c252;
     const char* btnText  = str_play;
     if (jukebox->isPlaying)
     {
-        color   = c511;
+        color   = c533;
         btnText = str_stop;
     }
 
@@ -631,7 +764,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
         snprintf(text, sizeof(text), "Mode: %s", categoryName);
         int16_t width = textWidth(nameFont, text);
         int16_t yOff  = (TFT_HEIGHT - nameFont->height) / 2 - nameFont->height * 0;
-        drawText(nameFont, c311, text, (TFT_WIDTH - width) / 2, yOff);
+        drawText(nameFont, c533, text, (TFT_WIDTH - width) / 2, yOff);
         // Draw category arrows if this submode has more than 1 category
         if ((jukebox->inMusicSubmode && ARRAY_SIZE(musicCategories) > 1) || ARRAY_SIZE(sfxCategories) > 1)
         {
@@ -644,7 +777,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
         snprintf(text, sizeof(text), "%s: %s", songTypeName, songName);
         yOff  = (TFT_HEIGHT - nameFont->height) / 2 + nameFont->height * 2.5f;
         width = textWidth(nameFont, text);
-        drawText(nameFont, c113, text, (TFT_WIDTH - width) / 2, yOff);
+        drawText(nameFont, c335, text, (TFT_WIDTH - width) / 2, yOff);
         // Draw song arrows if this category has more than 1 song
         if (numSongs > 1)
         {
@@ -666,11 +799,12 @@ void jukeboxMainLoop(int64_t elapsedUs)
  */
 void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    fillDisplayArea(x, y, x + w, y + h, c235);
+    fillDisplayArea(x, y, x + w, y + h, c303);
 }
 
 void jukeboxBzrDoneCb(void)
 {
+    //printf("bzr done\n");
     const jukeboxCategory_t* category;
     if (jukebox->inMusicSubmode)
     {
@@ -712,5 +846,47 @@ void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCa
                 unloadMidiFile(&categoryArray[categoryIdx].songs[songIdx].song);
             }
         }
+    }
+}
+
+wsg_t* jukeboxGetDecorationGraphic(uint8_t i)
+{
+    switch(i)
+    {
+        case 1:
+            return &jukebox->doubleQuaver;
+        case 2:
+            return &jukebox->fClef;
+        case 3:
+            return &jukebox->halfNote;
+        case 4:
+            return &jukebox->taillessQuaver;
+        case 5:
+            return &jukebox->trebleClef;
+        case 6:
+            return &jukebox->twoTailQuaver;
+        case 7:
+            return &jukebox->wholeNote;
+        case 0:
+        default:
+            return &jukebox->quaver;
+    }
+}
+
+bool jukeboxIsDecorationUpsideDownable(uint8_t i)
+{
+    switch(i)
+    {
+        case 3:
+        case 4:
+            return true;
+        case 0:
+        case 1:
+        case 2:
+        case 5:
+        case 6:
+        case 7:
+        default:
+            return false;
     }
 }
