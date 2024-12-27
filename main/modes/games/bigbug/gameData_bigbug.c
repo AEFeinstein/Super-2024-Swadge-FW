@@ -18,8 +18,6 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     // Set the mode to game mode
     gameData->screen = BIGBUG_GAME;
 
-    gameData->debugMode = false;
-
     gameData->GarbotnikStat_fireTime            = 200;
     gameData->GarbotnikStat_diggingStrength     = 1;
     gameData->GarbotnikStat_fuelConsumptionRate = 4;

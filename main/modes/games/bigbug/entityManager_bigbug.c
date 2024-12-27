@@ -407,7 +407,7 @@ void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
     }
 }
 
-void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer)
+void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePersistentEntities)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -416,16 +416,17 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePla
         {
             continue;
         }
-
-        bb_destroyEntity(currentEntity, false);
-
-        if (excludePlayer && currentEntity == entityManager->playerEntity)
+        if(excludePersistentEntities &&
+            (currentEntity->spriteIndex != BB_DEATH_DUMPSTER
+            || currentEntity->spriteIndex != ROCKET_ANIM
+            || currentEntity->spriteIndex != FLAME_ANIM))
         {
-            currentEntity->active = true;
+            continue;
         }
+        bb_destroyEntity(currentEntity, false);
     }
 
-    // load all cached enemies and destroy them one by one.
+    // load all cached entities and destroy them one by one.
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(entityManager->cachedEntities)))
     {

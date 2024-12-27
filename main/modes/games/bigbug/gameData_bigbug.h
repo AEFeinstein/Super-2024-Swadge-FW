@@ -122,8 +122,6 @@ struct bb_gameData_t
 
     led_t leds[CONFIG_NUM_LEDS];
 
-    bool debugMode;
-
     uint8_t changeBgm;
     uint8_t currentBgm;
 

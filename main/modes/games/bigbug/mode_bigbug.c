@@ -50,6 +50,7 @@ struct bb_t
 // required by adam
 static void bb_EnterMode(void);
 static void bb_EnterModeSkipIntro(void);
+static void bb_FreeTilemapData(void);
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
 static void bb_BackgroundDrawCallbackBlack(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -314,6 +315,27 @@ void bb_setupMidi(void)
     // midiSetProgram(sfx, 0, 0);
 }
 
+static void bb_FreeTilemapData(void)
+{
+    for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
+    {
+        heap_caps_free(bigbug->gameData.tilemap.fgTiles[w]);
+        heap_caps_free(bigbug->gameData.tilemap.mgTiles[w]);
+    }
+
+    while (bigbug->gameData.pleaseCheck.first != NULL)
+    {
+        uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.pleaseCheck);
+        heap_caps_free(shiftedVal);
+    }
+
+    while (bigbug->gameData.unsupported.first != NULL)
+    {
+        uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.unsupported);
+        heap_caps_free(shiftedVal);
+    }
+}
+
 static void bb_ExitMode(void)
 {
     heatshrink_decoder_free(bb_hsd);
@@ -336,17 +358,7 @@ static void bb_ExitMode(void)
 
     bb_freeWsgs(&bigbug->gameData.tilemap);
 
-    for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
-    {
-        heap_caps_free(bigbug->gameData.tilemap.fgTiles[w]);
-        heap_caps_free(bigbug->gameData.tilemap.mgTiles[w]);
-    }
-
-    while (bigbug->gameData.unsupported.first != NULL)
-    {
-        uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.unsupported);
-        heap_caps_free(shiftedVal);
-    }
+    bb_FreeTilemapData();
 
     heap_caps_free(bigbug);
 }

@@ -321,6 +321,28 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
         self->gameData->day++;
+        //if it is trash day
+        if (self->gameData->day % 7 == 2 || self->gameData->day % 7 == 5 || self->gameData->day % 7 == 0)
+        {
+            // Force draw a loading screen
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
+            const char loadingStr[] = "landfill generating...";
+            int32_t tWidth          = textWidth(&self->gameData->font, loadingStr);
+            drawText(&self->gameData->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - self->gameData->font.height) / 2);
+            drawDisplayTft(NULL);
+
+            bb_deactivateAllEntities(&self->gameData->entityManager, true);
+            bb_FreeTilemapData();
+            // calloc the columns in layers separately to avoid a big alloc
+            for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
+            {
+                self->gameData->tilemap.fgTiles[w]
+                    = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM);
+                self->gameData->tilemap.mgTiles[w]
+                    = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM);
+            }
+            bb_generateWorld(&(self->gameData->tilemap));
+        }
 
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
