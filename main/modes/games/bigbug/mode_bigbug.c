@@ -904,8 +904,8 @@ static void bb_DrawScene_Loadout_Select(void)
     tWidth = textWidth(&bigbug->gameData.font, "secondary wile");
     drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c021, "secondary wile", (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
 
-    drawLineScaled(30, 200, 40, 200, c323, 3, 0, 0, 3, 3);
-    drawRectScaled(30,210,40,220,c555,0,0,3,3);
+    drawLineScaled(30, 30, 40, 40, c323, 3, 0, 0, 3, 3);
+    drawRectScaled(10,70,13,75,c555,0,0,3,3);
     drawTriangleOutlined(25, 175, 15, 170, 25, 165, c323, c555);
     drawTriangleOutlined(255, 175, 265, 170, 255, 165, c323, c555);
 
@@ -1058,8 +1058,6 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
                     }
                     default: //case 3 PRIME THE TRASH POD
                     {
-                        bigbug->gameData.garbotnikUpgrade.upgrades
-                            += 1 << bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius];
                         bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
                         bigbug->gameData.screen             = BIGBUG_GAME;
                         break;
