@@ -223,9 +223,6 @@ static void bb_EnterModeSkipIntro(void)
     bb_initializeGameData(&bigbug->gameData);
     bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
 
-
-
-
     // create the death dumpster
     bigbug->gameData.entityManager.deathDumpster
         = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,

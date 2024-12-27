@@ -198,17 +198,17 @@ void bb_updateRocketLanding(bb_entity_t* self)
 {
     bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
 
-    //get the terrain height under this booster
+    // get the terrain height under this booster
     int32_t terrainY = 0;
-    for(int i = 0; i < TILE_FIELD_HEIGHT; i++)
+    for (int i = 0; i < TILE_FIELD_HEIGHT; i++)
     {
-        if(self->gameData->tilemap.fgTiles[self->pos.x >> 9][i].health)
+        if (self->gameData->tilemap.fgTiles[self->pos.x >> 9][i].health)
         {
             terrainY = i << 9;
             break;
         }
     }
-    if (self->pos.y > terrainY-3000 && rData->flame == NULL)
+    if (self->pos.y > terrainY - 3000 && rData->flame == NULL)
     {
         rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 16,
                                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
@@ -1877,7 +1877,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     // retreat into the booster
     if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
     {
-        if(ghData->grabbed == NULL || self->currentAnimationFrame == 2)
+        if (ghData->grabbed == NULL || self->currentAnimationFrame == 2)
         {
             self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY -= 2;
         }
@@ -1888,7 +1888,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
                 = self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS);
         }
     }
-    else if (ghData->grabbed != NULL )
+    else if (ghData->grabbed != NULL)
     {
         if (self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
         {
@@ -1911,9 +1911,9 @@ void bb_updateGrabbyHand(bb_entity_t* self)
             }
         }
         bb_destroyEntity(ghData->grabbed, false);
-        ghData->grabbed = NULL;
+        ghData->grabbed             = NULL;
         self->currentAnimationFrame = 0;
-        self->animationTimer = 0;
+        self->animationTimer        = 0;
 
         bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
         rData->numBugs++;
@@ -2733,7 +2733,7 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
     }
 
-    if(self->gameData->day == 3)//january 25
+    if (self->gameData->day == 3) // january 25
     {
         drawText(&self->gameData->cgThinFont, c022, "Left the orchestra behind,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 27,
@@ -2741,20 +2741,18 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
         drawText(&self->gameData->cgThinFont, c022, "Turning cogs of time",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
-        drawText(&self->gameData->cgThinFont, c022, "may find,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        drawText(&self->gameData->cgThinFont, c022, "may find,", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
         drawText(&self->gameData->cgThinFont, c022, "Lost melodies' glow.",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
     }
-    else if(self->gameData->day == 5)//january 27
+    else if (self->gameData->day == 5) // january 27
     {
         drawText(&self->gameData->cgThinFont, c022, "Controllers still hum,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
-        drawText(&self->gameData->cgThinFont, c022, "Endless tunes",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        drawText(&self->gameData->cgThinFont, c022, "Endless tunes", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
         drawText(&self->gameData->cgThinFont, c022, "and laughter bloom,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
@@ -2763,7 +2761,7 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
     }
-    else if(self->gameData->day == 10)//january 32
+    else if (self->gameData->day == 10) // january 32
     {
         drawText(&self->gameData->cgThinFont, c022, "Time slips, misaligned,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
@@ -2778,13 +2776,12 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
     }
-    else if(self->gameData->day == 78)//january 100
+    else if (self->gameData->day == 78) // january 100
     {
         drawText(&self->gameData->cgThinFont, c022, "Endless dawns repeat,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
-        drawText(&self->gameData->cgThinFont, c022, "Immortal,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        drawText(&self->gameData->cgThinFont, c022, "Immortal,", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
         drawText(&self->gameData->cgThinFont, c022, "yet bound by time,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
@@ -3270,13 +3267,14 @@ void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
     }
 
     // if nothing grabbed yet and there is something in hand to grab
-    if(self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS)
-               < other->pos.y - 128 && self->currentAnimationFrame == 0)
+    if (self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS)
+            < other->pos.y - 128
+        && self->currentAnimationFrame == 0)
     {
         self->paused    = false;
         ghData->grabbed = other;
     }
-    if(self->currentAnimationFrame == 2)
+    if (self->currentAnimationFrame == 2)
     {
         self->paused = true;
     }
