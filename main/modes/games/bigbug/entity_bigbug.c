@@ -389,6 +389,9 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     {
         bb_setupMidi(); // stops the music
 
+        freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[0]);
+        freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[40]);
+        freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[41]);
         bb_loadSprite("rocket", 42, 1, &self->gameData->entityManager.sprites[ROCKET_ANIM]);
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
@@ -519,6 +522,11 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50, true, false);
                 if(garbotnik != NULL)
                 {
+                    for(int i = 1; i < 40; i++)
+                    {
+                        freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[i]);
+                    }
+
                     self->gameData->isPaused = true;
                     self->gameData->entityManager.viewEntity = garbotnik;
                     self->updateFunction                     = bb_updateHeavyFalling;
