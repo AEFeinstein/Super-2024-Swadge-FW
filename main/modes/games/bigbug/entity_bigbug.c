@@ -107,8 +107,9 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         case BB_FOOD_CART:
         {
             bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
-            //The food cart needs to track its own caching status to communicate just-in-time loading between both pieces.
-            fcData->isCached          = caching;
+            // The food cart needs to track its own caching status to communicate just-in-time loading between both
+            // pieces.
+            fcData->isCached = caching;
             if (fcData->isCached && fcData->partner != NULL && ((bb_foodCartData_t*)fcData->partner)->isCached)
             {
                 for (int frame = 0; frame < 2; frame++)
@@ -291,7 +292,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
     }
-    else //this will fake the starfield scrolling during character talk.
+    else // this will fake the starfield scrolling during character talk.
     {
         self->gameData->camera.velocity.y = (rData->yVel * self->gameData->elapsedUs) >> 17;
         // iterate all entities
@@ -306,7 +307,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -77136)//reached the death dumpster
+    if (self->pos.y < -77136) // reached the death dumpster
     {
         self->pos.y = -77136;
         rData->yVel = 0;
@@ -1684,19 +1685,19 @@ void bb_updateCharacterTalk(bb_entity_t* self)
                 else if (strcmp(dData->characters[dData->curString], "Pixel") == 0)
                 {
                     characterSprite = bb_randomInt(7, 8);
-                    //borrow sprite from UTT
+                    // borrow sprite from UTT
                     loadWsgInplace("pixil_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
                 else if (strcmp(dData->characters[dData->curString], "Pango") == 0)
                 {
                     characterSprite = bb_randomInt(9, 10);
-                    //borrow sprite from UTT
+                    // borrow sprite from UTT
                     loadWsgInplace("hotdog_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
                 else if (strcmp(dData->characters[dData->curString], "Po") == 0)
                 {
                     characterSprite = bb_randomInt(11, 13);
-                    //borrow sprite from UTT
+                    // borrow sprite from UTT
                     loadWsgInplace("hand_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
 
@@ -1735,7 +1736,7 @@ void bb_updateAttachmentArm(bb_entity_t* self)
     }
     if (rData->armAngle >= 5744) // that is 359 << DECIMAL_BITS
     {
-        //find the grabby hand and destroy it.
+        // find the grabby hand and destroy it.
         for (int entityIdx = 0; entityIdx < MAX_ENTITIES; entityIdx++)
         {
             if (self->gameData->entityManager.entities[entityIdx].active
@@ -2386,8 +2387,8 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
         }
         if (dData->blinkTimer > 0)
         {
-            //The sprites I took from UTT need to be drawn a little more to the left.
-            drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186 );
+            // The sprites I took from UTT need to be drawn a little more to the left.
+            drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186);
         }
         drawText(&self->gameData->font, textColor, dData->characters[dData->curString], 13, 152);
 
@@ -3904,7 +3905,7 @@ void bb_triggerGameOver(bb_entity_t* self)
         return;
     }
 
-    //find the grabby hand and destroy it.
+    // find the grabby hand and destroy it.
     for (int i = 0; i < MAX_ENTITIES; i++)
     {
         if (self->gameData->entityManager.entities[i].spriteIndex == BB_GRABBY_HAND)
@@ -4066,7 +4067,7 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
-    int8_t characterSprite = 0;
+    int8_t characterSprite   = 0;
     if (strcmp(firstCharacter, "Ovo") == 0)
     {
         characterSprite = bb_randomInt(0, 6);
@@ -4075,19 +4076,19 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     else if (strcmp(firstCharacter, "Pixel") == 0)
     {
         characterSprite = bb_randomInt(7, 8);
-        //borrow sprite from UTT
+        // borrow sprite from UTT
         loadWsgInplace("pixil_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     else if (strcmp(firstCharacter, "Pango") == 0)
     {
         characterSprite = bb_randomInt(9, 10);
-        //borrow sprite from UTT
+        // borrow sprite from UTT
         loadWsgInplace("hotdog_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     else if (strcmp(firstCharacter, "Po") == 0)
     {
         characterSprite = bb_randomInt(11, 13);
-        //borrow sprite from UTT
+        // borrow sprite from UTT
         loadWsgInplace("hand_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     // Add dr. Ovo indices

@@ -2,7 +2,7 @@
 #include "esp_heap_caps.h"
 #include <inttypes.h>
 
-//#define MEMORY_DEBUG
+// #define MEMORY_DEBUG
 #ifdef MEMORY_DEBUG
 
     #define SPIRAM_SIZE          2093904
