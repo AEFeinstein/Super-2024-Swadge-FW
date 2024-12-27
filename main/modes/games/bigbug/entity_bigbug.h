@@ -141,7 +141,7 @@ typedef struct
     int32_t yVel;
     bb_entity_t* flame; // tracks the flame to update position like a child object
     uint16_t numBugs;   // number of bugs in the booster
-    uint8_t numDonuts; // number of donuts in the booster
+    uint8_t numDonuts;  // number of donuts in the booster
     int32_t armAngle;   // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
 } bb_rocketData_t;
 

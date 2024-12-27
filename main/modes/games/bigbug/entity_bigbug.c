@@ -1934,13 +1934,14 @@ void bb_updateGrabbyHand(bb_entity_t* self)
                 }
             }
         }
-        bb_entity_t* grabbed = ghData->grabbed;
+        bb_entity_t* grabbed   = ghData->grabbed;
         bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
-        if(grabbed->spriteIndex == BB_DONUT)
+        if (grabbed->spriteIndex == BB_DONUT)
         {
             rData->numDonuts++;
         }
-        else{
+        else
+        {
             rData->numBugs++;
         }
         bb_destroyEntity(ghData->grabbed, false);

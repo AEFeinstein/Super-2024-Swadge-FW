@@ -95,7 +95,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .usesThermometer          = true,
                            .overrideSelectBtn        = false,
                            .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterMode,//SkipIntro,
+                           .fnEnterMode              = bb_EnterMode, // SkipIntro,
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -887,37 +887,39 @@ static void bb_DrawScene_Loadout_Select(void)
     drawCircleQuadrants(238, 198, 40, true, false, false, false, c220);
     drawCircleQuadrants(236, 196, 40, true, false, false, false, c440);
 
-
-    
     char donuts[15];
     uint8_t numDonuts = ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts;
     snprintf(donuts, sizeof(donuts), "%d donut%s", numDonuts, numDonuts == 1 ? "" : "s");
-    uint8_t donutLeft = bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2 + textWidth(&bigbug->gameData.font, donuts);
+    uint8_t donutLeft
+        = bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2 + textWidth(&bigbug->gameData.font, donuts);
     donutLeft = (TFT_WIDTH >> 1) - (donutLeft >> 1);
     drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], donutLeft, 4);
-    drawText(&bigbug->gameData.font, c550, donuts, donutLeft + bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2, 16);
+    drawText(&bigbug->gameData.font, c550, donuts,
+             donutLeft + bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2, 16);
 
     uint16_t tWidth = textWidth(&bigbug->gameData.sevenSegmentFont, "loadout");
     drawText(&bigbug->gameData.sevenSegmentFont, c304, "loadout", (TFT_WIDTH >> 1) - (tWidth >> 1), 30);
     tWidth = textWidth(&bigbug->gameData.font, "primary wile");
-    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c021, "primary wile", (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c021, "primary wile",
+             (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
     tWidth = textWidth(&bigbug->gameData.font, "secondary wile");
-    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c021, "secondary wile", (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c021, "secondary wile",
+             (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
 
     drawLineScaled(30, 30, 40, 40, c323, 3, 0, 0, 3, 3);
-    drawRectScaled(10,70,13,75,c555,0,0,3,3);
+    drawRectScaled(10, 70, 13, 75, c555, 0, 0, 3, 3);
     drawTriangleOutlined(25, 175, 15, 170, 25, 165, c323, c555);
     drawTriangleOutlined(255, 175, 265, 170, 255, 165, c323, c555);
 
-    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c021, "Faulty Wile", 35, 155);
-    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c304 : c102, "This is some text.", 35, 170);
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c021, "Faulty Wile", 35,
+             155);
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c304 : c102, "This is some text.",
+             35, 170);
 
     tWidth = textWidth(&bigbug->gameData.font, "prime the trash pod");
-    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 3 ? c555 : c021, "prime the trash pod", (TFT_WIDTH >> 1) - (tWidth >> 1), 225);
-
-
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 3 ? c555 : c021, "prime the trash pod",
+             (TFT_WIDTH >> 1) - (tWidth >> 1), 225);
 }
-
 
 static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
 {
@@ -1006,36 +1008,38 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
             bigbug->gameData.btnDownState += evt.button;
             if (evt.button == PB_UP)
             {
-                if(bigbug->gameData.radar.playerPingRadius == 1)
+                if (bigbug->gameData.radar.playerPingRadius == 1)
                 {
                     bigbug->gameData.radar.playerPingRadius -= 2;
                 }
                 else
                 {
-                    bigbug->gameData.radar.playerPingRadius--; // using it as a selection idx in this screen to save space.
+                    bigbug->gameData.radar
+                        .playerPingRadius--; // using it as a selection idx in this screen to save space.
                 }
             }
             else if (evt.button == PB_DOWN)
             {
-                if(bigbug->gameData.radar.playerPingRadius == 0)
+                if (bigbug->gameData.radar.playerPingRadius == 0)
                 {
                     bigbug->gameData.radar.playerPingRadius += 2;
                 }
                 else
                 {
-                    bigbug->gameData.radar.playerPingRadius++; // using it as a selection idx in this screen to save space.
+                    bigbug->gameData.radar
+                        .playerPingRadius++; // using it as a selection idx in this screen to save space.
                 }
             }
-            else if(evt.button == PB_LEFT)
+            else if (evt.button == PB_LEFT)
             {
-                if(bigbug->gameData.radar.playerPingRadius == 1)
+                if (bigbug->gameData.radar.playerPingRadius == 1)
                 {
                     bigbug->gameData.radar.playerPingRadius--;
                 }
             }
-            else if(evt.button == PB_RIGHT)
+            else if (evt.button == PB_RIGHT)
             {
-                if(bigbug->gameData.radar.playerPingRadius == 0)
+                if (bigbug->gameData.radar.playerPingRadius == 0)
                 {
                     bigbug->gameData.radar.playerPingRadius++;
                 }
@@ -1044,19 +1048,19 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
             {
                 switch (bigbug->gameData.radar.playerPingRadius)
                 {
-                    case 0: //SELECT A PRIMARY WILE
+                    case 0: // SELECT A PRIMARY WILE
                     {
                         break;
                     }
-                    case 1: //SELECT A SECONDARY WILE
+                    case 1: // SELECT A SECONDARY WILE
                     {
                         break;
                     }
-                    case 2: //EQUIP A WILE
+                    case 2: // EQUIP A WILE
                     {
                         break;
                     }
-                    default: //case 3 PRIME THE TRASH POD
+                    default: // case 3 PRIME THE TRASH POD
                     {
                         bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
                         bigbug->gameData.screen             = BIGBUG_GAME;
