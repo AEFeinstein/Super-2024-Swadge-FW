@@ -1110,6 +1110,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_DONUT:
         {
+            entity->halfWidth  = 8 << DECIMAL_BITS;
+            entity->halfHeight = 8 << DECIMAL_BITS;
             // Give the donut NJIMEIA PHYSX for when it is tethered.
             bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
             physData->bounceNumerator   = 2; // 66% bounce

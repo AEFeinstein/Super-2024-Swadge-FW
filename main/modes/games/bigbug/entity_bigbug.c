@@ -465,26 +465,66 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 2)
     {
-        bb_entity_t* arm
-            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
-                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
-        ((bb_rocketData_t*)self->data)->armAngle     = 2880; // That is 180 down position.
-        ((bb_attachmentArmData_t*)arm->data)->rocket = self;
-
-        bb_entity_t* grabbyHand
-            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 5,
-                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, false, false);
-        ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
-
         self->paused             = true;
-        self->gameData->isPaused = true;
-        // deploy garbotnik!!!
-        bb_entity_t* garbotnik
-            = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+        bool armExists = false;
+        //check if an attachment arm exists.
+        for(int i = 0; i < MAX_ENTITIES; i++)
+        {
+            if(self->gameData->entityManager.entities[i].active && self->gameData->entityManager.entities[i].spriteIndex == ATTACHMENT_ARM)
+            {
+                armExists = true;
+                break;
+            }
+        }
+        if(!armExists)
+        {
+            bb_entity_t* arm
+                = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
+                                self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
+            if(arm != NULL)
+            {
+                ((bb_rocketData_t*)self->data)->armAngle     = 2880; // That is 180 down position.
+                ((bb_attachmentArmData_t*)arm->data)->rocket = self;
+            }
+        }
+        else
+        {
+            bool grabbyHandExists = false;
+            //check if a grabby hand exists
+            for(int i = 0; i < MAX_ENTITIES; i++)
+            {
+                if(self->gameData->entityManager.entities[i].active && self->gameData->entityManager.entities[i].spriteIndex == BB_GRABBY_HAND)
+                {
+                    grabbyHandExists = true;
+                    break;
+                }
+            }
+            if(!grabbyHandExists)
+            {
+                bb_entity_t* grabbyHand
+                = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 5,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, false, false);
+                if(grabbyHand != NULL)
+                {
+                    ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
+                }
+            }
+            else
+            {
+                
+                // deploy garbotnik!!!
+                bb_entity_t* garbotnik
+                    = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50, true, false);
-        self->gameData->entityManager.viewEntity = garbotnik;
-        self->updateFunction                     = bb_updateHeavyFalling;
-        bb_startGarbotnikLandingTalk(garbotnik);
+                if(garbotnik != NULL)
+                {
+                    self->gameData->isPaused = true;
+                    self->gameData->entityManager.viewEntity = garbotnik;
+                    self->updateFunction                     = bb_updateHeavyFalling;
+                    bb_startGarbotnikLandingTalk(garbotnik);
+                }
+            }
+        }
     }
 }
 
@@ -1678,7 +1718,7 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 
 void bb_updateAttachmentArm(bb_entity_t* self)
 {
-    if (self->gameData->entityManager.playerEntity == NULL)
+    if (self->gameData->entityManager.activeBooster->updateFunction != bb_updateGarbotnikDeploy && self->gameData->entityManager.playerEntity == NULL)
     {
         // this is for when garbotnik dies.
         bb_destroyEntity(self, false);
