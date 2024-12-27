@@ -1934,13 +1934,20 @@ void bb_updateGrabbyHand(bb_entity_t* self)
                 }
             }
         }
+        bb_entity_t* grabbed = ghData->grabbed;
+        bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
+        if(grabbed->spriteIndex == BB_DONUT)
+        {
+            rData->numDonuts++;
+        }
+        else{
+            rData->numBugs++;
+        }
         bb_destroyEntity(ghData->grabbed, false);
         ghData->grabbed             = NULL;
         self->currentAnimationFrame = 0;
         self->animationTimer        = 0;
 
-        bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
-        rData->numBugs++;
         midiPlayer_t* sfx = soundGetPlayerSfx();
         midiPlayerReset(sfx);
         soundPlaySfx(&self->gameData->sfxCollection, 0);
@@ -3860,6 +3867,8 @@ void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self)
 
 void bb_afterGarbotnikIntro(bb_entity_t* self)
 {
+    self->gameData->screen = BIGBUG_LOADOUT_SELECT_SCREEN;
+
     for (int i = 0; i < 3; i++)
     {
         if (self->gameData->entityManager.boosterEntities[i]->currentAnimationFrame != 41)

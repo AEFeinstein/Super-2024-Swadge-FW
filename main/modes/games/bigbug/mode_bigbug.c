@@ -64,6 +64,7 @@ static void bb_GameLoop_Radar(int64_t elapsedUs);
 static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs);
 static void bb_DrawScene_Garbotnik_Upgrade(void);
 static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs);
+static void bb_GameLoop_Loadout_Select(int64_t elapsedUs);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
@@ -395,6 +396,15 @@ static void bb_MainLoop(int64_t elapsedUs)
                 bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackBlack;
             }
             bb_GameLoop_Garbotnik_Upgrade(elapsedUs);
+            break;
+        }
+        case BIGBUG_LOADOUT_SELECT_SCREEN:
+        {
+            if (bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
+            {
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackBlack;
+            }
+            bb_GameLoop_Loadout_Select(elapsedUs);
             break;
         }
         case BIGBUG_GAME:
@@ -861,6 +871,46 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
                  65 + bigbug->gameData.radar.playerPingRadius * 30, c331);
 }
 
+static void bb_DrawScene_Loadout_Select(void)
+{
+    drawRect(1, 1, 279, 239, c220);
+    drawRect(3, 3, 277, 237, c440);
+    drawCircleQuadrants(238, 41, 40, false, false, false, true, c220);
+    drawCircleQuadrants(236, 43, 40, false, false, false, true, c440);
+
+    drawCircleQuadrants(41, 41, 40, false, false, true, false, c220);
+    drawCircleQuadrants(43, 43, 40, false, false, true, false, c440);
+
+    drawCircleQuadrants(41, 198, 40, false, true, false, false, c220);
+    drawCircleQuadrants(43, 196, 40, false, true, false, false, c440);
+
+    drawCircleQuadrants(238, 198, 40, true, false, false, false, c220);
+    drawCircleQuadrants(236, 196, 40, true, false, false, false, c440);
+
+    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT], 190, 4);
+    
+    char donuts[15];
+    snprintf(donuts, sizeof(donuts), "%d donuts", ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts);
+
+    drawText(&bigbug->gameData.font, c550, donuts, 230, 4);
+
+    drawText(&bigbug->gameData.sevenSegmentFont, c404, "loadout", 30, 30);
+    drawText(&bigbug->gameData.font, c232, "primary wile", 30, 90);
+    drawText(&bigbug->gameData.font, c232, "secondary wile", 210, 90);
+
+    drawRectScaled(30,210,250,260,c555,0,0,3,3);
+    drawTriangleOutlined(25, 240, 15, 235, 25, 230, c323, c555);
+    drawTriangleOutlined(255, 240, 265, 235, 255, 230, c323, c555);
+
+    drawText(&bigbug->gameData.font, c555, "Faulty Wile", 35, 215);
+    drawText(&bigbug->gameData.font, c404, "This is some text.", 35, 235);
+
+    drawText(&bigbug->gameData.font, c232, "Prime the Trash Pod", 30, 260);
+
+
+}
+
+
 static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
 {
     bigbug->gameData.btnDownState = 0b0;
@@ -931,6 +981,90 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
     bigbug->gameData.radar.playerPingRadius = (bigbug->gameData.radar.playerPingRadius % 2 + 2) % 2;
 
     bb_DrawScene_Garbotnik_Upgrade();
+}
+
+static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
+{
+    bigbug->gameData.btnDownState = 0b0;
+    // Always process button events, regardless of control scheme, so the main menu button can be captured
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        bigbug->gameData.btnState = evt.state;
+
+        if (evt.down)
+        {
+            bigbug->gameData.btnDownState += evt.button;
+            if (evt.button == PB_UP)
+            {
+                if(bigbug->gameData.radar.playerPingRadius == 1)
+                {
+                    bigbug->gameData.radar.playerPingRadius -= 2;
+                }
+                else
+                {
+                    bigbug->gameData.radar.playerPingRadius--; // using it as a selection idx in this screen to save space.
+                }
+            }
+            else if (evt.button == PB_DOWN)
+            {
+                if(bigbug->gameData.radar.playerPingRadius == 0)
+                {
+                    bigbug->gameData.radar.playerPingRadius += 2;
+                }
+                else
+                {
+                    bigbug->gameData.radar.playerPingRadius++; // using it as a selection idx in this screen to save space.
+                }
+            }
+            else if(evt.button == PB_LEFT)
+            {
+                if(bigbug->gameData.radar.playerPingRadius == 1)
+                {
+                    bigbug->gameData.radar.playerPingRadius--;
+                }
+            }
+            else if(evt.button == PB_RIGHT)
+            {
+                if(bigbug->gameData.radar.playerPingRadius == 0)
+                {
+                    bigbug->gameData.radar.playerPingRadius++;
+                }
+            }
+            else if (evt.button == PB_A)
+            {
+                switch (bigbug->gameData.radar.playerPingRadius)
+                {
+                    case 0: //SELECT A PRIMARY WILE
+                    {
+                        break;
+                    }
+                    case 1: //SELECT A SECONDARY WILE
+                    {
+                        break;
+                    }
+                    case 2: //EQUIP A WILE
+                    {
+                        break;
+                    }
+                    default: //case 3 PRIME THE TRASH POD
+                    {
+                        bigbug->gameData.garbotnikUpgrade.upgrades
+                            += 1 << bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius];
+                        bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
+                        bigbug->gameData.screen             = BIGBUG_GAME;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // keep the selection wrapped in range of available choices.
+    bigbug->gameData.radar.playerPingRadius = (bigbug->gameData.radar.playerPingRadius % 4 + 4) % 4;
+
+    bb_DrawScene_Loadout_Select();
 }
 
 static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs)

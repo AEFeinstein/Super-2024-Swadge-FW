@@ -40,6 +40,7 @@ enum bb_screen_t
     BIGBUG_GAME,
     BIGBUG_GAME_PINGING, // While game is still playing, but radar is pinging. Don't allow new radar pings.
     BIGBUG_GARBOTNIK_UPGRADE_SCREEN,
+    BIGBUG_LOADOUT_SELECT_SCREEN,
 };
 
 enum bb_radarUpgrade_t
