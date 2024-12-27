@@ -490,7 +490,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
                           - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
     }
 
-    if (currentEntity->paused == false)
+    if (!currentEntity->paused)
     {
         // increment the frame counter
         currentEntity->animationTimer++;
@@ -586,6 +586,44 @@ bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager)
         }
     }
     return NULL;
+}
+
+// This function destroys enough unimportant entities to make from for more.
+void bb_ensureEntitySpace(bb_entityManager_t* entityManager, uint8_t numEntities)
+{
+    if (entityManager->activeEntities <= MAX_ENTITIES - numEntities)
+    {
+        return;
+    }
+    for (int i = 0; i < MAX_ENTITIES; i++)
+    {
+        if (entityManager->entities[i].active
+            && (entityManager->entities[i].spriteIndex == CRUMBLE_ANIM
+                || entityManager->entities[i].spriteIndex == BUMP_ANIM
+                || entityManager->entities[i].spriteIndex == CRUMBLE_ANIM))
+        {
+            bb_destroyEntity(&entityManager->entities[i], false);
+            if (entityManager->activeEntities <= MAX_ENTITIES - numEntities)
+            {
+                return;
+            }
+        }
+    }
+    for (int i = 0; i < MAX_ENTITIES; i++)
+    {
+        if (entityManager->entities[i].active &&
+
+            (entityManager->entities[i].spriteIndex >= 8
+             && entityManager->entities[i].spriteIndex <= 13) // bugs are 8 through 13
+        )
+        {
+            bb_destroyEntity(&entityManager->entities[i], false);
+            if (entityManager->activeEntities <= MAX_ENTITIES - numEntities)
+            {
+                return;
+            }
+        }
+    }
 }
 
 void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera)
@@ -1020,7 +1058,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_setData(entity, ghData, GRABBY_HAND_DATA);
 
             entity->cacheable  = true;
-            entity->halfWidth  = 5 << DECIMAL_BITS;
+            entity->halfWidth  = 7 << DECIMAL_BITS;
             entity->halfHeight = 26 << DECIMAL_BITS;
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);

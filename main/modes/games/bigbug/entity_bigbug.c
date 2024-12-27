@@ -198,7 +198,17 @@ void bb_updateRocketLanding(bb_entity_t* self)
 {
     bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
 
-    if (self->pos.y > -2600 && rData->flame == NULL)
+    // get the terrain height under this booster
+    int32_t terrainY = 0;
+    for (int i = 0; i < TILE_FIELD_HEIGHT; i++)
+    {
+        if (self->gameData->tilemap.fgTiles[self->pos.x >> 9][i].health)
+        {
+            terrainY = i << 9;
+            break;
+        }
+    }
+    if (self->pos.y > terrainY - 3000 && rData->flame == NULL)
     {
         rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 16,
                                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
@@ -421,6 +431,30 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     }
     else
     {
+        // search for the grabby hand in the cached entities in case it was off camera, load it in and snap it to the
+        // rocket.
+        node_t* checkEntity = self->gameData->entityManager.cachedEntities->first;
+        while (checkEntity != NULL)
+        {
+            bb_entity_t* cachedEntityVal = (bb_entity_t*)checkEntity->val;
+            node_t* next                 = checkEntity->next;
+            if (cachedEntityVal != NULL && cachedEntityVal->spriteIndex == BB_GRABBY_HAND) // it's grabby hand
+            {
+                bb_ensureEntitySpace(&self->gameData->entityManager, 1);
+                bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
+                if (foundSpot != NULL)
+                {
+                    bb_loadSprite("grab", 3, 1, &self->gameData->entityManager.sprites[BB_GRABBY_HAND]);
+                    // like a memcopy
+                    *foundSpot = *cachedEntityVal;
+                    self->gameData->entityManager.activeEntities++;
+                    heap_caps_free(removeEntry(self->gameData->entityManager.cachedEntities, checkEntity));
+                    foundSpot->pos = self->pos;
+                }
+            }
+            checkEntity = next;
+        }
+
         hfData->yVel -= 50;
         // Update the dirt to air.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
@@ -491,70 +525,39 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 2)
     {
-        self->paused             = true;
-        bool armExists = false;
-        //check if an attachment arm exists.
-        for(int i = 0; i < MAX_ENTITIES; i++)
+        self->paused = true;
+        for (int i = 1; i < 40; i++)
         {
-            if(self->gameData->entityManager.entities[i].active && self->gameData->entityManager.entities[i].spriteIndex == ATTACHMENT_ARM)
-            {
-                armExists = true;
-                break;
-            }
+            freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[i]);
         }
-        if(!armExists)
-        {
-            bb_entity_t* arm
-                = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
-                                self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
-            if(arm != NULL)
-            {
-                ((bb_rocketData_t*)self->data)->armAngle     = 2880; // That is 180 down position.
-                ((bb_attachmentArmData_t*)arm->data)->rocket = self;
-            }
-        }
-        else
-        {
-            bool grabbyHandExists = false;
-            //check if a grabby hand exists
-            for(int i = 0; i < MAX_ENTITIES; i++)
-            {
-                if(self->gameData->entityManager.entities[i].active && self->gameData->entityManager.entities[i].spriteIndex == BB_GRABBY_HAND)
-                {
-                    grabbyHandExists = true;
-                    break;
-                }
-            }
-            if(!grabbyHandExists)
-            {
-                bb_entity_t* grabbyHand
-                = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 5,
-                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, false, false);
-                if(grabbyHand != NULL)
-                {
-                    ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
-                }
-            }
-            else
-            {
-                
-                // deploy garbotnik!!!
-                bb_entity_t* garbotnik
-                    = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
-                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50, true, false);
-                if(garbotnik != NULL)
-                {
-                    for(int i = 1; i < 40; i++)
-                    {
-                        freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[i]);
-                    }
 
-                    self->gameData->isPaused = true;
-                    self->gameData->entityManager.viewEntity = garbotnik;
-                    self->updateFunction                     = bb_updateHeavyFalling;
-                    bb_startGarbotnikLandingTalk(garbotnik);
-                }
-            }
+        // ensure space for attachment arm, grabby hand, and garbotnik
+        bb_ensureEntitySpace(&self->gameData->entityManager, 3);
+        // deploy garbotnik!!!
+        bb_entity_t* garbotnik
+            = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50, true, false);
+        bb_entity_t* arm
+            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, true, false);
+        if (arm != NULL)
+        {
+            ((bb_rocketData_t*)self->data)->armAngle     = 2880; // That is 180 down position.
+            ((bb_attachmentArmData_t*)arm->data)->rocket = self;
+        }
+        bb_entity_t* grabbyHand
+            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 6,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, true, false);
+        if (grabbyHand != NULL)
+        {
+            ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
+        }
+        if (garbotnik != NULL)
+        {
+            self->gameData->isPaused                 = true;
+            self->gameData->entityManager.viewEntity = garbotnik;
+            self->updateFunction                     = bb_updateHeavyFalling;
+            bb_startGarbotnikLandingTalk(garbotnik);
         }
     }
 }
@@ -974,7 +977,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             // Create a crumble
             bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health);
         }
-        else
+        else if (self->gameData->entityManager.activeEntities < MAX_ENTITIES)
         {
             // Create a bump animation
             bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 4,
@@ -1111,6 +1114,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
             self->pos = elData->egg->pos; // sets what will be the bug to the egg position, because eggs tend to wiggle
                                           // about before hatching.
 
+            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             // create a bug
             bb_entity_t* bug
                 = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
@@ -1230,7 +1234,7 @@ void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations)
 
 void bb_updateBugShooting(bb_entity_t* self)
 {
-    if (bb_randomInt(0, 100) < 1)
+    if (bb_randomInt(0, 100) < 1 && self->gameData->entityManager.activeEntities < MAX_ENTITIES)
     {
         // call it paused and update frames in it's own update function because this one uses another spriteIdx.
         bb_entity_t* spit = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_SPIT, 10,
@@ -1749,7 +1753,8 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 
 void bb_updateAttachmentArm(bb_entity_t* self)
 {
-    if (self->gameData->entityManager.activeBooster->updateFunction != bb_updateGarbotnikDeploy && self->gameData->entityManager.playerEntity == NULL)
+    if (self->gameData->entityManager.activeBooster->updateFunction != bb_updateGarbotnikDeploy
+        && self->gameData->entityManager.playerEntity == NULL)
     {
         // this is for when garbotnik dies.
         bb_destroyEntity(self, false);
@@ -1894,7 +1899,10 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     // retreat into the booster
     if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
     {
-        self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY -= 2;
+        if (ghData->grabbed == NULL || self->currentAnimationFrame == 2)
+        {
+            self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY -= 2;
+        }
         if (ghData->grabbed != NULL)
         {
             ghData->grabbed->pos.x = self->pos.x;
@@ -1925,7 +1933,9 @@ void bb_updateGrabbyHand(bb_entity_t* self)
             }
         }
         bb_destroyEntity(ghData->grabbed, false);
-        ghData->grabbed = NULL;
+        ghData->grabbed             = NULL;
+        self->currentAnimationFrame = 0;
+        self->animationTimer        = 0;
 
         bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
         rData->numBugs++;
@@ -1941,13 +1951,6 @@ void bb_updateGrabbyHand(bb_entity_t* self)
             rpData->color              = c541;
             rpData->executeAfterPing   = &bb_upgradeRadar;
         }
-
-        self->currentAnimationFrame = 0;
-        self->paused                = true;
-    }
-    if (self->currentAnimationFrame == 2)
-    {
-        self->paused = true;
     }
 }
 
@@ -1991,6 +1994,7 @@ void bb_updateCarOpen(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         switch (((bb_carData_t*)self->data)->reward)
         {
             case BB_DONUT:
@@ -2645,7 +2649,7 @@ void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, b
     // don't draw the hand if it is fully retracted. Cuts down on overdraw a lot of the time.
     if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0],
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
                       (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                       (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
                           - camera->pos.y);
@@ -2751,7 +2755,64 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
     }
 
-    if (self->gameData->day % 7 == 1 || self->gameData->day % 7 == 4 || self->gameData->day % 7 == 6)
+    if (self->gameData->day == 3) // january 25
+    {
+        drawText(&self->gameData->cgThinFont, c022, "Left the orchestra behind,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 27,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c022, "Turning cogs of time",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c022, "may find,", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        drawText(&self->gameData->cgThinFont, c022, "Lost melodies' glow.",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
+    }
+    else if (self->gameData->day == 5) // january 27
+    {
+        drawText(&self->gameData->cgThinFont, c022, "Controllers still hum,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c022, "Endless tunes", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c022, "and laughter bloom,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        drawText(&self->gameData->cgThinFont, c022, "MAGFest never ends.",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
+    }
+    else if (self->gameData->day == 10) // january 32
+    {
+        drawText(&self->gameData->cgThinFont, c022, "Time slips, misaligned,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c022, "Days leap past",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c022, "or lag behind,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        drawText(&self->gameData->cgThinFont, c022, "Calendars defy.",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
+    }
+    else if (self->gameData->day == 78) // january 100
+    {
+        drawText(&self->gameData->cgThinFont, c022, "Endless dawns repeat,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c022, "Immortal,", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c022, "yet bound by time,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        drawText(&self->gameData->cgThinFont, c022, "Chaos waits unseen.",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
+    }
+    else if (self->gameData->day % 7 == 1 || self->gameData->day % 7 == 4 || self->gameData->day % 7 == 6)
     {
         drawText(&self->gameData->cgThinFont, c500, "Tomorrow is trash day!",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
@@ -2843,11 +2904,14 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             // Bug got stabbed
             if (bData->health - 34 <= 0) // bug just died
             {
-                // use a bump animation but tweak its graphics
-                bb_entity_t* hitEffect
-                    = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
-                                      hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
-                hitEffect->drawFunction = &bb_drawHitEffect;
+                if (self->gameData->entityManager.activeEntities < MAX_ENTITIES)
+                {
+                    // use a bump animation but tweak its graphics
+                    bb_entity_t* hitEffect
+                        = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
+                                          hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+                    hitEffect->drawFunction = &bb_drawHitEffect;
+                }
 
                 if (self->gameData->carFightState > 0)
                 {
@@ -3033,6 +3097,8 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
 
     // number of bugs to fight. More risk at greater depths.
     self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 5;
+
+    bb_ensureEntitySpace(&self->gameData->entityManager, self->gameData->carFightState + 6);
 
     // complex way to spawn bugs that adapts to any arena
     for (int bugSpawn = 0; bugSpawn < self->gameData->carFightState; bugSpawn++)
@@ -3223,12 +3289,16 @@ void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
     }
 
     // if nothing grabbed yet and there is something in hand to grab
-    if (self->currentAnimationFrame == 0
-        && self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS)
-               < other->pos.y - 128)
+    if (self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS)
+            < other->pos.y - 128
+        && self->currentAnimationFrame == 0)
     {
         self->paused    = false;
         ghData->grabbed = other;
+    }
+    if (self->currentAnimationFrame == 2)
+    {
+        self->paused = true;
     }
 }
 

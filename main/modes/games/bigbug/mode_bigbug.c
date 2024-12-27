@@ -259,23 +259,23 @@ static void bb_EnterModeSkipIntro(void)
             bb_entity_t* arm                                                    = bb_createEntity(
                 &bigbug->gameData.entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                 bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
-                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, false, false);
+                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, true, false);
             ((bb_attachmentArmData_t*)arm->data)->rocket = bigbug->gameData.entityManager.activeBooster;
 
             bb_entity_t* grabbyHand = bb_createEntity(
-                &bigbug->gameData.entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 2,
+                &bigbug->gameData.entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 6,
                 bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
-                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 53, false, false);
+                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 53, true, false);
             ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = bigbug->gameData.entityManager.activeBooster;
         }
     }
-
-    bb_loadWsgs(&bigbug->gameData.tilemap);
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
                           bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
                           (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 90, true, false);
+
+    bb_loadWsgs(&bigbug->gameData.tilemap);
 
     bigbug->gameData.entityManager.playerEntity = bigbug->gameData.entityManager.viewEntity;
 
@@ -1138,8 +1138,11 @@ static void bb_UpdateTileSupport(void)
                     bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
                 }
 
-                // create a crumble animation
-                bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0], shiftedVal[1], true);
+                if (bigbug->gameData.entityManager.activeEntities < MAX_ENTITIES)
+                {
+                    // create a crumble animation
+                    bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0], shiftedVal[1], true);
+                }
 
                 // queue neighbors for crumbling
                 for (uint8_t neighborIdx = 0; neighborIdx < 4;

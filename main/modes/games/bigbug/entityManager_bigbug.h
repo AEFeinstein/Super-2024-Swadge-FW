@@ -52,6 +52,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera);
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager);
 bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager);
+void bb_ensureEntitySpace(bb_entityManager_t* entityManager, uint8_t numEntities);
 
 void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera);
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
