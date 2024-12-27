@@ -416,10 +416,9 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         {
             continue;
         }
-        if(excludePersistentEntities &&
-            (currentEntity->spriteIndex != BB_DEATH_DUMPSTER
-            || currentEntity->spriteIndex != ROCKET_ANIM
-            || currentEntity->spriteIndex != FLAME_ANIM))
+        if (excludePersistentEntities
+            && (currentEntity->spriteIndex != BB_DEATH_DUMPSTER || currentEntity->spriteIndex != ROCKET_ANIM
+                || currentEntity->spriteIndex != FLAME_ANIM))
         {
             continue;
         }

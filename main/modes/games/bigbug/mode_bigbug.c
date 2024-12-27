@@ -50,7 +50,6 @@ struct bb_t
 // required by adam
 static void bb_EnterMode(void);
 static void bb_EnterModeSkipIntro(void);
-static void bb_FreeTilemapData(void);
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
 static void bb_BackgroundDrawCallbackBlack(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -315,7 +314,7 @@ void bb_setupMidi(void)
     // midiSetProgram(sfx, 0, 0);
 }
 
-static void bb_FreeTilemapData(void)
+void bb_FreeTilemapData(void)
 {
     for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
     {
@@ -573,8 +572,17 @@ static void bb_DrawScene_Radar(void)
         }
     }
     // garbotnik
-    vec_t garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                 (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 3};
+    vec_t garbotnikPos = (vec_t){0};
+    if (bigbug->gameData.entityManager.playerEntity != NULL)
+    {
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                               (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 3};
+    }
+    else
+    {
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 3,
+                               (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 3};
+    }
 
     drawCircleFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, 3, c515);
     // garbotnik pings

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "gameData_bigbug.h"
 #include "entityManager_bigbug.h"
+#include "tilemap_bigbug.h"
 #include "esp_random.h"
 #include "hdw-btn.h"
 #include "touchUtils.h"

@@ -236,7 +236,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     {
                         case EGG_EMBED:
                         {
-                            bb_ensureEntitySpace(&entityManager, 1);
+                            bb_ensureEntitySpace(entityManager, 1);
                             bb_entity_t* eggLeaves
                                 = bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1,
                                                   i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false);
@@ -258,7 +258,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case WASHING_MACHINE_EMBED:
                         {
-                            bb_ensureEntitySpace(&entityManager, 1);
+                            bb_ensureEntitySpace(entityManager, 1);
                             if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_WASHING_MACHINE, 1,
                                                 i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
                                 != NULL)
@@ -269,7 +269,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case BB_CAR_WITH_DONUT_EMBED:
                         {
-                            bb_ensureEntitySpace(&entityManager, 1);
+                            bb_ensureEntitySpace(entityManager, 1);
                             bb_entity_t* car = bb_createEntity(entityManager, ONESHOT_ANIMATION, true, BB_CAR, 6,
                                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2,
                                                                false, false);
@@ -283,7 +283,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case BB_CAR_WITH_SWADGE_EMBED:
                         {
-                            bb_ensureEntitySpace(&entityManager, 1);
+                            bb_ensureEntitySpace(entityManager, 1);
                             bb_entity_t* car = bb_createEntity(entityManager, ONESHOT_ANIMATION, true, BB_CAR, 6,
                                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2,
                                                                false, false);
@@ -297,7 +297,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case BB_FOOD_CART_WITH_DONUT_EMBED:
                         {
-                            bb_ensureEntitySpace(&entityManager, 2);
+                            bb_ensureEntitySpace(entityManager, 2);
                             // background piece, also with collision on the umbrella
                             bb_entity_t* foodCartBG = bb_createEntity(entityManager, NO_ANIMATION, true, BB_FOOD_CART,
                                                                       1, i * TILE_SIZE + HALF_TILE + 1,
@@ -327,7 +327,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case BB_FOOD_CART_WITH_SWADGE_EMBED:
                         {
-                            bb_ensureEntitySpace(&entityManager, 2);
+                            bb_ensureEntitySpace(entityManager, 2);
                             // background piece, also with collision on the umbrella
                             bb_entity_t* foodCartBG = bb_createEntity(entityManager, NO_ANIMATION, true, BB_FOOD_CART,
                                                                       1, i * TILE_SIZE + HALF_TILE + 1,
@@ -356,7 +356,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case SKELETON_EMBED:
                         {
-                            bb_ensureEntitySpace(&entityManager, 1);
+                            bb_ensureEntitySpace(entityManager, 1);
                             bb_entity_t* skeleton
                                 = bb_createEntity(entityManager, NO_ANIMATION, true, BB_SKELETON, 1,
                                                   i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false);
@@ -368,7 +368,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         }
                         case DOOR_EMBED:
                         {
-                            bb_ensureEntitySpace(&entityManager, 1);
+                            bb_ensureEntitySpace(entityManager, 1);
                             if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_DOOR, 1,
                                                 i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
                                 != NULL)

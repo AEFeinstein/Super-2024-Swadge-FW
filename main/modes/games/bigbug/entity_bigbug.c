@@ -12,6 +12,7 @@
 #include "gameData_bigbug.h"
 #include "lighting_bigbug.h"
 #include "random_bigbug.h"
+#include "worldGen_bigbug.h"
 
 #include "soundFuncs.h"
 #include "hdw-btn.h"
@@ -331,14 +332,15 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
         self->gameData->day++;
-        //if it is trash day
+        // if it is trash day
         if (self->gameData->day % 7 == 2 || self->gameData->day % 7 == 5 || self->gameData->day % 7 == 0)
         {
             // Force draw a loading screen
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
             const char loadingStr[] = "landfill generating...";
             int32_t tWidth          = textWidth(&self->gameData->font, loadingStr);
-            drawText(&self->gameData->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - self->gameData->font.height) / 2);
+            drawText(&self->gameData->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2,
+                     (TFT_HEIGHT - self->gameData->font.height) / 2);
             drawDisplayTft(NULL);
 
             bb_deactivateAllEntities(&self->gameData->entityManager, true);
@@ -3950,8 +3952,15 @@ void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in
 
 void bb_openMap(bb_entity_t* self)
 {
-    self->gameData->radar.cam.y = (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
-    self->gameData->screen      = BIGBUG_RADAR_SCREEN;
+    if (self->gameData->entityManager.playerEntity != NULL)
+    {
+        self->gameData->radar.cam.y = (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
+    }
+    else
+    {
+        self->gameData->radar.cam.y = (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 120;
+    }
+    self->gameData->screen = BIGBUG_RADAR_SCREEN;
 }
 
 void bb_upgradeRadar(bb_entity_t* self)

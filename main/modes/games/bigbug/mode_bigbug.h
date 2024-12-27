@@ -15,6 +15,7 @@
     #define _MODE_BIGBUG_H_
 
 void bb_setupMidi(void);
+void bb_FreeTilemapData(void);
 
 extern swadgeMode_t bigbugMode;
 
