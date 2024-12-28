@@ -343,7 +343,39 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
         }
         case CG_SPAR_DODGE_ST:
         {
-            // TODO: Draw Chowa dodge
+            // Draw Chowa dodge
+            int xNOff = 0;
+            int yNOff = 0;
+            if (cg1->animTimer < 200000)
+            {
+                spr   = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
+                xNOff = -10;
+                yNOff = -7;
+            }
+            else if (cg1->animTimer < 400000)
+            {
+                spr   = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 1);
+                xNOff = -15;
+                yNOff = -10;
+            }
+            else if (cg1->animTimer < 600000)
+            {
+                spr   = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 2);
+                xNOff = -20;
+                yNOff = -7;
+            }
+            else if (cg1->animTimer < 800000)
+            {
+                spr   = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 3);
+                xNOff = -25;
+                yNOff = 0;
+            }
+            else if (cg1->animTimer >= 800000)
+            {
+                cg1->doneAnimating = true;
+                spr                = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 1);
+            }
+            drawWsgSimpleScaled(spr, xOff + 20 + xNOff, yOff + yNOff, 2, 2);
             break;
         }
         case CG_SPAR_WIN:
@@ -481,7 +513,39 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
         }
         case CG_SPAR_DODGE_ST:
         {
-            // Draw chowa dodge
+            // Draw Chowa dodge
+            int xNOff = 0;
+            int yNOff = 0;
+            if (cg2->animTimer < 200000)
+            {
+                spr   = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
+                xNOff = -10;
+                yNOff = -7;
+            }
+            else if (cg2->animTimer < 400000)
+            {
+                spr   = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 1);
+                xNOff = -15;
+                yNOff = -10;
+            }
+            else if (cg2->animTimer < 600000)
+            {
+                spr   = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 2);
+                xNOff = -20;
+                yNOff = -7;
+            }
+            else if (cg2->animTimer < 800000)
+            {
+                spr   = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 3);
+                xNOff = -25;
+                yNOff = 0;
+            }
+            else if (cg2->animTimer >= 800000)
+            {
+                cg2->doneAnimating = true;
+                spr                = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 1);
+            }
+            drawWsgSimpleScaled(spr, xOff + 20 + xNOff, yOff + yNOff, 2, 2);
             break;
         }
         case CG_SPAR_WIN:

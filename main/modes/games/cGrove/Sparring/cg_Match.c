@@ -163,6 +163,8 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
         || (cg->spar.match.chowa[0].currState == CG_SPAR_READY
             && cg->spar.match.chowa[1].currState == CG_SPAR_READY))
     {
+        cg->spar.match.chowa[0].animTimer = 0;
+        cg->spar.match.chowa[1].animTimer = 0;
         cg_sparMatchResolve(cg);
     }
 
@@ -659,8 +661,7 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
                 {
                     cg->spar.match.chowa[idx].updateTimer += elapsedUs;
                 }
-                int32_t readinessTick = SECOND;
-                if (cg->spar.match.chowa[idx].updateTimer >= readinessTick)
+                if (cg->spar.match.chowa[idx].updateTimer >= SECOND)
                 {
                     // Resolve
                     cg->spar.match.resolve                    = true;
