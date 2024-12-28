@@ -30,8 +30,9 @@
 
 static const char* sparSplashScreen[] = {"Chowa Sparring", "Press any button to continue!"};
 static const char* matchText[]        = {"--Pause--", "FINISHED", "DRAW", "YOU LOST!", "YOU WIN!"};
-static const char* prompts[]          = {"Set up a match", "Press A to start match", "Press B to go back", "Go to the grove to get a Chowa first!"};
-static const char* difficultyStrs[]   = {"Beginner", "Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Expert"};
+static const char* prompts[]
+    = {"Set up a match", "Press A to start match", "Press B to go back", "Go to the grove to get a Chowa first!"};
+static const char* difficultyStrs[] = {"Beginner", "Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Expert"};
 
 static const int16_t sparMatchTimes[] = {30, 60, 90, 120, 999};
 
@@ -233,7 +234,6 @@ static void cg_drawSparField(cGrove_t* cg)
  */
 static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
 {
-    // TODO: Finish animations
     cgSparChowaData_t* cg1 = &cg->spar.match.chowa[CG_P1];
     cgSparChowaData_t* cg2 = &cg->spar.match.chowa[CG_P2];
     cg1->animTimer += elapsedUs;
@@ -261,34 +261,19 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
         }
         case CG_SPAR_READY:
         {
-            // TODO: Walk forward toward center
-            switch (cg1->currMove)
+            // Walk forward toward center
+            if (cg1->animTimer > 1000000 >> 2)
             {
-                case CG_SPAR_PUNCH:
-                case CG_SPAR_FAST_PUNCH:
+                cg1->animFrame++;
+                if (cg1->animFrame >= 4)
                 {
-                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 0);
-                    break;
+                    cg1->animFrame = 0;
                 }
-                case CG_SPAR_KICK:
-                case CG_SPAR_JUMP_KICK:
-                case CG_SPAR_DODGE:
-                {
-                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 0);
-                    break;
-                }
-                case CG_SPAR_HEADBUTT:
-                {
-                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HEADBUTT_RIGHT, 0);
-                    break;
-                }
-                default:
-                {
-                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
-                    break;
-                }
+                cg1->hOffset += 5;
+                cg1->animTimer = 0;
             }
-            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, cg1->animFrame);
+            drawWsgSimpleScaled(spr, xOff + cg1->hOffset, yOff, 2, 2);
             break;
         }
         case CG_SPAR_EXHAUSTED:
@@ -327,12 +312,38 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
         }
         case CG_SPAR_ATTACK:
         {
-            // Draw the Chowa attacking
+            // TODO: Draw the Chowa attacking
+            switch (cg1->currMove)
+            {
+                case CG_SPAR_PUNCH:
+                case CG_SPAR_FAST_PUNCH:
+                {
+                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 0);
+                    break;
+                }
+                case CG_SPAR_KICK:
+                case CG_SPAR_JUMP_KICK:
+                case CG_SPAR_DODGE:
+                {
+                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 0);
+                    break;
+                }
+                case CG_SPAR_HEADBUTT:
+                {
+                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HEADBUTT_RIGHT, 0);
+                    break;
+                }
+                default:
+                {
+                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
+                    break;
+                }
+            }
             break;
         }
         case CG_SPAR_DODGE_ST:
         {
-            // Draw Chowa dodge
+            // TODO: Draw Chowa dodge
             break;
         }
         case CG_SPAR_WIN:
@@ -385,33 +396,19 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
         case CG_SPAR_READY:
         {
             // Pause on a specific frame
-            switch (cg2->currMove)
+            // Walk forward toward center
+            if (cg2->animTimer > 1000000 >> 2)
             {
-                case CG_SPAR_PUNCH:
-                case CG_SPAR_FAST_PUNCH:
+                cg2->animFrame++;
+                if (cg2->animFrame >= 4)
                 {
-                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_RIGHT, 0);
-                    break;
+                    cg2->animFrame = 0;
                 }
-                case CG_SPAR_KICK:
-                case CG_SPAR_JUMP_KICK:
-                case CG_SPAR_DODGE:
-                {
-                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_RIGHT, 0);
-                    break;
-                }
-                case CG_SPAR_HEADBUTT:
-                {
-                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HEADBUTT_RIGHT, 0);
-                    break;
-                }
-                default:
-                {
-                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_RIGHT, 0);
-                    break;
-                }
+                cg2->hOffset -= 5;
+                cg2->animTimer = 0;
             }
-            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, cg2->animFrame);
+            drawWsgSimpleScaled(spr, xOff + cg2->hOffset, yOff, 2, 2);
             break;
         }
         case CG_SPAR_EXHAUSTED:
@@ -452,6 +449,34 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
         case CG_SPAR_ATTACK:
         {
             // Draw the Chowa attacking
+            switch (cg2->currMove)
+            {
+                case CG_SPAR_PUNCH:
+                case CG_SPAR_FAST_PUNCH:
+                {
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_LEFT, 0);
+                    break;
+                }
+                case CG_SPAR_KICK:
+                case CG_SPAR_JUMP_KICK:
+                case CG_SPAR_DODGE:
+                {
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_LEFT, 0);
+                    break;
+                }
+                case CG_SPAR_HEADBUTT:
+                {
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HEADBUTT_LEFT, 0);
+                    break;
+                }
+                default:
+                {
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
+                    break;
+                }
+            }
+            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            break;
             break;
         }
         case CG_SPAR_DODGE_ST:
@@ -491,6 +516,8 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
     {
         cg1->doneAnimating      = false;
         cg2->doneAnimating      = false;
+        cg1->hOffset            = 0;
+        cg2->hOffset            = 0;
         cg->spar.match.animDone = true;
     }
 }
@@ -522,43 +549,43 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
             {
                 case CG_SPAR_PUNCH:
                 {
-                    //drawText(&cg->menuFont, c005, "P1: Punch", 100, 108);
+                    // drawText(&cg->menuFont, c005, "P1: Punch", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[1], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_FAST_PUNCH:
                 {
-                    //drawText(&cg->menuFont, c005, "P1: Fast Punch", 100, 108);
+                    // drawText(&cg->menuFont, c005, "P1: Fast Punch", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[2], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_KICK:
                 {
-                    //drawText(&cg->menuFont, c005, "P1: Kick", 100, 108);
+                    // drawText(&cg->menuFont, c005, "P1: Kick", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[4], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_JUMP_KICK:
                 {
-                    //drawText(&cg->menuFont, c005, "P1: Jump Kick", 100, 108);
+                    // drawText(&cg->menuFont, c005, "P1: Jump Kick", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[5], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
-                    //drawText(&cg->menuFont, c005, "P1: Headbutt", 100, 108);
+                    // drawText(&cg->menuFont, c005, "P1: Headbutt", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[3], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_DODGE:
                 {
-                    //drawText(&cg->menuFont, c005, "P1: Dodge", 100, 108);
+                    // drawText(&cg->menuFont, c005, "P1: Dodge", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[0], 64, 64, 2, 2);
                     break;
                 }
                 default:
                 {
-                    //drawText(&cg->menuFont, c005, "P1: Unset", 100, 108);
+                    // drawText(&cg->menuFont, c005, "P1: Unset", 100, 108);
                     break;
                 }
             }

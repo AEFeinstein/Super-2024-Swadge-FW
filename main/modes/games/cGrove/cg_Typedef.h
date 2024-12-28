@@ -450,6 +450,7 @@ typedef struct
     bool doneAnimating; ///< Currently animating
     int64_t animTimer;  ///< Used to count miliseconds for animations
     int8_t animFrame;   ///< Current frame of the animation
+    int8_t hOffset;     ///< Offset for animations
 } cgSparChowaData_t;
 
 typedef struct
