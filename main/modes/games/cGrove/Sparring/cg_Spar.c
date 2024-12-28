@@ -246,15 +246,15 @@ void cg_runSpar(int64_t elapsedUs)
                     {
                         // Starts match
                         strcpy(cg->spar.match.data.matchTitle, "Random Match");
-                        // TODO: Make Chowa Opponent
-                        /* cg->spar.match.data.chowa[1]->stats[CG_SPEED]    = 128;
-                        cg->spar.match.data.chowa[1]->stats[CG_STAMINA]  = 128;
-                        cg->spar.match.data.chowa[1]->stats[CG_STRENGTH] = 0;
-                        cg->spar.match.data.chowa[1]->stats[CG_AGILITY]  = 128;
-                        cg->spar.match.data.chowa[1]->stats[CG_HEALTH]   = 128;
-                        cg->spar.match.data.chowa[1]->playerAffinity     = 255;
-                        cg->spar.match.data.chowa[1]->type               = CG_KING_DONUT;
-                        cg->spar.match.data.chowa[1]->age                = i * 100; */
+                        // Make Chowa Opponent
+                        for (int idx = 0; idx < 6; idx++)
+                        {
+                            cg->spar.match.data.chowa[1]->stats[CG_SPEED]
+                                = (30 * cg->spar.aiSelect) + (esp_random() % 50);
+                        }
+                        cg->spar.match.data.chowa[1]->playerAffinity = 255;
+                        cg->spar.match.data.chowa[1]->type           = CG_KING_DONUT;
+                        cg->spar.match.data.chowa[1]->age            = esp_random() % 128;
                         cg->spar.match.data.chowa[0] = &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]];
                         cg->spar.match.data.chowa[1] = &cg->spar.opponent;
                         cg_initSparMatch(cg, 0, sparMatchTimes[cg->spar.timerSelect], cg->spar.aiSelect,
