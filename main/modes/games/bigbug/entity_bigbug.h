@@ -26,7 +26,7 @@ typedef enum
     ATTACHMENT_ARM_DATA,
     BU_DATA,
     BUGGO_DATA,
-    CAR_ACTIVE_DATA,
+    CAR_DATA,
     DEATH_DUMPSTER_DATA,
     DIALOGUE_DATA,
     EGG_DATA,
@@ -45,6 +45,7 @@ typedef enum
     ROCKET_DATA,
     STUCK_HARPOON_DATA,
     SPIT_DATA,
+    FOOD_CART_DATA,
 } bb_data_type_t;
 
 typedef enum
@@ -67,7 +68,6 @@ typedef struct
     vec_t yaw;            //.x is the yaw, .y is the change in yaw over time. Gravitates toward left or right.
     uint8_t numHarpoons;  // number of harpoons
     int32_t fuel;         // garbotnik's remaining fuel. Like a level timer that can be influenced.
-    bool gettingCrushed;  // Set to true when a heavy falling object is pushing Garbotnik down.
     list_t towedEntities; // A list of entities attached via tow cable.
     int16_t towTimer;     // Overflows to negative to detach a towed entity. Then resets to zero.
 
@@ -80,6 +80,9 @@ typedef struct
 
     // dialogue stuff
     int16_t landingPhrases[29];
+
+    int8_t damageEffect;     // decrements over time. Render damagePalette color swap if > 0.
+    int16_t harpoonCooldown; // decrements over time. Fires if < 0 and resets to GameData's GarbotnikStat_fireTime.
 } bb_garbotnikData_t;
 
 typedef struct
@@ -138,6 +141,7 @@ typedef struct
     int32_t yVel;
     bb_entity_t* flame; // tracks the flame to update position like a child object
     uint16_t numBugs;   // number of bugs in the booster
+    uint8_t numDonuts;  // number of donuts in the booster
     int32_t armAngle;   // Typically rotated at 180. Increments to 359 while garbotnik is on the booster.
 } bb_rocketData_t;
 
@@ -189,6 +193,10 @@ typedef struct
 typedef struct
 {
     bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
+    bb_spriteDef_t reward;       // The sprite to spawn when the car trunk opens
+    midiFile_t alarm;            // The midi file to play when the car is active. Can be 1 of 3 files.
+    bool midiLoaded;             // True if the midi file is loaded, false otherwise.
+    uint16_t textTimer;          // The timer for the text to appear on screen.
 } bb_carData_t;
 
 typedef struct
@@ -196,6 +204,15 @@ typedef struct
     vec_t vel;
     uint16_t lifetime;
 } bb_spitData_t;
+
+typedef struct
+{
+    bb_entity_t* partner;  // the other piece of the food cart
+    bool isCached;         // tracking this to only unload sprites when both pieces are cached.
+    bb_spriteDef_t reward; // The sprite to spawn when the food cart is destroyed.
+    int8_t damageEffect;   // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the
+                           // zero animation frame because the cart background gets not graphical effect.
+} bb_foodCartData_t;
 
 typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
 
@@ -210,14 +227,12 @@ typedef struct
 typedef struct
 {
     uint8_t numStrings;
-    char** strings;
+    char** strings; // the list of strings to be spoken in order.
     int8_t curString;
-    char character[8];
+    char** characters;                   // the list of characters who are speaking in order.
     bb_callbackFunction_t endDialogueCB; // executes when the character is done talking.
     wsg_t sprite;                        // the current talking sprite
     wsg_t spriteNext;                    // a blinking triangle right of the dialogue
-    bool spriteNextLoaded;               // True if the next sprite is loaded, false otherwise
-    int8_t loadedIdx;                    // The current loaded sprite. -1 if none loaded.
     int16_t offsetY;                     // Track the sprite sliding up or down on screen.
     int8_t blinkTimer;
 } bb_dialogueData_t;
@@ -340,6 +355,8 @@ void bb_updateDoor(bb_entity_t* self);
 void bb_updateCarActive(bb_entity_t* self);
 void bb_updateCarOpen(bb_entity_t* self);
 void bb_updateSpit(bb_entity_t* self);
+void bb_updatePangoAndFriends(bb_entity_t* self);
+void bb_updateDiveSummary(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -361,6 +378,10 @@ void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
 void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawSpit(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawHitEffect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
@@ -372,6 +393,8 @@ void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
 void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
@@ -383,15 +406,18 @@ void bb_afterGarbotnikFuelTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
+void bb_afterLiftoffInteraction(bb_entity_t* self);
 void bb_deployBooster(bb_entity_t* self);
 void bb_openMap(bb_entity_t* self);
 void bb_upgradeRadar(bb_entity_t* self);
 void bb_triggerGameOver(bb_entity_t* self);
+void bb_upgradeGarbotnik(bb_entity_t* self);
+void bb_playCarAlarm(bb_entity_t* self);
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth);
-bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings);
-void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* str);
+bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter);
+void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* character, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);
 
 #endif

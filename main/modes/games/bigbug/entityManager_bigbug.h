@@ -17,7 +17,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 200
-#define NUM_SPRITES  23 // The number of bb_sprite_t last accounted for door
+#define NUM_SPRITES  27 // The number of bb_sprite_t last accounted for BB_FOOD_CART
 
 //==============================================================================
 // Structs
@@ -46,11 +46,13 @@ void bb_freeSprite(bb_sprite_t* sprite);
 void bb_loadSprites(bb_entityManager_t* entityManager);
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera);
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera);
+void bb_deactivateNonPersistentEntities(bb_entityManager_t* entityManager);
 void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer);
 void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager, rectangle_t* camera);
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera);
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager);
 bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager);
+void bb_ensureEntitySpace(bb_entityManager_t* entityManager, uint8_t numEntities);
 
 void bb_viewFollowEntity(bb_entity_t* entity, bb_camera_t* camera);
 bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType_t type, bool paused,
