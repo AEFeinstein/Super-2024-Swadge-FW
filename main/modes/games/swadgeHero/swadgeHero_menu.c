@@ -54,7 +54,7 @@ static const shSong_t shSongList[] = {
         .fName  = "sh_devils",
     },
     {
-        .name   = "Swadge City Ocean 1989",
+        .name   = "Ocean City 1989",
         .artist = "Carrie Wood",
         .fName  = "sh_ocean",
     },
@@ -77,6 +77,21 @@ static const shSong_t shSongList[] = {
         .name   = "Wake Man Stage",
         .artist = "JnWake",
         .fName  = "sh_wakeman",
+    },
+    {
+        .name   = "Gunship Credits",
+        .artist = "Newmajoe",
+        .fName  = "sh_gs_credits",
+    },
+    {
+        .name   = "Starfest Magway",
+        .artist = "Ronin Op F",
+        .fName  = "sh_starfest",
+    },
+    {
+        .name   = "San Pablo Sunrise",
+        .artist = "Ian Cowell",
+        .fName  = "sh_starfest",
     },
 };
 
