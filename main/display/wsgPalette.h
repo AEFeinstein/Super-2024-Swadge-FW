@@ -79,8 +79,8 @@ typedef struct
 // Functions
 //==============================================================================
 
-void drawWsgPalette(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, bool flipLR, bool flipUD,
-                    int16_t rotateDeg);
+void drawWsgPalette(const wsg_t* wsg, int32_t xOff, int32_t yOff, wsgPalette_t* palette, bool flipLR, bool flipUD,
+                    int32_t rotateDeg);
 void drawWsgPaletteSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette);
 void drawWsgPaletteSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, wsgPalette_t* palette, int16_t xScale,
                                 int16_t yScale);
