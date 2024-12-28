@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "gameData_bigbug.h"
 #include "entityManager_bigbug.h"
+#include "tilemap_bigbug.h"
 #include "esp_random.h"
 #include "hdw-btn.h"
 #include "touchUtils.h"
@@ -18,7 +19,10 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     // Set the mode to game mode
     gameData->screen = BIGBUG_GAME;
 
-    gameData->debugMode = false;
+    gameData->GarbotnikStat_fireTime            = 200;
+    gameData->GarbotnikStat_diggingStrength     = 1;
+    gameData->GarbotnikStat_fuelConsumptionRate = 4;
+    gameData->GarbotnikStat_maxTowCables        = 2;
 
     loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->bgm, true);
     // loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);
@@ -29,6 +33,11 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     loadMidiFile("Bump.mid", &gameData->sfxBump, true);
     loadMidiFile("Harpoon.mid", &gameData->sfxHarpoon, true);
     loadMidiFile("Dirt_Breaking.mid", &gameData->sfxDirt, true);
+    loadMidiFile("BigBug - Egg 2.mid", &gameData->sfxEgg, true);
+    loadMidiFile("BigBug - Egg 1.mid", &gameData->sfxDamage, true);
+    loadMidiFile("r_item_get.mid", &gameData->sfxCollection, true);
+    loadMidiFile("r_p_ice.mid", &gameData->sfxTether, true);
+    loadMidiFile("r_health.mid", &gameData->sfxHealth, true);
 
     gameData->neighbors[0][0] = -1; // left  neighbor x offset
     gameData->neighbors[0][1] = 0;  // left  neighbor y offset
@@ -41,8 +50,8 @@ void bb_initializeGameData(bb_gameData_t* gameData)
 
     // Load font
     loadFont("ibm_vga8.font", &gameData->font, false);
-    loadFont("tiny_numbers.font", &gameData->tinyNumbers, false);
-    loadFont("seven_segment.font", &gameData->sevenSegment, false);
+    loadFont("tiny_numbers.font", &gameData->tinyNumbersFont, false);
+    loadFont("seven_segment.font", &gameData->sevenSegmentFont, false);
 
     memset(&gameData->pleaseCheck, 0, sizeof(list_t));
     memset(&gameData->unsupported, 0, sizeof(list_t));
@@ -89,7 +98,16 @@ void bb_freeGameData(bb_gameData_t* gameData)
     unloadMidiFile(&gameData->sfxBump);
     unloadMidiFile(&gameData->sfxHarpoon);
     unloadMidiFile(&gameData->sfxDirt);
+    unloadMidiFile(&gameData->sfxEgg);
+    unloadMidiFile(&gameData->sfxDamage);
+    unloadMidiFile(&gameData->sfxCollection);
+    unloadMidiFile(&gameData->sfxTether);
+    unloadMidiFile(&gameData->sfxHealth);
     freeFont(&gameData->font);
+    freeFont(&gameData->tinyNumbersFont);
+    freeFont(&gameData->sevenSegmentFont);
+    freeFont(&gameData->cgFont);
+    freeFont(&gameData->cgThinFont);
     while (gameData->unsupported.first)
     {
         heap_caps_free(shift(&gameData->unsupported));

@@ -53,6 +53,11 @@ typedef enum
     BB_FUEL,        // A zero-g glob of relish or crude dinosaur juice.
     BB_GRABBY_HAND, // A hand in the booster that grabs bugs.
     BB_DOOR,
+    BB_DONUT,             // May be towed back to the booster to purchase WILES between dives.
+    BB_SWADGE,            // Gives an immediate upgrade choice to the player when touched.
+    BB_PANGO_AND_FRIENDS, // A sprite that flies up next to the rocket for a dialogue moment.
+    BB_FOOD_CART, // Must be bumped 10 times to release a donut or a swadge. Also spawns a horde of bugs that may be
+                  // ignored.
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.
@@ -63,6 +68,7 @@ typedef enum
     BB_RADAR_PING,    // Expanding circles when you press pause.
     BB_JANKY_BUG_DIG, // used in the car fights. When bugs touch this the dirt "digs" toward the car fight arena.
     BB_SPIT,          // projectile from the bug. Reuses fuel sprite with a palette swap.
+    BB_DIVE_SUMMARY,  // A notepad that shows your dive stats.
     WILE              // A metal ball that is thrown (not implemented)
 
 } bb_spriteDef_t;
@@ -73,9 +79,12 @@ typedef enum
     NOTHING_EMBED,
     EGG_EMBED,
     WASHING_MACHINE_EMBED,
-    CAR_EMBED,
+    BB_CAR_WITH_DONUT_EMBED,
+    BB_CAR_WITH_SWADGE_EMBED,
     SKELETON_EMBED,
     DOOR_EMBED,
+    BB_FOOD_CART_WITH_DONUT_EMBED,
+    BB_FOOD_CART_WITH_SWADGE_EMBED
 } bb_embeddable_t;
 
 typedef enum
