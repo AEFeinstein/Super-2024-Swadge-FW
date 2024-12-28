@@ -30,9 +30,10 @@
 
 static const char* sparSplashScreen[] = {"Chowa Sparring", "Press any button to continue!"};
 static const char* matchText[]        = {"--Pause--", "FINISHED", "DRAW", "YOU LOST!", "YOU WIN!"};
-// static const char* matchSetupText[]   = {""};
-static const char noRecord[] = "No record found in this slot";
-static const char versus[]   = "VS";
+static const char* prompts[]          = {"Set up a match", "Press A to start match", "Press B to go back"};
+static const char* difficultyStrs[]   = {"Beginner", "Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Expert"};
+
+static const int16_t sparMatchTimes[] = {30, 60, 90, 120, 999};
 
 //==============================================================================
 // Function Declarations
@@ -92,121 +93,30 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
     drawTextWordWrap(&cg->largeMenuFont, c555, sparSplashScreen[1], &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
 }
 
-/**
- * @brief Draws the battle record
- *
- * @param cg Game data
- */
-void cg_drawSparRecord(cGrove_t* cg)
-{
-    // Background
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
-    // Reference the record
-    cgRecord_t* record = &cg->spar.sparRecord[cg->spar.recordSelect];
-
-    // Don't draw if record is empty
-    if (!record->active)
-    {
-        char buffer[32];
-        snprintf(buffer, sizeof(buffer) - 1, "Record #%" PRId8, cg->spar.recordSelect);
-        drawText(&cg->menuFont, c555, buffer, 16, 16);
-        drawText(&cg->titleFont, c555, noRecord, (TFT_WIDTH - textWidth(&cg->titleFont, noRecord)) >> 1,
-                 (TFT_HEIGHT - 20) >> 1);
-        return;
-    }
-
-    // Draw Match title + Arrows
-    drawText(&cg->menuFont, c555, record->matchTitle, (TFT_WIDTH - textWidth(&cg->menuFont, record->matchTitle)) >> 1,
-             8);
-    drawWsg(&cg->arrow, ((TFT_WIDTH - textWidth(&cg->menuFont, record->matchTitle)) >> 1) - (4 + cg->arrow.w), 4, false,
-            false, 270);
-    drawWsg(&cg->arrow, ((TFT_WIDTH + textWidth(&cg->menuFont, record->matchTitle)) >> 1) + 4, 4, false, false, 90);
-
-    // Player names + vs label
-    int16_t vsStart = (TFT_WIDTH - textWidth(&cg->menuFont, versus)) >> 1;
-    drawText(&cg->menuFont, c333, versus, vsStart, 24);
-    drawText(&cg->menuFont, c533, record->chowa[0]->owner,
-             vsStart - (textWidth(&cg->menuFont, record->chowa[1]->owner) + 16), 24);
-    drawText(&cg->menuFont, c335, record->chowa[1]->owner, vsStart + textWidth(&cg->menuFont, versus) + 16, 24);
-
-    // Round number and arrows
-    char buffer[32];
-    snprintf(buffer, sizeof(buffer) - 1, "Round %d", cg->spar.roundSelect);
-    drawWsgSimple(&cg->arrow, (TFT_WIDTH - cg->arrow.w) >> 1, 40);
-    drawText(&cg->menuFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 60);
-    drawWsg(&cg->arrow, (TFT_WIDTH - cg->arrow.w) >> 1, 76, false, true, 0);
-
-    // Draw Chowa
-
-    // Draw time
-    snprintf(buffer, sizeof(buffer) - 1, "Time: %d", record->timer[cg->spar.roundSelect]);
-    drawText(&cg->menuFont, c444, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 188);
-
-    // Draw Chowa names
-    int8_t offset = cg->spar.roundSelect * 2;
-    drawText(&cg->menuFont, c444, record->chowa[offset]->name, 8, 204);
-    drawText(&cg->menuFont, c444, record->chowa[offset + 1]->name,
-             TFT_WIDTH - (8 + textWidth(&cg->menuFont, record->chowa[offset + 1]->name)), 204);
-
-    // Draw result of the game
-    switch (record->result[cg->spar.roundSelect])
-    {
-        case CG_P1_WIN:
-        {
-            snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->chowa[0]->owner);
-            drawText(&cg->menuFont, c533, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 220);
-            break;
-        }
-        case CG_P2_WIN:
-        {
-            snprintf(buffer, sizeof(buffer) - 1, "Winner: %s", record->chowa[1]->owner);
-            drawText(&cg->menuFont, c335, buffer, (TFT_WIDTH - textWidth(&cg->menuFont, buffer)) >> 1, 220);
-            break;
-        }
-        case CG_DRAW:
-        {
-            drawText(&cg->menuFont, c333, "Draw", (TFT_WIDTH - textWidth(&cg->menuFont, "Draw")) >> 1, 220);
-            break;
-        }
-    }
-}
-
-/**
- * @brief Draws the match initialization screen
- *
- * @param cg Game data
- */
-void cg_drawSparTournamentSetup(cGrove_t* cg)
-{
-    // Player has to pick all Chowa, one per match
-}
-
-void cg_drawSparPrivateSetup(cGrove_t* cg)
-{
-    // Player has to pick all Chowa, one per match
-
-    // You can see opponent ahead of time (NPCs)
-
-    // If player doesn't have enough Chowa, the number of rounds is reduced
-}
-
-void cg_drawSparGuestSetup(cGrove_t* cg)
-{
-    // Player has to pick all Chowa, one per match
-
-    // You can see opponent ahead of time (Guests)
-
-    // If not guest present, turn player away
-}
-
 void cg_drawSparMatchPrep(cGrove_t* cg)
 {
-    // Draw Match title
-    // Draw round of total rounds
-    // Display both contestants
-    // Press A to continue
-    // Press Start to quit tournament
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+
+    // Draw prompts
+    drawText(&cg->largeMenuFont, c555, prompts[0], (TFT_WIDTH - textWidth(&cg->largeMenuFont, prompts[0])) / 2, 16);
+    drawText(&cg->menuFont, c555, prompts[1], (TFT_WIDTH - textWidth(&cg->menuFont, prompts[1])) / 2, TFT_HEIGHT - 32);
+    drawText(&cg->menuFont, c555, prompts[2], (TFT_WIDTH - textWidth(&cg->menuFont, prompts[2])) / 2, TFT_HEIGHT - 16);
+
+    char buffer[40];
+
+    // Draw Selected Chowa name
+    snprintf(buffer, sizeof(buffer) - 1, "Selected Chowa: %s", cg->spar.activeChowaNames[cg->spar.chowaSelect]);
+    drawText(&cg->menuFont, c550, buffer, 48, 64);
+    // Draw difficulty
+    snprintf(buffer, sizeof(buffer) - 1, "Difficulty: %s", difficultyStrs[cg->spar.aiSelect]);
+    drawText(&cg->menuFont, c550, buffer, 48, 96);
+    // Draw match timer
+    snprintf(buffer, sizeof(buffer) - 1, "Match Time: %" PRId16, sparMatchTimes[cg->spar.timerSelect]);
+    drawText(&cg->menuFont, c550, buffer, 48, 128);
+
+    // Draw arrows around current selection
+    drawWsg(&cg->arrow, 16, 64 + (cg->spar.optionSelect * 32), false, false, 270);
+    drawWsg(&cg->arrow, TFT_WIDTH - (16 + cg->arrow.h), 64 + (cg->spar.optionSelect * 32), false, false, 90);
 }
 
 /**
@@ -586,8 +496,8 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
 {
     // Player 1
     // Draw health bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P1]->maxHP, cg->spar.match.chowa[CG_P1]->HP, PADDING,
-                        STAT_BAR_BASE, c500, 3);
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P1]->maxHP, cg->spar.match.chowa[CG_P1]->HP, PADDING, STAT_BAR_BASE,
+                        c500, 3);
     // Draw stamina bar
     cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P1]->maxStamina, cg->spar.match.chowa[CG_P1]->stamina,
                         1 * (PADDING + STAT_BAR_WIDTH) + PADDING, STAT_BAR_BASE, c550, 1);
@@ -654,8 +564,8 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
 
     // Player 2
     // Draw health bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P2]->maxHP, cg->spar.match.chowa[CG_P2]->HP,
-                        TFT_WIDTH - PADDING, STAT_BAR_BASE, c500, 3);
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P2]->maxHP, cg->spar.match.chowa[CG_P2]->HP, TFT_WIDTH - PADDING,
+                        STAT_BAR_BASE, c500, 3);
     // Draw stamina bar
     cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P2]->maxStamina, cg->spar.match.chowa[CG_P2]->stamina,
                         TFT_WIDTH - (1 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c550, 1);

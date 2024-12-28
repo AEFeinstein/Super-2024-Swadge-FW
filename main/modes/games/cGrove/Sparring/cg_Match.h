@@ -20,5 +20,5 @@
 // Functions
 //==============================================================================
 
-void cg_initSparMatch(cGrove_t* cg, char* matchName, int8_t round, int16_t maxTime, cgAIDifficulty_t ai);
+void cg_initSparMatch(cGrove_t* cg, int8_t round, int16_t maxTime, cgAIDifficulty_t ai, cgChowa_t* c1);
 void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs);

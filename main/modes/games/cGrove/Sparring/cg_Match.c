@@ -74,11 +74,10 @@ void static cg_sparMatchRPS(cGrove_t* cg);
  * @param round What round of the spar this is
  * @param maxTime When the timeout occurs
  */
-void cg_initSparMatch(cGrove_t* cg, char* matchName, int8_t round, int16_t maxTime, cgAIDifficulty_t ai)
+void cg_initSparMatch(cGrove_t* cg, int8_t round, int16_t maxTime, cgAIDifficulty_t ai, cgChowa_t* c1)
 {
     // Initialize
     // Load tournament/match data
-    strcpy(cg->spar.match.data.matchTitle, matchName);
     cg->spar.match.round        = round;
     cg->spar.match.maxTime      = maxTime;
     cg->spar.match.animDone     = false;
@@ -90,22 +89,12 @@ void cg_initSparMatch(cGrove_t* cg, char* matchName, int8_t round, int16_t maxTi
     cg->spar.match.ai.aiDifficulty = ai;
 
     // Chowa
-    cg->spar.match.chowa[CG_P1]->chowa = cg->spar.match.data.chowa[2 * round];
+    cg->spar.match.chowa[CG_P1]->chowa = &cg->chowa[0];//c1; //cg->spar.match.data.chowa[2 * round];
     cg->spar.match.chowa[CG_P2]->chowa = cg->spar.match.data.chowa[(2 * round) + 1];
 
-    // FIXME: Setting stats for test purposes
+    // Setting stats for test purposes
     for (int32_t i = 0; i < 2; i++)
     {
-        cg->spar.match.chowa[i]->chowa->stats[CG_SPEED]    = 128;
-        cg->spar.match.chowa[i]->chowa->stats[CG_STAMINA]  = 128;
-        cg->spar.match.chowa[i]->chowa->stats[CG_STRENGTH] = 0;
-        cg->spar.match.chowa[i]->chowa->stats[CG_AGILITY]  = 128;
-        cg->spar.match.chowa[i]->chowa->stats[CG_HEALTH]   = 128;
-        cg->spar.match.chowa[i]->chowa->playerAffinity     = 255;
-        cg->spar.match.chowa[i]->chowa->type               = CG_KING_DONUT;
-        cg->spar.match.chowa[i]->chowa->age                = i * 100;
-        // Charisma not needed for spar
-
         cg->spar.match.chowa[i]->currState = CG_SPAR_UNREADY;
         cg->spar.match.chowa[i]->currMove  = CG_SPAR_UNSET;
         cg->spar.match.chowa[i]->maxStamina
@@ -135,7 +124,7 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
         if (cg->spar.match.endGameTimer >= 5000000)
         {
             // Move on
-            cg->spar.state = CG_SPAR_MATCH_RESULTS;
+            cg->spar.state = CG_SPAR_MENU;
         }
         return;
     }

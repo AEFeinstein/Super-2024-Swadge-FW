@@ -34,7 +34,7 @@
 
 static const char cGroveTitle[] = "Chowa Grove"; // Game title
 
-static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Perform", "Guest Profiles", "Settings"};
+static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Settings"};
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
 static const int32_t cGroveEnabledVals[]        = {true, false};
@@ -162,10 +162,7 @@ static void cGroveEnterMode(void)
                              ARRAY_SIZE(shadowColors), ledColor);
     addSingleItemToMenu(cg->menu, cGroveMenuNames[0]);     // Go to Grove
     addSingleItemToMenu(cg->menu, cGroveMenuNames[1]);     // Go to Spar
-    addSingleItemToMenu(cg->menu, cGroveMenuNames[2]);     // Go to Race
-    addSingleItemToMenu(cg->menu, cGroveMenuNames[3]);     // Go to Performance
-    addSingleItemToMenu(cg->menu, cGroveMenuNames[4]);     // View player profiles
-    cg->menu = startSubMenu(cg->menu, cGroveMenuNames[5]); // Settings
+    cg->menu = startSubMenu(cg->menu, cGroveMenuNames[2]); // Settings
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.touch); // Enable/disable touch controls
@@ -240,20 +237,6 @@ static void cGroveEnterMode(void)
         }
         writeNvsBlob(cgNVSKeys[1], &cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
     }
-
-    // Guests
-    readNvsBlob(cgNVSKeys[3], NULL, &blobLen);
-    if (!readNvsBlob(cgNVSKeys[3], &cg->guests, &blobLen))
-    {
-        for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA - 1; i++)
-        {
-            cg->guests[i].active = true;
-            char buffer[32];
-            snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", i);
-            strcpy(cg->guests[i].name, buffer);
-        }
-        writeNvsBlob(cgNVSKeys[3], &cg->guests, sizeof(cgChowa_t) * CG_MAX_CHOWA);
-    }
     globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
 }
 
@@ -323,7 +306,6 @@ static void cGroveMainLoop(int64_t elapsedUs)
                 }
             }
         }
-
         return;
     }
 
@@ -345,15 +327,6 @@ static void cGroveMainLoop(int64_t elapsedUs)
                 cg_deInitSpar();
                 break;
             }
-            case CG_RACE:
-            {
-                break;
-            }
-            case CG_PERFORMANCE:
-            {
-                break;
-            }
-
             default:
             {
                 // Something went wrong
@@ -388,16 +361,6 @@ static void cGroveMainLoop(int64_t elapsedUs)
         case CG_SPAR:
         {
             cg_runSpar(elapsedUs);
-            break;
-        }
-        case CG_RACE:
-        {
-            // Race
-            break;
-        }
-        case CG_PERFORMANCE:
-        {
-            // Performance
             break;
         }
         case CG_FIRST_RUN:
@@ -489,21 +452,6 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
             globalMidiPlayerStop(true);
             cg_initSpar(cg);
             cg->state = CG_SPAR;
-        }
-        else if (label == cGroveMenuNames[2])
-        {
-            // Start Racing
-            // TODO: Racing
-        }
-        else if (label == cGroveMenuNames[3])
-        {
-            // Start Performing
-            // TODO: Performances
-        }
-        else if (label == cGroveMenuNames[4])
-        {
-            // View saved players
-            // TODO: View recently interacted players
         }
         else if (label == cGroveResetData[0])
         {

@@ -23,20 +23,12 @@
 
 static const char sparMenuName[] = "Chowa Sparring!";
 
-static const char* sparMenuNames[] = {"Schedule Match", "View records", "Tutorial", "Settings", "Main Menu"};
+static const char* sparMenuNames[] = {"Match", "Tutorial", "Main Menu"};
 
 static const char* attackIcons[]
     = {"Dodge-1.wsg", "Fist-1.wsg", "Fist-2.wsg", "Headbutt-1.wsg", "Kick-1.wsg", "Kick-2.wsg"};
 
-static const char* recordKeys[] = {
-    "cgSRecord0", "cgSRecord1", "cgSRecord2", "cgSRecord3", "cgSRecord4",
-    "cgSRecord5", "cgSRecord6", "cgSRecord7", "cgSRecord8", "cgSRecord9",
-};
-
-static const char* scheduleMenu[]    = {"Schedule Match", "Tournament", "Private match", "Guest match"};
-static const char* tournamentNames[] = {"Egg Cup", "Souffle Shuffle", "Hot Dog League"};
-
-//static const char* NPCs[] = {"Pango", "Pixel", "Poe", "Garbotnik"};
+static const int16_t sparMatchTimes[] = {30, 60, 90, 120, 999};
 
 //==============================================================================
 // Variables
@@ -49,7 +41,6 @@ cGrove_t* cg;
 //==============================================================================
 
 static void sparMenuCb(const char* label, bool selected, uint32_t settingVal);
-static void sparLoadBattleRecords(void);
 
 //==============================================================================
 // Functions
@@ -72,45 +63,13 @@ void cg_initSpar(cGrove_t* grove)
     }
 
     // Audio
-    loadMidiFile("Chowa_Battle.mid", &cg->spar.sparBGM, true);
+    loadMidiFile("Chowa_Race.mid", &cg->spar.sparBGM, true);
 
     // Init menu
     cg->spar.sparMenu = initMenu(sparMenuName, sparMenuCb);
-    cg->spar.sparMenu = startSubMenu(cg->spar.sparMenu, scheduleMenu[0]); // Start a match
-    cg->spar.sparMenu = startSubMenu(cg->spar.sparMenu, scheduleMenu[1]); // Tournament
-    for (int idx = 0; idx < ARRAY_SIZE(tournamentNames); idx++)
-    {
-        addSingleItemToMenu(cg->spar.sparMenu, tournamentNames[idx]);
-    }
-    cg->spar.sparMenu = endSubMenu(cg->spar.sparMenu);
-    cg->spar.sparMenu = startSubMenu(cg->spar.sparMenu, scheduleMenu[2]); // Private Match
-    // TODO: Generate Private matches
-    cg->spar.sparMenu = endSubMenu(cg->spar.sparMenu);
-    bool guests       = false;
-    for (int idx = 0; idx < CG_GROVE_MAX_GUEST_CHOWA; idx++)
-    {
-        if (cg->guests[idx].active)
-        {
-            guests = true;
-        }
-    }
-    if (guests)
-    {
-        cg->spar.sparMenu = startSubMenu(cg->spar.sparMenu, scheduleMenu[3]); // Guest Match
-        for (int idx = 0; idx < CG_GROVE_MAX_GUEST_CHOWA; idx++)
-        {
-            if (cg->guests[idx].active)
-            {
-                addSingleItemToMenu(cg->spar.sparMenu, cg->guests[idx].name);
-            }
-        }
-        cg->spar.sparMenu = endSubMenu(cg->spar.sparMenu);
-    }
-    cg->spar.sparMenu = endSubMenu(cg->spar.sparMenu);
-    addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[1]); // View combat records
-    addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[2]); // View tutorial
-    addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[3]); // Settings
-    addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[4]); // Go back to main menu
+    addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[0]); // Start match
+    addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[1]); // View tutorial
+    addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[2]); // Go back to main menu
 
     // Renderer
     cg->spar.renderer = initMenuManiaRenderer(&cg->titleFont, &cg->titleFontOutline, &cg->menuFont);
@@ -118,9 +77,6 @@ void cg_initSpar(cGrove_t* grove)
     led_t ledColor                             = {.r = 0, .g = 200, .b = 200};
     recolorMenuManiaRenderer(cg->spar.renderer, c111, c430, c445, c045, c542, c430, c111, c445, shadowColors,
                              ARRAY_SIZE(shadowColors), ledColor);
-
-    // Initialize battle record
-    sparLoadBattleRecords();
 
     // Play BGM
     midiGmOn(cg->mPlayer);
@@ -189,154 +145,135 @@ void cg_runSpar(int64_t elapsedUs)
             drawMenuMania(cg->spar.sparMenu, cg->spar.renderer, elapsedUs);
             break;
         }
-        case CG_SPAR_TOURNAMENT_SETUP:
-        {
-            while (checkButtonQueueWrapper(&evt))
-            {
-                // TODO: Up/Down changes what's being selected
-                // TODO: Left/Right changes Chowa for selection
-                // TODO: B backs out
-                // TODO: A selects
-                // TODO: Only B works when not enough Chowa
-                if (evt.down)
-                {
-                    // Do stuff
-                }
-            }
-            // cg_drawSparMatchSetup(cg);
-            // FIXME: don't immediately drop through
-            if (true)
-            {
-                cg->spar.state = CG_SPAR_MATCH;
-                cg_initSparMatch(cg, "TestMatch", 0, 5, CG_HARD);
-            }
-            break;
-        }
-        case CG_SPAR_PRIVATE_SETUP:
-        {
-            while (checkButtonQueueWrapper(&evt))
-            {
-                // TODO: Up/Down changes what's being selected
-                // TODO: Left/Right changes Chowa for selection
-                // TODO: B backs out
-                // TODO: A selects
-                // TODO: Only B works when not enough Chowa
-                if (evt.down)
-                {
-                    // Do stuff
-                }
-            }
-            // cg_drawSparMatchSetup(cg);
-            // FIXME: don't immediately drop through
-            if (true)
-            {
-                cg->spar.state = CG_SPAR_MATCH;
-                cg_initSparMatch(cg, "TestMatch", 0, 5, CG_HARD);
-            }
-            break;
-        }
-        case CG_SPAR_GUEST_SETUP:
-        {
-            while (checkButtonQueueWrapper(&evt))
-            {
-                // TODO: Up/Down changes what's being selected
-                // TODO: Left/Right changes Chowa for selection
-                // TODO: B backs out
-                // TODO: A selects
-                // TODO: Only B works when not enough Chowa
-                if (evt.down)
-                {
-                    // Do stuff
-                }
-            }
-            // cg_drawSparMatchSetup(cg);
-            // FIXME: don't immediately drop through
-            if (true)
-            {
-                cg->spar.state = CG_MATCH_PREP;
-                cg_initSparMatch(cg, "TestMatch", 0, 5, CG_HARD);
-            }
-            break;
-        }
         case CG_MATCH_PREP:
         {
-            // TODO: Match preview
-            // Show the matchup, then handle countdown
+            // Handle input
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    if (evt.button & PB_DOWN)
+                    {
+                        cg->spar.optionSelect++;
+                        if (cg->spar.optionSelect >= 3)
+                        {
+                            cg->spar.optionSelect = 0;
+                        }
+                    }
+                    else if (evt.button & PB_UP)
+                    {
+                        cg->spar.optionSelect--;
+                        if (cg->spar.optionSelect < 0)
+                        {
+                            cg->spar.optionSelect = 2;
+                        }
+                    }
+                    else if (evt.button & PB_RIGHT)
+                    {
+                        switch (cg->spar.optionSelect)
+                        {
+                            case 0:
+                            {
+                                cg->spar.chowaSelect++;
+                                if (cg->spar.chowaSelect >= cg->spar.numActiveChowa)
+                                {
+                                    cg->spar.chowaSelect = 0;
+                                }
+                                break;
+                            }
+                            case 1:
+                            {
+                                cg->spar.aiSelect++;
+                                if (cg->spar.aiSelect >= CG_NUM_DIFF)
+                                {
+                                    cg->spar.aiSelect = 0;
+                                }
+                                break;
+                            }
+                            case 2:
+                            {
+                                cg->spar.timerSelect++;
+                                if (cg->spar.timerSelect >= ARRAY_SIZE(sparMatchTimes))
+                                {
+                                    cg->spar.timerSelect = 0;
+                                }
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else if (evt.button & PB_LEFT)
+                    {
+                        switch (cg->spar.optionSelect)
+                        {
+                            case 0:
+                            {
+                                cg->spar.chowaSelect--;
+                                if (cg->spar.chowaSelect < 0)
+                                {
+                                    cg->spar.chowaSelect = cg->spar.numActiveChowa - 1;
+                                }
+                                break;
+                            }
+                            case 1:
+                            {
+                                cg->spar.aiSelect--;
+                                if (cg->spar.aiSelect < 0)
+                                {
+                                    cg->spar.aiSelect = CG_NUM_DIFF - 1;
+                                }
+                                break;
+                            }
+                            case 2:
+                            {
+                                cg->spar.timerSelect--;
+                                if (cg->spar.timerSelect < 0)
+                                {
+                                    cg->spar.timerSelect = ARRAY_SIZE(sparMatchTimes) - 1;
+                                }
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else if (evt.button & PB_A)
+                    {
+                        // Starts match
+                        strcpy(cg->spar.match.data.matchTitle, "Random Match");
+                        // TODO: Make Chowa Opponent
+                        /* cg->spar.match.data.chowa[1]->stats[CG_SPEED]    = 128;
+                        cg->spar.match.data.chowa[1]->stats[CG_STAMINA]  = 128;
+                        cg->spar.match.data.chowa[1]->stats[CG_STRENGTH] = 0;
+                        cg->spar.match.data.chowa[1]->stats[CG_AGILITY]  = 128;
+                        cg->spar.match.data.chowa[1]->stats[CG_HEALTH]   = 128;
+                        cg->spar.match.data.chowa[1]->playerAffinity     = 255;
+                        cg->spar.match.data.chowa[1]->type               = CG_KING_DONUT;
+                        cg->spar.match.data.chowa[1]->age                = i * 100; */
+                        // TODO: Set match settings based on selections
+                        cg->spar.match.data.chowa[0] = &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]];
+                        cg->spar.match.data.chowa[1] = &cg->spar.opponent;
+                        cg_initSparMatch(cg, 0, sparMatchTimes[cg->spar.timerSelect], cg->spar.aiSelect, &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]]);
+                    }
+                    else if (evt.button & PB_B)
+                    {
+                        cg->spar.state = CG_SPAR_MENU;
+                    }
+                }
+            }
+            // Draw prep screen
+            cg_drawSparMatchPrep(cg);
             break;
         }
         case CG_SPAR_MATCH:
         {
             cg_runSparMatch(cg, elapsedUs);
             cg_drawSparMatch(cg, elapsedUs);
-            break;
-        }
-        case CG_SPAR_MATCH_RESULTS:
-        {
-            // TODO: Show match results, save to Swadge
-            // Show the final results
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-            drawText(&cg->titleFont, c555, "BLAH", 32, 32);
-            break;
-        }
-        case CG_SPAR_BATTLE_RECORD:
-        {
-            while (checkButtonQueueWrapper(&evt))
-            {
-                if (evt.down)
-                {
-                    switch (evt.button)
-                    {
-                        case PB_RIGHT:
-                        {
-                            cg->spar.recordSelect++;
-                            if (cg->spar.recordSelect >= CG_SPAR_MAX_RECORDS)
-                            {
-                                cg->spar.recordSelect = 0;
-                            }
-                            break;
-                        }
-                        case PB_LEFT:
-                        {
-                            cg->spar.recordSelect--;
-                            if (cg->spar.recordSelect < 0)
-                            {
-                                cg->spar.recordSelect = CG_SPAR_MAX_RECORDS - 1;
-                            }
-                            break;
-                        }
-                        case PB_UP:
-                        {
-                            cg->spar.roundSelect--;
-                            if (cg->spar.roundSelect < 0)
-                            {
-                                cg->spar.roundSelect = 2;
-                            }
-                            break;
-                        }
-                        case PB_DOWN:
-                        {
-                            cg->spar.roundSelect++;
-                            if (cg->spar.roundSelect >= 3)
-                            {
-                                cg->spar.roundSelect = 0;
-                            }
-                            break;
-                        }
-                        case PB_A:
-                        case PB_B:
-                        {
-                            cg->spar.state = CG_SPAR_MENU;
-                            break;
-                        }
-                        default:
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            // Draw
-            cg_drawSparRecord(cg);
             break;
         }
         case CG_SPAR_TUTORIAL:
@@ -359,122 +296,42 @@ static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
-        if (label == tournamentNames[0])
+        if (label == sparMenuNames[0])
         {
-            cg->spar.match.data.numRounds = 2;
-            strcpy(cg->spar.match.data.matchTitle, tournamentNames[0]);
-            // TODO: Get Opponent Chowa
             // Clear old data out
             for (int idx = 0; idx < 3; idx++)
             {
                 cg->spar.match.data.timer[idx]  = 0;
                 cg->spar.match.data.result[idx] = CG_DRAW;
             }
-            int8_t activeChowa = 0;
+
+            // Generate List of active Chowa
+            cg->spar.numActiveChowa = 0; // Reset
             for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
             {
                 if (cg->chowa[idx].active)
                 {
-                    activeChowa++;
+                    cg->spar.activeChowaIdxs[cg->spar.numActiveChowa] = idx;
+                    strcpy(cg->spar.activeChowaNames[cg->spar.numActiveChowa], cg->chowa[idx].name);
+                    cg->spar.numActiveChowa++;
                 }
             }
-            cg->spar.state = CG_SPAR_TOURNAMENT_SETUP;
-        }
-        else if (label == tournamentNames[1])
-        {
-            cg->spar.match.data.numRounds = 3;
-            strcpy(cg->spar.match.data.matchTitle, tournamentNames[0]);
-            // TODO: Get Opponent Chowa
-            // Clear old data out
-            for (int idx = 0; idx < 3; idx++)
-            {
-                cg->spar.match.data.timer[idx]  = 0;
-                cg->spar.match.data.result[idx] = CG_DRAW;
-            }
-            int8_t activeChowa = 0;
-            for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
-            {
-                if (cg->chowa[idx].active)
-                {
-                    activeChowa++;
-                }
-            }
-            cg->spar.state = CG_SPAR_TOURNAMENT_SETUP;
-        }
-        else if (label == tournamentNames[2])
-        {
-            cg->spar.match.data.numRounds = 3;
-            strcpy(cg->spar.match.data.matchTitle, tournamentNames[0]);
-            // TODO: Get Opponent Chowa
-            // Clear old data out
-            for (int idx = 0; idx < 3; idx++)
-            {
-                cg->spar.match.data.timer[idx]  = 0;
-                cg->spar.match.data.result[idx] = CG_DRAW;
-            }
-            int8_t activeChowa = 0;
-            for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
-            {
-                if (cg->chowa[idx].active)
-                {
-                    activeChowa++;
-                }
-            }
-            cg->spar.state = CG_SPAR_TOURNAMENT_SETUP;
+
+            // Allow player to choose their Chowa and difficulty
+            cg->spar.state = CG_MATCH_PREP;
         }
         else if (label == sparMenuNames[1])
-        {
-            // View records
-            cg->spar.state = CG_SPAR_BATTLE_RECORD;
-        }
-        else if (label == sparMenuNames[2])
         {
             // Tutorial
             cg->spar.state = CG_SPAR_TUTORIAL;
         }
-        else if (label == sparMenuNames[3])
-        {
-            // Settings
-        }
-        else if (label == sparMenuNames[4])
+        else if (label == sparMenuNames[2])
         {
             // Go to main menu
             cg->unload = true;
             globalMidiPlayerStop(true);
             globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
             cg->spar.state = CG_SPAR_SPLASH;
-        }
-        else
-        {
-            for (int idx = 0; idx < CG_GROVE_MAX_GUEST_CHOWA; idx++)
-            {
-                if (label == cg->guests[idx].name)
-                {
-                    cg->spar.match.data.numRounds = 1;
-                    strcpy(cg->spar.match.data.matchTitle, tournamentNames[0]);
-                    // Get Opponent Chowa
-                    cg->spar.match.data.chowa[1] = &cg->guests[idx];
-                    // Clear old data out
-                    for (int idx2 = 0; idx2 < 3; idx2++)
-                    {
-                        cg->spar.match.data.timer[idx2]  = 0;
-                        cg->spar.match.data.result[idx2] = CG_DRAW;
-                    }
-                    cg->spar.state = CG_SPAR_GUEST_SETUP;
-                }
-            }
-        }
-    }
-}
-
-static void sparLoadBattleRecords()
-{
-    for (int32_t idx = 0; idx < ARRAY_SIZE(recordKeys); idx++)
-    {
-        size_t blobLen = sizeof(cgRecord_t);
-        if (!readNvsBlob(recordKeys[idx], &cg->spar.sparRecord[idx], &blobLen))
-        {
-            cg->spar.sparRecord[idx].active = false;
         }
     }
 }
