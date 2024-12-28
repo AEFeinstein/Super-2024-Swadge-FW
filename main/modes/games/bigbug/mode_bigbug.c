@@ -437,7 +437,12 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
     // Flat background color
     paletteColor_t bgColor;
-    if (cameraPos->y >= 400)
+    if (cameraPos->y + y > -100)
+    {
+        // Shallow underground is dark red
+        bgColor = c100;
+    }
+    else if (cameraPos->y >= 400)
     {
         // Deep underground is black
         bgColor = c000;
@@ -513,6 +518,11 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
                 else if (drawS2row) // No transparency check
                 {
                     *(fb++) = surface2px[iX];
+                }
+                else
+                {
+                    // Nothing to draw here, advance the pointer
+                    fb++;
                 }
             }
         }
