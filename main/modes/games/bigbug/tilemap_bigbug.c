@@ -273,11 +273,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             bb_entity_t* car = bb_createEntity(entityManager, ONESHOT_ANIMATION, true, BB_CAR, 6,
                                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2,
                                                                false, false);
-                            ((bb_carData_t*)car->data)->reward = BB_DONUT;
                             if (car != NULL)
                             {
-                                car->currentAnimationFrame   = 1;
-                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                                ((bb_carData_t*)car->data)->reward = BB_DONUT;
+                                car->currentAnimationFrame         = 1;
+                                tilemap->fgTiles[i][j].embed       = NOTHING_EMBED;
                             }
                             break;
                         }
@@ -287,11 +287,11 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             bb_entity_t* car = bb_createEntity(entityManager, ONESHOT_ANIMATION, true, BB_CAR, 6,
                                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE + 2,
                                                                false, false);
-                            ((bb_carData_t*)car->data)->reward = BB_SWADGE;
                             if (car != NULL)
                             {
-                                car->currentAnimationFrame   = 1;
-                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                                ((bb_carData_t*)car->data)->reward = BB_SWADGE;
+                                car->currentAnimationFrame         = 1;
+                                tilemap->fgTiles[i][j].embed       = NOTHING_EMBED;
                             }
                             break;
                         }

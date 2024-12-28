@@ -418,7 +418,7 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         }
         if (excludePersistentEntities
             && (currentEntity->spriteIndex == BB_DEATH_DUMPSTER || currentEntity->spriteIndex == ROCKET_ANIM
-                || currentEntity->spriteIndex != FLAME_ANIM))
+                || currentEntity->spriteIndex == FLAME_ANIM))
         {
             continue;
         }
@@ -599,7 +599,7 @@ void bb_ensureEntitySpace(bb_entityManager_t* entityManager, uint8_t numEntities
         if (entityManager->entities[i].active
             && (entityManager->entities[i].spriteIndex == CRUMBLE_ANIM
                 || entityManager->entities[i].spriteIndex == BUMP_ANIM
-                || entityManager->entities[i].spriteIndex == CRUMBLE_ANIM))
+                || entityManager->entities[i].spriteIndex == BB_SPIT))
         {
             bb_destroyEntity(&entityManager->entities[i], false);
             if (entityManager->activeEntities <= MAX_ENTITIES - numEntities)
