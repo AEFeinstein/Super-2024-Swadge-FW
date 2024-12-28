@@ -74,7 +74,6 @@ uint8_t pa_getTile(paTilemap_t* tilemap, uint8_t tx, uint8_t ty);
 void pa_setTile(paTilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
 bool pa_isSolid(uint8_t tileId);
 void pa_unlockScrolling(paTilemap_t* tilemap);
-bool pa_needsTransparency(uint8_t tileId);
 void pa_freeTilemap(paTilemap_t* tilemap);
 void pa_generateMaze(paTilemap_t* tilemap);
 bool pa_genPathContinue(paTilemap_t* tilemap, uint32_t x, uint32_t y);

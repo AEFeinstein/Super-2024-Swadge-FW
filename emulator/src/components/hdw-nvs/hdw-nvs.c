@@ -19,6 +19,7 @@
 #include "emu_main.h"
 #include "emu_utils.h"
 #include "hashMap.h"
+#include "esp_heap_caps.h"
 
 //==============================================================================
 // Defines
@@ -863,7 +864,7 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
             bool freeOutStats = false;
             if (outStats == NULL)
             {
-                outStats     = calloc(1, sizeof(nvs_stats_t));
+                outStats     = heap_caps_calloc(1, sizeof(nvs_stats_t), MALLOC_CAP_8BIT);
                 freeOutStats = true;
             }
 
@@ -1022,7 +1023,7 @@ bool nvsNamespaceInUse(const char* namespace)
 static char* blobToStr(const void* value, size_t length)
 {
     const uint8_t* value8 = (const uint8_t*)value;
-    char* blobStr         = malloc((length * 2) + 1);
+    char* blobStr         = heap_caps_malloc((length * 2) + 1, MALLOC_CAP_8BIT);
     for (size_t i = 0; i < length; i++)
     {
         sprintf(&blobStr[i * 2], "%02X", value8[i]);
@@ -1094,7 +1095,7 @@ void emuInjectNvsBlob(const char* namespace, const char* key, size_t length, con
         nvsInjectedDataInit = true;
     }
 
-    void* alloc = malloc(sizeof(emuNvsInjectedData_t) + length);
+    void* alloc = heap_caps_malloc(sizeof(emuNvsInjectedData_t) + length, MALLOC_CAP_8BIT);
     if (alloc != NULL)
     {
         emuNvsInjectedData_t* data = (emuNvsInjectedData_t*)alloc;
@@ -1117,7 +1118,7 @@ void emuInjectNvs32(const char* namespace, const char* key, int32_t value)
         nvsInjectedDataInit = true;
     }
 
-    void* alloc = malloc(sizeof(emuNvsInjectedData_t));
+    void* alloc = heap_caps_malloc(sizeof(emuNvsInjectedData_t), MALLOC_CAP_8BIT);
     if (alloc != NULL)
     {
         emuNvsInjectedData_t* data = (emuNvsInjectedData_t*)alloc;

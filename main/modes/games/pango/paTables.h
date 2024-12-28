@@ -63,7 +63,7 @@ static const int16_t masterDifficulty2[MASTER_DIFFICULTY2_TABLE_LENGTH * MASTER_
          7,      4,       4,         0,          1,      8,    10,
 };*/
 
-#define MASTER_DIFFICULTY_TABLE_LENGTH 50
+#define MASTER_DIFFICULTY_TABLE_LENGTH 120
 
 #define BLOCK_WSG_LOOKUP_OFFSET                      0
 #define TOTAL_ENEMIES_LOOKUP_OFFSET                  1
@@ -109,9 +109,8 @@ static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DI
     PA_WSG_BLOCK_MAGENTA, 14, 3, 16, 100, 400, 1, 1,  //
     PA_WSG_BLOCK_MAGENTA, 15, 4, 15, 100, 400, 1, 1,  //
     PA_WSG_BLOCK_MAGENTA, 12, 2, 17, 100, 300, 1, 1,  //
-    PA_WSG_BLOCK_MAGENTA, 30, 10, 13, 100, 400, 1, 1, //
+    PA_WSG_BLOCK_MAGENTA, 30, 10, 13, 100, 400, 1, 1, // 25
 
-    // Placeholder: bonus stage
     PA_WSG_BLOCK_BLUE, 12, 1, 18, 100, 300, 1, 1,   //
     PA_WSG_BLOCK_GREEN, 16, 3, 12, 300, 900, 1, 2,  //
     PA_WSG_BLOCK_YELLOW, 17, 3, 13, 300, 900, 1, 2, //
@@ -140,7 +139,98 @@ static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DI
     PA_WSG_BLOCK_YELLOW, 24, 3, 16, 100, 400, 1, 2,   //
     PA_WSG_BLOCK_ORANGE, 25, 4, 15, 100, 400, 1, 2,   //
     PA_WSG_BLOCK_RED, 22, 2, 17, 100, 300, 1, 2,      //
-    PA_WSG_BLOCK_MAGENTA, 42, 10, 13, 100, 400, 1, 2, //
+    PA_WSG_BLOCK_MAGENTA, 42, 10, 13, 100, 400, 1, 2, // 49
+
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_BLUE, 12, 1, 19, 100, 300, 1, 1, //
+    PA_WSG_BLOCK_BLUE, 16, 3, 13, 300, 900, 2, 2, //
+    PA_WSG_BLOCK_BLUE, 17, 3, 14, 300, 900, 2, 2, //
+    PA_WSG_BLOCK_BLUE, 17, 4, 11, 300, 900, 2, 2, //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_GREEN, 18, 3, 14, 300, 600, 2, 2, //
+    PA_WSG_BLOCK_GREEN, 19, 3, 14, 300, 600, 2, 2, //
+    PA_WSG_BLOCK_GREEN, 20, 4, 12, 300, 600, 2, 2, //
+    PA_WSG_BLOCK_GREEN, 17, 2, 15, 200, 600, 2, 2, //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_YELLOW, 20, 3, 14, 200, 600, 2, 2, //
+    PA_WSG_BLOCK_YELLOW, 21, 3, 15, 200, 600, 2, 2, //
+    PA_WSG_BLOCK_YELLOW, 22, 4, 13, 200, 600, 2, 2, //
+    PA_WSG_BLOCK_YELLOW, 19, 2, 15, 100, 600, 2, 2, //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_ORANGE, 22, 3, 15, 100, 600, 2, 2, //
+    PA_WSG_BLOCK_ORANGE, 23, 4, 14, 100, 600, 2, 2, //
+    PA_WSG_BLOCK_ORANGE, 20, 2, 16, 100, 600, 2, 2, //
+    PA_WSG_BLOCK_ORANGE, 34, 8, 13, 100, 500, 2, 2, //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_RED, 23, 3, 16, 100, 500, 2, 2, //
+    PA_WSG_BLOCK_RED, 24, 4, 15, 100, 500, 2, 2, //
+    PA_WSG_BLOCK_RED, 21, 2, 17, 100, 400, 2, 2, //
+    PA_WSG_BLOCK_RED, 38, 8, 14, 100, 500, 2, 2, //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_MAGENTA, 24, 3, 17, 100, 400, 2, 2,  //
+    PA_WSG_BLOCK_MAGENTA, 25, 4, 16, 100, 400, 2, 2,  //
+    PA_WSG_BLOCK_MAGENTA, 22, 2, 18, 100, 300, 2, 2,  //
+    PA_WSG_BLOCK_MAGENTA, 42, 11, 10, 100, 400, 2, 2, // 73
+
+    PA_WSG_BLOCK_BLUE, 16, 3, 13, 300, 900, 2, 3,   //
+    PA_WSG_BLOCK_GREEN, 17, 3, 14, 300, 900, 2, 3,  //
+    PA_WSG_BLOCK_YELLOW, 17, 4, 11, 300, 900, 2, 3, //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_ORANGE, 18, 3, 14, 300, 600, 2, 3,  //
+    PA_WSG_BLOCK_RED, 19, 3, 14, 300, 600, 2, 3,     //
+    PA_WSG_BLOCK_MAGENTA, 20, 4, 12, 300, 600, 2, 3, //
+    PA_WSG_BLOCK_BLUE, 17, 2, 15, 200, 600, 2, 3,    //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_GREEN, 20, 3, 14, 200, 600, 2, 3,  //
+    PA_WSG_BLOCK_YELLOW, 21, 3, 15, 200, 600, 2, 3, //
+    PA_WSG_BLOCK_ORANGE, 22, 4, 13, 200, 600, 2, 3, //
+    PA_WSG_BLOCK_RED, 19, 2, 15, 100, 600, 2, 3,    //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_BLUE, 22, 3, 15, 100, 600, 2, 3,   //
+    PA_WSG_BLOCK_GREEN, 23, 4, 14, 100, 600, 2, 3,  //
+    PA_WSG_BLOCK_YELLOW, 20, 2, 16, 100, 600, 2, 3, //
+    PA_WSG_BLOCK_ORANGE, 34, 8, 13, 100, 500, 2, 3, //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_RED, 23, 3, 16, 100, 500, 2, 3,     //
+    PA_WSG_BLOCK_MAGENTA, 24, 4, 15, 100, 500, 2, 3, //
+    PA_WSG_BLOCK_BLUE, 21, 2, 17, 100, 400, 2, 3,    //
+    PA_WSG_BLOCK_GREEN, 38, 8, 14, 100, 500, 2, 3,   //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_YELLOW, 24, 3, 17, 100, 400, 2, 3,   //
+    PA_WSG_BLOCK_ORANGE, 25, 4, 16, 100, 400, 2, 3,   //
+    PA_WSG_BLOCK_RED, 22, 2, 18, 100, 300, 2, 3,      //
+    PA_WSG_BLOCK_MAGENTA, 42, 11, 11, 100, 400, 2, 3, // 96
+
+    PA_WSG_BLOCK_RED, 16, 3, 12, 300, 900, 3, 3, //
+    PA_WSG_BLOCK_RED, 17, 3, 13, 300, 900, 3, 3, //
+    PA_WSG_BLOCK_RED, 17, 4, 10, 300, 900, 3, 3, //
+    // Placeholder: bonus stage
+    PA_WSG_BLOCK_RED, 18, 3, 13, 300, 600, 3, 3,   //
+    PA_WSG_BREAK_BLOCK, 19, 3, 13, 300, 600, 3, 3, //
+    PA_WSG_BREAK_BLOCK, 20, 4, 11, 300, 600, 3, 3, //
+    PA_WSG_BREAK_BLOCK, 17, 2, 15, 200, 600, 2, 3, //
+    // Placeholder: bonus stage
+    PA_WSG_BREAK_BLOCK, 20, 3, 13, 200, 600, 3, 3,   //
+    PA_WSG_BREAK_BLOCK_1, 21, 3, 14, 200, 600, 3, 3, //
+    PA_WSG_BREAK_BLOCK_1, 22, 4, 12, 200, 600, 3, 3, //
+    PA_WSG_BREAK_BLOCK_1, 19, 2, 14, 100, 600, 2, 3, //
+    // Placeholder: bonus stage
+    PA_WSG_BREAK_BLOCK_1, 22, 3, 14, 100, 600, 3, 3, //
+    PA_WSG_BREAK_BLOCK_2, 23, 4, 13, 100, 600, 3, 3, //
+    PA_WSG_BREAK_BLOCK_2, 20, 2, 15, 100, 600, 2, 3, //
+    PA_WSG_BREAK_BLOCK_2, 34, 8, 12, 100, 500, 3, 3, //
+    // Placeholder: bonus stage
+    PA_WSG_BREAK_BLOCK_2, 23, 3, 15, 100, 500, 3, 3, //
+    PA_WSG_BREAK_BLOCK_3, 24, 4, 14, 100, 500, 3, 3, //
+    PA_WSG_BREAK_BLOCK_3, 38, 8, 13, 100, 500, 3, 3, //
+    // Placeholder: bonus stage
+    PA_WSG_BREAK_BLOCK_3, 24, 3, 16, 100, 400, 3, 3, //
+    PA_WSG_BREAK_BLOCK_3, 25, 4, 15, 100, 400, 3, 3, //
+    PA_WSG_GIRL_ICON, 42, 11, 12, 100, 400, 3, 3,    // 117
+
+    PA_WSG_PO_ICON, 42, 3, 17, 100, 400, 3, 3,    //
+    PA_WSG_PIXEL_ICON, 42, 4, 16, 100, 400, 4, 4, //
+    PA_WSG_PANGO_ICON, 64, 2, 20, 100, 400, 1, 2, // 120
 };
 
 #define DEMO_CONTROLS_SCRIPT_TABLE_LENGTH     17
@@ -192,5 +282,7 @@ static const uint16_t demoScoringScript[DEMO_SCORING_SCRIPT_TABLE_LENGTH * DEMO_
 };
 
 static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
+
+static const uint8_t ledRemap[] = {4, 5, 6, 7, 8, 0, 1, 2, 3};
 
 #endif
