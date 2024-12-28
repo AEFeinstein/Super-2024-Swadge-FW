@@ -13,6 +13,8 @@
 // Includes
 //==============================================================================
 
+#include <esp_heap_caps.h>
+
 #include "mode_2048.h"
 #include "2048_game.h"
 #include "2048_menus.h"
@@ -32,6 +34,7 @@ static paletteColor_t t48_generateRainbow(void);
 static void t48_fadeLEDs(int32_t elapsedUs);
 static void t48_chaseLEDs(int32_t elapseUs);
 static led_t t48_randColor(void);
+static void t48BackgroundDraw(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 //==============================================================================
 // Const Variables
@@ -75,14 +78,14 @@ swadgeMode_t t48Mode = {
     .modeName                 = modeName,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
-    .usesAccelerometer        = false,
+    .usesAccelerometer        = true,
     .usesThermometer          = false,
     .overrideSelectBtn        = false,
     .fnEnterMode              = t48EnterMode,
     .fnExitMode               = t48ExitMode,
     .fnMainLoop               = t48MainLoop,
     .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = NULL,
+    .fnBackgroundDrawCallback = t48BackgroundDraw,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
@@ -102,7 +105,7 @@ static void t48EnterMode(void)
     setFrameRateUs(16667); // 60 FPS
 
     // Init Mode & resources
-    t48 = calloc(sizeof(t48_t), 1);
+    t48 = heap_caps_calloc(sizeof(t48_t), 1, MALLOC_CAP_8BIT);
 
     // Load fonts
     loadFont("ibm_vga8.font", &t48->font, false);
@@ -110,27 +113,31 @@ static void t48EnterMode(void)
     makeOutlineFont(&t48->titleFont, &t48->titleFontOutline, false);
 
     // Load images
-    t48->tiles = calloc(ARRAY_SIZE(tileSpriteNames), sizeof(wsg_t));
+    t48->tiles = heap_caps_calloc(ARRAY_SIZE(tileSpriteNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t tIdx = 0; tIdx < ARRAY_SIZE(tileSpriteNames); tIdx++)
     {
         loadWsg(tileSpriteNames[tIdx], &t48->tiles[tIdx], true);
     }
 
-    t48->sparkleSprites = calloc(ARRAY_SIZE(sparkleSpriteNames), sizeof(wsg_t));
+    t48->sparkleSprites = heap_caps_calloc(ARRAY_SIZE(sparkleSpriteNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(sparkleSpriteNames); sIdx++)
     {
         loadWsg(sparkleSpriteNames[sIdx], &t48->sparkleSprites[sIdx], true);
     }
 
-    t48->newSparkles = calloc(ARRAY_SIZE(newSparkleSprNames), sizeof(wsg_t));
+    t48->newSparkles = heap_caps_calloc(ARRAY_SIZE(newSparkleSprNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(newSparkleSprNames); sIdx++)
     {
         loadWsg(newSparkleSprNames[sIdx], &t48->newSparkles[sIdx], true);
     }
 
     // Load sounds
-    loadMidiFile("Follinesque.mid", &t48->bgm, true);
+    loadMidiFile("lullaby_in_numbers.mid", &t48->bgm, true);
     loadMidiFile("sndBounce.mid", &t48->click, true);
+
+    // Init sound player
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
 
     // Init Text Entry
     textEntryInit(&t48->font, 4, t48->playerInitials);
@@ -161,25 +168,25 @@ static void t48ExitMode(void)
     {
         freeWsg(&t48->sparkleSprites[i]);
     }
-    free(t48->sparkleSprites);
+    heap_caps_free(t48->sparkleSprites);
 
     for (uint8_t i = 0; i < ARRAY_SIZE(tileSpriteNames); i++)
     {
         freeWsg(&t48->tiles[i]);
     }
-    free(t48->tiles);
+    heap_caps_free(t48->tiles);
 
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(newSparkleSprNames); sIdx++)
     {
         freeWsg(&t48->newSparkles[sIdx]);
     }
-    free(t48->newSparkles);
+    heap_caps_free(t48->newSparkles);
 
     soundStop(true);
     unloadMidiFile(&t48->bgm);
     unloadMidiFile(&t48->click);
 
-    free(t48);
+    heap_caps_free(t48);
 }
 
 /**
@@ -208,10 +215,45 @@ static void t48MainLoop(int64_t elapsedUs)
             // Get inputs
             while (checkButtonQueueWrapper(&evt))
             {
-                if (evt.down)
+                bool isDpad = (PB_UP == evt.button) ||   //
+                              (PB_DOWN == evt.button) || //
+                              (PB_LEFT == evt.button) || //
+                              (PB_RIGHT == evt.button);
+                // Accept buttons if it's not tilt, or not D-Pad
+                if (evt.down && (!t48->tiltControls || !isDpad))
                 {
-                    // Process inputs
                     t48_gameInput(t48, evt.button);
+                }
+            }
+
+            // Take accel input if cells aren't moving
+            if (t48->tiltControls && !t48->cellsAnimating)
+            {
+                int16_t ox, oy, oz;
+                if (ESP_OK == accelGetOrientVec(&ox, &oy, &oz))
+                {
+                    if (ABS(ox) > ABS(oy))
+                    {
+                        if (ox > 128)
+                        {
+                            t48_gameInput(t48, PB_LEFT);
+                        }
+                        else if (ox < -128)
+                        {
+                            t48_gameInput(t48, PB_RIGHT);
+                        }
+                    }
+                    else
+                    {
+                        if (oy > 128)
+                        {
+                            t48_gameInput(t48, PB_DOWN);
+                        }
+                        else if (oy < -128)
+                        {
+                            t48_gameInput(t48, PB_UP);
+                        }
+                    }
                 }
             }
 
@@ -224,10 +266,10 @@ static void t48MainLoop(int64_t elapsedUs)
             // Check any button is pressed
             while (checkButtonQueueWrapper(&evt))
             {
-                if (evt.down)
+                if (evt.down && (PB_A == evt.button || PB_B == evt.button))
                 {
                     soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48_gameInit(t48);
+                    t48_gameInit(t48, PB_B == evt.button);
                     t48->state = T48_IN_GAME;
                 }
             }
@@ -495,4 +537,24 @@ led_t t48_randColor()
     col.g     = 128 + (esp_random() % 127);
     col.b     = 128 + (esp_random() % 127);
     return col;
+}
+
+/**
+ * @brief Integrate the accelerometer in the background
+ *
+ * @param x Unused
+ * @param y  Unused
+ * @param w  Unused
+ * @param h  Unused
+ * @param up  Unused
+ * @param upNum  Unused
+ */
+static void t48BackgroundDraw(int16_t x __attribute__((unused)), int16_t y __attribute__((unused)),
+                              int16_t w __attribute__((unused)), int16_t h __attribute__((unused)),
+                              int16_t up __attribute__((unused)), int16_t upNum __attribute__((unused)))
+{
+    if (t48->tiltControls)
+    {
+        accelIntegrate();
+    }
 }

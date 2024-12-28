@@ -10,6 +10,9 @@
 
 #define ARROW_BLINK_PERIOD 1000000
 
+#define ROTATE_TIME    1000000
+#define MOVE_ANIM_TIME 1000000
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -110,11 +113,14 @@ typedef struct
 
 typedef struct
 {
-    bool singlePlayer;
+    bool singleSystem;
+    bool passAndPlay;
     playOrder_t singlePlayerPlayOrder;
     p2pInfo p2p;
     tttGameState_t state;
     tttSubgame_t subgames[3][3];
+    int32_t gameTimers[3][3];
+    int32_t cellTimers[3][3][3][3];
     vec_t cursor;
     vec_t selectedSubgame;
     tttCursorMode_t cursorMode;
@@ -122,6 +128,9 @@ typedef struct
     int32_t p1MarkerIdx;
     int32_t p2MarkerIdx;
     tttCpuData_t cpu;
+    int32_t moveAnimTimer;
+    vec_t priorCellAnim[2];
+    vec_t nextSubgameAnim[2];
 } tttGameData_t;
 
 typedef struct
@@ -163,6 +172,11 @@ typedef struct
     list_t instructionHistory;
     bool showingInstructions;
     arrow_t instructionArrow;
+    // MIDIs
+    midiFile_t sfxMoveCursor;
+    midiFile_t sfxPlaceMarker;
+    midiFile_t sfxWinSubgame;
+    midiFile_t sfxWinGame;
 } ultimateTTT_t;
 
 typedef struct

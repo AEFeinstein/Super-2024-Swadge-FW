@@ -18,7 +18,7 @@ soko_abs_t* soko_s;
 
 void sokoInitGameBin(soko_abs_t* soko)
 {
-    printf("init sokoban game from bin file");
+    ESP_LOGD(SOKO_TAG, "init sokoban game from bin file");
 
     soko_s              = soko;
     soko_s->soko_player = &soko_s->currentLevel.entities[soko_s->currentLevel.playerIndex];
@@ -35,7 +35,7 @@ void sokoInitGameBin(soko_abs_t* soko)
 
 void sokoInitGame(soko_abs_t* soko)
 {
-    printf("init sokobon game.\n");
+    ESP_LOGD(SOKO_TAG, "init sokobon game.");
 
     // Configure conveninence pointers.
     soko_s              = soko;
@@ -56,7 +56,7 @@ void sokoInitGame(soko_abs_t* soko)
 
 void sokoInitNewLevel(soko_abs_t* soko, soko_var_t variant)
 {
-    printf("Init New Level.\n");
+    ESP_LOGD(SOKO_TAG, "Init New Level.");
 
     soko_s              = soko;
     soko_s->soko_player = &soko_s->currentLevel.entities[soko_s->currentLevel.playerIndex];
@@ -246,8 +246,10 @@ void drawTiles(sokoLevel_t* level)
                         drawWsg(&s->playerLeftWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
                         break;
                     case SKD_DOWN:
-                    default:
                         drawWsg(&s->playerDownWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                    case SKD_NONE:
+                    default:
+                        drawWsg(&s->playerCenterWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
                         break;
                 }
 

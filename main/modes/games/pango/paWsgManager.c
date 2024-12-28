@@ -310,6 +310,7 @@ void pa_animateTiles(paWsgManager_t* self)
         self->globalTileAnimationFrame = ((self->globalTileAnimationFrame + 1) % 6);
 
         pa_remapWsgToTile(self, 9, PA_WSG_BLOCK_BLUE + self->globalTileAnimationFrame);
+        pa_remapWsgToSprite(self, PA_SP_BONUS_BLOCK, PA_WSG_BLOCK_BLUE + self->globalTileAnimationFrame);
 
         self->globalTileAnimationTimer = 6;
     }

@@ -26,18 +26,18 @@
  * Creating an empty list:
  * \code{.c}
  * // Use calloc to ensure members are all 0 or NULL
- * list_t* myList = calloc(1, sizeof(list_t));
+ * list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
  * \endcode
  *
  * Adding values to a list:
  * \code{.c}
  * // Malloc the value to be persistent
  * // push to tail
- * uint32_t* val1 = malloc(sizeof(uint32_t));
+ * uint32_t* val1 = heap_caps_malloc(sizeof(uint32_t), MALLOC_CAP_8BIT);
  * *val1          = 1;
  * push(myList, (void*)val1);
  * // unshift to head
- * uint32_t* val2 = malloc(sizeof(uint32_t));
+ * uint32_t* val2 = heap_caps_malloc(sizeof(uint32_t), MALLOC_CAP_8BIT);
  * *val2          = 2;
  * unshift(myList, (void*)val2);
  * \endcode

@@ -95,8 +95,6 @@ swadgeMode_t mainMenuMode = {
 
 mainMenu_t* mainMenu;
 
-static const char settingsLabel[] = "Settings";
-
 static const char tftSettingLabel[] = "TFT";
 static const char ledSettingLabel[] = "LED";
 #ifdef SW_VOL_CONTROL
@@ -105,6 +103,10 @@ static const char sfxVolSettingLabel[] = "SFX";
 #endif
 const char micSettingLabel[]                 = "MIC";
 static const char screenSaverSettingsLabel[] = "Screensaver: ";
+
+#ifdef CONFIG_FACTORY_TEST_NORMAL
+
+static const char settingsLabel[] = "Settings";
 
 static const int32_t screenSaverSettingsValues[] = {
     0,   // Off
@@ -119,6 +121,8 @@ static const int32_t screenSaverSettingsValues[] = {
 static const char* const screenSaverSettingsOptions[] = {
     "Off", "10s", "20s", "30s", "1m", "2m", "5m",
 };
+
+#endif
 
 static const int16_t cheatCode[] = {
     PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A,
@@ -144,7 +148,7 @@ static const char* const showSecretsMenuSettingOptions[] = {
 static void mainMenuEnterMode(void)
 {
     // Allocate memory for the mode
-    mainMenu = calloc(1, sizeof(mainMenu_t));
+    mainMenu = heap_caps_calloc(1, sizeof(mainMenu_t), MALLOC_CAP_8BIT);
 
     // Load a font
     loadFont("rodin_eb.font", &mainMenu->font_rodin, false);
@@ -161,6 +165,7 @@ static void mainMenuEnterMode(void)
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
+#ifdef CONFIG_FACTORY_TEST_NORMAL
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
@@ -194,17 +199,17 @@ static void mainMenuEnterMode(void)
     // Get the bounds and current settings to build this menu
     addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
     addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
-#ifdef SW_VOL_CONTROL
+    #ifdef SW_VOL_CONTROL
     addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
-#endif
+    #endif
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
 
-#ifdef SW_VOL_CONTROL
+    #ifdef SW_VOL_CONTROL
     // These are just used for playing the sound only when the setting changes
     mainMenu->lastBgmVol = getBgmVolumeSetting();
     mainMenu->lastSfxVol = getSfxVolumeSetting();
-#endif
+    #endif
 
     addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsLabel, screenSaverSettingsOptions,
                                  screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
@@ -216,6 +221,8 @@ static void mainMenuEnterMode(void)
     {
         addSecretsMenu();
     }
+
+#endif
 
     // Show the battery on the main menu
     setShowBattery(mainMenu->menu, true);
@@ -246,7 +253,7 @@ static void mainMenuExitMode(void)
     unloadMidiFile(&mainMenu->fanfare);
 
     // Free mode memory
-    free(mainMenu);
+    heap_caps_free(mainMenu);
 }
 
 /**
@@ -313,6 +320,13 @@ static void mainMenuMainLoop(int64_t elapsedUs)
 
     // Draw the menu
     drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
+
+#ifdef CONFIG_FACTORY_TEST_WARNING
+    const char warning[] = "Take me to VR Zone to get flashed please!";
+    int16_t xOff         = 12;
+    int16_t yOff         = (TFT_HEIGHT / 2) - mainMenu->font_rodin.height;
+    drawTextWordWrap(&mainMenu->font_rodin, c000, warning, &xOff, &yOff, TFT_WIDTH - 12, TFT_HEIGHT);
+#endif
 }
 
 /**

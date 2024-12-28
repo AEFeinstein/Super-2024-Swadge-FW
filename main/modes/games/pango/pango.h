@@ -31,9 +31,6 @@ typedef struct
     uint8_t maxLevelIndexUnlocked;
     bool gameCleared;
     bool oneCreditCleared;
-    bool bigScore;
-    bool fastTime;
-    bool biggerScore;
 } pangoUnlockables_t;
 
 //==============================================================================

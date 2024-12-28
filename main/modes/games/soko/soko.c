@@ -4,6 +4,8 @@
 #include "soko_game.h"
 #include "soko_gamerules.h"
 #include "soko_save.h"
+#include "sokoHelp.h"
+#include "mainMenu.h"
 
 static void sokoMainLoop(int64_t elapsedUs);
 static void sokoEnterMode(void);
@@ -13,9 +15,14 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
 
 // strings
-static const char sokoModeName[]        = "Sokobanabokabon";
-static const char sokoResumeGameLabel[] = "returnitytoit";
-static const char sokoNewGameLabel[]    = "startsyfreshy";
+const char sokoModeName[]             = "Hunter's Puzzles";
+static const char sokoPlayGameLabel[] = "Play";
+static const char sokoHelpLabel[]     = "Instructions";
+static const char sokoExitLabel[]     = "Exit";
+
+const char SOKO_TAG[] = "SB";
+
+extern const char key_sk_overworldPos[];
 
 // create the mode
 swadgeMode_t sokoMode = {
@@ -40,9 +47,17 @@ soko_abs_t* soko = NULL;
 
 static void sokoEnterMode(void)
 {
-    soko = calloc(1, sizeof(soko_abs_t));
+    soko = heap_caps_calloc(1, sizeof(soko_abs_t), MALLOC_CAP_SPIRAM);
     // Load a font
-    loadFont("ibm_vga8.font", &soko->ibm, false);
+    loadFont("ibm_vga8.font", &soko->ibm, true);
+    loadFont("rodin_eb.font", &soko->font_rodin, true);
+    makeOutlineFont(&soko->font_rodin, &soko->font_rodin_outline, true);
+    loadFont("righteous_150.font", &soko->font_righteous, true);
+    makeOutlineFont(&soko->font_righteous, &soko->font_righteous_outline, true);
+
+    soko->allSolved = false;
+
+    soko->allSolved = false;
 
     // load sprite assets
     // set pointer
@@ -50,13 +65,14 @@ static void sokoEnterMode(void)
     soko->sokoDefaultTheme.wallColor     = c111;
     soko->sokoDefaultTheme.floorColor    = c444;
     soko->sokoDefaultTheme.altFloorColor = c444;
-    soko->background                     = SKBG_FORREST;
+    soko->background                     = SKBG_BLACK;
     // load or set themes...
     //  Default Theme
-    loadWsg("sk_pixel_front.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
-    loadWsg("sk_pixel_back.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
-    loadWsg("sk_pixel_left.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
-    loadWsg("sk_pixel_right.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
+    loadWsg("sk_player1.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
+    loadWsg("sk_player2.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
+    loadWsg("sk_player3.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
+    loadWsg("sk_player4.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
+    loadWsg("sk_player5.wsg", &soko->sokoDefaultTheme.playerCenterWSG, false);
     loadWsg("sk_crate_2.wsg", &soko->sokoDefaultTheme.crateWSG, false);
     loadWsg("sk_crate_ongoal.wsg", &soko->sokoDefaultTheme.crateOnGoalWSG, false);
     loadWsg("sk_sticky_crate.wsg", &soko->sokoDefaultTheme.stickyCrateWSG, false);
@@ -73,6 +89,7 @@ static void sokoEnterMode(void)
     soko->overworldTheme.playerUpWSG          = soko->sokoDefaultTheme.playerUpWSG;
     soko->overworldTheme.playerLeftWSG        = soko->sokoDefaultTheme.playerLeftWSG;
     soko->overworldTheme.playerRightWSG       = soko->sokoDefaultTheme.playerRightWSG;
+    soko->overworldTheme.playerCenterWSG      = soko->sokoDefaultTheme.playerCenterWSG;
     soko->overworldTheme.crateWSG             = soko->sokoDefaultTheme.crateWSG;
     soko->overworldTheme.goalWSG              = soko->sokoDefaultTheme.goalWSG;
     soko->overworldTheme.crateOnGoalWSG       = soko->sokoDefaultTheme.crateOnGoalWSG;
@@ -83,11 +100,12 @@ static void sokoEnterMode(void)
     soko->overworldTheme.floorColor           = c444;
 
     // Euler Theme
-    soko->eulerTheme.playerDownWSG  = soko->sokoDefaultTheme.playerDownWSG;
-    soko->eulerTheme.playerUpWSG    = soko->sokoDefaultTheme.playerUpWSG;
-    soko->eulerTheme.playerLeftWSG  = soko->sokoDefaultTheme.playerLeftWSG;
-    soko->eulerTheme.playerRightWSG = soko->sokoDefaultTheme.playerRightWSG;
-    soko->eulerTheme.goalWSG        = soko->sokoDefaultTheme.goalWSG;
+    soko->eulerTheme.playerDownWSG   = soko->sokoDefaultTheme.playerDownWSG;
+    soko->eulerTheme.playerUpWSG     = soko->sokoDefaultTheme.playerUpWSG;
+    soko->eulerTheme.playerLeftWSG   = soko->sokoDefaultTheme.playerLeftWSG;
+    soko->eulerTheme.playerRightWSG  = soko->sokoDefaultTheme.playerRightWSG;
+    soko->eulerTheme.playerCenterWSG = soko->sokoDefaultTheme.playerCenterWSG;
+    soko->eulerTheme.goalWSG         = soko->sokoDefaultTheme.goalWSG;
 
     loadWsg("sk_e_crate.wsg", &soko->eulerTheme.crateWSG, false);
     loadWsg("sk_sticky_trail_crate.wsg", &soko->eulerTheme.crateOnGoalWSG, false);
@@ -99,15 +117,35 @@ static void sokoEnterMode(void)
     soko->eulerTheme.altFloorColor        = c433; // painted tiles color.
 
     // Initialize the menu
-    soko->menu              = initMenu(sokoModeName, sokoMenuCb);
-    soko->menuManiaRenderer = initMenuManiaRenderer(&soko->ibm, NULL, NULL);
+    soko->menu   = initMenu(sokoModeName, sokoMenuCb);
+    soko->bgMenu = initMenu(sokoModeName, NULL);
+    soko->menuManiaRenderer
+        = initMenuManiaRenderer(&soko->font_righteous, &soko->font_righteous_outline, &soko->font_rodin);
 
-    addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
-    addSingleItemToMenu(soko->menu, sokoNewGameLabel);
+    // Color the menu
+    led_t menuColor = {
+        .r = 0xFF,
+        .g = 0xCC,
+        .b = 0x00,
+    };
+    static const paletteColor_t shadowColors[] = {c103, c213, c224, c334, c445, c555, c445, c334, c224, c213};
+    recolorMenuManiaRenderer(soko->menuManiaRenderer, //
+                             c401, c554, c522,        // titleBgColor, titleTextColor, textOutlineColor
+                             c444,                    // bgColor
+                             c433, c334,              // outerRingColor, innerRingColor
+                             c111, c555,              // rowColor, rowTextColor
+                             shadowColors, ARRAY_SIZE(shadowColors), menuColor);
+
+    // addSingleItemToMenu(soko->menu, sokoResumeGameLabel);
+    addSingleItemToMenu(soko->menu, sokoPlayGameLabel);
+    addSingleItemToMenu(soko->menu, sokoHelpLabel);
+    addSingleItemToMenu(soko->menu, sokoExitLabel);
 
     // Set the mode to menu mode
     soko->screen = SOKO_MENU;
     soko->state  = SKS_INIT;
+    setManiaLedsOn(soko->menuManiaRenderer, true);
+    setManiaDrawRings(soko->menuManiaRenderer, true);
 
     // load up the level list.
     soko->levelFileText = loadTxt("SK_LEVEL_LIST.txt", true);
@@ -119,12 +157,24 @@ static void sokoEnterMode(void)
 
 static void sokoExitMode(void)
 {
+    for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(soko->levelTitles); lIdx++)
+    {
+        if (soko->levelTitles[lIdx])
+        {
+            heap_caps_free(soko->levelTitles[lIdx]);
+        }
+    }
     // Deinitialize the menu
     deinitMenu(soko->menu);
+    deinitMenu(soko->bgMenu);
     deinitMenuManiaRenderer(soko->menuManiaRenderer);
 
     // Free the font
     freeFont(&soko->ibm);
+    freeFont(&soko->font_rodin);
+    freeFont(&soko->font_rodin_outline);
+    freeFont(&soko->font_righteous);
+    freeFont(&soko->font_righteous_outline);
 
     // free the level name file
     freeTxt(soko->levelFileText);
@@ -135,6 +185,7 @@ static void sokoExitMode(void)
     freeWsg(&soko->sokoDefaultTheme.playerDownWSG);
     freeWsg(&soko->sokoDefaultTheme.playerLeftWSG);
     freeWsg(&soko->sokoDefaultTheme.playerRightWSG);
+    freeWsg(&soko->sokoDefaultTheme.playerCenterWSG);
     freeWsg(&soko->sokoDefaultTheme.crateWSG);
     freeWsg(&soko->sokoDefaultTheme.crateOnGoalWSG);
     freeWsg(&soko->sokoDefaultTheme.stickyCrateWSG);
@@ -144,9 +195,9 @@ static void sokoExitMode(void)
     //  euler
     freeWsg(&soko->eulerTheme.crateWSG);
     freeWsg(&soko->eulerTheme.crateOnGoalWSG);
-    free(soko->levelBinaryData); // TODO is this the best place to free?
+    heap_caps_free(soko->levelBinaryData); // TODO is this the best place to free?
     // Free everything else
-    free(soko);
+    heap_caps_free(soko);
 }
 
 static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
@@ -154,23 +205,40 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
     if (selected)
     {
         // placeholder.
-        if (label == sokoResumeGameLabel)
+        if (label == sokoPlayGameLabel)
         {
-            int32_t data;
-            readNvs32("sk_data", &data);
-            // bitshift, etc, as needed.
-            uint16_t lastSaved = (uint16_t)data;
-            sokoLoadGameplay(soko, lastSaved, false);
+            int32_t overworld_player;
+            if (readNvs32(key_sk_overworldPos, &overworld_player))
+            {
+                soko->overworld_playerX
+                    = (uint16_t)(overworld_player
+                                 & 0b1111111111111111); // okay so the cast to uint16 just does this right?
+                soko->overworld_playerY = (uint16_t)(overworld_player >> 16);
+            }
+            else
+            {
+                soko->overworld_playerX = 0;
+                soko->overworld_playerY = 0;
+            }
+            ESP_LOGD(SOKO_TAG, "Load Overworld: %" PRIu16 ",%" PRIu16 " - {%" PRId32 "}", soko->overworld_playerX,
+                     soko->overworld_playerY, overworld_player);
+
+            // if x == 0 && y == 0, then put the player somewhere else.
+
+            sokoLoadGameplay(soko, 0, false);
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
         }
-        else if (label == sokoNewGameLabel)
+        else if (sokoHelpLabel == label)
         {
-            // load level.
-            // we probably shouldn't have a new game option; just an overworld option.
-            sokoLoadGameplay(soko, 0, true);
-            sokoInitGameBin(soko);
-            soko->screen = SOKO_LEVELPLAY;
+            soko->helpIdx = 0;
+            soko->screen  = SOKO_HELP;
+            setManiaLedsOn(soko->menuManiaRenderer, false);
+            setManiaDrawRings(soko->menuManiaRenderer, false);
+        }
+        else if (sokoExitLabel == label)
+        {
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
 }
@@ -196,6 +264,10 @@ static void sokoMainLoop(int64_t elapsedUs)
         }
         case SOKO_LEVELPLAY:
         {
+            // Turn LEDs off
+            led_t offLeds[CONFIG_NUM_LEDS] = {0};
+            setLeds(offLeds, CONFIG_NUM_LEDS);
+
             // pass along to other gameplay, in other file
             //  Always process button events, regardless of control scheme, so the main menu button can be captured
             buttonEvt_t evt = {0};
@@ -215,31 +287,33 @@ static void sokoMainLoop(int64_t elapsedUs)
         }
         case SOKO_LOADNEWLEVEL:
         {
+            // Turn LEDs off
+            led_t offLeds[CONFIG_NUM_LEDS] = {0};
+            setLeds(offLeds, CONFIG_NUM_LEDS);
+
             sokoLoadGameplay(soko, soko->loadNewLevelIndex, soko->loadNewLevelFlag);
             sokoInitNewLevel(soko, soko->currentLevel.gameMode);
-            printf("Go to gameplay\n");
+            ESP_LOGD(SOKO_TAG, "Go to gameplay");
             soko->loadNewLevelFlag = false; // reset flag.
             soko->screen           = SOKO_LEVELPLAY;
+            break;
+        }
+        case SOKO_HELP:
+        {
+            // Turn LEDs off
+            led_t offLeds[CONFIG_NUM_LEDS] = {0};
+            setLeds(offLeds, CONFIG_NUM_LEDS);
+
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                buttonSokoHelp(soko, &evt);
+            }
+            drawSokoHelp(soko, elapsedUs);
         }
     }
 }
 
-// void freeEntity(soko_abs_t* self, sokoEntity_t* entity) // Free internal entity structures
-// {
-//     if (entity->propFlag)
-//     {
-//         if (entity->properties->targetCount)
-//         {
-//             free(entity->properties->targetX);
-//             free(entity->properties->targetY);
-//         }
-//         free(entity->properties);
-//         entity->propFlag = false;
-//     }
-//     self->currentLevel.entityCount -= 1;
-// }
-
-// placeholder.
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     // Use TURBO drawing mode to draw individual pixels fast
@@ -316,16 +390,9 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 // todo: move to soko_save
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
 {
-    printf("Loading Level List...!\n");
-    // printf("%s\n", self->levelFileText);
-    // printf("%d\n", (int)strlen(self->levelFileText));
-    //  char* a = strstr(self->levelFileText,":");
-    //  char* b = strstr(a,".bin:");
-    //  printf("%d",(int)((int)b-(int)a));
-    //  char* stringPtrs[30];
-    //  memset(stringPtrs,0,30*sizeof(char*));
     char** stringPtrs = soko->levelNames;
     memset(stringPtrs, 0, sizeof(soko->levelNames));
+    memset(soko->levelTitles, 0, sizeof(soko->levelTitles));
     memset(soko->levelIndices, 0, sizeof(soko->levelIndices));
     int intInd       = 0;
     int ind          = 0;
@@ -336,29 +403,37 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
         if (!(strstr(storageStr, ".bin"))) // Make sure you're not accidentally reading a number from a filename
         {
             soko->levelIndices[intInd] = (int)strtol(storageStr, NULL, 10);
-            // printf("NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
+            // ESP_LOGD(SOKO_TAG, "NumberThing: %s :: %d",storageStr,(int)strtol(storageStr,NULL,10));
             intInd++;
         }
         else
         {
             if (!strpbrk(storageStr, "\n\t\r ") && (strstr(storageStr, ".bin")))
             {
-                // int tokLen = strlen(storageStr);
-                // char* tempPtr = calloc((tokLen + 1), sizeof(char)); // Length plus null teminator
-                // strcpy(tempPtr,storageStr);
-                // stringPtrs[ind] = tempPtr;
+                int tokLen = strlen(storageStr);
+                // char* tempPtr = heap_caps_malloc((tokLen + 1), sizeof(char), MALLOC_CAP_SPIRAM) ; // Length plus null
+                // teminator strcpy(tempPtr,storageStr); stringPtrs[ind] = tempPtr;
+
+                // remove the sk_e_ and .bin from the filename and copy to title.
                 stringPtrs[ind] = storageStr;
-                // printf("%s\n",storageStr);
+                char* title     = heap_caps_calloc(tokLen - 8, sizeof(char), MALLOC_CAP_SPIRAM);
+                strncpy(title, storageStr + 5, tokLen - 9);
+
+                // change _ to spaces
+                for (int i = 0; i < strlen(title); i++)
+                {
+                    if (title[i] == '_')
+                    {
+                        title[i] = ' ';
+                    }
+                }
+                // set title
+                soko->levelTitles[ind] = title;
+
                 ind++;
             }
         }
-        // printf("This guy!\n");
+        // ESP_LOGD(SOKO_TAG, "This guy!");
         storageStr = strtok(NULL, ":");
-    }
-    printf("Strings: %d, Ints: %d\n", ind, intInd);
-    printf("Levels and indices:\n");
-    for (int i = ind - 1; i > -1; i--)
-    {
-        printf("Index: %d : %d : %s\n", i, soko->levelIndices[i], stringPtrs[i]);
     }
 }

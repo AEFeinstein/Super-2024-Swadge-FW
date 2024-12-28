@@ -3,13 +3,12 @@
 ## General
 - Add BGM
 - Update menu colors
-- Load data from NVM
 - View recently interacted with players
+- Tutorials play the first time you load a mode, and then can be recalled any time
 
 ## Spar
 - Add BGM
 - Create/Add SFX
-- Add background images that jump on crit
 - Add sparring animations
   - Splash screen
   - Main game
@@ -21,13 +20,9 @@
 - Get icons for punching, kicking, dodging, etc
 
 ## Grove
-- AI
-  - Go to an item
-  - Using item
-- Add menu for buying items
-- Stats can be increased
-- Save and load from NVS
 - Create/Add SFX
+- Normal Chowa Egg
+- Normal Chowa Egg cracked
 
 ## Race
 - Build mode

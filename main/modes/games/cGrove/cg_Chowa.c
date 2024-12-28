@@ -79,7 +79,7 @@ void cg_initChowaWSGs(cGrove_t* cg)
     {
         for (int32_t idx2 = 0; idx2 < 2; idx2++)
         {
-            cg->chowaWSGs[idx][idx2] = calloc(ARRAY_SIZE(imageStrings), sizeof(wsg_t));
+            cg->chowaWSGs[idx][idx2] = heap_caps_calloc(ARRAY_SIZE(imageStrings), sizeof(wsg_t), MALLOC_CAP_8BIT);
         }
     }
     cg_initByPrefix(cg, CG_KING_DONUT, CG_CHILD, "ckd");
@@ -94,13 +94,13 @@ void cg_deInitChowaWSGs(cGrove_t* cg)
 {
     for (int32_t idx = 0; idx < CG_NUM_TYPES; idx++)
     {
-        for (int32_t idx2 = 0; idx < 2; idx++)
+        for (int32_t idx2 = 0; idx2 < 2; idx2++)
         {
             for (int idx3 = 0; idx3 < ARRAY_SIZE(imageStrings); idx3++)
             {
                 freeWsg(&cg->chowaWSGs[idx][idx2][idx3]);
             }
-            free(cg->chowaWSGs[idx][idx2]);
+            heap_caps_free(cg->chowaWSGs[idx][idx2]);
         }
     }
 }
@@ -118,7 +118,7 @@ wsg_t* cg_getChowaWSG(cGrove_t* cg, cgChowa_t* c, cgChowaAnimIdx_t anim, int8_t 
 {
     // Get type and age
     cgChowaAnimAge_t age = CG_CHILD;
-    if (c->age > 64)
+    if (c->age > CG_ADULT_AGE)
     {
         age = CG_ADULT;
     }

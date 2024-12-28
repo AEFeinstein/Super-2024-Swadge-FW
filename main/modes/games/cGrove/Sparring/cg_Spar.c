@@ -57,17 +57,14 @@ void cg_initSpar(cGrove_t* grove)
     cg = grove;
     // WSGs
     loadWsg("DojoBG.wsg", &cg->spar.dojoBG, true);
-    cg->spar.dojoBGItems = calloc(ARRAY_SIZE(sparDojoSprites), sizeof(wsg_t));
+    cg->spar.dojoBGItems = heap_caps_calloc(ARRAY_SIZE(sparDojoSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(sparDojoSprites); idx++)
     {
         loadWsg(sparDojoSprites[idx], &cg->spar.dojoBGItems[idx], true);
     }
-    loadWsg("cg_Arrow.wsg", &cg->spar.arrow, true);
 
-    // Fonts
-    loadFont("righteous_150.font", &cg->spar.sparTitleFont, true);
-    loadFont("eightbit_atari_grube2.font", &cg->spar.sparRegFont, true);
-    makeOutlineFont(&cg->spar.sparTitleFont, &cg->spar.sparTitleFontOutline, true);
+    // Audio
+    loadMidiFile("Chowa_Battle.mid", &cg->spar.sparBGM, true);
 
     // Init menu
     cg->spar.sparMenu = initMenu(sparMenuName, sparMenuCb);
@@ -77,7 +74,7 @@ void cg_initSpar(cGrove_t* grove)
     addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[3]); // Settings
     addSingleItemToMenu(cg->spar.sparMenu, sparMenuNames[4]); // Go back to main menu
 
-    cg->spar.renderer                          = initMenuManiaRenderer(NULL, NULL, &cg->spar.sparRegFont);
+    cg->spar.renderer = initMenuManiaRenderer(&cg->titleFont, &cg->titleFontOutline, &cg->menuFont);
     static const paletteColor_t shadowColors[] = {c110, c210, c220, c320, c330, c430, c330, c320, c220, c210};
     led_t ledColor                             = {.r = 128, .g = 128, .b = 0};
     recolorMenuManiaRenderer(cg->spar.renderer, c115, c335, c000, c110, c003, c004, c220, c335, shadowColors,
@@ -86,7 +83,11 @@ void cg_initSpar(cGrove_t* grove)
     // Initialize battle record
     sparLoadBattleRecords();
 
+    // Play BGM
+    globalMidiPlayerPlaySong(&cg->spar.sparBGM, MIDI_BGM);
+
     // Load the splash screen
+    // TODO: Load tutorial the first time mode is loaded
     cg->spar.state = CG_SPAR_SPLASH;
 }
 
@@ -101,19 +102,13 @@ void cg_deInitSpar()
     deinitMenu(cg->spar.sparMenu);
     deinitMenuManiaRenderer(cg->spar.renderer);
 
-    // Fonts
-    freeFont(&cg->spar.sparTitleFont);
-    freeFont(&cg->spar.sparTitleFontOutline);
-    freeFont(&cg->spar.sparRegFont);
-
     // Free assets
-    freeWsg(&cg->spar.arrow);
     freeWsg(&cg->spar.dojoBG);
     for (uint8_t i = 0; i < ARRAY_SIZE(sparDojoSprites); i++)
     {
         freeWsg(&cg->spar.dojoBGItems[i]);
     }
-    free(cg->spar.dojoBGItems);
+    heap_caps_free(cg->spar.dojoBGItems);
 }
 
 /**
@@ -279,7 +274,9 @@ static void sparMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == sparMenuNames[4])
         {
             // Go to main menu
-            cg->state      = CG_MAIN_MENU;
+            cg->unload = true;
+            globalMidiPlayerStop(true);
+            globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
             cg->spar.state = CG_SPAR_SPLASH;
         }
         else

@@ -310,7 +310,7 @@ song_t metronome_secondary
 void tunernomeEnterMode(void)
 {
     // Allocate zero'd memory for the mode
-    tunernome = calloc(1, sizeof(tunernome_t));
+    tunernome = heap_caps_calloc(1, sizeof(tunernome_t), MALLOC_CAP_8BIT);
 
     loadFont("ibm_vga8.font", &tunernome->ibm_vga8, false);
     loadFont("radiostars.font", &tunernome->radiostars, false);
@@ -418,7 +418,7 @@ void tunernomeExitMode(void)
     freeWsg(&(tunernome->logbookArrowWsg));
     freeWsg(&(tunernome->flatWsg));
 
-    free(tunernome);
+    heap_caps_free(tunernome);
 }
 
 /**
