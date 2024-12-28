@@ -129,6 +129,7 @@ typedef struct
     wsg_t radiostarsArrowWsg;
     wsg_t logbookArrowWsg;
     wsg_t flatWsg;
+    wsg_t background;
 
     int32_t blinkTimerUs;
     bool isSilent;
@@ -159,6 +160,7 @@ void instrumentTunerMagic(const uint16_t freqBinIdxs[], uint16_t numStrings, led
 void tunernomeMainLoop(int64_t elapsedUs);
 void ledReset(void* timer_arg);
 void fasterBpmChange(void* timer_arg);
+void tunernomeBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static inline int16_t getMagnitude(uint16_t idx);
 static inline int16_t getDiffAround(uint16_t idx);
@@ -179,7 +181,7 @@ swadgeMode_t tunernomeMode = {.modeName                 = "Tunernome",
                               .fnExitMode               = tunernomeExitMode,
                               .fnMainLoop               = tunernomeMainLoop,
                               .fnAudioCallback          = tunernomeSampleHandler,
-                              .fnBackgroundDrawCallback = NULL,
+                              .fnBackgroundDrawCallback = tunernomeBackgroundDrawCb,
                               .fnEspNowRecvCb           = NULL,
                               .fnEspNowSendCb           = NULL,
                               .fnAdvancedUSB            = NULL};
@@ -325,6 +327,7 @@ void tunernomeEnterMode(void)
     loadWsg("arrow12.wsg", &(tunernome->radiostarsArrowWsg), false);
     loadWsg("arrow18.wsg", &(tunernome->logbookArrowWsg), false);
     loadWsg("flat_mm.wsg", &(tunernome->flatWsg), false);
+    loadWsg("woodBackground.wsg", &(tunernome->background), false);
 
     tunernome->beatLength   = 4;
     tunernome->beatCtr      = 0;
@@ -417,6 +420,7 @@ void tunernomeExitMode(void)
     freeWsg(&(tunernome->radiostarsArrowWsg));
     freeWsg(&(tunernome->logbookArrowWsg));
     freeWsg(&(tunernome->flatWsg));
+    freeWsg(&(tunernome->background));
 
     heap_caps_free(tunernome);
 }
@@ -664,19 +668,16 @@ void tunernomeMainLoop(int64_t elapsedUs)
     }
     tunernome->isTouched = touched;
 
-    clearPxTft();
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
-
     switch (tunernome->mode)
     {
         default:
         case TN_TUNER:
         {
             // Instructions at top of display
-            drawText(&tunernome->radiostars, c115, "Flat", CORNER_OFFSET, CORNER_OFFSET);
+            drawText(&tunernome->radiostars, c234, "Flat", CORNER_OFFSET, CORNER_OFFSET);
             drawText(&tunernome->radiostars, c555, inTuneStr,
                      (TFT_WIDTH - textWidth(&tunernome->radiostars, inTuneStr)) / 2, CORNER_OFFSET);
-            drawText(&tunernome->radiostars, c500, sharpStr,
+            drawText(&tunernome->radiostars, c511, sharpStr,
                      TFT_WIDTH - textWidth(&tunernome->radiostars, sharpStr) - CORNER_OFFSET, CORNER_OFFSET);
 
             // A/B/Start button functions at bottom of display
@@ -1394,5 +1395,25 @@ void tunernomeSampleHandler(uint16_t* samples, uint32_t sampleCnt)
             // Reset the sample count
             tunernome->audioSamplesProcessed = 0;
         }
+    }
+}
+
+/**
+ * @brief Draw a portion of the background when requested
+ *
+ * @param x The X offset to draw
+ * @param y The Y offset to draw
+ * @param w The width to draw
+ * @param h The height to draw
+ * @param up The current number of the update call
+ * @param upNum The total number of update calls for this frame
+ */
+void tunernomeBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    paletteColor_t* const src = tunernome->background.px;
+    paletteColor_t* dst = getPxTftFramebuffer();
+    for(int16_t row = y; row < y + h; row++)
+    {//
+        memcpy(&dst[row * TFT_WIDTH + x], &src[row * TFT_WIDTH + x], w);
     }
 }
