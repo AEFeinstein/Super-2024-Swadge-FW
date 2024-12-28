@@ -12,7 +12,6 @@
 #include "gameData_bigbug.h"
 #include "lighting_bigbug.h"
 #include "random_bigbug.h"
-#include "worldGen_bigbug.h"
 
 #include "soundFuncs.h"
 #include "hdw-btn.h"
@@ -108,10 +107,9 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         case BB_FOOD_CART:
         {
             bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
-            // The food cart needs to track its own caching status to communicate just-in-time loading between both
-            // pieces.
-            fcData->isCached = caching;
-            if (fcData->isCached && fcData->partner != NULL && ((bb_foodCartData_t*)fcData->partner)->isCached)
+            //The food cart needs to track its own caching status to communicate just-in-time loading between both pieces.
+            fcData->isCached          = caching;
+            if (((bb_foodCartData_t*)fcData->partner)->isCached)
             {
                 for (int frame = 0; frame < 2; frame++)
                 {
@@ -199,17 +197,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
 {
     bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
 
-    // get the terrain height under this booster
-    int32_t terrainY = 0;
-    for (int i = 0; i < TILE_FIELD_HEIGHT; i++)
-    {
-        if (self->gameData->tilemap.fgTiles[self->pos.x >> 9][i].health)
-        {
-            terrainY = i << 9;
-            break;
-        }
-    }
-    if (self->pos.y > terrainY - 3000 && rData->flame == NULL)
+    if (self->pos.y > -2600 && rData->flame == NULL)
     {
         rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 16,
                                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
@@ -303,7 +291,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
     }
-    else // this will fake the starfield scrolling during character talk.
+    else //this will fake the starfield scrolling during character talk.
     {
         self->gameData->camera.velocity.y = (rData->yVel * self->gameData->elapsedUs) >> 17;
         // iterate all entities
@@ -318,7 +306,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -77136) // reached the death dumpster
+    if (self->pos.y < -77136)//reached the death dumpster
     {
         self->pos.y = -77136;
         rData->yVel = 0;
@@ -332,29 +320,6 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
         self->gameData->day++;
-        // if it is trash day
-        if (self->gameData->day % 7 == 2 || self->gameData->day % 7 == 5 || self->gameData->day % 7 == 0)
-        {
-            // Force draw a loading screen
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
-            const char loadingStr[] = "landfill generating...";
-            int32_t tWidth          = textWidth(&self->gameData->font, loadingStr);
-            drawText(&self->gameData->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2,
-                     (TFT_HEIGHT - self->gameData->font.height) / 2);
-            drawDisplayTft(NULL);
-
-            bb_deactivateAllEntities(&self->gameData->entityManager, true);
-            bb_FreeTilemapData();
-            // calloc the columns in layers separately to avoid a big alloc
-            for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
-            {
-                self->gameData->tilemap.fgTiles[w]
-                    = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM);
-                self->gameData->tilemap.mgTiles[w]
-                    = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM);
-            }
-            bb_generateWorld(&(self->gameData->tilemap));
-        }
 
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
@@ -423,9 +388,6 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     {
         bb_setupMidi(); // stops the music
 
-        freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[0]);
-        freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[40]);
-        freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[41]);
         bb_loadSprite("rocket", 42, 1, &self->gameData->entityManager.sprites[ROCKET_ANIM]);
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
@@ -433,30 +395,6 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     }
     else
     {
-        // search for the grabby hand in the cached entities in case it was off camera, load it in and snap it to the
-        // rocket.
-        node_t* checkEntity = self->gameData->entityManager.cachedEntities->first;
-        while (checkEntity != NULL)
-        {
-            bb_entity_t* cachedEntityVal = (bb_entity_t*)checkEntity->val;
-            node_t* next                 = checkEntity->next;
-            if (cachedEntityVal != NULL && cachedEntityVal->spriteIndex == BB_GRABBY_HAND) // it's grabby hand
-            {
-                bb_ensureEntitySpace(&self->gameData->entityManager, 1);
-                bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
-                if (foundSpot != NULL)
-                {
-                    bb_loadSprite("grab", 3, 1, &self->gameData->entityManager.sprites[BB_GRABBY_HAND]);
-                    // like a memcopy
-                    *foundSpot = *cachedEntityVal;
-                    self->gameData->entityManager.activeEntities++;
-                    heap_caps_free(removeEntry(self->gameData->entityManager.cachedEntities, checkEntity));
-                    foundSpot->pos = self->pos;
-                }
-            }
-            checkEntity = next;
-        }
-
         hfData->yVel -= 50;
         // Update the dirt to air.
         self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
@@ -527,40 +465,26 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 2)
     {
-        self->paused = true;
-        for (int i = 1; i < 40; i++)
-        {
-            freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[i]);
-        }
+        bb_entity_t* arm
+            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
+        ((bb_rocketData_t*)self->data)->armAngle     = 2880; // That is 180 down position.
+        ((bb_attachmentArmData_t*)arm->data)->rocket = self;
 
-        // ensure space for attachment arm, grabby hand, and garbotnik
-        bb_ensureEntitySpace(&self->gameData->entityManager, 3);
+        bb_entity_t* grabbyHand
+            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 5,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, false, false);
+        ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
+
+        self->paused             = true;
+        self->gameData->isPaused = true;
         // deploy garbotnik!!!
         bb_entity_t* garbotnik
             = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50, true, false);
-        bb_entity_t* arm
-            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
-                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, true, false);
-        if (arm != NULL)
-        {
-            ((bb_rocketData_t*)self->data)->armAngle     = 2880; // That is 180 down position.
-            ((bb_attachmentArmData_t*)arm->data)->rocket = self;
-        }
-        bb_entity_t* grabbyHand
-            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 6,
-                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, true, false);
-        if (grabbyHand != NULL)
-        {
-            ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
-        }
-        if (garbotnik != NULL)
-        {
-            self->gameData->isPaused                 = true;
-            self->gameData->entityManager.viewEntity = garbotnik;
-            self->updateFunction                     = bb_updateHeavyFalling;
-            bb_startGarbotnikLandingTalk(garbotnik);
-        }
+        self->gameData->entityManager.viewEntity = garbotnik;
+        self->updateFunction                     = bb_updateHeavyFalling;
+        bb_startGarbotnikLandingTalk(garbotnik);
     }
 }
 
@@ -897,7 +821,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
     }
 
-    // if b button down, tether another entity if it's close enough
+    // if 'a' button down, tether another entity if it's close enough
     if ((self->gameData->btnState & 0b10000) >> 4)
     {
         int16_t best_i     = -1;     // negative 1 means no valid candidates found
@@ -979,7 +903,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             // Create a crumble
             bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health);
         }
-        else if (self->gameData->entityManager.activeEntities < MAX_ENTITIES)
+        else
         {
             // Create a bump animation
             bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 4,
@@ -1116,7 +1040,6 @@ void bb_updateEggLeaves(bb_entity_t* self)
             self->pos = elData->egg->pos; // sets what will be the bug to the egg position, because eggs tend to wiggle
                                           // about before hatching.
 
-            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             // create a bug
             bb_entity_t* bug
                 = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
@@ -1236,7 +1159,7 @@ void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations)
 
 void bb_updateBugShooting(bb_entity_t* self)
 {
-    if (bb_randomInt(0, 100) < 1 && self->gameData->entityManager.activeEntities < MAX_ENTITIES)
+    if (bb_randomInt(0, 100) < 1)
     {
         // call it paused and update frames in it's own update function because this one uses another spriteIdx.
         bb_entity_t* spit = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_SPIT, 10,
@@ -1597,7 +1520,7 @@ void bb_updatePOI(bb_entity_t* self)
                                (tData->tracking->pos.y >> DECIMAL_BITS) - (self->pos.y >> DECIMAL_BITS)};
         if (sqMagVec2d(ToFrom) > tData->midPointSqDist)
         {
-            tData->speed++;
+            tData->speed+=4;
         }
         else if (tData->midPointSqDist == 0)
         {
@@ -1607,7 +1530,7 @@ void bb_updatePOI(bb_entity_t* self)
         }
         else if (tData->speed > 0)
         {
-            tData->speed--;
+            tData->speed-=4;
         }
         else if (tData->speed == 0)
         {
@@ -1721,19 +1644,19 @@ void bb_updateCharacterTalk(bb_entity_t* self)
                 else if (strcmp(dData->characters[dData->curString], "Pixel") == 0)
                 {
                     characterSprite = bb_randomInt(7, 8);
-                    // borrow sprite from UTT
+                    //borrow sprite from UTT
                     loadWsgInplace("pixil_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
                 else if (strcmp(dData->characters[dData->curString], "Pango") == 0)
                 {
                     characterSprite = bb_randomInt(9, 10);
-                    // borrow sprite from UTT
+                    //borrow sprite from UTT
                     loadWsgInplace("hotdog_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
                 else if (strcmp(dData->characters[dData->curString], "Po") == 0)
                 {
                     characterSprite = bb_randomInt(11, 13);
-                    // borrow sprite from UTT
+                    //borrow sprite from UTT
                     loadWsgInplace("hand_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
 
@@ -1755,8 +1678,7 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 
 void bb_updateAttachmentArm(bb_entity_t* self)
 {
-    if (self->gameData->entityManager.activeBooster->updateFunction != bb_updateGarbotnikDeploy
-        && self->gameData->entityManager.playerEntity == NULL)
+    if (self->gameData->entityManager.playerEntity == NULL)
     {
         // this is for when garbotnik dies.
         bb_destroyEntity(self, false);
@@ -1773,16 +1695,6 @@ void bb_updateAttachmentArm(bb_entity_t* self)
     }
     if (rData->armAngle >= 5744) // that is 359 << DECIMAL_BITS
     {
-        // find the grabby hand and destroy it.
-        for (int entityIdx = 0; entityIdx < MAX_ENTITIES; entityIdx++)
-        {
-            if (self->gameData->entityManager.entities[entityIdx].active
-                && self->gameData->entityManager.entities[entityIdx].dataType == GRABBY_HAND_DATA)
-            {
-                bb_destroyEntity(&self->gameData->entityManager.entities[entityIdx], false);
-                break;
-            }
-        }
         bb_setupMidi();
         unloadMidiFile(&self->gameData->bgm);
         loadMidiFile("BigBug_Space Travel.mid", &self->gameData->bgm, true);
@@ -1901,10 +1813,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     // retreat into the booster
     if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
     {
-        if (ghData->grabbed == NULL || self->currentAnimationFrame == 2)
-        {
-            self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY -= 2;
-        }
+        self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY -= 2;
         if (ghData->grabbed != NULL)
         {
             ghData->grabbed->pos.x = self->pos.x;
@@ -1934,21 +1843,11 @@ void bb_updateGrabbyHand(bb_entity_t* self)
                 }
             }
         }
-        bb_entity_t* grabbed   = ghData->grabbed;
-        bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
-        if (grabbed->spriteIndex == BB_DONUT)
-        {
-            rData->numDonuts++;
-        }
-        else
-        {
-            rData->numBugs++;
-        }
         bb_destroyEntity(ghData->grabbed, false);
-        ghData->grabbed             = NULL;
-        self->currentAnimationFrame = 0;
-        self->animationTimer        = 0;
+        ghData->grabbed = NULL;
 
+        bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
+        rData->numBugs++;
         midiPlayer_t* sfx = soundGetPlayerSfx();
         midiPlayerReset(sfx);
         soundPlaySfx(&self->gameData->sfxCollection, 0);
@@ -1961,6 +1860,13 @@ void bb_updateGrabbyHand(bb_entity_t* self)
             rpData->color              = c541;
             rpData->executeAfterPing   = &bb_upgradeRadar;
         }
+
+        self->currentAnimationFrame = 0;
+        self->paused                = true;
+    }
+    if (self->currentAnimationFrame == 2)
+    {
+        self->paused = true;
     }
 }
 
@@ -2004,7 +1910,11 @@ void bb_updateCarOpen(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
-        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
+        // free most previous car frames.
+        for (int i = 1; i < 59; i++)
+        {
+            freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[i]);
+        }
         switch (((bb_carData_t*)self->data)->reward)
         {
             case BB_DONUT:
@@ -2431,8 +2341,8 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
         }
         if (dData->blinkTimer > 0)
         {
-            // The sprites I took from UTT need to be drawn a little more to the left.
-            drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186);
+            //The sprites I took from UTT need to be drawn a little more to the left.
+            drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186 );
         }
         drawText(&self->gameData->font, textColor, dData->characters[dData->curString], 13, 152);
 
@@ -2659,7 +2569,7 @@ void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, b
     // don't draw the hand if it is fully retracted. Cuts down on overdraw a lot of the time.
     if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0],
                       (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                       (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
                           - camera->pos.y);
@@ -2765,64 +2675,7 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
     }
 
-    if (self->gameData->day == 3) // january 25
-    {
-        drawText(&self->gameData->cgThinFont, c022, "Left the orchestra behind,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 27,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
-        drawText(&self->gameData->cgThinFont, c022, "Turning cogs of time",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
-        drawText(&self->gameData->cgThinFont, c022, "may find,", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
-        drawText(&self->gameData->cgThinFont, c022, "Lost melodies' glow.",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
-    }
-    else if (self->gameData->day == 5) // january 27
-    {
-        drawText(&self->gameData->cgThinFont, c022, "Controllers still hum,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
-        drawText(&self->gameData->cgThinFont, c022, "Endless tunes", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
-        drawText(&self->gameData->cgThinFont, c022, "and laughter bloom,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
-        drawText(&self->gameData->cgThinFont, c022, "MAGFest never ends.",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
-    }
-    else if (self->gameData->day == 10) // january 32
-    {
-        drawText(&self->gameData->cgThinFont, c022, "Time slips, misaligned,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
-        drawText(&self->gameData->cgThinFont, c022, "Days leap past",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
-        drawText(&self->gameData->cgThinFont, c022, "or lag behind,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
-        drawText(&self->gameData->cgThinFont, c022, "Calendars defy.",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
-    }
-    else if (self->gameData->day == 78) // january 100
-    {
-        drawText(&self->gameData->cgThinFont, c022, "Endless dawns repeat,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
-        drawText(&self->gameData->cgThinFont, c022, "Immortal,", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
-        drawText(&self->gameData->cgThinFont, c022, "yet bound by time,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
-        drawText(&self->gameData->cgThinFont, c022, "Chaos waits unseen.",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
-                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
-    }
-    else if (self->gameData->day % 7 == 1 || self->gameData->day % 7 == 4 || self->gameData->day % 7 == 6)
+    if (self->gameData->day % 7 == 1 || self->gameData->day % 7 == 4 || self->gameData->day % 7 == 6)
     {
         drawText(&self->gameData->cgThinFont, c500, "Tomorrow is trash day!",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
@@ -2914,14 +2767,11 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             // Bug got stabbed
             if (bData->health - 34 <= 0) // bug just died
             {
-                if (self->gameData->entityManager.activeEntities < MAX_ENTITIES)
-                {
-                    // use a bump animation but tweak its graphics
-                    bb_entity_t* hitEffect
-                        = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
-                                          hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
-                    hitEffect->drawFunction = &bb_drawHitEffect;
-                }
+                // use a bump animation but tweak its graphics
+                bb_entity_t* hitEffect
+                    = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
+                                      hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+                hitEffect->drawFunction = &bb_drawHitEffect;
 
                 if (self->gameData->carFightState > 0)
                 {
@@ -3107,8 +2957,6 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
 
     // number of bugs to fight. More risk at greater depths.
     self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 5;
-
-    bb_ensureEntitySpace(&self->gameData->entityManager, self->gameData->carFightState + 6);
 
     // complex way to spawn bugs that adapts to any arena
     for (int bugSpawn = 0; bugSpawn < self->gameData->carFightState; bugSpawn++)
@@ -3299,16 +3147,12 @@ void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
     }
 
     // if nothing grabbed yet and there is something in hand to grab
-    if (self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS)
-            < other->pos.y - 128
-        && self->currentAnimationFrame == 0)
+    if (self->currentAnimationFrame == 0
+        && self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS)
+               < other->pos.y - 128)
     {
         self->paused    = false;
         ghData->grabbed = other;
-    }
-    if (self->currentAnimationFrame == 2)
-    {
-        self->paused = true;
     }
 }
 
@@ -3868,6 +3712,7 @@ void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self)
 
 void bb_afterGarbotnikIntro(bb_entity_t* self)
 {
+    self->gameData->loadoutScreenData = heap_caps_calloc(1, sizeof(bb_loadoutSelectScreenData_t), MALLOC_CAP_SPIRAM);
     self->gameData->screen = BIGBUG_LOADOUT_SELECT_SCREEN;
 
     for (int i = 0; i < 3; i++)
@@ -3962,15 +3807,8 @@ void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in
 
 void bb_openMap(bb_entity_t* self)
 {
-    if (self->gameData->entityManager.playerEntity != NULL)
-    {
-        self->gameData->radar.cam.y = (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
-    }
-    else
-    {
-        self->gameData->radar.cam.y = (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 120;
-    }
-    self->gameData->screen = BIGBUG_RADAR_SCREEN;
+    self->gameData->radar.cam.y = (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
+    self->gameData->screen      = BIGBUG_RADAR_SCREEN;
 }
 
 void bb_upgradeRadar(bb_entity_t* self)
@@ -4023,17 +3861,6 @@ void bb_triggerGameOver(bb_entity_t* self)
     {
         return;
     }
-
-    // find the grabby hand and destroy it.
-    for (int i = 0; i < MAX_ENTITIES; i++)
-    {
-        if (self->gameData->entityManager.entities[i].spriteIndex == BB_GRABBY_HAND)
-        {
-            bb_destroyEntity(&self->gameData->entityManager.entities[i], false);
-            break;
-        }
-    }
-
     bb_freeWsgs(&self->gameData->tilemap);
     bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
     self->gameData->entityManager.playerEntity = NULL;
@@ -4186,7 +4013,7 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
-    int8_t characterSprite   = 0;
+    int8_t characterSprite = 0;
     if (strcmp(firstCharacter, "Ovo") == 0)
     {
         characterSprite = bb_randomInt(0, 6);
@@ -4195,19 +4022,19 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     else if (strcmp(firstCharacter, "Pixel") == 0)
     {
         characterSprite = bb_randomInt(7, 8);
-        // borrow sprite from UTT
+        //borrow sprite from UTT
         loadWsgInplace("pixil_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     else if (strcmp(firstCharacter, "Pango") == 0)
     {
         characterSprite = bb_randomInt(9, 10);
-        // borrow sprite from UTT
+        //borrow sprite from UTT
         loadWsgInplace("hotdog_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     else if (strcmp(firstCharacter, "Po") == 0)
     {
         characterSprite = bb_randomInt(11, 13);
-        // borrow sprite from UTT
+        //borrow sprite from UTT
         loadWsgInplace("hand_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     // Add dr. Ovo indices

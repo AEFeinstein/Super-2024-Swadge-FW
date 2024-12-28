@@ -58,6 +58,7 @@ typedef enum
     BB_PANGO_AND_FRIENDS, // A sprite that flies up next to the rocket for a dialogue moment.
     BB_FOOD_CART, // Must be bumped 10 times to release a donut or a swadge. Also spawns a horde of bugs that may be
                   // ignored.
+    BB_ARROW,     // Arrows for dialing in wiles.
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.

@@ -195,6 +195,10 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     // bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
     entityManager->sprites[BB_FOOD_CART].originX = 36;
     entityManager->sprites[BB_FOOD_CART].originY = 56;
+
+    entityManager->sprites[BB_ARROW].frames    = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    loadWsgInplace("sh_uo.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
+    loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -418,7 +422,7 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         }
         if (excludePersistentEntities
             && (currentEntity->spriteIndex == BB_DEATH_DUMPSTER || currentEntity->spriteIndex == ROCKET_ANIM
-                || currentEntity->spriteIndex == FLAME_ANIM))
+                || currentEntity->spriteIndex == FLAME_ANIM || currentEntity->spriteIndex == CRUMBLE_ANIM || currentEntity->spriteIndex == NO_SPRITE_STAR))
         {
             continue;
         }
@@ -975,7 +979,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_GAME_OVER:
         {
             bb_gameOverData_t* goData = heap_caps_calloc(1, sizeof(bb_gameOverData_t), MALLOC_CAP_SPIRAM);
-            loadWsgInplace("GameOver0.wsg\0", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
+            loadWsgInplace("GameOver0.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
             goData->wsgLoaded = true;
             bb_setData(entity, goData, GAME_OVER_DATA);
 

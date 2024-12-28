@@ -48,13 +48,7 @@ typedef enum
     FOOD_CART_DATA,
 } bb_data_type_t;
 
-typedef enum
-{
-    BB_DOWN,
-    BB_LEFT,
-    BB_UP,
-    BB_RIGHT
-} bb_direction_t;
+
 
 //==============================================================================
 // Structs
@@ -108,7 +102,7 @@ typedef struct // child class
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
     //-----------------------------------------------
-    bb_direction_t gravity; // to walk on the walls & ceiling: local gravity switches
+    enum bb_direction_t gravity; // to walk on the walls & ceiling: local gravity switches
     uint8_t fallSpeed;      // increments in free fall
 } bb_buData_t;
 
@@ -250,7 +244,7 @@ typedef struct
 
 typedef struct
 {
-    bb_direction_t arena; // The direction to dig towards the car fight arena.
+    enum bb_direction_t arena; // The direction to dig towards the car fight arena.
     uint8_t numberOfDigs; // Increments with each dig. Destroy self at 2. That's three digs when you count 0.
 } bb_jankyBugDigData_t;
 

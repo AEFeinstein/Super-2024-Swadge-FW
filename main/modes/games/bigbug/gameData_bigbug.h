@@ -55,6 +55,40 @@ enum bb_radarUpgrade_t
     BIGBUG_REFILL_AMMO,
 };
 
+enum bb_direction_t
+{
+    BB_DOWN,
+    BB_LEFT,
+    BB_UP,
+    BB_RIGHT,
+    BB_NONE,
+};
+
+typedef struct
+{
+    uint8_t primingEffect; //fills up the background with a color
+    uint8_t selectedWile;   //the index of the wile that is currently selected.
+    uint8_t blinkTimer;     //a timer to blink the left and right triangles. Don't render when it's less than 126.
+    int32_t marqueeTimer;   //increments always for the marquee effect.
+} bb_loadoutSelectScreenData_t;
+
+struct bb_wileData_t
+{
+    char name[22];//FIX ME!!! Figure out what the shortest name is later.
+    char description[149];//FIX ME!!! Figure out what the shortest description is later.
+    uint8_t cost; // the number of donuts required to purchase the wile.
+    bool purchased; //set to true when donuts have been paid.
+    uint8_t cooldown; // the number of seconds to wait before the wile can be called again.
+    enum bb_direction_t callSequence[6]; // the sequence of directional button presses while holding 'B' to call the wile.
+};
+
+struct bb_loadoutData_t
+{
+    uint8_t primaryWileIdx; //index into the array of all wiles.
+    uint8_t secondaryWileIdx;
+    struct bb_wileData_t allWiles[7];
+};
+
 struct bb_radarScreenData_t
 {
     vec_t cam;                // x and y offsets for use in the radar (pause) screen.
@@ -164,6 +198,9 @@ struct bb_gameData_t
     uint8_t GarbotnikStat_diggingStrength;     // Starts at 1. Can increment indefinetly by 1.
     uint8_t GarbotnikStat_fuelConsumptionRate; // Starts at 4. Can decrement to 0.
     uint8_t GarbotnikStat_maxTowCables;        // Starts at 2. Can increment indefintely by 3.
+
+    struct bb_loadoutData_t loadout;
+    bb_loadoutSelectScreenData_t* loadoutScreenData;
 };
 
 //==============================================================================

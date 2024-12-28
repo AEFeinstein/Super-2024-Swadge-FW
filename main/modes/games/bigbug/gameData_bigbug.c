@@ -10,6 +10,7 @@
 #include "hdw-btn.h"
 #include "touchUtils.h"
 #include "soundFuncs.h"
+#include "random_bigbug.h"
 
 //==============================================================================
 // Functions
@@ -89,6 +90,79 @@ void bb_initializeGameData(bb_gameData_t* gameData)
         rgbCol = (rgbCol & 0x00FFFF) | newChannelColor;
         wsgPaletteSet(&gameData->damagePalette, (paletteColor_t)color, RGBtoPalette(rgbCol));
     }
+
+    // initialize the loadout data
+    strcpy(gameData->loadout.allWiles[0].name, "Faulty Wile");
+    strcpy(gameData->loadout.allWiles[0].description, "Tends to explode in a few short seconds before establishing communication with the Death Dumpster. Still ironing out the kinks.");
+    gameData->loadout.allWiles[0].callSequence[0] = BB_DOWN;
+    gameData->loadout.allWiles[0].callSequence[1] = BB_DOWN;
+    gameData->loadout.allWiles[0].callSequence[2] = BB_LEFT;
+    gameData->loadout.allWiles[0].callSequence[3] = BB_NONE;
+    gameData->loadout.allWiles[0].cooldown = 30;
+    gameData->loadout.allWiles[0].cost = bb_randomInt(1, 3);
+
+    strcpy(gameData->loadout.allWiles[1].name, "Drill Bot");
+    strcpy(gameData->loadout.allWiles[1].description, "A robot that drills horizontally. Very obedient until the battery runs out.");
+    gameData->loadout.allWiles[1].callSequence[0] = BB_LEFT;
+    gameData->loadout.allWiles[1].callSequence[1] = BB_LEFT;
+    gameData->loadout.allWiles[1].callSequence[2] = BB_LEFT;
+    gameData->loadout.allWiles[1].callSequence[3] = BB_RIGHT;
+    gameData->loadout.allWiles[1].callSequence[4] = BB_RIGHT;
+    gameData->loadout.allWiles[1].callSequence[5] = BB_NONE;
+    gameData->loadout.allWiles[1].cooldown = 30;
+    gameData->loadout.allWiles[1].cost = bb_randomInt(1, 3);
+
+    strcpy(gameData->loadout.allWiles[2].name, "Pacifier");
+    strcpy(gameData->loadout.allWiles[2].description, "Turns wild bugs into compliant little critters.");
+    gameData->loadout.allWiles[2].callSequence[0] = BB_UP;
+    gameData->loadout.allWiles[2].callSequence[1] = BB_RIGHT;
+    gameData->loadout.allWiles[2].callSequence[2] = BB_UP;
+    gameData->loadout.allWiles[2].callSequence[3] = BB_DOWN;
+    gameData->loadout.allWiles[2].callSequence[4] = BB_NONE;
+    gameData->loadout.allWiles[2].cooldown = 30;
+    gameData->loadout.allWiles[2].cost = bb_randomInt(1, 3);
+
+    strcpy(gameData->loadout.allWiles[3].name, "Shield");
+    strcpy(gameData->loadout.allWiles[3].description, "Quantum particles are delivered from above until a wearer is found who becomes invulnerable for 10 seconds.");
+    gameData->loadout.allWiles[3].callSequence[0] = BB_RIGHT;
+    gameData->loadout.allWiles[3].callSequence[1] = BB_DOWN;
+    gameData->loadout.allWiles[3].callSequence[2] = BB_DOWN;
+    gameData->loadout.allWiles[3].callSequence[3] = BB_RIGHT;
+    gameData->loadout.allWiles[3].callSequence[4] = BB_LEFT;
+    gameData->loadout.allWiles[3].callSequence[5] = BB_NONE;
+    gameData->loadout.allWiles[3].cooldown = 30;
+    gameData->loadout.allWiles[3].cost = bb_randomInt(1, 3);
+
+    strcpy(gameData->loadout.allWiles[4].name, "501Kg Bomb");
+    strcpy(gameData->loadout.allWiles[4].description, "Calls down ordinance from the Death Dumpster's stockpile.");
+    gameData->loadout.allWiles[4].callSequence[0] = BB_UP;
+    gameData->loadout.allWiles[4].callSequence[1] = BB_LEFT;
+    gameData->loadout.allWiles[4].callSequence[2] = BB_RIGHT;
+    gameData->loadout.allWiles[4].callSequence[3] = BB_LEFT;
+    gameData->loadout.allWiles[4].callSequence[4] = BB_DOWN;
+    gameData->loadout.allWiles[4].callSequence[5] = BB_NONE;
+    gameData->loadout.allWiles[4].cooldown = 30;
+    gameData->loadout.allWiles[4].cost = bb_randomInt(1, 3);
+
+    strcpy(gameData->loadout.allWiles[5].name, "Atmospheric Atomizer");
+    strcpy(gameData->loadout.allWiles[5].description, "The first prototype for the Death Dumpster's own onboard time machine, but it eviscerates the atmosphere within a few square miles for 30 seconds.");
+    gameData->loadout.allWiles[5].callSequence[0] = BB_DOWN;
+    gameData->loadout.allWiles[5].callSequence[1] = BB_LEFT;
+    gameData->loadout.allWiles[5].callSequence[2] = BB_DOWN;
+    gameData->loadout.allWiles[5].callSequence[3] = BB_RIGHT;
+    gameData->loadout.allWiles[5].callSequence[2] = BB_DOWN;
+    gameData->loadout.allWiles[5].callSequence[4] = BB_NONE;
+    gameData->loadout.allWiles[5].cooldown = 30;
+    gameData->loadout.allWiles[5].cost = bb_randomInt(1, 3);
+
+    strcpy(gameData->loadout.allWiles[6].name, "Ammo Supply");
+    strcpy(gameData->loadout.allWiles[6].description, "Drops a crate to top off your ammo to the max.");
+    gameData->loadout.allWiles[6].callSequence[0] = BB_DOWN;
+    gameData->loadout.allWiles[6].callSequence[1] = BB_UP;
+    gameData->loadout.allWiles[6].callSequence[2] = BB_RIGHT;
+    gameData->loadout.allWiles[6].callSequence[3] = BB_NONE;
+    gameData->loadout.allWiles[6].cooldown = 30;
+    gameData->loadout.allWiles[6].cost = bb_randomInt(1, 3);
 }
 
 void bb_freeGameData(bb_gameData_t* gameData)
@@ -115,6 +189,10 @@ void bb_freeGameData(bb_gameData_t* gameData)
     while (gameData->pleaseCheck.first)
     {
         heap_caps_free(shift(&gameData->unsupported));
+    }
+    if(gameData->loadoutScreenData!=NULL)
+    {
+        heap_caps_free(gameData->loadoutScreenData);
     }
 }
 
