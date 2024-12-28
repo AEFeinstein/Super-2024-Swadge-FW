@@ -150,7 +150,7 @@ void cg_runSpar(int64_t elapsedUs)
             // Handle input
             while (checkButtonQueueWrapper(&evt))
             {
-                if (evt.down)
+                if (evt.down && cg->spar.numActiveChowa > 0)
                 {
                     if (evt.button & PB_DOWN)
                     {
@@ -255,15 +255,20 @@ void cg_runSpar(int64_t elapsedUs)
                         cg->spar.match.data.chowa[1]->playerAffinity     = 255;
                         cg->spar.match.data.chowa[1]->type               = CG_KING_DONUT;
                         cg->spar.match.data.chowa[1]->age                = i * 100; */
-                        // TODO: Set match settings based on selections
                         cg->spar.match.data.chowa[0] = &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]];
                         cg->spar.match.data.chowa[1] = &cg->spar.opponent;
-                        cg_initSparMatch(cg, 0, sparMatchTimes[cg->spar.timerSelect], cg->spar.aiSelect, &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]]);
+                        cg_initSparMatch(cg, 0, sparMatchTimes[cg->spar.timerSelect], cg->spar.aiSelect,
+                                         &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]]);
+                        cg->spar.state = CG_SPAR_MATCH;
                     }
                     else if (evt.button & PB_B)
                     {
                         cg->spar.state = CG_SPAR_MENU;
                     }
+                }
+                else if (evt.down)
+                {
+                    cg->spar.state = CG_SPAR_MENU;
                 }
             }
             // Draw prep screen

@@ -466,9 +466,9 @@ typedef struct
 typedef struct
 {
     // Data
-    cgRecord_t data;             ///< Match data
-    cgSparChowaData_t* chowa[2]; ///< Shortcut to chowa
-    int8_t round;                ///< The round of the fight
+    cgRecord_t data;            ///< Match data
+    cgSparChowaData_t chowa[2]; ///< Extended Chowa object
+    int8_t round;               ///< The round of the fight
 
     // State
     bool paused;  ///< If the match is paused

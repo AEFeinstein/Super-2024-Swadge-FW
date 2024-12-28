@@ -205,7 +205,6 @@ static void cGroveEnterMode(void)
     readNvsBlob(cgNVSKeys[1], NULL, &blobLen);
     if (!readNvsBlob(cgNVSKeys[1], &cg->chowa, &blobLen))
     {
-        // TODO: remove when done testing
         for (int i = 0; i < CG_MAX_CHOWA - 1; i++)
         {
             cg->chowa[i].active = false;

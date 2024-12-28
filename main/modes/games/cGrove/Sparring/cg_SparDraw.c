@@ -30,7 +30,7 @@
 
 static const char* sparSplashScreen[] = {"Chowa Sparring", "Press any button to continue!"};
 static const char* matchText[]        = {"--Pause--", "FINISHED", "DRAW", "YOU LOST!", "YOU WIN!"};
-static const char* prompts[]          = {"Set up a match", "Press A to start match", "Press B to go back"};
+static const char* prompts[]          = {"Set up a match", "Press A to start match", "Press B to go back", "Go to the grove to get a Chowa first!"};
 static const char* difficultyStrs[]   = {"Beginner", "Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Expert"};
 
 static const int16_t sparMatchTimes[] = {30, 60, 90, 120, 999};
@@ -96,6 +96,14 @@ void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs)
 void cg_drawSparMatchPrep(cGrove_t* cg)
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+
+    if (cg->spar.numActiveChowa < 1)
+    {
+        int16_t xOff = 16;
+        int16_t yOff = (TFT_HEIGHT - 64) >> 1;
+        drawTextWordWrap(&cg->largeMenuFont, c555, prompts[3], &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
+        return;
+    }
 
     // Draw prompts
     drawText(&cg->largeMenuFont, c555, prompts[0], (TFT_WIDTH - textWidth(&cg->largeMenuFont, prompts[0])) / 2, 16);
@@ -226,8 +234,8 @@ static void cg_drawSparField(cGrove_t* cg)
 static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
 {
     // TODO: Finish animations
-    cgSparChowaData_t* cg1 = cg->spar.match.chowa[CG_P1];
-    cgSparChowaData_t* cg2 = cg->spar.match.chowa[CG_P2];
+    cgSparChowaData_t* cg1 = &cg->spar.match.chowa[CG_P1];
+    cgSparChowaData_t* cg2 = &cg->spar.match.chowa[CG_P2];
     cg1->animTimer += elapsedUs;
     cg2->animTimer += elapsedUs;
 
@@ -496,61 +504,61 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
 {
     // Player 1
     // Draw health bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P1]->maxHP, cg->spar.match.chowa[CG_P1]->HP, PADDING, STAT_BAR_BASE,
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P1].maxHP, cg->spar.match.chowa[CG_P1].HP, PADDING, STAT_BAR_BASE,
                         c500, 3);
     // Draw stamina bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P1]->maxStamina, cg->spar.match.chowa[CG_P1]->stamina,
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P1].maxStamina, cg->spar.match.chowa[CG_P1].stamina,
                         1 * (PADDING + STAT_BAR_WIDTH) + PADDING, STAT_BAR_BASE, c550, 1);
     // Draw Readiness bar
-    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowa[CG_P1]->readiness,
+    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowa[CG_P1].readiness,
                         2 * (PADDING + STAT_BAR_WIDTH) + PADDING, STAT_BAR_BASE, c050, -1);
 
-    switch (cg->spar.match.chowa[CG_P1]->currState)
+    switch (cg->spar.match.chowa[CG_P1].currState)
     {
         case CG_SPAR_UNREADY:
         case CG_SPAR_READY:
         {
-            switch (cg->spar.match.chowa[CG_P1]->currMove)
+            switch (cg->spar.match.chowa[CG_P1].currMove)
             {
                 case CG_SPAR_PUNCH:
                 {
-                    drawText(&cg->menuFont, c005, "P1: Punch", 100, 108);
+                    //drawText(&cg->menuFont, c005, "P1: Punch", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[1], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_FAST_PUNCH:
                 {
-                    drawText(&cg->menuFont, c005, "P1: Fast Punch", 100, 108);
+                    //drawText(&cg->menuFont, c005, "P1: Fast Punch", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[2], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_KICK:
                 {
-                    drawText(&cg->menuFont, c005, "P1: Kick", 100, 108);
+                    //drawText(&cg->menuFont, c005, "P1: Kick", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[4], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_JUMP_KICK:
                 {
-                    drawText(&cg->menuFont, c005, "P1: Jump Kick", 100, 108);
+                    //drawText(&cg->menuFont, c005, "P1: Jump Kick", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[5], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
-                    drawText(&cg->menuFont, c005, "P1: Headbutt", 100, 108);
+                    //drawText(&cg->menuFont, c005, "P1: Headbutt", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[3], 64, 64, 2, 2);
                     break;
                 }
                 case CG_SPAR_DODGE:
                 {
-                    drawText(&cg->menuFont, c005, "P1: Dodge", 100, 108);
+                    //drawText(&cg->menuFont, c005, "P1: Dodge", 100, 108);
                     drawWsgSimpleScaled(&cg->spar.attackIcons[0], 64, 64, 2, 2);
                     break;
                 }
                 default:
                 {
-                    drawText(&cg->menuFont, c005, "P1: Unset", 100, 108);
+                    //drawText(&cg->menuFont, c005, "P1: Unset", 100, 108);
                     break;
                 }
             }
@@ -564,22 +572,22 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
 
     // Player 2
     // Draw health bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P2]->maxHP, cg->spar.match.chowa[CG_P2]->HP, TFT_WIDTH - PADDING,
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P2].maxHP, cg->spar.match.chowa[CG_P2].HP, TFT_WIDTH - PADDING,
                         STAT_BAR_BASE, c500, 3);
     // Draw stamina bar
-    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P2]->maxStamina, cg->spar.match.chowa[CG_P2]->stamina,
+    cg_drawSparProgBars(cg, cg->spar.match.chowa[CG_P2].maxStamina, cg->spar.match.chowa[CG_P2].stamina,
                         TFT_WIDTH - (1 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c550, 1);
     // Draw Readiness bar
-    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowa[CG_P2]->readiness,
+    cg_drawSparProgBars(cg, CG_MAX_READY_VALUE, cg->spar.match.chowa[CG_P2].readiness,
                         TFT_WIDTH - (2 * (PADDING + STAT_BAR_WIDTH) + PADDING), STAT_BAR_BASE, c050, -1);
 
-    // FIXME: For debug only
-    switch (cg->spar.match.chowa[CG_P2]->currState)
+    /* // For debug only
+    switch (cg->spar.match.chowa[CG_P2].currState)
     {
         case CG_SPAR_UNREADY:
         case CG_SPAR_READY:
         {
-            switch (cg->spar.match.chowa[CG_P2]->currMove)
+            switch (cg->spar.match.chowa[CG_P2].currMove)
             {
                 case CG_SPAR_PUNCH:
                 {
@@ -623,7 +631,7 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
         {
             break;
         }
-    }
+    } */
 }
 
 /**
