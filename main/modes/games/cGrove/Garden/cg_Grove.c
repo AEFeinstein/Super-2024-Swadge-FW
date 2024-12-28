@@ -748,9 +748,9 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 if (evt.down && evt.button & PB_DOWN)
                 {
                     cg->grove.tutorialPage++;
-                    if (cg->grove.tutorialPage > 6)
+                    if (cg->grove.tutorialPage > 5)
                     {
-                        cg->grove.tutorialPage = 6;
+                        cg->grove.tutorialPage = 5;
                     }
                 }
                 if (evt.down && evt.button & PB_UP)
@@ -761,7 +761,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                         cg->grove.tutorialPage = 0;
                     }
                 }
-                if (evt.down && evt.button & PB_START && cg->grove.tutorialPage == 6)
+                if (evt.down && evt.button & PB_START && cg->grove.tutorialPage == 5)
                 {
                     cg->grove.state = CG_GROVE_FIELD;
                     writeNvs32(nvsTutorialKey, 1);
@@ -792,7 +792,9 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 cg->grove.state = CG_GROVE_FIELD;
                 // Clear text entry
                 strcpy(cg->buffer, "");
+                textEntrySoftReset();
             }
+            
             textEntrySetPrompt(namePrompt);
             cg_groveDrawField(cg, 0);
             textEntryDraw(elapsedUS);

@@ -51,8 +51,6 @@ static const char* tutorialText[]
        "When using the C Stick, the down and right arrow keys mimic the A and B keys respectively.",
        "Donuts",
        "The golden donuts are the main currency for Chowa. They appear randomly, snag them with A when you see them.",
-       "Guests",
-       "Once you've invited some guests over, they will also appear in the garden.",
        "Grove Menu",
        "Press start to access the menu. Here you can buy and sell items, take items from the inventory and put them in "
        "the garden, and manage who's in the Grove.",
@@ -470,8 +468,8 @@ void cg_drawGroveTutorial(cGrove_t* cg)
         case 0:
         {
             // Draw the welcome screen
-            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][13],
-                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][13].h)) >> 1, 100, 3, 3);
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][26],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][26].h)) >> 1, 100, 3, 3);
             break;
         }
         case 1:
@@ -498,19 +496,10 @@ void cg_drawGroveTutorial(cGrove_t* cg)
         }
         case 4:
         {
-            // Guests
-            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30],
-                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30].h) - 70) >> 1, 100, 3, 3);
-            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30],
-                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30].h) + 70) >> 1, 100, 3, 3);
-            break;
-        }
-        case 5:
-        {
             // Menu
             break;
         }
-        case 6:
+        case 5:
         {
             // Getting started
             drawWsgSimpleScaled(&cg->grove.eggs[0], (TFT_WIDTH - (4 * cg->grove.eggs[0].w)) >> 1, 110, 4.0, 4.0);
@@ -525,7 +514,7 @@ void cg_drawGroveTutorial(cGrove_t* cg)
     {
         drawWsgSimple(&cg->arrow, 8, 180);
     }
-    if (cg->grove.tutorialPage != 6)
+    if (cg->grove.tutorialPage != 5)
     {
         drawWsg(&cg->arrow, 8, 200, false, true, 0);
     }

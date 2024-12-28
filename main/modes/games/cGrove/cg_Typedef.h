@@ -138,9 +138,9 @@ typedef enum
 
 typedef enum
 {
-    CG_NORMAL,
     CG_KING_DONUT,
     CG_NUM_TYPES, ///< Move if more get added
+    CG_NORMAL,
     CG_CHO,
     CG_RED_LUMBERJACK,
     CG_GREEN_LUMBERJACK,
@@ -169,18 +169,6 @@ typedef struct
 } cgChowa_t;
 
 //==============================================================================
-// NPCs
-//==============================================================================
-
-typedef struct
-{
-    char name[CG_MAX_STR_LEN]; ///< Name of the NPC
-    wsg_t* icon;               ///< Icons for dialogue
-    // Text for competitions
-    cgChowa_t chowa[3]; ///< NPCs CHowa
-} cgNPC_t;
-
-//==============================================================================
 // Submode generics
 //==============================================================================
 
@@ -207,6 +195,7 @@ typedef enum
     CG_HARD,
     CG_VERY_HARD,
     CG_EXPERT,
+    CG_NUM_DIFF, // For loops
 } cgAIDifficulty_t;
 
 // Structs ==============================
@@ -405,14 +394,9 @@ typedef enum
 {
     CG_SPAR_SPLASH,
     CG_SPAR_MENU,
-    CG_SPAR_TOURNAMENT_SETUP,
-    CG_SPAR_PRIVATE_SETUP,
-    CG_SPAR_GUEST_SETUP,
     CG_MATCH_PREP,
     CG_SPAR_MATCH,
-    CG_SPAR_MATCH_RESULTS,
     CG_SPAR_TUTORIAL,
-    CG_SPAR_BATTLE_RECORD,
 } cgSparState_t;
 
 typedef enum
@@ -523,15 +507,18 @@ typedef struct
     menu_t* sparMenu;              ///< Menu object
     menuManiaRenderer_t* renderer; ///< Renderer
 
-    // Match
-    // cgRecord_t currMatch; ///< The currently in use match data
-    cgNPC_t NPCs[4]; ///< NPCs
-    cgMatch_t match; ///< Match object
+    // Match setup
+    int8_t numActiveChowa;                               ///< Number of active chowa
+    int8_t activeChowaIdxs[CG_MAX_CHOWA];                ///< Indexes of active chowa
+    char activeChowaNames[CG_MAX_CHOWA][CG_MAX_STR_LEN]; ///< Names of Chowa currently active
+    int8_t optionSelect;                                 ///< Currently selected option
+    int8_t chowaSelect;                                  ///< Currently selected Chowa
+    int8_t aiSelect;                                     ///< Currently selected AI difficulty
+    int8_t timerSelect;                                  ///< Currently selected timer length
 
-    // Battle Record
-    cgRecord_t sparRecord[CG_SPAR_MAX_RECORDS]; ///< List of battle records
-    int8_t recordSelect;                        ///< Which record is currently active
-    int8_t roundSelect;                         ///< Which round of the record is currently selected
+    // Match
+    cgMatch_t match;    ///< Match object
+    cgChowa_t opponent; ///< Current opponent
 } cgSpar_t;
 
 //==============================================================================
@@ -544,8 +531,6 @@ typedef enum
     CG_MAIN_MENU,
     CG_GROVE,
     CG_SPAR,
-    CG_RACE,
-    CG_PERFORMANCE,
     CG_FIRST_RUN,
     CG_ERASE,
 } cgMainState_t;
