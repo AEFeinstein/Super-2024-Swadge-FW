@@ -284,6 +284,7 @@ void app_main(void)
     // Read settings from NVS
     readAllSettings();
 
+#ifdef CONFIG_FACTORY_TEST_NORMAL
     // If test mode was passed
     if (getTutorialCompletedSetting())
     {
@@ -295,6 +296,14 @@ void app_main(void)
         // Start the out-of-box experience / tutorial
         cSwadgeMode = &introMode;
     }
+#else
+    // If test mode was passed
+    if (getTestModePassedSetting())
+    {
+        // Show the main menu
+        cSwadgeMode = &mainMenuMode;
+    }
+#endif
     else
     {
         // Otherwise enter test mode

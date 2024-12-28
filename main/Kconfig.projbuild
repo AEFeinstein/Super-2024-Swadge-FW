@@ -54,4 +54,18 @@ menu "Swadge Configuration"
 			help
 				Sound comes out the speaker
 	endchoice
+	choice FACTORY_TEST_TYPE
+		prompt "Select Factory Test Type"
+		default FACTORY_TEST_NORMAL
+		help
+			Select factory test mode, either boot to the normal menu or show a warning
+		config FACTORY_TEST_NORMAL
+			bool "FACTORY_TEST_NORMAL"
+			help
+				Run tutorial and normal menu after factory test
+		config FACTORY_TEST_WARNING
+			bool "FACTORY_TEST_WARNING"
+			help
+				Show a warning after factory test
+	endchoice
 endmenu

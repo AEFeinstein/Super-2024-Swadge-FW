@@ -26,7 +26,3 @@ int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint3
  * @return int8_t The signed 8-bit sample generated for this tick of the drumkit
  */
 int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data);
-
-#ifdef BAKE_DRUMS
-void bakeDrums(void);
-#endif

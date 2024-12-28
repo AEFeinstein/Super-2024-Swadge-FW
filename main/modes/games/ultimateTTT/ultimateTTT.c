@@ -98,9 +98,6 @@ ultimateTTT_t* ttt;
  */
 static void tttEnterMode(void)
 {
-    // TODO enable speaker if BGM is added
-    setDacShutdown(true);
-
     // Allocate memory for the mode
     ttt = heap_caps_calloc(1, sizeof(ultimateTTT_t), MALLOC_CAP_8BIT);
 
@@ -120,6 +117,13 @@ static void tttEnterMode(void)
         snprintf(assetName, sizeof(assetName) - 1, "%s_%c%c.wsg", markerNames[pIdx], 'r', 'l');
         loadWsg(assetName, &ttt->markerWsg[pIdx].red.large, true);
     }
+
+    // Load SFX
+    loadMidiFile("uttt_cursor.mid", &ttt->sfxMoveCursor, true);
+    loadMidiFile("uttt_marker.mid", &ttt->sfxPlaceMarker, true);
+    loadMidiFile("uttt_win_s.mid", &ttt->sfxWinSubgame, true);
+    loadMidiFile("uttt_win_g.mid", &ttt->sfxWinGame, true);
+    initGlobalMidiPlayer();
 
     // Load some fonts
     loadFont("rodin_eb.font", &ttt->font_rodin, false);
@@ -236,6 +240,14 @@ static void tttExitMode(void)
         freeWsg(&ttt->markerWsg[pIdx].red.large);
     }
 
+    // Free MIDI
+    globalMidiPlayerStop(true);
+    deinitGlobalMidiPlayer();
+    unloadMidiFile(&ttt->sfxMoveCursor);
+    unloadMidiFile(&ttt->sfxPlaceMarker);
+    unloadMidiFile(&ttt->sfxWinSubgame);
+    unloadMidiFile(&ttt->sfxWinGame);
+
     // Clear out this list
     while (0 != ttt->instructionHistory.length)
     {
@@ -319,7 +331,7 @@ static void tttMainLoop(int64_t elapsedUs)
         }
         case TUI_GAME:
         {
-            tttDrawGame(ttt);
+            tttDrawGame(ttt, elapsedUs);
             break;
         }
         case TUI_MARKER_SELECT:

@@ -41,12 +41,7 @@ void pa_initializeEntityManager(paEntityManager_t* entityManager, paWsgManager_t
     entityManager->gameData       = gameData;
     entityManager->soundManager   = soundManager;
 
-    // entityManager->viewEntity = pa_createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,
-    // entityManager->tilemap->warps[0].y * 16);
     entityManager->playerEntity = entityManager->viewEntity;
-
-    // entityManager->activeEnemies = 0;
-    // entityManager->maxEnemies = 3;
 }
 
 void pa_updateEntities(paEntityManager_t* entityManager)
@@ -137,25 +132,13 @@ void pa_viewFollowEntity(paTilemap_t* tilemap, paEntity_t* entity)
     int16_t centerOfViewX = tilemap->mapOffsetX + 140;
     int16_t centerOfViewY = tilemap->mapOffsetY + 120;
 
-    // if(centerOfViewX != moveViewByX) {
     moveViewByX -= centerOfViewX;
-    //}
-
-    // if(centerOfViewY != moveViewByY) {
     moveViewByY -= centerOfViewY;
-    //}
-
-    // if(moveViewByX && moveViewByY){
     pa_scrollTileMap(tilemap, moveViewByX, moveViewByY);
-    //}
 }
 
 paEntity_t* pa_createEntity(paEntityManager_t* entityManager, uint8_t objectIndex, uint16_t x, uint16_t y)
 {
-    // if(entityManager->activeEntities == MAX_ENTITIES){
-    //     return NULL;
-    // }
-
     paEntity_t* createdEntity;
 
     switch (objectIndex)
@@ -172,10 +155,6 @@ paEntity_t* pa_createEntity(paEntityManager_t* entityManager, uint8_t objectInde
         default:
             createdEntity = NULL;
     }
-
-    // if(createdEntity != NULL) {
-    //     entityManager->activeEntities++;
-    // }
 
     return createdEntity;
 }
@@ -196,15 +175,15 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
 
     entity->xspeed             = 0;
     entity->yspeed             = 0;
-    entity->xMaxSpeed          = 40; // 72; Walking
-    entity->yMaxSpeed          = 64; // 72;
+    entity->xMaxSpeed          = 40;
+    entity->yMaxSpeed          = 64;
     entity->xDamping           = 2;
     entity->yDamping           = 2;
     entity->gravityEnabled     = false;
     entity->gravity            = 4;
     entity->falling            = false;
     entity->spriteFlipVertical = false;
-    entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
+    entity->animationTimer     = 0;
     entity->state              = PA_PL_ST_NORMAL;
     entity->stateTimer         = -1;
 
@@ -529,13 +508,8 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager)
 
                         if (newEnemy != NULL)
                         {
-                            // pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
                             newEnemy->state      = PA_EN_ST_STUN;
                             newEnemy->stateTimer = 120;
-                            /*if(entityManager->activeEnemies == 0 || entityManager->gameData->remainingEnemies == 1){
-                                //The first and last enemies are permanently angry
-                                newEnemy->stateFlag = true;
-                            }*/
 
                             paEntity_t* newBreakBlock = pa_createBreakBlock(
                                 entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,

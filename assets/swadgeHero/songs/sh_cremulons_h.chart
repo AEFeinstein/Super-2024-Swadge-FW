@@ -1,10 +1,10 @@
 [Song]
 {
-  Name = "SwadgeMusic Test"
+  Name = ""
   Charter = "Edward Haas"
   Year = "Unknown"
   Offset = 0
-  Resolution = 960
+  Resolution = 480
   Player2 = bass
   Difficulty = 4
   PreviewStart = 0
@@ -18,7 +18,8 @@
   0 = TS 4
   0 = B 120000
   0 = TS 4
-  0 = B 125000
+  0 = B 120000
+  1920 = B 125000
 }
 [ExpertSingle]
 {
@@ -130,10 +131,18 @@
   59520 = N 4 0
   60000 = N 3 0
   60240 = N 4 0
-  60720 = N 3 0
-  61200 = N 0 0
-  61920 = N 3 0
-  62400 = N 2 0
+  60360 = N 5 0
+  60600 = N 4 0
+  60960 = N 1 0
+  61440 = N 1 1920
+  63840 = N 4 0
+  64080 = N 3 0
+  64200 = N 4 0
+  64440 = N 5 0
+  64680 = N 2 0
+  64800 = N 1 0
+  64920 = N 0 0
+  65040 = N 2 0
   65280 = N 1 0
   65760 = N 5 0
   66000 = N 2 0
