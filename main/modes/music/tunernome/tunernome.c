@@ -497,9 +497,7 @@ static inline int16_t getSemiDiffAround(uint16_t idx)
 void recalcMetronome(void)
 {
     // Figure out how many microseconds are in one beat
-    double ratio = tunernome->tAccumulatedUs / (double) tunernome->usPerBeat;
     tunernome->usPerBeat = (60 * 1000000) / tunernome->bpm;
-    tunernome->tAccumulatedUs = round(tunernome->usPerBeat * ratio);
 }
 
 // TODO: make this compatible with instruments with an odd number of notes
@@ -1090,6 +1088,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
             int16_t weightY = round(METRONOME_CENTER_Y - (0.5 * ABS(intermedY) + 0.5) * weightRadius);
             //printf("weightRadiusPercent = %f, x = %"PRIi16", y = %"PRIi16"\n", weightRadiusPercent, weightX, weightY);
             drawLine(METRONOME_CENTER_X, METRONOME_CENTER_Y, armX, armY, c445, 0);
+            //drawLineScaled(METRONOME_CENTER_X, METRONOME_CENTER_Y, armX, armY, c445, 0, -METRONOME_CENTER_X, 0, 2, 1);
             drawCircleFilled(weightX, weightY, METRONOME_WEIGHT_SIZE_RADIUS, c222);
             drawWsg(&(tunernome->metronomeBottomWsg), (TFT_WIDTH - tunernome->metronomeBottomWsg.w) / 2, METRONOME_GRAPHIC_Y, false, false, 0);
             break;
@@ -1255,7 +1254,9 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
 void modifyBpm(int16_t bpmMod)
 {
     tunernome->bpm = CLAMP(tunernome->bpm + bpmMod, 1, MAX_BPM);
+    double ratio = tunernome->tAccumulatedUs / (double) tunernome->usPerBeat;
     recalcMetronome();
+    tunernome->tAccumulatedUs = round(tunernome->usPerBeat * ratio);
 }
 
 /**
