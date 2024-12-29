@@ -33,7 +33,6 @@
 //==============================================================================
 
 static const char cGroveTitle[] = "Chowa Grove"; // Game title
-
 static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Settings"};
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
@@ -125,7 +124,7 @@ static void cGroveEnterMode(void)
     // Load Chowa WSGs
     cg_initChowaWSGs(cg);
     // Load title screen
-    cg->title = calloc(ARRAY_SIZE(cGroveTitleSprites), sizeof(wsg_t));
+    cg->title = heap_caps_calloc(ARRAY_SIZE(cGroveTitleSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(cGroveTitleSprites); idx++)
     {
         loadWsg(cGroveTitleSprites[idx], &cg->title[idx], true);
@@ -235,6 +234,7 @@ static void cGroveEnterMode(void)
             strcpy(cg->chowa[i].owner, cg->player);
         }
         writeNvsBlob(cgNVSKeys[1], &cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
+
     }
     globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
 }
@@ -266,7 +266,6 @@ static void cGroveExitMode(void)
 
     // Audio
     unloadMidiFile(&cg->menuBGM);
-
     // Fonts
     freeFont(&cg->titleFontOutline);
     freeFont(&cg->menuFont);
@@ -275,12 +274,12 @@ static void cGroveExitMode(void)
 
     // WSGs
     freeWsg(&cg->title[1]); // Sky wsg, only one not freed earlier
-    free(cg->title);
+    heap_caps_free(cg->title);
     freeWsg(&cg->arrow);
     cg_deInitChowaWSGs(cg);
 
     // Main
-    free(cg);
+    heap_caps_free(cg);
 }
 
 static void cGroveMainLoop(int64_t elapsedUs)
@@ -427,6 +426,71 @@ static void cGroveMainLoop(int64_t elapsedUs)
             yOff = 120;
             drawTextWordWrap(&cg->menuFont, c555, cGroveResetData[2], &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
         }
+        case CG_FIRST_RUN:
+        {
+            buttonEvt_t evt = {0};
+            bool done       = false;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                done = !textEntryInput(evt.down, evt.button);
+            }
+            if (done)
+            {
+                textEntrySoftReset();
+                strcpy(cg->player, cg->buffer);
+                strcpy(cg->buffer, "");
+                writeNvsBlob(cgNVSKeys[0], cg->player, sizeof(cg->player));
+                cg->state = CG_MAIN_MENU;
+            }
+            textEntryDraw(elapsedUs);
+            break;
+        }
+        case CG_ERASE:
+        {
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && evt.button & PB_START)
+                {
+                    // Player name, Chowa
+                    eraseNvsKey(cgNVSKeys[0]);
+                    eraseNvsKey(cgNVSKeys[1]);
+                    eraseNvsKey(cgNVSKeys[2]);
+
+                    // Deactivate all Chowa
+                    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+                    {
+                        cg->chowa[idx].active = false;
+                    }
+                    for (int idx = 0; idx < CG_GROVE_MAX_GUEST_CHOWA; idx++)
+                    {
+                        cg->guests[idx].active = false;
+                    }
+
+                    // Individual modes
+                    cg_clearGroveNVSData();
+
+                    // Move to name entry
+                    cg->state = CG_FIRST_RUN;
+                    textEntrySetPrompt(cgTextPrompt);
+                }
+                else if (evt.down)
+                {
+                    cg->state = CG_MAIN_MENU;
+                }
+            }
+
+            // Draw
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            int16_t xOff = 16;
+            int16_t yOff = 48;
+            drawText(&cg->largeMenuFont, c500, cGroveResetData[0], xOff, yOff);
+            yOff += 30;
+            drawTextWordWrap(&cg->menuFont, c555, cGroveResetData[1], &xOff, &yOff, TFT_WIDTH - 16, 200);
+            xOff = 16;
+            yOff = 120;
+            drawTextWordWrap(&cg->menuFont, c555, cGroveResetData[2], &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
+        }
         default:
         {
             break;
@@ -451,6 +515,11 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
             globalMidiPlayerStop(true);
             cg_initSpar(cg);
             cg->state = CG_SPAR;
+        }
+        else if (label == cGroveResetData[0])
+        {
+            // Erase data
+            cg->state = CG_ERASE;
         }
         else if (label == cGroveResetData[0])
         {

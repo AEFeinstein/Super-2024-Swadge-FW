@@ -809,20 +809,20 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
                 if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
                 {
                     // Success, free the raw data
-                    free(data);
+                    heap_caps_free(data);
                     data = decompressed;
                 }
                 else
                 {
-                    free(decompressed);
-                    free(data);
+                    heap_caps_free(decompressed);
+                    heap_caps_free(data);
                     return false;
                 }
             }
             else
             {
                 ESP_LOGE("MIDIFileParser", "Song %s could not be decompressed!", name);
-                free(data);
+                heap_caps_free(data);
                 return false;
             }
         }
@@ -848,10 +848,10 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
             if (file->tracks != NULL)
             {
                 // TODO should this be handled in the parser?
-                free(file->tracks);
+                heap_caps_free(file->tracks);
                 file->tracks = NULL;
             }
-            free(data);
+            heap_caps_free(data);
             memset(file, 0, sizeof(midiFile_t));
             return false;
         }
@@ -864,8 +864,8 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 
 void unloadMidiFile(midiFile_t* file)
 {
-    free(file->tracks);
-    free(file->data);
+    heap_caps_free(file->tracks);
+    heap_caps_free(file->data);
     memset(file, 0, sizeof(midiFile_t));
 }
 
@@ -889,7 +889,7 @@ void midiParserSetFile(midiFileReader_t* reader, const midiFile_t* file)
 {
     if (reader->states != NULL)
     {
-        free(reader->states);
+        heap_caps_free(reader->states);
         reader->states = NULL;
     }
 
@@ -946,7 +946,7 @@ void deinitMidiParser(midiFileReader_t* reader)
 
     if (states != NULL)
     {
-        free(states);
+        heap_caps_free(states);
     }
 }
 
@@ -1017,7 +1017,7 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
 
 void* globalMidiSave(void)
 {
-    // TODO: There are multiple allocs here, so the return value _can't_ safely be free()'d by others
+    // TODO: There are multiple allocs here, so the return value _can't_ safely be heap_caps_free()'d by others
     midiSaveState_t* saveState = heap_caps_calloc(NUM_GLOBAL_PLAYERS, sizeof(midiSaveState_t), MALLOC_CAP_SPIRAM);
 
     for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
@@ -1067,7 +1067,7 @@ void globalMidiRestore(void* data)
 
     // Do not free any of the individual save state data, since it's now just the real data
     // Just free the container
-    free(data);
+    heap_caps_free(data);
 }
 
 int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)

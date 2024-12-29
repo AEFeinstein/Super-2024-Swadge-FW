@@ -10,6 +10,7 @@
 #include "esp_timer.h"
 #include "esp_log.h"
 #include "esp_timer_emu.h"
+#include "esp_heap_caps.h"
 
 //==============================================================================
 // Variables
@@ -125,7 +126,7 @@ esp_err_t esp_timer_create(const esp_timer_create_args_t* create_args, esp_timer
     if (NULL == *out_handle)
     {
         // Allocate memory for a timer
-        (*out_handle) = (esp_timer_handle_t)calloc(1, sizeof(struct esp_timer));
+        (*out_handle) = (esp_timer_handle_t)heap_caps_calloc(1, sizeof(struct esp_timer), MALLOC_CAP_8BIT);
     }
 
     // Initialize the timer
@@ -172,7 +173,7 @@ esp_err_t esp_timer_delete(const esp_timer_handle_t timer)
     {
         if (node->val == timer)
         {
-            free(node->val);
+            heap_caps_free(node->val);
             removeEntry(timerList, node);
             break;
         }

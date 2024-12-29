@@ -30,12 +30,11 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
     gameData->rank            = 5;
     gameData->debugMode       = false;
     gameData->continuesUsed   = false;
-    gameData->inGameTimer     = 0;
     gameData->soundManager    = soundManager;
     gameData->playerCharacter = PA_PLAYER_CHARACTER_PANGO;
 }
 
-void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t levelIndex)
+void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData)
 {
     gameData->gameState                = 0;
     gameData->btnState                 = 0;
@@ -45,10 +44,7 @@ void pa_initializeGameDataFromTitleScreen(paGameData_t* gameData, uint16_t level
     gameData->levelTime                = 000;
     gameData->frameCount               = 0;
     gameData->bgColor                  = c000;
-    gameData->currentBgm               = 0;
-    gameData->changeBgm                = 0;
     gameData->continuesUsed            = (gameData->level == 1) ? false : true;
-    gameData->inGameTimer              = 0;
     gameData->firstBonusItemDispensed  = false;
     gameData->secondBonusItemDispensed = false;
 
@@ -63,6 +59,14 @@ void pa_scorePoints(paGameData_t* gameData, uint16_t points)
     {
         gameData->lives++;
         gameData->extraLifeScore += 10000; //(gameData->extraLifeScore + 2000);
+
+        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i += 2)
+        {
+            gameData->leds[ledRemap[i]].r = 0xFF;
+            gameData->leds[ledRemap[i]].g = 0xFF;
+            gameData->leds[ledRemap[i]].b = 0xFF;
+        }
+
         soundPlaySfx(&(gameData->soundManager->snd1up), MIDI_SFX);
     }
 }
@@ -83,28 +87,40 @@ void pa_updateLedsShowHighScores(paGameData_t* gameData)
 {
     if (((gameData->frameCount) % 10) == 0)
     {
-        for (int32_t i = 0; i < 8; i++)
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
             if (((gameData->frameCount >> 4) % CONFIG_NUM_LEDS) == i)
             {
-                gameData->leds[i].r = 0xF0;
-                gameData->leds[i].g = 0xF0;
-                gameData->leds[i].b = 0x00;
+                gameData->leds[i].r = 0xFF;
+                gameData->leds[i].g = 0xFF;
+                gameData->leds[i].b = 0xFF;
             }
 
-            if (gameData->leds[i].r > 0)
+            if (gameData->leds[i].r > 0x05)
             {
                 gameData->leds[i].r -= 0x05;
             }
+            else
+            {
+                gameData->leds[i].r -= 0;
+            }
 
-            if (gameData->leds[i].g > 0)
+            if (gameData->leds[i].g > 0x10)
             {
                 gameData->leds[i].g -= 0x10;
             }
-
-            if (gameData->leds[i].b > 0)
+            else
             {
-                gameData->leds[i].b = 0x00;
+                gameData->leds[i].g -= 0;
+            }
+
+            if (gameData->leds[i].b > 0x40)
+            {
+                gameData->leds[i].b -= 0x40;
+            }
+            else
+            {
+                gameData->leds[i].b = 0;
             }
         }
     }
@@ -189,6 +205,98 @@ void pa_updateLedsGameClear(paGameData_t* gameData)
             if (gameData->leds[i].b > 0)
             {
                 gameData->leds[i].b -= 0x10;
+            }
+        }
+    }
+    setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}
+
+void pa_updateLedsInGame(paGameData_t* gameData)
+{
+    if (((gameData->frameCount) % 4) == 0)
+    {
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            uint8_t mappedLed = ledRemap[i];
+            uint8_t nextLed   = ledRemap[(i + 1) % CONFIG_NUM_LEDS];
+
+            if (gameData->leds[mappedLed].r > 0xF)
+            {
+                gameData->leds[mappedLed].r -= 0x10;
+
+                if ((gameData->leds[mappedLed].r >> 4) == 0xC && (i < CONFIG_NUM_LEDS - 1))
+                {
+                    gameData->leds[nextLed].r = 0xF0;
+                }
+            }
+            else
+            {
+                gameData->leds[mappedLed].r = 0;
+            }
+
+            if (gameData->leds[mappedLed].g > 0xF)
+            {
+                gameData->leds[mappedLed].g -= 0x10;
+
+                if ((gameData->leds[mappedLed].g >> 4) == 0xC && (i < CONFIG_NUM_LEDS - 1))
+                {
+                    gameData->leds[nextLed].g = 0xF0;
+                }
+            }
+            else
+            {
+                gameData->leds[mappedLed].g = 0;
+            }
+
+            if (gameData->leds[mappedLed].b > 0xF)
+            {
+                gameData->leds[mappedLed].b -= 0x10;
+
+                if ((gameData->leds[mappedLed].b >> 4) == 0xC && (i < CONFIG_NUM_LEDS - 1))
+                {
+                    gameData->leds[nextLed].b = 0xF0;
+                }
+            }
+            else
+            {
+                gameData->leds[mappedLed].b = 0;
+            }
+        }
+    }
+    setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}
+
+void pa_fadeLeds(paGameData_t* gameData)
+{
+    if (((gameData->frameCount) % 10) == 0)
+    {
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            if (gameData->leds[i].r > 0xF)
+            {
+                gameData->leds[i].r -= 0x10;
+            }
+            else
+            {
+                gameData->leds[i].r = 0;
+            }
+
+            if (gameData->leds[i].g > 0xF)
+            {
+                gameData->leds[i].g -= 0x10;
+            }
+            else
+            {
+                gameData->leds[i].g = 0;
+            }
+
+            if (gameData->leds[i].b > 0xF)
+            {
+                gameData->leds[i].b -= 0x10;
+            }
+            else
+            {
+                gameData->leds[i].b = 0;
             }
         }
     }

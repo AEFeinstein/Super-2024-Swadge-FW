@@ -10,7 +10,6 @@
 #include "soundFuncs.h"
 #include "hdw-btn.h"
 #include "esp_random.h"
-// #include "aabb_utils.h"
 #include "trigonometry.h"
 #include <esp_log.h>
 #include "soundFuncs.h"
@@ -159,11 +158,6 @@ void pa_updatePlayer(paEntity_t* self)
                 self->animationTimer--;
             }
 
-            if (((self->gameData->btnState & PB_START) && !(self->gameData->prevBtnState & PB_START)))
-            {
-                self->gameData->changeState = PA_ST_PAUSE;
-            }
-
             switch (self->facingDirection)
             {
                 case PA_DIRECTION_WEST:
@@ -198,6 +192,12 @@ void pa_updatePlayer(paEntity_t* self)
                     {
                         pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
                         newHitBlock->state = t;
+
+                        if (t == PA_TILE_SPAWN_BLOCK_0)
+                        {
+                            newHitBlock->spriteIndex = PA_SP_BONUS_BLOCK;
+                        }
+
                         switch (self->facingDirection)
                         {
                             case PA_DIRECTION_WEST:
@@ -214,7 +214,7 @@ void pa_updatePlayer(paEntity_t* self)
                                 newHitBlock->yspeed = 64;
                                 break;
                         }
-                        soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
+                        soundPlaySfx(&(self->soundManager->sndSlide), BZR_LEFT);
                     }
                 }
 
@@ -295,16 +295,8 @@ void updateCrabdozer(paEntity_t* self)
             if (self->stateTimer < 0)
             {
                 self->facingDirection = PA_DIRECTION_NONE;
-
-                /*if(self->stateFlag){
-                    self->state = PA_EN_ST_AGGRESSIVE;
-                    self->stateTimer = 32767; //effectively always aggressive
-                    self->entityManager->aggroEnemies++;
-                } else*/
-                {
-                    self->state      = PA_EN_ST_NORMAL;
-                    self->stateTimer = pa_enemySetAggroStateTimer(self);
-                }
+                self->state           = PA_EN_ST_NORMAL;
+                self->stateTimer      = pa_enemySetAggroStateTimer(self);
             }
             else
             {
@@ -322,15 +314,26 @@ void updateCrabdozer(paEntity_t* self)
         case PA_EN_ST_RUNAWAY:
         {
             self->stateTimer--;
-            if (self->stateTimer < 0 || self->entityManager->aggroEnemies < self->gameData->minAggroEnemies)
+
+            if (self->state == PA_EN_ST_RUNAWAY && self->stateTimer < 0)
             {
-                if (self->state == PA_EN_ST_RUNAWAY)
-                {
-                    killEnemy(self);
-                    break;
-                }
-                else if (self->state == PA_EN_ST_NORMAL
-                         && (self->entityManager->aggroEnemies < self->gameData->maxAggroEnemies))
+                soundPlaySfx(&(self->soundManager->sndSquish), 2);
+                self->spriteIndex = PA_SP_ENEMY_STUN;
+                self->yspeed      = -32;
+                self->gravity     = 4;
+                killEnemy(self);
+                break;
+            }
+            // The aggroEnemies < minAggroEnemies in the below condition is actually a bug.
+            // It was originally intended to apply at any time when he enemy is in NORMAL state only.
+            // This bug results in enemies "panicking" when there are fewer than minAggroEnemies active.
+            // Similar to the RUNAWAY state, enemies cannot break blocks in this unintended state.
+            // It gives the player a break in the later levels if they can maintain these conditions.
+            // It looks cool and feels good to pull off, so I hereby decleare this bug a "feature".
+            else if (self->stateTimer < 0 || self->entityManager->aggroEnemies < self->gameData->minAggroEnemies)
+            {
+                if (self->state == PA_EN_ST_NORMAL
+                    && (self->entityManager->aggroEnemies < self->gameData->maxAggroEnemies))
                 {
                     self->state = PA_EN_ST_AGGRESSIVE;
                     self->entityManager->aggroEnemies++;
@@ -342,7 +345,8 @@ void updateCrabdozer(paEntity_t* self)
                     self->state = PA_EN_ST_NORMAL;
                     self->entityManager->aggroEnemies--;
                     self->baseSpeed -= 2;
-                    self->stateTimer = pa_enemySetAggroStateTimer(self);
+                    self->stateTimer                    = pa_enemySetAggroStateTimer(self);
+                    self->gameData->leds[ledRemap[0]].r = 0xFF;
                 }
             }
 
@@ -368,7 +372,7 @@ void updateCrabdozer(paEntity_t* self)
                 pa_enemyChangeDirection(self, self->facingDirection, self->baseSpeed);
             }
 
-            bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE) /*? esp_random() % 2 : false*/;
+            bool doAgression = (self->state == PA_EN_ST_AGGRESSIVE);
 
             pa_enemyDecideDirection(self, doAgression);
 
@@ -386,25 +390,6 @@ void updateCrabdozer(paEntity_t* self)
         }
         case PA_EN_ST_BREAK_BLOCK:
         {
-            /*//Need to force a speed value because
-            //tile collision will stop the enemy before we get here
-            switch(self->facingDirection){
-                case PA_DIRECTION_WEST:
-                    self->xspeed = -8;
-                    break;
-                case PA_DIRECTION_EAST:
-                    self->xspeed = 8;
-                    break;
-                case PA_DIRECTION_NORTH:
-                    self->yspeed = -8;
-                    break;
-                case PA_DIRECTION_SOUTH:
-                    self->yspeed = 8;
-                    break;
-                default:
-                    break;
-            }*/
-
             self->x += self->xspeed;
             self->y += self->yspeed;
 
@@ -831,6 +816,22 @@ void pa_enemyBreakBlock(paEntity_t* self, uint16_t newDirection, int16_t speed, 
 
 void pa_animateEnemy(paEntity_t* self)
 {
+    bool useAggressiveSprites = false;
+    switch (self->state)
+    {
+        case PA_EN_ST_NORMAL:
+        default:
+            useAggressiveSprites = false;
+            break;
+        case PA_EN_ST_AGGRESSIVE:
+        case PA_EN_ST_BREAK_BLOCK:
+            useAggressiveSprites = true;
+            break;
+        case PA_EN_ST_RUNAWAY:
+            useAggressiveSprites = (self->gameData->frameCount % 2);
+            break;
+    }
+
     if (self->xspeed != 0)
     {
         if ((self->xspeed < 0) || (self->xspeed > 0))
@@ -840,8 +841,7 @@ void pa_animateEnemy(paEntity_t* self)
 
             if (self->gameData->frameCount % 5 == 0)
             {
-                self->spriteIndex
-                    = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+                self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2) + (useAggressiveSprites ? 4 : 0);
                 self->facingDirection = self->spriteFlipHorizontal ? PA_DIRECTION_WEST : PA_DIRECTION_EAST;
             }
         }
@@ -854,7 +854,7 @@ void pa_animateEnemy(paEntity_t* self)
     {
         if (self->gameData->frameCount % 5 == 0)
         {
-            self->spriteIndex          = PA_SP_ENEMY_SOUTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+            self->spriteIndex          = PA_SP_ENEMY_SOUTH + (useAggressiveSprites ? 4 : 0);
             self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
             self->facingDirection      = PA_DIRECTION_SOUTH;
         }
@@ -863,7 +863,7 @@ void pa_animateEnemy(paEntity_t* self)
     {
         if (self->gameData->frameCount % 5 == 0)
         {
-            self->spriteIndex          = PA_SP_ENEMY_NORTH + ((self->state != PA_EN_ST_NORMAL) ? 4 : 0);
+            self->spriteIndex          = PA_SP_ENEMY_NORTH + (useAggressiveSprites ? 4 : 0);
             self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
             self->facingDirection      = PA_DIRECTION_NORTH;
         }
@@ -1072,12 +1072,6 @@ void despawnWhenOffscreen(paEntity_t* self)
 
 void pa_destroyEntity(paEntity_t* self, bool respawn)
 {
-    /*if (respawn && !(self->homeTileX == 0 && self->homeTileY == 0))
-    {
-        self->tilemap->map[self->homeTileY * self->tilemap->mapWidth + self->homeTileX] = self->type + 128;
-    }*/
-
-    // self->entityManager->activeEntities--;
     self->active = false;
 }
 
@@ -1172,7 +1166,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
                 {
                     self->xspeed = 0;
                     self->yspeed = 0;
-                    soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
+                    soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
                 }
             }
 
@@ -1205,8 +1199,9 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
         case PA_ENTITY_BONUS_ITEM:
         {
             pa_scorePoints(self->gameData, other->scoreValue);
+            self->gameData->leds[ledRemap[0]].g = 0xFF;
 
-            soundPlaySfx(&self->soundManager->sndCoin, MIDI_SFX);
+            soundPlaySfx(&self->soundManager->sndBonus, MIDI_SFX);
 
             paEntity_t* createdEntity = pa_createScoreDisplay(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
                                                               (self->y >> SUBPIXEL_RESOLUTION) - 4);
@@ -1249,7 +1244,9 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             self->xspeed = other->xspeed * 2;
             self->yspeed = other->yspeed * 2;
 
-            uint16_t pointsScored = hitBlockComboScores[other->scoreValue];
+            uint16_t pointsScored = hitBlockComboScores[(other->scoreValue < SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1)
+                                                            ? other->scoreValue
+                                                            : SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1];
             pa_scorePoints(self->gameData, pointsScored);
             other->scoreValue++;
 
@@ -1260,7 +1257,7 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
                 createdEntity->scoreValue = pointsScored;
             }
 
-            soundPlaySfx(&(self->soundManager->sndHurt), 2);
+            soundPlaySfx(&(self->soundManager->sndSquish), 2);
             killEnemy(self);
             break;
         }
@@ -1278,27 +1275,6 @@ void pa_dummyCollisionHandler(paEntity_t* self, paEntity_t* other)
 
 bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
-    /*switch (tileId)
-    {
-        case PA_TILE_COIN_1 ... PA_TILE_COIN_3:
-        {
-            pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
-            addCoins(self->gameData, 1);
-            pa_scorePoints(self->gameData, 50);
-            break;
-        }
-        case PA_TILE_LADDER:
-        {
-            self->gravityEnabled = false;
-            self->falling = false;
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }*/
-
     if (pa_isSolid(tileId))
     {
         switch (direction)
@@ -1313,9 +1289,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 self->yspeed = 0;
                 break;
             case 4: // DOWN
-                // Landed on platform
-                self->falling = false;
-                self->yspeed  = 0;
+                self->yspeed = 0;
                 break;
             default: // Should never hit
                 return false;
@@ -1329,51 +1303,6 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
 
 bool pa_enemyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
-    /*switch (tileId)
-    {
-        case PA_TILE_BOUNCE_BLOCK:
-        {
-            switch (direction)
-            {
-                case 0:
-                    // hitBlock->xspeed = -64;
-                    if (tileId == PA_TILE_BOUNCE_BLOCK)
-                    {
-                        self->xspeed = 48;
-                    }
-                    break;
-                case 1:
-                    // hitBlock->xspeed = 64;
-                    if (tileId == PA_TILE_BOUNCE_BLOCK)
-                    {
-                        self->xspeed = -48;
-                    }
-                    break;
-                case 2:
-                    // hitBlock->yspeed = -128;
-                    if (tileId == PA_TILE_BOUNCE_BLOCK)
-                    {
-                        self->yspeed = 48;
-                    }
-                    break;
-                case 4:
-                    // hitBlock->yspeed = (tileId == PA_TILE_BRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PA_TILE_BOUNCE_BLOCK)
-                    {
-                        self->yspeed = -48;
-                    }
-                    break;
-                default:
-                    break;
-            }
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }*/
-
     if (pa_isSolid(tileId))
     {
         switch (direction)
@@ -1388,9 +1317,7 @@ bool pa_enemyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, 
                 self->yspeed = 0;
                 break;
             case 4: // DOWN
-                // Landed on platform
-                self->falling = false;
-                self->yspeed  = 0;
+                self->yspeed = 0;
                 break;
             default: // Should never hit
                 return false;
@@ -1411,7 +1338,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
 {
     if (pa_isSolid(tileId))
     {
-        soundPlaySfx(&(self->soundManager->sndHit), 1);
+        soundPlaySfx(&(self->soundManager->sndBlockStop), 1);
 
         self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth
                            + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)]
@@ -1454,7 +1381,10 @@ void pa_executeSpawnBlockCombo(paEntity_t* self, uint8_t tx, uint8_t ty, uint16_
             {
                 pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
                 self->gameData->remainingBlocks--;
-                pa_scorePoints(self->gameData, spawnBlockComboScores[self->scoreValue]);
+                pa_scorePoints(self->gameData,
+                               spawnBlockComboScores[(self->scoreValue < SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1)
+                                                         ? self->scoreValue
+                                                         : SPAWN_BLOCK_COMBO_SCORE_TABLE_LENGTH - 1]);
                 self->entityManager->gameData->remainingEnemies--;
             }
             else
@@ -1503,7 +1433,10 @@ void pa_updateBreakBlock(paEntity_t* self)
                     pointsScored = spawnBlockComboScores[self->scoreValue];
 
                     pa_scorePoints(self->gameData, pointsScored);
-                    soundPlaySfx(&(self->soundManager->sndCoin), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager->sndBonus), BZR_STEREO);
+                    self->gameData->leds[4].r = 0xFF;
+                    self->gameData->leds[4].g = 0xFF;
+
                     self->entityManager->gameData->remainingEnemies--;
 
                     pa_executeSpawnBlockCombo(self, tx + 1, ty, self->scoreValue + 1);
@@ -1521,11 +1454,6 @@ void pa_updateBreakBlock(paEntity_t* self)
 
                     createdEntity = pa_createHotDog(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
                                                     (self->y >> SUBPIXEL_RESOLUTION) - 4);
-
-                    /*createdEntity
-                        = pa_createBonusItem(self->entityManager, (self->x >> SUBPIXEL_RESOLUTION) - 4,
-                                                (self->y >> SUBPIXEL_RESOLUTION) - 4);*/
-
                     break;
                 }
                 default:
@@ -1545,13 +1473,6 @@ void pa_updateBreakBlock(paEntity_t* self)
             pa_destroyEntity(self, false);
         }
     }
-
-    /*if(self->scoreValue > 0){
-        char scoreStr[32];
-        snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32, self->scoreValue);
-        drawText(&(self->gameData->scoreFont), c050, scoreStr, self->x >> SUBPIXEL_RESOLUTION, self->y >>
-    SUBPIXEL_RESOLUTION);
-    }*/
 }
 
 void updateEntityDead(paEntity_t* self)
@@ -1615,39 +1536,7 @@ void killEnemy(paEntity_t* target)
 
 void pa_playerOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
 {
-    /*switch (tileId)
-    {
-        case PA_TILE_COIN_1 ... PA_TILE_COIN_3:
-        {
-            pa_setTile(self->tilemap, tx, ty, PA_TILE_EMPTY);
-            addCoins(self->gameData, 1);
-            pa_scorePoints(self->gameData, 50);
-            break;
-        }
-        case PA_TILE_LADDER:
-        {
-            if (self->gravityEnabled)
-            {
-                self->gravityEnabled = false;
-                self->xspeed         = 0;
-            }
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
-
-    if (!self->gravityEnabled && tileId != PA_TILE_LADDER)
-    {
-        self->gravityEnabled = true;
-        self->falling        = true;
-        if (self->yspeed < 0)
-        {
-            self->yspeed = -32;
-        }
-    }*/
+    // Nothing to do.
 }
 
 void pa_defaultOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
@@ -1714,6 +1603,8 @@ void pa_updateBonusItem(paEntity_t* self)
             pa_moveEntityWithTileCollisions(self);
             break;
     }
+
+    pa_detectEntityCollisions(self);
 }
 
 uint16_t pa_getBonusItemValue(int16_t elapsedTime)

@@ -123,7 +123,7 @@ static void timerEnterMode(void)
     // Disable speaker for timer
     setDacShutdown(true);
 
-    timerData = calloc(1, sizeof(timerMode_t));
+    timerData = heap_caps_calloc(1, sizeof(timerMode_t), MALLOC_CAP_8BIT);
 
     loadFont("ibm_vga8.font", &timerData->textFont, false);
     loadFont("seven_segment.font", &timerData->numberFont, false);
@@ -145,7 +145,7 @@ static void timerExitMode(void)
     freeWsg(&timerData->aWsg);
     freeWsg(&timerData->bWsg);
 
-    free(timerData);
+    heap_caps_free(timerData);
     timerData = NULL;
 }
 

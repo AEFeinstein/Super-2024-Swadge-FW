@@ -235,16 +235,16 @@ void IRAM_ATTR handle_advanced_usb_control_set(const uint8_t* data, int datalen)
                 {
                     if (advanced_usb_scratch_buffer_data)
                     {
-                        free(advanced_usb_scratch_buffer_data);
+                        heap_caps_free(advanced_usb_scratch_buffer_data);
                     }
-                    advanced_usb_scratch_buffer_data      = calloc(1, value);
+                    advanced_usb_scratch_buffer_data      = heap_caps_calloc(1, value, MALLOC_CAP_8BIT);
                     advanced_usb_scratch_buffer_data_size = value;
                 }
                 if (value == 0)
                 {
                     if (advanced_usb_scratch_buffer_data)
                     {
-                        free(advanced_usb_scratch_buffer_data);
+                        heap_caps_free(advanced_usb_scratch_buffer_data);
                     }
                     advanced_usb_scratch_buffer_data_size = 0;
                 }

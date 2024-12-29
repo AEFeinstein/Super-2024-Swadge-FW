@@ -494,12 +494,7 @@ void cg_drawGroveTutorial(cGrove_t* cg)
                                 3.0);
             break;
         }
-        case 4:
-        {
-            // Menu
-            break;
-        }
-        case 5:
+        case 6:
         {
             // Getting started
             drawWsgSimpleScaled(&cg->grove.eggs[0], (TFT_WIDTH - (4 * cg->grove.eggs[0].w)) >> 1, 110, 4.0, 4.0);

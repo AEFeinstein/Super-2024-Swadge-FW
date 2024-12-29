@@ -137,7 +137,7 @@ void addOrRemoveNote(sequencerVars_t* sv, bool playPreview)
     }
 
     // Make a new note
-    sequencerNote_t* newNote = calloc(1, sizeof(sequencerNote_t));
+    sequencerNote_t* newNote = heap_caps_calloc(1, sizeof(sequencerNote_t), MALLOC_CAP_8BIT);
     newNote->midiNum         = 108 - sv->cursorPos.y;
     // sv->songParams.grid is denominator, i.e. quarter note grid is 4, eighth note grid is 8, etc.
     newNote->sixteenthOn  = sv->cursorPos.x;
@@ -155,8 +155,8 @@ void addOrRemoveNote(sequencerVars_t* sv, bool playPreview)
             && (setNote->sixteenthOff) > (newNote->sixteenthOn))
         {
             // Overlap, delete note
-            free(newNote);
-            free(setNote);
+            heap_caps_free(newNote);
+            heap_caps_free(setNote);
             removeEntry(&sv->notes, noteNode);
 
             // Return, nothing to add

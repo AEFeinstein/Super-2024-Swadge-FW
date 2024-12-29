@@ -85,7 +85,11 @@ void cg_initSpar(cGrove_t* grove)
     midiGmOn(cg->mPlayer);
     globalMidiPlayerPlaySong(&cg->spar.sparBGM, MIDI_BGM);
 
+    // Play BGM
+    globalMidiPlayerPlaySong(&cg->spar.sparBGM, MIDI_BGM);
+
     // Load the splash screen
+    // TODO: Load tutorial the first time mode is loaded
     cg->spar.state = CG_SPAR_SPLASH;
 }
 
@@ -108,7 +112,7 @@ void cg_deInitSpar()
     {
         freeWsg(&cg->spar.attackIcons[idx]);
     }
-    free(cg->spar.attackIcons);
+    heap_caps_free(cg->spar.attackIcons);
     freeWsg(&cg->spar.dojoBG);
 }
 
