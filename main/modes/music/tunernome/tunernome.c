@@ -44,20 +44,26 @@
 #define SENSITIVITY                  5
 #define TONAL_DIFF_IN_TUNE_DEVIATION 10
 
-#define METRONOME_CENTER_X   TFT_WIDTH / 2
-#define METRONOME_CENTER_Y   TFT_HEIGHT - (2 * tunernome->ibm_vga8.height) - 10 - CORNER_OFFSET
-#define TUNER_CENTER_Y       TFT_HEIGHT - tunernome->ibm_vga8.height - 8 - CORNER_OFFSET
-#define METRONOME_RADIUS     125
-#define TUNER_RADIUS         80
-#define TUNER_TEXT_Y_OFFSET  30
-#define TUNER_ARROW_Y_OFFSET 8
-#define INITIAL_BPM          120
-#define MAX_BPM              400
-#define MAX_BEATS            16 // I mean, realistically, who's going to have more than 16 beats in a measure?
-// #define METRONOME_CLICK_MS   35
-#define BPM_CHANGE_FIRST_MS  500
-#define BPM_CHANGE_FAST_MS   2000
-#define BPM_CHANGE_REPEAT_MS 50
+#define METRONOME_GRAPHIC_BASE_HEIGHT 25
+#define METRONOME_GRAPHIC_Y           70
+#define METRONOME_CENTER_X            (TFT_WIDTH / 2)
+#define METRONOME_CENTER_Y            (TFT_HEIGHT - (2 * tunernome->ibm_vga8.height) - 10 - CORNER_OFFSET - METRONOME_GRAPHIC_BASE_HEIGHT)
+#define TUNER_CENTER_Y                (TFT_HEIGHT - tunernome->ibm_vga8.height - 8 - CORNER_OFFSET)
+#define METRONOME_RADIUS              (125 - METRONOME_GRAPHIC_BASE_HEIGHT)
+#define METRONOME_WEIGHT_SIZE_RADIUS  5 // total diameter is 1 + (2 * this value)
+#define METRONOME_WEIGHT_MIN_RADIUS   (METRONOME_WEIGHT_SIZE_RADIUS + 2.0) // 1px for center of weight, and 1px for tip of arm
+#define METRONOME_WEIGHT_MAX_RADIUS   (METRONOME_RADIUS - METRONOME_WEIGHT_MIN_RADIUS)
+#define METRONOME_WEIGHT_RADIUS_RANGE (METRONOME_WEIGHT_MAX_RADIUS - METRONOME_WEIGHT_MIN_RADIUS)
+#define TUNER_RADIUS                  80
+#define TUNER_TEXT_Y_OFFSET           30
+#define TUNER_ARROW_Y_OFFSET          8
+#define INITIAL_BPM                   120
+#define MAX_BPM                       400
+#define MAX_BEATS                     16 // I mean, realistically, who's going to have more than 16 beats in a measure?
+// #define METRONOME_CLICK_MS            35 // superseded by midis
+#define BPM_CHANGE_FIRST_MS           500
+#define BPM_CHANGE_FAST_MS            2000
+#define BPM_CHANGE_REPEAT_MS          50
 
 // Musical constant, do not change
 #define NUM_SEMITONES 12
@@ -129,7 +135,9 @@ typedef struct
     wsg_t radiostarsArrowWsg;
     wsg_t logbookArrowWsg;
     wsg_t flatWsg;
-    wsg_t background;
+    wsg_t backgroundWsg;
+    wsg_t metronomeTopWsg;
+    wsg_t metronomeBottomWsg;
 
     int32_t blinkTimerUs;
     bool isSilent;
@@ -327,7 +335,9 @@ void tunernomeEnterMode(void)
     loadWsg("arrow12.wsg", &(tunernome->radiostarsArrowWsg), false);
     loadWsg("arrow18.wsg", &(tunernome->logbookArrowWsg), false);
     loadWsg("flat_mm.wsg", &(tunernome->flatWsg), false);
-    loadWsg("woodBackground.wsg", &(tunernome->background), false);
+    loadWsg("woodBackground.wsg", &(tunernome->backgroundWsg), false);
+    loadWsg("metronomeTop.wsg", &(tunernome->metronomeTopWsg), false);
+    loadWsg("metronomeBottom.wsg", &(tunernome->metronomeBottomWsg), false);
 
     tunernome->beatLength   = 4;
     tunernome->beatCtr      = 0;
@@ -420,7 +430,9 @@ void tunernomeExitMode(void)
     freeWsg(&(tunernome->radiostarsArrowWsg));
     freeWsg(&(tunernome->logbookArrowWsg));
     freeWsg(&(tunernome->flatWsg));
-    freeWsg(&(tunernome->background));
+    freeWsg(&(tunernome->backgroundWsg));
+    freeWsg(&(tunernome->metronomeTopWsg));
+    freeWsg(&(tunernome->metronomeBottomWsg));
 
     heap_caps_free(tunernome);
 }
@@ -1063,12 +1075,21 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 }
             }
 
+            drawWsg(&(tunernome->metronomeTopWsg), (TFT_WIDTH - tunernome->metronomeTopWsg.w) / 2, METRONOME_GRAPHIC_Y, false, false, 0);
+
             // Draw metronome arm based on the value of tAccumulatedUs, which is between (0, usPerBeat)
             float intermedX = -1 * cosf(tunernome->tAccumulatedUs * M_PI / tunernome->usPerBeat);
             float intermedY = -1 * sinf(tunernome->tAccumulatedUs * M_PI / tunernome->usPerBeat);
-            int x           = round(METRONOME_CENTER_X - (intermedX * METRONOME_RADIUS));
-            int y           = round(METRONOME_CENTER_Y - (ABS(intermedY) * METRONOME_RADIUS));
-            drawLine(METRONOME_CENTER_X, METRONOME_CENTER_Y, x, y, c555, 0);
+            int16_t armX    = round(METRONOME_CENTER_X - (0.5 * intermedX * METRONOME_RADIUS));
+            int16_t armY    = round(METRONOME_CENTER_Y - ((0.5 * ABS(intermedY) + 0.5) * METRONOME_RADIUS));
+            double weightRadiusPercent = (MAX_BPM - tunernome->bpm) / ((float) (MAX_BPM - 1));
+            double weightRadius = weightRadiusPercent * METRONOME_WEIGHT_RADIUS_RANGE + METRONOME_WEIGHT_MIN_RADIUS;
+            int16_t weightX = round(METRONOME_CENTER_X - (0.5 * intermedX * weightRadius));
+            int16_t weightY = round(METRONOME_CENTER_Y - (0.5 * ABS(intermedY) + 0.5) * weightRadius);
+            //printf("weightRadiusPercent = %f, x = %"PRIi16", y = %"PRIi16"\n", weightRadiusPercent, weightX, weightY);
+            drawLine(METRONOME_CENTER_X, METRONOME_CENTER_Y, armX, armY, c333, 0);
+            drawCircleFilled(weightX, weightY, METRONOME_WEIGHT_SIZE_RADIUS, c111);
+            drawWsg(&(tunernome->metronomeBottomWsg), (TFT_WIDTH - tunernome->metronomeBottomWsg.w) / 2, METRONOME_GRAPHIC_Y, false, false, 0);
             break;
         }
     }
@@ -1410,7 +1431,7 @@ void tunernomeSampleHandler(uint16_t* samples, uint32_t sampleCnt)
  */
 void tunernomeBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    paletteColor_t* const src = tunernome->background.px;
+    paletteColor_t* const src = tunernome->backgroundWsg.px;
     paletteColor_t* dst = getPxTftFramebuffer();
     for(int16_t row = y; row < y + h; row++)
     {//
