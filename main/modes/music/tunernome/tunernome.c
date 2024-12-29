@@ -497,7 +497,9 @@ static inline int16_t getSemiDiffAround(uint16_t idx)
 void recalcMetronome(void)
 {
     // Figure out how many microseconds are in one beat
+    double ratio = tunernome->tAccumulatedUs / (double) tunernome->usPerBeat;
     tunernome->usPerBeat = (60 * 1000000) / tunernome->bpm;
+    tunernome->tAccumulatedUs = round(tunernome->usPerBeat * ratio);
 }
 
 // TODO: make this compatible with instruments with an odd number of notes
@@ -1082,7 +1084,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
             float intermedY = -1 * sinf(tunernome->tAccumulatedUs * M_PI / tunernome->usPerBeat);
             int16_t armX    = round(METRONOME_CENTER_X - (0.5 * intermedX * METRONOME_RADIUS));
             int16_t armY    = round(METRONOME_CENTER_Y - ((0.5 * ABS(intermedY) + 0.5) * METRONOME_RADIUS));
-            double weightRadiusPercent = (MAX_BPM - tunernome->bpm) / ((float) (MAX_BPM - 1));
+            double weightRadiusPercent = (MAX_BPM - tunernome->bpm) / ((double) (MAX_BPM - 1));
             double weightRadius = weightRadiusPercent * METRONOME_WEIGHT_RADIUS_RANGE + METRONOME_WEIGHT_MIN_RADIUS;
             int16_t weightX = round(METRONOME_CENTER_X - (0.5 * intermedX * weightRadius));
             int16_t weightY = round(METRONOME_CENTER_Y - (0.5 * ABS(intermedY) + 0.5) * weightRadius);
