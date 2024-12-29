@@ -125,6 +125,7 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
         {
             // Move on
             cg->spar.state = CG_SPAR_MENU;
+            // TODO: Assign rewards
         }
         return;
     }

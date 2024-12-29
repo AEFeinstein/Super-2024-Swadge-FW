@@ -36,6 +36,65 @@ static const char* difficultyStrs[] = {"Beginner", "Very Easy", "Easy", "Medium"
 
 static const int16_t sparMatchTimes[] = {30, 60, 90, 120, 999};
 
+static const char* tutorialText[] = {
+    "Sparring Tutorial",
+    "Welcome to the Grove! Here you can test the skill of your Chowa against a randomly generated opponent.",
+    // Draw two Chowa cheering
+
+    "The Dojo",
+    "Your Chowa will always be on the left, and you opponent on the right. The opponent will be scaled depending on "
+    "the difficulty selected.",
+    // Draw two Chowa facing off
+
+    "Readiness bar",
+    "Each Chowa has three status bars behind them. The green represents how ready the Chowa is. Press the button "
+    "corresponding with the action you want the Chowa to use to repeatedly to encourage them to get ready faster. "
+    "Switching moves int eh middle will confuse the chowa, and their readiness will take a hit.",
+
+    "Stamina/HP",
+    "The yellow bar is stamina, each move uses an amount of stamina and when the stamina bar is empty the Chowa "
+    "will be exhausted. Every action aside from standing still uses stamina. The red bar is health, when it reaches "
+    "zero that Chowa loses. The bars will grow in size as the Chowa's Stamina and Health increase.",
+    // Draw a green, yellow and red bar.
+
+    "Exhaustion",
+    "When the Chowa are exhausted, they will sit down and try to recover. They will stand back up either once their "
+    "stamina bar is full again (Press B rapidly to fill) or they're ready again (Press A rapidly to fill). Without "
+    "encouragement, the Stamina and readiness will fill on their own.",
+    // Draw exhausted Chowa
+
+    "Once Ready",
+    "Once ready, a Chowa will approach and wait for a second to see if their opponent is also ready. If they aren't "
+    "then the other Chowa will take the full brunt of the attacker's move. If they both ready up in time, then "
+    "whoever's picked the better move does damage.",
+
+    "Punches",
+    "There are two types of punches: Regular and Fast. The regular punch can be selected by pressing up, the fast "
+    "punch can be selected by pressing down.",
+    // Draw Punch icons
+
+    "Kicks",
+    "There are two types of kicks: Regular and Jumping. The regular kick can be selected by pressing left, the "
+    "jumping kick can be selected by pressing right.",
+    // Draw Kick icons
+
+    "Other", "A is headbutt. B is dodge, which cannot do damage but will always avoid incoming damage.",
+    // Draw Headbutt and dodge icons
+
+    "Win condition",
+    "To win, your Chowa must completely drain it's opponents stamina. The opponent can only win by doing the same "
+    "to your Chowa. If neither Chowa strikes the knockout blow, the match will result in a draw. If you win, you'll "
+    "get a prize!",
+    // Draw a crying Chowa and a cheering chowa
+
+    "You're Ready!",
+    "Now go get your Chowa ready to fight! If you need to look at this tutorial again, just click the 'tutorial' "
+    "button on the spar menu."
+    // Draw a cake
+};
+
+static const char startText[] = "Press Pause to continue";
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -147,7 +206,7 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
     char buffer[32];
 
     // Draw match title
-    snprintf(buffer, sizeof(buffer) - 1, "%s, round %d", cg->spar.match.data.matchTitle, cg->spar.match.round);
+    snprintf(buffer, sizeof(buffer) - 1, "%s", cg->spar.match.data.matchTitle);
     drawText(&cg->largeMenuFont, c000, buffer, (TFT_WIDTH - textWidth(&cg->largeMenuFont, buffer)) >> 1, 8);
 
     // Time
@@ -206,6 +265,117 @@ void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs)
                 break;
             }
         }
+    }
+}
+
+/**
+ * @brief Draws the tutorial for the tutorial
+ *
+ * @param cg Game Data
+ */
+void cg_drawSparTutorial(cGrove_t* cg)
+{
+    // Blank
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+
+    // Draw text based on page
+    drawText(&cg->largeMenuFont, c555, tutorialText[cg->spar.tutorialPage * 2],
+             (TFT_WIDTH - textWidth(&cg->largeMenuFont, tutorialText[cg->spar.tutorialPage * 2])) >> 1, 10);
+
+    int16_t xOff = 16;
+    int16_t yOff = 32;
+    drawTextWordWrap(&cg->menuFont, c555, tutorialText[(cg->spar.tutorialPage * 2) + 1], &xOff, &yOff, TFT_WIDTH - 16,
+                     TFT_HEIGHT - 16);
+
+    // Draw art based on page
+    switch (cg->spar.tutorialPage)
+    {
+        case 0:
+        {
+            // Draw the welcome screen
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][26],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][26].h - 100)) >> 1, 100, 3, 3);
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_ADULT][26],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_ADULT][26].h + 100)) >> 1, 80, 3, 3);
+            break;
+        }
+        case 1:
+        {
+            // Dojo
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][49],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][49].h - 100)) >> 1, 110, 3, 3);
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_ADULT][47],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_ADULT][47].h + 100)) >> 1, 90, 3, 3);
+            break;
+        }
+        case 3:
+        {
+            // Stamina/HP/Readiness bars
+            fillDisplayArea(80, 180, 84, TFT_HEIGHT - 16, c500);
+            fillDisplayArea(88, 200, 92, TFT_HEIGHT - 16, c550);
+            fillDisplayArea(96, 160, 100, TFT_HEIGHT - 16, c050);
+            break;
+        }
+        case 4:
+        {
+            // Exhaustion
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][56],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][56].h)) >> 1, 140, 3, 3);
+            break;
+        }
+        case 6:
+        {
+            // Punches
+            drawWsgSimpleScaled(&cg->spar.attackIcons[1], (TFT_WIDTH - 2 * (64 + cg->spar.attackIcons[3].h)) >> 1, 120, 2, 2);
+            drawWsgSimpleScaled(&cg->spar.attackIcons[2], (TFT_WIDTH + 32) >> 1, 120, 2, 2);
+            break;
+        }
+        case 7:
+        {
+            // Kicks
+            drawWsgSimpleScaled(&cg->spar.attackIcons[4], (TFT_WIDTH - 2 * (64 + cg->spar.attackIcons[3].h)) >> 1, 120, 2, 2);
+            drawWsgSimpleScaled(&cg->spar.attackIcons[5], (TFT_WIDTH + 32) >> 1, 120, 2, 2);
+            break;
+        }
+        case 8:
+        {
+            // Headbutt/Dodge
+            drawWsgSimpleScaled(&cg->spar.attackIcons[3], (TFT_WIDTH - 2 * (64 + cg->spar.attackIcons[3].h)) >> 1, 100, 2, 2);
+            drawWsgSimpleScaled(&cg->spar.attackIcons[0], (TFT_WIDTH + 32) >> 1, 100, 2, 2);
+            break;
+        }
+        case 9:
+        {
+            // Win Condition
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][8],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][8].h + 100)) >> 1, 140, 3, 3);
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_ADULT][61],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_ADULT][61].h - 100)) >> 1, 110, 3, 3);
+            break;
+        }
+        case 10:
+        {
+            // Done
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_ADULT][10],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_ADULT][10].h)) >> 1, 90, 3, 3);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    if (cg->spar.tutorialPage != 0)
+    {
+        drawWsgSimple(&cg->arrow, 8, 180);
+    }
+    if (cg->spar.tutorialPage != 10)
+    {
+        drawWsg(&cg->arrow, 8, 200, false, true, 0);
+    }
+    else
+    {
+        drawText(&cg->menuFont, c550, startText, 8, 200);
     }
 }
 

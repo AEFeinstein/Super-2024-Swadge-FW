@@ -31,6 +31,8 @@ static const char* attackIcons[]
 
 static const int16_t sparMatchTimes[] = {30, 60, 90, 120, 999};
 
+static const char nvsTutorialKey[] = "cgSparTut";
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -84,7 +86,6 @@ void cg_initSpar(cGrove_t* grove)
     globalMidiPlayerPlaySong(&cg->spar.sparBGM, MIDI_BGM);
 
     // Load the splash screen
-    // TODO: Load tutorial the first time mode is loaded
     cg->spar.state = CG_SPAR_SPLASH;
 }
 
@@ -129,7 +130,15 @@ void cg_runSpar(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
-                    cg->spar.state = CG_SPAR_MENU;
+                    int32_t t;
+                    if (!readNvs32(nvsTutorialKey, &t))
+                    {
+                        cg->spar.state = CG_SPAR_TUTORIAL;
+                    }
+                    else
+                    {
+                        cg->spar.state = CG_SPAR_MENU;
+                    }
                 }
             }
             // Draw
@@ -250,14 +259,13 @@ void cg_runSpar(int64_t elapsedUs)
                         // Make Chowa Opponent
                         for (int idx = 0; idx < 6; idx++)
                         {
-                            cg->spar.opponent.stats[CG_SPEED]
-                                = (30 * cg->spar.aiSelect) + (esp_random() % 50);
+                            cg->spar.opponent.stats[CG_SPEED] = (30 * cg->spar.aiSelect) + (esp_random() % 50);
                         }
                         cg->spar.opponent.playerAffinity = 255;
                         cg->spar.opponent.type           = CG_KING_DONUT;
                         cg->spar.opponent.age            = esp_random() % 128;
-                        cg->spar.match.data.chowa[0] = &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]];
-                        cg->spar.match.data.chowa[1] = &cg->spar.opponent;
+                        cg->spar.match.data.chowa[0]     = &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]];
+                        cg->spar.match.data.chowa[1]     = &cg->spar.opponent;
                         cg_initSparMatch(cg, 0, sparMatchTimes[cg->spar.timerSelect], cg->spar.aiSelect,
                                          &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]]);
                         cg->spar.state = CG_SPAR_MATCH;
@@ -284,7 +292,34 @@ void cg_runSpar(int64_t elapsedUs)
         }
         case CG_SPAR_TUTORIAL:
         {
-            // TODO: Tutorial
+            // Handle input
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && evt.button & PB_DOWN)
+                {
+                    cg->spar.tutorialPage++;
+                    if (cg->spar.tutorialPage > 10)
+                    {
+                        cg->spar.tutorialPage = 10;
+                    }
+                }
+                if (evt.down && evt.button & PB_UP)
+                {
+                    cg->spar.tutorialPage--;
+                    if (cg->spar.tutorialPage < 0)
+                    {
+                        cg->spar.tutorialPage = 0;
+                    }
+                }
+                if (evt.down && evt.button & PB_START && cg->spar.tutorialPage == 10)
+                {
+                    cg->spar.state = CG_SPAR_MENU;
+                    writeNvs32(nvsTutorialKey, 1);
+                }
+            }
+            // Draw Tutorial
+            cg_drawSparTutorial(cg);
             break;
         }
         default:

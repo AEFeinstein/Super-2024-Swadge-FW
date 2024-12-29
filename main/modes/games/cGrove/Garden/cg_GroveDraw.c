@@ -38,7 +38,7 @@ static const char slotEmpty[]      = "No Chowa in this slot";
 static const char hatchingEgg[]    = "An egg is incubating!";
 static const char confirmDefault[] = "Press A to go back, press B to confirm";
 static const char abandonChowa[]   = "Release Chowa";
-static const char startGame[]      = "Press start to open the grove!";
+static const char startGame[]      = "Press Pause to open the grove!";
 
 static const char* tutorialText[]
     = {"Welcome",

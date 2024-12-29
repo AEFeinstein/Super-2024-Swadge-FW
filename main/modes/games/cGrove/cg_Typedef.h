@@ -520,6 +520,9 @@ typedef struct
     // Match
     cgMatch_t match;    ///< Match object
     cgChowa_t opponent; ///< Current opponent
+
+    // Tutorial
+    int8_t tutorialPage; ///< The page of the tutorial
 } cgSpar_t;
 
 //==============================================================================
