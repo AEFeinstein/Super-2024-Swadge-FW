@@ -6,6 +6,7 @@
 #include <esp_rom_gpio.h>
 #include <soc/gpio_sig_map.h>
 #include <string.h>
+#include <driver/gpio.h>
 
 #include "led_strip_encoder.h"
 #include "hdw-led.h"
@@ -60,6 +61,16 @@ esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
 
     if (GPIO_NUM_NC != gpioAlt)
     {
+        /* Initialize the GPIO of mirrored LED pin */
+        gpio_config_t mirror_gpio_config = {
+            .mode         = GPIO_MODE_OUTPUT,
+            .pin_bit_mask = 1ULL << gpioAlt,
+            .pull_up_en   = GPIO_PULLUP_ENABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .intr_type    = GPIO_INTR_DISABLE,
+        };
+        ESP_ERROR_CHECK(gpio_config(&mirror_gpio_config));
+
         // Mirror the output to another GPIO
         // Warning, this is a hack!! led_chan is a (rmt_channel_handle_t), which is
         // really a (rmt_channel_t *), and that struct has a private definition in
