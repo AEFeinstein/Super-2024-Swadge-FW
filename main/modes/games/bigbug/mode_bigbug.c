@@ -253,6 +253,7 @@ static void bb_EnterModeSkipIntro(void)
         else // rocketIdx == 0
         {
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
+            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 20;
             bigbug->gameData.entityManager.activeBooster->currentAnimationFrame = 40;
             bigbug->gameData.entityManager.activeBooster->pos.y                 = 50;
             bigbug->gameData.entityManager.activeBooster->updateFunction        = bb_updateHeavyFalling;
@@ -905,17 +906,39 @@ static void bb_DrawScene_Loadout_Select(void)
     drawLine(15, 123, 125, 123, bigbug->gameData.radar.playerPingRadius == 0 ? c550 : c222, 0);
     drawLine(15, 84, 15, 123, bigbug->gameData.radar.playerPingRadius == 0 ? c550 : c222, 13);
     drawLine(125, 84, 125, 123, bigbug->gameData.radar.playerPingRadius == 0 ? c550 : c222, 13);
+    if(bigbug->gameData.loadout.primaryWileIdx != 255)
+    {
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c333, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.primaryWileIdx].name, 20, 89);
+        snprintf(donuts, sizeof(donuts), "cooldown: %ds", bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.primaryWileIdx].cooldown);
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c345 : c333, donuts, 20, 110);
+    }
+    else
+    {
+        tWidth = textWidth(&bigbug->gameData.font, "none");
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c333, "none", (TFT_WIDTH >> 2) - (tWidth >> 1), 98);
+    }
     tWidth = textWidth(&bigbug->gameData.font, "primary wile");
     drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c333, "primary wile",
-             (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
+             (TFT_WIDTH >> 2) - (tWidth >> 1), 126);
 
     drawLine(155, 84, 265, 84, bigbug->gameData.radar.playerPingRadius == 1 ? c550 : c222, 0);
     drawLine(155, 123, 265, 123, bigbug->gameData.radar.playerPingRadius == 1 ? c550 : c222, 0);
     drawLine(155, 84, 155, 123, bigbug->gameData.radar.playerPingRadius == 1 ? c550 : c222, 13);
     drawLine(265, 84, 265, 123, bigbug->gameData.radar.playerPingRadius == 1 ? c550 : c222, 13);
+    if(bigbug->gameData.loadout.secondaryWileIdx != 255)
+    {
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c333, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.secondaryWileIdx].name, 160, 89);
+        snprintf(donuts, sizeof(donuts), "cooldown: %ds", bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.secondaryWileIdx].cooldown);
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c345 : c333, donuts, 160, 110);
+    }
+    else
+    {
+        tWidth = textWidth(&bigbug->gameData.font, "none");
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c333, "none", (TFT_WIDTH >> 2) * 3 - (tWidth >> 1), 98);
+    }
     tWidth = textWidth(&bigbug->gameData.font, "secondary wile");
     drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c333, "secondary wile",
-             (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
+             (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 126);
 
     if(bigbug->gameData.loadoutScreenData->blinkTimer > 126 && bigbug->gameData.radar.playerPingRadius == 2)
     {
@@ -928,9 +951,12 @@ static void bb_DrawScene_Loadout_Select(void)
     drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c333, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].name, 35,
              155);
 
-    if(true)//bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].purchased)
+    if(bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].purchased)
     {
         drawTextMarquee(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c325 : c225, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].description, 35, 170, 247, &bigbug->gameData.loadoutScreenData->marqueeTimer);
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c333, "hold", 35, 188);
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c500 : c333, "B", 73, 188);
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c333, "+", 86, 188);
         //draw the call sequence
         for(int i = 0; i < 6; i++)
         {
@@ -941,13 +967,19 @@ static void bb_DrawScene_Loadout_Select(void)
             }
             int32_t rotation = 180 + dir * 90;
             rotation = rotation % 360;
-            drawWsg(&bigbug->gameData.entityManager.sprites[BB_ARROW].frames[bigbug->gameData.radar.playerPingRadius == 2], 35 + i * 30, 182, false, false, rotation);
+            drawWsg(&bigbug->gameData.entityManager.sprites[BB_ARROW].frames[bigbug->gameData.radar.playerPingRadius == 2], 96 + i * 30, 182, false, false, rotation);
         }
     }
     else
     {
-        drawTriangleOutlined(209,155,246,155,246,192, c215,c215);
-        uint8_t numDonuts = ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts;
+        //draw lock
+        drawTriangleOutlined(205,155,246,155,246,196, c215,c215);
+        drawCircleFilled(237, 164, 5, c000);
+        drawCircleFilled(237, 164, 3, c215);
+        drawRectFilled(238, 163, 243, 165, c215);
+        drawRectFilled(229,165,245,178,c000);
+        drawRectFilled(236, 171, 238, 173, c215);
+
         snprintf(donuts, sizeof(donuts), "pay %d donut%s", bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost == 1 ? "" : "s");
         tWidth = textWidth(&bigbug->gameData.font, donuts);
         paletteColor_t textCol = c222;
@@ -955,14 +987,14 @@ static void bb_DrawScene_Loadout_Select(void)
         {
             if(bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost <= numDonuts)
             {
-                textCol = c555;
+                textCol = c550;
             }
             else
             {
                 textCol = c500;
             }
         }
-        drawText(&bigbug->gameData.font, textCol, donuts, (TFT_WIDTH>>1) - (tWidth>>1), 170);
+        drawText(&bigbug->gameData.font, textCol, donuts, (TFT_WIDTH>>1) - (tWidth>>1), 180);
     }
 
     drawRectFilled(0, primingEffectY+10, TFT_WIDTH, primingEffectY+20, c451);
@@ -1148,6 +1180,47 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
                     }
                 }
                 bigbug->gameData.loadoutScreenData->marqueeTimer = 0;
+            }
+            else if (evt.button == PB_A)
+            {
+                if(bigbug->gameData.radar.playerPingRadius == 0)
+                {
+                    if (bigbug->gameData.loadout.primaryWileIdx != 255)
+                    {
+                        bigbug->gameData.loadout.primaryWileIdx = 255;
+                    }
+                }
+                else if(bigbug->gameData.radar.playerPingRadius == 1)
+                {
+                    if (bigbug->gameData.loadout.secondaryWileIdx != 255)
+                    {
+                        bigbug->gameData.loadout.secondaryWileIdx = 255;
+                    }
+                }
+                else if(bigbug->gameData.radar.playerPingRadius == 2)
+                {
+                    if(!bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].purchased)
+                    {
+                        if(bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost <= ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts)
+                        {
+                            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts -= bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost;
+                            bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].purchased = true;
+                        }
+                    }
+                    else
+                    {
+                        if(bigbug->gameData.loadout.primaryWileIdx == 255 && bigbug->gameData.loadout.secondaryWileIdx != bigbug->gameData.loadoutScreenData->selectedWile)
+                        {
+                            //nothing was selected yet
+                            bigbug->gameData.loadout.primaryWileIdx = bigbug->gameData.loadoutScreenData->selectedWile;
+                        }
+                        else if(bigbug->gameData.loadout.secondaryWileIdx == 255 && bigbug->gameData.loadout.primaryWileIdx != bigbug->gameData.loadoutScreenData->selectedWile)
+                        {
+                            //nothing was selected yet
+                            bigbug->gameData.loadout.secondaryWileIdx = bigbug->gameData.loadoutScreenData->selectedWile;
+                        }
+                    }
+                }
             }
         }
     }

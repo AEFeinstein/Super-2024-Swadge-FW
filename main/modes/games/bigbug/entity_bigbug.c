@@ -3712,8 +3712,7 @@ void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self)
 
 void bb_afterGarbotnikIntro(bb_entity_t* self)
 {
-    self->gameData->loadoutScreenData = heap_caps_calloc(1, sizeof(bb_loadoutSelectScreenData_t), MALLOC_CAP_SPIRAM);
-    self->gameData->screen = BIGBUG_LOADOUT_SELECT_SCREEN;
+
 
     for (int i = 0; i < 3; i++)
     {
@@ -3721,22 +3720,26 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
         {
             self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[i];
 
-            bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
-            tData->tracking    = self->gameData->entityManager.activeBooster;
-            tData->midPointSqDist
-                = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
-                                                  - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
-                                              (tData->tracking->pos.y >> DECIMAL_BITS)
-                                                  - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
-                                      2));
-
-            tData->executeOnArrival = &bb_deployBooster;
-
-            self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
-
-            return;
+            break;
         }
     }
+
+    ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->numDonuts = 20;
+
+    self->gameData->loadoutScreenData = heap_caps_calloc(1, sizeof(bb_loadoutSelectScreenData_t), MALLOC_CAP_SPIRAM);
+    self->gameData->screen = BIGBUG_LOADOUT_SELECT_SCREEN;
+
+    bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
+    tData->tracking    = self->gameData->entityManager.activeBooster;
+    tData->midPointSqDist
+        = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
+                                            - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
+                                        (tData->tracking->pos.y >> DECIMAL_BITS)
+                                            - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
+                                2));
+
+    tData->executeOnArrival = &bb_deployBooster;
+    self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
 }
 
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self)

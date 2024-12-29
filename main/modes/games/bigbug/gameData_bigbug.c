@@ -93,7 +93,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
 
     // initialize the loadout data
     strcpy(gameData->loadout.allWiles[0].name, "Faulty Wile");
-    strcpy(gameData->loadout.allWiles[0].description, "Tends to explode in a few short seconds before establishing communication with the Death Dumpster. Still ironing out the kinks.");
+    strcpy(gameData->loadout.allWiles[0].description, "Tends to explode in a few short seconds before establishing comms with the Death Dumpster. Still ironing out the kinks.");
     gameData->loadout.allWiles[0].callSequence[0] = BB_DOWN;
     gameData->loadout.allWiles[0].callSequence[1] = BB_DOWN;
     gameData->loadout.allWiles[0].callSequence[2] = BB_LEFT;
@@ -102,7 +102,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[0].cost = bb_randomInt(1, 3);
 
     strcpy(gameData->loadout.allWiles[1].name, "Drill Bot");
-    strcpy(gameData->loadout.allWiles[1].description, "A robot that drills horizontally. Very obedient until the battery runs out.");
+    strcpy(gameData->loadout.allWiles[1].description, "A robot that drills horizontally. Very obedient until the battery runs out. May it go forth and destroy Pango.");
     gameData->loadout.allWiles[1].callSequence[0] = BB_LEFT;
     gameData->loadout.allWiles[1].callSequence[1] = BB_LEFT;
     gameData->loadout.allWiles[1].callSequence[2] = BB_LEFT;
@@ -163,6 +163,9 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[6].callSequence[3] = BB_NONE;
     gameData->loadout.allWiles[6].cooldown = 30;
     gameData->loadout.allWiles[6].cost = bb_randomInt(1, 3);
+
+    gameData->loadout.primaryWileIdx   = 255;
+    gameData->loadout.secondaryWileIdx = 255;
 }
 
 void bb_freeGameData(bb_gameData_t* gameData)
