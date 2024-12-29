@@ -326,21 +326,24 @@ void cg_drawSparTutorial(cGrove_t* cg)
         case 6:
         {
             // Punches
-            drawWsgSimpleScaled(&cg->spar.attackIcons[1], (TFT_WIDTH - 2 * (64 + cg->spar.attackIcons[3].h)) >> 1, 120, 2, 2);
+            drawWsgSimpleScaled(&cg->spar.attackIcons[1], (TFT_WIDTH - 2 * (64 + cg->spar.attackIcons[3].h)) >> 1, 120,
+                                2, 2);
             drawWsgSimpleScaled(&cg->spar.attackIcons[2], (TFT_WIDTH + 32) >> 1, 120, 2, 2);
             break;
         }
         case 7:
         {
             // Kicks
-            drawWsgSimpleScaled(&cg->spar.attackIcons[4], (TFT_WIDTH - 2 * (64 + cg->spar.attackIcons[3].h)) >> 1, 120, 2, 2);
+            drawWsgSimpleScaled(&cg->spar.attackIcons[4], (TFT_WIDTH - 2 * (64 + cg->spar.attackIcons[3].h)) >> 1, 120,
+                                2, 2);
             drawWsgSimpleScaled(&cg->spar.attackIcons[5], (TFT_WIDTH + 32) >> 1, 120, 2, 2);
             break;
         }
         case 8:
         {
             // Headbutt/Dodge
-            drawWsgSimpleScaled(&cg->spar.attackIcons[3], (TFT_WIDTH - 2 * (64 + cg->spar.attackIcons[3].h)) >> 1, 100, 2, 2);
+            drawWsgSimpleScaled(&cg->spar.attackIcons[3], (TFT_WIDTH - 2 * (64 + cg->spar.attackIcons[3].h)) >> 1, 100,
+                                2, 2);
             drawWsgSimpleScaled(&cg->spar.attackIcons[0], (TFT_WIDTH + 32) >> 1, 100, 2, 2);
             break;
         }

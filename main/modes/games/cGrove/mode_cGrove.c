@@ -197,8 +197,8 @@ static void cGroveEnterMode(void)
     }
 
     // Adjust Audio to use correct instruments
-    cg->mPlayer = globalMidiPlayerGet(MIDI_BGM);
-    cg->mPlayer->loop         = true;
+    cg->mPlayer       = globalMidiPlayerGet(MIDI_BGM);
+    cg->mPlayer->loop = true;
     midiGmOn(cg->mPlayer);
 
     // Init Chowa

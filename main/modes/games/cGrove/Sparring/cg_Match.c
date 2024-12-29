@@ -134,7 +134,7 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
             globalMidiPlayerPlaySong(&cg->spar.MenuBGM, MIDI_BGM);
 
             // If player won
-            if (cg->spar.match.data.result == CG_P1_WIN)
+            if (cg->spar.match.data.result[0] == CG_P1_WIN)
             {
                 size_t blobLen;
                 readNvsBlob(nvsKey, NULL, &blobLen);

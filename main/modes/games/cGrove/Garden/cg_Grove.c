@@ -794,7 +794,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 strcpy(cg->buffer, "");
                 textEntrySoftReset();
             }
-            
+
             textEntrySetPrompt(namePrompt);
             cg_groveDrawField(cg, 0);
             textEntryDraw(elapsedUS);
