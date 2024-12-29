@@ -46,6 +46,7 @@ typedef enum
     STUCK_HARPOON_DATA,
     SPIT_DATA,
     FOOD_CART_DATA,
+    WILE_DATA,
 } bb_data_type_t;
 
 
@@ -152,10 +153,26 @@ typedef struct
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
-    int8_t tileTime; // Only relevant for Garbotnik's dying scenario. Goes up with every tile collision
+    int8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
                      // on the ground and trigger a game over.
 } bb_physicsData_t;
+
+typedef struct
+{
+    //match bb_physicsData_t exactly
+    vec_t vel;
+    uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
+                             // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
+    uint8_t bounceDenominator;
+    int8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
+                     // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                     // on the ground and trigger a game over.
+    //new attributes
+    uint16_t lifetime;
+    uint8_t wileIdx; // the index of the wile to activate.
+}
+bb_wileData_t;
 
 typedef struct
 {
@@ -351,6 +368,7 @@ void bb_updateCarOpen(bb_entity_t* self);
 void bb_updateSpit(bb_entity_t* self);
 void bb_updatePangoAndFriends(bb_entity_t* self);
 void bb_updateDiveSummary(bb_entity_t* self);
+void bb_updateWile(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -376,6 +394,7 @@ void bb_drawHitEffect(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);

@@ -161,9 +161,6 @@ struct bb_gameData_t
 
     led_t leds[CONFIG_NUM_LEDS];
 
-    uint8_t changeBgm;
-    uint8_t currentBgm;
-
     bb_tilemap_t tilemap;
 
     int8_t neighbors[4][2]; // a handy table of left, up, right, and down offsets

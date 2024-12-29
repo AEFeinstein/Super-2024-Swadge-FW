@@ -203,9 +203,6 @@ void bb_freeGameData(bb_gameData_t* gameData)
 
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData)
 {
-    gameData->currentBgm = 0;
-    gameData->changeBgm  = 0;
-
     bb_resetGameDataLeds(gameData);
 }
 

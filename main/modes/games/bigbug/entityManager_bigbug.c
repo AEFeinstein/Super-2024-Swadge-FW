@@ -196,6 +196,10 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     entityManager->sprites[BB_FOOD_CART].originX = 36;
     entityManager->sprites[BB_FOOD_CART].originY = 56;
 
+    bb_loadSprite("wile", 1, 1, &entityManager->sprites[BB_WILE]);
+    entityManager->sprites[BB_WILE].originX = 6;
+    entityManager->sprites[BB_WILE].originY = 6;
+
     entityManager->sprites[BB_ARROW].frames    = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
     loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
     loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
@@ -1214,6 +1218,20 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             // sprites loaded just-in-time
             bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
+            break;
+        }
+        case BB_WILE:
+        {
+            bb_wileData_t* wData = heap_caps_calloc(1, sizeof(bb_wileData_t), MALLOC_CAP_SPIRAM);
+            wData->bounceNumerator = 1;
+            wData->bounceDenominator = 4;
+            bb_setData(entity, wData, WILE_DATA);
+
+            entity->halfHeight = 6 << DECIMAL_BITS;
+            entity->halfWidth  = 6 << DECIMAL_BITS;
+
+            entity->updateFunction = &bb_updateWile;
+            entity->drawFunction   = &bb_drawWile;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

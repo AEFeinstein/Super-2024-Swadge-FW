@@ -17,7 +17,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 200
-#define NUM_SPRITES  28 // The number of bb_sprite_t last accounted for BB_ARROW
+#define NUM_SPRITES  29 // The number of bb_sprite_t last accounted for BB_WILE
 
 //==============================================================================
 // Structs

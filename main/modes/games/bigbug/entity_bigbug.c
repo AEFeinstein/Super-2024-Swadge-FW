@@ -447,8 +447,8 @@ void bb_updatePhysicsObject(bb_entity_t* self)
 {
     bb_physicsData_t* pData = (bb_physicsData_t*)self->data;
     pData->vel.y++;
-    self->pos.x += (pData->vel.x * self->gameData->elapsedUs) >> 16;
-    self->pos.y += (pData->vel.y * self->gameData->elapsedUs) >> 16;
+    self->pos.x += (pData->vel.x * self->gameData->elapsedUs) >> 15;
+    self->pos.y += (pData->vel.y * self->gameData->elapsedUs) >> 15;
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
@@ -545,6 +545,48 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     }
 
     gData->fire = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
+    if(gData->fire && gData->activeWile != 255)
+    {
+        //Throw a wile!
+        bb_entity_t* wile = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, BB_WILE, 1,
+                                            self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+
+        if (wile != NULL)
+        {
+            midiPlayer_t* sfx = soundGetPlayerSfx();
+            midiPlayerReset(sfx);
+            soundPlaySfx(&self->gameData->sfxHarpoon, 1);
+
+            bb_wileData_t* wData = (bb_wileData_t*)wile->data;
+            wData->wileIdx = gData->activeWile;
+
+            //set the cooldown for this wile
+            if(gData->activeWile == self->gameData->loadout.primaryWileIdx)
+            {
+                self->gameData->loadout.primaryTimer = self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000;
+            }
+            else if(gData->activeWile == self->gameData->loadout.secondaryWileIdx)
+            {
+                self->gameData->loadout.secondaryTimer = self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown * 1000;
+            }
+            
+
+            //set the active wile to none (255).
+            gData->activeWile = 255;
+            //clear the call sequence inputs.
+            for(int input = 0; input < 5; input++)
+            {
+                self->gameData->loadout.playerInputSequence[input] = BB_NONE;
+            }
+            
+            int32_t x;
+            int32_t y;
+            getTouchCartesian(gData->phi, gData->r, &x, &y);
+            // Set wile's velocity
+            wData->vel.x = (x - 512) >> 2;
+            wData->vel.y = (-y + 512) >> 2;
+        }
+    }
 
     gData->harpoonCooldown -= self->gameData->elapsedUs >> 11;
     if (gData->harpoonCooldown < -250)
@@ -552,7 +594,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         gData->harpoonCooldown = -250;
     }
 
-    if (gData->touching && gData->harpoonCooldown < 0 && gData->numHarpoons > 0)
+    if (gData->touching && gData->harpoonCooldown < 0 && gData->numHarpoons > 0 && gData->activeWile == 255)
     {
         gData->harpoonCooldown = self->gameData->GarbotnikStat_fireTime;
         // Create a harpoon
@@ -562,9 +604,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             midiPlayer_t* sfx = soundGetPlayerSfx();
             midiPlayerReset(sfx);
-            midiPitchWheel(sfx, 14, bb_randomInt(14, 1683));
-
-            midiPitchWheel(sfx, 15, bb_randomInt(15, 1683));
             soundPlaySfx(&self->gameData->sfxHarpoon, 1);
             gData->numHarpoons -= 1;
             bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
@@ -829,17 +868,23 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     }
 
     //decrement the primary and secondary wile timers and wileNotification
-    self->gameData->loadout.primaryTimer -= self->gameData->elapsedUs >> 10;
-    //catch underflow, set to zero.
-    if(self->gameData->loadout.primaryTimer > self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000)
+    if(self->gameData->loadout.primaryWileIdx != 255)
     {
-        self->gameData->loadout.primaryTimer = 0;
+        self->gameData->loadout.primaryTimer -= self->gameData->elapsedUs >> 10;
+        //catch underflow, set to zero.
+        if(self->gameData->loadout.primaryTimer > self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000)
+        {
+            self->gameData->loadout.primaryTimer = 0;
+        }
     }
-    self->gameData->loadout.secondaryTimer -= self->gameData->elapsedUs >> 10;
-    //catch underflow, set to zero.
-    if(self->gameData->loadout.secondaryTimer > self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown  * 1000)
+    if(self->gameData->loadout.secondaryWileIdx != 255)
     {
-        self->gameData->loadout.secondaryTimer = 0;
+        self->gameData->loadout.secondaryTimer -= self->gameData->elapsedUs >> 10;
+        //catch underflow, set to zero.
+        if(self->gameData->loadout.secondaryTimer > self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown  * 1000)
+        {
+            self->gameData->loadout.secondaryTimer = 0;
+        }
     }
 
     // if 'a' button down, tether another entity if it's close enough
@@ -977,21 +1022,48 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             else
             {
                 //validate the input aqainst the primary and secondary wile call sequences
-                int8_t primaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence);
-                int8_t secondaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence);
-                if(primaryComparison == 1 && self->gameData->loadout.primaryTimer == 0)
+                int8_t primaryComparison = -2;
+                int8_t secondaryComparison = -2;
+                if(self->gameData->loadout.primaryWileIdx != 255)
                 {
-                    //activate the primary wile
-                    gData->activeWile = self->gameData->loadout.primaryWileIdx;
+                    primaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence);
+                    if(primaryComparison == 1 && self->gameData->loadout.primaryTimer == 0)
+                    {
+                        //activate the primary wile
+                        gData->activeWile = self->gameData->loadout.primaryWileIdx;
+                    }
                 }
-                else if(secondaryComparison == 1 && self->gameData->loadout.secondaryTimer == 0)
+                if(self->gameData->loadout.secondaryWileIdx != 255)
                 {
-                    //activate the secondary wile
-                    gData->activeWile = self->gameData->loadout.secondaryWileIdx;
+                    secondaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence);
+                    if(secondaryComparison == 1 && self->gameData->loadout.secondaryTimer == 0)
+                    {
+                        //activate the secondary wile
+                        gData->activeWile = self->gameData->loadout.secondaryWileIdx;
+                    }
                 }
-                else if((primaryComparison == -1 && self->gameData->loadout.primaryTimer == 0 && secondaryComparison == -1 && self->gameData->loadout.secondaryTimer == 0) ||
-                        (primaryComparison == -1 && self->gameData->loadout.primaryTimer == 0 && self->gameData->loadout.secondaryTimer != 0) ||
-                        (secondaryComparison == -1 && self->gameData->loadout.secondaryTimer == 0 && self->gameData->loadout.primaryTimer != 0))
+
+                bool primaryFail = self->gameData->loadout.primaryWileIdx == 255;
+                if(!primaryFail)
+                {
+                    primaryFail = self->gameData->loadout.primaryTimer != 0;
+                    if(!primaryFail)
+                    {
+                        primaryFail = primaryComparison == -1;
+                    }
+                }
+                
+                bool secondaryFail = self->gameData->loadout.secondaryWileIdx == 255;
+                if(!secondaryFail)
+                {
+                    secondaryFail = self->gameData->loadout.secondaryTimer != 0;
+                    if(!secondaryFail)
+                    {
+                        secondaryFail = secondaryComparison == -1;
+                    }
+                }
+
+                if(primaryFail && secondaryFail)
                 {
                     //reset the player input sequence to BB_NONEs
                     for(int i = 0; i < 5; i++)
@@ -2233,6 +2305,36 @@ void bb_updateDiveSummary(bb_entity_t* self)
     }
 }
 
+void bb_updateWile(bb_entity_t* self)
+{
+    bb_updatePhysicsObject(self);
+
+
+    bb_wileData_t* wData = (bb_wileData_t*)self->data;
+
+    // Update wile's lifetime. I think not using elapsed time is good enough.
+    if(wData->tileTime > 101 &&wData->lifetime == 0)
+    {
+        wData->lifetime = 1;
+    }
+    if(wData->lifetime > 0)
+    {
+        wData->lifetime++;
+    }
+    
+    if (wData->lifetime > 140)
+    {
+        //trigger the wile function
+        if(self->gameData->loadout.allWiles[wData->wileIdx].wileFunction != NULL)
+        {
+            self->gameData->loadout.allWiles[wData->wileIdx].wileFunction(self);
+        }
+        //and destroy the wile
+        bb_destroyEntity(self, false);
+        return;
+    }
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     if (GARBOTNIK_DATA != self->dataType)
@@ -2319,7 +2421,7 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
              TFT_HEIGHT - self->gameData->font.height - 2);
 
     //draw the wile call sequences
-    if(((self->gameData->btnState & 0b100000) >> 5) || gData->activeWile == self->gameData->loadout.primaryWileIdx)
+    if(self->gameData->loadout.primaryWileIdx != 255 && (((self->gameData->btnState & 0b100000) >> 5) || gData->activeWile == self->gameData->loadout.primaryWileIdx))
     {
         //primary wile
         drawRectFilled(0, 0, 140 - (self->gameData->loadout.primaryTimer * 140) / (self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000), 16, gData->activeWile == self->gameData->loadout.primaryWileIdx ? c050 : (self->gameData->loadout.primaryTimer == 0 ? c550 : c500));
@@ -2358,7 +2460,7 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         }
     }
 
-    if(((self->gameData->btnState & 0b100000) >> 5) || gData->activeWile == self->gameData->loadout.secondaryWileIdx)
+    if(self->gameData->loadout.secondaryWileIdx != 255 && (((self->gameData->btnState & 0b100000) >> 5) || gData->activeWile == self->gameData->loadout.secondaryWileIdx))
     {
         //secondary wile
         drawRectFilled(140, 0, 280 - (self->gameData->loadout.secondaryTimer * 140) / (self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown * 1000), 16, gData->activeWile == self->gameData->loadout.secondaryWileIdx ? c050 : (self->gameData->loadout.secondaryTimer == 0 ? c550 : c500));
@@ -2960,6 +3062,36 @@ void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
     }
 }
 
+void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    drawWsgSimple(
+        &entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
+        (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+        (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    bb_wileData_t* wData = (bb_wileData_t*)self->data;
+    if(wData->lifetime > 0)
+    {
+        //sample some arbitrary data to draw binary 1's and 0's out of the BGM straight above the wile
+        for(int i = 0; i < 17; i++)
+        {
+            if(self->gameData->bgm.data[i + (wData->lifetime>>2)] & 1)
+            {
+                drawText(&self->gameData->font, c511, "1", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
+                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 30 - i * 15);
+            }
+            else
+            {
+                drawText(&self->gameData->font, c511, "0", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
+                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 30 - i * 15);
+            }
+        }
+
+        drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7, wData->lifetime % 20, c500);
+        drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7, (wData->lifetime+7) % 20, c511);
+        drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7, (wData->lifetime+14) % 20, c500);
+    }
+}
+
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 // {
 //     drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
@@ -3477,10 +3609,10 @@ void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
                 = 1; // It'll decrement soon anyways. Keeps more of the game over code on Garbotnik's side of the fence.
         }
     }
-    else // PHYSICS_DATA
+    else // PHYSICS_DATAwdw
     {
         bb_physicsData_t* pData = (bb_physicsData_t*)other->data;
-        pData->vel              = addVec2d(pData->vel, (vec_t){sData->vel.x << 4, sData->vel.y << 4});
+        pData->vel              = addVec2d(pData->vel, (vec_t){sData->vel.x << 3, sData->vel.y << 3});
     }
     bb_destroyEntity(self, false);
 }
