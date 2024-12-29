@@ -2,7 +2,7 @@
  * @file cg_sparDraw.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Draws the Chowa Garden Spar
- * @version 0.1
+ * @version 1.0
  * @date 2024-09-19
  *
  * @copyright Copyright (c) 2024

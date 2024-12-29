@@ -2,7 +2,7 @@
  * @file cg_spar.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Provides the sparring implementation for Chowa Grove
- * @version 0.1
+ * @version 0.5.0
  * @date 2024-09-19
  *
  * @copyright Copyright (c) 2024
@@ -66,7 +66,8 @@ void cg_initSpar(cGrove_t* grove)
     }
 
     // Audio
-    loadMidiFile("Chowa_Race.mid", &cg->spar.sparBGM, true);
+    loadMidiFile("Chowa_Race.mid", &cg->spar.MenuBGM, true);
+    loadMidiFile("Chowa_Dancing.mid", &cg->spar.sparBGM, true);
 
     // Init menu
     cg->spar.sparMenu = initMenu(sparMenuName, sparMenuCb);
@@ -83,7 +84,7 @@ void cg_initSpar(cGrove_t* grove)
 
     // Play BGM
     midiGmOn(cg->mPlayer);
-    globalMidiPlayerPlaySong(&cg->spar.sparBGM, MIDI_BGM);
+    globalMidiPlayerPlaySong(&cg->spar.MenuBGM, MIDI_BGM);
 
     // Load the splash screen
     cg->spar.state = CG_SPAR_SPLASH;
@@ -102,6 +103,7 @@ void cg_deInitSpar()
 
     // Audio
     unloadMidiFile(&cg->spar.sparBGM);
+    unloadMidiFile(&cg->spar.MenuBGM);
 
     // Free assets
     for (int idx = 0; idx < ARRAY_SIZE(attackIcons); idx++)
@@ -269,6 +271,10 @@ void cg_runSpar(int64_t elapsedUs)
                         cg_initSparMatch(cg, 0, sparMatchTimes[cg->spar.timerSelect], cg->spar.aiSelect,
                                          &cg->chowa[cg->spar.activeChowaIdxs[cg->spar.chowaSelect]]);
                         cg->spar.state = CG_SPAR_MATCH;
+                        // Change BGM
+                        globalMidiPlayerStop(cg->mPlayer);
+                        midiGmOn(cg->mPlayer);
+                        globalMidiPlayerPlaySong(&cg->spar.sparBGM, MIDI_BGM);
                     }
                     else if (evt.button & PB_B)
                     {

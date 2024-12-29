@@ -2,7 +2,7 @@
  * @file cg_Match.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Provide the individual match implementation for Chowa Grove spars
- * @version 0.1
+ * @version 1.0.0
  * @date 2024-09-22
  *
  * @copyright Copyright (c) 2024

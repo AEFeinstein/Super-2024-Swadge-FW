@@ -2,7 +2,7 @@
  * @file cg_Typedef.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Types for Chowa Grove
- * @version 0.1
+ * @version 1.0
  * @date 2024-09-19
  *
  * @copyright Copyright (c) 2024
@@ -491,6 +491,7 @@ typedef struct
     wsg_t* attackIcons; ///< Attack and dodge icons
     // Music
     midiFile_t sparBGM; ///< Music
+    midiFile_t MenuBGM; ///< Other music
 
     // Spar
     cgSparState_t state; ///< Active state

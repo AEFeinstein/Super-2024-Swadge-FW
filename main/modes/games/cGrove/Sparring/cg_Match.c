@@ -2,7 +2,7 @@
  * @file cg_Match.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Provide the individual match implementation for Chowa Grove spars
- * @version 0.1
+ * @version 1.0.0
  * @date 2024-09-22
  *
  * @copyright Copyright (c) 2024
@@ -95,7 +95,7 @@ void cg_initSparMatch(cGrove_t* cg, int8_t round, int16_t maxTime, cgAIDifficult
     cg->spar.match.ai.aiDifficulty = ai;
 
     // Chowa
-    cg->spar.match.chowa[CG_P1].chowa = &cg->chowa[0]; // c1; //cg->spar.match.data.chowa[2 * round];
+    cg->spar.match.chowa[CG_P1].chowa = &cg->chowa[0];
     cg->spar.match.chowa[CG_P2].chowa = cg->spar.match.data.chowa[(2 * round) + 1];
 
     // Setting stats
@@ -129,6 +129,9 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
         {
             // Move on
             cg->spar.state = CG_SPAR_MENU;
+            globalMidiPlayerStop(cg->mPlayer);
+            midiGmOn(cg->mPlayer);
+            globalMidiPlayerPlaySong(&cg->spar.MenuBGM, MIDI_BGM);
 
             // If player won
             if (cg->spar.match.data.result == CG_P1_WIN)

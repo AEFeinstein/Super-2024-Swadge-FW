@@ -2,7 +2,7 @@
  * @file cg_chowa.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Pet behavior and appearance
- * @version 0.1
+ * @version 0.2.0
  * @date 2024-09-08
  *
  * @copyright Copyright (c) 2024
