@@ -1089,8 +1089,8 @@ void tunernomeMainLoop(int64_t elapsedUs)
             int16_t weightX = round(METRONOME_CENTER_X - (0.5 * intermedX * weightRadius));
             int16_t weightY = round(METRONOME_CENTER_Y - (0.5 * ABS(intermedY) + 0.5) * weightRadius);
             //printf("weightRadiusPercent = %f, x = %"PRIi16", y = %"PRIi16"\n", weightRadiusPercent, weightX, weightY);
-            drawLine(METRONOME_CENTER_X, METRONOME_CENTER_Y, armX, armY, c333, 0);
-            drawCircleFilled(weightX, weightY, METRONOME_WEIGHT_SIZE_RADIUS, c111);
+            drawLine(METRONOME_CENTER_X, METRONOME_CENTER_Y, armX, armY, c445, 0);
+            drawCircleFilled(weightX, weightY, METRONOME_WEIGHT_SIZE_RADIUS, c222);
             drawWsg(&(tunernome->metronomeBottomWsg), (TFT_WIDTH - tunernome->metronomeBottomWsg.w) / 2, METRONOME_GRAPHIC_Y, false, false, 0);
             break;
         }
