@@ -35,12 +35,6 @@ typedef struct
     int8_t numOfUses;          ///< Number of uses before being used up
 } cgItem_t;
 
-typedef struct
-{
-    char name[CG_MAX_STR_LEN]; ///< Name
-    wsg_t* spr;                ///< Sprite
-} cgWearable_t;
-
 //==============================================================================
 // Chowa
 //==============================================================================

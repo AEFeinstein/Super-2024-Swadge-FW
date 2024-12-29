@@ -46,6 +46,12 @@
 #define DODGE_STAMINA_COST        30 // Cost to Dodge
 
 //==============================================================================
+// Const Strings
+//==============================================================================
+
+static const char nvsKey[] = "cgInventory";
+
+//==============================================================================
 // Static Functions
 //==============================================================================
 
@@ -82,29 +88,27 @@ void cg_initSparMatch(cGrove_t* cg, int8_t round, int16_t maxTime, cgAIDifficult
     cg->spar.match.maxTime      = maxTime;
     cg->spar.match.animDone     = false;
     cg->spar.match.done         = false;
-    cg->spar.match.timer = 0;
+    cg->spar.match.timer        = 0;
     cg->spar.match.endGameTimer = 0;
 
     // AI
     cg->spar.match.ai.aiDifficulty = ai;
 
     // Chowa
-    cg->spar.match.chowa[CG_P1].chowa = &cg->chowa[0];//c1; //cg->spar.match.data.chowa[2 * round];
+    cg->spar.match.chowa[CG_P1].chowa = &cg->chowa[0]; // c1; //cg->spar.match.data.chowa[2 * round];
     cg->spar.match.chowa[CG_P2].chowa = cg->spar.match.data.chowa[(2 * round) + 1];
 
     // Setting stats
     for (int32_t i = 0; i < 2; i++)
     {
-        cg->spar.match.chowa[i].currState = CG_SPAR_UNREADY;
-        cg->spar.match.chowa[i].currMove  = CG_SPAR_UNSET;
-        cg->spar.match.chowa[i].maxStamina
-            = MIN_STAMINA + (cg->spar.match.chowa[i].chowa->stats[CG_STAMINA] >> 1);
-        cg->spar.match.chowa[i].stamina   = cg->spar.match.chowa[i].maxStamina;
-        cg->spar.match.chowa[i].readiness = 0;
-        cg->spar.match.chowa[i].readiness = 0;
-        cg->spar.match.chowa[i].maxHP
-            = MIN_HP + cg->spar.match.chowa[i].chowa->stats[CG_HEALTH] * 3; // 250 - 1000
-        cg->spar.match.chowa[i].HP          = cg->spar.match.chowa[i].maxHP;
+        cg->spar.match.chowa[i].currState  = CG_SPAR_UNREADY;
+        cg->spar.match.chowa[i].currMove   = CG_SPAR_UNSET;
+        cg->spar.match.chowa[i].maxStamina = MIN_STAMINA + (cg->spar.match.chowa[i].chowa->stats[CG_STAMINA] >> 1);
+        cg->spar.match.chowa[i].stamina    = cg->spar.match.chowa[i].maxStamina;
+        cg->spar.match.chowa[i].readiness  = 0;
+        cg->spar.match.chowa[i].readiness  = 0;
+        cg->spar.match.chowa[i].maxHP      = MIN_HP + cg->spar.match.chowa[i].chowa->stats[CG_HEALTH] * 3; // 250 - 1000
+        cg->spar.match.chowa[i].HP         = cg->spar.match.chowa[i].maxHP;
         cg->spar.match.chowa[i].updateTimer = 0;
     }
 }
@@ -125,7 +129,54 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
         {
             // Move on
             cg->spar.state = CG_SPAR_MENU;
-            // TODO: Assign rewards
+
+            // If player won
+            if (cg->spar.match.data.result == CG_P1_WIN)
+            {
+                size_t blobLen;
+                readNvsBlob(nvsKey, NULL, &blobLen);
+                if (!readNvsBlob(nvsKey, &cg->grove.inv, &blobLen))
+                {
+                    cg->grove.inv.money          = 100;
+                    cg->grove.inv.quantities[11] = 2;
+                }
+                cg->grove.inv.money += 30 + esp_random() % 20;
+                switch (cg->spar.match.ai.aiDifficulty)
+                {
+                    case CG_VERY_EASY:
+                    case CG_EASY:
+                    case CG_MEDIUM:
+                    case CG_BEGINNER:
+                    {
+                        // Random book
+                        cg->grove.inv.quantities[esp_random() % 5] += 1;
+                        break;
+                    }
+                    case CG_HARD:
+                    {
+                        // Souffle
+                        cg->grove.inv.quantities[10] += 1;
+                        break;
+                    }
+                    case CG_VERY_HARD:
+                    {
+                        // Cake
+                        cg->grove.inv.quantities[9] += 1;
+                        break;
+                    }
+                    case CG_EXPERT:
+                    {
+                        // Knife
+                        cg->grove.inv.quantities[7] += 1;
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                writeNvsBlob(nvsKey, &cg->grove.inv, sizeof(cgInventory_t));
+            }
         }
         return;
     }
@@ -148,8 +199,8 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
     {
         cg->spar.match.done                              = true;
         cg->spar.match.data.result[cg->spar.match.round] = CG_DRAW;
-        cg->spar.match.chowa[CG_P1].currState        = CG_SPAR_LOSE;
-        cg->spar.match.chowa[CG_P2].currState        = CG_SPAR_LOSE;
+        cg->spar.match.chowa[CG_P1].currState            = CG_SPAR_LOSE;
+        cg->spar.match.chowa[CG_P2].currState            = CG_SPAR_LOSE;
         return;
     }
 
@@ -161,8 +212,7 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
 
     // Resolve if both are ready or if one has been ready for a full second
     if (cg->spar.match.resolve
-        || (cg->spar.match.chowa[0].currState == CG_SPAR_READY
-            && cg->spar.match.chowa[1].currState == CG_SPAR_READY))
+        || (cg->spar.match.chowa[0].currState == CG_SPAR_READY && cg->spar.match.chowa[1].currState == CG_SPAR_READY))
     {
         cg->spar.match.chowa[0].animTimer = 0;
         cg->spar.match.chowa[0].animFrame = 0;
@@ -185,14 +235,14 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
         if (cg->spar.match.chowa[CG_P1].HP <= 0)
         {
             cg->spar.match.data.result[cg->spar.match.round] = CG_P2_WIN;
-            cg->spar.match.chowa[CG_P1].currState        = CG_SPAR_LOSE;
-            cg->spar.match.chowa[CG_P2].currState        = CG_SPAR_WIN;
+            cg->spar.match.chowa[CG_P1].currState            = CG_SPAR_LOSE;
+            cg->spar.match.chowa[CG_P2].currState            = CG_SPAR_WIN;
         }
         else if (cg->spar.match.chowa[CG_P2].HP <= 0)
         {
             cg->spar.match.data.result[cg->spar.match.round] = CG_P1_WIN;
-            cg->spar.match.chowa[CG_P1].currState        = CG_SPAR_WIN;
-            cg->spar.match.chowa[CG_P2].currState        = CG_SPAR_LOSE;
+            cg->spar.match.chowa[CG_P1].currState            = CG_SPAR_WIN;
+            cg->spar.match.chowa[CG_P2].currState            = CG_SPAR_LOSE;
         }
 
         // End the game
@@ -355,7 +405,7 @@ static void cg_sparMatchAI(cGrove_t* cg, int64_t elapsedUs)
             // Sometimes pick a move. Otherwise, just sit there like a lump
             if (!cg->spar.match.ai.pickedMove)
             {
-                cg->spar.match.ai.pickedMove             = true;
+                cg->spar.match.ai.pickedMove         = true;
                 cg->spar.match.chowa[CG_P2].currMove = (esp_random() % 2 == 0) ? esp_random() % 5 : CG_SPAR_UNSET;
             }
             break;
@@ -368,8 +418,8 @@ static void cg_sparMatchAI(cGrove_t* cg, int64_t elapsedUs)
                 cg->spar.match.ai.pickedMove = true;
                 if (!cg->spar.match.ai.init)
                 {
-                    cg->spar.match.ai.init                   = true;
-                    cg->spar.match.ai.prevMoves[0]           = esp_random() % 5;
+                    cg->spar.match.ai.init               = true;
+                    cg->spar.match.ai.prevMoves[0]       = esp_random() % 5;
                     cg->spar.match.chowa[CG_P2].currMove = cg->spar.match.ai.prevMoves[0];
                 }
                 cg->spar.match.chowa[CG_P2].currMove = (cg->spar.match.ai.prevMoves[0]++) % 5;
@@ -384,10 +434,9 @@ static void cg_sparMatchAI(cGrove_t* cg, int64_t elapsedUs)
                 cg->spar.match.ai.pickedMove = true;
                 if (!cg->spar.match.ai.init || cg->spar.match.ai.movesPicked < 3)
                 {
-                    cg->spar.match.ai.init                   = true;
-                    cg->spar.match.chowa[CG_P2].currMove = esp_random() % 5;
-                    cg->spar.match.ai.prevMoves[cg->spar.match.ai.movesPicked]
-                        = cg->spar.match.chowa[CG_P2].currMove;
+                    cg->spar.match.ai.init                                     = true;
+                    cg->spar.match.chowa[CG_P2].currMove                       = esp_random() % 5;
+                    cg->spar.match.ai.prevMoves[cg->spar.match.ai.movesPicked] = cg->spar.match.chowa[CG_P2].currMove;
                     cg->spar.match.ai.movesPicked++;
                 }
                 else
@@ -637,8 +686,7 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
                 {
                     cg->spar.match.chowa[idx].updateTimer += elapsedUs;
                 }
-                int32_t readinessTick
-                    = SECOND - (STAMINA_SCALAR * cg->spar.match.chowa[idx].chowa->stats[CG_SPEED]);
+                int32_t readinessTick = SECOND - (STAMINA_SCALAR * cg->spar.match.chowa[idx].chowa->stats[CG_SPEED]);
                 if (cg->spar.match.chowa[idx].updateTimer >= readinessTick)
                 {
                     cg->spar.match.chowa[idx].updateTimer = 0;
@@ -667,7 +715,7 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
                 if (cg->spar.match.chowa[idx].updateTimer >= SECOND)
                 {
                     // Resolve
-                    cg->spar.match.resolve                    = true;
+                    cg->spar.match.resolve                = true;
                     cg->spar.match.chowa[idx].updateTimer = 0;
                 }
                 break;
@@ -680,8 +728,7 @@ static void cg_sparMatchChowaState(cGrove_t* cg, int64_t elapsedUs)
                 {
                     cg->spar.match.chowa[idx].updateTimer += elapsedUs;
                 }
-                int32_t readinessTick
-                    = SECOND - (STAMINA_SCALAR * cg->spar.match.chowa[idx].chowa->stats[CG_SPEED]);
+                int32_t readinessTick = SECOND - (STAMINA_SCALAR * cg->spar.match.chowa[idx].chowa->stats[CG_SPEED]);
                 if (cg->spar.match.chowa[idx].updateTimer >= readinessTick)
                 {
                     cg->spar.match.chowa[idx].updateTimer = 0;
@@ -998,13 +1045,11 @@ void static cg_sparMatchRPS(cGrove_t* cg)
     if ((esp_random() % 10) == 0)
     {
         // Crit
-        cg->spar.match.chowa[loseIdx].HP
-            -= MIN_DAMAGE + (cg->spar.match.chowa[winIdx].chowa->stats[CG_STRENGTH] << 1);
+        cg->spar.match.chowa[loseIdx].HP -= MIN_DAMAGE + (cg->spar.match.chowa[winIdx].chowa->stats[CG_STRENGTH] << 1);
     }
     else
     {
-        cg->spar.match.chowa[loseIdx].HP
-            -= MIN_DAMAGE + (cg->spar.match.chowa[winIdx].chowa->stats[CG_STRENGTH]);
+        cg->spar.match.chowa[loseIdx].HP -= MIN_DAMAGE + (cg->spar.match.chowa[winIdx].chowa->stats[CG_STRENGTH]);
     }
 
     // Stamina
