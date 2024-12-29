@@ -312,30 +312,192 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
         }
         case CG_SPAR_ATTACK:
         {
-            // TODO: Draw the Chowa attacking
+            // Draw the Chowa attacking
+            // Update the frames every 1/5th a second
+            if (cg1->animTimer >= 200000)
+            {
+                cg1->animTimer = 0;
+                cg1->animFrame++;
+            }
             switch (cg1->currMove)
             {
                 case CG_SPAR_PUNCH:
+                {
+                    switch (cg1->animFrame)
+                    {
+                        case 0:
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff + 25, yOff, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 1);
+                            drawWsgSimpleScaled(spr, xOff + 30, yOff, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 1);
+                            drawWsgSimpleScaled(spr, xOff + 15, yOff, 2, 2);
+                            break;
+                        }
+                        case 4:
+                        {
+                            cg1->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
+                    break;
+                }
                 case CG_SPAR_FAST_PUNCH:
                 {
-                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 0);
+                    switch (cg1->animFrame)
+                    {
+                        case 0:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff + 20, yOff, 2, 2);
+                            break;
+                        }
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 1);
+                            drawWsgSimpleScaled(spr, xOff + 20, yOff, 2, 2);
+                            drawWsgSimpleScaled(spr, xOff + 25, yOff, 2, 2);
+                            drawWsgSimpleScaled(spr, xOff + 30, yOff, 2, 2);
+                            drawWsgSimpleScaled(spr, xOff + 35, yOff, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_PUNCH_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff + 25, yOff, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            cg1->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
                     break;
                 }
                 case CG_SPAR_KICK:
-                case CG_SPAR_JUMP_KICK:
-                case CG_SPAR_DODGE:
                 {
-                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 0);
+                    switch (cg1->animFrame)
+                    {
+                        case 0:
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff + 25, yOff, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 1);
+                            drawWsgSimpleScaled(spr, xOff + 30, yOff, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 1);
+                            drawWsgSimpleScaled(spr, xOff + 15, yOff, 2, 2);
+                            break;
+                        }
+                        case 4:
+                        {
+                            cg1->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case CG_SPAR_JUMP_KICK:
+                {
+                    switch (cg1->animFrame)
+                    {
+                        case 0:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff + 25, yOff - 10, 2, 2);
+                            break;
+                        }
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff + 25, yOff - 15, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 1);
+                            drawWsgSimpleScaled(spr, xOff + 30, yOff - 15, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_KICK_RIGHT, 1);
+                            drawWsgSimpleScaled(spr, xOff + 15, yOff - 10, 2, 2);
+                            break;
+                        }
+                        case 4:
+                        {
+                            cg1->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
-                    spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HEADBUTT_RIGHT, 0);
+                    switch (cg1->animFrame)
+                    {
+                        case 0:
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HEADBUTT_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff + 25, yOff, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HEADBUTT_RIGHT, 1);
+                            drawWsgSimpleScaled(spr, xOff + 30, yOff, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HEADBUTT_RIGHT, 1);
+                            drawWsgSimpleScaled(spr, xOff + 15, yOff, 2, 2);
+                            break;
+                        }
+                        case 4:
+                        {
+                            cg1->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_HEADBUTT_RIGHT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
                     break;
                 }
                 default:
                 {
+                    // Catch all
                     spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
+                    drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
                     break;
                 }
             }
@@ -481,34 +643,194 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
         case CG_SPAR_ATTACK:
         {
             // Draw the Chowa attacking
+            // Update the frames every 1/5th a second
+            if (cg2->animTimer >= 200000)
+            {
+                cg2->animTimer = 0;
+                cg2->animFrame++;
+            }
             switch (cg2->currMove)
             {
                 case CG_SPAR_PUNCH:
+                {
+                    switch (cg2->animFrame)
+                    {
+                        case 0:
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff - 25, yOff, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_LEFT, 1);
+                            drawWsgSimpleScaled(spr, xOff - 30, yOff, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_LEFT, 1);
+                            drawWsgSimpleScaled(spr, xOff - 15, yOff, 2, 2);
+                            break;
+                        }
+                        case 4:
+                        {
+                            cg2->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
+                    break;
+                }
                 case CG_SPAR_FAST_PUNCH:
                 {
-                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_LEFT, 0);
+                    switch (cg2->animFrame)
+                    {
+                        case 0:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff - 25, yOff, 2, 2);
+                            break;
+                        }
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_LEFT, 1);
+                            drawWsgSimpleScaled(spr, xOff - 20, yOff, 2, 2);
+                            drawWsgSimpleScaled(spr, xOff - 25, yOff, 2, 2);
+                            drawWsgSimpleScaled(spr, xOff - 30, yOff, 2, 2);
+                            drawWsgSimpleScaled(spr, xOff - 35, yOff, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_PUNCH_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff - 25, yOff, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            cg2->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
                     break;
                 }
                 case CG_SPAR_KICK:
-                case CG_SPAR_JUMP_KICK:
-                case CG_SPAR_DODGE:
                 {
-                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_LEFT, 0);
+                    switch (cg2->animFrame)
+                    {
+                        case 0:
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff - 25, yOff, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_LEFT, 1);
+                            drawWsgSimpleScaled(spr, xOff - 30, yOff, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_LEFT, 1);
+                            drawWsgSimpleScaled(spr, xOff - 15, yOff, 2, 2);
+                            break;
+                        }
+                        case 4:
+                        {
+                            cg2->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case CG_SPAR_JUMP_KICK:
+                {
+                    switch (cg2->animFrame)
+                    {
+                        case 0:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff - 25, yOff - 10, 2, 2);
+                            break;
+                        }
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff - 25, yOff - 15, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_LEFT, 1);
+                            drawWsgSimpleScaled(spr, xOff - 30, yOff - 15, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_KICK_LEFT, 1);
+                            drawWsgSimpleScaled(spr, xOff - 15, yOff - 10, 2, 2);
+                            break;
+                        }
+                        case 4:
+                        {
+                            cg2->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
                     break;
                 }
                 case CG_SPAR_HEADBUTT:
                 {
-                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HEADBUTT_LEFT, 0);
+                    switch (cg2->animFrame)
+                    {
+                        case 0:
+                        case 1:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HEADBUTT_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff - 25, yOff, 2, 2);
+                            break;
+                        }
+                        case 2:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HEADBUTT_LEFT, 1);
+                            drawWsgSimpleScaled(spr, xOff - 30, yOff, 2, 2);
+                            break;
+                        }
+                        case 3:
+                        {
+                            spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HEADBUTT_LEFT, 1);
+                            drawWsgSimpleScaled(spr, xOff - 15, yOff, 2, 2);
+                            break;
+                        }
+                        case 4:
+                        {
+                            cg1->doneAnimating = true;
+                            spr                = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_HEADBUTT_LEFT, 0);
+                            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+                            break;
+                        }
+                    }
                     break;
                 }
                 default:
                 {
-                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
+                    // Catch all
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_RIGHT, 0);
+                    drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
                     break;
                 }
             }
-            drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
-            break;
             break;
         }
         case CG_SPAR_DODGE_ST:

@@ -164,7 +164,9 @@ void cg_runSparMatch(cGrove_t* cg, int64_t elapsedUs)
             && cg->spar.match.chowa[1].currState == CG_SPAR_READY))
     {
         cg->spar.match.chowa[0].animTimer = 0;
+        cg->spar.match.chowa[0].animFrame = 0;
         cg->spar.match.chowa[1].animTimer = 0;
+        cg->spar.match.chowa[1].animFrame = 0;
         cg_sparMatchResolve(cg);
     }
 
