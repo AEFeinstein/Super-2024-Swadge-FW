@@ -296,10 +296,7 @@ void cg_runSpar(int64_t elapsedUs)
         }
         case CG_SPAR_MATCH:
         {
-            while (checkButtonQueueWrapper(&evt))
-            {
-                ; // No button input, but make sure the queue is serviced
-            }
+            // checkButtonQueueWrapper() called by cg_runSparMatch() -> cg_sparMatchPlayerInput()
             cg_runSparMatch(cg, elapsedUs);
             cg_drawSparMatch(cg, elapsedUs);
             break;
