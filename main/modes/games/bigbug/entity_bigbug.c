@@ -74,9 +74,16 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     {
         case BB_CAR:
         {
-            for (int frame = 0; frame < 60; frame++)
+            if(self->currentAnimationFrame == 59)
             {
-                freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[frame]);
+                freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[59]);
+            }
+            else
+            {
+                for (int frame = 0; frame < 60; frame++)
+                {
+                    freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[frame]);
+                }
             }
             break;
         }
@@ -1823,7 +1830,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     }
     else if (ghData->grabbed != NULL)
     {
-        if (self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+        if (self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
         {
             // iterate towed entities
             bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
@@ -1910,6 +1917,13 @@ void bb_updateCarOpen(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == 59 && !self->paused)
     {
+        self->cacheable = true;
+
+        bb_setupMidi();
+        unloadMidiFile(&self->gameData->bgm);
+        loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
+        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
+
         // free most previous car frames.
         for (int i = 1; i < 59; i++)
         {
@@ -1933,6 +1947,10 @@ void bb_updateCarOpen(bb_entity_t* self)
             }
         }
         self->paused = true;
+    }
+    else
+    {
+        self->cacheable = false;
     }
 }
 
@@ -2895,6 +2913,11 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
 
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
+    bb_setupMidi();
+    unloadMidiFile(&self->gameData->bgm);
+    loadMidiFile("sh_revenge.mid", &self->gameData->bgm, true);
+    globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
+
     // close the door and make it not cacheable so bugs don't walk out offscreen.
     node_t* checkEntity = self->gameData->entityManager.cachedEntities->first;
     while (checkEntity != NULL)
