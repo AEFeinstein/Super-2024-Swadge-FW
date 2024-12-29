@@ -1040,7 +1040,7 @@ void static cg_sparMatchRPS(cGrove_t* cg)
     else
     {
         // Something went wrong
-        printf("Draw propagated too far");
+        ESP_LOGI("CG", "Draw propagated too far");
         return;
     }
 

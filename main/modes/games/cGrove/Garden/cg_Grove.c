@@ -412,11 +412,11 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                     // Save inv and items
                     if (!writeNvsBlob(nvsBlobKeys[0], cg->grove.items, sizeof(cgItem_t) * CG_GROVE_MAX_ITEMS))
                     {
-                        printf("Item failed to save to NVS\n");
+                        ESP_LOGI("CG", "Item failed to save to NVS");
                     }
                     if (!writeNvsBlob(nvsBlobKeys[1], &cg->grove.inv, sizeof(cgInventory_t)))
                     {
-                        printf("Inventory failed to save to NVS\n");
+                        ESP_LOGI("CG", "Inventory failed to save to NVS");
                     }
                     cg->grove.state = CG_GROVE_FIELD;
                 }
@@ -884,8 +884,8 @@ static void cg_handleInputGarden(cGrove_t* cg)
                 int16_t speed = phi >> 5;
                 if (!(speed <= 5))
                 {
-                    // printf("touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32 "\n", phi, r,
-                    //        intensity);
+                    /* ESP_LOGI("CG", "touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32, phi, r,
+                     * intensity); */
                     // Move hand
                     cg->grove.cursor.pos.x += (getCos1024(phi) * speed) / 1024;
                     cg->grove.cursor.pos.y -= (getSin1024(phi) * speed) / 1024;
