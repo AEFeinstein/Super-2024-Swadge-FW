@@ -2,7 +2,7 @@
  * @file cg_chowa.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Pet behavior and appearance
- * @version 0.1
+ * @version 0.2.0
  * @date 2024-09-08
  *
  * @copyright Copyright (c) 2024
@@ -20,34 +20,58 @@
 //==============================================================================
 
 static const char* imageStrings[] = {
-    "_angry-1.wsg",     "_angry-2.wsg",                                         // Angry                (0-1)
-    "_bkfall1.wsg",     "_bkfall2.wsg",     "_bkfall3.wsg",     "_bkfall4.wsg", // Falling up           (2-5)
-    "_bkwalk1.wsg",     "_bkwalk2.wsg",     "_bkwalk3.wsg",     "_bkwalk4.wsg", // Walking up           (6-9)
-    "_climb1.wsg",      "_climb2.wsg",                                          // Climbing             (10-11)
-    "_dance-1.wsg",     "_dance-2.wsg",     "_dance-3.wsg",     "_dance-4.wsg", // Dancing              (12-15)
-    "_disgust1.wsg",    "_disgust2.wsg",                                        // Disgust              (16-17)
-    "_draw-1.wsg",      "_draw-2.wsg",                                          // Drawing              (18-19)
-    "_eat-1.wsg",       "_eat-2.wsg",       "_eat-3.wsg",       "_eat-4.wsg",   // Eating               (20-23)
-    "_fallingbk-1.wsg", "_fallingbk-2.wsg",                                     // Falling facing down  (24-25)
-    "_fear-1.wsg",      "_fear-2.wsg",                                          // Afraid               (26-27)
-    "_flail-1.wsg",     "_flail-2.wsg",                                         // Flailing             (28-29)
-    "_gift-1.wsg",                                                              // Gift/Cheer           (30)
-    "_givup-1.wsg",     "_givup-2.wsg",                                         // Depressed/Give up    (31-32)
-    "_happy1.wsg",      "_happy2.wsg",                                          // Happy                (33-34)
-    "_hdbtt-1.wsg",     "_hdbtt-2.wsg",                                         // Headbutt             (35-36)
-    "_kick-1.wsg",      "_kick-2.wsg",                                          // Kick                 (37-38)
-    "_pet-1.wsg",                                                               // Being pet            (39)
-    "_punch-1.wsg",     "_punch-2.wsg",                                         // Punching             (40-41)
-    "_read-1.wsg",      "_read-2.wsg",      "_read-3.wsg",                      // Reading              (42-44)
-    "_sad-1.wsg",       "_sad-2.wsg",                                           // Sad                  (45-46)
-    "_sdfall1.wsg",     "_sdfall2.wsg",     "_sdfall3.wsg",                     // Side Fall            (47-49)
-    "_sdwalk1.wsg",     "_sdwalk2.wsg",     "_sdwalk3.wsg",     "_sdwalk4.wsg", // Side walk            (50-53)
-    "_sing-1.wsg",      "_sing-2.wsg",      "_sing-3.wsg",      "_sing-4.wsg",  // Sing                 (54-57)
-    "_sit1.wsg",                                                                // Sit                  (58)
-    "_swim-1.wsg",      "_swim-2.wsg",      "_swim-3.wsg",      "_swim-4.wsg",  // Swim                 (59-62)
-    "_swordplay-1.wsg", "_swordplay-2.wsg", "_swordplay-3.wsg",                 // Swords               (63-65)
-    "_throw-1.wsg",     "_throw-2.wsg",     "_throw-3.wsg",                     // Throw item           (66-68)
-    "_walk1.wsg",       "_walk2.wsg",       "_walk3.wsg",       "_walk4.wsg",   // Walk down            (69-72)
+    "_angry-1.wsg",     "_angry-2.wsg",                   // Angry             (0-1)
+    "_climb-1.wsg",     "_climb-2.wsg",                   // Climbing          (2-3)
+    "_confused-1.wsg",  "_confused-2.wsg",                // Confused          (4-5)
+    "_cry-1.wsg",       "_cry-2.wsg",       "_cry-3.wsg", // Crying            (6-8)
+    "_dance-1.wsg",     "_dance-2.wsg",     "_dance-3.wsg",
+    "_dance-4.wsg",                       // Dancing           (9-12)
+    "_disgust-1.wsg",   "_disgust-2.wsg", // Disgust           (13-14)
+    "_draw-1.wsg",      "_draw-2.wsg",    // Drawing           (15-16)
+    "_eat-1.wsg",       "_eat-2.wsg",       "_eat-3.wsg",
+    "_eat-4.wsg",                                             // Eating            (17-20)
+    "_fear-1.wsg",      "_fear-2.wsg",      "_fear-3.wsg",    // Afraid            (21-23)
+    "_flail-1.wsg",     "_flail-2.wsg",                       // Flailing          (24-25)
+    "_gift-1.wsg",                                            // Gift/Cheer        (26)
+    "_giveup-1.wsg",    "_giveup-2.wsg",    "_giveup-3.wsg",  // Depressed/Give up (27-29)
+    "_happy-1.wsg",     "_happy-2.wsg",                       // Happy             (30-31)
+    "_hdbtt-lft-1.wsg", "_hdbtt-lft-2.wsg",                   // Headbutt Left     (32-33)
+    "_hdbtt-rgt-1.wsg", "_hdbtt-rgt-2.wsg",                   // Headbutt Right    (34-35)
+    "_hit-lft-1.wsg",   "_hit-lft-2.wsg",   "_hit-lft-3.wsg", // Was hit Left      (36-38)
+    "_hit-rgt-1.wsg",   "_hit-rgt-2.wsg",   "_hit-rgt-3.wsg", // Was hit Right     (39-41)
+    "_jump-1.wsg",      "_jump-2.wsg",                        // Jumping           (42-43)
+    "_kick-lft-1.wsg",  "_kick-lft-2.wsg",                    // Kick left         (44-45)
+    "_kick-rgt-1.wsg",  "_kick-rgt-2.wsg",                    // Kick right        (46-47)
+    "_pet-1.wsg",                                             // Being pet         (48)
+    "_punch-lft-1.wsg", "_punch-lft-2.wsg",                   // Punching left     (49-50)
+    "_punch-rgt-1.wsg", "_punch-rgt-2.wsg",                   // Punching right    (51-52)
+    "_read-1.wsg",      "_read-2.wsg",      "_read-3.wsg",    // Reading           (53-55)
+    "_sad-1.wsg",       "_sad-2.wsg",                         // Sad               (56-57)
+    "_shocked-1.wsg",   "_shocked-2.wsg",                     // Shocked           (58-59)
+    "_sing-1.wsg",      "_sing-2.wsg",      "_sing-3.wsg",
+    "_sing-4.wsg", // Sing              (60-63)
+    "_sit-1.wsg",  // Sit               (64)
+    "_swim-lft-1.wsg",  "_swim-lft-2.wsg",  "_swim-lft-3.wsg",
+    "_swim-lft-4.wsg", // Swim              (65-68)
+    "_swim-rgt-1.wsg",  "_swim-rgt-2.wsg",  "_swim-rgt-3.wsg",
+    "_swim-rgt-4.wsg",                                          // Swim              (69-72)
+    "_sword-1.wsg",     "_sword-2.wsg",     "_sword-3.wsg",     // Swords            (73-75)
+    "_throw-lft-1.wsg", "_throw-lft-2.wsg", "_throw-lft-3.wsg", // Throw item        (76-78)
+    "_throw-rgt-1.wsg", "_throw-rgt-2.wsg", "_throw-rgt-3.wsg", // Throw item        (79-81)
+    "_trip-bk-1.wsg",   "_trip-bk-2.wsg",   "_trip-bk-3.wsg",
+    "_trip-bk-3.wsg", // Tripped backwards (82-85)
+    "_trip-lft-1.wsg",  "_trip-lft-2.wsg",  "_trip-lft-3.wsg",
+    "_trip-lft-3.wsg", // Tripped Left      (86-89)
+    "_trip-rgt-1.wsg",  "_trip-rgt-2.wsg",  "_trip-rgt-3.wsg",
+    "_trip-rgt-3.wsg", // Tripped Right     (90-93)
+    "_walkfwd-1.wsg",   "_walkfwd-2.wsg",   "_walkfwd-3.wsg",
+    "_walkfwd-4.wsg", // Walking toward    (94-97)
+    "_walkbk-1.wsg",    "_walkbk-2.wsg",    "_walkbk-3.wsg",
+    "_walkbk-4.wsg", // Walking away      (98-101)
+    "_walklft-1.wsg",   "_walklft-2.wsg",   "_walklft-3.wsg",
+    "_walklft-4.wsg", // Walking left      (102-105)
+    "_walkrgt-1.wsg",   "_walkrgt-2.wsg",   "_walkrgt-3.wsg",
+    "_walkrgt-4.wsg", // Walking right     (106-109)
 };
 
 //==============================================================================
@@ -83,6 +107,7 @@ void cg_initChowaWSGs(cGrove_t* cg)
         }
     }
     cg_initByPrefix(cg, CG_KING_DONUT, CG_CHILD, "ckd");
+    cg_initByPrefix(cg, CG_KING_DONUT, CG_ADULT, "akd");
 }
 
 /**
@@ -131,117 +156,161 @@ wsg_t* cg_getChowaWSG(cGrove_t* cg, cgChowa_t* c, cgChowaAnimIdx_t anim, int8_t 
         {
             return &spr[0 + idx];
         }
-        case CG_ANIM_DISGUST:
+        case CG_ANIM_CONFUSED:
         {
-            return &spr[16 + idx];
+            return &spr[4 + idx];
         }
-        case CG_ANIM_FEAR:
-        {
-            return &spr[26 + idx];
-        }
-        case CG_ANIM_FLAIL:
-        {
-            return &spr[28 + idx];
-        }
-        case CG_ANIM_GIVE_UP:
-        {
-            return &spr[31 + idx];
-        }
-        case CG_ANIM_HAPPY:
-        {
-            return &spr[33 + idx];
-        }
-        case CG_ANIM_SAD:
-        {
-            return &spr[45 + idx];
-        }
-        case CG_ANIM_WALK_DOWN:
-        {
-            return &spr[69 + idx];
-        }
-        case CG_ANIM_WALK_SIDE:
-        {
-            return &spr[50 + idx];
-        }
-        case CG_ANIM_WALK_UP:
+        case CG_ANIM_CRY:
         {
             return &spr[6 + idx];
         }
-        case CG_ANIM_SWIM:
+        case CG_ANIM_DISGUST:
         {
-            return &spr[59 + idx];
+            return &spr[13 + idx];
         }
-        case CG_ANIM_CLIMB:
+        case CG_ANIM_FEAR:
         {
-            return &spr[10 + idx];
+            return &spr[21 + idx];
         }
-        case CG_ANIM_FALL_SIDE:
-        {
-            return &spr[47 + idx];
-        }
-        case CG_ANIM_FALL_UP:
-        {
-            return &spr[2 + idx];
-        }
-        case CG_ANIM_FALL_DOWN:
+        case CG_ANIM_FLAIL:
         {
             return &spr[24 + idx];
         }
-        case CG_ANIM_HEADBUTT:
+        case CG_ANIM_GIVE_UP:
         {
-            return &spr[35 + idx];
+            return &spr[27 + idx];
         }
-        case CG_ANIM_KICK:
+        case CG_ANIM_HAPPY:
         {
-            return &spr[37 + idx];
+            return &spr[30 + idx];
         }
-        case CG_ANIM_PUNCH:
+        case CG_ANIM_SAD:
         {
-            return &spr[40 + idx];
+            return &spr[56 + idx];
         }
-        case CG_ANIM_DRAW:
+        case CG_ANIM_WALK_DOWN:
         {
-            return &spr[18 + idx];
+            return &spr[94 + idx];
         }
-        case CG_ANIM_EAT:
+        case CG_ANIM_WALK_UP:
         {
-            return &spr[20 + idx];
+            return &spr[98 + idx];
         }
-        case CG_ANIM_GIFT:
+        case CG_ANIM_WALK_RIGHT:
         {
-            return &spr[30];
+            return &spr[106 + idx];
         }
-        case CG_ANIM_READ:
+        case CG_ANIM_WALK_LEFT:
+        {
+            return &spr[102 + idx];
+        }
+        case CG_ANIM_SWIM_RIGHT:
+        {
+            return &spr[69 + idx];
+        }
+        case CG_ANIM_SWIM_LEFT:
+        {
+            return &spr[65 + idx];
+        }
+        case CG_ANIM_CLIMB:
+        {
+            return &spr[2 + idx];
+        }
+        case CG_ANIM_JUMP:
         {
             return &spr[42 + idx];
         }
+        case CG_ANIM_TRIP_UP:
+        {
+            return &spr[82 + idx];
+        }
+        case CG_ANIM_TRIP_RIGHT:
+        {
+            return &spr[90 + idx];
+        }
+        case CG_ANIM_TRIP_LEFT:
+        {
+            return &spr[86 + idx];
+        }
+        case CG_ANIM_HEADBUTT_RIGHT:
+        {
+            return &spr[34 + idx];
+        }
+        case CG_ANIM_HEADBUTT_LEFT:
+        {
+            return &spr[32 + idx];
+        }
+        case CG_ANIM_KICK_RIGHT:
+        {
+            return &spr[46 + idx];
+        }
+        case CG_ANIM_KICK_LEFT:
+        {
+            return &spr[44 + idx];
+        }
+        case CG_ANIM_PUNCH_RIGHT:
+        {
+            return &spr[51 + idx];
+        }
+        case CG_ANIM_PUNCH_LEFT:
+        {
+            return &spr[49 + idx];
+        }
+        case CG_ANIM_HIT_RIGHT:
+        {
+            return &spr[39 + idx];
+        }
+        case CG_ANIM_HIT_LEFT:
+        {
+            return &spr[36 + idx];
+        }
+        case CG_ANIM_DRAW:
+        {
+            return &spr[15 + idx];
+        }
+        case CG_ANIM_EAT:
+        {
+            return &spr[17 + idx];
+        }
+        case CG_ANIM_GIFT:
+        {
+            return &spr[26];
+        }
+        case CG_ANIM_READ:
+        {
+            return &spr[53 + idx];
+        }
         case CG_ANIM_SWORD:
         {
-            return &spr[63 + idx];
+            return &spr[73 + idx];
         }
-        case CG_ANIM_THROW:
+        case CG_ANIM_THROW_RIGHT:
         {
-            return &spr[66 + idx];
+            return &spr[79 + idx];
+        }
+        case CG_ANIM_THROW_LEFT:
+        {
+            return &spr[76 + idx];
         }
         case CG_ANIM_DANCE:
         {
-            return &spr[12 + idx];
+            return &spr[9 + idx];
         }
         case CG_ANIM_PET:
         {
-            return &spr[39];
+            return &spr[48];
         }
         case CG_ANIM_SING:
         {
-            return &spr[54 + idx];
+            return &spr[60 + idx];
         }
         case CG_ANIM_SIT:
         {
-            return &spr[58];
+            return &spr[64];
         }
         default:
         {
-            return &spr[69]; // Walk down frame 1
+            return &spr[94]; // Walk down frame 1
         }
     }
 }
