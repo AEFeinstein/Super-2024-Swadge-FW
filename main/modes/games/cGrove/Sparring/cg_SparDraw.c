@@ -666,6 +666,10 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
                 default:
                 {
                     // Catch all
+                    if (cg1->animFrame > 5)
+                    {
+                        cg1->doneAnimating = true;
+                    }
                     spr = cg_getChowaWSG(cg, cg1->chowa, CG_ANIM_WALK_RIGHT, 0);
                     drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
                     break;
@@ -996,7 +1000,12 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
                 default:
                 {
                     // Catch all
-                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_RIGHT, 0);
+                    // Catch all
+                    if (cg2->animFrame > 5)
+                    {
+                        cg2->doneAnimating = true;
+                    }
+                    spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
                     drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
                     break;
                 }
