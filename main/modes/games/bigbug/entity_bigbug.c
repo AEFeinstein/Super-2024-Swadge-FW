@@ -583,7 +583,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     vec_t accel = {.x = 0, .y = 0};
 
     // Update garbotnik's velocity if a button is currently down
-    switch (self->gameData->btnState & 0b1111)
+    switch (self->gameData->btnState & 0b101111)
     {
         // up
         case 0b0001:
@@ -828,6 +828,20 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
     }
 
+    //decrement the primary and secondary wile timers and wileNotification
+    self->gameData->loadout.primaryTimer -= self->gameData->elapsedUs >> 10;
+    //catch underflow, set to zero.
+    if(self->gameData->loadout.primaryTimer > self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000)
+    {
+        self->gameData->loadout.primaryTimer = 0;
+    }
+    self->gameData->loadout.secondaryTimer -= self->gameData->elapsedUs >> 10;
+    //catch underflow, set to zero.
+    if(self->gameData->loadout.secondaryTimer > self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown  * 1000)
+    {
+        self->gameData->loadout.secondaryTimer = 0;
+    }
+
     // if 'a' button down, tether another entity if it's close enough
     if ((self->gameData->btnState & 0b10000) >> 4)
     {
@@ -875,6 +889,120 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
         }
     }
+    
+    // if 'b' button down, handle wile call sequence logic
+    if ((self->gameData->btnState & 0b100000) >> 5)
+    {
+        bool inputUpdated = false;
+
+        //if down was pressed
+        if((self->gameData->btnDownState & PB_DOWN)>>1)
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                if(self->gameData->loadout.playerInputSequence[i] == BB_NONE)
+                {
+                    self->gameData->loadout.playerInputSequence[i] = BB_DOWN;
+                    inputUpdated = true;
+                    break;
+                }
+                else if(i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
+                {
+                    inputUpdated = true;
+                }
+            }
+        }
+        //if left was pressed
+        else if((self->gameData->btnDownState & PB_LEFT)>>2)
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                if(self->gameData->loadout.playerInputSequence[i] == BB_NONE)
+                {
+                    self->gameData->loadout.playerInputSequence[i] = BB_LEFT;
+                    inputUpdated = true;
+                    break;
+                }
+                else if(i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
+                {
+                    inputUpdated = true;
+                }
+            }
+        }
+        //if up was pressed
+        else if(self->gameData->btnDownState & PB_UP)
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                if(self->gameData->loadout.playerInputSequence[i] == BB_NONE)
+                {
+                    self->gameData->loadout.playerInputSequence[i] = BB_UP;
+                    inputUpdated = true;
+                    break;
+                }
+                else if(i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
+                {
+                    inputUpdated = true;
+                }
+            }
+        }
+        //if down was pressed
+        else if((self->gameData->btnDownState & PB_RIGHT)>>3)
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                if(self->gameData->loadout.playerInputSequence[i] == BB_NONE)
+                {
+                    self->gameData->loadout.playerInputSequence[i] = BB_RIGHT;
+                    inputUpdated = true;
+                    break;
+                }
+                else if(i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
+                {
+                    inputUpdated = true;
+                }
+            }
+        }
+        if(inputUpdated)
+        {
+            if(gData->activeWile != 255)
+            {
+                //reset the player input sequence to BB_NONEs
+                for(int i = 0; i < 5; i++)
+                {
+                    self->gameData->loadout.playerInputSequence[i] = BB_NONE;
+                }
+                gData->activeWile = 255; //255 means no active wile.
+            }
+            else
+            {
+                //validate the input aqainst the primary and secondary wile call sequences
+                int8_t primaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence);
+                int8_t secondaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence);
+                if(primaryComparison == 1 && self->gameData->loadout.primaryTimer == 0)
+                {
+                    //activate the primary wile
+                    gData->activeWile = self->gameData->loadout.primaryWileIdx;
+                }
+                else if(secondaryComparison == 1 && self->gameData->loadout.secondaryTimer == 0)
+                {
+                    //activate the secondary wile
+                    gData->activeWile = self->gameData->loadout.secondaryWileIdx;
+                }
+                else if((primaryComparison == -1 && self->gameData->loadout.primaryTimer == 0 && secondaryComparison == -1 && self->gameData->loadout.secondaryTimer == 0) ||
+                        (primaryComparison == -1 && self->gameData->loadout.primaryTimer == 0 && self->gameData->loadout.secondaryTimer != 0) ||
+                        (secondaryComparison == -1 && self->gameData->loadout.secondaryTimer == 0 && self->gameData->loadout.primaryTimer != 0))
+                {
+                    //reset the player input sequence to BB_NONEs
+                    for(int i = 0; i < 5; i++)
+                    {
+                        self->gameData->loadout.playerInputSequence[i] = BB_NONE;
+                    }
+                }
+            }
+        }
+    }
+    
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos, &hitInfo);
@@ -2189,6 +2317,85 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
              TFT_HEIGHT - self->gameData->font.height - 3);
     drawText(&self->gameData->font, c223, harpoonText, TFT_WIDTH - tWidth - 30,
              TFT_HEIGHT - self->gameData->font.height - 2);
+
+    //draw the wile call sequences
+    if(((self->gameData->btnState & 0b100000) >> 5) || gData->activeWile == self->gameData->loadout.primaryWileIdx)
+    {
+        //primary wile
+        drawRectFilled(0, 0, 140 - (self->gameData->loadout.primaryTimer * 140) / (self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000), 16, gData->activeWile == self->gameData->loadout.primaryWileIdx ? c050 : (self->gameData->loadout.primaryTimer == 0 ? c550 : c500));
+        tWidth = textWidth(&self->gameData->font, self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].name);
+        drawText(&self->gameData->font, (gData->activeWile == self->gameData->loadout.primaryWileIdx && bb_randomInt(0,1)) ? c203 : (self->gameData->loadout.primaryTimer == 0 ? c000 : c444),
+                 self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].name, 70 - (tWidth >> 1), 3);
+        //draw the call sequence
+        uint8_t sequenceLength = 0;
+        for(int i = 0; i < 5; i++)
+        {
+            if(self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence[i] == BB_NONE)
+            {
+                break;
+            }
+            sequenceLength++;
+        }
+        int8_t primaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence);
+        for(int i = 0; i < sequenceLength; i++)
+        {
+            int32_t rotation = 180;
+            rotation += 90 * self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence[i];
+            rotation = rotation % 360;
+
+            if(self->gameData->loadout.primaryTimer != 0)
+            {
+                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0], 70 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, &self->gameData->damagePalette, false, false, rotation);
+            }
+            else if(primaryComparison != -1 && self->gameData->loadout.playerInputSequence[i] == self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence[i])
+            {
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 70 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, false, false, rotation);
+            }
+            else
+            {
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 70 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, false, false, rotation);
+            }
+        }
+    }
+
+    if(((self->gameData->btnState & 0b100000) >> 5) || gData->activeWile == self->gameData->loadout.secondaryWileIdx)
+    {
+        //secondary wile
+        drawRectFilled(140, 0, 280 - (self->gameData->loadout.secondaryTimer * 140) / (self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown * 1000), 16, gData->activeWile == self->gameData->loadout.secondaryWileIdx ? c050 : (self->gameData->loadout.secondaryTimer == 0 ? c550 : c500));
+        tWidth = textWidth(&self->gameData->font, self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].name);
+        drawText(&self->gameData->font, (gData->activeWile == self->gameData->loadout.secondaryWileIdx && bb_randomInt(0,1)) ? c203 : (self->gameData->loadout.secondaryTimer == 0 ? c000 : c444),
+                 self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].name, 210 - (tWidth >> 1), 3);
+        //draw the call sequence
+        uint8_t sequenceLength = 0;
+        for(int i = 0; i < 5; i++)
+        {
+            if(self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence[i] == BB_NONE)
+            {
+                break;
+            }
+            sequenceLength++;
+        }
+        int8_t secondaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence);
+        for(int i = 0; i < sequenceLength; i++)
+        {
+            int32_t rotation = 180;
+            rotation += 90 * self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence[i];
+            rotation = rotation % 360;
+
+            if(self->gameData->loadout.secondaryTimer != 0)
+            {
+                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0], 210 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, &self->gameData->damagePalette, false, false, rotation);
+            }
+            else if(secondaryComparison != -1 && self->gameData->loadout.playerInputSequence[i] == self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence[i])
+            {
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 210 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, false, false, rotation);
+            }
+            else
+            {
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 210 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, false, false, rotation);
+            }
+        }
+    }
 }
 
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -4092,4 +4299,26 @@ void bb_freeDialogueData(bb_dialogueData_t* dData)
     }
     heap_caps_free(dData->strings); // Free the array of string pointers
     heap_caps_free(dData);          // Free the struct itself
+}
+
+
+//return -1 if there is a mismatch. 0 if playerInputSequence is a prefix of compareTo. 1 if playerInputSequence matches compareTo.
+int8_t bb_compareWileCallSequences(enum bb_direction_t* playerInputSequence, enum bb_direction_t* compareTo)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if(compareTo[i] == BB_NONE)
+        {
+            return 1;
+        }
+        else if(playerInputSequence[i] == BB_NONE)
+        {
+            return 0;
+        }
+        else if (playerInputSequence[i] != compareTo[i])
+        {
+            return -1;
+        }
+    }
+    return 1;
 }

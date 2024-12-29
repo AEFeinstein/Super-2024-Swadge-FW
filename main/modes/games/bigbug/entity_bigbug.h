@@ -77,6 +77,8 @@ typedef struct
 
     int8_t damageEffect;     // decrements over time. Render damagePalette color swap if > 0.
     int16_t harpoonCooldown; // decrements over time. Fires if < 0 and resets to GameData's GarbotnikStat_fireTime.
+
+    uint8_t activeWile;
 } bb_garbotnikData_t;
 
 typedef struct
@@ -141,7 +143,7 @@ typedef struct
 
 typedef struct
 {
-    int32_t yVel;
+    int32_t yVel;//FINISH ME!!! maybe get away with int16_t
 } bb_heavyFallingData_t;
 
 typedef struct
@@ -207,8 +209,6 @@ typedef struct
     int8_t damageEffect;   // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the
                            // zero animation frame because the cart background gets not graphical effect.
 } bb_foodCartData_t;
-
-typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
 
 typedef struct
 {
@@ -413,5 +413,6 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter);
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* character, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);
+int8_t bb_compareWileCallSequences(enum bb_direction_t* playerInputSequence, enum bb_direction_t* compareTo);
 
 #endif

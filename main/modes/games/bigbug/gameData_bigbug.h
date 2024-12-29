@@ -79,14 +79,18 @@ struct bb_wileData_t
     uint8_t cost; // the number of donuts required to purchase the wile.
     bool purchased; //set to true when donuts have been paid.
     uint8_t cooldown; // the number of seconds to wait before the wile can be called again.
-    enum bb_direction_t callSequence[6]; // the sequence of directional button presses while holding 'B' to call the wile.
+    enum bb_direction_t callSequence[5]; // the sequence of directional button presses while holding 'B' to call the wile.
+    bb_callbackFunction_t wileFunction; // the function that is called after the wile is thrown
 };
 
 struct bb_loadoutData_t
 {
     uint8_t primaryWileIdx; //index into the array of all wiles.
     uint8_t secondaryWileIdx;
+    uint32_t primaryTimer; //decrements to zero. Stays at zero until the wile is called.
+    uint32_t secondaryTimer; //decrements to zero. Stays at zero until the wile is called.
     struct bb_wileData_t allWiles[7];
+    enum bb_direction_t playerInputSequence[5]; // the sequence of directional button presses while holding 'B' to call the wile.
 };
 
 struct bb_radarScreenData_t

@@ -28,6 +28,8 @@ typedef struct bb_gameData_t bb_gameData_t;
 typedef struct bb_midgroundTileInfo_t bb_midgroundTileInfo_t;
 typedef struct bb_foregroundTileInfo_t bb_foregroundTileInfo_t;
 
+typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
+
 typedef enum
 {
     CRUMBLE_ANIM,       // A particle effect where garbage crumbles

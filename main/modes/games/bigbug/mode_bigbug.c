@@ -958,7 +958,7 @@ static void bb_DrawScene_Loadout_Select(void)
         drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c500 : c333, "B", 73, 188);
         drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c333, "+", 86, 188);
         //draw the call sequence
-        for(int i = 0; i < 6; i++)
+        for(int i = 0; i < 5; i++)
         {
             enum bb_direction_t dir = bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].callSequence[i];
             if(dir == BB_NONE)

@@ -59,7 +59,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
 
     // Palette setup
     wsgPaletteReset(&gameData->damagePalette);
-    for (int color = 0; color < 215; color++)
+    for (int color = 0; color < 214; color++)
     {
         uint32_t rgbCol = paletteToRGB((paletteColor_t)color);
         // don't modify blue channel
@@ -90,6 +90,8 @@ void bb_initializeGameData(bb_gameData_t* gameData)
         rgbCol = (rgbCol & 0x00FFFF) | newChannelColor;
         wsgPaletteSet(&gameData->damagePalette, (paletteColor_t)color, RGBtoPalette(rgbCol));
     }
+    //set white to gray for the sake of the calldown arrows on cooldown.
+    wsgPaletteSet(&gameData->damagePalette, c555, c333);
 
     // initialize the loadout data
     strcpy(gameData->loadout.allWiles[0].name, "Faulty Wile");
@@ -97,7 +99,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[0].callSequence[0] = BB_DOWN;
     gameData->loadout.allWiles[0].callSequence[1] = BB_DOWN;
     gameData->loadout.allWiles[0].callSequence[2] = BB_LEFT;
-    gameData->loadout.allWiles[0].callSequence[3] = BB_NONE;
+    gameData->loadout.allWiles[0].callSequence[3] = BB_NONE;//terminator for shorter sequences
     gameData->loadout.allWiles[0].cooldown = 30;
     gameData->loadout.allWiles[0].cost = bb_randomInt(1, 3);
 
@@ -108,7 +110,6 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[1].callSequence[2] = BB_LEFT;
     gameData->loadout.allWiles[1].callSequence[3] = BB_RIGHT;
     gameData->loadout.allWiles[1].callSequence[4] = BB_RIGHT;
-    gameData->loadout.allWiles[1].callSequence[5] = BB_NONE;
     gameData->loadout.allWiles[1].cooldown = 30;
     gameData->loadout.allWiles[1].cost = bb_randomInt(1, 3);
 
@@ -118,7 +119,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[2].callSequence[1] = BB_RIGHT;
     gameData->loadout.allWiles[2].callSequence[2] = BB_UP;
     gameData->loadout.allWiles[2].callSequence[3] = BB_DOWN;
-    gameData->loadout.allWiles[2].callSequence[4] = BB_NONE;
+    gameData->loadout.allWiles[2].callSequence[4] = BB_NONE;//terminator for shorter sequences
     gameData->loadout.allWiles[2].cooldown = 30;
     gameData->loadout.allWiles[2].cost = bb_randomInt(1, 3);
 
@@ -129,7 +130,6 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[3].callSequence[2] = BB_DOWN;
     gameData->loadout.allWiles[3].callSequence[3] = BB_RIGHT;
     gameData->loadout.allWiles[3].callSequence[4] = BB_LEFT;
-    gameData->loadout.allWiles[3].callSequence[5] = BB_NONE;
     gameData->loadout.allWiles[3].cooldown = 30;
     gameData->loadout.allWiles[3].cost = bb_randomInt(1, 3);
 
@@ -140,7 +140,6 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[4].callSequence[2] = BB_RIGHT;
     gameData->loadout.allWiles[4].callSequence[3] = BB_LEFT;
     gameData->loadout.allWiles[4].callSequence[4] = BB_DOWN;
-    gameData->loadout.allWiles[4].callSequence[5] = BB_NONE;
     gameData->loadout.allWiles[4].cooldown = 30;
     gameData->loadout.allWiles[4].cost = bb_randomInt(1, 3);
 
@@ -150,8 +149,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[5].callSequence[1] = BB_LEFT;
     gameData->loadout.allWiles[5].callSequence[2] = BB_DOWN;
     gameData->loadout.allWiles[5].callSequence[3] = BB_RIGHT;
-    gameData->loadout.allWiles[5].callSequence[2] = BB_DOWN;
-    gameData->loadout.allWiles[5].callSequence[4] = BB_NONE;
+    gameData->loadout.allWiles[5].callSequence[4] = BB_DOWN;
     gameData->loadout.allWiles[5].cooldown = 30;
     gameData->loadout.allWiles[5].cost = bb_randomInt(1, 3);
 
@@ -160,12 +158,16 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[6].callSequence[0] = BB_DOWN;
     gameData->loadout.allWiles[6].callSequence[1] = BB_UP;
     gameData->loadout.allWiles[6].callSequence[2] = BB_RIGHT;
-    gameData->loadout.allWiles[6].callSequence[3] = BB_NONE;
+    gameData->loadout.allWiles[6].callSequence[3] = BB_NONE;//terminator for shorter sequences
     gameData->loadout.allWiles[6].cooldown = 30;
     gameData->loadout.allWiles[6].cost = bb_randomInt(1, 3);
 
     gameData->loadout.primaryWileIdx   = 255;
     gameData->loadout.secondaryWileIdx = 255;
+    for(int i = 0; i < 5; i++)
+    {
+        gameData->loadout.playerInputSequence[i] = BB_NONE;
+    }
 }
 
 void bb_freeGameData(bb_gameData_t* gameData)

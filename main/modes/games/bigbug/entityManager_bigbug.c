@@ -197,7 +197,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     entityManager->sprites[BB_FOOD_CART].originY = 56;
 
     entityManager->sprites[BB_ARROW].frames    = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
-    loadWsgInplace("sh_uo.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
+    loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
     loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
 }
 
@@ -700,6 +700,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             gData->fuel = 1000 * 60 * 3; // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes.
                                          // //also set in bb_onCollisionFuel()
             gData->yaw.x = -1;           // So he starts off facing left away from the tutorial egg.
+            gData->activeWile = 255;     // 255 means no wile active.
 
             memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
