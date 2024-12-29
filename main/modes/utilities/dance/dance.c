@@ -153,7 +153,7 @@ void danceEnterMode(void)
     // No speaker output for LEDs!
     setDacShutdown(true);
 
-    danceState = calloc(1, sizeof(danceMode_t));
+    danceState = heap_caps_calloc(1, sizeof(danceMode_t), MALLOC_CAP_8BIT);
 
     danceState->danceIdx   = 0;
     danceState->danceSpeed = DANCE_SPEED_MULT;
@@ -221,9 +221,9 @@ void danceExitMode(void)
     deinitMenuManiaRenderer(danceState->menuRenderer);
     deinitMenu(danceState->menu);
 
-    free(danceState->danceNames);
-    free(danceState->danceVals);
-    free(danceState);
+    heap_caps_free(danceState->danceNames);
+    heap_caps_free(danceState->danceVals);
+    heap_caps_free(danceState);
     danceState = NULL;
 }
 

@@ -156,45 +156,45 @@ void cg_initGrove(cGrove_t* cg)
     // WSGs
     loadWsg("garden_background_small.wsg", &cg->grove.groveBG, true);
     // Cursors
-    cg->grove.cursors = calloc(ARRAY_SIZE(groveCursorSprites), sizeof(wsg_t));
+    cg->grove.cursors = heap_caps_calloc(ARRAY_SIZE(groveCursorSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(groveCursorSprites); idx++)
     {
         loadWsg(groveCursorSprites[idx], &cg->grove.cursors[idx], true);
     }
     // Emotes
-    cg->grove.angerParticles = calloc(ARRAY_SIZE(angerParticles), sizeof(wsg_t));
+    cg->grove.angerParticles = heap_caps_calloc(ARRAY_SIZE(angerParticles), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(angerParticles); idx++)
     {
         loadWsg(angerParticles[idx], &cg->grove.angerParticles[idx], true);
     }
-    cg->grove.questionMarks = calloc(ARRAY_SIZE(questionMarkSprites), sizeof(wsg_t));
+    cg->grove.questionMarks = heap_caps_calloc(ARRAY_SIZE(questionMarkSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(questionMarkSprites); idx++)
     {
         loadWsg(questionMarkSprites[idx], &cg->grove.questionMarks[idx], true);
     }
-    cg->grove.notes = calloc(ARRAY_SIZE(musicNoteSprites), sizeof(wsg_t));
+    cg->grove.notes = heap_caps_calloc(ARRAY_SIZE(musicNoteSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(musicNoteSprites); idx++)
     {
         loadWsg(musicNoteSprites[idx], &cg->grove.notes[idx], true);
     }
-    cg->grove.speechBubbles = calloc(ARRAY_SIZE(speechBubbleSprites), sizeof(wsg_t));
+    cg->grove.speechBubbles = heap_caps_calloc(ARRAY_SIZE(speechBubbleSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(speechBubbleSprites); idx++)
     {
         loadWsg(speechBubbleSprites[idx], &cg->grove.speechBubbles[idx], true);
     }
     // Items
-    cg->grove.itemsWSGs = calloc(ARRAY_SIZE(itemSprites), sizeof(wsg_t));
+    cg->grove.itemsWSGs = heap_caps_calloc(ARRAY_SIZE(itemSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(itemSprites); idx++)
     {
         loadWsg(itemSprites[idx], &cg->grove.itemsWSGs[idx], true);
     }
     // Eggs
-    cg->grove.eggs = calloc(ARRAY_SIZE(eggsIntactSprites), sizeof(wsg_t));
+    cg->grove.eggs = heap_caps_calloc(ARRAY_SIZE(eggsIntactSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(eggsIntactSprites); idx++)
     {
         loadWsg(eggsIntactSprites[idx], &cg->grove.eggs[idx], true);
     }
-    cg->grove.crackedEggs = calloc(ARRAY_SIZE(eggsCrackedSprites), sizeof(wsg_t));
+    cg->grove.crackedEggs = heap_caps_calloc(ARRAY_SIZE(eggsCrackedSprites), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int32_t idx = 0; idx < ARRAY_SIZE(eggsCrackedSprites); idx++)
     {
         loadWsg(eggsCrackedSprites[idx], &cg->grove.crackedEggs[idx], true);
@@ -316,6 +316,7 @@ void cg_initGrove(cGrove_t* cg)
     cg->grove.saveTimer = 0;
 
     // Play the BGM
+
     midiGmOn(cg->mPlayer);
     globalMidiPlayerPlaySong(&cg->grove.bgm, MIDI_BGM);
 }
@@ -345,42 +346,42 @@ void cg_deInitGrove(cGrove_t* cg)
     {
         freeWsg(&cg->grove.crackedEggs[i]);
     }
-    free(cg->grove.crackedEggs);
+    heap_caps_free(cg->grove.crackedEggs);
     for (uint8_t i = 0; i < ARRAY_SIZE(eggsIntactSprites); i++)
     {
         freeWsg(&cg->grove.eggs[i]);
     }
-    free(cg->grove.eggs);
+    heap_caps_free(cg->grove.eggs);
     for (uint8_t i = 0; i < ARRAY_SIZE(itemSprites); i++)
     {
         freeWsg(&cg->grove.itemsWSGs[i]);
     }
-    free(cg->grove.itemsWSGs);
+    heap_caps_free(cg->grove.itemsWSGs);
     for (uint8_t i = 0; i < ARRAY_SIZE(speechBubbleSprites); i++)
     {
         freeWsg(&cg->grove.speechBubbles[i]);
     }
-    free(cg->grove.speechBubbles);
+    heap_caps_free(cg->grove.speechBubbles);
     for (uint8_t i = 0; i < ARRAY_SIZE(musicNoteSprites); i++)
     {
         freeWsg(&cg->grove.notes[i]);
     }
-    free(cg->grove.notes);
+    heap_caps_free(cg->grove.notes);
     for (uint8_t i = 0; i < ARRAY_SIZE(questionMarkSprites); i++)
     {
         freeWsg(&cg->grove.questionMarks[i]);
     }
-    free(cg->grove.questionMarks);
+    heap_caps_free(cg->grove.questionMarks);
     for (uint8_t i = 0; i < ARRAY_SIZE(angerParticles); i++)
     {
         freeWsg(&cg->grove.angerParticles[i]);
     }
-    free(cg->grove.angerParticles);
+    heap_caps_free(cg->grove.angerParticles);
     for (uint8_t i = 0; i < ARRAY_SIZE(groveCursorSprites); i++)
     {
         freeWsg(&cg->grove.cursors[i]);
     }
-    free(cg->grove.cursors);
+    heap_caps_free(cg->grove.cursors);
     freeWsg(&cg->grove.groveBG);
 }
 
@@ -794,7 +795,6 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                 strcpy(cg->buffer, "");
                 textEntrySoftReset();
             }
-
             textEntrySetPrompt(namePrompt);
             cg_groveDrawField(cg, 0);
             textEntryDraw(elapsedUS);

@@ -59,5 +59,5 @@ char* loadJson(const char* name, bool spiRam)
  */
 void freeJson(char* jsonStr)
 {
-    free(jsonStr);
+    heap_caps_free(jsonStr);
 }

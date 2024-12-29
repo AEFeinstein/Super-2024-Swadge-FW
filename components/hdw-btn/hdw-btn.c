@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <esp_log.h>
+#include <esp_timer.h>
 #include <driver/gptimer.h>
 #include <driver/dedic_gpio.h>
 #include <driver/touch_sensor.h>
@@ -21,6 +22,17 @@
 
 /// The number of samples kept in history to debounce buttons
 #define DEBOUNCE_HIST_LEN 5
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+/// @brief A timestamped button event
+typedef struct
+{
+    int32_t state; /// The button state
+    int32_t time;  /// The timestamp for this state
+} timedEvt_t;
 
 //==============================================================================
 // Variables
@@ -75,7 +87,7 @@ static int getBaseTouchVals(int32_t* data, int count);
 void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads)
 {
     // create a queue to handle polling GPIO from ISR
-    btn_evt_queue = xQueueCreate(3 * (numPushButtons + numTouchPads), sizeof(uint32_t));
+    btn_evt_queue = xQueueCreate(3 * (numPushButtons + numTouchPads), sizeof(timedEvt_t));
 
     initPushButtons(pushButtons, numPushButtons);
     initTouchSensor(touchPads, numTouchPads, 0.2f, true);
@@ -96,8 +108,8 @@ void deinitButtons(void)
     ESP_ERROR_CHECK(touch_pad_deinit());
 
     vQueueDelete(btn_evt_queue);
-    free(touchPads);
-    free(baseOffsets);
+    heap_caps_free(touchPads);
+    heap_caps_free(baseOffsets);
 }
 
 /**
@@ -111,12 +123,12 @@ void deinitButtons(void)
 bool checkButtonQueue(buttonEvt_t* evt)
 {
     // Check if there's an event to dequeue from the ISR
-    uint32_t gpio_evt;
+    timedEvt_t gpio_evt;
     while (xQueueReceive(btn_evt_queue, &gpio_evt, 0))
     {
         // Save the old state, set the new state
         uint32_t oldButtonStates = buttonStates;
-        buttonStates             = gpio_evt;
+        buttonStates             = gpio_evt.state;
         // If there was a change
         if (oldButtonStates != buttonStates)
         {
@@ -124,6 +136,7 @@ bool checkButtonQueue(buttonEvt_t* evt)
             evt->button = oldButtonStates ^ buttonStates;
             evt->down   = (buttonStates > oldButtonStates);
             evt->state  = buttonStates;
+            evt->time   = gpio_evt.time;
 
             // Debug print
             // ESP_LOGE("BTN", "Bit 0x%02x was %s, buttonStates is %02x",
@@ -256,8 +269,14 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
     {
         // save the event
         pushIsrState = evt;
+
+        timedEvt_t tEvt = {
+            .state = evt,
+            .time  = esp_timer_get_time(),
+        };
+
         // Queue this state from the ISR
-        xQueueSendFromISR(btn_evt_queue, &evt, &high_task_awoken);
+        xQueueSendFromISR(btn_evt_queue, &tEvt, &high_task_awoken);
     }
     // return whether we need to yield at the end of ISR
     return high_task_awoken == pdTRUE;
@@ -284,7 +303,7 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
     if (NULL == touchPads)
     {
         numTouchPads = _numTouchPads;
-        touchPads    = malloc(sizeof(touch_pad_t) * numTouchPads);
+        touchPads    = heap_caps_malloc(sizeof(touch_pad_t) * numTouchPads, MALLOC_CAP_8BIT);
         memcpy(touchPads, _touchPads, (sizeof(touch_pad_t) * numTouchPads));
     }
 
@@ -419,7 +438,7 @@ int getBaseTouchVals(int32_t* data, int count)
     // curVals is valid.
     if (NULL == baseOffsets)
     {
-        baseOffsets = malloc(sizeof(baseOffsets[0]) * numTouchPads);
+        baseOffsets = heap_caps_malloc(sizeof(baseOffsets[0]) * numTouchPads, MALLOC_CAP_8BIT);
         for (int i = 0; i < numTouchPads; i++)
         {
             baseOffsets[i] = curVals[i] << 8;
@@ -552,7 +571,8 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
         *intensity = totalIntensity;
     }
 
-#if defined(CONFIG_HARDWARE_HOTDOG)
+#if defined(CONFIG_HARDWARE_HOTDOG_PROTO)
+    // The prototype had a rotated touchpad, so un-rotate it
     *phi = (*phi + 225) % 360;
 #endif
 

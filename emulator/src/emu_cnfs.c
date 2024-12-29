@@ -56,7 +56,7 @@ bool emuCnfsInjectFile(const char* name, const char* filePath)
 
         if (fileSize > 0)
         {
-            void* fileData = malloc(fileSize);
+            void* fileData = heap_caps_malloc(fileSize, MALLOC_CAP_8BIT);
             if (fileData != NULL)
             {
                 if (fileSize == fread(fileData, 1, fileSize, dataFile))
@@ -155,7 +155,7 @@ uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     }
     else
     {
-        output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
+        output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_8BIT);
     }
     memcpy(output, fptr, *outsize);
     return output;

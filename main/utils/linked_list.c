@@ -8,6 +8,7 @@
 
 #include <esp_log.h>
 #include <esp_random.h>
+#include <esp_heap_caps.h>
 
 #include "linked_list.h"
 
@@ -42,7 +43,7 @@ static void validateList(const char* func, int line, bool nl, list_t* list, node
 void push(list_t* list, void* val)
 {
     VALIDATE_LIST(__func__, __LINE__, true, list, val);
-    node_t* newLast = malloc(sizeof(node_t));
+    node_t* newLast = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
     newLast->val    = val;
     newLast->next   = NULL;
     newLast->prev   = list->last;
@@ -93,7 +94,7 @@ void* pop(list_t* list)
 
         // Get the last node val, then free it and update length
         retval = target->val;
-        free(target);
+        heap_caps_free(target);
         list->length--;
     }
 
@@ -110,7 +111,7 @@ void* pop(list_t* list)
 void unshift(list_t* list, void* val)
 {
     VALIDATE_LIST(__func__, __LINE__, true, list, val);
-    node_t* newFirst = malloc(sizeof(node_t));
+    node_t* newFirst = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
     newFirst->val    = val;
     newFirst->next   = list->first;
     newFirst->prev   = NULL;
@@ -161,7 +162,7 @@ void* shift(list_t* list)
 
         // Get the first node val, then free it and update length
         retval = target->val;
-        free(target);
+        heap_caps_free(target);
         list->length--;
     }
 
@@ -193,7 +194,7 @@ bool addIdx(list_t* list, void* val, uint16_t index)
     // Else if the index we're trying to add to is before the end of the list
     else if (index < list->length - 1)
     {
-        node_t* newNode = malloc(sizeof(node_t));
+        node_t* newNode = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
         newNode->val    = val;
         newNode->next   = NULL;
         newNode->prev   = NULL;
@@ -248,7 +249,7 @@ void addBefore(list_t* list, void* val, node_t* entry)
     else
     {
         node_t* prev    = entry->prev;
-        node_t* newNode = malloc(sizeof(node_t));
+        node_t* newNode = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
         newNode->val    = val;
         newNode->prev   = prev;
         newNode->next   = entry;
@@ -287,7 +288,7 @@ void addAfter(list_t* list, void* val, node_t* entry)
     else
     {
         node_t* next    = entry->next;
-        node_t* newNode = malloc(sizeof(node_t));
+        node_t* newNode = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
         newNode->val    = val;
         newNode->prev   = entry;
         newNode->next   = next;
@@ -349,7 +350,7 @@ void* removeIdx(list_t* list, uint16_t index)
         current->next       = target->next;
         current->next->prev = current;
 
-        free(target);
+        heap_caps_free(target);
         target = NULL;
 
         list->length--;
@@ -415,7 +416,7 @@ void* removeEntry(list_t* list, node_t* entry)
     VALIDATE_LIST(__func__, __LINE__, false, list, entry);
 
     // free the memory
-    free(entry);
+    heap_caps_free(entry);
 
     // Return the value
     return retVal;
