@@ -32,7 +32,7 @@
 // Consts
 //==============================================================================
 
-static const char cGroveTitle[] = "Chowa Grove"; // Game title
+static const char cGroveTitle[]        = "Chowa Grove"; // Game title
 static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Settings"};
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
@@ -234,7 +234,6 @@ static void cGroveEnterMode(void)
             strcpy(cg->chowa[i].owner, cg->player);
         }
         writeNvsBlob(cgNVSKeys[1], &cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
-
     }
     globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
 }

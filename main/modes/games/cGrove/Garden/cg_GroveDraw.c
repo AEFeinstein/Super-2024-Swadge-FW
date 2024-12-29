@@ -791,7 +791,6 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     c->frameTimer = 0;
                     c->animFrame  = (c->animFrame + 1) % 4;
                 }
-                bool flip = false;
                 vec_t temp;
                 // Check if in the water
                 if (rectRectIntersection(c->aabb, cg->grove.waterBoundary, &temp))
@@ -813,8 +812,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     }
                     else if (c->angle > 135 && c->angle <= 225)
                     {
-                        spr  = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_LEFT, c->animFrame);
-                        flip = true;
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_LEFT, c->animFrame);
                     }
                     else if (c->angle > 225 && c->angle <= 315)
                     {

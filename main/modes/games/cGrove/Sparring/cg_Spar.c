@@ -296,6 +296,10 @@ void cg_runSpar(int64_t elapsedUs)
         }
         case CG_SPAR_MATCH:
         {
+            while (checkButtonQueueWrapper(&evt))
+            {
+                ; // No button input, but make sure the queue is serviced
+            }
             cg_runSparMatch(cg, elapsedUs);
             cg_drawSparMatch(cg, elapsedUs);
             break;
@@ -303,7 +307,6 @@ void cg_runSpar(int64_t elapsedUs)
         case CG_SPAR_TUTORIAL:
         {
             // Handle input
-            buttonEvt_t evt = {0};
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down && evt.button & PB_DOWN)
@@ -335,6 +338,10 @@ void cg_runSpar(int64_t elapsedUs)
         default:
         {
             // Should never hit
+            while (checkButtonQueueWrapper(&evt))
+            {
+                ; // No button input, but make sure the queue is serviced
+            }
             break;
         }
     }
