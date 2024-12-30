@@ -214,15 +214,26 @@ int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint3
 {
 #ifdef USE_BAKED_DRUMS
 
-    int32_t dIdx = drum - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
-    if (idx >= bakedDrumsLens[dIdx])
+    if (drum < ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM || drum > OPEN_TRIANGLE)
     {
+        // Drum not implemented
         *done = true;
         return 0;
     }
     else
     {
-        return bakedDrums[dIdx][idx];
+        int32_t dIdx = drum - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
+        if (idx >= bakedDrumsLens[dIdx])
+        {
+            // Drum sample finished
+            *done = true;
+            return 0;
+        }
+        else
+        {
+            // Drum sample playing
+            return bakedDrums[dIdx][idx];
+        }
     }
 
 #else
