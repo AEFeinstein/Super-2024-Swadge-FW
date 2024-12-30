@@ -75,6 +75,7 @@ typedef enum
     BB_SPIT,          // projectile from the bug. Reuses fuel sprite with a palette swap.
     BB_DIVE_SUMMARY,  // A notepad that shows your dive stats.
     BB_EXPLOSION,     // A particle effect that deletes dirt, kills bugs, hurts and pushes garbotnik.
+    BB_ATMOSPHERIC_ATOMIZER, // A particle effect that increases garbotnik's dragShift.
 
 } bb_spriteDef_t;
 
@@ -101,5 +102,6 @@ typedef enum
 
 void bb_trigger501kg(bb_entity_t* self);
 void bb_triggerFaultyWile(bb_entity_t* self);
+void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self);
 
 #endif

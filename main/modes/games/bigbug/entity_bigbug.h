@@ -49,6 +49,7 @@ typedef enum
     WILE_DATA,
     BB_501KG_DATA,
     EXPLOSION_DATA,
+    ATMOSPHERIC_ATOMIZER_DATA,
 } bb_data_type_t;
 
 
@@ -82,6 +83,8 @@ typedef struct
     int16_t harpoonCooldown; // decrements over time. Fires if < 0 and resets to GameData's GarbotnikStat_fireTime.
 
     uint8_t activeWile;
+
+    uint8_t dragShift; //typically 17 or 19 with the atmospheric atomizer.
 } bb_garbotnikData_t;
 
 typedef struct
@@ -282,6 +285,11 @@ typedef struct
 
 typedef struct
 {
+    uint16_t lifetime;
+} bb_atmosphericAtomizerData_t;
+
+typedef struct
+{
     vec_t pos;
     uint16_t radius;
 } pingCircle;
@@ -386,6 +394,8 @@ void bb_updateDiveSummary(bb_entity_t* self);
 void bb_updateWile(bb_entity_t* self);
 void bb_update501kg(bb_entity_t* self);
 void bb_updateExplosion(bb_entity_t* self);
+void bb_updateAtmosphericAtomizer(bb_entity_t* self);
+
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -414,6 +424,7 @@ void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
 void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_draw501kg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawExplosion(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawAtmosphericAtomizer(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 

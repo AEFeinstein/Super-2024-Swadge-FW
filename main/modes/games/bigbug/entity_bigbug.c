@@ -711,7 +711,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             drag = 10;
         }
         // Apply drag based on absolute value to smooth asymmetry
-        int32_t dragEffect = (drag * self->gameData->elapsedUs) >> 17;
+        int32_t dragEffect = (drag * self->gameData->elapsedUs) >> gData->dragShift;//typically 17, or 19 with atmospheric atomizer
 
         // Adjust velocity symmetrically for both positive and negative values
         if (gData->vel.x > 0)
@@ -1043,6 +1043,37 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             }
         }
     }
+
+    // Fuel decrements with time. Right shifting by 10 is fairly close to
+    // converting microseconds to milliseconds without requiring division.
+    gData->fuel -= (((self->gameData->elapsedUs >> 10) * self->gameData->GarbotnikStat_fuelConsumptionRate) >> 2);
+    if (gData->fuel < 0)
+    {
+        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+        physData->vel               = gData->vel;
+        physData->bounceNumerator   = 1; // 25% bounce
+        physData->bounceDenominator = 4;
+        bb_setData(self, physData, PHYSICS_DATA);
+        self->updateFunction = bb_updateGarbotnikDying;
+        self->drawFunction   = NULL;
+        return;
+    }
+    else if (gData->fuel < 38000 && self->gameData->bgm.length == 7217)
+    {
+        // exploration song length 7217
+        // hurry up song length 6480
+        bb_setupMidi();
+        unloadMidiFile(&self->gameData->bgm);
+        loadMidiFile("Big Bug Hurry up.mid", &self->gameData->bgm, true);
+        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
+    }
+    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 6480)
+    {
+        bb_setupMidi();
+        unloadMidiFile(&self->gameData->bgm);
+        loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
+        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
+    }
     
 
     bb_hitInfo_t hitInfo = {0};
@@ -1108,37 +1139,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ESP_LOGD(BB_TAG, "bounceScalar %" PRId32 "\n", bounceScalar);
         gData->vel = mulVec2d(
             subVec2d(gData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(gData->vel, hitInfo.normal)))), bounceScalar);
-    }
-
-        // Fuel decrements with time. Right shifting by 10 is fairly close to
-    // converting microseconds to milliseconds without requiring division.
-    gData->fuel -= (((self->gameData->elapsedUs >> 10) * self->gameData->GarbotnikStat_fuelConsumptionRate) >> 2);
-    if (gData->fuel < 0)
-    {
-        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
-        physData->vel               = gData->vel;
-        physData->bounceNumerator   = 1; // 25% bounce
-        physData->bounceDenominator = 4;
-        bb_setData(self, physData, PHYSICS_DATA);
-        self->updateFunction = bb_updateGarbotnikDying;
-        self->drawFunction   = NULL;
-        return;
-    }
-    else if (gData->fuel < 38000 && self->gameData->bgm.length == 7217)
-    {
-        // exploration song length 7217
-        // hurry up song length 6480
-        bb_setupMidi();
-        unloadMidiFile(&self->gameData->bgm);
-        loadMidiFile("Big Bug Hurry up.mid", &self->gameData->bgm, true);
-        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
-    }
-    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 6480)
-    {
-        bb_setupMidi();
-        unloadMidiFile(&self->gameData->bgm);
-        loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
-        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     }
 }
 
@@ -2351,8 +2351,8 @@ void bb_update501kg(bb_entity_t* self)
     bb_501kgData_t* fData = (bb_501kgData_t*)self->data;
     if(self->pos.y < fData->targetY)
     {
-        self->pos.x += (fData->vel.x * self->gameData->elapsedUs) >> 14;
-        self->pos.y += (fData->vel.y * self->gameData->elapsedUs) >> 14;
+        self->pos.x += (fData->vel.x * self->gameData->elapsedUs) >> 13;
+        self->pos.y += (fData->vel.y * self->gameData->elapsedUs) >> 13;
 
         bb_hitInfo_t hitInfo = {0};
         bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
@@ -2424,6 +2424,18 @@ void bb_updateExplosion(bb_entity_t* self)
     eData->lifetime += self->gameData->elapsedUs >> 10;
     if(eData->lifetime > 1000)
     {
+        bb_destroyEntity(self, false);
+    }
+}
+
+void bb_updateAtmosphericAtomizer(bb_entity_t* self)
+{
+    bb_atmosphericAtomizerData_t* aData = (bb_atmosphericAtomizerData_t*)self->data;
+    aData->lifetime += self->gameData->elapsedUs >> 10;
+    if(aData->lifetime > 30000)
+    {
+        bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
+        gData->dragShift = 17;//This greatly reduces the drag on the garbotnik
         bb_destroyEntity(self, false);
     }
 }
@@ -2540,15 +2552,15 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
 
             if(self->gameData->loadout.primaryTimer != 0)
             {
-                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0], 70 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, &self->gameData->damagePalette, false, false, rotation);
+                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0], 70 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, &self->gameData->damagePalette, false, false, rotation);
             }
             else if(primaryComparison != -1 && self->gameData->loadout.playerInputSequence[i] == self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence[i])
             {
-                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 70 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, false, false, rotation);
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 70 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, false, false, rotation);
             }
             else
             {
-                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 70 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, false, false, rotation);
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 70 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, false, false, rotation);
             }
         }
     }
@@ -2579,15 +2591,15 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
 
             if(self->gameData->loadout.secondaryTimer != 0)
             {
-                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0], 210 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, &self->gameData->damagePalette, false, false, rotation);
+                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0], 210 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, &self->gameData->damagePalette, false, false, rotation);
             }
             else if(secondaryComparison != -1 && self->gameData->loadout.playerInputSequence[i] == self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence[i])
             {
-                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 210 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, false, false, rotation);
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 210 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, false, false, rotation);
             }
             else
             {
-                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 210 - ((sequenceLength * 29 - 5)>>1) + i * 29, 17, false, false, rotation);
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 210 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, false, false, rotation);
             }
         }
     }
@@ -3170,12 +3182,12 @@ void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
             if(self->gameData->bgm.data[i + (wData->lifetime>>2)] & 1)
             {
                 drawText(&self->gameData->font, c511, "1", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
-                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 30 - i * 15);
+                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285 + i * 15);
             }
             else
             {
                 drawText(&self->gameData->font, c511, "0", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
-                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 30 - i * 15);
+                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285 + i * 15);
             }
         }
 
@@ -3197,6 +3209,40 @@ void bb_drawExplosion(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 {
     drawCircleFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
                      ((bb_explosionData_t*)self->data)->radius, bb_randomInt(0,1)?c555:c550);
+}
+
+void bb_drawAtmosphericAtomizer(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    //draw solar radiation lines diagonally penetrating the screen from above that offset in time with bb_atmostphericAtomizerData_t->lifetime.
+    bb_atmosphericAtomizerData_t* aData = (bb_atmosphericAtomizerData_t*)self->data;
+    
+    uint16_t thing1 = aData->lifetime % 16;
+    uint16_t thing2 = aData->lifetime % 240;
+    uint16_t thing3 = (aData->lifetime >> 2) % 2;
+    for(int i = 0; i < 17; i++)
+    {
+        if(bb_randomInt(0,2))
+        {
+            drawLineFast(i*16+thing1 - thing3,
+                         thing2 + 240 - i * 12,
+                         i*18+thing1 - thing3,
+                         thing2 - 30 - i * 15, c555);
+        }
+        else
+        {
+            drawLineFast(i*16+thing1 - thing3,
+                         thing2 + 240 - i * 12,
+                         i*18+thing1 - thing3,
+                         thing2 - 30 - i * 15, c552);
+        }
+    }
+    //draw dots randomly all over the screen
+    for(int i = 0; i < 30; i++)
+    {
+        drawCircleFilled(bb_randomInt(0,280),
+                         bb_randomInt(0,240),
+                         1, c445);
+    }
 }
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -4419,13 +4465,19 @@ void bb_playCarAlarm(bb_entity_t* self)
 void bb_trigger501kg(bb_entity_t* self)
 {
     bb_loadSprite("501kg",1, 1, &self->gameData->entityManager.sprites[BB_501KG]);
+    
     bb_entity_t* missile = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_501KG, 1,
-                    self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+                    self->pos.x >> DECIMAL_BITS,
+                    self->pos.y >> DECIMAL_BITS, true, true);
     bb_501kgData_t* kgData = ((bb_501kgData_t*)missile->data);
 
-    missile->pos = (vec_t){self->pos.x + ((bb_randomInt(0,1)*2)-1) * bb_randomInt(0,((6144 - self->pos.y)>>1)), -6144};
-    kgData->vel = subVec2d(self->pos, missile->pos);
-    fastNormVec(&kgData->vel.x, &kgData->vel.y);
+    kgData->vel = (vec_t){bb_randomInt(-60,60), 60};
+
+    while(missile->pos.y > -2173)
+    {
+        missile->pos.x -= (self->gameData->elapsedUs >> 12) * kgData->vel.x;
+        missile->pos.y -= (self->gameData->elapsedUs >> 12) * kgData->vel.y;
+    }
 
     vecFl_t floatVel = {(float)kgData->vel.x, (float)kgData->vel.y};
 
@@ -4448,6 +4500,16 @@ void bb_triggerFaultyWile(bb_entity_t* self)
     bb_entity_t* explosion = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
     bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
     eData->radius = 40;
+}
+
+void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self)
+{
+    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_ATMOSPHERIC_ATOMIZER, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+    if(self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+    {
+        bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
+        gData->dragShift = 20;//This greatly reduces the drag on the garbotnik
+    }
 }
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,

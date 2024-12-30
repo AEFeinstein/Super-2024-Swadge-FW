@@ -145,8 +145,8 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[4].cost = bb_randomInt(1, 3);
     gameData->loadout.allWiles[4].wileFunction = bb_trigger501kg;
 
-    strcpy(gameData->loadout.allWiles[5].name, "Atmospheric Atomizer");
-    strcpy(gameData->loadout.allWiles[5].description, "The first prototype for the Death Dumpster's own onboard time machine, but it eviscerates the atmosphere within a few square miles for 30 seconds.");
+    strcpy(gameData->loadout.allWiles[5].name, "Sky Choker");
+    strcpy(gameData->loadout.allWiles[5].description, "Eliminates drag on Garbotnik. It was a failed time machine prototype, but it eviscerates the atmosphere withing a few square miles.");
     gameData->loadout.allWiles[5].callSequence[0] = BB_DOWN;
     gameData->loadout.allWiles[5].callSequence[1] = BB_LEFT;
     gameData->loadout.allWiles[5].callSequence[2] = BB_DOWN;
@@ -154,6 +154,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[5].callSequence[4] = BB_DOWN;
     gameData->loadout.allWiles[5].cooldown = 30;
     gameData->loadout.allWiles[5].cost = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[5].wileFunction = bb_triggerAtmosphericAtomizerWile;
 
     strcpy(gameData->loadout.allWiles[6].name, "Ammo Supply");
     strcpy(gameData->loadout.allWiles[6].description, "Drops a crate to top off your ammo to the max.");

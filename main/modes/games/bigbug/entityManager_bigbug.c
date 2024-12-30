@@ -705,6 +705,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                                          // //also set in bb_onCollisionFuel()
             gData->yaw.x = -1;           // So he starts off facing left away from the tutorial egg.
             gData->activeWile = 255;     // 255 means no wile active.
+            gData->dragShift = 17;
 
             memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
@@ -1246,6 +1247,14 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_setData(entity, heap_caps_calloc(1, sizeof(bb_explosionData_t), MALLOC_CAP_SPIRAM), EXPLOSION_DATA);
             entity->updateFunction = &bb_updateExplosion;
             entity->drawFunction   = &bb_drawExplosion;
+            break;
+        }
+        case BB_ATMOSPHERIC_ATOMIZER:
+        {
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_atmosphericAtomizerData_t), MALLOC_CAP_SPIRAM),
+                       ATMOSPHERIC_ATOMIZER_DATA);
+            entity->updateFunction = &bb_updateAtmosphericAtomizer;
+            entity->drawFunction   = &bb_drawAtmosphericAtomizer;
             break;
         }
         default: // FLAME_ANIM and others need nothing set
