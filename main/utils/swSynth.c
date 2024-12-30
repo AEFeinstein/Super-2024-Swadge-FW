@@ -4,11 +4,16 @@
 
 #include <inttypes.h>
 #include <stdio.h>
-#include "esp_attr.h"
-#include "hdw-dac.h"
+//#include "esp_attr.h"
 #include "swSynth.h"
 #include "macros.h"
 #include "fp_math.h"
+
+#ifdef MIDI_STANDALONE
+#define DAC_SAMPLE_RATE_HZ 16384
+#else
+#include "hdw-dac.h"
+#endif
 
 //==============================================================================
 // Constant variables

@@ -5,6 +5,7 @@
 //==============================================================================
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 //==============================================================================
@@ -255,6 +256,13 @@ typedef struct
 } midiEvent_t;
 
 //==============================================================================
+// Constants
+//==============================================================================
+
+extern const uint8_t midiHeader[4];
+extern const uint8_t trackHeader[4];
+
+//==============================================================================
 // Function Declarations
 //==============================================================================
 
@@ -268,6 +276,16 @@ typedef struct
  * @return false If the load failed
  */
 bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam);
+
+/**
+ * @brief Load a MIDI file from raw data
+ * @param data A pointer to raw MIDI file data.
+ * @param size The length, in bytes, of the data parameter
+ * @param[out] file A pointer to a midiFile_t struct to load the data into
+ *
+ * @warning The data pointer is not copied here, so it must remain valid throughout the entire lifetime of the resulting midiFile_t.
+*/
+bool loadMidiData(const uint8_t* data, size_t size, midiFile_t* file);
 
 /**
  * @brief Free the data associated with the given MIDI file

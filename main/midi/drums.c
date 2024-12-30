@@ -1,9 +1,23 @@
 #include "drums.h"
 #include "swSynth.h"
-#include "hdw-dac.h"
 #include "midiNoteFreqs.h"
 #include "midiUtil.h"
+
+#ifdef MIDI_STANDALONE
+
+#define DAC_SAMPLE_RATE_HZ 16384
+
+static const uint8_t* cnfsGetFile(const char* name, size_t* size)
+{
+    return NULL;
+}
+
+#else
+
+#include "hdw-dac.h"
 #include "cnfs.h"
+
+#endif
 
 #define FREQ_HZ(whole)     (((whole) & 0xFFFFu) << 16)
 #define FREQ_HZ_FRAC(flhz) ((((uint32_t)(flhz)) << 16) | ((uint32_t)(((flhz) - ((float)((uint32_t)(flhz)))) * 65536.0)))

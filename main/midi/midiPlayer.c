@@ -2,18 +2,29 @@
 
 #include <string.h>
 #include <inttypes.h>
-#include <esp_heap_caps.h>
 
 #include "waveTables.h"
 #include "midiNoteFreqs.h"
 #include "midiData.h"
 #include "midiUtil.h"
-#include "hdw-dac.h"
 #include "fp_math.h"
-#include "esp_log.h"
 #include "drums.h"
 #include "macros.h"
+
+
+#ifdef MIDI_STANDALONE
+
+#define heap_caps_calloc(count, size, ignore) calloc(count, size)
+#define heap_caps_free free
+
+#else
+
+#include <esp_heap_caps.h>
+#include "hdw-dac.h"
 #include "cnfs.h"
+#include "esp_log.h"
+
+#endif
 
 // Uncomment to enable logging SysEx commands in detail
 // #define DEBUG_SYSEX 1

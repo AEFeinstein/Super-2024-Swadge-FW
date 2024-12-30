@@ -4,17 +4,42 @@
 
 #include "midiFileParser.h"
 #include "midiPlayer.h"
-#include "heatshrink_helper.h"
-#include "cnfs.h"
-
-#include <esp_log.h>
-#include <esp_heap_caps.h>
 
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef MIDI_STANDALONE
+
+#include <esp_log.h>
+#include <esp_heap_caps.h>
+
+#else
+
+#define ESP_LOGD()
+#define ESP_LOGI()
+#define ESP_LOGW()
+#define ESP_LOGE()
+
+#ifndef MIDI_CALLOC
+#define MIDI_CALLOC calloc
+#endif
+
+#ifndef MIDI_FREE
+#define MIDI_FREE free
+#endif
+
+#endif
+
+#ifndef MIDI_CALLOC
+#define MIDI_CALLOC(nmemb, sz) heap_caps_calloc(nmemb, sz, MALLOC_CAP_SPIRAM)
+#endif
+
+#ifndef MIDI_FREE
+#define MIDI_FREE(ptr) heap_caps_free(ptr)
+#endif
 
 //==============================================================================
 // Structs
@@ -67,8 +92,8 @@ static void readFirstEvents(midiFileReader_t* reader);
 // Variables
 //==============================================================================
 
-static const uint8_t midiHeader[]  = {'M', 'T', 'h', 'd'};
-static const uint8_t trackHeader[] = {'M', 'T', 'r', 'k'};
+const uint8_t midiHeader[]  = {'M', 'T', 'h', 'd'};
+const uint8_t trackHeader[] = {'M', 'T', 'r', 'k'};
 
 //==============================================================================
 // Functions
@@ -636,7 +661,7 @@ static bool parseMidiHeader(midiFile_t* file)
     uint16_t trackChunkCount = (file->data[offset] << 8) | file->data[offset + 1];
     offset += 2;
     file->trackCount = trackChunkCount;
-    file->tracks     = heap_caps_calloc(trackChunkCount, sizeof(midiTrack_t), MALLOC_CAP_SPIRAM);
+    file->tracks     = MIDI_CALLOC(trackChunkCount, sizeof(midiTrack_t));
     if (NULL == file->tracks)
     {
         ESP_LOGE("MIDIParser", "Could not allocate data for MIDI file with %" PRIu16 " tracks", trackChunkCount);
@@ -791,51 +816,18 @@ static void readFirstEvents(midiFileReader_t* reader)
     }
 }
 
+#ifdef MIDI_STANDALONE
 bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 {
-    uint32_t size;
-    size_t raw_size;
-    uint8_t* data = cnfsReadFile(name, &raw_size, spiRam);
+    printf("loadMidiFile() Not Implemented!!!\n");
+    return false;
+}
+#endif
 
-    if (NULL != data)
-    {
-        if (raw_size < sizeof(midiHeader) || memcmp(data, midiHeader, sizeof(midiHeader)))
-        {
-            // This is not a MIDI file! Try to decompress
-            if (heatshrinkDecompress(NULL, &size, data, (uint32_t)raw_size))
-            {
-                // Size was read successfully, allocate the non-compressed buffer
-                uint8_t* decompressed = heap_caps_malloc(size, spiRam ? MALLOC_CAP_SPIRAM : 0);
-                if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
-                {
-                    // Success, free the raw data
-                    heap_caps_free(data);
-                    data = decompressed;
-                }
-                else
-                {
-                    heap_caps_free(decompressed);
-                    heap_caps_free(data);
-                    return false;
-                }
-            }
-            else
-            {
-                ESP_LOGE("MIDIFileParser", "Song %s could not be decompressed!", name);
-                heap_caps_free(data);
-                return false;
-            }
-        }
-        else
-        {
-            ESP_LOGI("MIDIFileParser", "Song %s is loaded uncompressed", name);
-            size = (uint32_t)raw_size;
-        }
-    }
-
+bool loadMidiData(const uint8_t* data, size_t size, midiFile_t* file)
+{
     if (data != NULL)
     {
-        ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", name, size);
         file->data   = data;
         file->length = (uint32_t)size;
         if (parseMidiHeader(file))
@@ -848,10 +840,9 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
             if (file->tracks != NULL)
             {
                 // TODO should this be handled in the parser?
-                heap_caps_free(file->tracks);
+                MIDI_FREE(file->tracks);
                 file->tracks = NULL;
             }
-            heap_caps_free(data);
             memset(file, 0, sizeof(midiFile_t));
             return false;
         }
@@ -864,14 +855,14 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 
 void unloadMidiFile(midiFile_t* file)
 {
-    heap_caps_free(file->tracks);
-    heap_caps_free(file->data);
+    MIDI_FREE(file->tracks);
+    MIDI_FREE(file->data);
     memset(file, 0, sizeof(midiFile_t));
 }
 
 bool initMidiParser(midiFileReader_t* reader, const midiFile_t* file)
 {
-    reader->states = heap_caps_calloc(file->trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
+    reader->states = MIDI_CALLOC(file->trackCount, sizeof(midiTrackState_t));
     if (NULL == reader->states)
     {
         return false;
@@ -889,11 +880,11 @@ void midiParserSetFile(midiFileReader_t* reader, const midiFile_t* file)
 {
     if (reader->states != NULL)
     {
-        heap_caps_free(reader->states);
+        MIDI_FREE(reader->states);
         reader->states = NULL;
     }
 
-    reader->states     = heap_caps_calloc(file->trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
+    reader->states     = MIDI_CALLOC(file->trackCount, sizeof(midiTrackState_t));
     reader->stateCount = file->trackCount;
 
     // Initialize the reader's internal per-track parsing states
@@ -946,7 +937,7 @@ void deinitMidiParser(midiFileReader_t* reader)
 
     if (states != NULL)
     {
-        heap_caps_free(states);
+        MIDI_FREE(states);
     }
 }
 
@@ -1017,8 +1008,8 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
 
 void* globalMidiSave(void)
 {
-    // TODO: There are multiple allocs here, so the return value _can't_ safely be heap_caps_free()'d by others
-    midiSaveState_t* saveState = heap_caps_calloc(NUM_GLOBAL_PLAYERS, sizeof(midiSaveState_t), MALLOC_CAP_SPIRAM);
+    // TODO: There are multiple allocs here, so the return value _can't_ safely be MIDI_FREE()'d by others
+    midiSaveState_t* saveState = MIDI_CALLOC(NUM_GLOBAL_PLAYERS, sizeof(midiSaveState_t));
 
     for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
     {
@@ -1031,7 +1022,7 @@ void* globalMidiSave(void)
             {
                 saveState[i].trackCount = player->reader.file->trackCount;
                 saveState[i].trackStates
-                    = heap_caps_calloc(saveState[i].trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
+                    = MIDI_CALLOC(saveState[i].trackCount, sizeof(midiTrackState_t));
 
                 // Overwrite the copy with the newly allocated pointer, since the current one may be free'd
                 saveState[i].player.reader.states = saveState[i].trackStates;
@@ -1067,7 +1058,7 @@ void globalMidiRestore(void* data)
 
     // Do not free any of the individual save state data, since it's now just the real data
     // Just free the container
-    heap_caps_free(data);
+    MIDI_FREE(data);
 }
 
 int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
