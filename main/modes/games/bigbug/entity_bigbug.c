@@ -1816,15 +1816,15 @@ void bb_updateCharacterTalk(bb_entity_t* self)
 {
     bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
 
-    dData->blinkTimer += 3;
+    dData->blinkTimer += 5;
 
     if (dData->offsetY < 0 && dData->curString < dData->numStrings)
     {
-        dData->offsetY += 3;
+        dData->offsetY += 10;
     }
     else if (dData->curString >= dData->numStrings)
     {
-        dData->offsetY -= 3;
+        dData->offsetY -= 10;
         if (dData->offsetY <= -240)
         {
             dData->endDialogueCB(self);
