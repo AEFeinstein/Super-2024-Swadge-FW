@@ -5,7 +5,6 @@
 #include "drums.h"
 
 #include "macros.h"
-#include "hdw-dac.h"
 #include "midiNoteFreqs.h"
 
 const midiTimbre_t acousticGrandPianoTimbre = {

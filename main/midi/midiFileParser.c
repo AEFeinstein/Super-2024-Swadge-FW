@@ -18,17 +18,17 @@
 
 #else
 
-#define ESP_LOGD()
-#define ESP_LOGI()
-#define ESP_LOGW()
-#define ESP_LOGE()
+#define ESP_LOGD(...)
+#define ESP_LOGI(...)
+#define ESP_LOGW(...)
+#define ESP_LOGE(...)
 
 #ifndef MIDI_CALLOC
-#define MIDI_CALLOC calloc
+#define MIDI_CALLOC(nmemb, sz) calloc(nmemb, sz)
 #endif
 
 #ifndef MIDI_FREE
-#define MIDI_FREE free
+#define MIDI_FREE(ptr) free(ptr)
 #endif
 
 #endif
@@ -209,7 +209,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
     }
 
     // Read the status byte of the next event
-    uint8_t status = *(track->cur++);
+    uint8_t status = *(track-> cur++);
 
     // Handle running status
     if (status > 0xF7)
@@ -819,7 +819,7 @@ static void readFirstEvents(midiFileReader_t* reader)
 #ifdef MIDI_STANDALONE
 bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 {
-    printf("loadMidiFile() Not Implemented!!!\n");
+    ESP_LOGE("MIDIParser", "loadMidiFile() Not Implemented!!!\n");
     return false;
 }
 #endif

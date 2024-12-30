@@ -14,8 +14,21 @@
 
 #ifdef MIDI_STANDALONE
 
+#include <stdlib.h>
+
+#define ESP_LOGD(...)
+#define ESP_LOGI(...)
+#define ESP_LOGW(...)
+#define ESP_LOGE(...)
+
 #define heap_caps_calloc(count, size, ignore) calloc(count, size)
 #define heap_caps_free free
+
+static const uint8_t* cnfsGetFile(const char* name, size_t* size)
+{
+    return NULL;
+}
+
 
 #else
 

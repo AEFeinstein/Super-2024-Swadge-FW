@@ -64,6 +64,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifdef MIDI_STANDALONE
+#define DAC_SAMPLE_RATE_HZ 16384
+#else
+#include <hdw-dac.h>
+#endif
+
 //==============================================================================
 // Defines
 //==============================================================================
