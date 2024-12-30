@@ -24,19 +24,9 @@ static void shMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static const shSong_t shSongList[] = {
     {
-        .name   = "Let It Bleed",
-        .artist = "TheManPF",
-        .fName  = "sh_bleed",
-    },
-    {
         .name   = "Chowa Grove",
         .artist = "Newmajoe",
         .fName  = "sh_cgrove",
-    },
-    {
-        .name   = "Chowa Race",
-        .artist = "Tuck",
-        .fName  = "sh_crace",
     },
     {
         .name   = "Hot Dog Credits",
@@ -44,9 +34,14 @@ static const shSong_t shSongList[] = {
         .fName  = "sh_credits",
     },
     {
-        .name   = "The Dance of the Cremulons",
-        .artist = "Mattmattat",
-        .fName  = "sh_cremulons",
+        .name   = "Chowa Race",
+        .artist = "Tuck",
+        .fName  = "sh_crace",
+    },
+    {
+        .name   = "Pango",
+        .artist = "Newmajoe",
+        .fName  = "sh_pango",
     },
     {
         .name   = "The Devil's Lullaby",
@@ -54,14 +49,34 @@ static const shSong_t shSongList[] = {
         .fName  = "sh_devils",
     },
     {
+        .name   = "Starfest Magway",
+        .artist = "Ronin Op F",
+        .fName  = "sh_starfest",
+    },
+    {
+        .name   = "Wake Man Stage",
+        .artist = "JnWake",
+        .fName  = "sh_wakeman",
+    },
+    {
         .name   = "Ocean City 1989",
         .artist = "Carrie Wood",
         .fName  = "sh_ocean",
     },
     {
-        .name   = "Pango",
-        .artist = "Newmajoe",
-        .fName  = "sh_pango",
+        .name   = "San Pablo Sunrise",
+        .artist = "Ian Cowell",
+        .fName  = "sh_starfest",
+    },
+    {
+        .name   = "The Dance of the Cremulons",
+        .artist = "Mattmattat",
+        .fName  = "sh_cremulons",
+    },
+    {
+        .name   = "Let It Bleed",
+        .artist = "TheManPF",
+        .fName  = "sh_bleed",
     },
     {
         .name   = "Revenge",
@@ -74,24 +89,9 @@ static const shSong_t shSongList[] = {
         .fName  = "sh_pain",
     },
     {
-        .name   = "Wake Man Stage",
-        .artist = "JnWake",
-        .fName  = "sh_wakeman",
-    },
-    {
         .name   = "Gunship Credits",
         .artist = "Newmajoe",
         .fName  = "sh_gs_credits",
-    },
-    {
-        .name   = "Starfest Magway",
-        .artist = "Ronin Op F",
-        .fName  = "sh_starfest",
-    },
-    {
-        .name   = "San Pablo Sunrise",
-        .artist = "Ian Cowell",
-        .fName  = "sh_starfest",
     },
 };
 
