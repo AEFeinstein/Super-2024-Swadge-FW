@@ -1234,6 +1234,20 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->drawFunction   = &bb_drawWile;
             break;
         }
+        case BB_501KG:
+        {
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_501kgData_t), MALLOC_CAP_SPIRAM), BB_501KG_DATA);
+            entity->updateFunction = &bb_update501kg;
+            entity->drawFunction   = &bb_draw501kg;
+            break;
+        }
+        case BB_EXPLOSION:
+        {
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_explosionData_t), MALLOC_CAP_SPIRAM), EXPLOSION_DATA);
+            entity->updateFunction = &bb_updateExplosion;
+            entity->drawFunction   = &bb_drawExplosion;
+            break;
+        }
         default: // FLAME_ANIM and others need nothing set
         {
             break;

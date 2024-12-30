@@ -156,7 +156,7 @@ static void bb_EnterMode(void)
     //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
 
     bb_entity_t* foreground       = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
-                                                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -5146, true, false);
+                                                    (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -2573, true, false);
     foreground->updateFarFunction = &bb_updateFarMenuAndUnload; // This menu will unload menu sprites when it is far.
 
     foreground->updateFunction = NULL;
@@ -227,7 +227,7 @@ static void bb_EnterModeSkipIntro(void)
     // create the death dumpster
     bigbug->gameData.entityManager.deathDumpster
         = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
-                          (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -4746, true, false);
+                          (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -2173, true, false);
 
     // create 3 rockets
     for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
@@ -458,8 +458,8 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
             c333, c334, c344, //
             c444, c445, c455  //
         };
-        // get steps from 0 (at -4000) to 14 (at -1200)
-        int32_t skyStep = cameraPos->y / 200 + 20;
+        // get steps from 0 (at -2000) to 14 (at -900)
+        int32_t skyStep = (cameraPos->y + 2000) * 14 / 1100;
         skyStep         = CLAMP(skyStep, 0, ARRAY_SIZE(skyColors) - 1);
         bgColor         = skyColors[skyStep];
     }

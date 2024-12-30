@@ -47,6 +47,8 @@ typedef enum
     SPIT_DATA,
     FOOD_CART_DATA,
     WILE_DATA,
+    BB_501KG_DATA,
+    EXPLOSION_DATA,
 } bb_data_type_t;
 
 
@@ -267,6 +269,19 @@ typedef struct
 
 typedef struct
 {
+    vec_t vel;
+    int32_t targetY; //The y position to reach before stopping.
+    int16_t angle;   //The angle to rotate the sprite. Calculate once at creation.
+} bb_501kgData_t;
+
+typedef struct
+{
+    uint16_t lifetime;
+    uint16_t radius;
+} bb_explosionData_t;
+
+typedef struct
+{
     vec_t pos;
     uint16_t radius;
 } pingCircle;
@@ -369,6 +384,8 @@ void bb_updateSpit(bb_entity_t* self);
 void bb_updatePangoAndFriends(bb_entity_t* self);
 void bb_updateDiveSummary(bb_entity_t* self);
 void bb_updateWile(bb_entity_t* self);
+void bb_update501kg(bb_entity_t* self);
+void bb_updateExplosion(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -395,6 +412,9 @@ void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, b
 void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_draw501kg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawExplosion(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
@@ -426,6 +446,7 @@ void bb_upgradeRadar(bb_entity_t* self);
 void bb_triggerGameOver(bb_entity_t* self);
 void bb_upgradeGarbotnik(bb_entity_t* self);
 void bb_playCarAlarm(bb_entity_t* self);
+
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth);

@@ -313,9 +313,9 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -77136)//reached the death dumpster
+    if (self->pos.y < -38568)//reached the death dumpster
     {
-        self->pos.y = -77136;
+        self->pos.y = -38568;
         rData->yVel = 0;
 
         freeFont(&self->gameData->cgFont);
@@ -353,7 +353,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         self->updateFunction = NULL;
         return;
     }
-    else if (self->pos.y < -68000 && !(self->gameData->endDayChecks & (1 << 0))
+    else if (self->pos.y < -34000 && !(self->gameData->endDayChecks & (1 << 0))
              && !(self->gameData->endDayChecks & (1 << 2))) // if not pause illusion and dive summary hasn't shown yet.
     {
         self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0); // set the pause illusion bit.
@@ -363,7 +363,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         loadFont("cg_font_body.font", &self->gameData->cgFont, false);
         loadFont("cg_font_body_thin.font", &self->gameData->cgThinFont, false);
     }
-    else if (self->pos.y < -52000 && !(self->gameData->endDayChecks & (1 << 0))
+    else if (self->pos.y < -26000 && !(self->gameData->endDayChecks & (1 << 0))
              && !(self->gameData->endDayChecks & (1 << 1))) // if not pause illusion and pangos have not spoken
     {
         self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0); // set the pause illusion bit.
@@ -371,7 +371,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, BB_PANGO_AND_FRIENDS, 3,
                         (self->pos.x >> DECIMAL_BITS) - 77, (self->pos.y >> DECIMAL_BITS) - 100, true, false);
     }
-    else if (self->pos.y < -40000 && self->gameData->tilemap.wsgsLoaded)
+    else if (self->pos.y < -20000 && self->gameData->tilemap.wsgsLoaded)
     {
         bb_freeWsgs(&self->gameData->tilemap);
     }
@@ -502,37 +502,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     if (gData->damageEffect > 0)
     {
         gData->damageEffect -= self->gameData->elapsedUs >> 11;
-    }
-
-    // Fuel decrements with time. Right shifting by 10 is fairly close to
-    // converting microseconds to milliseconds without requiring division.
-    gData->fuel -= (((self->gameData->elapsedUs >> 10) * self->gameData->GarbotnikStat_fuelConsumptionRate) >> 2);
-    if (gData->fuel < 0)
-    {
-        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
-        physData->vel               = gData->vel;
-        physData->bounceNumerator   = 1; // 25% bounce
-        physData->bounceDenominator = 4;
-        bb_setData(self, physData, PHYSICS_DATA);
-        self->updateFunction = bb_updateGarbotnikDying;
-        self->drawFunction   = NULL;
-        return;
-    }
-    else if (gData->fuel < 38000 && self->gameData->bgm.length == 7217)
-    {
-        // exploration song length 7217
-        // hurry up song length 6480
-        bb_setupMidi();
-        unloadMidiFile(&self->gameData->bgm);
-        loadMidiFile("Big Bug Hurry up.mid", &self->gameData->bgm, true);
-        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
-    }
-    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 6480)
-    {
-        bb_setupMidi();
-        unloadMidiFile(&self->gameData->bgm);
-        loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
-        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     }
 
     // touchpad stuff
@@ -1139,6 +1108,37 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         ESP_LOGD(BB_TAG, "bounceScalar %" PRId32 "\n", bounceScalar);
         gData->vel = mulVec2d(
             subVec2d(gData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(gData->vel, hitInfo.normal)))), bounceScalar);
+    }
+
+        // Fuel decrements with time. Right shifting by 10 is fairly close to
+    // converting microseconds to milliseconds without requiring division.
+    gData->fuel -= (((self->gameData->elapsedUs >> 10) * self->gameData->GarbotnikStat_fuelConsumptionRate) >> 2);
+    if (gData->fuel < 0)
+    {
+        bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+        physData->vel               = gData->vel;
+        physData->bounceNumerator   = 1; // 25% bounce
+        physData->bounceDenominator = 4;
+        bb_setData(self, physData, PHYSICS_DATA);
+        self->updateFunction = bb_updateGarbotnikDying;
+        self->drawFunction   = NULL;
+        return;
+    }
+    else if (gData->fuel < 38000 && self->gameData->bgm.length == 7217)
+    {
+        // exploration song length 7217
+        // hurry up song length 6480
+        bb_setupMidi();
+        unloadMidiFile(&self->gameData->bgm);
+        loadMidiFile("Big Bug Hurry up.mid", &self->gameData->bgm, true);
+        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
+    }
+    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 6480)
+    {
+        bb_setupMidi();
+        unloadMidiFile(&self->gameData->bgm);
+        loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
+        globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     }
 }
 
@@ -2315,6 +2315,17 @@ void bb_updateWile(bb_entity_t* self)
     // Update wile's lifetime. I think not using elapsed time is good enough.
     if(wData->tileTime > 101 &&wData->lifetime == 0)
     {
+        if(wData->wileIdx == 0)//faulty wile triggers early
+        {
+            //trigger the wile function
+            if(self->gameData->loadout.allWiles[wData->wileIdx].wileFunction != NULL)
+            {
+                self->gameData->loadout.allWiles[wData->wileIdx].wileFunction(self);
+            }
+            //and destroy the wile
+            bb_destroyEntity(self, false);
+            return;
+        }
         wData->lifetime = 1;
     }
     if(wData->lifetime > 0)
@@ -2332,6 +2343,88 @@ void bb_updateWile(bb_entity_t* self)
         //and destroy the wile
         bb_destroyEntity(self, false);
         return;
+    }
+}
+
+void bb_update501kg(bb_entity_t* self)
+{
+    bb_501kgData_t* fData = (bb_501kgData_t*)self->data;
+    if(self->pos.y < fData->targetY)
+    {
+        self->pos.x += (fData->vel.x * self->gameData->elapsedUs) >> 14;
+        self->pos.y += (fData->vel.y * self->gameData->elapsedUs) >> 14;
+
+        bb_hitInfo_t hitInfo = {0};
+        bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
+        if (hitInfo.hit)
+        {
+            // Update the dirt to air.
+            self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].health = 0;
+            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true);
+        }
+    }
+    else
+    {
+        //use the y velocity as a timer to detonation
+        fData->vel.y--;
+        if(fData->vel.y <= 0)
+        {
+            //detonate
+            freeWsg(&self->gameData->entityManager.sprites[BB_501KG].frames[0]);
+            bb_entity_t* explosion = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+            bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
+            eData->radius = 180;
+            bb_destroyEntity(self, false);
+        }
+    }
+}
+
+void bb_updateExplosion(bb_entity_t* self)
+{
+    bb_explosionData_t* eData = (bb_explosionData_t*)self->data;
+    if(eData->lifetime == 0)
+    {
+        //iterate over a square of tiles around the explosion
+        vec_t tileCheck = {(self->pos.x >> 9)-(eData->radius>>5), (self->pos.y >> 9)-(eData->radius>>5)};
+        if(tileCheck.x < 0)
+        {
+            tileCheck.x = 0;
+        }
+        if(tileCheck.y < 0)
+        {
+            tileCheck.y = 0;
+        }
+        for(int checkI = tileCheck.x; checkI < tileCheck.x + (eData->radius>>3); checkI++)
+        {
+            if(checkI >= TILE_FIELD_WIDTH)
+            {
+                continue;
+            }
+            for(int checkJ = tileCheck.y; checkJ < tileCheck.y + (eData->radius>>3); checkJ++)
+            {
+                if(checkJ >= TILE_FIELD_HEIGHT)
+                {
+                    break;
+                }
+                //if it is in range of the explosion, crumble the dirt.
+                if(sqMagVec2d(subVec2d((vec_t){checkI<<5, checkJ<<5}, (vec_t){self->pos.x>>4, self->pos.y>>4})) < eData->radius * eData->radius)
+                {
+                    if(self->gameData->tilemap.fgTiles[checkI][checkJ].health > 0)
+                    {
+                        // Update the dirt to air.
+                        self->gameData->tilemap.fgTiles[checkI][checkJ].health = 0;
+                        bb_crumbleDirt(self->gameData, bb_randomInt(2,3), checkI, checkJ, true);
+                    }
+                }
+            }
+        }
+    }
+
+
+    eData->lifetime += self->gameData->elapsedUs >> 10;
+    if(eData->lifetime > 1000)
+    {
+        bb_destroyEntity(self, false);
     }
 }
 
@@ -3090,6 +3183,20 @@ void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
         drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7, (wData->lifetime+7) % 20, c511);
         drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7, (wData->lifetime+14) % 20, c500);
     }
+}
+
+void bb_draw501kg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    drawWsg(
+        &entityManager->sprites[self->spriteIndex].frames[0],
+        (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+        (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, false, false, ((bb_501kgData_t*)self->data)->angle);
+}
+
+void bb_drawExplosion(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    drawCircleFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
+                     ((bb_explosionData_t*)self->data)->radius, bb_randomInt(0,1)?c555:c550);
 }
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -4307,6 +4414,40 @@ void bb_playCarAlarm(bb_entity_t* self)
     midiPlayer_t* sfx = soundGetPlayerSfx();
     midiPlayerReset(sfx);
     soundPlaySfx(&cData->alarm, 0);
+}
+
+void bb_trigger501kg(bb_entity_t* self)
+{
+    bb_loadSprite("501kg",1, 1, &self->gameData->entityManager.sprites[BB_501KG]);
+    bb_entity_t* missile = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_501KG, 1,
+                    self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+    bb_501kgData_t* kgData = ((bb_501kgData_t*)missile->data);
+
+    missile->pos = (vec_t){self->pos.x + ((bb_randomInt(0,1)*2)-1) * bb_randomInt(0,((6144 - self->pos.y)>>1)), -6144};
+    kgData->vel = subVec2d(self->pos, missile->pos);
+    fastNormVec(&kgData->vel.x, &kgData->vel.y);
+
+    vecFl_t floatVel = {(float)kgData->vel.x, (float)kgData->vel.y};
+
+    kgData->angle = (int16_t)(atan2f(floatVel.y, floatVel.x) * (180.0 / M_PI));
+    kgData->angle += 270;
+    while (kgData->angle < 0)
+    {
+        kgData->angle += 360;
+    }
+    while (kgData->angle > 359)
+    {
+        kgData->angle -= 360;
+    }
+
+    kgData->targetY = self->pos.y;
+}
+
+void bb_triggerFaultyWile(bb_entity_t* self)
+{
+    bb_entity_t* explosion = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+    bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
+    eData->radius = 40;
 }
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,

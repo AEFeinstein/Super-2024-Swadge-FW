@@ -62,6 +62,7 @@ typedef enum
                   // ignored.
     BB_ARROW,     // Arrows for dialing in wiles.
     BB_WILE,
+    BB_501KG, // A huge bomb
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.
@@ -73,7 +74,7 @@ typedef enum
     BB_JANKY_BUG_DIG, // used in the car fights. When bugs touch this the dirt "digs" toward the car fight arena.
     BB_SPIT,          // projectile from the bug. Reuses fuel sprite with a palette swap.
     BB_DIVE_SUMMARY,  // A notepad that shows your dive stats.
-    WILE              // A metal ball that is thrown (not implemented)
+    BB_EXPLOSION,     // A particle effect that deletes dirt, kills bugs, hurts and pushes garbotnik.
 
 } bb_spriteDef_t;
 
@@ -97,5 +98,8 @@ typedef enum
     LOOPING_ANIMATION,
     NO_ANIMATION
 } bb_animationType_t;
+
+void bb_trigger501kg(bb_entity_t* self);
+void bb_triggerFaultyWile(bb_entity_t* self);
 
 #endif

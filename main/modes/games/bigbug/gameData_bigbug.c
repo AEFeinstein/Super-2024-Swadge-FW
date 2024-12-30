@@ -102,6 +102,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[0].callSequence[3] = BB_NONE;//terminator for shorter sequences
     gameData->loadout.allWiles[0].cooldown = 30;
     gameData->loadout.allWiles[0].cost = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[0].wileFunction = bb_triggerFaultyWile;
 
     strcpy(gameData->loadout.allWiles[1].name, "Drill Bot");
     strcpy(gameData->loadout.allWiles[1].description, "A robot that drills horizontally. Very obedient until the battery runs out. May it go forth and destroy Pango.");
@@ -142,6 +143,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[4].callSequence[4] = BB_DOWN;
     gameData->loadout.allWiles[4].cooldown = 30;
     gameData->loadout.allWiles[4].cost = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[4].wileFunction = bb_trigger501kg;
 
     strcpy(gameData->loadout.allWiles[5].name, "Atmospheric Atomizer");
     strcpy(gameData->loadout.allWiles[5].description, "The first prototype for the Death Dumpster's own onboard time machine, but it eviscerates the atmosphere within a few square miles for 30 seconds.");
