@@ -37,6 +37,7 @@
 #define CORNER_OFFSET 15
 
 // Tuner musical and audio definitions
+#define NUM_MAX_STRINGS              6 // change this if you add an instrument with more strings
 #define NUM_GUITAR_STRINGS           ARRAY_SIZE(guitarNoteNames)
 #define NUM_VIOLIN_STRINGS           ARRAY_SIZE(violinNoteNames)
 #define NUM_UKULELE_STRINGS          ARRAY_SIZE(ukuleleNoteNames)
@@ -51,6 +52,8 @@
 #define TUNER_RADIUS                  80
 #define TUNER_TEXT_Y_OFFSET           30
 #define TUNER_ARROW_Y_OFFSET          8
+#define TUNER_STRING_WIDTH            3
+#define TUNER_STRING_X_PADDING        (TFT_WIDTH / 7)
 
 // Metronome musical and audio definitions
 #define INITIAL_BPM                   120
@@ -105,6 +108,14 @@ typedef enum
     MAX_GUITAR_MODES
 } tuner_mode_t;
 
+typedef enum
+{
+    NO_TUNE,
+    FLAT_TUNE,
+    IN_TUNE,
+    SHARP_TUNE
+} tune_state_t;
+
 typedef struct
 {
     tnMode mode;
@@ -125,6 +136,7 @@ typedef struct
     int audioSamplesProcessed;
     uint32_t intensities_filt[CONFIG_NUM_LEDS];
     int32_t diffs_filt[CONFIG_NUM_LEDS];
+    tune_state_t stringTuneStates[NUM_MAX_STRINGS];
 
     uint8_t beatCtr;
     int bpm;
@@ -170,6 +182,7 @@ void tunernomeProcessButtons(buttonEvt_t* evt);
 void modifyBpm(int16_t bpmMod);
 void tunernomeSampleHandler(uint16_t* samples, uint32_t sampleCnt);
 void recalcMetronome(void);
+void plotInstrumentStrings(uint16_t numNotes);
 void plotInstrumentNameAndNotes(const char* instrumentName, const char* const* instrumentNotes, uint16_t numNotes);
 void plotTopSemiCircle(int xm, int ym, int r, paletteColor_t col);
 void instrumentTunerMagic(const uint16_t freqBinIdxs[], uint16_t numStrings, led_t colors[],
@@ -509,7 +522,42 @@ void recalcMetronome(void)
     tunernome->usPerBeat = (60 * 1000000) / tunernome->bpm;
 }
 
-// TODO: make this compatible with instruments with an odd number of notes
+/**
+ * Plot instrument strings as colored vertical lines spread evenly across the display
+ * @param numNotes The number of notes in instrumentsNotes
+ */
+void plotInstrumentStrings(uint16_t numNotes)
+{
+    int16_t stringXRange = TFT_WIDTH - 2 * TUNER_STRING_X_PADDING;
+    int16_t totalStringWidths = numNotes * TUNER_STRING_WIDTH;
+    int16_t totalInnerSpacingWidths = stringXRange - totalStringWidths;
+    int16_t perStringXOffset = TUNER_STRING_WIDTH + round(totalInnerSpacingWidths / (double) (numNotes - 1));
+
+    for(int i = 0; i < numNotes; i++)
+    {
+        paletteColor_t color;
+        switch(tunernome->stringTuneStates[i])
+        {
+            case FLAT_TUNE:
+                color = c003;
+                break;
+            case IN_TUNE:
+                color = c222;
+                break;
+            case SHARP_TUNE:
+                color = c300;
+                break;
+            case NO_TUNE:
+            default:
+                color = c000;
+                break;
+        }
+
+        int16_t stringXOffset = TUNER_STRING_X_PADDING + perStringXOffset * i;
+        drawRectFilled(stringXOffset, 0, stringXOffset + (TUNER_STRING_WIDTH - 1), TFT_HEIGHT - 1, color);
+    }
+}
+
 /**
  * Plot instrument name and the note names of strings, arranged to match LED positions, in middle of display
  * @param instrumentName The name of the instrument to plot to the display
@@ -626,6 +674,7 @@ void instrumentTunerMagic(const uint16_t freqBinIdxs[], uint16_t numStrings, led
             red = 255;
             grn = 255;
             blu = 255;
+            tunernome->stringTuneStates[i] = IN_TUNE;
         }
         else
         {
@@ -635,12 +684,14 @@ void instrumentTunerMagic(const uint16_t freqBinIdxs[], uint16_t numStrings, led
                 // Note too sharp, make it red
                 red = 255;
                 grn = blu = 255 - (tonalDiff) * 15;
+                tunernome->stringTuneStates[i] = SHARP_TUNE;
             }
             else
             {
                 // Note too flat, make it blue
                 blu = 255;
                 grn = red = 255 - (-tonalDiff) * 15;
+                tunernome->stringTuneStates[i] = FLAT_TUNE;
             }
 
             // Make sure LED output isn't more than 255
@@ -654,10 +705,21 @@ void instrumentTunerMagic(const uint16_t freqBinIdxs[], uint16_t numStrings, led
         grn = (grn >> 3) * (intensity >> 3);
         blu = (blu >> 3) * (intensity >> 3);
 
-        // Set the LED, ensure each channel is between 0 and 255
-        colors[(stringIdxToLedIdx != NULL) ? stringIdxToLedIdx[i] : i].r = CLAMP(red, 0, 255);
-        colors[(stringIdxToLedIdx != NULL) ? stringIdxToLedIdx[i] : i].g = CLAMP(grn, 0, 255);
-        colors[(stringIdxToLedIdx != NULL) ? stringIdxToLedIdx[i] : i].b = CLAMP(blu, 0, 255);
+        // Ensure each channel is between 0 and 255
+        red = CLAMP(red, 0, 255);
+        grn = CLAMP(grn, 0, 255);
+        blu = CLAMP(blu, 0, 255);
+
+        // Set the LED
+        colors[(stringIdxToLedIdx != NULL) ? stringIdxToLedIdx[i] : i].r = red;
+        colors[(stringIdxToLedIdx != NULL) ? stringIdxToLedIdx[i] : i].g = grn;
+        colors[(stringIdxToLedIdx != NULL) ? stringIdxToLedIdx[i] : i].b = blu;
+
+        // Unset the tune state for the string if its LED is off
+        if(red == 0 && grn == 0 && blu == 0)
+        {
+            tunernome->stringTuneStates[i] = NO_TUNE;
+        }
     }
 }
 
@@ -694,61 +756,30 @@ void tunernomeMainLoop(int64_t elapsedUs)
         default:
         case TN_TUNER:
         {
-            // Instructions at top of display
-            drawText(&tunernome->radiostars, c234, "Flat", CORNER_OFFSET, CORNER_OFFSET);
-            drawText(&tunernome->radiostars, c555, inTuneStr,
-                     (TFT_WIDTH - textWidth(&tunernome->radiostars, inTuneStr)) / 2, CORNER_OFFSET);
-            drawText(&tunernome->radiostars, c511, sharpStr,
-                     TFT_WIDTH - textWidth(&tunernome->radiostars, sharpStr) - CORNER_OFFSET, CORNER_OFFSET);
-
-            // A/B/Start button functions at bottom of display
-            int16_t afterText = drawText(&tunernome->ibm_vga8, c151, "A", CORNER_OFFSET,
-                                         TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
-            afterText         = drawText(&tunernome->ibm_vga8, c555, "/", afterText,
-                                         TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
-            afterText         = drawText(&tunernome->ibm_vga8, c511, "B", afterText,
-                                         TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
-            afterText         = drawText(&tunernome->ibm_vga8, c555, leftStr, afterText,
-                                         TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
-
-            char gainStr[16] = {0};
-            snprintf(gainStr, sizeof(gainStr) - 1, "Gain: %d", getMicGainSetting());
-            drawText(&tunernome->ibm_vga8, c555, gainStr, afterText,
-                     TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
-
-            drawText(&tunernome->ibm_vga8, c555, rightStrMetronome,
-                     TFT_WIDTH - textWidth(&tunernome->ibm_vga8, rightStrMetronome) - CORNER_OFFSET,
-                     TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
-
-            // Up/Down arrows in middle of display around current note/mode
-            drawWsg(&(tunernome->radiostarsArrowWsg), (TFT_WIDTH - tunernome->radiostarsArrowWsg.w) / 2 + 1,
-                    (TFT_HEIGHT - tunernome->logbook.height) / 2 - tunernome->radiostarsArrowWsg.h
-                        - TUNER_ARROW_Y_OFFSET - TUNER_TEXT_Y_OFFSET,
-                    false, false, 0);
-            drawWsg(&(tunernome->radiostarsArrowWsg), (TFT_WIDTH - tunernome->radiostarsArrowWsg.w) / 2 + 1,
-                    (TFT_HEIGHT + tunernome->logbook.height) / 2 + TUNER_ARROW_Y_OFFSET - TUNER_TEXT_Y_OFFSET, false,
-                    true, 0);
-
             // Current note/mode in middle of display
             switch (tunernome->curTunerMode)
             {
                 case GUITAR_TUNER:
                 {
+                    plotInstrumentStrings(NUM_GUITAR_STRINGS);
                     plotInstrumentNameAndNotes(theWordGuitar, guitarNoteNames, NUM_GUITAR_STRINGS);
                     break;
                 }
                 case VIOLIN_TUNER:
                 {
+                    plotInstrumentStrings(NUM_VIOLIN_STRINGS);
                     plotInstrumentNameAndNotes(theWordViolin, violinNoteNames, NUM_VIOLIN_STRINGS);
                     break;
                 }
                 case UKULELE_TUNER:
                 {
+                    plotInstrumentStrings(NUM_UKULELE_STRINGS);
                     plotInstrumentNameAndNotes(theWordUkulele, ukuleleNoteNames, NUM_UKULELE_STRINGS);
                     break;
                 }
                 case BANJO_TUNER:
                 {
+                    plotInstrumentStrings(NUM_BANJO_STRINGS);
                     plotInstrumentNameAndNotes(theWordBanjo, banjoNoteNames, NUM_BANJO_STRINGS);
                     break;
                 }
@@ -877,6 +908,41 @@ void tunernomeMainLoop(int64_t elapsedUs)
                     break;
                 }
             }
+
+            // Instructions at top of display
+            drawText(&tunernome->radiostars, c234, "Flat", CORNER_OFFSET, CORNER_OFFSET);
+            drawText(&tunernome->radiostars, c555, inTuneStr,
+                     (TFT_WIDTH - textWidth(&tunernome->radiostars, inTuneStr)) / 2, CORNER_OFFSET);
+            drawText(&tunernome->radiostars, c511, sharpStr,
+                     TFT_WIDTH - textWidth(&tunernome->radiostars, sharpStr) - CORNER_OFFSET, CORNER_OFFSET);
+
+            // A/B/Start button functions at bottom of display
+            int16_t afterText = drawText(&tunernome->ibm_vga8, c151, "A", CORNER_OFFSET,
+                                         TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
+            afterText         = drawText(&tunernome->ibm_vga8, c555, "/", afterText,
+                                         TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
+            afterText         = drawText(&tunernome->ibm_vga8, c511, "B", afterText,
+                                         TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
+            afterText         = drawText(&tunernome->ibm_vga8, c555, leftStr, afterText,
+                                         TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
+
+            char gainStr[16] = {0};
+            snprintf(gainStr, sizeof(gainStr) - 1, "Gain: %d", getMicGainSetting());
+            drawText(&tunernome->ibm_vga8, c555, gainStr, afterText,
+                     TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
+
+            drawText(&tunernome->ibm_vga8, c555, rightStrMetronome,
+                     TFT_WIDTH - textWidth(&tunernome->ibm_vga8, rightStrMetronome) - CORNER_OFFSET,
+                     TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
+
+            // Up/Down arrows in middle of display around current note/mode
+            drawWsg(&(tunernome->radiostarsArrowWsg), (TFT_WIDTH - tunernome->radiostarsArrowWsg.w) / 2 + 1,
+                    (TFT_HEIGHT - tunernome->logbook.height) / 2 - tunernome->radiostarsArrowWsg.h
+                        - TUNER_ARROW_Y_OFFSET - TUNER_TEXT_Y_OFFSET,
+                    false, false, 0);
+            drawWsg(&(tunernome->radiostarsArrowWsg), (TFT_WIDTH - tunernome->radiostarsArrowWsg.w) / 2 + 1,
+                    (TFT_HEIGHT + tunernome->logbook.height) / 2 + TUNER_ARROW_Y_OFFSET - TUNER_TEXT_Y_OFFSET, false,
+                    true, 0);
 
             break;
         }
