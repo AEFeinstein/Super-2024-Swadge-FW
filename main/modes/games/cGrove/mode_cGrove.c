@@ -2,7 +2,7 @@
  * @file mode_cGrove.c
  * @author Jeremy Stintzcum (Jeremy.Stintzcum@gmail.com)
  * @brief A small game similar to the chao garden from the Sonic series by SEGA
- * @version 0.1
+ * @version 1.0
  * @date 2024-09-07
  *
  * @copyright Copyright (c) 2024
@@ -32,9 +32,8 @@
 // Consts
 //==============================================================================
 
-static const char cGroveTitle[] = "Chowa Grove"; // Game title
-
-static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Race", "Perform", "Player Profiles", "Settings"};
+static const char cGroveTitle[]        = "Chowa Grove"; // Game title
+static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Settings"};
 static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
 static const int32_t cGroveEnabledVals[]        = {true, false};
@@ -162,10 +161,7 @@ static void cGroveEnterMode(void)
                              ARRAY_SIZE(shadowColors), ledColor);
     addSingleItemToMenu(cg->menu, cGroveMenuNames[0]);     // Go to Grove
     addSingleItemToMenu(cg->menu, cGroveMenuNames[1]);     // Go to Spar
-    addSingleItemToMenu(cg->menu, cGroveMenuNames[2]);     // Go to Race
-    addSingleItemToMenu(cg->menu, cGroveMenuNames[3]);     // Go to Performance
-    addSingleItemToMenu(cg->menu, cGroveMenuNames[4]);     // View player profiles
-    cg->menu = startSubMenu(cg->menu, cGroveMenuNames[5]); // Settings
+    cg->menu = startSubMenu(cg->menu, cGroveMenuNames[2]); // Settings
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.touch); // Enable/disable touch controls
@@ -200,15 +196,14 @@ static void cGroveEnterMode(void)
     }
 
     // Adjust Audio to use correct instruments
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop         = true;
-    midiGmOn(player);
+    cg->mPlayer       = globalMidiPlayerGet(MIDI_BGM);
+    cg->mPlayer->loop = true;
+    midiGmOn(cg->mPlayer);
 
     // Init Chowa
     readNvsBlob(cgNVSKeys[1], NULL, &blobLen);
     if (!readNvsBlob(cgNVSKeys[1], &cg->chowa, &blobLen))
     {
-        /* // TODO: remove when done testing
         for (int i = 0; i < CG_MAX_CHOWA - 1; i++)
         {
             cg->chowa[i].active = false;
@@ -237,19 +232,8 @@ static void cGroveEnterMode(void)
             snprintf(buffer, sizeof(buffer) - 1, "Chowa%d", i);
             strcpy(cg->chowa[i].name, buffer);
             strcpy(cg->chowa[i].owner, cg->player);
-        } */
-        writeNvsBlob(cgNVSKeys[1], &cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
-    }
-
-    // Guests
-    readNvsBlob(cgNVSKeys[3], NULL, &blobLen);
-    if (!readNvsBlob(cgNVSKeys[3], &cg->guests, &blobLen))
-    {
-        for (int i = 0; i < CG_GROVE_MAX_GUEST_CHOWA; i++)
-        {
-            cg->guests[i].active = false;
         }
-        writeNvsBlob(cgNVSKeys[3], &cg->guests, sizeof(cgChowa_t) * CG_MAX_CHOWA);
+        writeNvsBlob(cgNVSKeys[1], &cg->chowa, sizeof(cgChowa_t) * CG_MAX_CHOWA);
     }
     globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
 }
@@ -279,6 +263,8 @@ static void cGroveExitMode(void)
     deinitMenu(cg->menu);
     deinitMenuManiaRenderer(cg->renderer);
 
+    // Audio
+    unloadMidiFile(&cg->menuBGM);
     // Fonts
     freeFont(&cg->titleFontOutline);
     freeFont(&cg->menuFont);
@@ -317,7 +303,6 @@ static void cGroveMainLoop(int64_t elapsedUs)
                 }
             }
         }
-
         return;
     }
 
@@ -339,22 +324,14 @@ static void cGroveMainLoop(int64_t elapsedUs)
                 cg_deInitSpar();
                 break;
             }
-            case CG_RACE:
-            {
-                break;
-            }
-            case CG_PERFORMANCE:
-            {
-                break;
-            }
-
             default:
             {
                 // Something went wrong
                 break;
             }
         }
-
+        midiGmOn(cg->mPlayer);
+        globalMidiPlayerPlaySong(&cg->menuBGM, MIDI_BGM);
         cg->state = CG_MAIN_MENU;
     }
 
@@ -381,16 +358,6 @@ static void cGroveMainLoop(int64_t elapsedUs)
         case CG_SPAR:
         {
             cg_runSpar(elapsedUs);
-            break;
-        }
-        case CG_RACE:
-        {
-            // Race
-            break;
-        }
-        case CG_PERFORMANCE:
-        {
-            // Performance
             break;
         }
         case CG_FIRST_RUN:
@@ -483,20 +450,10 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
             cg_initSpar(cg);
             cg->state = CG_SPAR;
         }
-        else if (label == cGroveMenuNames[2])
+        else if (label == cGroveResetData[0])
         {
-            // Start Racing
-            // TODO: Racing
-        }
-        else if (label == cGroveMenuNames[3])
-        {
-            // Start Performing
-            // TODO: Performances
-        }
-        else if (label == cGroveMenuNames[4])
-        {
-            // View saved players
-            // TODO: View recently interacted players
+            // Erase data
+            cg->state = CG_ERASE;
         }
         else if (label == cGroveResetData[0])
         {

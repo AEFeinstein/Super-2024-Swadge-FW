@@ -15,7 +15,7 @@
 //==============================================================================
 // Prototypes
 //==============================================================================
-uint16_t fCost(const bb_midgroundTileInfo_t* tile);
+
 bool isPerimeterNode(const bb_midgroundTileInfo_t* tile);
 void getNeighbors(const bb_midgroundTileInfo_t* tile, list_t* neighbors, bb_tilemap_t* tilemap);
 bool contains(const list_t* nodeList, const bb_midgroundTileInfo_t* tile);
