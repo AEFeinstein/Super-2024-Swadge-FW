@@ -251,8 +251,14 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     }
                     case BB_FOOD_CART:
                     {
-                        ((bb_foodCartData_t*)curEntity->data)->isCached = false;
-                        bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
+                        bb_foodCartData_t* fcData = (bb_foodCartData_t*)curEntity->data;
+                        //tell this partner of the change in address
+                        ((bb_foodCartData_t*)fcData->partner->data)->partner = foundSpot;
+                        if(((bb_foodCartData_t*)fcData->partner->data)->isCached)
+                        {
+                            bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
+                        }
+                        fcData->isCached = false;
                         break;
                     }
                     default:
@@ -285,6 +291,12 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     bb_entity_t* cachedEntity = heap_caps_calloc(1, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
                     // It's like a memcopy
                     *cachedEntity = *curEntity;
+
+                    if(cachedEntity->dataType == FOOD_CART_DATA)
+                    {
+                        //tell this partner of the change in address
+                        ((bb_foodCartData_t*)((bb_foodCartData_t*)cachedEntity->data)->partner->data)->partner = cachedEntity;
+                    }
                     // push to the tail
                     push(entityManager->cachedEntities, (void*)cachedEntity);
                     bb_destroyEntity(curEntity, true);
@@ -434,10 +446,10 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
     }
 
     // load all cached entities and destroy them one by one.
+    bb_ensureEntitySpace(entityManager, 1);
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(entityManager->cachedEntities)))
     {
-        bb_destroyEntity(curEntity, false);
         heap_caps_free(curEntity);
     }
 }

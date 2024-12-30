@@ -116,7 +116,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
             //The food cart needs to track its own caching status to communicate just-in-time loading between both pieces.
             fcData->isCached          = caching;
-            if (((bb_foodCartData_t*)fcData->partner)->isCached)
+            if (((bb_foodCartData_t*)fcData->partner->data)->isCached)
             {
                 for (int frame = 0; frame < 2; frame++)
                 {
@@ -1206,6 +1206,10 @@ void bb_updateStuckHarpoon(bb_entity_t* self)
     if (shData->parent != NULL)
     {
         self->pos = addVec2d(shData->parent->pos, shData->offset);
+    }
+    else
+    {
+        bb_destroyEntity(self, false);
     }
 }
 
@@ -2374,6 +2378,7 @@ void bb_update501kg(bb_entity_t* self)
             bb_entity_t* explosion = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
             bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
             eData->radius = 180;
+
             bb_destroyEntity(self, false);
         }
     }
@@ -2407,7 +2412,7 @@ void bb_updateExplosion(bb_entity_t* self)
                     break;
                 }
                 //if it is in range of the explosion, crumble the dirt.
-                if(sqMagVec2d(subVec2d((vec_t){checkI<<5, checkJ<<5}, (vec_t){self->pos.x>>4, self->pos.y>>4})) < eData->radius * eData->radius)
+                if(sqMagVec2d(subVec2d((vec_t){(checkI<<5)+HALF_TILE, (checkJ<<5)+HALF_TILE}, (vec_t){self->pos.x>>4, self->pos.y>>4})) < eData->radius * eData->radius)
                 {
                     if(self->gameData->tilemap.fgTiles[checkI][checkJ].health > 0)
                     {
@@ -2418,6 +2423,91 @@ void bb_updateExplosion(bb_entity_t* self)
                 }
             }
         }
+
+        self->halfWidth = eData->radius<<DECIMAL_BITS;
+        self->halfHeight = eData->radius<<DECIMAL_BITS;
+
+        //if garbotnik is in the blast radius, apply a force and damage
+        if(self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+        {
+
+        }
+
+        //iterate all cached entities
+        //possibly load them in if they are relevant to the explosion
+        node_t* current = self->gameData->entityManager.cachedEntities->first;
+        while(current != NULL)
+        {
+            bb_entity_t* curEntity = (bb_entity_t*)current->val;
+            vec_t toFrom = subVec2d(curEntity->pos, self->pos);
+            if(bb_boxesCollide(self, curEntity, NULL, NULL) && sqMagVec2d(toFrom) < (eData->radius<<DECIMAL_BITS)*(eData->radius<<DECIMAL_BITS))
+            {
+                if(curEntity->dataType == PHYSICS_DATA || curEntity->dataType == FOOD_CART_DATA ||((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(-1,1)))
+                {
+                    bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
+                    if (foundSpot != NULL)
+                    {
+                        // like a memcopy
+                        *foundSpot = *curEntity;
+                        self->gameData->entityManager.activeEntities++;
+                        //remove current from cached entities
+                        current = current->next;
+                        removeEntry(self->gameData->entityManager.cachedEntities, current);
+
+                        //if it was a foodcart load the sprites just in time
+                        if(foundSpot->dataType == FOOD_CART_DATA)
+                        {
+                            bb_loadSprite("foodCart", 2, 1, &self->gameData->entityManager.sprites[BB_FOOD_CART]);
+                        }
+                        continue;
+                    }
+                }
+            }
+            current = current->next;
+        }
+
+        //iterate all entities and do things if they are in the blast radius
+        for(int i = 0; i < MAX_ENTITIES; i++)
+        {
+            bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
+            if(curEntity->dataType != PHYSICS_DATA && curEntity->dataType != BUGGO_DATA && curEntity->dataType != BU_DATA && curEntity->dataType != FOOD_CART_DATA)
+            {
+                continue;
+            }
+            bb_hitInfo_t hitInfo = {0};
+            vec_t toFrom = subVec2d(curEntity->pos, self->pos);
+            if(bb_boxesCollide(self, curEntity, NULL, &hitInfo) && sqMagVec2d(toFrom) < (eData->radius<<DECIMAL_BITS)*(eData->radius<<DECIMAL_BITS))
+            {
+                if(curEntity->dataType == PHYSICS_DATA)
+                {
+                    //apply a force to the entity
+                    bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
+                    pData->vel = divVec2d(toFrom, 5);
+                }
+                else if((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(0,2))
+                {
+                    //66% chance to kill the bug
+                    hitInfo.pos = curEntity->pos;
+                    bb_bugDeath(curEntity, &hitInfo);
+                }
+                else if(curEntity->dataType == FOOD_CART_DATA)
+                {
+                    //destroy the food cart if it is the main cart
+                    if(curEntity->currentAnimationFrame == 1)
+                    {
+                        hitInfo.pos = curEntity->pos;
+                        bb_cartDeath(curEntity, &hitInfo);
+                    }
+                }
+                else if(curEntity->dataType == GARBOTNIK_DATA)
+                {
+                    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
+                    gData->vel = divVec2d(toFrom, 5);
+                    gData->fuel -= eData->radius * 17;//damage is proportional to the size of the explosion
+                }
+            }
+        }
+
     }
 
 
@@ -3277,47 +3367,11 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             // Bug got stabbed
             if (bData->health - 34 <= 0) // bug just died
             {
-                // use a bump animation but tweak its graphics
-                bb_entity_t* hitEffect
-                    = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
-                                      hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
-                hitEffect->drawFunction = &bb_drawHitEffect;
-
                 if (self->gameData->carFightState > 0)
                 {
                     self->gameData->carFightState--;
                 }
-                if (self->dataType == BU_DATA)
-                {
-                    bb_buData_t* buData = (bb_buData_t*)self->data;
-                    switch (buData->gravity)
-                    {
-                        case BB_LEFT:
-                            bb_rotateBug(self, -1);
-                            break;
-                        case BB_UP:
-                            bb_rotateBug(self, 2);
-                            break;
-                        case BB_RIGHT:
-                            bb_rotateBug(self, 1);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                other->drawFunction = NULL;
-
-                midiPlayer_t* sfx = soundGetPlayerSfx();
-                midiPlayerReset(sfx);
-                soundPlaySfx(&self->gameData->sfxDirt, 0);
-
-                bData->health               = 0;
-                other->paused               = true;
-                bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
-                physData->bounceNumerator   = 2; // 66% bounce
-                physData->bounceDenominator = 3;
-                bb_setData(other, physData, PHYSICS_DATA);
-                other->updateFunction = bb_updatePhysicsObject;
+                bb_bugDeath(other, hitInfo);
             }
             else
             {
@@ -3818,38 +3872,7 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
             mainCart->currentAnimationFrame--;
             if (mainCart->currentAnimationFrame == 1)
             {
-                // Destroy the food cart and spawn a reward.
-                // free sprites
-                freeWsg(&mainCart->gameData->entityManager.sprites[BB_FOOD_CART].frames[0]);
-                freeWsg(&mainCart->gameData->entityManager.sprites[BB_FOOD_CART].frames[1]);
-
-                bb_destroyEntity(mcData->partner, false);
-
-                switch (mcData->reward)
-                {
-                    case BB_DONUT:
-                    {
-                        // spawn a donut as a reward for completing the fight
-                        bb_createEntity(&mainCart->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
-                                        (mainCart->pos.x >> DECIMAL_BITS), (mainCart->pos.y >> DECIMAL_BITS), true,
-                                        false);
-                        break;
-                    }
-                    default: // BB_SWADGE
-                    {
-                        // spawn a swadge as a reward for completing the fight
-                        bb_createEntity(&mainCart->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
-                                        (mainCart->pos.x >> DECIMAL_BITS), (mainCart->pos.y >> DECIMAL_BITS), true,
-                                        false);
-                        break;
-                    }
-                }
-                bb_destroyEntity(mainCart, false);
-                // use a bump animation but tweak its graphics
-                bb_entity_t* hitEffect
-                    = bb_createEntity(&(mainCart->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
-                                      hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
-                hitEffect->drawFunction = &bb_drawHitEffect;
+                bb_cartDeath(mainCart, hitInfo);
             }
             else
             {
@@ -4462,6 +4485,85 @@ void bb_playCarAlarm(bb_entity_t* self)
     soundPlaySfx(&cData->alarm, 0);
 }
 
+void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
+{
+    // use a bump animation but tweak its graphics
+    bb_entity_t* hitEffect
+        = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
+                            hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+    hitEffect->drawFunction = &bb_drawHitEffect;
+
+    if (self->dataType == BU_DATA)
+    {
+        bb_buData_t* buData = (bb_buData_t*)self->data;
+        switch (buData->gravity)
+        {
+            case BB_LEFT:
+                bb_rotateBug(self, -1);
+                break;
+            case BB_UP:
+                bb_rotateBug(self, 2);
+                break;
+            case BB_RIGHT:
+                bb_rotateBug(self, 1);
+                break;
+            default:
+                break;
+        }
+    }
+    self->drawFunction = NULL;
+
+    midiPlayer_t* sfx = soundGetPlayerSfx();
+    midiPlayerReset(sfx);
+    soundPlaySfx(&self->gameData->sfxDirt, 0);
+
+    bb_bugData_t* bData = (bb_bugData_t*)self->data;
+    bData->health               = 0;
+    self->paused               = true;
+    bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
+    physData->bounceNumerator   = 2; // 66% bounce
+    physData->bounceDenominator = 3;
+    bb_setData(self, physData, PHYSICS_DATA);
+    self->updateFunction = bb_updatePhysicsObject;
+}
+
+void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
+{
+    // Destroy the food cart and spawn a reward.
+    // free sprites
+    freeWsg(&self->gameData->entityManager.sprites[BB_FOOD_CART].frames[0]);
+    freeWsg(&self->gameData->entityManager.sprites[BB_FOOD_CART].frames[1]);
+
+    bb_foodCartData_t* mcData = (bb_foodCartData_t*)self->data;
+    bb_destroyEntity(mcData->partner, false);
+
+    switch (mcData->reward)
+    {
+        case BB_DONUT:
+        {
+            // spawn a donut as a reward for completing the fight
+            bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
+                            (self->pos.x >> DECIMAL_BITS), (self->pos.y >> DECIMAL_BITS), true,
+                            false);
+            break;
+        }
+        default: // BB_SWADGE
+        {
+            // spawn a swadge as a reward for completing the fight
+            bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
+                            (self->pos.x >> DECIMAL_BITS), (self->pos.y >> DECIMAL_BITS), true,
+                            false);
+            break;
+        }
+    }
+    bb_destroyEntity(self, false);
+    // use a bump animation but tweak its graphics
+    bb_entity_t* hitEffect
+        = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
+                            hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+    hitEffect->drawFunction = &bb_drawHitEffect;
+}
+
 void bb_trigger501kg(bb_entity_t* self)
 {
     bb_loadSprite("501kg",1, 1, &self->gameData->entityManager.sprites[BB_501KG]);
@@ -4499,7 +4601,7 @@ void bb_triggerFaultyWile(bb_entity_t* self)
 {
     bb_entity_t* explosion = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
     bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
-    eData->radius = 40;
+    eData->radius = 60;
 }
 
 void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self)

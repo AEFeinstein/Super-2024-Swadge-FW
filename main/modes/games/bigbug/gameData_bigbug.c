@@ -100,7 +100,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[0].callSequence[1] = BB_DOWN;
     gameData->loadout.allWiles[0].callSequence[2] = BB_LEFT;
     gameData->loadout.allWiles[0].callSequence[3] = BB_NONE;//terminator for shorter sequences
-    gameData->loadout.allWiles[0].cooldown = 30;
+    gameData->loadout.allWiles[0].cooldown = 25;
     gameData->loadout.allWiles[0].cost = bb_randomInt(1, 3);
     gameData->loadout.allWiles[0].wileFunction = bb_triggerFaultyWile;
 
@@ -141,7 +141,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[4].callSequence[2] = BB_RIGHT;
     gameData->loadout.allWiles[4].callSequence[3] = BB_LEFT;
     gameData->loadout.allWiles[4].callSequence[4] = BB_DOWN;
-    gameData->loadout.allWiles[4].cooldown = 30;
+    gameData->loadout.allWiles[4].cooldown = 90;
     gameData->loadout.allWiles[4].cost = bb_randomInt(1, 3);
     gameData->loadout.allWiles[4].wileFunction = bb_trigger501kg;
 
@@ -152,7 +152,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[5].callSequence[2] = BB_DOWN;
     gameData->loadout.allWiles[5].callSequence[3] = BB_RIGHT;
     gameData->loadout.allWiles[5].callSequence[4] = BB_DOWN;
-    gameData->loadout.allWiles[5].cooldown = 30;
+    gameData->loadout.allWiles[5].cooldown = 40;
     gameData->loadout.allWiles[5].cost = bb_randomInt(1, 3);
     gameData->loadout.allWiles[5].wileFunction = bb_triggerAtmosphericAtomizerWile;
 

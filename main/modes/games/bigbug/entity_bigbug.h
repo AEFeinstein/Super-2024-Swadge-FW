@@ -457,6 +457,8 @@ void bb_upgradeRadar(bb_entity_t* self);
 void bb_triggerGameOver(bb_entity_t* self);
 void bb_upgradeGarbotnik(bb_entity_t* self);
 void bb_playCarAlarm(bb_entity_t* self);
+void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
+void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
