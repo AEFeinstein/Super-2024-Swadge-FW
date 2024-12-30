@@ -116,7 +116,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
             //The food cart needs to track its own caching status to communicate just-in-time loading between both pieces.
             fcData->isCached          = caching;
-            if (((bb_foodCartData_t*)fcData->partner->data)->isCached)
+            if (fcData->partner->active == false || ((bb_foodCartData_t*)fcData->partner->data)->isCached)
             {
                 for (int frame = 0; frame < 2; frame++)
                 {
@@ -2391,9 +2391,9 @@ void bb_updateExplosion(bb_entity_t* self)
     {
         //iterate over a square of tiles around the explosion
         vec_t tileCheck = {(self->pos.x >> 9)-(eData->radius>>5), (self->pos.y >> 9)-(eData->radius>>5)};
-        if(tileCheck.x < 0)
+        if(tileCheck.x < 4)
         {
-            tileCheck.x = 0;
+            tileCheck.x = 4;
         }
         if(tileCheck.y < 0)
         {
@@ -2401,13 +2401,13 @@ void bb_updateExplosion(bb_entity_t* self)
         }
         for(int checkI = tileCheck.x; checkI < tileCheck.x + (eData->radius>>3); checkI++)
         {
-            if(checkI >= TILE_FIELD_WIDTH)
+            if(checkI >= TILE_FIELD_WIDTH - 5)
             {
                 continue;
             }
             for(int checkJ = tileCheck.y; checkJ < tileCheck.y + (eData->radius>>3); checkJ++)
             {
-                if(checkJ >= TILE_FIELD_HEIGHT)
+                if(checkJ >= TILE_FIELD_HEIGHT - 5)
                 {
                     break;
                 }
@@ -2451,13 +2451,18 @@ void bb_updateExplosion(bb_entity_t* self)
                         *foundSpot = *curEntity;
                         self->gameData->entityManager.activeEntities++;
                         //remove current from cached entities
-                        current = current->next;
+                        node_t* next = current->next;
                         removeEntry(self->gameData->entityManager.cachedEntities, current);
 
+                        current = next;
                         //if it was a foodcart load the sprites just in time
                         if(foundSpot->dataType == FOOD_CART_DATA)
                         {
+                            bb_foodCartData_t* fcData = (bb_foodCartData_t*)curEntity->data;
+                            //tell this partner of the change in address
+                            ((bb_foodCartData_t*)fcData->partner->data)->partner = foundSpot;
                             bb_loadSprite("foodCart", 2, 1, &self->gameData->entityManager.sprites[BB_FOOD_CART]);
+                            fcData->isCached = false;
                         }
                         continue;
                     }
@@ -2470,13 +2475,17 @@ void bb_updateExplosion(bb_entity_t* self)
         for(int i = 0; i < MAX_ENTITIES; i++)
         {
             bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
-            if(curEntity->dataType != PHYSICS_DATA && curEntity->dataType != BUGGO_DATA && curEntity->dataType != BU_DATA && curEntity->dataType != FOOD_CART_DATA)
+            if(curEntity->dataType != PHYSICS_DATA &&
+            curEntity->dataType != BUGGO_DATA &&
+            curEntity->dataType != BU_DATA &&
+            curEntity->dataType != FOOD_CART_DATA &&
+            curEntity->dataType != GARBOTNIK_DATA)
             {
                 continue;
             }
-            bb_hitInfo_t hitInfo = {0};
+            
             vec_t toFrom = subVec2d(curEntity->pos, self->pos);
-            if(bb_boxesCollide(self, curEntity, NULL, &hitInfo) && sqMagVec2d(toFrom) < (eData->radius<<DECIMAL_BITS)*(eData->radius<<DECIMAL_BITS))
+            if(bb_boxesCollide(self, curEntity, NULL, NULL) && sqMagVec2d(toFrom) < (eData->radius<<DECIMAL_BITS)*(eData->radius<<DECIMAL_BITS))
             {
                 if(curEntity->dataType == PHYSICS_DATA)
                 {
@@ -2487,14 +2496,16 @@ void bb_updateExplosion(bb_entity_t* self)
                 else if((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(0,2))
                 {
                     //66% chance to kill the bug
+                    bb_hitInfo_t hitInfo = {0};
                     hitInfo.pos = curEntity->pos;
                     bb_bugDeath(curEntity, &hitInfo);
                 }
                 else if(curEntity->dataType == FOOD_CART_DATA)
                 {
                     //destroy the food cart if it is the main cart
-                    if(curEntity->currentAnimationFrame == 1)
+                    if(curEntity->currentAnimationFrame > 1)
                     {
+                        bb_hitInfo_t hitInfo = {0};
                         hitInfo.pos = curEntity->pos;
                         bb_cartDeath(curEntity, &hitInfo);
                     }
@@ -2503,11 +2514,10 @@ void bb_updateExplosion(bb_entity_t* self)
                 {
                     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
                     gData->vel = divVec2d(toFrom, 5);
-                    gData->fuel -= eData->radius * 17;//damage is proportional to the size of the explosion
+                    gData->fuel -= eData->radius * 120;//damage is proportional to the size of the explosion
                 }
             }
         }
-
     }
 
 
@@ -4530,10 +4540,6 @@ void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
 void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
 {
     // Destroy the food cart and spawn a reward.
-    // free sprites
-    freeWsg(&self->gameData->entityManager.sprites[BB_FOOD_CART].frames[0]);
-    freeWsg(&self->gameData->entityManager.sprites[BB_FOOD_CART].frames[1]);
-
     bb_foodCartData_t* mcData = (bb_foodCartData_t*)self->data;
     bb_destroyEntity(mcData->partner, false);
 
