@@ -66,7 +66,7 @@ static const shSong_t shSongList[] = {
     {
         .name   = "San Pablo Sunrise",
         .artist = "Ian Cowell",
-        .fName  = "sh_starfest",
+        .fName  = "sh_sunrise",
     },
     {
         .name   = "The Dance of the Cremulons",
