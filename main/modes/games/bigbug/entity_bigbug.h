@@ -50,6 +50,7 @@ typedef enum
     BB_501KG_DATA,
     EXPLOSION_DATA,
     ATMOSPHERIC_ATOMIZER_DATA,
+    DRILL_BOT_DATA,
 } bb_data_type_t;
 
 
@@ -273,7 +274,7 @@ typedef struct
 typedef struct
 {
     vec_t vel;
-    int32_t targetY; //The y position to reach before stopping.
+    int16_t targetY; //The y position to reach before stopping.
     int16_t angle;   //The angle to rotate the sprite. Calculate once at creation.
 } bb_501kgData_t;
 
@@ -287,6 +288,14 @@ typedef struct
 {
     uint16_t lifetime;
 } bb_atmosphericAtomizerData_t;
+
+typedef struct
+{
+    int16_t targetY; //The y position to reach before stopping.
+    uint16_t lifetime;
+    bool facingRight;
+    int16_t yVel;
+} bb_drillBotData_t;
 
 typedef struct
 {
@@ -395,6 +404,7 @@ void bb_updateWile(bb_entity_t* self);
 void bb_update501kg(bb_entity_t* self);
 void bb_updateExplosion(bb_entity_t* self);
 void bb_updateAtmosphericAtomizer(bb_entity_t* self);
+void bb_updateDrillBot(bb_entity_t* self);
 
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);

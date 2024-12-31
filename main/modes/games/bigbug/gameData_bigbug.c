@@ -17,7 +17,7 @@
 //==============================================================================
 void bb_initializeGameData(bb_gameData_t* gameData)
 {
-    gameData->day = 1;
+    gameData->day = 0;
     // Set the mode to game mode
     gameData->screen = BIGBUG_GAME;
 

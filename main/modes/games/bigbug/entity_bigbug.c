@@ -2561,6 +2561,17 @@ void bb_updateAtmosphericAtomizer(bb_entity_t* self)
     }
 }
 
+void bb_updateDrillBot(bb_entity_t* self)
+{
+    bb_drillBotData_t* dData = (bb_drillBotData_t*)self->data;
+    dData->yVel++;
+    self->pos.y += (dData->yVel * self->gameData->elapsedUs) >> 15;
+    if(self->pos.y < dData->targetY)
+    {
+
+    }
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     if (GARBOTNIK_DATA != self->dataType)
@@ -2910,7 +2921,7 @@ void bb_drawGameOver(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
     bb_gameOverData_t* goData = (bb_gameOverData_t*)self->data;
     if (goData->wsgLoaded)
     {
-        drawWsgSimple(&goData->fullscreenGraphic, 0, 0);
+        drawWsgSimpleScaled(&goData->fullscreenGraphic, 0, 0, 2, 2);
     }
 }
 

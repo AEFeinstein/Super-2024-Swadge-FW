@@ -76,7 +76,7 @@ typedef enum
     BB_DIVE_SUMMARY,  // A notepad that shows your dive stats.
     BB_EXPLOSION,     // A particle effect that deletes dirt, kills bugs, hurts and pushes garbotnik.
     BB_ATMOSPHERIC_ATOMIZER, // A particle effect that increases garbotnik's dragShift.
-
+    BB_DRILL_BOT,      // A driller that comes down then drills horizontally.
 } bb_spriteDef_t;
 
 typedef enum
