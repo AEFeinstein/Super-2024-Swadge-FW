@@ -748,16 +748,25 @@ void tunernomeMainLoop(int64_t elapsedUs)
     bool touched = getTouchJoystick(&phi, &r, &intensity);
     if (!tunernome->isTouched && touched)
     {
-        switch(tunernome->mode)
+        switch (tunernome->mode)
         {
             case TN_TUNER:
+            {
                 // On any tap, toggle string display
                 tunernome->isShowingStrings = !tunernome->isShowingStrings;
                 break;
+            }
             case TN_METRONOME:
+            {
                 // On any tap, toggle silence
                 tunernome->isSilent = !tunernome->isSilent;
+                if (tunernome->isSilent)
+                {
+                    // Turn off tone
+                    midiNoteOff(globalMidiPlayerGet(MIDI_BGM), 0, tunernome->midiNote, 0x7F);
+                }
                 break;
+            }
         }
     }
     tunernome->isTouched = touched;
