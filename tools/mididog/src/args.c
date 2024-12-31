@@ -81,15 +81,19 @@ static bool parseBoolArg(const char* val, bool defaultValue);
 //==============================================================================
 
 midiDogArgs_t mdArgs = {
-    .midiFile = NULL,
+    .action = "dump",
+    .midiIn = NULL,
+    .midiOut = NULL,
 };
 
-static const char mainDoc[] = "Parses and Processes MIDI Files";
+static const char mainDoc[] = "Parse and process MIDI Files";
 
 // Long argument name definitions
 // These MUST be defined here, so that they are
 // the same in both options and argDocs
-static const char argMidiFile[]    = "midi-file";
+static const char argMidiIn[]    = "input";
+static const char argMidiOut[]   = "output";
+static const char argMultiLine[] = "verbose";
 static const char argHelp[]        = "help";
 static const char argUsage[]       = "usage";
 
@@ -99,7 +103,9 @@ static const char argUsage[]       = "usage";
  */
 static const struct option options[] =
 {
-    { argMidiFile,    required_argument, NULL,                             0    },
+    { argMidiIn,      required_argument, NULL,                             0    },
+    { argMidiOut,     required_argument, NULL,                             0    },
+    { argMultiLine,   no_argument,       (int*)&mdArgs.multiLine,          true },
     { argHelp,        no_argument,       NULL,                             'h'  },
     { argUsage,       no_argument,       NULL,                             0    },
     {0},
@@ -110,7 +116,9 @@ static const struct option options[] =
  */
 static const optDoc_t argDocs[] =
 {
-    {'f',  argMidiFile,    "FILE",  "Open and immediately play a MIDI file" },
+    {'i',  argMidiIn,     "FILE",  "Specify the input MIDI file" },
+    {'o',  argMidiOut,    "FILE",  "Specify the output MIDI file" },
+    {'v',  argMultiLine,  NULL,    "Print detailed multi-line data" },
     {'h', argHelp,        NULL,    "Give this help list" },
     { 0,  argUsage,       NULL,    "Give a short usage message" },
 };
@@ -132,9 +140,13 @@ static const optDoc_t argDocs[] =
 static bool handleArgument(const char* optName, const char* arg, int optVal)
 {
     // Handle all arguments by their long-option, as it will always be set.
-    if (argMidiFile == optName)
+    if (argMidiIn == optName)
     {
-        mdArgs.midiFile = arg;
+        mdArgs.midiIn = arg;
+    }
+    else if (argMidiOut == optName)
+    {
+        mdArgs.midiOut = arg;
     }
 
     // It's OK if an arg is unhandled, as it may just be a flag set automatically
@@ -148,7 +160,7 @@ static bool handlePositionalArgument(const char* val)
         if ((strlen(val) > 4 && (!strcmp(&val[strlen(val) - 4], ".mid") || !strcmp(&val[strlen(val) - 4], ".kar")))
             || (strlen(val) > 5 && !strcmp(&val[strlen(val) - 5], ".midi")))
         {
-            mdArgs.midiFile = val;
+            mdArgs.midiIn = val;
             return true;
         }
     }

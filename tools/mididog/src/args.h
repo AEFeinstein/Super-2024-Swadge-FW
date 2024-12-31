@@ -21,8 +21,15 @@
 
 typedef struct
 {
+    /// @brief The action to perform
+    const char* action;
+
     // MIDI
-    const char* midiFile;
+    const char* midiIn;
+    const char* midiOut;
+
+    // Output
+    const bool multiLine;
 } midiDogArgs_t;
 
 //==============================================================================
