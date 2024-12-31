@@ -1123,7 +1123,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // Check for digging
     int32_t dot = dotVec2d(gData->vel, hitInfo.normal);
-    if (dot < -40)
+    if (dot < -40 || (gData->dragShift!=17 && dot < 0))
     { // velocity angle is opposing garbage normal vector. Tweak number for different threshold.
         ///////////////////////
         // digging detected! //
@@ -1163,15 +1163,20 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // range is roughly 2600 to 7100
         // ESP_LOGD(BB_TAG,"dot %d\n", dot);
         // ESP_LOGD(BB_TAG,"thing: %d\n",sqMagVec2d(gData->vel) * dot);
-        int32_t bounceScalar = 3;
-        if (sqMagVec2d(gData->vel) * dot < -360000)
+        int32_t bounceScalar = 1;
+        if(gData->dragShift == 17)
         {
-            bounceScalar = 2;
+            bounceScalar = 3;
+            if (sqMagVec2d(gData->vel) * dot < -360000)
+            {
+                bounceScalar = 2;
+            }
+            if (sqMagVec2d(gData->vel) * dot < -550000)
+            {
+                bounceScalar = 1;
+            }
         }
-        if (sqMagVec2d(gData->vel) * dot < -550000)
-        {
-            bounceScalar = 1;
-        }
+
         ESP_LOGD(BB_TAG, "bounceScalar %" PRId32 "\n", bounceScalar);
         gData->vel = mulVec2d(
             subVec2d(gData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(gData->vel, hitInfo.normal)))), bounceScalar);
@@ -4037,7 +4042,7 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
 
         // Check for digging
         int32_t dot = dotVec2d(gData->vel, hitInfo->normal);
-        if (dot < -40)
+        if (dot < -40 || (gData->dragShift!=17 && dot < 0))
         { // velocity angle is opposing food cart normal vector. Tweak number for different threshold.
             ////////////////////////////
             // cart digging detected! //
@@ -4817,7 +4822,7 @@ void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self)
     if(self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
     {
         bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
-        gData->dragShift = 21;//This greatly reduces the drag on the garbotnik
+        gData->dragShift = 23;//This greatly reduces the drag on the garbotnik
     }
 }
 
