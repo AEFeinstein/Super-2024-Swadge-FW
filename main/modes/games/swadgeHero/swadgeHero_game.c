@@ -875,6 +875,12 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
         return;
     }
 
+    // Don't accept other button input while paused
+    if (sh->paused)
+    {
+        return;
+    }
+
     // Get the position of the song and when the next event is, in ms
     int32_t songUs;
     if (sh->leadInUs > 0)
