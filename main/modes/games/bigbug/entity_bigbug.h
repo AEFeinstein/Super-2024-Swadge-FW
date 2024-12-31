@@ -159,19 +159,35 @@ typedef struct
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
-    int8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
+    uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
                      // on the ground and trigger a game over.
 } bb_physicsData_t;
 
 typedef struct
 {
-    //match bb_physicsData_t exactly
     vec_t vel;
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
-    int8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
+    uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
+                     // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                     // on the ground and trigger a game over.
+    //child attributes
+    int16_t targetY; //The y position to reach before stopping.
+    uint16_t lifetime;
+    bool facingRight;
+    int8_t attacking; //janky way to overide the animation to drilling when colliding with a bug. Decrements to zero.
+} bb_drillBotData_t;
+
+
+typedef struct
+{
+    vec_t vel;
+    uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
+                             // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
+    uint8_t bounceDenominator;
+    uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
                      // on the ground and trigger a game over.
     //new attributes
@@ -288,14 +304,6 @@ typedef struct
 {
     uint16_t lifetime;
 } bb_atmosphericAtomizerData_t;
-
-typedef struct
-{
-    int16_t targetY; //The y position to reach before stopping.
-    uint16_t lifetime;
-    bool facingRight;
-    int16_t yVel;
-} bb_drillBotData_t;
 
 typedef struct
 {
@@ -435,6 +443,7 @@ void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 void bb_draw501kg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawExplosion(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawAtmosphericAtomizer(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
@@ -449,6 +458,7 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
 void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);

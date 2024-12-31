@@ -1276,21 +1276,42 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             if (!entityManager->sprites[BB_DRILL_BOT].allocated)
             {
-                entityManager->sprites[BB_DRILL_BOT].numFrames = 5;
-                entityManager->sprites[BB_DRILL_BOT].frames    = heap_caps_calloc(5, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+                entityManager->sprites[BB_DRILL_BOT].numFrames = 7;
+                entityManager->sprites[BB_DRILL_BOT].frames    = heap_caps_calloc(7, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
                 entityManager->sprites[BB_DRILL_BOT].allocated = true;
+                entityManager->sprites[BB_DRILL_BOT].originX = 7;
+                entityManager->sprites[BB_DRILL_BOT].originY = 15;
             }
 
             // sprites loaded just-in-time
-            loadWsgInplace("pa-en-005.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[0], true, bb_decodeSpace, bb_hsd);//drilling down
-            loadWsgInplace("pa-en-008.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[1], true, bb_decodeSpace, bb_hsd);//landing
-            loadWsgInplace("pa-en-000.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[1], true, bb_decodeSpace, bb_hsd);//walking right 1
-            loadWsgInplace("pa-en-001.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[1], true, bb_decodeSpace, bb_hsd);//walking right 2
-            loadWsgInplace("pa-en-002.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[1], true, bb_decodeSpace, bb_hsd);//drilling right 1
-            loadWsgInplace("pa-en-003.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[1], true, bb_decodeSpace, bb_hsd);//drilling right 2
-            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_drillBotData_t), MALLOC_CAP_SPIRAM), DRILL_BOT_DATA);
+            loadWsgInplace("pa-en-004.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[0], true, bb_decodeSpace, bb_hsd);//falling
+            loadWsgInplace("pa-en-008.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[1], true, bb_decodeSpace, bb_hsd);//bouncing
+            loadWsgInplace("pa-en-005.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[2], true, bb_decodeSpace, bb_hsd);//drilling down
+            loadWsgInplace("pa-en-000.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[3], true, bb_decodeSpace, bb_hsd);//walking right 1
+            loadWsgInplace("pa-en-001.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[4], true, bb_decodeSpace, bb_hsd);//walking right 2
+            loadWsgInplace("pa-en-002.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[5], true, bb_decodeSpace, bb_hsd);//drilling right 1
+            loadWsgInplace("pa-en-003.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[6], true, bb_decodeSpace, bb_hsd);//drilling right 2
+            bb_drillBotData_t* dbData = heap_caps_calloc(1, sizeof(bb_drillBotData_t), MALLOC_CAP_SPIRAM);
+            dbData->bounceNumerator = 1;
+            dbData->bounceDenominator = 4;
+            bb_setData(entity, dbData, DRILL_BOT_DATA);
 
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)BU);
+            push(others, (void*)BUG);
+            push(others, (void*)BUGG);
+            push(others, (void*)BUGGO);
+            push(others, (void*)BUGGY);
+            push(others, (void*)BUTT);
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionDrillBot};
+            push(entity->collisions, (void*)collision);
+
+            entity->halfHeight = 8 << DECIMAL_BITS;
+            entity->halfWidth  = 8 << DECIMAL_BITS;
             entity->updateFunction = &bb_updateDrillBot;
+            entity->drawFunction   = &bb_drawDrillBot;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

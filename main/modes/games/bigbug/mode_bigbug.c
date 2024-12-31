@@ -1189,12 +1189,20 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
                     {
                         bigbug->gameData.loadout.primaryWileIdx = 255;
                     }
+                    else
+                    {
+                        bigbug->gameData.radar.playerPingRadius = 2;
+                    }
                 }
                 else if(bigbug->gameData.radar.playerPingRadius == 1)
                 {
                     if (bigbug->gameData.loadout.secondaryWileIdx != 255)
                     {
                         bigbug->gameData.loadout.secondaryWileIdx = 255;
+                    }
+                    else
+                    {
+                        bigbug->gameData.radar.playerPingRadius = 2;
                     }
                 }
                 else if(bigbug->gameData.radar.playerPingRadius == 2)

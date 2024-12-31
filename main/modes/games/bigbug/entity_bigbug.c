@@ -126,6 +126,14 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             }
             break;
         }
+        case BB_DRILL_BOT:
+        {
+            for (int frame = 0; frame < 7; frame++)
+            {
+                freeWsg(&self->gameData->entityManager.sprites[BB_DRILL_BOT].frames[frame]);
+            }
+            break;
+        }
         default:
         {
             break;
@@ -180,6 +188,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         heap_caps_free(self->data);
     }
     self->data = NULL;
+    self->dataType = NULL_DATA;
 
     bb_clearCollisions(self, caching);
 
@@ -462,9 +471,25 @@ void bb_updatePhysicsObject(bb_entity_t* self)
     {
         return;
     }
-    pData->tileTime += 20;
+    if(hitInfo.normal.y == -1)
+    {
+        pData->tileTime += 20;
+        if(pData->tileTime > 110)
+        {
+            pData->tileTime = 110;
+        }
+    }
     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
+    //keep the physics object within the bounds of the level.
+    if (self->pos.x < 256)
+    {
+        self->pos.x = 256;
+    }
+    else if (self->pos.x > 38144)
+    {
+        self->pos.x = 38144;
+    }
 
     // Reflect the velocity vector along the normal
     // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
@@ -717,7 +742,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             drag = 10;
         }
         // Apply drag based on absolute value to smooth asymmetry
-        int32_t dragEffect = (drag * self->gameData->elapsedUs) >> gData->dragShift;//typically 17, or 19 with atmospheric atomizer
+        int32_t dragEffect = (drag * self->gameData->elapsedUs) >> gData->dragShift;//typically 17, or 21 with atmospheric atomizer
 
         // Adjust velocity symmetrically for both positive and negative values
         if (gData->vel.x > 0)
@@ -773,9 +798,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     {
         self->pos.x = 2560;
     }
-    else if (self->pos.x > 35216)
+    else if (self->pos.x > 35500)
     {
-        self->pos.x = 35216;
+        self->pos.x = 35500;
     }
 
     // tow cable stuff
@@ -827,7 +852,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t dampingForceY = (pData->vel.y - gData->vel.y) / DAMPING_CONSTANT;
 
             // Apply the force
-            if (curEntity->updateFunction == &bb_updatePhysicsObject) // dead bug or donut
+            if (curEntity->updateFunction == &bb_updatePhysicsObject || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA) // dead bug or donut or drill bot or wile
             {
                 pData->vel.x += springForceX - dampingForceX;
                 pData->vel.y += springForceY - dampingForceY + 4;
@@ -871,7 +896,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
             // if it is a bug or a donut
-            if ((curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13) || curEntity->spriteIndex == BB_DONUT)
+            if ((curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13) || curEntity->spriteIndex == BB_DONUT || curEntity->spriteIndex == BB_WILE || curEntity->spriteIndex == BB_DRILL_BOT)
             {
                 // if it is not already towed
                 bool isTowed = false;
@@ -907,6 +932,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             midiPlayerReset(sfx);
             soundPlaySfx(&self->gameData->sfxTether, 0);
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
+            if(self->gameData->entityManager.entities[best_i].dataType == DRILL_BOT_DATA)
+            {
+                bb_drillBotData_t* dData = (bb_drillBotData_t*)self->gameData->entityManager.entities[best_i].data;
+                dData->facingRight = !dData->facingRight;
+            }
         }
     }
     
@@ -1156,10 +1186,6 @@ void bb_updateGarbotnikDying(bb_entity_t* self)
     if (physData->tileTime > 0)
     {
         physData->tileTime--;
-    }
-    if (physData->tileTime > 101)
-    {
-        bb_triggerGameOver(self);
     }
 }
 
@@ -2448,12 +2474,6 @@ void bb_updateExplosion(bb_entity_t* self)
         self->halfWidth = eData->radius<<DECIMAL_BITS;
         self->halfHeight = eData->radius<<DECIMAL_BITS;
 
-        //if garbotnik is in the blast radius, apply a force and damage
-        if(self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
-        {
-
-        }
-
         //iterate all cached entities
         //possibly load them in if they are relevant to the explosion
         node_t* current = self->gameData->entityManager.cachedEntities->first;
@@ -2463,7 +2483,7 @@ void bb_updateExplosion(bb_entity_t* self)
             vec_t toFrom = subVec2d(curEntity->pos, self->pos);
             if(bb_boxesCollide(self, curEntity, NULL, NULL) && sqMagVec2d(toFrom) < (eData->radius<<DECIMAL_BITS)*(eData->radius<<DECIMAL_BITS))
             {
-                if(curEntity->dataType == PHYSICS_DATA || curEntity->dataType == FOOD_CART_DATA ||((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(-1,1)))
+                if(curEntity->dataType == PHYSICS_DATA || curEntity->dataType == FOOD_CART_DATA || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA ||((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(-1,1)))
                 {
                     bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
                     if (foundSpot != NULL)
@@ -2500,7 +2520,9 @@ void bb_updateExplosion(bb_entity_t* self)
             curEntity->dataType != BUGGO_DATA &&
             curEntity->dataType != BU_DATA &&
             curEntity->dataType != FOOD_CART_DATA &&
-            curEntity->dataType != GARBOTNIK_DATA)
+            curEntity->dataType != GARBOTNIK_DATA &&
+            curEntity->dataType != DRILL_BOT_DATA &&
+            curEntity->dataType != WILE_DATA)
             {
                 continue;
             }
@@ -2508,7 +2530,7 @@ void bb_updateExplosion(bb_entity_t* self)
             vec_t toFrom = subVec2d(curEntity->pos, self->pos);
             if(bb_boxesCollide(self, curEntity, NULL, NULL) && sqMagVec2d(toFrom) < (eData->radius<<DECIMAL_BITS)*(eData->radius<<DECIMAL_BITS))
             {
-                if(curEntity->dataType == PHYSICS_DATA)
+                if(curEntity->dataType == PHYSICS_DATA || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA)
                 {
                     //apply a force to the entity
                     bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
@@ -2563,12 +2585,79 @@ void bb_updateAtmosphericAtomizer(bb_entity_t* self)
 
 void bb_updateDrillBot(bb_entity_t* self)
 {
+    bb_updatePhysicsObject(self);
     bb_drillBotData_t* dData = (bb_drillBotData_t*)self->data;
-    dData->yVel++;
-    self->pos.y += (dData->yVel * self->gameData->elapsedUs) >> 15;
-    if(self->pos.y < dData->targetY)
+    if(dData->lifetime == 0)
     {
+        dData->facingRight = bb_randomInt(0,1);
+    }
+    dData->lifetime++;
+    if(dData->lifetime > 1900)
+    {
+        bb_destroyEntity(self, false);
+        return;
+    }
+    if (dData->tileTime > 0)
+    {
+        dData->tileTime--;
+    }
+    if(dData->tileTime > 110)
+    {
+        dData->tileTime = 110;
+    }
+    dData->attacking--;
+    if(dData->attacking <= 0)
+    {
+        dData->attacking = 0;
+    }
 
+    //driller might drill two tiles wide if it's on the edge.
+    uint8_t drillX1 = self->pos.x >> 9;
+    uint16_t drillX2 = self->pos.x % 512;
+    if(drillX2 <= 128)
+    {
+        drillX2 = drillX1 - 1;
+    }
+    else if(drillX2 >= 384)
+    {
+        drillX2 = drillX1 + 1;
+    }
+    else
+    {
+        drillX2 = 255;//second drill spot is set out of bounds. Gets ignored.
+    }
+    if(dData->tileTime > 101)
+    {
+        if(self->pos.y < dData->targetY)
+        {
+            dData->tileTime = 0;
+            if(bb_randomInt(-100,1))
+            {
+                //destroy the tile below the drill bot
+                if(self->pos.y < 0)
+                {
+                    bb_crumbleDirt(self->gameData, 2, drillX1, 0, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX2, 0, true);
+                }
+                else
+                {
+                    bb_crumbleDirt(self->gameData, 2, drillX1, (self->pos.y >> 9) + 1, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX2, (self->pos.y >> 9) + 1, true);
+                }
+            }
+        }
+        else
+        {
+            int8_t direction = (dData->facingRight * 2) - 1;
+            self->pos.x += direction * 8 * self->gameData->elapsedUs >> 13;
+            if(self->gameData->tilemap.fgTiles[(self->pos.x + direction * 144)>>9][self->pos.y>>9].health > 0)
+            {
+                if(bb_randomInt(0,110)==1)
+                {
+                    bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144)>>9, self->pos.y>>9, true);
+                }
+            }
+        }
     }
 }
 
@@ -3377,6 +3466,55 @@ void bb_drawAtmosphericAtomizer(bb_entityManager_t* entityManager, rectangle_t* 
     }
 }
 
+void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_drillBotData_t* dData = (bb_drillBotData_t*)self->data;
+    if(dData->attacking)
+    {
+        drawWsg(
+                &entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2)%2)+5],
+                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, !dData->facingRight, false, 0);
+        return;
+    }
+
+    if(self->pos.y < dData->targetY)
+    {
+        if(dData->vel.y < 5 && dData->vel.y > -5 && dData->tileTime > 0)
+        {
+            drawWsgSimple(
+                &entityManager->sprites[self->spriteIndex].frames[2],
+                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+        }
+        else
+        {
+            drawWsgSimple(
+                &entityManager->sprites[self->spriteIndex].frames[dData->tileTime > 0],
+                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+        }
+    }
+    else
+    {
+        int8_t direction = (dData->facingRight * 2) - 1;
+        if(self->gameData->tilemap.fgTiles[(self->pos.x + direction * 144)>>9][self->pos.y>>9].health > 0)
+        {
+            drawWsg(
+                &entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2)%2)+5],
+                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, !dData->facingRight, false, 0);
+        }
+        else
+        {
+            drawWsg(
+                &entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2)%2)+3],
+                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, !dData->facingRight, false, 0);
+        }
+    }
+}
+
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 // {
 //     drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
@@ -3947,6 +4085,30 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
         }
     }
 }
+
+void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    ((bb_drillBotData_t*)self->data)->attacking = 2;
+    //5% to deal 34 damage to other
+    if (bb_randomInt(0, 20) == 0)
+    {
+        bb_bugData_t* bData = (bb_bugData_t*)other->data;
+        if (bData->health - 34 <= 0) // bug just died
+        {
+            if (self->gameData->carFightState > 0)
+            {
+                self->gameData->carFightState--;
+            }
+            bb_bugDeath(other, hitInfo);
+        }
+        else
+        {
+            bData->damageEffect = 100;
+            bData->health -= 34;
+        }
+    }
+}
+
 
 void bb_startGarbotnikIntro(bb_entity_t* self)
 {
@@ -4642,19 +4804,30 @@ void bb_triggerFaultyWile(bb_entity_t* self)
     eData->radius = 60;
 }
 
+void bb_triggerDrillBot(bb_entity_t* self)
+{
+    bb_entity_t* drillBot = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DRILL_BOT, 1, self->pos.x >> DECIMAL_BITS, -1000, false, false);
+    bb_drillBotData_t* dbData = (bb_drillBotData_t*)drillBot->data;
+    dbData->targetY = self->pos.y-256;
+}
+
 void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self)
 {
     bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_ATMOSPHERIC_ATOMIZER, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
     if(self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
     {
         bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
-        gData->dragShift = 20;//This greatly reduces the drag on the garbotnik
+        gData->dragShift = 21;//This greatly reduces the drag on the garbotnik
     }
 }
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth)
 {
+    if(tile_i >= TILE_FIELD_WIDTH - 2 || tile_j >= TILE_FIELD_HEIGHT - 3)
+    {
+        return;
+    }
     int16_t xPos = tile_i * TILE_SIZE + HALF_TILE;
     int16_t yPos = tile_j * TILE_SIZE + HALF_TILE;
     if (xPos > gameData->camera.camera.pos.x - 60 && xPos < gameData->camera.camera.pos.x + 340

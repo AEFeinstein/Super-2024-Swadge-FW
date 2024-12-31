@@ -107,13 +107,14 @@ void bb_initializeGameData(bb_gameData_t* gameData)
 
     strcpy(gameData->loadout.allWiles[1].name, "Drill Bot");
     strcpy(gameData->loadout.allWiles[1].description, "A robot that drills horizontally. Very obedient until the battery runs out. May it go forth and destroy Pango.");
-    gameData->loadout.allWiles[1].callSequence[0] = BB_LEFT;
+    gameData->loadout.allWiles[1].callSequence[0] = BB_DOWN;
     gameData->loadout.allWiles[1].callSequence[1] = BB_LEFT;
-    gameData->loadout.allWiles[1].callSequence[2] = BB_LEFT;
-    gameData->loadout.allWiles[1].callSequence[3] = BB_RIGHT;
+    gameData->loadout.allWiles[1].callSequence[2] = BB_RIGHT;
+    gameData->loadout.allWiles[1].callSequence[3] = BB_LEFT;
     gameData->loadout.allWiles[1].callSequence[4] = BB_RIGHT;
-    gameData->loadout.allWiles[1].cooldown = 30;
+    gameData->loadout.allWiles[1].cooldown = 50;
     gameData->loadout.allWiles[1].cost = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[1].wileFunction = bb_triggerDrillBot;
 
     strcpy(gameData->loadout.allWiles[2].name, "Pacifier");
     strcpy(gameData->loadout.allWiles[2].description, "Turns wild bugs into compliant little critters.");
