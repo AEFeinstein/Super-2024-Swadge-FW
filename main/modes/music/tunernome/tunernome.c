@@ -163,6 +163,7 @@ typedef struct
     int32_t blinkTimerUs;
     bool isSilent;
     bool isTouched;
+    bool isShowingStrings;
 } tunernome_t;
 
 // typedef struct
@@ -287,18 +288,19 @@ const char* const banjoNoteNames[] = {"G4", "D3", "G3", "B3", "D4"};
 const char* const semitoneNoteNames[]
     = {"C", "C#/D\1", "D", "D#/E\1", "E", "F", "F#/G\1", "G", "G#/A\1", "A", "A#/B\1", "B"};
 
-static const char theWordGuitar[]     = "Guitar";
-static const char theWordViolin[]     = "Violin";
-static const char theWordUkulele[]    = "Ukulele";
-static const char theWordBanjo[]      = "Banjo";
-static const char playStringsText[]   = "Play all open strings";
-static const char listeningText[]     = "Listening for a note";
-static const char leftStr[]           = ": ";
-static const char rightStrTuner1[]    = "Touch: Beep";
-static const char rightStrTuner2[]    = "Pause: Tuner";
-static const char rightStrMetronome[] = "Pause: Metronome";
-static const char inTuneStr[]         = "In-Tune";
-static const char sharpStr[]          = "Sharp";
+static const char theWordGuitar[]      = "Guitar";
+static const char theWordViolin[]      = "Violin";
+static const char theWordUkulele[]     = "Ukulele";
+static const char theWordBanjo[]       = "Banjo";
+static const char playStringsText[]    = "Play all open strings";
+static const char listeningText[]      = "Listening for a note";
+static const char leftStr[]            = ": ";
+static const char rightStrTuner1[]     = "Touch: Beep";
+static const char rightStrTuner2[]     = "Pause: Tuner";
+static const char rightStrMetronome1[] = "Touch: Strings";
+static const char rightStrMetronome2[] = "Pause: Metronome";
+static const char inTuneStr[]          = "In-Tune";
+static const char sharpStr[]           = "Sharp";
 
 // TODO: these should be const after being assigned
 static int TUNER_FLAT_THRES_X;
@@ -373,6 +375,7 @@ void tunernomeEnterMode(void)
     tunernome->blinkTimerUs = 0;
     tunernome->clickTimerUs = 0;
     tunernome->isSilent     = false;
+    tunernome->isShowingStrings = true;
 }
 
 /**
@@ -743,10 +746,16 @@ void tunernomeMainLoop(int64_t elapsedUs)
     bool touched = getTouchJoystick(&phi, &r, &intensity);
     if (!tunernome->isTouched && touched)
     {
-        if (TN_METRONOME == tunernome->mode)
+        switch(tunernome->mode)
         {
-            // On any tap, toggle silence
-            tunernome->isSilent = !tunernome->isSilent;
+            case TN_TUNER:
+                // On any tap, toggle string display
+                tunernome->isShowingStrings = !tunernome->isShowingStrings;
+                break;
+            case TN_METRONOME:
+                // On any tap, toggle silence
+                tunernome->isSilent = !tunernome->isSilent;
+                break;
         }
     }
     tunernome->isTouched = touched;
@@ -761,25 +770,37 @@ void tunernomeMainLoop(int64_t elapsedUs)
             {
                 case GUITAR_TUNER:
                 {
-                    plotInstrumentStrings(NUM_GUITAR_STRINGS);
+                    if(tunernome->isShowingStrings)
+                    {
+                        plotInstrumentStrings(NUM_GUITAR_STRINGS);
+                    }
                     plotInstrumentNameAndNotes(theWordGuitar, guitarNoteNames, NUM_GUITAR_STRINGS);
                     break;
                 }
                 case VIOLIN_TUNER:
                 {
-                    plotInstrumentStrings(NUM_VIOLIN_STRINGS);
+                    if(tunernome->isShowingStrings)
+                    {
+                        plotInstrumentStrings(NUM_VIOLIN_STRINGS);
+                    }
                     plotInstrumentNameAndNotes(theWordViolin, violinNoteNames, NUM_VIOLIN_STRINGS);
                     break;
                 }
                 case UKULELE_TUNER:
                 {
-                    plotInstrumentStrings(NUM_UKULELE_STRINGS);
+                    if(tunernome->isShowingStrings)
+                    {
+                        plotInstrumentStrings(NUM_UKULELE_STRINGS);
+                    }
                     plotInstrumentNameAndNotes(theWordUkulele, ukuleleNoteNames, NUM_UKULELE_STRINGS);
                     break;
                 }
                 case BANJO_TUNER:
                 {
-                    plotInstrumentStrings(NUM_BANJO_STRINGS);
+                    if(tunernome->isShowingStrings)
+                    {
+                        plotInstrumentStrings(NUM_BANJO_STRINGS);
+                    }
                     plotInstrumentNameAndNotes(theWordBanjo, banjoNoteNames, NUM_BANJO_STRINGS);
                     break;
                 }
@@ -931,8 +952,15 @@ void tunernomeMainLoop(int64_t elapsedUs)
             drawText(&tunernome->ibm_vga8, c555, gainStr, afterText,
                      TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
 
-            drawText(&tunernome->ibm_vga8, c555, rightStrMetronome,
-                     TFT_WIDTH - textWidth(&tunernome->ibm_vga8, rightStrMetronome) - CORNER_OFFSET,
+            uint16_t widestRightStrMetronomeWidth
+                = MAX(textWidth(&tunernome->ibm_vga8, rightStrMetronome1), textWidth(&tunernome->ibm_vga8, rightStrMetronome2));
+
+            // Draw text to toggle string display
+            drawText(&tunernome->ibm_vga8, c555, rightStrMetronome1, TFT_WIDTH - widestRightStrMetronomeWidth - CORNER_OFFSET,
+                     TFT_HEIGHT - (2 * tunernome->ibm_vga8.height) - 2 - CORNER_OFFSET);
+
+            // Draw text to toggle beeps
+            drawText(&tunernome->ibm_vga8, c555, rightStrMetronome2, TFT_WIDTH - widestRightStrMetronomeWidth - CORNER_OFFSET,
                      TFT_HEIGHT - tunernome->ibm_vga8.height - CORNER_OFFSET);
 
             // Up/Down arrows in middle of display around current note/mode
