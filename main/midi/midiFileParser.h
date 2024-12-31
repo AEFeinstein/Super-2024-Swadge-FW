@@ -67,62 +67,6 @@ typedef enum
 //==============================================================================
 
 /**
- * @brief Contains basic information pointing to a MIDI track within its file data
- */
-typedef struct
-{
-    /// @brief Total chunk length
-    uint32_t length;
-
-    /// @brief Pointer to the start of this chunk's data
-    uint8_t* data;
-} midiTrack_t;
-
-/**
- * @brief Contains information which applies to the entire MIDI file
- */
-typedef struct
-{
-    /// @brief A pointer to the start of the MIDI file
-    uint8_t* data;
-
-    /// @brief The total length of the MIDI file
-    uint32_t length;
-
-    /// @brief The MIDI file format which defines how this file's tracks are interpreted
-    midiFileFormat_t format;
-
-    /// @brief The time division of MIDI frames, either ticks per frame or ticks per quarter note
-    uint16_t timeDivision;
-
-    /// @brief The number of tracks in this file
-    uint16_t trackCount;
-
-    /// @brief An array of MIDI tracks
-    midiTrack_t* tracks;
-} midiFile_t;
-
-typedef struct midiTrackState midiTrackState_t;
-
-typedef struct
-{
-    /// @brief A pointer to the MIDI file currently loaded into the reader, if any
-    const midiFile_t* file;
-
-    /// @brief If true, text meta-events will be handled and sent to the MIDI player
-    bool handleMetaEvents;
-
-    /// @brief The number of divisions per midi tick
-    uint16_t division;
-
-    /// @brief The number of track states allocated
-    uint8_t stateCount;
-
-    /// @brief An array containing the internal parser state for each track
-    midiTrackState_t* states;
-} midiFileReader_t;
-
-/**
  * @brief Data for a normal MIDI status event
  */
 typedef struct
@@ -255,6 +199,83 @@ typedef struct
     };
 } midiEvent_t;
 
+/**
+ * Represents a MIDI track as a contiguous list of events
+*/
+typedef struct
+{
+    /// @brief The total number of events in this track
+    uint32_t count;
+
+    /// @brief A pointer to an array of events
+    midiEvent_t* events;
+
+    /// @brief Extra application-specific data related to this stream
+    void* data;
+} midiEventStream_t;
+
+/**
+ * @brief Contains basic information pointing to a MIDI track within its file data
+ */
+typedef struct
+{
+    /// @brief Total chunk length
+    uint32_t length;
+
+    /// @brief Pointer to the start of this chunk's data
+    uint8_t* data;
+} midiTrack_t;
+
+/**
+ * @brief Contains information which applies to the entire MIDI file
+ */
+typedef struct
+{
+    /// @brief A pointer to the start of the MIDI file
+    uint8_t* data;
+
+    /// @brief The total length of the MIDI file
+    uint32_t length;
+
+    /// @brief The MIDI file format which defines how this file's tracks are interpreted
+    midiFileFormat_t format;
+
+    /// @brief The time division of MIDI frames, either ticks per frame or ticks per quarter note
+    uint16_t timeDivision;
+
+    /// @brief The number of tracks in this file
+    uint16_t trackCount;
+
+    union
+    {
+        /// @brief An array of MIDI tracks
+        midiTrack_t* tracks;
+
+        /// @brief An array of MIDI event streams representing the song's tracks
+        midiEventStream_t* events;
+    };
+} midiFile_t;
+
+typedef struct midiTrackState midiTrackState_t;
+
+typedef struct
+{
+    /// @brief A pointer to the MIDI file currently loaded into the reader, if any
+    const midiFile_t* file;
+
+    /// @brief If true, text meta-events will be handled and sent to the MIDI player
+    bool handleMetaEvents;
+
+    /// @brief The number of divisions per midi tick
+    uint16_t division;
+
+    /// @brief The number of track states allocated
+    uint8_t stateCount;
+
+    /// @brief An array containing the internal parser state for each track
+    midiTrackState_t* states;
+} midiFileReader_t;
+
 //==============================================================================
 // Constants
 //==============================================================================
@@ -347,11 +368,33 @@ uint32_t midiNextEventTime(midiFileReader_t* reader);
 bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event);
 
 /**
+ * @brief Writes a MIDI file header to a byte buffer
+ *
+ * @param out The byte array. If NULL, nothing is written and the length of the header is returned
+ * @param max The maximum number of bytes to write
+ * @param file A pointer to the MIDI file
+ *
+ * @return int The number of bytes written, or the length of the header if out is NULL.
+*/
+int midiWriteHeader(uint8_t* out, int max, const midiFile_t* file);
+
+/**
  * @brief Writes a MIDI event to a byte buffer
  *
- * @param out The byte array
+ * @param out The byte array. If NULL, nothing is written and the length of the next event is returned
  * @param max The maximum number of bytes to write
  * @param event The event to write
- * @return int The number of bytes written
+ * @return int The number of bytes written, or the length of the event if out is NULL.
  */
 int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event);
+
+/**
+ * @brief Writes a MIDI event to a byte buffer, taking running status into account
+ *
+ * @param out The byte array. If NULL, nothing is written and the length of the next event is returned
+ * @param max The maximum number of bytes to write
+ * @param event The event to write
+ * @param[in,out] runningStatus A pointer to a status byte to be used as running status, if non-NULL. Should be initialized to 0 on first call
+ * @return The number of bytes written, or the length of the event if out is NULL.
+*/
+int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* event, uint8_t* runningStatus);

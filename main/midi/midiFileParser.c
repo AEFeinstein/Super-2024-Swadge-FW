@@ -149,7 +149,14 @@ static int writeVariableLength(uint8_t* out, int max, uint32_t quantity)
 
     while (written < max)
     {
-        out[written++] = reversed & 0x7F;
+        if (NULL != out)
+        {
+            out[written++] = reversed & 0x7F;
+        }
+        else
+        {
+            written++;
+        }
 
         if (reversed & 0x80)
         {
@@ -289,6 +296,9 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
         case 0xF0:
         {
             // These events reset the running status
+            // It's important to note that, because this only parses MIDI **file** tracks, NOT real-time MIDI stream events, there will never
+            // be a system-realtime message here. The status byte values allocated actually overlap, so there must be different handling for
+            // files and streams.
             track->runningStatus = 0;
 
             if (status == 0xFF)
@@ -1061,13 +1071,122 @@ void globalMidiRestore(void* data)
     MIDI_FREE(data);
 }
 
-int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
+int midiWriteHeader(uint8_t* out, int max, const midiFile_t* file)
 {
     int written = 0;
+
+    // Enough space for:
+    // the header (4)
+    // header chunk length (4)
+
+    // format (2)
+    // track chunk count (2)
+    // division (2)
+    const uint8_t midiHeaderLen = 4 + 4 + 2 + 2 + 2;
+
+    if (NULL == out)
+    {
+        return midiHeaderLen;
+    }
+
+    // Write the full header or nothing
+    if (max >= midiHeaderLen)
+    {
+        // Write MIDI file magic number (chunk header)
+        memcpy(out, midiHeader, sizeof(midiHeader));
+        written += sizeof(midiHeader);
+
+        // Header chunk length
+        // These are mostly going to all be zero no matter what, have at it compiler
+        out[written++] = (midiHeaderLen >> 24) & 0xFFu;
+        out[written++] = (midiHeaderLen >> 16) & 0xFFu;
+        out[written++] = (midiHeaderLen >> 8) & 0xFFu;
+        out[written++] = (midiHeaderLen) & 0xFFu;
+
+        // File format
+        out[written++] = (file->format >> 8) & 0xFFu;
+        out[written++] = (file->format) & 0xFFu;
+
+        // Track chunk count
+        out[written++] = (file->trackCount >> 8) & 0xFFu;
+        out[written++] = (file->trackCount) & 0xFFu;
+
+        // Time Division
+        // TODO: Oops, did I not save this fully reversibly in the file struct?
+        out[written++] = (file->timeDivision >> 8) & 0xFFu;
+        out[written++] = (file->timeDivision) & 0xFFu;
+    }
+
+    return written;
+}
+
+int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* event, uint8_t* runningStatus)
+{
+    int written = 0;
+
+    // So, writing running status!
+    // It should be easier than reading it, right?
+    // Here's what we do:
+    // 1. Check what the status of the next event would be
+    //    - [0x80, 0xEF]: Use running status, set running status. If running status equals last running status, don't write status byte
+    //    - [0xF0, 0xF6]: Clear running status, do not use running status
+    //    - [0xF7, 0xFF]: Do not set running status, do not use running status
+    uint8_t prevRunningStatus = 0;
+    if (NULL != runningStatus)
+    {
+        // Save the previously-set running status for later
+        prevRunningStatus = *runningStatus;
+    }
+
+
+    /// The total length of the packet
+    uint32_t len = 0;
+
     switch (event->type)
     {
         case MIDI_EVENT:
         {
+            // This is a MIDI event, which means we utilize running status if possible
+            // Note that since this is a single-event write function it might actually write an arbitrary event,
+            // so it could be used for a system realtime or system common message.
+
+            // If there's no running status or the running status is different from before, set it
+            if (runningStatus != NULL)
+            {
+
+                // Handle running status
+                if (event->midi.status > 0xF7)
+                {
+                    // System Realtime messages do not affect running status at all
+                    len++;
+                }
+                else if (0xF0 <= event->midi.status && event->midi.status <= 0xF7)
+                {
+                    // System Common messages clear the running status
+                    if (NULL != out)
+                    {
+                        *runningStatus = 0;
+                    }
+                    len++;
+                }
+                else if (0x80 <= event->midi.status && event->midi.status <= 0xEF && event->midi.status != prevRunningStatus)
+                {
+                    // Account for the status byte length, but only if a new status would be written
+                    len++;
+
+                    // Voice Messages set the running status
+                    if (NULL != out)
+                    {
+                        *runningStatus = event->midi.status;
+                    }
+                }
+            }
+            else
+            {
+                // Account for the status byte length, no running status available
+                len++;
+            }
+
             switch (event->midi.status & 0xF0)
             {
                 // Two-byte statuses
@@ -1077,18 +1196,24 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
                 case 0xB0: // Control Change
                 case 0xE0: // Pitch bend
                 {
-                    if (max > 0)
+                    len += 2;
+                    if (NULL != out)
                     {
-                        out[written++] = event->midi.status;
-                        if (max > 1)
+                        if (max >= len)
                         {
-                            out[written++] = event->midi.data[0];
-
-                            if (max > 2)
+                            // Only write status if the length accounts for the status byte (for running status)
+                            if (len > 2)
                             {
-                                out[written++] = event->midi.data[1];
+                                out[written++] = event->midi.status;
                             }
+
+                            out[written++] = event->midi.data[0];
+                            out[written++] = event->midi.data[1];
                         }
+                    }
+                    else
+                    {
+                        written += len;
                     }
                     break;
                 }
@@ -1097,35 +1222,114 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
                 case 0xC0: // Program Select
                 case 0xD0: // Channel Pressure
                 {
-                    if (max > 0)
+                    len += 1;
+                    if (NULL != out)
                     {
-                        out[written++] = event->midi.status;
-
-                        if (max > 1)
+                        if (max >= len)
                         {
+                            // Only write status if the length accounts for the status byte (for running status)
+                            if (len > 1)
+                            {
+                                out[written++] = event->midi.status;
+                            }
+
                             out[written++] = event->midi.data[0];
                         }
+                    }
+                    else
+                    {
+                        written += len;
                     }
                     break;
                 }
 
+                case 0xF0:
+                {
+                    // Status byte is already accounted for, so len == 1 here
+                    // Just Account for data bytes length.
+                    // 0xF0 is for SysEx
+                    if (event->midi.status == 0xF1)
+                    {
+                        // MTC Quarter-frame message
+                        len++;
+                    }
+                    else if (event->midi.status == 0xF2)
+                    {
+                        // Song Position Pointer
+                        // Two bytes: 14-bit value for MIDI Beat#
+                        len += 2;
+                    }
+                    else if (event->midi.status == 0xF3)
+                    {
+                        // Song Select
+                        len++;
+                    }
+                    // 0xF4 and F5 are undefined
+                    else if (event->midi.status == 0xF6)
+                    {
+                        // Tune request, no data bytes
+                    }
+                    // The rest are all single-byte realtime messages:
+                    // 0xF7: SysEx start, not handled here
+                    // 0xF8: MIDI Clock, for time syncing
+                    // 0xF9: Tick, also for time syncing
+                    // 0xFA: MIDI Start, starts playing at beat 0
+                    // 0xFB: MIDI Continue, resumes playing at last position
+                    // 0xFC: MIDI Stop, stops playback and saves the position
+                    // 0xFD: undefined
+                    // 0xFE: Active Sense, keepalive messages at least every 300ms
+                    // 0xFF: Reset
+
+                    // 0-byte statuses, I guess, by the measure used for the other ones (no additional bytes other than status)
+                    // These are single-byte system realtime messages, or various-number-of-byte system common messages
+                    if (NULL != out)
+                    {
+                        if (max >= len)
+                        {
+                            out[written++] = event->midi.status;
+                            
+                            if (len > 1)
+                            {
+                                out[written++] = event->midi.data[0];
+                                if (len > 2)
+                                {
+                                    out[written++] = event->midi.data[1];
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        written += len;
+                    }
+                }
+
                 default:
-                    // No other valid status bytes
+                {
+                    // No other valid status bytes here
                     break;
+                }
             }
             break;
         }
 
         case META_EVENT:
         {
-            if (written < max)
+            if (NULL != out)
             {
-                out[written++] = 0xFF;
-            }
+                if (written < max)
+                {
+                    out[written++] = 0xFF;
+                }
 
-            if (written < max)
+                if (written < max)
+                {
+                    out[written++] = event->meta.type;
+                }
+            }
+            else
             {
-                out[written++] = event->meta.type;
+                written += 2;
             }
 
             written += writeVariableLength(out, max - written, event->meta.length);
@@ -1136,13 +1340,20 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
                 {
                     if (event->meta.length > 0)
                     {
-                        if (written < max)
+                        if (NULL != out)
                         {
-                            out[written++] = (event->meta.sequenceNumber >> 8) & 0xFF;
                             if (written < max)
                             {
-                                out[written++] = (event->meta.sequenceNumber & 0xFF);
+                                out[written++] = (event->meta.sequenceNumber >> 8) & 0xFF;
+                                if (written < max)
+                                {
+                                    out[written++] = (event->meta.sequenceNumber & 0xFF);
+                                }
                             }
+                        }
+                        else
+                        {
+                            written += 2;
                         }
                     }
                     break;
@@ -1168,7 +1379,15 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
                     const char* strCur = event->meta.text;
                     while (written < max && strCur < (event->meta.text + event->meta.length))
                     {
-                        out[written++] = *(const uint8_t*)(strCur++);
+                        if (NULL != out)
+                        {
+                            out[written++] = *(const uint8_t*)(strCur++);
+                        }
+                        else
+                        {
+                            written++;
+                            strCur++;
+                        }
                     }
                     break;
                 }
@@ -1176,9 +1395,16 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
                 case CHANNEL_PREFIX:
                 case PORT_PREFIX:
                 {
-                    if (written < max)
+                    if (NULL != out)
                     {
-                        out[written++] = event->meta.prefix;
+                        if (written < max)
+                        {
+                            out[written++] = event->meta.prefix;
+                        }
+                    }
+                    else
+                    {
+                        written++;
                     }
                     break;
                 }
@@ -1191,65 +1417,86 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
 
                 case TEMPO:
                 {
-                    if (written < max)
+                    if (NULL != out)
                     {
-                        out[written++] = (event->meta.tempo >> 16) & 0xFF;
-
                         if (written < max)
                         {
-                            out[written++] = (event->meta.tempo >> 8) & 0xFF;
+                            out[written++] = (event->meta.tempo >> 16) & 0xFF;
 
                             if (written < max)
                             {
-                                out[written++] = (event->meta.tempo & 0xFF);
+                                out[written++] = (event->meta.tempo >> 8) & 0xFF;
+
+                                if (written < max)
+                                {
+                                    out[written++] = (event->meta.tempo & 0xFF);
+                                }
                             }
                         }
+                    }
+                    else
+                    {
+                        written += 3;
                     }
                     break;
                 }
 
                 case SMPTE_OFFSET:
                 {
-                    if (written < max)
+                    if (NULL != out)
                     {
-                        out[written++] = event->meta.startTime.hour;
                         if (written < max)
                         {
-                            out[written++] = event->meta.startTime.min;
+                            out[written++] = event->meta.startTime.hour;
                             if (written < max)
                             {
-                                out[written++] = event->meta.startTime.sec;
+                                out[written++] = event->meta.startTime.min;
                                 if (written < max)
                                 {
-                                    out[written++] = event->meta.startTime.frame;
+                                    out[written++] = event->meta.startTime.sec;
                                     if (written < max)
                                     {
-                                        out[written++] = event->meta.startTime.frameHundredths;
+                                        out[written++] = event->meta.startTime.frame;
+                                        if (written < max)
+                                        {
+                                            out[written++] = event->meta.startTime.frameHundredths;
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        written += 5;
                     }
                     break;
                 }
 
                 case TIME_SIGNATURE:
                 {
-                    if (written < max)
+                    if (NULL != out)
                     {
-                        out[written++] = event->meta.timeSignature.numerator;
                         if (written < max)
                         {
-                            out[written++] = event->meta.timeSignature.denominator;
+                            out[written++] = event->meta.timeSignature.numerator;
                             if (written < max)
                             {
-                                out[written++] = event->meta.timeSignature.midiClocksPerMetronomeTick;
+                                out[written++] = event->meta.timeSignature.denominator;
                                 if (written < max)
                                 {
-                                    out[written++] = event->meta.timeSignature.num32ndNotesPerBeat;
+                                    out[written++] = event->meta.timeSignature.midiClocksPerMetronomeTick;
+                                    if (written < max)
+                                    {
+                                        out[written++] = event->meta.timeSignature.num32ndNotesPerBeat;
+                                    }
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        written += 4;
                     }
 
                     break;
@@ -1257,20 +1504,27 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
 
                 case KEY_SIGNATURE:
                 {
-                    if (written < max)
+                    if (NULL != out)
                     {
-                        if (event->meta.keySignature.flats)
+                        if (written < max)
                         {
-                            out[written++] = (uint8_t)(-event->meta.keySignature.flats);
+                            if (event->meta.keySignature.flats)
+                            {
+                                out[written++] = (uint8_t)(-event->meta.keySignature.flats);
+                            }
+                            else if (event->meta.keySignature.sharps)
+                            {
+                                out[written++] = event->meta.keySignature.sharps;
+                            }
+                            else
+                            {
+                                out[written++] = 0;
+                            }
                         }
-                        else if (event->meta.keySignature.sharps)
-                        {
-                            out[written++] = event->meta.keySignature.sharps;
-                        }
-                        else
-                        {
-                            out[written++] = 0;
-                        }
+                    }
+                    else
+                    {
+                        written++;
                     }
                     break;
                 }
@@ -1281,7 +1535,15 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
                     const uint8_t* dataCur = event->meta.data;
                     while (written < max && dataCur < (event->meta.data + event->meta.length))
                     {
-                        out[written++] = *dataCur++;
+                        if (NULL != out)
+                        {
+                            out[written++] = *dataCur++;
+                        }
+                        else
+                        {
+                            written++;
+                            dataCur++;
+                        }
                     }
                     break;
                 }
@@ -1291,31 +1553,58 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
 
         case SYSEX_EVENT:
         {
-            if (written < max)
+            if (NULL != out)
             {
-                if (event->sysex.prefix)
+                if (written < max)
                 {
-                    out[written++] = event->sysex.prefix;
+                    if (event->sysex.prefix)
+                    {
+                        out[written++] = event->sysex.prefix;
+                    }
+                    else
+                    {
+                        out[written++] = 0xF0;
+                    }
                 }
-                else
-                {
-                    out[written++] = 0xF0;
-                }
+            }
+            else
+            {
+                written++;
             }
 
             const uint8_t* data = event->sysex.data;
             while (written < max && data < event->sysex.data + event->sysex.length)
             {
-                out[written++] = *data++;
+                if (NULL != out)
+                {
+                    out[written++] = *data++;
+                }
+                else
+                {
+                    written++;
+                    data++;
+                }
             }
 
             if (written < max)
             {
-                out[written++] = 0xF7;
+                if (NULL != out)
+                {
+                    out[written++] = 0xF7;
+                }
+                else
+                {
+                    written++;
+                }
             }
             break;
         }
     }
 
     return written;
+}
+
+int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
+{
+    return midiWriteEventWithRunningStatus(out, max, event, NULL);
 }
