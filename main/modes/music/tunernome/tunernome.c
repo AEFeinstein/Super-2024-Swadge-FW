@@ -67,8 +67,10 @@
 #define METRONOME_CENTER_X            (TFT_WIDTH / 2)
 #define METRONOME_CENTER_Y            (TFT_HEIGHT - (2 * tunernome->ibm_vga8.height) - 10 - CORNER_OFFSET - METRONOME_GRAPHIC_BASE_HEIGHT)
 #define METRONOME_RADIUS              (125 - METRONOME_GRAPHIC_BASE_HEIGHT)
+#define METRONOME_ARC_DEGREES         90
+#define METRONOME_ARC_MULTIPLIER      (METRONOME_ARC_DEGREES / 180.0)
 #define METRONOME_WEIGHT_SIZE_RADIUS  5 // total diameter is 1 + (2 * this value)
-#define METRONOME_WEIGHT_MIN_RADIUS   (METRONOME_WEIGHT_SIZE_RADIUS + 3.0) // 1px for center of weight, 1px for tip of arm, and 1px for lack of precision
+#define METRONOME_WEIGHT_MIN_RADIUS   (METRONOME_WEIGHT_SIZE_RADIUS + 2.0) // 1px for center of weight, and 1px for tip of arm
 #define METRONOME_WEIGHT_MAX_RADIUS   (METRONOME_RADIUS - METRONOME_WEIGHT_MIN_RADIUS)
 #define METRONOME_WEIGHT_RADIUS_RANGE (METRONOME_WEIGHT_MAX_RADIUS - METRONOME_WEIGHT_MIN_RADIUS)
 
@@ -534,7 +536,7 @@ void plotInstrumentStrings(uint16_t numNotes)
     int16_t stringXRange = TFT_WIDTH - 2 * TUNER_STRING_X_PADDING;
     int16_t totalStringWidths = numNotes * TUNER_STRING_WIDTH;
     int16_t totalInnerSpacingWidths = stringXRange - totalStringWidths;
-    int16_t perStringXOffset = TUNER_STRING_WIDTH + round(totalInnerSpacingWidths / (double) (numNotes - 1));
+    int16_t perStringXOffset = TUNER_STRING_WIDTH + round(totalInnerSpacingWidths / (float) (numNotes - 1));
 
     for(int i = 0; i < numNotes; i++)
     {
@@ -1182,17 +1184,17 @@ void tunernomeMainLoop(int64_t elapsedUs)
             drawWsg(&(tunernome->metronomeTopWsg), (TFT_WIDTH - tunernome->metronomeTopWsg.w) / 2, METRONOME_GRAPHIC_Y, false, false, 0);
 
             // Draw metronome arm based on the value of tAccumulatedUs, which is between (0, usPerBeat)
-            float intermedX = -1 * cosf(tunernome->tAccumulatedUs * M_PI / tunernome->usPerBeat);
-            float intermedY = -1 * sinf(tunernome->tAccumulatedUs * M_PI / tunernome->usPerBeat);
-            int16_t armX    = round(METRONOME_CENTER_X - (0.5 * intermedX * METRONOME_RADIUS));
-            int16_t armY    = round(METRONOME_CENTER_Y - ((0.5 * ABS(intermedY) + 0.5) * METRONOME_RADIUS));
+            float intermedX = cosf(METRONOME_ARC_MULTIPLIER * tunernome->tAccumulatedUs * M_PI / tunernome->usPerBeat + METRONOME_ARC_MULTIPLIER * 0.5 * M_PI);
+            float intermedY = ABS(sinf(METRONOME_ARC_MULTIPLIER * tunernome->tAccumulatedUs * M_PI / tunernome->usPerBeat + METRONOME_ARC_MULTIPLIER * 0.5 * M_PI));
+            int16_t armX    = round(METRONOME_CENTER_X - (intermedX * METRONOME_RADIUS));
+            int16_t armY    = round(METRONOME_CENTER_Y - (intermedY * METRONOME_RADIUS));
             drawLine(METRONOME_CENTER_X, METRONOME_CENTER_Y, armX, armY, c445, 0);
 
             // Draw metronome balance weight
-            double weightRadiusPercent = (MAX_BPM - tunernome->bpm) / ((double) (MAX_BPM - 1));
-            double weightRadius = weightRadiusPercent * METRONOME_WEIGHT_RADIUS_RANGE + METRONOME_WEIGHT_MIN_RADIUS;
-            int16_t weightX = round(METRONOME_CENTER_X - (0.5 * intermedX * weightRadius));
-            int16_t weightY = round(METRONOME_CENTER_Y - (0.5 * ABS(intermedY) + 0.5) * weightRadius);
+            float weightRadiusPercent = (MAX_BPM - tunernome->bpm) / ((float) (MAX_BPM - 1));
+            float weightRadius = weightRadiusPercent * METRONOME_WEIGHT_RADIUS_RANGE + METRONOME_WEIGHT_MIN_RADIUS;
+            int16_t weightX = round(METRONOME_CENTER_X - (intermedX * weightRadius));
+            int16_t weightY = round(METRONOME_CENTER_Y - (intermedY * weightRadius));
             //printf("weightRadiusPercent = %f, x = %"PRIi16", y = %"PRIi16"\n", weightRadiusPercent, weightX, weightY);
             //drawLineScaled(METRONOME_CENTER_X, METRONOME_CENTER_Y, armX, armY, c445, 0, -METRONOME_CENTER_X, 0, 2, 1);
             drawCircleFilled(weightX, weightY, METRONOME_WEIGHT_SIZE_RADIUS, c222);
