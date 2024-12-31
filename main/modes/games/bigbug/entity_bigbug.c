@@ -2018,7 +2018,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
 {
     bb_grabbyHandData_t* ghData = (bb_grabbyHandData_t*)self->data;
     // destroy grabby hand if the booster is broken.
-    if (ghData->rocket->currentAnimationFrame == 41)
+    if (ghData->rocket->currentAnimationFrame == 41 || ghData->rocket->updateFunction == bb_updateRocketLiftoff)
     {
         bb_destroyEntity(self, false);
         return;
@@ -4065,7 +4065,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         }
         case 7:
         {
-            bb_setCharacterLine(dData, 0, "Ovo", "Would you look at the time... It's GARBAGE DAY!");
+            bb_setCharacterLine(dData, 0, "Ovo", "Would you look at the time... It's GARBAGE TIME!");
             break;
         }
         case 8:

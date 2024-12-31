@@ -439,7 +439,7 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         if (excludePersistentEntities
             && (currentEntity->spriteIndex == BB_DEATH_DUMPSTER || currentEntity->spriteIndex == ROCKET_ANIM
                 || currentEntity->spriteIndex == FLAME_ANIM || currentEntity->spriteIndex == CRUMBLE_ANIM ||
-                currentEntity->spriteIndex == NO_SPRITE_STAR || currentEntity->spriteIndex == BB_GRABBY_HAND))
+                currentEntity->spriteIndex == NO_SPRITE_STAR))
         {
             continue;
         }
