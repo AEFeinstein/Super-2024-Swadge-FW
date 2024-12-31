@@ -49,7 +49,7 @@ struct bb_t
 
 // required by adam
 static void bb_EnterMode(void);
-static void bb_EnterModeSkipIntro(void);
+static void bb_EnterMode(void);//SkipIntro(void);
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
 static void bb_BackgroundDrawCallbackBlack(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -895,7 +895,7 @@ static void bb_DrawScene_Loadout_Select(void)
         = bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2 + textWidth(&bigbug->gameData.font, donuts);
     donutLeft = (TFT_WIDTH >> 1) - (donutLeft >> 1);
     drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], donutLeft, 4);
-    drawText(&bigbug->gameData.font, donuts > 0 ? c555 : c500, donuts,
+    drawText(&bigbug->gameData.font, numDonuts > 0 ? c555 : c500, donuts,
              donutLeft + bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2, 16);
 
     
