@@ -32,11 +32,15 @@
 // Consts
 //==============================================================================
 
-static const char cGroveTitle[]        = "Chowa Grove"; // Game title
-static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Settings"};
-static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
-static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
-static const int32_t cGroveEnabledVals[]        = {true, false};
+static const char cGroveTitle[]      = "Chowa Grove"; // Game title
+static const char* cGroveMenuNames[] = {"Play with Chowa", "Spar", "Settings"};
+static const char* cGroveSettingOpts[]
+    = {"Grove Touch Scroll: ", "Touch Scroll Speed: ", "Show Item Text: ", "Show Chowa Names: "};
+static const char* const cGroveEnabledOptions[]    = {"Enabled", "Disabled"};
+static const int32_t cGroveEnabledVals[]           = {true, false};
+static const char* const cGroveTouchScrollLabels[] = {"Slow", "Medium", "Fast", "Pango"};
+static const int32_t cGroveTouchScrollVals[]
+    = {8, 7, 6, 5}; // 9 only works at 100% in one direction, 4 is uncontrollably fast
 static const char* cGroveResetData[]
     = {"Reset all game data", "Are you sure you want to reset to factory? All data will be lost.",
        "Press 'Start' to permanently erase all data. Press any other key to return to menu."};
@@ -147,7 +151,7 @@ static void cGroveEnterMode(void)
     if (!readNvsBlob(cgNVSKeys[2], &cg->settings, &blobLen))
     {
         cg->settings.touch      = true;
-        cg->settings.online     = false;
+        cg->settings.speed      = 7;
         cg->settings.itemText   = true;
         cg->settings.chowaNames = true;
     }
@@ -165,9 +169,9 @@ static void cGroveEnterMode(void)
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.touch); // Enable/disable touch controls
-    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveEnabledOptions, cGroveEnabledVals,
-                                 ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
-                                 cg->settings.online); // Enable/disable online functions
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveTouchScrollLabels, cGroveTouchScrollVals,
+                                 ARRAY_SIZE(cGroveTouchScrollLabels), getScreensaverTimeSettingBounds(),
+                                 cg->settings.speed); // Enable/disable online functions
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[2], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.itemText); // Enable/disable Item names
@@ -473,8 +477,9 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
     }
     else if (label == cGroveSettingOpts[1])
     {
-        // Online on or off
-        cg->settings.online = settingVal;
+        // FIXME
+        // Touch scroll speed
+        cg->settings.speed = settingVal;
         writeNvsBlob(cgNVSKeys[2], &cg->settings, sizeof(cgSettings_t));
     }
     else if (label == cGroveSettingOpts[2])

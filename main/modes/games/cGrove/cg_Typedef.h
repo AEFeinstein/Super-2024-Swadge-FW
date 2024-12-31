@@ -538,7 +538,7 @@ typedef enum
 typedef struct
 {
     bool touch;      ///< Touch controls for Grove
-    bool online;     ///< If online features are enabled
+    int8_t speed;    ///< If online features are enabled
     bool itemText;   ///< If item text should be drawn
     bool chowaNames; ///< If Chowa's show have their names drawn in Grove
 } cgSettings_t;
