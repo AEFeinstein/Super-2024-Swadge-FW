@@ -44,6 +44,9 @@ const char modeName[]          = "2048";
 static const char youWin[]     = "You got 2048!";
 static const char continueAB[] = "Press A or B to continue";
 
+static const char* loadGameStrs[] = {"Load save?", "Press A to load saved game", "Press B to make a new game",
+                                     "Press any other key return to title screen. Will not delete your save."};
+
 static const char* tileSpriteNames[] = {
     "Tile-Blue-Diamond.wsg", "Tile-Blue-Square.wsg",  "Tile-Cyan-Legs.wsg",      "Tile-Green-Diamond.wsg",
     "Tile-Green-Octo.wsg",   "Tile-Green-Square.wsg", "Tile-Mauve-Legs.wsg",     "Tile-Orange-Legs.wsg",
@@ -307,13 +310,25 @@ static void t48MainLoop(int64_t elapsedUs)
                         t48_gameInit(t48, evt.button == PB_A);
                         t48->state = T48_IN_GAME;
                     }
-                    else {
+                    else
+                    {
                         // Return to start screen without deleting save
                         t48->state = T48_START_SCREEN;
                     }
                 }
-                // TODO: Draw load save/new game screen
             }
+            // Draw load save/new game screen
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            drawText(&t48->titleFont, c055, loadGameStrs[0],
+                     (TFT_WIDTH - textWidth(&t48->titleFont, loadGameStrs[0])) >> 1, 48);
+            drawText(&t48->font, c555, loadGameStrs[1], (TFT_WIDTH - textWidth(&t48->font, loadGameStrs[1])) >> 1,
+                     TFT_HEIGHT - 128);
+            drawText(&t48->font, c555, loadGameStrs[2], (TFT_WIDTH - textWidth(&t48->font, loadGameStrs[2])) >> 1,
+                     TFT_HEIGHT - 96);
+            int16_t xOff = 24; // To make it look centered, uneven
+            int16_t yOff = TFT_HEIGHT - 64;
+            drawTextWordWrap(&t48->font, c555, loadGameStrs[3], &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
+            break;
         }
         case T48_WIN_SCREEN:
         {
@@ -326,8 +341,8 @@ static void t48MainLoop(int64_t elapsedUs)
                 }
             }
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-            drawText(&t48->titleFont, c055, youWin, (TFT_WIDTH - textWidth(&t48->titleFont, youWin)) / 2, 48);
-            drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) / 2,
+            drawText(&t48->titleFont, c055, youWin, (TFT_WIDTH - textWidth(&t48->titleFont, youWin)) >> 1, 48);
+            drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) >> 1,
                      TFT_HEIGHT - 64);
             break;
         }
