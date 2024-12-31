@@ -398,7 +398,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    if (camera->camera.pos.y < -800 && camera->camera.pos.y > -5386)
+    if (camera->camera.pos.y < -800 && camera->camera.pos.y > -2800)
     {
         int16_t halfWidth  = HALF_WIDTH >> DECIMAL_BITS;
         int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
@@ -438,7 +438,8 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         }
         if (excludePersistentEntities
             && (currentEntity->spriteIndex == BB_DEATH_DUMPSTER || currentEntity->spriteIndex == ROCKET_ANIM
-                || currentEntity->spriteIndex == FLAME_ANIM || currentEntity->spriteIndex == CRUMBLE_ANIM || currentEntity->spriteIndex == NO_SPRITE_STAR))
+                || currentEntity->spriteIndex == FLAME_ANIM || currentEntity->spriteIndex == CRUMBLE_ANIM ||
+                currentEntity->spriteIndex == NO_SPRITE_STAR || currentEntity->spriteIndex == BB_GRABBY_HAND))
         {
             continue;
         }
@@ -1215,7 +1216,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_FOOD_CART:
         {
             entity->halfWidth  = 22 << DECIMAL_BITS;
-            entity->halfHeight = 9 << DECIMAL_BITS;
+            entity->halfHeight = 12 << DECIMAL_BITS;
             entity->cacheable  = true;
 
             bb_setData(entity, heap_caps_calloc(1, sizeof(bb_foodCartData_t), MALLOC_CAP_SPIRAM), FOOD_CART_DATA);

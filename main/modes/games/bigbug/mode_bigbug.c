@@ -895,7 +895,7 @@ static void bb_DrawScene_Loadout_Select(void)
         = bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2 + textWidth(&bigbug->gameData.font, donuts);
     donutLeft = (TFT_WIDTH >> 1) - (donutLeft >> 1);
     drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], donutLeft, 4);
-    drawText(&bigbug->gameData.font, c555, donuts,
+    drawText(&bigbug->gameData.font, donuts > 0 ? c555 : c500, donuts,
              donutLeft + bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2, 16);
 
     
