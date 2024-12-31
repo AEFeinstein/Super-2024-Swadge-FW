@@ -55,9 +55,8 @@ static led_t t48_getLEDColor(t48_t* t48);
 // Const Variables
 //==============================================================================
 
-static const char paused[]  = "Paused!";
-static const char pausedA[] = "Press A to continue playing";
-static const char pausedB[] = "Press B to abandon game";
+static const char* pauseText[]
+    = {"Paused!", "Press A to save and quit", "Press B to abandon game", "Press Pause to resume playing"};
 
 static const int32_t tileIndices[] = {
     0, 8, 2, 12, 5, 9, 14, 10, 7, 15, 1, 3, 6, 13, 4, 11, 0, 8, 0, 0, 0, 0, 0, 0, 0,
@@ -67,6 +66,8 @@ static const int32_t sparkleIndices[] = {
     3, 3, 4, 1, 6, 0, 7, 0, 3, 4, 4, 7, 5, 6, 6, 2, 2, 1, 3, 3, 3, 3, 3, 3, 3,
 };
 
+const char nvsSaved2048[] = "nvs2048Save";
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -75,25 +76,33 @@ static const int32_t sparkleIndices[] = {
  * @brief Initialize the game state
  *
  * @param t48 The game data to initialize
- * @param tiltControls true to use tilt controls, false to use D-Pad
+ * @param saveGame If the game should be loading a save or not
  */
-void t48_gameInit(t48_t* t48, bool tiltControls)
+void t48_gameInit(t48_t* t48, bool newGame)
 {
     // Clear the board
     memset(t48->board, 0, sizeof(t48->board));
 
-    // Reset the score
-    t48->score = 0;
-
-    // Set two cells randomly
-    for (int32_t i = 0; i < 2; i++)
+    // Load new game if set
+    // TODO: Initialize game from board
+    if (newGame)
     {
-        t48_setRandomCell(t48, 2);
+        t48->score = t48->sd.score;
+    }
+    else
+    {
+        // Reset the score
+        t48->score = 0;
+
+        // Set two cells randomly
+        for (int32_t i = 0; i < 2; i++)
+        {
+            t48_setRandomCell(t48, 2);
+        }
     }
 
     // Accept input
     t48->acceptGameInput = true;
-    t48->tiltControls    = tiltControls;
 }
 
 /**
@@ -108,11 +117,13 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
     {
         // Draw pause screen
         fillDisplayArea(64, 75, TFT_WIDTH - 64, 100, c100);
-        drawText(&t48->titleFont, c555, paused, (TFT_WIDTH - textWidth(&t48->titleFont, paused)) / 2, 80);
+        drawText(&t48->titleFont, c555, pauseText[0], (TFT_WIDTH - textWidth(&t48->titleFont, pauseText[0])) >> 1, 80);
         fillDisplayArea(32, 110, TFT_WIDTH - 32, 130, c100);
-        drawText(&t48->font, c555, pausedA, (TFT_WIDTH - textWidth(&t48->font, pausedA)) / 2, 115);
+        drawText(&t48->font, c555, pauseText[3], (TFT_WIDTH - textWidth(&t48->font, pauseText[3])) >> 1, 115);
         fillDisplayArea(32, 135, TFT_WIDTH - 32, 155, c100);
-        drawText(&t48->font, c555, pausedB, (TFT_WIDTH - textWidth(&t48->font, pausedB)) / 2, 140);
+        drawText(&t48->font, c555, pauseText[1], (TFT_WIDTH - textWidth(&t48->font, pauseText[1])) >> 1, 140);
+        fillDisplayArea(32, 160, TFT_WIDTH - 32, 180, c100);
+        drawText(&t48->font, c555, pauseText[2], (TFT_WIDTH - textWidth(&t48->font, pauseText[2])) >> 1, 165);
         return; // Bail instead of drawing the rest of the game
     }
 
@@ -297,7 +308,14 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
         }
         case PB_A:
         {
-            t48->paused = false;
+            if (t48->paused)
+            {
+                // TODO: Save board
+                t48->sd.score = t48->score;
+                writeNvsBlob(nvsSaved2048, &t48->sd, sizeof(t48GameSaveData_t));
+                t48->state  = T48_START_SCREEN;
+                t48->paused = false;
+            }
             break;
         }
         case PB_B:
@@ -313,7 +331,6 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
         {
             t48->paused = !t48->paused;
         }
-        case PB_SELECT:
         default:
         {
             break;

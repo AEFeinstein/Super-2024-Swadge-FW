@@ -2,7 +2,7 @@
  * @file mode_2048.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 1.5.0
+ * @version 1.5.1
  * @date 2024-06-28
  *
  * @copyright Copyright (c) 2024
@@ -269,14 +269,51 @@ static void t48MainLoop(int64_t elapsedUs)
                 if (evt.down && (PB_A == evt.button || PB_B == evt.button))
                 {
                     soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48_gameInit(t48, PB_B == evt.button);
-                    t48->state = T48_IN_GAME;
+                    t48->tiltControls = PB_B == evt.button;
+                    // If a save game is detected, ask if the player wants to load it.
+                    size_t blob = sizeof(t48GameSaveData_t);
+                    readNvsBlob(nvsSaved2048, NULL, &blob);
+                    if (!readNvsBlob(nvsSaved2048, &t48->sd, &blob))
+                    {
+                        t48_gameInit(t48, false);
+                        t48->state = T48_IN_GAME;
+                    }
+                    else
+                    {
+                        // Game data detected
+                        t48->state = T48_LOAD_SAVE;
+                    }
+                    break;
                 }
             }
             // Draw
             t48_drawStartScreen(t48, t48_generateRainbow(), elapsedUs);
             t48_chaseLEDs(elapsedUs);
             break;
+        }
+        case T48_LOAD_SAVE:
+        {
+            // AAsk player if they want to load their old save
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    if (evt.button & PB_A || evt.button & PB_B)
+                    {
+                        // Delete old save
+                        eraseNvsKey(nvsSaved2048);
+
+                        // Start new game
+                        t48_gameInit(t48, evt.button == PB_A);
+                        t48->state = T48_IN_GAME;
+                    }
+                    else {
+                        // Return to start screen without deleting save
+                        t48->state = T48_START_SCREEN;
+                    }
+                }
+                // TODO: Draw load save/new game screen
+            }
         }
         case T48_WIN_SCREEN:
         {
