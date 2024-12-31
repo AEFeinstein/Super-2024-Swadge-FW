@@ -69,7 +69,7 @@ SUBMODULES = $(shell git config --file .gitmodules --name-only --get-regexp path
 ################################################################################
 
 # Look for folders with .h files in these directories, recursively
-INC_DIRS_RECURSIVE = ../../main
+INC_DIRS_RECURSIVE = ../../main ../../emulator/src-lib
 # Look for folders named "include" in these directories, recursively
 INC_DIRS_INCLUDE =
 # Treat every source directory as one to search for headers in, also add a few more

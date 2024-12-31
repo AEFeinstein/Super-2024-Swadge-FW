@@ -1,0 +1,38 @@
+/**
+ * @file args.h
+ * @author dylwhich (dylan@whichard.com)
+ * @brief Defines a struct for command-line arguments and a method to parse them.
+ * @date 2024-12-30
+ *
+ * Once ::emuParseArgs() has been called, the arguments may be accessed at any time via ::emulatorArgs
+ */
+#pragma once
+
+//==============================================================================
+// Includes
+//==============================================================================
+
+#include <stdbool.h>
+#include <stdint.h>
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+typedef struct
+{
+    // MIDI
+    const char* midiFile;
+} midiDogArgs_t;
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+extern midiDogArgs_t mdArgs;
+
+//==============================================================================
+//  Function Prototypes
+//==============================================================================
+
+bool mdParseArgs(int argc, char** argv);
