@@ -11,8 +11,9 @@
 bool action_dump(void)
 {
     midiFile_t* file = mididogLoadPath(mdArgs.midiIn);
+    midiFile_t* tokFile = mididogTokenizeMidi(file);
 
-    midiFileReader_t reader = {0};
+    /*midiFileReader_t reader = {0};
     if (initMidiParser(&reader, file))
     {
         midiEvent_t event;
@@ -23,8 +24,20 @@ bool action_dump(void)
         }
 
         deinitMidiParser(&reader);
+    }*/
+
+    for (int trackNum = 0; trackNum < tokFile->trackCount; trackNum++)
+    {
+        fprintf(stdout, "Track %d\n", trackNum);
+        for (int eventNum = 0; eventNum < tokFile->events[trackNum].count; eventNum++)
+        {
+            midiEvent_t* event = &tokFile->events[trackNum].events[eventNum];
+
+            fprintEvent(stdout, mdArgs.multiLine ? MD_DUMP_MULTILINE : 0, event);
+        }
     }
 
+    unloadMidiFile(tokFile);
     unloadMidiFile(file);
     free(file);
     
@@ -33,7 +46,7 @@ bool action_dump(void)
 
 void fprintEvent(FILE* stream, int flags, const midiEvent_t* event)
 {
-    /// Multi-line, for convenience
+    /// Extract the multi-line flag, for convenience
     bool ml = ((flags & MD_DUMP_MULTILINE) == MD_DUMP_MULTILINE);
 
     if (event == NULL)
@@ -48,12 +61,12 @@ void fprintEvent(FILE* stream, int flags, const midiEvent_t* event)
     
     if (ml)
     {
-        fprintf(stream, "Time (abs): %08" PRIu32 "\n", event->absTime);
-        fprintf(stream, "Delta Time: %08" PRIu32 "\n", event->deltaTime);
+        fprintf(stream, "Time (abs): %8" PRIu32 "\n", event->absTime);
+        fprintf(stream, "Delta Time: %8" PRIu32 "\n", event->deltaTime);
     }
     else
     {
-        fprintf(stream, "%08" PRIu32 " ", event->deltaTime);
+        fprintf(stream, "%8" PRIu32 " ", event->deltaTime);
     }
 
     switch (event->type)
@@ -118,6 +131,62 @@ void fprintEvent(FILE* stream, int flags, const midiEvent_t* event)
                 else
                 {
                     fputs("      ", stream);
+                }
+
+                switch (status)
+                {
+                    case 0x80:
+                    {
+                        fputs("  Note Off", stream);
+                        break;
+                    }
+                    case 0x90:
+                    {
+                        fputs("  Note On", stream);
+                        break;
+                    }
+                    case 0xA0:
+                    {
+                         fputs("  AfterTouch", stream);
+                         break;
+                    }
+                    case 0xB0:
+                    {
+                        fputs("  Control Change", stream);
+                        break;
+                    }
+                    case 0xC0:
+                    {
+                        fputs("  Program Change", stream);
+                        break;
+                    }
+                    case 0xD0:
+                    {
+                        fputs("  Channel Pressure", stream);
+                        break;
+                    }
+                    case 0xE0:
+                    {
+                        fputs("  Pitch Bend", stream);
+                        break;
+                    }
+                    case 0xF0:
+                    {
+                        if (event->midi.status > 0xF7)
+                        {
+                            fputs("  System Realtime", stream);
+                        }
+                        else
+                        {
+                            fputs("  System Common", stream);
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        fputs("  Unknown", stream);
+                        break;
+                    }
                 }
             }
             break;

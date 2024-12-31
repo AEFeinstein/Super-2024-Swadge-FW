@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -217,4 +218,121 @@ bool mididogWritePath(const midiFile_t* data, const char* path)
     }
 
     return false;
+}
+
+midiFile_t* mididogTokenizeMidi(const midiFile_t* midiFile)
+{
+    if (NULL == midiFile)
+    {
+        return NULL;
+    }
+
+    // Number of events in each track
+    uint32_t trackEventCounts[midiFile->trackCount];
+
+    // The total length in bytes of all events in each track
+    //uint32_t trackEventLengths[midiFile->trackCount];
+
+    // Temporary running status bytes for each track
+    //uint8_t trackRunningStatuses[midiFile->trackCount];
+
+    midiEventStream_t* streams = calloc(midiFile->trackCount, sizeof(midiEventStream_t));
+
+    if (NULL == streams)
+    {
+        fprintf(stderr, "ERR: unable to allocate %lu bytes for MIDI event streams\n", midiFile->trackCount * sizeof(midiEventStream_t));
+        return NULL;
+    }
+
+    midiFileReader_t reader = {0};
+    if (initMidiParser(&reader, midiFile))
+    {
+        midiEvent_t event;
+
+        // Dynamically-sized stack-allocated arrays don't get zeroed automatically!
+        memset(trackEventCounts, 0, sizeof(trackEventCounts));
+
+        // 1. Count number of events in each track
+        // 2. Count total length of written events in each track
+        // midiNextEvent returns events in order of time, then track, so we need to basically un-collate it
+        while (midiNextEvent(&reader, &event))
+        {
+            trackEventCounts[event.track]++;
+            //trackEventLengths[event.track] += midiWriteEventWithRunningStatus(NULL, 1024, &event, &trackRunningStatuses[event.track]);
+        }
+
+        // Count up the total number of events in the file from the track totals
+        uint32_t totalEvents = 0;
+        for (int i = 0; i < midiFile->trackCount; i++)
+        {
+            totalEvents += trackEventCounts[i];
+        }
+
+        fprintf(stderr, "File has %" PRIu16 " tracks with %" PRIu32 " events total\n", midiFile->trackCount, totalEvents);
+
+        // Allocate the events, once
+        midiEvent_t* allEvents = calloc(totalEvents, sizeof(midiEvent_t));
+
+        if (NULL == allEvents)
+        {
+            fprintf(stderr, "ERR: unable to allocate %lu bytes for MIDI event data\n", totalEvents * sizeof(midiEvent_t));
+            deinitMidiParser(&reader);
+            free(streams);
+            return NULL;
+        }
+
+        midiFile_t* result = malloc(sizeof(midiFile_t));
+
+        if (NULL == result)
+        {
+            fprintf(stderr, "ERR: unable to allocate %lu bytes for tokenized MIDI file\n", sizeof(midiFile_t));
+            deinitMidiParser(&reader);
+            free(streams);
+            free(allEvents);
+            return NULL;
+        }
+
+        // Clear data not used for tokenized files
+        result->length = 0;
+        result->tracks = NULL;
+
+        // Kinda a hack but it's already hacky anyway. This makes sure something can free the events we allocated when the file's deallocated
+        result->data = (uint8_t*)((void*)allEvents);
+
+        // Copy the original's metadata
+        result->format = midiFile->format;
+        result->timeDivision = midiFile->timeDivision;
+        result->trackCount = midiFile->trackCount;
+
+        // Set the track event streams
+        result->events = streams;
+
+        // Populate each track's stream with the correct events pointer within allEvents
+        uint32_t eventOffset = 0;
+        for (int i = 0; i < midiFile->trackCount; i++)
+        {
+            midiEventStream_t* trackStream = &streams[i];
+            trackStream->count = 0;
+            trackStream->events = &allEvents[eventOffset];
+            eventOffset += trackEventCounts[i];
+        }
+
+        // Reset the file parser so we can actually read the events
+        resetMidiParser(&reader);
+
+        // Actually copy each event to the appropriate track's event stream
+        while (midiNextEvent(&reader, &event))
+        {
+            midiEventStream_t* trackStream = &streams[event.track];
+
+            memcpy(&trackStream->events[trackStream->count++], &event, sizeof(midiEvent_t));
+        }
+
+        // We're done! Deinit the MIDI parser
+        deinitMidiParser(&reader);
+
+        return result;
+    }
+
+    return NULL;
 }
