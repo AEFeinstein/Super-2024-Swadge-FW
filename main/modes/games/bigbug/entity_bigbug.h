@@ -51,6 +51,7 @@ typedef enum
     EXPLOSION_DATA,
     ATMOSPHERIC_ATOMIZER_DATA,
     DRILL_BOT_DATA,
+    SPACE_LASER_DATA,
 } bb_data_type_t;
 
 
@@ -163,6 +164,19 @@ typedef struct
                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
                      // on the ground and trigger a game over.
 } bb_physicsData_t;
+
+typedef struct
+{
+    vec_t vel;
+    uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
+                             // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
+    uint8_t bounceDenominator;
+    uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
+                     // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                     // on the ground and trigger a game over.
+    //child attributes
+    uint16_t lifetime;
+} bb_timedPhysicsData_t;
 
 typedef struct
 {
@@ -321,6 +335,12 @@ typedef struct
     bb_callbackFunction_t executeAfterPing;
 } bb_radarPingData_t;
 
+typedef struct
+{
+    uint16_t lifetime;
+    uint8_t highestGarbage;
+} bb_spaceLaserData_t;
+
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
 typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -413,6 +433,9 @@ void bb_update501kg(bb_entity_t* self);
 void bb_updateExplosion(bb_entity_t* self);
 void bb_updateAtmosphericAtomizer(bb_entity_t* self);
 void bb_updateDrillBot(bb_entity_t* self);
+void bb_updateTimedPhysicsObject(bb_entity_t* self);
+void bb_updatePacifier(bb_entity_t* self);
+void bb_updateSpaceLaser(bb_entity_t* self);
 
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -444,6 +467,8 @@ void bb_draw501kg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_ent
 void bb_drawExplosion(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawAtmosphericAtomizer(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawPacifier(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
@@ -459,6 +484,7 @@ void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
 void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);

@@ -134,6 +134,16 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             }
             break;
         }
+        case BB_AMMO_SUPPLY:
+        {
+            freeWsg(&self->gameData->entityManager.sprites[BB_AMMO_SUPPLY].frames[0]);
+            break;
+        }
+        case BB_PACIFIER:
+        {
+            freeWsg(&self->gameData->entityManager.sprites[BB_PACIFIER].frames[0]);
+            break;
+        }
         default:
         {
             break;
@@ -852,7 +862,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t dampingForceY = (pData->vel.y - gData->vel.y) / DAMPING_CONSTANT;
 
             // Apply the force
-            if (curEntity->updateFunction == &bb_updatePhysicsObject || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA) // dead bug or donut or drill bot or wile
+            if (curEntity->updateFunction == &bb_updatePhysicsObject || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA || curEntity->dataType == PHYSICS_DATA) // dead bug or donut or drill bot or wile
             {
                 pData->vel.x += springForceX - dampingForceX;
                 pData->vel.y += springForceY - dampingForceY + 4;
@@ -896,7 +906,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
             // if it is a bug or a donut
-            if ((curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13) || curEntity->spriteIndex == BB_DONUT || curEntity->spriteIndex == BB_WILE || curEntity->spriteIndex == BB_DRILL_BOT)
+            if ((curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13) || curEntity->spriteIndex == BB_DONUT || curEntity->spriteIndex == BB_WILE || curEntity->spriteIndex == BB_DRILL_BOT || curEntity->spriteIndex == BB_AMMO_SUPPLY || curEntity->spriteIndex == BB_PACIFIER)
             {
                 // if it is not already towed
                 bool isTowed = false;
@@ -2666,6 +2676,100 @@ void bb_updateDrillBot(bb_entity_t* self)
     }
 }
 
+void bb_updateTimedPhysicsObject(bb_entity_t* self)
+{
+    bb_updatePhysicsObject(self);
+    bb_timedPhysicsData_t* tData = (bb_timedPhysicsData_t*)self->data;
+    tData->lifetime++;
+    if(tData->lifetime > 1900)
+    {
+        bb_destroyEntity(self, false);
+        return;
+    }
+}
+
+void bb_updatePacifier(bb_entity_t* self)
+{
+    bb_updatePhysicsObject(self);
+    bb_timedPhysicsData_t* tData = (bb_timedPhysicsData_t*)self->data;
+    tData->lifetime++;
+    if(tData->lifetime > 1900)
+    {
+        bb_destroyEntity(self, false);
+        return;
+    }
+    
+    int16_t radius = ((tData->lifetime<<1) % 300)<<DECIMAL_BITS;
+    int16_t sqRadiusOuter = (radius + 48) * (radius + 48);
+    int16_t sqRadiusInner = (radius - 48) * (radius - 48);
+    //iterate all entities
+    for(int i = 0; i < MAX_ENTITIES; i++)
+    {
+        bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
+        if(curEntity->spriteIndex != BB_SPIT)
+        {
+            continue;
+        }
+        vec_t toFrom = subVec2d(curEntity->pos, self->pos);
+        if(curEntity->pos.x < self->pos.x + radius + 48 && curEntity->pos.x > self->pos.x - radius - 48 && curEntity->pos.y < self->pos.y + radius + 48 && curEntity->pos.y > self->pos.y - radius - 48)
+        {
+            int16_t sqDist = sqMagVec2d(toFrom);
+            if(sqDist < sqRadiusOuter && sqDist > sqRadiusInner)
+            {
+                bb_destroyEntity(curEntity, false);
+            }
+        }
+    }
+}
+
+void bb_updateSpaceLaser(bb_entity_t* self)
+{
+    bb_spaceLaserData_t* slData = (bb_spaceLaserData_t*)self->data;
+    if(slData->lifetime == 0)
+    {
+        //Position it at half height above the highest garbage
+        for(int i = 0; i < TILE_FIELD_HEIGHT; i++)
+        {
+            if(self->gameData->tilemap.fgTiles[self->pos.x>>9][i].health > 0)
+            {
+                slData->highestGarbage = i;
+                break;
+            }
+        }
+    }
+    slData->lifetime++;
+    if(slData->lifetime > 1900)
+    {
+        bb_destroyEntity(self, false);
+        return;
+    }
+    if(bb_randomInt(0, 50)==0)
+    {
+        //decrement the health of the tile below the laser by one
+        self->gameData->tilemap.fgTiles[self->pos.x>>9][slData->highestGarbage].health--;
+        int8_t health = self->gameData->tilemap.fgTiles[self->pos.x>>9][slData->highestGarbage].health;
+        if(health == 1 || health == 4 || health == 10)
+        {
+            bb_crumbleDirt(self->gameData, 2, self->pos.x>>9, slData->highestGarbage, false);
+        }
+        else if(health == 0)
+        {
+            bb_crumbleDirt(self->gameData, 2, self->pos.x>>9, slData->highestGarbage, true);
+            //recalculate the highest garbage
+            for(int i = 0; i < TILE_FIELD_HEIGHT; i++)
+            {
+                if(self->gameData->tilemap.fgTiles[self->pos.x>>9][i].health > 0)
+                {
+                    slData->highestGarbage = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    self->pos.y = (slData->highestGarbage<<9) - self->halfHeight;
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     if (GARBOTNIK_DATA != self->dataType)
@@ -3520,6 +3624,55 @@ void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
     }
 }
 
+void bb_drawPacifier(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_timedPhysicsData_t* tData = (bb_timedPhysicsData_t*)self->data;
+    drawWsgSimple(
+        &entityManager->sprites[self->spriteIndex].frames[0],
+        (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+        (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y, (tData->lifetime<<1) % 300, c345);
+}
+
+void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    //if the bottom of the laser is below the top of the screen
+    int16_t yBottom = ((self->pos.y + self->halfHeight) >> DECIMAL_BITS) - camera->pos.y;
+    if(yBottom > 0)
+    {
+        //draw a rectangle from the top of the screen to the bottom of the laser.
+        bb_spaceLaserData_t* sData = (bb_spaceLaserData_t*)self->data;
+        uint8_t flashEffect = sData->lifetime % 13;
+        uint8_t foo = bb_randomInt(0, 50);
+        if(foo > 37)
+        {
+            flashEffect = foo % 13;
+        }
+        drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x,
+                       0,
+                       ((self->pos.x - self->halfWidth) >> DECIMAL_BITS)- camera->pos.x  + flashEffect,
+                       yBottom, c500);
+        drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect,
+                       0,
+                       ((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect + 2,
+                       yBottom, foo > 25 ? c533 : c555);
+        drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect + 2,
+                       0,
+                       ((self->pos.x + self->halfWidth) >> DECIMAL_BITS) - camera->pos.x,
+                       yBottom, c500);
+        if(foo>40)
+        {
+            //create a bump anim at the bottom of the laser
+            bb_entity_t* bump = bb_createEntity(entityManager, ONESHOT_ANIMATION, false, BUMP_ANIM, 1, (self->pos.x >> DECIMAL_BITS)-12+foo%25, (self->pos.y + self->halfHeight)>>DECIMAL_BITS, false, false);
+            if(foo >= 25)
+            {
+                bump->drawFunction = bb_drawHitEffect;
+            }
+        }
+    }
+
+}
+
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 // {
 //     drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
@@ -4112,6 +4265,16 @@ void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
             bData->health -= 34;
         }
     }
+}
+
+void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
+    gData->numHarpoons = self->gameData->GarbotnikStat_maxHarpoons;
+    midiPlayer_t* sfx = soundGetPlayerSfx();
+    midiPlayerReset(sfx);
+    soundPlaySfx(&self->gameData->sfxHealth, 0);
+    bb_destroyEntity(self, false);
 }
 
 
@@ -4809,9 +4972,9 @@ void bb_triggerFaultyWile(bb_entity_t* self)
     eData->radius = 60;
 }
 
-void bb_triggerDrillBot(bb_entity_t* self)
+void bb_triggerDrillBotWile(bb_entity_t* self)
 {
-    bb_entity_t* drillBot = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DRILL_BOT, 1, self->pos.x >> DECIMAL_BITS, -1000, false, false);
+    bb_entity_t* drillBot = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DRILL_BOT, 1, self->pos.x >> DECIMAL_BITS, -800, false, false);
     bb_drillBotData_t* dbData = (bb_drillBotData_t*)drillBot->data;
     dbData->targetY = self->pos.y-256;
 }
@@ -4824,6 +4987,21 @@ void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self)
         bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
         gData->dragShift = 23;//This greatly reduces the drag on the garbotnik
     }
+}
+
+void bb_triggerAmmoSupplyWile(bb_entity_t* self)
+{
+    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_AMMO_SUPPLY, 1, self->pos.x >> DECIMAL_BITS, -800, false, false);
+}
+
+void bb_triggerPacifierWile(bb_entity_t* self)
+{
+    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_PACIFIER, 1, self->pos.x >> DECIMAL_BITS, -800, false, false);
+}
+
+void bb_triggerSpaceLaserWile(bb_entity_t* self)
+{
+    bb_entity_t* laser = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_SPACE_LASER, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
 }
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,

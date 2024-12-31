@@ -25,6 +25,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->GarbotnikStat_diggingStrength     = 1;
     gameData->GarbotnikStat_fuelConsumptionRate = 4;
     gameData->GarbotnikStat_maxTowCables        = 2;
+    gameData->GarbotnikStat_maxHarpoons         = 50;
 
     loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->bgm, true);
     // loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);
@@ -106,7 +107,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[0].wileFunction = bb_triggerFaultyWile;
 
     strcpy(gameData->loadout.allWiles[1].name, "Drill Bot");
-    strcpy(gameData->loadout.allWiles[1].description, "A robot that drills horizontally. Very obedient until the battery runs out. May it go forth and destroy Pango.");
+    strcpy(gameData->loadout.allWiles[1].description, "A robot that drills down to the wile depth then horizontally. Can be towed to flip directions. May it go forth and destroy Pango.");
     gameData->loadout.allWiles[1].callSequence[0] = BB_DOWN;
     gameData->loadout.allWiles[1].callSequence[1] = BB_LEFT;
     gameData->loadout.allWiles[1].callSequence[2] = BB_RIGHT;
@@ -114,10 +115,10 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[1].callSequence[4] = BB_RIGHT;
     gameData->loadout.allWiles[1].cooldown = 50;
     gameData->loadout.allWiles[1].cost = bb_randomInt(1, 3);
-    gameData->loadout.allWiles[1].wileFunction = bb_triggerDrillBot;
+    gameData->loadout.allWiles[1].wileFunction = bb_triggerDrillBotWile;
 
     strcpy(gameData->loadout.allWiles[2].name, "Pacifier");
-    strcpy(gameData->loadout.allWiles[2].description, "Turns wild bugs into compliant little critters.");
+    strcpy(gameData->loadout.allWiles[2].description, "Turns wild bugs into compliant little critters. Emits gamer waves to dissolve bug spit. Can be towed.");
     gameData->loadout.allWiles[2].callSequence[0] = BB_UP;
     gameData->loadout.allWiles[2].callSequence[1] = BB_RIGHT;
     gameData->loadout.allWiles[2].callSequence[2] = BB_UP;
@@ -125,16 +126,18 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[2].callSequence[4] = BB_NONE;//terminator for shorter sequences
     gameData->loadout.allWiles[2].cooldown = 30;
     gameData->loadout.allWiles[2].cost = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[2].wileFunction = bb_triggerPacifierWile;
 
-    strcpy(gameData->loadout.allWiles[3].name, "Shield");
-    strcpy(gameData->loadout.allWiles[3].description, "Quantum particles are delivered from above until a wearer is found who becomes invulnerable for 10 seconds.");
+    strcpy(gameData->loadout.allWiles[3].name, "Evil Laser");
+    strcpy(gameData->loadout.allWiles[3].description, "Careful where you point that thing.");
     gameData->loadout.allWiles[3].callSequence[0] = BB_RIGHT;
     gameData->loadout.allWiles[3].callSequence[1] = BB_DOWN;
     gameData->loadout.allWiles[3].callSequence[2] = BB_DOWN;
     gameData->loadout.allWiles[3].callSequence[3] = BB_RIGHT;
     gameData->loadout.allWiles[3].callSequence[4] = BB_LEFT;
-    gameData->loadout.allWiles[3].cooldown = 30;
+    gameData->loadout.allWiles[3].cooldown = 120;
     gameData->loadout.allWiles[3].cost = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[3].wileFunction = bb_triggerSpaceLaserWile;
 
     strcpy(gameData->loadout.allWiles[4].name, "501Kg Bomb");
     strcpy(gameData->loadout.allWiles[4].description, "Calls down ordinance from the Death Dumpster's stockpile.");
@@ -166,6 +169,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[6].callSequence[3] = BB_NONE;//terminator for shorter sequences
     gameData->loadout.allWiles[6].cooldown = 30;
     gameData->loadout.allWiles[6].cost = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[6].wileFunction = bb_triggerAmmoSupplyWile;
 
     gameData->loadout.primaryWileIdx   = 255;
     gameData->loadout.secondaryWileIdx = 255;

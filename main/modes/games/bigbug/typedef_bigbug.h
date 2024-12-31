@@ -64,6 +64,8 @@ typedef enum
     BB_WILE,
     BB_501KG, // A huge bomb
     BB_DRILL_BOT,      // A driller that comes down then drills horizontally.
+    BB_AMMO_SUPPLY,    // A barrel of harpoons
+    BB_PACIFIER,       // Calms down the bugs in range.
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.
@@ -77,6 +79,7 @@ typedef enum
     BB_DIVE_SUMMARY,  // A notepad that shows your dive stats.
     BB_EXPLOSION,     // A particle effect that deletes dirt, kills bugs, hurts and pushes garbotnik.
     BB_ATMOSPHERIC_ATOMIZER, // A particle effect that increases garbotnik's dragShift.
+    BB_SPACE_LASER,    // A beam of pure damage straight down from the sky.
 } bb_spriteDef_t;
 
 typedef enum
@@ -103,6 +106,9 @@ typedef enum
 void bb_trigger501kg(bb_entity_t* self);
 void bb_triggerFaultyWile(bb_entity_t* self);
 void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self);
-void bb_triggerDrillBot(bb_entity_t* self);
+void bb_triggerDrillBotWile(bb_entity_t* self);
+void bb_triggerAmmoSupplyWile(bb_entity_t* self);
+void bb_triggerPacifierWile(bb_entity_t* self);
+void bb_triggerSpaceLaserWile(bb_entity_t* self);
 
 #endif

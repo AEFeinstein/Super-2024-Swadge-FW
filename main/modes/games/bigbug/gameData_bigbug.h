@@ -199,6 +199,7 @@ struct bb_gameData_t
     uint8_t GarbotnikStat_diggingStrength;     // Starts at 1. Can increment indefinetly by 1.
     uint8_t GarbotnikStat_fuelConsumptionRate; // Starts at 4. Can decrement to 0.
     uint8_t GarbotnikStat_maxTowCables;        // Starts at 2. Can increment indefintely by 3.
+    uint8_t GarbotnikStat_maxHarpoons;         // Starts at 50. Can increment by 50 to 250.
 
     struct bb_loadoutData_t loadout;
     bb_loadoutSelectScreenData_t* loadoutScreenData;

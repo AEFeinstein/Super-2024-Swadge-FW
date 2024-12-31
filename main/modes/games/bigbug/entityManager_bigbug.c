@@ -715,7 +715,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case GARBOTNIK_FLYING:
         {
             bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
-            gData->numHarpoons        = 250;
+            gData->numHarpoons        = entity->gameData->GarbotnikStat_maxHarpoons;
             gData->fuel = 1000 * 60 * 3; // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes.
                                          // //also set in bb_onCollisionFuel()
             gData->yaw.x = -1;           // So he starts off facing left away from the tutorial egg.
@@ -1312,6 +1312,56 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfWidth  = 8 << DECIMAL_BITS;
             entity->updateFunction = &bb_updateDrillBot;
             entity->drawFunction   = &bb_drawDrillBot;
+            break;
+        }
+        case BB_AMMO_SUPPLY:
+        {
+            bb_loadSprite("ammo_supply", 1, 1, &entityManager->sprites[BB_AMMO_SUPPLY]);
+            entityManager->sprites[BB_AMMO_SUPPLY].originX = 14;
+            entityManager->sprites[BB_AMMO_SUPPLY].originY = 26;       
+
+            bb_timedPhysicsData_t* pData = heap_caps_calloc(1, sizeof(bb_timedPhysicsData_t), MALLOC_CAP_SPIRAM);
+            pData->bounceNumerator = 1;
+            pData->bounceDenominator = 8;
+            bb_setData(entity, pData, PHYSICS_DATA);
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionAmmoSupply};
+            push(entity->collisions, (void*)collision);
+
+            entity->halfWidth = 14 << DECIMAL_BITS;
+            entity->halfHeight = 13 << DECIMAL_BITS;
+            entity->updateFunction = &bb_updateTimedPhysicsObject;
+            break;
+        }
+        case BB_PACIFIER:
+        {
+            bb_loadSprite("pacifier", 1, 1, &entityManager->sprites[BB_PACIFIER]);
+            entityManager->sprites[BB_PACIFIER].originX = 14;
+            entityManager->sprites[BB_PACIFIER].originY = 14;       
+
+            bb_timedPhysicsData_t* pData = heap_caps_calloc(1, sizeof(bb_timedPhysicsData_t), MALLOC_CAP_SPIRAM);
+            pData->bounceNumerator = 1;
+            pData->bounceDenominator = 2;
+            bb_setData(entity, pData, PHYSICS_DATA);
+
+            entity->halfWidth = 10 << DECIMAL_BITS;
+            entity->halfHeight = 13 << DECIMAL_BITS;
+            entity->updateFunction = &bb_updatePacifier;
+            entity->drawFunction = &bb_drawPacifier;
+            break;
+        }
+        case BB_SPACE_LASER:
+        {
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_spaceLaserData_t), MALLOC_CAP_SPIRAM), SPACE_LASER_DATA);
+
+            entity->halfWidth = 4 << DECIMAL_BITS;
+            entity->halfHeight = 2000 << DECIMAL_BITS;
+            entity->updateFunction = &bb_updateSpaceLaser;
+            entity->drawFunction = &bb_drawSpaceLaser;
             break;
         }
         default: // FLAME_ANIM and others need nothing set
