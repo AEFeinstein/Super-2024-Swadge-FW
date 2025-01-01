@@ -20,6 +20,8 @@
 #include "2048_menus.h"
 #include "textEntry.h"
 
+#include "advanced_usb_control.h"
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -232,31 +234,74 @@ static void t48MainLoop(int64_t elapsedUs)
             // Take accel input if cells aren't moving
             if (t48->tiltControls && !t48->cellsAnimating)
             {
-                int16_t ox, oy, oz;
-                if (ESP_OK == accelGetOrientVec(&ox, &oy, &oz))
+                //int16_t ox, oy, oz;
+                float q[4];
+                esp_err_t aq = accelGetQuaternion( q );
+                if (ESP_OK == aq)
                 {
-                    if (ABS(ox) > ABS(oy))
+                    float qRelativeRotation[4];
+
+                    // this takes about 36 flops.
+                    mathComputeQuaternionDeltaBetweenQuaternions( qRelativeRotation, t48->quatBase, q);
+
+                    // qRelativeRotation represents the rotation from the initial state to now. 
+                    // The quaternion is:  [w, x, y, z]
+                    //  the w term, more like the part that sums everything to a unit quaternion.
+                    //  the x term is the amount of rotation around the x axis.
+                    //  the y term is the amount of rotation around the y axis.
+                    //  the z term is the amount of rotation around the z axis.
+                    // Not quite like euler angles, but kinda?
+                    //
+                    // I am not sure why our coordinate frame is different, but, we can go back to
+                    // what the rest of the game logic is expecting here.
+                    int oy =  qRelativeRotation[1] * 512;
+                    int ox = -qRelativeRotation[2] * 512;
+
+                    bool bXPressed = ABS(ox) > 128;
+                    bool bXReleased = ABS(ox) < 80;
+                    bool bYWasTriggered = t48->receivedInputMask & 2;
+
+                    bool bYPressed = ABS(oy) > 128;
+                    bool bYReleased = ABS(oy) < 80;
+                    bool bXWasTriggered = t48->receivedInputMask & 1;
+
+                    if (!bYWasTriggered && bYPressed)
                     {
-                        if (ox > 128)
-                        {
-                            t48_gameInput(t48, PB_LEFT);
-                        }
-                        else if (ox < -128)
-                        {
-                            t48_gameInput(t48, PB_RIGHT);
-                        }
-                    }
-                    else
-                    {
-                        if (oy > 128)
+                        if (oy > 0)
                         {
                             t48_gameInput(t48, PB_DOWN);
                         }
-                        else if (oy < -128)
+                        else
                         {
                             t48_gameInput(t48, PB_UP);
                         }
+                        bYWasTriggered = true;
                     }
+                    if (bYWasTriggered && bYReleased )
+                    {
+                        bYWasTriggered = false;
+                    }
+
+                    if (!bXWasTriggered && bXPressed)
+                    {
+                        if (ox > 0)
+                        {
+                            t48_gameInput(t48, PB_LEFT);
+                        }
+                        else
+                        {
+                            t48_gameInput(t48, PB_RIGHT);
+                        }
+                        bXWasTriggered = true;
+                    }
+                    if (bXWasTriggered && bXReleased )
+                    {
+                        bXWasTriggered = false;
+                    }
+
+                    t48->receivedInputMask = (bYWasTriggered ? 2 : 0) | (bXWasTriggered ? 1 : 0);
+                    t48->lastIMUx = ox;
+                    t48->lastIMUy = oy;
                 }
             }
 
@@ -272,7 +317,19 @@ static void t48MainLoop(int64_t elapsedUs)
                 if (evt.down && (PB_A == evt.button || PB_B == evt.button))
                 {
                     soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48->tiltControls = PB_B == evt.button;
+                    bool doTiltControls = PB_B == evt.button;
+
+                    if( doTiltControls )
+                    {
+                        esp_err_t aq = accelGetQuaternion( t48->quatBase );
+                        if (ESP_OK != aq)
+                        {
+                            doTiltControls = false;
+                        }
+                    }
+
+                    t48->tiltControls = doTiltControls;
+
                     // If a save game is detected, ask if the player wants to load it.
                     size_t blob = sizeof(t48GameSaveData_t);
                     readNvsBlob(nvsSaved2048, NULL, &blob);
@@ -605,7 +662,9 @@ static void t48BackgroundDraw(int16_t x __attribute__((unused)), int16_t y __att
                               int16_t w __attribute__((unused)), int16_t h __attribute__((unused)),
                               int16_t up __attribute__((unused)), int16_t upNum __attribute__((unused)))
 {
-    if (t48->tiltControls)
+    // Allow IMU integration while in menu, to make it so when we set the zero, it
+    // is at the time of the B press.
+    if (t48->tiltControls || t48->state == T48_START_SCREEN)
     {
         accelIntegrate();
     }
