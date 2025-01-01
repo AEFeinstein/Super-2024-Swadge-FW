@@ -115,8 +115,9 @@ enum bb_garbotnikUpgrade_t
     GARBOTNIK_FASTER_FIRE_RATE,
     GARBOTNIK_MORE_DIGGING_STRENGTH,
     GARBOTNIK_MORE_TOW_CABLES,
+    GARBOTNIK_INCREASE_MAX_AMMO,
+    GARBOTNIK_MORE_CHOICES,
     GARBOTNIK_BUG_WHISPERER,
-    GARBOTNIK_EXTRA_CHOICE,
 };
 
 struct bb_garbotnikUpgradeScreenData_t
@@ -125,7 +126,11 @@ struct bb_garbotnikUpgradeScreenData_t
                         // 0b1       reduced fuel consumption  1 << 0
                         // 0b10      faster fire rate          1 << 1
                         // 0b100     more digging strength     1 << 2
-    uint8_t choices[2]; // the choices presented to the player. -1 means no choice.
+                        // 0b1000    more tow cables           1 << 3
+                        // 0b10000   increase max ammo         1 << 4
+                        // 0b100000  more choices              1 << 5
+                        // 0b1000000 bug whisperer             1 << 6
+    int8_t choices[3]; // the choices presented to the player. -1 means no choice.
 };
 
 struct bb_gameData_t

@@ -826,7 +826,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(3, 6);
-            bData->faceLeft    = bb_randomInt(0, 1);
+            bData->flags    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -846,7 +846,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(1, 5);
-            bData->faceLeft    = bb_randomInt(0, 1);
+            bData->flags    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -866,7 +866,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health         = 100;
             bData->speed          = 4 * bb_randomInt(1, 5);
             bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
-            bData->faceLeft       = bData->direction.x < 0;
+            bData->flags       = bData->direction.x < 0;
             bb_setData(entity, bData, BUGGO_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -886,7 +886,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health         = 100;
             bData->speed          = 4 * bb_randomInt(3, 4);
             bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
-            bData->faceLeft       = bData->direction.x < 0;
+            bData->flags       = bData->direction.x < 0;
             bb_setData(entity, bData, BUGGO_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -906,7 +906,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(1, 5);
-            bData->faceLeft    = bb_randomInt(0, 1);
+            bData->flags    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -926,7 +926,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(1, 5);
-            bData->faceLeft    = bb_randomInt(0, 1);
+            bData->flags    = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;

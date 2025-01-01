@@ -99,7 +99,9 @@ typedef struct
 
 typedef struct // parent class
 {
-    bool faceLeft;       // flip the sprite if true
+    uint8_t flags; // bitpacked flags for various things.
+                   //0b00000001  // face left. Flip the sprite if true
+                   //0b00000010  // isTethered.
     uint8_t speed;       // randomized on creation. Used for walking or flying.
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
@@ -107,7 +109,9 @@ typedef struct // parent class
 
 typedef struct // child class
 {
-    bool faceLeft;       // flip the sprite if true
+    uint8_t flags; // bitpacked flags for various things.
+                   //0b00000001  // face left. Flip the sprite if true
+                   //0b00000010  // isTethered.
     uint8_t speed;       // randomized on creation. Used for walking or flying.
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
@@ -118,7 +122,9 @@ typedef struct // child class
 
 typedef struct // child class
 {
-    bool faceLeft;       // flip the sprite if true
+    uint8_t flags; // bitpacked flags for various things.
+                   //0b00000001  // face left. Flip the sprite if true
+                   //0b00000010  // isTethered.
     uint8_t speed;       // randomized on creation. Used for walking or flying.
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.

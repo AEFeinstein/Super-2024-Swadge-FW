@@ -773,7 +773,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             drag = 10;
         }
         // Apply drag based on absolute value to smooth asymmetry
-        int32_t dragEffect = (drag * self->gameData->elapsedUs) >> 17;
+        int32_t dragEffect = (drag * self->gameData->elapsedUs) >> gData->dragShift;
 
         // Adjust velocity symmetrically for both positive and negative values
         if (gData->vel.y > 0)
@@ -829,6 +829,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             // detach
             node_t* next = current->next;
+            //set the isTethered flag to false
+            bb_bugData_t* bData = (bb_bugData_t*)curEntity->data;
+            bData->flags &= ~0b10; // Clears the second least significant bit of the flags
             removeEntry(&gData->towedEntities, current);
             current = next;
         }
@@ -936,9 +939,17 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             midiPlayerReset(sfx);
             soundPlaySfx(&self->gameData->sfxTether, 0);
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
-            if(self->gameData->entityManager.entities[best_i].dataType == DRILL_BOT_DATA)
+            bb_entity_t* tetheredEntity = &self->gameData->entityManager.entities[best_i];
+            if(tetheredEntity->dataType == BUGGO_DATA || tetheredEntity->dataType == BU_DATA)
             {
-                bb_drillBotData_t* dData = (bb_drillBotData_t*)self->gameData->entityManager.entities[best_i].data;
+                //set the isTethered flag to true
+                bb_bugData_t* bData = (bb_bugData_t*)tetheredEntity->data;
+                bData->flags = bData->flags | 0b10; //0b10 is the bitpacked isTethered flag
+            }
+            else if(tetheredEntity->dataType == DRILL_BOT_DATA)
+            {
+                //tethering a drill bot will cause it to change direction
+                bb_drillBotData_t* dData = (bb_drillBotData_t*)tetheredEntity->data;
                 dData->facingRight = !dData->facingRight;
             }
         }
@@ -1429,6 +1440,8 @@ void bb_updateWalkingBug(bb_entity_t* self)
 {
     bb_buData_t* bData = (bb_buData_t*)self->data;
 
+    bool faceLeft = (bData->flags & 0b1) >> 1;
+
     if (bData->damageEffect > 0)
     {
         bData->damageEffect -= self->gameData->elapsedUs >> 11;
@@ -1497,7 +1510,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 {
                     if (hitInfo.normal.x == 1)
                     {
-                        if (bData->faceLeft)
+                        if (faceLeft)
                         {
                             bb_rotateBug(self, 1);
                         }
@@ -1506,7 +1519,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                     }
                     else if (hitInfo.normal.x == -1)
                     {
-                        if (!bData->faceLeft)
+                        if (!faceLeft)
                         {
                             bb_rotateBug(self, -1);
                         }
@@ -1517,7 +1530,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 else
                 {
                     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
-                    self->pos.x += (bData->faceLeft * -2 + 1) * bData->speed;
+                    self->pos.x += (faceLeft * -2 + 1) * bData->speed;
                 }
                 self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
                 break;
@@ -1528,7 +1541,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 {
                     if (hitInfo.normal.y == 1)
                     {
-                        if (bData->faceLeft)
+                        if (faceLeft)
                         {
                             bb_rotateBug(self, 1);
                         }
@@ -1537,7 +1550,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                     }
                     else if (hitInfo.normal.y == -1)
                     {
-                        if (!bData->faceLeft)
+                        if (!faceLeft)
                         {
                             bb_rotateBug(self, -1);
                         }
@@ -1548,7 +1561,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 else
                 {
                     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
-                    self->pos.y += (bData->faceLeft * -2 + 1) * bData->speed;
+                    self->pos.y += (faceLeft * -2 + 1) * bData->speed;
                 }
                 self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
                 break;
@@ -1559,7 +1572,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 {
                     if (hitInfo.normal.x == -1)
                     {
-                        if (bData->faceLeft)
+                        if (faceLeft)
                         {
                             bb_rotateBug(self, 1);
                         }
@@ -1568,7 +1581,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                     }
                     else if (hitInfo.normal.x == 1)
                     {
-                        if (!bData->faceLeft)
+                        if (!faceLeft)
                         {
                             bb_rotateBug(self, -1);
                         }
@@ -1579,7 +1592,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 else
                 {
                     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
-                    self->pos.x -= (bData->faceLeft * -2 + 1) * bData->speed;
+                    self->pos.x -= (faceLeft * -2 + 1) * bData->speed;
                 }
                 self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
                 break;
@@ -1590,7 +1603,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 {
                     if (hitInfo.normal.y == -1)
                     {
-                        if (bData->faceLeft)
+                        if (faceLeft)
                         {
                             bb_rotateBug(self, 1);
                         }
@@ -1599,7 +1612,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                     }
                     else if (hitInfo.normal.y == 1)
                     {
-                        if (!bData->faceLeft)
+                        if (!faceLeft)
                         {
                             bb_rotateBug(self, -1);
                         }
@@ -1610,7 +1623,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 else
                 {
                     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
-                    self->pos.y -= (bData->faceLeft * -2 + 1) * bData->speed;
+                    self->pos.y -= (faceLeft * -2 + 1) * bData->speed;
                 }
                 self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
                 break;
@@ -1619,7 +1632,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
     }
     else if (bData->fallSpeed == 18)
     {
-        bb_rotateBug(self, bData->faceLeft * -2 + 1);
+        bb_rotateBug(self, faceLeft * -2 + 1);
         switch (bData->gravity)
         {
             case BB_DOWN:
@@ -1636,7 +1649,10 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 break;
         }
     }
-    bb_updateBugShooting(self);
+    if(!((bData->flags & 0b10)>>1))//if it is not tethered
+    {
+        bb_updateBugShooting(self);
+    }
 }
 
 void bb_updateFlyingBug(bb_entity_t* self)
@@ -1655,10 +1671,12 @@ void bb_updateFlyingBug(bb_entity_t* self)
     {
         self->pos        = previousPos;
         bData->direction = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
-        bData->faceLeft  = bData->direction.x < 0;
+        bData->flags = bData->flags | (bData->direction.x < 0);
     }
-
-    bb_updateBugShooting(self);
+    if(!((bData->flags & 0b10)>>1))//if it is not tethered
+    {
+        bb_updateBugShooting(self);
+    }
 }
 
 void bb_updateMenu(bb_entity_t* self)
@@ -3192,6 +3210,8 @@ void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
+    bb_buData_t* bData = (bb_buData_t*)self->data;
+    bool faceLeft = (bData->flags & 0b1)>>1;
     uint8_t brightness = 5;
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
@@ -3222,17 +3242,16 @@ void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
                 &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x), brightness);
         }
     }
-    bb_buData_t* bData = (bb_buData_t*)self->data;
     if (bData->damageEffect > 70 || (bData->damageEffect > 0 && bb_randomInt(0, 1)))
     {
         drawWsgPalette(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
-                       xOff, yOff, &self->gameData->damagePalette, bData->faceLeft, false,
+                       xOff, yOff, &self->gameData->damagePalette, faceLeft, false,
                        (self->dataType == BU_DATA) * 90 * bData->gravity);
     }
     else
     {
         drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff,
-                yOff, bData->faceLeft, false, (self->dataType == BU_DATA) * 90 * bData->gravity);
+                yOff, faceLeft, false, (self->dataType == BU_DATA) * 90 * bData->gravity);
     }
 }
 
@@ -3614,7 +3633,7 @@ void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
     else
     {
         int8_t direction = (dData->facingRight * 2) - 1;
-        if(self->gameData->tilemap.fgTiles[(self->pos.x + direction * 144)>>9][self->pos.y>>9].health > 0)
+        if(self->pos.y >= 0 && self->gameData->tilemap.fgTiles[(self->pos.x + direction * 144)>>9][self->pos.y>>9].health > 0)
         {
             drawWsg(
                 &entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2)%2)+5],
@@ -3784,7 +3803,7 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     else if (other->dataType == BU_DATA || other->dataType == BUGGO_DATA)
     {
         bb_bugData_t* bData = (bb_bugData_t*)other->data;
-        bData->faceLeft     = !bData->faceLeft;
+        bData->flags &= ~0b1;
     }
 }
 
@@ -4806,7 +4825,7 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
     self->gameData->radar.playerPingRadius      = 0; // just using this as a selection idx to save some space.
     self->gameData->garbotnikUpgrade.choices[0] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH; // default choice
     uint8_t zeroCount                           = 0; // zero count represent the number of upgrades not yet maxed out.
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 7; i++)
     {
         if ((self->gameData->garbotnikUpgrade.upgrades & (1 << i)) == 0)
         { // Check if the bit at position i is 0
@@ -4815,20 +4834,43 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
     }
     if (zeroCount > 1)
     {
-        enum bb_garbotnikUpgrade_t candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
+        enum bb_garbotnikUpgrade_t candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 6);
         while (((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1)
         {
-            candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
+            candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 6);
         }
         self->gameData->garbotnikUpgrade.choices[0] = (int8_t)candidate;
-        candidate                                   = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
+        candidate                                   = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 6);
         while (((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1
                || candidate == self->gameData->garbotnikUpgrade.choices[0])
         {
-            candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 2);
+            candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 6);
         }
         self->gameData->garbotnikUpgrade.choices[1] = (int8_t)candidate;
     }
+    else
+    {
+        self->gameData->garbotnikUpgrade.choices[1] = -1;
+        self->gameData->garbotnikUpgrade.choices[2] = -1;
+    }
+    if((self->gameData->garbotnikUpgrade.upgrades & (1<<GARBOTNIK_MORE_CHOICES))>>GARBOTNIK_MORE_CHOICES == 1)
+    {
+        if(zeroCount > 2)
+        {
+            enum bb_garbotnikUpgrade_t candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 6);
+            while (((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1
+                || candidate == self->gameData->garbotnikUpgrade.choices[0] || candidate == self->gameData->garbotnikUpgrade.choices[1])
+            {
+                candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 6);
+            }
+            self->gameData->garbotnikUpgrade.choices[2] = (int8_t)candidate;
+        }
+    }
+    else
+    {
+        self->gameData->garbotnikUpgrade.choices[2] = -1;
+    }
+
     self->gameData->screen = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
 }
 
@@ -5008,7 +5050,7 @@ void bb_triggerPacifierWile(bb_entity_t* self)
 
 void bb_triggerSpaceLaserWile(bb_entity_t* self)
 {
-    bb_entity_t* laser = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_SPACE_LASER, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_SPACE_LASER, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
 }
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,

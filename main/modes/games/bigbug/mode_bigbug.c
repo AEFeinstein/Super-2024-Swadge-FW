@@ -822,8 +822,12 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
                    73 + bigbug->gameData.radar.playerPingRadius * 30, c545);
 
     uint16_t tWidth = 0;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
+        if(bigbug->gameData.garbotnikUpgrade.choices[i] == -1)
+        {
+            break;
+        }
         char upgradeText[32];
         char detailText[32];
         switch (bigbug->gameData.garbotnikUpgrade.choices[i])
@@ -855,6 +859,19 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
                 strcpy(upgradeText, "more tow cables");
                 snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_maxTowCables,
                          bigbug->gameData.GarbotnikStat_maxTowCables + 2);
+                break;
+            }
+            case GARBOTNIK_INCREASE_MAX_AMMO:
+            {
+                strcpy(upgradeText, "increase max ammo");
+                snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_maxHarpoons,
+                         bigbug->gameData.GarbotnikStat_maxHarpoons + 50);
+                break;
+            }
+            case GARBOTNIK_MORE_CHOICES:
+            {
+                strcpy(upgradeText, "more choices");
+                strcpy(detailText, "3rd choice at future upgrades");
                 break;
             }
             case GARBOTNIK_BUG_WHISPERER:
@@ -1078,6 +1095,27 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                     case GARBOTNIK_MORE_TOW_CABLES:
                     {
                         bigbug->gameData.GarbotnikStat_maxTowCables += 3;
+                        break;
+                    }
+                    case GARBOTNIK_INCREASE_MAX_AMMO:
+                    {
+                        bigbug->gameData.GarbotnikStat_maxHarpoons += 50;
+                        if(bigbug->gameData.GarbotnikStat_maxHarpoons == 250)
+                        {
+                            //max ammo is maxed out. Take it out of the pool.
+                            bigbug->gameData.garbotnikUpgrade.upgrades
+                                = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_INCREASE_MAX_AMMO);
+                        }
+                        break;
+                    }
+                    case GARBOTNIK_MORE_CHOICES:
+                    {
+                        bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_MORE_CHOICES);
+                        break;
+                    }
+                    case GARBOTNIK_BUG_WHISPERER:
+                    {
+                        bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_BUG_WHISPERER);
                         break;
                     }
                     default:
