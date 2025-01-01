@@ -129,7 +129,7 @@ typedef struct
     // Input for IMU-based 2048.
     // Only used if tiltControls == true
     float quatBase[4];
-    char  receivedInputMask;
+    char receivedInputMask;
     int lastIMUx, lastIMUy;
 
     // Audio

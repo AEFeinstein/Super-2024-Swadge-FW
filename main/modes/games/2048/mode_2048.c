@@ -234,17 +234,17 @@ static void t48MainLoop(int64_t elapsedUs)
             // Take accel input if cells aren't moving
             if (t48->tiltControls && !t48->cellsAnimating)
             {
-                //int16_t ox, oy, oz;
+                // int16_t ox, oy, oz;
                 float q[4];
-                esp_err_t aq = accelGetQuaternion( q );
+                esp_err_t aq = accelGetQuaternion(q);
                 if (ESP_OK == aq)
                 {
                     float qRelativeRotation[4];
 
                     // this takes about 36 flops.
-                    mathComputeQuaternionDeltaBetweenQuaternions( qRelativeRotation, t48->quatBase, q);
+                    mathComputeQuaternionDeltaBetweenQuaternions(qRelativeRotation, t48->quatBase, q);
 
-                    // qRelativeRotation represents the rotation from the initial state to now. 
+                    // qRelativeRotation represents the rotation from the initial state to now.
                     // The quaternion is:  [w, x, y, z]
                     //  the w term, more like the part that sums everything to a unit quaternion.
                     //  the x term is the amount of rotation around the x axis.
@@ -254,18 +254,18 @@ static void t48MainLoop(int64_t elapsedUs)
                     //
                     // I am not sure why our coordinate frame is different, but, we can go back to
                     // what the rest of the game logic is expecting here.
-                    int oy =  qRelativeRotation[1] * 512;
+                    int oy = qRelativeRotation[1] * 512;
                     int ox = -qRelativeRotation[2] * 512;
 
                     const int trigger = 104;
                     const int release = 80;
 
-                    bool bXPressed = ABS(ox) > trigger;
-                    bool bXReleased = ABS(ox) < release;
+                    bool bXPressed      = ABS(ox) > trigger;
+                    bool bXReleased     = ABS(ox) < release;
                     bool bYWasTriggered = t48->receivedInputMask & 2;
 
-                    bool bYPressed = ABS(oy) > trigger;
-                    bool bYReleased = ABS(oy) < release;
+                    bool bYPressed      = ABS(oy) > trigger;
+                    bool bYReleased     = ABS(oy) < release;
                     bool bXWasTriggered = t48->receivedInputMask & 1;
 
                     if (!bYWasTriggered && bYPressed)
@@ -280,7 +280,7 @@ static void t48MainLoop(int64_t elapsedUs)
                         }
                         bYWasTriggered = true;
                     }
-                    if (bYWasTriggered && bYReleased )
+                    if (bYWasTriggered && bYReleased)
                     {
                         bYWasTriggered = false;
                     }
@@ -297,23 +297,22 @@ static void t48MainLoop(int64_t elapsedUs)
                         }
                         bXWasTriggered = true;
                     }
-                    if (bXWasTriggered && bXReleased )
+                    if (bXWasTriggered && bXReleased)
                     {
                         bXWasTriggered = false;
                     }
 
                     t48->receivedInputMask = (bYWasTriggered ? 2 : 0) | (bXWasTriggered ? 1 : 0);
-                    t48->lastIMUx = ox;
-                    t48->lastIMUy = oy;
-
+                    t48->lastIMUx          = ox;
+                    t48->lastIMUy          = oy;
 
                     // Handle pushing the zero around. You can push it by pushing past the endstops.
-                    bool bXIsRailed = ABS(ox) > (trigger+2);
-                    bool bYIsRailed = ABS(ox) > (trigger+2);
+                    bool bXIsRailed = ABS(ox) > (trigger + 2);
+                    bool bYIsRailed = ABS(ox) > (trigger + 2);
                     if (bXIsRailed || bYIsRailed)
                     {
-                        const float fNudgeAmount = 0.04; 
-                        float qNudgeX[4] = { 0.999, 0.0, 0.0, 0.0 };
+                        const float fNudgeAmount = 0.04;
+                        float qNudgeX[4]         = {0.999, 0.0, 0.0, 0.0};
                         if (bXIsRailed)
                         {
                             qNudgeX[2] = ox > 0 ? -fNudgeAmount : fNudgeAmount;
@@ -323,7 +322,7 @@ static void t48MainLoop(int64_t elapsedUs)
                             qNudgeX[1] = oy < 0 ? -fNudgeAmount : fNudgeAmount;
                         }
                         mathQuatApply(t48->quatBase, t48->quatBase, qNudgeX);
-                        mathQuatNormalize( t48->quatBase, t48->quatBase );
+                        mathQuatNormalize(t48->quatBase, t48->quatBase);
                     }
                 }
             }
@@ -342,9 +341,9 @@ static void t48MainLoop(int64_t elapsedUs)
                     soundPlaySfx(&t48->click, MIDI_SFX);
                     bool doTiltControls = PB_B == evt.button;
 
-                    if( doTiltControls )
+                    if (doTiltControls)
                     {
-                        esp_err_t aq = accelGetQuaternion( t48->quatBase );
+                        esp_err_t aq = accelGetQuaternion(t48->quatBase);
                         if (ESP_OK != aq)
                         {
                             doTiltControls = false;
