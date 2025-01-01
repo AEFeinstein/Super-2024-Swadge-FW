@@ -38,6 +38,7 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "ultimateTTT.h"
+#include "renderer3dTest.h"
 
 //==============================================================================
 // Defines
@@ -77,6 +78,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &mainMenuMode,
     &modeCredits,
     &pangoMode,
+    &renderer3dTestMode,
     &sequencerMode,
     &sokoMode,
     &swadgeHeroMode,
