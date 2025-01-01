@@ -574,9 +574,8 @@ typedef struct
     // title screen
     bool titleActive;  ///< If title screen is active
     int64_t timer;     ///< Timer for animations
-    vec_t cloudPos;    ///< Position of the cloud
+    int16_t cloudPos;    ///< Position of the cloud
     int8_t animFrame;  ///< Current frame of the animation;
-    int8_t titleFrame; ///< Frame of title animation
 
     // Menu
     menu_t* menu;                  ///< Main menu
