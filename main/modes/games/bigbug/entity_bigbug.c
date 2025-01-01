@@ -163,7 +163,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
                 bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
                 freeWsg(&dData->sprite);
                 freeWsg(&dData->spriteNext);
-                bb_freeDialogueData(dData);
+                bb_freeDialogueData(dData);//false because struct gets freed after this switch statement.
                 break;
             }
             case GAME_OVER_DATA:
@@ -329,9 +329,9 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -35368)//reached the death dumpster
+    if (self->pos.y < -36328)//reached the death dumpster
     {
-        self->pos.y = -35368;
+        self->pos.y = -36328;
         rData->yVel = 0;
 
         freeFont(&self->gameData->cgFont);
@@ -3644,7 +3644,7 @@ void bb_drawPacifier(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
 void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     //if the bottom of the laser is below the top of the screen
-    int16_t yBottom = ((self->pos.y + self->halfHeight) >> DECIMAL_BITS) - camera->pos.y;
+    int16_t yBottom = ((self->pos.y + self->halfHeight) >> DECIMAL_BITS) - camera->pos.y + 2;
     if(yBottom > 0)
     {
         //draw a rectangle from the top of the screen to the bottom of the laser.
@@ -3658,7 +3658,7 @@ void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, b
         drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x,
                        0,
                        ((self->pos.x - self->halfWidth) >> DECIMAL_BITS)- camera->pos.x  + flashEffect,
-                       yBottom, c500);
+                       yBottom, c530);
         drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect,
                        0,
                        ((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect + 2,
@@ -3666,7 +3666,7 @@ void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, b
         drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect + 2,
                        0,
                        ((self->pos.x + self->halfWidth) >> DECIMAL_BITS) - camera->pos.x,
-                       yBottom, c500);
+                       yBottom, c530);
         if(foo>40)
         {
             //create a bump anim at the bottom of the laser
@@ -5145,7 +5145,6 @@ void bb_freeDialogueData(bb_dialogueData_t* dData)
     }
     heap_caps_free(dData->strings); // Free the array of string pointers
     heap_caps_free(dData->characters);
-    heap_caps_free(dData);          // Free the struct itself
 }
 
 
