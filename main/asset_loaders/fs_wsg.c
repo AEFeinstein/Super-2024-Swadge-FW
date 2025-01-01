@@ -201,5 +201,10 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
  */
 void freeWsg(wsg_t* wsg)
 {
-    heap_caps_free(wsg->px);
+    if (wsg->w && wsg->h)
+    {
+        heap_caps_free(wsg->px);
+        wsg->h = 0;
+        wsg->w = 0;
+    }
 }
