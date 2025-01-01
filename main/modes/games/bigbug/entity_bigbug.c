@@ -1233,6 +1233,10 @@ void bb_updateGarbotnikDying(bb_entity_t* self)
     {
         physData->tileTime--;
     }
+    if (physData->tileTime > 101)
+    {
+        bb_triggerGameOver(self);
+    }
 }
 
 void bb_updateHarpoon(bb_entity_t* self)
