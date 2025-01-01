@@ -248,6 +248,11 @@ typedef struct
 typedef struct
 {
     bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
+} bb_PointOfInterestParentData_t;
+
+typedef struct
+{
+    bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
     bb_spriteDef_t reward;       // The sprite to spawn when the car trunk opens
     midiFile_t alarm;            // The midi file to play when the car is active. Can be 1 of 3 files.
     bool midiLoaded;             // True if the midi file is loaded, false otherwise.
@@ -256,18 +261,19 @@ typedef struct
 
 typedef struct
 {
-    vec_t vel;
-    uint16_t lifetime;
-} bb_spitData_t;
-
-typedef struct
-{
+    bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
     bb_entity_t* partner;  // the other piece of the food cart
     bool isCached;         // tracking this to only unload sprites when both pieces are cached.
     bb_spriteDef_t reward; // The sprite to spawn when the food cart is destroyed.
     int8_t damageEffect;   // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the
                            // zero animation frame because the cart background gets not graphical effect.
 } bb_foodCartData_t;
+
+typedef struct
+{
+    vec_t vel;
+    uint16_t lifetime;
+} bb_spitData_t;
 
 typedef struct
 {
@@ -511,6 +517,7 @@ void bb_upgradeGarbotnik(bb_entity_t* self);
 void bb_playCarAlarm(bb_entity_t* self);
 void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
+void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs);
 
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,

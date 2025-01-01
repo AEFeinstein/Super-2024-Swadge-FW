@@ -338,9 +338,9 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -36328)//reached the death dumpster
+    if (self->pos.y < -36008)//reached the death dumpster
     {
-        self->pos.y = -36328;
+        self->pos.y = -36008;
         rData->yVel = 0;
 
         freeFont(&self->gameData->cgFont);
@@ -363,16 +363,28 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
-        bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
 
-        bb_setCharacterLine(dData, 0, "Ovo", "Gaaaash dangit.");
-        bb_setCharacterLine(dData, 1, "Ovo", "DARN IT! DARN IT! DARN IT! DARN IT!");
-        bb_setCharacterLine(dData, 2, "Ovo", "GLITCH MY CIRCUITS!");
-        bb_setCharacterLine(dData, 3, "Ovo", "I'll have to patch this up before all the air gets out.");
-        bb_setCharacterLine(dData, 4, "Ovo", "And the hardware store closes so early.");
-        dData->curString     = -1;
-        dData->endDialogueCB = &bb_afterGarbotnikIntro;
-        bb_setData(ovo, dData, DIALOGUE_DATA);
+        if(self->gameData->day == 0)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
+            bb_setCharacterLine(dData, 0, "Ovo", "Gaaaash dangit.");
+            bb_setCharacterLine(dData, 1, "Ovo", "DARN IT! DARN IT! DARN IT! DARN IT!");
+            bb_setCharacterLine(dData, 2, "Ovo", "GLITCH MY CIRCUITS!");
+            bb_setCharacterLine(dData, 3, "Ovo", "I'll have to patch this up before all the air gets out.");
+            bb_setCharacterLine(dData, 4, "Ovo", "And the hardware store closes so early.");
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterGarbotnikIntro;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        else
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
+            bb_setCharacterLine(dData, 0, "Ovo", "Time to check the loadout!");
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterGarbotnikIntro;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        
 
         self->gameData->entityManager.viewEntity = bb_createEntity(
             &(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
@@ -3900,154 +3912,11 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     // make an active car not cacheable so it keeps beeping from off screen.
     self->cacheable = false;
 
-    bb_carData_t* cData = (bb_carData_t*)self->data;
-
     // number of bugs to fight. More risk at greater depths.
     self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 5;
 
-    // complex way to spawn bugs that adapts to any arena
-    for (int bugSpawn = 0; bugSpawn < self->gameData->carFightState; bugSpawn++)
-    {
-        bool success = false; // when this loop is done, a bug is spawned.
-        while (success == false)
-        {
-            uint8_t spawnPosStartIdx = bb_randomInt(0, 3); // top left, top right, bottom left, bottom right
-            uint8_t spawnDirection   = bb_randomInt(0, 2); // down, sideways, up
-            // in terms of tile indices...
-            vec_t spawnPos = {0};    // Set all fields to 0
-            if (self->pos.x > 18944) // if it's on the right half of the map (74/2)<<9
-            {
-                spawnPos.x = (self->pos.x >> 9) - 2 - (spawnPosStartIdx % 2) * 3;
-            }
-            else
-            {
-                spawnPos.x = (self->pos.x >> 9) + 2 + (spawnPosStartIdx % 2) * 3;
-            }
-            spawnPos.y = (self->pos.y >> 9) - 5 + (spawnPosStartIdx > 1) * 3;
-            // make sure there are 3 consecutive blocks of garbage enclosed in garbage.
-            uint8_t consecutiveGarbage = 0;
-            while (true)
-            {
-                switch (spawnDirection)
-                {
-                    case 0: // down
-                    {
-                        spawnPos.y++;
-                        break;
-                    }
-                    case 1: // sideways
-                    {
-                        spawnPos.x += ((self->pos.x > 18944) << 1) - 1;
-                        break;
-                    }
-                    default: // case 2://up
-                    {
-                        spawnPos.y--;
-                        break;
-                    }
-                }
-                if (spawnPos.x - 1 >= 0 && spawnPos.y - 1 >= 0 && spawnPos.x + 1 < TILE_FIELD_WIDTH
-                    && spawnPos.y + 1 < TILE_FIELD_HEIGHT)
-                {
-                    if (self->gameData->tilemap.fgTiles[spawnPos.x][spawnPos.y].health > 0
-                        && self->gameData->tilemap.fgTiles[spawnPos.x - 1][spawnPos.y].health > 0
-                        && self->gameData->tilemap.fgTiles[spawnPos.x][spawnPos.y - 1].health > 0
-                        && self->gameData->tilemap.fgTiles[spawnPos.x + 1][spawnPos.y].health > 0
-                        && self->gameData->tilemap.fgTiles[spawnPos.x][spawnPos.y + 1].health > 0)
-                    {
-                        consecutiveGarbage++;
-                    }
-                    else if (consecutiveGarbage > 0)
-                    {
-                        consecutiveGarbage = 0;
-                    }
-                }
-                else // invalid
-                {
-                    break;
-                }
-                if (consecutiveGarbage == 2)
-                {
-                    bb_entity_t* jankyBugDig
-                        = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_JANKY_BUG_DIG, 1,
-                                          (spawnPos.x << 5) + 16, (spawnPos.y << 5) + 16, false, false);
+    bb_spawnHorde(self, self->gameData->carFightState);
 
-                    if (jankyBugDig == NULL)
-                    {
-                        return;
-                    }
-
-                    bb_entity_t* bug
-                        = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13),
-                                          1, (spawnPos.x << 5) + 16, (spawnPos.y << 5) + 16, false, false);
-
-                    // spawn a bug
-                    if (bug != NULL)
-                    {
-                        midiPlayer_t* sfx = soundGetPlayerSfx();
-                        midiPlayerReset(sfx);
-                        soundPlaySfx(&self->gameData->sfxEgg, 0);
-
-                        success        = true;
-                        bug->cacheable = false; // car fight bugs don't cache so they may dig in from off screen.
-
-                        uint8_t jankyBugDigIdx = 0;
-                        if ((spawnPosStartIdx == 0 || spawnPosStartIdx == 2) && spawnDirection == 0)
-                        {
-                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_UP;
-                        }
-                        else if ((spawnPosStartIdx == 1 || spawnPosStartIdx == 3) && spawnDirection == 0)
-                        {
-                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_UP;
-                            jankyBugDigIdx                                    = 1;
-                        }
-                        else if ((spawnPosStartIdx == 0 || spawnPosStartIdx == 1) && spawnDirection == 1)
-                        {
-                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena
-                                = self->pos.x > 18944 ? BB_LEFT : BB_RIGHT;
-                            jankyBugDigIdx = 2;
-                        }
-                        else if ((spawnPosStartIdx == 2 || spawnPosStartIdx == 3) && spawnDirection == 1)
-                        {
-                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena
-                                = self->pos.x > 18944 ? BB_LEFT : BB_RIGHT;
-                            jankyBugDigIdx = 3;
-                        }
-                        else if ((spawnPosStartIdx == 0 || spawnPosStartIdx == 2) && spawnDirection == 2)
-                        {
-                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_DOWN;
-                            jankyBugDigIdx                                    = 4;
-                        }
-                        else if ((spawnPosStartIdx == 1 || spawnPosStartIdx == 3) && spawnDirection == 2)
-                        {
-                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_DOWN;
-                            jankyBugDigIdx                                    = 5;
-                        }
-
-                        if (cData->jankyBugDig[jankyBugDigIdx] == NULL)
-                        {
-                            cData->jankyBugDig[jankyBugDigIdx] = jankyBugDig;
-                        }
-                        else
-                        {
-                            bb_destroyEntity(jankyBugDig, false);
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-    }
-    for (int jankyBugDigIdx = 0; jankyBugDigIdx < 6; jankyBugDigIdx++)
-    {
-        if (cData->jankyBugDig[jankyBugDigIdx] != NULL)
-        {
-            self->gameData->tilemap
-                .fgTiles[cData->jankyBugDig[jankyBugDigIdx]->pos.x >> 9][cData->jankyBugDig[jankyBugDigIdx]->pos.y >> 9]
-                .health
-                = 0;
-        }
-    }
     self->paused         = false;
     self->updateFunction = &bb_updateCarActive;
     bb_clearCollisions(self, false);
@@ -4247,6 +4116,10 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
             }
             bb_foodCartData_t* mcData = (bb_foodCartData_t*)mainCart->data;
             // Update the main cart by decrementing it's animation frame. Using animation frame as health to save space.
+            if(mainCart->currentAnimationFrame == 20)
+            {
+                bb_spawnHorde(self, 6);
+            }
             mainCart->currentAnimationFrame--;
             if (mainCart->currentAnimationFrame == 1)
             {
@@ -4674,7 +4547,7 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
         }
     }
 
-    ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->numDonuts = 20;
+    ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->numDonuts = 0;
 
     self->gameData->loadoutScreenData = heap_caps_calloc(1, sizeof(bb_loadoutSelectScreenData_t), MALLOC_CAP_SPIRAM);
     self->gameData->screen = BIGBUG_LOADOUT_SELECT_SCREEN;
@@ -5001,6 +4874,155 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
         = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
                             hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
     hitEffect->drawFunction = &bb_drawHitEffect;
+}
+
+void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs)
+{
+    bb_PointOfInterestParentData_t* cData = (bb_PointOfInterestParentData_t*)self->data;
+    
+    // complex way to spawn bugs that adapts to any arena
+    for (int bugSpawn = 0; bugSpawn < numBugs; bugSpawn++)
+    {
+        bool success = false; // when this loop is done, a bug is spawned.
+        while (success == false)
+        {
+            uint8_t spawnPosStartIdx = bb_randomInt(0, 3); // top left, top right, bottom left, bottom right
+            uint8_t spawnDirection   = bb_randomInt(0, 2); // down, sideways, up
+            // in terms of tile indices...
+            vec_t spawnPos = {0};    // Set all fields to 0
+            if (self->pos.x > 18944) // if it's on the right half of the map (74/2)<<9
+            {
+                spawnPos.x = (self->pos.x >> 9) - 2 - (spawnPosStartIdx % 2) * 3;
+            }
+            else
+            {
+                spawnPos.x = (self->pos.x >> 9) + 2 + (spawnPosStartIdx % 2) * 3;
+            }
+            spawnPos.y = (self->pos.y >> 9) - 5 + (spawnPosStartIdx > 1) * 3;
+            // make sure there are 3 consecutive blocks of garbage enclosed in garbage.
+            uint8_t consecutiveGarbage = 0;
+            while (true)
+            {
+                switch (spawnDirection)
+                {
+                    case 0: // down
+                    {
+                        spawnPos.y++;
+                        break;
+                    }
+                    case 1: // sideways
+                    {
+                        spawnPos.x += ((self->pos.x > 18944) << 1) - 1;
+                        break;
+                    }
+                    default: // case 2://up
+                    {
+                        spawnPos.y--;
+                        break;
+                    }
+                }
+                if (spawnPos.x - 1 >= 0 && spawnPos.y - 1 >= 0 && spawnPos.x + 1 < TILE_FIELD_WIDTH
+                    && spawnPos.y + 1 < TILE_FIELD_HEIGHT)
+                {
+                    if (self->gameData->tilemap.fgTiles[spawnPos.x][spawnPos.y].health > 0
+                        && self->gameData->tilemap.fgTiles[spawnPos.x - 1][spawnPos.y].health > 0
+                        && self->gameData->tilemap.fgTiles[spawnPos.x][spawnPos.y - 1].health > 0
+                        && self->gameData->tilemap.fgTiles[spawnPos.x + 1][spawnPos.y].health > 0
+                        && self->gameData->tilemap.fgTiles[spawnPos.x][spawnPos.y + 1].health > 0)
+                    {
+                        consecutiveGarbage++;
+                    }
+                    else if (consecutiveGarbage > 0)
+                    {
+                        consecutiveGarbage = 0;
+                    }
+                }
+                else // invalid
+                {
+                    break;
+                }
+                if (consecutiveGarbage == 2)
+                {
+                    bb_entity_t* jankyBugDig
+                        = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_JANKY_BUG_DIG, 1,
+                                          (spawnPos.x << 5) + 16, (spawnPos.y << 5) + 16, false, false);
+
+                    if (jankyBugDig == NULL)
+                    {
+                        return;
+                    }
+
+                    bb_entity_t* bug
+                        = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13),
+                                          1, (spawnPos.x << 5) + 16, (spawnPos.y << 5) + 16, false, false);
+
+                    // spawn a bug
+                    if (bug != NULL)
+                    {
+                        midiPlayer_t* sfx = soundGetPlayerSfx();
+                        midiPlayerReset(sfx);
+                        soundPlaySfx(&self->gameData->sfxEgg, 0);
+
+                        success        = true;
+                        bug->cacheable = false; // car fight bugs don't cache so they may dig in from off screen.
+
+                        uint8_t jankyBugDigIdx = 0;
+                        if ((spawnPosStartIdx == 0 || spawnPosStartIdx == 2) && spawnDirection == 0)
+                        {
+                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_UP;
+                        }
+                        else if ((spawnPosStartIdx == 1 || spawnPosStartIdx == 3) && spawnDirection == 0)
+                        {
+                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_UP;
+                            jankyBugDigIdx                                    = 1;
+                        }
+                        else if ((spawnPosStartIdx == 0 || spawnPosStartIdx == 1) && spawnDirection == 1)
+                        {
+                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena
+                                = self->pos.x > 18944 ? BB_LEFT : BB_RIGHT;
+                            jankyBugDigIdx = 2;
+                        }
+                        else if ((spawnPosStartIdx == 2 || spawnPosStartIdx == 3) && spawnDirection == 1)
+                        {
+                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena
+                                = self->pos.x > 18944 ? BB_LEFT : BB_RIGHT;
+                            jankyBugDigIdx = 3;
+                        }
+                        else if ((spawnPosStartIdx == 0 || spawnPosStartIdx == 2) && spawnDirection == 2)
+                        {
+                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_DOWN;
+                            jankyBugDigIdx                                    = 4;
+                        }
+                        else if ((spawnPosStartIdx == 1 || spawnPosStartIdx == 3) && spawnDirection == 2)
+                        {
+                            ((bb_jankyBugDigData_t*)jankyBugDig->data)->arena = BB_DOWN;
+                            jankyBugDigIdx                                    = 5;
+                        }
+
+                        if (cData->jankyBugDig[jankyBugDigIdx] == NULL)
+                        {
+                            cData->jankyBugDig[jankyBugDigIdx] = jankyBugDig;
+                        }
+                        else
+                        {
+                            bb_destroyEntity(jankyBugDig, false);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    for (int jankyBugDigIdx = 0; jankyBugDigIdx < 6; jankyBugDigIdx++)
+    {
+        if (cData->jankyBugDig[jankyBugDigIdx] != NULL)
+        {
+            self->gameData->tilemap
+                .fgTiles[cData->jankyBugDig[jankyBugDigIdx]->pos.x >> 9][cData->jankyBugDig[jankyBugDigIdx]->pos.y >> 9]
+                .health
+                = 0;
+        }
+    }
 }
 
 void bb_trigger501kg(bb_entity_t* self)

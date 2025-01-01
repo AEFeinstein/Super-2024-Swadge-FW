@@ -182,7 +182,15 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     entityManager->sprites[BB_DOOR].originX = 16;
     entityManager->sprites[BB_DOOR].originY = 48;
 
-    bb_loadSprite("donut", 1, 1, &entityManager->sprites[BB_DONUT]);
+
+    if (!entityManager->sprites[BB_DONUT].allocated)
+    {
+        entityManager->sprites[BB_DONUT].numFrames = 2;
+        entityManager->sprites[BB_DONUT].frames    = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+        entityManager->sprites[BB_DONUT].allocated = true;
+    }
+    loadWsgInplace("donut0.wsg", &entityManager->sprites[BB_DONUT].frames[0], true, bb_decodeSpace, bb_hsd);
+    loadWsgInplace("hotdog_rs.wsg", &entityManager->sprites[BB_DONUT].frames[1], true, bb_decodeSpace, bb_hsd);
     entityManager->sprites[BB_DONUT].originX = 15;
     entityManager->sprites[BB_DONUT].originY = 15;
 
@@ -1218,7 +1226,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_FOOD_CART:
         {
             entity->halfWidth  = 22 << DECIMAL_BITS;
-            entity->halfHeight = 12 << DECIMAL_BITS;
+            entity->halfHeight = 18 << DECIMAL_BITS;
             entity->cacheable  = true;
 
             bb_setData(entity, heap_caps_calloc(1, sizeof(bb_foodCartData_t), MALLOC_CAP_SPIRAM), FOOD_CART_DATA);
