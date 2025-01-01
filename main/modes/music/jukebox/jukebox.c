@@ -87,7 +87,7 @@ typedef struct
 {
     wsg_t* graphic;
     int16_t x;
-    double y;
+    float y;
     int16_t rotateDeg;
     uint8_t speed; // pixels to move up per second
 } jukeboxDecoration_t;
