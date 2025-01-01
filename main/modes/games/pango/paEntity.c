@@ -403,6 +403,7 @@ void updateCrabdozer(paEntity_t* self)
             }
 
             pa_animateEnemy(self);
+            pa_detectEntityCollisions(self);
             break;
         }
         default:
