@@ -590,8 +590,83 @@ static void bb_DrawScene_Radar(void)
             }
             drawRectFilled(xIdx * 4 - 4, yIdx * 4 - bigbug->gameData.radar.cam.y, xIdx * 4,
                            yIdx * 4 + 4 - bigbug->gameData.radar.cam.y, radarTileColor);
+            if ((bigbug->gameData.radar.upgrades >> BIGBUG_ENEMIES) & 1)
+            {
+                if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == EGG_EMBED)
+                {
+                    drawCircleFilled(xIdx * 4 - 2, yIdx * 4 - bigbug->gameData.radar.cam.y - 2, 2, c530);
+                }
+            }
+            if((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
+            {
+                if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == SKELETON_EMBED)
+                {
+                    drawCircleFilled(xIdx * 4 - 2, yIdx * 4 - bigbug->gameData.radar.cam.y - 2, 2, c050);
+                }
+            }
         }
     }
+    
+    //fuel & enemies
+    //iterate all cached entities
+    node_t* current = bigbug->gameData.entityManager.cachedEntities->first;
+    while (current != NULL)
+    {
+        bb_entity_t* entity = (bb_entity_t*)current->val;
+        if ((bigbug->gameData.radar.upgrades >> BIGBUG_ENEMIES) & 1)
+        {
+            if (entity->dataType == EGG_DATA)
+            {
+                drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 3, c530);
+            }
+            else if(entity->spriteIndex >= 8 && entity->spriteIndex <= 13)
+            {
+                drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 3, c500);
+            }
+        }
+        if((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
+        {
+            if (entity->spriteIndex == BB_FUEL)
+            {
+                drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 3, c050);
+            }
+        }
+        current = current->next;
+    }
+
+    //iterate all entities
+    for(int i = 0; i < MAX_ENTITIES; i++)
+    {
+        bb_entity_t* entity = &bigbug->gameData.entityManager.entities[i];
+        if(entity->active)
+        {
+            if ((bigbug->gameData.radar.upgrades >> BIGBUG_ENEMIES) & 1)
+            {
+                if (entity->dataType == EGG_DATA)
+                {
+                    drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 3, c530);
+                }
+                else if(entity->spriteIndex >= 8 && entity->spriteIndex <= 13)
+                {
+                    drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 3, c500);
+                }
+            }
+            if((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
+            {
+                if (entity->spriteIndex == BB_FUEL)
+                {
+                    drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 3, c050);
+                }
+            }
+        }
+    }
+    
     // garbotnik
     vec_t garbotnikPos = (vec_t){0};
     if (bigbug->gameData.entityManager.playerEntity != NULL)
@@ -680,62 +755,63 @@ static void bb_DrawScene_Radar_Upgrade(void)
         drawText(&bigbug->gameData.font, c122, "(pick one)", 138, 120);
     }
 
-    drawCircleFilledQuadrants(29, 166 + bigbug->gameData.radar.playerPingRadius * 30, 10, bb_randomInt(0, 8),
+    drawCircleFilledQuadrants(29, 166 + bigbug->gameData.radar.playerPingRadius * 20, 10, bb_randomInt(0, 8),
                               bb_randomInt(0, 1), bb_randomInt(-8, 1), bb_randomInt(-20, 1), c132);
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
+        if(bigbug->gameData.radar.choices[i] == -1)
+        {
+            break;
+        }
         switch (bigbug->gameData.radar.choices[i])
         {
             case BIGBUG_GARBAGE_DENSITY:
             {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "garbage density", 45, 160 + i * 30);
+                         "garbage density", 45, 160 + i * 20);
                 break;
             }
             case BIGBUG_INFINITE_RANGE:
             {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "infinite range", 45, 160 + i * 30);
+                         "infinite range", 45, 160 + i * 20);
                 break;
             }
             case BIGBUG_FUEL:
             {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "fuel locations", 45, 160 + i * 30);
-                drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
+                         "fuel locations", 45, 160 + i * 20);
                 break;
             }
             case BIGBUG_ENEMIES:
             {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "enemy locations", 45, 160 + i * 30);
-                drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
+                         "enemy locations", 45, 160 + i * 20);
                 break;
             }
             case BIGBUG_ACTIVE_BOOSTER:
             {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "booster location", 45, 160 + i * 30);
+                         "booster location", 45, 160 + i * 20);
                 break;
             }
             case BIGBUG_OLD_BOOSTERS:
             {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "old booster locations", 45, 160 + i * 30);
+                         "old booster locations", 45, 160 + i * 20);
                 break;
             }
             case BIGBUG_POINTS_OF_INTEREST:
             {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "more points of interest", 45, 160 + i * 30);
-                drawText(&bigbug->gameData.font, c122, "not implemented", 45, 172 + i * 30);
+                         "more points of interest", 45, 160 + i * 20);
                 break;
             }
             case BIGBUG_REFILL_AMMO:
             {
                 drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c141 : c132,
-                         "refill ammo", 45, 160 + i * 30);
+                         "refill ammo", 45, 160 + i * 20);
                 break;
             }
             default:
@@ -1132,7 +1208,9 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
     }
 
     // keep the selection wrapped in range of available choices.
-    bigbug->gameData.radar.playerPingRadius = (bigbug->gameData.radar.playerPingRadius % 2 + 2) % 2;
+    uint8_t numChoices = 1 + (uint8_t)(bigbug->gameData.radar.choices[1] > -1) + (uint8_t)(bigbug->gameData.radar.choices[2] > -1);
+    bigbug->gameData.radar.playerPingRadius
+        = (bigbug->gameData.radar.playerPingRadius % numChoices + numChoices) % numChoices;
 
     bb_DrawScene_Garbotnik_Upgrade();
 }

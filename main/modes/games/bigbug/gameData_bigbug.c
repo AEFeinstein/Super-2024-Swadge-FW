@@ -150,7 +150,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[4].cost = bb_randomInt(1, 3);
     gameData->loadout.allWiles[4].wileFunction = bb_trigger501kg;
 
-    strcpy(gameData->loadout.allWiles[5].name, "Sky Choker");
+    strcpy(gameData->loadout.allWiles[5].name, "DVD Logo");
     strcpy(gameData->loadout.allWiles[5].description, "Eliminates drag on Garbotnik. It was a failed time machine prototype, but it eviscerates the atmosphere within a few square miles.");
     gameData->loadout.allWiles[5].callSequence[0] = BB_DOWN;
     gameData->loadout.allWiles[5].callSequence[1] = BB_LEFT;

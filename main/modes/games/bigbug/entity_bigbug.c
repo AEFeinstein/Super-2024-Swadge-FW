@@ -219,8 +219,17 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
 void bb_updateRocketLanding(bb_entity_t* self)
 {
     bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
-
-    if (self->pos.y > -2600 && rData->flame == NULL)
+    // get the terrain height under this booster
+    int16_t terrainY = 0;
+    for (int i = 0; i < TILE_FIELD_HEIGHT; i++)
+    {
+        if (self->gameData->tilemap.fgTiles[self->pos.x >> 9][i].health)
+        {
+            terrainY = i << 9;
+            break;
+        }
+    }
+    if (self->pos.y > terrainY - 3000 && rData->flame == NULL)
     {
         rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 16,
                                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
@@ -808,6 +817,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     {
         self->pos.x = 35500;
     }
+    if (self->pos.y < -36368)
+    {
+        self->pos.y = -36368;
+    }
+    
 
     // tow cable stuff
     // apply spring force and unhook far towed entities
@@ -895,7 +909,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     }
 
     // if 'a' button down, tether another entity if it's close enough
-    if ((self->gameData->btnState & 0b10000) >> 4)
+    if ((self->gameData->btnState & 0b10000) >> 4 && gData->towedEntities.length < self->gameData->GarbotnikStat_maxTowCables)
     {
         int16_t best_i     = -1;     // negative 1 means no valid candidates found
         uint16_t best_dist = 0xFFFF; // the distance of the best_i
@@ -1440,7 +1454,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
 {
     bb_buData_t* bData = (bb_buData_t*)self->data;
 
-    bool faceLeft = (bData->flags & 0b1) >> 1;
+    bool faceLeft = bData->flags & 0b1;
 
     if (bData->damageEffect > 0)
     {
@@ -3211,7 +3225,7 @@ void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     bb_buData_t* bData = (bb_buData_t*)self->data;
-    bool faceLeft = (bData->flags & 0b1)>>1;
+    bool faceLeft = bData->flags & 0b1;
     uint8_t brightness = 5;
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
@@ -4755,6 +4769,7 @@ void bb_upgradeRadar(bb_entity_t* self)
     self->gameData->radar.playerPingRadius = 0; // just using this as a selection idx to save some space.
     self->gameData->radar.choices[0]       = (int8_t)BIGBUG_REFILL_AMMO; // refill ammo
     self->gameData->radar.choices[1]       = -1;                         // no choice available
+    self->gameData->radar.choices[2]       = -1;                         // no choice available
 
     uint8_t zeroCount = 0; // zero count represent the number of upgrades not yet gotten.
     for (int i = 0; i < 7; i++)
@@ -4776,7 +4791,6 @@ void bb_upgradeRadar(bb_entity_t* self)
             }
         }
     }
-
     if (zeroCount > 1)
     {
         while (self->gameData->radar.choices[1] == -1)
@@ -4786,6 +4800,21 @@ void bb_upgradeRadar(bb_entity_t* self)
                 && (((self->gameData->radar.upgrades & 1 << candidate) >> candidate) == 0))
             {
                 self->gameData->radar.choices[1] = (int8_t)candidate;
+            }
+        }
+    }
+    if((self->gameData->garbotnikUpgrade.upgrades & (1<<GARBOTNIK_MORE_CHOICES))>>GARBOTNIK_MORE_CHOICES == 1)
+    {
+        if(zeroCount > 2)
+        {
+            while (self->gameData->radar.choices[1] == -1)
+            {
+                enum bb_radarUpgrade_t candidate = (enum bb_radarUpgrade_t)bb_randomInt(0, 6);
+                if ((candidate != self->gameData->radar.choices[0])
+                    && (((self->gameData->radar.upgrades & 1 << candidate) >> candidate) == 0))
+                {
+                    self->gameData->radar.choices[2] = (int8_t)candidate;
+                }
             }
         }
     }
@@ -4824,6 +4853,8 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
 {
     self->gameData->radar.playerPingRadius      = 0; // just using this as a selection idx to save some space.
     self->gameData->garbotnikUpgrade.choices[0] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH; // default choice
+    self->gameData->garbotnikUpgrade.choices[1] = -1;                                     // no choice available
+    self->gameData->garbotnikUpgrade.choices[2] = -1;                                     // no choice available
     uint8_t zeroCount                           = 0; // zero count represent the number of upgrades not yet maxed out.
     for (int i = 0; i < 7; i++)
     {
@@ -4848,11 +4879,6 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
         }
         self->gameData->garbotnikUpgrade.choices[1] = (int8_t)candidate;
     }
-    else
-    {
-        self->gameData->garbotnikUpgrade.choices[1] = -1;
-        self->gameData->garbotnikUpgrade.choices[2] = -1;
-    }
     if((self->gameData->garbotnikUpgrade.upgrades & (1<<GARBOTNIK_MORE_CHOICES))>>GARBOTNIK_MORE_CHOICES == 1)
     {
         if(zeroCount > 2)
@@ -4865,10 +4891,6 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
             }
             self->gameData->garbotnikUpgrade.choices[2] = (int8_t)candidate;
         }
-    }
-    else
-    {
-        self->gameData->garbotnikUpgrade.choices[2] = -1;
     }
 
     self->gameData->screen = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
