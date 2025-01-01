@@ -207,6 +207,7 @@ void bb_freeGameData(bb_gameData_t* gameData)
     if(gameData->loadoutScreenData!=NULL)
     {
         heap_caps_free(gameData->loadoutScreenData);
+        gameData->loadoutScreenData = NULL;
     }
 }
 

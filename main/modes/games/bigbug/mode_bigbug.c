@@ -1280,6 +1280,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
         if(bigbug->gameData.loadoutScreenData->primingEffect >= 185)
         {
             heap_caps_free(bigbug->gameData.loadoutScreenData);
+            bigbug->gameData.loadoutScreenData  = NULL;
             bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
             bigbug->gameData.screen             = BIGBUG_GAME;
             return;
