@@ -886,8 +886,8 @@ static void cg_handleInputGarden(cGrove_t* cg)
                     /* ESP_LOGI("CG", "touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32, phi, r,
                      intensity);  */
                     // Move hand
-                    cg->grove.cursor.pos.x += (getCos1024(phi) * (r >> 5)) / 1024;
-                    cg->grove.cursor.pos.y -= (getSin1024(phi) * (r >> 5)) / 1024;
+                    cg->grove.cursor.pos.x += (getCos1024(phi) * (r >> cg->settings.speed)) / 1024;
+                    cg->grove.cursor.pos.y -= (getSin1024(phi) * (r >> cg->settings.speed)) / 1024;
                 }
             }
             while (checkButtonQueueWrapper(&evt))

@@ -538,7 +538,7 @@ typedef enum
 typedef struct
 {
     bool touch;      ///< Touch controls for Grove
-    bool online;     ///< If online features are enabled
+    int8_t speed;    ///< If online features are enabled
     bool itemText;   ///< If item text should be drawn
     bool chowaNames; ///< If Chowa's show have their names drawn in Grove
 } cgSettings_t;
@@ -572,11 +572,10 @@ typedef struct
     bool unload;         ///< if the state is ready to unload
 
     // title screen
-    bool titleActive;  ///< If title screen is active
-    int64_t timer;     ///< Timer for animations
-    vec_t cloudPos;    ///< Position of the cloud
-    int8_t animFrame;  ///< Current frame of the animation;
-    int8_t titleFrame; ///< Frame of title animation
+    bool titleActive; ///< If title screen is active
+    int64_t timer;    ///< Timer for animations
+    int16_t cloudPos; ///< Position of the cloud
+    int8_t animFrame; ///< Current frame of the animation;
 
     // Menu
     menu_t* menu;                  ///< Main menu

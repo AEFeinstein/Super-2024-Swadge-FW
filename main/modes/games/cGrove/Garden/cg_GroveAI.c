@@ -419,6 +419,8 @@ void cg_GroveEggAI(cGrove_t* cg, int64_t elapsedUs)
                 strcpy(cg->chowa[idx].owner, cg->player);
                 cg->grove.state    = CG_KEYBOARD_WRITE_NAME;
                 cg->grove.hatchIdx = idx;
+                // break after hatching so future Chowa don't hatch first.
+                break;
             }
         }
     }

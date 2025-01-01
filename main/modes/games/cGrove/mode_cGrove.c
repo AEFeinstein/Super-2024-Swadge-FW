@@ -32,11 +32,15 @@
 // Consts
 //==============================================================================
 
-static const char cGroveTitle[]        = "Chowa Grove"; // Game title
-static const char* cGroveMenuNames[]   = {"Play with Chowa", "Spar", "Settings"};
-static const char* cGroveSettingOpts[] = {"Grove Touch Scroll: ", "Online: ", "Show Item Text: ", "Show Chowa Names: "};
-static const char* const cGroveEnabledOptions[] = {"Enabled", "Disabled"};
-static const int32_t cGroveEnabledVals[]        = {true, false};
+static const char cGroveTitle[]      = "Chowa Grove"; // Game title
+static const char* cGroveMenuNames[] = {"Play with Chowa", "Spar", "Settings"};
+static const char* cGroveSettingOpts[]
+    = {"Grove Touch Scroll: ", "Touch Scroll Speed: ", "Show Item Text: ", "Show Chowa Names: "};
+static const char* const cGroveEnabledOptions[]    = {"Enabled", "Disabled"};
+static const int32_t cGroveEnabledVals[]           = {true, false};
+static const char* const cGroveTouchScrollLabels[] = {"Slow", "Medium", "Fast", "Pango"};
+static const int32_t cGroveTouchScrollVals[]
+    = {8, 7, 6, 5}; // 9 only works at 100% in one direction, 4 is uncontrollably fast
 static const char* cGroveResetData[]
     = {"Reset all game data", "Are you sure you want to reset to factory? All data will be lost.",
        "Press 'Start' to permanently erase all data. Press any other key to return to menu."};
@@ -147,7 +151,7 @@ static void cGroveEnterMode(void)
     if (!readNvsBlob(cgNVSKeys[2], &cg->settings, &blobLen))
     {
         cg->settings.touch      = true;
-        cg->settings.online     = false;
+        cg->settings.speed      = 7;
         cg->settings.itemText   = true;
         cg->settings.chowaNames = true;
     }
@@ -165,9 +169,9 @@ static void cGroveEnterMode(void)
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[0], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.touch); // Enable/disable touch controls
-    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveEnabledOptions, cGroveEnabledVals,
-                                 ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
-                                 cg->settings.online); // Enable/disable online functions
+    addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[1], cGroveTouchScrollLabels, cGroveTouchScrollVals,
+                                 ARRAY_SIZE(cGroveTouchScrollLabels), getScreensaverTimeSettingBounds(),
+                                 cg->settings.speed); // Enable/disable online functions
     addSettingsOptionsItemToMenu(cg->menu, cGroveSettingOpts[2], cGroveEnabledOptions, cGroveEnabledVals,
                                  ARRAY_SIZE(cGroveEnabledOptions), getScreensaverTimeSettingBounds(),
                                  cg->settings.itemText); // Enable/disable Item names
@@ -473,8 +477,8 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
     }
     else if (label == cGroveSettingOpts[1])
     {
-        // Online on or off
-        cg->settings.online = settingVal;
+        // Touch scroll speed
+        cg->settings.speed = settingVal;
         writeNvsBlob(cgNVSKeys[2], &cg->settings, sizeof(cgSettings_t));
     }
     else if (label == cGroveSettingOpts[2])
@@ -495,21 +499,45 @@ static void cg_titleScreen(int64_t elapsedUs)
 {
     // Update
     cg->timer += elapsedUs;
-    if (cg->timer >= SECOND)
+    if (cg->timer >= (SECOND >> 4))
     {
-        cg->timer = 0;
-        cg->cloudPos.x += 1;
-        if (cg->cloudPos.x >= TFT_WIDTH)
+        // Animation frame
+        cg->animFrame += 1;
+        if (cg->animFrame >= 16)
         {
-            cg->cloudPos.x = -cg->title[0].h;
+            cg->animFrame = 0;
         }
-    }
-    cg->animFrame  = (cg->animFrame + 1) % 32;
-    cg->titleFrame = (cg->titleFrame + 1) % 64;
 
-    // Draw
-    drawWsgSimple(&cg->title[1], 0, 0);
-    drawWsgSimpleHalf(&cg->title[0], cg->cloudPos.x, -30);
-    drawWsgSimpleHalf(&cg->title[4 + (cg->animFrame >> 3)], 0, 84);
-    drawWsgSimpleHalf(&cg->title[2 + (cg->titleFrame >> 5)], 0, 0);
+        // Cloud (1/16)
+        cg->cloudPos += 1;
+        if (cg->cloudPos >= TFT_WIDTH)
+        {
+            cg->cloudPos = -(cg->title[0].h * 7);
+        }
+
+        // Reset timer
+        cg->timer -= SECOND >> 4;
+    }
+
+    // Draw bg
+    drawWsgSimpleScaled(&cg->title[1], 0, 0, 3, 5);
+
+    // Draw cloud
+    drawWsgSimpleScaled(&cg->title[0], cg->cloudPos, 64, 5, 5);
+
+    // Chowa
+    // 4 frames, loop every 1 second
+    // 1 frame = 4 animFrames; bitshift by two (divide by four)
+    drawWsgSimple(&cg->title[4 + (cg->animFrame >> 2)], 0, 84);
+
+    // Title
+    drawWsgSimpleHalf(&cg->title[2], 16, 16);
+
+    // Blinky Arrow
+    // 2 frames, loop every 1 second
+    // 1 frame - 8 animFrames; bitshift by three (divide by eight)
+    if (cg->animFrame >> 3 == 1)
+    {
+        drawWsgSimpleHalf(&cg->title[3], 125, 20);
+    }
 }

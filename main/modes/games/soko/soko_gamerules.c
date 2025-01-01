@@ -299,7 +299,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
     // These are in level space (not pixels) and must be within bounds of currentLevel.tiles.
     int16_t screenMinX, screenMaxX, screenMinY, screenMaxY;
     // offsets.
-    uint16_t ox, oy;
+    int16_t ox, oy;
 
     // Recalculate Camera Position
     // todo: extract to a function if we end up with different draw functions. Part of future pointer refactor.
@@ -606,10 +606,10 @@ sokoVec_t sokoGridToPix(soko_abs_t* self, sokoVec_t grid) // Convert grid positi
     uint16_t scale
         = self->currentLevel
               .levelScale; //@todo These should be in constants, but too lazy to change all references at the moment.
-    uint16_t ox = (TFT_WIDTH / 2) - ((self->currentLevel.width) * scale / 2);
-    uint16_t oy = (TFT_HEIGHT / 2) - ((self->currentLevel.height) * scale / 2);
-    retVec.x    = ox + scale * grid.x + scale / 2;
-    retVec.y    = oy + scale * grid.y + scale / 2;
+    int16_t ox = (TFT_WIDTH / 2) - ((self->currentLevel.width) * scale / 2);
+    int16_t oy = (TFT_HEIGHT / 2) - ((self->currentLevel.height) * scale / 2);
+    retVec.x   = ox + scale * grid.x + scale / 2;
+    retVec.y   = oy + scale * grid.y + scale / 2;
     return retVec;
 }
 
