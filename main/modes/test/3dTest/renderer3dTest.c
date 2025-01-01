@@ -14,7 +14,7 @@
 //==============================================================================
 
 #include "renderer3dTest.h"
-#include "cVectors.h"
+#include "3dPrimitives.h"
 
 //==============================================================================
 // Consts
@@ -28,6 +28,7 @@ static const char modeName[] = "3D Renderer Test";
 
 typedef struct
 {
+    mesh_t cube;
 } ren3_t;
 
 //==============================================================================
@@ -82,6 +83,9 @@ static void enterMode(void)
     // render = (ren3_t*)heap_caps_calloc(1, sizeof(ren3_t), MALLOC_CAP_8BIT);
     // Faster RAM
     render = calloc(1, sizeof(ren3_t));
+
+    // Initialize test objects
+    // render->cube.tris;
 }
 
 static void exitMode(void)
@@ -118,17 +122,17 @@ static void vecTest()
     int n = 207;
 
     // Init Vector
-    initVector(&v);
+    vectorInit(&v);
     if (v.total != 0)
     {
         ESP_LOGI("VecTest", "Error - Total doesn't match after initialization.");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
     else if (v.capacity != 4)
     {
         ESP_LOGI("VecTest", "Error - Capacity does not match after initialization.");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
 
@@ -136,7 +140,7 @@ static void vecTest()
     if (vectorTotal(&v) != 0)
     {
         ESP_LOGI("VecTest", "Error - Getting total via 'vectorTotal' resulted in wrong value.");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
 
@@ -145,13 +149,13 @@ static void vecTest()
     if (vectorTotal(&v) != 1)
     {
         ESP_LOGI("VecTest", "Error - First item added, total not updated");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
     if (v.data[0] != &i)
     {
         ESP_LOGI("VecTest", "Error - First item added, pointer is incorrect.");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
 
@@ -163,19 +167,19 @@ static void vecTest()
     if (vectorTotal(&v) != 5)
     {
         ESP_LOGI("VecTest", "Error - Several items added, total not updated");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
     if (v.data[2] != &k)
     {
         ESP_LOGI("VecTest", "Error - Several items added, index 3 not correct pointer.");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
     if (v.capacity != 8)
     {
         ESP_LOGI("VecTest", "Error - Several items added, capacity hasn't updated.");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
 
@@ -186,13 +190,13 @@ static void vecTest()
     if (vectorTotal(&v) != 5)
     {
         ESP_LOGI("VecTest", "Error - Vector Set, Total not correct");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
     if (v.data[1] != &n)
     {
         ESP_LOGI("VecTest", "Error - Set data incorrect");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
 
@@ -200,21 +204,21 @@ static void vecTest()
     if (vectorGet(&v, 4) != &m)
     {
         ESP_LOGI("VecTest", "Error - Get grabbed the wrong value");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
 
     // Vector Remove
-    vectorRm(&v, 1);
-    if(vectorGet(&v, 3) != &m)
+    vectorRemove(&v, 1);
+    if (vectorGet(&v, 3) != &m)
     {
         ESP_LOGI("VecTest", "Error - RM failed");
-        freeVector(&v);
+        vectorFree(&v);
         return;
     }
-    
+
     // Free and exit
-    freeVector(&v);
+    vectorFree(&v);
 
     // Exit
     ESP_LOGI("VecTest", "C++ Vector tests okay");

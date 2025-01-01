@@ -32,13 +32,13 @@
  * @param vec Vector to resize
  * @param newCapacity How large the Vector needs to be
  */
-void vectorResize(cVector_t* vec, int newCapacity);
+void _vectorResize(cVector_t* vec, int newCapacity);
 
 //==============================================================================
 // Functions
 //==============================================================================
 
-void initVector(cVector_t* vec)
+void vectorInit(cVector_t* vec)
 {
     vec->capacity = VEC_INITIAL_CAPACITY;
     vec->data     = malloc(sizeof(void*) * vec->capacity);
@@ -54,7 +54,7 @@ void vectorAdd(cVector_t* vec, void* item)
 {
     if (vec->capacity == vec->total)
     {
-        vectorResize(vec, vec->capacity * 2);
+        _vectorResize(vec, vec->capacity * 2);
     }
     vec->data[vec->total++] = item;
 }
@@ -76,7 +76,7 @@ void* vectorGet(cVector_t* vec, int idx)
     return NULL;
 }
 
-void vectorRm(cVector_t* vec, int idx)
+void vectorRemove(cVector_t* vec, int idx)
 {
     // Return if outside bounds
     if (idx < 0 || idx >= vectorTotal(vec))
@@ -97,11 +97,11 @@ void vectorRm(cVector_t* vec, int idx)
     // Resize down if capacity is low enough (Divided by four to not constantly up and daown size)
     if (vec->total > 0 && vec->total == (vec->capacity >> 2))
     {
-        vectorResize(vec, vec->capacity >> 1);
+        _vectorResize(vec, vec->capacity >> 1);
     }
 }
 
-void freeVector(cVector_t* vec)
+void vectorFree(cVector_t* vec)
 {
     free(vec->data);
 }
@@ -110,7 +110,7 @@ void freeVector(cVector_t* vec)
 // Static Functions
 //==============================================================================
 
-void vectorResize(cVector_t* vec, int newCapacity)
+void _vectorResize(cVector_t* vec, int newCapacity)
 {
     void** data = realloc(vec->data, sizeof(void*) * newCapacity);
     if (data)

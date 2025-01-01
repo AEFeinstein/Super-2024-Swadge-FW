@@ -4,9 +4,9 @@
  * @brief Tests the 3D capabilities of the renderer
  * @version 0.1
  * @date 2024-12-31
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 
@@ -15,7 +15,6 @@
 //==============================================================================
 
 #include "swadge2024.h"
-#include "renderer3dTest.h"
 
 //==============================================================================
 // Externs
