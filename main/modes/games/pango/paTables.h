@@ -226,7 +226,7 @@ static const int16_t masterDifficulty[MASTER_DIFFICULTY_TABLE_LENGTH * MASTER_DI
     // Placeholder: bonus stage
     PA_WSG_BREAK_BLOCK_3, 24, 3, 16, 100, 400, 3, 3, //
     PA_WSG_BREAK_BLOCK_3, 25, 4, 15, 100, 400, 3, 3, //
-    PA_WSG_PIPER_ICON, 42, 11, 12, 100, 400, 3, 3,    // 117
+    PA_WSG_PIPER_ICON, 42, 11, 12, 100, 400, 3, 3,   // 117
 
     PA_WSG_PO_ICON, 42, 3, 17, 100, 400, 3, 3,    //
     PA_WSG_PIXEL_ICON, 42, 4, 16, 100, 400, 4, 4, //
