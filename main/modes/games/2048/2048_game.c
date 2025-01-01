@@ -264,7 +264,7 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
         const int indicatorSize = 9;
         int dx = CLAMP(t48->lastIMUx >> 4, -indicatorSize, indicatorSize);
         int dy =-CLAMP(t48->lastIMUy >> 4, -indicatorSize, indicatorSize);
-        drawRect(indicatorx - indicatorSize - 1, indicatory - indicatorSize - 1,
+        drawRect(indicatorx - indicatorSize, indicatory - indicatorSize,
                  indicatorx + indicatorSize + 1, indicatory + indicatorSize + 1, c333 );
         drawCircle(indicatorx + dx, indicatory + dy, 1, c555 );
     }

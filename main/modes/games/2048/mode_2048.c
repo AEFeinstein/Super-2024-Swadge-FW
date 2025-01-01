@@ -257,12 +257,15 @@ static void t48MainLoop(int64_t elapsedUs)
                     int oy =  qRelativeRotation[1] * 512;
                     int ox = -qRelativeRotation[2] * 512;
 
-                    bool bXPressed = ABS(ox) > 128;
-                    bool bXReleased = ABS(ox) < 80;
+                    const int trigger = 104;
+                    const int release = 80;
+
+                    bool bXPressed = ABS(ox) > trigger;
+                    bool bXReleased = ABS(ox) < release;
                     bool bYWasTriggered = t48->receivedInputMask & 2;
 
-                    bool bYPressed = ABS(oy) > 128;
-                    bool bYReleased = ABS(oy) < 80;
+                    bool bYPressed = ABS(oy) > trigger;
+                    bool bYReleased = ABS(oy) < release;
                     bool bXWasTriggered = t48->receivedInputMask & 1;
 
                     if (!bYWasTriggered && bYPressed)
@@ -302,6 +305,26 @@ static void t48MainLoop(int64_t elapsedUs)
                     t48->receivedInputMask = (bYWasTriggered ? 2 : 0) | (bXWasTriggered ? 1 : 0);
                     t48->lastIMUx = ox;
                     t48->lastIMUy = oy;
+
+
+                    // Handle pushing the zero around. You can push it by pushing past the endstops.
+                    bool bXIsRailed = ABS(ox) > (trigger+2);
+                    bool bYIsRailed = ABS(ox) > (trigger+2);
+                    if (bXIsRailed || bYIsRailed)
+                    {
+                        const float fNudgeAmount = 0.04; 
+                        float qNudgeX[4] = { 0.999, 0.0, 0.0, 0.0 };
+                        if (bXIsRailed)
+                        {
+                            qNudgeX[2] = ox > 0 ? -fNudgeAmount : fNudgeAmount;
+                        }
+                        if (bYIsRailed)
+                        {
+                            qNudgeX[1] = oy < 0 ? -fNudgeAmount : fNudgeAmount;
+                        }
+                        mathQuatApply(t48->quatBase, t48->quatBase, qNudgeX);
+                        mathQuatNormalize( t48->quatBase, t48->quatBase );
+                    }
                 }
             }
 
