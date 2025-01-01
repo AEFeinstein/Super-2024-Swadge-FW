@@ -405,7 +405,7 @@ void cg_GroveEggAI(cGrove_t* cg, int64_t elapsedUs)
             {
                 cg->grove.unhatchedEggs[idx].active = false;
                 cg->chowa[idx].active               = true;
-                cg->chowa[idx].type                 = CG_KING_DONUT; // FIXME: Remove when second Chowa is in
+                cg->chowa[idx].type                 = CG_KING_DONUT;
                 cg->chowa[idx].age                  = 0;
                 cg->chowa[idx].mood                 = CG_NEUTRAL;
                 for (int idx2 = 0; idx2 < CG_STAT_COUNT; idx2++)

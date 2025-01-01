@@ -8,7 +8,25 @@
 //==============================================================================
 // Functions
 //==============================================================================
-uint16_t fCost(const bb_midgroundTileInfo_t* tile)
+// static inline function to get bits 0-6 of pos
+static inline uint8_t getX(const bb_midgroundTileInfo_t* tile)
+{
+    return tile->pos & 0x7F;
+}
+
+// static inline function to get bits 7-14 of pos
+static inline uint8_t getY(const bb_midgroundTileInfo_t* tile)
+{
+    return (tile->pos >> 7) & 0xFF;
+}
+
+// static inline function to get bit 15 of pos
+static inline bool getZ(const bb_midgroundTileInfo_t* tile)
+{
+    return (tile->pos >> 15) & 0x1;
+}
+
+static inline uint16_t fCost(const bb_midgroundTileInfo_t* tile)
 {
     return tile->gCost + tile->hCost;
 }
@@ -17,15 +35,15 @@ uint16_t fCost(const bb_midgroundTileInfo_t* tile)
 // functions as my target nodes all down the sides which offer grounded stability to tiles.
 bool isPerimeterNode(const bb_midgroundTileInfo_t* tile)
 {
-    return tile->x == 4 || tile->x == TILE_FIELD_WIDTH - 5 || tile->y == TILE_FIELD_HEIGHT - 5;
+    return getX(tile) == 4 || getX(tile) == TILE_FIELD_WIDTH - 5 || getY(tile) == TILE_FIELD_HEIGHT - 5;
 }
 
 void getNeighbors(const bb_midgroundTileInfo_t* tile, list_t* neighbors, bb_tilemap_t* tilemap)
 {
     // left neighbor
-    uint16_t neighborX = tile->x - 1;
-    uint16_t neighborY = tile->y;
-    bool neighborZ     = tile->z;
+    uint16_t neighborX = getX(tile) - 1;
+    uint16_t neighborY = getY(tile);
+    bool neighborZ     = getZ(tile);
 
     // adds orthogonal neighbors
     for (uint8_t i = 0; i < 5; i++)
@@ -47,24 +65,24 @@ void getNeighbors(const bb_midgroundTileInfo_t* tile, list_t* neighbors, bb_tile
             //(left neighbor) was already handled in first iteration
             case 0: // right neighbor
             {
-                neighborX = tile->x + 1;
+                neighborX = getX(tile) + 1;
                 break;
             }
             case 1: // up neighbor
             {
-                neighborX = tile->x;
-                neighborY = tile->y - 1;
+                neighborX = getX(tile);
+                neighborY = getY(tile) - 1;
                 break;
             }
             case 2: // down neighbor
             {
-                neighborY = tile->y + 1;
+                neighborY = getY(tile) + 1;
                 break;
             }
             case 3: // z neighbor
             {
-                neighborY = tile->y;
-                neighborZ = !tile->z;
+                neighborY = getY(tile);
+                neighborZ = !getZ(tile);
                 break;
             }
             default:
@@ -81,7 +99,7 @@ bool contains(const list_t* nodeList, const bb_midgroundTileInfo_t* tile)
     while (cur != NULL)
     {
         bb_midgroundTileInfo_t* curNode = (bb_midgroundTileInfo_t*)cur->val;
-        if (tile->x == curNode->x && tile->y == curNode->y && tile->z == curNode->z)
+        if (getX(tile) == getX(curNode) && getY(tile) == getY(curNode) && getZ(tile) == getZ(curNode))
         {
             return true;
         }
@@ -97,13 +115,13 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
     uint16_t halfFieldWidth = TILE_FIELD_WIDTH / 2;
     start->gCost            = 0;
     // manhattan distance from the target
-    if (start->x < halfFieldWidth)
+    if (getX(start) < halfFieldWidth)
     {
-        start->hCost = start->x - 4;
+        start->hCost = getX(start) - 4;
     }
     else
     {
-        start->hCost = TILE_FIELD_WIDTH - 5 - start->x;
+        start->hCost = TILE_FIELD_WIDTH - 5 - getX(start);
     }
     // bb_tileInfo_t* start = heap_caps_malloc(sizeof(bb_tileInfo_t), MALLOC_CAP_SPIRAM);
     //  It's like a memcopy
@@ -161,8 +179,8 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
             //      temp = temp->next;
             //  }
 
-            if ((neighborTile->z ? tilemap->fgTiles[neighborTile->x][neighborTile->y].health
-                                 : tilemap->mgTiles[neighborTile->x][neighborTile->y].health)
+            if ((getZ(neighborTile) ? tilemap->fgTiles[getX(neighborTile)][getY(neighborTile)].health
+                                    : tilemap->mgTiles[getX(neighborTile)][getY(neighborTile)].health)
                     == 0
                 || contains(&closed, neighborTile))
             {
@@ -179,13 +197,13 @@ bool pathfindToPerimeter(bb_midgroundTileInfo_t* start, bb_tilemap_t* tilemap)
                 // set fCost of neighbor (we don't set the fCost, we calculate the gCost and hCost)
                 neighborTile->gCost = newCostToNeighbor;
                 // manhattan distance from the target
-                if (neighborTile->x < halfFieldWidth)
+                if (getX(neighborTile) < halfFieldWidth)
                 {
-                    neighborTile->hCost = neighborTile->x - 4;
+                    neighborTile->hCost = getX(neighborTile) - 4;
                 }
                 else
                 {
-                    neighborTile->hCost = TILE_FIELD_WIDTH - 5 - neighborTile->x;
+                    neighborTile->hCost = TILE_FIELD_WIDTH - 5 - getX(neighborTile);
                     // set parent of neighbor to current
                     //  neighborTile->parent = current;
                 }

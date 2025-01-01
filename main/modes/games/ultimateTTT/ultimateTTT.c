@@ -98,9 +98,6 @@ ultimateTTT_t* ttt;
  */
 static void tttEnterMode(void)
 {
-    // TODO enable speaker if BGM is added
-    setDacShutdown(true);
-
     // Allocate memory for the mode
     ttt = heap_caps_calloc(1, sizeof(ultimateTTT_t), MALLOC_CAP_8BIT);
 

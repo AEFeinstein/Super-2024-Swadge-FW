@@ -466,7 +466,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
         if (cursorMoved)
         {
             globalMidiPlayerStop(true);
-            globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_BGM);
+            globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_SFX);
             tttSendCursor(ttt);
         }
     }
@@ -558,7 +558,7 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
 
     // Play SFX
     globalMidiPlayerStop(true);
-    globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_BGM);
+    globalMidiPlayerPlaySong(&ttt->sfxMoveCursor, MIDI_SFX);
 }
 
 /**
@@ -978,7 +978,7 @@ void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
         for (int32_t x = 0; x < 3; x++)
         {
             // Check animation timers for the subgame winners
-            if (ttt->game.gameTimers[x][y] > 0)
+            if (ttt->game.gameTimers[x][y] > elapsedUs)
             {
                 ttt->game.gameTimers[x][y] -= elapsedUs;
             }
@@ -992,7 +992,7 @@ void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
                 for (int32_t sx = 0; sx < 3; sx++)
                 {
                     // Check animation timers for the subgame cells
-                    if (ttt->game.cellTimers[x][y][sx][sy] > 0)
+                    if (ttt->game.cellTimers[x][y][sx][sy] > elapsedUs)
                     {
                         ttt->game.cellTimers[x][y][sx][sy] -= elapsedUs;
                     }
@@ -1022,7 +1022,7 @@ void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
     tttDrawGrid(ttt->gameOffset.x, ttt->gameOffset.y, ttt->gameOffset.x + ttt->gameSize - 1,
                 ttt->gameOffset.y + ttt->gameSize - 1, 0, MAIN_GRID_COLOR);
 
-    // For each subgame
+    // Draw the background for each subgame
     for (int subY = 0; subY < 3; subY++)
     {
         for (int subX = 0; subX < 3; subX++)
@@ -1043,7 +1043,19 @@ void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
 
             // Draw the subgame grid lines
             tttDrawGrid(sX0, sY0, sX1, sY1, 4, SUB_GRID_COLOR);
+        }
+    }
 
+    // Draw the markers for each subgame
+    for (int subY = 0; subY < 3; subY++)
+    {
+        for (int subX = 0; subX < 3; subX++)
+        {
+            // Get this subgame's rectangle
+            int16_t sX0 = ttt->gameOffset.x + (subX * ttt->subgameSize);
+            int16_t sY0 = ttt->gameOffset.y + (subY * ttt->subgameSize);
+            int16_t sX1 = sX0 + ttt->subgameSize - 1;
+            int16_t sY1 = sY0 + ttt->subgameSize - 1;
             // If selected, draw the cursor on this subgame
             if (SELECT_SUBGAME == ttt->game.cursorMode && //
                 ttt->game.cursor.x == subX && ttt->game.cursor.y == subY)

@@ -35,13 +35,9 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
     {
         for (int j = 0; j < TILE_FIELD_HEIGHT; j++)
         {
-            tilemap->fgTiles[i][j].x = i;
-            tilemap->fgTiles[i][j].y = j;
-            tilemap->fgTiles[i][j].z = 1;
+            tilemap->fgTiles[i][j].pos = i | (j << 7) | (1 << 15);
 
-            tilemap->mgTiles[i][j].x = i;
-            tilemap->mgTiles[i][j].y = j;
-            tilemap->mgTiles[i][j].z = 0;
+            tilemap->mgTiles[i][j].pos = i | (j << 7); // z is implicitly zero
 
             uint32_t rgbCol = paletteToRGB(levelWsg.px[(j * levelWsg.w) + i]);
 
@@ -70,17 +66,19 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                 }
                 default: // case 0
                 {
-                    // blue value used for washing machines, cars
+                    // blue value used for washing machines, cars, swadges/donuts
                     switch (rgbCol & 255)
                     {
                         case 51:
                         {
-                            tilemap->fgTiles[i][j].embed = CAR_EMBED;
+                            tilemap->fgTiles[i][j].embed
+                                = bb_randomInt(0, 1) == 0 ? BB_CAR_WITH_DONUT_EMBED : BB_CAR_WITH_SWADGE_EMBED;
                             break;
                         }
                         case 102:
                         {
-                            tilemap->fgTiles[i][j].embed = CAR_EMBED;
+                            tilemap->fgTiles[i][j].embed = bb_randomInt(0, 1) == 0 ? BB_FOOD_CART_WITH_DONUT_EMBED
+                                                                                   : BB_FOOD_CART_WITH_SWADGE_EMBED;
                             break;
                         }
                         case 153:

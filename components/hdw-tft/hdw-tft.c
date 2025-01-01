@@ -262,8 +262,8 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
 #endif
 
     // Enable the backlight
-    setTFTBacklightBrightness(brightness);
     enableTFTBacklight();
+    setTFTBacklightBrightness(brightness);
 
     if (NULL == pixels)
     {
