@@ -477,7 +477,6 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
     }
     else if (label == cGroveSettingOpts[1])
     {
-        // FIXME
         // Touch scroll speed
         cg->settings.speed = settingVal;
         writeNvsBlob(cgNVSKeys[2], &cg->settings, sizeof(cgSettings_t));
