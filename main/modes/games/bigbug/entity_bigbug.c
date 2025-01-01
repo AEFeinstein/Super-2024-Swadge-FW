@@ -161,13 +161,9 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             case DIALOGUE_DATA:
             {
                 bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
-                for (int i = 0; i < dData->numStrings; i++)
-                {
-                    heap_caps_free(dData->strings[i]);
-                }
-                heap_caps_free(dData->strings);
                 freeWsg(&dData->sprite);
                 freeWsg(&dData->spriteNext);
+                bb_freeDialogueData(dData);
                 break;
             }
             case GAME_OVER_DATA:
@@ -819,6 +815,13 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     while (current != NULL)
     {
         bb_entity_t* curEntity = (bb_entity_t*)current->val;
+        if(curEntity->active == false)
+        {
+            node_t* next = current->next;
+            removeEntry(&gData->towedEntities, current);
+            current = next;
+            continue;
+        }
         vec_t toFrom           = subVec2d(curEntity->pos, self->pos);
         int32_t dist           = sqMagVec2d(toFrom);
         // if more than 100px away
@@ -826,15 +829,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             // detach
             node_t* next = current->next;
-
-            // if(self->spriteIndex == BB_DONUT)
-            // {
-            //     //turn off physics for the donut when not towed.
-            //     heap_caps_free(self->data);
-            //     self->data = NULL;
-            //     ((bb_entity_t*)current->val)->updateFunction = NULL;
-            // }
-
             removeEntry(&gData->towedEntities, current);
             current = next;
         }
@@ -1981,25 +1975,6 @@ void bb_updateGameOver(bb_entity_t* self)
     {
         if (self->currentAnimationFrame == 0)
         {
-            self->currentAnimationFrame = 1;
-            if (goData->wsgLoaded)
-            {
-                freeWsg(&goData->fullscreenGraphic);
-                goData->wsgLoaded = false;
-            }
-            loadWsgInplace("GameOver1.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
-            goData->wsgLoaded = true;
-        }
-        else
-        {
-            // increment booster animation frame to look destroyed
-            self->gameData->entityManager.activeBooster->currentAnimationFrame++;
-            bb_heavyFallingData_t* hfData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
-            hfData->yVel                  = ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->yVel;
-            bb_setData(self->gameData->entityManager.activeBooster, hfData, HEAVY_FALLING_DATA);
-            self->gameData->entityManager.activeBooster->drawFunction = NULL;
-            // this booster's grabby hand will destroy itself next time in it's own update loop.
-
             uint8_t boosterIdx = 0;
             while (boosterIdx < 3)
             {
@@ -2009,20 +1984,52 @@ void bb_updateGameOver(bb_entity_t* self)
                 }
                 boosterIdx++;
             }
-
-            self->gameData->entityManager.activeBooster = NULL;
-            if (boosterIdx > 2)
+            
+            if (goData->wsgLoaded)
             {
-                // IDK it is really really game over here.
-                ESP_LOGD(BB_TAG, "finish me\n");
+                freeWsg(&goData->fullscreenGraphic);
+            }
+            if (boosterIdx <= 2)
+            {
+                self->currentAnimationFrame = 1;
+                loadWsgInplace("GameOver1.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
             }
             else
             {
-                self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
-
-                bb_destroyEntity(self, false);
-                bb_startGarbotnikCloningTalk(self->gameData->entityManager.deathDumpster);
+                self->currentAnimationFrame = 2;
+                loadWsgInplace("GameOver2.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
             }
+        }
+        else if(self->currentAnimationFrame == 1)
+        {
+            // increment booster animation frame to look destroyed
+            self->gameData->entityManager.activeBooster->currentAnimationFrame++;
+            bb_heavyFallingData_t* hfData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
+            hfData->yVel                  = ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->yVel;
+            bb_setData(self->gameData->entityManager.activeBooster, hfData, HEAVY_FALLING_DATA);
+            self->gameData->entityManager.activeBooster->drawFunction = NULL;
+            // this booster's grabby hand will destroy itself next time in it's own update loop.
+
+
+            self->gameData->entityManager.activeBooster = NULL;
+            uint8_t boosterIdx = 0;
+            while (boosterIdx < 3)
+            {
+                if (self->gameData->entityManager.boosterEntities[boosterIdx]->currentAnimationFrame != 41)
+                {
+                    break;
+                }
+                boosterIdx++;
+            }
+            self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
+
+            bb_destroyEntity(self, false);
+            bb_startGarbotnikCloningTalk(self->gameData->entityManager.deathDumpster);
+        }
+        else
+        {
+            // exit the game
+            self->gameData->exit = true;
         }
     }
 }
@@ -5134,8 +5141,10 @@ void bb_freeDialogueData(bb_dialogueData_t* dData)
     for (int i = 0; i < dData->numStrings; i++)
     {
         heap_caps_free(dData->strings[i]); // Free each string
+        heap_caps_free(dData->characters[i]); // Also free each character string
     }
     heap_caps_free(dData->strings); // Free the array of string pointers
+    heap_caps_free(dData->characters);
     heap_caps_free(dData);          // Free the struct itself
 }
 
