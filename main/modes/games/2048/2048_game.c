@@ -84,10 +84,21 @@ void t48_gameInit(t48_t* t48, bool newGame)
     memset(t48->board, 0, sizeof(t48->board));
 
     // Load new game if set
-    // TODO: Initialize game from board
     if (newGame)
     {
+        // Initialize game from board
         t48->score = t48->sd.score;
+        for (int idx = 0; idx < T48_GRID_SIZE; idx++)
+        {
+            for (int idx2 = 0; idx2 < T48_GRID_SIZE; idx2++)
+            {
+                // Initialize tiles so they show up
+                t48cell_t* cell           = &t48->board[idx][idx2];
+                cell->value               = t48->sd.board[idx][idx2];
+                cell->drawnTiles[0].value = t48->sd.board[idx][idx2];
+                cell->drawnTiles[1].value = 0;
+            }
+        }
     }
     else
     {
@@ -310,9 +321,19 @@ void t48_gameInput(t48_t* t48, buttonBit_t button)
         {
             if (t48->paused)
             {
-                // TODO: Save board
+                // Save board
+                for (int idx = 0; idx < T48_GRID_SIZE; idx++)
+                {
+                    for (int idx2 = 0; idx2 < T48_GRID_SIZE; idx2++)
+                    {
+                        t48->sd.board[idx][idx2] = t48->board[idx][idx2].value;
+                    }
+                }
+                // Save score
                 t48->sd.score = t48->score;
+                // Write out
                 writeNvsBlob(nvsSaved2048, &t48->sd, sizeof(t48GameSaveData_t));
+                // Exit
                 t48->state  = T48_START_SCREEN;
                 t48->paused = false;
             }
