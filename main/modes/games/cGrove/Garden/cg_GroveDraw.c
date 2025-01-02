@@ -38,7 +38,7 @@ static const char slotEmpty[]      = "No Chowa in this slot";
 static const char hatchingEgg[]    = "An egg is incubating!";
 static const char confirmDefault[] = "Press A to go back, press B to confirm";
 static const char abandonChowa[]   = "Release Chowa";
-static const char startGame[]      = "Press start to open the grove!";
+static const char startGame[]      = "Press Pause to open the grove!";
 
 static const char* tutorialText[]
     = {"Welcome",
@@ -51,8 +51,6 @@ static const char* tutorialText[]
        "When using the C Stick, the down and right arrow keys mimic the A and B keys respectively.",
        "Donuts",
        "The golden donuts are the main currency for Chowa. They appear randomly, snag them with A when you see them.",
-       "Guests",
-       "Once you've invited some guests over, they will also appear in the garden.",
        "Grove Menu",
        "Press start to access the menu. Here you can buy and sell items, take items from the inventory and put them in "
        "the garden, and manage who's in the Grove.",
@@ -470,8 +468,8 @@ void cg_drawGroveTutorial(cGrove_t* cg)
         case 0:
         {
             // Draw the welcome screen
-            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][13],
-                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][13].h)) >> 1, 100, 3, 3);
+            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][26],
+                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][26].h)) >> 1, 100, 3, 3);
             break;
         }
         case 1:
@@ -496,21 +494,7 @@ void cg_drawGroveTutorial(cGrove_t* cg)
                                 3.0);
             break;
         }
-        case 4:
-        {
-            // Guests
-            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30],
-                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30].h) - 70) >> 1, 100, 3, 3);
-            drawWsgSimpleScaled(&cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30],
-                                (TFT_WIDTH - (3 * cg->chowaWSGs[CG_KING_DONUT][CG_CHILD][30].h) + 70) >> 1, 100, 3, 3);
-            break;
-        }
         case 5:
-        {
-            // Menu
-            break;
-        }
-        case 6:
         {
             // Getting started
             drawWsgSimpleScaled(&cg->grove.eggs[0], (TFT_WIDTH - (4 * cg->grove.eggs[0].w)) >> 1, 110, 4.0, 4.0);
@@ -525,7 +509,7 @@ void cg_drawGroveTutorial(cGrove_t* cg)
     {
         drawWsgSimple(&cg->arrow, 8, 180);
     }
-    if (cg->grove.tutorialPage != 6)
+    if (cg->grove.tutorialPage != 5)
     {
         drawWsg(&cg->arrow, 8, 200, false, true, 0);
     }
@@ -807,16 +791,18 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     c->frameTimer = 0;
                     c->animFrame  = (c->animFrame + 1) % 4;
                 }
-                bool flip = false;
                 vec_t temp;
                 // Check if in the water
                 if (rectRectIntersection(c->aabb, cg->grove.waterBoundary, &temp))
                 {
                     if (c->angle <= 270 && c->angle > 90)
                     {
-                        flip = true;
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SWIM_LEFT, c->animFrame);
                     }
-                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SWIM, c->animFrame);
+                    else
+                    {
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_SWIM_RIGHT, c->animFrame);
+                    }
                 }
                 else
                 {
@@ -826,8 +812,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     }
                     else if (c->angle > 135 && c->angle <= 225)
                     {
-                        spr  = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, c->animFrame);
-                        flip = true;
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_LEFT, c->animFrame);
                     }
                     else if (c->angle > 225 && c->angle <= 315)
                     {
@@ -835,10 +820,10 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     }
                     else
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, c->animFrame);
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_RIGHT, c->animFrame);
                     }
                 }
-                drawWsg(spr, xOffset, yOffset, flip, false, 0);
+                drawWsgSimple(spr, xOffset, yOffset);
                 break;
             }
             case CHOWA_SING:
@@ -907,17 +892,38 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 {
                     case 0:
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PUNCH, c->animFrame);
+                        if (c->flip)
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PUNCH_LEFT, c->animFrame);
+                        }
+                        else
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_PUNCH_RIGHT, c->animFrame);
+                        }
                         break;
                     }
                     case 1:
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_KICK, c->animFrame);
+                        if (c->flip)
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_KICK_LEFT, c->animFrame);
+                        }
+                        else
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_KICK_RIGHT, c->animFrame);
+                        }
                         break;
                     }
                     case 2:
                     {
-                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_HEADBUTT, c->animFrame);
+                        if (c->flip)
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_HEADBUTT_LEFT, c->animFrame);
+                        }
+                        else
+                        {
+                            spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_HEADBUTT_RIGHT, c->animFrame);
+                        }
                         break;
                     }
                 }
@@ -957,7 +963,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                     c->frameTimer = 0;
                     c->animFrame  = (c->animFrame + 1) % 4;
                 }
-                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_SIDE, 0);
+                spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_WALK_RIGHT, 0);
                 drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
                 // Draw Speech bubbles. Only animate if talking to other Chowa
                 if (!c->hasPartner)
@@ -1020,8 +1026,15 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                 }
                 else if (throwing)
                 {
-                    spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_THROW, c->animFrame);
-                    drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
+                    if (c->flip)
+                    {
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_THROW_LEFT, c->animFrame);
+                    }
+                    else
+                    {
+                        spr = cg_getChowaWSG(cg, c->chowa, CG_ANIM_THROW_RIGHT, c->animFrame);
+                    }
+                    drawWsgSimple(spr, xOffset, yOffset);
                     break;
                 }
                 else if (sword)

@@ -2,7 +2,7 @@
  * @file cg_Typedef.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Types for Chowa Grove
- * @version 0.1
+ * @version 1.0
  * @date 2024-09-19
  *
  * @copyright Copyright (c) 2024
@@ -35,12 +35,6 @@ typedef struct
     int8_t numOfUses;          ///< Number of uses before being used up
 } cgItem_t;
 
-typedef struct
-{
-    char name[CG_MAX_STR_LEN]; ///< Name
-    wsg_t* spr;                ///< Sprite
-} cgWearable_t;
-
 //==============================================================================
 // Chowa
 //==============================================================================
@@ -67,29 +61,42 @@ typedef enum
 {
     // Emotes
     CG_ANIM_ANGRY,
+    CG_ANIM_CONFUSED,
+    CG_ANIM_CRY,
     CG_ANIM_DISGUST,
     CG_ANIM_FEAR,
     CG_ANIM_FLAIL,
     CG_ANIM_GIVE_UP,
     CG_ANIM_HAPPY,
     CG_ANIM_SAD,
+    CG_ANIM_SHOCKED,
 
     // Moving
-    CG_ANIM_WALK_DOWN,
-    CG_ANIM_WALK_SIDE,
     CG_ANIM_WALK_UP,
-    CG_ANIM_SWIM,
+    CG_ANIM_WALK_DOWN,
+    CG_ANIM_WALK_RIGHT,
+    CG_ANIM_WALK_LEFT,
+    CG_ANIM_SWIM_RIGHT,
+    CG_ANIM_SWIM_LEFT,
     CG_ANIM_CLIMB,
+    CG_ANIM_JUMP,
 
     // Falling
-    CG_ANIM_FALL_SIDE,
-    CG_ANIM_FALL_UP,
-    CG_ANIM_FALL_DOWN,
+    CG_ANIM_TRIP_UP,
+    CG_ANIM_TRIP_RIGHT,
+    CG_ANIM_TRIP_LEFT,
 
     // Attacking
-    CG_ANIM_HEADBUTT,
-    CG_ANIM_KICK,
-    CG_ANIM_PUNCH,
+    CG_ANIM_HEADBUTT_RIGHT,
+    CG_ANIM_HEADBUTT_LEFT,
+    CG_ANIM_KICK_RIGHT,
+    CG_ANIM_KICK_LEFT,
+    CG_ANIM_PUNCH_RIGHT,
+    CG_ANIM_PUNCH_LEFT,
+
+    // Damage
+    CG_ANIM_HIT_RIGHT,
+    CG_ANIM_HIT_LEFT,
 
     // Using Items
     CG_ANIM_DRAW,
@@ -97,7 +104,8 @@ typedef enum
     CG_ANIM_GIFT,
     CG_ANIM_READ,
     CG_ANIM_SWORD,
-    CG_ANIM_THROW,
+    CG_ANIM_THROW_RIGHT,
+    CG_ANIM_THROW_LEFT,
 
     // Other
     CG_ANIM_DANCE,
@@ -124,9 +132,9 @@ typedef enum
 
 typedef enum
 {
-    CG_NORMAL,
     CG_KING_DONUT,
     CG_NUM_TYPES, ///< Move if more get added
+    CG_NORMAL,
     CG_CHO,
     CG_RED_LUMBERJACK,
     CG_GREEN_LUMBERJACK,
@@ -155,18 +163,6 @@ typedef struct
 } cgChowa_t;
 
 //==============================================================================
-// NPCs
-//==============================================================================
-
-typedef struct
-{
-    char name[CG_MAX_STR_LEN]; ///< Name of the NPC
-    wsg_t* icon;               ///< Icons for dialogue
-    // Text for competitions
-    cgChowa_t chowa[3]; ///< NPCs CHowa
-} cgNPC_t;
-
-//==============================================================================
 // Submode generics
 //==============================================================================
 
@@ -193,18 +189,18 @@ typedef enum
     CG_HARD,
     CG_VERY_HARD,
     CG_EXPERT,
+    CG_NUM_DIFF, // For loops
 } cgAIDifficulty_t;
 
 // Structs ==============================
 typedef struct
 {
-    char matchTitle[CG_MAX_STR_LEN];     ///< Title of the match
-    char playerNames[2][CG_MAX_STR_LEN]; ///< Player names
-    char chowaNames[6][CG_MAX_STR_LEN];  ///< Up to 6 Chowa participate
-    cgColorType_t colorType[6];          ///< Type of Chowa
-    wsgPalette_t palettes[6];            ///< Colors of the Chowa for drawing
-    cgWinLoss_t result[3];               ///< Results of all three matches
-    int16_t timer[3];                    ///< Time per round in seconds
+    bool active;                     ///< If record contains real data
+    char matchTitle[CG_MAX_STR_LEN]; ///< Title of the match
+    cgChowa_t* chowa[6];             ///< Chowa Data
+    cgWinLoss_t result[3];           ///< Results of all three matches
+    int16_t timer[3];                ///< Time per round in seconds
+    int8_t numRounds;                ///< How many rounds are in the record
 } cgRecord_t;
 
 //==============================================================================
@@ -392,12 +388,9 @@ typedef enum
 {
     CG_SPAR_SPLASH,
     CG_SPAR_MENU,
-    CG_SPAR_SCHEDULE,
     CG_MATCH_PREP,
     CG_SPAR_MATCH,
-    CG_SPAR_MATCH_RESULTS,
     CG_SPAR_TUTORIAL,
-    CG_SPAR_BATTLE_RECORD,
 } cgSparState_t;
 
 typedef enum
@@ -438,13 +431,20 @@ typedef struct
     cgChowa_t* chowa;              ///< Chowa object
     cgMatchChowaState_t currState; ///< Current Chowa state
     cgRPSState_t currMove;         ///< Current selected move
-    int16_t maxStamina;            ///< Max stamina of each Chowa
-    int16_t stamina;               ///< Stamina of both Chowa for stamina bars
-    int16_t readiness;             ///< How ready each Chowa is
-    int16_t HP;                    ///< Current HP for this Chowa
-    int16_t maxHP;                 ///< Max HP for this Chowa
-    int32_t updateTimer;           ///< Used for readiness updates
-    bool doneAnimating;            ///< Currently animating
+
+    // Status bars
+    int16_t maxStamina;  ///< Max stamina of each Chowa
+    int16_t stamina;     ///< Stamina of both Chowa for stamina bars
+    int16_t readiness;   ///< How ready each Chowa is
+    int16_t HP;          ///< Current HP for this Chowa
+    int16_t maxHP;       ///< Max HP for this Chowa
+    int32_t updateTimer; ///< Used for readiness updates
+
+    // Animations
+    bool doneAnimating; ///< Currently animating
+    int64_t animTimer;  ///< Used to count miliseconds for animations
+    int8_t animFrame;   ///< Current frame of the animation
+    int8_t hOffset;     ///< Offset for animations
 } cgSparChowaData_t;
 
 typedef struct
@@ -461,21 +461,17 @@ typedef struct
 typedef struct
 {
     // Data
-    char matchName[CG_MAX_STR_LEN]; ///< Name of the current match
-    int8_t round;                   ///< The round of the fight
+    cgRecord_t data;            ///< Match data
+    cgSparChowaData_t chowa[2]; ///< Extended Chowa object
+    int8_t round;               ///< The round of the fight
 
     // State
-    cgSparChowaData_t chowaData[2]; ///< Extended Chowa data
-    bool paused;                    ///< If the match is paused
-    bool online;                    ///< If match is online
-    bool resolve;                   ///< Marks that the match should be resolved
+    bool paused;  ///< If the match is paused
+    bool resolve; ///< Marks that the match should be resolved
+    bool done;    ///< If match is finished
 
     // AI
     cgSparAI_t ai;
-
-    // Match ended
-    bool done;               ///< If match if finished
-    cgWinLoss_t finalResult; ///< The ultimate result of the match
 
     // Match time
     int64_t usTimer; ///< Microsecond timer
@@ -483,56 +479,45 @@ typedef struct
     int16_t maxTime; ///< Max time allowed for the round
 
     // Animations
-    bool animDone; ///< If Animation is done
-    bool wasCrit;  ///< If Chowa was hit while unready
+    bool animDone;        ///< If Animation is done
+    int64_t endGameTimer; ///< Accumulates until game ends
 } cgMatch_t;
 
 typedef struct
 {
     // Assets
-    // Audio
-    // - Combat sounds
-    //   - Pain sounds
-    //   - Impact sounds
-
     // BG Sprites
     wsg_t dojoBG;       ///< Dojo Background image
-    wsg_t* dojoBGItems; ///< Dojo BG items
-    // UI Sprites
-    // - Punch icon
-    // - Kick icon
-    // - Dodge
-    // - Headbutt
-
-    // Fonts
-    /* font_t sparTitleFont;        ///< Font used for larger text
-    font_t sparTitleFontOutline; ///< Outline for title font
-    font_t sparRegFont;          ///< Regular text */
-
+    wsg_t* attackIcons; ///< Attack and dodge icons
     // Music
     midiFile_t sparBGM; ///< Music
+    midiFile_t MenuBGM; ///< Other music
 
     // Spar
     cgSparState_t state; ///< Active state
     int64_t timer;       ///< Timer for animations
+    int8_t animFrame;    ///< Frame for animations
     bool toggle;         ///< Toggles on timer
 
     // Menu
     menu_t* sparMenu;              ///< Menu object
     menuManiaRenderer_t* renderer; ///< Renderer
 
+    // Match setup
+    int8_t numActiveChowa;                               ///< Number of active chowa
+    int8_t activeChowaIdxs[CG_MAX_CHOWA];                ///< Indexes of active chowa
+    char activeChowaNames[CG_MAX_CHOWA][CG_MAX_STR_LEN]; ///< Names of Chowa currently active
+    int8_t optionSelect;                                 ///< Currently selected option
+    int8_t chowaSelect;                                  ///< Currently selected Chowa
+    int8_t aiSelect;                                     ///< Currently selected AI difficulty
+    int8_t timerSelect;                                  ///< Currently selected timer length
+
     // Match
-    cgMatch_t match; ///< Match object
+    cgMatch_t match;    ///< Match object
+    cgChowa_t opponent; ///< Current opponent
 
-    // Battle Record
-    cgRecord_t sparRecord[CG_SPAR_MAX_RECORDS]; ///< List of battle records
-    int8_t recordSelect;                        ///< Which record is currently active
-    int8_t roundSelect;                         ///< Which round of the record is currently selected
-
-    // Input
-
-    // LEDs
-
+    // Tutorial
+    int8_t tutorialPage; ///< The page of the tutorial
 } cgSpar_t;
 
 //==============================================================================
@@ -545,8 +530,6 @@ typedef enum
     CG_MAIN_MENU,
     CG_GROVE,
     CG_SPAR,
-    CG_RACE,
-    CG_PERFORMANCE,
     CG_FIRST_RUN,
     CG_ERASE,
 } cgMainState_t;
@@ -555,7 +538,7 @@ typedef enum
 typedef struct
 {
     bool touch;      ///< Touch controls for Grove
-    bool online;     ///< If online features are enabled
+    int8_t speed;    ///< If online features are enabled
     bool itemText;   ///< If item text should be drawn
     bool chowaNames; ///< If Chowa's show have their names drawn in Grove
 } cgSettings_t;
@@ -577,7 +560,8 @@ typedef struct
     // NPC sprites
 
     // Audio
-    midiFile_t menuBGM;
+    midiPlayer_t* mPlayer; ///< Midi Player
+    midiFile_t menuBGM;    ///< Menu BGM
 
     // Modes
     cgGrove_t grove; ///< Garden data
@@ -588,11 +572,10 @@ typedef struct
     bool unload;         ///< if the state is ready to unload
 
     // title screen
-    bool titleActive;  ///< If title screen is active
-    int64_t timer;     ///< Timer for animations
-    vec_t cloudPos;    ///< Position of the cloud
-    int8_t animFrame;  ///< Current frame of the animation;
-    int8_t titleFrame; ///< Frame of title animation
+    bool titleActive; ///< If title screen is active
+    int64_t timer;    ///< Timer for animations
+    int16_t cloudPos; ///< Position of the cloud
+    int8_t animFrame; ///< Current frame of the animation;
 
     // Menu
     menu_t* menu;                  ///< Main menu

@@ -189,8 +189,8 @@ void drawTiles(sokoLevel_t* level)
 {
     SETUP_FOR_TURBO();
     uint16_t scale = level->levelScale;
-    uint16_t ox = (TFT_WIDTH/2)-((level->width)*scale/2);
-    uint16_t oy = (TFT_HEIGHT/2)-((level->height)*scale/2);
+    int16_t ox = (TFT_WIDTH/2)-((level->width)*scale/2);
+    int16_t oy = (TFT_HEIGHT/2)-((level->height)*scale/2);
 
     for (size_t x = 0; x < level->width; x++)
     {

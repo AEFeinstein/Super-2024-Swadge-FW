@@ -2,7 +2,7 @@
  * @file cg_spar.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Provides the sparring implementation for Chowa Grove
- * @version 0.1
+ * @version 0.5.0
  * @date 2024-09-19
  *
  * @copyright Copyright (c) 2024
