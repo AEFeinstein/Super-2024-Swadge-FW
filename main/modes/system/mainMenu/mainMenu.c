@@ -168,26 +168,26 @@ static void mainMenuEnterMode(void)
 #ifdef CONFIG_FACTORY_TEST_NORMAL
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
     addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
     addSingleItemToMenu(mainMenu->menu, cGroveMode.modeName);
     addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
-    addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
     addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
     addSingleItemToMenu(mainMenu->menu, sequencerMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
-    addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
     addSingleItemToMenu(mainMenu->menu, introMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
