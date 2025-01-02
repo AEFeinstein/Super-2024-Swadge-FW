@@ -66,31 +66,33 @@ enum bb_direction_t
 
 typedef struct
 {
-    uint8_t primingEffect; //fills up the background with a color
-    uint8_t selectedWile;   //the index of the wile that is currently selected.
-    uint8_t blinkTimer;     //a timer to blink the left and right triangles. Don't render when it's less than 126.
-    int32_t marqueeTimer;   //increments always for the marquee effect.
+    uint8_t primingEffect; // fills up the background with a color
+    uint8_t selectedWile;  // the index of the wile that is currently selected.
+    uint8_t blinkTimer;    // a timer to blink the left and right triangles. Don't render when it's less than 126.
+    int32_t marqueeTimer;  // increments always for the marquee effect.
 } bb_loadoutSelectScreenData_t;
 
 struct bb_wileData_t
 {
-    char name[22];//FIX ME!!! Figure out what the shortest name is later.
-    char description[149];//FIX ME!!! Figure out what the shortest description is later.
-    uint8_t cost; // the number of donuts required to purchase the wile.
-    bool purchased; //set to true when donuts have been paid.
-    uint8_t cooldown; // the number of seconds to wait before the wile can be called again.
-    enum bb_direction_t callSequence[5]; // the sequence of directional button presses while holding 'B' to call the wile.
+    char name[22];         // FIX ME!!! Figure out what the shortest name is later.
+    char description[149]; // FIX ME!!! Figure out what the shortest description is later.
+    uint8_t cost;          // the number of donuts required to purchase the wile.
+    bool purchased;        // set to true when donuts have been paid.
+    uint8_t cooldown;      // the number of seconds to wait before the wile can be called again.
+    enum bb_direction_t
+        callSequence[5]; // the sequence of directional button presses while holding 'B' to call the wile.
     bb_callbackFunction_t wileFunction; // the function that is called after the wile is thrown
 };
 
 struct bb_loadoutData_t
 {
-    uint8_t primaryWileIdx; //index into the array of all wiles.
+    uint8_t primaryWileIdx; // index into the array of all wiles.
     uint8_t secondaryWileIdx;
-    uint32_t primaryTimer; //decrements to zero. Stays at zero until the wile is called.
-    uint32_t secondaryTimer; //decrements to zero. Stays at zero until the wile is called.
+    uint32_t primaryTimer;   // decrements to zero. Stays at zero until the wile is called.
+    uint32_t secondaryTimer; // decrements to zero. Stays at zero until the wile is called.
     struct bb_wileData_t allWiles[7];
-    enum bb_direction_t playerInputSequence[5]; // the sequence of directional button presses while holding 'B' to call the wile.
+    enum bb_direction_t
+        playerInputSequence[5]; // the sequence of directional button presses while holding 'B' to call the wile.
 };
 
 struct bb_radarScreenData_t
@@ -122,14 +124,14 @@ enum bb_garbotnikUpgrade_t
 
 struct bb_garbotnikUpgradeScreenData_t
 {
-    uint8_t upgrades;   // the garbotnik upgrade bools are bitpacked into this
-                        // 0b1       reduced fuel consumption  1 << 0
-                        // 0b10      faster fire rate          1 << 1
-                        // 0b100     more digging strength     1 << 2
-                        // 0b1000    more tow cables           1 << 3
-                        // 0b10000   increase max ammo         1 << 4
-                        // 0b100000  more choices              1 << 5
-                        // 0b1000000 bug whisperer             1 << 6
+    uint8_t upgrades;  // the garbotnik upgrade bools are bitpacked into this
+                       // 0b1       reduced fuel consumption  1 << 0
+                       // 0b10      faster fire rate          1 << 1
+                       // 0b100     more digging strength     1 << 2
+                       // 0b1000    more tow cables           1 << 3
+                       // 0b10000   increase max ammo         1 << 4
+                       // 0b100000  more choices              1 << 5
+                       // 0b1000000 bug whisperer             1 << 6
     int8_t choices[3]; // the choices presented to the player. -1 means no choice.
 };
 

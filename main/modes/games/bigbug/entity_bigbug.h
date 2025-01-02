@@ -54,8 +54,6 @@ typedef enum
     SPACE_LASER_DATA,
 } bb_data_type_t;
 
-
-
 //==============================================================================
 // Structs
 //==============================================================================
@@ -86,7 +84,7 @@ typedef struct
 
     uint8_t activeWile;
 
-    uint8_t dragShift; //typically 17 or 19 with the atmospheric atomizer.
+    uint8_t dragShift; // typically 17 or 19 with the atmospheric atomizer.
 } bb_garbotnikData_t;
 
 typedef struct
@@ -100,8 +98,8 @@ typedef struct
 typedef struct // parent class
 {
     uint8_t flags; // bitpacked flags for various things.
-                   //0b00000001  // face left. Flip the sprite if true
-                   //0b00000010  // isTethered.
+                   // 0b00000001  // face left. Flip the sprite if true
+                   // 0b00000010  // isTethered.
     uint8_t speed;       // randomized on creation. Used for walking or flying.
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
@@ -110,21 +108,21 @@ typedef struct // parent class
 typedef struct // child class
 {
     uint8_t flags; // bitpacked flags for various things.
-                   //0b00000001  // face left. Flip the sprite if true
-                   //0b00000010  // isTethered.
+                   // 0b00000001  // face left. Flip the sprite if true
+                   // 0b00000010  // isTethered.
     uint8_t speed;       // randomized on creation. Used for walking or flying.
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
     //-----------------------------------------------
     enum bb_direction_t gravity; // to walk on the walls & ceiling: local gravity switches
-    uint8_t fallSpeed;      // increments in free fall
+    uint8_t fallSpeed;           // increments in free fall
 } bb_buData_t;
 
 typedef struct // child class
 {
     uint8_t flags; // bitpacked flags for various things.
-                   //0b00000001  // face left. Flip the sprite if true
-                   //0b00000010  // isTethered.
+                   // 0b00000001  // face left. Flip the sprite if true
+                   // 0b00000010  // isTethered.
     uint8_t speed;       // randomized on creation. Used for walking or flying.
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
@@ -157,7 +155,7 @@ typedef struct
 
 typedef struct
 {
-    int32_t yVel;//FINISH ME!!! maybe get away with int16_t
+    int32_t yVel; // FINISH ME!!! maybe get away with int16_t
 } bb_heavyFallingData_t;
 
 typedef struct
@@ -167,8 +165,8 @@ typedef struct
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
     uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
-                     // and decrements steadily over time. So it serves to detect when he is steadily sitting
-                     // on the ground and trigger a game over.
+                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                      // on the ground and trigger a game over.
 } bb_physicsData_t;
 
 typedef struct
@@ -178,9 +176,9 @@ typedef struct
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
     uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
-                     // and decrements steadily over time. So it serves to detect when he is steadily sitting
-                     // on the ground and trigger a game over.
-    //child attributes
+                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                      // on the ground and trigger a game over.
+    // child attributes
     uint16_t lifetime;
 } bb_timedPhysicsData_t;
 
@@ -191,15 +189,14 @@ typedef struct
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
     uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
-                     // and decrements steadily over time. So it serves to detect when he is steadily sitting
-                     // on the ground and trigger a game over.
-    //child attributes
-    int16_t targetY; //The y position to reach before stopping.
+                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                      // on the ground and trigger a game over.
+    // child attributes
+    int16_t targetY; // The y position to reach before stopping.
     uint16_t lifetime;
     bool facingRight;
-    int8_t attacking; //janky way to overide the animation to drilling when colliding with a bug. Decrements to zero.
+    int8_t attacking; // janky way to overide the animation to drilling when colliding with a bug. Decrements to zero.
 } bb_drillBotData_t;
-
 
 typedef struct
 {
@@ -208,13 +205,12 @@ typedef struct
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
     uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
-                     // and decrements steadily over time. So it serves to detect when he is steadily sitting
-                     // on the ground and trigger a game over.
-    //new attributes
+                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                      // on the ground and trigger a game over.
+    // new attributes
     uint16_t lifetime;
     uint8_t wileIdx; // the index of the wile to activate.
-}
-bb_wileData_t;
+} bb_wileData_t;
 
 typedef struct
 {
@@ -263,11 +259,11 @@ typedef struct
 typedef struct
 {
     bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
-    bb_spriteDef_t reward; // The sprite to spawn when the food cart is destroyed.
-    bb_entity_t* partner;  // the other piece of the food cart
-    bool isCached;         // tracking this to only unload sprites when both pieces are cached.
-    int8_t damageEffect;   // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the
-                           // zero animation frame because the cart background gets not graphical effect.
+    bb_spriteDef_t reward;       // The sprite to spawn when the food cart is destroyed.
+    bb_entity_t* partner;        // the other piece of the food cart
+    bool isCached;               // tracking this to only unload sprites when both pieces are cached.
+    int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the
+                         // zero animation frame because the cart background gets not graphical effect.
 } bb_foodCartData_t;
 
 typedef struct
@@ -311,14 +307,14 @@ typedef struct
 typedef struct
 {
     enum bb_direction_t arena; // The direction to dig towards the car fight arena.
-    uint8_t numberOfDigs; // Increments with each dig. Destroy self at 2. That's three digs when you count 0.
+    uint8_t numberOfDigs;      // Increments with each dig. Destroy self at 2. That's three digs when you count 0.
 } bb_jankyBugDigData_t;
 
 typedef struct
 {
     vec_t vel;
-    int16_t targetY; //The y position to reach before stopping.
-    int16_t angle;   //The angle to rotate the sprite. Calculate once at creation.
+    int16_t targetY; // The y position to reach before stopping.
+    int16_t angle;   // The angle to rotate the sprite. Calculate once at creation.
 } bb_501kgData_t;
 
 typedef struct
@@ -450,7 +446,6 @@ void bb_updateTimedPhysicsObject(bb_entity_t* self);
 void bb_updatePacifier(bb_entity_t* self);
 void bb_updateSpaceLaser(bb_entity_t* self);
 
-
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawStuckHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -519,7 +514,6 @@ void bb_playCarAlarm(bb_entity_t* self);
 void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs);
-
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth);

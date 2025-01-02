@@ -8,7 +8,7 @@
     #define SPIRAM_SIZE          2093904
     #define SPIRAM_LARGEST_BLOCK 2064384
 
-    //#define MEMORY_DEBUG_PRINT
+    // #define MEMORY_DEBUG_PRINT
     #ifdef MEMORY_DEBUG_PRINT
         #define md_printf(...)     printf(__VA_ARGS__)
         #define md_fprintf(f, ...) fprintf(f, __VA_ARGS__)

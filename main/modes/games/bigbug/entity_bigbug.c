@@ -75,7 +75,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     {
         case BB_CAR:
         {
-            if(self->currentAnimationFrame == 59)
+            if (self->currentAnimationFrame == 59)
             {
                 freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[59]);
             }
@@ -115,8 +115,9 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         case BB_FOOD_CART:
         {
             bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
-            //The food cart needs to track its own caching status to communicate just-in-time loading between both pieces.
-            fcData->isCached          = caching;
+            // The food cart needs to track its own caching status to communicate just-in-time loading between both
+            // pieces.
+            fcData->isCached = caching;
             if (fcData->partner->active == false || ((bb_foodCartData_t*)fcData->partner->data)->isCached)
             {
                 for (int frame = 0; frame < 2; frame++)
@@ -163,7 +164,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
                 bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
                 freeWsg(&dData->sprite);
                 freeWsg(&dData->spriteNext);
-                bb_freeDialogueData(dData);//false because struct gets freed after this switch statement.
+                bb_freeDialogueData(dData); // false because struct gets freed after this switch statement.
                 break;
             }
             case GAME_OVER_DATA:
@@ -193,7 +194,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         }
         heap_caps_free(self->data);
     }
-    self->data = NULL;
+    self->data     = NULL;
     self->dataType = NULL_DATA;
 
     bb_clearCollisions(self, caching);
@@ -323,7 +324,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         self->pos.y += (rData->yVel * self->gameData->elapsedUs) >> 17;
     }
-    else //this will fake the starfield scrolling during character talk.
+    else // this will fake the starfield scrolling during character talk.
     {
         self->gameData->camera.velocity.y = rData->yVel >> 6;
         // iterate all entities
@@ -338,7 +339,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -36008)//reached the death dumpster
+    if (self->pos.y < -36008) // reached the death dumpster
     {
         self->pos.y = -36008;
         rData->yVel = 0;
@@ -352,19 +353,18 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
         self->gameData->day++;
-        //if it is trash day
+        // if it is trash day
         if (self->gameData->day % 7 == 2 || self->gameData->day % 7 == 5 || self->gameData->day % 7 == 0)
         {
             bb_deactivateAllEntities(&self->gameData->entityManager, true);
             bb_generateWorld(&(self->gameData->tilemap));
         }
 
-
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-        if(self->gameData->day == 0)
+        if (self->gameData->day == 0)
         {
             bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
             bb_setCharacterLine(dData, 0, "Ovo", "Gaaaash dangit.");
@@ -384,7 +384,6 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
             dData->endDialogueCB = &bb_afterGarbotnikIntro;
             bb_setData(ovo, dData, DIALOGUE_DATA);
         }
-        
 
         self->gameData->entityManager.viewEntity = bb_createEntity(
             &(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
@@ -498,17 +497,17 @@ void bb_updatePhysicsObject(bb_entity_t* self)
     {
         return;
     }
-    if(hitInfo.normal.y == -1)
+    if (hitInfo.normal.y == -1)
     {
         pData->tileTime += 20;
-        if(pData->tileTime > 110)
+        if (pData->tileTime > 110)
         {
             pData->tileTime = 110;
         }
     }
     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
-    //keep the physics object within the bounds of the level.
+    // keep the physics object within the bounds of the level.
     if (self->pos.x < 256)
     {
         self->pos.x = 256;
@@ -572,9 +571,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     }
 
     gData->fire = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
-    if(gData->fire && gData->activeWile != 255)
+    if (gData->fire && gData->activeWile != 255)
     {
-        //Throw a wile!
+        // Throw a wile!
         bb_entity_t* wile = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, BB_WILE, 1,
                                             self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
 
@@ -585,27 +584,28 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             soundPlaySfx(&self->gameData->sfxHarpoon, 1);
 
             bb_wileData_t* wData = (bb_wileData_t*)wile->data;
-            wData->wileIdx = gData->activeWile;
+            wData->wileIdx       = gData->activeWile;
 
-            //set the cooldown for this wile
-            if(gData->activeWile == self->gameData->loadout.primaryWileIdx)
+            // set the cooldown for this wile
+            if (gData->activeWile == self->gameData->loadout.primaryWileIdx)
             {
-                self->gameData->loadout.primaryTimer = self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000;
+                self->gameData->loadout.primaryTimer
+                    = self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000;
             }
-            else if(gData->activeWile == self->gameData->loadout.secondaryWileIdx)
+            else if (gData->activeWile == self->gameData->loadout.secondaryWileIdx)
             {
-                self->gameData->loadout.secondaryTimer = self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown * 1000;
+                self->gameData->loadout.secondaryTimer
+                    = self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown * 1000;
             }
-            
 
-            //set the active wile to none (255).
+            // set the active wile to none (255).
             gData->activeWile = 255;
-            //clear the call sequence inputs.
-            for(int input = 0; input < 5; input++)
+            // clear the call sequence inputs.
+            for (int input = 0; input < 5; input++)
             {
                 self->gameData->loadout.playerInputSequence[input] = BB_NONE;
             }
-            
+
             int32_t x;
             int32_t y;
             getTouchCartesian(gData->phi, gData->r, &x, &y);
@@ -769,7 +769,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             drag = 10;
         }
         // Apply drag based on absolute value to smooth asymmetry
-        int32_t dragEffect = (drag * self->gameData->elapsedUs) >> gData->dragShift;//typically 17, or 21 with atmospheric atomizer
+        int32_t dragEffect
+            = (drag * self->gameData->elapsedUs) >> gData->dragShift; // typically 17, or 21 with atmospheric atomizer
 
         // Adjust velocity symmetrically for both positive and negative values
         if (gData->vel.x > 0)
@@ -833,7 +834,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     {
         self->pos.y = -36368;
     }
-    
 
     // tow cable stuff
     // apply spring force and unhook far towed entities
@@ -841,21 +841,21 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     while (current != NULL)
     {
         bb_entity_t* curEntity = (bb_entity_t*)current->val;
-        if(curEntity->active == false)
+        if (curEntity->active == false)
         {
             node_t* next = current->next;
             removeEntry(&gData->towedEntities, current);
             current = next;
             continue;
         }
-        vec_t toFrom           = subVec2d(curEntity->pos, self->pos);
-        int32_t dist           = sqMagVec2d(toFrom);
+        vec_t toFrom = subVec2d(curEntity->pos, self->pos);
+        int32_t dist = sqMagVec2d(toFrom);
         // if more than 100px away
         if (dist > 2560000)
         {
             // detach
             node_t* next = current->next;
-            //set the isTethered flag to false
+            // set the isTethered flag to false
             bb_bugData_t* bData = (bb_bugData_t*)curEntity->data;
             bData->flags &= ~0b10; // Clears the second least significant bit of the flags
             removeEntry(&gData->towedEntities, current);
@@ -885,7 +885,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t dampingForceY = (pData->vel.y - gData->vel.y) / DAMPING_CONSTANT;
 
             // Apply the force
-            if (curEntity->updateFunction == &bb_updatePhysicsObject || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA || curEntity->dataType == PHYSICS_DATA) // dead bug or donut or drill bot or wile
+            if (curEntity->updateFunction == &bb_updatePhysicsObject || curEntity->dataType == DRILL_BOT_DATA
+                || curEntity->dataType == WILE_DATA
+                || curEntity->dataType == PHYSICS_DATA) // dead bug or donut or drill bot or wile
             {
                 pData->vel.x += springForceX - dampingForceX;
                 pData->vel.y += springForceY - dampingForceY + 4;
@@ -900,28 +902,31 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
     }
 
-    //decrement the primary and secondary wile timers and wileNotification
-    if(self->gameData->loadout.primaryWileIdx != 255)
+    // decrement the primary and secondary wile timers and wileNotification
+    if (self->gameData->loadout.primaryWileIdx != 255)
     {
         self->gameData->loadout.primaryTimer -= self->gameData->elapsedUs >> 10;
-        //catch underflow, set to zero.
-        if(self->gameData->loadout.primaryTimer > self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000)
+        // catch underflow, set to zero.
+        if (self->gameData->loadout.primaryTimer
+            > self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000)
         {
             self->gameData->loadout.primaryTimer = 0;
         }
     }
-    if(self->gameData->loadout.secondaryWileIdx != 255)
+    if (self->gameData->loadout.secondaryWileIdx != 255)
     {
         self->gameData->loadout.secondaryTimer -= self->gameData->elapsedUs >> 10;
-        //catch underflow, set to zero.
-        if(self->gameData->loadout.secondaryTimer > self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown  * 1000)
+        // catch underflow, set to zero.
+        if (self->gameData->loadout.secondaryTimer
+            > self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown * 1000)
         {
             self->gameData->loadout.secondaryTimer = 0;
         }
     }
 
     // if 'a' button down, tether another entity if it's close enough
-    if ((self->gameData->btnState & 0b10000) >> 4 && gData->towedEntities.length < self->gameData->GarbotnikStat_maxTowCables)
+    if ((self->gameData->btnState & 0b10000) >> 4
+        && gData->towedEntities.length < self->gameData->GarbotnikStat_maxTowCables)
     {
         int16_t best_i     = -1;     // negative 1 means no valid candidates found
         uint16_t best_dist = 0xFFFF; // the distance of the best_i
@@ -929,7 +934,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         {
             bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
             // if it is a bug or a donut
-            if ((curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13) || curEntity->spriteIndex == BB_DONUT || curEntity->spriteIndex == BB_WILE || curEntity->spriteIndex == BB_DRILL_BOT || curEntity->spriteIndex == BB_AMMO_SUPPLY || curEntity->spriteIndex == BB_PACIFIER)
+            if ((curEntity->spriteIndex >= 8 && curEntity->spriteIndex <= 13) || curEntity->spriteIndex == BB_DONUT
+                || curEntity->spriteIndex == BB_WILE || curEntity->spriteIndex == BB_DRILL_BOT
+                || curEntity->spriteIndex == BB_AMMO_SUPPLY || curEntity->spriteIndex == BB_PACIFIER)
             {
                 // if it is not already towed
                 bool isTowed = false;
@@ -966,153 +973,157 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             soundPlaySfx(&self->gameData->sfxTether, 0);
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
             bb_entity_t* tetheredEntity = &self->gameData->entityManager.entities[best_i];
-            if(tetheredEntity->dataType == BUGGO_DATA || tetheredEntity->dataType == BU_DATA)
+            if (tetheredEntity->dataType == BUGGO_DATA || tetheredEntity->dataType == BU_DATA)
             {
-                //set the isTethered flag to true
+                // set the isTethered flag to true
                 bb_bugData_t* bData = (bb_bugData_t*)tetheredEntity->data;
-                bData->flags = bData->flags | 0b10; //0b10 is the bitpacked isTethered flag
+                bData->flags        = bData->flags | 0b10; // 0b10 is the bitpacked isTethered flag
             }
-            else if(tetheredEntity->dataType == DRILL_BOT_DATA)
+            else if (tetheredEntity->dataType == DRILL_BOT_DATA)
             {
-                //tethering a drill bot will cause it to change direction
+                // tethering a drill bot will cause it to change direction
                 bb_drillBotData_t* dData = (bb_drillBotData_t*)tetheredEntity->data;
-                dData->facingRight = !dData->facingRight;
+                dData->facingRight       = !dData->facingRight;
             }
         }
     }
-    
+
     // if 'b' button down, handle wile call sequence logic
     if ((self->gameData->btnState & 0b100000) >> 5)
     {
         bool inputUpdated = false;
 
-        //if down was pressed
-        if((self->gameData->btnDownState & PB_DOWN)>>1)
+        // if down was pressed
+        if ((self->gameData->btnDownState & PB_DOWN) >> 1)
         {
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
-                if(self->gameData->loadout.playerInputSequence[i] == BB_NONE)
+                if (self->gameData->loadout.playerInputSequence[i] == BB_NONE)
                 {
                     self->gameData->loadout.playerInputSequence[i] = BB_DOWN;
-                    inputUpdated = true;
+                    inputUpdated                                   = true;
                     break;
                 }
-                else if(i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
+                else if (i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
                 {
                     inputUpdated = true;
                 }
             }
         }
-        //if left was pressed
-        else if((self->gameData->btnDownState & PB_LEFT)>>2)
+        // if left was pressed
+        else if ((self->gameData->btnDownState & PB_LEFT) >> 2)
         {
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
-                if(self->gameData->loadout.playerInputSequence[i] == BB_NONE)
+                if (self->gameData->loadout.playerInputSequence[i] == BB_NONE)
                 {
                     self->gameData->loadout.playerInputSequence[i] = BB_LEFT;
-                    inputUpdated = true;
+                    inputUpdated                                   = true;
                     break;
                 }
-                else if(i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
+                else if (i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
                 {
                     inputUpdated = true;
                 }
             }
         }
-        //if up was pressed
-        else if(self->gameData->btnDownState & PB_UP)
+        // if up was pressed
+        else if (self->gameData->btnDownState & PB_UP)
         {
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
-                if(self->gameData->loadout.playerInputSequence[i] == BB_NONE)
+                if (self->gameData->loadout.playerInputSequence[i] == BB_NONE)
                 {
                     self->gameData->loadout.playerInputSequence[i] = BB_UP;
-                    inputUpdated = true;
+                    inputUpdated                                   = true;
                     break;
                 }
-                else if(i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
+                else if (i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
                 {
                     inputUpdated = true;
                 }
             }
         }
-        //if down was pressed
-        else if((self->gameData->btnDownState & PB_RIGHT)>>3)
+        // if down was pressed
+        else if ((self->gameData->btnDownState & PB_RIGHT) >> 3)
         {
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
-                if(self->gameData->loadout.playerInputSequence[i] == BB_NONE)
+                if (self->gameData->loadout.playerInputSequence[i] == BB_NONE)
                 {
                     self->gameData->loadout.playerInputSequence[i] = BB_RIGHT;
-                    inputUpdated = true;
+                    inputUpdated                                   = true;
                     break;
                 }
-                else if(i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
+                else if (i == 4 && self->gameData->loadout.playerInputSequence[i] != BB_NONE)
                 {
                     inputUpdated = true;
                 }
             }
         }
-        if(inputUpdated)
+        if (inputUpdated)
         {
-            if(gData->activeWile != 255)
+            if (gData->activeWile != 255)
             {
-                //reset the player input sequence to BB_NONEs
-                for(int i = 0; i < 5; i++)
+                // reset the player input sequence to BB_NONEs
+                for (int i = 0; i < 5; i++)
                 {
                     self->gameData->loadout.playerInputSequence[i] = BB_NONE;
                 }
-                gData->activeWile = 255; //255 means no active wile.
+                gData->activeWile = 255; // 255 means no active wile.
             }
             else
             {
-                //validate the input aqainst the primary and secondary wile call sequences
-                int8_t primaryComparison = -2;
+                // validate the input aqainst the primary and secondary wile call sequences
+                int8_t primaryComparison   = -2;
                 int8_t secondaryComparison = -2;
-                if(self->gameData->loadout.primaryWileIdx != 255)
+                if (self->gameData->loadout.primaryWileIdx != 255)
                 {
-                    primaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence);
-                    if(primaryComparison == 1 && self->gameData->loadout.primaryTimer == 0)
+                    primaryComparison = bb_compareWileCallSequences(
+                        self->gameData->loadout.playerInputSequence,
+                        self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence);
+                    if (primaryComparison == 1 && self->gameData->loadout.primaryTimer == 0)
                     {
-                        //activate the primary wile
+                        // activate the primary wile
                         gData->activeWile = self->gameData->loadout.primaryWileIdx;
                     }
                 }
-                if(self->gameData->loadout.secondaryWileIdx != 255)
+                if (self->gameData->loadout.secondaryWileIdx != 255)
                 {
-                    secondaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence);
-                    if(secondaryComparison == 1 && self->gameData->loadout.secondaryTimer == 0)
+                    secondaryComparison = bb_compareWileCallSequences(
+                        self->gameData->loadout.playerInputSequence,
+                        self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence);
+                    if (secondaryComparison == 1 && self->gameData->loadout.secondaryTimer == 0)
                     {
-                        //activate the secondary wile
+                        // activate the secondary wile
                         gData->activeWile = self->gameData->loadout.secondaryWileIdx;
                     }
                 }
 
                 bool primaryFail = self->gameData->loadout.primaryWileIdx == 255;
-                if(!primaryFail)
+                if (!primaryFail)
                 {
                     primaryFail = self->gameData->loadout.primaryTimer != 0;
-                    if(!primaryFail)
+                    if (!primaryFail)
                     {
                         primaryFail = primaryComparison == -1;
                     }
                 }
-                
+
                 bool secondaryFail = self->gameData->loadout.secondaryWileIdx == 255;
-                if(!secondaryFail)
+                if (!secondaryFail)
                 {
                     secondaryFail = self->gameData->loadout.secondaryTimer != 0;
-                    if(!secondaryFail)
+                    if (!secondaryFail)
                     {
                         secondaryFail = secondaryComparison == -1;
                     }
                 }
 
-                if(primaryFail && secondaryFail)
+                if (primaryFail && secondaryFail)
                 {
-                    //reset the player input sequence to BB_NONEs
-                    for(int i = 0; i < 5; i++)
+                    // reset the player input sequence to BB_NONEs
+                    for (int i = 0; i < 5; i++)
                     {
                         self->gameData->loadout.playerInputSequence[i] = BB_NONE;
                     }
@@ -1151,7 +1162,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     }
-    
 
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, &gData->previousPos, &hitInfo);
@@ -1164,7 +1174,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
     // Check for digging
     int32_t dot = dotVec2d(gData->vel, hitInfo.normal);
-    if (dot < -40 || (gData->dragShift!=17 && dot < 0))
+    if (dot < -40 || (gData->dragShift != 17 && dot < 0))
     { // velocity angle is opposing garbage normal vector. Tweak number for different threshold.
         ///////////////////////
         // digging detected! //
@@ -1205,7 +1215,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         // ESP_LOGD(BB_TAG,"dot %d\n", dot);
         // ESP_LOGD(BB_TAG,"thing: %d\n",sqMagVec2d(gData->vel) * dot);
         int32_t bounceScalar = 1;
-        if(gData->dragShift == 17)
+        if (gData->dragShift == 17)
         {
             bounceScalar = 3;
             if (sqMagVec2d(gData->vel) * dot < -360000)
@@ -1679,8 +1689,9 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 break;
         }
     }
-    //if NOT (garbotnik has the bug whisperer talent AND bug is tethered)
-    if(!(((self->gameData->garbotnikUpgrade.upgrades & (1<<GARBOTNIK_BUG_WHISPERER))>>GARBOTNIK_BUG_WHISPERER) && ((bData->flags & 0b10)>>1)))
+    // if NOT (garbotnik has the bug whisperer talent AND bug is tethered)
+    if (!(((self->gameData->garbotnikUpgrade.upgrades & (1 << GARBOTNIK_BUG_WHISPERER)) >> GARBOTNIK_BUG_WHISPERER)
+          && ((bData->flags & 0b10) >> 1)))
     {
         bb_updateBugShooting(self);
     }
@@ -1702,10 +1713,11 @@ void bb_updateFlyingBug(bb_entity_t* self)
     {
         self->pos        = previousPos;
         bData->direction = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
-        bData->flags = bData->flags | (bData->direction.x < 0);
+        bData->flags     = bData->flags | (bData->direction.x < 0);
     }
-    //if NOT (garbotnik has the bug whisperer talent AND bug is tethered)
-    if(!(((self->gameData->garbotnikUpgrade.upgrades & (1<<GARBOTNIK_BUG_WHISPERER))>>GARBOTNIK_BUG_WHISPERER) && ((bData->flags & 0b10)>>1)))
+    // if NOT (garbotnik has the bug whisperer talent AND bug is tethered)
+    if (!(((self->gameData->garbotnikUpgrade.upgrades & (1 << GARBOTNIK_BUG_WHISPERER)) >> GARBOTNIK_BUG_WHISPERER)
+          && ((bData->flags & 0b10) >> 1)))
     {
         bb_updateBugShooting(self);
     }
@@ -1821,7 +1833,7 @@ void bb_updatePOI(bb_entity_t* self)
                                (tData->tracking->pos.y >> DECIMAL_BITS) - (self->pos.y >> DECIMAL_BITS)};
         if (sqMagVec2d(ToFrom) > tData->midPointSqDist)
         {
-            tData->speed+=4;
+            tData->speed += 4;
         }
         else if (tData->midPointSqDist == 0)
         {
@@ -1831,7 +1843,7 @@ void bb_updatePOI(bb_entity_t* self)
         }
         else if (tData->speed > 0)
         {
-            tData->speed-=4;
+            tData->speed -= 4;
         }
         else if (tData->speed == 0)
         {
@@ -1945,19 +1957,19 @@ void bb_updateCharacterTalk(bb_entity_t* self)
                 else if (strcmp(dData->characters[dData->curString], "Pixel") == 0)
                 {
                     characterSprite = bb_randomInt(7, 8);
-                    //borrow sprite from UTT
+                    // borrow sprite from UTT
                     loadWsgInplace("pixil_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
                 else if (strcmp(dData->characters[dData->curString], "Pango") == 0)
                 {
                     characterSprite = bb_randomInt(9, 10);
-                    //borrow sprite from UTT
+                    // borrow sprite from UTT
                     loadWsgInplace("hotdog_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
                 else if (strcmp(dData->characters[dData->curString], "Po") == 0)
                 {
                     characterSprite = bb_randomInt(11, 13);
-                    //borrow sprite from UTT
+                    // borrow sprite from UTT
                     loadWsgInplace("hand_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
                 }
 
@@ -2034,7 +2046,7 @@ void bb_updateGameOver(bb_entity_t* self)
                 }
                 boosterIdx++;
             }
-            
+
             if (goData->wsgLoaded)
             {
                 freeWsg(&goData->fullscreenGraphic);
@@ -2050,7 +2062,7 @@ void bb_updateGameOver(bb_entity_t* self)
                 loadWsgInplace("GameOver2.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
             }
         }
-        else if(self->currentAnimationFrame == 1)
+        else if (self->currentAnimationFrame == 1)
         {
             // increment booster animation frame to look destroyed
             self->gameData->entityManager.activeBooster->currentAnimationFrame++;
@@ -2060,9 +2072,8 @@ void bb_updateGameOver(bb_entity_t* self)
             self->gameData->entityManager.activeBooster->drawFunction = NULL;
             // this booster's grabby hand will destroy itself next time in it's own update loop.
 
-
             self->gameData->entityManager.activeBooster = NULL;
-            uint8_t boosterIdx = 0;
+            uint8_t boosterIdx                          = 0;
             while (boosterIdx < 3)
             {
                 if (self->gameData->entityManager.boosterEntities[boosterIdx]->currentAnimationFrame != 41)
@@ -2137,7 +2148,8 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     }
     else if (ghData->grabbed != NULL)
     {
-        if (self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+        if (self->gameData->entityManager.playerEntity != NULL
+            && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
         {
             // iterate towed entities
             bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
@@ -2158,7 +2170,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
             }
         }
         bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
-        if(ghData->grabbed->spriteIndex == BB_DONUT)
+        if (ghData->grabbed->spriteIndex == BB_DONUT)
         {
             rData->numDonuts++;
         }
@@ -2420,38 +2432,37 @@ void bb_updateWile(bb_entity_t* self)
 {
     bb_updatePhysicsObject(self);
 
-
     bb_wileData_t* wData = (bb_wileData_t*)self->data;
 
     // Update wile's lifetime. I think not using elapsed time is good enough.
-    if(wData->tileTime > 101 &&wData->lifetime == 0)
+    if (wData->tileTime > 101 && wData->lifetime == 0)
     {
-        if(wData->wileIdx == 0)//faulty wile triggers early
+        if (wData->wileIdx == 0) // faulty wile triggers early
         {
-            //trigger the wile function
-            if(self->gameData->loadout.allWiles[wData->wileIdx].wileFunction != NULL)
+            // trigger the wile function
+            if (self->gameData->loadout.allWiles[wData->wileIdx].wileFunction != NULL)
             {
                 self->gameData->loadout.allWiles[wData->wileIdx].wileFunction(self);
             }
-            //and destroy the wile
+            // and destroy the wile
             bb_destroyEntity(self, false);
             return;
         }
         wData->lifetime = 1;
     }
-    if(wData->lifetime > 0)
+    if (wData->lifetime > 0)
     {
         wData->lifetime++;
     }
-    
+
     if (wData->lifetime > 140)
     {
-        //trigger the wile function
-        if(self->gameData->loadout.allWiles[wData->wileIdx].wileFunction != NULL)
+        // trigger the wile function
+        if (self->gameData->loadout.allWiles[wData->wileIdx].wileFunction != NULL)
         {
             self->gameData->loadout.allWiles[wData->wileIdx].wileFunction(self);
         }
-        //and destroy the wile
+        // and destroy the wile
         bb_destroyEntity(self, false);
         return;
     }
@@ -2460,14 +2471,15 @@ void bb_updateWile(bb_entity_t* self)
 void bb_update501kg(bb_entity_t* self)
 {
     bb_501kgData_t* fData = (bb_501kgData_t*)self->data;
-    if(self->pos.y < fData->targetY)
+    if (self->pos.y < fData->targetY)
     {
         self->pos.x += (fData->vel.x * self->gameData->elapsedUs) >> 13;
         self->pos.y += (fData->vel.y * self->gameData->elapsedUs) >> 13;
 
         bb_hitInfo_t hitInfo = {0};
         bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
-        if (hitInfo.hit && hitInfo.tile_i > 0 && hitInfo.tile_j > 0 && hitInfo.tile_i < TILE_FIELD_WIDTH - 1 && hitInfo.tile_j < TILE_FIELD_HEIGHT - 4)
+        if (hitInfo.hit && hitInfo.tile_i > 0 && hitInfo.tile_j > 0 && hitInfo.tile_i < TILE_FIELD_WIDTH - 1
+            && hitInfo.tile_j < TILE_FIELD_HEIGHT - 4)
         {
             // Update the dirt to air.
             bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true);
@@ -2475,12 +2487,13 @@ void bb_update501kg(bb_entity_t* self)
     }
     else
     {
-        //use the x velocity as a flag for finding garbage
-        if(fData->vel.x)
+        // use the x velocity as a flag for finding garbage
+        if (fData->vel.x)
         {
             bb_hitInfo_t hitInfo = {0};
             bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
-            if (hitInfo.hit && hitInfo.tile_i > 0 && hitInfo.tile_j > 0 && hitInfo.tile_i < TILE_FIELD_WIDTH - 1 && hitInfo.tile_j < TILE_FIELD_HEIGHT - 4)
+            if (hitInfo.hit && hitInfo.tile_i > 0 && hitInfo.tile_j > 0 && hitInfo.tile_i < TILE_FIELD_WIDTH - 1
+                && hitInfo.tile_j < TILE_FIELD_HEIGHT - 4)
             {
                 fData->vel.x = 0;
             }
@@ -2492,15 +2505,17 @@ void bb_update501kg(bb_entity_t* self)
         }
         else
         {
-            //use the y velocity as a timer to detonation
+            // use the y velocity as a timer to detonation
             fData->vel.y--;
-            if(fData->vel.y <= 0)
+            if (fData->vel.y <= 0)
             {
-                //detonate
+                // detonate
                 freeWsg(&self->gameData->entityManager.sprites[BB_501KG].frames[0]);
-                bb_entity_t* explosion = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+                bb_entity_t* explosion
+                    = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1,
+                                      self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
                 bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
-                eData->radius = 180;
+                eData->radius             = 180;
 
                 bb_destroyEntity(self, false);
             }
@@ -2511,55 +2526,60 @@ void bb_update501kg(bb_entity_t* self)
 void bb_updateExplosion(bb_entity_t* self)
 {
     bb_explosionData_t* eData = (bb_explosionData_t*)self->data;
-    if(eData->lifetime == 0)
+    if (eData->lifetime == 0)
     {
-        //iterate over a square of tiles around the explosion
-        vec_t tileCheck = {(self->pos.x >> 9)-(eData->radius>>5), (self->pos.y >> 9)-(eData->radius>>5)};
-        if(tileCheck.x < 4)
+        // iterate over a square of tiles around the explosion
+        vec_t tileCheck = {(self->pos.x >> 9) - (eData->radius >> 5), (self->pos.y >> 9) - (eData->radius >> 5)};
+        if (tileCheck.x < 4)
         {
             tileCheck.x = 4;
         }
-        if(tileCheck.y < 0)
+        if (tileCheck.y < 0)
         {
             tileCheck.y = 0;
         }
-        for(int checkI = tileCheck.x; checkI < tileCheck.x + (eData->radius>>3); checkI++)
+        for (int checkI = tileCheck.x; checkI < tileCheck.x + (eData->radius >> 3); checkI++)
         {
-            if(checkI >= TILE_FIELD_WIDTH - 5)
+            if (checkI >= TILE_FIELD_WIDTH - 5)
             {
                 continue;
             }
-            for(int checkJ = tileCheck.y; checkJ < tileCheck.y + (eData->radius>>3); checkJ++)
+            for (int checkJ = tileCheck.y; checkJ < tileCheck.y + (eData->radius >> 3); checkJ++)
             {
-                if(checkJ >= TILE_FIELD_HEIGHT - 5)
+                if (checkJ >= TILE_FIELD_HEIGHT - 5)
                 {
                     break;
                 }
-                //if it is in range of the explosion, crumble the dirt.
-                if(sqMagVec2d(subVec2d((vec_t){(checkI<<5)+HALF_TILE, (checkJ<<5)+HALF_TILE}, (vec_t){self->pos.x>>4, self->pos.y>>4})) < eData->radius * eData->radius)
+                // if it is in range of the explosion, crumble the dirt.
+                if (sqMagVec2d(subVec2d((vec_t){(checkI << 5) + HALF_TILE, (checkJ << 5) + HALF_TILE},
+                                        (vec_t){self->pos.x >> 4, self->pos.y >> 4}))
+                    < eData->radius * eData->radius)
                 {
-                    if(self->gameData->tilemap.fgTiles[checkI][checkJ].health > 0)
+                    if (self->gameData->tilemap.fgTiles[checkI][checkJ].health > 0)
                     {
                         // Update the dirt to air.
-                        bb_crumbleDirt(self->gameData, bb_randomInt(2,3), checkI, checkJ, true);
+                        bb_crumbleDirt(self->gameData, bb_randomInt(2, 3), checkI, checkJ, true);
                     }
                 }
             }
         }
 
-        self->halfWidth = eData->radius<<DECIMAL_BITS;
-        self->halfHeight = eData->radius<<DECIMAL_BITS;
+        self->halfWidth  = eData->radius << DECIMAL_BITS;
+        self->halfHeight = eData->radius << DECIMAL_BITS;
 
-        //iterate all cached entities
-        //possibly load them in if they are relevant to the explosion
+        // iterate all cached entities
+        // possibly load them in if they are relevant to the explosion
         node_t* current = self->gameData->entityManager.cachedEntities->first;
-        while(current != NULL)
+        while (current != NULL)
         {
             bb_entity_t* curEntity = (bb_entity_t*)current->val;
-            vec_t toFrom = subVec2d(curEntity->pos, self->pos);
-            if(bb_boxesCollide(self, curEntity, NULL, NULL) && sqMagVec2d(toFrom) < (eData->radius<<DECIMAL_BITS)*(eData->radius<<DECIMAL_BITS))
+            vec_t toFrom           = subVec2d(curEntity->pos, self->pos);
+            if (bb_boxesCollide(self, curEntity, NULL, NULL)
+                && sqMagVec2d(toFrom) < (eData->radius << DECIMAL_BITS) * (eData->radius << DECIMAL_BITS))
             {
-                if(curEntity->dataType == PHYSICS_DATA || curEntity->dataType == FOOD_CART_DATA || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA ||((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(-1,1)))
+                if (curEntity->dataType == PHYSICS_DATA || curEntity->dataType == FOOD_CART_DATA
+                    || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA
+                    || ((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(-1, 1)))
                 {
                     bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
                     if (foundSpot != NULL)
@@ -2567,16 +2587,16 @@ void bb_updateExplosion(bb_entity_t* self)
                         // like a memcopy
                         *foundSpot = *curEntity;
                         self->gameData->entityManager.activeEntities++;
-                        //remove current from cached entities
+                        // remove current from cached entities
                         node_t* next = current->next;
                         removeEntry(self->gameData->entityManager.cachedEntities, current);
 
                         current = next;
-                        //if it was a foodcart load the sprites just in time
-                        if(foundSpot->dataType == FOOD_CART_DATA)
+                        // if it was a foodcart load the sprites just in time
+                        if (foundSpot->dataType == FOOD_CART_DATA)
                         {
                             bb_foodCartData_t* fcData = (bb_foodCartData_t*)curEntity->data;
-                            //tell this partner of the change in address
+                            // tell this partner of the change in address
                             ((bb_foodCartData_t*)fcData->partner->data)->partner = foundSpot;
                             bb_loadSprite("foodCart", 2, 1, &self->gameData->entityManager.sprites[BB_FOOD_CART]);
                             fcData->isCached = false;
@@ -2588,60 +2608,58 @@ void bb_updateExplosion(bb_entity_t* self)
             current = current->next;
         }
 
-        //iterate all entities and do things if they are in the blast radius
-        for(int i = 0; i < MAX_ENTITIES; i++)
+        // iterate all entities and do things if they are in the blast radius
+        for (int i = 0; i < MAX_ENTITIES; i++)
         {
             bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
-            if(curEntity->dataType != PHYSICS_DATA &&
-            curEntity->dataType != BUGGO_DATA &&
-            curEntity->dataType != BU_DATA &&
-            curEntity->dataType != FOOD_CART_DATA &&
-            curEntity->dataType != GARBOTNIK_DATA &&
-            curEntity->dataType != DRILL_BOT_DATA &&
-            curEntity->dataType != WILE_DATA)
+            if (curEntity->dataType != PHYSICS_DATA && curEntity->dataType != BUGGO_DATA
+                && curEntity->dataType != BU_DATA && curEntity->dataType != FOOD_CART_DATA
+                && curEntity->dataType != GARBOTNIK_DATA && curEntity->dataType != DRILL_BOT_DATA
+                && curEntity->dataType != WILE_DATA)
             {
                 continue;
             }
-            
+
             vec_t toFrom = subVec2d(curEntity->pos, self->pos);
-            if(bb_boxesCollide(self, curEntity, NULL, NULL) && sqMagVec2d(toFrom) < (eData->radius<<DECIMAL_BITS)*(eData->radius<<DECIMAL_BITS))
+            if (bb_boxesCollide(self, curEntity, NULL, NULL)
+                && sqMagVec2d(toFrom) < (eData->radius << DECIMAL_BITS) * (eData->radius << DECIMAL_BITS))
             {
-                if(curEntity->dataType == PHYSICS_DATA || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA)
+                if (curEntity->dataType == PHYSICS_DATA || curEntity->dataType == DRILL_BOT_DATA
+                    || curEntity->dataType == WILE_DATA)
                 {
-                    //apply a force to the entity
+                    // apply a force to the entity
                     bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
-                    pData->vel = divVec2d(toFrom, 5);
+                    pData->vel              = divVec2d(toFrom, 5);
                 }
-                else if((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(0,2))
+                else if ((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(0, 2))
                 {
-                    //66% chance to kill the bug
+                    // 66% chance to kill the bug
                     bb_hitInfo_t hitInfo = {0};
-                    hitInfo.pos = curEntity->pos;
+                    hitInfo.pos          = curEntity->pos;
                     bb_bugDeath(curEntity, &hitInfo);
                 }
-                else if(curEntity->dataType == FOOD_CART_DATA)
+                else if (curEntity->dataType == FOOD_CART_DATA)
                 {
-                    //destroy the food cart if it is the main cart
-                    if(curEntity->currentAnimationFrame > 1)
+                    // destroy the food cart if it is the main cart
+                    if (curEntity->currentAnimationFrame > 1)
                     {
                         bb_hitInfo_t hitInfo = {0};
-                        hitInfo.pos = curEntity->pos;
+                        hitInfo.pos          = curEntity->pos;
                         bb_cartDeath(curEntity, &hitInfo);
                     }
                 }
-                else if(curEntity->dataType == GARBOTNIK_DATA)
+                else if (curEntity->dataType == GARBOTNIK_DATA)
                 {
                     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
-                    gData->vel = divVec2d(toFrom, 5);
-                    gData->fuel -= eData->radius * 120;//damage is proportional to the size of the explosion
+                    gData->vel                = divVec2d(toFrom, 5);
+                    gData->fuel -= eData->radius * 120; // damage is proportional to the size of the explosion
                 }
             }
         }
     }
 
-
     eData->lifetime += self->gameData->elapsedUs >> 10;
-    if(eData->lifetime > 1000)
+    if (eData->lifetime > 1000)
     {
         bb_destroyEntity(self, false);
     }
@@ -2651,10 +2669,10 @@ void bb_updateAtmosphericAtomizer(bb_entity_t* self)
 {
     bb_atmosphericAtomizerData_t* aData = (bb_atmosphericAtomizerData_t*)self->data;
     aData->lifetime += self->gameData->elapsedUs >> 10;
-    if(aData->lifetime > 30000)
+    if (aData->lifetime > 30000)
     {
         bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
-        gData->dragShift = 17;//This greatly reduces the drag on the garbotnik
+        gData->dragShift          = 17; // This greatly reduces the drag on the garbotnik
         bb_destroyEntity(self, false);
     }
 }
@@ -2663,12 +2681,12 @@ void bb_updateDrillBot(bb_entity_t* self)
 {
     bb_updatePhysicsObject(self);
     bb_drillBotData_t* dData = (bb_drillBotData_t*)self->data;
-    if(dData->lifetime == 0)
+    if (dData->lifetime == 0)
     {
-        dData->facingRight = bb_randomInt(0,1);
+        dData->facingRight = bb_randomInt(0, 1);
     }
     dData->lifetime++;
-    if(dData->lifetime > 1900)
+    if (dData->lifetime > 1900)
     {
         bb_destroyEntity(self, false);
         return;
@@ -2677,40 +2695,40 @@ void bb_updateDrillBot(bb_entity_t* self)
     {
         dData->tileTime--;
     }
-    if(dData->tileTime > 110)
+    if (dData->tileTime > 110)
     {
         dData->tileTime = 110;
     }
     dData->attacking--;
-    if(dData->attacking <= 0)
+    if (dData->attacking <= 0)
     {
         dData->attacking = 0;
     }
 
-    //driller might drill two tiles wide if it's on the edge.
-    uint8_t drillX1 = self->pos.x >> 9;
+    // driller might drill two tiles wide if it's on the edge.
+    uint8_t drillX1  = self->pos.x >> 9;
     uint16_t drillX2 = self->pos.x % 512;
-    if(drillX2 <= 128)
+    if (drillX2 <= 128)
     {
         drillX2 = drillX1 - 1;
     }
-    else if(drillX2 >= 384)
+    else if (drillX2 >= 384)
     {
         drillX2 = drillX1 + 1;
     }
     else
     {
-        drillX2 = 255;//second drill spot is set out of bounds. Gets ignored.
+        drillX2 = 255; // second drill spot is set out of bounds. Gets ignored.
     }
-    if(dData->tileTime > 101)
+    if (dData->tileTime > 101)
     {
-        if(self->pos.y < dData->targetY)
+        if (self->pos.y < dData->targetY)
         {
             dData->tileTime = 0;
-            if(bb_randomInt(-100,1))
+            if (bb_randomInt(-100, 1))
             {
-                //destroy the tile below the drill bot
-                if(self->pos.y < 0)
+                // destroy the tile below the drill bot
+                if (self->pos.y < 0)
                 {
                     bb_crumbleDirt(self->gameData, 2, drillX1, 0, true);
                     bb_crumbleDirt(self->gameData, 2, drillX2, 0, true);
@@ -2726,11 +2744,11 @@ void bb_updateDrillBot(bb_entity_t* self)
         {
             int8_t direction = (dData->facingRight * 2) - 1;
             self->pos.x += direction * 8 * self->gameData->elapsedUs >> 13;
-            if(self->gameData->tilemap.fgTiles[(self->pos.x + direction * 144)>>9][self->pos.y>>9].health > 0)
+            if (self->gameData->tilemap.fgTiles[(self->pos.x + direction * 144) >> 9][self->pos.y >> 9].health > 0)
             {
-                if(bb_randomInt(0,110)==1)
+                if (bb_randomInt(0, 110) == 1)
                 {
-                    bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144)>>9, self->pos.y>>9, true);
+                    bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144) >> 9, self->pos.y >> 9, true);
                 }
             }
         }
@@ -2742,7 +2760,7 @@ void bb_updateTimedPhysicsObject(bb_entity_t* self)
     bb_updatePhysicsObject(self);
     bb_timedPhysicsData_t* tData = (bb_timedPhysicsData_t*)self->data;
     tData->lifetime++;
-    if(tData->lifetime > 1900)
+    if (tData->lifetime > 1900)
     {
         bb_destroyEntity(self, false);
         return;
@@ -2754,28 +2772,29 @@ void bb_updatePacifier(bb_entity_t* self)
     bb_updatePhysicsObject(self);
     bb_timedPhysicsData_t* tData = (bb_timedPhysicsData_t*)self->data;
     tData->lifetime++;
-    if(tData->lifetime > 1900)
+    if (tData->lifetime > 1900)
     {
         bb_destroyEntity(self, false);
         return;
     }
-    
-    int16_t radius = ((tData->lifetime<<1) % 300)<<DECIMAL_BITS;
+
+    int16_t radius        = ((tData->lifetime << 1) % 300) << DECIMAL_BITS;
     int16_t sqRadiusOuter = (radius + 48) * (radius + 48);
     int16_t sqRadiusInner = (radius - 48) * (radius - 48);
-    //iterate all entities
-    for(int i = 0; i < MAX_ENTITIES; i++)
+    // iterate all entities
+    for (int i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
-        if(curEntity->spriteIndex != BB_SPIT)
+        if (curEntity->spriteIndex != BB_SPIT)
         {
             continue;
         }
         vec_t toFrom = subVec2d(curEntity->pos, self->pos);
-        if(curEntity->pos.x < self->pos.x + radius + 48 && curEntity->pos.x > self->pos.x - radius - 48 && curEntity->pos.y < self->pos.y + radius + 48 && curEntity->pos.y > self->pos.y - radius - 48)
+        if (curEntity->pos.x < self->pos.x + radius + 48 && curEntity->pos.x > self->pos.x - radius - 48
+            && curEntity->pos.y < self->pos.y + radius + 48 && curEntity->pos.y > self->pos.y - radius - 48)
         {
             int16_t sqDist = sqMagVec2d(toFrom);
-            if(sqDist < sqRadiusOuter && sqDist > sqRadiusInner)
+            if (sqDist < sqRadiusOuter && sqDist > sqRadiusInner)
             {
                 bb_destroyEntity(curEntity, false);
             }
@@ -2786,12 +2805,12 @@ void bb_updatePacifier(bb_entity_t* self)
 void bb_updateSpaceLaser(bb_entity_t* self)
 {
     bb_spaceLaserData_t* slData = (bb_spaceLaserData_t*)self->data;
-    if(slData->lifetime == 0)
+    if (slData->lifetime == 0)
     {
-        //Position it at half height above the highest garbage
-        for(int i = 0; i < TILE_FIELD_HEIGHT; i++)
+        // Position it at half height above the highest garbage
+        for (int i = 0; i < TILE_FIELD_HEIGHT; i++)
         {
-            if(self->gameData->tilemap.fgTiles[self->pos.x>>9][i].health > 0)
+            if (self->gameData->tilemap.fgTiles[self->pos.x >> 9][i].health > 0)
             {
                 slData->highestGarbage = i;
                 break;
@@ -2799,27 +2818,27 @@ void bb_updateSpaceLaser(bb_entity_t* self)
         }
     }
     slData->lifetime++;
-    if(slData->lifetime > 1900)
+    if (slData->lifetime > 1900)
     {
         bb_destroyEntity(self, false);
         return;
     }
-    if(bb_randomInt(0, 50)==0)
+    if (bb_randomInt(0, 50) == 0)
     {
-        //decrement the health of the tile below the laser by one
-        self->gameData->tilemap.fgTiles[self->pos.x>>9][slData->highestGarbage].health--;
-        int8_t health = self->gameData->tilemap.fgTiles[self->pos.x>>9][slData->highestGarbage].health;
-        if(health == 1 || health == 4 || health == 10)
+        // decrement the health of the tile below the laser by one
+        self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health--;
+        int8_t health = self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health;
+        if (health == 1 || health == 4 || health == 10)
         {
-            bb_crumbleDirt(self->gameData, 2, self->pos.x>>9, slData->highestGarbage, false);
+            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, false);
         }
-        else if(health == 0)
+        else if (health == 0)
         {
-            bb_crumbleDirt(self->gameData, 2, self->pos.x>>9, slData->highestGarbage, true);
-            //recalculate the highest garbage
-            for(int i = 0; i < TILE_FIELD_HEIGHT; i++)
+            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, true);
+            // recalculate the highest garbage
+            for (int i = 0; i < TILE_FIELD_HEIGHT; i++)
             {
-                if(self->gameData->tilemap.fgTiles[self->pos.x>>9][i].health > 0)
+                if (self->gameData->tilemap.fgTiles[self->pos.x >> 9][i].health > 0)
                 {
                     slData->highestGarbage = i;
                     break;
@@ -2828,7 +2847,7 @@ void bb_updateSpaceLaser(bb_entity_t* self)
         }
     }
 
-    self->pos.y = (slData->highestGarbage<<9) - self->halfHeight;
+    self->pos.y = (slData->highestGarbage << 9) - self->halfHeight;
 }
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -2916,81 +2935,127 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
     drawText(&self->gameData->font, c223, harpoonText, TFT_WIDTH - tWidth - 30,
              TFT_HEIGHT - self->gameData->font.height - 2);
 
-    //draw the wile call sequences
-    if(self->gameData->loadout.primaryWileIdx != 255 && (((self->gameData->btnState & 0b100000) >> 5) || gData->activeWile == self->gameData->loadout.primaryWileIdx))
+    // draw the wile call sequences
+    if (self->gameData->loadout.primaryWileIdx != 255
+        && (((self->gameData->btnState & 0b100000) >> 5)
+            || gData->activeWile == self->gameData->loadout.primaryWileIdx))
     {
-        //primary wile
-        drawRectFilled(0, 0, 140 - (self->gameData->loadout.primaryTimer * 140) / (self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000), 16, gData->activeWile == self->gameData->loadout.primaryWileIdx ? c050 : (self->gameData->loadout.primaryTimer == 0 ? c550 : c500));
-        tWidth = textWidth(&self->gameData->font, self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].name);
-        drawText(&self->gameData->font, (gData->activeWile == self->gameData->loadout.primaryWileIdx && bb_randomInt(0,1)) ? c203 : (self->gameData->loadout.primaryTimer == 0 ? c000 : c444),
+        // primary wile
+        drawRectFilled(
+            0, 0,
+            140
+                - (self->gameData->loadout.primaryTimer * 140)
+                      / (self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].cooldown * 1000),
+            16,
+            gData->activeWile == self->gameData->loadout.primaryWileIdx
+                ? c050
+                : (self->gameData->loadout.primaryTimer == 0 ? c550 : c500));
+        tWidth = textWidth(&self->gameData->font,
+                           self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].name);
+        drawText(&self->gameData->font,
+                 (gData->activeWile == self->gameData->loadout.primaryWileIdx && bb_randomInt(0, 1))
+                     ? c203
+                     : (self->gameData->loadout.primaryTimer == 0 ? c000 : c444),
                  self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].name, 70 - (tWidth >> 1), 3);
-        //draw the call sequence
+        // draw the call sequence
         uint8_t sequenceLength = 0;
-        for(int i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++)
         {
-            if(self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence[i] == BB_NONE)
+            if (self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence[i] == BB_NONE)
             {
                 break;
             }
             sequenceLength++;
         }
-        int8_t primaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence);
-        for(int i = 0; i < sequenceLength; i++)
+        int8_t primaryComparison = bb_compareWileCallSequences(
+            self->gameData->loadout.playerInputSequence,
+            self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence);
+        for (int i = 0; i < sequenceLength; i++)
         {
             int32_t rotation = 180;
             rotation += 90 * self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence[i];
             rotation = rotation % 360;
 
-            if(self->gameData->loadout.primaryTimer != 0)
+            if (self->gameData->loadout.primaryTimer != 0)
             {
-                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0], 70 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, &self->gameData->damagePalette, false, false, rotation);
+                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0],
+                               70 - ((sequenceLength * 28 - 4) >> 1) + i * 28, 17, &self->gameData->damagePalette,
+                               false, false, rotation);
             }
-            else if(primaryComparison != -1 && self->gameData->loadout.playerInputSequence[i] == self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence[i])
+            else if (primaryComparison != -1
+                     && self->gameData->loadout.playerInputSequence[i]
+                            == self->gameData->loadout.allWiles[self->gameData->loadout.primaryWileIdx].callSequence[i])
             {
-                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 70 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, false, false, rotation);
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 70 - ((sequenceLength * 28 - 4) >> 1) + i * 28, 17,
+                        false, false, rotation);
             }
             else
             {
-                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 70 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, false, false, rotation);
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 70 - ((sequenceLength * 28 - 4) >> 1) + i * 28, 17,
+                        false, false, rotation);
             }
         }
     }
 
-    if(self->gameData->loadout.secondaryWileIdx != 255 && (((self->gameData->btnState & 0b100000) >> 5) || gData->activeWile == self->gameData->loadout.secondaryWileIdx))
+    if (self->gameData->loadout.secondaryWileIdx != 255
+        && (((self->gameData->btnState & 0b100000) >> 5)
+            || gData->activeWile == self->gameData->loadout.secondaryWileIdx))
     {
-        //secondary wile
-        drawRectFilled(140, 0, 280 - (self->gameData->loadout.secondaryTimer * 140) / (self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown * 1000), 16, gData->activeWile == self->gameData->loadout.secondaryWileIdx ? c050 : (self->gameData->loadout.secondaryTimer == 0 ? c550 : c500));
-        tWidth = textWidth(&self->gameData->font, self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].name);
-        drawText(&self->gameData->font, (gData->activeWile == self->gameData->loadout.secondaryWileIdx && bb_randomInt(0,1)) ? c203 : (self->gameData->loadout.secondaryTimer == 0 ? c000 : c444),
-                 self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].name, 210 - (tWidth >> 1), 3);
-        //draw the call sequence
+        // secondary wile
+        drawRectFilled(
+            140, 0,
+            280
+                - (self->gameData->loadout.secondaryTimer * 140)
+                      / (self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].cooldown * 1000),
+            16,
+            gData->activeWile == self->gameData->loadout.secondaryWileIdx
+                ? c050
+                : (self->gameData->loadout.secondaryTimer == 0 ? c550 : c500));
+        tWidth = textWidth(&self->gameData->font,
+                           self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].name);
+        drawText(&self->gameData->font,
+                 (gData->activeWile == self->gameData->loadout.secondaryWileIdx && bb_randomInt(0, 1))
+                     ? c203
+                     : (self->gameData->loadout.secondaryTimer == 0 ? c000 : c444),
+                 self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].name, 210 - (tWidth >> 1),
+                 3);
+        // draw the call sequence
         uint8_t sequenceLength = 0;
-        for(int i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++)
         {
-            if(self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence[i] == BB_NONE)
+            if (self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence[i] == BB_NONE)
             {
                 break;
             }
             sequenceLength++;
         }
-        int8_t secondaryComparison = bb_compareWileCallSequences(self->gameData->loadout.playerInputSequence, self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence);
-        for(int i = 0; i < sequenceLength; i++)
+        int8_t secondaryComparison = bb_compareWileCallSequences(
+            self->gameData->loadout.playerInputSequence,
+            self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence);
+        for (int i = 0; i < sequenceLength; i++)
         {
             int32_t rotation = 180;
             rotation += 90 * self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence[i];
             rotation = rotation % 360;
 
-            if(self->gameData->loadout.secondaryTimer != 0)
+            if (self->gameData->loadout.secondaryTimer != 0)
             {
-                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0], 210 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, &self->gameData->damagePalette, false, false, rotation);
+                drawWsgPalette(&entityManager->sprites[BB_ARROW].frames[0],
+                               210 - ((sequenceLength * 28 - 4) >> 1) + i * 28, 17, &self->gameData->damagePalette,
+                               false, false, rotation);
             }
-            else if(secondaryComparison != -1 && self->gameData->loadout.playerInputSequence[i] == self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx].callSequence[i])
+            else if (secondaryComparison != -1
+                     && self->gameData->loadout.playerInputSequence[i]
+                            == self->gameData->loadout.allWiles[self->gameData->loadout.secondaryWileIdx]
+                                   .callSequence[i])
             {
-                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 210 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, false, false, rotation);
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[1], 210 - ((sequenceLength * 28 - 4) >> 1) + i * 28,
+                        17, false, false, rotation);
             }
             else
             {
-                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 210 - ((sequenceLength * 28 - 4)>>1) + i * 28, 17, false, false, rotation);
+                drawWsg(&entityManager->sprites[BB_ARROW].frames[0], 210 - ((sequenceLength * 28 - 4) >> 1) + i * 28,
+                        17, false, false, rotation);
             }
         }
     }
@@ -3164,8 +3229,8 @@ void bb_drawCharacterTalk(bb_entityManager_t* entityManager, rectangle_t* camera
         }
         if (dData->blinkTimer > 0)
         {
-            //The sprites I took from UTT need to be drawn a little more to the left.
-            drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186 );
+            // The sprites I took from UTT need to be drawn a little more to the left.
+            drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186);
         }
         drawText(&self->gameData->font, textColor, dData->characters[dData->curString], 13, 152);
 
@@ -3247,7 +3312,7 @@ void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     bb_buData_t* bData = (bb_buData_t*)self->data;
-    bool faceLeft = bData->flags & 0b1;
+    bool faceLeft      = bData->flags & 0b1;
     uint8_t brightness = 5;
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
@@ -3348,7 +3413,8 @@ void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
     if ((cData->textTimer / 3000) % 2 == 0)
     {
         char screenText[30] = "Car Alarm!";
-        drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1), 30);
+        drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1),
+                 30);
         snprintf(screenText, sizeof(screenText), "Kill %d bugs!", self->gameData->carFightState);
         drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1),
                  185);
@@ -3561,17 +3627,16 @@ void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
 
 void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    drawWsgSimple(
-        &entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
-        (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-        (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[(self->currentAnimationFrame > 1)],
+                  (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                  (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
     bb_wileData_t* wData = (bb_wileData_t*)self->data;
-    if(wData->lifetime > 0)
+    if (wData->lifetime > 0)
     {
-        //sample some arbitrary data to draw binary 1's and 0's out of the BGM straight above the wile
-        for(int i = 0; i < 17; i++)
+        // sample some arbitrary data to draw binary 1's and 0's out of the BGM straight above the wile
+        for (int i = 0; i < 17; i++)
         {
-            if(self->gameData->bgm.data[i + (wData->lifetime>>2)] & 1)
+            if (self->gameData->bgm.data[i + (wData->lifetime >> 2)] & 1)
             {
                 drawText(&self->gameData->font, c511, "1", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
                          (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285 + i * 15);
@@ -3583,75 +3648,73 @@ void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
             }
         }
 
-        drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7, wData->lifetime % 20, c500);
-        drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7, (wData->lifetime+7) % 20, c511);
-        drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7, (wData->lifetime+14) % 20, c500);
+        drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7,
+                   wData->lifetime % 20, c500);
+        drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7,
+                   (wData->lifetime + 7) % 20, c511);
+        drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 7,
+                   (wData->lifetime + 14) % 20, c500);
     }
 }
 
 void bb_draw501kg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    drawWsg(
-        &entityManager->sprites[self->spriteIndex].frames[0],
-        (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-        (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, false, false, ((bb_501kgData_t*)self->data)->angle);
+    drawWsg(&entityManager->sprites[self->spriteIndex].frames[0],
+            (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+            (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, false,
+            false, ((bb_501kgData_t*)self->data)->angle);
 }
 
 void bb_drawExplosion(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     drawCircleFilled((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
-                     ((bb_explosionData_t*)self->data)->radius, bb_randomInt(0,1)?c555:c550);
+                     ((bb_explosionData_t*)self->data)->radius, bb_randomInt(0, 1) ? c555 : c550);
 }
 
 void bb_drawAtmosphericAtomizer(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    //draw solar radiation lines diagonally penetrating the screen from above that offset in time with bb_atmostphericAtomizerData_t->lifetime.
+    // draw solar radiation lines diagonally penetrating the screen from above that offset in time with
+    // bb_atmostphericAtomizerData_t->lifetime.
     bb_atmosphericAtomizerData_t* aData = (bb_atmosphericAtomizerData_t*)self->data;
-    
+
     uint16_t thing1 = aData->lifetime % 16;
     uint16_t thing2 = aData->lifetime % 240;
     uint16_t thing3 = (aData->lifetime >> 2) % 2;
-    for(int i = 0; i < 17; i++)
+    for (int i = 0; i < 17; i++)
     {
-        if(bb_randomInt(0,2))
+        if (bb_randomInt(0, 2))
         {
-            drawLineFast(i*16+thing1 - thing3,
-                         thing2 + 240 - i * 12,
-                         i*18+thing1 - thing3,
+            drawLineFast(i * 16 + thing1 - thing3, thing2 + 240 - i * 12, i * 18 + thing1 - thing3,
                          thing2 - 30 - i * 15, c555);
         }
         else
         {
-            drawLineFast(i*16+thing1 - thing3,
-                         thing2 + 240 - i * 12,
-                         i*18+thing1 - thing3,
+            drawLineFast(i * 16 + thing1 - thing3, thing2 + 240 - i * 12, i * 18 + thing1 - thing3,
                          thing2 - 30 - i * 15, c552);
         }
     }
-    //draw dots randomly all over the screen
-    for(int i = 0; i < 30; i++)
+    // draw dots randomly all over the screen
+    for (int i = 0; i < 30; i++)
     {
-        drawCircleFilled(bb_randomInt(0,280),
-                         bb_randomInt(0,240),
-                         1, c445);
+        drawCircleFilled(bb_randomInt(0, 280), bb_randomInt(0, 240), 1, c445);
     }
 }
 
 void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     bb_drillBotData_t* dData = (bb_drillBotData_t*)self->data;
-    if(dData->attacking)
+    if (dData->attacking)
     {
-        drawWsg(
-                &entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2)%2)+5],
+        drawWsg(&entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2) % 2) + 5],
                 (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, !dData->facingRight, false, 0);
+                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y,
+                !dData->facingRight, false, 0);
         return;
     }
 
-    if(self->pos.y < dData->targetY)
+    if (self->pos.y < dData->targetY)
     {
-        if(dData->vel.y < 5 && dData->vel.y > -5 && dData->tileTime > 0)
+        if (dData->vel.y < 5 && dData->vel.y > -5 && dData->tileTime > 0)
         {
             drawWsgSimple(
                 &entityManager->sprites[self->spriteIndex].frames[2],
@@ -3669,19 +3732,20 @@ void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
     else
     {
         int8_t direction = (dData->facingRight * 2) - 1;
-        if(self->pos.y >= 0 && self->gameData->tilemap.fgTiles[(self->pos.x + direction * 144)>>9][self->pos.y>>9].health > 0)
+        if (self->pos.y >= 0
+            && self->gameData->tilemap.fgTiles[(self->pos.x + direction * 144) >> 9][self->pos.y >> 9].health > 0)
         {
-            drawWsg(
-                &entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2)%2)+5],
-                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, !dData->facingRight, false, 0);
+            drawWsg(&entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2) % 2) + 5],
+                    (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                    (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y,
+                    !dData->facingRight, false, 0);
         }
         else
         {
-            drawWsg(
-                &entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2)%2)+3],
-                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y, !dData->facingRight, false, 0);
+            drawWsg(&entityManager->sprites[self->spriteIndex].frames[((dData->lifetime >> 2) % 2) + 3],
+                    (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                    (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y,
+                    !dData->facingRight, false, 0);
         }
     }
 }
@@ -3689,50 +3753,46 @@ void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
 void bb_drawPacifier(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     bb_timedPhysicsData_t* tData = (bb_timedPhysicsData_t*)self->data;
-    drawWsgSimple(
-        &entityManager->sprites[self->spriteIndex].frames[0],
-        (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
-        (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
-    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y, (tData->lifetime<<1) % 300, c345);
+    drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0],
+                  (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
+                  (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
+    drawCircle((self->pos.x >> DECIMAL_BITS) - camera->pos.x, (self->pos.y >> DECIMAL_BITS) - camera->pos.y,
+               (tData->lifetime << 1) % 300, c345);
 }
 
 void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    //if the bottom of the laser is below the top of the screen
+    // if the bottom of the laser is below the top of the screen
     int16_t yBottom = ((self->pos.y + self->halfHeight) >> DECIMAL_BITS) - camera->pos.y + 2;
-    if(yBottom > 0)
+    if (yBottom > 0)
     {
-        //draw a rectangle from the top of the screen to the bottom of the laser.
+        // draw a rectangle from the top of the screen to the bottom of the laser.
         bb_spaceLaserData_t* sData = (bb_spaceLaserData_t*)self->data;
-        uint8_t flashEffect = sData->lifetime % 13;
-        uint8_t foo = bb_randomInt(0, 50);
-        if(foo > 37)
+        uint8_t flashEffect        = sData->lifetime % 13;
+        uint8_t foo                = bb_randomInt(0, 50);
+        if (foo > 37)
         {
             flashEffect = foo % 13;
         }
-        drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x,
-                       0,
-                       ((self->pos.x - self->halfWidth) >> DECIMAL_BITS)- camera->pos.x  + flashEffect,
-                       yBottom, c530);
-        drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect,
-                       0,
-                       ((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect + 2,
-                       yBottom, foo > 25 ? c533 : c555);
-        drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect + 2,
-                       0,
-                       ((self->pos.x + self->halfWidth) >> DECIMAL_BITS) - camera->pos.x,
-                       yBottom, c530);
-        if(foo>40)
+        drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x, 0,
+                       ((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect, yBottom, c530);
+        drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect, 0,
+                       ((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect + 2, yBottom,
+                       foo > 25 ? c533 : c555);
+        drawRectFilled(((self->pos.x - self->halfWidth) >> DECIMAL_BITS) - camera->pos.x + flashEffect + 2, 0,
+                       ((self->pos.x + self->halfWidth) >> DECIMAL_BITS) - camera->pos.x, yBottom, c530);
+        if (foo > 40)
         {
-            //create a bump anim at the bottom of the laser
-            bb_entity_t* bump = bb_createEntity(entityManager, ONESHOT_ANIMATION, false, BUMP_ANIM, 1, (self->pos.x >> DECIMAL_BITS)-12+foo%25, (self->pos.y + self->halfHeight)>>DECIMAL_BITS, false, false);
-            if(foo >= 25)
+            // create a bump anim at the bottom of the laser
+            bb_entity_t* bump = bb_createEntity(entityManager, ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
+                                                (self->pos.x >> DECIMAL_BITS) - 12 + foo % 25,
+                                                (self->pos.y + self->halfHeight) >> DECIMAL_BITS, false, false);
+            if (foo >= 25)
             {
                 bump->drawFunction = bb_drawHitEffect;
             }
         }
     }
-
 }
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -3838,7 +3898,7 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     }
     else if (other->dataType == BU_DATA || other->dataType == BUGGO_DATA)
     {
-        //flip the bug's walking direction bit flag.
+        // flip the bug's walking direction bit flag.
         bb_bugData_t* bData = (bb_bugData_t*)other->data;
         bData->flags ^= 0b1;
     }
@@ -3927,7 +3987,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 4;
 
     // one extra bug than required for easier completion and to match the same feel as in testing.
-    bb_spawnHorde(self, self->gameData->carFightState+1);
+    bb_spawnHorde(self, self->gameData->carFightState + 1);
 
     self->paused         = false;
     self->updateFunction = &bb_updateCarActive;
@@ -4116,7 +4176,7 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
 
         // Check for digging
         int32_t dot = dotVec2d(gData->vel, hitInfo->normal);
-        if (dot < -40 || (gData->dragShift!=17 && dot < 0))
+        if (dot < -40 || (gData->dragShift != 17 && dot < 0))
         { // velocity angle is opposing food cart normal vector. Tweak number for different threshold.
             ////////////////////////////
             // cart digging detected! //
@@ -4128,7 +4188,7 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
             }
             bb_foodCartData_t* mcData = (bb_foodCartData_t*)mainCart->data;
             // Update the main cart by decrementing it's animation frame. Using animation frame as health to save space.
-            if(mainCart->currentAnimationFrame == 20)
+            if (mainCart->currentAnimationFrame == 20)
             {
                 bb_spawnHorde(self, 6);
             }
@@ -4172,7 +4232,7 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
 void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     ((bb_drillBotData_t*)self->data)->attacking = 2;
-    //5% to deal 34 damage to other
+    // 5% to deal 34 damage to other
     if (bb_randomInt(0, 20) == 0)
     {
         bb_bugData_t* bData = (bb_bugData_t*)other->data;
@@ -4195,13 +4255,12 @@ void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
 void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
-    gData->numHarpoons = self->gameData->GarbotnikStat_maxHarpoons;
-    midiPlayer_t* sfx = soundGetPlayerSfx();
+    gData->numHarpoons        = self->gameData->GarbotnikStat_maxHarpoons;
+    midiPlayer_t* sfx         = soundGetPlayerSfx();
     midiPlayerReset(sfx);
     soundPlaySfx(&self->gameData->sfxHealth, 0);
     bb_destroyEntity(self, false);
 }
-
 
 void bb_startGarbotnikIntro(bb_entity_t* self)
 {
@@ -4547,8 +4606,6 @@ void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self)
 
 void bb_afterGarbotnikIntro(bb_entity_t* self)
 {
-
-
     for (int i = 0; i < 3; i++)
     {
         if (self->gameData->entityManager.boosterEntities[i]->currentAnimationFrame != 41)
@@ -4560,18 +4617,18 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
     }
 
     self->gameData->loadoutScreenData = heap_caps_calloc(1, sizeof(bb_loadoutSelectScreenData_t), MALLOC_CAP_SPIRAM);
-    self->gameData->screen = BIGBUG_LOADOUT_SELECT_SCREEN;
+    self->gameData->screen            = BIGBUG_LOADOUT_SELECT_SCREEN;
 
     bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
     tData->tracking    = self->gameData->entityManager.activeBooster;
     tData->midPointSqDist
         = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
-                                            - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
-                                        (tData->tracking->pos.y >> DECIMAL_BITS)
-                                            - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
-                                2));
+                                          - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
+                                      (tData->tracking->pos.y >> DECIMAL_BITS)
+                                          - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
+                              2));
 
-    tData->executeOnArrival = &bb_deployBooster;
+    tData->executeOnArrival                                  = &bb_deployBooster;
     self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
 }
 
@@ -4686,9 +4743,9 @@ void bb_upgradeRadar(bb_entity_t* self)
             }
         }
     }
-    if((self->gameData->garbotnikUpgrade.upgrades & (1<<GARBOTNIK_MORE_CHOICES))>>GARBOTNIK_MORE_CHOICES == 1)
+    if ((self->gameData->garbotnikUpgrade.upgrades & (1 << GARBOTNIK_MORE_CHOICES)) >> GARBOTNIK_MORE_CHOICES == 1)
     {
-        if(zeroCount > 2)
+        if (zeroCount > 2)
         {
             while (self->gameData->radar.choices[1] == -1)
             {
@@ -4736,8 +4793,8 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
 {
     self->gameData->radar.playerPingRadius      = 0; // just using this as a selection idx to save some space.
     self->gameData->garbotnikUpgrade.choices[0] = (int8_t)GARBOTNIK_MORE_DIGGING_STRENGTH; // default choice
-    self->gameData->garbotnikUpgrade.choices[1] = -1;                                     // no choice available
-    self->gameData->garbotnikUpgrade.choices[2] = -1;                                     // no choice available
+    self->gameData->garbotnikUpgrade.choices[1] = -1;                                      // no choice available
+    self->gameData->garbotnikUpgrade.choices[2] = -1;                                      // no choice available
     uint8_t zeroCount                           = 0; // zero count represent the number of upgrades not yet maxed out.
     for (int i = 0; i < 7; i++)
     {
@@ -4762,13 +4819,14 @@ void bb_upgradeGarbotnik(bb_entity_t* self)
         }
         self->gameData->garbotnikUpgrade.choices[1] = (int8_t)candidate;
     }
-    if((self->gameData->garbotnikUpgrade.upgrades & (1<<GARBOTNIK_MORE_CHOICES))>>GARBOTNIK_MORE_CHOICES == 1)
+    if ((self->gameData->garbotnikUpgrade.upgrades & (1 << GARBOTNIK_MORE_CHOICES)) >> GARBOTNIK_MORE_CHOICES == 1)
     {
-        if(zeroCount > 2)
+        if (zeroCount > 2)
         {
             enum bb_garbotnikUpgrade_t candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 6);
             while (((self->gameData->garbotnikUpgrade.upgrades & (1 << candidate)) >> candidate) == 1
-                || candidate == self->gameData->garbotnikUpgrade.choices[0] || candidate == self->gameData->garbotnikUpgrade.choices[1])
+                   || candidate == self->gameData->garbotnikUpgrade.choices[0]
+                   || candidate == self->gameData->garbotnikUpgrade.choices[1])
             {
                 candidate = (enum bb_garbotnikUpgrade_t)bb_randomInt(0, 6);
             }
@@ -4816,7 +4874,7 @@ void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
     // use a bump animation but tweak its graphics
     bb_entity_t* hitEffect
         = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
-                            hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+                          hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
     hitEffect->drawFunction = &bb_drawHitEffect;
 
     if (self->dataType == BU_DATA)
@@ -4843,9 +4901,9 @@ void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
     midiPlayerReset(sfx);
     soundPlaySfx(&self->gameData->sfxDirt, 0);
 
-    bb_bugData_t* bData = (bb_bugData_t*)self->data;
+    bb_bugData_t* bData         = (bb_bugData_t*)self->data;
     bData->health               = 0;
-    self->paused               = true;
+    self->paused                = true;
     bb_physicsData_t* physData  = heap_caps_calloc(1, sizeof(bb_physicsData_t), MALLOC_CAP_SPIRAM);
     physData->bounceNumerator   = 2; // 66% bounce
     physData->bounceDenominator = 3;
@@ -4865,16 +4923,14 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
         {
             // spawn a donut as a reward for completing the fight
             bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
-                            (self->pos.x >> DECIMAL_BITS), (self->pos.y >> DECIMAL_BITS), true,
-                            false);
+                            (self->pos.x >> DECIMAL_BITS), (self->pos.y >> DECIMAL_BITS), true, false);
             break;
         }
         default: // BB_SWADGE
         {
             // spawn a swadge as a reward for completing the fight
             bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
-                            (self->pos.x >> DECIMAL_BITS), (self->pos.y >> DECIMAL_BITS), true,
-                            false);
+                            (self->pos.x >> DECIMAL_BITS), (self->pos.y >> DECIMAL_BITS), true, false);
             break;
         }
     }
@@ -4882,14 +4938,14 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
     // use a bump animation but tweak its graphics
     bb_entity_t* hitEffect
         = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
-                            hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+                          hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
     hitEffect->drawFunction = &bb_drawHitEffect;
 }
 
 void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs)
 {
     bb_PointOfInterestParentData_t* cData = (bb_PointOfInterestParentData_t*)self->data;
-    
+
     // complex way to spawn bugs that adapts to any arena
     for (int bugSpawn = 0; bugSpawn < numBugs; bugSpawn++)
     {
@@ -5037,16 +5093,15 @@ void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs)
 
 void bb_trigger501kg(bb_entity_t* self)
 {
-    bb_loadSprite("501kg",1, 1, &self->gameData->entityManager.sprites[BB_501KG]);
-    
-    bb_entity_t* missile = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_501KG, 1,
-                    self->pos.x >> DECIMAL_BITS,
-                    self->pos.y >> DECIMAL_BITS, true, true);
+    bb_loadSprite("501kg", 1, 1, &self->gameData->entityManager.sprites[BB_501KG]);
+
+    bb_entity_t* missile   = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_501KG, 1,
+                                             self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, true);
     bb_501kgData_t* kgData = ((bb_501kgData_t*)missile->data);
 
-    kgData->vel = (vec_t){bb_randomInt(-60,60), 60};
+    kgData->vel = (vec_t){bb_randomInt(-60, 60), 60};
 
-    while(missile->pos.y > -2173)
+    while (missile->pos.y > -2173)
     {
         missile->pos.x -= (self->gameData->elapsedUs >> 12) * kgData->vel.x;
         missile->pos.y -= (self->gameData->elapsedUs >> 12) * kgData->vel.y;
@@ -5070,58 +5125,65 @@ void bb_trigger501kg(bb_entity_t* self)
 
 void bb_triggerFaultyWile(bb_entity_t* self)
 {
-    bb_entity_t* explosion = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+    bb_entity_t* explosion    = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1,
+                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
     bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
-    eData->radius = 60;
+    eData->radius             = 60;
 }
 
 void bb_triggerDrillBotWile(bb_entity_t* self)
 {
-    bb_entity_t* drillBot = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DRILL_BOT, 1, self->pos.x >> DECIMAL_BITS, -800, false, false);
+    bb_entity_t* drillBot     = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DRILL_BOT, 1,
+                                                self->pos.x >> DECIMAL_BITS, -800, false, false);
     bb_drillBotData_t* dbData = (bb_drillBotData_t*)drillBot->data;
-    dbData->targetY = self->pos.y-256;
+    dbData->targetY           = self->pos.y - 256;
 }
 
 void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self)
 {
-    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_ATMOSPHERIC_ATOMIZER, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
-    if(self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
+    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_ATMOSPHERIC_ATOMIZER, 1,
+                    self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+    if (self->gameData->entityManager.playerEntity != NULL
+        && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
     {
         bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
-        gData->dragShift = 23;//This greatly reduces the drag on the garbotnik
+        gData->dragShift          = 23; // This greatly reduces the drag on the garbotnik
     }
 }
 
 void bb_triggerAmmoSupplyWile(bb_entity_t* self)
 {
-    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_AMMO_SUPPLY, 1, self->pos.x >> DECIMAL_BITS, -800, false, false);
+    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_AMMO_SUPPLY, 1, self->pos.x >> DECIMAL_BITS,
+                    -800, false, false);
 }
 
 void bb_triggerPacifierWile(bb_entity_t* self)
 {
-    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_PACIFIER, 1, self->pos.x >> DECIMAL_BITS, -800, false, false);
+    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_PACIFIER, 1, self->pos.x >> DECIMAL_BITS,
+                    -800, false, false);
 }
 
 void bb_triggerSpaceLaserWile(bb_entity_t* self)
 {
-    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_SPACE_LASER, 1, self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
+    bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_SPACE_LASER, 1, self->pos.x >> DECIMAL_BITS,
+                    self->pos.y >> DECIMAL_BITS, false, false);
 }
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth)
 {
-    if(tile_i >= TILE_FIELD_WIDTH - 2 || tile_j >= TILE_FIELD_HEIGHT - 3)
+    if (tile_i >= TILE_FIELD_WIDTH - 2 || tile_j >= TILE_FIELD_HEIGHT - 3)
     {
         return;
     }
     int16_t xPos = tile_i * TILE_SIZE + HALF_TILE;
     int16_t yPos = tile_j * TILE_SIZE + HALF_TILE;
     if (xPos > gameData->camera.camera.pos.x - 60 && xPos < gameData->camera.camera.pos.x + 340
-            && yPos > gameData->camera.camera.pos.y - 60 && yPos < gameData->camera.camera.pos.y + 300)
+        && yPos > gameData->camera.camera.pos.y - 60 && yPos < gameData->camera.camera.pos.y + 300)
     { // if it is on camera or close to it
         // Create a crumble animation
         bb_createEntity(&gameData->entityManager, ONESHOT_ANIMATION, false, CRUMBLE_ANIM, gameFramesPerAnimationFrame,
-                    xPos, yPos, false, false);
+                        xPos, yPos, false, false);
     }
 
     // Play sfx
@@ -5187,7 +5249,7 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
-    int8_t characterSprite = 0;
+    int8_t characterSprite   = 0;
     if (strcmp(firstCharacter, "Ovo") == 0)
     {
         characterSprite = bb_randomInt(0, 6);
@@ -5196,19 +5258,19 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     else if (strcmp(firstCharacter, "Pixel") == 0)
     {
         characterSprite = bb_randomInt(7, 8);
-        //borrow sprite from UTT
+        // borrow sprite from UTT
         loadWsgInplace("pixil_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     else if (strcmp(firstCharacter, "Pango") == 0)
     {
         characterSprite = bb_randomInt(9, 10);
-        //borrow sprite from UTT
+        // borrow sprite from UTT
         loadWsgInplace("hotdog_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     else if (strcmp(firstCharacter, "Po") == 0)
     {
         characterSprite = bb_randomInt(11, 13);
-        //borrow sprite from UTT
+        // borrow sprite from UTT
         loadWsgInplace("hand_rs.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     // Add dr. Ovo indices
@@ -5236,24 +5298,24 @@ void bb_freeDialogueData(bb_dialogueData_t* dData)
 {
     for (int i = 0; i < dData->numStrings; i++)
     {
-        heap_caps_free(dData->strings[i]); // Free each string
+        heap_caps_free(dData->strings[i]);    // Free each string
         heap_caps_free(dData->characters[i]); // Also free each character string
     }
     heap_caps_free(dData->strings); // Free the array of string pointers
     heap_caps_free(dData->characters);
 }
 
-
-//return -1 if there is a mismatch. 0 if playerInputSequence is a prefix of compareTo. 1 if playerInputSequence matches compareTo.
+// return -1 if there is a mismatch. 0 if playerInputSequence is a prefix of compareTo. 1 if playerInputSequence matches
+// compareTo.
 int8_t bb_compareWileCallSequences(enum bb_direction_t* playerInputSequence, enum bb_direction_t* compareTo)
 {
     for (int i = 0; i < 5; i++)
     {
-        if(compareTo[i] == BB_NONE)
+        if (compareTo[i] == BB_NONE)
         {
             return 1;
         }
-        else if(playerInputSequence[i] == BB_NONE)
+        else if (playerInputSequence[i] == BB_NONE)
         {
             return 0;
         }

@@ -254,10 +254,10 @@ static void bb_EnterModeSkipIntro(void)
         {
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
             ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 0;
-            bigbug->gameData.entityManager.activeBooster->currentAnimationFrame = 40;
-            bigbug->gameData.entityManager.activeBooster->pos.y                 = 50;
-            bigbug->gameData.entityManager.activeBooster->updateFunction        = bb_updateHeavyFalling;
-            bb_entity_t* arm                                                    = bb_createEntity(
+            bigbug->gameData.entityManager.activeBooster->currentAnimationFrame               = 40;
+            bigbug->gameData.entityManager.activeBooster->pos.y                               = 50;
+            bigbug->gameData.entityManager.activeBooster->updateFunction                      = bb_updateHeavyFalling;
+            bb_entity_t* arm                                                                  = bb_createEntity(
                 &bigbug->gameData.entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                 bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
                 (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, true, false);
@@ -597,41 +597,42 @@ static void bb_DrawScene_Radar(void)
                     drawCircleFilled(xIdx * 4 - 2, yIdx * 4 - bigbug->gameData.radar.cam.y, 1, c500);
                 }
             }
-            if((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
+            if ((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
             {
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == SKELETON_EMBED)
                 {
                     drawCircleFilled(xIdx * 4 - 2, yIdx * 4 - bigbug->gameData.radar.cam.y, 2, c050);
                 }
             }
-
         }
     }
-    
+
     for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
     {
         int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
         int16_t yMax = CLAMP(yMin + FIELD_HEIGHT / 4, 0, TILE_FIELD_HEIGHT);
         for (int yIdx = yMin; yIdx < yMax; yIdx++)
         {
-            if((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
+            if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
             {
-                if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_DONUT_EMBED ||
-                    bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_DONUT_EMBED)
+                if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_DONUT_EMBED
+                    || bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_DONUT_EMBED)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], xIdx * 4 - 15, yIdx * 4 - bigbug->gameData.radar.cam.y - 6);   
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], xIdx * 4 - 15,
+                                  yIdx * 4 - bigbug->gameData.radar.cam.y - 6);
                 }
-                if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_SWADGE_EMBED ||
-                    bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_SWADGE_EMBED)
+                if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_SWADGE_EMBED
+                    || bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_SWADGE_EMBED)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], xIdx * 4 - 15, yIdx * 4 - bigbug->gameData.radar.cam.y - 6);   
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], xIdx * 4 - 15,
+                                  yIdx * 4 - bigbug->gameData.radar.cam.y - 6);
                 }
             }
         }
     }
 
-    //fuel & enemies
-    //iterate all cached entities
+    // fuel & enemies
+    // iterate all cached entities
     node_t* current = bigbug->gameData.entityManager.cachedEntities->first;
     while (current != NULL)
     {
@@ -641,34 +642,38 @@ static void bb_DrawScene_Radar(void)
             if (entity->dataType == EGG_DATA)
             {
                 drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
-                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 1, c500);
+                                 (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 1, c500);
             }
-            else if(entity->spriteIndex >= 8 && entity->spriteIndex <= 13)
+            else if (entity->spriteIndex >= 8 && entity->spriteIndex <= 13)
             {
                 drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
-                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c530);
+                                 (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c530);
             }
         }
-        if((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
+        if ((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
         {
             if (entity->spriteIndex == BB_FUEL)
             {
                 drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
-                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c050);
+                                 (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c050);
             }
         }
-        if((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
+        if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
         {
-            if(entity->dataType == CAR_DATA || entity->dataType == FOOD_CART_DATA)
+            if (entity->dataType == CAR_DATA || entity->dataType == FOOD_CART_DATA)
             {
                 bb_PointOfInterestParentData_t* POIData = (bb_PointOfInterestParentData_t*)entity->data;
-                if(POIData->reward == BB_DONUT)
+                if (POIData->reward == BB_DONUT)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], (entity->pos.x >> DECIMAL_BITS) / 8 - 15, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0],
+                                  (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                  (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
-                else if(POIData->reward == BB_SWADGE)
+                else if (POIData->reward == BB_SWADGE)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], (entity->pos.x >> DECIMAL_BITS) / 8 - 15, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1],
+                                  (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                  (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
             }
         }
@@ -676,51 +681,55 @@ static void bb_DrawScene_Radar(void)
         current = current->next;
     }
 
-    //iterate all entities
-    for(int i = 0; i < MAX_ENTITIES; i++)
+    // iterate all entities
+    for (int i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* entity = &bigbug->gameData.entityManager.entities[i];
-        if(entity->active)
+        if (entity->active)
         {
             if ((bigbug->gameData.radar.upgrades >> BIGBUG_ENEMIES) & 1)
             {
                 if (entity->dataType == EGG_DATA)
                 {
                     drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
-                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 1, c500);
+                                     (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 1, c500);
                 }
-                else if(entity->spriteIndex >= 8 && entity->spriteIndex <= 13)
+                else if (entity->spriteIndex >= 8 && entity->spriteIndex <= 13)
                 {
                     drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
-                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c500);
+                                     (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c500);
                 }
             }
-            if((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
+            if ((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
             {
                 if (entity->spriteIndex == BB_FUEL)
                 {
                     drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
-                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c050);
+                                     (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c050);
                 }
             }
-            if((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
+            if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
             {
-                if(entity->dataType == CAR_DATA || entity->dataType == FOOD_CART_DATA)
+                if (entity->dataType == CAR_DATA || entity->dataType == FOOD_CART_DATA)
                 {
                     bb_PointOfInterestParentData_t* POIData = (bb_PointOfInterestParentData_t*)entity->data;
-                    if(POIData->reward == BB_DONUT)
+                    if (POIData->reward == BB_DONUT)
                     {
-                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], (entity->pos.x >> DECIMAL_BITS) / 8 - 15, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0],
+                                      (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                      (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
-                    else if(POIData->reward == BB_SWADGE)
+                    else if (POIData->reward == BB_SWADGE)
                     {
-                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], (entity->pos.x >> DECIMAL_BITS) / 8 - 15, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1],
+                                      (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                      (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
                 }
             }
         }
     }
-    
+
     // garbotnik
     vec_t garbotnikPos = (vec_t){0};
     if (bigbug->gameData.entityManager.playerEntity != NULL)
@@ -814,7 +823,7 @@ static void bb_DrawScene_Radar_Upgrade(void)
 
     for (int i = 0; i < 3; i++)
     {
-        if(bigbug->gameData.radar.choices[i] == -1)
+        if (bigbug->gameData.radar.choices[i] == -1)
         {
             break;
         }
@@ -954,7 +963,7 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
     uint16_t tWidth = 0;
     for (int i = 0; i < 3; i++)
     {
-        if(bigbug->gameData.garbotnikUpgrade.choices[i] == -1)
+        if (bigbug->gameData.garbotnikUpgrade.choices[i] == -1)
         {
             break;
         }
@@ -1032,8 +1041,7 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
 static void bb_DrawScene_Loadout_Select(void)
 {
     uint8_t primingEffectY = 160 - log((double)(bigbug->gameData.loadoutScreenData->primingEffect - 1)) * 80;
-    drawRectFilled(0, primingEffectY, TFT_WIDTH, primingEffectY+10, c451);
-
+    drawRectFilled(0, primingEffectY, TFT_WIDTH, primingEffectY + 10, c451);
 
     char donuts[15];
     uint8_t numDonuts = ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts;
@@ -1045,7 +1053,6 @@ static void bb_DrawScene_Loadout_Select(void)
     drawText(&bigbug->gameData.font, numDonuts > 0 ? c555 : c500, donuts,
              donutLeft + bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2, 16);
 
-    
     uint16_t tWidth = textWidth(&bigbug->gameData.sevenSegmentFont, "loadout");
     drawText(&bigbug->gameData.sevenSegmentFont, c225, "loadout", (TFT_WIDTH >> 1) - (tWidth >> 1), 30);
 
@@ -1053,16 +1060,19 @@ static void bb_DrawScene_Loadout_Select(void)
     drawLine(15, 123, 125, 123, bigbug->gameData.radar.playerPingRadius == 0 ? c550 : c222, 0);
     drawLine(15, 84, 15, 123, bigbug->gameData.radar.playerPingRadius == 0 ? c550 : c222, 13);
     drawLine(125, 84, 125, 123, bigbug->gameData.radar.playerPingRadius == 0 ? c550 : c222, 13);
-    if(bigbug->gameData.loadout.primaryWileIdx != 255)
+    if (bigbug->gameData.loadout.primaryWileIdx != 255)
     {
-        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c333, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.primaryWileIdx].name, 20, 89);
-        snprintf(donuts, sizeof(donuts), "cooldown: %ds", bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.primaryWileIdx].cooldown);
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c333,
+                 bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.primaryWileIdx].name, 20, 89);
+        snprintf(donuts, sizeof(donuts), "cooldown: %ds",
+                 bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.primaryWileIdx].cooldown);
         drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c345 : c333, donuts, 20, 110);
     }
     else
     {
         tWidth = textWidth(&bigbug->gameData.font, "none");
-        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c333, "none", (TFT_WIDTH >> 2) - (tWidth >> 1), 98);
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c333, "none",
+                 (TFT_WIDTH >> 2) - (tWidth >> 1), 98);
     }
     tWidth = textWidth(&bigbug->gameData.font, "primary wile");
     drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c333, "primary wile",
@@ -1072,67 +1082,78 @@ static void bb_DrawScene_Loadout_Select(void)
     drawLine(155, 123, 265, 123, bigbug->gameData.radar.playerPingRadius == 1 ? c550 : c222, 0);
     drawLine(155, 84, 155, 123, bigbug->gameData.radar.playerPingRadius == 1 ? c550 : c222, 13);
     drawLine(265, 84, 265, 123, bigbug->gameData.radar.playerPingRadius == 1 ? c550 : c222, 13);
-    if(bigbug->gameData.loadout.secondaryWileIdx != 255)
+    if (bigbug->gameData.loadout.secondaryWileIdx != 255)
     {
-        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c333, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.secondaryWileIdx].name, 160, 89);
-        snprintf(donuts, sizeof(donuts), "cooldown: %ds", bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.secondaryWileIdx].cooldown);
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c333,
+                 bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.secondaryWileIdx].name, 160, 89);
+        snprintf(donuts, sizeof(donuts), "cooldown: %ds",
+                 bigbug->gameData.loadout.allWiles[bigbug->gameData.loadout.secondaryWileIdx].cooldown);
         drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c345 : c333, donuts, 160, 110);
     }
     else
     {
         tWidth = textWidth(&bigbug->gameData.font, "none");
-        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c333, "none", (TFT_WIDTH >> 2) * 3 - (tWidth >> 1), 98);
+        drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c333, "none",
+                 (TFT_WIDTH >> 2) * 3 - (tWidth >> 1), 98);
     }
     tWidth = textWidth(&bigbug->gameData.font, "secondary wile");
     drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c333, "secondary wile",
              (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 126);
 
-    if(bigbug->gameData.loadoutScreenData->blinkTimer > 126 && bigbug->gameData.radar.playerPingRadius == 2)
+    if (bigbug->gameData.loadoutScreenData->blinkTimer > 126 && bigbug->gameData.radar.playerPingRadius == 2)
     {
         drawTriangleOutlined(25, 188, 15, 178, 25, 168, c222, c555);
         drawTriangleOutlined(255, 188, 265, 178, 255, 168, c222, c555);
     }
 
     drawRectScaled(10, 50, 84, 70, bigbug->gameData.radar.playerPingRadius == 2 ? c550 : c222, 0, 0, 3, 3);
-    
-    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c333, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].name, 35,
-             155);
 
-    if(bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].purchased)
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c333,
+             bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].name, 35, 155);
+
+    if (bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].purchased)
     {
-        drawTextMarquee(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c325 : c225, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].description, 35, 170, 247, &bigbug->gameData.loadoutScreenData->marqueeTimer);
+        drawTextMarquee(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c325 : c225,
+                        bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].description,
+                        35, 170, 247, &bigbug->gameData.loadoutScreenData->marqueeTimer);
         drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c333, "hold", 35, 188);
         drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c500 : c333, "B", 73, 188);
         drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c333, "+", 86, 188);
-        //draw the call sequence
-        for(int i = 0; i < 5; i++)
+        // draw the call sequence
+        for (int i = 0; i < 5; i++)
         {
-            enum bb_direction_t dir = bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].callSequence[i];
-            if(dir == BB_NONE)
+            enum bb_direction_t dir
+                = bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].callSequence[i];
+            if (dir == BB_NONE)
             {
                 break;
             }
             int32_t rotation = 180 + dir * 90;
-            rotation = rotation % 360;
-            drawWsg(&bigbug->gameData.entityManager.sprites[BB_ARROW].frames[bigbug->gameData.radar.playerPingRadius == 2], 96 + i * 30, 182, false, false, rotation);
+            rotation         = rotation % 360;
+            drawWsg(
+                &bigbug->gameData.entityManager.sprites[BB_ARROW].frames[bigbug->gameData.radar.playerPingRadius == 2],
+                96 + i * 30, 182, false, false, rotation);
         }
     }
     else
     {
-        //draw lock
-        drawTriangleOutlined(205,155,246,155,246,196, c215,c215);
+        // draw lock
+        drawTriangleOutlined(205, 155, 246, 155, 246, 196, c215, c215);
         drawCircleFilled(237, 164, 5, c000);
         drawCircleFilled(237, 164, 3, c215);
         drawRectFilled(238, 163, 243, 165, c215);
-        drawRectFilled(229,165,245,178,c000);
+        drawRectFilled(229, 165, 245, 178, c000);
         drawRectFilled(236, 171, 238, 173, c215);
 
-        snprintf(donuts, sizeof(donuts), "pay %d donut%s", bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost, bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost == 1 ? "" : "s");
-        tWidth = textWidth(&bigbug->gameData.font, donuts);
+        snprintf(donuts, sizeof(donuts), "pay %d donut%s",
+                 bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost,
+                 bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost == 1 ? ""
+                                                                                                               : "s");
+        tWidth                 = textWidth(&bigbug->gameData.font, donuts);
         paletteColor_t textCol = c222;
-        if(bigbug->gameData.radar.playerPingRadius == 2)
+        if (bigbug->gameData.radar.playerPingRadius == 2)
         {
-            if(bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost <= numDonuts)
+            if (bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost <= numDonuts)
             {
                 textCol = c550;
             }
@@ -1141,11 +1162,11 @@ static void bb_DrawScene_Loadout_Select(void)
                 textCol = c500;
             }
         }
-        drawText(&bigbug->gameData.font, textCol, donuts, (TFT_WIDTH>>1) - (tWidth>>1), 180);
+        drawText(&bigbug->gameData.font, textCol, donuts, (TFT_WIDTH >> 1) - (tWidth >> 1), 180);
     }
 
-    drawRectFilled(0, primingEffectY+10, TFT_WIDTH, primingEffectY+20, c451);
-    drawRectFilled(0, primingEffectY+20, TFT_WIDTH, TFT_HEIGHT, c151);
+    drawRectFilled(0, primingEffectY + 10, TFT_WIDTH, primingEffectY + 20, c451);
+    drawRectFilled(0, primingEffectY + 20, TFT_WIDTH, TFT_HEIGHT, c151);
 
     drawRect(1, 1, 279, 239, c303);
     drawRect(3, 3, 277, 237, c440);
@@ -1164,14 +1185,14 @@ static void bb_DrawScene_Loadout_Select(void)
     drawRectFilled(65, 217, 215, 234, bigbug->gameData.radar.playerPingRadius == 3 ? c550 : c222);
     drawCircleFilled(65, 225, 8, bigbug->gameData.radar.playerPingRadius == 3 ? c550 : c222);
     drawCircleFilled(215, 225, 8, bigbug->gameData.radar.playerPingRadius == 3 ? c550 : c222);
-    tWidth = textWidth(&bigbug->gameData.font, "prime the trash pod");
+    tWidth                 = textWidth(&bigbug->gameData.font, "prime the trash pod");
     paletteColor_t textCol = c000;
-    if(bigbug->gameData.radar.playerPingRadius == 3 && bigbug->gameData.loadoutScreenData->primingEffect > 10 && bb_randomInt(0,1))
+    if (bigbug->gameData.radar.playerPingRadius == 3 && bigbug->gameData.loadoutScreenData->primingEffect > 10
+        && bb_randomInt(0, 1))
     {
         textCol = c303;
     }
-    drawText(&bigbug->gameData.font, textCol, "prime the trash pod",
-             (TFT_WIDTH >> 1) - (tWidth >> 1), 220);
+    drawText(&bigbug->gameData.font, textCol, "prime the trash pod", (TFT_WIDTH >> 1) - (tWidth >> 1), 220);
 }
 
 static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
@@ -1230,9 +1251,9 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                     case GARBOTNIK_INCREASE_MAX_AMMO:
                     {
                         bigbug->gameData.GarbotnikStat_maxHarpoons += 50;
-                        if(bigbug->gameData.GarbotnikStat_maxHarpoons == 250)
+                        if (bigbug->gameData.GarbotnikStat_maxHarpoons == 250)
                         {
-                            //max ammo is maxed out. Take it out of the pool.
+                            // max ammo is maxed out. Take it out of the pool.
                             bigbug->gameData.garbotnikUpgrade.upgrades
                                 = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_INCREASE_MAX_AMMO);
                         }
@@ -1240,12 +1261,14 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                     }
                     case GARBOTNIK_MORE_CHOICES:
                     {
-                        bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_MORE_CHOICES);
+                        bigbug->gameData.garbotnikUpgrade.upgrades
+                            = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_MORE_CHOICES);
                         break;
                     }
                     case GARBOTNIK_BUG_WHISPERER:
                     {
-                        bigbug->gameData.garbotnikUpgrade.upgrades = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_BUG_WHISPERER);
+                        bigbug->gameData.garbotnikUpgrade.upgrades
+                            = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_BUG_WHISPERER);
                         break;
                     }
                     default:
@@ -1262,7 +1285,8 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
     }
 
     // keep the selection wrapped in range of available choices.
-    uint8_t numChoices = 1 + (uint8_t)(bigbug->gameData.radar.choices[1] > -1) + (uint8_t)(bigbug->gameData.radar.choices[2] > -1);
+    uint8_t numChoices
+        = 1 + (uint8_t)(bigbug->gameData.radar.choices[1] > -1) + (uint8_t)(bigbug->gameData.radar.choices[2] > -1);
     bigbug->gameData.radar.playerPingRadius
         = (bigbug->gameData.radar.playerPingRadius % numChoices + numChoices) % numChoices;
 
@@ -1272,7 +1296,7 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
 static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
 {
     bigbug->gameData.loadoutScreenData->blinkTimer += elapsedUs >> 12;
-    if(bigbug->gameData.radar.playerPingRadius == 2)
+    if (bigbug->gameData.radar.playerPingRadius == 2)
     {
         bigbug->gameData.loadoutScreenData->marqueeTimer += elapsedUs;
     }
@@ -1297,7 +1321,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
                 {
                     bigbug->gameData.radar
                         .playerPingRadius--; // using it as a selection idx in this screen to save space.
-                    if(bigbug->gameData.radar.playerPingRadius != 2)
+                    if (bigbug->gameData.radar.playerPingRadius != 2)
                     {
                         bigbug->gameData.loadoutScreenData->marqueeTimer = 0;
                     }
@@ -1314,7 +1338,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
                     bigbug->gameData.radar
                         .playerPingRadius++; // using it as a selection idx in this screen to save space.
                 }
-                if(bigbug->gameData.radar.playerPingRadius != 2)
+                if (bigbug->gameData.radar.playerPingRadius != 2)
                 {
                     bigbug->gameData.loadoutScreenData->marqueeTimer = 0;
                 }
@@ -1325,10 +1349,10 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
                 {
                     bigbug->gameData.radar.playerPingRadius--;
                 }
-                else if(bigbug->gameData.radar.playerPingRadius == 2)
+                else if (bigbug->gameData.radar.playerPingRadius == 2)
                 {
                     bigbug->gameData.loadoutScreenData->selectedWile--;
-                    if(bigbug->gameData.loadoutScreenData->selectedWile > 6)
+                    if (bigbug->gameData.loadoutScreenData->selectedWile > 6)
                     {
                         bigbug->gameData.loadoutScreenData->selectedWile = 6;
                     }
@@ -1341,10 +1365,10 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
                 {
                     bigbug->gameData.radar.playerPingRadius++;
                 }
-                else if(bigbug->gameData.radar.playerPingRadius == 2)
+                else if (bigbug->gameData.radar.playerPingRadius == 2)
                 {
                     bigbug->gameData.loadoutScreenData->selectedWile++;
-                    if(bigbug->gameData.loadoutScreenData->selectedWile > 6)
+                    if (bigbug->gameData.loadoutScreenData->selectedWile > 6)
                     {
                         bigbug->gameData.loadoutScreenData->selectedWile = 0;
                     }
@@ -1353,7 +1377,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
             }
             else if (evt.button == PB_A)
             {
-                if(bigbug->gameData.radar.playerPingRadius == 0)
+                if (bigbug->gameData.radar.playerPingRadius == 0)
                 {
                     if (bigbug->gameData.loadout.primaryWileIdx != 255)
                     {
@@ -1364,7 +1388,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
                         bigbug->gameData.radar.playerPingRadius = 2;
                     }
                 }
-                else if(bigbug->gameData.radar.playerPingRadius == 1)
+                else if (bigbug->gameData.radar.playerPingRadius == 1)
                 {
                     if (bigbug->gameData.loadout.secondaryWileIdx != 255)
                     {
@@ -1375,27 +1399,37 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
                         bigbug->gameData.radar.playerPingRadius = 2;
                     }
                 }
-                else if(bigbug->gameData.radar.playerPingRadius == 2)
+                else if (bigbug->gameData.radar.playerPingRadius == 2)
                 {
-                    if(!bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].purchased)
+                    if (!bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].purchased)
                     {
-                        if(bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost <= ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts)
+                        if (bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost
+                            <= ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts)
                         {
-                            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts -= bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].cost;
-                            bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile].purchased = true;
+                            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts
+                                -= bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile]
+                                       .cost;
+                            bigbug->gameData.loadout.allWiles[bigbug->gameData.loadoutScreenData->selectedWile]
+                                .purchased
+                                = true;
                         }
                     }
                     else
                     {
-                        if(bigbug->gameData.loadout.primaryWileIdx == 255 && bigbug->gameData.loadout.secondaryWileIdx != bigbug->gameData.loadoutScreenData->selectedWile)
+                        if (bigbug->gameData.loadout.primaryWileIdx == 255
+                            && bigbug->gameData.loadout.secondaryWileIdx
+                                   != bigbug->gameData.loadoutScreenData->selectedWile)
                         {
-                            //nothing was selected yet
+                            // nothing was selected yet
                             bigbug->gameData.loadout.primaryWileIdx = bigbug->gameData.loadoutScreenData->selectedWile;
                         }
-                        else if(bigbug->gameData.loadout.secondaryWileIdx == 255 && bigbug->gameData.loadout.primaryWileIdx != bigbug->gameData.loadoutScreenData->selectedWile)
+                        else if (bigbug->gameData.loadout.secondaryWileIdx == 255
+                                 && bigbug->gameData.loadout.primaryWileIdx
+                                        != bigbug->gameData.loadoutScreenData->selectedWile)
                         {
-                            //nothing was selected yet
-                            bigbug->gameData.loadout.secondaryWileIdx = bigbug->gameData.loadoutScreenData->selectedWile;
+                            // nothing was selected yet
+                            bigbug->gameData.loadout.secondaryWileIdx
+                                = bigbug->gameData.loadoutScreenData->selectedWile;
                         }
                     }
                 }
@@ -1406,10 +1440,10 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
     // keep the selections wrapped in range of available choices.
     bigbug->gameData.radar.playerPingRadius = (bigbug->gameData.radar.playerPingRadius % 4 + 4) % 4;
 
-    //if 3rd option is selected and 'a' button is held
+    // if 3rd option is selected and 'a' button is held
     if (bigbug->gameData.radar.playerPingRadius == 3 && ((bigbug->gameData.btnState & PB_A) >> 4))
     {
-        if(bigbug->gameData.loadoutScreenData->primingEffect >= 185)
+        if (bigbug->gameData.loadoutScreenData->primingEffect >= 185)
         {
             heap_caps_free(bigbug->gameData.loadoutScreenData);
             bigbug->gameData.loadoutScreenData  = NULL;
@@ -1421,7 +1455,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
         // printf("priming effect: %d\n",bigbug->gameData.loadoutScreenData->primingEffect);
     }
 
-    if(bigbug->gameData.loadoutScreenData->primingEffect>10)
+    if (bigbug->gameData.loadoutScreenData->primingEffect > 10)
     {
         bigbug->gameData.loadoutScreenData->primingEffect -= elapsedUs >> 14;
     }
