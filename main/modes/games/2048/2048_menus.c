@@ -14,12 +14,12 @@
 //==============================================================================
 
 #include "2048_menus.h"
+#include "mode_2048.h"
 
 //==============================================================================
 // Const Variables
 //==============================================================================
 
-const char mode[]             = "2048";
 static const char pressKeyA[] = "Press A to play with D-Pad";
 static const char pressKeyB[] = "Press B to play with Tilt Controls";
 static const char highScore[] = "You got a high score!";
@@ -104,8 +104,8 @@ void t48_drawStartScreen(t48_t* t48, paletteColor_t color, int32_t elapsedUs)
     }
 
     // Title
-    drawText(&t48->titleFont, color, mode, (TFT_WIDTH - textWidth(&t48->titleFont, mode)) / 2, TFT_HEIGHT / 2 - 12);
-    drawText(&t48->titleFontOutline, c555, mode, (TFT_WIDTH - textWidth(&t48->titleFont, mode)) / 2,
+    drawText(&t48->titleFont, color, t48Name, (TFT_WIDTH - textWidth(&t48->titleFont, t48Name)) / 2, TFT_HEIGHT / 2 - 12);
+    drawText(&t48->titleFontOutline, c555, t48Name, (TFT_WIDTH - textWidth(&t48->titleFont, t48Name)) / 2,
              TFT_HEIGHT / 2 - 12);
 
     // Draw current High Score
