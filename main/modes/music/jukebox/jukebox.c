@@ -43,19 +43,21 @@
 
 #define CORNER_OFFSET           14
 #define JUKEBOX_SPRITE_Y_OFFSET 3
-#define LINE_BREAK_Y            8
+#define LINE_BREAK_LONG_Y       8
+#define LINE_BREAK_SHORT_Y      3
+#define ARROW_OFFSET_FROM_TEXT  8
 
-#define NUM_DECORATION_WSGS 8
-#define MAX_DECORATIONS_ON_SCREEN 10
-#define MIN_DECORATION_DELAY_US_PAUSED 1000000
-#define MAX_DECORATION_DELAY_US_PAUSED 4000000
+#define NUM_DECORATION_WSGS             8
+#define MAX_DECORATIONS_ON_SCREEN       10
+#define MIN_DECORATION_DELAY_US_PAUSED  1000000
+#define MAX_DECORATION_DELAY_US_PAUSED  4000000
 #define MIN_DECORATION_DELAY_US_PLAYING 200000
 #define MAX_DECORATION_DELAY_US_PLAYING 600000
-#define MIN_DECORATION_SPEED_PAUSED 24 //pixels to rise per second
-#define MAX_DECORATION_SPEED_PAUSED 48
-#define MIN_DECORATION_SPEED_PLAYING 96
-#define MAX_DECORATION_SPEED_PLAYING 144
-#define MAX_DECORATION_ROTATE_DEG 30
+#define MIN_DECORATION_SPEED_PAUSED     24 //pixels to rise per second
+#define MAX_DECORATION_SPEED_PAUSED     48
+#define MIN_DECORATION_SPEED_PLAYING    96
+#define MAX_DECORATION_SPEED_PLAYING    144
+#define MAX_DECORATION_ROTATE_DEG       30
 
 
 /*==============================================================================
@@ -184,6 +186,7 @@ const char* JK_TAG = "JK";
 static const char str_bgm_muted[] = "Swadge music is muted!";
 static const char str_sfx_muted[] = "Swadge SFX are muted!";
 #endif
+static const char str_mode[]       = "Mode";
 const char str_bgm[]               = "Music";
 static const char str_sfx[]        = "SFX";
 static const char str_leds[]       = "B: LEDs:";
@@ -264,7 +267,7 @@ jukeboxSong_t music_swadgehero[] = {
     },
     {
         .filename = "sh_cremulons.mid",
-        .name     = "The Dance of the Cremulons",
+        .name     = "Dance of the Cremulons",
     },
     {
         .filename = "sh_devils.mid",
@@ -1077,20 +1080,20 @@ void jukeboxMainLoop(int64_t elapsedUs)
 
     // Music/SFX
     drawText(&jukebox->radiostars, c555, str_music_sfx, CORNER_OFFSET,
-             CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
+             CORNER_OFFSET + LINE_BREAK_LONG_Y + jukebox->radiostars.height);
     // "Music" or "SFX"
     const char* curMusicSfxStr = jukebox->inMusicSubmode ? str_bgm : str_sfx;
     drawText(&(jukebox->radiostars), c444, curMusicSfxStr,
              TFT_WIDTH - CORNER_OFFSET - textWidth(&jukebox->radiostars, curMusicSfxStr),
-             CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
+             CORNER_OFFSET + LINE_BREAK_LONG_Y + jukebox->radiostars.height);
 
     // LED Brightness
     drawText(&jukebox->radiostars, c555, str_brightness, CORNER_OFFSET,
-             CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
+             CORNER_OFFSET + (LINE_BREAK_LONG_Y + jukebox->radiostars.height) * 2);
     char text[32];
     snprintf(text, sizeof(text), "%d", getLedBrightnessSetting());
     drawText(&jukebox->radiostars, c444, text, TFT_WIDTH - textWidth(&jukebox->radiostars, text) - CORNER_OFFSET,
-             CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
+             CORNER_OFFSET + (LINE_BREAK_LONG_Y + jukebox->radiostars.height) * 2);
 
     // Assume not playing
     paletteColor_t color = c252;
@@ -1127,7 +1130,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
         {
             categoryName = musicCategories[jukebox->categoryIdx].categoryName;
             songName     = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
-            songTypeName = "Music";
+            songTypeName = str_bgm;
             numSongs     = musicCategories[jukebox->categoryIdx].numSongs;
             drawNames    = true;
         }
@@ -1146,7 +1149,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
         {
             categoryName = sfxCategories[jukebox->categoryIdx].categoryName;
             songName     = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
-            songTypeName = "SFX";
+            songTypeName = str_sfx;
             numSongs     = sfxCategories[jukebox->categoryIdx].numSongs;
             drawNames    = true;
         }
@@ -1154,32 +1157,37 @@ void jukeboxMainLoop(int64_t elapsedUs)
 
     if (drawNames)
     {
-        // Draw the mode name
+        // Draw the word "Mode"
         const font_t* nameFont      = &(jukebox->radiostars);
-        uint8_t arrowOffsetFromText = 8;
-        snprintf(text, sizeof(text), "Mode: %s", categoryName);
-        int16_t width = textWidth(nameFont, text);
-        int16_t yOff  = (TFT_HEIGHT - nameFont->height) / 2 - nameFont->height * 0;
-        drawText(nameFont, c533, text, (TFT_WIDTH - width) / 2, yOff);
+        int16_t width = textWidth(nameFont, str_mode);
+        int16_t yOff  = (TFT_HEIGHT - nameFont->height) / 2 - (nameFont->height + 2) * 2;
+        drawText(nameFont, c533, str_mode, (TFT_WIDTH - width) / 2, yOff);
         // Draw category arrows if this submode has more than 1 category
         if ((jukebox->inMusicSubmode && ARRAY_SIZE(musicCategories) > 1) || ARRAY_SIZE(sfxCategories) > 1)
         {
-            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - arrowOffsetFromText - jukebox->arrow.w, yOff, false,
+            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - ARROW_OFFSET_FROM_TEXT - jukebox->arrow.w, yOff, false,
                     false, 0);
-            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + arrowOffsetFromText, yOff, false, false, 180);
+            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + ARROW_OFFSET_FROM_TEXT, yOff, false, false, 180);
         }
 
-        // Draw the song name
-        snprintf(text, sizeof(text), "%s: %s", songTypeName, songName);
-        yOff  = (TFT_HEIGHT - nameFont->height) / 2 + nameFont->height * 2.5f;
-        width = textWidth(nameFont, text);
-        drawText(nameFont, c335, text, (TFT_WIDTH - width) / 2, yOff);
+        // Draw the mode name
+        yOff += nameFont->height + LINE_BREAK_SHORT_Y;
+        drawText(nameFont, c533, categoryName, (TFT_WIDTH - textWidth(nameFont, categoryName)) / 2, yOff);
+
+        // Draw either the word "Music" or "SFX"
+        yOff += (nameFont->height + LINE_BREAK_SHORT_Y) * 2;
+        width = textWidth(nameFont, songTypeName);
+        drawText(nameFont, c335, songTypeName, (TFT_WIDTH - width) / 2, yOff);
         // Draw song arrows if this category has more than 1 song
         if (numSongs > 1)
         {
             drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - 8 - jukebox->arrow.w, yOff, false, false, 270);
             drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 90);
         }
+
+        // Draw the song name
+        yOff += nameFont->height + LINE_BREAK_SHORT_Y;
+        drawText(nameFont, c335, songName, (TFT_WIDTH - textWidth(nameFont, songName)) / 2, yOff);
     }
 }
 
