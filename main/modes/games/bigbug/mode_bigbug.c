@@ -95,7 +95,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .usesThermometer          = true,
                            .overrideSelectBtn        = false,
                            .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterMode,//SkipIntro,
+                           .fnEnterMode              = bb_EnterModeSkipIntro,
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -594,14 +594,14 @@ static void bb_DrawScene_Radar(void)
             {
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == EGG_EMBED)
                 {
-                    drawCircleFilled(xIdx * 4 - 1, yIdx * 4 - bigbug->gameData.radar.cam.y - 2, 1, c530);
+                    drawCircleFilled(xIdx * 4 - 2, yIdx * 4 - bigbug->gameData.radar.cam.y, 1, c500);
                 }
             }
             if((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
             {
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == SKELETON_EMBED)
                 {
-                    drawCircleFilled(xIdx * 4 - 1, yIdx * 4 - bigbug->gameData.radar.cam.y - 1, 1, c050);
+                    drawCircleFilled(xIdx * 4 - 2, yIdx * 4 - bigbug->gameData.radar.cam.y, 2, c050);
                 }
             }
 
@@ -619,12 +619,12 @@ static void bb_DrawScene_Radar(void)
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_DONUT_EMBED ||
                     bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_DONUT_EMBED)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], xIdx * 4 - 6, yIdx * 4 - bigbug->gameData.radar.cam.y - 6);   
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], xIdx * 4 - 15, yIdx * 4 - bigbug->gameData.radar.cam.y - 6);   
                 }
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_SWADGE_EMBED ||
                     bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_SWADGE_EMBED)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], xIdx * 4 - 6, yIdx * 4 - bigbug->gameData.radar.cam.y - 6);   
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], xIdx * 4 - 15, yIdx * 4 - bigbug->gameData.radar.cam.y - 6);   
                 }
             }
         }
@@ -640,50 +640,35 @@ static void bb_DrawScene_Radar(void)
         {
             if (entity->dataType == EGG_DATA)
             {
-                drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 2, c530);
+                drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
+                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 1, c500);
             }
             else if(entity->spriteIndex >= 8 && entity->spriteIndex <= 13)
             {
-                drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 2, c500);
+                drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
+                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c530);
             }
         }
         if((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
         {
             if (entity->spriteIndex == BB_FUEL)
             {
-                drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 2, c050);
+                drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
+                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c050);
             }
         }
         if((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
         {
-            if(entity->dataType == CAR_DATA)
+            if(entity->dataType == CAR_DATA || entity->dataType == FOOD_CART_DATA)
             {
-                bb_carData_t* carData = (bb_carData_t*)entity->data;
-                if(carData->reward == BB_DONUT)
+                bb_PointOfInterestParentData_t* POIData = (bb_PointOfInterestParentData_t*)entity->data;
+                if(POIData->reward == BB_DONUT)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], (entity->pos.x >> DECIMAL_BITS) / 8 - 6, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], (entity->pos.x >> DECIMAL_BITS) / 8 - 15, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
-                else if(carData->reward == BB_SWADGE)
+                else if(POIData->reward == BB_SWADGE)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], (entity->pos.x >> DECIMAL_BITS) / 8 - 6, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
-                }
-            }
-            else if(entity->dataType == FOOD_CART_DATA)
-            {
-                bb_foodCartData_t* foodCartData = (bb_foodCartData_t*)entity->data;
-                if(entity->currentAnimationFrame == 1)
-                {
-                    if(foodCartData->reward == BB_DONUT)
-                    {
-                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], (entity->pos.x >> DECIMAL_BITS) / 8 - 6, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
-                    }
-                    else if(foodCartData->reward == BB_SWADGE)
-                    {
-                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], (entity->pos.x >> DECIMAL_BITS) / 8 - 6, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
-                    }
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], (entity->pos.x >> DECIMAL_BITS) / 8 - 15, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
             }
         }
@@ -701,50 +686,35 @@ static void bb_DrawScene_Radar(void)
             {
                 if (entity->dataType == EGG_DATA)
                 {
-                    drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 2, c530);
+                    drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
+                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 1, c500);
                 }
                 else if(entity->spriteIndex >= 8 && entity->spriteIndex <= 13)
                 {
-                    drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 2, c500);
+                    drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
+                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c500);
                 }
             }
             if((bigbug->gameData.radar.upgrades >> BIGBUG_FUEL) & 1)
             {
                 if (entity->spriteIndex == BB_FUEL)
                 {
-                    drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 3, 2, c050);
+                    drawCircleFilled((entity->pos.x >> DECIMAL_BITS) / 8 - 2,
+                                    (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y, 2, c050);
                 }
             }
             if((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
             {
-                if(entity->dataType == CAR_DATA)
+                if(entity->dataType == CAR_DATA || entity->dataType == FOOD_CART_DATA)
                 {
-                    bb_carData_t* carData = (bb_carData_t*)entity->data;
-                    if(carData->reward == BB_DONUT)
+                    bb_PointOfInterestParentData_t* POIData = (bb_PointOfInterestParentData_t*)entity->data;
+                    if(POIData->reward == BB_DONUT)
                     {
-                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], (entity->pos.x >> DECIMAL_BITS) / 8 - 6, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], (entity->pos.x >> DECIMAL_BITS) / 8 - 15, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
-                    else if(carData->reward == BB_SWADGE)
+                    else if(POIData->reward == BB_SWADGE)
                     {
-                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], (entity->pos.x >> DECIMAL_BITS) / 8 - 6, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
-                    }
-                }
-                else if(entity->dataType == FOOD_CART_DATA)
-                {
-                    bb_foodCartData_t* foodCartData = (bb_foodCartData_t*)entity->data;
-                    if(entity->currentAnimationFrame == 1)
-                    {
-                        if(foodCartData->reward == BB_DONUT)
-                        {
-                            drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], (entity->pos.x >> DECIMAL_BITS) / 8 - 6, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
-                        }
-                        else if(foodCartData->reward == BB_SWADGE)
-                        {
-                            drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], (entity->pos.x >> DECIMAL_BITS) / 8 - 6, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
-                        }
+                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], (entity->pos.x >> DECIMAL_BITS) / 8 - 15, (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
                 }
             }
@@ -786,7 +756,7 @@ static void bb_DrawScene_Radar(void)
                 garbotnikPos.y
                     = (bigbug->gameData.entityManager.boosterEntities[boosterIdx]->pos.y >> DECIMAL_BITS) / 8 - 4;
                 drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2,
-                               garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c430);
+                               garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c124);
             }
         }
     }
@@ -804,8 +774,8 @@ static void bb_DrawScene_Radar(void)
     {
         if ((bigbug->gameData.radar.playerPingRadius % 51) < 26)
         {
-            drawTriangleOutlined(140, 2, 148, 10, 132, 10, c222, c555);
-            drawTriangleOutlined(132, 230, 148, 230, 140, 238, c222, c555);
+            drawTriangleOutlined(140, 2, 148, 10, 132, 10, c222, c550);
+            drawTriangleOutlined(132, 230, 148, 230, 140, 238, c222, c550);
         }
     }
 

@@ -1679,7 +1679,8 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 break;
         }
     }
-    if(!((bData->flags & 0b10)>>1))//if it is not tethered
+    //if NOT (garbotnik has the bug whisperer talent AND bug is tethered)
+    if(!(((self->gameData->garbotnikUpgrade.upgrades & (1<<GARBOTNIK_BUG_WHISPERER))>>GARBOTNIK_BUG_WHISPERER) && ((bData->flags & 0b10)>>1)))
     {
         bb_updateBugShooting(self);
     }
@@ -1703,7 +1704,8 @@ void bb_updateFlyingBug(bb_entity_t* self)
         bData->direction = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
         bData->flags = bData->flags | (bData->direction.x < 0);
     }
-    if(!((bData->flags & 0b10)>>1))//if it is not tethered
+    //if NOT (garbotnik has the bug whisperer talent AND bug is tethered)
+    if(!(((self->gameData->garbotnikUpgrade.upgrades & (1<<GARBOTNIK_BUG_WHISPERER))>>GARBOTNIK_BUG_WHISPERER) && ((bData->flags & 0b10)>>1)))
     {
         bb_updateBugShooting(self);
     }
@@ -2155,10 +2157,14 @@ void bb_updateGrabbyHand(bb_entity_t* self)
                 }
             }
         }
+        bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
+        if(ghData->grabbed->spriteIndex == BB_DONUT)
+        {
+            rData->numDonuts++;
+        }
         bb_destroyEntity(ghData->grabbed, false);
         ghData->grabbed = NULL;
 
-        bb_rocketData_t* rData = (bb_rocketData_t*)ghData->rocket->data;
         rData->numBugs++;
         midiPlayer_t* sfx = soundGetPlayerSfx();
         midiPlayerReset(sfx);
@@ -3832,8 +3838,9 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     }
     else if (other->dataType == BU_DATA || other->dataType == BUGGO_DATA)
     {
+        //flip the bug's walking direction bit flag.
         bb_bugData_t* bData = (bb_bugData_t*)other->data;
-        bData->flags &= ~0b1;
+        bData->flags ^= 0b1;
     }
 }
 
@@ -3917,9 +3924,10 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     self->cacheable = false;
 
     // number of bugs to fight. More risk at greater depths.
-    self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 5;
+    self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 4;
 
-    bb_spawnHorde(self, self->gameData->carFightState);
+    // one extra bug than required for easier completion and to match the same feel as in testing.
+    bb_spawnHorde(self, self->gameData->carFightState+1);
 
     self->paused         = false;
     self->updateFunction = &bb_updateCarActive;
@@ -4550,8 +4558,6 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
             break;
         }
     }
-
-    ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->numDonuts = 0;
 
     self->gameData->loadoutScreenData = heap_caps_calloc(1, sizeof(bb_loadoutSelectScreenData_t), MALLOC_CAP_SPIRAM);
     self->gameData->screen = BIGBUG_LOADOUT_SELECT_SCREEN;

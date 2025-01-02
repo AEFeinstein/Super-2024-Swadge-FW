@@ -139,7 +139,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                 {
                     tilemap->fgTiles[i][j].embed = SKELETON_EMBED;
                 }
-                else if (bb_randomInt(0, 99) < (((rgbCol & 255) / 51) * 20))
+                else if (bb_randomInt(0, 99) < (((rgbCol & 255) / 51) * 10))
                 {
                     tilemap->fgTiles[i][j].embed = EGG_EMBED;
                 }
