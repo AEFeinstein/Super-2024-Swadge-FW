@@ -17,7 +17,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 200
-#define NUM_SPRITES  27 // The number of bb_sprite_t last accounted for BB_FOOD_CART
+#define NUM_SPRITES  33 // The number of bb_sprite_t last accounted for BB_AMMO_SUPPLY and BB_PACIFIER
 
 //==============================================================================
 // Structs

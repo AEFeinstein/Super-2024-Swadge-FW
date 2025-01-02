@@ -46,15 +46,13 @@ typedef enum
     STUCK_HARPOON_DATA,
     SPIT_DATA,
     FOOD_CART_DATA,
+    WILE_DATA,
+    BB_501KG_DATA,
+    EXPLOSION_DATA,
+    ATMOSPHERIC_ATOMIZER_DATA,
+    DRILL_BOT_DATA,
+    SPACE_LASER_DATA,
 } bb_data_type_t;
-
-typedef enum
-{
-    BB_DOWN,
-    BB_LEFT,
-    BB_UP,
-    BB_RIGHT
-} bb_direction_t;
 
 //==============================================================================
 // Structs
@@ -83,6 +81,10 @@ typedef struct
 
     int8_t damageEffect;     // decrements over time. Render damagePalette color swap if > 0.
     int16_t harpoonCooldown; // decrements over time. Fires if < 0 and resets to GameData's GarbotnikStat_fireTime.
+
+    uint8_t activeWile;
+
+    uint8_t dragShift; // typically 17 or 19 with the atmospheric atomizer.
 } bb_garbotnikData_t;
 
 typedef struct
@@ -95,7 +97,9 @@ typedef struct
 
 typedef struct // parent class
 {
-    bool faceLeft;       // flip the sprite if true
+    uint8_t flags; // bitpacked flags for various things.
+                   // 0b00000001  // face left. Flip the sprite if true
+                   // 0b00000010  // isTethered.
     uint8_t speed;       // randomized on creation. Used for walking or flying.
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
@@ -103,18 +107,22 @@ typedef struct // parent class
 
 typedef struct // child class
 {
-    bool faceLeft;       // flip the sprite if true
+    uint8_t flags; // bitpacked flags for various things.
+                   // 0b00000001  // face left. Flip the sprite if true
+                   // 0b00000010  // isTethered.
     uint8_t speed;       // randomized on creation. Used for walking or flying.
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
     //-----------------------------------------------
-    bb_direction_t gravity; // to walk on the walls & ceiling: local gravity switches
-    uint8_t fallSpeed;      // increments in free fall
+    enum bb_direction_t gravity; // to walk on the walls & ceiling: local gravity switches
+    uint8_t fallSpeed;           // increments in free fall
 } bb_buData_t;
 
 typedef struct // child class
 {
-    bool faceLeft;       // flip the sprite if true
+    uint8_t flags; // bitpacked flags for various things.
+                   // 0b00000001  // face left. Flip the sprite if true
+                   // 0b00000010  // isTethered.
     uint8_t speed;       // randomized on creation. Used for walking or flying.
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
@@ -147,7 +155,7 @@ typedef struct
 
 typedef struct
 {
-    int32_t yVel;
+    int32_t yVel; // FINISH ME!!! maybe get away with int16_t
 } bb_heavyFallingData_t;
 
 typedef struct
@@ -156,10 +164,53 @@ typedef struct
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
-    int8_t tileTime; // Only relevant for Garbotnik's dying scenario. Goes up with every tile collision
-                     // and decrements steadily over time. So it serves to detect when he is steadily sitting
-                     // on the ground and trigger a game over.
+    uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
+                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                      // on the ground and trigger a game over.
 } bb_physicsData_t;
+
+typedef struct
+{
+    vec_t vel;
+    uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
+                             // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
+    uint8_t bounceDenominator;
+    uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
+                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                      // on the ground and trigger a game over.
+    // child attributes
+    uint16_t lifetime;
+} bb_timedPhysicsData_t;
+
+typedef struct
+{
+    vec_t vel;
+    uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
+                             // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
+    uint8_t bounceDenominator;
+    uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
+                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                      // on the ground and trigger a game over.
+    // child attributes
+    int16_t targetY; // The y position to reach before stopping.
+    uint16_t lifetime;
+    bool facingRight;
+    int8_t attacking; // janky way to overide the animation to drilling when colliding with a bug. Decrements to zero.
+} bb_drillBotData_t;
+
+typedef struct
+{
+    vec_t vel;
+    uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
+                             // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
+    uint8_t bounceDenominator;
+    uint8_t tileTime; // Only relevant for Garbotnik's dying scenario (and wiles now). Goes up with every tile collision
+                      // and decrements steadily over time. So it serves to detect when he is steadily sitting
+                      // on the ground and trigger a game over.
+    // new attributes
+    uint16_t lifetime;
+    uint8_t wileIdx; // the index of the wile to activate.
+} bb_wileData_t;
 
 typedef struct
 {
@@ -194,6 +245,12 @@ typedef struct
 {
     bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
     bb_spriteDef_t reward;       // The sprite to spawn when the car trunk opens
+} bb_PointOfInterestParentData_t;
+
+typedef struct
+{
+    bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
+    bb_spriteDef_t reward;       // The sprite to spawn when the car trunk opens
     midiFile_t alarm;            // The midi file to play when the car is active. Can be 1 of 3 files.
     bool midiLoaded;             // True if the midi file is loaded, false otherwise.
     uint16_t textTimer;          // The timer for the text to appear on screen.
@@ -201,20 +258,19 @@ typedef struct
 
 typedef struct
 {
-    vec_t vel;
-    uint16_t lifetime;
-} bb_spitData_t;
+    bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
+    bb_spriteDef_t reward;       // The sprite to spawn when the food cart is destroyed.
+    bb_entity_t* partner;        // the other piece of the food cart
+    bool isCached;               // tracking this to only unload sprites when both pieces are cached.
+    int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the
+                         // zero animation frame because the cart background gets not graphical effect.
+} bb_foodCartData_t;
 
 typedef struct
 {
-    bb_entity_t* partner;  // the other piece of the food cart
-    bool isCached;         // tracking this to only unload sprites when both pieces are cached.
-    bb_spriteDef_t reward; // The sprite to spawn when the food cart is destroyed.
-    int8_t damageEffect;   // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the
-                           // zero animation frame because the cart background gets not graphical effect.
-} bb_foodCartData_t;
-
-typedef void (*bb_callbackFunction_t)(bb_entity_t* self);
+    vec_t vel;
+    uint16_t lifetime;
+} bb_spitData_t;
 
 typedef struct
 {
@@ -250,9 +306,27 @@ typedef struct
 
 typedef struct
 {
-    bb_direction_t arena; // The direction to dig towards the car fight arena.
-    uint8_t numberOfDigs; // Increments with each dig. Destroy self at 2. That's three digs when you count 0.
+    enum bb_direction_t arena; // The direction to dig towards the car fight arena.
+    uint8_t numberOfDigs;      // Increments with each dig. Destroy self at 2. That's three digs when you count 0.
 } bb_jankyBugDigData_t;
+
+typedef struct
+{
+    vec_t vel;
+    int16_t targetY; // The y position to reach before stopping.
+    int16_t angle;   // The angle to rotate the sprite. Calculate once at creation.
+} bb_501kgData_t;
+
+typedef struct
+{
+    uint16_t lifetime;
+    uint16_t radius;
+} bb_explosionData_t;
+
+typedef struct
+{
+    uint16_t lifetime;
+} bb_atmosphericAtomizerData_t;
 
 typedef struct
 {
@@ -269,6 +343,12 @@ typedef struct
     paletteColor_t color;
     bb_callbackFunction_t executeAfterPing;
 } bb_radarPingData_t;
+
+typedef struct
+{
+    uint16_t lifetime;
+    uint8_t highestGarbage;
+} bb_spaceLaserData_t;
 
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
@@ -357,6 +437,14 @@ void bb_updateCarOpen(bb_entity_t* self);
 void bb_updateSpit(bb_entity_t* self);
 void bb_updatePangoAndFriends(bb_entity_t* self);
 void bb_updateDiveSummary(bb_entity_t* self);
+void bb_updateWile(bb_entity_t* self);
+void bb_update501kg(bb_entity_t* self);
+void bb_updateExplosion(bb_entity_t* self);
+void bb_updateAtmosphericAtomizer(bb_entity_t* self);
+void bb_updateDrillBot(bb_entity_t* self);
+void bb_updateTimedPhysicsObject(bb_entity_t* self);
+void bb_updatePacifier(bb_entity_t* self);
+void bb_updateSpaceLaser(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -382,6 +470,14 @@ void bb_drawHitEffect(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_draw501kg(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawExplosion(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawAtmosphericAtomizer(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawPacifier(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
@@ -395,6 +491,8 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
 void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
@@ -413,11 +511,15 @@ void bb_upgradeRadar(bb_entity_t* self);
 void bb_triggerGameOver(bb_entity_t* self);
 void bb_upgradeGarbotnik(bb_entity_t* self);
 void bb_playCarAlarm(bb_entity_t* self);
+void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
+void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
+void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs);
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth);
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter);
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* character, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);
+int8_t bb_compareWileCallSequences(enum bb_direction_t* playerInputSequence, enum bb_direction_t* compareTo);
 
 #endif

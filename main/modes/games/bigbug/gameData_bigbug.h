@@ -55,6 +55,46 @@ enum bb_radarUpgrade_t
     BIGBUG_REFILL_AMMO,
 };
 
+enum bb_direction_t
+{
+    BB_DOWN,
+    BB_LEFT,
+    BB_UP,
+    BB_RIGHT,
+    BB_NONE,
+};
+
+typedef struct
+{
+    uint8_t primingEffect; // fills up the background with a color
+    uint8_t selectedWile;  // the index of the wile that is currently selected.
+    uint8_t blinkTimer;    // a timer to blink the left and right triangles. Don't render when it's less than 126.
+    int32_t marqueeTimer;  // increments always for the marquee effect.
+} bb_loadoutSelectScreenData_t;
+
+struct bb_wileData_t
+{
+    char name[22];         // FIX ME!!! Figure out what the shortest name is later.
+    char description[149]; // FIX ME!!! Figure out what the shortest description is later.
+    uint8_t cost;          // the number of donuts required to purchase the wile.
+    bool purchased;        // set to true when donuts have been paid.
+    uint8_t cooldown;      // the number of seconds to wait before the wile can be called again.
+    enum bb_direction_t
+        callSequence[5]; // the sequence of directional button presses while holding 'B' to call the wile.
+    bb_callbackFunction_t wileFunction; // the function that is called after the wile is thrown
+};
+
+struct bb_loadoutData_t
+{
+    uint8_t primaryWileIdx; // index into the array of all wiles.
+    uint8_t secondaryWileIdx;
+    uint32_t primaryTimer;   // decrements to zero. Stays at zero until the wile is called.
+    uint32_t secondaryTimer; // decrements to zero. Stays at zero until the wile is called.
+    struct bb_wileData_t allWiles[7];
+    enum bb_direction_t
+        playerInputSequence[5]; // the sequence of directional button presses while holding 'B' to call the wile.
+};
+
 struct bb_radarScreenData_t
 {
     vec_t cam;                // x and y offsets for use in the radar (pause) screen.
@@ -68,7 +108,7 @@ struct bb_radarScreenData_t
                               // 0b100000  old boosters     1 << 5
                               // 0b1000000 more points of interest 1 << 6
                               // 0b10000000 refill ammo     1 << 7
-    int8_t choices[2];        // the choices presented to the player. -1 means no choice.
+    int8_t choices[3];        // the choices presented to the player. -1 means no choice.
 };
 
 enum bb_garbotnikUpgrade_t
@@ -77,17 +117,22 @@ enum bb_garbotnikUpgrade_t
     GARBOTNIK_FASTER_FIRE_RATE,
     GARBOTNIK_MORE_DIGGING_STRENGTH,
     GARBOTNIK_MORE_TOW_CABLES,
+    GARBOTNIK_INCREASE_MAX_AMMO,
+    GARBOTNIK_MORE_CHOICES,
     GARBOTNIK_BUG_WHISPERER,
-    GARBOTNIK_EXTRA_CHOICE,
 };
 
 struct bb_garbotnikUpgradeScreenData_t
 {
-    uint8_t upgrades;   // the garbotnik upgrade bools are bitpacked into this
-                        // 0b1       reduced fuel consumption  1 << 0
-                        // 0b10      faster fire rate          1 << 1
-                        // 0b100     more digging strength     1 << 2
-    uint8_t choices[2]; // the choices presented to the player. -1 means no choice.
+    uint8_t upgrades;  // the garbotnik upgrade bools are bitpacked into this
+                       // 0b1       reduced fuel consumption  1 << 0
+                       // 0b10      faster fire rate          1 << 1
+                       // 0b100     more digging strength     1 << 2
+                       // 0b1000    more tow cables           1 << 3
+                       // 0b10000   increase max ammo         1 << 4
+                       // 0b100000  more choices              1 << 5
+                       // 0b1000000 bug whisperer             1 << 6
+    int8_t choices[3]; // the choices presented to the player. -1 means no choice.
 };
 
 struct bb_gameData_t
@@ -122,9 +167,6 @@ struct bb_gameData_t
     bb_entityManager_t entityManager;
 
     led_t leds[CONFIG_NUM_LEDS];
-
-    uint8_t changeBgm;
-    uint8_t currentBgm;
 
     bb_tilemap_t tilemap;
 
@@ -164,6 +206,10 @@ struct bb_gameData_t
     uint8_t GarbotnikStat_diggingStrength;     // Starts at 1. Can increment indefinetly by 1.
     uint8_t GarbotnikStat_fuelConsumptionRate; // Starts at 4. Can decrement to 0.
     uint8_t GarbotnikStat_maxTowCables;        // Starts at 2. Can increment indefintely by 3.
+    uint8_t GarbotnikStat_maxHarpoons;         // Starts at 50. Can increment by 50 to 250.
+
+    struct bb_loadoutData_t loadout;
+    bb_loadoutSelectScreenData_t* loadoutScreenData;
 };
 
 //==============================================================================

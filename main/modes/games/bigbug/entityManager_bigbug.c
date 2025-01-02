@@ -182,7 +182,14 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     entityManager->sprites[BB_DOOR].originX = 16;
     entityManager->sprites[BB_DOOR].originY = 48;
 
-    bb_loadSprite("donut", 1, 1, &entityManager->sprites[BB_DONUT]);
+    if (!entityManager->sprites[BB_DONUT].allocated)
+    {
+        entityManager->sprites[BB_DONUT].numFrames = 2;
+        entityManager->sprites[BB_DONUT].frames    = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+        entityManager->sprites[BB_DONUT].allocated = true;
+    }
+    loadWsgInplace("donut0.wsg", &entityManager->sprites[BB_DONUT].frames[0], true, bb_decodeSpace, bb_hsd);
+    loadWsgInplace("hotdog_rs.wsg", &entityManager->sprites[BB_DONUT].frames[1], true, bb_decodeSpace, bb_hsd);
     entityManager->sprites[BB_DONUT].originX = 15;
     entityManager->sprites[BB_DONUT].originY = 15;
 
@@ -195,6 +202,14 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     // bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
     entityManager->sprites[BB_FOOD_CART].originX = 36;
     entityManager->sprites[BB_FOOD_CART].originY = 56;
+
+    bb_loadSprite("wile", 1, 1, &entityManager->sprites[BB_WILE]);
+    entityManager->sprites[BB_WILE].originX = 6;
+    entityManager->sprites[BB_WILE].originY = 6;
+
+    entityManager->sprites[BB_ARROW].frames = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
+    loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -243,8 +258,14 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     }
                     case BB_FOOD_CART:
                     {
-                        ((bb_foodCartData_t*)curEntity->data)->isCached = false;
-                        bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
+                        bb_foodCartData_t* fcData = (bb_foodCartData_t*)curEntity->data;
+                        // tell this partner of the change in address
+                        ((bb_foodCartData_t*)fcData->partner->data)->partner = foundSpot;
+                        if (((bb_foodCartData_t*)fcData->partner->data)->isCached)
+                        {
+                            bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
+                        }
+                        fcData->isCached = false;
                         break;
                     }
                     default:
@@ -277,6 +298,13 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     bb_entity_t* cachedEntity = heap_caps_calloc(1, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
                     // It's like a memcopy
                     *cachedEntity = *curEntity;
+
+                    if (cachedEntity->dataType == FOOD_CART_DATA)
+                    {
+                        // tell this partner of the change in address
+                        ((bb_foodCartData_t*)((bb_foodCartData_t*)cachedEntity->data)->partner->data)->partner
+                            = cachedEntity;
+                    }
                     // push to the tail
                     push(entityManager->cachedEntities, (void*)cachedEntity);
                     bb_destroyEntity(curEntity, true);
@@ -378,7 +406,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
 void bb_updateStarField(bb_entityManager_t* entityManager, bb_camera_t* camera)
 {
-    if (camera->camera.pos.y < -800 && camera->camera.pos.y > -5386)
+    if (camera->camera.pos.y < -800 && camera->camera.pos.y > -2800)
     {
         int16_t halfWidth  = HALF_WIDTH >> DECIMAL_BITS;
         int16_t halfHeight = HALF_HEIGHT >> DECIMAL_BITS;
@@ -418,7 +446,8 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         }
         if (excludePersistentEntities
             && (currentEntity->spriteIndex == BB_DEATH_DUMPSTER || currentEntity->spriteIndex == ROCKET_ANIM
-                || currentEntity->spriteIndex == FLAME_ANIM))
+                || currentEntity->spriteIndex == FLAME_ANIM || currentEntity->spriteIndex == CRUMBLE_ANIM
+                || currentEntity->spriteIndex == NO_SPRITE_STAR))
         {
             continue;
         }
@@ -426,10 +455,10 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
     }
 
     // load all cached entities and destroy them one by one.
+    bb_ensureEntitySpace(entityManager, 1);
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(entityManager->cachedEntities)))
     {
-        bb_destroyEntity(curEntity, false);
         heap_caps_free(curEntity);
     }
 }
@@ -692,10 +721,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case GARBOTNIK_FLYING:
         {
             bb_garbotnikData_t* gData = heap_caps_calloc(1, sizeof(bb_garbotnikData_t), MALLOC_CAP_SPIRAM);
-            gData->numHarpoons        = 250;
+            gData->numHarpoons        = entity->gameData->GarbotnikStat_maxHarpoons;
             gData->fuel = 1000 * 60 * 3; // 1 thousand milliseconds in a second. 60 seconds in a minute. 3 minutes.
                                          // //also set in bb_onCollisionFuel()
-            gData->yaw.x = -1;           // So he starts off facing left away from the tutorial egg.
+            gData->yaw.x      = -1;      // So he starts off facing left away from the tutorial egg.
+            gData->activeWile = 255;     // 255 means no wile active.
+            gData->dragShift  = 17;
 
             memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
@@ -801,7 +832,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(3, 6);
-            bData->faceLeft    = bb_randomInt(0, 1);
+            bData->flags       = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -821,7 +852,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(1, 5);
-            bData->faceLeft    = bb_randomInt(0, 1);
+            bData->flags       = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -841,7 +872,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health         = 100;
             bData->speed          = 4 * bb_randomInt(1, 5);
             bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
-            bData->faceLeft       = bData->direction.x < 0;
+            bData->flags          = bData->direction.x < 0;
             bb_setData(entity, bData, BUGGO_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -861,7 +892,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health         = 100;
             bData->speed          = 4 * bb_randomInt(3, 4);
             bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
-            bData->faceLeft       = bData->direction.x < 0;
+            bData->flags          = bData->direction.x < 0;
             bb_setData(entity, bData, BUGGO_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -881,7 +912,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(1, 5);
-            bData->faceLeft    = bb_randomInt(0, 1);
+            bData->flags       = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -901,7 +932,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(1, 5);
-            bData->faceLeft    = bb_randomInt(0, 1);
+            bData->flags       = bb_randomInt(0, 1);
             bb_setData(entity, bData, BU_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -975,7 +1006,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_GAME_OVER:
         {
             bb_gameOverData_t* goData = heap_caps_calloc(1, sizeof(bb_gameOverData_t), MALLOC_CAP_SPIRAM);
-            loadWsgInplace("GameOver0.wsg\0", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
+            loadWsgInplace("GameOver0.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
             goData->wsgLoaded = true;
             bb_setData(entity, goData, GAME_OVER_DATA);
 
@@ -1193,7 +1224,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_FOOD_CART:
         {
             entity->halfWidth  = 22 << DECIMAL_BITS;
-            entity->halfHeight = 9 << DECIMAL_BITS;
+            entity->halfHeight = 18 << DECIMAL_BITS;
             entity->cacheable  = true;
 
             bb_setData(entity, heap_caps_calloc(1, sizeof(bb_foodCartData_t), MALLOC_CAP_SPIRAM), FOOD_CART_DATA);
@@ -1209,6 +1240,141 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
             // sprites loaded just-in-time
             bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
+            break;
+        }
+        case BB_WILE:
+        {
+            bb_wileData_t* wData     = heap_caps_calloc(1, sizeof(bb_wileData_t), MALLOC_CAP_SPIRAM);
+            wData->bounceNumerator   = 1;
+            wData->bounceDenominator = 4;
+            bb_setData(entity, wData, WILE_DATA);
+
+            entity->halfHeight = 6 << DECIMAL_BITS;
+            entity->halfWidth  = 6 << DECIMAL_BITS;
+
+            entity->updateFunction = &bb_updateWile;
+            entity->drawFunction   = &bb_drawWile;
+            break;
+        }
+        case BB_501KG:
+        {
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_501kgData_t), MALLOC_CAP_SPIRAM), BB_501KG_DATA);
+            entity->updateFunction = &bb_update501kg;
+            entity->drawFunction   = &bb_draw501kg;
+            break;
+        }
+        case BB_EXPLOSION:
+        {
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_explosionData_t), MALLOC_CAP_SPIRAM), EXPLOSION_DATA);
+            entity->updateFunction = &bb_updateExplosion;
+            entity->drawFunction   = &bb_drawExplosion;
+            break;
+        }
+        case BB_ATMOSPHERIC_ATOMIZER:
+        {
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_atmosphericAtomizerData_t), MALLOC_CAP_SPIRAM),
+                       ATMOSPHERIC_ATOMIZER_DATA);
+            entity->updateFunction = &bb_updateAtmosphericAtomizer;
+            entity->drawFunction   = &bb_drawAtmosphericAtomizer;
+            break;
+        }
+        case BB_DRILL_BOT:
+        {
+            if (!entityManager->sprites[BB_DRILL_BOT].allocated)
+            {
+                entityManager->sprites[BB_DRILL_BOT].numFrames = 7;
+                entityManager->sprites[BB_DRILL_BOT].frames    = heap_caps_calloc(7, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+                entityManager->sprites[BB_DRILL_BOT].allocated = true;
+                entityManager->sprites[BB_DRILL_BOT].originX   = 7;
+                entityManager->sprites[BB_DRILL_BOT].originY   = 15;
+            }
+
+            // sprites loaded just-in-time
+            loadWsgInplace("pa-en-004.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[0], true, bb_decodeSpace,
+                           bb_hsd); // falling
+            loadWsgInplace("pa-en-008.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[1], true, bb_decodeSpace,
+                           bb_hsd); // bouncing
+            loadWsgInplace("pa-en-005.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[2], true, bb_decodeSpace,
+                           bb_hsd); // drilling down
+            loadWsgInplace("pa-en-000.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[3], true, bb_decodeSpace,
+                           bb_hsd); // walking right 1
+            loadWsgInplace("pa-en-001.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[4], true, bb_decodeSpace,
+                           bb_hsd); // walking right 2
+            loadWsgInplace("pa-en-002.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[5], true, bb_decodeSpace,
+                           bb_hsd); // drilling right 1
+            loadWsgInplace("pa-en-003.wsg", &entityManager->sprites[BB_DRILL_BOT].frames[6], true, bb_decodeSpace,
+                           bb_hsd); // drilling right 2
+            bb_drillBotData_t* dbData = heap_caps_calloc(1, sizeof(bb_drillBotData_t), MALLOC_CAP_SPIRAM);
+            dbData->bounceNumerator   = 1;
+            dbData->bounceDenominator = 4;
+            bb_setData(entity, dbData, DRILL_BOT_DATA);
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)BU);
+            push(others, (void*)BUG);
+            push(others, (void*)BUGG);
+            push(others, (void*)BUGGO);
+            push(others, (void*)BUGGY);
+            push(others, (void*)BUTT);
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionDrillBot};
+            push(entity->collisions, (void*)collision);
+
+            entity->halfHeight     = 8 << DECIMAL_BITS;
+            entity->halfWidth      = 8 << DECIMAL_BITS;
+            entity->updateFunction = &bb_updateDrillBot;
+            entity->drawFunction   = &bb_drawDrillBot;
+            break;
+        }
+        case BB_AMMO_SUPPLY:
+        {
+            bb_loadSprite("ammo_supply", 1, 1, &entityManager->sprites[BB_AMMO_SUPPLY]);
+            entityManager->sprites[BB_AMMO_SUPPLY].originX = 14;
+            entityManager->sprites[BB_AMMO_SUPPLY].originY = 26;
+
+            bb_timedPhysicsData_t* pData = heap_caps_calloc(1, sizeof(bb_timedPhysicsData_t), MALLOC_CAP_SPIRAM);
+            pData->bounceNumerator       = 1;
+            pData->bounceDenominator     = 8;
+            bb_setData(entity, pData, PHYSICS_DATA);
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionAmmoSupply};
+            push(entity->collisions, (void*)collision);
+
+            entity->halfWidth      = 14 << DECIMAL_BITS;
+            entity->halfHeight     = 13 << DECIMAL_BITS;
+            entity->updateFunction = &bb_updateTimedPhysicsObject;
+            break;
+        }
+        case BB_PACIFIER:
+        {
+            bb_loadSprite("pacifier", 1, 1, &entityManager->sprites[BB_PACIFIER]);
+            entityManager->sprites[BB_PACIFIER].originX = 14;
+            entityManager->sprites[BB_PACIFIER].originY = 14;
+
+            bb_timedPhysicsData_t* pData = heap_caps_calloc(1, sizeof(bb_timedPhysicsData_t), MALLOC_CAP_SPIRAM);
+            pData->bounceNumerator       = 1;
+            pData->bounceDenominator     = 2;
+            bb_setData(entity, pData, PHYSICS_DATA);
+
+            entity->halfWidth      = 10 << DECIMAL_BITS;
+            entity->halfHeight     = 13 << DECIMAL_BITS;
+            entity->updateFunction = &bb_updatePacifier;
+            entity->drawFunction   = &bb_drawPacifier;
+            break;
+        }
+        case BB_SPACE_LASER:
+        {
+            bb_setData(entity, heap_caps_calloc(1, sizeof(bb_spaceLaserData_t), MALLOC_CAP_SPIRAM), SPACE_LASER_DATA);
+
+            entity->halfWidth      = 4 << DECIMAL_BITS;
+            entity->halfHeight     = 2000 << DECIMAL_BITS;
+            entity->updateFunction = &bb_updateSpaceLaser;
+            entity->drawFunction   = &bb_drawSpaceLaser;
             break;
         }
         default: // FLAME_ANIM and others need nothing set
