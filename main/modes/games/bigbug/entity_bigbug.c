@@ -5253,7 +5253,7 @@ bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCh
     if (strcmp(firstCharacter, "Ovo") == 0)
     {
         characterSprite = bb_randomInt(0, 6);
-        loadWsgInplace("dialogue_next.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd); // TODO free
+        loadWsgInplace("dialogue_next.wsg", &dData->spriteNext, true, bb_decodeSpace, bb_hsd);
     }
     else if (strcmp(firstCharacter, "Pixel") == 0)
     {
