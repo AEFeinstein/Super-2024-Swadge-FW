@@ -241,10 +241,10 @@ typedef struct soko_abs_s
 
     // camera features
     bool camEnabled;
-    uint16_t camX;
-    uint16_t camY;
-    uint16_t camPadExtentX;
-    uint16_t camPadExtentY;
+    int16_t camX;
+    int16_t camY;
+    int16_t camPadExtentX;
+    int16_t camPadExtentY;
     uint16_t camWidth;
     uint16_t camHeight;
 

@@ -2,7 +2,7 @@
  * @file cg_sparDraw.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Draws the Chowa Garden Spar
- * @version 0.1
+ * @version 1.0
  * @date 2024-09-19
  *
  * @copyright Copyright (c) 2024
@@ -20,8 +20,7 @@
 // Functions
 //==============================================================================
 
-void cg_drawMatch(cGrove_t* cg, int64_t elapsedUs);
 void cg_drawSparSplash(cGrove_t* cg, int64_t elapsedUs);
-void cg_drawSparRecord(cGrove_t* cg);
-void cg_drawSparMatchSetup(cGrove_t* cg);
+void cg_drawSparMatchPrep(cGrove_t* cg);
 void cg_drawSparMatch(cGrove_t* cg, int64_t elapsedUs);
+void cg_drawSparTutorial(cGrove_t* cg);

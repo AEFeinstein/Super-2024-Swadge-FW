@@ -52,7 +52,7 @@ static void bb_EnterMode(void);
 static void bb_EnterModeSkipIntro(void);
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
-static void bb_BackgroundDrawCallbackRadar(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void bb_BackgroundDrawCallbackBlack(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 // big bug logic
@@ -62,6 +62,9 @@ static void bb_DrawScene_Radar(void);
 static void bb_DrawScene_Radar_Upgrade(void);
 static void bb_GameLoop_Radar(int64_t elapsedUs);
 static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs);
+static void bb_DrawScene_Garbotnik_Upgrade(void);
+static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs);
+static void bb_GameLoop_Loadout_Select(int64_t elapsedUs);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
@@ -92,7 +95,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .usesThermometer          = true,
                            .overrideSelectBtn        = false,
                            .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterModeSkipIntro,
+                           .fnEnterMode              = bb_EnterMode, // SkipIntro,
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -230,7 +233,7 @@ static void bb_EnterModeSkipIntro(void)
     for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
     {
         bigbug->gameData.entityManager.boosterEntities[rocketIdx] = bb_createEntity(
-            &bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 8,
+            &bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
             (bigbug->gameData.entityManager.deathDumpster->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
             (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS), true, false);
 
@@ -256,23 +259,23 @@ static void bb_EnterModeSkipIntro(void)
             bb_entity_t* arm                                                    = bb_createEntity(
                 &bigbug->gameData.entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                 bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
-                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, false, false);
+                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, true, false);
             ((bb_attachmentArmData_t*)arm->data)->rocket = bigbug->gameData.entityManager.activeBooster;
 
             bb_entity_t* grabbyHand = bb_createEntity(
-                &bigbug->gameData.entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 5,
+                &bigbug->gameData.entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 6,
                 bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
-                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 53, false, false);
+                (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 53, true, false);
             ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = bigbug->gameData.entityManager.activeBooster;
         }
     }
-
-    bb_loadWsgs(&bigbug->gameData.tilemap);
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
                           bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
                           (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 90, true, false);
+
+    bb_loadWsgs(&bigbug->gameData.tilemap);
 
     bigbug->gameData.entityManager.playerEntity = bigbug->gameData.entityManager.viewEntity;
 
@@ -312,6 +315,27 @@ void bb_setupMidi(void)
     // midiSetProgram(sfx, 0, 0);
 }
 
+void bb_FreeTilemapData(void)
+{
+    for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
+    {
+        heap_caps_free(bigbug->gameData.tilemap.fgTiles[w]);
+        heap_caps_free(bigbug->gameData.tilemap.mgTiles[w]);
+    }
+
+    while (bigbug->gameData.pleaseCheck.first != NULL)
+    {
+        uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.pleaseCheck);
+        heap_caps_free(shiftedVal);
+    }
+
+    while (bigbug->gameData.unsupported.first != NULL)
+    {
+        uint8_t* shiftedVal = (uint8_t*)shift(&bigbug->gameData.unsupported);
+        heap_caps_free(shiftedVal);
+    }
+}
+
 static void bb_ExitMode(void)
 {
     heatshrink_decoder_free(bb_hsd);
@@ -334,11 +358,7 @@ static void bb_ExitMode(void)
 
     bb_freeWsgs(&bigbug->gameData.tilemap);
 
-    for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
-    {
-        heap_caps_free(bigbug->gameData.tilemap.fgTiles[w]);
-        heap_caps_free(bigbug->gameData.tilemap.mgTiles[w]);
-    }
+    bb_FreeTilemapData();
 
     heap_caps_free(bigbug);
 }
@@ -355,7 +375,7 @@ static void bb_MainLoop(int64_t elapsedUs)
         {
             if (bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
             {
-                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackRadar;
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackBlack;
             }
             bb_GameLoop_Radar(elapsedUs);
             break;
@@ -364,9 +384,27 @@ static void bb_MainLoop(int64_t elapsedUs)
         {
             if (bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
             {
-                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackRadar;
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackBlack;
             }
             bb_GameLoop_Radar_Upgrade(elapsedUs);
+            break;
+        }
+        case BIGBUG_GARBOTNIK_UPGRADE_SCREEN:
+        {
+            if (bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
+            {
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackBlack;
+            }
+            bb_GameLoop_Garbotnik_Upgrade(elapsedUs);
+            break;
+        }
+        case BIGBUG_LOADOUT_SELECT_SCREEN:
+        {
+            if (bigbugMode.fnBackgroundDrawCallback == bb_BackgroundDrawCallback)
+            {
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallbackBlack;
+            }
+            bb_GameLoop_Loadout_Select(elapsedUs);
             break;
         }
         case BIGBUG_GAME:
@@ -387,7 +425,7 @@ static void bb_MainLoop(int64_t elapsedUs)
     }
 }
 
-static void bb_BackgroundDrawCallbackRadar(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+static void bb_BackgroundDrawCallbackBlack(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     fillDisplayArea(x, y, x + w, y + h, c000);
 }
@@ -399,7 +437,12 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
     // Flat background color
     paletteColor_t bgColor;
-    if (cameraPos->y >= 400)
+    if (cameraPos->y + y > -100)
+    {
+        // Shallow underground is dark red
+        bgColor = c100;
+    }
+    else if (cameraPos->y >= 400)
     {
         // Deep underground is black
         bgColor = c000;
@@ -433,19 +476,16 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         int32_t grWidth = tilemap->landfillGradient.w;
 
         // Calculate furthest background offset
-        int32_t offsetX2 = ((cameraPos->x / 3) % bgWidth);
         int32_t offsetY2 = -(cameraPos->y / 3) - 64;
 
         // Calculate nearer background offset
-        int32_t offsetX1 = ((cameraPos->x / 2) % bgWidth);
         int32_t offsetY1 = -(cameraPos->y / 2);
 
         // Calculate gradient offset (under nearer background)
-        int32_t offsetXG = offsetX1 % grWidth;
         int32_t offsetYG = offsetY1 + tilemap->surface1Wsg.h;
 
-        // setup fast pixel drawing with TURBO_SET_PIXEL()
-        SETUP_FOR_TURBO();
+        // Get a pointer to the framebuffer for fast pixel setting
+        paletteColor_t* fb = &getPxTftFramebuffer()[TFT_WIDTH * y + x];
 
         // For each row
         for (int32_t iY = y; iY < y + h; iY++)
@@ -463,32 +503,27 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
             bool drawGrRow             = (0 <= grRow && grRow < tilemap->landfillGradient.h);
             paletteColor_t* gradientPx = &tilemap->landfillGradient.px[grWidth * grRow];
 
-            // Start indices at X offsets
-            int32_t s1idx = offsetX1;
-            int32_t s2idx = offsetX2;
-            int32_t gridx = offsetXG;
-
             // For each pixel in the row
             for (int32_t iX = x; iX < x + w; iX++)
             {
                 // Draw appropriate pixel
-                if (drawS1row && cTransparent != surface1px[s1idx])
+                if (drawS1row && cTransparent != surface1px[iX])
                 {
-                    TURBO_SET_PIXEL(iX, iY, surface1px[s1idx]);
+                    *(fb++) = surface1px[iX];
                 }
                 else if (drawGrRow) // No transparency check
                 {
-                    TURBO_SET_PIXEL(iX, iY, gradientPx[gridx]);
+                    *(fb++) = gradientPx[iX % grWidth];
                 }
                 else if (drawS2row) // No transparency check
                 {
-                    TURBO_SET_PIXEL(iX, iY, surface2px[s2idx]);
+                    *(fb++) = surface2px[iX];
                 }
-
-                // Increment with modulo
-                s1idx = (s1idx + 1) % bgWidth;
-                s2idx = (s2idx + 1) % bgWidth;
-                gridx = (gridx + 1) % grWidth;
+                else
+                {
+                    // Nothing to draw here, advance the pointer
+                    fb++;
+                }
             }
         }
     }
@@ -525,10 +560,9 @@ static void bb_DrawScene_Radar(void)
 {
     for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
     {
-        for (int yIdx = bigbug->gameData.radar.cam.y / 4 < 0 ? 0 : bigbug->gameData.radar.cam.y / 4;
-             yIdx < (bigbug->gameData.radar.cam.y / 4 < 0 ? FIELD_HEIGHT / 4
-                                                          : bigbug->gameData.radar.cam.y / 4 + FIELD_HEIGHT / 4);
-             yIdx++)
+        int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
+        int16_t yMax = CLAMP(yMin + FIELD_HEIGHT / 4, 0, TILE_FIELD_HEIGHT);
+        for (int yIdx = yMin; yIdx < yMax; yIdx++)
         {
             uint16_t radarTileColor = bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].health > 0 ? c333 : c000;
             if ((bigbug->gameData.radar.upgrades >> BIGBUG_GARBAGE_DENSITY) & 1)
@@ -558,8 +592,17 @@ static void bb_DrawScene_Radar(void)
         }
     }
     // garbotnik
-    vec_t garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                                 (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 3};
+    vec_t garbotnikPos = (vec_t){0};
+    if (bigbug->gameData.entityManager.playerEntity != NULL)
+    {
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
+                               (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 3};
+    }
+    else
+    {
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 3,
+                               (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 3};
+    }
 
     drawCircleFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, 3, c515);
     // garbotnik pings
@@ -625,7 +668,7 @@ static void bb_DrawScene_Radar_Upgrade(void)
     drawCircleQuadrants(238, 198, 40, true, false, false, false, c132);
     drawCircleQuadrants(236, 196, 40, true, false, false, false, c141);
 
-    drawText(&bigbug->gameData.sevenSegment, c141, "bugnology", 10, 40);
+    drawText(&bigbug->gameData.sevenSegmentFont, c141, "bugnology", 10, 40);
     if (bigbug->gameData.radar.choices[0] == BIGBUG_REFILL_AMMO)
     {
         drawText(&bigbug->gameData.font, c301, "No radar upgrades available...", 10, 120);
@@ -757,6 +800,291 @@ static void bb_GameLoop_Radar(int64_t elapsedUs)
     bigbug->gameData.radar.playerPingRadius += 3;
 
     bb_DrawScene_Radar();
+}
+
+static void bb_DrawScene_Garbotnik_Upgrade(void)
+{
+    // Draw the upgrade options
+    drawText(&bigbug->gameData.font, c441, "Choose a swadge upgrade:", 45, 20);
+
+    // vertical line always the same
+    drawLineFast(29, 0, 29, 239, c331);
+
+    // left side of a horizontal line
+    drawLineFast(0, 65 + bigbug->gameData.radar.playerPingRadius * 30, 43,
+                 65 + bigbug->gameData.radar.playerPingRadius * 30, c331);
+
+    // a PLUS graphic
+    drawRectFilled(21, 64 + bigbug->gameData.radar.playerPingRadius * 30, 38,
+                   67 + bigbug->gameData.radar.playerPingRadius * 30, c545);
+    drawRectFilled(28, 56 + bigbug->gameData.radar.playerPingRadius * 30, 31,
+                   73 + bigbug->gameData.radar.playerPingRadius * 30, c545);
+
+    uint16_t tWidth = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        char upgradeText[32];
+        char detailText[32];
+        switch (bigbug->gameData.garbotnikUpgrade.choices[i])
+        {
+            case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
+            {
+                strcpy(upgradeText, "reduced fuel consumption");
+                snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_fuelConsumptionRate,
+                         bigbug->gameData.GarbotnikStat_fuelConsumptionRate - 1);
+                break;
+            }
+            case GARBOTNIK_FASTER_FIRE_RATE:
+            {
+                strcpy(upgradeText, "faster fire rate");
+                snprintf(detailText, sizeof(detailText), "cooldown: %d -> %d", bigbug->gameData.GarbotnikStat_fireTime,
+                         bigbug->gameData.GarbotnikStat_fireTime > 75 ? bigbug->gameData.GarbotnikStat_fireTime - 50
+                                                                      : 25);
+                break;
+            }
+            case GARBOTNIK_MORE_DIGGING_STRENGTH:
+            {
+                strcpy(upgradeText, "more digging strength");
+                snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_diggingStrength,
+                         bigbug->gameData.GarbotnikStat_diggingStrength + 1);
+                break;
+            }
+            case GARBOTNIK_MORE_TOW_CABLES:
+            {
+                strcpy(upgradeText, "more tow cables");
+                snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_maxTowCables,
+                         bigbug->gameData.GarbotnikStat_maxTowCables + 2);
+                break;
+            }
+            case GARBOTNIK_BUG_WHISPERER:
+            {
+                strcpy(upgradeText, "bug whisperer");
+                strcpy(detailText, "towed bugs won't shoot back");
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+        if (i == bigbug->gameData.radar.playerPingRadius)
+        {
+            tWidth = textWidth(&bigbug->gameData.font, upgradeText);
+        }
+        drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c515 : c304, upgradeText, 45,
+                 60 + i * 30);
+        drawText(&bigbug->gameData.font, i == bigbug->gameData.radar.playerPingRadius ? c225 : c113, detailText, 45,
+                 72 + i * 30);
+    }
+    // draw the right side of the horizonal line
+    drawLineFast(45 + tWidth + 2, 65 + bigbug->gameData.radar.playerPingRadius * 30, 279,
+                 65 + bigbug->gameData.radar.playerPingRadius * 30, c331);
+}
+
+static void bb_DrawScene_Loadout_Select(void)
+{
+    drawRect(1, 1, 279, 239, c220);
+    drawRect(3, 3, 277, 237, c440);
+    drawCircleQuadrants(238, 41, 40, false, false, false, true, c220);
+    drawCircleQuadrants(236, 43, 40, false, false, false, true, c440);
+
+    drawCircleQuadrants(41, 41, 40, false, false, true, false, c220);
+    drawCircleQuadrants(43, 43, 40, false, false, true, false, c440);
+
+    drawCircleQuadrants(41, 198, 40, false, true, false, false, c220);
+    drawCircleQuadrants(43, 196, 40, false, true, false, false, c440);
+
+    drawCircleQuadrants(238, 198, 40, true, false, false, false, c220);
+    drawCircleQuadrants(236, 196, 40, true, false, false, false, c440);
+
+    char donuts[15];
+    uint8_t numDonuts = ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts;
+    snprintf(donuts, sizeof(donuts), "%d donut%s", numDonuts, numDonuts == 1 ? "" : "s");
+    uint8_t donutLeft
+        = bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2 + textWidth(&bigbug->gameData.font, donuts);
+    donutLeft = (TFT_WIDTH >> 1) - (donutLeft >> 1);
+    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], donutLeft, 4);
+    drawText(&bigbug->gameData.font, c550, donuts,
+             donutLeft + bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0].w + 2, 16);
+
+    uint16_t tWidth = textWidth(&bigbug->gameData.sevenSegmentFont, "loadout");
+    drawText(&bigbug->gameData.sevenSegmentFont, c304, "loadout", (TFT_WIDTH >> 1) - (tWidth >> 1), 30);
+    tWidth = textWidth(&bigbug->gameData.font, "primary wile");
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 0 ? c555 : c021, "primary wile",
+             (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
+    tWidth = textWidth(&bigbug->gameData.font, "secondary wile");
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 1 ? c555 : c021, "secondary wile",
+             (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 130);
+
+    drawLineScaled(30, 30, 40, 40, c323, 3, 0, 0, 3, 3);
+    drawRectScaled(10, 70, 13, 75, c555, 0, 0, 3, 3);
+    drawTriangleOutlined(25, 175, 15, 170, 25, 165, c323, c555);
+    drawTriangleOutlined(255, 175, 265, 170, 255, 165, c323, c555);
+
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c555 : c021, "Faulty Wile", 35,
+             155);
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 2 ? c304 : c102, "This is some text.",
+             35, 170);
+
+    tWidth = textWidth(&bigbug->gameData.font, "prime the trash pod");
+    drawText(&bigbug->gameData.font, bigbug->gameData.radar.playerPingRadius == 3 ? c555 : c021, "prime the trash pod",
+             (TFT_WIDTH >> 1) - (tWidth >> 1), 225);
+}
+
+static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
+{
+    bigbug->gameData.btnDownState = 0b0;
+    // Always process button events, regardless of control scheme, so the main menu button can be captured
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        bigbug->gameData.btnState = evt.state;
+
+        if (evt.down)
+        {
+            bigbug->gameData.btnDownState += evt.button;
+            if (evt.button == PB_UP)
+            {
+                bigbug->gameData.radar.playerPingRadius--; // using it as a selection idx in this screen to save space.
+            }
+            else if (evt.button == PB_DOWN)
+            {
+                bigbug->gameData.radar.playerPingRadius++; // using it as a selection idx in this screen to save space.
+            }
+            else if (evt.button == PB_A)
+            {
+                switch (bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius])
+                {
+                    case GARBOTNIK_FASTER_FIRE_RATE:
+                    {
+                        bigbug->gameData.GarbotnikStat_fireTime = bigbug->gameData.GarbotnikStat_fireTime > 75
+                                                                      ? bigbug->gameData.GarbotnikStat_fireTime - 50
+                                                                      : 25;
+                        if (bigbug->gameData.GarbotnikStat_fireTime == 25)
+                        {
+                            // fireTime is maxed out. Take it out of the pool.
+                            bigbug->gameData.garbotnikUpgrade.upgrades
+                                = bigbug->gameData.garbotnikUpgrade.upgrades | (1 << GARBOTNIK_FASTER_FIRE_RATE);
+                        }
+                        break;
+                    }
+                    case GARBOTNIK_MORE_DIGGING_STRENGTH:
+                    {
+                        bigbug->gameData.GarbotnikStat_diggingStrength++;
+                        break;
+                    }
+                    case GARBOTNIK_REDUCED_FUEL_CONSUMPTION:
+                    {
+                        bigbug->gameData.GarbotnikStat_fuelConsumptionRate--;
+                        break;
+                    }
+                    case GARBOTNIK_MORE_TOW_CABLES:
+                    {
+                        bigbug->gameData.GarbotnikStat_maxTowCables += 3;
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                bigbug->gameData.garbotnikUpgrade.upgrades
+                    += 1 << bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius];
+                bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
+                bigbug->gameData.screen             = BIGBUG_GAME;
+            }
+        }
+    }
+
+    // keep the selection wrapped in range of available choices.
+    bigbug->gameData.radar.playerPingRadius = (bigbug->gameData.radar.playerPingRadius % 2 + 2) % 2;
+
+    bb_DrawScene_Garbotnik_Upgrade();
+}
+
+static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
+{
+    bigbug->gameData.btnDownState = 0b0;
+    // Always process button events, regardless of control scheme, so the main menu button can be captured
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        bigbug->gameData.btnState = evt.state;
+
+        if (evt.down)
+        {
+            bigbug->gameData.btnDownState += evt.button;
+            if (evt.button == PB_UP)
+            {
+                if (bigbug->gameData.radar.playerPingRadius == 1)
+                {
+                    bigbug->gameData.radar.playerPingRadius -= 2;
+                }
+                else
+                {
+                    bigbug->gameData.radar
+                        .playerPingRadius--; // using it as a selection idx in this screen to save space.
+                }
+            }
+            else if (evt.button == PB_DOWN)
+            {
+                if (bigbug->gameData.radar.playerPingRadius == 0)
+                {
+                    bigbug->gameData.radar.playerPingRadius += 2;
+                }
+                else
+                {
+                    bigbug->gameData.radar
+                        .playerPingRadius++; // using it as a selection idx in this screen to save space.
+                }
+            }
+            else if (evt.button == PB_LEFT)
+            {
+                if (bigbug->gameData.radar.playerPingRadius == 1)
+                {
+                    bigbug->gameData.radar.playerPingRadius--;
+                }
+            }
+            else if (evt.button == PB_RIGHT)
+            {
+                if (bigbug->gameData.radar.playerPingRadius == 0)
+                {
+                    bigbug->gameData.radar.playerPingRadius++;
+                }
+            }
+            else if (evt.button == PB_A)
+            {
+                switch (bigbug->gameData.radar.playerPingRadius)
+                {
+                    case 0: // SELECT A PRIMARY WILE
+                    {
+                        break;
+                    }
+                    case 1: // SELECT A SECONDARY WILE
+                    {
+                        break;
+                    }
+                    case 2: // EQUIP A WILE
+                    {
+                        break;
+                    }
+                    default: // case 3 PRIME THE TRASH POD
+                    {
+                        bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
+                        bigbug->gameData.screen             = BIGBUG_GAME;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // keep the selection wrapped in range of available choices.
+    bigbug->gameData.radar.playerPingRadius = (bigbug->gameData.radar.playerPingRadius % 4 + 4) % 4;
+
+    bb_DrawScene_Loadout_Select();
 }
 
 static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs)
@@ -972,8 +1300,11 @@ static void bb_UpdateTileSupport(void)
                     bigbug->gameData.tilemap.mgTiles[shiftedVal[0]][shiftedVal[1]].health = 0;
                 }
 
-                // create a crumble animation
-                bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0], shiftedVal[1], true);
+                if (bigbug->gameData.entityManager.activeEntities < MAX_ENTITIES)
+                {
+                    // create a crumble animation
+                    bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0], shiftedVal[1], true);
+                }
 
                 // queue neighbors for crumbling
                 for (uint8_t neighborIdx = 0; neighborIdx < 4;

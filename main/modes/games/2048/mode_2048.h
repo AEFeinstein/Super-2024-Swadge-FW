@@ -2,7 +2,7 @@
  * @file mode_2048.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 1.5.0
+ * @version 1.5.1
  * @date 2024-06-28
  *
  * @copyright Copyright (c) 2024
@@ -47,6 +47,7 @@ typedef enum
 {
     T48_IN_GAME,
     T48_START_SCREEN,
+    T48_LOAD_SAVE,
     T48_WIN_SCREEN,
     T48_HS_SCREEN,
     T48_END_SCREEN,
@@ -99,6 +100,12 @@ typedef struct
 
 typedef struct
 {
+    int32_t board[T48_GRID_SIZE][T48_GRID_SIZE]; ///< Board state
+    int32_t score;                               ///< Score when saved
+} t48GameSaveData_t;
+
+typedef struct
+{
     // Assets
     font_t font;             ///< Font used for tile values
     font_t titleFont;        ///< Font used for the title
@@ -140,6 +147,9 @@ typedef struct
     int32_t fadeTimer;           ///< Timer between fades
     int32_t nextLedTimer;        ///< Timer before the next LED illuminates
     uint8_t currLED;             ///< Index of the led for the chase mode
+
+    // Save game data
+    t48GameSaveData_t sd; ///< Save data for temp saves
 } t48_t;
 
 //==============================================================================

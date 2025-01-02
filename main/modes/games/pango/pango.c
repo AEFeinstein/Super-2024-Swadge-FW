@@ -667,7 +667,7 @@ void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
         drawText(font, c555, "Debug Mode", 80, 48);
     }
 
-    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_GIRL_WIN]), 128, 116);
+    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PIPER_WIN]), 128, 116);
     drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PO_PUSH_SIDE_1]), 144, 122);
     drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PIXEL_WIN]), 120, 126);
     drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PANGO_PUSH_SOUTH_2]), 136, 132);
@@ -1158,7 +1158,7 @@ void drawGameClear(font_t* font, paWsgManager_t* wsgManager, paGameData_t* gameD
 
             if (gameData->frameCount > 240)
             {
-                drawWsgSimpleScaled(&wsgManager->wsgs[PA_WSG_GIRL_WIN], 172, 44, 2, 2);
+                drawWsgSimpleScaled(&wsgManager->wsgs[PA_WSG_PIPER_WIN], 172, 44, 2, 2);
             }
 
             if (gameData->frameCount > 360)

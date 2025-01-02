@@ -60,8 +60,8 @@ typedef struct
     uint16_t h;         ///< The height of the image
 } wsg_t;
 
-void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height);
-void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, int16_t rotateDeg);
+void rotatePixel(int32_t* x, int32_t* y, int32_t rotateDeg, int32_t width, int32_t height);
+void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg);
 void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff);
 void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale);
 void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff);

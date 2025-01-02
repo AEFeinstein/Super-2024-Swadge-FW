@@ -2,7 +2,7 @@
  * @file mode_2048.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 1.5.0
+ * @version 1.5.1
  * @date 2024-06-28
  *
  * @copyright Copyright (c) 2024
@@ -43,6 +43,9 @@ static void t48BackgroundDraw(int16_t x, int16_t y, int16_t w, int16_t h, int16_
 const char t48Name[]           = "2048";
 static const char youWin[]     = "You got 2048!";
 static const char continueAB[] = "Press A or B to continue";
+
+static const char* loadGameStrs[] = {"Load save?", "Press A to load saved game", "Press B to make a new game",
+                                     "Press any other key return to title screen. Will not delete your save."};
 
 static const char* tileSpriteNames[] = {
     "Tile-Blue-Diamond.wsg", "Tile-Blue-Square.wsg",  "Tile-Cyan-Legs.wsg",      "Tile-Green-Diamond.wsg",
@@ -269,13 +272,62 @@ static void t48MainLoop(int64_t elapsedUs)
                 if (evt.down && (PB_A == evt.button || PB_B == evt.button))
                 {
                     soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48_gameInit(t48, PB_B == evt.button);
-                    t48->state = T48_IN_GAME;
+                    t48->tiltControls = PB_B == evt.button;
+                    // If a save game is detected, ask if the player wants to load it.
+                    size_t blob = sizeof(t48GameSaveData_t);
+                    readNvsBlob(nvsSaved2048, NULL, &blob);
+                    if (!readNvsBlob(nvsSaved2048, &t48->sd, &blob))
+                    {
+                        t48_gameInit(t48, false);
+                        t48->state = T48_IN_GAME;
+                    }
+                    else
+                    {
+                        // Game data detected
+                        t48->state = T48_LOAD_SAVE;
+                    }
+                    break;
                 }
             }
             // Draw
             t48_drawStartScreen(t48, t48_generateRainbow(), elapsedUs);
             t48_chaseLEDs(elapsedUs);
+            break;
+        }
+        case T48_LOAD_SAVE:
+        {
+            // AAsk player if they want to load their old save
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    if (evt.button & PB_A || evt.button & PB_B)
+                    {
+                        // Delete old save
+                        eraseNvsKey(nvsSaved2048);
+
+                        // Start new game
+                        t48_gameInit(t48, evt.button == PB_A);
+                        t48->state = T48_IN_GAME;
+                    }
+                    else
+                    {
+                        // Return to start screen without deleting save
+                        t48->state = T48_START_SCREEN;
+                    }
+                }
+            }
+            // Draw load save/new game screen
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            drawText(&t48->titleFont, c055, loadGameStrs[0],
+                     (TFT_WIDTH - textWidth(&t48->titleFont, loadGameStrs[0])) >> 1, 48);
+            drawText(&t48->font, c555, loadGameStrs[1], (TFT_WIDTH - textWidth(&t48->font, loadGameStrs[1])) >> 1,
+                     TFT_HEIGHT - 128);
+            drawText(&t48->font, c555, loadGameStrs[2], (TFT_WIDTH - textWidth(&t48->font, loadGameStrs[2])) >> 1,
+                     TFT_HEIGHT - 96);
+            int16_t xOff = 24; // To make it look centered, uneven
+            int16_t yOff = TFT_HEIGHT - 64;
+            drawTextWordWrap(&t48->font, c555, loadGameStrs[3], &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
             break;
         }
         case T48_WIN_SCREEN:
@@ -289,8 +341,8 @@ static void t48MainLoop(int64_t elapsedUs)
                 }
             }
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-            drawText(&t48->titleFont, c055, youWin, (TFT_WIDTH - textWidth(&t48->titleFont, youWin)) / 2, 48);
-            drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) / 2,
+            drawText(&t48->titleFont, c055, youWin, (TFT_WIDTH - textWidth(&t48->titleFont, youWin)) >> 1, 48);
+            drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) >> 1,
                      TFT_HEIGHT - 64);
             break;
         }
