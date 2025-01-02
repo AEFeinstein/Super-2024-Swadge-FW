@@ -42,14 +42,14 @@ static const char* tutorialText[] = {
     // Draw two Chowa cheering
 
     "The Dojo",
-    "Your Chowa will always be on the left, and you opponent on the right. The opponent will be scaled depending on "
+    "Your Chowa will always be on the left, and your opponent on the right. The opponent will be scaled depending on "
     "the difficulty selected.",
     // Draw two Chowa facing off
 
     "Readiness bar",
     "Each Chowa has three status bars behind them. The green represents how ready the Chowa is. Press the button "
-    "corresponding with the action you want the Chowa to use to repeatedly to encourage them to get ready faster. "
-    "Switching moves int eh middle will confuse the chowa, and their readiness will take a hit.",
+    "corresponding with the action you want the Chowa to use repeatedly to encourage them to get ready faster. "
+    "Switching moves in the middle will confuse the chowa, and their readiness will take a hit.",
 
     "Stamina/HP",
     "The yellow bar is stamina, each move uses an amount of stamina and when the stamina bar is empty the Chowa "
@@ -82,7 +82,7 @@ static const char* tutorialText[] = {
     // Draw Headbutt and dodge icons
 
     "Win condition",
-    "To win, your Chowa must completely drain it's opponents stamina. The opponent can only win by doing the same "
+    "To win, your Chowa must completely drain its opponent's stamina. The opponent can only win by doing the same "
     "to your Chowa. If neither Chowa strikes the knockout blow, the match will result in a draw. If you win, you'll "
     "get a prize!",
     // Draw a crying Chowa and a cheering chowa
