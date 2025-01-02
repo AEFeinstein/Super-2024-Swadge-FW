@@ -8,6 +8,7 @@
 #include "midiFileParser.h"
 
 #include "utils.h"
+#include "midi_dump.h"
 
 midiFile_t* mididogLoadFile(FILE* stream)
 {
@@ -123,7 +124,7 @@ bool mididogWriteFile(const midiFile_t* data, FILE* stream)
     size_t len = 0;
     size_t written = 0;
 
-    len = midiWriteHeader(buffer, sizeof(buffer), data);
+    /*len = midiWriteHeader(buffer, sizeof(buffer), data);
 
     written = fwrite(buffer, 1, len, stream);
 
@@ -141,18 +142,42 @@ bool mididogWriteFile(const midiFile_t* data, FILE* stream)
             fprintf(stderr, "ERR: Reached EOF when writing MIDI file header to stream\n");
             return false;
         }
-    }
+    }*/
 
     if (data->data != NULL)
     {
         // Write data out directly
         written = 0;
         // TODO
+        len = data->length;
 
-        return false;
+        do
+        {
+            written += fwrite(data->data + written, 1, len - written, stream);
+            if (written < len)
+            {
+                int err = ferror(stream);
+
+                // Ignore EAGAIN since it's not a "real" error in this situation
+                if (err != 0 && err != EAGAIN)
+                {
+                    fprintf(stderr, "ERR: Error code %d when writing MIDI file to stream: %s\n", err, strerror(err));
+                    return false;
+                }
+
+                if (feof(stream))
+                {
+                    fprintf(stderr, "ERR: Reached EOF when writing MIDI file to stream\n");
+                    return false;
+                }
+            }
+        } while (written < len);
+
+        return true;
     }
     else
     {
+        return false;
         // Write data from event stream
         for (uint8_t trackNum = 0; trackNum < data->trackCount; trackNum++)
         {
@@ -335,4 +360,199 @@ midiFile_t* mididogTokenizeMidi(const midiFile_t* midiFile)
     }
 
     return NULL;
+}
+
+midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
+{
+    if (NULL == midiFile)
+    {
+        return NULL;
+    }
+
+    const midiEvent_t eot = {
+        .deltaTime = 0,
+        .type = META_EVENT,
+        .meta = {
+            .type = END_OF_TRACK,
+            .length = 0,
+        }
+    };
+
+    // The total length in bytes of all events in each track
+    uint32_t trackEventLengths[midiFile->trackCount];
+    
+    int totalFileLength = 0;
+
+    // Measure header length
+    uint32_t headerLength = midiWriteHeader(NULL, 1024, midiFile);
+
+    totalFileLength += headerLength;
+    
+    int tmp = 0;
+
+    for (int trackNum = 0; trackNum < midiFile->trackCount; trackNum++)
+    {
+        trackEventLengths[trackNum] = 0;
+        uint8_t runningStatus = 0;
+        bool endOfTrack = false;
+
+        fprintf(stderr, "track %d has %d events\n", trackNum, midiFile->events[trackNum].count);
+
+        for (int eventNum = 0; eventNum < midiFile->events[trackNum].count; eventNum++)
+        {
+            midiEvent_t* event = &midiFile->events[trackNum].events[eventNum];
+            // Account for the delta time
+            trackEventLengths[trackNum] += tmp = writeVariableLength(NULL, 1024, event->deltaTime);
+            //fprintf(stderr, "variable length quantity %d computed with %d bytes\n", event->deltaTime, tmp);
+            // Account for actual event
+            trackEventLengths[trackNum] += tmp = midiWriteEventWithRunningStatus(NULL, 1024, event, &runningStatus);
+            //fprintf(stderr, "computed event with length of %d\n", tmp);
+            //fprintEvent(stderr, 0, event);
+
+            if (event->type == META_EVENT && event->meta.type == END_OF_TRACK)
+            {
+                endOfTrack = true;
+            }
+        }
+
+        // Ensure the track actually has an end of track event
+        if (!endOfTrack)
+        {
+            fprintf(stderr, "Track %d is missing end-of-track event\n", trackNum);
+            // running status
+            trackEventLengths[trackNum] += writeVariableLength(NULL, 1024, eot.deltaTime);
+            trackEventLengths[trackNum] += midiWriteEventWithRunningStatus(NULL, 1024, &eot, &runningStatus);
+        }
+
+        totalFileLength += 8;
+        totalFileLength += trackEventLengths[trackNum];
+    }
+
+    midiFile_t* result = malloc(sizeof(midiFile_t));
+    if (NULL == result)
+    {
+        fprintf(stderr, "ERR: unable to allocate %lu bytes for un-tokenized MIDI file\n", sizeof(midiFile_t));
+        //free(fileData);
+        return NULL;
+    }
+
+    midiTrack_t* tracks = calloc(midiFile->trackCount, sizeof(midiTrack_t));
+    if (NULL == tracks)
+    {
+        fprintf(stderr, "ERR: unable to allocate %" PRIu32 " bytes for un-tokenized MIDI file data\n", totalFileLength);
+        free(result);
+        return NULL;
+    }
+
+    uint8_t* fileData = malloc(totalFileLength);
+    if (NULL == fileData)
+    {
+        fprintf(stderr, "ERR: unable to allocate %" PRIu32 " bytes for un-tokenized MIDI file data\n", totalFileLength);
+        free(tracks);
+        free(result);
+        return NULL;
+    }
+
+    // Clear data not used for normal files
+    result->events = NULL;
+
+    // Kinda a hack but it's already hacky anyway. This makes sure something can free the events we allocated when the file's deallocated
+    result->data = fileData;
+    result->length = totalFileLength;
+
+    // Copy the original's metadata
+    result->format = midiFile->format;
+    result->timeDivision = midiFile->timeDivision;
+    result->trackCount = midiFile->trackCount;
+    result->tracks = tracks;
+
+    int offset = 0;
+
+    offset += midiWriteHeader(fileData + offset, totalFileLength - offset, result);
+    fprintf(stderr, "offset=%d after writing header\n", offset);
+    
+    for (int trackNum = 0; trackNum < midiFile->trackCount; trackNum++)
+    {
+        uint8_t runningStatus = 0;
+        bool endOfTrack = false;
+        
+        // Write track chunk header
+        // Write magic bytes
+        memcpy(fileData + offset, "MTrk", 4);
+        offset += 4;
+        
+        // Write data length
+        fileData[offset++] = (trackEventLengths[trackNum] >> 24) & 0xFFu;
+        fileData[offset++] = (trackEventLengths[trackNum] >> 16) & 0xFFu;
+        fileData[offset++] = (trackEventLengths[trackNum] >> 8) & 0xFFu;
+        fileData[offset++] = (trackEventLengths[trackNum]) & 0xFFu;
+
+        int trackStartOffset = offset;
+
+        result->tracks[trackNum].data = fileData + offset;
+        result->tracks[trackNum].length = trackEventLengths[trackNum];
+
+
+        // Write actual events
+        for (int eventNum = 0; eventNum < midiFile->events[trackNum].count; eventNum++)
+        {
+            midiEvent_t* event = &midiFile->events[trackNum].events[eventNum];
+            // Account for the delta time
+            tmp = writeVariableLength(fileData + offset, totalFileLength - offset, event->deltaTime);
+            offset += tmp;
+            fprintf(stderr, "variable length quantity %d written with %d bytes, new offset=%d\n", event->deltaTime, tmp, offset);
+            fprintf(stderr, "%1$d (%1$x) --> ", event->deltaTime);
+            for (int i = 0; i < tmp; i++)
+            {
+                fprintf(stderr, "0x%02hhx ", fileData[offset - tmp + i]);
+            }
+            fputc('\n', stderr);
+            
+
+            // Account for actual event
+            tmp = midiWriteEventWithRunningStatus(fileData + offset, totalFileLength - offset, event, &runningStatus);
+            offset += tmp;
+            fprintf(stderr, "wrote event with length of %d, new offset=%d\n", tmp, offset);
+            fprintEvent(stderr, 0, event);
+
+            if (offset >= 8)
+            {
+                fprintf(stderr, "Last 8 bytes: %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx\n", fileData[offset - 8], fileData[offset - 7], fileData[offset - 6], fileData[offset - 5], fileData[offset - 4], fileData[offset - 3], fileData[offset - 2], fileData[offset - 1]);
+            }
+
+            if (event->type == META_EVENT && event->meta.type == END_OF_TRACK)
+            {
+                endOfTrack = true;
+            }
+        }
+
+        // Add missing end-of-track event
+        if (!endOfTrack)
+        {
+            fprintf(stderr, "Adding missing end-of-track to track %d\n", trackNum);
+            offset += writeVariableLength(fileData + offset, totalFileLength - offset, eot.deltaTime);
+            offset += midiWriteEventWithRunningStatus(fileData + offset, totalFileLength - offset, &eot, &runningStatus);
+        }
+
+        if (offset - trackStartOffset != result->tracks[trackNum].length)
+        {
+            fprintf(stderr, "ERR: Output track does not have correc length!?? We said it would be %u, but now it's actually %d\n", result->tracks[trackNum].length, offset - trackStartOffset);
+        }
+    }
+
+    return result;
+}
+
+static const char* noteNames[] = {"A","A#","B","C","C#","D","D#","E","F","F#","G","G#"};
+static const uint8_t noteA0 = 21;
+
+int writeNoteName(char* output, int max, int flags, uint8_t note)
+{
+    // Calculate semitones above A0
+    int16_t semitones = (int16_t)note - (int16_t)noteA0;    
+
+    const char* name = noteNames[(12 + semitones % 12) % 12];
+    int16_t octave = semitones / 12;
+
+    return snprintf(output, max, "%s%" PRId16, name, octave);
 }

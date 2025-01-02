@@ -157,12 +157,8 @@ static bool handlePositionalArgument(const char* val)
 {
     if (val)
     {
-        if ((strlen(val) > 4 && (!strcmp(&val[strlen(val) - 4], ".mid") || !strcmp(&val[strlen(val) - 4], ".kar")))
-            || (strlen(val) > 5 && !strcmp(&val[strlen(val) - 5], ".midi")))
-        {
-            mdArgs.midiIn = val;
-            return true;
-        }
+        mdArgs.action = val;
+        return true;
     }
 
     return false;

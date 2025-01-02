@@ -1,6 +1,6 @@
 #include "midi_dump.h"
 
-#include <inttypes.h>e
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +11,19 @@
 bool action_dump(void)
 {
     midiFile_t* file = mididogLoadPath(mdArgs.midiIn);
+
+    if (NULL == file)
+    {
+        return false;
+    }
+
     midiFile_t* tokFile = mididogTokenizeMidi(file);
+    if (NULL == tokFile)
+    {
+        unloadMidiFile(file);
+        free(file);
+        return false;
+    }
 
     /*midiFileReader_t reader = {0};
     if (initMidiParser(&reader, file))
@@ -85,13 +97,74 @@ void fprintEvent(FILE* stream, int flags, const midiEvent_t* event)
 
                 switch (status)
                 {
-                    case 0x80: fputs("  Note Off\n", stream); break;
-                    case 0x90: fputs("  Note On\n", stream); break;
-                    case 0xA0: fputs("  AfterTouch\n", stream); break;
-                    case 0xB0: fputs("  Control Change\n", stream); break;
-                    case 0xC0: fputs("  Program Change\n", stream); break;
-                    case 0xD0: fputs("  Channel Pressure\n", stream); break;
-                    case 0xE0: fputs("  Pitch Bend\n", stream); break;
+                    case 0x80:
+                    {
+                        char noteName[16] = {0};
+                        writeNoteName(noteName, sizeof(noteName), 0, event->midi.data[0]);
+
+                        fputs("  Note Off\n", stream);
+                        fprintf(stream, "   - Channel: %hhx\n", channel + 1);
+                        fprintf(stream, "   - Note: %hhu (%s)\n", event->midi.data[0], noteName);
+                        break;
+                    }
+                    case 0x90:
+                    {
+                        char noteName[16] = {0};
+                        writeNoteName(noteName, sizeof(noteName), 0, event->midi.data[0]);
+
+                        if (event->midi.data[1] == 0)
+                        {
+                            fputs("  Note On*\n", stream);
+                        }
+                        else
+                        {
+                            fputs("  Note On\n", stream);
+                        }
+                        fprintf(stream, "   - Channel: %hhx\n", channel + 1);
+                        fprintf(stream, "   - Note: %hhu (%s)\n", event->midi.data[0], noteName);
+                        fprintf(stream, "   - Velocity: %hhu\n", event->midi.data[1]);
+                        break;
+                    }
+                    case 0xA0:
+                    {
+                        char noteName[16] = {0};
+                        writeNoteName(noteName, sizeof(noteName), 0, event->midi.data[0]);
+
+                        fputs("  AfterTouch\n", stream);
+                        fprintf(stream, "   - Note: %hhu (%s)\n", event->midi.data[0], noteName);
+                        fprintf(stream, "   - Velocity: %hhu\n", event->midi.data[1]);
+                        
+                        break;
+                    }
+                    case 0xB0:
+                    {
+                        fputs("  Control Change\n", stream);
+                        fprintf(stream, "   - Control: %hhu\n", event->midi.data[0]);
+                        fprintf(stream, "   - Value: %1$hhu\n (0x%1$hhx)\n", event->midi.data[1]);
+                        break;
+                    }
+                    case 0xC0:
+                    {
+                        fputs("  Program Change\n", stream);
+                        fprintf(stream, "   - Program: %hhu\n", event->midi.data[0]);
+                        break;
+                    }
+                    case 0xD0:
+                    {
+                        fputs("  Channel Pressure\n", stream);
+                        fprintf(stream, "   - Pressure: %hhu\n", event->midi.data[0]);
+                        break;
+                    }
+                    case 0xE0:
+                    {
+                        // Get 14-bit value for pitch bend
+                        uint16_t pitch = ((event->midi.data[1] & 0x7F) << 7) | (event->midi.data[0] & 0x7F);
+                        int32_t bendCents = (((int16_t)-0x2000) + pitch) * 100 / 0x1FFF;
+                        fputs("  Pitch Bend\n", stream);
+
+                        fprintf(stream, "   - Pitch Bend: %04" PRIx16 " (%+" PRId32 " cents)\n", pitch, bendCents);
+                        break;
+                    }
                     case 0xF0:
                     {
                         if (event->midi.status > 0xF7)
@@ -202,6 +275,132 @@ void fprintEvent(FILE* stream, int flags, const midiEvent_t* event)
             {
                 putc('M', stream);
             }
+
+            if (ml)
+            {
+                
+            }
+            else
+            {
+                bool text = false;
+                switch (event->meta.type)
+                {
+                    case SEQUENCE_NUMBER:
+                    {
+                        fprintf(stream, " Seq#");
+                        text = true;
+                        break;
+                    }
+                    case TEXT:
+                    {
+                        fprintf(stream, " Text");
+                        text = true;
+                        break;
+                    }
+                    case COPYRIGHT:
+                    {
+                        fprintf(stream, " (C)");
+                        text = true;
+                        break;
+                    }
+                    case SEQUENCE_OR_TRACK_NAME:
+                    {
+                        fprintf(stream, " Name");
+                        text = true;
+                        break;
+                    }
+                    case INSTRUMENT_NAME:
+                    {
+                        fprintf(stream, " Inst");
+                        text = true;
+                        break;
+                    }
+                    case LYRIC:
+                    {
+                        fprintf(stream, " Lyric");
+                        text = true;
+                        break;
+                    }
+                    case MARKER:
+                    {
+                        fprintf(stream, " Marker");
+                        text = true;
+                        break;
+                    }
+                    case CUE_POINT:
+                    {
+                        fprintf(stream, " Cue");
+                        text = true;
+                        break;
+                    }
+                    // Other text, unknown specific types
+                    case 8:
+                    case 9:
+                    case 10:
+                    case 11:
+                    case 12:
+                    case 13:
+                    case 14:
+                    case 15:
+                    {
+                        fprintf(stream, " Text?");
+                        text = true;
+                        break;
+                    }
+                    case CHANNEL_PREFIX:
+                    {
+                        fprintf(stream, " Ch. Prefix");
+                        break;
+                    }
+                    case PORT_PREFIX:
+                    {
+                        fprintf(stream, " Port Prefix");
+                        break;
+                    }
+                    case END_OF_TRACK:
+                    {
+                        fprintf(stream, " EOT");
+                        break;
+                    }
+                    case TEMPO:
+                    {
+                        fprintf(stream, " Tempo %d", event->meta.tempo);
+                        break;
+                    }
+                    case SMPTE_OFFSET:
+                    {
+                        fprintf(stream, " SMPTE");
+                        break;
+                    }
+                    case TIME_SIGNATURE:
+                    {
+                        fprintf(stream, " TimeSig");
+                        break;
+                    }
+                    case KEY_SIGNATURE:
+                    {
+                        fprintf(stream, " KeySig");
+                        break;
+                    }
+                    case PROPRIETARY:
+                    {
+                        fprintf(stream, " Proprietary");
+                        break;
+                    }
+                }
+
+                if (text)
+                {
+                    if (event->meta.length < 64)
+                    {
+                        fprintf(stream, " \"%.*s\"", (int)event->meta.length, event->meta.text);
+                    }
+                    else
+                    {
+                        fprintf(stream, " \"%.*s\" ...", 64, event->meta.text);
+                    }
+                }
+            }
             break;
         }
 
@@ -223,6 +422,7 @@ void fprintEvent(FILE* stream, int flags, const midiEvent_t* event)
     putc('\n', stream);
     if (ml)
     {
+        // Extra blank line to end a multi-line output
         putc('\n', stream);
     }
 }

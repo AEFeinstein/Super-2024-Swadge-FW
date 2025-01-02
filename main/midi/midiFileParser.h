@@ -398,3 +398,13 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event);
  * @return The number of bytes written, or the length of the event if out is NULL.
 */
 int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* event, uint8_t* runningStatus);
+
+/**
+ * @brief Write a variable length quantity to a byte buffer
+ *
+ * @param out The buffer to write the quantity to
+ * @param max The maximum number of bytes to write
+ * @param length The quanity to write
+ * @return int
+ */
+int writeVariableLength(uint8_t* out, int max, uint32_t length);

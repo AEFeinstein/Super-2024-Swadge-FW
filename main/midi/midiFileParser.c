@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifndef MIDI_STANDALONE
 
@@ -18,10 +19,10 @@
 
 #else
 
-#define ESP_LOGD(...)
-#define ESP_LOGI(...)
-#define ESP_LOGW(...)
-#define ESP_LOGE(...)
+#define ESP_LOGD(tag, ...) do { fprintf(stderr, __VA_ARGS__); putc('\n', stderr); } while (0)
+#define ESP_LOGI(tag, ...) do { fprintf(stderr, __VA_ARGS__); putc('\n', stderr); } while (0)
+#define ESP_LOGW(tag, ...) do { fprintf(stderr, __VA_ARGS__); putc('\n', stderr); } while (0)
+#define ESP_LOGE(tag, ...) do { fprintf(stderr, __VA_ARGS__); putc('\n', stderr); } while (0)
 
 #ifndef MIDI_CALLOC
 #define MIDI_CALLOC(nmemb, sz) calloc(nmemb, sz)
@@ -83,7 +84,6 @@ typedef struct
 //==============================================================================
 
 static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* out);
-static int writeVariableLength(uint8_t* out, int max, uint32_t length);
 static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track);
 static bool parseMidiHeader(midiFile_t* file);
 static void readFirstEvents(midiFileReader_t* reader);
@@ -127,15 +127,7 @@ static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* ou
     return read;
 }
 
-/**
- * @brief Write a variable length quantity to a byte buffer
- *
- * @param out The buffer to write the quantity to
- * @param max The maximum number of bytes to write
- * @param length The quanity to write
- * @return int
- */
-static int writeVariableLength(uint8_t* out, int max, uint32_t quantity)
+int writeVariableLength(uint8_t* out, int max, uint32_t quantity)
 {
     int written = 0;
 
@@ -151,7 +143,7 @@ static int writeVariableLength(uint8_t* out, int max, uint32_t quantity)
     {
         if (NULL != out)
         {
-            out[written++] = reversed & 0x7F;
+            out[written++] = reversed;
         }
         else
         {
@@ -535,6 +527,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 
                     default:
                     {
+                        track->nextEvent.meta.type = (metaEventType_t)metaType;
                         ESP_LOGE("MIDIParser", "Unknown meta-event %02" PRIx8, metaType);
                         break;
                     }
@@ -753,7 +746,8 @@ static bool parseMidiHeader(midiFile_t* file)
         // Check the header of this chunk
         if (memcmp(ptr, trackHeader, sizeof(trackHeader)))
         {
-            ESP_LOGW("MIDIParser", "Start of chunk %d did not contain track chunk header", i);
+            ESP_LOGW("MIDIParser", "Start of chunk %d (offset=%ld) did not contain track chunk header", i, ptr - file->data);
+            ESP_LOGW("MIDIParser", "Value was %02hhx %02hhx %02hhx %02hhx", ptr[0], ptr[1], ptr[2], ptr[3]);
 
             // We should ignore unknown chunk types
             ptr += sizeof(trackHeader);
@@ -1138,14 +1132,13 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
         prevRunningStatus = *runningStatus;
     }
 
-
-    /// The total length of the packet
-    uint32_t len = 0;
-
     switch (event->type)
     {
         case MIDI_EVENT:
         {
+            /// The total length of the packet
+            uint32_t len = 0;
+
             // This is a MIDI event, which means we utilize running status if possible
             // Note that since this is a single-event write function it might actually write an arbitrary event,
             // so it could be used for a system realtime or system common message.
@@ -1153,7 +1146,6 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
             // If there's no running status or the running status is different from before, set it
             if (runningStatus != NULL)
             {
-
                 // Handle running status
                 if (event->midi.status > 0xF7)
                 {
@@ -1162,23 +1154,23 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
                 }
                 else if (0xF0 <= event->midi.status && event->midi.status <= 0xF7)
                 {
+                    //ESP_LOGW("MIDIParser", "Unsetting running status from %02hhx", prevRunningStatus);
                     // System Common messages clear the running status
-                    if (NULL != out)
-                    {
-                        *runningStatus = 0;
-                    }
+                    *runningStatus = 0;
                     len++;
                 }
                 else if (0x80 <= event->midi.status && event->midi.status <= 0xEF && event->midi.status != prevRunningStatus)
                 {
+                    //ESP_LOGW("MIDIParser", "Setting running status to %02hhx, previous was %02hhx", event->midi.status, prevRunningStatus);
                     // Account for the status byte length, but only if a new status would be written
                     len++;
 
                     // Voice Messages set the running status
-                    if (NULL != out)
-                    {
-                        *runningStatus = event->midi.status;
-                    }
+                    *runningStatus = event->midi.status;
+                }
+                else
+                {
+                    //ESP_LOGW("MIDIParser", "Using previous running status byte of %02hhx for status %02hhx", prevRunningStatus, event->midi.status);
                 }
             }
             else
@@ -1213,7 +1205,12 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
                     }
                     else
                     {
-                        written += len;
+                        if (len > 2)
+                        {
+                            //ESP_LOGW("MIDIParser", "Would write status byte");
+                            written++;
+                        }
+                        written += 2;
                     }
                     break;
                 }
@@ -1238,7 +1235,11 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
                     }
                     else
                     {
-                        written += len;
+                        if (len > 1)
+                        {
+                            written++;
+                        }
+                        written++;
                     }
                     break;
                 }
@@ -1268,6 +1269,14 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
                     else if (event->midi.status == 0xF6)
                     {
                         // Tune request, no data bytes
+                    }
+
+                    if (event->midi.status <= 0xF7)
+                    {
+                        if (NULL != runningStatus)
+                        {
+                            *runningStatus = 0;
+                        }
                     }
                     // The rest are all single-byte realtime messages:
                     // 0xF7: SysEx start, not handled here
@@ -1315,16 +1324,19 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
 
         case META_EVENT:
         {
+            ESP_LOGW("MIDIParser", "Meta-event @ %d of %x", written, (int)out);
             if (NULL != out)
             {
                 if (written < max)
                 {
-                    out[written++] = 0xFF;
+                    out[written++] = (uint8_t)0xFFu;
+                    ESP_LOGW("MIDIParser", "Wrote 0xFF status byte for meta event @ %d", written-1);
                 }
 
                 if (written < max)
                 {
-                    out[written++] = event->meta.type;
+                    out[written++] = (uint8_t)event->meta.type;
+                    ESP_LOGW("MIDIParser", "Wrote %hhx type byte for meta event @ %d", (uint8_t)event->meta.type, written-1);
                 }
             }
             else
@@ -1332,9 +1344,15 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
                 written += 2;
             }
 
-            written += writeVariableLength(out, max - written, event->meta.length);
+            if (NULL != runningStatus)
+            {
+                *runningStatus = 0;
+            }
 
-            switch ((uint8_t)event->meta.type)
+            written += writeVariableLength(out ? (out + written) : NULL, max - written, event->meta.length);
+            ESP_LOGW("MIDIParser", "Wrote length of META event (%u) with %d bytes", event->meta.length, written - 2);
+
+            switch (event->meta.type)
             {
                 case SEQUENCE_NUMBER:
                 {
@@ -1520,11 +1538,16 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
                             {
                                 out[written++] = 0;
                             }
+
+                            if (written < max)
+                            {
+                                out[written++] = event->meta.keySignature.minor ? 1 : 0;
+                            }
                         }
                     }
                     else
                     {
-                        written++;
+                        written += 2;
                     }
                     break;
                 }
@@ -1572,6 +1595,11 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
                 written++;
             }
 
+            if (NULL != runningStatus)
+            {
+                *runningStatus = 0;
+            }
+
             const uint8_t* data = event->sysex.data;
             while (written < max && data < event->sysex.data + event->sysex.length)
             {
@@ -1597,6 +1625,12 @@ int midiWriteEventWithRunningStatus(uint8_t* out, int max, const midiEvent_t* ev
                     written++;
                 }
             }
+            break;
+        }
+
+        default:
+        {
+            printf("?????\n");
             break;
         }
     }
