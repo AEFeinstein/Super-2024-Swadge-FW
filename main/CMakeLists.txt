@@ -190,6 +190,7 @@ add_custom_target(dummy_target ALL
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
+    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/../tools/soko/soko_tmx_preprocessor.py ${CMAKE_CURRENT_SOURCE_DIR}/../assets/soko/ ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
