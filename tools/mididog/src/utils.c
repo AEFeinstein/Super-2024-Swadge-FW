@@ -378,8 +378,12 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
         }
     };
 
+    const bool skipEmptyTracks = true;
+
     // The total length in bytes of all events in each track
     uint32_t trackEventLengths[midiFile->trackCount];
+    bool emptyTracks[midiFile->trackCount];
+    uint16_t emptyTrackCount = 0;
     
     int totalFileLength = 0;
 
@@ -394,24 +398,40 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
     {
         trackEventLengths[trackNum] = 0;
         uint8_t runningStatus = 0;
+        uint32_t nextDeltaTime = 0;
         bool endOfTrack = false;
+        bool empty = true;
 
         fprintf(stderr, "track %d has %d events\n", trackNum, midiFile->events[trackNum].count);
 
         for (int eventNum = 0; eventNum < midiFile->events[trackNum].count; eventNum++)
         {
             midiEvent_t* event = &midiFile->events[trackNum].events[eventNum];
+
+            if (event->type == NO_EVENT)
+            {
+                // Skip any no-op events, but make sure to account for their delta time
+                nextDeltaTime += event->deltaTime;
+                continue;
+            }
+
             // Account for the delta time
-            trackEventLengths[trackNum] += tmp = writeVariableLength(NULL, 1024, event->deltaTime);
+            trackEventLengths[trackNum] += tmp = writeVariableLength(NULL, 1024, event->deltaTime + nextDeltaTime);
             //fprintf(stderr, "variable length quantity %d computed with %d bytes\n", event->deltaTime, tmp);
             // Account for actual event
             trackEventLengths[trackNum] += tmp = midiWriteEventWithRunningStatus(NULL, 1024, event, &runningStatus);
             //fprintf(stderr, "computed event with length of %d\n", tmp);
             //fprintEvent(stderr, 0, event);
 
+            nextDeltaTime = 0;
+
             if (event->type == META_EVENT && event->meta.type == END_OF_TRACK)
             {
                 endOfTrack = true;
+            }
+            else
+            {
+                empty = false;
             }
         }
 
@@ -424,8 +444,18 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
             trackEventLengths[trackNum] += midiWriteEventWithRunningStatus(NULL, 1024, &eot, &runningStatus);
         }
 
-        totalFileLength += 8;
-        totalFileLength += trackEventLengths[trackNum];
+        emptyTracks[trackNum] = empty;
+
+        if (empty && skipEmptyTracks)
+        {
+            emptyTrackCount++;
+            trackEventLengths[trackNum] = 0;
+        }
+        else
+        {
+            totalFileLength += 8;
+            totalFileLength += trackEventLengths[trackNum];
+        }
     }
 
     midiFile_t* result = malloc(sizeof(midiFile_t));
@@ -436,7 +466,9 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
         return NULL;
     }
 
-    midiTrack_t* tracks = calloc(midiFile->trackCount, sizeof(midiTrack_t));
+    uint16_t validTrackCount = midiFile->trackCount - emptyTrackCount;
+
+    midiTrack_t* tracks = calloc(validTrackCount, sizeof(midiTrack_t));
     if (NULL == tracks)
     {
         fprintf(stderr, "ERR: unable to allocate %" PRIu32 " bytes for un-tokenized MIDI file data\n", totalFileLength);
@@ -463,7 +495,7 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
     // Copy the original's metadata
     result->format = midiFile->format;
     result->timeDivision = midiFile->timeDivision;
-    result->trackCount = midiFile->trackCount;
+    result->trackCount = validTrackCount;
     result->tracks = tracks;
 
     int offset = 0;
@@ -474,8 +506,14 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
     for (int trackNum = 0; trackNum < midiFile->trackCount; trackNum++)
     {
         uint8_t runningStatus = 0;
+        uint32_t nextDeltaTime = 0;
         bool endOfTrack = false;
         
+        if (skipEmptyTracks && emptyTracks[trackNum])
+        {
+            continue;
+        }
+
         // Write track chunk header
         // Write magic bytes
         memcpy(fileData + offset, "MTrk", 4);
@@ -497,8 +535,16 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
         for (int eventNum = 0; eventNum < midiFile->events[trackNum].count; eventNum++)
         {
             midiEvent_t* event = &midiFile->events[trackNum].events[eventNum];
+
+
+            if (event->type == NO_EVENT)
+            {
+                nextDeltaTime += event->deltaTime;
+                continue;
+            }
+
             // Account for the delta time
-            tmp = writeVariableLength(fileData + offset, totalFileLength - offset, event->deltaTime);
+            tmp = writeVariableLength(fileData + offset, totalFileLength - offset, event->deltaTime + nextDeltaTime);
             offset += tmp;
             fprintf(stderr, "variable length quantity %d written with %d bytes, new offset=%d\n", event->deltaTime, tmp, offset);
             fprintf(stderr, "%1$d (%1$x) --> ", event->deltaTime);
@@ -524,6 +570,8 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
             {
                 endOfTrack = true;
             }
+
+            nextDeltaTime = 0;
         }
 
         // Add missing end-of-track event

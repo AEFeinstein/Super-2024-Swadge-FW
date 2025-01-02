@@ -1190,6 +1190,11 @@ static void handleEvent(midiPlayer_t* player, const midiEvent_t* event)
             handleSysexEvent(player, &event->sysex);
             break;
         }
+
+        case NO_EVENT:
+        {
+            break;
+        }
     }
 }
 

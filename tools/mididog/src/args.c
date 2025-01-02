@@ -82,8 +82,10 @@ static bool parseBoolArg(const char* val, bool defaultValue);
 
 midiDogArgs_t mdArgs = {
     .action = "dump",
+    .stripText = false,
     .midiIn = NULL,
     .midiOut = NULL,
+    .multiLine = false,
 };
 
 static const char mainDoc[] = "Parse and process MIDI Files";
@@ -94,6 +96,7 @@ static const char mainDoc[] = "Parse and process MIDI Files";
 static const char argMidiIn[]    = "input";
 static const char argMidiOut[]   = "output";
 static const char argMultiLine[] = "verbose";
+static const char argStripText[] = "strip-text";
 static const char argHelp[]        = "help";
 static const char argUsage[]       = "usage";
 
@@ -106,6 +109,7 @@ static const struct option options[] =
     { argMidiIn,      required_argument, NULL,                             0    },
     { argMidiOut,     required_argument, NULL,                             0    },
     { argMultiLine,   no_argument,       (int*)&mdArgs.multiLine,          true },
+    { argStripText,   no_argument,       (int*)&mdArgs.stripText,          true },
     { argHelp,        no_argument,       NULL,                             'h'  },
     { argUsage,       no_argument,       NULL,                             0    },
     {0},
@@ -119,6 +123,7 @@ static const optDoc_t argDocs[] =
     {'i',  argMidiIn,     "FILE",  "Specify the input MIDI file" },
     {'o',  argMidiOut,    "FILE",  "Specify the output MIDI file" },
     {'v',  argMultiLine,  NULL,    "Print detailed multi-line data" },
+    {'t',  argStripText,  NULL,    "Strip all text events from the file (shrink)" },
     {'h', argHelp,        NULL,    "Give this help list" },
     { 0,  argUsage,       NULL,    "Give a short usage message" },
 };

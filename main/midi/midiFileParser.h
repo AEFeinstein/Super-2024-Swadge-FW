@@ -23,6 +23,8 @@ typedef enum
     META_EVENT,
     /// @brief A system-exclusive MIDI event
     SYSEX_EVENT,
+    /// @brief A no-op event with no data
+    NO_EVENT,
 } midiEventType_t;
 
 /**

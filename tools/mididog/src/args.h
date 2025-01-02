@@ -24,12 +24,16 @@ typedef struct
     /// @brief The action to perform
     const char* action;
 
+    // Shrink-specific options (filters)
+    /// @brief If true, strip all text events when shrinking a file
+    bool stripText;
+
     // MIDI
     const char* midiIn;
     const char* midiOut;
 
     // Output
-    const bool multiLine;
+    bool multiLine;
 } midiDogArgs_t;
 
 //==============================================================================
