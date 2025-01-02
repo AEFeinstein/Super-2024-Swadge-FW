@@ -62,7 +62,8 @@ static const creditsEntry_t entries[] = {
     {.name = "James Albracht\n", .color = c440},
     {.name = "Jeremy Stintzcum\n", .color = c032},
     {.name = "Joe Newman\n", .color = c245},
-    {.name = "Jon Vega (JVeg199X)\n", .color = c250},
+    {.name = "Jon Vega", .color = c250},
+    {.name = "(JVeg199X)\n", .color = c250},
     {.name = "Kaitie Lawson\n", .color = c551},
     {.name = "Kevin \"PF3k\" Lin\n", .color = c250},
     {.name = "Livingston Rampey\n", .color = c205},
@@ -99,7 +100,7 @@ void creditsEnterMode(void)
 
     // Load a font
     font_t* creditsFont = (font_t*)heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_8BIT);
-    loadFont("logbook.font", creditsFont, false);
+    loadFont("sonic.font", creditsFont, false);
 
     // Initialize credits
     initCredits(credits, creditsFont, entries, ARRAY_SIZE(entries));
