@@ -316,7 +316,7 @@ EXECUTABLE = swadge_emulator
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets bundle clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) update-submodules print-%
+.PHONY: all assets $(CNFS_FILE) bundle clean fullclean docs format gen-coverage update-submodules bigbug-memory clean-firmware firmware usbflash monitor installudev cppcheck print-%
 
 # Build the executable
 all: $(EXECUTABLE)
@@ -343,9 +343,6 @@ $(CNFS_FILE):
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 	$(MAKE) -C ./tools/cnfs/
 	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
-	
-
-
 
 bundle: SwadgeEmulator.app
 
@@ -357,7 +354,6 @@ SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns emulator/resources/I
 	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
 	vtool -set-build-version macos 10.0 10.0 -replace -output SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator $(EXECUTABLE)
 	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator -d ./SwadgeEmulator.app/Contents/libs/
-
 
 build/SwadgeEmulator.icns: emulator/resources/icon.png
 	rm -rf build/SwadgeEmulator.iconset
@@ -408,6 +404,21 @@ docs:
 format:
 	$(CLANG_FORMAT) -i -style=file $(ALL_FILES)
 
+gen-coverage:
+	lcov --capture --directory ./emulator/obj/ --output-file ./coverage.info
+	genhtml ./coverage.info --output-directory ./coverage
+	firefox ./coverage/index.html &
+
+update-submodules:
+	for submodule in $(SUBMODULES) ; do \
+		echo Updating $$submodule to latest ; \
+		git -C $$submodule fetch --prune ; \
+		git -C $$submodule checkout origin/HEAD ; \
+	done
+
+bigbug-memory: all
+	./swadge_emulator -m "Big Bug" -t -r | grep -iP "(alloc|free|SPI Used)" | tee bigbug-mem.csv
+
 ################################################################################
 # Firmware targets
 ################################################################################
@@ -421,7 +432,9 @@ clean-firmware:
 firmware:
 	idf.py build
 
-# For now, works on Linux.  You can copy-paste these for Windows.
+################################################################################
+# Flashing targets
+################################################################################
 
 ifeq ($(HOST_OS),Windows)
 usbflash :
@@ -483,17 +496,9 @@ CPPCHECK_IGNORE_FLAGS = $(patsubst %,-i%, $(CPPCHECK_IGNORE))
 cppcheck:
 	cppcheck $(CPPCHECK_FLAGS) $(DEFINES) $(INC) $(CPPCHECK_DIRS) $(CPPCHECK_IGNORE_FLAGS)
 
-gen-coverage:
-	lcov --capture --directory ./emulator/obj/ --output-file ./coverage.info
-	genhtml ./coverage.info --output-directory ./coverage
-	firefox ./coverage/index.html &
-
-update-submodules:
-	for submodule in $(SUBMODULES) ; do \
-		echo Updating $$submodule to latest ; \
-		git -C $$submodule fetch --prune ; \
-		git -C $$submodule checkout origin/HEAD ; \
-	done
+################################################################################
+# Makefile debug targets
+################################################################################
 
 # Print any value from this makefile
 print-%  : ; @echo $* = $($*)
