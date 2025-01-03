@@ -347,6 +347,8 @@ int requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, ui
         paneInfo->pane.id      = extInfo->panes.length;
 
         push(&extInfo->panes, paneInfo);
+        extManager.paneMinsCalculated = false;
+
         return paneInfo->pane.id;
     }
     return -1;

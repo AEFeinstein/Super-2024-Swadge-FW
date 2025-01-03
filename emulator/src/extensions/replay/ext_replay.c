@@ -57,9 +57,10 @@ typedef enum
     SCREENSHOT,
     SET_MODE,
     RANDOM_SEED,
+    COMMAND,
 } replayLogType_t;
 
-#define LAST_TYPE RANDOM_SEED
+#define LAST_TYPE COMMAND
 
 //==============================================================================
 // Structs
@@ -79,6 +80,7 @@ typedef struct
         uint32_t seedVal;
         char* filename;
         char* modeName;
+        char* commandStr;
     };
 } replayEntry_t;
 
@@ -123,7 +125,7 @@ static void writeEntry(const replayEntry_t* entry);
 
 static const char* replayLogTypeStrs[] = {
     "BtnDown", "BtnUp", "TouchPhi", "TouchR",     "TouchI",  "AccelX", "AccelY",
-    "AccelZ",  "Fuzz",  "Quit",     "Screenshot", "SetMode", "Seed",
+    "AccelZ",  "Fuzz",  "Quit",     "Screenshot", "SetMode", "Seed",   "Command",
 };
 
 static const char* replayButtonNames[] = {
@@ -300,6 +302,7 @@ static void replayRecordFrame(uint64_t frame)
             case SCREENSHOT:
             case SET_MODE:
             case RANDOM_SEED:
+            case COMMAND:
                 break;
         }
     }
@@ -451,6 +454,15 @@ static void replayPlaybackFrame(uint64_t frame)
                     emulatorSetEspRandomSeed(replay.nextEntry.seedVal);
                     break;
                 }
+
+                case COMMAND:
+                {
+                    handleConsoleCommand(replay.nextEntry.commandStr);
+
+                    free(replay.nextEntry.commandStr);
+                    replay.nextEntry.commandStr = NULL;
+                    break;
+                }
             }
 
             // Get the next entry
@@ -503,7 +515,7 @@ static void replayPreFrame(uint64_t frame)
 
 static bool readEntry(replayEntry_t* entry)
 {
-    char buffer[64];
+    char buffer[1024];
     if (!replay.headerHandled)
     {
         if (1 != fscanf(replay.file, "%63[^\n]\n", buffer) || strncmp(buffer, HEADER, strlen(buffer)))
@@ -675,6 +687,19 @@ static bool readEntry(replayEntry_t* entry)
             break;
         }
 
+        case COMMAND:
+        {
+            if (1 != fscanf(replay.file, "%1023[^\n]\n", buffer))
+            {
+                return false;
+            }
+
+            char* tmpStr = malloc(strlen(buffer) + 1);
+            strncpy(tmpStr, buffer, strlen(buffer) + 1);
+            entry->commandStr = tmpStr;
+            break;
+        }
+
         default:
         {
             return false;
@@ -686,7 +711,7 @@ static bool readEntry(replayEntry_t* entry)
 
 static void writeEntry(const replayEntry_t* entry)
 {
-    char buffer[256];
+    char buffer[1024];
     char* ptr = buffer;
 #define BUFSIZE (buffer + sizeof(buffer) - 1 - ptr)
 
@@ -750,6 +775,12 @@ static void writeEntry(const replayEntry_t* entry)
         case RANDOM_SEED:
         {
             snprintf(ptr, BUFSIZE, "%" PRIu32 "\n", entry->seedVal);
+            break;
+        }
+
+        case COMMAND:
+        {
+            snprintf(ptr, BUFSIZE, "%s\n", entry->commandStr ? entry->commandStr : "");
             break;
         }
     }
@@ -824,6 +855,21 @@ void startRecording(const char* filename)
     }
 }
 
+void stopRecording(void)
+{
+    if (replay.file != NULL && replay.mode == RECORD)
+    {
+        fclose(replay.file);
+        replay.file = NULL;
+        printf("\nStopped recording inputs\n");
+    }
+}
+
+bool isRecordingInput(void)
+{
+    return replay.file != NULL && replay.mode == RECORD;
+}
+
 /**
  * @brief Begins playing back emulator inputs from the given file
  *
@@ -892,5 +938,41 @@ void emulatorRecordRandomSeed(uint32_t seed)
             .seedVal = seed,
         };
         writeEntry(&entry);
+    }
+}
+
+/**
+ * @brief Notifies the replay extension that a command was used
+ *
+ * @param command The command string
+ */
+void emulatorRecordCommand(const char* command)
+{
+    if (replay.mode == RECORD && replay.file)
+    {
+        replayEntry_t entry = {
+            .time       = esp_timer_get_time(),
+            .type       = COMMAND,
+            .commandStr = NULL,
+        };
+
+        if (!strncmp("record", command, strlen("record")))
+        {
+            // Don't insert recording-related commands into the recording
+            return;
+        }
+
+        if (command)
+        {
+            // Create a copy of the filename since entry.commandStr is not const
+            char tmp[strlen(command) + 1];
+            strcpy(tmp, command);
+            entry.commandStr = tmp;
+            writeEntry(&entry);
+        }
+        else
+        {
+            writeEntry(&entry);
+        }
     }
 }
