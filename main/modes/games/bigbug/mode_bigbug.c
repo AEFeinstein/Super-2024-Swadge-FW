@@ -353,7 +353,10 @@ static void bb_ExitMode(void)
     freeFont(&bigbug->font);
 
     soundStop(true);
-    unloadMidiFile(&bigbug->gameData.bgm);
+    if (bigbug->gameData.bgm.data)
+    {
+        unloadMidiFile(&bigbug->gameData.bgm);
+    }
 
     deinitGlobalMidiPlayer();
 
