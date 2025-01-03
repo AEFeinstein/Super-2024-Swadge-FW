@@ -29,23 +29,24 @@
  * Defines, Structs, Enums
  *==========================================================================*/
 
+// clang-format off
 #ifndef M_PI
-    #define M_PI 3.14159265358979323846
+    #define M_PI                      3.14159265358979323846
 #endif
 
 // Screen curve compensation
-#define CORNER_OFFSET 15
+#define CORNER_OFFSET                 15
 
 // Tuner musical and audio definitions
-#define NUM_MAX_STRINGS              6 // change this if you add an instrument with more strings
-#define NUM_GUITAR_STRINGS           ARRAY_SIZE(guitarNoteNames)
-#define NUM_VIOLIN_STRINGS           ARRAY_SIZE(violinNoteNames)
-#define NUM_UKULELE_STRINGS          ARRAY_SIZE(ukuleleNoteNames)
-#define NUM_BANJO_STRINGS            ARRAY_SIZE(banjoNoteNames)
-#define GUITAR_OFFSET                0
-#define CHROMATIC_OFFSET             6 // adjust start point by quarter tones
-#define SENSITIVITY                  5
-#define TONAL_DIFF_IN_TUNE_DEVIATION 10
+#define NUM_MAX_STRINGS               6 // change this if you add an instrument with more strings
+#define NUM_GUITAR_STRINGS            ARRAY_SIZE(guitarNoteNames)
+#define NUM_VIOLIN_STRINGS            ARRAY_SIZE(violinNoteNames)
+#define NUM_UKULELE_STRINGS           ARRAY_SIZE(ukuleleNoteNames)
+#define NUM_BANJO_STRINGS             ARRAY_SIZE(banjoNoteNames)
+#define GUITAR_OFFSET                 0
+#define CHROMATIC_OFFSET              6 // adjust start point by quarter tones
+#define SENSITIVITY                   5
+#define TONAL_DIFF_IN_TUNE_DEVIATION  10
 
 // Tuner screen definitions
 #define TUNER_CENTER_Y                (TFT_HEIGHT - tunernome->ibm_vga8.height * 2 - 8 - CORNER_OFFSET)
@@ -81,7 +82,8 @@
 #define BPM_CHANGE_REPEAT_MS          50
 
 // Musical constant, do not change
-#define NUM_SEMITONES 12
+#define NUM_SEMITONES                 12
+// clang-format on
 
 typedef enum
 {
