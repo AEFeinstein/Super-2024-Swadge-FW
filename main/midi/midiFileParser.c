@@ -805,7 +805,7 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
             if (heatshrinkDecompress(NULL, &size, data, (uint32_t)raw_size))
             {
                 // Size was read successfully, allocate the non-compressed buffer
-                uint8_t* decompressed = heap_caps_malloc(size, spiRam ? MALLOC_CAP_SPIRAM : 0);
+                uint8_t* decompressed = heap_caps_malloc_tag(size, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, name);
                 if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
                 {
                     // Success, free the raw data
@@ -864,6 +864,10 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 
 void unloadMidiFile(midiFile_t* file)
 {
+    if (NULL == file->tracks || NULL == file->data)
+    {
+        printf("NULL FREE\n");
+    }
     heap_caps_free(file->tracks);
     heap_caps_free(file->data);
     memset(file, 0, sizeof(midiFile_t));

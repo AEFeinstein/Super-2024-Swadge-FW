@@ -148,7 +148,7 @@ uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* out
 
     ESP_LOGD("Heatshrink", "Compressed size is %" PRIu64, (uint64_t)sz);
 
-    uint8_t* buf = (uint8_t*)heap_caps_malloc(sz, spiRam ? MALLOC_CAP_SPIRAM : 0);
+    uint8_t* buf = (uint8_t*)heap_caps_malloc(sz, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
     if (!buf)
     {
         return NULL;
@@ -163,7 +163,7 @@ uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* out
     // Pick out the decompresed size and create a space for it
     (*outsize) = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
 
-    uint8_t* decompressedBuf = (uint8_t*)heap_caps_malloc((*outsize), spiRam ? MALLOC_CAP_SPIRAM : 0);
+    uint8_t* decompressedBuf = (uint8_t*)heap_caps_malloc((*outsize), spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
 
     // Create the decoder
     size_t copied           = 0;
