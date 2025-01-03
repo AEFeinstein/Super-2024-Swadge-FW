@@ -15,6 +15,7 @@ static int recordCommandCb(const char** args, int argCount, char* out);
 static int replayCommandCb(const char** args, int argCount, char* out);
 static int fuzzCommandCb(const char** args, int argCount, char* out);
 static int touchCommandCb(const char** args, int argCount, char* out);
+static int ledsCommandCb(const char** args, int argCount, char* out);
 static int helpCommandCb(const char** args, int argCount, char* out);
 
 static const char* buttonNames[] = {
@@ -39,15 +40,20 @@ static const char* commandDocs[][3] = {
     {"fuzz touch", "fuzz touch [on|off]", "toggles fuzzing of touchpad inputs"},
     {"fuzz motion", "fuzz motion [on|off]", "toggles fuzzing of accelerometer motion inputs"},
     {"fuzz time", "fuzz time [on|off]", "toggles fuzzing of frame times"},
-    {"touch", "touch [on|off]", "toggles the virtual touchpad"},
+    {"touchpad", "touchpad [on|off]", "toggles the virtual touchpad"},
     {"help", "help [command]", "prints help text for all commands, or for commands matching [command]"},
 };
 
 static const consoleCommand_t consoleCommands[] = {
-    {.name = "screenshot", .cb = screenshotCommandCb}, {.name = "mode", .cb = setModeCommandCb},
-    {.name = "gif", .cb = screenRecordCommandCb},      {.name = "replay", .cb = replayCommandCb},
-    {.name = "record", .cb = recordCommandCb},         {.name = "fuzz", .cb = fuzzCommandCb},
-    {.name = "touch", .cb = touchCommandCb},           {.name = "help", .cb = helpCommandCb},
+    {.name = "screenshot", .cb = screenshotCommandCb},
+    {.name = "mode", .cb = setModeCommandCb},
+    {.name = "gif", .cb = screenRecordCommandCb},
+    {.name = "replay", .cb = replayCommandCb},
+    {.name = "record", .cb = recordCommandCb},
+    {.name = "fuzz", .cb = fuzzCommandCb},
+    {.name = "touchpad", .cb = touchCommandCb},
+    {.name = "leds", .cb = ledsCommandCb},
+    {.name = "help", .cb = helpCommandCb},
 };
 
 const consoleCommand_t* getConsoleCommands(void)
@@ -398,6 +404,42 @@ static int touchCommandCb(const char** args, int argCount, char* out)
         disableExtension("touch");
     }
     return sprintf(out, "Touchpad %s\n", enable ? "enabled" : "disabled");
+}
+
+static int ledsCommandCb(const char** args, int argCount, char* out)
+{
+    bool enable = false;
+    if (argCount > 0)
+    {
+        if (!strncmp("on", args[0], strlen(args[0])))
+        {
+            enable = true;
+        }
+        else if (!strncmp("off", args[0], strlen(args[0])))
+        {
+            enable = false;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        enable = emulatorArgs.hideLeds;
+    }
+
+    if (enable)
+    {
+        emulatorArgs.hideLeds = false;
+        enableExtension("leds");
+    }
+    else
+    {
+        emulatorArgs.hideLeds = true;
+        disableExtension("leds");
+    }
+    return sprintf(out, "LEDs %s\n", enable ? "enabled" : "disabled");
 }
 
 static int helpCommandCb(const char** args, int argCount, char* out)
