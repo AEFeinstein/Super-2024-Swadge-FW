@@ -104,7 +104,8 @@ void t48_drawStartScreen(t48_t* t48, paletteColor_t color, int32_t elapsedUs)
     }
 
     // Title
-    drawText(&t48->titleFont, color, t48Name, (TFT_WIDTH - textWidth(&t48->titleFont, t48Name)) / 2, TFT_HEIGHT / 2 - 12);
+    drawText(&t48->titleFont, color, t48Name, (TFT_WIDTH - textWidth(&t48->titleFont, t48Name)) / 2,
+             TFT_HEIGHT / 2 - 12);
     drawText(&t48->titleFontOutline, c555, t48Name, (TFT_WIDTH - textWidth(&t48->titleFont, t48Name)) / 2,
              TFT_HEIGHT / 2 - 12);
 

@@ -32,7 +32,7 @@
 #include "jukebox.h"
 #include "tunernome.h"
 #ifdef SW_VOL_CONTROL
-#include "mainMenu.h"
+    #include "mainMenu.h"
 #endif
 #include "mode_credits.h"
 #include "factoryTest.h"
@@ -53,12 +53,11 @@
 #define MAX_DECORATION_DELAY_US_PAUSED  4000000
 #define MIN_DECORATION_DELAY_US_PLAYING 200000
 #define MAX_DECORATION_DELAY_US_PLAYING 600000
-#define MIN_DECORATION_SPEED_PAUSED     24 //pixels to rise per second
+#define MIN_DECORATION_SPEED_PAUSED     24 // pixels to rise per second
 #define MAX_DECORATION_SPEED_PAUSED     48
 #define MIN_DECORATION_SPEED_PLAYING    96
 #define MAX_DECORATION_SPEED_PLAYING    144
 #define MAX_DECORATION_ROTATE_DEG       30
-
 
 /*==============================================================================
  * Enums
@@ -197,6 +196,7 @@ static const char str_play[]       = ": Play";
 
 // Arrays
 
+// clang-format off
 jukeboxSong_t music_bigbug[] = {
     {
         .filename = "brkBgmTitle.mid",
@@ -301,7 +301,7 @@ jukeboxSong_t music_swadgehero[] = {
         .filename = "sh_wakeman.mid",
         .name     = "Wake Man Stage",
     },
-    
+
     {
         .filename = "sh_sunrise.mid",
         .name     = "Sunrise (Unused)",
@@ -422,7 +422,6 @@ jukeboxSong_t music_unused[] = {
     },
 };
 
-// clang-format off
 const jukeboxCategory_t musicCategories[] = {
     {
         .categoryName = bigbugName,
@@ -465,7 +464,6 @@ const jukeboxCategory_t musicCategories[] = {
         .numSongs     = ARRAY_SIZE(music_unused),
     },
 };
-// clang-format on
 
 jukeboxSong_t sfx_bigbug[] = {
     {
@@ -678,7 +676,6 @@ jukeboxSong_t sfx_unused[] = {
     },
 };
 
-// clang-format off
 const jukeboxCategory_t sfxCategories[] = {
     {
         .categoryName = bigbugName,
@@ -849,7 +846,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                     soundPlaySfxCb(&sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }
-                jukebox->isPlaying = true;
+                jukebox->isPlaying            = true;
                 jukebox->usBetweenDecorations = 0;
             }
             break;
@@ -995,72 +992,81 @@ void jukeboxMainLoop(int64_t elapsedUs)
     bool spawnDecoration = false;
     jukebox->usSinceLastDecoration += elapsedUs;
 
-    if(jukebox->usSinceLastDecoration >= jukebox->usBetweenDecorations)
+    if (jukebox->usSinceLastDecoration >= jukebox->usBetweenDecorations)
     {
         spawnDecoration = true;
 
-        if(jukebox->isPlaying)
+        if (jukebox->isPlaying)
         {
-            jukebox->usBetweenDecorations = MIN_DECORATION_DELAY_US_PLAYING + (esp_random() % (MAX_DECORATION_DELAY_US_PLAYING - MIN_DECORATION_DELAY_US_PLAYING));
+            jukebox->usBetweenDecorations
+                = MIN_DECORATION_DELAY_US_PLAYING
+                  + (esp_random() % (MAX_DECORATION_DELAY_US_PLAYING - MIN_DECORATION_DELAY_US_PLAYING));
         }
         else
         {
-            jukebox->usBetweenDecorations = MIN_DECORATION_DELAY_US_PAUSED + (esp_random() % (MAX_DECORATION_DELAY_US_PAUSED - MIN_DECORATION_DELAY_US_PAUSED));
+            jukebox->usBetweenDecorations
+                = MIN_DECORATION_DELAY_US_PAUSED
+                  + (esp_random() % (MAX_DECORATION_DELAY_US_PAUSED - MIN_DECORATION_DELAY_US_PAUSED));
         }
-        
     }
 
-    for(uint8_t i = 0; i < MAX_DECORATIONS_ON_SCREEN; i++)
+    for (uint8_t i = 0; i < MAX_DECORATIONS_ON_SCREEN; i++)
     {
         jukeboxDecoration_t* decoration = &jukebox->decorations[i];
-        bool spawnedDecoration = false;
-        if(spawnDecoration && decoration->graphic == 0)
+        bool spawnedDecoration          = false;
+        if (spawnDecoration && decoration->graphic == 0)
         {
-            uint8_t index = esp_random() % NUM_DECORATION_WSGS;
-            decoration->graphic = jukeboxGetDecorationGraphic(index);
-            decoration->x = (esp_random() % TFT_WIDTH) - (decoration->graphic->w / 2);
-            decoration->y = TFT_HEIGHT - 1;
+            uint8_t index         = esp_random() % NUM_DECORATION_WSGS;
+            decoration->graphic   = jukeboxGetDecorationGraphic(index);
+            decoration->x         = (esp_random() % TFT_WIDTH) - (decoration->graphic->w / 2);
+            decoration->y         = TFT_HEIGHT - 1;
             decoration->rotateDeg = (esp_random() % (MAX_DECORATION_ROTATE_DEG * 2 + 1)) - MAX_DECORATION_ROTATE_DEG;
 
-            if(jukeboxIsDecorationUpsideDownable(index) && (esp_random() % 4) == 0)
+            if (jukeboxIsDecorationUpsideDownable(index) && (esp_random() % 4) == 0)
             {
                 decoration->rotateDeg += 180;
             }
 
-            if(decoration->rotateDeg < 0)
+            if (decoration->rotateDeg < 0)
             {
                 decoration->rotateDeg += 360;
             }
-            
-            if(jukebox->isPlaying)
+
+            if (jukebox->isPlaying)
             {
-                decoration->speed = MIN_DECORATION_SPEED_PLAYING + (esp_random() % (MAX_DECORATION_SPEED_PLAYING - MIN_DECORATION_SPEED_PLAYING + 1));
+                // clang-format off
+                decoration->speed
+                    = MIN_DECORATION_SPEED_PLAYING
+                      + (esp_random() % (MAX_DECORATION_SPEED_PLAYING - MIN_DECORATION_SPEED_PLAYING + 1));
             }
             else
             {
-                decoration->speed = MIN_DECORATION_SPEED_PAUSED + (esp_random() % (MAX_DECORATION_SPEED_PAUSED - MIN_DECORATION_SPEED_PAUSED + 1));
+                decoration->speed
+                    = MIN_DECORATION_SPEED_PAUSED
+                      + (esp_random() % (MAX_DECORATION_SPEED_PAUSED - MIN_DECORATION_SPEED_PAUSED + 1));
+                // clang-format on
             }
             jukebox->usSinceLastDecoration = 0;
-            spawnDecoration = false;
-            spawnedDecoration = true;
+            spawnDecoration                = false;
+            spawnedDecoration              = true;
         }
-        
-        if(decoration->graphic != 0)
+
+        if (decoration->graphic != 0)
         {
-            if(!spawnedDecoration)
+            if (!spawnedDecoration)
             {
                 decoration->y -= decoration->speed * (elapsedUs / 1000000.0);
             }
 
             drawWsg(decoration->graphic, decoration->x, round(decoration->y), false, false, decoration->rotateDeg);
 
-            if(decoration->y < -decoration->graphic->h)
+            if (decoration->y < -decoration->graphic->h)
             {
-                decoration->graphic = 0;
-                decoration->x = 0;
-                decoration->y = 0;
+                decoration->graphic   = 0;
+                decoration->x         = 0;
+                decoration->y         = 0;
                 decoration->rotateDeg = 0;
-                decoration->speed = 0;
+                decoration->speed     = 0;
             }
         }
     }
@@ -1158,16 +1164,19 @@ void jukeboxMainLoop(int64_t elapsedUs)
     if (drawNames)
     {
         // Draw the word "Mode"
-        const font_t* nameFont      = &(jukebox->radiostars);
-        int16_t width = textWidth(nameFont, str_mode);
-        int16_t yOff  = (TFT_HEIGHT - nameFont->height) / 2 - (nameFont->height + 2) * 2;
+        const font_t* nameFont = &(jukebox->radiostars);
+        int16_t width          = textWidth(nameFont, str_mode);
+        int16_t yOff           = (TFT_HEIGHT - nameFont->height) / 2 - (nameFont->height + 2) * 2;
         drawText(nameFont, c533, str_mode, (TFT_WIDTH - width) / 2, yOff);
         // Draw category arrows if this submode has more than 1 category
         if ((jukebox->inMusicSubmode && ARRAY_SIZE(musicCategories) > 1) || ARRAY_SIZE(sfxCategories) > 1)
         {
-            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - ARROW_OFFSET_FROM_TEXT - jukebox->arrow.w, yOff, false,
-                    false, 0);
-            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + ARROW_OFFSET_FROM_TEXT, yOff, false, false, 180);
+            // clang-format off
+            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - ARROW_OFFSET_FROM_TEXT - jukebox->arrow.w, yOff,
+                    false, false, 0);
+            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + ARROW_OFFSET_FROM_TEXT, yOff,
+                    false, false, 180);
+            // clang-format on
         }
 
         // Draw the mode name
@@ -1208,7 +1217,7 @@ void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
 
 void jukeboxBzrDoneCb(void)
 {
-    //printf("bzr done\n");
+    // printf("bzr done\n");
     const jukeboxCategory_t* category;
     if (jukebox->inMusicSubmode)
     {
@@ -1255,7 +1264,7 @@ void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCa
 
 wsg_t* jukeboxGetDecorationGraphic(uint8_t i)
 {
-    switch(i)
+    switch (i)
     {
         case 1:
             return &jukebox->doubleQuaver;
@@ -1279,7 +1288,7 @@ wsg_t* jukeboxGetDecorationGraphic(uint8_t i)
 
 bool jukeboxIsDecorationUpsideDownable(uint8_t i)
 {
-    switch(i)
+    switch (i)
     {
         case 3:
         case 4:

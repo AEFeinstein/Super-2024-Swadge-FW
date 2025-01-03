@@ -32,7 +32,7 @@
 // Consts
 //==============================================================================
 
-const char cGroveTitle[]      = "Chowa Grove"; // Game title
+const char cGroveTitle[]             = "Chowa Grove"; // Game title
 static const char* cGroveMenuNames[] = {"Play with Chowa", "Spar", "Settings"};
 static const char* cGroveSettingOpts[]
     = {"Grove Touch Scroll: ", "Touch Scroll Speed: ", "Show Item Text: ", "Show Chowa Names: "};
