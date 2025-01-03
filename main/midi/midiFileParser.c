@@ -60,7 +60,7 @@ typedef struct
 static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* out);
 static int writeVariableLength(uint8_t* out, int max, uint32_t length);
 static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track);
-static bool parseMidiHeader(midiFile_t* file);
+static bool parseMidiHeader(midiFile_t* file, const char* name);
 static void readFirstEvents(midiFileReader_t* reader);
 
 //==============================================================================
@@ -598,7 +598,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
  * @return true if the MIDI file contains a valid header and was successfully parsed
  * @return false if the MIDI file header could not be parsed
  */
-static bool parseMidiHeader(midiFile_t* file)
+static bool parseMidiHeader(midiFile_t* file, const char* name)
 {
     uint32_t offset = 0;
 
@@ -636,7 +636,7 @@ static bool parseMidiHeader(midiFile_t* file)
     uint16_t trackChunkCount = (file->data[offset] << 8) | file->data[offset + 1];
     offset += 2;
     file->trackCount = trackChunkCount;
-    file->tracks     = heap_caps_calloc(trackChunkCount, sizeof(midiTrack_t), MALLOC_CAP_SPIRAM);
+    file->tracks     = heap_caps_calloc_tag(trackChunkCount, sizeof(midiTrack_t), MALLOC_CAP_SPIRAM, name);
     if (NULL == file->tracks)
     {
         ESP_LOGE("MIDIParser", "Could not allocate data for MIDI file with %" PRIu16 " tracks", trackChunkCount);
@@ -838,7 +838,7 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
         ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", name, size);
         file->data   = data;
         file->length = (uint32_t)size;
-        if (parseMidiHeader(file))
+        if (parseMidiHeader(file, name))
         {
             return true;
         }

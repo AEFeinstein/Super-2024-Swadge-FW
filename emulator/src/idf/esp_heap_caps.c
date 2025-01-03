@@ -149,8 +149,9 @@ static void dumpAllocTable(void)
         allocation_t* al = &aTable[idx];
         if (al->ptr)
         {
-            printf("%s,%s,%s,%d,%s,%p,%d,%d,%d,%d\n", "DUMP", al->file, al->func, al->line, al->tag, al->ptr, 0, 0, 0,
-                   0);
+            printf("%s,%s,%s,%d,%s,%p,%d,%d,%d,%d\n", "DUMP", al->file, al->func, al->line, al->tag, al->ptr,
+                   al->caps & MALLOC_CAP_SPIRAM ? 0 : (uint32_t)al->size,
+                   al->caps & MALLOC_CAP_SPIRAM ? (uint32_t)al->size : 0, 0, 0);
         }
     }
 }
@@ -251,7 +252,7 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
             }
             else
             {
-                memset(al->tag, 0, sizeof(al->tag));
+                snprintf(al->tag, sizeof(al->tag) - 1, "%s:%d", al->func, al->line);
             }
 
             // Adjust space
