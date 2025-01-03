@@ -131,6 +131,7 @@ static void printMemoryOperation(memOp_t op, allocation_t* al)
         headerPrinted = true;
     }
 
+    // esp_timer_get_time() is impossible to use here for some reason
     printf("%s,%s,%s,%d,%s,%p,%d,%d,%d,%d\n", opStr, al->file, al->func, al->line, al->tag, al->ptr, internalDiff,
            spiRamDiff, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1]);
 #endif
@@ -181,14 +182,7 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
             al->file = file;
             al->func = func;
             al->line = line;
-            if (tag)
-            {
-                snprintf(al->tag, sizeof(al->tag) - 1, "%s", tag);
-            }
-            else
-            {
-                memset(al->tag, 0, sizeof(al->tag));
-            }
+            // Don't overwrite tag
 
             // Decrement space
             if (al->size > *usedMem)
