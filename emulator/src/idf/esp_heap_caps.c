@@ -68,6 +68,7 @@ size_t usedMemory[MAX_MEM_TYPES]  = {0};
 static void printMemoryOperation(memOp_t op, allocation_t* al);
 static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32_t size, uint32_t caps,
                            const char* file, const char* func, uint32_t line, const char* tag);
+static void dumpAllocTable(void);
 
 //==============================================================================
 // Functions
@@ -135,6 +136,23 @@ static void printMemoryOperation(memOp_t op, allocation_t* al)
     printf("%s,%s,%s,%d,%s,%p,%d,%d,%d,%d\n", opStr, al->file, al->func, al->line, al->tag, al->ptr, internalDiff,
            spiRamDiff, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1]);
 #endif
+}
+
+/**
+ * @brief
+ *
+ */
+static void dumpAllocTable(void)
+{
+    for (int idx = 0; idx < A_TABLE_SIZE; idx++)
+    {
+        allocation_t* al = &aTable[idx];
+        if (al->ptr)
+        {
+            printf("%s,%s,%s,%d,%s,%p,%d,%d,%d,%d\n", "DUMP", al->file, al->func, al->line, al->tag, al->ptr, 0, 0, 0,
+                   0);
+        }
+    }
 }
 
 /**
@@ -206,6 +224,7 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
             if (size >= SPIRAM_LARGEST_BLOCK)
             {
                 fprintf(stderr, "!! Too large alloc at %s:%d (%d)\n", file, line, size);
+                dumpAllocTable();
                 exit(-1);
             }
 
@@ -246,6 +265,7 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
         if (usedMemory[1] >= SPIRAM_SIZE)
         {
             fprintf(stderr, "!! Out of SPIRAM at %s:%d (%d)\n", file, line, (uint32_t)usedMemory[1]);
+            dumpAllocTable();
             exit(-1);
         }
     }
