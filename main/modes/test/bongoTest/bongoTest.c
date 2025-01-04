@@ -30,7 +30,7 @@
 
 const char bongoModeName[] = "Bongo Bongo Bongo";
 
-const char* bongoWsgs[]
+const char* const bongoWsgs[]
     = {"bongoDown.wsg", "bongoLeft.wsg", "bongoRight.wsg", "bongoUp.wsg", "bongoTable.wsg", "bongoMeow.wsg"};
 
 //==============================================================================
@@ -53,6 +53,9 @@ typedef struct
 
     // LEDs
     led_t leds[CONFIG_NUM_LEDS];
+
+    // MIDI
+    midiPlayer_t* player;
 } bongoTest_t;
 
 //==============================================================================
@@ -100,7 +103,6 @@ swadgeMode_t bongoTest = {
 };
 
 static bongoTest_t* bt;
-static midiPlayer_t* player;
 
 //==============================================================================
 // Functions
@@ -115,11 +117,11 @@ static void enterTheBongo(void)
         loadWsg(bongoWsgs[tIdx], &bt->sprs[tIdx], true);
     }
     initGlobalMidiPlayer();
-    player                    = globalMidiPlayerGet(MIDI_BGM);
-    player->mode              = MIDI_STREAMING;
-    player->streamingCallback = NULL;
-    midiGmOn(player);
-    midiPause(player, false);
+    bt->player                    = globalMidiPlayerGet(MIDI_BGM);
+    bt->player->mode              = MIDI_STREAMING;
+    bt->player->streamingCallback = NULL;
+    midiGmOn(bt->player);
+    midiPause(bt->player, false);
     wsgPaletteReset(&bt->pal);
     bt->heat = 0;
 }
@@ -132,7 +134,7 @@ static void abandonBongo(void)
         freeWsg(&bt->sprs[tIdx]);
     }
     heap_caps_free(bt->sprs);
-    free(bt);
+    heap_caps_free(bt);
 }
 
 static void playWithBongo(int64_t elapsedUs)
@@ -172,32 +174,32 @@ static void playWithBongo(int64_t elapsedUs)
             if (evt.button & PB_A)
             {
                 bt->hits[0] = true;
-                midiNoteOn(player, 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7F);
+                midiNoteOn(bt->player, 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7F);
             }
             else if (evt.button & PB_B)
             {
                 bt->hits[1] = true;
-                midiNoteOn(player, 9, CLOSED_HI_HAT, 0x7F);
+                midiNoteOn(bt->player, 9, CLOSED_HI_HAT, 0x7F);
             }
             else if (evt.button & PB_UP)
             {
                 bt->hits[2] = true;
-                midiNoteOn(player, 0, 72, 0x7F);
+                midiNoteOn(bt->player, 0, 72, 0x7F);
             }
             else if (evt.button & PB_DOWN)
             {
                 bt->hits[3] = true;
-                midiNoteOn(player, 0, 71, 0x7F);
+                midiNoteOn(bt->player, 0, 71, 0x7F);
             }
             else if (evt.button & PB_LEFT)
             {
                 bt->hits[4] = true;
-                midiNoteOn(player, 0, 74, 0x7F);
+                midiNoteOn(bt->player, 0, 74, 0x7F);
             }
             else if (evt.button & PB_RIGHT)
             {
                 bt->hits[5] = true;
-                midiNoteOn(player, 0, 76, 0x7F);
+                midiNoteOn(bt->player, 0, 76, 0x7F);
             }
             bt->bgColor++;
             bt->leds[esp_random() % CONFIG_NUM_LEDS] = LedEHSVtoHEXhelper(bt->bgColor, 255, 200, true);
@@ -220,22 +222,22 @@ static void playWithBongo(int64_t elapsedUs)
             else if (evt.button & PB_UP)
             {
                 bt->hits[2] = false;
-                midiNoteOff(player, 0, 72, 0x7F);
+                midiNoteOff(bt->player, 0, 72, 0x7F);
             }
             else if (evt.button & PB_DOWN)
             {
                 bt->hits[3] = false;
-                midiNoteOff(player, 0, 71, 0x7F);
+                midiNoteOff(bt->player, 0, 71, 0x7F);
             }
             else if (evt.button & PB_LEFT)
             {
                 bt->hits[4] = false;
-                midiNoteOff(player, 0, 74, 0x7F);
+                midiNoteOff(bt->player, 0, 74, 0x7F);
             }
             else if (evt.button & PB_RIGHT)
             {
                 bt->hits[5] = false;
-                midiNoteOff(player, 0, 76, 0x7F);
+                midiNoteOff(bt->player, 0, 76, 0x7F);
             }
         }
     }
@@ -282,6 +284,6 @@ static void playWithBongo(int64_t elapsedUs)
 
     if (bt->hits[2] || bt->hits[3] || bt->hits[4] || bt->hits[5])
     {
-        drawWsgSimple(&bt->sprs[5], 0, 0);
+        drawWsgSimple(&bt->sprs[5], 108, 92);
     }
 }
