@@ -20,7 +20,6 @@
 // Defines
 //==============================================================================
 
-#define HIT_DURATION 50000
 #define HEAT_CUTOFF  10
 #define DECAY_RATE   200000
 
@@ -95,7 +94,8 @@ swadgeMode_t bongoTest = {
     .fnAdvancedUSB            = NULL,
 };
 
-bongoTest_t* bt;
+static bongoTest_t* bt;
+static midiPlayer_t* player;
 
 //==============================================================================
 // Functions
@@ -109,11 +109,20 @@ static void enterTheBongo(void)
     {
         loadWsg(bongoWsgs[tIdx], &bt->sprs[tIdx], true);
     }
+    initGlobalMidiPlayer();
+    player = globalMidiPlayerGet(MIDI_BGM);
+    player->mode              = MIDI_STREAMING;
+    player->streamingCallback = NULL;
+    midiGmOn(player);
+    midiPause(player, false);
+    
     wsgPaletteReset(&bt->pal);
+    bt->heat = 0;
 }
 
 static void abandonBongo(void)
 {
+    deinitGlobalMidiPlayer();
     for (int32_t tIdx = 0; tIdx < ARRAY_SIZE(bongoWsgs); tIdx++)
     {
         freeWsg(&bt->sprs[tIdx]);
@@ -128,7 +137,7 @@ static void playWithBongo(int64_t elapsedUs)
 
     // Decay
     bt->heatDecay += elapsedUs;
-    if (bt->heatDecay >= DECAY_RATE)
+    if (bt->heatDecay >= DECAY_RATE && bt->heat > 0)
     {
         bt->heatDecay = 0;
         bt->heat--;
@@ -143,17 +152,18 @@ static void playWithBongo(int64_t elapsedUs)
             if (evt.button & PB_A)
             {
                 bt->hits[0] = true;
-                // TODO: Play sound
+                midiNoteOn(player, 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7F);
             }
             else if (evt.button & PB_B)
             {
                 bt->hits[1] = true;
-                // TODO: Play sound
+                midiNoteOn(player, 9, CLOSED_HI_HAT, 0x7F);
             }
             bt->bgColor++;
             if (bt->heat <= 254)
             {
                 bt->heat++;
+                bt->heatDecay = 0; // Avoids
             }
         }
         else if (!evt.down)
