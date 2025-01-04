@@ -438,14 +438,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     {
         bb_setupMidi(); // stops the music
 
-        //load frames 1 through 39 briefly to play the animation.
-        for (int frame = 1; frame < 40; frame++)
-        {
-            char wsg_name[strlen("rocket") + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" + null
-                                             // terminator ('\0')
-            snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "rocket", frame);
-            loadWsgInplace(wsg_name, &self->gameData->entityManager.sprites[ROCKET_ANIM].frames[frame], true, bb_decodeSpace, bb_hsd);
-        }
+        bb_loadSprite("rocket", 42, 1, &self->gameData->entityManager.sprites[ROCKET_ANIM]);
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
