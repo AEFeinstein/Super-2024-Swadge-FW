@@ -15,6 +15,7 @@
 
 #include "bongoTest.h"
 #include "wsgPalette.h"
+#include <esp_random.h>
 
 //==============================================================================
 // Defines
@@ -48,6 +49,9 @@ typedef struct
     uint8_t heat;
     int64_t heatDecay;
     wsgPalette_t pal;
+
+    // LEDs
+    led_t leds[CONFIG_NUM_LEDS];
 } bongoTest_t;
 
 //==============================================================================
@@ -133,7 +137,23 @@ static void abandonBongo(void)
 
 static void playWithBongo(int64_t elapsedUs)
 {
-    // TODO: LEDs
+    // LEDs
+    for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    {
+        if (bt->leds[idx].r > 2)
+        {
+            bt->leds[idx].r -= 3;
+        }
+        if (bt->leds[idx].g > 2)
+        {
+            bt->leds[idx].g-= 3;
+        }
+        if (bt->leds[idx].b > 2)
+        {
+            bt->leds[idx].b-= 3;
+        }
+    }
+    setLeds(&bt->leds, CONFIG_NUM_LEDS);
 
     // Decay
     bt->heatDecay += elapsedUs;
@@ -153,11 +173,13 @@ static void playWithBongo(int64_t elapsedUs)
             {
                 bt->hits[0] = true;
                 midiNoteOn(player, 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7F);
+                bt->leds[esp_random() % CONFIG_NUM_LEDS] = LedEHSVtoHEXhelper(bt->bgColor, 255, 200, true);
             }
             else if (evt.button & PB_B)
             {
                 bt->hits[1] = true;
                 midiNoteOn(player, 9, CLOSED_HI_HAT, 0x7F);
+                bt->leds[esp_random() % CONFIG_NUM_LEDS] = LedEHSVtoHEXhelper(bt->bgColor, 255, 200, true);
             }
             bt->bgColor++;
             if (bt->heat <= 254)
