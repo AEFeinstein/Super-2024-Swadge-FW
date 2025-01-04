@@ -199,30 +199,6 @@ static const char str_play[]       = ": Play";
 // clang-format off
 jukeboxSong_t music_bigbug[] = {
     {
-        .filename = "brkBgmTitle.mid",
-        .name     = "BGM Title",
-    },
-    {
-        .filename = "brkBgmCrazy.mid",
-        .name     = "BGM Crazy",
-    },
-    {
-        .filename = "brkBgmPixel.mid",
-        .name     = "BGM Pixel",
-    },
-    {
-        .filename = "brkBgmSkill.mid",
-        .name     = "BGM Skill",
-    },
-    {
-        .filename = "brkBgmFinale.mid",
-        .name     = "BGM Finale",
-    },
-    {
-        .filename = "brkHighScore.mid",
-        .name     = "High Score",
-    },
-    {
         .filename = "BigBug_Dr.Garbotniks Home.mid",
         .name     = "Dr. Garbotnik's Home",
     },
@@ -304,7 +280,7 @@ jukeboxSong_t music_swadgehero[] = {
 
     {
         .filename = "sh_sunrise.mid",
-        .name     = "Sunrise (Unused)",
+        .name     = "San Pablo Sunrise",
     },
 };
 
@@ -467,16 +443,8 @@ const jukeboxCategory_t musicCategories[] = {
 
 jukeboxSong_t sfx_bigbug[] = {
     {
-        .filename = "brkGetReady.mid",
-        .name     = "Get Ready",
-    },
-    {
         .filename = "sndBounce.mid",
         .name     = "Bounce",
-    },
-    {
-        .filename = "sndBreak.mid",
-        .name     = "Break",
     },
     {
         .filename = "sndBreak2.mid",
@@ -499,20 +467,8 @@ jukeboxSong_t sfx_bigbug[] = {
         .name     = "Wave Ball",
     },
     {
-        .filename = "brkLvlClear.mid",
-        .name     = "Level Clear",
-    },
-    {
         .filename = "sndBrkTally.mid",
         .name     = "Tally",
-    },
-    {
-        .filename = "sndBrkDie.mid",
-        .name     = "Die",
-    },
-    {
-        .filename = "brkGameOver.mid",
-        .name     = "Game Over",
     },
     {
         .filename = "BigBug - Car 1.mid",
