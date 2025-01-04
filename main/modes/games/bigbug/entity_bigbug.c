@@ -438,7 +438,6 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     {
         bb_setupMidi(); // stops the music
 
-        bb_loadSprite("rocket", 42, 1, &self->gameData->entityManager.sprites[ROCKET_ANIM]);
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
