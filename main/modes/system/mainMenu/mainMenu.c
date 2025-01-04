@@ -7,6 +7,7 @@
 #include "mainMenu.h"
 
 #include "accelTest.h"
+#include "bongoTest.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"
@@ -179,6 +180,7 @@ static void mainMenuEnterMode(void)
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
     addSingleItemToMenu(mainMenu->menu, sequencerMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, bongoTest.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
@@ -439,6 +441,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == t48Mode.modeName)
         {
             switchToSwadgeMode(&t48Mode);
+        }
+        else if (label == bongoTest.modeName)
+        {
+            switchToSwadgeMode(&bongoTest);
         }
         else if (label == confirmResetName)
         {
