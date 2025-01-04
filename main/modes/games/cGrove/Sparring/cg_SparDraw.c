@@ -394,7 +394,7 @@ void cg_drawSparTutorial(cGrove_t* cg)
 static void cg_drawSparField(cGrove_t* cg)
 {
     // Draw the sky
-    drawWsgSimple(&cg->title[1], 0, 0);
+    drawWsgSimpleScaled(&cg->title[1], 0, 0, 3, 5);
     // Draw dojo
     drawWsgSimple(&cg->spar.dojoBG, 0, 0);
 }
