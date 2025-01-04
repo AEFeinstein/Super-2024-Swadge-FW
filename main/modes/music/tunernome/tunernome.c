@@ -565,9 +565,11 @@ void plotInstrumentNameAndNotesAndStrings(const char* instrumentName, const char
     int16_t totalInnerSpacingWidths = TUNER_STRING_X_RANGE - totalStringWidths;
     int16_t perStringXOffset        = TUNER_STRING_WIDTH + round(totalInnerSpacingWidths / (float)(numNotes - 1));
 
-    int16_t yOffDiff = tunernome->radiostarsArrowWsg.h - TUNER_ARROW_Y_OFFSET * 2 - tunernome->logbook.height / 2;
+    int16_t yOffDiff = tunernome->radiostarsArrowWsg.h + TUNER_ARROW_Y_OFFSET * 2 + tunernome->logbook.height / 2;
     int16_t yOffUp   = yOff - yOffDiff - tunernome->logbook.height;
     int16_t yOffDown = yOff + yOffDiff;
+    //int16_t yOffUp   = yOff - tunernome->radiostarsArrowWsg.h - TUNER_ARROW_Y_OFFSET * 2 - tunernome->logbook.height * 1.5;
+    //int16_t yOffDown = yOff + tunernome->radiostarsArrowWsg.h + TUNER_ARROW_Y_OFFSET * 2 + tunernome->logbookArrowWsg.h / 2;
 
     // Note names of strings, arranged to match LED positions
     for (int i = 0; i < numNotes && i < CONFIG_NUM_LEDS && i < NUM_MAX_STRINGS; i++)
