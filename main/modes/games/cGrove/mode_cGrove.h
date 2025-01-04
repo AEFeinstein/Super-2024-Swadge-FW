@@ -19,3 +19,4 @@
 
 // Make Swadgemode available
 extern swadgeMode_t cGroveMode;
+extern const char cGroveTitle[];
