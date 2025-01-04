@@ -31,7 +31,7 @@
 void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData)
 {
     bb_loadSprites(entityManager);
-    entityManager->entities = heap_caps_calloc(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
+    entityManager->entities = heap_caps_calloc_tag(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "entities");
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -41,7 +41,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
     entityManager->activeEntities = 0;
 
     // Use calloc to ensure members are all 0 or NULL
-    entityManager->cachedEntities = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    entityManager->cachedEntities = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "cachedEntities");
 }
 
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite)
@@ -50,7 +50,9 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
     if (!sprite->allocated)
     {
         sprite->numFrames = num_frames;
-        sprite->frames    = heap_caps_calloc(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+        char tmp[32];
+        snprintf(tmp, sizeof(tmp) - 1, "frames %s", name);
+        sprite->frames    = heap_caps_calloc_tag(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM, tmp);
         sprite->allocated = true;
     }
 
@@ -185,7 +187,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     if (!entityManager->sprites[BB_DONUT].allocated)
     {
         entityManager->sprites[BB_DONUT].numFrames = 2;
-        entityManager->sprites[BB_DONUT].frames    = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+        entityManager->sprites[BB_DONUT].frames
+            = heap_caps_calloc_tag(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM, "donutFrames");
         entityManager->sprites[BB_DONUT].allocated = true;
     }
     loadWsgInplace("donut0.wsg", &entityManager->sprites[BB_DONUT].frames[0], true, bb_decodeSpace, bb_hsd);
@@ -207,7 +210,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     entityManager->sprites[BB_WILE].originX = 6;
     entityManager->sprites[BB_WILE].originY = 6;
 
-    entityManager->sprites[BB_ARROW].frames = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    entityManager->sprites[BB_ARROW].frames = heap_caps_calloc_tag(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM, "arrowFrames");
     loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
     loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
 }
@@ -761,17 +764,18 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case ROCKET_ANIM:
         {
-            bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
+            bb_rocketData_t* rData = heap_caps_calloc_tag(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM, "rData");
             rData->flame           = NULL;
             rData->yVel            = 0;
             rData->armAngle        = 2880; // That is 180 << DECIMAL_BITS
             bb_setData(entity, rData, ROCKET_DATA);
 
-            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            entity->collisions = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rCollisions");
+            list_t* others     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
             push(others, (void*)GARBOTNIK_FLYING);
-            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
-            *collision                = (bb_collision_t){others, bb_onCollisionHeavyFalling};
+            bb_collision_t* collision
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision = (bb_collision_t){others, bb_onCollisionHeavyFalling};
             push(entity->collisions, (void*)collision);
 
             entity->halfWidth    = 192;

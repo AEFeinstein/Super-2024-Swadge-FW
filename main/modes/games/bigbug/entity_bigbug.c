@@ -5246,7 +5246,7 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
 
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter)
 {
-    bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
+    bb_dialogueData_t* dData = heap_caps_calloc_tag(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM, firstCharacter);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
     int8_t characterSprite   = 0;

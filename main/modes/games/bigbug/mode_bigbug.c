@@ -124,20 +124,23 @@ static void bb_EnterMode(void)
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
     // Allocate memory for the game state
-    bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+    bigbug = heap_caps_calloc_tag(1, sizeof(bb_t), MALLOC_CAP_SPIRAM, "bigbug");
 
     // calloc the columns in layers separately to avoid a big alloc
     for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
     {
+        char tmp[32];
+        snprintf(tmp, sizeof(tmp) - 1, "fgTile%02d", w);
         bigbug->gameData.tilemap.fgTiles[w]
-            = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM);
+            = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM, tmp);
+        snprintf(tmp, sizeof(tmp) - 1, "mgTile%02d", w);
         bigbug->gameData.tilemap.mgTiles[w]
-            = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM);
+            = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM, tmp);
     }
 
     // Allocate WSG loading helpers
     bb_hsd         = heatshrink_decoder_alloc(256, 8, 4);
-    bb_decodeSpace = heap_caps_malloc(102404, MALLOC_CAP_SPIRAM);
+    bb_decodeSpace = heap_caps_malloc_tag(102404, MALLOC_CAP_SPIRAM, "decodeSpace");
 
     bb_SetLeds();
 
