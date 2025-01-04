@@ -10,12 +10,14 @@
 #include "hdw-btn.h"
 #include "touchUtils.h"
 #include "soundFuncs.h"
+#include "random_bigbug.h"
 
 //==============================================================================
 // Functions
 //==============================================================================
 void bb_initializeGameData(bb_gameData_t* gameData)
 {
+    gameData->day = 0;
     // Set the mode to game mode
     gameData->screen = BIGBUG_GAME;
 
@@ -23,6 +25,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->GarbotnikStat_diggingStrength     = 1;
     gameData->GarbotnikStat_fuelConsumptionRate = 4;
     gameData->GarbotnikStat_maxTowCables        = 2;
+    gameData->GarbotnikStat_maxHarpoons         = 50;
 
     loadMidiFile("BigBug_Dr.Garbotniks Home.mid", &gameData->bgm, true);
     // loadMidiFile("BigBugExploration.mid", &gameData->bgm, true);
@@ -58,7 +61,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
 
     // Palette setup
     wsgPaletteReset(&gameData->damagePalette);
-    for (int color = 0; color < 215; color++)
+    for (int color = 0; color < 214; color++)
     {
         uint32_t rgbCol = paletteToRGB((paletteColor_t)color);
         // don't modify blue channel
@@ -89,6 +92,97 @@ void bb_initializeGameData(bb_gameData_t* gameData)
         rgbCol = (rgbCol & 0x00FFFF) | newChannelColor;
         wsgPaletteSet(&gameData->damagePalette, (paletteColor_t)color, RGBtoPalette(rgbCol));
     }
+    // set white to gray for the sake of the calldown arrows on cooldown.
+    wsgPaletteSet(&gameData->damagePalette, c555, c333);
+
+    // initialize the loadout data
+    strcpy(gameData->loadout.allWiles[0].name, "Faulty Wile");
+    strcpy(gameData->loadout.allWiles[0].description, "Tends to explode in a few short seconds before establishing "
+                                                      "comms with the Death Dumpster. Still ironing out the kinks.");
+    gameData->loadout.allWiles[0].callSequence[0] = BB_DOWN;
+    gameData->loadout.allWiles[0].callSequence[1] = BB_DOWN;
+    gameData->loadout.allWiles[0].callSequence[2] = BB_LEFT;
+    gameData->loadout.allWiles[0].callSequence[3] = BB_NONE; // terminator for shorter sequences
+    gameData->loadout.allWiles[0].cooldown        = 25;
+    gameData->loadout.allWiles[0].cost            = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[0].wileFunction    = bb_triggerFaultyWile;
+
+    strcpy(gameData->loadout.allWiles[1].name, "Drill Bot");
+    strcpy(gameData->loadout.allWiles[1].description,
+           "A robot that drills down to the wile depth then horizontally. Can be towed to flip directions. May it go "
+           "forth and destroy Pango.");
+    gameData->loadout.allWiles[1].callSequence[0] = BB_DOWN;
+    gameData->loadout.allWiles[1].callSequence[1] = BB_LEFT;
+    gameData->loadout.allWiles[1].callSequence[2] = BB_RIGHT;
+    gameData->loadout.allWiles[1].callSequence[3] = BB_LEFT;
+    gameData->loadout.allWiles[1].callSequence[4] = BB_RIGHT;
+    gameData->loadout.allWiles[1].cooldown        = 50;
+    gameData->loadout.allWiles[1].cost            = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[1].wileFunction    = bb_triggerDrillBotWile;
+
+    strcpy(gameData->loadout.allWiles[2].name, "Pacifier");
+    strcpy(gameData->loadout.allWiles[2].description,
+           "Turns wild bugs into compliant little critters. Emits gamer waves to dissolve bug spit. Can be towed.");
+    gameData->loadout.allWiles[2].callSequence[0] = BB_UP;
+    gameData->loadout.allWiles[2].callSequence[1] = BB_RIGHT;
+    gameData->loadout.allWiles[2].callSequence[2] = BB_UP;
+    gameData->loadout.allWiles[2].callSequence[3] = BB_DOWN;
+    gameData->loadout.allWiles[2].callSequence[4] = BB_NONE; // terminator for shorter sequences
+    gameData->loadout.allWiles[2].cooldown        = 30;
+    gameData->loadout.allWiles[2].cost            = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[2].wileFunction    = bb_triggerPacifierWile;
+
+    strcpy(gameData->loadout.allWiles[3].name, "Evil Laser");
+    strcpy(gameData->loadout.allWiles[3].description, "Careful where you point that thing.");
+    gameData->loadout.allWiles[3].callSequence[0] = BB_RIGHT;
+    gameData->loadout.allWiles[3].callSequence[1] = BB_DOWN;
+    gameData->loadout.allWiles[3].callSequence[2] = BB_DOWN;
+    gameData->loadout.allWiles[3].callSequence[3] = BB_RIGHT;
+    gameData->loadout.allWiles[3].callSequence[4] = BB_LEFT;
+    gameData->loadout.allWiles[3].cooldown        = 120;
+    gameData->loadout.allWiles[3].cost            = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[3].wileFunction    = bb_triggerSpaceLaserWile;
+
+    strcpy(gameData->loadout.allWiles[4].name, "501Kg Bomb");
+    strcpy(gameData->loadout.allWiles[4].description, "Calls down ordinance from the Death Dumpster's stockpile.");
+    gameData->loadout.allWiles[4].callSequence[0] = BB_UP;
+    gameData->loadout.allWiles[4].callSequence[1] = BB_LEFT;
+    gameData->loadout.allWiles[4].callSequence[2] = BB_RIGHT;
+    gameData->loadout.allWiles[4].callSequence[3] = BB_LEFT;
+    gameData->loadout.allWiles[4].callSequence[4] = BB_DOWN;
+    gameData->loadout.allWiles[4].cooldown        = 90;
+    gameData->loadout.allWiles[4].cost            = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[4].wileFunction    = bb_trigger501kg;
+
+    strcpy(gameData->loadout.allWiles[5].name, "DVD Logo");
+    strcpy(gameData->loadout.allWiles[5].description,
+           "Eliminates drag on Garbotnik. It was a failed time machine prototype, but it eviscerates the atmosphere "
+           "within a few square miles.");
+    gameData->loadout.allWiles[5].callSequence[0] = BB_DOWN;
+    gameData->loadout.allWiles[5].callSequence[1] = BB_LEFT;
+    gameData->loadout.allWiles[5].callSequence[2] = BB_DOWN;
+    gameData->loadout.allWiles[5].callSequence[3] = BB_RIGHT;
+    gameData->loadout.allWiles[5].callSequence[4] = BB_DOWN;
+    gameData->loadout.allWiles[5].cooldown        = 40;
+    gameData->loadout.allWiles[5].cost            = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[5].wileFunction    = bb_triggerAtmosphericAtomizerWile;
+
+    strcpy(gameData->loadout.allWiles[6].name, "Ammo Supply");
+    strcpy(gameData->loadout.allWiles[6].description, "Drops a crate to top off your ammo to the max.");
+    gameData->loadout.allWiles[6].callSequence[0] = BB_DOWN;
+    gameData->loadout.allWiles[6].callSequence[1] = BB_UP;
+    gameData->loadout.allWiles[6].callSequence[2] = BB_RIGHT;
+    gameData->loadout.allWiles[6].callSequence[3] = BB_NONE; // terminator for shorter sequences
+    gameData->loadout.allWiles[6].cooldown        = 30;
+    gameData->loadout.allWiles[6].cost            = bb_randomInt(1, 3);
+    gameData->loadout.allWiles[6].wileFunction    = bb_triggerAmmoSupplyWile;
+
+    gameData->loadout.primaryWileIdx   = 255;
+    gameData->loadout.secondaryWileIdx = 255;
+    for (int i = 0; i < 5; i++)
+    {
+        gameData->loadout.playerInputSequence[i] = BB_NONE;
+    }
 }
 
 void bb_freeGameData(bb_gameData_t* gameData)
@@ -116,13 +210,15 @@ void bb_freeGameData(bb_gameData_t* gameData)
     {
         heap_caps_free(shift(&gameData->unsupported));
     }
+    if (gameData->loadoutScreenData != NULL)
+    {
+        heap_caps_free(gameData->loadoutScreenData);
+        gameData->loadoutScreenData = NULL;
+    }
 }
 
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData)
 {
-    gameData->currentBgm = 0;
-    gameData->changeBgm  = 0;
-
     bb_resetGameDataLeds(gameData);
 }
 

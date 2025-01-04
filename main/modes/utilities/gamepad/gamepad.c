@@ -611,24 +611,24 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
 
         gamepadTouch_t touchSetting = getGamepadTouchSetting();
         switch (touchSetting)
-            {
-                default:
-                    touchDrawVector(&gamepad->ibmFont, "", c333, tBarX, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF, TOUCHPAD_DIAM / 2,
-                        touched, phi, r);
-                    break;
-                case GAMEPAD_TOUCH_MORE_BUTTONS_SETTING:
-                    touchDrawCircle(&gamepad->ibmFont, "", tBarX, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF, TOUCHPAD_DIAM / 2, 8, false, touched,
-                        getTouchJoystickZones(phi, r, false, true));
-                    drawText(&gamepad->ibmFont, c444, "ZL+ZR", tBarX - 19, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF + 30);
-                    drawText(&gamepad->ibmFont, c444, "ZR", tBarX + 16, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF + 16);
-                    drawText(&gamepad->ibmFont, c444, "ZL", tBarX - 28, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF + 16);
-                    drawText(&gamepad->ibmFont, c444, "X", tBarX + 26, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 6);
-                    drawText(&gamepad->ibmFont, c444, "Y", tBarX - 32, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 6);
-                    drawText(&gamepad->ibmFont, c444, "R", tBarX + 20, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 24);
-                    drawText(&gamepad->ibmFont, c444, "L", tBarX - 24, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 24);
-                    drawText(&gamepad->ibmFont, c444, "L+R", tBarX - 11, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 36);
-                    break;
-            }
+        {
+            default:
+                touchDrawVector(&gamepad->ibmFont, "", c333, tBarX, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF,
+                                TOUCHPAD_DIAM / 2, touched, phi, r);
+                break;
+            case GAMEPAD_TOUCH_MORE_BUTTONS_SETTING:
+                touchDrawCircle(&gamepad->ibmFont, "", tBarX, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF,
+                                TOUCHPAD_DIAM / 2, 8, false, touched, getTouchJoystickZones(phi, r, false, true));
+                drawText(&gamepad->ibmFont, c444, "ZL+ZR", tBarX - 19, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF + 30);
+                drawText(&gamepad->ibmFont, c444, "ZR", tBarX + 16, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF + 16);
+                drawText(&gamepad->ibmFont, c444, "ZL", tBarX - 28, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF + 16);
+                drawText(&gamepad->ibmFont, c444, "X", tBarX + 26, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 6);
+                drawText(&gamepad->ibmFont, c444, "Y", tBarX - 32, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 6);
+                drawText(&gamepad->ibmFont, c444, "R", tBarX + 20, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 24);
+                drawText(&gamepad->ibmFont, c444, "L", tBarX - 24, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 24);
+                drawText(&gamepad->ibmFont, c444, "L+R", tBarX - 11, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF - 36);
+                break;
+        }
 
         if (getGamepadAccelSetting() && gamepad->gamepadType == GAMEPAD_GENERIC)
         {

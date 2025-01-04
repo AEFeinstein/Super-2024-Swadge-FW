@@ -32,7 +32,7 @@
 // Consts
 //==============================================================================
 
-static const char cGroveTitle[]      = "Chowa Grove"; // Game title
+const char cGroveTitle[]             = "Chowa Grove"; // Game title
 static const char* cGroveMenuNames[] = {"Play with Chowa", "Spar", "Settings"};
 static const char* cGroveSettingOpts[]
     = {"Grove Touch Scroll: ", "Touch Scroll Speed: ", "Show Item Text: ", "Show Chowa Names: "};
@@ -499,21 +499,45 @@ static void cg_titleScreen(int64_t elapsedUs)
 {
     // Update
     cg->timer += elapsedUs;
-    if (cg->timer >= SECOND)
+    if (cg->timer >= (SECOND >> 4))
     {
-        cg->timer = 0;
-        cg->cloudPos.x += 1;
-        if (cg->cloudPos.x >= TFT_WIDTH)
+        // Animation frame
+        cg->animFrame += 1;
+        if (cg->animFrame >= 16)
         {
-            cg->cloudPos.x = -cg->title[0].h;
+            cg->animFrame = 0;
         }
-    }
-    cg->animFrame  = (cg->animFrame + 1) % 32;
-    cg->titleFrame = (cg->titleFrame + 1) % 64;
 
-    // Draw
-    drawWsgSimple(&cg->title[1], 0, 0);
-    drawWsgSimpleHalf(&cg->title[0], cg->cloudPos.x, -30);
-    drawWsgSimpleHalf(&cg->title[4 + (cg->animFrame >> 3)], 0, 84);
-    drawWsgSimpleHalf(&cg->title[2 + (cg->titleFrame >> 5)], 0, 0);
+        // Cloud (1/16)
+        cg->cloudPos += 1;
+        if (cg->cloudPos >= TFT_WIDTH)
+        {
+            cg->cloudPos = -(cg->title[0].h * 7);
+        }
+
+        // Reset timer
+        cg->timer -= SECOND >> 4;
+    }
+
+    // Draw bg
+    drawWsgSimpleScaled(&cg->title[1], 0, 0, 3, 5);
+
+    // Draw cloud
+    drawWsgSimpleScaled(&cg->title[0], cg->cloudPos, 64, 5, 5);
+
+    // Chowa
+    // 4 frames, loop every 1 second
+    // 1 frame = 4 animFrames; bitshift by two (divide by four)
+    drawWsgSimple(&cg->title[4 + (cg->animFrame >> 2)], 0, 84);
+
+    // Title
+    drawWsgSimpleHalf(&cg->title[2], 16, 16);
+
+    // Blinky Arrow
+    // 2 frames, loop every 1 second
+    // 1 frame - 8 animFrames; bitshift by three (divide by eight)
+    if (cg->animFrame >> 3 == 1)
+    {
+        drawWsgSimpleHalf(&cg->title[3], 125, 20);
+    }
 }
