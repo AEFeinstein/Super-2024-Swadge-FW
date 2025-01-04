@@ -762,6 +762,7 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
             // Standing there, menacingly
             spr = cg_getChowaWSG(cg, cg2->chowa, CG_ANIM_WALK_LEFT, 0);
             drawWsgSimpleScaled(spr, xOff, yOff, 2, 2);
+            cg2->doneAnimating = true;
             break;
         }
         case CG_SPAR_READY:
@@ -1160,7 +1161,12 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
         }
         case CG_SPAR_EXHAUSTED:
         {
-            drawText(&cg->largeMenuFont, c555, matchText[5], (TFT_WIDTH - textWidth(&cg->largeMenuFont, matchText[5])) >> 1, TFT_HEIGHT >> 1);
+            int8_t xOff = ((TFT_WIDTH - textWidth(&cg->largeMenuFont, matchText[5])) >> 1) - 5;
+            fillDisplayArea(xOff, (TFT_HEIGHT >> 1) - 5,
+                            ((TFT_WIDTH + textWidth(&cg->largeMenuFont, matchText[5])) >> 1) + 5,
+                            (TFT_HEIGHT >> 1) + cg->largeMenuFont.height + 5, c111);
+            drawText(&cg->largeMenuFont, c500, matchText[5],
+                     (TFT_WIDTH - textWidth(&cg->largeMenuFont, matchText[5])) >> 1, TFT_HEIGHT >> 1);
             break;
         }
         default:
