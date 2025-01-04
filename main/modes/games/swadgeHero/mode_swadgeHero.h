@@ -160,6 +160,7 @@ typedef struct
 //==============================================================================
 
 extern swadgeMode_t swadgeHeroMode;
+extern const char shName[];
 
 //==============================================================================
 // Function Declarations

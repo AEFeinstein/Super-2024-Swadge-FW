@@ -79,7 +79,7 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
  * These strings are all declared 'const' because they do not change, so that they are placed in ROM, not RAM.
  * Lengths are not explicitly given so the compiler can figure it out.
  */
-static const char bigbugName[] = "Big Bug";
+const char bigbugName[] = "Big Bug";
 
 // A tag for debug printing
 const char BB_TAG[] = "BB";

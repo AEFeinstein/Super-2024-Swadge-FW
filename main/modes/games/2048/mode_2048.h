@@ -163,3 +163,4 @@ typedef struct
 //==============================================================================
 
 extern swadgeMode_t t48Mode;
+extern const char t48Name[];

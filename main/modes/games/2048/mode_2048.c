@@ -42,7 +42,7 @@ static void t48BackgroundDraw(int16_t x, int16_t y, int16_t w, int16_t h, int16_
 // Const Variables
 //==============================================================================
 
-const char modeName[]          = "2048";
+const char t48Name[]           = "2048";
 static const char youWin[]     = "You got 2048!";
 static const char continueAB[] = "Press A or B to continue";
 
@@ -80,7 +80,7 @@ const char highScoreInitialsKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
 //==============================================================================
 
 swadgeMode_t t48Mode = {
-    .modeName                 = modeName,
+    .modeName                 = t48Name,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
     .usesAccelerometer        = true,
