@@ -1,11 +1,15 @@
 #include "emu_console_cmds.h"
 #include "macros.h"
 
+#include <errno.h>
+
 #include "ext_modes.h"
 #include "ext_tools.h"
 #include "emu_utils.h"
 #include "ext_replay.h"
 #include "ext_fuzzer.h"
+#include "hdw-nvs_emu.h"
+#include "emu_cnfs.h"
 
 // Console command handlers
 static int screenshotCommandCb(const char** args, int argCount, char* out);
@@ -16,6 +20,7 @@ static int replayCommandCb(const char** args, int argCount, char* out);
 static int fuzzCommandCb(const char** args, int argCount, char* out);
 static int touchCommandCb(const char** args, int argCount, char* out);
 static int ledsCommandCb(const char** args, int argCount, char* out);
+static int injectCommandCb(const char** args, int argCount, char* out);
 static int helpCommandCb(const char** args, int argCount, char* out);
 
 static const char* buttonNames[] = {
@@ -41,6 +46,9 @@ static const char* commandDocs[][3] = {
     {"fuzz motion", "fuzz motion [on|off]", "toggles fuzzing of accelerometer motion inputs"},
     {"fuzz time", "fuzz time [on|off]", "toggles fuzzing of frame times"},
     {"touchpad", "touchpad [on|off]", "toggles the virtual touchpad"},
+    {"inject", "inject <nvs|asset> <...>", "injects data into NVS or assets"},
+    {"inject nvs", "inject nvs [namespace] <key> <int|str|file> <value>", "injects data into an NVS key. Value can be either an integer, a string, or a file path"},
+    {"inject asset", "inject asset <name> <filename>", "injects a file's entire contents as an asset"},
     {"help", "help [command]", "prints help text for all commands, or for commands matching [command]"},
 };
 
@@ -53,6 +61,7 @@ static const consoleCommand_t consoleCommands[] = {
     {.name = "fuzz", .cb = fuzzCommandCb},
     {.name = "touchpad", .cb = touchCommandCb},
     {.name = "leds", .cb = ledsCommandCb},
+    {.name = "inject", .cb = injectCommandCb},
     {.name = "help", .cb = helpCommandCb},
 };
 
@@ -440,6 +449,179 @@ static int ledsCommandCb(const char** args, int argCount, char* out)
         disableExtension("leds");
     }
     return sprintf(out, "LEDs %s\n", enable ? "enabled" : "disabled");
+}
+
+static int injectCommandCb(const char** args, int argCount, char* out)
+{
+    if (argCount < 1)
+    {
+        return 0;
+    }
+
+    if (!strncmp("nvs", args[0], strlen(args[0])))
+    {
+        // inject nvs [namespace] <key> <int|str|file> <value>
+        // inject nvs   <key> <int|str|file> <value>
+        // -1      0       1        2         3           4
+
+        if (argCount < 3)
+        {
+            return 0;
+        }
+
+        char* typeArg = args[3];
+        char* keyArg = args[2];
+        char** valueArg = NULL;
+
+        char* namespace = "storage";
+
+        if (!strcmp(typeArg, "int") || !strcmp(typeArg, "str") || !strcmp(typeArg, "file"))
+        {
+            namespace = args[1];
+            if (argCount > 4)
+            {
+                valueArg = &args[4];
+            }
+        }
+        else
+        {
+            typeArg = args[2];
+            keyArg = args[1];
+
+            if (argCount > 3)
+            {
+                valueArg = &args[3];
+            }
+        }
+
+        if (!strcmp(typeArg, "int"))
+        {
+            if (!valueArg)
+            {
+                return snprintf(out, 1024, "Value is required\n");
+            }
+
+            char* endPtr = NULL;
+            errno = 0;
+            int32_t intVal = strtol(*valueArg, &endPtr, 10);
+            if (errno != 0)
+            {
+                return snprintf(out, 1024, "Invalid int value: %" PRId32 "\n", intVal);
+            }
+
+            // Set int32 value
+            emuInjectNvs32(namespace, keyArg, intVal);
+
+            return snprintf(out, 1024, "Set NVS %s:%s to %" PRId32 "\n", namespace, keyArg, intVal);
+        }
+        else if (!strcmp(typeArg, "str"))
+        {
+            char valueBuf[512];
+            char* bufOut = valueBuf;
+
+            if (!valueArg)
+            {
+                valueBuf[0] = '\0';
+            }
+            else
+            {
+                for (char** argPtr = valueArg; argPtr < (args + argCount); argPtr++)
+                {
+                    if (argPtr > valueArg)
+                    {
+                        bufOut += snprintf(bufOut, sizeof(valueBuf) - (bufOut - valueBuf), " %s", *argPtr);
+                    }
+                    else
+                    {
+                        bufOut += snprintf(bufOut, sizeof(valueBuf) - (bufOut - valueBuf), "%s", *argPtr);
+                    }
+                }
+            }
+
+            emuInjectNvsBlob(namespace, keyArg, (bufOut - valueBuf), valueBuf);
+
+            return snprintf(out, 1024, "Set NVS %s:%s to %s\n", namespace, keyArg, valueBuf);
+        }
+        else if (!strcmp(typeArg, "file"))
+        {
+            if (!valueArg)
+            {
+                return snprintf(out, 1024, "Filename is required\n");
+            }
+
+            char filenameBuf[1024];
+            expandPath(filenameBuf, sizeof(filenameBuf), *valueArg);
+
+            FILE* file = NULL;
+            file = fopen(filenameBuf, "rb");
+            if (NULL != file)
+            {
+                fseek(file, 0, SEEK_END);
+                size_t len = ftell(file);
+                fseek(file, 0, SEEK_SET);
+
+                uint8_t* fileData = malloc(len);
+
+                if (NULL != fileData)
+                {
+                    size_t read = 0;
+                    while (read < len)
+                    {
+                        errno = 0;
+                        read += fread(fileData, 1, read - len, file);
+
+                        if (0 != errno)
+                        {
+                            fclose(file);
+                            free(fileData);
+                            return snprintf(out, 1024, "Failed to read data from file %s\n", filenameBuf);
+                        }
+                    }
+                    fclose(file);
+
+                    emuInjectNvsBlob(namespace, keyArg, len, fileData);
+
+                    free(fileData);
+
+                    return snprintf(out, 1024, "Set NVS %s:%s to content of file '%s'\n", namespace, keyArg, filenameBuf);
+                }
+                fclose(file);
+            }
+
+            return snprintf(out, 1024, "Could not open file %s\n", filenameBuf);
+        }
+        else
+        {
+            return snprintf(out, 1024, "Invalid type '%s'\n", typeArg);
+        }
+    }
+    else if (!strncmp("asset", args[0], strlen(args[0])))
+    {
+        // inject asset <name> <filename>
+        if (argCount > 2)
+        {
+            char filenameBuf[1024];
+            expandPath(filenameBuf, sizeof(filenameBuf), args[2]);
+
+
+            if (emuCnfsInjectFile(args[1], filenameBuf))
+            {
+                return snprintf(out, 1024, "Set asset %s to content of file '%s'\n", args[1], filenameBuf);
+            }
+            else
+            {
+                return snprintf(out, 1024, "Could not load data from file '%s'\n", filenameBuf);
+            }
+        }
+        else
+        {
+            return snprintf(out, 1024, "asset name and file name are required\n");
+        }
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 static int helpCommandCb(const char** args, int argCount, char* out)
