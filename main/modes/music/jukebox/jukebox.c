@@ -82,6 +82,7 @@ typedef struct
     const char* categoryName;
     jukeboxSong_t* songs;
     const uint8_t numSongs;
+    bool generalMidi;
 } jukeboxCategory_t;
 
 typedef struct
@@ -196,7 +197,6 @@ static const char str_play[]       = ": Play";
 
 // Arrays
 
-// clang-format off
 jukeboxSong_t music_bigbug[] = {
     {
         .filename = "BigBug_Dr.Garbotniks Home.mid",
@@ -369,7 +369,7 @@ jukeboxSong_t music_jukebox[] = {
     {
         .filename = "banana.mid",
         .name     = "Banana",
-    }
+    },
 };
 
 jukeboxSong_t music_credits[] = {
@@ -403,41 +403,49 @@ const jukeboxCategory_t musicCategories[] = {
         .categoryName = bigbugName,
         .songs        = music_bigbug,
         .numSongs     = ARRAY_SIZE(music_bigbug),
+        .generalMidi  = true,
     },
     {
         .categoryName = shName,
         .songs        = music_swadgehero,
         .numSongs     = ARRAY_SIZE(music_swadgehero),
+        .generalMidi  = true,
     },
     {
         .categoryName = pangoName,
         .songs        = music_pango,
         .numSongs     = ARRAY_SIZE(music_pango),
+        .generalMidi  = false,
     },
     {
         .categoryName = cGroveTitle,
         .songs        = music_chowagrove,
         .numSongs     = ARRAY_SIZE(music_chowagrove),
+        .generalMidi  = true,
     },
     {
         .categoryName = t48Name,
         .songs        = music_2048,
         .numSongs     = ARRAY_SIZE(music_2048),
+        .generalMidi  = true,
     },
     {
         .categoryName = jukeboxName,
         .songs        = music_jukebox,
         .numSongs     = ARRAY_SIZE(music_jukebox),
+        .generalMidi  = false,
     },
     {
         .categoryName = creditsName,
         .songs        = music_credits,
         .numSongs     = ARRAY_SIZE(music_credits),
+        .generalMidi  = true,
     },
     {
         .categoryName = "(Unused)",
         .songs        = music_unused,
         .numSongs     = ARRAY_SIZE(music_unused),
+        .generalMidi  = false,
     },
 };
 
@@ -637,36 +645,41 @@ const jukeboxCategory_t sfxCategories[] = {
         .categoryName = bigbugName,
         .songs        = sfx_bigbug,
         .numSongs     = ARRAY_SIZE(sfx_bigbug),
+        .generalMidi  = true,
     },
     {
         .categoryName = pangoName,
         .songs        = sfx_pango,
         .numSongs     = ARRAY_SIZE(sfx_pango),
+        .generalMidi  = false,
     },
     {
         .categoryName = tttName,
         .songs        = sfx_ultimatettt,
         .numSongs     = ARRAY_SIZE(sfx_ultimatettt),
+        .generalMidi  = false,
     },
     {
         .categoryName = factoryTestName,
         .songs        = sfx_factoryTest,
         .numSongs     = ARRAY_SIZE(sfx_factoryTest),
+        .generalMidi  = true,
     },
 #ifdef SW_VOL_CONTROL
     {
         .categoryName = mainMenuName,
         .songs        = sfx_mainMenu,
         .numSongs     = ARRAY_SIZE(sfx_mainMenu),
+        .generalMidi  = true,
     },
 #endif
     {
         .categoryName = "(Unused)",
         .songs        = sfx_unused,
         .numSongs     = ARRAY_SIZE(sfx_unused),
+        .generalMidi  = false,
     },
 };
-// clang-format on
 
 /*============================================================================
  * Functions
@@ -789,6 +802,16 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                         soundGetPlayerBgm()->loop
                             = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
                     }
+
+                    if (musicCategories[jukebox->categoryIdx].generalMidi)
+                    {
+                        midiGmOn(soundGetPlayerBgm());
+                    }
+                    else
+                    {
+                        midiGmOff(soundGetPlayerBgm());
+                    }
+
                     soundPlayBgmCb(&musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }
@@ -799,6 +822,16 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                         soundGetPlayerSfx()->loop
                             = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
                     }
+
+                    if (sfxCategories[jukebox->categoryIdx].generalMidi)
+                    {
+                        midiGmOn(soundGetPlayerSfx());
+                    }
+                    else
+                    {
+                        midiGmOff(soundGetPlayerSfx());
+                    }
+
                     soundPlaySfxCb(&sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }
@@ -990,17 +1023,14 @@ void jukeboxMainLoop(int64_t elapsedUs)
 
             if (jukebox->isPlaying)
             {
-                // clang-format off
                 decoration->speed
                     = MIN_DECORATION_SPEED_PLAYING
                       + (esp_random() % (MAX_DECORATION_SPEED_PLAYING - MIN_DECORATION_SPEED_PLAYING + 1));
             }
             else
             {
-                decoration->speed
-                    = MIN_DECORATION_SPEED_PAUSED
-                      + (esp_random() % (MAX_DECORATION_SPEED_PAUSED - MIN_DECORATION_SPEED_PAUSED + 1));
-                // clang-format on
+                decoration->speed = MIN_DECORATION_SPEED_PAUSED
+                                    + (esp_random() % (MAX_DECORATION_SPEED_PAUSED - MIN_DECORATION_SPEED_PAUSED + 1));
             }
             jukebox->usSinceLastDecoration = 0;
             spawnDecoration                = false;
@@ -1127,12 +1157,10 @@ void jukeboxMainLoop(int64_t elapsedUs)
         // Draw category arrows if this submode has more than 1 category
         if ((jukebox->inMusicSubmode && ARRAY_SIZE(musicCategories) > 1) || ARRAY_SIZE(sfxCategories) > 1)
         {
-            // clang-format off
-            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - ARROW_OFFSET_FROM_TEXT - jukebox->arrow.w, yOff,
-                    false, false, 0);
-            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + ARROW_OFFSET_FROM_TEXT, yOff,
-                    false, false, 180);
-            // clang-format on
+            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - ARROW_OFFSET_FROM_TEXT - jukebox->arrow.w, yOff, false,
+                    false, 0);
+            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + ARROW_OFFSET_FROM_TEXT, yOff, false, false,
+                    180);
         }
 
         // Draw the mode name
