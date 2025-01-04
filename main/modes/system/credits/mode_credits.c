@@ -43,47 +43,48 @@ swadgeMode_t modeCredits = {
     .fnAdvancedUSB            = NULL,
 };
 
-// clang-format off
 // Everyone's here
 static const creditsEntry_t entries[] = {
-    {.name = "Adam Feinstein\n",       .color = c031},
-    {.name = "AllieCat Cosplay\n",     .color = c533},
-    {.name = "angrypolarbear\n",       .color = c135},
-    {.name = "Bedrock\n",              .color = c512},
-    {.name = "Bryce Browner\n",        .color = c115},
-    {.name = "cnlohr\n",               .color = c520},
-    {.name = "Dac\n",                  .color = c252},
-    {.name = "Decnav\n",               .color = c005},
-    {.name = "dylwhich\n",             .color = c035},
-    {.name = "Emily Anthony\n",        .color = c523},
-    {.name = "Eriktronic\n",           .color = c135},
-    {.name = "Greg Lord (gplord)\n",   .color = c045},
-    {.name = "J.Vega (@JVeg199X)\n",   .color = c250},
-    {.name = "JFrye/Swadgeman\n",      .color = c505},
-    {.name = "Joe Newman\n",           .color = c250},
-    {.name = "Jonathan Moriarty\n",    .color = c215},
-    {.name = "Kaitie Lawson\n",        .color = c550},
-    {.name = "Kevin \"PF3k\" Lin\n",   .color = c225},
-    {.name = "Livingston Rampey\n",    .color = c205},
-    {.name = "MrTroy\n",               .color = c555},
-    {.name = "Nilly (@VanillyNeko)\n", .color = c424},
-    {.name = "Pixel\n",                .color = c354},
-    {.name = "Producer Scott\n",       .color = c242},
-    {.name = "silvershoelaces\n",      .color = c315},
-    {.name = "Socks\n",                .color = c450},
-    {.name = "Steven Hewitt\n",        .color = c541},
-    {.name = "thaeli\n",               .color = c245},
-    {.name = "timeshifter08\n",        .color = c144},
-    {.name = "",                       .color = c000},
-    {.name = "",                       .color = c000},
-    {.name = "For the littlest one\n", .color = c524},
-    {.name = "She's coming!\n",        .color = c524},
-    {.name = "",                       .color = c000},
-    {.name = "",                       .color = c000},
-    {.name = "",                       .color = c000},
-    {.name = "",                       .color = c000},
+    {.name = "Adam Feinstein\n", .color = c031},
+    {.name = "Bryce Browner\n", .color = c315},
+    {.name = "Carrie Wood\n", .color = c203},
+    {.name = "cnlohr\n", .color = c541},
+    {.name = "Dac\n", .color = c545},
+    {.name = "dylwhich\n", .color = c055},
+    {.name = "Emily Anthony\n", .color = c435},
+    {.name = "Eriktronic101\n", .color = c135},
+    {.name = "Gerald M. (GEMISIS)\n", .color = c510},
+    {.name = "Grav\n", .color = c130},
+    {.name = "Greg Lord (gplord)\n", .color = c025},
+    {.name = "Heather \"Heathstaa\"", .color = c445},
+    {.name = "Hamilton\n", .color = c445},
+    {.name = "Hunter Dyar\n", .color = c433},
+    {.name = "James Albracht\n", .color = c440},
+    {.name = "Jeremy Stintzcum\n", .color = c032},
+    {.name = "Joe Newman\n", .color = c245},
+    {.name = "Jon Vega", .color = c250},
+    {.name = "(JVeg199X)\n", .color = c250},
+    {.name = "Kaitie Lawson\n", .color = c551},
+    {.name = "Kevin \"PF3k\" Lin\n", .color = c250},
+    {.name = "Livingston Rampey\n", .color = c205},
+    {.name = "Logan Tucker\n", .color = c522},
+    {.name = "LunaToon\n", .color = c513},
+    {.name = "Nathan M. Schultz\n", .color = c311},
+    {.name = "Pixel\n", .color = c143},
+    {.name = "Producer Scott\n", .color = c015},
+    {.name = "Swadgeman (jfrye)\n", .color = c505},
+    {.name = "Thaeli\n", .color = c425},
+    {.name = "", .color = c000},
+    {.name = "", .color = c000},
+    {.name = "Thanks for", .color = c524},
+    {.name = "Swadging!\n", .color = c524},
+    {.name = "", .color = c000},
+    {.name = "See you next year!\n", .color = c524},
+    {.name = "", .color = c000},
+    {.name = "", .color = c000},
+    {.name = "", .color = c000},
+    {.name = "", .color = c000},
 };
-// clang-format on
 
 //==============================================================================
 // Functions
@@ -99,7 +100,7 @@ void creditsEnterMode(void)
 
     // Load a font
     font_t* creditsFont = (font_t*)heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_8BIT);
-    loadFont("logbook.font", creditsFont, false);
+    loadFont("sonic.font", creditsFont, false);
 
     // Initialize credits
     initCredits(credits, creditsFont, entries, ARRAY_SIZE(entries));

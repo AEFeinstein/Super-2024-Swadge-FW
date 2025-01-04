@@ -88,12 +88,16 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
  */
 void freeFont(font_t* font)
 {
-    // using uint8_t instead of char because a char will overflow to -128 after the last char is freed (\x7f)
-    for (uint8_t idx = 0; idx <= '~' - ' ' + 1; idx++)
+    if (font->height)
     {
-        if (font->chars[idx].bitmap != NULL)
+        // using uint8_t instead of char because a char will overflow to -128 after the last char is freed (\x7f)
+        for (uint8_t idx = 0; idx <= '~' - ' ' + 1; idx++)
         {
-            heap_caps_free(font->chars[idx].bitmap);
+            if (font->chars[idx].bitmap != NULL)
+            {
+                heap_caps_free(font->chars[idx].bitmap);
+            }
         }
+        font->height = 0;
     }
 }

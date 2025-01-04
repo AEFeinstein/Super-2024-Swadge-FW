@@ -211,6 +211,7 @@ void tttShowUi(tttUi_t ui);
 // Externs
 //==============================================================================
 
+extern const char tttName[];
 extern const char tttWinKey[];
 extern const char tttLossKey[];
 extern const char tttDrawKey[];
