@@ -281,8 +281,9 @@ const uint16_t freqBinIdxsBanjo[] = {
     58  // D
 };
 
-const led_position_t ledIdxToPos[CONFIG_NUM_LEDS] = {LED_POS_DOWN, LED_POS_UP,   LED_POS_UP,   LED_POS_UP,  LED_POS_DOWN,
-                                      LED_POS_DOWN, LED_POS_DOWN, LED_POS_DOWN, LED_POS_DOWN};
+const led_position_t ledIdxToPos[CONFIG_NUM_LEDS]
+    = {LED_POS_DOWN, LED_POS_UP,   LED_POS_UP,   LED_POS_UP,  LED_POS_DOWN,
+       LED_POS_DOWN, LED_POS_DOWN, LED_POS_DOWN, LED_POS_DOWN};
 
 const uint16_t fourNoteStringIdxToLedIdx[] = {3, 4, 0, 1};
 
@@ -551,15 +552,14 @@ void recalcMetronome(void)
 void plotInstrumentNameAndNotesAndStrings(const char* instrumentName, const char* const* instrumentNotes,
                                           const uint16_t* stringIdxToLedIdx, uint16_t numNotes)
 {
-    if(numNotes < 1 || numNotes > MIN(NUM_MAX_STRINGS, CONFIG_NUM_LEDS))
+    if (numNotes < 1 || numNotes > MIN(NUM_MAX_STRINGS, CONFIG_NUM_LEDS))
     {
         return;
     }
 
-    // Instrument name
-    int16_t yOff = TFT_HEIGHT / 2 - TUNER_TEXT_Y_OFFSET;
-    drawText(&tunernome->logbook, c555, instrumentName,
-             (TFT_WIDTH - textWidth(&tunernome->logbook, instrumentName)) / 2, yOff - tunernome->logbook.height / 2);
+    // Instrument name offset
+    int16_t yOff  = TFT_HEIGHT / 2 - TUNER_TEXT_Y_OFFSET;
+    int16_t yName = yOff - tunernome->logbook.height / 2;
 
     int16_t totalStringWidths       = numNotes * TUNER_STRING_WIDTH;
     int16_t totalInnerSpacingWidths = TUNER_STRING_X_RANGE - totalStringWidths;
@@ -568,8 +568,9 @@ void plotInstrumentNameAndNotesAndStrings(const char* instrumentName, const char
     int16_t yOffDiff = tunernome->radiostarsArrowWsg.h + TUNER_ARROW_Y_OFFSET * 2 + tunernome->logbook.height / 2;
     int16_t yOffUp   = yOff - yOffDiff - tunernome->logbook.height;
     int16_t yOffDown = yOff + yOffDiff;
-    //int16_t yOffUp   = yOff - tunernome->radiostarsArrowWsg.h - TUNER_ARROW_Y_OFFSET * 2 - tunernome->logbook.height * 1.5;
-    //int16_t yOffDown = yOff + tunernome->radiostarsArrowWsg.h + TUNER_ARROW_Y_OFFSET * 2 + tunernome->logbookArrowWsg.h / 2;
+    // int16_t yOffUp   = yOff - tunernome->radiostarsArrowWsg.h - TUNER_ARROW_Y_OFFSET * 2 - tunernome->logbook.height
+    // * 1.5; int16_t yOffDown = yOff + tunernome->radiostarsArrowWsg.h + TUNER_ARROW_Y_OFFSET * 2 +
+    // tunernome->logbookArrowWsg.h / 2;
 
     // Note names of strings, arranged to match LED positions
     for (int i = 0; i < numNotes && i < CONFIG_NUM_LEDS && i < NUM_MAX_STRINGS; i++)
@@ -602,11 +603,15 @@ void plotInstrumentNameAndNotesAndStrings(const char* instrumentName, const char
 
         // Draw instrument note
         int ledIdx = stringIdxToLedIdx == NULL ? i : stringIdxToLedIdx[i];
-        ledIdx = ledIdx < CONFIG_NUM_LEDS ? ledIdx : i;
+        ledIdx     = ledIdx < CONFIG_NUM_LEDS ? ledIdx : i;
         drawText(&tunernome->logbook, c555, instrumentNotes[i],
                  stringXOffset + (TUNER_STRING_WIDTH - 1 - textWidth(&tunernome->logbook, instrumentNotes[i])) / 2,
                  ledIdxToPos[ledIdx] == LED_POS_UP ? yOffUp : yOffDown);
     }
+
+    // Instrument name
+    drawText(&tunernome->logbook, c555, instrumentName,
+             (TFT_WIDTH - textWidth(&tunernome->logbook, instrumentName)) / 2, yName);
 
     // Draw text telling user to play all open strings
     drawText(&tunernome->radiostars, c555, playStringsText,
