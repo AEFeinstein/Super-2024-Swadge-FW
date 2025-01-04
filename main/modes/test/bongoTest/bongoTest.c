@@ -23,6 +23,7 @@
 
 #define HEAT_CUTOFF 10
 #define DECAY_RATE  200000
+#define UNSITCK_VAL 250000
 
 //==============================================================================
 // Consts
@@ -44,6 +45,7 @@ typedef struct
 
     // Bongo
     bool hits[6];
+    int32_t unstickTimer;
 
     // Rainbows
     uint8_t bgColor;
@@ -139,7 +141,7 @@ static void abandonBongo(void)
 
 static void playWithBongo(int64_t elapsedUs)
 {
-    // Decay is the only constant
+    // Decay
     bt->heatDecay += elapsedUs;
     if (bt->heatDecay >= DECAY_RATE && bt->heat > 0)
     {
@@ -165,12 +167,14 @@ static void playWithBongo(int64_t elapsedUs)
     }
     setLeds(bt->leds, CONFIG_NUM_LEDS);
 
-    // Input me harder
+    bt->unstickTimer += elapsedUs;
+    // Input
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down)
         {
+            bt->unstickTimer = 0;
             if (evt.button & PB_A)
             {
                 bt->hits[0] = true;
@@ -211,6 +215,7 @@ static void playWithBongo(int64_t elapsedUs)
         }
         else if (!evt.down)
         {
+            bt->unstickTimer = 0;
             if (evt.button & PB_A)
             {
                 bt->hits[0] = false;
@@ -241,6 +246,19 @@ static void playWithBongo(int64_t elapsedUs)
             }
         }
     }
+    if (bt->unstickTimer >= UNSITCK_VAL)
+    {
+        bt->unstickTimer = 0;
+        midiPlayerReset(bt->player);
+        bt->player->mode              = MIDI_STREAMING;
+        bt->player->streamingCallback = NULL;
+        midiGmOn(bt->player);
+        midiPause(bt->player, false);
+        for (int idx = 0; idx < 6; idx++)
+        {
+            bt->hits[idx] = false;
+        }
+    }
     if (bt->heat >= HEAT_CUTOFF)
     {
         wsgPaletteSet(&bt->pal, c555, paletteHsvToHex((bt->bgColor + 128) % 255, 255, 255));
@@ -250,7 +268,7 @@ static void playWithBongo(int64_t elapsedUs)
         wsgPaletteSet(&bt->pal, c555, c555);
     }
 
-    // Draw me like a french poodle
+    // Draw
     // BG
     if (bt->heat >= HEAT_CUTOFF)
     {
