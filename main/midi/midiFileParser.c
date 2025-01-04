@@ -6,6 +6,7 @@
 #include "midiPlayer.h"
 #include "heatshrink_helper.h"
 #include "cnfs.h"
+#include "macros.h"
 
 #include <esp_log.h>
 #include <esp_heap_caps.h>

@@ -122,3 +122,11 @@
     } while (0)
 
 #endif
+
+#if defined(__XTENSA__)
+// Memory tagging is not supported on real hardware
+#define heap_caps_malloc_tag(s, c, t)     heap_caps_malloc(s, c)
+#define heap_caps_calloc_tag(n, s, c, t)  heap_caps_calloc(n, s, c)
+#define heap_caps_realloc_tag(p, s, c, t) heap_caps_realloc(p, s, c)
+#define heap_caps_free_tag(p)             heap_caps_free(p)
+#endif

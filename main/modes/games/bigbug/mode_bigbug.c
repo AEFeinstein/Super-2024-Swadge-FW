@@ -129,10 +129,10 @@ static void bb_EnterMode(void)
     for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
     {
         char tmp[32];
-        snprintf(tmp, sizeof(tmp) - 1, "fgTile%02d", w);
+        snprintf(tmp, sizeof(tmp) - 1, "fgTile%02" PRId32, w);
         bigbug->gameData.tilemap.fgTiles[w]
             = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM, tmp);
-        snprintf(tmp, sizeof(tmp) - 1, "mgTile%02d", w);
+        snprintf(tmp, sizeof(tmp) - 1, "mgTile%02" PRId32, w);
         bigbug->gameData.tilemap.mgTiles[w]
             = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM, tmp);
     }
