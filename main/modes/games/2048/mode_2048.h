@@ -126,6 +126,12 @@ typedef struct
     bool alreadyWon;                               ///< If the win screen has already displayed
     t48ModeStateEnum_t state;                      ///< Where in the game sequence we are
 
+    // Input for IMU-based 2048.
+    // Only used if tiltControls == true
+    float quatBase[4];
+    char receivedInputMask;
+    int lastIMUx, lastIMUy;
+
     // Audio
     bool bgmIsPlaying; ///< Allows the BGM to restart
 

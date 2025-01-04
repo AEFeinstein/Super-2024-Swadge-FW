@@ -5,8 +5,17 @@
 #include "midiUtil.h"
 #include "cnfs.h"
 
-#define FREQ_HZ(whole)     (((whole) & 0xFFFFu) << 16)
-#define FREQ_HZ_FRAC(flhz) ((((uint32_t)(flhz)) << 16) | ((uint32_t)(((flhz) - ((float)((uint32_t)(flhz)))) * 65536.0)))
+#define USE_BAKED_DRUMS
+
+#ifdef USE_BAKED_DRUMS
+    #include "bakedDrums.h"
+#endif
+
+#ifndef USE_BAKED_DRUMS
+
+    #define FREQ_HZ(whole) (((whole) & 0xFFFFu) << 16)
+    #define FREQ_HZ_FRAC(flhz) \
+        ((((uint32_t)(flhz)) << 16) | ((uint32_t)(((flhz) - ((float)((uint32_t)(flhz)))) * 65536.0)))
 
 static int8_t linearNoiseImpulse(uint32_t length, uint32_t idx, bool* done);
 static int8_t linearWaveImpulse(oscillatorShape_t shape, uq16_16 freq, uint32_t length, uint32_t idx, bool* done);
@@ -49,6 +58,10 @@ static int8_t linearWaveImpulse(oscillatorShape_t shape, uq16_16 freq, uint32_t 
 {
     if (idx >= length)
     {
+        if (done)
+        {
+            *done = true;
+        }
         return 0;
     }
 
@@ -184,19 +197,47 @@ static inline int8_t finishAt(uint32_t finishTime, uint32_t idx, bool* done)
 
 // noiseVol=48, sineVol=256, len=8192, freq=G1
 
-#define TOM(idx, len, noiseVol, sineVol, freq, done)                                             \
-    adrLerp(idx, (len) / 2, (len) / 2, noiseVol, 0) * swSynthSampleWave(NOISE, idx & 0xFF) / 256 \
-        + adrLerp(idx, 128, ((len)-128), sineVol, 0) * sampleWaveAt(idx, SHAPE_SINE, freq) / 256 \
-        + finishAt(len, idx, done)
+    #define TOM(idx, len, noiseVol, sineVol, freq, done)                                             \
+        adrLerp(idx, (len) / 2, (len) / 2, noiseVol, 0) * swSynthSampleWave(NOISE, idx & 0xFF) / 256 \
+            + adrLerp(idx, 128, ((len)-128), sineVol, 0) * sampleWaveAt(idx, SHAPE_SINE, freq) / 256 \
+            + finishAt(len, idx, done)
 
-/* defaultDrumkitFunc() defines values in terms of samples at 32768hz
- * The actual sample rate is half that, so we double the sample index to match
- */
-#define DRUMKIT_SAMPLE_RATE_HZ 32768
-#define DRUMKIT_SAMPLE_FACTOR  (DRUMKIT_SAMPLE_RATE_HZ / DAC_SAMPLE_RATE_HZ)
+    /* defaultDrumkitFunc() defines values in terms of samples at 32768hz
+     * The actual sample rate is half that, so we double the sample index to match
+     */
+    #define DRUMKIT_SAMPLE_RATE_HZ 32768
+    #define DRUMKIT_SAMPLE_FACTOR  (DRUMKIT_SAMPLE_RATE_HZ / DAC_SAMPLE_RATE_HZ)
+
+#endif
 
 int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data)
 {
+#ifdef USE_BAKED_DRUMS
+
+    if (drum < ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM || drum > OPEN_TRIANGLE)
+    {
+        // Drum not implemented
+        *done = true;
+        return 0;
+    }
+    else
+    {
+        int32_t dIdx = drum - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
+        if (idx >= bakedDrumsLens[dIdx])
+        {
+            // Drum sample finished
+            *done = true;
+            return 0;
+        }
+        else
+        {
+            // Drum sample playing
+            return bakedDrums[dIdx][idx];
+        }
+    }
+
+#else
+
     // Speed up the IDX to match the actual sample rate
     idx *= DRUMKIT_SAMPLE_FACTOR;
 
@@ -504,10 +545,13 @@ int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint3
 
     *done = true;
     return 0;
+#endif
 }
 
-#define DONUT_SAMPLE_RATE_HZ 8192
-#define SAMPLE_FACTOR        (DAC_SAMPLE_RATE_HZ / DONUT_SAMPLE_RATE_HZ)
+#ifndef USE_BAKED_DRUMS
+
+    #define DONUT_SAMPLE_RATE_HZ 8192
+    #define SAMPLE_FACTOR        (DAC_SAMPLE_RATE_HZ / DONUT_SAMPLE_RATE_HZ)
 
 // literally copied from the donut swadge
 // TODO: have these be an instrument in a separate bank or something
@@ -519,8 +563,60 @@ static const uint8_t kit1_speed[] = {14, 13, 16, 11, 10, 9, 8, 7, 6, 5, 4, 2, 2}
 static const uint16_t kit1_fade[] = {128, 512, 8, 128, 128, 128, 128, 128, 255, 255, 255, 512, 1024};
 static const uint8_t kit1_drop[]  = {5, 64, 4, 10, 10, 16, 16, 16, 24, 24, 24, 64, 128};
 
+#endif
+
 int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data)
 {
+#ifdef USE_BAKED_DRUMS
+
+    int32_t len           = 0;
+    const int8_t* samples = NULL;
+    if (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= drum && drum <= LOW_MID_TOM)
+    {
+        len     = bakedDonutDrumsLens[0];
+        samples = bakedDonutDrums[0];
+    }
+    else if (HIGH_MID_TOM <= drum && drum <= HIGH_BONGO)
+    {
+        len     = bakedDonutDrumsLens[1];
+        samples = bakedDonutDrums[1];
+    }
+    else if (LOW_BONGO == drum)
+    {
+        // Colossus Roar
+        len     = bakedDonutDrumsLens[2];
+        samples = bakedDonutDrums[2];
+    }
+    else if (SHORT_WHISTLE == drum)
+    {
+        // MAG
+        len     = bakedDonutDrumsLens[3];
+        samples = bakedDonutDrums[3];
+    }
+    else if (LONG_WHISTLE == drum)
+    {
+        // FEST
+        len     = bakedDonutDrumsLens[4];
+        samples = bakedDonutDrums[4];
+    }
+    else
+    {
+        // not a real drum, ignore
+        *done = true;
+        return 0;
+    }
+
+    if (idx >= len)
+    {
+        *done = true;
+        return 0;
+    }
+    else
+    {
+        return samples[idx];
+    }
+
+#else
     const uint8_t* speeds;
     const uint16_t* fades;
     const uint8_t* drops;
@@ -633,4 +729,151 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
     }
 
     return wave * volume >> 8;
+#endif
 }
+
+#ifdef BAKE_DRUMS
+
+    #include <stdio.h>
+    #include <inttypes.h>
+
+const char* getDrumName(percussionNote_t n)
+{
+    const char* names[] = {"ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM",
+                           "ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM",
+                           "SIDE_STICK",
+                           "ACOUSTIC_SNARE",
+                           "HAND_CLAP",
+                           "ELECTRIC_SNARE_OR_RIMSHOT",
+                           "LOW_FLOOR_TOM",
+                           "CLOSED_HI_HAT",
+                           "HIGH_FLOOR_TOM",
+                           "PEDAL_HI_HAT",
+                           "LOW_TOM",
+                           "OPEN_HI_HAT",
+                           "LOW_MID_TOM",
+                           "HIGH_MID_TOM",
+                           "CRASH_CYMBAL_1",
+                           "HIGH_TOM",
+                           "RIDE_CYMBAL_1",
+                           "CHINESE_CYMBAL",
+                           "RIDE_BELL",
+                           "TAMBOURINE",
+                           "SPLASH_CYMBAL",
+                           "COWBELL",
+                           "CRASH_CYMBAL_2",
+                           "VIBRASLAP",
+                           "RIDE_CYMBAL_2",
+                           "HIGH_BONGO",
+                           "LOW_BONGO",
+                           "MUTE_HIGH_CONGA",
+                           "OPEN_HIGH_CONGA",
+                           "LOW_CONGA",
+                           "HIGH_TIMBALE",
+                           "LOW_TIMBALE",
+                           "HIGH_AGOGO",
+                           "LOW_AGOGO",
+                           "CABASA",
+                           "MARACAS",
+                           "SHORT_WHISTLE",
+                           "LONG_WHISTLE",
+                           "SHORT_GUIRO",
+                           "LONG_GUIRO",
+                           "CLAVES",
+                           "HIGH_WOODBLOCK",
+                           "LOW_WOODBLOCK",
+                           "MUTE_CUICA",
+                           "OPEN_CUICA",
+                           "MUTE_TRIANGLE",
+                           "OPEN_TRIANGLE"};
+    return names[n - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM];
+}
+
+/**
+ * @brief Call this function to print out all the drum samples
+ *
+ * This "bakes" the drums in, rather than calculating them on the fly
+ *
+ * It should be run on the emulator, not firmware.
+ */
+void bakeDrums(void)
+{
+    printf("#include \"bakedDrums.h\"\n\n");
+    int32_t lengths[OPEN_TRIANGLE - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM + 1] = {0};
+    for (percussionNote_t n = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM; n <= OPEN_TRIANGLE; n++)
+    {
+        int32_t idx         = 0;
+        bool done           = false;
+        uint32_t scratch[4] = {0};
+        printf("static const int8_t %s_SAMPLES[] = {\n", getDrumName(n));
+        while (!done)
+        {
+            int8_t sample = defaultDrumkitFunc(n, idx, &done, scratch, NULL);
+            if (!done)
+            {
+                printf("%" PRId8 ", ", sample);
+                idx++;
+            }
+        }
+        printf("};\n\n");
+
+        lengths[n - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM] = idx;
+    }
+
+    printf("const int8_t* bakedDrums[] = {\n");
+    for (percussionNote_t n = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM; n <= OPEN_TRIANGLE; n++)
+    {
+        printf("%s_SAMPLES, ", getDrumName(n));
+    }
+    printf("};\n");
+
+    printf("const int32_t bakedDrumsLens[] = {\n");
+    for (percussionNote_t n = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM; n <= OPEN_TRIANGLE; n++)
+    {
+        printf("%" PRId32 ", ", lengths[n - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]);
+    }
+    printf("};\n");
+
+    #define NUM_DONUT_DRUMS 5
+    percussionNote_t donutDrums[NUM_DONUT_DRUMS]
+        = {ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM, HIGH_MID_TOM, LOW_BONGO, SHORT_WHISTLE, LONG_WHISTLE};
+
+    int32_t donutLengths[NUM_DONUT_DRUMS] = {0};
+
+    for (int32_t nIdx = 0; nIdx < NUM_DONUT_DRUMS; nIdx++)
+    {
+        percussionNote_t n = donutDrums[nIdx];
+
+        int32_t idx         = 0;
+        bool done           = false;
+        uint32_t scratch[4] = {0};
+        printf("static const int8_t DONUT_%d_SAMPLES[] = {\n", nIdx);
+        while (!done)
+        {
+            int8_t sample = donutDrumkitFunc(n, idx, &done, scratch, NULL);
+            if (!done)
+            {
+                printf("%" PRId8 ", ", sample);
+                idx++;
+            }
+        }
+        donutLengths[nIdx] = idx;
+        printf("};\n");
+    }
+
+    printf("const int8_t* bakedDonutDrums[] = {\n");
+    for (int32_t nIdx = 0; nIdx < NUM_DONUT_DRUMS; nIdx++)
+    {
+        printf("DONUT_%d_SAMPLES,", nIdx);
+    }
+    printf("};\n");
+
+    printf("const int32_t bakedDonutDrumsLens[] = {\n");
+    for (int32_t nIdx = 0; nIdx < NUM_DONUT_DRUMS; nIdx++)
+    {
+        printf("%" PRId32 ", ", donutLengths[nIdx]);
+    }
+    printf("};\n");
+}
+
+#endif

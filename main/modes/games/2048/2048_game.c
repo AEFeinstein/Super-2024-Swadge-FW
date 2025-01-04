@@ -255,6 +255,18 @@ void t48_gameLoop(t48_t* t48, int32_t elapsedUs)
         // Accept input again
         t48->acceptGameInput = true;
     }
+
+    if (t48->tiltControls)
+    {
+        const int indicatorx    = 190;
+        const int indicatory    = 10;
+        const int indicatorSize = 9;
+        int dx                  = -CLAMP(t48->lastIMUx >> 4, -indicatorSize, indicatorSize);
+        int dy                  = CLAMP(t48->lastIMUy >> 4, -indicatorSize, indicatorSize);
+        drawRect(indicatorx - indicatorSize, indicatory - indicatorSize, indicatorx + indicatorSize + 1,
+                 indicatory + indicatorSize + 1, c333);
+        drawCircle(indicatorx + dx, indicatory + dy, 1, c555);
+    }
 }
 
 /**

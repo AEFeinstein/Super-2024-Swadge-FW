@@ -315,7 +315,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
 
                                     ((bb_foodCartData_t*)foodCart->data)->reward = BB_DONUT;
                                     foodCart->currentAnimationFrame
-                                        = 11; // Also used as health for the food cart. It takes 10 hits to destroy.
+                                        = 20; // Also used as health for the food cart. It takes 10 hits to destroy.
                                     tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                                 }
                                 else
@@ -344,7 +344,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     ((bb_foodCartData_t*)foodCartBG->data)->partner = foodCart;
 
                                     ((bb_foodCartData_t*)foodCart->data)->reward = BB_SWADGE;
-                                    foodCart->currentAnimationFrame = 10; // functions as health for the food cart
+                                    foodCart->currentAnimationFrame = 20; // functions as health for the food cart
                                     tilemap->fgTiles[i][j].embed    = NOTHING_EMBED;
                                 }
                                 else
