@@ -529,7 +529,7 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 2)
     {
-        //unload rocket frames 1 through 39 now that the animation is done.
+        // unload rocket frames 1 through 39 now that the animation is done.
         for (int frame = 1; frame < 40; frame++)
         {
             freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[frame]);
@@ -644,8 +644,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t y;
             getTouchCartesian(gData->phi, gData->r, &x, &y);
             // Set harpoon's velocity
-            pData->vel.x = ((x - 512)*7) >> 6;
-            pData->vel.y = ((-y + 512)*7) >> 6;
+            pData->vel.x = ((x - 512) * 7) >> 6;
+            pData->vel.y = ((-y + 512) * 7) >> 6;
         }
     }
 
@@ -2832,7 +2832,7 @@ void bb_updateSpaceLaser(bb_entity_t* self)
     if (bb_randomInt(0, 50) == 0)
     {
         // decrement the health of the tile below the laser by one
-        if(self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health)
+        if (self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health)
         {
             self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health--;
         }

@@ -865,10 +865,6 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 
 void unloadMidiFile(midiFile_t* file)
 {
-    if (NULL == file->tracks || NULL == file->data)
-    {
-        printf("NULL FREE\n");
-    }
     heap_caps_free(file->tracks);
     heap_caps_free(file->data);
     memset(file, 0, sizeof(midiFile_t));

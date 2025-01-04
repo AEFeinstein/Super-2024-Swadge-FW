@@ -50,9 +50,7 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
     if (!sprite->allocated)
     {
         sprite->numFrames = num_frames;
-        char tmp[32];
-        snprintf(tmp, sizeof(tmp) - 1, "frames %s", name);
-        sprite->frames    = heap_caps_calloc_tag(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM, tmp);
+        sprite->frames    = heap_caps_calloc_tag(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM, name);
         sprite->allocated = true;
     }
 
@@ -210,8 +208,6 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
     loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
 
-
-    
     if (!entityManager->sprites[BB_HOTDOG].allocated)
     {
         entityManager->sprites[BB_HOTDOG].numFrames = 1;
