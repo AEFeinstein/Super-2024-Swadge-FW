@@ -44,8 +44,8 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
     // The rest of the bytes are pixels
-    wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
+    wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
+                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, name);
 
     if (NULL != wsg->px)
     {
@@ -89,8 +89,8 @@ bool loadWsgInplace(const char* name, wsg_t* wsg, bool spiRam, uint8_t* decompre
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
     // The rest of the bytes are pixels
-    wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
+    wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
+                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, name);
 
     if (NULL != wsg->px)
     {
@@ -122,14 +122,8 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
     ESP_LOGD("WSG", "full WSG is %" PRIu16 " x %" PRIu16 ", or %d pixels", wsg->w, wsg->h, wsg->w * wsg->h);
 
     // The rest of the bytes are pixels
-    if (spiRam)
-    {
-        wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h, MALLOC_CAP_SPIRAM);
-    }
-    else
-    {
-        wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h, MALLOC_CAP_8BIT);
-    }
+    wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
+                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, key);
 
     if (NULL != wsg->px)
     {
@@ -158,7 +152,7 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
     uint32_t imageSize = wsgHeaderSize + pixelSize;
 
     // Create an output buffer big enough to hold the uncompressed image
-    uint8_t* output = heap_caps_malloc(imageSize, MALLOC_CAP_SPIRAM);
+    uint8_t* output = heap_caps_malloc_tag(imageSize, MALLOC_CAP_SPIRAM, key);
 
     if (!output)
     {

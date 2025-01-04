@@ -216,7 +216,7 @@ void initExtensions(emuArgs_t* args)
 
         if (ext->fnInitCb)
         {
-            printf("Extension %s initializing... ", ext->name);
+            printf("Extension %s initializing...\n", ext->name);
             info->enabled = ext->fnInitCb(args);
             printf("%s!\n", info->enabled ? "enabled" : "disabled");
         }

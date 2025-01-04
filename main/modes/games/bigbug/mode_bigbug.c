@@ -37,7 +37,6 @@
 struct bb_t
 {
     menu_t* menu; ///< The menu structure
-    font_t font;  ///< The font used in the menu and game
     // bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
@@ -124,29 +123,30 @@ static void bb_EnterMode(void)
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
     // Allocate memory for the game state
-    bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+    bigbug = heap_caps_calloc_tag(1, sizeof(bb_t), MALLOC_CAP_SPIRAM, "bigbug");
 
     // calloc the columns in layers separately to avoid a big alloc
     for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
     {
         bigbug->gameData.tilemap.fgTiles[w]
-            = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM);
+            = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM, "fgTile");
         bigbug->gameData.tilemap.mgTiles[w]
-            = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM);
+            = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM, "mgTiles");
     }
 
     // Allocate WSG loading helpers
     bb_hsd         = heatshrink_decoder_alloc(256, 8, 4);
-    bb_decodeSpace = heap_caps_malloc(102404, MALLOC_CAP_SPIRAM);
+    bb_decodeSpace = heap_caps_malloc_tag(102404, MALLOC_CAP_SPIRAM, "decodeSpace");
 
     bb_SetLeds();
 
     // Load font
-    loadFont("ibm_vga8.font", &bigbug->font, false);
+    loadFont("ibm_vga8.font", &bigbug->gameData.font, false);
 
     const char loadingStr[] = "Loading...";
-    int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
-    drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
+    int32_t tWidth          = textWidth(&bigbug->gameData.font, loadingStr);
+    drawText(&bigbug->gameData.font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2,
+             (TFT_HEIGHT - bigbug->gameData.font.height) / 2);
     drawDisplayTft(NULL);
 
     bb_initializeGameData(&bigbug->gameData);
@@ -214,11 +214,12 @@ static void bb_EnterModeSkipIntro(void)
     bb_SetLeds();
 
     // Load font
-    loadFont("ibm_vga8.font", &bigbug->font, false);
+    loadFont("ibm_vga8.font", &bigbug->gameData.font, false);
 
     const char loadingStr[] = "Loading...";
-    int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
-    drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
+    int32_t tWidth          = textWidth(&bigbug->gameData.font, loadingStr);
+    drawText(&bigbug->gameData.font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2,
+             (TFT_HEIGHT - bigbug->gameData.font.height) / 2);
     drawDisplayTft(NULL);
 
     bb_initializeGameData(&bigbug->gameData);
@@ -350,10 +351,13 @@ static void bb_ExitMode(void)
     // Free entity manager
     bb_freeEntityManager(&bigbug->gameData.entityManager);
     // Free font
-    freeFont(&bigbug->font);
+    freeFont(&bigbug->gameData.font);
 
     soundStop(true);
-    unloadMidiFile(&bigbug->gameData.bgm);
+    if (bigbug->gameData.bgm.data)
+    {
+        unloadMidiFile(&bigbug->gameData.bgm);
+    }
 
     deinitGlobalMidiPlayer();
 
@@ -554,13 +558,13 @@ static void bb_DrawScene(void)
     }
 
     bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera.camera);
-    DRAW_FPS_COUNTER(bigbug->font);
+    DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar(void)
 {
-    //draw eggs (enemies), skeletons (fuel), donuts, hotdogs
-    //iterate tilemap embeds
+    // draw eggs (enemies), skeletons (fuel), donuts, hotdogs
+    // iterate tilemap embeds
     for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
     {
         int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
@@ -781,7 +785,7 @@ static void bb_DrawScene_Radar(void)
         }
     }
 
-    DRAW_FPS_COUNTER(bigbug->font);
+    DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar_Upgrade(void)

@@ -438,14 +438,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     {
         bb_setupMidi(); // stops the music
 
-        //load frames 1 through 39 briefly to play the animation.
-        for (int frame = 1; frame < 40; frame++)
-        {
-            char wsg_name[strlen("rocket") + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" + null
-                                             // terminator ('\0')
-            snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "rocket", frame);
-            loadWsgInplace(wsg_name, &self->gameData->entityManager.sprites[ROCKET_ANIM].frames[frame], true, bb_decodeSpace, bb_hsd);
-        }
+        bb_loadSprite("rocket", 42, 1, &self->gameData->entityManager.sprites[ROCKET_ANIM]);
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
@@ -536,7 +529,7 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 2)
     {
-        //unload rocket frames 1 through 39 now that the animation is done.
+        // unload rocket frames 1 through 39 now that the animation is done.
         for (int frame = 1; frame < 40; frame++)
         {
             freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[frame]);
@@ -651,8 +644,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t y;
             getTouchCartesian(gData->phi, gData->r, &x, &y);
             // Set harpoon's velocity
-            pData->vel.x = ((x - 512)*7) >> 6;
-            pData->vel.y = ((-y + 512)*7) >> 6;
+            pData->vel.x = ((x - 512) * 7) >> 6;
+            pData->vel.y = ((-y + 512) * 7) >> 6;
         }
     }
 
@@ -2095,7 +2088,10 @@ void bb_updateGameOver(bb_entity_t* self)
                 }
                 boosterIdx++;
             }
-            self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
+            if (boosterIdx < 3)
+            {
+                self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
+            }
 
             bb_destroyEntity(self, false);
             bb_startGarbotnikCloningTalk(self->gameData->entityManager.deathDumpster);
@@ -2839,7 +2835,7 @@ void bb_updateSpaceLaser(bb_entity_t* self)
     if (bb_randomInt(0, 50) == 0)
     {
         // decrement the health of the tile below the laser by one
-        if(self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health)
+        if (self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health)
         {
             self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health--;
         }
@@ -5262,7 +5258,7 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
 
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter)
 {
-    bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
+    bb_dialogueData_t* dData = heap_caps_calloc_tag(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM, firstCharacter);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
     int8_t characterSprite   = 0;

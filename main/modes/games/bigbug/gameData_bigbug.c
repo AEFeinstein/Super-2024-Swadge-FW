@@ -52,7 +52,6 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->neighbors[3][1] = 1;  // down  neighbor y offset
 
     // Load font
-    loadFont("ibm_vga8.font", &gameData->font, false);
     loadFont("tiny_numbers.font", &gameData->tinyNumbersFont, false);
     loadFont("seven_segment.font", &gameData->sevenSegmentFont, false);
 
@@ -197,7 +196,6 @@ void bb_freeGameData(bb_gameData_t* gameData)
     unloadMidiFile(&gameData->sfxCollection);
     unloadMidiFile(&gameData->sfxTether);
     unloadMidiFile(&gameData->sfxHealth);
-    freeFont(&gameData->font);
     freeFont(&gameData->tinyNumbersFont);
     freeFont(&gameData->sevenSegmentFont);
     freeFont(&gameData->cgFont);
