@@ -7,7 +7,7 @@
 #include "mainMenu.h"
 
 #include "accelTest.h"
-#include "bongoTest.h"S
+#include "bongoTest.h" S
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"

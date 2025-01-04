@@ -21,8 +21,8 @@
 // Defines
 //==============================================================================
 
-#define HEAT_CUTOFF  10
-#define DECAY_RATE   200000
+#define HEAT_CUTOFF 10
+#define DECAY_RATE  200000
 
 //==============================================================================
 // Consts
@@ -30,7 +30,8 @@
 
 const char bongoModeName[] = "Bongo Bongo Bongo";
 
-const char* bongoWsgs[] = {"bongoDown.wsg", "bongoLeft.wsg", "bongoRight.wsg", "bongoUp.wsg", "bongoTable.wsg"};
+const char* bongoWsgs[]
+    = {"bongoDown.wsg", "bongoLeft.wsg", "bongoRight.wsg", "bongoUp.wsg", "bongoTable.wsg", "bongoMeow.wsg"};
 
 //==============================================================================
 // Structs
@@ -42,7 +43,7 @@ typedef struct
     wsg_t* sprs;
 
     // Bongo
-    bool hits[2];
+    bool hits[6];
 
     // Rainbows
     uint8_t bgColor;
@@ -114,12 +115,11 @@ static void enterTheBongo(void)
         loadWsg(bongoWsgs[tIdx], &bt->sprs[tIdx], true);
     }
     initGlobalMidiPlayer();
-    player = globalMidiPlayerGet(MIDI_BGM);
+    player                    = globalMidiPlayerGet(MIDI_BGM);
     player->mode              = MIDI_STREAMING;
     player->streamingCallback = NULL;
     midiGmOn(player);
     midiPause(player, false);
-    
     wsgPaletteReset(&bt->pal);
     bt->heat = 0;
 }
@@ -137,6 +137,14 @@ static void abandonBongo(void)
 
 static void playWithBongo(int64_t elapsedUs)
 {
+    // Decay is the only constant
+    bt->heatDecay += elapsedUs;
+    if (bt->heatDecay >= DECAY_RATE && bt->heat > 0)
+    {
+        bt->heatDecay = 0;
+        bt->heat--;
+    }
+
     // LEDs
     for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
@@ -146,22 +154,14 @@ static void playWithBongo(int64_t elapsedUs)
         }
         if (bt->leds[idx].g > 2)
         {
-            bt->leds[idx].g-= 3;
+            bt->leds[idx].g -= 3;
         }
         if (bt->leds[idx].b > 2)
         {
-            bt->leds[idx].b-= 3;
+            bt->leds[idx].b -= 3;
         }
     }
-    setLeds(&bt->leds, CONFIG_NUM_LEDS);
-
-    // Decay
-    bt->heatDecay += elapsedUs;
-    if (bt->heatDecay >= DECAY_RATE && bt->heat > 0)
-    {
-        bt->heatDecay = 0;
-        bt->heat--;
-    }
+    setLeds(bt->leds, CONFIG_NUM_LEDS);
 
     // Input me harder
     buttonEvt_t evt;
@@ -173,15 +173,34 @@ static void playWithBongo(int64_t elapsedUs)
             {
                 bt->hits[0] = true;
                 midiNoteOn(player, 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7F);
-                bt->leds[esp_random() % CONFIG_NUM_LEDS] = LedEHSVtoHEXhelper(bt->bgColor, 255, 200, true);
             }
             else if (evt.button & PB_B)
             {
                 bt->hits[1] = true;
                 midiNoteOn(player, 9, CLOSED_HI_HAT, 0x7F);
-                bt->leds[esp_random() % CONFIG_NUM_LEDS] = LedEHSVtoHEXhelper(bt->bgColor, 255, 200, true);
+            }
+            else if (evt.button & PB_UP)
+            {
+                bt->hits[2] = true;
+                midiNoteOn(player, 0, 72, 0x7F);
+            }
+            else if (evt.button & PB_DOWN)
+            {
+                bt->hits[3] = true;
+                midiNoteOn(player, 0, 71, 0x7F);
+            }
+            else if (evt.button & PB_LEFT)
+            {
+                bt->hits[4] = true;
+                midiNoteOn(player, 0, 74, 0x7F);
+            }
+            else if (evt.button & PB_RIGHT)
+            {
+                bt->hits[5] = true;
+                midiNoteOn(player, 0, 76, 0x7F);
             }
             bt->bgColor++;
+            bt->leds[esp_random() % CONFIG_NUM_LEDS] = LedEHSVtoHEXhelper(bt->bgColor, 255, 200, true);
             if (bt->heat <= 254)
             {
                 bt->heat++;
@@ -197,6 +216,26 @@ static void playWithBongo(int64_t elapsedUs)
             else if (evt.button & PB_B)
             {
                 bt->hits[1] = false;
+            }
+            else if (evt.button & PB_UP)
+            {
+                bt->hits[2] = false;
+                midiNoteOff(player, 0, 72, 0x7F);
+            }
+            else if (evt.button & PB_DOWN)
+            {
+                bt->hits[3] = false;
+                midiNoteOff(player, 0, 71, 0x7F);
+            }
+            else if (evt.button & PB_LEFT)
+            {
+                bt->hits[4] = false;
+                midiNoteOff(player, 0, 74, 0x7F);
+            }
+            else if (evt.button & PB_RIGHT)
+            {
+                bt->hits[5] = false;
+                midiNoteOff(player, 0, 76, 0x7F);
             }
         }
     }
@@ -239,5 +278,10 @@ static void playWithBongo(int64_t elapsedUs)
     else if (bt->hits[0] && bt->hits[1])
     {
         drawWsgSimple(&bt->sprs[0], 0, 0);
+    }
+
+    if (bt->hits[2] || bt->hits[3] || bt->hits[4] || bt->hits[5])
+    {
+        drawWsgSimple(&bt->sprs[5], 0, 0);
     }
 }

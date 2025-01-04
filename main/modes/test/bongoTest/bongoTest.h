@@ -4,9 +4,9 @@
  * @brief Tests your beatboxing skills
  * @version 1.0
  * @date 2025-01-04
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 #pragma once
 
