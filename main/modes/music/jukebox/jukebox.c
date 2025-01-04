@@ -593,7 +593,7 @@ jukeboxSong_t sfx_ultimatettt[] = {
         .name     = "Marker",
     },
     {
-        .filename = "`.mid",
+        .filename = "uttt_win_s.mid",
         .name     = "Win Subgame",
     },
     {
@@ -631,7 +631,7 @@ jukeboxSong_t sfx_unused[] = {
         .name     = "Pong Block 1",
     },
     {
-        .filename = "block1.mid",
+        .filename = "block2.mid",
         .name     = "Pong Block 2",
     },
     {
