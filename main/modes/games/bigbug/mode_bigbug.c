@@ -566,6 +566,8 @@ static void bb_DrawScene(void)
 
 static void bb_DrawScene_Radar(void)
 {
+    //draw eggs (enemies), skeletons (fuel), donuts, hotdogs
+    //iterate tilemap embeds
     for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
     {
         int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
@@ -611,15 +613,6 @@ static void bb_DrawScene_Radar(void)
                     drawCircleFilled(xIdx * 4 - 2, yIdx * 4 - bigbug->gameData.radar.cam.y, 2, c050);
                 }
             }
-        }
-    }
-
-    for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
-    {
-        int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
-        int16_t yMax = CLAMP(yMin + FIELD_HEIGHT / 4, 0, TILE_FIELD_HEIGHT);
-        for (int yIdx = yMin; yIdx < yMax; yIdx++)
-        {
             if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
             {
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_DONUT_EMBED
@@ -631,14 +624,14 @@ static void bb_DrawScene_Radar(void)
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_SWADGE_EMBED
                     || bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_SWADGE_EMBED)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], xIdx * 4 - 15,
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0], xIdx * 4 - 15,
                                   yIdx * 4 - bigbug->gameData.radar.cam.y - 6);
                 }
             }
         }
     }
 
-    // fuel & enemies
+    // draw fuel, enemies, POIs
     // iterate all cached entities
     node_t* current = bigbug->gameData.entityManager.cachedEntities->first;
     while (current != NULL)
@@ -678,7 +671,7 @@ static void bb_DrawScene_Radar(void)
                 }
                 else if (POIData->reward == BB_SWADGE)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1],
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
                                   (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                                   (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
@@ -688,7 +681,7 @@ static void bb_DrawScene_Radar(void)
         current = current->next;
     }
 
-    // iterate all entities
+    // iterate all active entities
     for (int i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* entity = &bigbug->gameData.entityManager.entities[i];
@@ -737,7 +730,7 @@ static void bb_DrawScene_Radar(void)
         }
     }
 
-    // garbotnik
+    // draw garbotnik
     vec_t garbotnikPos = (vec_t){0};
     if (bigbug->gameData.entityManager.playerEntity != NULL)
     {

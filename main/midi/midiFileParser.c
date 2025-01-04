@@ -987,7 +987,7 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
         if (info->eventParsed || (info->nextEvent.deltaTime != UINT32_MAX && trackParseNext(reader, info)))
         {
             // info->nextEvent has now been set by trackParseNext()
-            if (!info->nextEvent.deltaTime || reader->file->format == MIDI_FORMAT_2)
+            if (!info->nextEvent.deltaTime || (reader && reader->file && reader->file->format == MIDI_FORMAT_2))
             {
                 // The delta-time is 0! Just return this event immediately
                 *event = info->nextEvent;

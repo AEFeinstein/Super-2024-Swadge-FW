@@ -438,7 +438,14 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
     {
         bb_setupMidi(); // stops the music
 
-        bb_loadSprite("rocket", 42, 1, &self->gameData->entityManager.sprites[ROCKET_ANIM]);
+        //load frames 1 through 39 briefly to play the animation.
+        for (int frame = 1; frame < 40; frame++)
+        {
+            char wsg_name[strlen("rocket") + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" + null
+                                             // terminator ('\0')
+            snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", "rocket", frame);
+            loadWsgInplace(wsg_name, &self->gameData->entityManager.sprites[ROCKET_ANIM].frames[frame], true, bb_decodeSpace, bb_hsd);
+        }
         hfData->yVel         = 0;
         self->updateFunction = bb_updateGarbotnikDeploy;
         self->paused         = false;
@@ -529,6 +536,12 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 2)
     {
+        //unload rocket frames 1 through 39 now that the animation is done.
+        for (int frame = 1; frame < 40; frame++)
+        {
+            freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[frame]);
+        }
+
         bb_entity_t* arm
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
@@ -638,8 +651,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             int32_t y;
             getTouchCartesian(gData->phi, gData->r, &x, &y);
             // Set harpoon's velocity
-            pData->vel.x = (x - 512) >> 3;
-            pData->vel.y = (-y + 512) >> 3;
+            pData->vel.x = ((x - 512)*7) >> 6;
+            pData->vel.y = ((-y + 512)*7) >> 6;
         }
     }
 
@@ -2826,7 +2839,10 @@ void bb_updateSpaceLaser(bb_entity_t* self)
     if (bb_randomInt(0, 50) == 0)
     {
         // decrement the health of the tile below the laser by one
-        self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health--;
+        if(self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health)
+        {
+            self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health--;
+        }
         int8_t health = self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health;
         if (health == 1 || health == 4 || health == 10)
         {
