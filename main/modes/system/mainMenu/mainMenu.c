@@ -7,6 +7,7 @@
 #include "mainMenu.h"
 
 #include "accelTest.h"
+#include "bongoTest.h"S
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"
@@ -440,6 +441,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&t48Mode);
         }
+        else if (label == bongoTest.modeName)
+        {
+            switchToSwadgeMode(&bongoTest);
+        }
         else if (label == confirmResetName)
         {
             if (eraseNvs())
@@ -522,6 +527,7 @@ void addSecretsMenu(void)
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, bongoTest.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);
