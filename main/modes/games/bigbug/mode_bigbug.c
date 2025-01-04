@@ -37,7 +37,6 @@
 struct bb_t
 {
     menu_t* menu; ///< The menu structure
-    font_t font;  ///< The font used in the menu and game
     // bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
@@ -145,11 +144,12 @@ static void bb_EnterMode(void)
     bb_SetLeds();
 
     // Load font
-    loadFont("ibm_vga8.font", &bigbug->font, false);
+    loadFont("ibm_vga8.font", &bigbug->gameData.font, false);
 
     const char loadingStr[] = "Loading...";
-    int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
-    drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
+    int32_t tWidth          = textWidth(&bigbug->gameData.font, loadingStr);
+    drawText(&bigbug->gameData.font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2,
+             (TFT_HEIGHT - bigbug->gameData.font.height) / 2);
     drawDisplayTft(NULL);
 
     bb_initializeGameData(&bigbug->gameData);
@@ -217,11 +217,12 @@ static void bb_EnterModeSkipIntro(void)
     bb_SetLeds();
 
     // Load font
-    loadFont("ibm_vga8.font", &bigbug->font, false);
+    loadFont("ibm_vga8.font", &bigbug->gameData.font, false);
 
     const char loadingStr[] = "Loading...";
-    int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
-    drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
+    int32_t tWidth          = textWidth(&bigbug->gameData.font, loadingStr);
+    drawText(&bigbug->gameData.font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2,
+             (TFT_HEIGHT - bigbug->gameData.font.height) / 2);
     drawDisplayTft(NULL);
 
     bb_initializeGameData(&bigbug->gameData);
@@ -353,7 +354,7 @@ static void bb_ExitMode(void)
     // Free entity manager
     bb_freeEntityManager(&bigbug->gameData.entityManager);
     // Free font
-    freeFont(&bigbug->font);
+    freeFont(&bigbug->gameData.font);
 
     soundStop(true);
     if (bigbug->gameData.bgm.data)
@@ -560,7 +561,7 @@ static void bb_DrawScene(void)
     }
 
     bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera.camera);
-    DRAW_FPS_COUNTER(bigbug->font);
+    DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar(void)
@@ -794,7 +795,7 @@ static void bb_DrawScene_Radar(void)
         }
     }
 
-    DRAW_FPS_COUNTER(bigbug->font);
+    DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar_Upgrade(void)
