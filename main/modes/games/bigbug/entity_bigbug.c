@@ -2088,7 +2088,10 @@ void bb_updateGameOver(bb_entity_t* self)
                 }
                 boosterIdx++;
             }
-            self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
+            if (boosterIdx < 3)
+            {
+                self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
+            }
 
             bb_destroyEntity(self, false);
             bb_startGarbotnikCloningTalk(self->gameData->entityManager.deathDumpster);
