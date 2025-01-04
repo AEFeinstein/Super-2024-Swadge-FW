@@ -29,7 +29,7 @@
 //==============================================================================
 
 static const char* sparSplashScreen[] = {"Chowa Sparring", "Press any button to continue!"};
-static const char* matchText[]        = {"--Pause--", "FINISHED", "DRAW", "YOU LOST!", "YOU WIN!"};
+static const char* matchText[]        = {"--Pause--", "FINISHED", "DRAW", "YOU LOST!", "YOU WIN!", "Exhausted!"};
 static const char* prompts[]
     = {"Set up a match", "Press A to start match", "Press B to go back", "Go to the grove to get a Chowa first!"};
 static const char* difficultyStrs[] = {"Beginner", "Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Expert"};
@@ -1003,7 +1003,6 @@ static void cg_drawSparChowa(cGrove_t* cg, int64_t elapsedUs)
                 default:
                 {
                     // Catch all
-                    // Catch all
                     if (cg2->animFrame > 5)
                     {
                         cg2->doneAnimating = true;
@@ -1157,6 +1156,11 @@ static void cg_drawSparChowaUI(cGrove_t* cg)
                     break;
                 }
             }
+            break;
+        }
+        case CG_SPAR_EXHAUSTED:
+        {
+            drawText(&cg->largeMenuFont, c555, matchText[5], (TFT_WIDTH - textWidth(&cg->largeMenuFont, matchText[5])) >> 1, TFT_HEIGHT >> 1);
             break;
         }
         default:
