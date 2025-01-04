@@ -253,7 +253,11 @@ static void playWithBongo(int64_t elapsedUs)
         bt->player->mode              = MIDI_STREAMING;
         bt->player->streamingCallback = NULL;
         midiGmOn(bt->player);
-        midiPause(bt->player, false); 
+        midiPause(bt->player, false);
+        for (int idx = 0; idx < 6; idx++)
+        {
+            bt->hits[idx] = false;
+        }
     }
     if (bt->heat >= HEAT_CUTOFF)
     {
