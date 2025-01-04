@@ -54,10 +54,14 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
         snprintf(tmp, sizeof(tmp) - 1, "frames %s", name);
         sprite->frames    = heap_caps_calloc_tag(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM, tmp);
         sprite->allocated = true;
+    }
 
-        for (uint8_t brightness = 0; brightness < brightnessLevels; brightness++)
+    for (uint8_t brightness = 0; brightness < brightnessLevels; brightness++)
+    {
+        for (uint8_t i = 0; i < num_frames; i++)
         {
-            for (uint8_t i = 0; i < num_frames; i++)
+            wsg_t* wsg = &sprite->frames[brightness * num_frames + i];
+            if (0 == wsg->h && 0 == wsg->w)
             {
                 char wsg_name[strlen(name) + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" +
                                                  // null terminator ('\0')
