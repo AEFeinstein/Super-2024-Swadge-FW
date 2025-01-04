@@ -664,7 +664,7 @@ void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
 
     if (pango->gameData.debugMode)
     {
-        drawText(font, c555, "Debug Mode", 80, 48);
+        drawText(font, c555, "Debug Mode", 88, 96);
     }
 
     drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PIPER_WIN]), 128, 116);
