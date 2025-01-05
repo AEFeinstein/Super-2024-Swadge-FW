@@ -70,7 +70,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         return;
     }
 
-    // some particular entities get sprites freed.
+        // some particular entities get sprites freed.
     switch (self->spriteIndex)
     {
         case BB_CAR:
@@ -155,6 +155,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     self->active    = false;
     self->cacheable = false;
 
+    //some particular frees for entities that had data with more allocated data.
     if (self->data != NULL && caching == false)
     {
         switch (self->dataType)
@@ -387,11 +388,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
 
         self->gameData->entityManager.viewEntity = bb_createEntity(
             &(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
-            self->gameData->camera.camera.pos.x + 140, self->gameData->camera.camera.pos.y + 120, true, false);
-
-        // Create a crumble animation
-        bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 3,
-                        self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 30, true, false);
+            self->gameData->camera.camera.pos.x + 140, self->gameData->camera.camera.pos.y + 120, false, false);
 
         self->updateFunction = NULL;
         return;
@@ -448,7 +445,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
         hfData->yVel -= 50;
         // Update the dirt to air.
         // Create a crumble
-        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true);
+        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true, true);
     }
     return;
 }
@@ -479,7 +476,7 @@ void bb_updateHeavyFalling(bb_entity_t* self)
         hfData->yVel -= 45;
         // Update the dirt to air.
         // Create a crumble
-        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true);
+        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true, true);
     }
     return;
 }
@@ -1201,7 +1198,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             || (tile->health < 5 && tile->health + self->gameData->GarbotnikStat_diggingStrength >= 5))
         {
             // Create a crumble
-            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health);
+            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health, !tile->health);
         }
         else
         {
@@ -1324,11 +1321,15 @@ void bb_updateEggLeaves(bb_entity_t* self)
 
         lookup = divVec2d(lookup, 2);
 
-        if (GARBOTNIK_DATA == self->gameData->entityManager.playerEntity->dataType)
+        if (self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->updateFunction == bb_updateGarbotnikFlying)
         {
             elData->brightness = bb_foregroundLighting(
                 &(self->gameData->tilemap.headlampWsg), &lookup,
                 &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x));
+        }
+        else
+        {
+            elData->brightness = 0;
         }
 
         bb_eggData_t* eData = (bb_eggData_t*)elData->egg->data;
@@ -1366,7 +1367,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed  = NOTHING_EMBED;
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
                     // Create a crumble
-                    bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true);
+                    bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true, true);
                     midiPlayer_t* sfx = soundGetPlayerSfx();
                     midiPlayerReset(sfx);
                     soundPlaySfx(&self->gameData->sfxEgg, 0);
@@ -2491,7 +2492,7 @@ void bb_update501kg(bb_entity_t* self)
             && hitInfo.tile_j < TILE_FIELD_HEIGHT - 4)
         {
             // Update the dirt to air.
-            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true);
+            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true, true);
         }
     }
     else
@@ -2567,7 +2568,7 @@ void bb_updateExplosion(bb_entity_t* self)
                     if (self->gameData->tilemap.fgTiles[checkI][checkJ].health > 0)
                     {
                         // Update the dirt to air.
-                        bb_crumbleDirt(self->gameData, bb_randomInt(2, 3), checkI, checkJ, true);
+                        bb_crumbleDirt(self->gameData, bb_randomInt(2, 3), checkI, checkJ, true, true);
                     }
                 }
             }
@@ -2739,13 +2740,13 @@ void bb_updateDrillBot(bb_entity_t* self)
                 // destroy the tile below the drill bot
                 if (self->pos.y < 0)
                 {
-                    bb_crumbleDirt(self->gameData, 2, drillX1, 0, true);
-                    bb_crumbleDirt(self->gameData, 2, drillX2, 0, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX1, 0, true, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX2, 0, true, true);
                 }
                 else
                 {
-                    bb_crumbleDirt(self->gameData, 2, drillX1, (self->pos.y >> 9) + 1, true);
-                    bb_crumbleDirt(self->gameData, 2, drillX2, (self->pos.y >> 9) + 1, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX1, (self->pos.y >> 9) + 1, true, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX2, (self->pos.y >> 9) + 1, true, true);
                 }
             }
         }
@@ -2757,7 +2758,7 @@ void bb_updateDrillBot(bb_entity_t* self)
             {
                 if (bb_randomInt(0, 110) == 1)
                 {
-                    bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144) >> 9, self->pos.y >> 9, true);
+                    bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144) >> 9, self->pos.y >> 9, true, true);
                 }
             }
         }
@@ -2842,11 +2843,11 @@ void bb_updateSpaceLaser(bb_entity_t* self)
         int8_t health = self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health;
         if (health == 1 || health == 4 || health == 10)
         {
-            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, false);
+            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, false, false);
         }
         else if (health == 0)
         {
-            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, true);
+            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, true, true);
             // recalculate the highest garbage
             for (int i = 0; i < TILE_FIELD_HEIGHT; i++)
             {
@@ -3824,7 +3825,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         int32_t tile_i = other->pos.x >> 9; // 4 decimal bits and 5 bitshifts is divide by 32.
         int32_t tile_j = other->pos.y >> 9; // 4 decimal bits and 5 bitshifts is divide by 32.
         self->gameData->tilemap.fgTiles[tile_i][tile_j].health = 0;
-        bb_crumbleDirt(other->gameData, 2, tile_i, tile_j, true);
+        bb_crumbleDirt(other->gameData, 2, tile_i, tile_j, true, true);
         // destroy this harpoon
         bb_destroyEntity(self, false);
     }
@@ -4094,7 +4095,7 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
     if (self->gameData->tilemap.fgTiles[tilePos.x][tilePos.y].health > 0)
     {
         self->gameData->tilemap.fgTiles[tilePos.x][tilePos.y].health = 0;
-        bb_crumbleDirt(self->gameData, 2, tilePos.x, tilePos.y, true);
+        bb_crumbleDirt(self->gameData, 2, tilePos.x, tilePos.y, true, true);
     }
     self->pos.x = (tilePos.x << 9) + (16 << DECIMAL_BITS);
     self->pos.y = (tilePos.y << 9) + (16 << DECIMAL_BITS);
@@ -5182,7 +5183,7 @@ void bb_triggerSpaceLaserWile(bb_entity_t* self)
 }
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
-                    bool zeroHealth)
+                    bool zeroHealth, bool flagNeighborsForPathfinding)
 {
     if (tile_i >= TILE_FIELD_WIDTH - 2 || tile_j >= TILE_FIELD_HEIGHT - 3)
     {
@@ -5206,7 +5207,10 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
     if (zeroHealth)
     {
         gameData->tilemap.fgTiles[tile_i][tile_j].health = 0;
-        flagNeighbors((bb_midgroundTileInfo_t*)&gameData->tilemap.fgTiles[tile_i][tile_j], gameData);
+        if(flagNeighborsForPathfinding)
+        {
+            flagNeighbors((bb_midgroundTileInfo_t*)&gameData->tilemap.fgTiles[tile_i][tile_j], gameData);
+        }
         switch (gameData->tilemap.fgTiles[tile_i][tile_j].embed)
         {
             case EGG_EMBED:

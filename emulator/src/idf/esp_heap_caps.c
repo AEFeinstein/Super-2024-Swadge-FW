@@ -13,7 +13,7 @@
 //==============================================================================
 
 #define MEMORY_DEBUG
-// #define MEMORY_DEBUG_PRINT
+#define MEMORY_DEBUG_PRINT
 
 #define SPIRAM_SIZE          2093904
 #define SPIRAM_LARGEST_BLOCK 2064384

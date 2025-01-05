@@ -78,9 +78,13 @@ void bb_freeSprite(bb_sprite_t* sprite)
     {
         for (uint8_t brightness = 0; brightness < sprite->brightnessLevels; brightness++)
         {
-            for (uint8_t i = 0; i < sprite->numFrames; i++)
+            for (uint8_t frame = 0; frame < sprite->numFrames; frame++)
             {
-                freeWsg(&sprite->frames[brightness * sprite->numFrames + i]);
+                if(sprite->frames[brightness * sprite->numFrames + frame].w != 0 ||
+                sprite->frames[brightness * sprite->numFrames + frame].h != 0)
+                {
+                    freeWsg(&sprite->frames[brightness * sprite->numFrames + frame]);
+                }
             }
         }
         heap_caps_free(sprite->frames);
@@ -204,19 +208,24 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     entityManager->sprites[BB_WILE].originX = 6;
     entityManager->sprites[BB_WILE].originY = 6;
 
-    entityManager->sprites[BB_ARROW].frames = heap_caps_calloc_tag(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM, "arrowFrames");
-    loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
-    loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
+    if(!entityManager->sprites[BB_ARROW].allocated)
+    {
+        entityManager->sprites[BB_ARROW].numFrames = 2;
+        entityManager->sprites[BB_ARROW].frames = heap_caps_calloc_tag(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM, "arrowFrames");
+        loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
+        loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
+        entityManager->sprites[BB_ARROW].allocated = true;
+    }
 
     if (!entityManager->sprites[BB_HOTDOG].allocated)
     {
         entityManager->sprites[BB_HOTDOG].numFrames = 1;
         entityManager->sprites[BB_HOTDOG].frames    = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+        loadWsgInplace("hotdog_rs.wsg", &entityManager->sprites[BB_HOTDOG].frames[0], true, bb_decodeSpace, bb_hsd);
+        entityManager->sprites[BB_HOTDOG].originX = 6;
+        entityManager->sprites[BB_HOTDOG].originY = 6;
         entityManager->sprites[BB_HOTDOG].allocated = true;
     }
-    loadWsgInplace("hotdog_rs.wsg", &entityManager->sprites[BB_HOTDOG].frames[0], true, bb_decodeSpace, bb_hsd);
-    entityManager->sprites[BB_HOTDOG].originX = 6;
-    entityManager->sprites[BB_HOTDOG].originY = 6;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -564,7 +573,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
 
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 {
-    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    for (int i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* currentEntity = &entityManager->entities[i];
 
@@ -574,14 +583,14 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
         }
     }
 
-    for (uint8_t i = MAX_ENTITIES - 1;; i--)
+    for (int i = MAX_ENTITIES - 1; i>=0; i--)
     {
         bb_entity_t* currentEntity = &entityManager->entities[i];
 
-        if (!currentEntity->active)
-        {
-            break;
-        }
+        // if (!currentEntity->active)
+        // {
+        //     break;
+        // }
         if (currentEntity->forceToFront)
         {
             bb_drawEntity(currentEntity, entityManager, camera);

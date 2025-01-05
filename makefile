@@ -417,7 +417,7 @@ update-submodules:
 	done
 
 bigbug-memory: all
-	./swadge_emulator -m "Big Bug" -t -r | grep -P "(Operation|alloc|free|DUMP)," | tee bigbug-mem.csv
+	./swadge_emulator -m "Big Bug" -t -r | grep -P "(Operation|alloc|free|DUMP)," > bigbug-mem.csv
 
 ################################################################################
 # Firmware targets

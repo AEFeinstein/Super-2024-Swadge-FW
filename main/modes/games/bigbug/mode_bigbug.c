@@ -563,8 +563,7 @@ static void bb_DrawScene(void)
 
 static void bb_DrawScene_Radar(void)
 {
-    // draw eggs (enemies), skeletons (fuel), donuts, hotdogs
-    // iterate tilemap embeds
+    //Draw the tilemap squares
     for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
     {
         int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
@@ -596,6 +595,16 @@ static void bb_DrawScene_Radar(void)
             }
             drawRectFilled(xIdx * 4 - 4, yIdx * 4 - bigbug->gameData.radar.cam.y, xIdx * 4,
                            yIdx * 4 + 4 - bigbug->gameData.radar.cam.y, radarTileColor);
+        }
+    }
+    // draw eggs (enemies), skeletons (fuel), donuts, hotdogs
+    // iterate tilemap embeds
+    for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
+    {
+        int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
+        int16_t yMax = CLAMP(yMin + FIELD_HEIGHT / 4, 0, TILE_FIELD_HEIGHT);
+        for (int yIdx = yMin; yIdx < yMax; yIdx++)
+        {
             if ((bigbug->gameData.radar.upgrades >> BIGBUG_ENEMIES) & 1)
             {
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == EGG_EMBED)
@@ -741,7 +750,7 @@ static void bb_DrawScene_Radar(void)
     }
 
     drawCircleFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, 3, c515);
-    // garbotnik pings
+    // garbotnik's pings
     for (int i = 0; i < 254; i += 51)
     {
         bigbug->gameData.radar.playerPingRadius += i;
@@ -762,7 +771,7 @@ static void bb_DrawScene_Radar(void)
                 garbotnikPos.y
                     = (bigbug->gameData.entityManager.boosterEntities[boosterIdx]->pos.y >> DECIMAL_BITS) / 8 - 4;
                 drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2,
-                               garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c124);
+                               garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c452);
             }
         }
     }
@@ -773,7 +782,7 @@ static void bb_DrawScene_Radar(void)
         garbotnikPos.x = (bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 4;
         garbotnikPos.y = (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 4;
         drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2,
-                       garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c250);
+                       garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c124);
     }
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_INFINITE_RANGE) & 1)
@@ -1680,7 +1689,7 @@ static void bb_UpdateTileSupport(void)
                 if (bigbug->gameData.entityManager.activeEntities < MAX_ENTITIES)
                 {
                     // create a crumble animation
-                    bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0], shiftedVal[1], true);
+                    bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0], shiftedVal[1], true, false);
                 }
 
                 // queue neighbors for crumbling
