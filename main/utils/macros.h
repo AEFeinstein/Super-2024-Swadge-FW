@@ -47,9 +47,9 @@
  */
 #ifdef __APPLE__
     /* Force a compilation error if condition is true, but also produce a
-       result (of value 0 and type size_t), so the expression can be used
-       e.g. in a structure initializer (or where-ever else comma expressions
-       aren't permitted). */
+        result (of value 0 and type size_t), so the expression can be used
+        e.g. in a structure initializer (or where-ever else comma expressions
+        aren't permitted). */
     #define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int : -!!(e); }))
 
     /// Helper macro to determine the number of elements in an array. Should not be used directly
@@ -78,5 +78,47 @@
  * @return (a + b) % d
  */
 #define POS_MODULO_ADD(a, b, d) ((a + (b % d) + d) % d)
+
+/**
+ * @brief Run timer_code every period, using tracking it with timer
+ *
+ * @param timer The accumulator variable, must persist between calls
+ * @param period The period at which timer_code should be run
+ * @param elapsed The time elapsed since this was last called
+ * @param timer_code The code to execute every period
+ */
+#define RUN_TIMER_EVERY(timer, period, elapsed, timer_code) \
+    do                                                      \
+    {                                                       \
+        timer += (elapsed);                                 \
+        while (timer > (period))                            \
+        {                                                   \
+            timer -= (period);                              \
+            {                                               \
+                timer_code                                  \
+            }                                               \
+        }                                                   \
+    } while (0)
+
+#define NUM_FRAME_TIMES 60
+#define DRAW_FPS_COUNTER(font)                                                \
+    do                                                                        \
+    {                                                                         \
+        static uint32_t frameTimesIdx               = 0;                      \
+        static uint32_t frameTimes[NUM_FRAME_TIMES] = {0};                    \
+                                                                              \
+        int32_t startIdx  = (frameTimesIdx + 1) % NUM_FRAME_TIMES;            \
+        uint32_t tElapsed = frameTimes[frameTimesIdx] - frameTimes[startIdx]; \
+        if (0 != tElapsed)                                                    \
+        {                                                                     \
+            uint32_t fps = (1000000 * NUM_FRAME_TIMES) / tElapsed;            \
+            char tmp[16];                                                     \
+            snprintf(tmp, sizeof(tmp) - 1, "%" PRIu32, fps);                  \
+            fillDisplayArea(34, 1, 51, 3 + font.height, c000);                \
+            drawText(&font, c555, tmp, 35, 2);                                \
+        }                                                                     \
+        frameTimesIdx             = (frameTimesIdx + 1) % NUM_FRAME_TIMES;    \
+        frameTimes[frameTimesIdx] = esp_timer_get_time();                     \
+    } while (0)
 
 #endif

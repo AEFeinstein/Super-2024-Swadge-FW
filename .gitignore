@@ -63,7 +63,7 @@ docs/*.pu
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 
-spiffs_image
+assets_image
 managed_components
 nvs.json
 cppcheck_result.txt
@@ -73,6 +73,7 @@ plantuml.jar
 swadge_emulator
 crash-*.txt
 screenshot-*.png
+screen-recording-*.gif
 rec-*.csv
 
 *.pyc
@@ -87,3 +88,9 @@ tools/font_maker/*.ttf
 
 *.DS_Store
 !/assets/**
+
+main/utils/cnfs_image.c
+main/utils/cnfs_image.h
+tools/cnfs/cnfs_gen
+
+_old/*

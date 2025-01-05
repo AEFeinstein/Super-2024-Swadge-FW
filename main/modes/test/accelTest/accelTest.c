@@ -157,8 +157,9 @@ accelTest_t* accelTest = NULL;
 static void accelTestEnterMode(void)
 {
     // Allocate and clear all memory for this mode. All the variables are contained in a single struct for convenience.
-    // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
-    accelTest = calloc(1, sizeof(accelTest_t));
+    // heap_caps_calloc() is used instead of heap_caps_malloc() because heap_caps_calloc() also initializes the
+    // allocated memory to zeros.
+    accelTest = heap_caps_calloc(1, sizeof(accelTest_t), MALLOC_CAP_8BIT);
 
     // Load a font
     loadFont("ibm_vga8.font", &accelTest->ibm, false);
@@ -191,7 +192,7 @@ static void accelTestExitMode(void)
 
     // Free the font
     freeFont(&accelTest->ibm);
-    free(accelTest);
+    heap_caps_free(accelTest);
 }
 
 /**

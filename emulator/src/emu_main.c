@@ -11,12 +11,12 @@
         #define _GNU_SOURCE
     #endif
     #include <dlfcn.h>
-    #include <link.h>
 #endif
 #include <time.h>
 
 #include <esp_system.h>
 #include <esp_timer.h>
+#include "esp_timer_emu.h"
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
@@ -35,8 +35,6 @@
 
 #include "hdw-mic.h"
 #include "hdw-mic_emu.h"
-#include "hdw-bzr.h"
-#include "hdw-bzr_emu.h"
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
 
@@ -45,6 +43,7 @@
 #include "trigonometry.h"
 
 #include "hdw-esp-now.h"
+#include "esp_random_emu.h"
 #include "mainMenu.h"
 
 // clang-format off
@@ -59,16 +58,31 @@
 #endif
 // clang-format on
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+    #pragma GCC diagnostic ignored "-Wjump-misses-init"
+    #pragma GCC diagnostic ignored "-Wundef"
+    #pragma GCC diagnostic ignored "-Wredundant-decls"
+#endif
+
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
 // CNFGOGL May be defined in the makefile
 #include "CNFG.h"
 
 #define CNFA_IMPLEMENTATION
-#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
     #define PULSEAUDIO
 #endif
 #include "CNFA.h"
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
 
 // Useful if you're trying to find the code for a key/button
 // #define DEBUG_INPUTS
@@ -76,6 +90,7 @@
 #include "emu_args.h"
 #include "emu_ext.h"
 #include "emu_main.h"
+#include "ext_tools.h"
 
 //==============================================================================
 // Defines
@@ -85,10 +100,14 @@
 #define DIV_COLOR 0x808080FF
 
 #if defined(CNFGOGL)
-    #define CORNER_COLOR BG_COLOR
+    #define CORNER_COLOR    BG_COLOR
+    #define PAUSED_COLOR    0xFFFF00FF
+    #define RECORDING_COLOR 0xFF0000FF
 #else
     // Swap RGBA to ARGB
-    #define CORNER_COLOR (((BG_COLOR >> 8) & 0xFFFFFF) | ((BG_COLOR << 24) * 0xFF))
+    #define CORNER_COLOR    (((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24))
+    #define PAUSED_COLOR    0xFFFFFF00
+    #define RECORDING_COLOR 0xFFFF0000
 #endif
 
 //==============================================================================
@@ -111,6 +130,7 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 
 static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col);
 static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr);
+void handleArgs(int argc, char** argv);
 
 //==============================================================================
 // Functions
@@ -170,6 +190,11 @@ int main(int argc, char** argv)
     {
         // One of the extension must have quit due to an error.
         return 0;
+    }
+
+    if (emulatorArgs.seed != UINT32_MAX)
+    {
+        emulatorSetEspRandomSeed(emulatorArgs.seed);
     }
 
     // First initialize rawdraw
@@ -263,144 +288,149 @@ void taskYIELD(void)
 
     // Below: Support for pausing and unpausing the emulator
     // Keep track of whether we've called the pre-frame callbacks yet
-    // bool preFrameCalled = false;
-    // do {
-
-    // Always handle inputs
-    if (!CNFGHandleInput())
+    bool preFrameCalled = false;
+    do
     {
-        isRunning = false;
-    }
+        // Always handle inputs
+        if (!CNFGHandleInput())
+        {
+            isRunning = false;
+        }
 
-    // If not running anymore, don't handle graphics
-    // Must be checked after handling input, before graphics
-    if (!isRunning)
-    {
-        deinitSystem();
-        // This is registered with atexit()
-        // CNFGTearDown();
+        // If not running anymore, don't handle graphics
+        // Must be checked after handling input, before graphics
+        if (!isRunning)
+        {
+            deinitSystem();
+            // This is registered with atexit()
+            // CNFGTearDown();
 
 #ifdef ENABLE_GCOV
-        __gcov_dump();
+            __gcov_dump();
 #endif
 
-        exit(0);
-        return;
-    }
+            exit(0);
+            return;
+        }
 
-    // Check things here which are called by interrupts or timers on the Swadge
-    check_esp_timer(tElapsedUs);
+        // Check things here which are called by interrupts or timers on the Swadge
+        check_esp_timer(tElapsedUs);
 
-    // Grey Background
-    CNFGBGColor = BG_COLOR;
-    CNFGClearFrame();
+        // Grey Background
+        CNFGBGColor = BG_COLOR;
+        CNFGClearFrame();
 
-    // Get the current window dimensions
-    short window_w, window_h;
-    CNFGGetDimensions(&window_w, &window_h);
-    static emuPane_t screenPane;
+        // Get the current window dimensions
+        short window_w, window_h;
+        CNFGGetDimensions(&window_w, &window_h);
+        static emuPane_t screenPane;
 
-    // If the dimensions changed
-    if ((lastWindow_h != window_h) || (lastWindow_w != window_w))
-    {
-        uint8_t screenMult;
-        // Recalculate the window layout and get the settings for the screen
-        layoutPanes(window_w, window_h, TFT_WIDTH, TFT_HEIGHT, &screenPane, &screenMult);
+        emuPaneMinimum_t paneMins[4];
+        bool panesChanged = calculatePaneMinimums(paneMins);
 
-        // Set the multiplier
-        setDisplayBitmapMultiplier(screenMult);
+        // If the dimensions changed
+        if (panesChanged || (lastWindow_h != window_h) || (lastWindow_w != window_w))
+        {
+            uint8_t screenMult;
+            // Recalculate the window layout and get the settings for the screen
+            layoutPanes(window_w, window_h, TFT_WIDTH, TFT_HEIGHT, &screenPane, &screenMult);
 
-        // Save for the next loop
-        lastWindow_w = window_w;
-        lastWindow_h = window_h;
-    }
+            // Set the multiplier
+            setDisplayBitmapMultiplier(screenMult);
 
-    // Draw dividing lines, if they're on-screen
-    CNFGColor(DIV_COLOR);
+            // Save for the next loop
+            lastWindow_w = window_w;
+            lastWindow_h = window_h;
+        }
 
-    emuPaneMinimum_t paneMins[4];
-    calculatePaneMinimums(paneMins);
+        // Draw dividing lines, if they're on-screen
+        CNFGColor(DIV_COLOR);
 
-    // Draw Left Divider
-    if (paneMins[PANE_LEFT].count > 0)
-    {
-        CNFGTackSegment(screenPane.paneX - 1, 0, screenPane.paneX - 1, window_h);
-    }
+        // Draw Left Divider
+        if (paneMins[PANE_LEFT].count > 0)
+        {
+            CNFGTackSegment(screenPane.paneX - 1, 0, screenPane.paneX - 1, window_h);
+        }
 
-    // Draw Right Divider
-    if (paneMins[PANE_RIGHT].count > 0)
-    {
-        CNFGTackSegment(screenPane.paneX + screenPane.paneW, 0, screenPane.paneX + screenPane.paneW, window_h);
-    }
+        // Draw Right Divider
+        if (paneMins[PANE_RIGHT].count > 0)
+        {
+            CNFGTackSegment(screenPane.paneX + screenPane.paneW, 0, screenPane.paneX + screenPane.paneW, window_h);
+        }
 
-    // Draw Top Divider
-    if (paneMins[PANE_TOP].count > 0)
-    {
-        CNFGTackSegment(screenPane.paneX, screenPane.paneY - 1, screenPane.paneX + screenPane.paneW,
-                        screenPane.paneY - 1);
-    }
+        // Draw Top Divider
+        if (paneMins[PANE_TOP].count > 0)
+        {
+            CNFGTackSegment(screenPane.paneX, screenPane.paneY - 1, screenPane.paneX + screenPane.paneW,
+                            screenPane.paneY - 1);
+        }
 
-    // Draw Bottom Divider
-    if (paneMins[PANE_BOTTOM].count > 0)
-    {
-        CNFGTackSegment(screenPane.paneX, screenPane.paneY + screenPane.paneH, screenPane.paneX + screenPane.paneW,
-                        screenPane.paneY + screenPane.paneH);
-    }
+        // Draw Bottom Divider
+        if (paneMins[PANE_BOTTOM].count > 0)
+        {
+            CNFGTackSegment(screenPane.paneX, screenPane.paneY + screenPane.paneH, screenPane.paneX + screenPane.paneW,
+                            screenPane.paneY + screenPane.paneH);
+        }
 
-    // Get the display memory
-    uint16_t bitmapWidth, bitmapHeight;
-    uint32_t* bitmapDisplay = getDisplayBitmap(&bitmapWidth, &bitmapHeight);
+        // Get the display memory
+        uint16_t bitmapWidth, bitmapHeight;
+        uint32_t* bitmapDisplay = getDisplayBitmap(&bitmapWidth, &bitmapHeight);
 
-    if ((0 != bitmapWidth) && (0 != bitmapHeight) && (NULL != bitmapDisplay))
-    {
+        if ((0 != bitmapWidth) && (0 != bitmapHeight) && (NULL != bitmapDisplay))
+        {
 #if defined(CONFIG_GC9307_240x280)
-        plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, CORNER_COLOR);
+            uint32_t cornerColor = CORNER_COLOR;
+            if (emuTimerIsPaused())
+            {
+                cornerColor = PAUSED_COLOR;
+            }
+            else if (isScreenRecording())
+            {
+                cornerColor = RECORDING_COLOR;
+            }
+
+            plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, cornerColor);
 #endif
-        // Update the display, centered
-        CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
-    }
+            // Update the display, centered
+            CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
+        }
 
-    // After the screen has been fully rendered, call all the render callbacks to render anything else
-    doExtRenderCb(window_w, window_h);
+        // After the screen has been fully rendered, call all the render callbacks to render anything else
+        doExtRenderCb(window_w, window_h);
 
-    // Display the image and wait for time to display next frame.
-    CNFGSwapBuffers();
+        // Display the image and wait for time to display next frame.
+        CNFGSwapBuffers();
 
-    // Sleep for one ms
-    static struct timespec tRemaining = {0};
-    const struct timespec tSleep      = {
-             .tv_sec  = 0 + tRemaining.tv_sec,
-             .tv_nsec = 1000000 + tRemaining.tv_nsec,
-    };
-    nanosleep(&tSleep, &tRemaining);
+        // Sleep for one ms
+        static struct timespec tRemaining = {0};
+        const struct timespec tSleep      = {
+                 .tv_sec  = 0 + tRemaining.tv_sec,
+                 .tv_nsec = 1000000 + tRemaining.tv_nsec,
+        };
+        nanosleep(&tSleep, &tRemaining);
 
-    doExtPreFrameCb(++frameNum);
+        // This means that the pre-frame callback gets called once (assuming the post-frame
+        // callback didn't already pause) and then, if one of them pauses, they don't get called
+        // again until after, which is good since that's the only way we'd be able to handle input
+        // as normal
+        if (!preFrameCalled && !emuTimerIsPaused())
+        {
+            preFrameCalled = true;
 
-    // Below: Support for pausing and unpausing the emulator
-    // Note:  Remove the above doExtPreFrameCb()... if uncommenting the below
-    //     // Don't call the pre-frame callbacks until the emulator is unpaused.
-    //     // And also, only call it once per frame
-    //     // This means that the pre-frame callback gets called once (assuming the post-frame
-    //     // callback didn't already pause) and then, if one of them pauses, they don't get called
-    //     // again until after
-    //     // be able to handle input as normal, which is good since that's the only way we'd
-    //     if (!preFrameCalled && !emuTimerIsPaused())
-    //     {
-    //         preFrameCalled = true;
-    //
-    //         // Call the pre-frame callbacks just before we return to the swadge main loop
-    //         // When fnPreFrameCb is first called, the system is always initialized
-    //         // and this is the optimal time to inject button presses, pause, etc.
-    //         doExtPreFrameCb(++frameNum);
-    //     }
-    //
-    //     // Set the elapsed micros to 0 so ESP timer tasks don't get called repeatedly if we pause
-    //     // (if we just updated the time normally instead, this would be 0 anyway since time is paused, but this
-    //     shortcuts that) tElapsedUs = 0;
-    //
-    //     // Make sure we stop if no longer running, but otherwise run until the emulator is unpaused
-    //     // and the pre-frame callbacks have all been called
-    // } while (isRunning && (!preFrameCalled || emuTimerIsPaused()));
+            // Call the pre-frame callbacks just before we return to the swadge main loop
+            // When fnPreFrameCb is first called, the system is always initialized
+            // and this is the optimal time to inject button presses, pause, etc.
+            doExtPreFrameCb(++frameNum);
+        }
+
+        // Set the elapsed micros to 0 so ESP timer tasks don't get called repeatedly if we pause
+        // (if we just updated the time normally instead, this would be 0 anyway since time is paused, but this
+        // shortcuts that)
+        tElapsedUs = 0;
+
+        // Make sure we stop if no longer running, but otherwise run until the emulator is unpaused
+        // and the pre-frame callbacks have all been called
+    } while (isRunning && (!preFrameCalled || emuTimerIsPaused()));
 }
 
 /**
@@ -587,6 +617,13 @@ void HandleMotion(int x, int y, int mask)
     doExtMouseMoveCb(x, y, mask);
 }
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#endif
+
 /**
  * @brief Free memory on exit
  */
@@ -614,6 +651,10 @@ int HandleDestroy()
     return 0;
 }
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
+
 /**
  * @brief Callback for sound events, both input and output
  * Handle output here, pass input to handleSoundInput()
@@ -626,6 +667,15 @@ int HandleDestroy()
  */
 static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr)
 {
+    if (emuTimerIsPaused())
+    {
+        if (out)
+        {
+            memset(out, 0, sizeof(short) * 2 * framesp);
+        }
+        return;
+    }
+
     // Pass to microphone
     micHandleSoundInput(in, framesr, sd->channelsRec);
 
@@ -738,12 +788,12 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
                 if (array[i] >= (void*)dli.dli_fbase)
                 {
                     sign   = '+';
-                    offset = array[i] - dli.dli_fbase;
+                    offset = ((char*)array[i]) - ((char*)dli.dli_fbase);
                 }
                 else
                 {
                     sign   = '-';
-                    offset = dli.dli_fbase - array[i];
+                    offset = ((char*)dli.dli_fbase) - ((char*)array[i]);
                 }
 
                 // Concatenate each address
@@ -760,17 +810,29 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
             {
                 // Print this to the terminal and file
                 snprintf(msg, sizeof(msg) - 1, "\nCRASH BACKTRACE\n");
-                write(dumpFileDescriptor, msg, strlen(msg));
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
                 printf("%s", msg);
 
                 snprintf(msg, sizeof(msg) - 1, "===============\n");
-                write(dumpFileDescriptor, msg, strlen(msg));
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
                 printf("%s", msg);
 
                 /* Read the output a line at a time - output it. */
                 while (fgets(path, sizeof(path), fp) != NULL)
                 {
-                    write(dumpFileDescriptor, path, strlen(path));
+                    if (0 >= write(dumpFileDescriptor, path, strlen(path)))
+                    {
+                        // Write failed, jump out early
+                        return;
+                    }
                     printf("%s", path);
                 }
 

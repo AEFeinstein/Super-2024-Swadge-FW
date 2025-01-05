@@ -4,11 +4,13 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "ext_fuzzer.h"
 #include "emu_args.h"
 #include "hdw-btn_emu.h"
 #include "hdw-imu_emu.h"
+#include "esp_timer_emu.h"
 
 //==============================================================================
 // Function Prototypes
@@ -26,6 +28,7 @@ typedef struct
     bool buttons;
     bool touch;
     bool motion;
+    bool time;
 } fuzzer_t;
 
 //==============================================================================
@@ -55,11 +58,17 @@ static bool fuzzerInitCb(emuArgs_t* emuArgs)
     fuzzer.buttons = emuArgs->fuzzButtons;
     fuzzer.touch   = emuArgs->fuzzTouch;
     fuzzer.motion  = emuArgs->fuzzMotion;
+    fuzzer.time    = emuArgs->fuzzTime;
 
     if (emuArgs->fuzz)
     {
-        printf("\nFuzzing:\n - [%c] Buttons\n - [%c] Touch\n - [%c] Motion\n", fuzzer.buttons ? 'X' : ' ',
-               fuzzer.touch ? 'X' : ' ', fuzzer.motion ? 'X' : ' ');
+        printf("\nFuzzing:\n - [%c] Buttons\n - [%c] Touch\n - [%c] Motion\n - [%c] Time\n", fuzzer.buttons ? 'X' : ' ',
+               fuzzer.touch ? 'X' : ' ', fuzzer.motion ? 'X' : ' ', fuzzer.time ? 'X' : ' ');
+
+        if (fuzzer.time)
+        {
+            emuSetUseRealTime(false);
+        }
     }
 
     return emuArgs->fuzz;
@@ -106,5 +115,17 @@ static void fuzzerPreFrameCb(uint64_t frame)
         emulatorSetAccelerometer((rand() % (1 + accelMax - accelMin)) + accelMin,
                                  (rand() % (1 + accelMax - accelMin)) + accelMin,
                                  (rand() % (1 + accelMax - accelMin)) + accelMin);
+    }
+
+    if (fuzzer.time)
+    {
+        static uint64_t fakeTime = 0;
+
+        // 100FPS is  10000us per frame
+        //  60FPS is  16666us per frame
+        //  25FPS is  40000us per frame
+        //   1FPS = 1000000us per frame
+        fakeTime += (rand() % 128) * 1000 << (rand() % (4));
+        emuSetEspTimerTime(fakeTime);
     }
 }

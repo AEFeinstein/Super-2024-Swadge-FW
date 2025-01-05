@@ -28,8 +28,8 @@
 #define _MENU_MANIA_RENDERER_H_
 
 #include "menu.h"
-#include "spiffs_font.h"
-#include "spiffs_wsg.h"
+#include "fs_font.h"
+#include "fs_wsg.h"
 #include "hdw-led.h"
 
 #define Y_SECTION_MARGIN 14
@@ -70,22 +70,42 @@ typedef struct
     wsg_t batt[4];                  ///< Images for the battery levels
 
     maniaRing_t rings[2];
+    bool drawRings;
 
     int32_t ledDecayTimer;  ///< Timer to decay LEDs
     int32_t ledExciteTimer; ///< Timer to excite LEDs
     int16_t currentLed;     ///< The current LED being excited
     bool ledsOn;            ///< true to use the LEDs, false to keep them off
 
-    menuItem_t* selectedItem;    ///< Reference to the selected item to tell when it changes
-    int16_t selectedShadowIdx;   ///< The index to the color offset for the selected drop shadow
-    int32_t selectedShadowTimer; ///< The timer to change the color for the selected drop shadow
-    int16_t selectedBounceIdx;   ///< The index to the bounce offset for the selected item
-    int32_t selectedBounceTimer; ///< The timer to bounce the offset for the selected item
+    menuItem_t* selectedItem;     ///< Reference to the selected item to tell when it changes
+    int16_t selectedShadowIdx;    ///< The index to the color offset for the selected drop shadow
+    int32_t selectedShadowTimer;  ///< The timer to change the color for the selected drop shadow
+    int16_t selectedBounceIdx;    ///< The index to the bounce offset for the selected item
+    int32_t selectedBounceTimer;  ///< The timer to bounce the offset for the selected item
+    int32_t selectedValue;        ///< The option index or setting value to tell when it changes
+    int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
+
+    paletteColor_t titleBgColor;        ///< The color of the title background
+    paletteColor_t titleTextColor;      ///< The color of the title text
+    paletteColor_t textOutlineColor;    ///< The color of the title text outline
+    paletteColor_t bgColor;             ///< The color of the screen background
+    paletteColor_t outerRingColor;      ///< The color of the outer rotating ring
+    paletteColor_t innerRingColor;      ///< The color of the inner rotating ring
+    paletteColor_t rowColor;            ///< The color of the row background
+    paletteColor_t rowTextColor;        ///< The color of the row text
+    const paletteColor_t* shadowColors; ///< The colors cycled through as the selected shadow
+    int32_t shadowColorsLen;            ///< The number of selected shadow colors to cycle through
+    led_t baseLedColor;                 ///< The base color of the LED rotation
 } menuManiaRenderer_t;
 
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
 void setManiaLedsOn(menuManiaRenderer_t* renderer, bool ledsOn);
+void setManiaDrawRings(menuManiaRenderer_t* renderer, bool ringsOn);
+void recolorMenuManiaRenderer(menuManiaRenderer_t* renderer, paletteColor_t titleBgColor, paletteColor_t titleTextColor,
+                              paletteColor_t textOutlineColor, paletteColor_t bgColor, paletteColor_t outerRingColor,
+                              paletteColor_t innerRingColor, paletteColor_t rowColor, paletteColor_t rowTextColor,
+                              const paletteColor_t* shadowColors, int32_t shadowColorsLen, led_t baseLedColor);
 
 #endif

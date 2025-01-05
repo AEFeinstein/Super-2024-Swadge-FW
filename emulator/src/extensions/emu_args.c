@@ -68,6 +68,7 @@ typedef struct
 //==============================================================================
 
 static bool handleArgument(const char* optName, const char* arg, int optVal);
+static bool handlePositionalArgument(const char* val);
 static void printHelp(const char* progName);
 static void printUsage(const char* progName);
 static const optDoc_t* findOptDoc(char shortOpt, const char* longOpt);
@@ -81,6 +82,8 @@ static bool parseBoolArg(const char* val, bool defaultValue);
 //==============================================================================
 
 emuArgs_t emulatorArgs = {
+    .fakeFps    = 0.0,
+    .fakeTime   = false,
     .fullscreen = false,
     .hideLeds   = false,
 
@@ -110,6 +113,12 @@ emuArgs_t emulatorArgs = {
 
     .recordFile = NULL,
     .replayFile = NULL,
+
+    .seed = UINT32_MAX,
+
+    .showFps = false,
+
+    .vsync = true,
 };
 
 static const char mainDoc[] = "Emulates a swadge";
@@ -117,21 +126,28 @@ static const char mainDoc[] = "Emulates a swadge";
 // Long argument name definitions
 // These MUST be defined here, so that they are
 // the same in both options and argDocs
+static const char argFakeFps[]     = "fake-fps";
+static const char argFakeTime[]    = "fake-time";
 static const char argFullscreen[]  = "fullscreen";
 static const char argFuzz[]        = "fuzz";
 static const char argFuzzButtons[] = "fuzz-buttons";
 static const char argFuzzTouch[]   = "fuzz-touch";
+static const char argFuzzTime[]    = "fuzz-time";
 static const char argFuzzMotion[]  = "fuzz-motion";
 static const char argHeadless[]    = "headless";
 static const char argHideLeds[]    = "hide-leds";
 static const char argKeymap[]      = "keymap";
 static const char argLock[]        = "lock";
+static const char argMidiFile[]    = "midi-file";
 static const char argMode[]        = "mode";
 static const char argModeSwitch[]  = "mode-switch";
 static const char argModeList[]    = "modes-list";
 static const char argPlayback[]    = "playback";
 static const char argRecord[]      = "record";
+static const char argSeed[]        = "seed";
+static const char argShowFps[]     = "show-fps";
 static const char argTouch[]       = "touch";
+static const char argVsync[]       = "vsync";
 static const char argHelp[]        = "help";
 static const char argUsage[]       = "usage";
 
@@ -141,21 +157,28 @@ static const char argUsage[]       = "usage";
  */
 static const struct option options[] =
 {
+    { argFakeFps,     required_argument, NULL,                             0    },
+    { argFakeTime,    no_argument,       (int*)&emulatorArgs.fakeTime,     true },
     { argFullscreen,  no_argument,       (int*)&emulatorArgs.fullscreen,   true },
     { argFuzz,        no_argument,       (int*)&emulatorArgs.fuzz,         true },
     { argFuzzButtons, optional_argument, (int*)&emulatorArgs.fuzzButtons,  true },
+    { argFuzzTime,    optional_argument, (int*)&emulatorArgs.fuzzTime,     true },
     { argFuzzTouch,   optional_argument, (int*)&emulatorArgs.fuzzTouch,    true },
     { argFuzzMotion,  optional_argument, (int*)&emulatorArgs.fuzzMotion,   true },
     { argHeadless,    no_argument,       (int*)&emulatorArgs.headless,     true },
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
     { argKeymap,      required_argument, NULL,                             'k'  },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
+    { argMidiFile,    required_argument, NULL,                             0    },
     { argMode,        required_argument, NULL,                             'm'  },
     { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
     { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
+    { argSeed,        required_argument, (int*)&emulatorArgs.seed,         0    },
+    { argShowFps,     optional_argument, (int*)&emulatorArgs.showFps,      'c'  },
     { argModeSwitch,  optional_argument, NULL,                             10   },
     { argModeList,    no_argument,       NULL,                             0    },
     { argTouch,       no_argument,       (int*)&emulatorArgs.emulateTouch, 't'  },
+    { argVsync,       optional_argument, (int*)&emulatorArgs.vsync,        true },
     { argHelp,        no_argument,       NULL,                             'h'  },
     { argUsage,       no_argument,       NULL,                             0    },
     {0},
@@ -166,21 +189,28 @@ static const struct option options[] =
  */
 static const optDoc_t argDocs[] =
 {
+    { 0,  argFakeFps,     "RATE",  "Set a fake framerate. RATE can be a decimal number"},
+    { 0,  argFakeTime,    NULL,    "Use a fake timer that ticks at a constant "},
     {'f', argFullscreen,  NULL,    "Open in fullscreen mode" },
     { 0,  argFuzz,        NULL,    "Enable fuzzing mode, which injects random input in order to test modes" },
     { 0,  argFuzzButtons, "y|n",   "Set whether buttons are fuzzed" },
     { 0,  argFuzzTouch,   "y|n",   "Set whether touchpad inputs are fuzzed" },
+    { 0,  argFuzzTime,    "y|n",   "Set whether frame durations are fuzzed" },
     { 0,  argFuzzMotion,  "y|n",   "Set whether motion inputs are fuzzed" },
     { 0,  argHeadless,    NULL,    "Runs the emulator without a window." },
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
     {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak"},
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
+    { 0,  argMidiFile,    "FILE",  "Open and immediately play a MIDI file" },
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
     { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
     {'p', argPlayback,    "FILE",  "Play back recorded emulator inputs from a file" },
     {'r', argRecord,      "FILE",  "Record emulator inputs to a file" },
+    {'s', argSeed,        "SEED",  "Seed the random number generator with a specific value" },
+    {'c', argShowFps,     NULL,    "Display an FPS counter" },
     {'t', argTouch,       NULL,    "Simulate touch sensor readings with a virtual touchpad" },
+    { 0,  argVsync,       "y|n",   "Set whether VSync is enabled" },
     {'h', argHelp,        NULL,    "Give this help list" },
     { 0,  argUsage,       NULL,    "Give a short usage message" },
 };
@@ -202,7 +232,33 @@ static const optDoc_t argDocs[] =
 static bool handleArgument(const char* optName, const char* arg, int optVal)
 {
     // Handle all arguments by their long-option, as it will always be set.
-    if (argFuzz == optName)
+    if (argFakeFps == optName)
+    {
+        // Set fake FPS
+        if (arg)
+        {
+            char* end            = NULL;
+            emulatorArgs.fakeFps = strtof(arg, &end);
+            if (emulatorArgs.fakeFps == 0.0 && end == arg)
+            {
+                // strtof had an error
+                return false;
+            }
+        }
+        else
+        {
+            emulatorArgs.fakeFps = 24.0;
+        }
+        return true;
+    }
+    else if (argFakeTime == optName)
+    {
+        if (emulatorArgs.fakeFps == 0.0)
+        {
+            emulatorArgs.fakeFps = 24.0;
+        }
+    }
+    else if (argFuzz == optName)
     {
         // Enable Fuzz
         emulatorArgs.fuzzButtons = true;
@@ -243,6 +299,16 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
         }
         return true;
     }
+    else if (argFuzzTime == optName)
+    {
+        // Fuzz Frame Time
+        emulatorArgs.fuzz = true;
+        // Set arg to parsed boolean arg if present, otherwise true
+        if (arg)
+        {
+            emulatorArgs.fuzzTime = parseBoolArg(arg, true);
+        }
+    }
     else if (argKeymap == optName)
     {
         if (arg)
@@ -250,6 +316,10 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
             emulatorArgs.keymap = arg;
         }
         return true;
+    }
+    else if (argMidiFile == optName)
+    {
+        emulatorArgs.midiFile = arg;
     }
     else if (argMode == optName)
     {
@@ -312,9 +382,48 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
             emulatorArgs.replayFile = arg;
         }
     }
+    else if (argSeed == optName)
+    {
+        if (arg)
+        {
+            errno             = 0;
+            emulatorArgs.seed = atoi(arg);
+            if (errno)
+            {
+                printf("ERR: Invalid integer value '%s'\n", arg);
+                return false;
+            }
+        }
+    }
+    else if (argShowFps == optName)
+    {
+        emulatorArgs.showFps = true;
+    }
+    else if (argVsync == optName)
+    {
+        if (arg)
+        {
+            emulatorArgs.vsync = parseBoolArg(arg, true);
+        }
+    }
 
     // It's OK if an arg is unhandled, as it may just be a flag set automatically
     return true;
+}
+
+static bool handlePositionalArgument(const char* val)
+{
+    if (val)
+    {
+        if ((strlen(val) > 4 && (!strcmp(&val[strlen(val) - 4], ".mid") || !strcmp(&val[strlen(val) - 4], ".kar")))
+            || (strlen(val) > 5 && !strcmp(&val[strlen(val) - 5], ".midi")))
+        {
+            emulatorArgs.midiFile = val;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -742,8 +851,21 @@ bool emuParseArgs(int argc, char** argv)
 
         if (optVal < 0)
         {
-            // No more options
-            break;
+            // Not an option
+            if (optind < argc)
+            {
+                // ...but there are still arguments, so this is a positional arg
+                if (!handlePositionalArgument(argv[optind]))
+                {
+                    printf("Unknown argument '%s'\n", argv[optind]);
+                    return false;
+                }
+            }
+            else
+            {
+                // No more options
+                break;
+            }
         }
         else if (optVal == '?')
         {

@@ -10,9 +10,11 @@
 //==============================================================================
 
 #include <esp_sleep.h>
+#include <esp_heap_caps.h>
 
 #include "dance.h"
 #include "settingsManager.h"
+#include "mainMenu.h"
 
 //==============================================================================
 // Defines
@@ -23,8 +25,7 @@
 #define ARG_G(arg)         (((arg) >> 8) & 0xFF)
 #define ARG_B(arg)         (((arg) >> 0) & 0xFF)
 
-#define DANCE_SPEED_MULT         8
-#define DANCE_NORMAL_SPEED_INDEX 5
+#define DANCE_SPEED_MULT 8
 
 // Sleep the TFT after 5s
 #define TFT_TIMEOUT_US 5000000
@@ -35,43 +36,44 @@
 
 typedef struct
 {
-    uint8_t danceIdx;
-    uint8_t danceSpeed;
+    uint32_t danceIdx;
+    uint32_t danceSpeed;
 
     bool resetDance;
     bool blankScreen;
 
-    uint64_t buttonPressedTimer;
+    uint32_t buttonPressedTimer;
 
-    touchSpinState_t spinState;
-    uint8_t startDanceSpeed;
+    menu_t* menu;
+    menuManiaRenderer_t* menuRenderer;
 
-    font_t infoFont;
-    wsg_t arrow;
+    const char** danceNames;
+    int32_t* danceVals;
 } danceMode_t;
 
 //==============================================================================
 // Prototypes
 //==============================================================================
 
-void danceEnterMode(void);
-void danceExitMode(void);
-void danceMainLoop(int64_t elapsedUs);
-void danceButtonHandler(buttonEvt_t* evt);
-void dancePollTouch(void);
-
-uint32_t danceRand(uint32_t bound);
-void danceRedrawScreen(void);
-void selectNextDance(void);
-void selectPrevDance(void);
+static void danceEnterMode(void);
+static void danceExitMode(void);
+static void danceMainLoop(int64_t elapsedUs);
+static uint32_t danceRand(uint32_t bound);
+static void danceMenuCb(const char* label, bool selected, uint32_t value);
 
 //==============================================================================
-// Variables
+// Const Variables
 //==============================================================================
 
-static const char ledDancesExitText[] = "Hold Menu To Exit";
+static const char danceName[]      = "Light Dances";
+static const char str_exit[]       = "Exit";
+static const char str_brightness[] = "Brightness";
 
-static const uint8_t danceSpeeds[] = {
+static const char str_speed[]    = "Speed: ";
+static const char* speedLabels[] = {
+    "1/8x", "1/6x", "1/4x", "1/3x", "1/2x", "1x", "1.5x", "2x", "4x",
+};
+static const int32_t speedVals[] = {
     64, // 1/8x
     48, // 1/6x
     32, // 1/4x
@@ -88,6 +90,18 @@ const ledDanceArg ledDances[] = {
     {.func = danceComet, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Comet R"},
     {.func = danceComet, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Comet G"},
     {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Comet B"},
+    {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0x00, 0x00), .name = "Ketchup"},
+    {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0x00), .name = "Mustard"},
+    {.func = danceCondiment, .arg = RGB_2_ARG(0x00, 0xFF, 0x00), .name = "Relish"},
+    {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0xFF), .name = "Mayo"},
+    {.func = danceSharpRainbow, .arg = 0, .name = "Rainbow Sharp"},
+    {.func = danceSmoothRainbow, .arg = 20000, .name = "Rainbow Slow"},
+    {.func = danceSmoothRainbow, .arg = 4000, .name = "Rainbow Fast"},
+    {.func = danceRainbowSolid, .arg = 0, .name = "Rainbow Solid"},
+    {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0), .name = "Sweep RGB"},
+    {.func = danceSweep, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Sweep R"},
+    {.func = danceSweep, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Sweep G"},
+    {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Sweep B"},
     {.func = danceRise, .arg = RGB_2_ARG(0, 0, 0), .name = "Rise RGB"},
     {.func = danceRise, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Rise R"},
     {.func = danceRise, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Rise G"},
@@ -96,10 +110,6 @@ const ledDanceArg ledDances[] = {
     {.func = dancePulse, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Pulse R"},
     {.func = dancePulse, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Pulse G"},
     {.func = dancePulse, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Pulse B"},
-    {.func = danceSharpRainbow, .arg = 0, .name = "Rainbow Sharp"},
-    {.func = danceSmoothRainbow, .arg = 20000, .name = "Rainbow Slow"},
-    {.func = danceSmoothRainbow, .arg = 4000, .name = "Rainbow Fast"},
-    {.func = danceRainbowSolid, .arg = 0, .name = "Rainbow Solid"},
     {.func = danceFire, .arg = RGB_2_ARG(0xFF, 51, 0), .name = "Fire R"},
     {.func = danceFire, .arg = RGB_2_ARG(0, 0xFF, 51), .name = "Fire G"},
     {.func = danceFire, .arg = RGB_2_ARG(51, 0, 0xFF), .name = "Fire B"},
@@ -113,8 +123,12 @@ const ledDanceArg ledDances[] = {
     {.func = danceRandomDance, .arg = 0, .name = "Shuffle All"},
 };
 
+//==============================================================================
+// Variables
+//==============================================================================
+
 swadgeMode_t danceMode = {
-    .modeName        = "Light Dances",
+    .modeName        = danceName,
     .fnEnterMode     = danceEnterMode,
     .fnExitMode      = danceExitMode,
     .fnMainLoop      = danceMainLoop,
@@ -128,7 +142,7 @@ swadgeMode_t danceMode = {
 danceMode_t* danceState;
 
 //==============================================================================
-// Mode Functions
+// Functions
 //==============================================================================
 
 /**
@@ -136,18 +150,61 @@ danceMode_t* danceState;
  */
 void danceEnterMode(void)
 {
-    danceState = calloc(1, sizeof(danceMode_t));
+    // No speaker output for LEDs!
+    setDacShutdown(true);
+
+    danceState = heap_caps_calloc(1, sizeof(danceMode_t), MALLOC_CAP_8BIT);
 
     danceState->danceIdx   = 0;
-    danceState->danceSpeed = DANCE_NORMAL_SPEED_INDEX;
+    danceState->danceSpeed = DANCE_SPEED_MULT;
 
     danceState->resetDance  = true;
     danceState->blankScreen = false;
 
     danceState->buttonPressedTimer = 0;
 
-    loadFont("logbook.font", &(danceState->infoFont), false);
-    loadWsg("arrow18.wsg", &danceState->arrow, false);
+    danceState->menu         = initMenu(danceName, danceMenuCb);
+    danceState->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    setManiaLedsOn(danceState->menuRenderer, false);
+    static const paletteColor_t shadowColors[] = {
+        c430, c431, c442, c543, c554, c555, c554, c543, c442, c431,
+    };
+    led_t offLed = {0};
+    recolorMenuManiaRenderer(danceState->menuRenderer, // Pango palette!
+                             c320, c542, c111,         // titleBgColor, titleTextColor, textOutlineColor
+                             c045,                     // bgColor
+                             c542, c541,               // outerRingColor, innerRingColor
+                             c111, c455,               // rowColor, rowTextColor
+                             shadowColors, ARRAY_SIZE(shadowColors), offLed);
+
+    // Add dances to the menu
+    danceState->danceNames = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(char*), MALLOC_CAP_SPIRAM);
+    danceState->danceVals  = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(int32_t), MALLOC_CAP_SPIRAM);
+    for (int32_t dIdx = 0; dIdx < ARRAY_SIZE(ledDances); dIdx++)
+    {
+        danceState->danceNames[dIdx] = ledDances[dIdx].name;
+        danceState->danceVals[dIdx]  = dIdx;
+    }
+    const settingParam_t danceParam = {
+        .min = 0,
+        .max = ARRAY_SIZE(ledDances) - 1,
+    };
+    addSettingsOptionsItemToMenu(danceState->menu, NULL, danceState->danceNames, danceState->danceVals,
+                                 ARRAY_SIZE(ledDances), &danceParam, 0);
+
+    // Add brightness to the menu
+    addSettingsItemToMenu(danceState->menu, str_brightness, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
+
+    // Add speed to the menu
+    const settingParam_t speedParam = {
+        .min = speedVals[0],
+        .max = speedVals[ARRAY_SIZE(speedVals) - 1],
+    };
+    addSettingsOptionsItemToMenu(danceState->menu, str_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
+                                 &speedParam, speedVals[5]);
+
+    // Add exit to the menu
+    addSingleItemToMenu(danceState->menu, str_exit);
 }
 
 /**
@@ -161,9 +218,12 @@ void danceExitMode(void)
         enableTFTBacklight();
         setTFTBacklightBrightness(getTftBrightnessSetting());
     }
-    freeFont(&(danceState->infoFont));
-    freeWsg(&danceState->arrow);
-    free(danceState);
+    deinitMenuManiaRenderer(danceState->menuRenderer);
+    deinitMenu(danceState->menu);
+
+    heap_caps_free(danceState->danceNames);
+    heap_caps_free(danceState->danceVals);
+    heap_caps_free(danceState);
     danceState = NULL;
 }
 
@@ -178,15 +238,22 @@ void danceMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        danceButtonHandler(&evt);
+        // Reset this on any button event
+        danceState->buttonPressedTimer = 0;
+
+        // This button press will wake the display, so don't process it
+        if (danceState->blankScreen)
+        {
+            return;
+        }
+
+        danceState->menu = menuButton(danceState->menu, evt);
     }
 
-    // Poll for touch inputs
-    dancePollTouch();
-
     // Light the LEDs!
-    ledDances[danceState->danceIdx].func(elapsedUs * DANCE_SPEED_MULT / danceSpeeds[danceState->danceSpeed],
+    ledDances[danceState->danceIdx].func(elapsedUs * DANCE_SPEED_MULT / danceState->danceSpeed,
                                          ledDances[danceState->danceIdx].arg, danceState->resetDance);
+    danceState->resetDance = false;
 
     // If the screen is blank
     if (danceState->blankScreen)
@@ -199,7 +266,7 @@ void danceMainLoop(int64_t elapsedUs)
             setTFTBacklightBrightness(getTftBrightnessSetting());
             danceState->blankScreen = false;
             // Draw to it
-            danceRedrawScreen();
+            drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
         }
     }
     else
@@ -214,11 +281,9 @@ void danceMainLoop(int64_t elapsedUs)
         else
         {
             // Screen is not blank, draw to it
-            danceRedrawScreen();
+            drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
         }
     }
-
-    danceState->resetDance = false;
 
     // Only sleep with a blank screen, otherwise the screen flickers
     if (danceState->blankScreen)
@@ -235,139 +300,34 @@ void danceMainLoop(int64_t elapsedUs)
 }
 
 /**
- * @brief Handle button events for the LED dance mode
+ * @brief Callback for the menu options
  *
- * @param evt The button event that occurred
+ * @param label The menu option that was selected or changed
+ * @param selected True if the option was selected, false if it was only changed
+ * @param value The setting value for this operation
  */
-void danceButtonHandler(buttonEvt_t* evt)
+void danceMenuCb(const char* label, bool selected, uint32_t value)
 {
-    // Reset this on any button event
-    danceState->buttonPressedTimer = 0;
-
-    // This button press will wake the display, so don't process it
-    if (danceState->blankScreen)
+    if (selected && str_exit == label)
     {
-        return;
+        // Exit to the main menu
+        switchToSwadgeMode(&mainMenuMode);
     }
-
-    if (evt->down)
+    else if (str_brightness == label)
     {
-        switch (evt->button)
-        {
-            case PB_UP:
-            {
-                incLedBrightnessSetting();
-                break;
-            }
-
-            case PB_DOWN:
-            {
-                decLedBrightnessSetting();
-                break;
-            }
-
-            case PB_LEFT:
-            case PB_B:
-            {
-                selectPrevDance();
-                break;
-            }
-
-            case PB_RIGHT:
-            case PB_A:
-            {
-                selectNextDance();
-                break;
-            }
-
-            case PB_SELECT:
-            case PB_START:
-            {
-                // Unused
-                break;
-            }
-        }
+        setLedBrightnessSetting(value);
     }
-}
-
-/**
- * @brief Poll for touch events for the LED dance mode
- * TODO hook this up when the touch driver is implemented
- */
-void dancePollTouch(void)
-{
-    int32_t phi, r, intensity;
-    if (getTouchJoystick(&phi, &r, &intensity))
+    else if (str_speed == label)
     {
-        if (!danceState->spinState.startSet)
-        {
-            danceState->startDanceSpeed = danceState->danceSpeed;
-        }
-
-        getTouchSpins(&danceState->spinState, phi, r);
-
-        // Make sure we are pressing on the edge.
-
-        int32_t speeds = ARRAY_SIZE(danceSpeeds);
-        int32_t diff
-            = CLAMP((((danceState->spinState.spins * 360 + danceState->spinState.remainder) * (speeds - 1)) / -360),
-                    -speeds, speeds);
-
-        danceState->danceSpeed         = CLAMP(danceState->startDanceSpeed + diff, 0, speeds - 1);
-        danceState->buttonPressedTimer = 0;
+        danceState->danceSpeed = value;
     }
-    else
+    else if (NULL == label) // Dance names are label-less
     {
-        danceState->spinState.startSet = false;
-    }
-}
-
-/**
- * @brief Blanks and redraws the entire screen
- */
-void danceRedrawScreen(void)
-{
-    clearPxTft();
-
-    if (!danceState->blankScreen)
-    {
-        // Draw the name, perfectly centered
-        int16_t yOff   = (TFT_HEIGHT - danceState->infoFont.height) / 2;
-        uint16_t width = textWidth(&(danceState->infoFont), ledDances[danceState->danceIdx].name);
-        drawText(&(danceState->infoFont), c555, ledDances[danceState->danceIdx].name, (TFT_WIDTH - width) / 2, yOff);
-        // Draw some arrows
-        drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) - 8 - danceState->arrow.w, yOff, false, false, 270);
-        drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 90);
-
-        // Draw the brightness at the top
-        char text[32];
-        snprintf(text, sizeof(text) - 1, "Brightness: %d", getLedBrightnessSetting());
-        width = textWidth(&(danceState->infoFont), text);
-        yOff  = 16;
-        drawText(&(danceState->infoFont), c555, text, (TFT_WIDTH - width) / 2, yOff);
-        // Draw some arrows
-        drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) - 8 - danceState->arrow.w, yOff, false, false, 0);
-        drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 180);
-
-        // Draw the speed below the brightness
-        yOff += danceState->infoFont.height + 16;
-        if (danceSpeeds[danceState->danceSpeed] > DANCE_SPEED_MULT)
+        if (danceState->danceIdx != value)
         {
-            snprintf(text, sizeof(text) - 1, "Touch: Speed: 1/%dx",
-                     danceSpeeds[danceState->danceSpeed] / DANCE_SPEED_MULT);
+            danceState->danceIdx   = value;
+            danceState->resetDance = true;
         }
-        else
-        {
-            snprintf(text, sizeof(text) - 1, "Touch: Speed: %dx",
-                     DANCE_SPEED_MULT / danceSpeeds[danceState->danceSpeed]);
-        }
-        width = textWidth(&(danceState->infoFont), text);
-        drawText(&(danceState->infoFont), c555, text, (TFT_WIDTH - width) / 2, yOff);
-
-        // Draw text to show how to exit at the bottom
-        width = textWidth(&(danceState->infoFont), ledDancesExitText);
-        yOff  = TFT_HEIGHT - danceState->infoFont.height - 16;
-        drawText(&(danceState->infoFont), c555, ledDancesExitText, (TFT_WIDTH - width) / 2, yOff);
     }
 }
 
@@ -376,7 +336,7 @@ void danceRedrawScreen(void)
  */
 uint8_t getNumDances(void)
 {
-    return (sizeof(ledDances) / sizeof(ledDances[0]));
+    return ARRAY_SIZE(ledDances);
 }
 
 /**
@@ -565,15 +525,21 @@ void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset)
  */
 void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
-    static int16_t levels[CONFIG_NUM_LEDS / 2] = {0, -256, -512};
-    static bool rising[CONFIG_NUM_LEDS / 2]    = {true, true, true};
-    static uint8_t angle                       = 0;
-    static uint32_t tAccumulated               = 0;
-    static uint8_t ledRemap[CONFIG_NUM_LEDS]   = {1, 0, 2, 3, 4, 5, 7, 6};
+#define RISE_LEVELS 3
+    static const int8_t ledsPerLevel[RISE_LEVELS][4] = {
+        {5, 6, 7, 8},
+        {0, 4, -1, -1},
+        {1, 2, 3, -1},
+    };
+
+    static int16_t levels[RISE_LEVELS] = {0, -256, -512};
+    static bool rising[RISE_LEVELS]    = {true, true, true};
+    static uint8_t angle               = 0;
+    static uint32_t tAccumulated       = 0;
 
     if (reset)
     {
-        for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
+        for (uint8_t i = 0; i < RISE_LEVELS; i++)
         {
             levels[i] = i * -256;
             rising[i] = true;
@@ -596,7 +562,7 @@ void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset)
             angle = danceRand(256);
         }
 
-        for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
+        for (uint8_t i = 0; i < RISE_LEVELS; i++)
         {
             if (rising[i])
             {
@@ -616,36 +582,26 @@ void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset)
             }
         }
 
+        int32_t color;
         if (0 == arg)
         {
-            int32_t color = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
-            for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
-            {
-                if (levels[i] > 0)
-                {
-                    leds[ledRemap[i]].r = (levels[i] * ((color >> 0) & 0xFF) >> 8);
-                    leds[ledRemap[i]].g = (levels[i] * ((color >> 8) & 0xFF) >> 8);
-                    leds[ledRemap[i]].b = (levels[i] * ((color >> 16) & 0xFF) >> 8);
-
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].r = (levels[i] * ((color >> 0) & 0xFF) >> 8);
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].g = (levels[i] * ((color >> 8) & 0xFF) >> 8);
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].b = (levels[i] * ((color >> 16) & 0xFF) >> 8);
-                }
-            }
+            color = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
         }
         else
         {
-            for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
-            {
-                if (levels[i] > 0)
-                {
-                    leds[ledRemap[i]].r = (levels[i] * ARG_R(arg)) >> 8;
-                    leds[ledRemap[i]].g = (levels[i] * ARG_G(arg)) >> 8;
-                    leds[ledRemap[i]].b = (levels[i] * ARG_B(arg)) >> 8;
+            color = arg;
+        }
 
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].r = (levels[i] * ARG_R(arg)) >> 8;
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].g = (levels[i] * ARG_G(arg)) >> 8;
-                    leds[ledRemap[CONFIG_NUM_LEDS - 1 - i]].b = (levels[i] * ARG_B(arg)) >> 8;
+        for (uint8_t i = 0; i < RISE_LEVELS; i++)
+        {
+            for (int8_t lIdx = 0; lIdx < ARRAY_SIZE(ledsPerLevel[0]); lIdx++)
+            {
+                int8_t ledNum = ledsPerLevel[i][lIdx];
+                if (-1 != ledNum && levels[i] > 0)
+                {
+                    leds[ledNum].r = (levels[i] * ((color >> 16) & 0xFF) >> 8);
+                    leds[ledNum].g = (levels[i] * ((color >> 8) & 0xFF) >> 8);
+                    leds[ledNum].b = (levels[i] * ((color >> 0) & 0xFF) >> 8);
                 }
             }
         }
@@ -877,47 +833,29 @@ void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset)
         tAccumulated -= 75000;
         ledsUpdated = true;
 
-        uint8_t randC;
+        // How bright each level flickers
+        const int32_t baseLevels[][2] = {{105, 150}, {40, 24}, {16, 4}};
+        // What LEDs are in each level. -1 means "no led"
+        const int32_t baseLeds[][4] = {{5, 6, 7, 8}, {0, 4, -1, -1}, {1, 2, 3, -1}};
 
-        // Base
-        randC     = danceRand(105) + 150;
-        leds[1].r = (randC * ARG_R(arg)) / 256;
-        leds[1].g = (randC * ARG_G(arg)) / 256;
-        leds[1].b = (randC * ARG_B(arg)) / 256;
-        randC     = danceRand(105) + 150;
-        leds[6].r = (randC * ARG_R(arg)) / 256;
-        leds[6].g = (randC * ARG_G(arg)) / 256;
-        leds[6].b = (randC * ARG_B(arg)) / 256;
-
-        // Mid-low
-        randC     = danceRand(48) + 32;
-        leds[0].r = (randC * ARG_R(arg)) / 256;
-        leds[0].g = (randC * ARG_G(arg)) / 256;
-        leds[0].b = (randC * ARG_B(arg)) / 256;
-        randC     = danceRand(48) + 32;
-        leds[7].r = (randC * ARG_R(arg)) / 256;
-        leds[7].g = (randC * ARG_G(arg)) / 256;
-        leds[7].b = (randC * ARG_B(arg)) / 256;
-
-        // Mid-high
-        randC     = danceRand(32) + 16;
-        leds[2].r = (randC * ARG_R(arg)) / 256;
-        leds[2].g = (randC * ARG_G(arg)) / 256;
-        leds[2].b = (randC * ARG_B(arg)) / 256;
-        randC     = danceRand(32) + 16;
-        leds[5].r = (randC * ARG_R(arg)) / 256;
-        leds[5].g = (randC * ARG_G(arg)) / 256;
-        leds[5].b = (randC * ARG_B(arg)) / 256;
-
-        // Tip
-        randC     = danceRand(16) + 4;
-        leds[3].r = (randC * ARG_R(arg)) / 256;
-        leds[3].g = (randC * ARG_G(arg)) / 256;
-        leds[3].b = (randC * ARG_B(arg)) / 256;
-        randC     = danceRand(16) + 4;
-        leds[4].r = (randC * ARG_R(arg)) / 256;
-        leds[4].g = (randC * ARG_G(arg)) / 256;
-        leds[4].b = (randC * ARG_B(arg)) / 256;
+        // for each level of the fire
+        for (int32_t base = 0; base < ARRAY_SIZE(baseLevels); base++)
+        {
+            // for each LED in that level
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(baseLeds[0]); lIdx++)
+            {
+                // Get the index for convenience
+                int32_t ledNum = baseLeds[base][lIdx];
+                if (-1 != ledNum)
+                {
+                    // Randomly light the LED, within bounds
+                    uint8_t randC  = danceRand(baseLevels[base][0]) + baseLevels[base][1];
+                    leds[ledNum].r = (randC * ARG_R(arg)) / 256;
+                    leds[ledNum].g = (randC * ARG_G(arg)) / 256;
+                    leds[ledNum].b = (randC * ARG_B(arg)) / 256;
+                }
+            }
+        }
     }
     if (ledsUpdated)
     {
@@ -933,13 +871,13 @@ void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset)
  */
 void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset)
 {
-    static int32_t ledCount;
+    static bool sideLit;
     static uint32_t tAccumulated = 0;
 
     if (reset)
     {
-        ledCount     = 0;
-        tAccumulated = 120000;
+        sideLit      = false;
+        tAccumulated = 500000;
         return;
     }
 
@@ -948,38 +886,38 @@ void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)),
     bool ledsUpdated            = false;
 
     tAccumulated += tElapsedUs;
-    while (tAccumulated >= 120000)
+    while (tAccumulated >= 500000)
     {
-        tAccumulated -= 120000;
+        tAccumulated -= 500000;
         ledsUpdated = true;
 
-        // Skip to the next LED around the swadge
-        ledCount = ledCount + 1;
-        if (ledCount > CONFIG_NUM_LEDS)
-        {
-            ledCount = 0;
-        }
+        // Alternate which side is lit
+        sideLit = !sideLit;
 
-        uint8_t i;
-        if (ledCount < (CONFIG_NUM_LEDS >> 1))
-        {
-            // red
-            for (i = 0; i < (CONFIG_NUM_LEDS >> 1); i++)
+        // These are the LEDs on each side
+        static const uint8_t halves[2][5] = {
+            {0, 1, 2, 7, 8},
+            {2, 3, 4, 5, 6},
+        };
+
+        // These are the colors for each side
+        static const led_t colors[2] = {
             {
-                leds[i].r = 0xFF;
-                leds[i].g = 0x00;
-                leds[i].b = 0x00;
-            }
-        }
-        else
-        {
-            // blue
-            for (i = (CONFIG_NUM_LEDS >> 1); i < CONFIG_NUM_LEDS; i++)
+                .r = 0xFF,
+                .g = 0x00,
+                .b = 0x00,
+            },
             {
-                leds[i].r = 0x00;
-                leds[i].g = 0x00;
-                leds[i].b = 0xFF;
-            }
+                .r = 0x00,
+                .g = 0x00,
+                .b = 0xFF,
+            },
+        };
+
+        // Set the appropriate LEDs to the appropriate color
+        for (uint32_t i = 0; i < ARRAY_SIZE(halves[0]); i++)
+        {
+            leds[halves[sideLit][i]] = colors[sideLit];
         }
     }
     // Output the LED data, actually turning them on
@@ -1393,35 +1331,207 @@ void danceNone(uint32_t tElapsedUs __attribute__((unused)), uint32_t arg __attri
 }
 
 /**
- * @brief Switches to the previous dance in the list, with wrapping
+ * @brief Run the LED along the condiment, then pulse the bun
+ *
+ * @param tElapsedUs The time elapsed since last call, in microseconds
+ * @param arg        The base color to use
+ * @param reset      true to reset this dance's variables
  */
-void selectPrevDance(void)
+void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
-    if (danceState->danceIdx > 0)
+    static const int8_t pulseLeds[] = {0, 1, 2, 3, 4};
+    static const int8_t stripLeds[] = {5, 6, 7, 8};
+
+    static bool isPulse                             = false;
+    static int16_t pulseVal                         = 0;
+    static bool pulseRising                         = true;
+    static int16_t stripVals[ARRAY_SIZE(stripLeds)] = {0};
+    static int32_t stripExciter                     = 0;
+
+    if (reset)
     {
-        danceState->danceIdx--;
-    }
-    else
-    {
-        danceState->danceIdx = getNumDances() - 1;
+        isPulse     = false;
+        pulseVal    = 0;
+        pulseRising = true;
+        memset(stripVals, 0, sizeof(stripVals));
+        stripExciter = 0;
     }
 
-    danceState->resetDance = true;
+    // Declare some LEDs, all off
+    led_t leds[CONFIG_NUM_LEDS] = {{0}};
+    bool ledsUpdated            = false;
+
+    // Run this code every frame
+    static uint32_t condimentTimer = 0;
+    RUN_TIMER_EVERY(condimentTimer, DEFAULT_FRAME_RATE_US, tElapsedUs, {
+        if (isPulse)
+        {
+            if (pulseRising)
+            {
+                pulseVal += 8;
+                if (0xFF <= pulseVal)
+                {
+                    pulseRising = false;
+                    pulseVal    = 0xFF;
+                }
+            }
+            else
+            {
+                pulseVal -= 8;
+                if (0 >= pulseVal)
+                {
+                    isPulse     = false;
+                    pulseRising = true;
+                    pulseVal    = 0;
+                }
+            }
+
+            // Light the pulse LEDs
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(pulseLeds); lIdx++)
+            {
+                leds[lIdx].r = (pulseVal * ARG_R(arg)) / 256;
+                leds[lIdx].g = (pulseVal * ARG_G(arg)) / 256;
+                leds[lIdx].b = (pulseVal * ARG_B(arg)) / 256;
+            }
+            ledsUpdated = true;
+        }
+        else
+        {
+            // Run an exciter to lead the strip
+            if (stripExciter % 8 == 0 && (stripExciter / 8) < ARRAY_SIZE(stripLeds))
+            {
+                stripVals[stripExciter / 8] = 0xFF;
+            }
+            stripExciter++;
+
+            // Decay the strip
+            bool someLedOn = false;
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(stripLeds); lIdx++)
+            {
+                stripVals[lIdx] -= 8;
+                if (stripVals[lIdx] < 0)
+                {
+                    stripVals[lIdx] = 0;
+                }
+                else
+                {
+                    someLedOn = true;
+                }
+                leds[stripLeds[lIdx]].r = (stripVals[lIdx] * ARG_R(arg)) / 256;
+                leds[stripLeds[lIdx]].g = (stripVals[lIdx] * ARG_G(arg)) / 256;
+                leds[stripLeds[lIdx]].b = (stripVals[lIdx] * ARG_B(arg)) / 256;
+            }
+            ledsUpdated = true;
+
+            // All off, switch back to pulse
+            if (!someLedOn)
+            {
+                isPulse      = true;
+                stripExciter = 0;
+            }
+        }
+    });
+
+    // Light the LEDs
+    if (ledsUpdated)
+    {
+        setLeds(leds, CONFIG_NUM_LEDS);
+    }
 }
 
 /**
- * @brief Switches to the next dance in the list, with wrapping
+ * @brief TODO doc
+ *
+ * @param tElapsedUs
+ * @param arg
+ * @param reset
  */
-void selectNextDance(void)
+void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
-    if (danceState->danceIdx < getNumDances() - 1)
+    static const int8_t ledOrder[][2] = {
+        {3, 5}, {4, -1}, {6, -1}, {2, -1}, {7, -1}, {0, -1}, {1, 8},
+    };
+
+    static int32_t sweepTimer                      = 0;
+    static int32_t stripExciter                    = 0;
+    static int16_t stripVals[ARRAY_SIZE(ledOrder)] = {0};
+    static bool stripDir                           = true;
+    static int32_t rgbAngle                        = 0;
+
+    if (reset)
     {
-        danceState->danceIdx++;
-    }
-    else
-    {
-        danceState->danceIdx = 0;
+        sweepTimer   = 0;
+        stripExciter = 0;
+        memset(stripVals, 0, sizeof(stripVals));
+        stripDir = true;
+        rgbAngle = 0;
     }
 
-    danceState->resetDance = true;
+    // Declare some LEDs, all off
+    led_t leds[CONFIG_NUM_LEDS] = {{0}};
+    bool ledsUpdated            = false;
+
+    RUN_TIMER_EVERY(sweepTimer, DEFAULT_FRAME_RATE_US, tElapsedUs, {
+        // Run an exciter to lead the strip
+        int8_t stripIdx = stripExciter / 8;
+        if (stripExciter % 8 == 0 && stripIdx < ARRAY_SIZE(ledOrder))
+        {
+            stripVals[stripIdx] = 0xFF;
+        }
+
+        // Flip directions at the end
+        if (stripIdx < 0 || stripIdx >= ARRAY_SIZE(ledOrder))
+        {
+            stripDir = !stripDir;
+        }
+
+        // Move the exciter
+        if (stripDir)
+        {
+            stripExciter++;
+        }
+        else
+        {
+            stripExciter--;
+        }
+
+        // Apply rainbow if there's no color
+        if (0 == arg)
+        {
+            arg = EHSVtoHEXhelper(rgbAngle, 0xFF, 0xFF, false);
+            rgbAngle++;
+            if (256 == rgbAngle)
+            {
+                rgbAngle = 0;
+            }
+        }
+
+        // Decay the strip
+        for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(ledOrder); sIdx++)
+        {
+            stripVals[sIdx] -= 8;
+            if (stripVals[sIdx] < 0)
+            {
+                stripVals[sIdx] = 0;
+            }
+
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(ledOrder[0]); lIdx++)
+            {
+                int8_t numLed = ledOrder[sIdx][lIdx];
+                if (0 <= numLed)
+                {
+                    leds[ledOrder[sIdx][lIdx]].r = (stripVals[sIdx] * ARG_R(arg)) / 256;
+                    leds[ledOrder[sIdx][lIdx]].g = (stripVals[sIdx] * ARG_G(arg)) / 256;
+                    leds[ledOrder[sIdx][lIdx]].b = (stripVals[sIdx] * ARG_B(arg)) / 256;
+                }
+            }
+            ledsUpdated = true;
+        }
+    });
+
+    // Light the LEDs
+    if (ledsUpdated)
+    {
+        setLeds(leds, CONFIG_NUM_LEDS);
+    }
 }

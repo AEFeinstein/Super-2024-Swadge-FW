@@ -159,9 +159,9 @@ typedef struct
     const char* const* options; ///< The labels displayed if multi-select
     menu_t* subMenu;            ///< A pointer to a submenu, maybe NULL for single-select and multi-select
     uint8_t numOptions;         ///< The number of options for multi-select
-    uint8_t currentOpt;         ///< The current selected option for multi-select
-    uint8_t minSetting;         ///< The minimum value for settings items
-    uint8_t maxSetting;         ///< The maximum value for settings items
+    int32_t currentOpt;         ///< The current selected option for multi-select
+    int32_t minSetting;         ///< The minimum value for settings items
+    int32_t maxSetting;         ///< The maximum value for settings items
     const int32_t* settingVals; ///< The setting value options for settings-options items
     int32_t currentSetting;     ///< The current value for settings items
 } menuItem_t;

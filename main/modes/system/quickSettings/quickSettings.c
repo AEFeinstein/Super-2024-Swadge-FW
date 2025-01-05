@@ -43,7 +43,9 @@ typedef struct
     font_t font;                           ///< The font used for menu text
     int64_t ledTimer;
     bool showLeds;
-    song_t jingle;
+#ifdef SW_VOL_CONTROL
+    midiFile_t jingle;
+#endif
     void* buzzerState;
     led_t ledState[CONFIG_NUM_LEDS + 1];
 
@@ -57,6 +59,7 @@ typedef struct
     wsg_t iconTftOn;
     wsg_t iconTftOff;
 
+#ifdef SW_VOL_CONTROL
     int32_t lastOnSfxValue;
     int32_t minSfxValue;
     int32_t prevSfxValue;
@@ -64,6 +67,7 @@ typedef struct
     int32_t lastOnBgmValue;
     int32_t minBgmValue;
     int32_t prevBgmValue;
+#endif
 
     int32_t lastOnLedsValue;
     int32_t minLedsValue;
@@ -95,18 +99,22 @@ static void quickSettingsSetLeds(int64_t elapsedUs);
 
 static const char quickSettingsName[] = "Settings";
 
-static const char quickSettingsLeds[]      = "LED Brightness";
-static const char quickSettingsSfx[]       = "SFX Volume";
-static const char quickSettingsBgm[]       = "Music Volume";
-static const char quickSettingsBacklight[] = "Screen Brightness: ";
+static const char quickSettingsLeds[] = "LED Brightness";
+#ifdef SW_VOL_CONTROL
+static const char quickSettingsSfx[] = "SFX Volume";
+static const char quickSettingsBgm[] = "Music Volume";
+#endif
+const char quickSettingsBacklight[] = "Screen Brightness: ";
 
-static const char quickSettingsLedsOff[]      = "LEDs Off";
-static const char quickSettingsLedsMax[]      = "LED Brightness: Max";
-static const char quickSettingsSfxMuted[]     = "SFX Muted";
-static const char quickSettingsSfxMax[]       = "SFX Volume: Max";
-static const char quickSettingsBgmMuted[]     = "Music Muted";
-static const char quickSettingsBgmMax[]       = "Music Volume: Max";
-static const char quickSettingsBacklightOff[] = "Screen Backlight Off";
+static const char quickSettingsLedsOff[] = "LEDs Off";
+static const char quickSettingsLedsMax[] = "LED Brightness: Max";
+#ifdef SW_VOL_CONTROL
+static const char quickSettingsSfxMuted[] = "SFX Muted";
+static const char quickSettingsSfxMax[]   = "SFX Volume: Max";
+static const char quickSettingsBgmMuted[] = "Music Muted";
+static const char quickSettingsBgmMax[]   = "Music Volume: Max";
+#endif
+const char quickSettingsBacklightOff[]        = "Screen Backlight Off";
 static const char quickSettingsBacklightMax[] = "Screen Brightness: Max";
 
 //==============================================================================
@@ -131,7 +139,7 @@ swadgeMode_t quickSettingsMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-/// All state information for the Quick Settings mode. This whole struct is calloc()'d and free()'d
+/// All state information for the Quick Settings mode. This whole struct is heap_caps_calloc()'d and heap_caps_free()'d
 /// so that Quick Settings is only using memory while it is active
 quickSettingsMenu_t* quickSettings = NULL;
 
@@ -173,8 +181,9 @@ static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t cur
 static void quickSettingsEnterMode(void)
 {
     // Allocate and clear all memory for this mode. All the variables are contained in a single struct for convenience.
-    // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
-    quickSettings = calloc(1, sizeof(quickSettingsMenu_t));
+    // heap_caps_calloc() is used instead of heap_caps_malloc() because heap_caps_calloc() also initializes the
+    // allocated memory to zeros.
+    quickSettings = heap_caps_calloc(1, sizeof(quickSettingsMenu_t), MALLOC_CAP_8BIT);
 
     // Allocate background image and copy framebuffer into it
     quickSettings->frozenScreen = heap_caps_calloc(TFT_WIDTH * TFT_HEIGHT, sizeof(paletteColor_t), MALLOC_CAP_SPIRAM);
@@ -193,18 +202,21 @@ static void quickSettingsEnterMode(void)
     // Load a font
     loadFont("ibm_vga8.font", &quickSettings->font, true);
 
+#ifdef SW_VOL_CONTROL
     // Load the buzzer song
-    loadSong("jingle.sng", &quickSettings->jingle, true);
-
+    loadMidiFile("jingle.mid", &quickSettings->jingle, true);
+#endif
     // Load graphics
     // Use SPI because we're not the only mode, I guess?
     loadWsg("defaultSetting.wsg", &quickSettings->iconGeneric, true);
     loadWsg("ledsEnabled.wsg", &quickSettings->iconLedsOn, true);
     loadWsg("ledsDisabled.wsg", &quickSettings->iconLedsOff, true);
+#ifdef SW_VOL_CONTROL
     loadWsg("musicEnabled.wsg", &quickSettings->iconBgmOn, true);
     loadWsg("musicDisabled.wsg", &quickSettings->iconBgmOff, true);
     loadWsg("sfxEnabled.wsg", &quickSettings->iconSfxOn, true);
     loadWsg("sfxDisabled.wsg", &quickSettings->iconSfxOff, true);
+#endif
     loadWsg("backlightEnabled.wsg", &quickSettings->iconTftOn, true);
     loadWsg("backlightDisabled.wsg", &quickSettings->iconTftOff, true);
 
@@ -217,28 +229,34 @@ static void quickSettingsEnterMode(void)
     // If we get an independent mute setting we can just use that instead and not worry about it
     const settingParam_t* ledsBounds = getLedBrightnessSettingBounds();
     const settingParam_t* tftBounds  = getTftBrightnessSettingBounds();
-    const settingParam_t* sfxBounds  = getSfxVolumeSettingBounds();
-    const settingParam_t* bgmBounds  = getBgmVolumeSettingBounds();
+#ifdef SW_VOL_CONTROL
+    const settingParam_t* sfxBounds = getSfxVolumeSettingBounds();
+    const settingParam_t* bgmBounds = getBgmVolumeSettingBounds();
+#endif
 
     // Calculate the settings' minimums and set up their "on" values for toggling
     int32_t ledsValue = setupQuickSettingParams(ledsBounds, getLedBrightnessSetting(), &quickSettings->lastOnLedsValue,
                                                 &quickSettings->minLedsValue);
     int32_t tftValue  = setupQuickSettingParams(tftBounds, getTftBrightnessSetting(), &quickSettings->lastOnTftValue,
                                                 &quickSettings->minTftValue);
-    int32_t sfxValue  = setupQuickSettingParams(sfxBounds, getSfxVolumeSetting(), &quickSettings->lastOnSfxValue,
-                                                &quickSettings->minSfxValue);
-    int32_t bgmValue  = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), &quickSettings->lastOnBgmValue,
-                                                &quickSettings->minBgmValue);
+#ifdef SW_VOL_CONTROL
+    int32_t sfxValue = setupQuickSettingParams(sfxBounds, getSfxVolumeSetting(), &quickSettings->lastOnSfxValue,
+                                               &quickSettings->minSfxValue);
+    int32_t bgmValue = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), &quickSettings->lastOnBgmValue,
+                                               &quickSettings->minBgmValue);
 
     quickSettings->prevSfxValue = sfxValue;
     quickSettings->prevBgmValue = bgmValue;
-    quickSettings->showLeds     = true;
+#endif
+    quickSettings->showLeds = true;
 
     // Add the actual items to the menu
     addSettingsItemToMenu(quickSettings->menu, quickSettingsLeds, ledsBounds, ledsValue);
     addSettingsItemToMenu(quickSettings->menu, quickSettingsBacklight, tftBounds, tftValue);
+#ifdef SW_VOL_CONTROL
     addSettingsItemToMenu(quickSettings->menu, quickSettingsSfx, sfxBounds, sfxValue);
     addSettingsItemToMenu(quickSettings->menu, quickSettingsBgm, bgmBounds, bgmValue);
+#endif
 
     // Customize the icons and labels for all the quick settings items
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsLeds, &quickSettings->iconLedsOn,
@@ -246,10 +264,12 @@ static void quickSettingsEnterMode(void)
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsBacklight, &quickSettings->iconTftOn,
                                          &quickSettings->iconTftOff, quickSettingsBacklightMax,
                                          quickSettingsBacklightOff);
+#ifdef SW_VOL_CONTROL
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsSfx, &quickSettings->iconSfxOn,
                                          &quickSettings->iconSfxOff, quickSettingsSfxMax, quickSettingsSfxMuted);
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsBgm, &quickSettings->iconBgmOn,
                                          &quickSettings->iconBgmOff, quickSettingsBgmMax, quickSettingsBgmMuted);
+#endif
 }
 
 /**
@@ -261,8 +281,10 @@ static void quickSettingsExitMode(void)
     deinitMenu(quickSettings->menu);
     deinitMenuQuickSettingsRenderer(quickSettings->renderer);
 
+#ifdef SW_VOL_CONTROL
     // Free the buzzer song
-    freeSong(&quickSettings->jingle);
+    unloadMidiFile(&quickSettings->jingle);
+#endif
 
     soundStop(true);
 
@@ -287,9 +309,9 @@ static void quickSettingsExitMode(void)
     freeWsg(&quickSettings->iconTftOff);
 
     // Free underlying screen
-    free(quickSettings->frozenScreen);
+    heap_caps_free(quickSettings->frozenScreen);
 
-    free(quickSettings);
+    heap_caps_free(quickSettings);
     quickSettings = NULL;
 }
 
@@ -402,6 +424,7 @@ static int32_t quickSettingsFlipValue(const char* label, int32_t value)
     {
         return (value <= quickSettings->minTftValue) ? quickSettings->lastOnTftValue : quickSettings->minTftValue;
     }
+#ifdef SW_VOL_CONTROL
     else if (label == quickSettingsSfx)
     {
         return (value <= quickSettings->minSfxValue) ? quickSettings->lastOnSfxValue : quickSettings->minSfxValue;
@@ -410,6 +433,7 @@ static int32_t quickSettingsFlipValue(const char* label, int32_t value)
     {
         return (value <= quickSettings->minBgmValue) ? quickSettings->lastOnBgmValue : quickSettings->minBgmValue;
     }
+#endif
 
     return 0;
 }
@@ -444,6 +468,7 @@ static void quickSettingsOnChange(const char* label, int32_t value)
             quickSettings->lastOnTftValue = value;
         }
     }
+#ifdef SW_VOL_CONTROL
     else if (label == quickSettingsSfx)
     {
         if (value != quickSettings->prevSfxValue)
@@ -474,6 +499,7 @@ static void quickSettingsOnChange(const char* label, int32_t value)
             quickSettings->lastOnBgmValue = value;
         }
     }
+#endif
 }
 
 /**

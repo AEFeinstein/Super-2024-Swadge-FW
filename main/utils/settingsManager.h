@@ -78,6 +78,7 @@
 
 typedef enum
 {
+    GAMEPAD_TOUCH_MORE_BUTTONS_SETTING,
     GAMEPAD_TOUCH_L_STICK_SETTING,
     GAMEPAD_TOUCH_R_STICK_SETTING,
 } gamepadTouch_t;
@@ -109,6 +110,7 @@ typedef struct
 
 void readAllSettings(void);
 
+#ifdef SW_VOL_CONTROL
 uint16_t getBgmVolumeSetting(void);
 const settingParam_t* getBgmVolumeSettingBounds(void);
 bool setBgmVolumeSetting(uint16_t);
@@ -116,6 +118,7 @@ bool setBgmVolumeSetting(uint16_t);
 uint16_t getSfxVolumeSetting(void);
 const settingParam_t* getSfxVolumeSettingBounds(void);
 bool setSfxVolumeSetting(uint16_t);
+#endif
 
 uint8_t getTftBrightnessSetting(void);
 const settingParam_t* getTftBrightnessSettingBounds(void);

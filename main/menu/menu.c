@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <esp_heap_caps.h>
 
 #include "menu.h"
 #include "macros.h"
@@ -47,11 +48,11 @@ static void deinitSubMenu(menu_t* menu);
  */
 menu_t* initMenu(const char* title, menuCb cbFunc)
 {
-    menu_t* menu      = calloc(1, sizeof(menu_t));
+    menu_t* menu      = heap_caps_calloc(1, sizeof(menu_t), MALLOC_CAP_SPIRAM);
     menu->title       = title;
     menu->cbFunc      = cbFunc;
     menu->currentItem = NULL;
-    menu->items       = calloc(1, sizeof(list_t));
+    menu->items       = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     menu->parentMenu  = NULL;
     menu->showBattery = false;
     return menu;
@@ -98,7 +99,7 @@ static void deinitSubMenu(menu_t* menu)
         }
 
         // Free the item
-        free(item);
+        heap_caps_free(item);
 
         // Move to the next
         itemNode = itemNode->next;
@@ -107,9 +108,9 @@ static void deinitSubMenu(menu_t* menu)
     // Clear all items in the list
     clear(menu->items);
     // Free the list
-    free(menu->items);
+    heap_caps_free(menu->items);
     // Free the menu
-    free(menu);
+    heap_caps_free(menu);
 }
 
 /**
@@ -130,15 +131,15 @@ static void deinitSubMenu(menu_t* menu)
 menu_t* startSubMenu(menu_t* menu, const char* label)
 {
     // Allocate a submenu
-    menu_t* subMenu      = calloc(1, sizeof(menu_t));
+    menu_t* subMenu      = heap_caps_calloc(1, sizeof(menu_t), MALLOC_CAP_SPIRAM);
     subMenu->title       = label;
     subMenu->cbFunc      = menu->cbFunc;
     subMenu->currentItem = NULL;
-    subMenu->items       = calloc(1, sizeof(list_t));
+    subMenu->items       = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     subMenu->parentMenu  = menu;
 
     // Allocate a new menu item
-    menuItem_t* newItem = calloc(1, sizeof(menuItem_t));
+    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
     newItem->label      = label;
     newItem->options    = NULL;
     newItem->numOptions = 0;
@@ -191,7 +192,7 @@ menu_t* endSubMenu(menu_t* menu)
  */
 menuItem_t* addSingleItemToMenu(menu_t* menu, const char* label)
 {
-    menuItem_t* newItem = calloc(1, sizeof(menuItem_t));
+    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
     newItem->label      = label;
     newItem->options    = NULL;
     newItem->numOptions = 0;
@@ -234,7 +235,7 @@ void removeSingleItemFromMenu(menu_t* menu, const char* label)
                 }
             }
             removeEntry(menu->items, listNode);
-            free(item);
+            heap_caps_free(item);
             return;
         }
         listNode = listNode->next;
@@ -260,7 +261,7 @@ void removeSingleItemFromMenu(menu_t* menu, const char* label)
  */
 void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels, uint8_t currentLabel)
 {
-    menuItem_t* newItem = calloc(1, sizeof(menuItem_t));
+    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
     newItem->label      = NULL;
     newItem->options    = labels;
     newItem->numOptions = numLabels;
@@ -303,7 +304,7 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
                 }
             }
 
-            free(item);
+            heap_caps_free(item);
             return;
         }
         listNode = listNode->next;
@@ -327,7 +328,7 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
  */
 void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t* bounds, int32_t val)
 {
-    menuItem_t* newItem     = calloc(1, sizeof(menuItem_t));
+    menuItem_t* newItem     = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
     newItem->label          = label;
     newItem->minSetting     = bounds->min;
     newItem->maxSetting     = bounds->max;
@@ -368,7 +369,7 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
                     menu->currentItem = listNode->prev;
                 }
             }
-            free(item);
+            heap_caps_free(item);
             return;
         }
         listNode = listNode->next;
@@ -404,7 +405,7 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const 
                                   const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
                                   int32_t currentValue)
 {
-    menuItem_t* newItem     = calloc(1, sizeof(menuItem_t));
+    menuItem_t* newItem     = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
     newItem->label          = settingLabel;
     newItem->options        = optionLabels;
     newItem->settingVals    = optionValues;
@@ -466,7 +467,7 @@ void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLa
                     menu->currentItem = listNode->prev;
                 }
             }
-            free(item);
+            heap_caps_free(item);
             return;
         }
         listNode = listNode->next;
@@ -723,7 +724,7 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
     }
     else if (item->label)
     {
-        if (item->label == mnuBackStr)
+        if (item->label == mnuBackStr && menu->parentMenu)
         {
             // If this is the back string, return the parent menu
             // Reset the current item when leaving a submenu
@@ -762,6 +763,11 @@ menu_t* menuSetCurrentOption(menu_t* menu, int32_t value)
         if (item->options)
         {
             item->currentOpt = CLAMP(value, 0, item->numOptions - 1);
+
+            if (item->settingVals)
+            {
+                item->currentSetting = item->settingVals[item->currentOpt];
+            }
         }
         else
         {

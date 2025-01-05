@@ -9,7 +9,9 @@
 #include "font.h"
 #include "menu.h"
 #include "palette.h"
-#include "esp_log.h"
+
+#include <esp_log.h>
+#include <esp_heap_caps.h>
 
 #include <stdint.h>
 #include <inttypes.h>
@@ -28,13 +30,13 @@
 
 #define TEXT_MARGIN 10
 
-#define PANEL_BG_COLOR            c200
-#define PANEL_BORDER_COLOR        c532
-#define PANEL_ICON_BG_COLOR_SEL   c411
-#define PANEL_ICON_BG_COLOR_UNSEL c311
-#define PANEL_ICON_BG_COLOR_OFF   c222
-#define PANEL_BOX_COLOR_SEL       c532
-#define PANEL_BOX_COLOR_UNSEL     c200
+#define PANEL_BG_COLOR            c115
+#define PANEL_BORDER_COLOR        c000
+#define PANEL_ICON_BG_COLOR_SEL   c243
+#define PANEL_ICON_BG_COLOR_UNSEL c114
+#define PANEL_ICON_BG_COLOR_OFF   c444
+#define PANEL_BOX_COLOR_SEL       c555
+#define PANEL_BOX_COLOR_UNSEL     c531
 #define PANEL_TEXT_COLOR          c542
 
 #define ICON_W      16
@@ -109,7 +111,7 @@ static const quickSettingsItemInfo_t* getInfoForLabel(menuQuickSettingsRenderer_
  */
 menuQuickSettingsRenderer_t* initMenuQuickSettingsRenderer(font_t* font)
 {
-    menuQuickSettingsRenderer_t* renderer = calloc(1, sizeof(menuQuickSettingsRenderer_t));
+    menuQuickSettingsRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuQuickSettingsRenderer_t), MALLOC_CAP_SPIRAM);
 
     renderer->font = font;
     return renderer;
@@ -125,10 +127,10 @@ void deinitMenuQuickSettingsRenderer(menuQuickSettingsRenderer_t* renderer)
     node_t* info = NULL;
     while ((info = pop(&renderer->iconMap)))
     {
-        free(info);
+        heap_caps_free(info);
     }
 
-    free(renderer);
+    heap_caps_free(renderer);
 }
 
 /**
@@ -243,7 +245,7 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
 void quickSettingsRendererCustomizeOption(menuQuickSettingsRenderer_t* renderer, const char* label, const wsg_t* onWsg,
                                           const wsg_t* offWsg, const char* maxLabel, const char* minLabel)
 {
-    quickSettingsItemInfo_t* info = calloc(1, sizeof(quickSettingsItemInfo_t));
+    quickSettingsItemInfo_t* info = heap_caps_calloc(1, sizeof(quickSettingsItemInfo_t), MALLOC_CAP_SPIRAM);
 
     info->label    = label;
     info->onWsg    = onWsg;

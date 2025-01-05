@@ -3,7 +3,7 @@
  * \section dac_design Design Philosophy
  *
  * The Digital To Analog Converter (DAC) is used to drive a speaker or headphones. It uses the <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/peripherals/dac.html">DAC
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32s2/api-reference/peripherals/dac.html">DAC
  * peripheral</a>. The peripheral can be used a few different ways, but this project uses DMA to output a
  * continuous, arbitrary signal.
  *
@@ -67,13 +67,16 @@
 //==============================================================================
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "driver/dac_continuous.h"
+#include "driver/gpio.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
 
 /** @brief The sample rate for the DAC */
-#define DAC_SAMPLE_RATE_HZ 32768
+#define DAC_SAMPLE_RATE_HZ 16384
 
 /** The size of each buffer to fill with DAC samples */
 #define DAC_BUF_SIZE 512
@@ -94,8 +97,9 @@ typedef void (*fnDacCallback_t)(uint8_t* samples, int16_t len);
 // Function Declarations
 //==============================================================================
 
-void initDac(fnDacCallback_t cb);
+void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb);
 void deinitDac(void);
 void dacPoll(void);
 void dacStart(void);
 void dacStop(void);
+void setDacShutdown(bool shutdown);

@@ -15,7 +15,7 @@
 #include "esp_random.h"
 
 // redundancy
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 
 #include <string.h>
 #include <stdlib.h>

@@ -45,6 +45,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "fp_math.h"
+
 //==============================================================================
 // Defines
 //==============================================================================
@@ -92,7 +94,7 @@ typedef union
  * @param idx The index of the wave to get a sample from
  * @return A signed 8-bit sample
  */
-typedef int8_t (*waveFunc_t)(uint16_t idx);
+typedef int8_t (*waveFunc_t)(uint16_t idx, void* data);
 
 //==============================================================================
 // Structs
@@ -104,10 +106,12 @@ typedef int8_t (*waveFunc_t)(uint16_t idx);
 typedef struct
 {
     waveFunc_t waveFunc;    ///< A pointer to the function which generates samples
+    void* waveFuncData;     ///< A pointer to pass to the wave function
     oscAccum_t accumulator; ///< An accumulator to increment the wave sample
     int32_t stepSize;       ///< The step that should be added to the accumulator each sample, dependent on frequency
     uint32_t tVol;          ///< The target volume (amplitude)
     uint32_t cVol;          ///< The current volume which smoothly transitions to the target volume
+    uint8_t chorus;         ///< The number of offset samples to return
 } synthOscillator_t;
 
 //==============================================================================
@@ -115,7 +119,13 @@ typedef struct
 //==============================================================================
 
 void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint32_t freq, uint8_t volume);
+void swSynthInitOscillatorWave(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveData, uint32_t freq,
+                               uint8_t volume);
 void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape);
+void swSynthSetWaveFunc(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveFuncData);
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq);
+void swSynthSetFreqPrecise(synthOscillator_t* osc, uq16_16 freq);
 void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume);
 uint8_t swSynthMixOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators);
+int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators);
+int8_t swSynthSampleWave(oscillatorShape_t shape, uint8_t idx);

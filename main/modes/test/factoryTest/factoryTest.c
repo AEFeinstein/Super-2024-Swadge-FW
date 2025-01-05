@@ -89,7 +89,8 @@ typedef struct
     uint8_t samplesProcessed;
     uint16_t maxValue;
     // Buzzers
-    song_t song;
+    midiFile_t song;
+    bool spkActive;
     // Button
     testButtonState_t buttonStates[8];
     // Touch, as an 8-way joystick with center deadzone
@@ -116,7 +117,7 @@ typedef struct
     bool buttonsPassed;
     bool touchPassed;
     bool accelPassed;
-    bool bzrMicPassed;
+    bool micPassed;
 } factoryTest_t;
 
 factoryTest_t* test;
@@ -150,14 +151,14 @@ swadgeMode_t factoryTestMode = {
 void testEnterMode(void)
 {
     // Allocate memory for this mode
-    test = (factoryTest_t*)calloc(1, sizeof(factoryTest_t));
+    test = (factoryTest_t*)heap_caps_calloc(1, sizeof(factoryTest_t), MALLOC_CAP_8BIT);
 
     // Load a font
-    loadFont("ibm_vga8.font", &test->ibm_vga8, false);
+    loadFont("ibm_vga8.font", &test->ibm_vga8, true);
 
     // Load a sprite
-    loadWsg("kid0.wsg", &test->kd_idle0, false);
-    loadWsg("kid1.wsg", &test->kd_idle1, false);
+    loadWsg("kid0.wsg", &test->kd_idle0, true);
+    loadWsg("kid1.wsg", &test->kd_idle1, true);
 
     // Init last touchState index to indicate no previous state
     test->lastTouchStateIdx = UINT8_MAX;
@@ -167,15 +168,21 @@ void testEnterMode(void)
     test->maxValue = 1;
 
     // Temporarily set the buzzer to full volume
-    bzrSetBgmVolume(MAX_VOLUME);
-    bzrSetSfxVolume(MAX_VOLUME);
+    globalMidiPlayerSetVolume(MIDI_BGM, MAX_VOLUME);
+    globalMidiPlayerSetVolume(MIDI_SFX, MAX_VOLUME);
 
     // Set the mic to listen
     setMicGainSetting(MAX_MIC_GAIN);
 
     // Play a song
-    loadSong("stereo_test.sng", &test->song, false);
-    soundPlayBgm(&test->song, BZR_STEREO);
+    loadMidiFile("hd_credits.mid", &test->song, true);
+    switchToSpeaker();
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
+    midiSetFile(player, &test->song);
+    player->loop = true;
+    midiPause(player, false);
+    test->spkActive = true;
 
     // Clear out accel setting.
     accelSetRegistersAndReset();
@@ -193,8 +200,8 @@ void testExitMode(void)
     freeFont(&test->ibm_vga8);
     freeWsg(&test->kd_idle0);
     freeWsg(&test->kd_idle1);
-    freeSong(&test->song);
-    free(test);
+    unloadMidiFile(&test->song);
+    heap_caps_free(test);
 }
 
 /**
@@ -214,8 +221,16 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     testReadAndValidateTouch();
     testReadAndValidateAccelerometer();
 
+    // If everything but the mic passed, and the mic isn't active
+    if (test->spkActive && test->buttonsPassed && test->touchPassed && test->accelPassed)
+    {
+        // Switch to microphone mode
+        test->spkActive = false;
+        switchToMicrophone();
+    }
+
     // Check for a test pass
-    if (test->buttonsPassed && test->touchPassed && test->accelPassed && test->bzrMicPassed)
+    if (test->buttonsPassed && test->touchPassed && test->accelPassed && test->micPassed)
     {
         // Set NVM to indicate the test passed
         setTestModePassedSetting(true);
@@ -248,7 +263,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     {
         energy += test->end.fuzzed_bins[i];
         uint8_t height       = ((TFT_HEIGHT / 2) * test->end.fuzzed_bins[i]) / test->maxValue;
-        paletteColor_t color = test->bzrMicPassed ? c050 : c500; // paletteHsvToHex((i * 256) / FIX_BINS, 255, 255);
+        paletteColor_t color = test->micPassed ? c050 : c500; // paletteHsvToHex((i * 256) / FIX_BINS, 255, 255);
         int16_t x0           = binMargin + (i * binWidth);
         int16_t x1           = binMargin + ((i + 1) * binWidth);
         // Big enough, fill an area
@@ -258,7 +273,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     // Check for a pass
     if (energy > 100000)
     {
-        test->bzrMicPassed = true;
+        test->micPassed = true;
     }
 
     // Draw button states
@@ -399,9 +414,9 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     {
         sprintf(dbgStr, "Test Accelerometer");
     }
-    else if (false == test->bzrMicPassed)
+    else if (false == test->micPassed)
     {
-        sprintf(dbgStr, "Test Buzzer & Mic");
+        sprintf(dbgStr, "Test Microphone");
     }
     else if (getTestModePassedSetting())
     {
@@ -411,9 +426,13 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     int16_t tWidth = textWidth(&test->ibm_vga8, dbgStr);
     drawText(&test->ibm_vga8, c555, dbgStr, (TFT_WIDTH - tWidth) / 2, 0);
 
-    sprintf(dbgStr, "Verify RGB LEDs & Tunes");
+    sprintf(dbgStr, "Verify LEDs");
+    if (test->spkActive)
+    {
+        strcat(dbgStr, " and Speaker");
+    }
     tWidth = textWidth(&test->ibm_vga8, dbgStr);
-    drawText(&test->ibm_vga8, c555, dbgStr, 70, test->ibm_vga8.height + 8);
+    drawText(&test->ibm_vga8, c555, dbgStr, (TFT_WIDTH - tWidth) / 2, test->ibm_vga8.height + 8);
 
     // Animate a sprite
     test->tSpriteElapsedUs += elapsedUs;
@@ -424,14 +443,8 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     // Draw the sprite
-    if (0 == test->spriteFrame)
-    {
-        drawWsg(&test->kd_idle0, 32, 4, false, false, 0);
-    }
-    else
-    {
-        drawWsg(&test->kd_idle1, 32, 4, false, false, 0);
-    }
+    drawWsg(0 == test->spriteFrame ? &test->kd_idle0 : &test->kd_idle1, //
+            125, 90, false, false, 0);
 
     // Pulse LEDs, each color for 1s
     test->tLedElapsedUs += elapsedUs;
@@ -761,7 +774,7 @@ void testAudioCb(uint16_t* samples, uint32_t sampleCnt)
             }
 
             // If already passed, just return
-            if (true == test->bzrMicPassed)
+            if (true == test->micPassed)
             {
                 return;
             }

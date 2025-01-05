@@ -3,7 +3,7 @@
 //==============================================================================
 
 #include "hdw-nvs.h"
-#include "hdw-bzr.h"
+#include "midiPlayer.h"
 #include "hdw-tft.h"
 #include "hdw-mic.h"
 #include "hdw-led.h"
@@ -52,15 +52,18 @@ typedef struct
 
 DECL_SETTING(test, 0, 1, 0);
 DECL_SETTING(tutorial, 0, 1, 0);
+#ifdef SW_VOL_CONTROL
 DECL_SETTING(bgm, 0, MAX_VOLUME, MAX_VOLUME);
 DECL_SETTING(sfx, 0, MAX_VOLUME, MAX_VOLUME);
+#endif
 DECL_SETTING(tft_br, 0, MAX_TFT_BRIGHTNESS, MAX_TFT_BRIGHTNESS);
 DECL_SETTING(led_br, 0, MAX_LED_BRIGHTNESS, 5);
 DECL_SETTING(mic, 0, MAX_MIC_GAIN, MAX_MIC_GAIN);
 DECL_SETTING(cc_mode, ALL_SAME_LEDS, LINEAR_LEDS, ALL_SAME_LEDS);
 DECL_SETTING(scrn_sv, 0, 300, 20);
 DECL_SETTING(gp_accel, 0, 1, 1);
-DECL_SETTING(gp_touch, GAMEPAD_TOUCH_L_STICK_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING);
+DECL_SETTING(gp_touch, GAMEPAD_TOUCH_MORE_BUTTONS_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING,
+             GAMEPAD_TOUCH_MORE_BUTTONS_SETTING);
 DECL_SETTING(show_secrets, SHOW_SECRETS, HIDE_SECRETS, HIDE_SECRETS);
 
 //==============================================================================
@@ -147,9 +150,11 @@ void readAllSettings(void)
     // Read the tutorial passed setting
     readSetting(&tutorial_setting);
 
+#ifdef SW_VOL_CONTROL
     // Read the buzzer settings
     readSetting(&bgm_setting);
     readSetting(&sfx_setting);
+#endif
 
     // Read the TFT settings
     readSetting(&tft_br_setting);
@@ -177,6 +182,8 @@ void readAllSettings(void)
 }
 
 //==============================================================================
+
+#ifdef SW_VOL_CONTROL
 
 /**
  * @brief Get the current background music volume setting
@@ -208,7 +215,7 @@ bool setBgmVolumeSetting(uint16_t vol)
 {
     if (setSetting(&bgm_setting, vol))
     {
-        bzrSetBgmVolume(getBgmVolumeSetting());
+        globalMidiPlayerSetVolume(MIDI_BGM, getBgmVolumeSetting());
         return true;
     }
     return false;
@@ -246,11 +253,13 @@ bool setSfxVolumeSetting(uint16_t vol)
 {
     if (setSetting(&sfx_setting, vol))
     {
-        bzrSetSfxVolume(getSfxVolumeSetting());
+        globalMidiPlayerSetVolume(MIDI_SFX, getSfxVolumeSetting());
         return true;
     }
     return false;
 }
+
+#endif
 
 //==============================================================================
 

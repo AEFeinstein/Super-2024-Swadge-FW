@@ -51,8 +51,10 @@ void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth)
 void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin,
                     int xScale, int yScale);
 void drawRect(int x0, int y0, int x1, int y1, paletteColor_t col);
+void drawRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col);
 void drawRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
                     int yScale);
+void drawRoundedRect(int x0, int y0, int x1, int y1, int r, paletteColor_t fillColor, paletteColor_t outlineColor);
 void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, int16_t v2x, int16_t v2y,
                           paletteColor_t fillColor, paletteColor_t outlineColor);
 void drawTriangleOutlinedBounded(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, int16_t v2x, int16_t v2y,
@@ -67,6 +69,7 @@ void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool 
 void drawCircleFilled(int xm, int ym, int r, paletteColor_t col);
 void drawCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
                             int yScale);
+void drawCircleFilledQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool q4, paletteColor_t col);
 void drawCircleOutline(int xm, int ym, int r, int stroke, paletteColor_t col);
 void drawEllipseRect(int x0, int y0, int x1, int y1, paletteColor_t col);
 void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin, int xScale,

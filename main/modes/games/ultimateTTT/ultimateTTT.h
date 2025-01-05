@@ -6,9 +6,12 @@
 // Defines
 //==============================================================================
 
-#define NUM_UNLOCKABLE_MARKERS 4
+#define NUM_UNLOCKABLE_MARKERS 13
 
 #define ARROW_BLINK_PERIOD 1000000
+
+#define ROTATE_TIME    1000000
+#define MOVE_ANIM_TIME 1000000
 
 //==============================================================================
 // Enums
@@ -63,6 +66,20 @@ typedef enum __attribute((packed))
     TTR_RECORDS,
 } tttResult_t;
 
+typedef enum __attribute__((packed))
+{
+    TCPU_INACTIVE,
+    TCPU_THINKING,
+    TCPU_MOVING,
+} tttCpuState_t;
+
+typedef enum __attribute__((packed))
+{
+    TDIFF_EASY,
+    TDIFF_MEDIUM,
+    TDIFF_HARD,
+} tttCpuDifficulty_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -87,14 +104,33 @@ typedef struct
 
 typedef struct
 {
+    tttCpuState_t state;
+    tttCpuDifficulty_t difficulty;
+    vec_t destSubgame;
+    vec_t destCell;
+    int64_t delayTime;
+} tttCpuData_t;
+
+typedef struct
+{
+    bool singleSystem;
+    bool passAndPlay;
+    playOrder_t singlePlayerPlayOrder;
     p2pInfo p2p;
     tttGameState_t state;
     tttSubgame_t subgames[3][3];
+    int32_t gameTimers[3][3];
+    int32_t cellTimers[3][3][3][3];
     vec_t cursor;
     vec_t selectedSubgame;
     tttCursorMode_t cursorMode;
+    vec_t cursorLastDir;
     int32_t p1MarkerIdx;
     int32_t p2MarkerIdx;
+    tttCpuData_t cpu;
+    int32_t moveAnimTimer;
+    vec_t priorCellAnim[2];
+    vec_t nextSubgameAnim[2];
 } tttGameData_t;
 
 typedef struct
@@ -136,6 +172,11 @@ typedef struct
     list_t instructionHistory;
     bool showingInstructions;
     arrow_t instructionArrow;
+    // MIDIs
+    midiFile_t sfxMoveCursor;
+    midiFile_t sfxPlaceMarker;
+    midiFile_t sfxWinSubgame;
+    midiFile_t sfxWinGame;
 } ultimateTTT_t;
 
 typedef struct
@@ -170,6 +211,7 @@ void tttShowUi(tttUi_t ui);
 // Externs
 //==============================================================================
 
+extern const char tttName[];
 extern const char tttWinKey[];
 extern const char tttLossKey[];
 extern const char tttDrawKey[];

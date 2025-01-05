@@ -120,16 +120,16 @@ static timerMode_t* timerData = NULL;
 
 static void timerEnterMode(void)
 {
-    timerData = calloc(1, sizeof(timerMode_t));
+    // Disable speaker for timer
+    setDacShutdown(true);
+
+    timerData = heap_caps_calloc(1, sizeof(timerMode_t), MALLOC_CAP_8BIT);
 
     loadFont("ibm_vga8.font", &timerData->textFont, false);
     loadFont("seven_segment.font", &timerData->numberFont, false);
     loadWsg("button_up.wsg", &timerData->dpadWsg, false);
     loadWsg("button_a.wsg", &timerData->aWsg, false);
     loadWsg("button_b.wsg", &timerData->bWsg, false);
-
-    // 100FPS? Sure?
-    setFrameRateUs(1000000 / 100);
 
     // Default to 30s
     timerData->countdownTime = 30 * 1000000;
@@ -145,7 +145,7 @@ static void timerExitMode(void)
     freeWsg(&timerData->aWsg);
     freeWsg(&timerData->bWsg);
 
-    free(timerData);
+    heap_caps_free(timerData);
     timerData = NULL;
 }
 
