@@ -154,7 +154,7 @@ static void bb_EnterMode(void)
     bb_initializeGameData(&bigbug->gameData);
     bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
     // Shrink after loading initial sprites. The next largest image is ovo_talk0.png, decodes to 67200 bytes
-    // 99328 is 1024 * 66
+    // 67584 is 1024 * 66
     bb_decodeSpace = heap_caps_realloc(bb_decodeSpace, 67584, MALLOC_CAP_SPIRAM);
 
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
@@ -232,7 +232,7 @@ static void bb_EnterModeSkipIntro(void)
     bb_initializeGameData(&bigbug->gameData);
     bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
     // Shrink after loading initial sprites. The next largest image is ovo_talk0.png, decodes to 67200 bytes
-    // 99328 is 1024 * 66
+    // 67584 is 1024 * 66
     bb_decodeSpace = heap_caps_realloc(bb_decodeSpace, 67584, MALLOC_CAP_SPIRAM);
 
     // create the death dumpster
