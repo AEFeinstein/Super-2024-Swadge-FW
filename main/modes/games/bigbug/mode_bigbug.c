@@ -457,11 +457,6 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         // Deep underground is black
         bgColor = c000;
     }
-    else if (cameraPos->y > -220)
-    {
-        // Shallow underground is dark red
-        bgColor = c100;
-    }
     else
     {
         // Lookup table of background colors from dark to light
