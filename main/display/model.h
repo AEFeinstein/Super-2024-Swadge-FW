@@ -4,7 +4,7 @@
  *
  * This module provides a self-contained utility for rendering 3D models. Any \c .obj file placed
  * in \c /assets/ will automatically be converted into a binary \c .mdl file in SPIFFS. Models are
- * loaded from SPIFFS with loadModel() and unloaded with freeModel(). Once loaded, the model can
+ * loaded from CNFS with loadModel() and unloaded with freeModel(). Once loaded, the model can
  * either be passed directly into drawModel(), or composed within a scene_t and passed to drawScene().
  *
  * Before rendering, either initRenderer(), initRendererCustom(), or initRendererScene() must be
@@ -18,7 +18,7 @@
  * #include <float.h>
  *
  * // For loadModel() and freeModel()
- * #include "spiffs_model.h"
+ * #include "fs_model.h"
  * // for model_t and all rendering functions
  * #include "model.h"
  * // For TFT_WIDTH, TFT_HEIGHT

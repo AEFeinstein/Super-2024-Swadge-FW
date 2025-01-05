@@ -21,7 +21,7 @@
 #include "linked_list.h"
 #include "font.h"
 #include "model.h"
-#include "spiffs_model.h"
+#include "fs_model.h"
 
 //==============================================================================
 // Defines
