@@ -136,7 +136,9 @@ static void bb_EnterMode(void)
 
     // Allocate WSG loading helpers
     bb_hsd         = heatshrink_decoder_alloc(256, 8, 4);
-    bb_decodeSpace = heap_caps_malloc_tag(102404, MALLOC_CAP_SPIRAM, "decodeSpace");
+    // The largest image is bb_menu2.png, decodes to 99124 bytes
+    // 99328 is 1024 * 97
+    bb_decodeSpace = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace");
 
     bb_SetLeds();
 
@@ -151,6 +153,9 @@ static void bb_EnterMode(void)
 
     bb_initializeGameData(&bigbug->gameData);
     bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
+    // Shrink after loading initial sprites. The next largest image is ovo_talk0.png, decodes to 67200 bytes
+    // 99328 is 1024 * 66
+    bb_decodeSpace = heap_caps_realloc(bb_decodeSpace, 67584, MALLOC_CAP_SPIRAM);
 
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
     //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
@@ -209,7 +214,9 @@ static void bb_EnterModeSkipIntro(void)
 
     // Allocate WSG loading helpers
     bb_hsd         = heatshrink_decoder_alloc(256, 8, 4);
-    bb_decodeSpace = heap_caps_malloc(102404, MALLOC_CAP_SPIRAM);
+    // The largest image is bb_menu2.png, decodes to 99124 bytes
+    // 99328 is 1024 * 97
+    bb_decodeSpace = heap_caps_malloc(99328, MALLOC_CAP_SPIRAM);
 
     bb_SetLeds();
 
@@ -224,6 +231,9 @@ static void bb_EnterModeSkipIntro(void)
 
     bb_initializeGameData(&bigbug->gameData);
     bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
+    // Shrink after loading initial sprites. The next largest image is ovo_talk0.png, decodes to 67200 bytes
+    // 99328 is 1024 * 66
+    bb_decodeSpace = heap_caps_realloc(bb_decodeSpace, 67584, MALLOC_CAP_SPIRAM);
 
     // create the death dumpster
     bigbug->gameData.entityManager.deathDumpster
