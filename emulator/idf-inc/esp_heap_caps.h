@@ -98,3 +98,5 @@ void *heap_caps_realloc_dbg(void *ptr, size_t size, uint32_t caps, const char* f
 
 /** See above, but with function and line debugging */
 void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t line, const char* tag);
+
+void dumpAllocTable(void);

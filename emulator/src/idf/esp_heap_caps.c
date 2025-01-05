@@ -68,7 +68,6 @@ size_t usedMemory[MAX_MEM_TYPES]  = {0};
 static void printMemoryOperation(memOp_t op, allocation_t* al);
 static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32_t size, uint32_t caps,
                            const char* file, const char* func, uint32_t line, const char* tag);
-static void dumpAllocTable(void);
 
 //==============================================================================
 // Functions
@@ -142,7 +141,7 @@ static void printMemoryOperation(memOp_t op, allocation_t* al)
  * @brief
  *
  */
-static void dumpAllocTable(void)
+void dumpAllocTable(void)
 {
     for (int idx = 0; idx < A_TABLE_SIZE; idx++)
     {
