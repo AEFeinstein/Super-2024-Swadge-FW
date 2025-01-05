@@ -769,7 +769,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                         }
                         case CG_KING_DONUT:
                         {
-                            drawWsgSimple(&cg->grove.questionMarks[5], xOffset + 5, yOffset - 10);
+                            drawWsgSimple(&cg->grove.questionMarks[1], xOffset + 5, yOffset - 10);
                             break;
                         }
                     }
@@ -927,7 +927,7 @@ static void cg_drawChowaGrove(cGrove_t* cg, int64_t elapsedUS)
                         break;
                     }
                 }
-                drawWsg(spr, xOffset, yOffset, c->flip, false, 0);
+                drawWsg(spr, xOffset, yOffset, false, false, 0);
                 if (c->hasPartner && c->animFrame % 2 == 0)
                 {
                     if (c->flip)
