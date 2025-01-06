@@ -13,11 +13,13 @@
 // Enums
 //==============================================================================
 
-/// @brief Flag for drawTextWordWrapFlags() to draw the text normally
-#define TEXT_DRAW 0
-
-/// @brief Flag for drawTexTWordWrapFlags() to measure the text without drawing
-#define TEXT_MEASURE 1
+/// @brief
+typedef enum
+{
+    TEXT_DRAW    = 0x01, /// Flag for drawTextWordWrapFlags() to draw the text normally
+    TEXT_MEASURE = 0x02, /// Flag for drawTexTWordWrapFlags() to measure the text without drawing
+    TEXT_CENTER  = 0x04, /// Flag for drawTextWordWrapFlags() to center text horizontally
+} wordWrapFlags_t;
 
 //==============================================================================
 // Static Function Declarations
@@ -248,8 +250,6 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
 {
     const char* textPtr = text;
     int16_t textX = *xOff, textY = *yOff;
-    int nextSpace, nextDash, nextNl;
-    int nextBreak;
     char buf[64];
 
     // don't dereference that null pointer
@@ -278,76 +278,63 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
             continue;
         }
 
-        // if strchr() returns NULL, this will be negative...
-        // otherwise, nextSpace will be the index of the next space of textPtr
-        nextSpace = strchr(textPtr, ' ') - textPtr;
-        nextDash  = strchr(textPtr, '-') - textPtr;
-        nextNl    = strchr(textPtr, '\n') - textPtr;
-
         // copy as much text as will fit into the buffer
         // leaving room for a null-terminator in case the string is longer
         strncpy(buf, textPtr, sizeof(buf) - 1);
 
-        // ensure there is always a null-terminator even if
-        buf[sizeof(buf) - 1] = '\0';
-
-        // worst case, there are no breaks remaining
-        // I think this strlen call is necessary?
-        nextBreak = strlen(buf);
-
-        if (nextSpace >= 0 && nextSpace < nextBreak)
+        // shorten the text until it fits
+        while (textX + textWidth(font, buf) > xMax)
         {
-            nextBreak = nextSpace + 1;
-        }
+            // Find all line breaking characters
+            char* lastSpace = strrchr(buf, ' ');
+            char* lastDash  = strrchr(buf, '-');
+            char* lastNl    = strrchr(buf, '\n');
 
-        if (nextDash >= 0 && nextDash < nextBreak)
-        {
-            nextBreak = nextDash + 1;
-        }
-
-        if (nextNl >= 0 && nextNl < nextBreak)
-        {
-            nextBreak = nextNl;
-        }
-
-        // end the string at the break
-        buf[nextBreak] = '\0';
-
-        // The text is longer than an entire line, so we must shorten it
-        if (xStart + textWidth(font, buf) > xMax)
-        {
-            // shorten the text until it fits
-            while (textX + textWidth(font, buf) > xMax && nextBreak > 0)
+            // Nothing more to split on, carry on
+            if (NULL == lastSpace && NULL == lastDash && NULL == lastNl)
             {
-                buf[--nextBreak] = '\0';
+                break;
             }
-        }
 
-        // The text is longer than will fit on the rest of the current line
-        // Or we shortened it down to nothing. Either way, move to next line.
-        // Also, go back to the start of the loop so we don't
-        // accidentally overrun the yMax
-        if (textX + textWidth(font, buf) > xMax || nextBreak == 0)
-        {
-            // The line won't fit
-            textY += font->height + 1;
-            textX = xStart;
-            continue;
+            // Find the last breaking character
+            char* lastBreak = MAX(MAX(lastSpace, lastDash), lastNl);
+
+            // Drop a null terminator to shrink the string
+            *lastBreak = '\0';
         }
 
         // the line must have enough space for the rest of the buffer
         // print the line, and advance the text pointer and offset
         if (!(flags & TEXT_MEASURE) && textY + font->height >= 0 && textY <= TFT_HEIGHT)
         {
-            textX = drawText(font, color, buf, textX, textY);
+            if (flags & TEXT_CENTER)
+            {
+                int16_t tWidth  = textWidth(font, buf);
+                int16_t cOffset = xStart + (xMax - xStart - tWidth) / 2;
+                textX           = drawText(font, color, buf, cOffset, textY);
+            }
+            else
+            {
+                textX = drawText(font, color, buf, textX, textY);
+            }
         }
         else
         {
             // drawText returns the next text position, which is 1px past the last char
             // textWidth returns, well, the text width, so add 1 to account for the last pixel
-            textX += textWidth(font, buf) + 1;
+            textX = textWidth(font, buf) + 1;
         }
-        textPtr += nextBreak;
+
+        // Reset for the next line
+        textPtr += strlen(buf);
+
+        // If there's another line
+        if (*textPtr)
+        {
+            // Reset these
+            textX = xStart;
+            textY += font->height + 1;
+        }
     }
 
     // Return NULL if we've printed everything
@@ -378,6 +365,31 @@ const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const cha
                              int16_t xMax, int16_t yMax)
 {
     return drawTextWordWrapFlags(font, color, text, *xOff, *yOff, xOff, yOff, xMax, yMax, TEXT_DRAW);
+}
+
+/**
+ * @brief Draws text, breaking on word boundaries, until the given bounds are filled or all text is drawn.
+ * The text is horizontally centered in the given bounds.
+ *
+ * Text will be drawn, starting at `(xOff, yOff)`, wrapping to the next line at ' ' or '-' when the next
+ * word would exceed `xMax`, or immediately when a newline ('\\n') is encountered. Carriage returns and
+ * tabs ('\\r', '\\t') are not supported. When the bottom of the next character would exceed `yMax`, no more
+ * text is drawn and a pointer to the next undrawn character within `text` is returned. If all text has
+ * been written, NULL is returned.
+ *
+ * @param font The font to use when drawing the text
+ * @param color The color of the text to be drawn
+ * @param text The text to be pointed, as a null-terminated string
+ * @param xOff The X-coordinate to begin drawing the text at
+ * @param yOff The Y-coordinate to begin drawing the text at
+ * @param xMax The maximum x-coordinate at which any text may be drawn
+ * @param yMax The maximum y-coordinate at which text may be drawn
+ * @return A pointer to the first unprinted character within `text`, or NULL if all text has been written
+ */
+const char* drawTextWordWrapCentered(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff,
+                                     int16_t* yOff, int16_t xMax, int16_t yMax)
+{
+    return drawTextWordWrapFlags(font, color, text, *xOff, *yOff, xOff, yOff, xMax, yMax, TEXT_DRAW | TEXT_CENTER);
 }
 
 const char* drawTextWordWrapFixed(const font_t* font, paletteColor_t color, const char* text, int16_t xStart,

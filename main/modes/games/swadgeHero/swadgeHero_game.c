@@ -812,10 +812,12 @@ void shDrawGame(shVars_t* sh)
     if (sh->leadInUs > 0)
     {
         int16_t tWidth = textWidth(&sh->rodin, sh->menuSong->name);
-        drawText(&sh->rodin, c555, sh->menuSong->name, (TFT_WIDTH - tWidth) / 2,
-                 (TFT_HEIGHT / 2) - sh->rodin.height - 2);
-        tWidth = textWidth(&sh->rodin, sh->menuSong->artist);
-        drawText(&sh->rodin, c555, sh->menuSong->artist, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 2);
+        int16_t xOff   = 0;
+        int16_t yOff   = (TFT_HEIGHT / 2) - sh->rodin.height - 2;
+        drawTextWordWrapCentered(&sh->rodin, c555, sh->menuSong->name, &xOff, &yOff, TFT_WIDTH, TFT_HEIGHT);
+        xOff = 0;
+        yOff += sh->rodin.height + 8;
+        drawTextWordWrapCentered(&sh->rodin, c555, sh->menuSong->artist, &xOff, &yOff, TFT_WIDTH, TFT_HEIGHT);
     }
 
     // Set LEDs
