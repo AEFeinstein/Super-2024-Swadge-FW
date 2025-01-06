@@ -306,9 +306,18 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
     }
 
     // This loops over all entities, doing updates and collision checks and moving the camera to the viewEntity.
-    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    for (uint8_t i = 0; i < MAX_ENTITIES + MAX_FRONT_ENTITIES; i++)
     {
-        bb_entity_t* curEntity = &entityManager->entities[i];
+        bb_entity_t* curEntity;
+        if(i < MAX_ENTITIES)
+        {
+            curEntity = &entityManager->entities[i];
+        }
+        else
+        {
+            curEntity = &entityManager->frontEntities[i - MAX_ENTITIES];
+        }
+         
         if (curEntity->active)
         {
             if (curEntity->cacheable)
@@ -337,7 +346,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
             if (curEntity->updateFunction != NULL
                 && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
             {
-                curEntity->updateFunction(&(entityManager->entities[i]));
+                curEntity->updateFunction(curEntity);
             }
             if (curEntity->updateFarFunction != NULL
                 && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
@@ -592,18 +601,17 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
 
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 {
-    for (int i = 0; i < MAX_ENTITIES; i++)
+    for (int i = 0; i < MAX_ENTITIES + MAX_FRONT_ENTITIES; i++)
     {
-        bb_entity_t* currentEntity = &entityManager->entities[i];
-        if (currentEntity->active)
+        bb_entity_t* currentEntity;
+        if(i < MAX_ENTITIES)
         {
-            bb_drawEntity(currentEntity, entityManager, camera);
+            currentEntity = &entityManager->entities[i];
         }
-    }
-
-    for (int i = 0; i < MAX_FRONT_ENTITIES; i++)
-    {
-        bb_entity_t* currentEntity = &entityManager->entities[i];
+        else
+        {
+            currentEntity = &entityManager->frontEntities[i - MAX_ENTITIES];
+        }
         if (currentEntity->active)
         {
             bb_drawEntity(currentEntity, entityManager, camera);

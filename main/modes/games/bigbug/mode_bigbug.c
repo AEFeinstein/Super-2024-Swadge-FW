@@ -563,7 +563,7 @@ static void bb_DrawScene(void)
     }
 
     bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera.camera);
-    DRAW_FPS_COUNTER(bigbug->gameData.font);
+    //DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar(void)
@@ -799,7 +799,7 @@ static void bb_DrawScene_Radar(void)
         }
     }
 
-    DRAW_FPS_COUNTER(bigbug->gameData.font);
+    //DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar_Upgrade(void)
