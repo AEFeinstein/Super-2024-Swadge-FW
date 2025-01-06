@@ -263,6 +263,14 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     case BB_CAR:
                     {
                         bb_loadSprite("car", 60, 1, &entityManager->sprites[BB_CAR]);
+                        //if it is on frame 59, unload frames 0 through 58
+                        if(curEntity->currentAnimationFrame == 59)
+                        {
+                            for(int frame = 0; frame < 59; frame++)
+                            {
+                                freeWsg(&entityManager->sprites[BB_CAR].frames[frame]);
+                            }
+                        }
                         break;
                     }
                     case BB_GRABBY_HAND:
@@ -332,12 +340,29 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     // It's like a memcopy
                     *cachedEntity = *curEntity;
 
-                    if (cachedEntity->dataType == FOOD_CART_DATA)
+                    switch(cachedEntity->spriteIndex)
                     {
-                        // tell this partner of the change in address
-                        ((bb_foodCartData_t*)((bb_foodCartData_t*)cachedEntity->data)->partner->data)->partner
+                        case BB_FOOD_CART:
+                        {
+                            // tell this partner of the change in address
+                            ((bb_foodCartData_t*)((bb_foodCartData_t*)cachedEntity->data)->partner->data)->partner
                             = cachedEntity;
+                            break;
+                        }
+                        case BB_SKELETON:
+                        {
+                            // tell the tilemap of the change in address
+                            cachedEntity->gameData->tilemap.fgTiles[cachedEntity->pos.x>>9][cachedEntity->pos.y>>9].entity = cachedEntity;
+                            break;
+                        }
+                        case EGG_LEAVES:
+                        {
+                            // tell the tilemap of the change in address
+                            cachedEntity->gameData->tilemap.fgTiles[cachedEntity->pos.x>>9][cachedEntity->pos.y>>9].entity = cachedEntity;
+                            break;
+                        }
                     }
+
                     // push to the tail
                     push(entityManager->cachedEntities, (void*)cachedEntity);
                     bb_destroyEntity(curEntity, true);
@@ -757,7 +782,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     {
         if (renderFront)
         {
-            
             entity = bb_findInactiveFrontEntityBackwards(entityManager);
         }
         else
@@ -1126,6 +1150,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(entity->collisions, (void*)collision);
 
             entity->drawFunction = &bb_drawCar;
+            entity->updateFarFunction = &bb_updateFarCar;
 
             // Load sprites just in time.
             bb_loadSprite("car", 60, 1, &entityManager->sprites[BB_CAR]);

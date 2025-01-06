@@ -1759,7 +1759,7 @@ void bb_updateMenu(bb_entity_t* self)
                 rData->flame->updateFunction = &bb_updateFlame;
             }
             bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
-            
+
             // create the death dumpster
             self->gameData->entityManager.deathDumpster
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
@@ -2274,6 +2274,37 @@ void bb_updateCarOpen(bb_entity_t* self)
     }
 }
 
+void bb_updateFarCar(bb_entity_t* self)
+{
+    vec_t shiftedCameraPos = self->gameData->camera.camera.pos;
+    shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
+    shiftedCameraPos.y     = (shiftedCameraPos.y - 120) << DECIMAL_BITS;
+    // 2752 = (140+32) << 4; 2432 = (120+32) << 4
+    if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 5504, .halfHeight = 4864},
+                        self, NULL, NULL)
+        == false)
+    {
+        // This car gets cached
+        bb_entity_t* cachedEntity = heap_caps_calloc(1, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
+        // It's like a memcopy
+        *cachedEntity = *self;
+
+        // push to the tail
+        push(self->gameData->entityManager.cachedEntities, (void*)cachedEntity);
+        
+        bb_destroyEntity(self, true);
+
+        //free sprites
+        for(int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
+        {
+            if(self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].w || self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].h)
+            {
+                freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
+            }
+        }
+    }
+}
+
 void bb_updateSpit(bb_entity_t* self)
 {
     // increment the frame counter
@@ -2369,6 +2400,23 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
             bb_setCharacterLine(dData, 9, "Pixel", "That man doesn't know the meaning of friendship.");
 
             dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterLiftoffInteraction;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        else if (self->gameData->day == 2)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(8, "Pango");
+
+            bb_setCharacterLine(dData, 0, "Pango", "Why do you have better shading than us?");
+            bb_setCharacterLine(dData, 1, "Ovo", "Because I'm the main character.");
+            bb_setCharacterLine(dData, 2, "Pango", "But MAGFast is literally named after me!");
+            bb_setCharacterLine(dData, 3, "Ovo", "You fool! It's called mag FEST because of PEST like you.");
+            bb_setCharacterLine(dData, 4, "Po", "That's so metal.");
+            bb_setCharacterLine(dData, 5, "Ovo", "POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+            bb_setCharacterLine(dData, 6, "Ovo", "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!");
+            bb_setCharacterLine(dData, 7, "Pixel", "Hey, don't yell at my friend like that!");
+
+            dData->curString = -1;
             dData->endDialogueCB = &bb_afterLiftoffInteraction;
             bb_setData(ovo, dData, DIALOGUE_DATA);
         }

@@ -238,14 +238,12 @@ static void bb_EnterModeSkipIntro(void)
     uint32_t deathDumpsterX = (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1;
     uint32_t deathDumpsterY = -2173;
 
-
     // create 3 rockets
     for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
     {
-        bigbug->gameData.entityManager.boosterEntities[rocketIdx] = bb_createEntity(
-            &bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
-            deathDumpsterX - 96 + 96 * rocketIdx,
-            deathDumpsterY, false, true);
+        bigbug->gameData.entityManager.boosterEntities[rocketIdx]
+            = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
+                              deathDumpsterX - 96 + 96 * rocketIdx, deathDumpsterY, false, true);
 
         // bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 
@@ -283,8 +281,8 @@ static void bb_EnterModeSkipIntro(void)
 
     // create the death dumpster
     bigbug->gameData.entityManager.deathDumpster
-    = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
-                        deathDumpsterX, deathDumpsterY, false, true);
+        = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1, deathDumpsterX,
+                          deathDumpsterY, false, true);
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
