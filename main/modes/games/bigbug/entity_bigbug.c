@@ -2278,7 +2278,7 @@ void bb_updateFarCar(bb_entity_t* self)
 {
     vec_t shiftedCameraPos = self->gameData->camera.camera.pos;
     shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
-    shiftedCameraPos.y     = (shiftedCameraPos.y - 120) << DECIMAL_BITS;
+    shiftedCameraPos.y     = (shiftedCameraPos.y + 240) << DECIMAL_BITS;
     // 2752 = (140+32) << 4; 2432 = (120+32) << 4
     if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 5504, .halfHeight = 4864},
                         self, NULL, NULL)
@@ -2292,8 +2292,6 @@ void bb_updateFarCar(bb_entity_t* self)
         // push to the tail
         push(self->gameData->entityManager.cachedEntities, (void*)cachedEntity);
         
-        bb_destroyEntity(self, true);
-
         //free sprites
         for(int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
         {
@@ -2302,6 +2300,8 @@ void bb_updateFarCar(bb_entity_t* self)
                 freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
             }
         }
+
+        bb_destroyEntity(self, true);
     }
 }
 
