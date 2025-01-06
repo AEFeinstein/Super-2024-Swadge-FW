@@ -340,9 +340,9 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -36008) // reached the death dumpster
+    if (self->pos.y < -34744) // reached the death dumpster
     {
-        self->pos.y = -36008;
+        self->pos.y = -34744;
         rData->yVel = 0;
 
         freeFont(&self->gameData->cgFont);
@@ -365,26 +365,11 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-        if (self->gameData->day == 0)
-        {
-            bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
-            bb_setCharacterLine(dData, 0, "Ovo", "Gaaaash dangit.");
-            bb_setCharacterLine(dData, 1, "Ovo", "DARN IT! DARN IT! DARN IT! DARN IT!");
-            bb_setCharacterLine(dData, 2, "Ovo", "GLITCH MY CIRCUITS!");
-            bb_setCharacterLine(dData, 3, "Ovo", "I'll have to patch this up before all the air gets out.");
-            bb_setCharacterLine(dData, 4, "Ovo", "And the hardware store closes so early.");
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterGarbotnikIntro;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
-        }
-        else
-        {
-            bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
-            bb_setCharacterLine(dData, 0, "Ovo", "Time to check the loadout!");
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterGarbotnikIntro;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
-        }
+        bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
+        bb_setCharacterLine(dData, 0, "Ovo", "Time to check the loadout!");
+        dData->curString     = -1;
+        dData->endDialogueCB = &bb_afterGarbotnikIntro;
+        bb_setData(ovo, dData, DIALOGUE_DATA);
 
         self->gameData->entityManager.viewEntity = bb_createEntity(
             &(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
@@ -393,7 +378,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         self->updateFunction = NULL;
         return;
     }
-    else if (self->pos.y < -31000 && !(self->gameData->endDayChecks & (1 << 0))
+    else if (self->pos.y < -30700 && !(self->gameData->endDayChecks & (1 << 0))
              && !(self->gameData->endDayChecks & (1 << 2))) // if not pause illusion and dive summary hasn't shown yet.
     {
         self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0); // set the pause illusion bit.
@@ -1761,7 +1746,7 @@ void bb_updateMenu(bb_entity_t* self)
                 self->gameData->entityManager.boosterEntities[rocketIdx]
                     = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
                                       (self->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
-                                      (self->pos.y >> DECIMAL_BITS) + 375, false, true);
+                                      (self->pos.y >> DECIMAL_BITS) + 400, false, true);
 
                 bb_rocketData_t* rData
                     = (bb_rocketData_t*)self->gameData->entityManager.boosterEntities[rocketIdx]->data;
