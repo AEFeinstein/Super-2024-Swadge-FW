@@ -143,7 +143,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_loadSprite("bug", 4, 6, &entityManager->sprites[BUG]);
     entityManager->sprites[BUG].originX = 13;
-    entityManager->sprites[BUG].originY = 7;
+    entityManager->sprites[BUG].originY = 6;
 
     bb_loadSprite("bugg", 4, 6, &entityManager->sprites[BUGG]);
     entityManager->sprites[BUGG].originX = 11;
@@ -155,7 +155,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_loadSprite("buggy", 4, 6, &entityManager->sprites[BUGGY]);
     entityManager->sprites[BUGGY].originX = 13;
-    entityManager->sprites[BUGGY].originY = 11;
+    entityManager->sprites[BUGGY].originY = 10;
 
     bb_loadSprite("butt", 4, 6, &entityManager->sprites[BUTT]);
     entityManager->sprites[BUTT].originX = 14;
@@ -913,7 +913,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->cacheable = true;
 
             entity->halfWidth  = 176;
-            entity->halfHeight = 48;
+            entity->halfHeight = 64;
 
             entity->updateFunction = &bb_updateWalkingBug;
             entity->drawFunction   = &bb_drawBug;
@@ -973,7 +973,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->cacheable = true;
 
             entity->halfWidth  = 184;
-            entity->halfHeight = 64;
+            entity->halfHeight = 80;
 
             entity->updateFunction = &bb_updateWalkingBug;
             entity->drawFunction   = &bb_drawBug;
