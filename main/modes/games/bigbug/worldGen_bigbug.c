@@ -127,11 +127,15 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                 }
                 case 102:
                 {
+                    
+                    tilemap->mgTiles[i][j].health = 0;
                     tilemap->fgTiles[i][j].embed = DOOR_EMBED;
                     break;
                 }
                 default:
                 {
+                    
+                    tilemap->mgTiles[i][j].health = 0;
                     break;
                 }
             }

@@ -3685,12 +3685,11 @@ void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
         if (self->currentAnimationFrame > 1)
         {
             // draw the healthbar
-            drawLineScaled(0, 0, self->currentAnimationFrame - 1, 0, c500, 0,
-                           (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX
-                               - camera->pos.x - self->currentAnimationFrame + 1,
+            drawLineScaled(0, 0, (self->currentAnimationFrame - 1)*2, 0, c500, 0,
+                           (self->pos.x >> DECIMAL_BITS) - camera->pos.x - (self->currentAnimationFrame + 1) * 2,
                            (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
                                - camera->pos.y - 10,
-                           1, 3);
+                           2, 3);
         }
     }
 }
@@ -4716,7 +4715,7 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
         return;
     }
 
-    self->gameData->isPaused = false;
+    self->gameData->isPaused = true;
     // find the tutorial egg on screen
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {

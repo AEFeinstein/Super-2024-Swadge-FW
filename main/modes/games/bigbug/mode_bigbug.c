@@ -94,7 +94,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .usesThermometer          = true,
                            .overrideSelectBtn        = false,
                            .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterModeSkipIntro,
+                           .fnEnterMode              = bb_EnterMode,//SkipIntro,
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -747,13 +747,13 @@ static void bb_DrawScene_Radar(void)
     vec_t garbotnikPos = (vec_t){0};
     if (bigbug->gameData.entityManager.playerEntity != NULL)
     {
-        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                               (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 3};
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> (DECIMAL_BITS + 3)) - 3,
+                               (bigbug->gameData.entityManager.playerEntity->pos.y >> (DECIMAL_BITS + 3)) - 3};
     }
     else
     {
-        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 3,
-                               (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 3};
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.activeBooster->pos.x >> (DECIMAL_BITS + 3)) - 3,
+                               (bigbug->gameData.entityManager.activeBooster->pos.y >> (DECIMAL_BITS + 3)) - 3};
     }
 
     drawCircleFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, 3, c515);
@@ -764,6 +764,9 @@ static void bb_DrawScene_Radar(void)
         drawCircle(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y,
                    bigbug->gameData.radar.playerPingRadius, c404);
     }
+
+    //draw camera perimeter
+    drawRect(garbotnikPos.x - 17, garbotnikPos.y - 15 - bigbug->gameData.radar.cam.y, garbotnikPos.x + 17, garbotnikPos.y + 15 - bigbug->gameData.radar.cam.y, c424);
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_OLD_BOOSTERS) & 1)
     {
@@ -1017,7 +1020,7 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
             {
                 strcpy(upgradeText, "increase max ammo");
                 snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_maxHarpoons,
-                         bigbug->gameData.GarbotnikStat_maxHarpoons + 50);
+                         bigbug->gameData.GarbotnikStat_maxHarpoons + 25);
                 break;
             }
             case GARBOTNIK_MORE_CHOICES:
@@ -1289,8 +1292,6 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                         break;
                     }
                 }
-                bigbug->gameData.garbotnikUpgrade.upgrades
-                    += 1 << bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius];
                 bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
                 bigbug->gameData.screen             = BIGBUG_GAME;
             }
