@@ -650,6 +650,18 @@ bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
     return NULL;
 }
 
+bb_entity_t* bb_findInactiveFrontEntityBackwards(bb_entityManager_t* entityManager)
+{
+    for (int i = MAX_FRONT_ENTITIES - 1; i >= 0; i--)
+    {
+        if (entityManager->frontEntities[i].active == false)
+        {
+            return &entityManager->entities[i];
+        }
+    }
+    return NULL;
+}
+
 bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
@@ -743,15 +755,25 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     bb_entity_t* entity;
     if (forceToFront)
     {
-        entity = bb_findInactiveFrontEntity(entityManager);
-    }
-    else if (renderFront)
-    {
-        entity = bb_findInactiveEntityBackwards(entityManager);
+        if (renderFront)
+        {
+            entity = bb_findInactiveFrontEntity(entityManager);
+        }
+        else
+        {
+            entity = bb_findInactiveFrontEntityBackwards(entityManager);
+        }
     }
     else
     {
-        entity = bb_findInactiveEntity(entityManager);
+        if (renderFront)
+        {
+            entity = bb_findInactiveEntityBackwards(entityManager);
+        }
+        else
+        {
+            entity = bb_findInactiveEntity(entityManager);
+        }
     }
 
     if (entity == NULL)

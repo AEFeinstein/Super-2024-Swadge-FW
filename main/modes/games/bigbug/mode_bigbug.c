@@ -238,7 +238,7 @@ static void bb_EnterModeSkipIntro(void)
     // create the death dumpster
     bigbug->gameData.entityManager.deathDumpster
         = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
-                          (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -2173, true, false);
+                          (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -2173, true, true);
 
     // create 3 rockets
     for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)

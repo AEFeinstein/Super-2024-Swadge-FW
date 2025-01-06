@@ -55,6 +55,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera);
 bb_entity_t* bb_findInactiveFrontEntity(bb_entityManager_t* entityManager);
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager);
+bb_entity_t* bb_findInactiveFrontEntityBackwards(bb_entityManager_t* entityManager);
 bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager);
 void bb_ensureEntitySpace(bb_entityManager_t* entityManager, uint8_t numEntities);
 
