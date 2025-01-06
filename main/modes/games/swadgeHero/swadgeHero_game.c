@@ -853,7 +853,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     sh->btnState = evt->state;
 
     // This pauses and unpauses
-    if (PB_B < evt->button)
+    if (PB_START == evt->button)
     {
         if (evt->down)
         {
@@ -893,7 +893,13 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     }
 
     // Find the note that corresponds to this button press
-    int32_t notePressed = sh->btnToNote[31 - __builtin_clz(evt->button)];
+    int32_t bnIdx = 31 - __builtin_clz(evt->button);
+    if (bnIdx >= ARRAY_SIZE(btnToNote_e))
+    {
+        // Invalid button press
+        return;
+    }
+    int32_t notePressed = sh->btnToNote[bnIdx];
 
     // If a note was pressed
     if (-1 != notePressed)
