@@ -3702,18 +3702,20 @@ void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
     bb_wileData_t* wData = (bb_wileData_t*)self->data;
     if (wData->lifetime > 0)
     {
+        int32_t startY = MIN((self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285, 0);
         // sample some arbitrary data to draw binary 1's and 0's out of the BGM straight above the wile
         for (int i = 0; i < 17; i++)
         {
             if (self->gameData->bgm.data[i + (wData->lifetime >> 2)] & 1)
             {
+                
                 drawText(&self->gameData->font, c511, "1", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
-                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285 + i * 15);
+                         startY + i * 15);
             }
             else
             {
                 drawText(&self->gameData->font, c511, "0", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
-                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285 + i * 15);
+                        startY + i * 15);
             }
         }
 
