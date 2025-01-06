@@ -734,7 +734,7 @@ static void bb_DrawScene_Radar(void)
                     }
                     else if (POIData->reward == BB_SWADGE)
                     {
-                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1],
+                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
                                       (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                                       (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
