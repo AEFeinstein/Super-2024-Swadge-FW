@@ -14,8 +14,11 @@
 #include <unistd.h>
 #include <errno.h>
 #include <math.h>
+#include <stdint.h>
 
 #if defined(EMU_WINDOWN)
+#include <Windows.h>
+#include <joystickapi.h>
 #elif defined(EMU_LINUX)
 #include <linux/joystick.h>
 #elif defined(EMU_MACOS)
@@ -69,6 +72,18 @@ const buttonBit_t joystickButtonMap[] = {
     0,
 };
 
+#ifdef EMU_WINDOWS
+typedef struct
+{
+    UINT deviceNum;
+    // Represents the last state transmitted to the consumer
+    JOYINFOEX lastState;
+    // Represents the actual state most recently returned by the OS
+    JOYINFOEX newState;
+    bool pendingState;
+} emuWinJoyData_t;
+#endif
+
 typedef enum
 {
     BUTTON,
@@ -101,22 +116,51 @@ void gamepadPreFrameCb(uint64_t frame);
 bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event);
 bool gamepadConnect(emuJoystick_t* joystick);
 
- emuExtension_t gamepadEmuExtension = {
+emuExtension_t gamepadEmuExtension = {
     .name = "gamepad",
     .fnInitCb = gamepadInitCb,
     .fnPreFrameCb = gamepadPreFrameCb,
- };
+};
 
- static emuJoystick_t joystick = {0};
-
-#if defined(EMU_LINUX)
+static emuJoystick_t joystick = {0};
 
 bool gamepadConnect(emuJoystick_t* joystick)
 {
-    const char* device = NULL;
+#if defined(EMU_WINDOWS)
+    UINT numDevices = joyGetNumDevs();
+    JOYCAPS caps;
+    bool set = false;
+    for (int i = 0; i < numDevices; i++)
+    {
+        MMRESULT result = joyGetDevCaps(i, &caps, sizeof(caps));
+
+        if (JOYERR_NOERROR == result)
+        {
+            void* data = calloc(1, sizeof(emuWinJoyData_t));
+
+            if (NULL != data)
+            {
+                emuWinJoyData_t* winData = (emuWinJoyData_t*)data;
+
+                printf("Joystick #%d: %s\n", i, caps.szPname);
+                printf("  Buttons: %d/%d\n", caps.wNumAxes, caps.wMaxAxes);
+                printf("  Axes: %d\n", cap.wNumButtons);
+
+                winData->deviceNum = i;
+
+                joystick->numButtons = cap.wNumButtons;
+                joystick->numAxes = cap.wNumAxes;
+
+                joystick->data = data;
+
+                return true;
+            }
+        }
+    }
+
+#elif defined(EMU_LINUX)
+    const char* device = "/dev/input/js0";
     int jsFd;
-#ifdef EMU_LINUX
-    device = "/dev/input/js0";
 
     jsFd = open(device, O_RDONLY | O_NONBLOCK);
     if (jsFd == -1)
@@ -185,7 +229,143 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 {
     if (joystick && joystick->data)
     {
-#ifdef EMU_LINUX
+#if defined(EMU_WINDOWS)
+        emuWinJoyData_t* winData = (emuWinJoyData_t*)joystick->data;
+
+        do {
+            if (!winData->pendingState)
+            {
+                // If we're here, we have successfully transmitted all state changes via events
+                // Now, try to get the new joystick state and see if it's different
+
+                // 1. Get the current joystick state data
+                // 2. Check which values are different from the last state
+                // 3. Emit the event with the new data
+                // 4. Update the last state to match the new data returned
+                // 5. If nothing is different, set pendingState = false;
+                JOYINFOEX winEvent = {0};
+                // what the hell kind of API requires this
+                winEvent.dwSize = sizeof(JOYINFOEX);
+                winEvent.dwFlags = 0;
+
+                MMRESULT result = joyGetPosEx((UINT)joystick->data, &winEvent);
+
+                if (result == JOYERR_NOERROR)
+                {
+                    printf("xPos: %d\nyPos: %d\nzPos: %d\n", winEvent.dwXpos, winEvent.dwYpos, winEvent.dwZpos);
+                    printf("rPos: %d\nuPos: %d\nvPos: %d\n", winEvent.dwRpos, winEvent.dwUpos, winEvent.dwVpos);
+                    printf("buttons: %d\n", winEvent.dwButtons);
+                    printf("dwPOV: %d\n", winEvent.dwPOV);
+
+                    if (memcmp(&winEvent, &winData->curState, sizeof(JOYINFOEX)))
+                    {
+                        // The new data is different from the current data so copy it over
+                        memcpy(&winData->newState, &winEvent, sizeof(JOYINFOEX));
+                        winData->pendingState = true;
+                    }
+                    else
+                    {
+                        // The new data is the same as what we already have, nothing more to do
+                        winData->pendingState = false;
+                    }
+                }
+            }
+
+            if (winData->pendingState)
+            {
+                JOYINFOEX* cur = &winData->lastState;
+                JOYINFOEX* new = &winData->newState;
+                if (cur->dwXpos != new->dwXpos)
+                {
+                    event->type = AXIS;
+                    event->axis = 0;
+                    event->value = new->dwXpos;
+                    cur->dwXpos = new->dwXpos;
+                    return true;
+                }
+                else if (cur->dwYpos != new->dwYpos)
+                {
+                    event->type = AXIS;
+                    event->axis = 1;
+                    event->value = new->dwYpos;
+                    cur->dwYpos = new->dwYpos;
+                    return true;
+                }
+                else if (cur->dwZpos != new->dwZpos)
+                {
+                    event->type = AXIS;
+                    event->axis = 2;
+                    event->value = new->dwZpos;
+                    cur->dwZpos = new->dwZpos;
+                    return true;
+                }
+                else if (cur->dwRpos != new->dwRpos)
+                {
+                    event->type = AXIS;
+                    event->axis = 3;
+                    event->value = new->dwRpos;
+                    cur->dwRpos = new->dwRpos;
+                    return true;
+                }
+                else if (cur->dwUpos != new->dwUpos)
+                {
+                    event->type = AXIS;
+                    event->axis = 4;
+                    event->value = new->dwUpos;
+                    cur->dwUpos = new->dwUpos;
+                    return true;
+                }
+                else if (cur->dwVpos != new->dwVpos)
+                {
+                    event->type = AXIS;
+                    event->axis = 5;
+                    event->value = new->dwVpos;
+                    cur->dwVpos = new->dwVpos;
+                }
+                else if (cur->buttons != new->buttons)
+                {
+                    uint32_t change = cur->buttons ^ new->buttons;
+                    if (change != 0)
+                    {
+                        uint32_t buttonIdx = __builtin_ctz(change);
+
+                        event->type = BUTTON;
+                        event->button = buttonIdx;
+
+                        if (new->buttons & (1 << buttonIdx))
+                        {
+                            // Button pressed
+                            event->value = 1;
+                            cur->buttons |= (1 << buttonIdx);
+                        }
+                        else
+                        {
+                            // Button released
+                            event->value = 0;
+                            cur->buttons &= ~(1 << buttonIdx);
+                        }
+
+                        return true;
+                    }
+                }
+                else if (cur->dwPOV != new->dwPOV)
+                {
+                    event->type = AXIS;
+                    event->axis = 6;
+                    event->value = new->dwPOV;
+                    cur->dwPOV = new->dwPOV;
+                    return true;
+                }
+                else
+                {
+                    // nothing is different!
+                    // check one more time
+                    winData->pendingState = false;
+                    continue;
+                }
+            }
+        } while (0);
+#elif defined(EMU_LINUX)
         struct js_event linuxEvent;
 
         errno = 0;
@@ -378,5 +558,3 @@ void gamepadPreFrameCb(uint64_t frame)
         }
     }
 }
-
-#endif
