@@ -450,7 +450,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     }
 
     // If failure is on and the song is playing
-    if (sh->failOn && songUs >= 0)
+    if (sh->failOn && (songUs >= 0) && (NUM_FAIL_METER_SAMPLES > sh->failSamples.length))
     {
         // Run a timer to sample the fail meter for a chart
         while (sh->failSampleInterval * sh->failSamples.length <= songUs)

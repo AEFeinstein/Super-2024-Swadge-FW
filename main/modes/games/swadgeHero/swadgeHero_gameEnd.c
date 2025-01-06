@@ -151,7 +151,11 @@ void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
         while (failNode)
         {
             // Draw a line from the last point to this one
-            xOff++;
+            if (failNode != sh->failSamples.first)
+            {
+                // Don't iterate on the very first point
+                xOff++;
+            }
             vec_t cPoint = {
                 .x = xOff,
                 .y = TFT_HEIGHT - Y_MARGIN - ((intptr_t)failNode->val) / 2,
