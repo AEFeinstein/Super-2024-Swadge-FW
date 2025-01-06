@@ -32,11 +32,17 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
 {
     bb_loadSprites(entityManager);
     entityManager->entities = heap_caps_calloc_tag(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "entities");
+    entityManager->frontEntities = heap_caps_calloc_tag(12, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "frontEntities");
 
-    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    for (int i = 0; i < MAX_ENTITIES; i++)
     {
         bb_initializeEntity(&(entityManager->entities[i]), entityManager, gameData);
     }
+
+    for (int i = 0; i < MAX_FRONT_ENTITIES; i++)
+    {
+        bb_initializeEntity(&(entityManager->frontEntities[i]), entityManager, gameData);
+    }    
 
     entityManager->activeEntities = 0;
 
@@ -470,6 +476,19 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         bb_destroyEntity(currentEntity, false);
     }
 
+    if(!excludePersistentEntities)
+    {
+        for (uint8_t i = 0; i < MAX_FRONT_ENTITIES; i++)
+        {
+            bb_entity_t* currentEntity = &(entityManager->frontEntities[i]);
+            if (!currentEntity->active)
+            {
+                continue;
+            }
+            bb_destroyEntity(currentEntity, false);
+        }
+    }
+
     // load all cached entities and destroy them one by one.
     bb_ensureEntitySpace(entityManager, 1);
     bb_entity_t* curEntity;
@@ -576,26 +595,32 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
     for (int i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* currentEntity = &entityManager->entities[i];
-
-        if (currentEntity->active && !currentEntity->forceToFront)
+        if (currentEntity->active)
         {
             bb_drawEntity(currentEntity, entityManager, camera);
         }
     }
 
-    for (int i = MAX_ENTITIES - 1; i>=0; i--)
+    for (int i = 0; i < MAX_FRONT_ENTITIES; i++)
     {
         bb_entity_t* currentEntity = &entityManager->entities[i];
-
-        // if (!currentEntity->active)
-        // {
-        //     break;
-        // }
-        if (currentEntity->forceToFront)
+        if (currentEntity->active)
         {
             bb_drawEntity(currentEntity, entityManager, camera);
         }
     }
+}
+
+bb_entity_t* bb_findInactiveFrontEntity(bb_entityManager_t* entityManager)
+{
+    for (int i = 0; i < MAX_FRONT_ENTITIES; i++)
+    {
+        if (entityManager->frontEntities[i].active == false)
+        {
+            return &entityManager->entities[i];
+        }
+    }
+    return NULL;
 }
 
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
@@ -706,7 +731,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     }
 
     bb_entity_t* entity;
-    if (renderFront)
+    if(forceToFront)
+    {
+        entity = bb_findInactiveFrontEntity(entityManager);
+    }
+    else if (renderFront)
     {
         entity = bb_findInactiveEntityBackwards(entityManager);
     }
@@ -722,7 +751,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     }
 
     entity->active       = true;
-    entity->forceToFront = forceToFront;
     entity->pos.x        = x << DECIMAL_BITS;
     entity->pos.y        = y << DECIMAL_BITS;
 
@@ -1420,6 +1448,7 @@ void bb_freeEntityManager(bb_entityManager_t* self)
     }
     // free and clear
     heap_caps_free(self->entities);
+    heap_caps_free(self->frontEntities);
 
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(self->cachedEntities)))

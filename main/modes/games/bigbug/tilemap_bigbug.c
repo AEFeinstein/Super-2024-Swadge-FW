@@ -253,7 +253,6 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 {
                                     tilemap->fgTiles[i][j].entity = eggLeaves;
                                 }
-                                tilemap->fgTiles[i][j].embed = eggLeaves;
                             }
                             break;
                         }

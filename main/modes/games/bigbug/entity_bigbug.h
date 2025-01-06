@@ -365,7 +365,6 @@ struct bb_entity_t
 {
     bool active;
     bool cacheable;
-    bool forceToFront;
 
     void* data;
     bb_data_type_t dataType;
