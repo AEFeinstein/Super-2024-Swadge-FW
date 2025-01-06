@@ -518,6 +518,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             // vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + 16 + tilemap->headlampWsg.w / 2,
                             //                 tilePos.y + 8 - garbotnikDrawPos->y + 17 + tilemap->headlampWsg.h / 2};
                             // ESP_LOGD(BB_TAG,"lookup: %d\n",lookup.x);
+                            brightness = 5 - (j > 25 ? 25 : j) / 5;
                             if(entityManager->playerEntity != NULL && entityManager->playerEntity->updateFunction == bb_updateGarbotnikFlying)
                             {
                                 brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
