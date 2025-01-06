@@ -568,13 +568,13 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
     // The outer half of the circle launches the same velocity so you don't have to touch at the very edge.
-    if (gData->r > 561)
-    {
-        gData->r = 561;
-    }
+    // if (gData->r > 561)
+    // {
+    //     gData->r = 561;
+    // }
 
     gData->fire = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
-    if (gData->fire && gData->activeWile != 255)
+    if (gData->r > 374 && gData->fire && gData->activeWile != 255)
     {
         // Throw a wile!
         bb_entity_t* wile = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, BB_WILE, 1,
@@ -611,10 +611,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
             int32_t x;
             int32_t y;
-            getTouchCartesian(gData->phi, gData->r, &x, &y);
+            getTouchCartesian(gData->phi, 512, &x, &y);
             // Set wile's velocity
-            wData->vel.x = (x - 512) >> 2;
-            wData->vel.y = (-y + 512) >> 2;
+            wData->vel.x = ((x - 512) * 7) >> 6;
+            wData->vel.y = ((-y + 512) * 7) >> 6;
         }
     }
 
@@ -624,7 +624,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         gData->harpoonCooldown = -250;
     }
 
-    if (gData->touching && gData->harpoonCooldown < 0 && gData->numHarpoons > 0 && gData->activeWile == 255)
+    if (gData->touching && gData->r > 374 && gData->harpoonCooldown < 0 && gData->numHarpoons > 0 && gData->activeWile == 255)
     {
         gData->harpoonCooldown = self->gameData->GarbotnikStat_fireTime;
         // Create a harpoon
@@ -639,7 +639,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
             int32_t x;
             int32_t y;
-            getTouchCartesian(gData->phi, gData->r, &x, &y);
+            getTouchCartesian(gData->phi, 512, &x, &y);
             // Set harpoon's velocity
             pData->vel.x = ((x - 512) * 7) >> 6;
             pData->vel.y = ((-y + 512) * 7) >> 6;
@@ -2936,7 +2936,18 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         int32_t x;
         int32_t y;
         getTouchCartesian(gData->phi, gData->r, &x, &y);
-        drawLineFast(xOff, yOff, xOff + (x - 511) / 5, yOff - (y - 511) / 5, c305);
+        x -= 511;
+        y -= 511;
+        drawCircle(xOff, yOff, 37, c103);
+        if(gData->r > 374)
+        {
+            drawCircleQuadrants(xOff, yOff, 37, x > 0 && y < 0, x < 0 && y < 0, x < 0 && y > 0, x > 0 && y > 0, c315);
+            drawLineFast(xOff, yOff, xOff + x/ 5, yOff - y / 5, c315);
+        }
+        else
+        {
+            drawLineFast(xOff, yOff, xOff + x/ 5, yOff - y / 5, c103);
+        }
     }
 
     char harpoonText[13]; // 13 characters makes room for up to a 3 digit number + " harpooons" + null
