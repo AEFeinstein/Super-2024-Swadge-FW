@@ -246,7 +246,7 @@ static void bb_EnterModeSkipIntro(void)
         bigbug->gameData.entityManager.boosterEntities[rocketIdx] = bb_createEntity(
             &bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
             (bigbug->gameData.entityManager.deathDumpster->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
-            (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS), true, false);
+            (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS), false, true);
 
         // bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 

@@ -32,7 +32,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
 {
     bb_loadSprites(entityManager);
     entityManager->entities = heap_caps_calloc_tag(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "entities");
-    entityManager->frontEntities = heap_caps_calloc_tag(12, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "frontEntities");
+    entityManager->frontEntities = heap_caps_calloc_tag(MAX_FRONT_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "frontEntities");
 
     for (int i = 0; i < MAX_ENTITIES; i++)
     {
@@ -617,7 +617,7 @@ bb_entity_t* bb_findInactiveFrontEntity(bb_entityManager_t* entityManager)
     {
         if (entityManager->frontEntities[i].active == false)
         {
-            return &entityManager->entities[i];
+            return &entityManager->frontEntities[i];
         }
     }
     return NULL;
@@ -724,7 +724,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                              bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y,
                              bool renderFront, bool forceToFront)
 {
-    if (entityManager->activeEntities == MAX_ENTITIES)
+    if (!forceToFront && entityManager->activeEntities == MAX_ENTITIES)
     {
         // ESP_LOGD(BB_TAG,"Failed entity creation. MAX_ENTITIES exceeded.\n");
         return NULL;
