@@ -178,23 +178,24 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
-/*     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
-    addSingleItemToMenu(mainMenu->menu, sequencerMode.modeName);
+mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
+  //  addSingleItemToMenu(mainMenu->menu, sequencerMode.modeName);
     addSingleItemToMenu(mainMenu->menu, bongoTest.modeName);
-    addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+  //  addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+  //  addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
-    mainMenu->menu = endSubMenu(mainMenu->menu); */
+  //  addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
+    mainMenu->menu = endSubMenu(mainMenu->menu); 
 
-  /*    mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
-   addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
+/*  mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
+    addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName); 
     addSingleItemToMenu(mainMenu->menu, introMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);*/
 
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
+    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -227,7 +228,7 @@ static void mainMenuEnterMode(void)
 #endif
 
     // Show the battery on the main menu
-    setShowBattery(mainMenu->menu, true);
+    setShowBattery(mainMenu->menu, false);
 
     // Initialize menu renderer
     mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
