@@ -22,7 +22,7 @@
 //==============================================================================
 
 #define HEAT_CUTOFF 10
-#define NANA_CUTOFF 100
+#define NANA_CUTOFF 50
 #define DECAY_RATE  200000
 #define UNSITCK_VAL 250000
 
