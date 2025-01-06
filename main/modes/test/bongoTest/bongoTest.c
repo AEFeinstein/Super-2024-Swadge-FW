@@ -22,6 +22,7 @@
 //==============================================================================
 
 #define HEAT_CUTOFF 10
+#define NANA_CUTOFF 50
 #define DECAY_RATE  200000
 #define UNSITCK_VAL 250000
 
@@ -32,7 +33,9 @@
 const char bongoModeName[] = "Bongo Bongo Bongo";
 
 const char* const bongoWsgs[]
-    = {"bongoDown.wsg", "bongoLeft.wsg", "bongoRight.wsg", "bongoUp.wsg", "bongoTable.wsg", "bongoMeow.wsg"};
+    = {"bongoDown.wsg",       "bongoLeft.wsg",     "bongoRight.wsg",      "bongoUp.wsg",
+       "bongoTable.wsg",      "bongoMeow.wsg",     "nana_hands_down.wsg", "nana_hand_left.wsg",
+       "nana_hand_right.wsg", "nana_hands_up.wsg", "nana_mouth_open.wsg"};
 
 //==============================================================================
 // Structs
@@ -283,25 +286,52 @@ static void playWithBongo(int64_t elapsedUs)
     drawWsgPaletteSimple(&bt->sprs[4], 0, 0, &bt->pal);
 
     // Cat
-    if (!bt->hits[0] && !bt->hits[1])
+    if (bt->heat <= NANA_CUTOFF)
     {
-        drawWsgSimple(&bt->sprs[3], 0, 0);
-    }
-    else if (!bt->hits[0] && bt->hits[1])
-    {
-        drawWsgSimple(&bt->sprs[2], 0, 0);
-    }
-    else if (bt->hits[0] && !bt->hits[1])
-    {
-        drawWsgSimple(&bt->sprs[1], 0, 0);
-    }
-    else if (bt->hits[0] && bt->hits[1])
-    {
-        drawWsgSimple(&bt->sprs[0], 0, 0);
-    }
+        if (!bt->hits[0] && !bt->hits[1])
+        {
+            drawWsgSimple(&bt->sprs[3], 0, 0);
+        }
+        else if (!bt->hits[0] && bt->hits[1])
+        {
+            drawWsgSimple(&bt->sprs[2], 0, 0);
+        }
+        else if (bt->hits[0] && !bt->hits[1])
+        {
+            drawWsgSimple(&bt->sprs[1], 0, 0);
+        }
+        else if (bt->hits[0] && bt->hits[1])
+        {
+            drawWsgSimple(&bt->sprs[0], 0, 0);
+        }
 
-    if (bt->hits[2] || bt->hits[3] || bt->hits[4] || bt->hits[5])
+        if (bt->hits[2] || bt->hits[3] || bt->hits[4] || bt->hits[5])
+        {
+            drawWsgSimple(&bt->sprs[5], 108, 92);
+        }
+    }
+    else
     {
-        drawWsgSimple(&bt->sprs[5], 108, 92);
+        if (!bt->hits[0] && !bt->hits[1])
+        {
+            drawWsgSimple(&bt->sprs[9], 0, 0);
+        }
+        else if (!bt->hits[0] && bt->hits[1])
+        {
+            drawWsgSimple(&bt->sprs[8], 0, 0);
+        }
+        else if (bt->hits[0] && !bt->hits[1])
+        {
+            drawWsgSimple(&bt->sprs[7], 0, 0);
+        }
+        else if (bt->hits[0] && bt->hits[1])
+        {
+            drawWsgSimple(&bt->sprs[6], 0, 0);
+        }
+
+        if (bt->hits[2] || bt->hits[3] || bt->hits[4] || bt->hits[5])
+        {
+            drawWsgSimple(&bt->sprs[10], 125, 83);
+        }
     }
 }
