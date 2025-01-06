@@ -656,7 +656,7 @@ bb_entity_t* bb_findInactiveFrontEntityBackwards(bb_entityManager_t* entityManag
     {
         if (entityManager->frontEntities[i].active == false)
         {
-            return &entityManager->entities[i];
+            return &entityManager->frontEntities[i];
         }
     }
     return NULL;
