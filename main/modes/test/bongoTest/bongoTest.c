@@ -32,17 +32,10 @@
 
 const char bongoModeName[] = "Bongo Bongo Bongo";
 
-const char* const bongoWsgs[] = {"bongoDown.wsg",
-                                 "bongoLeft.wsg",
-                                 "bongoRight.wsg",
-                                 "bongoUp.wsg",
-                                 "bongoTable.wsg",
-                                 "bongoMeow.wsg",
-                                 "nana_hands_down.wsg",
-                                 "nana_hand_left.wsg",
-                                 "nana_hand_right.wsg",
-                                 "nana_hands_up.wsg",
-                                 "nana_mouth_open.wsg"};
+const char* const bongoWsgs[]
+    = {"bongoDown.wsg",       "bongoLeft.wsg",     "bongoRight.wsg",      "bongoUp.wsg",
+       "bongoTable.wsg",      "bongoMeow.wsg",     "nana_hands_down.wsg", "nana_hand_left.wsg",
+       "nana_hand_right.wsg", "nana_hands_up.wsg", "nana_mouth_open.wsg"};
 
 //==============================================================================
 // Structs
@@ -316,7 +309,9 @@ static void playWithBongo(int64_t elapsedUs)
         {
             drawWsgSimple(&bt->sprs[5], 108, 92);
         }
-    } else {
+    }
+    else
+    {
         if (!bt->hits[0] && !bt->hits[1])
         {
             drawWsgSimple(&bt->sprs[9], 0, 0);
