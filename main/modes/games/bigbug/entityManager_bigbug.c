@@ -32,7 +32,8 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
 {
     bb_loadSprites(entityManager);
     entityManager->entities = heap_caps_calloc_tag(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "entities");
-    entityManager->frontEntities = heap_caps_calloc_tag(MAX_FRONT_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "frontEntities");
+    entityManager->frontEntities
+        = heap_caps_calloc_tag(MAX_FRONT_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "frontEntities");
 
     for (int i = 0; i < MAX_ENTITIES; i++)
     {
@@ -42,7 +43,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
     for (int i = 0; i < MAX_FRONT_ENTITIES; i++)
     {
         bb_initializeEntity(&(entityManager->frontEntities[i]), entityManager, gameData);
-    }    
+    }
 
     entityManager->activeEntities = 0;
 
@@ -86,8 +87,8 @@ void bb_freeSprite(bb_sprite_t* sprite)
         {
             for (uint8_t frame = 0; frame < sprite->numFrames; frame++)
             {
-                if(sprite->frames[brightness * sprite->numFrames + frame].w != 0 ||
-                sprite->frames[brightness * sprite->numFrames + frame].h != 0)
+                if (sprite->frames[brightness * sprite->numFrames + frame].w != 0
+                    || sprite->frames[brightness * sprite->numFrames + frame].h != 0)
                 {
                     freeWsg(&sprite->frames[brightness * sprite->numFrames + frame]);
                 }
@@ -214,10 +215,11 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     entityManager->sprites[BB_WILE].originX = 6;
     entityManager->sprites[BB_WILE].originY = 6;
 
-    if(!entityManager->sprites[BB_ARROW].allocated)
+    if (!entityManager->sprites[BB_ARROW].allocated)
     {
         entityManager->sprites[BB_ARROW].numFrames = 2;
-        entityManager->sprites[BB_ARROW].frames = heap_caps_calloc_tag(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM, "arrowFrames");
+        entityManager->sprites[BB_ARROW].frames
+            = heap_caps_calloc_tag(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM, "arrowFrames");
         loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
         loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
         entityManager->sprites[BB_ARROW].allocated = true;
@@ -228,8 +230,8 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
         entityManager->sprites[BB_HOTDOG].numFrames = 1;
         entityManager->sprites[BB_HOTDOG].frames    = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
         loadWsgInplace("hotdog_rs.wsg", &entityManager->sprites[BB_HOTDOG].frames[0], true, bb_decodeSpace, bb_hsd);
-        entityManager->sprites[BB_HOTDOG].originX = 6;
-        entityManager->sprites[BB_HOTDOG].originY = 6;
+        entityManager->sprites[BB_HOTDOG].originX   = 6;
+        entityManager->sprites[BB_HOTDOG].originY   = 6;
         entityManager->sprites[BB_HOTDOG].allocated = true;
     }
 }
@@ -309,7 +311,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
     for (uint8_t i = 0; i < MAX_ENTITIES + MAX_FRONT_ENTITIES; i++)
     {
         bb_entity_t* curEntity;
-        if(i < MAX_ENTITIES)
+        if (i < MAX_ENTITIES)
         {
             curEntity = &entityManager->entities[i];
         }
@@ -317,7 +319,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
         {
             curEntity = &entityManager->frontEntities[i - MAX_ENTITIES];
         }
-         
+
         if (curEntity->active)
         {
             if (curEntity->cacheable)
@@ -485,7 +487,7 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         bb_destroyEntity(currentEntity, false);
     }
 
-    if(!excludePersistentEntities)
+    if (!excludePersistentEntities)
     {
         for (uint8_t i = 0; i < MAX_FRONT_ENTITIES; i++)
         {
@@ -604,7 +606,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
     for (int i = 0; i < MAX_ENTITIES + MAX_FRONT_ENTITIES; i++)
     {
         bb_entity_t* currentEntity;
-        if(i < MAX_ENTITIES)
+        if (i < MAX_ENTITIES)
         {
             currentEntity = &entityManager->entities[i];
         }
@@ -739,7 +741,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     }
 
     bb_entity_t* entity;
-    if(forceToFront)
+    if (forceToFront)
     {
         entity = bb_findInactiveFrontEntity(entityManager);
     }
@@ -758,9 +760,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         return NULL;
     }
 
-    entity->active       = true;
-    entity->pos.x        = x << DECIMAL_BITS;
-    entity->pos.y        = y << DECIMAL_BITS;
+    entity->active = true;
+    entity->pos.x  = x << DECIMAL_BITS;
+    entity->pos.y  = y << DECIMAL_BITS;
 
     entity->type        = type;
     entity->paused      = paused;

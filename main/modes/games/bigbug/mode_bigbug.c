@@ -135,7 +135,7 @@ static void bb_EnterMode(void)
     }
 
     // Allocate WSG loading helpers
-    bb_hsd         = heatshrink_decoder_alloc(256, 8, 4);
+    bb_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
     // 99328 is 1024 * 97
     bb_decodeSpace = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace");
@@ -213,7 +213,7 @@ static void bb_EnterModeSkipIntro(void)
     }
 
     // Allocate WSG loading helpers
-    bb_hsd         = heatshrink_decoder_alloc(256, 8, 4);
+    bb_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
     // 99328 is 1024 * 97
     bb_decodeSpace = heap_caps_malloc(99328, MALLOC_CAP_SPIRAM);
@@ -563,12 +563,12 @@ static void bb_DrawScene(void)
     }
 
     bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera.camera);
-    //DRAW_FPS_COUNTER(bigbug->gameData.font);
+    // DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar(void)
 {
-    //Draw the tilemap squares
+    // Draw the tilemap squares
     for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
     {
         int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
@@ -799,7 +799,7 @@ static void bb_DrawScene_Radar(void)
         }
     }
 
-    //DRAW_FPS_COUNTER(bigbug->gameData.font);
+    // DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar_Upgrade(void)

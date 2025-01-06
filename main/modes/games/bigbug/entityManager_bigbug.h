@@ -16,9 +16,9 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define MAX_ENTITIES 200
+#define MAX_ENTITIES       200
 #define MAX_FRONT_ENTITIES 10
-#define NUM_SPRITES  34 // The number of bb_sprite_t last accounted for BB_HOTDOG
+#define NUM_SPRITES        34 // The number of bb_sprite_t last accounted for BB_HOTDOG
 
 //==============================================================================
 // Structs
@@ -28,7 +28,8 @@ typedef struct
 {
     bb_sprite_t sprites[NUM_SPRITES];
     bb_entity_t* entities;
-    bb_entity_t* frontEntities; // important entities that render on top. i.e. dialogue, pango & friends, booster rocket, garbotnik
+    bb_entity_t* frontEntities; // important entities that render on top. i.e. dialogue, pango & friends, booster
+                                // rocket, garbotnik
     list_t* cachedEntities;
     uint8_t activeEntities;
 

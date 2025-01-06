@@ -70,7 +70,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         return;
     }
 
-        // some particular entities get sprites freed.
+    // some particular entities get sprites freed.
     switch (self->spriteIndex)
     {
         case BB_CAR:
@@ -155,7 +155,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     self->active    = false;
     self->cacheable = false;
 
-    //some particular frees for entities that had data with more allocated data.
+    // some particular frees for entities that had data with more allocated data.
     if (self->data != NULL && caching == false)
     {
         switch (self->dataType)
@@ -624,7 +624,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         gData->harpoonCooldown = -250;
     }
 
-    if (gData->touching && gData->r > 374 && gData->harpoonCooldown < 0 && gData->numHarpoons > 0 && gData->activeWile == 255)
+    if (gData->touching && gData->r > 374 && gData->harpoonCooldown < 0 && gData->numHarpoons > 0
+        && gData->activeWile == 255)
     {
         gData->harpoonCooldown = self->gameData->GarbotnikStat_fireTime;
         // Create a harpoon
@@ -1321,7 +1322,8 @@ void bb_updateEggLeaves(bb_entity_t* self)
 
         lookup = divVec2d(lookup, 2);
 
-        if (self->gameData->entityManager.playerEntity != NULL && self->gameData->entityManager.playerEntity->updateFunction == bb_updateGarbotnikFlying)
+        if (self->gameData->entityManager.playerEntity != NULL
+            && self->gameData->entityManager.playerEntity->updateFunction == bb_updateGarbotnikFlying)
         {
             elData->brightness = bb_foregroundLighting(
                 &(self->gameData->tilemap.headlampWsg), &lookup,
@@ -1785,8 +1787,6 @@ void bb_updateMenu(bb_entity_t* self)
                                       2));
 
             self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
-
-
 
             self->updateFunction = NULL;
             return;
@@ -2759,7 +2759,8 @@ void bb_updateDrillBot(bb_entity_t* self)
             {
                 if (bb_randomInt(0, 110) == 1)
                 {
-                    bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144) >> 9, self->pos.y >> 9, true, true);
+                    bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144) >> 9, self->pos.y >> 9, true,
+                                   true);
                 }
             }
         }
@@ -2939,14 +2940,14 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         x -= 511;
         y -= 511;
         drawCircle(xOff, yOff, 37, c103);
-        if(gData->r > 374)
+        if (gData->r > 374)
         {
             drawCircleQuadrants(xOff, yOff, 37, x > 0 && y < 0, x < 0 && y < 0, x < 0 && y > 0, x > 0 && y > 0, c315);
-            drawLineFast(xOff, yOff, xOff + x/ 5, yOff - y / 5, c315);
+            drawLineFast(xOff, yOff, xOff + x / 5, yOff - y / 5, c315);
         }
         else
         {
-            drawLineFast(xOff, yOff, xOff + x/ 5, yOff - y / 5, c103);
+            drawLineFast(xOff, yOff, xOff + x / 5, yOff - y / 5, c103);
         }
     }
 
@@ -3647,16 +3648,15 @@ void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
                 (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                 (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
         }
-        if(self->currentAnimationFrame > 1)
+        if (self->currentAnimationFrame > 1)
         {
-            //draw the healthbar
-            drawLineScaled(0, 0,
-                self->currentAnimationFrame - 1, 0,
-                c500, 0,
-                (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x - self->currentAnimationFrame + 1,
-                (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y - 10,
-                1, 3
-                );
+            // draw the healthbar
+            drawLineScaled(0, 0, self->currentAnimationFrame - 1, 0, c500, 0,
+                           (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX
+                               - camera->pos.x - self->currentAnimationFrame + 1,
+                           (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
+                               - camera->pos.y - 10,
+                           1, 3);
         }
     }
 }
@@ -5230,7 +5230,7 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
     if (zeroHealth)
     {
         gameData->tilemap.fgTiles[tile_i][tile_j].health = 0;
-        if(flagNeighborsForPathfinding)
+        if (flagNeighborsForPathfinding)
         {
             flagNeighbors((bb_midgroundTileInfo_t*)&gameData->tilemap.fgTiles[tile_i][tile_j], gameData);
         }
