@@ -302,6 +302,12 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                 *foundSpot = *curEntity;
                 entityManager->activeEntities++;
                 heap_caps_free(removeEntry(entityManager->cachedEntities, currentNode));
+
+                if(foundSpot->spriteIndex == EGG_LEAVES || foundSpot->spriteIndex == BB_SKELETON)
+                {
+                    //inform the tilemap of this uncached embedded entity address.
+                    entityManager->activeBooster->gameData->tilemap.fgTiles[foundSpot->pos.x >> 9][foundSpot->pos.y >> 9].entity = foundSpot;
+                }
             }
         }
         currentNode = next;
