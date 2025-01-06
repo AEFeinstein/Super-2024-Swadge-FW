@@ -235,18 +235,17 @@ static void bb_EnterModeSkipIntro(void)
     // 67584 is 1024 * 66
     bb_decodeSpace = heap_caps_realloc(bb_decodeSpace, 67584, MALLOC_CAP_SPIRAM);
 
-    // create the death dumpster
-    bigbug->gameData.entityManager.deathDumpster
-        = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
-                          (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -2173, true, true);
+    uint32_t deathDumpsterX = (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1;
+    uint32_t deathDumpsterY = -2173;
+
 
     // create 3 rockets
     for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
     {
         bigbug->gameData.entityManager.boosterEntities[rocketIdx] = bb_createEntity(
             &bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
-            (bigbug->gameData.entityManager.deathDumpster->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
-            (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS), false, true);
+            deathDumpsterX - 96 + 96 * rocketIdx,
+            deathDumpsterY, false, true);
 
         // bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 
@@ -281,6 +280,11 @@ static void bb_EnterModeSkipIntro(void)
             ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = bigbug->gameData.entityManager.activeBooster;
         }
     }
+
+    // create the death dumpster
+    bigbug->gameData.entityManager.deathDumpster
+    = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
+                        deathDumpsterX, deathDumpsterY, false, true);
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,

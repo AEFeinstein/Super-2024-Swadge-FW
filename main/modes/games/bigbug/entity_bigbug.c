@@ -1755,7 +1755,6 @@ void bb_updateMenu(bb_entity_t* self)
             bb_destroyEntity(mData->cursor, false);
             mData->cursor = NULL;
 
-            // create the death dumpster
             // create 3 rockets
             for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
             {
@@ -1775,6 +1774,8 @@ void bb_updateMenu(bb_entity_t* self)
                 rData->flame->updateFunction = &bb_updateFlame;
             }
             bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
+            
+            // create the death dumpster
             self->gameData->entityManager.deathDumpster
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
                                   self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) + 400, false, true);

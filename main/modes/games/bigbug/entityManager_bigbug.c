@@ -757,11 +757,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     {
         if (renderFront)
         {
-            entity = bb_findInactiveFrontEntity(entityManager);
+            
+            entity = bb_findInactiveFrontEntityBackwards(entityManager);
         }
         else
         {
-            entity = bb_findInactiveFrontEntityBackwards(entityManager);
+            entity = bb_findInactiveFrontEntity(entityManager);
         }
     }
     else
