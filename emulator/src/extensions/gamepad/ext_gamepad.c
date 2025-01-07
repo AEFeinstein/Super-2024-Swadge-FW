@@ -79,6 +79,7 @@ typedef struct
     void* data;
     int16_t* axisData;
     uint8_t* buttonData;
+    bool connected;
 } emuJoystick_t;
 
 bool gamepadInitCb(emuArgs_t* args);
@@ -166,6 +167,7 @@ bool gamepadConnect(emuJoystick_t* joystick, const char* name)
                 }
 
                 joystick->data = data;
+                joystick->connected = true;
 
                 return true;
             }
@@ -207,12 +209,20 @@ bool gamepadConnect(emuJoystick_t* joystick, const char* name)
     if (ioctl(jsFd, JSIOCGAXES, &axes) == -1)
     {
         joystick->numAxes = 0;
+        joystick->axisData = NULL;
     }
     else
     {
         joystick->numAxes  = axes;
         joystick->axisData = calloc(axes, sizeof(int16_t));
     }
+
+    if (joystick->numAxes == 0 && joystick->numButtons == 0)
+    {
+        return false;
+    }
+
+    joystick->connected = true;
 
     return true;
 #else
@@ -246,6 +256,8 @@ void gamepadDisconnect(emuJoystick_t* joystick)
         joystick->buttonData = NULL;
         joystick->numButtons = 0;
     }
+
+    joystick->connected = false;
 }
 
 static void applyEvent(emuJoystick_t* joystick, const emuJoystickEvent_t* event)
@@ -277,7 +289,7 @@ static void applyEvent(emuJoystick_t* joystick, const emuJoystickEvent_t* event)
 
 bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 {
-    if (joystick && joystick->data)
+    if (joystick && joystick->connected)
     {
 #if defined(EMU_WINDOWS)
         emuWinJoyData_t* winData = (emuWinJoyData_t*)joystick->data;
@@ -314,6 +326,10 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                         // The new data is the same as what we already have, nothing more to do
                         winData->pendingState = false;
                     }
+                }
+                else
+                {
+                    gamepadDisconnect(joystick);
                 }
             }
 
@@ -497,19 +513,8 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
             }
 
             ESP_LOGE("GamepadExt", "Failed to read, disconnecting gamepad");
-            if (joystick->axisData)
-            {
-                free(joystick->axisData);
-                joystick->axisData = NULL;
-            }
-            if (joystick->buttonData)
-            {
-                free(joystick->buttonData);
-                joystick->buttonData = NULL;
-            }
+            gamepadDisconnect(joystick);
 
-            close((int)joystick->data);
-            joystick->data = NULL;
             return false;
         }
         else
@@ -521,6 +526,11 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
     }
 
     return false;
+}
+
+bool emuGamepadConnected(void)
+{
+    return joystickExt.connected;
 }
 
 bool gamepadInitCb(emuArgs_t* args)
