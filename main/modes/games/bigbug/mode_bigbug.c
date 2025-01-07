@@ -1017,7 +1017,7 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
             {
                 strcpy(upgradeText, "more tow cables");
                 snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_maxTowCables,
-                         bigbug->gameData.GarbotnikStat_maxTowCables + 2);
+                         bigbug->gameData.GarbotnikStat_maxTowCables + 3);
                 break;
             }
             case GARBOTNIK_INCREASE_MAX_AMMO:
