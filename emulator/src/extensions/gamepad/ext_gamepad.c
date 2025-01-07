@@ -131,7 +131,6 @@ bool gamepadConnect(emuJoystick_t* joystick)
 #if defined(EMU_WINDOWS)
     UINT numDevices = joyGetNumDevs();
     JOYCAPS caps;
-    bool set = false;
     for (int i = 0; i < numDevices; i++)
     {
         MMRESULT result = joyGetDevCaps(i, &caps, sizeof(caps));
@@ -205,7 +204,7 @@ bool gamepadConnect(emuJoystick_t* joystick)
 
                             default: break;
                         }
-                        winData->axisMins[axis] min;
+                        winData->axisMins[axis] = min;
                         winData->axisMaxs[axis] = max;
 
                         const char axisIds[] = "XYZRUV";
@@ -336,7 +335,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 
             if (winData->pendingState)
             {
-#define CALC_AXIS(n, val) ((n - winData->axisMins[n]) * 32767 / (winData->axisMaxs[n] - winData->axisMaxs[n]))
+#define CALC_AXIS(n, val) ((n - winData->axisMins[n]) * 32767 / (winData->axisMaxs[n] - winData->axisMins[n]))
                 JOYINFOEX* cur = &winData->curState;
                 JOYINFOEX* new = &winData->newState;
                 if (cur->dwXpos != new->dwXpos)
