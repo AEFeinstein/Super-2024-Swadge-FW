@@ -79,6 +79,8 @@ const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const cha
                              int16_t xMax, int16_t yMax);
 const char* drawTextWordWrapFixed(const font_t* font, paletteColor_t color, const char* text, int16_t xStart,
                                   int16_t yStart, int16_t* xOff, int16_t* yOff, int16_t xMax, int16_t yMax);
+const char* drawTextWordWrapCentered(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff,
+                                     int16_t* yOff, int16_t xMax, int16_t yMax);
 uint16_t textWidth(const font_t* font, const char* text);
 uint16_t textWordWrapHeight(const font_t* font, const char* text, int16_t width, int16_t maxHeight);
 
