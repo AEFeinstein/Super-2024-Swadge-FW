@@ -316,7 +316,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 JOYINFOEX winEvent = {0};
                 // what the hell kind of API requires this
                 winEvent.dwSize = sizeof(JOYINFOEX);
-                winEvent.dwFlags = 0;
+                winEvent.dwFlags = JOY_RETURNALL;
 
                 MMRESULT result = joyGetPosEx(winData->deviceNum, &winEvent);
 
