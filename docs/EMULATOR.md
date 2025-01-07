@@ -68,6 +68,43 @@ the `install.sh` script:
 | F12    | Screeshot      | Saves a screenshot to a PNG file                           |
 
 
+## Joystick Input
+
+The Windows and Linux versions of the emulator support Joystick input. If a Joystick device is available,
+the emulator will automatically connect to it on startup. The `--joystick` command-line argument can be
+used to connect to a specific device, or the `joystick` console command can be used to disconnect from
+the current joystick device, reconnect to the previous joystick device, or to connect to a different
+joystick device at any time.
+
+The joystick input uses the same configuration as the Swadge's Computer Gamepad mode. Other joysticks
+may require configuration.
+
+### Joystick Mapping
+
+Axis Mapping
+
+| Axis           | Description                           |
+|----------------|---------------------------------------|
+| 0 (X axis)     | The horizontal axis of the touchpad   |
+| 1 (Y axis)     | The vertical axis of the touchpad     |
+| 2 (Z axis)     | Not used                              |
+| 3 (X rotation) | The Y component of the accelerometer  |
+| 4 (Y rotation) | The X component of the accelerometer  |
+| 5 (Z rotation) | The Z component of the accelerometer  |
+| 6 (POV Hat X)  | The horizontal component of the D-pad |
+| 7 (POV Hat Y)  | The vertical component of the D-pad   |
+
+Button Mapping
+
+| Button | Description          |
+|--------|----------------------|
+| 1      | A Button             |
+| 2      | B Button             |
+| 3-10   | Not used             |
+| 11     | Menu Button (Select) |
+| 12     | Pause Button (Start) |
+| 13-32  | Not used             |
+
 ## Command-line Arguments
 
 The emulator supports a variety of command-line arguments that can enable extra functionality or
