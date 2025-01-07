@@ -94,7 +94,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .usesThermometer          = true,
                            .overrideSelectBtn        = false,
                            .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterMode,//SkipIntro,
+                           .fnEnterMode              = bb_EnterMode, // SkipIntro,
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -365,7 +365,6 @@ static void bb_ExitMode(void)
     bb_freeEntityManager(&bigbug->gameData.entityManager);
     // Free font
     freeFont(&bigbug->gameData.font);
-
 
     if (bigbug->gameData.bgm.data)
     {
@@ -768,8 +767,9 @@ static void bb_DrawScene_Radar(void)
                    bigbug->gameData.radar.playerPingRadius, c404);
     }
 
-    //draw camera perimeter
-    drawRect(garbotnikPos.x - 17, garbotnikPos.y - 15 - bigbug->gameData.radar.cam.y, garbotnikPos.x + 17, garbotnikPos.y + 15 - bigbug->gameData.radar.cam.y, c424);
+    // draw camera perimeter
+    drawRect(garbotnikPos.x - 17, garbotnikPos.y - 15 - bigbug->gameData.radar.cam.y, garbotnikPos.x + 17,
+             garbotnikPos.y + 15 - bigbug->gameData.radar.cam.y, c424);
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_OLD_BOOSTERS) & 1)
     {
