@@ -433,6 +433,7 @@ void bb_updateGrabbyHand(bb_entity_t* self);
 void bb_updateDoor(bb_entity_t* self);
 void bb_updateCarActive(bb_entity_t* self);
 void bb_updateCarOpen(bb_entity_t* self);
+void bb_updateFarCar(bb_entity_t* self);
 void bb_updateSpit(bb_entity_t* self);
 void bb_updatePangoAndFriends(bb_entity_t* self);
 void bb_updateDiveSummary(bb_entity_t* self);

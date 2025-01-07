@@ -41,6 +41,8 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
 
             tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
 
+            tilemap->fgTiles[i][j].entity = NULL;
+
             uint32_t rgbCol = paletteToRGB(levelWsg.px[(j * levelWsg.w) + i]);
 
             // red value used for foreground tiles
@@ -125,11 +127,15 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                 }
                 case 102:
                 {
+                    
+                    tilemap->mgTiles[i][j].health = 0;
                     tilemap->fgTiles[i][j].embed = DOOR_EMBED;
                     break;
                 }
                 default:
                 {
+                    
+                    tilemap->mgTiles[i][j].health = 0;
                     break;
                 }
             }

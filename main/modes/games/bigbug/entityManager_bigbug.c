@@ -223,6 +223,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
         loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
         loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
         entityManager->sprites[BB_ARROW].allocated = true;
+        entityManager->sprites[BB_ARROW].brightnessLevels = 1;
     }
 
     if (!entityManager->sprites[BB_HOTDOG].allocated)
@@ -233,6 +234,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
         entityManager->sprites[BB_HOTDOG].originX   = 6;
         entityManager->sprites[BB_HOTDOG].originY   = 6;
         entityManager->sprites[BB_HOTDOG].allocated = true;
+        entityManager->sprites[BB_HOTDOG].brightnessLevels = 1;
     }
 }
 
@@ -263,6 +265,14 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     case BB_CAR:
                     {
                         bb_loadSprite("car", 60, 1, &entityManager->sprites[BB_CAR]);
+                        //if it is on frame 59, unload frames 0 through 58
+                        if(curEntity->currentAnimationFrame == 59)
+                        {
+                            for(int frame = 0; frame < 59; frame++)
+                            {
+                                freeWsg(&entityManager->sprites[BB_CAR].frames[frame]);
+                            }
+                        }
                         break;
                     }
                     case BB_GRABBY_HAND:
@@ -338,12 +348,29 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     // It's like a memcopy
                     *cachedEntity = *curEntity;
 
-                    if (cachedEntity->dataType == FOOD_CART_DATA)
+                    switch(cachedEntity->spriteIndex)
                     {
-                        // tell this partner of the change in address
-                        ((bb_foodCartData_t*)((bb_foodCartData_t*)cachedEntity->data)->partner->data)->partner
+                        case BB_FOOD_CART:
+                        {
+                            // tell this partner of the change in address
+                            ((bb_foodCartData_t*)((bb_foodCartData_t*)cachedEntity->data)->partner->data)->partner
                             = cachedEntity;
+                            break;
+                        }
+                        case BB_SKELETON:
+                        {
+                            // tell the tilemap of the change in address
+                            cachedEntity->gameData->tilemap.fgTiles[cachedEntity->pos.x>>9][cachedEntity->pos.y>>9].entity = cachedEntity;
+                            break;
+                        }
+                        case EGG_LEAVES:
+                        {
+                            // tell the tilemap of the change in address
+                            cachedEntity->gameData->tilemap.fgTiles[cachedEntity->pos.x>>9][cachedEntity->pos.y>>9].entity = cachedEntity;
+                            break;
+                        }
                     }
+
                     // push to the tail
                     push(entityManager->cachedEntities, (void*)cachedEntity);
                     bb_destroyEntity(curEntity, true);
@@ -506,11 +533,11 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         }
     }
 
-    // load all cached entities and destroy them one by one.
-    bb_ensureEntitySpace(entityManager, 1);
+    // destroy all cached entities
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(entityManager->cachedEntities)))
-    {
+    {   
+        bb_destroyEntity(curEntity, false);
         heap_caps_free(curEntity);
     }
 }
@@ -763,7 +790,6 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     {
         if (renderFront)
         {
-            
             entity = bb_findInactiveFrontEntityBackwards(entityManager);
         }
         else
@@ -1132,6 +1158,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(entity->collisions, (void*)collision);
 
             entity->drawFunction = &bb_drawCar;
+            entity->updateFarFunction = &bb_updateFarCar;
 
             // Load sprites just in time.
             bb_loadSprite("car", 60, 1, &entityManager->sprites[BB_CAR]);

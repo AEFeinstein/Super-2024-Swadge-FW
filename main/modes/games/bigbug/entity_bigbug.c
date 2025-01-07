@@ -160,6 +160,17 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     {
         switch (self->dataType)
         {
+            case GARBOTNIK_DATA:
+            {
+                bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
+                    // destroy all cached entities
+                bb_entity_t* curEntity = pop(&gData->towedEntities);
+                while (NULL != curEntity)
+                {   
+                    curEntity = pop(&gData->towedEntities);
+                }
+                break;
+            }
             case DIALOGUE_DATA:
             {
                 bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
@@ -1135,16 +1146,16 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         self->drawFunction   = NULL;
         return;
     }
-    else if (gData->fuel < 38000 && self->gameData->bgm.length == 7217)
+    else if (gData->fuel < 38000 && self->gameData->bgm.length == 5537)
     {
-        // exploration song length 7217
-        // hurry up song length 6480
+        // exploration song length 5537
+        // hurry up song length 4833
         bb_setupMidi();
         unloadMidiFile(&self->gameData->bgm);
         loadMidiFile("Big Bug Hurry up.mid", &self->gameData->bgm, true);
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     }
-    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 6480)
+    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 4833)
     {
         bb_setupMidi();
         unloadMidiFile(&self->gameData->bgm);
@@ -1759,7 +1770,7 @@ void bb_updateMenu(bb_entity_t* self)
                 rData->flame->updateFunction = &bb_updateFlame;
             }
             bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
-            
+
             // create the death dumpster
             self->gameData->entityManager.deathDumpster
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
@@ -2274,6 +2285,37 @@ void bb_updateCarOpen(bb_entity_t* self)
     }
 }
 
+void bb_updateFarCar(bb_entity_t* self)
+{
+    vec_t shiftedCameraPos = self->gameData->camera.camera.pos;
+    shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
+    shiftedCameraPos.y     = (shiftedCameraPos.y + 240) << DECIMAL_BITS;
+    // 2752 = (140+32) << 4; 2432 = (120+32) << 4
+    if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 5504, .halfHeight = 4864},
+                        self, NULL, NULL)
+        == false)
+    {
+        // This car gets cached
+        bb_entity_t* cachedEntity = heap_caps_calloc(1, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
+        // It's like a memcopy
+        *cachedEntity = *self;
+
+        // push to the tail
+        push(self->gameData->entityManager.cachedEntities, (void*)cachedEntity);
+        
+        //free sprites
+        for(int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
+        {
+            if(self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].w || self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].h)
+            {
+                freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
+            }
+        }
+
+        bb_destroyEntity(self, true);
+    }
+}
+
 void bb_updateSpit(bb_entity_t* self)
 {
     // increment the frame counter
@@ -2369,6 +2411,23 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
             bb_setCharacterLine(dData, 9, "Pixel", "That man doesn't know the meaning of friendship.");
 
             dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterLiftoffInteraction;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        else if (self->gameData->day == 2)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(8, "Pango");
+
+            bb_setCharacterLine(dData, 0, "Pango", "Why do you have better shading than us?");
+            bb_setCharacterLine(dData, 1, "Ovo", "Because I'm the main character.");
+            bb_setCharacterLine(dData, 2, "Pango", "But MAGFast is literally named after me!");
+            bb_setCharacterLine(dData, 3, "Ovo", "You fool! It's called mag FEST because of PEST like you.");
+            bb_setCharacterLine(dData, 4, "Po", "That's so metal.");
+            bb_setCharacterLine(dData, 5, "Ovo", "POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+            bb_setCharacterLine(dData, 6, "Ovo", "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!");
+            bb_setCharacterLine(dData, 7, "Pixel", "Hey, don't yell at my friend like that!");
+
+            dData->curString = -1;
             dData->endDialogueCB = &bb_afterLiftoffInteraction;
             bb_setData(ovo, dData, DIALOGUE_DATA);
         }
@@ -3637,12 +3696,11 @@ void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
         if (self->currentAnimationFrame > 1)
         {
             // draw the healthbar
-            drawLineScaled(0, 0, self->currentAnimationFrame - 1, 0, c500, 0,
-                           (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX
-                               - camera->pos.x - self->currentAnimationFrame + 1,
+            drawLineScaled(0, 0, (self->currentAnimationFrame - 1)*2, 0, c500, 0,
+                           (self->pos.x >> DECIMAL_BITS) - camera->pos.x - (self->currentAnimationFrame + 1) * 2,
                            (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
                                - camera->pos.y - 10,
-                           1, 3);
+                           2, 3);
         }
     }
 }
@@ -3655,18 +3713,20 @@ void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
     bb_wileData_t* wData = (bb_wileData_t*)self->data;
     if (wData->lifetime > 0)
     {
+        int32_t startY = MIN((self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285, 0);
         // sample some arbitrary data to draw binary 1's and 0's out of the BGM straight above the wile
         for (int i = 0; i < 17; i++)
         {
             if (self->gameData->bgm.data[i + (wData->lifetime >> 2)] & 1)
             {
+                
                 drawText(&self->gameData->font, c511, "1", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
-                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285 + i * 15);
+                         startY + i * 15);
             }
             else
             {
                 drawText(&self->gameData->font, c511, "0", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
-                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285 + i * 15);
+                        startY + i * 15);
             }
         }
 
@@ -4668,7 +4728,7 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
         return;
     }
 
-    self->gameData->isPaused = false;
+    self->gameData->isPaused = true;
     // find the tutorial egg on screen
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -4787,7 +4847,7 @@ void bb_upgradeRadar(bb_entity_t* self)
 void bb_triggerGameOver(bb_entity_t* self)
 {
     // music is home 2, this function was already triggered. early return.
-    if (self->gameData->bgm.length == 9715)
+    if (self->gameData->bgm.length == 7437)
     {
         return;
     }

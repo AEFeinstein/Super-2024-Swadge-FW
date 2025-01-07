@@ -94,7 +94,7 @@ swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
                            .usesThermometer          = true,
                            .overrideSelectBtn        = false,
                            .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterModeSkipIntro,
+                           .fnEnterMode              = bb_EnterMode,//SkipIntro,
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -238,14 +238,12 @@ static void bb_EnterModeSkipIntro(void)
     uint32_t deathDumpsterX = (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1;
     uint32_t deathDumpsterY = -2173;
 
-
     // create 3 rockets
     for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
     {
-        bigbug->gameData.entityManager.boosterEntities[rocketIdx] = bb_createEntity(
-            &bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
-            deathDumpsterX - 96 + 96 * rocketIdx,
-            deathDumpsterY, false, true);
+        bigbug->gameData.entityManager.boosterEntities[rocketIdx]
+            = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
+                              deathDumpsterX - 96 + 96 * rocketIdx, deathDumpsterY, false, true);
 
         // bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 
@@ -263,7 +261,7 @@ static void bb_EnterModeSkipIntro(void)
         else // rocketIdx == 0
         {
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
-            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 0;
+            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 3;
             bigbug->gameData.entityManager.activeBooster->currentAnimationFrame               = 40;
             bigbug->gameData.entityManager.activeBooster->pos.y                               = 50;
             bigbug->gameData.entityManager.activeBooster->updateFunction                      = bb_updateHeavyFalling;
@@ -283,8 +281,8 @@ static void bb_EnterModeSkipIntro(void)
 
     // create the death dumpster
     bigbug->gameData.entityManager.deathDumpster
-    = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
-                        deathDumpsterX, deathDumpsterY, false, true);
+        = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1, deathDumpsterX,
+                          deathDumpsterY, false, true);
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
@@ -354,6 +352,7 @@ void bb_FreeTilemapData(void)
 
 static void bb_ExitMode(void)
 {
+    soundStop(true);
     heatshrink_decoder_free(bb_hsd);
     heap_caps_free(bb_decodeSpace);
 
@@ -367,7 +366,7 @@ static void bb_ExitMode(void)
     // Free font
     freeFont(&bigbug->gameData.font);
 
-    soundStop(true);
+
     if (bigbug->gameData.bgm.data)
     {
         unloadMidiFile(&bigbug->gameData.bgm);
@@ -380,6 +379,8 @@ static void bb_ExitMode(void)
     bb_FreeTilemapData();
 
     heap_caps_free(bigbug);
+
+    // heap_caps_free(bb_decodeSpace);
 }
 
 static void bb_MainLoop(int64_t elapsedUs)
@@ -736,7 +737,7 @@ static void bb_DrawScene_Radar(void)
                     }
                     else if (POIData->reward == BB_SWADGE)
                     {
-                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1],
+                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
                                       (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                                       (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
@@ -749,13 +750,13 @@ static void bb_DrawScene_Radar(void)
     vec_t garbotnikPos = (vec_t){0};
     if (bigbug->gameData.entityManager.playerEntity != NULL)
     {
-        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                               (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 3};
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> (DECIMAL_BITS + 3)) - 3,
+                               (bigbug->gameData.entityManager.playerEntity->pos.y >> (DECIMAL_BITS + 3)) - 3};
     }
     else
     {
-        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 3,
-                               (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 3};
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.activeBooster->pos.x >> (DECIMAL_BITS + 3)) - 3,
+                               (bigbug->gameData.entityManager.activeBooster->pos.y >> (DECIMAL_BITS + 3)) - 3};
     }
 
     drawCircleFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, 3, c515);
@@ -766,6 +767,9 @@ static void bb_DrawScene_Radar(void)
         drawCircle(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y,
                    bigbug->gameData.radar.playerPingRadius, c404);
     }
+
+    //draw camera perimeter
+    drawRect(garbotnikPos.x - 17, garbotnikPos.y - 15 - bigbug->gameData.radar.cam.y, garbotnikPos.x + 17, garbotnikPos.y + 15 - bigbug->gameData.radar.cam.y, c424);
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_OLD_BOOSTERS) & 1)
     {
@@ -1019,7 +1023,7 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
             {
                 strcpy(upgradeText, "increase max ammo");
                 snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_maxHarpoons,
-                         bigbug->gameData.GarbotnikStat_maxHarpoons + 50);
+                         bigbug->gameData.GarbotnikStat_maxHarpoons + 25);
                 break;
             }
             case GARBOTNIK_MORE_CHOICES:
@@ -1291,8 +1295,6 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                         break;
                     }
                 }
-                bigbug->gameData.garbotnikUpgrade.upgrades
-                    += 1 << bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius];
                 bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
                 bigbug->gameData.screen             = BIGBUG_GAME;
             }
