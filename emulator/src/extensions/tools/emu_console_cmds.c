@@ -634,7 +634,7 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
 
         strncpy(joyDevName, args[0], sizeof(joyDevName));
         const char* originalArg = emulatorArgs.joystick;
-        emulatorArgs.joystick = joyDevName;
+        emulatorArgs.joystick   = joyDevName;
 
         enableExtension("gamepad");
 

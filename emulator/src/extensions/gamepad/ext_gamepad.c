@@ -105,8 +105,8 @@ bool gamepadConnect(emuJoystick_t* joystick, const char* name)
     int winDevNum = -1;
     if (name != NULL)
     {
-        char* endptr = NULL;
-        errno = 0;
+        char* endptr  = NULL;
+        errno         = 0;
         int parsedVal = strtol(name, &endptr, 10);
 
         if (errno != 0 || endptr == name || parsedVal > 15)
@@ -166,7 +166,7 @@ bool gamepadConnect(emuJoystick_t* joystick, const char* name)
                     joystick->axisData = NULL;
                 }
 
-                joystick->data = data;
+                joystick->data      = data;
                 joystick->connected = true;
 
                 return true;
@@ -208,7 +208,7 @@ bool gamepadConnect(emuJoystick_t* joystick, const char* name)
     uint8_t axes;
     if (ioctl(jsFd, JSIOCGAXES, &axes) == -1)
     {
-        joystick->numAxes = 0;
+        joystick->numAxes  = 0;
         joystick->axisData = NULL;
     }
     else
