@@ -2986,14 +2986,17 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         x -= 511;
         y -= 511;
         drawCircle(xOff, yOff, 37, c103);
+        int16_t otherX = x / 5;
+        int16_t otherY = y / 5;
+        drawLineFast(xOff, yOff - 1, xOff + otherX, yOff - otherY - 1, c555);
         if (gData->r > 374)
         {
             drawCircleQuadrants(xOff, yOff, 37, x > 0 && y < 0, x < 0 && y < 0, x < 0 && y > 0, x > 0 && y > 0, c315);
-            drawLineFast(xOff, yOff, xOff + x / 5, yOff - y / 5, c315);
+            drawLineFast(xOff, yOff, xOff + otherX, yOff - otherY, c315);
         }
         else
         {
-            drawLineFast(xOff, yOff, xOff + x / 5, yOff - y / 5, c103);
+            drawLineFast(xOff, yOff, xOff + otherX, yOff - otherY, c103);
         }
     }
 
