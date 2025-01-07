@@ -305,6 +305,8 @@ void taskYIELD(void)
             // This is registered with atexit()
             // CNFGTearDown();
 
+            deinitExtensions();
+
 #ifdef ENABLE_GCOV
             __gcov_dump();
 #endif

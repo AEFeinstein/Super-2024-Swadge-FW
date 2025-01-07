@@ -39,10 +39,11 @@
  *
  * @return A pointer to the memory allocated on success, NULL on failure
  */
-#define heap_caps_malloc(s, c)    heap_caps_malloc_dbg(s, c, __FILE__, __func__, __LINE__)
+#define heap_caps_malloc(s, c)    heap_caps_malloc_dbg(s, c, __FILE__, __func__, __LINE__, NULL)
+#define heap_caps_malloc_tag(s, c, t)    heap_caps_malloc_dbg(s, c, __FILE__, __func__, __LINE__, t)
 
 /** See above, but with function and line debugging */
-void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const char* func, int32_t line);
+void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const char* func, int32_t line, const char* tag);
 
 /**
  * @brief Allocate a chunk of memory which has the given capabilities. The initialized value in the memory is set to
@@ -59,10 +60,11 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
  *
  * @return A pointer to the memory allocated on success, NULL on failure
  */
-#define heap_caps_calloc(n, s, c) heap_caps_calloc_dbg(n, s, c, __FILE__, __func__, __LINE__)
+#define heap_caps_calloc(n, s, c) heap_caps_calloc_dbg(n, s, c, __FILE__, __func__, __LINE__, NULL)
+#define heap_caps_calloc_tag(n, s, c, t) heap_caps_calloc_dbg(n, s, c, __FILE__, __func__, __LINE__, t)
 
 /** See above, but with function and line debugging */
-void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* file, const char* func, int32_t line);
+void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* file, const char* func, int32_t line, const char* tag);
 
 
 /**
@@ -80,17 +82,21 @@ void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* fil
  *
  * @return Pointer to a new buffer of size 'size' with capabilities 'caps', or NULL if allocation failed.
  */
-#define heap_caps_realloc(p, s, c) heap_caps_realloc_dbg(p, s, c, __FILE__, __func__, __LINE__)
+#define heap_caps_realloc(p, s, c) heap_caps_realloc_dbg(p, s, c, __FILE__, __func__, __LINE__, NULL)
+#define heap_caps_realloc_tag(p, s, c, t) heap_caps_realloc_dbg(p, s, c, __FILE__, __func__, __LINE__, t)
 
 /** See above, but with function and line debugging */
-void *heap_caps_realloc_dbg(void *ptr, size_t size, uint32_t caps, const char* file, const char* func, int32_t line);
+void *heap_caps_realloc_dbg(void *ptr, size_t size, uint32_t caps, const char* file, const char* func, int32_t line, const char* tag);
 
 /**
  * @brief Custom free to track memory allocation
  * 
  * @param ptr 
  */
-#define heap_caps_free(p)         heap_caps_free_dbg(p, __FILE__, __func__, __LINE__)
+#define heap_caps_free(p)         heap_caps_free_dbg(p, __FILE__, __func__, __LINE__, NULL)
+#define heap_caps_free_tag(p)         heap_caps_free_dbg(p, __FILE__, __func__, __LINE__, t)
 
 /** See above, but with function and line debugging */
-void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t line);
+void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t line, const char* tag);
+
+void dumpAllocTable(void);

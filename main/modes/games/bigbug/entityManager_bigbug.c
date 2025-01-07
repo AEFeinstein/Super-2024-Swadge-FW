@@ -31,17 +31,24 @@
 void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData)
 {
     bb_loadSprites(entityManager);
-    entityManager->entities = heap_caps_calloc(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
+    entityManager->entities = heap_caps_calloc_tag(MAX_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "entities");
+    entityManager->frontEntities
+        = heap_caps_calloc_tag(MAX_FRONT_ENTITIES, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM, "frontEntities");
 
-    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    for (int i = 0; i < MAX_ENTITIES; i++)
     {
         bb_initializeEntity(&(entityManager->entities[i]), entityManager, gameData);
+    }
+
+    for (int i = 0; i < MAX_FRONT_ENTITIES; i++)
+    {
+        bb_initializeEntity(&(entityManager->frontEntities[i]), entityManager, gameData);
     }
 
     entityManager->activeEntities = 0;
 
     // Use calloc to ensure members are all 0 or NULL
-    entityManager->cachedEntities = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    entityManager->cachedEntities = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "cachedEntities");
 }
 
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t brightnessLevels, bb_sprite_t* sprite)
@@ -50,7 +57,7 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
     if (!sprite->allocated)
     {
         sprite->numFrames = num_frames;
-        sprite->frames    = heap_caps_calloc(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+        sprite->frames    = heap_caps_calloc_tag(brightnessLevels * num_frames, sizeof(wsg_t), MALLOC_CAP_SPIRAM, name);
         sprite->allocated = true;
     }
 
@@ -58,10 +65,14 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames, uint8_t bright
     {
         for (uint8_t i = 0; i < num_frames; i++)
         {
-            char wsg_name[strlen(name) + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" + null
-                                             // terminator ('\0')
-            snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, brightness * num_frames + i);
-            loadWsgInplace(wsg_name, &sprite->frames[brightness * num_frames + i], true, bb_decodeSpace, bb_hsd);
+            wsg_t* wsg = &sprite->frames[brightness * num_frames + i];
+            if (0 == wsg->h && 0 == wsg->w)
+            {
+                char wsg_name[strlen(name) + 8]; // 7 extra characters makes room for up to a 3 digit number + ".wsg" +
+                                                 // null terminator ('\0')
+                snprintf(wsg_name, sizeof(wsg_name), "%s%d.wsg", name, brightness * num_frames + i);
+                loadWsgInplace(wsg_name, &sprite->frames[brightness * num_frames + i], true, bb_decodeSpace, bb_hsd);
+            }
         }
     }
 
@@ -74,9 +85,13 @@ void bb_freeSprite(bb_sprite_t* sprite)
     {
         for (uint8_t brightness = 0; brightness < sprite->brightnessLevels; brightness++)
         {
-            for (uint8_t i = 0; i < sprite->numFrames; i++)
+            for (uint8_t frame = 0; frame < sprite->numFrames; frame++)
             {
-                freeWsg(&sprite->frames[brightness * sprite->numFrames + i]);
+                if (sprite->frames[brightness * sprite->numFrames + frame].w != 0
+                    || sprite->frames[brightness * sprite->numFrames + frame].h != 0)
+                {
+                    freeWsg(&sprite->frames[brightness * sprite->numFrames + frame]);
+                }
             }
         }
         heap_caps_free(sprite->frames);
@@ -129,7 +144,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_loadSprite("bug", 4, 6, &entityManager->sprites[BUG]);
     entityManager->sprites[BUG].originX = 13;
-    entityManager->sprites[BUG].originY = 7;
+    entityManager->sprites[BUG].originY = 6;
 
     bb_loadSprite("bugg", 4, 6, &entityManager->sprites[BUGG]);
     entityManager->sprites[BUGG].originX = 11;
@@ -141,7 +156,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
 
     bb_loadSprite("buggy", 4, 6, &entityManager->sprites[BUGGY]);
     entityManager->sprites[BUGGY].originX = 13;
-    entityManager->sprites[BUGGY].originY = 11;
+    entityManager->sprites[BUGGY].originY = 10;
 
     bb_loadSprite("butt", 4, 6, &entityManager->sprites[BUTT]);
     entityManager->sprites[BUTT].originX = 14;
@@ -182,14 +197,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     entityManager->sprites[BB_DOOR].originX = 16;
     entityManager->sprites[BB_DOOR].originY = 48;
 
-    if (!entityManager->sprites[BB_DONUT].allocated)
-    {
-        entityManager->sprites[BB_DONUT].numFrames = 2;
-        entityManager->sprites[BB_DONUT].frames    = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
-        entityManager->sprites[BB_DONUT].allocated = true;
-    }
-    loadWsgInplace("donut0.wsg", &entityManager->sprites[BB_DONUT].frames[0], true, bb_decodeSpace, bb_hsd);
-    loadWsgInplace("hotdog_rs.wsg", &entityManager->sprites[BB_DONUT].frames[1], true, bb_decodeSpace, bb_hsd);
+    bb_loadSprite("donut", 1, 1, &entityManager->sprites[BB_DONUT]);
     entityManager->sprites[BB_DONUT].originX = 15;
     entityManager->sprites[BB_DONUT].originY = 15;
 
@@ -207,9 +215,27 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
     entityManager->sprites[BB_WILE].originX = 6;
     entityManager->sprites[BB_WILE].originY = 6;
 
-    entityManager->sprites[BB_ARROW].frames = heap_caps_calloc(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
-    loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
-    loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
+    if (!entityManager->sprites[BB_ARROW].allocated)
+    {
+        entityManager->sprites[BB_ARROW].numFrames = 2;
+        entityManager->sprites[BB_ARROW].frames
+            = heap_caps_calloc_tag(2, sizeof(wsg_t), MALLOC_CAP_SPIRAM, "arrowFrames");
+        loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
+        loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
+        entityManager->sprites[BB_ARROW].allocated        = true;
+        entityManager->sprites[BB_ARROW].brightnessLevels = 1;
+    }
+
+    if (!entityManager->sprites[BB_HOTDOG].allocated)
+    {
+        entityManager->sprites[BB_HOTDOG].numFrames = 1;
+        entityManager->sprites[BB_HOTDOG].frames    = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+        loadWsgInplace("hotdog_rs.wsg", &entityManager->sprites[BB_HOTDOG].frames[0], true, bb_decodeSpace, bb_hsd);
+        entityManager->sprites[BB_HOTDOG].originX          = 6;
+        entityManager->sprites[BB_HOTDOG].originY          = 6;
+        entityManager->sprites[BB_HOTDOG].allocated        = true;
+        entityManager->sprites[BB_HOTDOG].brightnessLevels = 1;
+    }
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -239,6 +265,14 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     case BB_CAR:
                     {
                         bb_loadSprite("car", 60, 1, &entityManager->sprites[BB_CAR]);
+                        // if it is on frame 59, unload frames 0 through 58
+                        if (curEntity->currentAnimationFrame == 59)
+                        {
+                            for (int frame = 0; frame < 59; frame++)
+                            {
+                                freeWsg(&entityManager->sprites[BB_CAR].frames[frame]);
+                            }
+                        }
                         break;
                     }
                     case BB_GRABBY_HAND:
@@ -278,15 +312,33 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                 *foundSpot = *curEntity;
                 entityManager->activeEntities++;
                 heap_caps_free(removeEntry(entityManager->cachedEntities, currentNode));
+
+                if (foundSpot->spriteIndex == EGG_LEAVES || foundSpot->spriteIndex == BB_SKELETON)
+                {
+                    // inform the tilemap of this uncached embedded entity address.
+                    entityManager->activeBooster->gameData->tilemap
+                        .fgTiles[foundSpot->pos.x >> 9][foundSpot->pos.y >> 9]
+                        .entity
+                        = foundSpot;
+                }
             }
         }
         currentNode = next;
     }
 
     // This loops over all entities, doing updates and collision checks and moving the camera to the viewEntity.
-    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    for (uint8_t i = 0; i < MAX_ENTITIES + MAX_FRONT_ENTITIES; i++)
     {
-        bb_entity_t* curEntity = &entityManager->entities[i];
+        bb_entity_t* curEntity;
+        if (i < MAX_ENTITIES)
+        {
+            curEntity = &entityManager->entities[i];
+        }
+        else
+        {
+            curEntity = &entityManager->frontEntities[i - MAX_ENTITIES];
+        }
+
         if (curEntity->active)
         {
             if (curEntity->cacheable)
@@ -299,12 +351,37 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     // It's like a memcopy
                     *cachedEntity = *curEntity;
 
-                    if (cachedEntity->dataType == FOOD_CART_DATA)
+                    switch (cachedEntity->spriteIndex)
                     {
-                        // tell this partner of the change in address
-                        ((bb_foodCartData_t*)((bb_foodCartData_t*)cachedEntity->data)->partner->data)->partner
-                            = cachedEntity;
+                        case BB_FOOD_CART:
+                        {
+                            // tell this partner of the change in address
+                            ((bb_foodCartData_t*)((bb_foodCartData_t*)cachedEntity->data)->partner->data)->partner
+                                = cachedEntity;
+                            break;
+                        }
+                        case BB_SKELETON:
+                        {
+                            // tell the tilemap of the change in address
+                            cachedEntity->gameData->tilemap.fgTiles[cachedEntity->pos.x >> 9][cachedEntity->pos.y >> 9]
+                                .entity
+                                = cachedEntity;
+                            break;
+                        }
+                        case EGG_LEAVES:
+                        {
+                            // tell the tilemap of the change in address
+                            cachedEntity->gameData->tilemap.fgTiles[cachedEntity->pos.x >> 9][cachedEntity->pos.y >> 9]
+                                .entity
+                                = cachedEntity;
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
                     }
+
                     // push to the tail
                     push(entityManager->cachedEntities, (void*)cachedEntity);
                     bb_destroyEntity(curEntity, true);
@@ -315,7 +392,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
             if (curEntity->updateFunction != NULL
                 && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
             {
-                curEntity->updateFunction(&(entityManager->entities[i]));
+                curEntity->updateFunction(curEntity);
             }
             if (curEntity->updateFarFunction != NULL
                 && (!isPaused || curEntity->spriteIndex == NO_SPRITE_POI || curEntity->spriteIndex == OVO_TALK))
@@ -445,20 +522,31 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
             continue;
         }
         if (excludePersistentEntities
-            && (currentEntity->spriteIndex == BB_DEATH_DUMPSTER || currentEntity->spriteIndex == ROCKET_ANIM
-                || currentEntity->spriteIndex == FLAME_ANIM || currentEntity->spriteIndex == CRUMBLE_ANIM
-                || currentEntity->spriteIndex == NO_SPRITE_STAR))
+            && (currentEntity->spriteIndex == FLAME_ANIM || currentEntity->spriteIndex == NO_SPRITE_STAR))
         {
             continue;
         }
         bb_destroyEntity(currentEntity, false);
     }
 
-    // load all cached entities and destroy them one by one.
-    bb_ensureEntitySpace(entityManager, 1);
+    if (!excludePersistentEntities)
+    {
+        for (uint8_t i = 0; i < MAX_FRONT_ENTITIES; i++)
+        {
+            bb_entity_t* currentEntity = &(entityManager->frontEntities[i]);
+            if (!currentEntity->active)
+            {
+                continue;
+            }
+            bb_destroyEntity(currentEntity, false);
+        }
+    }
+
+    // destroy all cached entities
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(entityManager->cachedEntities)))
     {
+        bb_destroyEntity(curEntity, false);
         heap_caps_free(curEntity);
     }
 }
@@ -557,29 +645,34 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
 
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 {
-    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    for (int i = 0; i < MAX_ENTITIES + MAX_FRONT_ENTITIES; i++)
     {
-        bb_entity_t* currentEntity = &entityManager->entities[i];
-
-        if (currentEntity->active && !currentEntity->forceToFront)
+        bb_entity_t* currentEntity;
+        if (i < MAX_ENTITIES)
+        {
+            currentEntity = &entityManager->entities[i];
+        }
+        else
+        {
+            currentEntity = &entityManager->frontEntities[i - MAX_ENTITIES];
+        }
+        if (currentEntity->active)
         {
             bb_drawEntity(currentEntity, entityManager, camera);
         }
     }
+}
 
-    for (uint8_t i = MAX_ENTITIES - 1;; i--)
+bb_entity_t* bb_findInactiveFrontEntity(bb_entityManager_t* entityManager)
+{
+    for (int i = 0; i < MAX_FRONT_ENTITIES; i++)
     {
-        bb_entity_t* currentEntity = &entityManager->entities[i];
-
-        if (!currentEntity->active)
+        if (entityManager->frontEntities[i].active == false)
         {
-            break;
-        }
-        if (currentEntity->forceToFront)
-        {
-            bb_drawEntity(currentEntity, entityManager, camera);
+            return &entityManager->frontEntities[i];
         }
     }
+    return NULL;
 }
 
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
@@ -594,6 +687,18 @@ bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager)
         if (entityManager->entities[i].active == false)
         {
             return &entityManager->entities[i];
+        }
+    }
+    return NULL;
+}
+
+bb_entity_t* bb_findInactiveFrontEntityBackwards(bb_entityManager_t* entityManager)
+{
+    for (int i = MAX_FRONT_ENTITIES - 1; i >= 0; i--)
+    {
+        if (entityManager->frontEntities[i].active == false)
+        {
+            return &entityManager->frontEntities[i];
         }
     }
     return NULL;
@@ -683,20 +788,34 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                              bb_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y,
                              bool renderFront, bool forceToFront)
 {
-    if (entityManager->activeEntities == MAX_ENTITIES)
+    if (!forceToFront && entityManager->activeEntities == MAX_ENTITIES)
     {
         // ESP_LOGD(BB_TAG,"Failed entity creation. MAX_ENTITIES exceeded.\n");
         return NULL;
     }
 
     bb_entity_t* entity;
-    if (renderFront)
+    if (forceToFront)
     {
-        entity = bb_findInactiveEntityBackwards(entityManager);
+        if (renderFront)
+        {
+            entity = bb_findInactiveFrontEntityBackwards(entityManager);
+        }
+        else
+        {
+            entity = bb_findInactiveFrontEntity(entityManager);
+        }
     }
     else
     {
-        entity = bb_findInactiveEntity(entityManager);
+        if (renderFront)
+        {
+            entity = bb_findInactiveEntityBackwards(entityManager);
+        }
+        else
+        {
+            entity = bb_findInactiveEntity(entityManager);
+        }
     }
 
     if (entity == NULL)
@@ -705,10 +824,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         return NULL;
     }
 
-    entity->active       = true;
-    entity->forceToFront = forceToFront;
-    entity->pos.x        = x << DECIMAL_BITS;
-    entity->pos.y        = y << DECIMAL_BITS;
+    entity->active = true;
+    entity->pos.x  = x << DECIMAL_BITS;
+    entity->pos.y  = y << DECIMAL_BITS;
 
     entity->type        = type;
     entity->paused      = paused;
@@ -761,17 +879,18 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case ROCKET_ANIM:
         {
-            bb_rocketData_t* rData = heap_caps_calloc(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM);
+            bb_rocketData_t* rData = heap_caps_calloc_tag(1, sizeof(bb_rocketData_t), MALLOC_CAP_SPIRAM, "rData");
             rData->flame           = NULL;
             rData->yVel            = 0;
             rData->armAngle        = 2880; // That is 180 << DECIMAL_BITS
             bb_setData(entity, rData, ROCKET_DATA);
 
-            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            entity->collisions = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rCollisions");
+            list_t* others     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
             push(others, (void*)GARBOTNIK_FLYING);
-            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
-            *collision                = (bb_collision_t){others, bb_onCollisionHeavyFalling};
+            bb_collision_t* collision
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision = (bb_collision_t){others, bb_onCollisionHeavyFalling};
             push(entity->collisions, (void*)collision);
 
             entity->halfWidth    = 192;
@@ -860,7 +979,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->cacheable = true;
 
             entity->halfWidth  = 176;
-            entity->halfHeight = 48;
+            entity->halfHeight = 64;
 
             entity->updateFunction = &bb_updateWalkingBug;
             entity->drawFunction   = &bb_drawBug;
@@ -920,7 +1039,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->cacheable = true;
 
             entity->halfWidth  = 184;
-            entity->halfHeight = 64;
+            entity->halfHeight = 80;
 
             entity->updateFunction = &bb_updateWalkingBug;
             entity->drawFunction   = &bb_drawBug;
@@ -1047,7 +1166,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             *collision                = (bb_collision_t){others, bb_onCollisionCarIdle};
             push(entity->collisions, (void*)collision);
 
-            entity->drawFunction = &bb_drawCar;
+            entity->drawFunction      = &bb_drawCar;
+            entity->updateFarFunction = &bb_updateFarCar;
 
             // Load sprites just in time.
             bb_loadSprite("car", 60, 1, &entityManager->sprites[BB_CAR]);
@@ -1403,6 +1523,7 @@ void bb_freeEntityManager(bb_entityManager_t* self)
     }
     // free and clear
     heap_caps_free(self->entities);
+    heap_caps_free(self->frontEntities);
 
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(self->cachedEntities)))

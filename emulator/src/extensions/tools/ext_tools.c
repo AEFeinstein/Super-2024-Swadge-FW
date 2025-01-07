@@ -13,6 +13,7 @@
 #include "ext_modes.h"
 #include "emu_utils.h"
 #include "emu_console_cmds.h"
+#include "esp_heap_caps.h"
 
 #if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
     #pragma GCC diagnostic push
@@ -221,6 +222,11 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
             }
             setPaneVisibility(&toolsEmuExtension, fpsPaneId, showFps);
         }
+    }
+    else if (keycode == CNFG_KEY_F8)
+    {
+        // Dump allocations
+        dumpAllocTable();
     }
     else if (keycode == CNFG_KEY_F9)
     {

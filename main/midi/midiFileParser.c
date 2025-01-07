@@ -6,6 +6,7 @@
 #include "midiPlayer.h"
 #include "heatshrink_helper.h"
 #include "cnfs.h"
+#include "macros.h"
 
 #include <esp_log.h>
 #include <esp_heap_caps.h>
@@ -60,7 +61,7 @@ typedef struct
 static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* out);
 static int writeVariableLength(uint8_t* out, int max, uint32_t length);
 static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track);
-static bool parseMidiHeader(midiFile_t* file);
+static bool parseMidiHeader(midiFile_t* file, const char* name);
 static void readFirstEvents(midiFileReader_t* reader);
 
 //==============================================================================
@@ -598,7 +599,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
  * @return true if the MIDI file contains a valid header and was successfully parsed
  * @return false if the MIDI file header could not be parsed
  */
-static bool parseMidiHeader(midiFile_t* file)
+static bool parseMidiHeader(midiFile_t* file, const char* name)
 {
     uint32_t offset = 0;
 
@@ -636,7 +637,7 @@ static bool parseMidiHeader(midiFile_t* file)
     uint16_t trackChunkCount = (file->data[offset] << 8) | file->data[offset + 1];
     offset += 2;
     file->trackCount = trackChunkCount;
-    file->tracks     = heap_caps_calloc(trackChunkCount, sizeof(midiTrack_t), MALLOC_CAP_SPIRAM);
+    file->tracks     = heap_caps_calloc_tag(trackChunkCount, sizeof(midiTrack_t), MALLOC_CAP_SPIRAM, name);
     if (NULL == file->tracks)
     {
         ESP_LOGE("MIDIParser", "Could not allocate data for MIDI file with %" PRIu16 " tracks", trackChunkCount);
@@ -805,7 +806,7 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
             if (heatshrinkDecompress(NULL, &size, data, (uint32_t)raw_size))
             {
                 // Size was read successfully, allocate the non-compressed buffer
-                uint8_t* decompressed = heap_caps_malloc(size, spiRam ? MALLOC_CAP_SPIRAM : 0);
+                uint8_t* decompressed = heap_caps_malloc_tag(size, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, name);
                 if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
                 {
                     // Success, free the raw data
@@ -838,7 +839,7 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
         ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", name, size);
         file->data   = data;
         file->length = (uint32_t)size;
-        if (parseMidiHeader(file))
+        if (parseMidiHeader(file, name))
         {
             return true;
         }
@@ -982,7 +983,7 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
         if (info->eventParsed || (info->nextEvent.deltaTime != UINT32_MAX && trackParseNext(reader, info)))
         {
             // info->nextEvent has now been set by trackParseNext()
-            if (!info->nextEvent.deltaTime || reader->file->format == MIDI_FORMAT_2)
+            if (!info->nextEvent.deltaTime || (reader && reader->file && reader->file->format == MIDI_FORMAT_2))
             {
                 // The delta-time is 0! Just return this event immediately
                 *event = info->nextEvent;

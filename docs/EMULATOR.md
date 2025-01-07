@@ -62,6 +62,7 @@ the `install.sh` script:
 | Escape | Exit\*         | Exits the emulator, **only** when in fullscreen            |
 | F4, \` | Toggle Console | Opens or closes the emulator console                       |
 | F5     | Toggle FPS     | Shows or hides the FPS counter                             |
+| F8     | Print Alloc    | Print all current allocated memory, if printing enabled    |
 | F9     | Step Frame     | **When paused**, steps forward a single frame              |
 | F10    | Pause Emulator | Pauses or unpauses the emulator                            |
 | F11    | Screen Record  | Starts or stops recording the screen to a GIF file         |

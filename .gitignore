@@ -93,3 +93,4 @@ main/utils/cnfs_image.h
 tools/cnfs/cnfs_gen
 
 _old/*
+bigbug-mem.csv
