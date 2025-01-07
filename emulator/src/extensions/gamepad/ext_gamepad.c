@@ -77,7 +77,7 @@ typedef struct
 {
     UINT deviceNum;
     // Represents the last state transmitted to the consumer
-    JOYINFOEX lastState;
+    JOYINFOEX curState;
     // Represents the actual state most recently returned by the OS
     JOYINFOEX newState;
     bool pendingState;
@@ -144,12 +144,12 @@ bool gamepadConnect(emuJoystick_t* joystick)
 
                 printf("Joystick #%d: %s\n", i, caps.szPname);
                 printf("  Buttons: %d/%d\n", caps.wNumAxes, caps.wMaxAxes);
-                printf("  Axes: %d\n", cap.wNumButtons);
+                printf("  Axes: %d\n", caps.wNumButtons);
 
                 winData->deviceNum = i;
 
-                joystick->numButtons = cap.wNumButtons;
-                joystick->numAxes = cap.wNumAxes;
+                joystick->numButtons = caps.wNumButtons;
+                joystick->numAxes = caps.wNumAxes;
 
                 joystick->data = data;
 
@@ -158,6 +158,7 @@ bool gamepadConnect(emuJoystick_t* joystick)
         }
     }
 
+    return false;
 #elif defined(EMU_LINUX)
     const char* device = "/dev/input/js0";
     int jsFd;
@@ -248,7 +249,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 winEvent.dwSize = sizeof(JOYINFOEX);
                 winEvent.dwFlags = 0;
 
-                MMRESULT result = joyGetPosEx((UINT)joystick->data, &winEvent);
+                MMRESULT result = joyGetPosEx(winData->deviceNum, &winEvent);
 
                 if (result == JOYERR_NOERROR)
                 {
@@ -273,7 +274,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 
             if (winData->pendingState)
             {
-                JOYINFOEX* cur = &winData->lastState;
+                JOYINFOEX* cur = &winData->curState;
                 JOYINFOEX* new = &winData->newState;
                 if (cur->dwXpos != new->dwXpos)
                 {
@@ -322,9 +323,9 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     event->value = new->dwVpos;
                     cur->dwVpos = new->dwVpos;
                 }
-                else if (cur->buttons != new->buttons)
+                else if (cur->dwButtons != new->dwButtons)
                 {
-                    uint32_t change = cur->buttons ^ new->buttons;
+                    uint32_t change = cur->dwButtons ^ new->dwButtons;
                     if (change != 0)
                     {
                         uint32_t buttonIdx = __builtin_ctz(change);
@@ -336,13 +337,13 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                         {
                             // Button pressed
                             event->value = 1;
-                            cur->buttons |= (1 << buttonIdx);
+                            cur->dwButtons |= (1 << buttonIdx);
                         }
                         else
                         {
                             // Button released
                             event->value = 0;
-                            cur->buttons &= ~(1 << buttonIdx);
+                            cur->dwButtons &= ~(1 << buttonIdx);
                         }
 
                         return true;
