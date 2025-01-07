@@ -333,7 +333,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                         event->type = BUTTON;
                         event->button = buttonIdx;
 
-                        if (new->buttons & (1 << buttonIdx))
+                        if (new->dwButtons & (1 << buttonIdx))
                         {
                             // Button pressed
                             event->value = 1;
