@@ -4086,7 +4086,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     self->cacheable = false;
 
     // number of bugs to fight. More risk at greater depths.
-    self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 4;
+    self->gameData->carFightState = (2 * (self->pos.y >> 9) / 20) + 4;
 
     // one extra bug than required for easier completion and to match the same feel as in testing.
     bb_spawnHorde(self, self->gameData->carFightState + 1);
