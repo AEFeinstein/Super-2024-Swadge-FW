@@ -59,9 +59,9 @@ void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
     int16_t yOff = Y_MARGIN;
 
     // Draw the name
-    int16_t tWidth = textWidth(&sh->rodin, sh->songName);
-    int16_t xOff   = 0;
-    drawTextWordWrapCentered(&sh->rodin, c555, sh->songName, &xOff, &yOff, TFT_WIDTH, TFT_HEIGHT);
+    int16_t tWidth     = textWidth(&sh->rodin, sh->songName);
+    int16_t xOff_title = 0;
+    drawTextWordWrapCentered(&sh->rodin, c555, sh->songName, &xOff_title, &yOff, TFT_WIDTH, TFT_HEIGHT);
     yOff += sh->rodin.height + Y_MARGIN;
 
     // Draw background for the body

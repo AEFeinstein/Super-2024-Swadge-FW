@@ -811,9 +811,8 @@ void shDrawGame(shVars_t* sh)
     // Draw title and artist during lead in
     if (sh->leadInUs > 0)
     {
-        int16_t tWidth = textWidth(&sh->rodin, sh->menuSong->name);
-        int16_t xOff   = 0;
-        int16_t yOff   = (TFT_HEIGHT / 2) - sh->rodin.height - 2;
+        int16_t xOff = 0;
+        int16_t yOff = (TFT_HEIGHT / 2) - sh->rodin.height - 2;
         drawTextWordWrapCentered(&sh->rodin, c555, sh->menuSong->name, &xOff, &yOff, TFT_WIDTH, TFT_HEIGHT);
         xOff = 0;
         yOff += sh->rodin.height + 8;
