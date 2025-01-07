@@ -8,11 +8,9 @@
 
 #include <esp_log.h>
 
-#include <fcntl.h>
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <errno.h>
 #include <math.h>
 #include <stdint.h>
@@ -22,9 +20,9 @@
 #include <joystickapi.h>
 #elif defined(EMU_LINUX)
 #include <linux/joystick.h>
+#include <fcntl.h>
+#include <unistd.h>
 #elif defined(EMU_MACOS)
-#else
-#error "Unrecognized platform"
 #endif
 
 // Defines the mapping of the default Swadge Gamepad mode
@@ -84,8 +82,6 @@ typedef struct
     bool pendingState;
     // Whether the second POV hat axis is pending
     bool pendingPov;
-    int* axisMins;
-    int* axisMaxs;
 } emuWinJoyData_t;
 #endif
 
@@ -116,18 +112,21 @@ typedef struct
 } emuJoystick_t;
 
 bool gamepadInitCb(emuArgs_t* args);
+void gamepadDeinitCb(void);
 void gamepadPreFrameCb(uint64_t frame);
 
 bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event);
 bool gamepadConnect(emuJoystick_t* joystick);
+void gamepadDisconnect(emuJoystick_t* joystick);
 
 emuExtension_t gamepadEmuExtension = {
     .name = "gamepad",
     .fnInitCb = gamepadInitCb,
+    .fnDeinitCb = gamepadDeinitCb,
     .fnPreFrameCb = gamepadPreFrameCb,
 };
 
-static emuJoystick_t joystick = {0};
+static emuJoystick_t joystickExt = {0};
 
 bool gamepadConnect(emuJoystick_t* joystick)
 {
@@ -145,10 +144,6 @@ bool gamepadConnect(emuJoystick_t* joystick)
             if (NULL != data)
             {
                 emuWinJoyData_t* winData = (emuWinJoyData_t*)data;
-
-                printf("Joystick #%d: %s\n", i, caps.szPname);
-                printf("  Axes: %d/%d\n", caps.wNumAxes, caps.wMaxAxes);
-                printf("  Buttons: %d\n", caps.wNumButtons);
 
                 winData->deviceNum = i;
 
@@ -172,52 +167,10 @@ bool gamepadConnect(emuJoystick_t* joystick)
                 if (joystick->numAxes > 0)
                 {
                     joystick->axisData = calloc(joystick->numAxes, sizeof(int16_t));
-                    winData->axisMins = calloc(joystick->numAxes, sizeof(int16_t));
-                    winData->axisMaxs = calloc(joystick->numAxes, sizeof(int16_t));
-
-                    for (int axis = 0; axis < MIN(6, joystick->numAxes); axis++)
-                    {
-                        int min = 0, max = 0;
-                        switch (axis)
-                        {
-                            case 0:
-                                min = caps.wXmin;
-                                max = caps.wXmax;
-                                break;
-
-                            case 1:
-                                min = caps.wYmin;
-                                max = caps.wYmax;
-                                break;
-
-                            case 2:
-                                min = caps.wZmin;
-                                max = caps.wZmax;
-                                break;
-
-                            case 3:
-                                min = caps.wRmin;
-                                max = caps.wRmax;
-                                break;
-
-                            case 4:
-                                min = caps.wUmin;
-                                max = caps.wUmax;
-                                break;
-
-                            case 5:
-                                min = caps.wVmin;
-                                max = caps.wVmax;
-                                break;
-
-                            default: break;
-                        }
-                        winData->axisMins[axis] = min;
-                        winData->axisMaxs[axis] = max;
-
-                        const char axisIds[] = "XYZRUV";
-                        printf("Axis #%d (%c): [%d, %d]\n", axis, axisIds[axis], min, max);
-                    }
+                }
+                else
+                {
+                    joystick->axisData = NULL;
                 }
 
                 joystick->data = data;
@@ -267,6 +220,34 @@ bool gamepadConnect(emuJoystick_t* joystick)
 #else
     return false;
 #endif
+}
+
+void gamepadDisconnect(emuJoystick_t* joystick)
+{
+#if defined(EMU_WINDOWS)
+    if (joystick->data)
+    {
+        free(joystick->data);
+        joystick->data = NULL;
+    }
+#elif defined(EMU_LINUX)
+    close((int)joystick->data);
+    joystick->data = NULL;
+#endif
+
+    if (joystick->axisData)
+    {
+        free(joystick->axisData);
+        joystick->axisData = NULL;
+        joystick->numAxes = 0;
+    }
+
+    if (joystick->buttonData)
+    {
+        free(joystick->buttonData);
+        joystick->buttonData = NULL;
+        joystick->numButtons = 0;
+    }
 }
 
 static void applyEvent(emuJoystick_t* joystick, const emuJoystickEvent_t* event)
@@ -397,8 +378,6 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 }
                 else if ((new->dwFlags & JOY_RETURNBUTTONS) && cur->dwButtons != new->dwButtons)
                 {
-                    printf("Buttons changed, %x -> %x\n", cur->dwButtons, new->dwButtons);
-
                     DWORD change = cur->dwButtons ^ new->dwButtons;
                     if (change != 0)
                     {
@@ -546,19 +525,24 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 
 bool gamepadInitCb(emuArgs_t* args)
 {
-    if (gamepadConnect(&joystick))
+    if (gamepadConnect(&joystickExt))
     {
-        ESP_LOGI("GamepadExt", "Connected to joystick with %d axes and %d buttons\n", joystick.numAxes, joystick.numButtons);
+        ESP_LOGI("GamepadExt", "Connected to joystick with %d axes and %d buttons\n", joystickExt.numAxes, joystickExt.numButtons);
         return true;
     }
 
     return false;
 }
 
+void gamepadDeinitCb(void)
+{
+    gamepadDisconnect(&joystickExt);
+}
+
 void gamepadPreFrameCb(uint64_t frame)
 {
     emuJoystickEvent_t event;
-    while (gamepadReadEvent(&joystick, &event))
+    while (gamepadReadEvent(&joystickExt, &event))
     {
         switch (event.type)
         {
@@ -581,8 +565,8 @@ void gamepadPreFrameCb(uint64_t frame)
                         // Joystick data comes in as a value from (-2**15) to (2**15-1)
                         // We need to take that down to (-128) to (127) (divide by 8)
                         // Then need to take the atan2 of it
-                        double x = (double)joystick.axisData[TOUCH_AXIS_X];
-                        double y = (double)joystick.axisData[TOUCH_AXIS_Y];
+                        double x = (double)joystickExt.axisData[TOUCH_AXIS_X];
+                        double y = (double)joystickExt.axisData[TOUCH_AXIS_Y];
 
                         if (x == 0 && y == 0)
                         {
@@ -606,9 +590,9 @@ void gamepadPreFrameCb(uint64_t frame)
                     case ACCEL_AXIS_Y:
                     case ACCEL_AXIS_Z:
                     {
-                        int16_t accelX = joystick.axisData[ACCEL_AXIS_X] / 128;
-                        int16_t accelY = joystick.axisData[ACCEL_AXIS_Y] / 128;
-                        int16_t accelZ = joystick.axisData[ACCEL_AXIS_Z] / 128;
+                        int16_t accelX = joystickExt.axisData[ACCEL_AXIS_X] / 128;
+                        int16_t accelY = joystickExt.axisData[ACCEL_AXIS_Y] / 128;
+                        int16_t accelZ = joystickExt.axisData[ACCEL_AXIS_Z] / 128;
 
                         emulatorSetAccelerometer(accelX, accelY, accelZ);
                         break;
@@ -617,22 +601,21 @@ void gamepadPreFrameCb(uint64_t frame)
                     case DPAD_AXIS_X:
                     case DPAD_AXIS_Y:
                     {
-                        uint8_t val = 0;
                         buttonBit_t curState = 0;
-                        if (joystick.axisData[DPAD_AXIS_X] < 0)
+                        if (joystickExt.axisData[DPAD_AXIS_X] < 0)
                         {
                             curState |= PB_LEFT;
                         }
-                        else if (joystick.axisData[DPAD_AXIS_X] > 0)
+                        else if (joystickExt.axisData[DPAD_AXIS_X] > 0)
                         {
                             curState |= PB_RIGHT;
                         }
 
-                        if (joystick.axisData[DPAD_AXIS_Y] < 0)
+                        if (joystickExt.axisData[DPAD_AXIS_Y] < 0)
                         {
                             curState |= PB_UP;
                         }
-                        else if (joystick.axisData[DPAD_AXIS_Y] > 0)
+                        else if (joystickExt.axisData[DPAD_AXIS_Y] > 0)
                         {
                             curState |= PB_DOWN;
                         }
