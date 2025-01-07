@@ -21,6 +21,7 @@
 #include "esp_heap_caps.h"
 #include "hdw-tft.h"
 #include <math.h>
+#include "mainMenu.h"
 
 //==============================================================================
 // Defines
@@ -1557,7 +1558,8 @@ static void bb_GameLoop(int64_t elapsedUs)
 {
     if (bigbug->gameData.exit)
     {
-        bb_ExitMode();
+        switchToSwadgeMode(&mainMenuMode);
+        return;
     }
     bigbug->gameData.btnDownState = 0b0;
     // Always process button events, regardless of control scheme, so the main menu button can be captured

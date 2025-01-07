@@ -351,9 +351,9 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -34744) // reached the death dumpster
+    if (self->pos.y < -34760) // reached the death dumpster
     {
-        self->pos.y = -34744;
+        self->pos.y = -34760;
         rData->yVel = 0;
 
         freeFont(&self->gameData->cgFont);
@@ -2056,7 +2056,7 @@ void bb_updateGameOver(bb_entity_t* self)
             {
                 freeWsg(&goData->fullscreenGraphic);
             }
-            if (boosterIdx <= 2)
+            if (boosterIdx < 2)
             {
                 self->currentAnimationFrame = 1;
                 loadWsgInplace("GameOver1.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
@@ -4743,7 +4743,7 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 
     self->gameData->isPaused = false;
 
-    if (self->gameData->day)
+    if (self->gameData->day || self->gameData->entityManager.activeBooster != self->gameData->entityManager.boosterEntities[0])
     {
         return;
     }
