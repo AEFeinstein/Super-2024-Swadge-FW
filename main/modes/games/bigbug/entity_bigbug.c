@@ -2423,9 +2423,26 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
             bb_setCharacterLine(dData, 2, "Pango", "But MAGFast is literally named after me!");
             bb_setCharacterLine(dData, 3, "Ovo", "You fool! It's called mag FEST because of PEST like you.");
             bb_setCharacterLine(dData, 4, "Po", "That's so metal.");
-            bb_setCharacterLine(dData, 5, "Ovo", "POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-            bb_setCharacterLine(dData, 6, "Ovo", "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!");
+            bb_setCharacterLine(dData, 5, "Ovo", "POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+            bb_setCharacterLine(dData, 6, "Ovo", "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!");
             bb_setCharacterLine(dData, 7, "Pixel", "Hey, don't yell at my friend like that!");
+
+            dData->curString = -1;
+            dData->endDialogueCB = &bb_afterLiftoffInteraction;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        else if (self->gameData->day == 3)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(8, "Pango");
+
+            bb_setCharacterLine(dData, 0, "Pango", "GARBOTNIK! Are you feeling well?");
+            bb_setCharacterLine(dData, 1, "Ovo", "Huh?");
+            bb_setCharacterLine(dData, 2, "Pango", "Looks like you've got a case of the T-rash!");
+            bb_setCharacterLine(dData, 3, "Ovo", "Aaaaaargh! Darn it! Darn it! DARN IT! DARN IT!");
+            bb_setCharacterLine(dData, 4, "Ovo", "GLITCH MY CIRCUITS!");
+            bb_setCharacterLine(dData, 5, "Pixel", "Freaking got him, Pango!");
+            bb_setCharacterLine(dData, 6, "Ovo", "T-raaaaash goes in the T-raaaaaash can.");
+            bb_setCharacterLine(dData, 7, "Po", "Huh?");
 
             dData->curString = -1;
             dData->endDialogueCB = &bb_afterLiftoffInteraction;
