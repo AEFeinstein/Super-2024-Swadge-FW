@@ -8,6 +8,7 @@
 #include "emu_utils.h"
 #include "ext_replay.h"
 #include "ext_fuzzer.h"
+#include "ext_gamepad.h"
 #include "hdw-nvs_emu.h"
 #include "emu_cnfs.h"
 
@@ -21,6 +22,7 @@ static int fuzzCommandCb(const char** args, int argCount, char* out);
 static int touchCommandCb(const char** args, int argCount, char* out);
 static int ledsCommandCb(const char** args, int argCount, char* out);
 static int injectCommandCb(const char** args, int argCount, char* out);
+static int joystickCommandCb(const char** args, int argCount, char* out);
 static int helpCommandCb(const char** args, int argCount, char* out);
 
 static const char* buttonNames[] = {
@@ -46,6 +48,7 @@ static const char* commandDocs[][3] = {
     {"fuzz motion", "fuzz motion [on|off]", "toggles fuzzing of accelerometer motion inputs"},
     {"fuzz time", "fuzz time [on|off]", "toggles fuzzing of frame times"},
     {"touchpad", "touchpad [on|off]", "toggles the virtual touchpad"},
+    {"joystick", "joystick [device]", "toggles the joystick or connects to a specific device"},
     {"inject", "inject <nvs|asset> <...>", "injects data into NVS or assets"},
     {"inject nvs", "inject nvs [namespace] <key> <int|str|file> <value>",
      "injects data into an NVS key. Value can be either an integer, a string, or a file path"},
@@ -59,6 +62,7 @@ static const consoleCommand_t consoleCommands[] = {
     {.name = "record", .cb = recordCommandCb},         {.name = "fuzz", .cb = fuzzCommandCb},
     {.name = "touchpad", .cb = touchCommandCb},        {.name = "leds", .cb = ledsCommandCb},
     {.name = "inject", .cb = injectCommandCb},         {.name = "help", .cb = helpCommandCb},
+    {.name = "joystick", .cb = joystickCommandCb},
 };
 
 const consoleCommand_t* getConsoleCommands(void)
@@ -617,6 +621,56 @@ static int injectCommandCb(const char** args, int argCount, char* out)
     else
     {
         return 0;
+    }
+}
+
+static char joyDevName[128];
+static int joystickCommandCb(const char** args, int argCount, char* out)
+{
+    if (argCount > 0)
+    {
+        // Enable and connect to named device
+        disableExtension("gamepad");
+
+        strncpy(joyDevName, args[0], sizeof(joyDevName));
+        const char* originalArg = emulatorArgs.joystick;
+        emulatorArgs.joystick = joyDevName;
+
+        enableExtension("gamepad");
+
+        if (emuGamepadConnected())
+        {
+            return snprintf(out, 1024, "Connected to joystick %s!\n", emulatorArgs.joystick);
+        }
+        else
+        {
+            emulatorArgs.joystick = originalArg;
+            return snprintf(out, 1024, "Failed to connect to joystick %s\n", joyDevName);
+        }
+    }
+    else
+    {
+        // Toggle, don't touch the joystick name
+        if (emuGamepadConnected())
+        {
+            disableExtension("gamepad");
+
+            return snprintf(out, 1024, "Joystick disconnected\n");
+        }
+        else
+        {
+            disableExtension("gamepad");
+            enableExtension("gamepad");
+
+            if (emuGamepadConnected())
+            {
+                return snprintf(out, 1024, "Connected to joystick!\n");
+            }
+            else
+            {
+                return snprintf(out, 1024, "Failed to connect to joystick\n");
+            }
+        }
     }
 }
 

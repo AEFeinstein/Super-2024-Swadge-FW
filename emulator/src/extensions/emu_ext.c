@@ -319,6 +319,14 @@ bool disableExtension(const char* name)
             free(paneInfo);
         }
 
+        if (extInfo->initialized)
+        {
+            if (extInfo->extension->fnDeinitCb)
+            {
+                extInfo->extension->fnDeinitCb();
+            }
+        }
+
         // If the extension had panes, we will need to recalculate
         extManager.paneMinsCalculated = false;
 
