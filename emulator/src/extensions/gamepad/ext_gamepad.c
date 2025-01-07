@@ -397,7 +397,8 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 }
                 else if (cur->dwButtons != new->dwButtons)
                 {
-                    uint32_t change = cur->dwButtons ^ new->dwButtons;
+                    printf("Buttons changed, %x -> %x\n", cur->dwButtons, new->dwButtons);
+                    DWORD change = cur->dwButtons ^ new->dwButtons;
                     if (change != 0)
                     {
                         uint32_t buttonIdx = __builtin_ctz(change);
