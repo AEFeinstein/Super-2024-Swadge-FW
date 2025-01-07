@@ -341,7 +341,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 #define CALC_AXIS(n, val) (val - 32767)
                 JOYINFOEX* cur = &winData->curState;
                 JOYINFOEX* new = &winData->newState;
-                if (cur->dwXpos != new->dwXpos)
+                if ((new->dwFlags & JOY_RETURNX) && cur->dwXpos != new->dwXpos)
                 {
                     event->type = AXIS;
                     event->axis = 0;
@@ -350,7 +350,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if (cur->dwYpos != new->dwYpos)
+                else if ((new->dwFlags & JOY_RETURNY) && cur->dwYpos != new->dwYpos)
                 {
                     event->type = AXIS;
                     event->axis = 1;
@@ -359,7 +359,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if (cur->dwZpos != new->dwZpos)
+                else if ((new->dwFlags & JOY_RETURNZ) && cur->dwZpos != new->dwZpos)
                 {
                     event->type = AXIS;
                     event->axis = 2;
@@ -368,7 +368,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if (cur->dwRpos != new->dwRpos)
+                else if ((new->dwFlags & JOY_RETURNR) && cur->dwRpos != new->dwRpos)
                 {
                     event->type = AXIS;
                     event->axis = 3;
@@ -377,7 +377,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if (cur->dwUpos != new->dwUpos)
+                else if ((new->dwFlags & JOY_RETURNU) && cur->dwUpos != new->dwUpos)
                 {
                     event->type = AXIS;
                     event->axis = 4;
@@ -386,7 +386,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if (cur->dwVpos != new->dwVpos)
+                else if ((new->dwFlags & JOY_RETURNV) && cur->dwVpos != new->dwVpos)
                 {
                     event->type = AXIS;
                     event->axis = 5;
@@ -395,9 +395,10 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if (cur->dwButtons != new->dwButtons)
+                else if ((new->dwFlags & JOY_RETURNBUTTONS) && cur->dwButtons != new->dwButtons)
                 {
                     printf("Buttons changed, %x -> %x\n", cur->dwButtons, new->dwButtons);
+
                     DWORD change = cur->dwButtons ^ new->dwButtons;
                     if (change != 0)
                     {
@@ -423,7 +424,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                         return true;
                     }
                 }
-                else if (cur->dwPOV != new->dwPOV)
+                else if ((new->dwFlags & JOY_RETURNPOVCTS) && cur->dwPOV != new->dwPOV)
                 {
                     // This is kinda weird!
                     // This is because we're splitting a single POV hat event into two discrete axes
