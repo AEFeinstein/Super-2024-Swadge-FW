@@ -345,6 +345,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     event->axis = 0;
                     event->value = CALC_AXIS(0, new->dwXpos);
                     cur->dwXpos = new->dwXpos;
+                    applyEvent(joystick, event);
                     return true;
                 }
                 else if (cur->dwYpos != new->dwYpos)
@@ -353,6 +354,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     event->axis = 1;
                     event->value = CALC_AXIS(1, new->dwYpos);
                     cur->dwYpos = new->dwYpos;
+                    applyEvent(joystick, event);
                     return true;
                 }
                 else if (cur->dwZpos != new->dwZpos)
@@ -361,6 +363,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     event->axis = 2;
                     event->value = CALC_AXIS(2, new->dwZpos);
                     cur->dwZpos = new->dwZpos;
+                    applyEvent(joystick, event);
                     return true;
                 }
                 else if (cur->dwRpos != new->dwRpos)
@@ -369,6 +372,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     event->axis = 3;
                     event->value = CALC_AXIS(3, new->dwRpos);
                     cur->dwRpos = new->dwRpos;
+                    applyEvent(joystick, event);
                     return true;
                 }
                 else if (cur->dwUpos != new->dwUpos)
@@ -377,6 +381,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     event->axis = 4;
                     event->value = CALC_AXIS(4, new->dwUpos);
                     cur->dwUpos = new->dwUpos;
+                    applyEvent(joystick, event);
                     return true;
                 }
                 else if (cur->dwVpos != new->dwVpos)
@@ -385,6 +390,8 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     event->axis = 5;
                     event->value = CALC_AXIS(5, new->dwVpos);
                     cur->dwVpos = new->dwVpos;
+                    applyEvent(joystick, event);
+                    return true;
                 }
                 else if (cur->dwButtons != new->dwButtons)
                 {
@@ -409,15 +416,18 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                             cur->dwButtons &= ~(1 << buttonIdx);
                         }
 
+                        applyEvent(joystick, event);
                         return true;
                     }
                 }
                 else if (cur->dwPOV != new->dwPOV)
                 {
+                    // TODO this needs to be split further into two different events...
                     event->type = AXIS;
                     event->axis = 6;
                     event->value = new->dwPOV;
                     cur->dwPOV = new->dwPOV;
+                    applyEvent(joystick, event);
                     return true;
                 }
                 else
