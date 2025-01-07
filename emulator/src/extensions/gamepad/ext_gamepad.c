@@ -315,8 +315,8 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 // 5. If nothing is different, set pendingState = false;
                 JOYINFOEX winEvent = {0};
                 // what the hell kind of API requires this
-                winEvent.dwSize = sizeof(JOYINFOEX);
-                winEvent.dwFlags = JOY_RETURNALL;
+                winEvent.dwSize = sizeof(JOYINFOEX)
+                winEvent.dwFlags = JOY_RETURNALL | JOY_RETURNPOV;
 
                 MMRESULT result = joyGetPosEx(winData->deviceNum, &winEvent);
 
@@ -424,7 +424,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                         return true;
                     }
                 }
-                else if ((new->dwFlags & JOY_RETURNPOVCTS) && cur->dwPOV != new->dwPOV)
+                else if ((new->dwFlags & JOY_RETURNPOV) && cur->dwPOV != new->dwPOV)
                 {
                     // This is kinda weird!
                     // This is because we're splitting a single POV hat event into two discrete axes
