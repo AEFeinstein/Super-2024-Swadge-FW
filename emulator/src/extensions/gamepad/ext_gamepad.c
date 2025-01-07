@@ -105,13 +105,16 @@ bool gamepadConnect(emuJoystick_t* joystick, const char* name)
     if (name != NULL)
     {
         char* endptr = NULL;
-        int winDevNum = strtol(name, &endptr, 10);
+        errno = 0;
+        int parsedVal = strtol(name, &endptr, 10);
 
-        if (endptr == name || winDevNum > 15)
+        if (errno != 0 || endptr == name || parsedVal > 15)
         {
             printf("ERR: Invalid joystick device number '%s'\n", name);
             return false;
         }
+
+        winDevNum = parsedVal;
     }
 
     UINT numDevices = joyGetNumDevs();
