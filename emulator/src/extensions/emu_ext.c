@@ -582,7 +582,22 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
           + (winH - winPanes[PANE_TOP].paneH - winPanes[PANE_BOTTOM].paneH - screenPane->paneH - topDivH - bottomDivH)
                 / 2;
 
-    winPanes[PANE_BOTTOM].paneX = screenPane->paneX;
+    // Center the screen in the window if it's bigger
+    if (paneInfos[PANE_LEFT].count == 0 && paneInfos[PANE_RIGHT].count == 0)
+    {
+        screenPane->paneX = (winW - screenPane->paneW) / 2;
+
+        winPanes[PANE_BOTTOM].paneX = 0;
+        winPanes[PANE_TOP].paneX    = 0;
+
+        winPanes[PANE_BOTTOM].paneW = winW;
+        winPanes[PANE_TOP].paneW    = winW;
+    }
+    else
+    {
+        winPanes[PANE_BOTTOM].paneX = screenPane->paneX;
+        winPanes[PANE_TOP].paneX    = screenPane->paneX;
+    }
     winPanes[PANE_BOTTOM].paneY = screenPane->paneY + screenPane->paneH + bottomDivH;
 
 ///< Macro for calculating the offset of the current sub-pane within the overall pane
