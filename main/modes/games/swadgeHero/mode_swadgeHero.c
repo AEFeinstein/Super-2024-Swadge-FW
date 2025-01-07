@@ -20,7 +20,7 @@ static void shBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
 // Const Variables
 //==============================================================================
 
-static const char shName[] = "Swadge Hero";
+const char shName[] = "Swadge Hero";
 
 //==============================================================================
 // Variables

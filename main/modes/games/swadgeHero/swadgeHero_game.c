@@ -450,7 +450,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     }
 
     // If failure is on and the song is playing
-    if (sh->failOn && songUs >= 0)
+    if (sh->failOn && (songUs >= 0) && (NUM_FAIL_METER_SAMPLES > sh->failSamples.length))
     {
         // Run a timer to sample the fail meter for a chart
         while (sh->failSampleInterval * sh->failSamples.length <= songUs)
@@ -811,11 +811,12 @@ void shDrawGame(shVars_t* sh)
     // Draw title and artist during lead in
     if (sh->leadInUs > 0)
     {
-        int16_t tWidth = textWidth(&sh->rodin, sh->menuSong->name);
-        drawText(&sh->rodin, c555, sh->menuSong->name, (TFT_WIDTH - tWidth) / 2,
-                 (TFT_HEIGHT / 2) - sh->rodin.height - 2);
-        tWidth = textWidth(&sh->rodin, sh->menuSong->artist);
-        drawText(&sh->rodin, c555, sh->menuSong->artist, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 2);
+        int16_t xOff = 0;
+        int16_t yOff = (TFT_HEIGHT / 2) - sh->rodin.height - 2;
+        drawTextWordWrapCentered(&sh->rodin, c555, sh->menuSong->name, &xOff, &yOff, TFT_WIDTH, TFT_HEIGHT);
+        xOff = 0;
+        yOff += sh->rodin.height + 8;
+        drawTextWordWrapCentered(&sh->rodin, c555, sh->menuSong->artist, &xOff, &yOff, TFT_WIDTH, TFT_HEIGHT);
     }
 
     // Set LEDs
@@ -853,7 +854,7 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     sh->btnState = evt->state;
 
     // This pauses and unpauses
-    if (PB_B < evt->button)
+    if (PB_START == evt->button)
     {
         if (evt->down)
         {
@@ -875,6 +876,12 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
         return;
     }
 
+    // Don't accept other button input while paused
+    if (sh->paused)
+    {
+        return;
+    }
+
     // Get the position of the song and when the next event is, in ms
     int32_t songUs;
     if (sh->leadInUs > 0)
@@ -887,7 +894,13 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
     }
 
     // Find the note that corresponds to this button press
-    int32_t notePressed = sh->btnToNote[31 - __builtin_clz(evt->button)];
+    int32_t bnIdx = 31 - __builtin_clz(evt->button);
+    if (bnIdx >= ARRAY_SIZE(btnToNote_e))
+    {
+        // Invalid button press
+        return;
+    }
+    int32_t notePressed = sh->btnToNote[bnIdx];
 
     // If a note was pressed
     if (-1 != notePressed)

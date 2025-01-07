@@ -2,7 +2,7 @@
  * @file mode_2048.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 1.5.0
+ * @version 1.5.1
  * @date 2024-06-28
  *
  * @copyright Copyright (c) 2024
@@ -19,6 +19,8 @@
 #include "2048_game.h"
 #include "2048_menus.h"
 #include "textEntry.h"
+
+#include "advanced_usb_control.h"
 
 //==============================================================================
 // Function Prototypes
@@ -40,9 +42,12 @@ static void t48BackgroundDraw(int16_t x, int16_t y, int16_t w, int16_t h, int16_
 // Const Variables
 //==============================================================================
 
-const char modeName[]          = "2048";
+const char t48Name[]           = "2048";
 static const char youWin[]     = "You got 2048!";
 static const char continueAB[] = "Press A or B to continue";
+
+static const char* loadGameStrs[] = {"Load save?", "Press A to load saved game", "Press B to make a new game",
+                                     "Press any other key return to title screen. Will not delete your save."};
 
 static const char* tileSpriteNames[] = {
     "Tile-Blue-Diamond.wsg", "Tile-Blue-Square.wsg",  "Tile-Cyan-Legs.wsg",      "Tile-Green-Diamond.wsg",
@@ -75,7 +80,7 @@ const char highScoreInitialsKey[T48_HS_COUNT][T48_HS_KEYLEN] = {
 //==============================================================================
 
 swadgeMode_t t48Mode = {
-    .modeName                 = modeName,
+    .modeName                 = t48Name,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
     .usesAccelerometer        = true,
@@ -229,30 +234,95 @@ static void t48MainLoop(int64_t elapsedUs)
             // Take accel input if cells aren't moving
             if (t48->tiltControls && !t48->cellsAnimating)
             {
-                int16_t ox, oy, oz;
-                if (ESP_OK == accelGetOrientVec(&ox, &oy, &oz))
+                // int16_t ox, oy, oz;
+                float q[4];
+                esp_err_t aq = accelGetQuaternion(q);
+                if (ESP_OK == aq)
                 {
-                    if (ABS(ox) > ABS(oy))
+                    float qRelativeRotation[4];
+
+                    // this takes about 36 flops.
+                    mathComputeQuaternionDeltaBetweenQuaternions(qRelativeRotation, t48->quatBase, q);
+
+                    // qRelativeRotation represents the rotation from the initial state to now.
+                    // The quaternion is:  [w, x, y, z]
+                    //  the w term, more like the part that sums everything to a unit quaternion.
+                    //  the x term is the amount of rotation around the x axis.
+                    //  the y term is the amount of rotation around the y axis.
+                    //  the z term is the amount of rotation around the z axis.
+                    // Not quite like euler angles, but kinda?
+                    //
+                    // I am not sure why our coordinate frame is different, but, we can go back to
+                    // what the rest of the game logic is expecting here.
+                    int oy = qRelativeRotation[1] * 512;
+                    int ox = -qRelativeRotation[2] * 512;
+
+                    const int trigger = 104;
+                    const int release = 80;
+
+                    bool bXPressed      = ABS(ox) > trigger;
+                    bool bXReleased     = ABS(ox) < release;
+                    bool bYWasTriggered = t48->receivedInputMask & 2;
+
+                    bool bYPressed      = ABS(oy) > trigger;
+                    bool bYReleased     = ABS(oy) < release;
+                    bool bXWasTriggered = t48->receivedInputMask & 1;
+
+                    if (!bYWasTriggered && bYPressed)
                     {
-                        if (ox > 128)
-                        {
-                            t48_gameInput(t48, PB_LEFT);
-                        }
-                        else if (ox < -128)
-                        {
-                            t48_gameInput(t48, PB_RIGHT);
-                        }
-                    }
-                    else
-                    {
-                        if (oy > 128)
+                        if (oy > 0)
                         {
                             t48_gameInput(t48, PB_DOWN);
                         }
-                        else if (oy < -128)
+                        else
                         {
                             t48_gameInput(t48, PB_UP);
                         }
+                        bYWasTriggered = true;
+                    }
+                    if (bYWasTriggered && bYReleased)
+                    {
+                        bYWasTriggered = false;
+                    }
+
+                    if (!bXWasTriggered && bXPressed)
+                    {
+                        if (ox > 0)
+                        {
+                            t48_gameInput(t48, PB_LEFT);
+                        }
+                        else
+                        {
+                            t48_gameInput(t48, PB_RIGHT);
+                        }
+                        bXWasTriggered = true;
+                    }
+                    if (bXWasTriggered && bXReleased)
+                    {
+                        bXWasTriggered = false;
+                    }
+
+                    t48->receivedInputMask = (bYWasTriggered ? 2 : 0) | (bXWasTriggered ? 1 : 0);
+                    t48->lastIMUx          = ox;
+                    t48->lastIMUy          = oy;
+
+                    // Handle pushing the zero around. You can push it by pushing past the endstops.
+                    bool bXIsRailed = ABS(ox) > (trigger + 2);
+                    bool bYIsRailed = ABS(ox) > (trigger + 2);
+                    if (bXIsRailed || bYIsRailed)
+                    {
+                        const float fNudgeAmount = 0.04;
+                        float qNudgeX[4]         = {0.999, 0.0, 0.0, 0.0};
+                        if (bXIsRailed)
+                        {
+                            qNudgeX[2] = ox > 0 ? -fNudgeAmount : fNudgeAmount;
+                        }
+                        if (bYIsRailed)
+                        {
+                            qNudgeX[1] = oy < 0 ? -fNudgeAmount : fNudgeAmount;
+                        }
+                        mathQuatApply(t48->quatBase, t48->quatBase, qNudgeX);
+                        mathQuatNormalize(t48->quatBase, t48->quatBase);
                     }
                 }
             }
@@ -269,13 +339,74 @@ static void t48MainLoop(int64_t elapsedUs)
                 if (evt.down && (PB_A == evt.button || PB_B == evt.button))
                 {
                     soundPlaySfx(&t48->click, MIDI_SFX);
-                    t48_gameInit(t48, PB_B == evt.button);
-                    t48->state = T48_IN_GAME;
+                    bool doTiltControls = PB_B == evt.button;
+
+                    if (doTiltControls)
+                    {
+                        esp_err_t aq = accelGetQuaternion(t48->quatBase);
+                        if (ESP_OK != aq)
+                        {
+                            doTiltControls = false;
+                        }
+                    }
+
+                    t48->tiltControls = doTiltControls;
+
+                    // If a save game is detected, ask if the player wants to load it.
+                    size_t blob = sizeof(t48GameSaveData_t);
+                    readNvsBlob(nvsSaved2048, NULL, &blob);
+                    if (!readNvsBlob(nvsSaved2048, &t48->sd, &blob))
+                    {
+                        t48_gameInit(t48, false);
+                        t48->state = T48_IN_GAME;
+                    }
+                    else
+                    {
+                        // Game data detected
+                        t48->state = T48_LOAD_SAVE;
+                    }
+                    break;
                 }
             }
             // Draw
             t48_drawStartScreen(t48, t48_generateRainbow(), elapsedUs);
             t48_chaseLEDs(elapsedUs);
+            break;
+        }
+        case T48_LOAD_SAVE:
+        {
+            // AAsk player if they want to load their old save
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    if (evt.button & PB_A || evt.button & PB_B)
+                    {
+                        // Delete old save
+                        eraseNvsKey(nvsSaved2048);
+
+                        // Start new game
+                        t48_gameInit(t48, evt.button == PB_A);
+                        t48->state = T48_IN_GAME;
+                    }
+                    else
+                    {
+                        // Return to start screen without deleting save
+                        t48->state = T48_START_SCREEN;
+                    }
+                }
+            }
+            // Draw load save/new game screen
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            drawText(&t48->titleFont, c055, loadGameStrs[0],
+                     (TFT_WIDTH - textWidth(&t48->titleFont, loadGameStrs[0])) >> 1, 48);
+            drawText(&t48->font, c555, loadGameStrs[1], (TFT_WIDTH - textWidth(&t48->font, loadGameStrs[1])) >> 1,
+                     TFT_HEIGHT - 128);
+            drawText(&t48->font, c555, loadGameStrs[2], (TFT_WIDTH - textWidth(&t48->font, loadGameStrs[2])) >> 1,
+                     TFT_HEIGHT - 96);
+            int16_t xOff = 24; // To make it look centered, uneven
+            int16_t yOff = TFT_HEIGHT - 64;
+            drawTextWordWrap(&t48->font, c555, loadGameStrs[3], &xOff, &yOff, TFT_WIDTH - 16, TFT_HEIGHT);
             break;
         }
         case T48_WIN_SCREEN:
@@ -289,8 +420,8 @@ static void t48MainLoop(int64_t elapsedUs)
                 }
             }
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-            drawText(&t48->titleFont, c055, youWin, (TFT_WIDTH - textWidth(&t48->titleFont, youWin)) / 2, 48);
-            drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) / 2,
+            drawText(&t48->titleFont, c055, youWin, (TFT_WIDTH - textWidth(&t48->titleFont, youWin)) >> 1, 48);
+            drawText(&t48->font, c555, continueAB, (TFT_WIDTH - textWidth(&t48->font, continueAB)) >> 1,
                      TFT_HEIGHT - 64);
             break;
         }
@@ -553,7 +684,9 @@ static void t48BackgroundDraw(int16_t x __attribute__((unused)), int16_t y __att
                               int16_t w __attribute__((unused)), int16_t h __attribute__((unused)),
                               int16_t up __attribute__((unused)), int16_t upNum __attribute__((unused)))
 {
-    if (t48->tiltControls)
+    // Allow IMU integration while in menu, to make it so when we set the zero, it
+    // is at the time of the B press.
+    if (t48->tiltControls || t48->state == T48_START_SCREEN)
     {
         accelIntegrate();
     }

@@ -52,7 +52,7 @@ static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
 
-const char* characterSelectOptions[] = {"Pango", "Po", "Pixel", "Piper"};
+const char* characterSelectOptions[] = {"Pango", "Poe", "Pixel", "Piper"};
 const int32_t characterSelectOptionValues[]
     = {PA_PLAYER_CHARACTER_PANGO, PA_PLAYER_CHARACTER_PO, PA_PLAYER_CHARACTER_PIXEL, PA_PLAYER_CHARACTER_GIRL};
 #define NUM_CHARACTERS 4
@@ -664,10 +664,10 @@ void drawPangoTitleScreen(font_t* font, paGameData_t* gameData)
 
     if (pango->gameData.debugMode)
     {
-        drawText(font, c555, "Debug Mode", 80, 48);
+        drawText(font, c555, "Debug Mode", 88, 96);
     }
 
-    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_GIRL_WIN]), 128, 116);
+    drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PIPER_WIN]), 128, 116);
     drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PO_PUSH_SIDE_1]), 144, 122);
     drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PIXEL_WIN]), 120, 126);
     drawWsgSimple(&(pango->wsgManager.wsgs[PA_WSG_PANGO_PUSH_SOUTH_2]), 136, 132);
@@ -1158,7 +1158,7 @@ void drawGameClear(font_t* font, paWsgManager_t* wsgManager, paGameData_t* gameD
 
             if (gameData->frameCount > 240)
             {
-                drawWsgSimpleScaled(&wsgManager->wsgs[PA_WSG_GIRL_WIN], 172, 44, 2, 2);
+                drawWsgSimpleScaled(&wsgManager->wsgs[PA_WSG_PIPER_WIN], 172, 44, 2, 2);
             }
 
             if (gameData->frameCount > 360)

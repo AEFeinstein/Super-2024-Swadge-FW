@@ -72,6 +72,16 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "modes/games/ultimateTTT/ultimateTTTmarkerSelect.c"
                             "modes/games/ultimateTTT/ultimateTTTp2p.c"
                             "modes/games/ultimateTTT/ultimateTTTresult.c"
+                            "modes/games/cGrove/mode_cGrove.c"
+                            "modes/games/cGrove/cg_Chowa.c"
+                            "modes/games/cGrove/cg_Items.c"
+                            "modes/games/cGrove/Garden/cg_Grove.c"
+                            "modes/games/cGrove/Garden/cg_GroveAI.c"
+                            "modes/games/cGrove/Garden/cg_GroveDraw.c"
+                            "modes/games/cGrove/Garden/cg_GroveItems.c"
+                            "modes/games/cGrove/Sparring/cg_Match.c"
+                            "modes/games/cGrove/Sparring/cg_Spar.c"
+                            "modes/games/cGrove/Sparring/cg_SparDraw.c"
                             "modes/music/colorchord/colorchord.c"
                             "modes/music/jukebox/jukebox.c"
                             "modes/music/sequencer/sequencerGrid.c"
@@ -88,6 +98,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "modes/system/quickSettings/quickSettings.c"
                             "modes/test/accelTest/accelTest.c"
                             "modes/test/accelTest/bunny.c"
+                            "modes/test/bongoTest/bongoTest.c"
                             "modes/test/factoryTest/factoryTest.c"
                             "modes/test/keebTest/keebTest.c"
                             "modes/test/touchTest/touchTest.c"
@@ -160,6 +171,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./modes/system/quickSettings"
                                 "./modes/test"
                                 "./modes/test/accelTest"
+                                "./modes/test/bongoTest"
                                 "./modes/test/factoryTest"
                                 "./modes/test/keebTest"
                                 "./modes/test/touchTest"
@@ -180,6 +192,7 @@ add_custom_target(dummy_target ALL
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
+    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/../tools/soko/soko_tmx_preprocessor.py ${CMAKE_CURRENT_SOURCE_DIR}/../assets/soko/ ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs

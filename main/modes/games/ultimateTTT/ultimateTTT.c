@@ -30,7 +30,7 @@ static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char tttName[]           = "Ultimate TTT";
+const char tttName[]                  = "Ultimate TTT";
 static const char tttMultiStr[]       = "Wireless Connect";
 static const char tttPassAndPlayStr[] = "Pass and Play";
 static const char tttMultiShortStr[]  = "Connect";
