@@ -184,7 +184,7 @@ typedef struct
      * @brief Function to be called just before the emulator exits
      *
      * This callback should be used to free any memory or resources the extension has allocated.
-    */
+     */
     void (*fnDeinitCb)(void);
 
     /**

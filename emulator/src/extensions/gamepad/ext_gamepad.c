@@ -16,12 +16,12 @@
 #include <stdint.h>
 
 #if defined(EMU_WINDOWS)
-#include <Windows.h>
-#include <joystickapi.h>
+    #include <Windows.h>
+    #include <joystickapi.h>
 #elif defined(EMU_LINUX)
-#include <linux/joystick.h>
-#include <fcntl.h>
-#include <unistd.h>
+    #include <linux/joystick.h>
+    #include <fcntl.h>
+    #include <unistd.h>
 #elif defined(EMU_MACOS)
 #endif
 
@@ -37,38 +37,7 @@
 #define DPAD_AXIS_Y 7
 
 const buttonBit_t joystickButtonMap[] = {
-    PB_A,
-    PB_B,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    PB_SELECT,
-    PB_START,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
+    PB_A, PB_B, 0, 0, 0, 0, 0, 0, 0, 0, PB_SELECT, PB_START, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 #ifdef EMU_WINDOWS
@@ -94,7 +63,8 @@ typedef enum
 typedef struct
 {
     emuJoystickEventType_t type;
-    union {
+    union
+    {
         uint16_t axis;
         uint16_t button;
     };
@@ -120,9 +90,9 @@ bool gamepadConnect(emuJoystick_t* joystick);
 void gamepadDisconnect(emuJoystick_t* joystick);
 
 emuExtension_t gamepadEmuExtension = {
-    .name = "gamepad",
-    .fnInitCb = gamepadInitCb,
-    .fnDeinitCb = gamepadDeinitCb,
+    .name         = "gamepad",
+    .fnInitCb     = gamepadInitCb,
+    .fnDeinitCb   = gamepadDeinitCb,
     .fnPreFrameCb = gamepadPreFrameCb,
 };
 
@@ -148,7 +118,7 @@ bool gamepadConnect(emuJoystick_t* joystick)
                 winData->deviceNum = i;
 
                 joystick->numButtons = caps.wNumButtons;
-                joystick->numAxes = caps.wNumAxes;
+                joystick->numAxes    = caps.wNumAxes;
 
                 if (caps.wCaps & JOYCAPS_HASPOV)
                 {
@@ -212,7 +182,7 @@ bool gamepadConnect(emuJoystick_t* joystick)
     }
     else
     {
-        joystick->numAxes = axes;
+        joystick->numAxes  = axes;
         joystick->axisData = calloc(axes, sizeof(int16_t));
     }
 
@@ -239,7 +209,7 @@ void gamepadDisconnect(emuJoystick_t* joystick)
     {
         free(joystick->axisData);
         joystick->axisData = NULL;
-        joystick->numAxes = 0;
+        joystick->numAxes  = 0;
     }
 
     if (joystick->buttonData)
@@ -271,7 +241,8 @@ static void applyEvent(emuJoystick_t* joystick, const emuJoystickEvent_t* event)
                 break;
             }
 
-            default: break;
+            default:
+                break;
         }
     }
 }
@@ -283,7 +254,8 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 #if defined(EMU_WINDOWS)
         emuWinJoyData_t* winData = (emuWinJoyData_t*)joystick->data;
 
-        do {
+        do
+        {
             if (!winData->pendingState)
             {
                 // If we're here, we have successfully transmitted all state changes via events
@@ -296,7 +268,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 // 5. If nothing is different, set pendingState = false;
                 JOYINFOEX winEvent = {0};
                 // what the hell kind of API requires this
-                winEvent.dwSize = sizeof(JOYINFOEX);
+                winEvent.dwSize  = sizeof(JOYINFOEX);
                 winEvent.dwFlags = JOY_RETURNALL | JOY_RETURNPOV;
 
                 MMRESULT result = joyGetPosEx(winData->deviceNum, &winEvent);
@@ -319,71 +291,71 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 
             if (winData->pendingState)
             {
-#define CALC_AXIS(n, val) (val - 32767)
+    #define CALC_AXIS(n, val) (val - 32767)
                 JOYINFOEX* cur = &winData->curState;
                 JOYINFOEX* new = &winData->newState;
-                if ((new->dwFlags & JOY_RETURNX) && cur->dwXpos != new->dwXpos)
+                if ((new->dwFlags& JOY_RETURNX) && cur->dwXpos != new->dwXpos)
                 {
-                    event->type = AXIS;
-                    event->axis = 0;
+                    event->type  = AXIS;
+                    event->axis  = 0;
                     event->value = CALC_AXIS(0, new->dwXpos);
-                    cur->dwXpos = new->dwXpos;
+                    cur->dwXpos  = new->dwXpos;
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if ((new->dwFlags & JOY_RETURNY) && cur->dwYpos != new->dwYpos)
+                else if ((new->dwFlags& JOY_RETURNY) && cur->dwYpos != new->dwYpos)
                 {
-                    event->type = AXIS;
-                    event->axis = 1;
+                    event->type  = AXIS;
+                    event->axis  = 1;
                     event->value = CALC_AXIS(1, new->dwYpos);
-                    cur->dwYpos = new->dwYpos;
+                    cur->dwYpos  = new->dwYpos;
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if ((new->dwFlags & JOY_RETURNZ) && cur->dwZpos != new->dwZpos)
+                else if ((new->dwFlags& JOY_RETURNZ) && cur->dwZpos != new->dwZpos)
                 {
-                    event->type = AXIS;
-                    event->axis = 2;
+                    event->type  = AXIS;
+                    event->axis  = 2;
                     event->value = CALC_AXIS(2, new->dwZpos);
-                    cur->dwZpos = new->dwZpos;
+                    cur->dwZpos  = new->dwZpos;
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if ((new->dwFlags & JOY_RETURNR) && cur->dwRpos != new->dwRpos)
+                else if ((new->dwFlags& JOY_RETURNR) && cur->dwRpos != new->dwRpos)
                 {
-                    event->type = AXIS;
-                    event->axis = 3;
+                    event->type  = AXIS;
+                    event->axis  = 3;
                     event->value = CALC_AXIS(3, new->dwRpos);
-                    cur->dwRpos = new->dwRpos;
+                    cur->dwRpos  = new->dwRpos;
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if ((new->dwFlags & JOY_RETURNU) && cur->dwUpos != new->dwUpos)
+                else if ((new->dwFlags& JOY_RETURNU) && cur->dwUpos != new->dwUpos)
                 {
-                    event->type = AXIS;
-                    event->axis = 4;
+                    event->type  = AXIS;
+                    event->axis  = 4;
                     event->value = CALC_AXIS(4, new->dwUpos);
-                    cur->dwUpos = new->dwUpos;
+                    cur->dwUpos  = new->dwUpos;
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if ((new->dwFlags & JOY_RETURNV) && cur->dwVpos != new->dwVpos)
+                else if ((new->dwFlags& JOY_RETURNV) && cur->dwVpos != new->dwVpos)
                 {
-                    event->type = AXIS;
-                    event->axis = 5;
+                    event->type  = AXIS;
+                    event->axis  = 5;
                     event->value = CALC_AXIS(5, new->dwVpos);
-                    cur->dwVpos = new->dwVpos;
+                    cur->dwVpos  = new->dwVpos;
                     applyEvent(joystick, event);
                     return true;
                 }
-                else if ((new->dwFlags & JOY_RETURNBUTTONS) && cur->dwButtons != new->dwButtons)
+                else if ((new->dwFlags& JOY_RETURNBUTTONS) && cur->dwButtons != new->dwButtons)
                 {
                     DWORD change = cur->dwButtons ^ new->dwButtons;
                     if (change != 0)
                     {
                         uint32_t buttonIdx = __builtin_ctz(change);
 
-                        event->type = BUTTON;
+                        event->type   = BUTTON;
                         event->button = buttonIdx;
 
                         if (new->dwButtons & (1 << buttonIdx))
@@ -403,7 +375,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                         return true;
                     }
                 }
-                else if ((new->dwFlags & JOY_RETURNPOV) && cur->dwPOV != new->dwPOV)
+                else if ((new->dwFlags& JOY_RETURNPOV) && cur->dwPOV != new->dwPOV)
                 {
                     // This is kinda weird!
                     // This is because we're splitting a single POV hat event into two discrete axes
@@ -441,7 +413,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                         }
 
                         winData->pendingPov = false;
-                        cur->dwPOV = new->dwPOV;
+                        cur->dwPOV          = new->dwPOV;
                     }
 
                     applyEvent(joystick, event);
@@ -459,7 +431,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 #elif defined(EMU_LINUX)
         struct js_event linuxEvent;
 
-        errno = 0;
+        errno     = 0;
         int count = read((int)joystick->data, &linuxEvent, sizeof(struct js_event));
         if (count >= (int)sizeof(struct js_event))
         {
@@ -467,16 +439,16 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
             {
                 case JS_EVENT_BUTTON:
                 {
-                    event->type = BUTTON;
+                    event->type   = BUTTON;
                     event->button = linuxEvent.number;
-                    event->value = linuxEvent.value;
+                    event->value  = linuxEvent.value;
                     break;
                 }
 
                 case JS_EVENT_AXIS:
                 {
-                    event->type = AXIS;
-                    event->axis = linuxEvent.number;
+                    event->type  = AXIS;
+                    event->axis  = linuxEvent.number;
                     event->value = linuxEvent.value;
                     break;
                 }
@@ -507,7 +479,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 free(joystick->buttonData);
                 joystick->buttonData = NULL;
             }
-            
+
             close((int)joystick->data);
             joystick->data = NULL;
             return false;
@@ -527,7 +499,8 @@ bool gamepadInitCb(emuArgs_t* args)
 {
     if (gamepadConnect(&joystickExt))
     {
-        ESP_LOGI("GamepadExt", "Connected to joystick with %d axes and %d buttons\n", joystickExt.numAxes, joystickExt.numButtons);
+        ESP_LOGI("GamepadExt", "Connected to joystick with %d axes and %d buttons\n", joystickExt.numAxes,
+                 joystickExt.numButtons);
         return true;
     }
 
@@ -556,7 +529,7 @@ void gamepadPreFrameCb(uint64_t frame)
             }
 
             case AXIS:
-            {   
+            {
                 switch (event.axis)
                 {
                     case TOUCH_AXIS_X:
@@ -575,10 +548,10 @@ void gamepadPreFrameCb(uint64_t frame)
                         else
                         {
                             const double maxRadius = 1024;
-                            
-                            double angle = atan2(-y, x);
+
+                            double angle        = atan2(-y, x);
                             double angleDegrees = (angle * 180) / M_PI;
-                            int radius = CLAMP(sqrt(x * x + y * y) * maxRadius / 32768, 0, maxRadius);
+                            int radius          = CLAMP(sqrt(x * x + y * y) * maxRadius / 32768, 0, maxRadius);
 
                             int angleDegreesRounded = (int)(angleDegrees + 360) % 360;
                             emulatorSetTouchJoystick(CLAMP(angleDegreesRounded, 0, 359), radius, 1024);
@@ -621,7 +594,7 @@ void gamepadPreFrameCb(uint64_t frame)
                         }
 
                         buttonBit_t lastState = emulatorGetButtonState();
-                        buttonBit_t changes = (lastState ^ curState) & ((1 << 8) - 1);
+                        buttonBit_t changes   = (lastState ^ curState) & ((1 << 8) - 1);
 
                         if (changes & PB_UP)
                         {

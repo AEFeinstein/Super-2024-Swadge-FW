@@ -32,9 +32,8 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &touchEmuCallback,  &ledEmuExtension,   &fuzzerEmuExtension, &toolsEmuExtension,
-    &keymapEmuCallback, &modesEmuExtension, &replayEmuExtension, &midiEmuExtension,
-    &gamepadEmuExtension,
+    &touchEmuCallback,  &ledEmuExtension,    &fuzzerEmuExtension, &toolsEmuExtension,   &keymapEmuCallback,
+    &modesEmuExtension, &replayEmuExtension, &midiEmuExtension,   &gamepadEmuExtension,
 };
 
 //==============================================================================
