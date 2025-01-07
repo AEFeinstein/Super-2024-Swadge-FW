@@ -77,6 +77,9 @@ typedef struct
 
     // MIDI
     const char* midiFile;
+
+    // Joystick
+    const char* joystick;
 } emuArgs_t;
 
 //==============================================================================

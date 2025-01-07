@@ -86,7 +86,7 @@ void gamepadDeinitCb(void);
 void gamepadPreFrameCb(uint64_t frame);
 
 bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event);
-bool gamepadConnect(emuJoystick_t* joystick);
+bool gamepadConnect(emuJoystick_t* joystick, const char* name);
 void gamepadDisconnect(emuJoystick_t* joystick);
 
 emuExtension_t gamepadEmuExtension = {
@@ -98,13 +98,32 @@ emuExtension_t gamepadEmuExtension = {
 
 static emuJoystick_t joystickExt = {0};
 
-bool gamepadConnect(emuJoystick_t* joystick)
+bool gamepadConnect(emuJoystick_t* joystick, const char* name)
 {
 #if defined(EMU_WINDOWS)
+    int winDevNum = -1;
+    if (name != NULL)
+    {
+        char* endptr = NULL;
+        int winDevNum = strtol(name, &endptr, 10);
+
+        if (endptr == name || winDevNum > 15)
+        {
+            printf("ERR: Invalid joystick device number '%s'\n", name);
+            return false;
+        }
+    }
+
     UINT numDevices = joyGetNumDevs();
     JOYCAPS caps;
     for (int i = 0; i < numDevices; i++)
     {
+        if (winDevNum != -1 && winDevNum != i)
+        {
+            // If we're trying to open a specific device, skip the other ones
+            continue;
+        }
+
         MMRESULT result = joyGetDevCaps(i, &caps, sizeof(caps));
 
         if (JOYERR_NOERROR == result)
@@ -148,17 +167,23 @@ bool gamepadConnect(emuJoystick_t* joystick)
                 return true;
             }
         }
+        else if (winDevNum == i)
+        {
+            // Targeting a specific device and it didn't open, give up
+            printf("ERR: Failed to open joystick device %d\n", winDevNum);
+            return false;
+        }
     }
 
     return false;
 #elif defined(EMU_LINUX)
-    const char* device = "/dev/input/js0";
+    const char* device = (name != NULL) ? name : "/dev/input/js0";
     int jsFd;
 
     jsFd = open(device, O_RDONLY | O_NONBLOCK);
     if (jsFd == -1)
     {
-        ESP_LOGE("Gamepad", "Failed to open joystick device /dev/input/js0");
+        ESP_LOGE("Gamepad", "Failed to open joystick device %s", device);
         return false;
     }
 
@@ -497,7 +522,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 
 bool gamepadInitCb(emuArgs_t* args)
 {
-    if (gamepadConnect(&joystickExt))
+    if (gamepadConnect(&joystickExt, args->joystick))
     {
         ESP_LOGI("GamepadExt", "Connected to joystick with %d axes and %d buttons\n", joystickExt.numAxes,
                  joystickExt.numButtons);

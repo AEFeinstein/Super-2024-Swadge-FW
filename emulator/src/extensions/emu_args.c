@@ -119,6 +119,8 @@ emuArgs_t emulatorArgs = {
     .showFps = false,
 
     .vsync = true,
+
+    .joystick = NULL,
 };
 
 static const char mainDoc[] = "Emulates a swadge";
@@ -136,6 +138,7 @@ static const char argFuzzTime[]    = "fuzz-time";
 static const char argFuzzMotion[]  = "fuzz-motion";
 static const char argHeadless[]    = "headless";
 static const char argHideLeds[]    = "hide-leds";
+static const char argJoystick[]    = "joystick";
 static const char argKeymap[]      = "keymap";
 static const char argLock[]        = "lock";
 static const char argMidiFile[]    = "midi-file";
@@ -167,6 +170,7 @@ static const struct option options[] =
     { argFuzzMotion,  optional_argument, (int*)&emulatorArgs.fuzzMotion,   true },
     { argHeadless,    no_argument,       (int*)&emulatorArgs.headless,     true },
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
+    { argJoystick,    required_argument, (int*)&emulatorArgs.joystick,     'j'  },
     { argKeymap,      required_argument, NULL,                             'k'  },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
     { argMidiFile,    required_argument, NULL,                             0    },
@@ -198,6 +202,7 @@ static const optDoc_t argDocs[] =
     { 0,  argFuzzTime,    "y|n",   "Set whether frame durations are fuzzed" },
     { 0,  argFuzzMotion,  "y|n",   "Set whether motion inputs are fuzzed" },
     { 0,  argHeadless,    NULL,    "Runs the emulator without a window." },
+    { 0,  argJoystick,   "JOYDEV", "Sets the joystick device to use." },
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
     {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak"},
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
@@ -404,6 +409,18 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
         if (arg)
         {
             emulatorArgs.vsync = parseBoolArg(arg, true);
+        }
+    }
+    else if (argJoystick == optName)
+    {
+        if (arg)
+        {
+            emulatorArgs.joystick = arg;
+        }
+        else
+        {
+            printf("ERR: Joystick value is required\n");
+            return false;
         }
     }
 
