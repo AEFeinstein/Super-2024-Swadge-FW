@@ -163,10 +163,10 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
             case GARBOTNIK_DATA:
             {
                 bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
-                    // destroy all cached entities
+                // destroy all cached entities
                 bb_entity_t* curEntity = pop(&gData->towedEntities);
                 while (NULL != curEntity)
-                {   
+                {
                     curEntity = pop(&gData->towedEntities);
                 }
                 break;
@@ -2291,8 +2291,8 @@ void bb_updateFarCar(bb_entity_t* self)
     shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
     shiftedCameraPos.y     = (shiftedCameraPos.y + 240) << DECIMAL_BITS;
     // 2752 = (140+32) << 4; 2432 = (120+32) << 4
-    if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 5504, .halfHeight = 4864},
-                        self, NULL, NULL)
+    if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 5504, .halfHeight = 4864}, self, NULL,
+                        NULL)
         == false)
     {
         // This car gets cached
@@ -2302,11 +2302,12 @@ void bb_updateFarCar(bb_entity_t* self)
 
         // push to the tail
         push(self->gameData->entityManager.cachedEntities, (void*)cachedEntity);
-        
-        //free sprites
-        for(int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
+
+        // free sprites
+        for (int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
         {
-            if(self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].w || self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].h)
+            if (self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].w
+                || self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].h)
             {
                 freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
             }
@@ -2427,7 +2428,7 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
             bb_setCharacterLine(dData, 6, "Ovo", "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!");
             bb_setCharacterLine(dData, 7, "Pixel", "Hey, don't yell at my friend like that!");
 
-            dData->curString = -1;
+            dData->curString     = -1;
             dData->endDialogueCB = &bb_afterLiftoffInteraction;
             bb_setData(ovo, dData, DIALOGUE_DATA);
         }
@@ -3696,7 +3697,7 @@ void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
         if (self->currentAnimationFrame > 1)
         {
             // draw the healthbar
-            drawLineScaled(0, 0, (self->currentAnimationFrame - 1)*2, 0, c500, 0,
+            drawLineScaled(0, 0, (self->currentAnimationFrame - 1) * 2, 0, c500, 0,
                            (self->pos.x >> DECIMAL_BITS) - camera->pos.x - (self->currentAnimationFrame + 1) * 2,
                            (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
                                - camera->pos.y - 10,
@@ -3719,14 +3720,13 @@ void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
         {
             if (self->gameData->bgm.data[i + (wData->lifetime >> 2)] & 1)
             {
-                
                 drawText(&self->gameData->font, c511, "1", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
                          startY + i * 15);
             }
             else
             {
                 drawText(&self->gameData->font, c511, "0", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
-                        startY + i * 15);
+                         startY + i * 15);
             }
         }
 
