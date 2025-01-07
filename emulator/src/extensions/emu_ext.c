@@ -250,6 +250,14 @@ void deinitExtensions(void)
         {
             free(paneInfo);
         }
+
+        if (extInfo->initialized)
+        {
+            if (extInfo->extension->fnDeinitCb)
+            {
+                extInfo->extension->fnDeinitCb();
+            }
+        }
         free(extInfo);
     }
 }
