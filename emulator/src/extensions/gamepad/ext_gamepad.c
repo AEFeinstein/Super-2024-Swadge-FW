@@ -322,7 +322,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 
                 if (result == JOYERR_NOERROR)
                 {
-                    if (memcmp(&winEvent, &winData->curState, sizeof(JOYINFOEX)))
+                    if (winEvent.dwFlags && memcmp(&winEvent, &winData->curState, sizeof(JOYINFOEX)))
                     {
                         // The new data is different from the current data so copy it over
                         memcpy(&winData->newState, &winEvent, sizeof(JOYINFOEX));
