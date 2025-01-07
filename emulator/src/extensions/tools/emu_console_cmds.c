@@ -47,22 +47,18 @@ static const char* commandDocs[][3] = {
     {"fuzz time", "fuzz time [on|off]", "toggles fuzzing of frame times"},
     {"touchpad", "touchpad [on|off]", "toggles the virtual touchpad"},
     {"inject", "inject <nvs|asset> <...>", "injects data into NVS or assets"},
-    {"inject nvs", "inject nvs [namespace] <key> <int|str|file> <value>", "injects data into an NVS key. Value can be either an integer, a string, or a file path"},
+    {"inject nvs", "inject nvs [namespace] <key> <int|str|file> <value>",
+     "injects data into an NVS key. Value can be either an integer, a string, or a file path"},
     {"inject asset", "inject asset <name> <filename>", "injects a file's entire contents as an asset"},
     {"help", "help [command]", "prints help text for all commands, or for commands matching [command]"},
 };
 
 static const consoleCommand_t consoleCommands[] = {
-    {.name = "screenshot", .cb = screenshotCommandCb},
-    {.name = "mode", .cb = setModeCommandCb},
-    {.name = "gif", .cb = screenRecordCommandCb},
-    {.name = "replay", .cb = replayCommandCb},
-    {.name = "record", .cb = recordCommandCb},
-    {.name = "fuzz", .cb = fuzzCommandCb},
-    {.name = "touchpad", .cb = touchCommandCb},
-    {.name = "leds", .cb = ledsCommandCb},
-    {.name = "inject", .cb = injectCommandCb},
-    {.name = "help", .cb = helpCommandCb},
+    {.name = "screenshot", .cb = screenshotCommandCb}, {.name = "mode", .cb = setModeCommandCb},
+    {.name = "gif", .cb = screenRecordCommandCb},      {.name = "replay", .cb = replayCommandCb},
+    {.name = "record", .cb = recordCommandCb},         {.name = "fuzz", .cb = fuzzCommandCb},
+    {.name = "touchpad", .cb = touchCommandCb},        {.name = "leds", .cb = ledsCommandCb},
+    {.name = "inject", .cb = injectCommandCb},         {.name = "help", .cb = helpCommandCb},
 };
 
 const consoleCommand_t* getConsoleCommands(void)
@@ -469,8 +465,8 @@ static int injectCommandCb(const char** args, int argCount, char* out)
             return 0;
         }
 
-        char* typeArg = args[3];
-        char* keyArg = args[2];
+        char* typeArg   = args[3];
+        char* keyArg    = args[2];
         char** valueArg = NULL;
 
         char* namespace = "storage";
@@ -486,7 +482,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
         else
         {
             typeArg = args[2];
-            keyArg = args[1];
+            keyArg  = args[1];
 
             if (argCount > 3)
             {
@@ -501,8 +497,8 @@ static int injectCommandCb(const char** args, int argCount, char* out)
                 return snprintf(out, 1024, "Value is required\n");
             }
 
-            char* endPtr = NULL;
-            errno = 0;
+            char* endPtr   = NULL;
+            errno          = 0;
             int32_t intVal = strtol(*valueArg, &endPtr, 10);
             if (errno != 0)
             {
@@ -553,7 +549,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
             expandPath(filenameBuf, sizeof(filenameBuf), *valueArg);
 
             FILE* file = NULL;
-            file = fopen(filenameBuf, "rb");
+            file       = fopen(filenameBuf, "rb");
             if (NULL != file)
             {
                 fseek(file, 0, SEEK_END);
@@ -583,7 +579,8 @@ static int injectCommandCb(const char** args, int argCount, char* out)
 
                     free(fileData);
 
-                    return snprintf(out, 1024, "Set NVS %s:%s to content of file '%s'\n", namespace, keyArg, filenameBuf);
+                    return snprintf(out, 1024, "Set NVS %s:%s to content of file '%s'\n", namespace, keyArg,
+                                    filenameBuf);
                 }
                 fclose(file);
             }
@@ -602,7 +599,6 @@ static int injectCommandCb(const char** args, int argCount, char* out)
         {
             char filenameBuf[1024];
             expandPath(filenameBuf, sizeof(filenameBuf), args[2]);
-
 
             if (emuCnfsInjectFile(args[1], filenameBuf))
             {
