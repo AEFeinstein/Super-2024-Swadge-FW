@@ -81,6 +81,8 @@ typedef struct
     // Represents the actual state most recently returned by the OS
     JOYINFOEX newState;
     bool pendingState;
+    int* axisMins;
+    int* axisMaxs;
 } emuWinJoyData_t;
 #endif
 
@@ -143,8 +145,8 @@ bool gamepadConnect(emuJoystick_t* joystick)
                 emuWinJoyData_t* winData = (emuWinJoyData_t*)data;
 
                 printf("Joystick #%d: %s\n", i, caps.szPname);
-                printf("  Buttons: %d/%d\n", caps.wNumAxes, caps.wMaxAxes);
-                printf("  Axes: %d\n", caps.wNumButtons);
+                printf("  Axes: %d/%d\n", caps.wNumAxes, caps.wMaxAxes);
+                printf("  Buttons: %d\n", caps.wNumButtons);
 
                 winData->deviceNum = i;
 
@@ -163,6 +165,52 @@ bool gamepadConnect(emuJoystick_t* joystick)
                 if (joystick->numAxes > 0)
                 {
                     joystick->axisData = calloc(joystick->numAxes, sizeof(int16_t));
+                    winData->axisMins = calloc(joystick->numAxes, sizeof(int16_t));
+                    winData->axisMaxs = calloc(joystick->numAxes, sizeof(int16_t));
+
+                    for (int axis = 0; axis < joystick->numAxes; axis++)
+                    {
+                        int min = 0, max = 0;
+                        switch (axis)
+                        {
+                            case 0:
+                                min = caps.wXmin;
+                                max = caps.wXmax;
+                                break;
+
+                            case 1:
+                                min = caps.wYmin;
+                                max = caps.wYmax;
+                                break;
+
+                            case 2:
+                                min = caps.wZmin;
+                                max = caps.wZmax;
+                                break;
+
+                            case 3:
+                                min = caps.wRmin;
+                                max = caps.wRmax;
+                                break;
+
+                            case 4:
+                                min = caps.wUmin;
+                                max = caps.wUmax;
+                                break;
+
+                            case 5:
+                                min = caps.wVmin;
+                                max = caps.wVmax;
+                                break;
+
+                            default: break;
+                        }
+                        winData->axisMins[axis] min;
+                        winData->axisMaxs[axis] = max;
+
+                        const char axisIds[] = "XYZRUV";
+                        printf("Axis #%d (%c): [%d, %d]\n", axis, axisIds[axis], min, max);
+                    }
                 }
 
                 joystick->data = data;
@@ -288,13 +336,14 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 
             if (winData->pendingState)
             {
+#define CALC_AXIS(n, val) ((n - winData->axisMins[n]) * 32767 / (winData->axisMaxs[n] - winData->axisMaxs[n]))
                 JOYINFOEX* cur = &winData->curState;
                 JOYINFOEX* new = &winData->newState;
                 if (cur->dwXpos != new->dwXpos)
                 {
                     event->type = AXIS;
                     event->axis = 0;
-                    event->value = new->dwXpos;
+                    event->value = CALC_AXIS(0, new->dwXpos);
                     cur->dwXpos = new->dwXpos;
                     return true;
                 }
@@ -302,7 +351,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 {
                     event->type = AXIS;
                     event->axis = 1;
-                    event->value = new->dwYpos;
+                    event->value = CALC_AXIS(1, new->dwYpos);
                     cur->dwYpos = new->dwYpos;
                     return true;
                 }
@@ -310,7 +359,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 {
                     event->type = AXIS;
                     event->axis = 2;
-                    event->value = new->dwZpos;
+                    event->value = CALC_AXIS(2, new->dwZpos);
                     cur->dwZpos = new->dwZpos;
                     return true;
                 }
@@ -318,7 +367,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 {
                     event->type = AXIS;
                     event->axis = 3;
-                    event->value = new->dwRpos;
+                    event->value = CALC_AXIS(3, new->dwRpos);
                     cur->dwRpos = new->dwRpos;
                     return true;
                 }
@@ -326,7 +375,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 {
                     event->type = AXIS;
                     event->axis = 4;
-                    event->value = new->dwUpos;
+                    event->value = CALC_AXIS(4, new->dwUpos);
                     cur->dwUpos = new->dwUpos;
                     return true;
                 }
@@ -334,7 +383,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 {
                     event->type = AXIS;
                     event->axis = 5;
-                    event->value = new->dwVpos;
+                    event->value = CALC_AXIS(5, new->dwVpos);
                     cur->dwVpos = new->dwVpos;
                 }
                 else if (cur->dwButtons != new->dwButtons)
