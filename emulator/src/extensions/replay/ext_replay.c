@@ -956,14 +956,13 @@ void emulatorRecordCommand(const char* command)
             .commandStr = NULL,
         };
 
-        if (!strncmp("record", command, strlen("record")))
-        {
-            // Don't insert recording-related commands into the recording
-            return;
-        }
-
         if (command)
         {
+            if (!strncmp("record", command, strlen("record")))
+            {
+                // Don't insert recording-related commands into the recording
+                return;
+            }
             // Create a copy of the filename since entry.commandStr is not const
             char tmp[strlen(command) + 1];
             strcpy(tmp, command);
