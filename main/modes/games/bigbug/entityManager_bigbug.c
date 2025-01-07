@@ -376,6 +376,10 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                                 = cachedEntity;
                             break;
                         }
+                        default:
+                        {
+                            break;
+                        }
                     }
 
                     // push to the tail
