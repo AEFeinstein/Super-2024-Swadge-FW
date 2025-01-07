@@ -55,16 +55,17 @@ void shGameEndInput(shVars_t* sh, buttonEvt_t* evt)
  */
 void shGameEndDraw(shVars_t* sh, int32_t elapsedUs)
 {
-    // Draw background for the body
-    fillDisplayArea(0, 2 * Y_MARGIN + sh->rodin.height, TFT_WIDTH, TFT_HEIGHT, c111);
-
     // Start here
-    int32_t yOff = Y_MARGIN;
+    int16_t yOff = Y_MARGIN;
 
     // Draw the name
     int16_t tWidth = textWidth(&sh->rodin, sh->songName);
-    drawText(&sh->rodin, c555, sh->songName, (TFT_WIDTH - tWidth) / 2, yOff);
+    int16_t xOff   = 0;
+    drawTextWordWrapCentered(&sh->rodin, c555, sh->songName, &xOff, &yOff, TFT_WIDTH, TFT_HEIGHT);
     yOff += sh->rodin.height + Y_MARGIN;
+
+    // Draw background for the body
+    fillDisplayArea(0, yOff, TFT_WIDTH, TFT_HEIGHT, c111);
 
     // This is the text area between the title and fail chart
     int32_t textAreaTop    = yOff;

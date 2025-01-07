@@ -42,7 +42,7 @@ static const sokoHelpPage_t helpPages[] = {
     },
     {
         .title = controlTitle,
-        .text  = "When painting a floor, you can't step on wet paint. \nNo returning to a spot you've already been",
+        .text  = "When painting a floor, you can't step on wet paint. No returning to a spot you've already been.",
     },
     {
         .title = controlTitle,
@@ -76,7 +76,7 @@ static const sokoHelpPage_t helpPages[] = {
     },
     {
         .title = sokoModeName,
-        .text  = "Good luck and get painting! \n\n'I hope you enjoy my puzzles'\n - Hunter",
+        .text  = "Good luck and get painting!\n'I hope you enjoy my puzzles'\n- Hunter",
     },
 };
 

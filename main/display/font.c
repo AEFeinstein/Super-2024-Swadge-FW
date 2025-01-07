@@ -281,6 +281,8 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
         // copy as much text as will fit into the buffer
         // leaving room for a null-terminator in case the string is longer
         strncpy(buf, textPtr, sizeof(buf) - 1);
+        // Always null terminate
+        buf[sizeof(buf) - 1] = 0;
 
         // shorten the text until it fits
         while (textX + textWidth(font, buf) > xMax)
@@ -301,6 +303,17 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
 
             // Drop a null terminator to shrink the string
             *lastBreak = '\0';
+        }
+
+        // Look for newlines in the current line
+        for (int32_t i = 0; i < sizeof(buf); i++)
+        {
+            if ('\n' == buf[i])
+            {
+                // Newline found, end line here
+                buf[i] = 0;
+                break;
+            }
         }
 
         // the line must have enough space for the rest of the buffer
