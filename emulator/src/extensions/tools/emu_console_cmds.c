@@ -465,11 +465,11 @@ static int injectCommandCb(const char** args, int argCount, char* out)
             return 0;
         }
 
-        char* typeArg   = args[3];
-        char* keyArg    = args[2];
-        char** valueArg = NULL;
+        const char* typeArg   = args[3];
+        const char* keyArg    = args[2];
+        const char** valueArg = NULL;
 
-        char* namespace = "storage";
+        const char* namespace = "storage";
 
         if (!strcmp(typeArg, "int") || !strcmp(typeArg, "str") || !strcmp(typeArg, "file"))
         {
@@ -521,7 +521,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
             }
             else
             {
-                for (char** argPtr = valueArg; argPtr < (args + argCount); argPtr++)
+                for (const char** argPtr = valueArg; argPtr < (args + argCount); argPtr++)
                 {
                     if (argPtr > valueArg)
                     {
@@ -645,7 +645,7 @@ static int helpCommandCb(const char** args, int argCount, char* out)
         int matches = 0;
         for (int i = 0; i < (sizeof(commandDocs) / sizeof(commandDocs[0])); i++)
         {
-            char** doc = commandDocs[i];
+            const char** doc = commandDocs[i];
 
             if (!strncasecmp(cmdMatchBuf, doc[0], strlen(cmdMatchBuf)))
             {
