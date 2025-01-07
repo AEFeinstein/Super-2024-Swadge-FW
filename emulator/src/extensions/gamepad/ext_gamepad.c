@@ -16,7 +16,7 @@
 #include <math.h>
 #include <stdint.h>
 
-#if defined(EMU_WINDOWN)
+#if defined(EMU_WINDOWS)
 #include <Windows.h>
 #include <joystickapi.h>
 #elif defined(EMU_LINUX)
