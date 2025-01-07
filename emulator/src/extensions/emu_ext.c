@@ -16,6 +16,7 @@
 #include "ext_touch.h"
 #include "ext_leds.h"
 #include "ext_fuzzer.h"
+#include "ext_gamepad.h"
 #include "ext_keymap.h"
 #include "ext_midi.h"
 #include "ext_modes.h"
@@ -31,8 +32,8 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &touchEmuCallback,  &ledEmuExtension,   &fuzzerEmuExtension, &toolsEmuExtension,
-    &keymapEmuCallback, &modesEmuExtension, &replayEmuExtension, &midiEmuExtension,
+    &touchEmuCallback,  &ledEmuExtension,    &fuzzerEmuExtension, &toolsEmuExtension,   &keymapEmuCallback,
+    &modesEmuExtension, &replayEmuExtension, &midiEmuExtension,   &gamepadEmuExtension,
 };
 
 //==============================================================================
@@ -200,7 +201,7 @@ static void preloadExtensions(void)
 }
 
 /**
- * @brief
+ * @brief Initializes all registered emulator extensions
  *
  * @param args
  */
@@ -232,7 +233,7 @@ void initExtensions(emuArgs_t* args)
 }
 
 /**
- * @brief
+ * @brief Deinitializes all registered emulator extensions
  *
  */
 void deinitExtensions(void)
@@ -247,6 +248,14 @@ void deinitExtensions(void)
         while ((paneInfo = (emuPaneInfo_t*)pop(&extInfo->panes)))
         {
             free(paneInfo);
+        }
+
+        if (extInfo->initialized)
+        {
+            if (extInfo->extension->fnDeinitCb)
+            {
+                extInfo->extension->fnDeinitCb();
+            }
         }
         free(extInfo);
     }
@@ -575,7 +584,22 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
           + (winH - winPanes[PANE_TOP].paneH - winPanes[PANE_BOTTOM].paneH - screenPane->paneH - topDivH - bottomDivH)
                 / 2;
 
-    winPanes[PANE_BOTTOM].paneX = screenPane->paneX;
+    // Center the screen in the window if it's bigger
+    if (paneInfos[PANE_LEFT].count == 0 && paneInfos[PANE_RIGHT].count == 0)
+    {
+        screenPane->paneX = (winW - screenPane->paneW) / 2;
+
+        winPanes[PANE_BOTTOM].paneX = 0;
+        winPanes[PANE_TOP].paneX    = 0;
+
+        winPanes[PANE_BOTTOM].paneW = winW;
+        winPanes[PANE_TOP].paneW    = winW;
+    }
+    else
+    {
+        winPanes[PANE_BOTTOM].paneX = screenPane->paneX;
+        winPanes[PANE_TOP].paneX    = screenPane->paneX;
+    }
     winPanes[PANE_BOTTOM].paneY = screenPane->paneY + screenPane->paneH + bottomDivH;
 
 ///< Macro for calculating the offset of the current sub-pane within the overall pane
