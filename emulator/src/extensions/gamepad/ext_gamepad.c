@@ -335,7 +335,8 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 
             if (winData->pendingState)
             {
-#define CALC_AXIS(n, val) ((n - winData->axisMins[n]) * 32767 / (winData->axisMaxs[n] - winData->axisMins[n]))
+//#define CALC_AXIS(n, val) ((val - winData->axisMins[n]) * 32767 / (winData->axisMaxs[n] - winData->axisMins[n]))
+#define CALC_AXIS(n, val) (((val) - winData->axisMins[n]) * 65535 / ((winData->axisMaxs[n] - winData->axisMins[n])) / 2 - (32768 * (winData->axisMaxs[n] - winData->axisMins[n]) / 65536))
                 JOYINFOEX* cur = &winData->curState;
                 JOYINFOEX* new = &winData->newState;
                 if (cur->dwXpos != new->dwXpos)
