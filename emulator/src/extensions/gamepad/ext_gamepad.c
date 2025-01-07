@@ -155,6 +155,11 @@ bool gamepadConnect(emuJoystick_t* joystick)
                 joystick->numButtons = caps.wNumButtons;
                 joystick->numAxes = caps.wNumAxes;
 
+                if (caps.wCaps & JOYCAPS_HASPOV)
+                {
+                    joystick->numAxes += 2;
+                }
+
                 if (joystick->numButtons > 0)
                 {
                     joystick->buttonData = calloc(joystick->numButtons, sizeof(uint8_t));
@@ -170,7 +175,7 @@ bool gamepadConnect(emuJoystick_t* joystick)
                     winData->axisMins = calloc(joystick->numAxes, sizeof(int16_t));
                     winData->axisMaxs = calloc(joystick->numAxes, sizeof(int16_t));
 
-                    for (int axis = 0; axis < joystick->numAxes; axis++)
+                    for (int axis = 0; axis < MIN(6, joystick->numAxes); axis++)
                     {
                         int min = 0, max = 0;
                         switch (axis)
@@ -428,7 +433,15 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     {
                         // Send this as the first axis (6)
                         event->axis = 6;
-                        event->value = CLAMP(32 * getCos1024(new->dwPOV / 100), -32768, 32767);
+
+                        if (new->dwPOV == 65535)
+                        {
+                            event->value = 0;
+                        }
+                        else
+                        {
+                            event->value = CLAMP(32 * getCos1024(new->dwPOV / 100), -32768, 32767);
+                        }
 
                         winData->pendingPov = true;
                     }
@@ -436,7 +449,15 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                     {
                         // Send this as the second axis (7)
                         event->axis = 7;
-                        event->value = CLAMP(32 * getSin1024(new->dwPOV / 100), -32768, 32767);
+
+                        if (new->dwPOV == 65535)
+                        {
+                            event->value = 0;
+                        }
+                        else
+                        {
+                            event->value = CLAMP(32 * getSin1024(new->dwPOV / 100), -32768, 32767);
+                        }
 
                         winData->pendingPov = false;
                         cur->dwPOV = new->dwPOV;
