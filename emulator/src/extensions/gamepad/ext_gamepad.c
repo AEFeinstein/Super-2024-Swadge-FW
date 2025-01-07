@@ -440,7 +440,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                         }
                         else
                         {
-                            event->value = CLAMP(32 * getCos1024(((new->dwPOV / 100) + 90) % 360), -32768, 32767);
+                            event->value = CLAMP(-32 * getCos1024(((new->dwPOV / 100) + 90) % 360), -32768, 32767);
                         }
 
                         winData->pendingPov = true;
@@ -456,7 +456,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                         }
                         else
                         {
-                            event->value = CLAMP(32 * getSin1024(((new->dwPOV / 100) + 90) % 360), -32768, 32767);
+                            event->value = CLAMP(-32 * getSin1024(((new->dwPOV / 100) + 90) % 360), -32768, 32767);
                         }
 
                         winData->pendingPov = false;
