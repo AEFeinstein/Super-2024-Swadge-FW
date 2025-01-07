@@ -201,7 +201,7 @@ static void preloadExtensions(void)
 }
 
 /**
- * @brief
+ * @brief Initializes all registered emulator extensions
  *
  * @param args
  */
@@ -233,7 +233,7 @@ void initExtensions(emuArgs_t* args)
 }
 
 /**
- * @brief
+ * @brief Deinitializes all registered emulator extensions
  *
  */
 void deinitExtensions(void)
