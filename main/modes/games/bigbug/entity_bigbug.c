@@ -2424,8 +2424,12 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
             bb_setCharacterLine(dData, 2, "Pango", "But MAGFast is literally named after me!");
             bb_setCharacterLine(dData, 3, "Ovo", "You fool! It's called mag FEST because of PEST like you.");
             bb_setCharacterLine(dData, 4, "Po", "That's so metal.");
-            bb_setCharacterLine(dData, 5, "Ovo", "POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-            bb_setCharacterLine(dData, 6, "Ovo", "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!");
+            bb_setCharacterLine(dData, 5, "Ovo",
+                                "POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+                                "OOOOOOOOOOOOOOOOOOOO");
+            bb_setCharacterLine(dData, 6, "Ovo",
+                                "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+                                "OOOOOOOOOOOOOOOOOOOOOOO!");
             bb_setCharacterLine(dData, 7, "Pixel", "Hey, don't yell at my friend like that!");
 
             dData->curString     = -1;
@@ -2445,7 +2449,7 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
             bb_setCharacterLine(dData, 6, "Ovo", "T-raaaaash goes in the T-raaaaaash can.");
             bb_setCharacterLine(dData, 7, "Po", "Huh?");
 
-            dData->curString = -1;
+            dData->curString     = -1;
             dData->endDialogueCB = &bb_afterLiftoffInteraction;
             bb_setData(ovo, dData, DIALOGUE_DATA);
         }
@@ -4743,7 +4747,8 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 
     self->gameData->isPaused = false;
 
-    if (self->gameData->day || self->gameData->entityManager.activeBooster != self->gameData->entityManager.boosterEntities[0])
+    if (self->gameData->day
+        || self->gameData->entityManager.activeBooster != self->gameData->entityManager.boosterEntities[0])
     {
         return;
     }
