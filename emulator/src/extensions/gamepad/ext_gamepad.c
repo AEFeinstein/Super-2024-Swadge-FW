@@ -151,6 +151,20 @@ bool gamepadConnect(emuJoystick_t* joystick)
                 joystick->numButtons = caps.wNumButtons;
                 joystick->numAxes = caps.wNumAxes;
 
+                if (joystick->numButtons > 0)
+                {
+                    joystick->buttonData = calloc(joystick->numButtons, sizeof(uint8_t));
+                }
+                else
+                {
+                    joystick->buttonData = NULL;
+                }
+
+                if (joystick->numAxes > 0)
+                {
+                    joystick->axisData = calloc(joystick->numAxes, sizeof(int16_t));
+                }
+
                 joystick->data = data;
 
                 return true;
