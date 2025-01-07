@@ -88,6 +88,7 @@ Emulates a swadge
      --fuzz-motion[=y|n]     Set whether motion inputs are fuzzed
      --headless              Runs the emulator without a window.
      --hide-leds             Don't draw simulated LEDs next to the display
+ -j, --joystick[=JOYDEV]     Sets the joystick device to use.
  -k, --keymap=LAYOUT         Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak
  -l, --lock                  Lock the emulator in the start mode
      --midi-file=FILE        Open and immediately play a MIDI file
@@ -245,6 +246,11 @@ from one system will not necessarily produce the same output if it is used on a 
 `--keymap`: Specify an alternative keyboard layout to use for mapping emulator inputs. Possible options
 are `azerty`, `dvorak`, or `colemak`.
 
+`--joystick`: Specifies the Joystick device to connect to. The value passed to this argument will depend on
+the platform; on Windows the value should be a number from 0 to 15, with 0 being the first connected joystick
+and so on; on Linux the value should be the path to a Joystick device, such as `/dev/input/js0`. Joystick
+input is not yet supported on Mac.
+
 ## Console Commands
 
 The emulator supports a small number of commands in the console, which can be opened by pressing `F4` or
@@ -267,6 +273,7 @@ type `help <command>` into the console.
 | `fuzz touch [on|off]`    | Toggles fuzzing of touchpad inputs on or off                                                          |
 | `fuzz motion [on|off]`   | Toggles fuzzing of accelerometer motion on or off                                                     |
 | `fuzz time [on|off]`     | Toggles fuzzing of frame timings on or off                                                            |
+| `joystick [device-name]` | Toggles the joystick on or off, or connects to a specific joystick device                             |
 | `touchpad [on|off]`      | Toggles the emulator's virtual touchpad on or off                                                     |
 | `leds [on|off]`          | Toggles the emulator's virtual LEDs on or off                                                         |
 
