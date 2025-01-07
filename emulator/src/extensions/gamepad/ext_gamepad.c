@@ -4,6 +4,7 @@
 #include "hdw-btn_emu.h"
 #include "hdw-imu_emu.h"
 #include "macros.h"
+#include "trigonometry.h"
 
 #include <esp_log.h>
 
@@ -81,6 +82,8 @@ typedef struct
     // Represents the actual state most recently returned by the OS
     JOYINFOEX newState;
     bool pendingState;
+    // Whether the second POV hat axis is pending
+    bool pendingPov;
     int* axisMins;
     int* axisMaxs;
 } emuWinJoyData_t;
@@ -314,11 +317,6 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
 
                 if (result == JOYERR_NOERROR)
                 {
-                    printf("xPos: %d\nyPos: %d\nzPos: %d\n", winEvent.dwXpos, winEvent.dwYpos, winEvent.dwZpos);
-                    printf("rPos: %d\nuPos: %d\nvPos: %d\n", winEvent.dwRpos, winEvent.dwUpos, winEvent.dwVpos);
-                    printf("buttons: %d\n", winEvent.dwButtons);
-                    printf("dwPOV: %d\n", winEvent.dwPOV);
-
                     if (memcmp(&winEvent, &winData->curState, sizeof(JOYINFOEX)))
                     {
                         // The new data is different from the current data so copy it over
@@ -421,11 +419,29 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 }
                 else if (cur->dwPOV != new->dwPOV)
                 {
-                    // TODO this needs to be split further into two different events...
+                    // This is kinda weird!
+                    // This is because we're splitting a single POV hat event into two discrete axes
+                    // So, we just send the X axis first, and then set a flag (and don't update the 'cur' value)
+                    // And next time if the flag is set, we return the Y axis instead, and then update the 'cur' value
                     event->type = AXIS;
-                    event->axis = 6;
-                    event->value = new->dwPOV;
-                    cur->dwPOV = new->dwPOV;
+                    if (!winData->pendingPov)
+                    {
+                        // Send this as the first axis (6)
+                        event->axis = 6;
+                        event->value = CLAMP(32 * getCos1024(new->dwPOV / 100), -32768, 32767);
+
+                        winData->pendingPov = true;
+                    }
+                    else
+                    {
+                        // Send this as the second axis (7)
+                        event->axis = 7;
+                        event->value = CLAMP(32 * getSin1024(new->dwPOV / 100), -32768, 32767);
+
+                        winData->pendingPov = false;
+                        cur->dwPOV = new->dwPOV;
+                    }
+
                     applyEvent(joystick, event);
                     return true;
                 }
