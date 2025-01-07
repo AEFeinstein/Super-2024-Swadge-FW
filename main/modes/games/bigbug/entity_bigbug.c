@@ -160,6 +160,17 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     {
         switch (self->dataType)
         {
+            case GARBOTNIK_DATA:
+            {
+                bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
+                    // destroy all cached entities
+                bb_entity_t* curEntity = pop(&gData->towedEntities);
+                while (NULL != curEntity)
+                {   
+                    curEntity = pop(&gData->towedEntities);
+                }
+                break;
+            }
             case DIALOGUE_DATA:
             {
                 bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
@@ -1135,16 +1146,16 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         self->drawFunction   = NULL;
         return;
     }
-    else if (gData->fuel < 38000 && self->gameData->bgm.length == 7217)
+    else if (gData->fuel < 38000 && self->gameData->bgm.length == 5537)
     {
-        // exploration song length 7217
-        // hurry up song length 6480
+        // exploration song length 5537
+        // hurry up song length 4833
         bb_setupMidi();
         unloadMidiFile(&self->gameData->bgm);
         loadMidiFile("Big Bug Hurry up.mid", &self->gameData->bgm, true);
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     }
-    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 6480)
+    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 4833)
     {
         bb_setupMidi();
         unloadMidiFile(&self->gameData->bgm);
@@ -4836,7 +4847,7 @@ void bb_upgradeRadar(bb_entity_t* self)
 void bb_triggerGameOver(bb_entity_t* self)
 {
     // music is home 2, this function was already triggered. early return.
-    if (self->gameData->bgm.length == 9715)
+    if (self->gameData->bgm.length == 7437)
     {
         return;
     }

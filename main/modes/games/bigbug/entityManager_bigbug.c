@@ -223,6 +223,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
         loadWsgInplace("sh_up.wsg", &entityManager->sprites[BB_ARROW].frames[0], true, bb_decodeSpace, bb_hsd);
         loadWsgInplace("sh_u1.wsg", &entityManager->sprites[BB_ARROW].frames[1], true, bb_decodeSpace, bb_hsd);
         entityManager->sprites[BB_ARROW].allocated = true;
+        entityManager->sprites[BB_ARROW].brightnessLevels = 1;
     }
 
     if (!entityManager->sprites[BB_HOTDOG].allocated)
@@ -233,6 +234,7 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
         entityManager->sprites[BB_HOTDOG].originX   = 6;
         entityManager->sprites[BB_HOTDOG].originY   = 6;
         entityManager->sprites[BB_HOTDOG].allocated = true;
+        entityManager->sprites[BB_HOTDOG].brightnessLevels = 1;
     }
 }
 
@@ -525,11 +527,11 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         }
     }
 
-    // load all cached entities and destroy them one by one.
-    bb_ensureEntitySpace(entityManager, 1);
+    // destroy all cached entities
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(entityManager->cachedEntities)))
-    {
+    {   
+        bb_destroyEntity(curEntity, false);
         heap_caps_free(curEntity);
     }
 }

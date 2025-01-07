@@ -352,6 +352,7 @@ void bb_FreeTilemapData(void)
 
 static void bb_ExitMode(void)
 {
+    soundStop(true);
     heatshrink_decoder_free(bb_hsd);
     heap_caps_free(bb_decodeSpace);
 
@@ -365,7 +366,7 @@ static void bb_ExitMode(void)
     // Free font
     freeFont(&bigbug->gameData.font);
 
-    soundStop(true);
+
     if (bigbug->gameData.bgm.data)
     {
         unloadMidiFile(&bigbug->gameData.bgm);
@@ -378,6 +379,8 @@ static void bb_ExitMode(void)
     bb_FreeTilemapData();
 
     heap_caps_free(bigbug);
+
+    // heap_caps_free(bb_decodeSpace);
 }
 
 static void bb_MainLoop(int64_t elapsedUs)
