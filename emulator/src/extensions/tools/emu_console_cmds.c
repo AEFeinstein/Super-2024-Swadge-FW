@@ -25,10 +25,6 @@ static int injectCommandCb(const char** args, int argCount, char* out);
 static int joystickCommandCb(const char** args, int argCount, char* out);
 static int helpCommandCb(const char** args, int argCount, char* out);
 
-static const char* buttonNames[] = {
-    "Up", "Down", "Left", "Right", "A", "B", "Start", "Select",
-};
-
 // command, usage, description
 // just a simple way to document sub-commands, etc.
 static const char* commandDocs[][3] = {
@@ -243,17 +239,8 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
                         buttonBit_t mask = 0;
                         for (int argNum = 2; argNum < argCount; argNum++)
                         {
-                            for (int i = 0; i < 8; i++)
-                            {
-                                buttonBit_t btn        = (buttonBit_t)(1 << i);
-                                const char* buttonName = buttonNames[i];
-
-                                if (!strcasecmp(buttonName, args[argNum]))
-                                {
-                                    mask |= btn;
-                                    break;
-                                }
-                            }
+                            // parseButtonName() returns 0 for invalid values which is fine here
+                            mask |= parseButtonName(args[argNum]);
                         }
                         emuSetFuzzButtonsMask(mask);
                     }
@@ -273,7 +260,7 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
 
                         if (mask & btn)
                         {
-                            written += sprintf(out + written, "- %s\n", buttonNames[i]);
+                            written += sprintf(out + written, "- %s\n", getButtonName(btn));
                         }
                     }
 
