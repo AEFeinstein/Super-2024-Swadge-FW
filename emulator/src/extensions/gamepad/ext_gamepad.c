@@ -641,6 +641,92 @@ void emuSetDpadAxisMapping(int xAxis, int yAxis)
     joystickConfig.dpad.yAxis = yAxis;
 }
 
+/**
+ * @brief Writes the current joystick button mapping to the provided array
+ *
+ * The corresponding `buttonBit_t` mapping, or 0 for unmapped buttons, will be written
+ * to the provided array at the index corresponding to the mapped joystick button.
+ *
+ * @param[out] buttons A pointer to an array of buttonBit_t with a length of at least 32
+ */
+void emuGetGamepadButtonMapping(buttonBit_t buttons[32])
+{
+    if (buttons)
+    {
+        for (int i = 0; i < 32; i++)
+        {
+            buttons[i] = joystickConfig.buttonMap[i];
+        }
+    }
+}
+
+/**
+ * @brief Writes the current joystick axes mapped to the emulator touchpad
+ *
+ * Values that are not mapped to any axis will be set to -1
+ *
+ * @param[out] xAxis A pointer to be set with the joystick axis mapped to the horizontal touchpad
+ * @param[out] yAxis A pointer to be set with the joystick axis mapped to the vertical touchpad
+ */
+void emuGetTouchpadAxisMapping(int* xAxis, int* yAxis)
+{
+    if (xAxis)
+    {
+        *xAxis = joystickConfig.touchpad.xAxis >= 0 ? joystickConfig.touchpad.xAxis : -1;
+    }
+
+    if (yAxis)
+    {
+        *yAxis = joystickConfig.touchpad.yAxis >= 0 ? joystickConfig.touchpad.yAxis : -1;
+    }
+}
+
+/**
+ * @brief Writes the current joystick axes mapped to the emulator accelerometer
+ *
+ * Values that are not mapped to any axis will be set to -1
+ *
+ * @param[out] xAxis A pointer to be set with the joystick axis mapped to the accelerometer X axis
+ * @param[out] yAxis A pointer to be set with the joystick axis mapped to the accelerometer Y axis
+ * @param[out] zAxis A pointer to be set with the joystick axis mapped to the accelerometer Z axis
+ */
+void emuGetAccelAxisMapping(int* xAxis, int* yAxis, int* zAxis)
+{
+    if (xAxis)
+    {
+        *xAxis = joystickConfig.accel.xAxis >= 0 ? joystickConfig.accel.xAxis : -1;
+    }
+
+    if (yAxis)
+    {
+        *yAxis = joystickConfig.accel.yAxis >= 0 ? joystickConfig.accel.yAxis : -1;
+    }
+
+    if (zAxis)
+    {
+        *zAxis = joystickConfig.accel.zAxis >= 0 ? joystickConfig.accel.zAxis : -1;
+    }
+}
+
+/**
+ * @brief Writes the current joystick axes mapped to the emulator D-pad
+ *
+ * @param[out] xAxis A pointer to be set with the joystick axis mapped to the horizontal D-pad value
+ * @param[out] yAxis A pointer to be set with the joystick axis mapped to the vertical D-pad value
+ */
+void emuGetDpadAxisMapping(int* xAxis, int* yAxis)
+{
+    if (xAxis)
+    {
+        *xAxis = joystickConfig.dpad.xAxis >= 0 ? joystickConfig.dpad.xAxis : -1;
+    }
+
+    if (yAxis)
+    {
+        *yAxis = joystickConfig.dpad.yAxis >= 0 ? joystickConfig.dpad.yAxis : -1;
+    }
+}
+
 bool gamepadInitCb(emuArgs_t* args)
 {
     if (gamepadConnect(&joystickExt, args->joystick))

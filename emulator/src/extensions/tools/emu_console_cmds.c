@@ -46,9 +46,11 @@ static const char* commandDocs[][3] = {
     {"touchpad", "touchpad [on|off]", "toggles the virtual touchpad"},
     {"joystick", "joystick [on|off]", "toggles the joystick"},
     {"joystick device", "joystick device <devname>", "connects to a specific joystick device"},
-    {"joystick map button", "joystick map button <btn-num> <btn-name> [<btn-num> <btn-name> ...]", "maps one or more joystick button numbers to button names"},
+    {"joystick map button", "joystick map button <btn-num> <btn-name> [<btn-num> <btn-name> ...]",
+     "maps one or more joystick button numbers to button names"},
     {"joystick map touchpad", "joystick map touchpad <x-axis> <y-axis>", "maps two joystick axes to the touchpad"},
-    {"joystick map motion", "joystick map motion <x-axis> <y-axis> <z-axis>", "maps three joystick axes to the accelerometer axes"},
+    {"joystick map motion", "joystick map motion <x-axis> <y-axis> <z-axis>",
+     "maps three joystick axes to the accelerometer axes"},
     {"joystick map dpad", "joystick map dpad <x-axis> <y-axis>", "maps two joystick axes to the D-pad buttons"},
     {"inject", "inject <nvs|asset> <...>", "injects data into NVS or assets"},
     {"inject nvs", "inject nvs [namespace] <key> <int|str|file> <value>",
@@ -684,16 +686,17 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
                     // joystick map button <button-idx> <button-name>
                     if (0 != (argCount % 2))
                     {
-                        return snprintf(out, 1024, "ERR: Arguments must be in pairs of button number and button name\n");
+                        return snprintf(out, 1024,
+                                        "ERR: Arguments must be in pairs of button number and button name\n");
                     }
 
                     // Get the button numbers and names in pairs
                     for (int argNum = 2; argNum < argCount; argNum += 2)
                     {
                         const char* buttonNumStr = args[argNum];
-                        const char* buttonName = args[argNum + 1];
-                        char* end = NULL;
-                        int buttonNum = strtol(buttonNumStr, &end, 10);
+                        const char* buttonName   = args[argNum + 1];
+                        char* end                = NULL;
+                        int buttonNum            = strtol(buttonNumStr, &end, 10);
                         if ((buttonNum == 0 && end == buttonNumStr) || buttonNum < 0 || buttonNum > 31)
                         {
                             return snprintf(out, 1024, "ERR: Invalid button number '%s'\n", buttonNumStr);
