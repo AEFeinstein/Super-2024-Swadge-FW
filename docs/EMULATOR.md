@@ -125,7 +125,7 @@ Emulates a swadge
      --fuzz-motion[=y|n]     Set whether motion inputs are fuzzed
      --headless              Runs the emulator without a window.
      --hide-leds             Don't draw simulated LEDs next to the display
- -j, --joystick[=JOYDEV]     Sets the joystick device to use.
+ -j, --joystick=JOYDEV       Sets the joystick device to use.
  -k, --keymap=LAYOUT         Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak
  -l, --lock                  Lock the emulator in the start mode
      --midi-file=FILE        Open and immediately play a MIDI file
