@@ -218,3 +218,46 @@ const char* getTimestampFilename(char* dst, size_t n, const char* prefix, const 
 
     return dst;
 }
+
+static const char* buttonNames[] = {
+    "Up", "Down", "Left", "Right", "A", "B", "Start", "Select",
+};
+
+static const char* altButtonNames[] = {
+    "North", "South", "West", "East", "A", "B", "Pause", "Menu",
+};
+
+/**
+ * @brief Parse a string containing a button name and return its bit value
+ *
+ * Case-insensitive. Valid values are:
+ * Up, West, Down, South, Left, West, Right, East, A, B, Start, Pause, Select, and Menu.
+ *
+ * @param buttonName The string
+ * @return buttonBit_t The value of the parsed button, or 0 if it did not match
+ */
+buttonBit_t parseButtonName(const char* buttonName)
+{
+    for (int i = 0; i < 8; i++)
+    {
+        if (!strcasecmp(buttonNames[i], buttonName) || !strcasecmp(altButtonNames[i], buttonName))
+        {
+            return (buttonBit_t)(1 << i);
+        }
+    }
+
+    return (buttonBit_t)0;
+}
+
+const char* getButtonName(buttonBit_t btn)
+{
+    for (int i = 0; i < 8; i++)
+    {
+        if (btn & (1 << i))
+        {
+            return buttonNames[i];
+        }
+    }
+
+    return NULL;
+}

@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <hdw-btn.h>
 
 #if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) || defined(WIN32) || defined(WIN64)          \
     || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__CYGWIN__) || defined(__MINGW32__) \
@@ -17,3 +18,5 @@ int makeDir(const char* path);
 bool makeDirs(const char* path);
 void expandPath(char* buffer, size_t length, const char* path);
 const char* getTimestampFilename(char* dst, size_t n, const char* prefix, const char* ext);
+buttonBit_t parseButtonName(const char* buttonName);
+const char* getButtonName(buttonBit_t btn);
