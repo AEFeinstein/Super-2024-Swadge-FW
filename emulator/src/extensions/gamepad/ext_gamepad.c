@@ -25,19 +25,57 @@
 #elif defined(EMU_MACOS)
 #endif
 
-// Defines the mapping of the default Swadge Gamepad mode
-#define TOUCH_AXIS_X 0
-#define TOUCH_AXIS_Y 1
+typedef struct
+{
+    const char* name;
+    struct
+    {
+        int xAxis;
+        int yAxis;
+    } touchpad;
 
-#define ACCEL_AXIS_X 5
-#define ACCEL_AXIS_Y 3
-#define ACCEL_AXIS_Z 4
+    struct
+    {
+        int xAxis;
+        int yAxis;
+        int zAxis;
+    } accel;
 
-#define DPAD_AXIS_X 6
-#define DPAD_AXIS_Y 7
+    struct
+    {
+        int xAxis;
+        int yAxis;
+    } dpad;
 
-const buttonBit_t joystickButtonMap[] = {
-    PB_A, PB_B, 0, 0, 0, 0, 0, 0, 0, 0, PB_SELECT, PB_START, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    buttonBit_t buttonMap[32];
+} emuJoystickConf_t;
+
+emuJoystickConf_t joystickConfig = {
+    .name = "Swadge",
+    .touchpad = {
+        .xAxis = 0,
+        .yAxis = 1,
+    },
+
+    .accel = {
+        .xAxis = 5,
+        .yAxis = 3,
+        .zAxis = 4,
+    },
+
+    .dpad = {
+        .xAxis = 6,
+        .yAxis = 7,
+    },
+
+    .buttonMap = {
+        PB_A, // 0
+        PB_B, // 1
+        0, 0, 0, 0, 0, 0, 0, 0,
+        PB_SELECT, // 10
+        PB_START, // 11
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    },
 };
 
 #ifdef EMU_WINDOWS
@@ -89,6 +127,7 @@ void gamepadPreFrameCb(uint64_t frame);
 bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event);
 bool gamepadConnect(emuJoystick_t* joystick, const char* name);
 void gamepadDisconnect(emuJoystick_t* joystick);
+int16_t getAxisData(int axis);
 
 emuExtension_t gamepadEmuExtension = {
     .name         = "gamepad",
@@ -528,9 +567,78 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
     return false;
 }
 
+int16_t getAxisData(int axis)
+{
+    if (axis >= 0 && axis < joystickExt.numAxes)
+    {
+        return joystickExt.axisData[axis];
+    }
+
+    return 0;
+}
+
 bool emuGamepadConnected(void)
 {
     return joystickExt.connected;
+}
+
+/**
+ * @brief Maps a joystick button to an emulator button
+ *
+ * Using a value of 0 for button will un-map the joystick button
+ *
+ * @param buttonIdx The joystick button number to map
+ * @param button The emulator button value to set
+ */
+void emuSetGamepadButtonMapping(uint8_t buttonIdx, buttonBit_t button)
+{
+    if (buttonIdx < 32)
+    {
+        joystickConfig.buttonMap[buttonIdx] = button;
+    }
+}
+
+/**
+ * @brief Maps two joystick axes onto the emulator touchpad
+ *
+ * A negative axis value means no axis will be mapped onto that value
+ *
+ * @param xAxis The axis to map to the horizontal touchpad value
+ * @param yAxis The axis to map to the vertical touchpad value
+ */
+void emuSetTouchpadAxisMapping(int xAxis, int yAxis)
+{
+    printf("Mapping touchpad to axes %d and %d\n", xAxis, yAxis);
+    joystickConfig.touchpad.xAxis = xAxis;
+    joystickConfig.touchpad.yAxis = yAxis;
+}
+
+/**
+ * @brief Maps three joystick axes onto the emulator accelerometer data
+ *
+ * @param xAxis The axis to map onto the accelerometer X axis
+ * @param yAxis The axis to map onto the accelerometer Y axis
+ * @param zAxis The axis to map onto the accelerometer Z axis
+ */
+void emuSetAccelAxisMapping(int xAxis, int yAxis, int zAxis)
+{
+    printf("Mapping motion to axes %d, %d, and %d\n", xAxis, yAxis, zAxis);
+    joystickConfig.accel.xAxis = xAxis;
+    joystickConfig.accel.yAxis = yAxis;
+    joystickConfig.accel.zAxis = zAxis;
+}
+
+/**
+ * @brief Maps two joystick axes onto the emulator D-pad
+ *
+ * @param xAxis The axis to map onto the horizontal D-pad value
+ * @param yAxis The axis to map onto the vertical D-pad value
+ */
+void emuSetDpadAxisMapping(int xAxis, int yAxis)
+{
+    printf("Mapping D-pad to axes %d and %d\n", xAxis, yAxis);
+    joystickConfig.dpad.xAxis = xAxis;
+    joystickConfig.dpad.yAxis = yAxis;
 }
 
 bool gamepadInitCb(emuArgs_t* args)
@@ -559,108 +667,92 @@ void gamepadPreFrameCb(uint64_t frame)
         {
             case BUTTON:
             {
-                if (event.button < 32 && joystickButtonMap[event.button])
+                if (event.button < 32 && joystickConfig.buttonMap[event.button])
                 {
-                    emulatorInjectButton(joystickButtonMap[event.button], event.value != 0);
+                    emulatorInjectButton(joystickConfig.buttonMap[event.button], event.value != 0);
                 }
                 break;
             }
 
             case AXIS:
             {
-                switch (event.axis)
+                if (event.axis == joystickConfig.touchpad.xAxis || event.axis == joystickConfig.touchpad.yAxis)
                 {
-                    case TOUCH_AXIS_X:
-                    case TOUCH_AXIS_Y:
+                    // Joystick data comes in as a value from (-2**15) to (2**15-1)
+                    // We need to take that down to (-128) to (127) (divide by 8)
+                    // Then need to take the atan2 of it
+                    double x = (double)getAxisData(joystickConfig.touchpad.xAxis);
+                    double y = (double)getAxisData(joystickConfig.touchpad.yAxis);
+
+                    if (x == 0 && y == 0)
                     {
-                        // Joystick data comes in as a value from (-2**15) to (2**15-1)
-                        // We need to take that down to (-128) to (127) (divide by 8)
-                        // Then need to take the atan2 of it
-                        double x = (double)joystickExt.axisData[TOUCH_AXIS_X];
-                        double y = (double)joystickExt.axisData[TOUCH_AXIS_Y];
-
-                        if (x == 0 && y == 0)
-                        {
-                            emulatorSetTouchJoystick(0, 0, 0);
-                        }
-                        else
-                        {
-                            const double maxRadius = 1024;
-
-                            double angle        = atan2(-y, x);
-                            double angleDegrees = (angle * 180) / M_PI;
-                            int radius          = CLAMP(sqrt(x * x + y * y) * maxRadius / 32768, 0, maxRadius);
-
-                            int angleDegreesRounded = (int)(angleDegrees + 360) % 360;
-                            emulatorSetTouchJoystick(CLAMP(angleDegreesRounded, 0, 359), radius, 1024);
-                        }
-                        break;
+                        emulatorSetTouchJoystick(0, 0, 0);
                     }
-
-                    case ACCEL_AXIS_X:
-                    case ACCEL_AXIS_Y:
-                    case ACCEL_AXIS_Z:
+                    else
                     {
-                        int16_t accelX = joystickExt.axisData[ACCEL_AXIS_X] / 128;
-                        int16_t accelY = joystickExt.axisData[ACCEL_AXIS_Y] / 128;
-                        int16_t accelZ = joystickExt.axisData[ACCEL_AXIS_Z] / 128;
+                        const double maxRadius = 1024;
 
-                        emulatorSetAccelerometer(accelX, accelY, accelZ);
-                        break;
-                    }
+                        double angle        = atan2(-y, x);
+                        double angleDegrees = (angle * 180) / M_PI;
+                        int radius          = CLAMP(sqrt(x * x + y * y) * maxRadius / 32768, 0, maxRadius);
 
-                    case DPAD_AXIS_X:
-                    case DPAD_AXIS_Y:
-                    {
-                        buttonBit_t curState = 0;
-                        if (joystickExt.axisData[DPAD_AXIS_X] < 0)
-                        {
-                            curState |= PB_LEFT;
-                        }
-                        else if (joystickExt.axisData[DPAD_AXIS_X] > 0)
-                        {
-                            curState |= PB_RIGHT;
-                        }
-
-                        if (joystickExt.axisData[DPAD_AXIS_Y] < 0)
-                        {
-                            curState |= PB_UP;
-                        }
-                        else if (joystickExt.axisData[DPAD_AXIS_Y] > 0)
-                        {
-                            curState |= PB_DOWN;
-                        }
-
-                        buttonBit_t lastState = emulatorGetButtonState();
-                        buttonBit_t changes   = (lastState ^ curState) & ((1 << 8) - 1);
-
-                        if (changes & PB_UP)
-                        {
-                            emulatorInjectButton(PB_UP, (curState & PB_UP));
-                        }
-                        else if (changes & PB_DOWN)
-                        {
-                            emulatorInjectButton(PB_DOWN, (curState & PB_DOWN));
-                        }
-
-                        if (changes & PB_LEFT)
-                        {
-                            emulatorInjectButton(PB_LEFT, (curState & PB_LEFT));
-                        }
-                        else if (changes & PB_RIGHT)
-                        {
-                            emulatorInjectButton(PB_RIGHT, (curState & PB_RIGHT));
-                        }
-                        break;
-                    }
-
-                    default:
-                    {
-                        break;
+                        int angleDegreesRounded = (int)(angleDegrees + 360) % 360;
+                        emulatorSetTouchJoystick(CLAMP(angleDegreesRounded, 0, 359), radius, 1024);
                     }
                 }
-                break;
+                else if (event.axis == joystickConfig.accel.xAxis || event.axis == joystickConfig.accel.yAxis
+                         || event.axis == joystickConfig.accel.zAxis)
+                {
+                    int16_t accelX = getAxisData(joystickConfig.accel.xAxis) / 128;
+                    int16_t accelY = getAxisData(joystickConfig.accel.yAxis) / 128;
+                    int16_t accelZ = getAxisData(joystickConfig.accel.zAxis) / 128;
+
+                    emulatorSetAccelerometer(accelX, accelY, accelZ);
+                }
+                else if (event.axis == joystickConfig.dpad.xAxis || event.axis == joystickConfig.dpad.yAxis)
+                {
+                    buttonBit_t curState = 0;
+                    if (getAxisData(joystickConfig.dpad.xAxis) < -256)
+                    {
+                        curState |= PB_LEFT;
+                    }
+                    else if (getAxisData(joystickConfig.dpad.xAxis) > 256)
+                    {
+                        curState |= PB_RIGHT;
+                    }
+
+                    if (getAxisData(joystickConfig.dpad.yAxis) < -256)
+                    {
+                        curState |= PB_UP;
+                    }
+                    else if (getAxisData(joystickConfig.dpad.yAxis) > 256)
+                    {
+                        curState |= PB_DOWN;
+                    }
+
+                    buttonBit_t lastState = emulatorGetButtonState();
+                    buttonBit_t changes   = (lastState ^ curState) & ((1 << 8) - 1);
+
+                    if (changes & PB_UP)
+                    {
+                        emulatorInjectButton(PB_UP, (curState & PB_UP));
+                    }
+                    else if (changes & PB_DOWN)
+                    {
+                        emulatorInjectButton(PB_DOWN, (curState & PB_DOWN));
+                    }
+
+                    if (changes & PB_LEFT)
+                    {
+                        emulatorInjectButton(PB_LEFT, (curState & PB_LEFT));
+                    }
+                    else if (changes & PB_RIGHT)
+                    {
+                        emulatorInjectButton(PB_RIGHT, (curState & PB_RIGHT));
+                    }
+                }
             }
+            break;
         }
     }
 }
