@@ -13,7 +13,7 @@
 #define PID 0x4269
 
 const char * sym_dump_cmd = "objdump -t %s > build/system_symbols.txt";
-const char * compile_cmd = "xtensa-esp32s2-elf-gcc -mlongcalls %s -DHAVE_CONFIG_H  -ffunction-sections -fdata-sections -Wall -Werror=all -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare -ggdb -O2 -fmacro-prefix-map=/home/cnlohr/git/esp32-c3-playground=. -fmacro-prefix-map=/home/cnlohr/esp/esp-idf=IDF -fstrict-volatile-bitfields -Wno-error=unused-but-set-variable -fno-jump-tables -fno-tree-switch-conversion sandbox.c sandbox.S -T build/sandbox.lds -o build/sandbox.o -nodefaultlibs -nostartfiles";
+const char * compile_cmd = "xtensa-esp32s2-elf-gcc -mlongcalls %s -DHAVE_CONFIG_H -DSWADGE -ffunction-sections -fdata-sections -Wall -Werror=all -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare -ggdb -Os -fmacro-prefix-map=/home/cnlohr/git/esp32-c3-playground=. -fmacro-prefix-map=/home/cnlohr/esp/esp-idf=IDF -fstrict-volatile-bitfields -Wno-error=unused-but-set-variable -fno-jump-tables -fno-tree-switch-conversion sandbox.c sandbox.S -T build/sandbox.lds -o build/sandbox.o -nodefaultlibs -nostartfiles";
 const char * sym_comp_dump_cmd = "objdump -t build/sandbox.o > build/sandbox_symbols.txt";
 const char * ocpy_cmd_inst = "xtensa-esp32s2-elf-objcopy -j .inst -O binary build/sandbox.o build/sandbox_inst.bin";
 const char * ocpy_cmd_data = "xtensa-esp32s2-elf-objcopy -j .data -O binary build/sandbox.o build/sandbox_data.bin";
@@ -175,6 +175,11 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/nvs_flash/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/soc/esp32s2/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/FreeRTOS-Kernel/include/freertos", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/dac/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/config/include/freertos", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/config/xtensa/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/FreeRTOS-Kernel/portable/xtensa/include/freertos", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/esp_additions/include", idf_path ); appendcflag( temp );
 
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/components/hdw-battmon/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components", argv[2] ); appendcflag( temp );
@@ -188,7 +193,9 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-temperature/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-imu/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-mic/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-dac/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-led/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-usb", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-usb/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-battmon/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-tft/include", argv[2] ); appendcflag( temp );
@@ -200,9 +207,14 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/menu", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/midi", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/asset_loaders/common", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/asset_loaders", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/mainMenu", argv[2] ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/colorchord", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/music/colorchord", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/system/mainMenu", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/fl_math", argv[2] ); appendcflag( temp );
+
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/build/config", argv[2] ); appendcflag( temp );
 
 			appendcflag( "-DTUP_DCD_ENDPOINT_MAX=8 -DESP_PLATFORM=1" );
@@ -252,7 +264,7 @@ int main( int argc, char ** argv )
 				char addy[128], prop[128], V[128], sec[128], size[128], name[1024];
 				int l = sscanf( line, "%127s %127s %127s %127s %127s %1023s\n", addy, prop, V, sec, size, name );
 				int naddy = strtol( addy, 0, 16 );
-				if( l == 6 )
+				if( l == 6 && !strstr( name, ".c" ) )
 				{
 					fprintf( provided, "PROVIDE( %s = 0x%s );\n", name, addy );
 				}
@@ -349,7 +361,7 @@ int main( int argc, char ** argv )
 				"INCLUDE \"build/provided.lds\"\n"
 				"INCLUDE \"%s/components/esp_rom/esp32s2/ld/esp32s2.rom.ld\"\n"
 				"INCLUDE \"%s/components/soc/esp32s2/ld/esp32s2.peripherals.ld\"\n"
-                "INCLUDE \"%s/components/esp_rom/esp32s2/ld/esp32s2.rom.api.ld\"\n"
+				"INCLUDE \"%s/components/esp_rom/esp32s2/ld/esp32s2.rom.api.ld\"\n"
 				, advanced_usb_scratch_buffer_address_inst
 				, advanced_usb_scratch_buffer_address_data
 				, advanced_usb_scratch_buffer_address_data
