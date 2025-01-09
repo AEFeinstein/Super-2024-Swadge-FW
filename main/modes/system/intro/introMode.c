@@ -113,7 +113,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .intData = 1,
         },
         .title = touchpadTitle,
-        .detail = "OK, now your finger spin around it counter-clockwise. Always remember to unwind the touchpad after use!"
+        .detail = "OK, now spin your finger around it counter-clockwise. Always remember to unwind the touchpad after use!"
     },
     {
         .trigger = {
