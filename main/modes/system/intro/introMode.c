@@ -43,10 +43,10 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
 // #define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
 
 static const char startTitle[]        = "Welcome!";
-static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one second to exit.";
+static const char holdLongerMessage[] = "Almost! Keep holding MENU for one second to exit.";
 static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
-                                        "responsibility. Hold SELECT to exit the tutorial and get started!";
+                                        "responsibility. Hold MENU to exit the tutorial and get started!";
 
 static const char dpadTitle[]     = "The D-Pad";
 static const char aBtnTitle[]     = "A Button";
