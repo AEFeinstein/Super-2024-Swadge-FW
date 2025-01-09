@@ -385,28 +385,28 @@ static void introEnterMode(void)
     // up
     iv->buttonIcons[0].icon    = &iv->icon.button.up;
     iv->buttonIcons[0].visible = true;
-    iv->buttonIcons[0].x       = 15;
+    iv->buttonIcons[0].x       = 10;
     iv->buttonIcons[0].y       = 5;
 
     // down
     iv->buttonIcons[1].icon    = &iv->icon.button.up;
     iv->buttonIcons[1].flipUD  = true;
     iv->buttonIcons[1].visible = true;
-    iv->buttonIcons[1].x       = 15;
+    iv->buttonIcons[1].x       = 10;
     iv->buttonIcons[1].y       = 25;
 
     // left
     iv->buttonIcons[2].icon    = &iv->icon.button.up;
     iv->buttonIcons[2].rot     = 270;
     iv->buttonIcons[2].visible = true;
-    iv->buttonIcons[2].x       = 5;
+    iv->buttonIcons[2].x       = 0;
     iv->buttonIcons[2].y       = 15;
 
     // right
     iv->buttonIcons[3].icon    = &iv->icon.button.up;
     iv->buttonIcons[3].rot     = 90;
     iv->buttonIcons[3].visible = true;
-    iv->buttonIcons[3].x       = 25;
+    iv->buttonIcons[3].x       = 20;
     iv->buttonIcons[3].y       = 15;
 
     // a
@@ -421,17 +421,17 @@ static void introEnterMode(void)
     iv->buttonIcons[5].x       = 95;
     iv->buttonIcons[5].y       = 20;
 
-    // start
+    // start (pause)
     iv->buttonIcons[6].icon    = &iv->icon.button.pause;
     iv->buttonIcons[6].visible = true;
-    iv->buttonIcons[6].x       = 70;
-    iv->buttonIcons[6].y       = 15;
+    iv->buttonIcons[6].x       = 45;
+    iv->buttonIcons[6].y       = 17;
 
-    // select
+    // select (menu)
     iv->buttonIcons[7].icon    = &iv->icon.button.menu;
     iv->buttonIcons[7].visible = true;
-    iv->buttonIcons[7].x       = 50;
-    iv->buttonIcons[7].y       = 15;
+    iv->buttonIcons[7].x       = 45;
+    iv->buttonIcons[7].y       = 33;
 
     iv->swadgeViewWidth  = iv->buttonIcons[5].x + iv->buttonIcons[5].icon->w + 5;
     iv->swadgeViewHeight = iv->buttonIcons[1].y + iv->buttonIcons[1].icon->h + 5;
