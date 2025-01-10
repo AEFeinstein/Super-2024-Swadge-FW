@@ -47,13 +47,17 @@ int main()
 	while(1)
 	{
 
-		swadgeDraw( SSD1306_W/2, 0, 1, swadgeGlyphHalf, "10GRAND" );
-//		swadgeDraw( SSD1306_W/2, 16, 1, swadgeGlyph, "%d", frameno );
+		glyphdraw_invert = 0;
+		glyphdraw_nomask = 1;
+
+		swadgeDraw( SSD1306_W/2, 2, 1, swadgeGlyphHalf, "A GRAND" );
+
+		swadgeDraw( SSD1306_W/2, 16, 1, swadgeGlyph, "%d", (frameno>>2) );
 
 		swapBuffer();
 
 
-		background(6);
+		background(7);
 
 		frameno++;
 	}

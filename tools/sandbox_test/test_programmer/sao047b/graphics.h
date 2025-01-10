@@ -30,7 +30,8 @@
 #include "lib_rand.h"
 
 extern int frameno;
-
+int glyphdraw_invert;
+int glyphdraw_nomask;
 
 // Organization:
 //   B0, MSB  B1 B2 B3
@@ -113,6 +114,7 @@ int swadgeGlyph( int x, int y, int c )
 		if( mx >= end ) line = 0; // For margin draw.
 
 		uint32_t emask = 0xff >> (8-yo);
+		if( glyphdraw_nomask ) emask = 0xffffffff;
 		uint32_t nextemask = 0xffff << (yo+16);
 		uint8_t * buffer = bufferbase;
 
@@ -120,7 +122,7 @@ int swadgeGlyph( int x, int y, int c )
 		{
 			if( row >= 0 )
 			{
-				uint32_t l = line | (buffer[0] & emask);
+				uint32_t l = ((line) | ((buffer[0] & emask) ^ (glyphdraw_invert)))  ^ (glyphdraw_invert);
 				*buffer = l;
 			}
 			line>>=8;
@@ -161,6 +163,7 @@ int swadgeGlyphHalf( int x, int y, int c )
 
 		uint32_t emask = 0xff >> (8-yo);
 		uint32_t nextemask = 0xffff << (yo+16);
+		if( glyphdraw_nomask ) emask = 0xffffffff;
 		uint8_t * buffer = bufferbase;
 
 		for( row = startrow; row < maxrow; row++ )
@@ -181,12 +184,12 @@ int swadgeGlyphHalf( int x, int y, int c )
 				//l = ((l & 0x0000) >> 8) | ((l & 0x00FF) >> 0);
 				// x = 0b .... .... .... .... abcd efgh ijkl mnop
 
-				l |= (buffer[0] & emask);
-				*buffer = l;
+				l = ((l) | ((buffer[0] & emask)^glyphdraw_invert))^glyphdraw_invert;
+				buffer[0] = l;
 			}
 			line>>=16;
 			buffer += SSD1306_W;
-			emask>>=8;
+			emask>>=16;
 			emask |= nextemask;
 		}
 	}
@@ -289,6 +292,9 @@ void background( int mode )
 			ssd1306_buffer[i++] = ((((x-(frameno>>4))>>3)+y)&1)?even:odd;
 		break;
 	}
+	case 7: // Grey
+		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = 1<<(_rand_gen_nb(10));
+		break;
 	case 0:
 	default: // Black
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = 0;
