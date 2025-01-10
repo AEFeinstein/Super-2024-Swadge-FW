@@ -27,6 +27,9 @@
 // Defines
 //==============================================================================
 
+/** Switch to either start at the menu or on the dump's surface */
+// #define SKIP_INTRO
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -48,8 +51,11 @@ struct bb_t
 //==============================================================================
 
 // required by adam
+#ifndef SKIP_INTRO
 static void bb_EnterMode(void);
+#else
 static void bb_EnterModeSkipIntro(void);
+#endif
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
 static void bb_BackgroundDrawCallbackBlack(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -79,7 +85,7 @@ static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
  * These strings are all declared 'const' because they do not change, so that they are placed in ROM, not RAM.
  * Lengths are not explicitly given so the compiler can figure it out.
  */
-static const char bigbugName[] = "Big Bug";
+const char bigbugName[] = "Big Bug";
 
 // A tag for debug printing
 const char BB_TAG[] = "BB";
@@ -88,14 +94,18 @@ const char BB_TAG[] = "BB";
 // Variables
 //==============================================================================
 
-swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
-                           .wifiMode                 = NO_WIFI,
-                           .overrideUsb              = false,
-                           .usesAccelerometer        = true,
-                           .usesThermometer          = true,
-                           .overrideSelectBtn        = false,
-                           .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterMode, // SkipIntro,
+swadgeMode_t bigbugMode = {.modeName          = bigbugName,
+                           .wifiMode          = NO_WIFI,
+                           .overrideUsb       = false,
+                           .usesAccelerometer = true,
+                           .usesThermometer   = true,
+                           .overrideSelectBtn = false,
+                           .fnAudioCallback   = NULL,
+#ifndef SKIP_INTRO
+                           .fnEnterMode = bb_EnterMode,
+#else
+                           .fnEnterMode = bb_EnterModeSkipIntro,
+#endif
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -115,6 +125,8 @@ uint8_t* bb_decodeSpace;
 //==============================================================================
 // Required Functions
 //==============================================================================
+
+#ifndef SKIP_INTRO
 
 static void bb_EnterMode(void)
 {
@@ -193,6 +205,8 @@ static void bb_EnterMode(void)
 
     bb_Reset();
 }
+
+#else
 
 static void bb_EnterModeSkipIntro(void)
 {
@@ -306,6 +320,8 @@ static void bb_EnterModeSkipIntro(void)
 
     bb_Reset();
 }
+
+#endif
 
 void bb_setupMidi(void)
 {
