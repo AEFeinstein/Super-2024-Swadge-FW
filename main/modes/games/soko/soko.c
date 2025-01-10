@@ -124,9 +124,9 @@ static void sokoEnterMode(void)
 
     // Color the menu
     led_t menuColor = {
-        .r = 0xFF,
-        .g = 0xCC,
-        .b = 0x00,
+        .r = 0xAA,
+        .g = 0x99,
+        .b = 0x99,
     };
     static const paletteColor_t shadowColors[] = {c103, c213, c224, c334, c445, c555, c445, c334, c224, c213};
     recolorMenuManiaRenderer(soko->menuManiaRenderer, //
