@@ -469,13 +469,21 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
             }
 
             // Spawn Rings
-            if (esp_random() % 512 == 0)
+            if (cg->grove.ring.active) {
+                cg->grove.ring.despawnTimer += elapsedUS;
+                if (cg->grove.ring.despawnTimer >= 5000000)
+                {
+                    cg->grove.ring.active = false;
+                }
+            }
+            if (!cg->grove.ring.active && esp_random() % 512 == 0)
             {
                 cg->grove.ring.aabb.pos.x
                     = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[11].w)));
                 cg->grove.ring.aabb.pos.y
                     = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[11].h)));
                 cg->grove.ring.active = true;
+                cg->grove.ring.despawnTimer = 0;
             }
 
             // Chowa AI
