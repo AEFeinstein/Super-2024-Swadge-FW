@@ -276,7 +276,7 @@ static void bb_EnterModeSkipIntro(void)
         else // rocketIdx == 0
         {
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
-            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 2;
+            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 20;
             bigbug->gameData.entityManager.activeBooster->currentAnimationFrame               = 40;
             bigbug->gameData.entityManager.activeBooster->pos.y                               = 50;
             bigbug->gameData.entityManager.activeBooster->updateFunction                      = bb_updateHeavyFalling;
@@ -647,15 +647,13 @@ static void bb_DrawScene_Radar(void)
             }
             if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
             {
-                if ((bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_DONUT_EMBED &&
-                     bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].entity->currentAnimationFrame != 59)
+                if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_DONUT_EMBED
                     || bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_DONUT_EMBED)
                 {
                     drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0], xIdx * 4 - 15,
                                   yIdx * 4 - bigbug->gameData.radar.cam.y - 6);
                 }
-                if ((bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_SWADGE_EMBED &&
-                     bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].entity->currentAnimationFrame != 59)
+                if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_SWADGE_EMBED
                     || bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_SWADGE_EMBED)
                 {
                     drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0], xIdx * 4 - 15,
@@ -716,7 +714,7 @@ static void bb_DrawScene_Radar(void)
                               (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                               (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
             }
-            else if(entity->spriteIndex == BB_HOTDOG)
+            else if(entity->spriteIndex == BB_SWADGE)
             {
                 drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
                               (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
@@ -771,6 +769,18 @@ static void bb_DrawScene_Radar(void)
                                       (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                                       (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
+                }
+                else if(entity->spriteIndex == BB_DONUT)
+                {
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0],
+                                (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                }
+                else if(entity->spriteIndex == BB_SWADGE)
+                {
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
+                                (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
             }
         }

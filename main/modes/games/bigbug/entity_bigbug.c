@@ -2022,9 +2022,6 @@ void bb_updateGameOver(bb_entity_t* self)
         {
             // increment booster animation frame to look destroyed
             self->gameData->entityManager.activeBooster->currentAnimationFrame++;
-            bb_heavyFallingData_t* hfData = heap_caps_calloc(1, sizeof(bb_heavyFallingData_t), MALLOC_CAP_SPIRAM);
-            hfData->yVel                  = ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->yVel;
-            bb_setData(self->gameData->entityManager.activeBooster, hfData, HEAVY_FALLING_DATA);
             self->gameData->entityManager.activeBooster->drawFunction = NULL;
             // this booster's grabby hand will destroy itself next time in it's own update loop.
 
@@ -2140,7 +2137,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
         midiPlayer_t* sfx = soundGetPlayerSfx();
         midiPlayerReset(sfx);
         soundPlaySfx(&self->gameData->sfxCollection, 0);
-        if (rData->numBugs % 1 == 0) // set to % 1 for quick testing the entire radar tech tree
+        if (rData->numBugs % 10 == 0) // set to % 1 for quick testing the entire radar tech tree
         {
             bb_entity_t* radarPing
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
@@ -4033,6 +4030,27 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
             bb_triggerGameOver(self);
         }
     }
+
+    if(self->spriteIndex == ROCKET_ANIM && self->currentAnimationFrame == 41)
+    {
+        bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
+        if(rData->numDonuts && bb_randomInt(0,60) == 60)
+        {
+            rData->numDonuts--;
+            // Get the donut back out of the busted booster
+            bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
+                            (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
+        }
+        if((rData->numBugs % 10 != 0) && bb_randomInt(0,60) == 60)
+        {
+            rData->numBugs--;
+            // Get the bug back out of the busted booster
+            bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, bb_randomInt(8,13), 1,
+                            (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
+            bb_bugDeath(bug, NULL);
+            ((bb_physicsData_t*)bug->data)->vel = (vec_t){bb_randomInt(-100, 100), bb_randomInt(-100, 0)};
+        }
+    }
 }
 
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
@@ -4997,10 +5015,13 @@ void bb_playCarAlarm(bb_entity_t* self)
 void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
 {
     // use a bump animation but tweak its graphics
-    bb_entity_t* hitEffect
-        = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
-                          hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
-    hitEffect->drawFunction = &bb_drawHitEffect;
+    if(hitInfo != NULL)
+    {
+        bb_entity_t* hitEffect
+            = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
+                            hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+        hitEffect->drawFunction = &bb_drawHitEffect;
+    }
 
     if (self->dataType == BU_DATA)
     {
