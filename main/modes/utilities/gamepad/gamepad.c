@@ -105,7 +105,7 @@ static const char* getButtonName(hid_gamepad_button_bm_t button);
 static const char str_pc[]    = "Computer";
 static const char str_ns[]    = "Switch";
 static const char str_accel[] = "Accel: ";
-static const char str_touch[] = "SwitchTouch:";
+static const char str_touch[] = "Switch Touch: ";
 static const char str_exit[]  = "Exit";
 
 static const int32_t accelSettingsValues[] = {0, 1};
@@ -120,8 +120,8 @@ static const int32_t touchSettingsValues[]
 
 static const char* const touchSettingsOptions[] = {
     "More Buttons",
-    "StickL",
-    "StickR",
+    "Stick L",
+    "Stick R",
 };
 
 gamepad_t* gamepad;
