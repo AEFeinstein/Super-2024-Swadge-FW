@@ -469,7 +469,8 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
             }
 
             // Spawn Rings
-            if (cg->grove.ring.active) {
+            if (cg->grove.ring.active)
+            {
                 cg->grove.ring.despawnTimer += elapsedUS;
                 if (cg->grove.ring.despawnTimer >= 5000000)
                 {
@@ -482,7 +483,7 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
                     = 32 + (esp_random() % (cg->grove.groveBG.w - (64 + cg->grove.itemsWSGs[11].w)));
                 cg->grove.ring.aabb.pos.y
                     = 32 + (esp_random() % (cg->grove.groveBG.h - (64 + cg->grove.itemsWSGs[11].h)));
-                cg->grove.ring.active = true;
+                cg->grove.ring.active       = true;
                 cg->grove.ring.despawnTimer = 0;
             }
 
