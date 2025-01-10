@@ -39,6 +39,10 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
 
             tilemap->mgTiles[i][j].pos = i | (j << 7); // z is implicitly zero
 
+            tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+
+            tilemap->fgTiles[i][j].entity = NULL;
+
             uint32_t rgbCol = paletteToRGB(levelWsg.px[(j * levelWsg.w) + i]);
 
             // red value used for foreground tiles
@@ -66,6 +70,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                 }
                 default: // case 0
                 {
+                    tilemap->fgTiles[i][j].health = 0;
                     // blue value used for washing machines, cars, swadges/donuts
                     switch (rgbCol & 255)
                     {
@@ -103,7 +108,6 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                         }
                         default:
                         {
-                            tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                             break;
                         }
                     }
@@ -123,11 +127,13 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                 }
                 case 102:
                 {
-                    tilemap->fgTiles[i][j].embed = DOOR_EMBED;
+                    tilemap->mgTiles[i][j].health = 0;
+                    tilemap->fgTiles[i][j].embed  = DOOR_EMBED;
                     break;
                 }
                 default:
                 {
+                    tilemap->mgTiles[i][j].health = 0;
                     break;
                 }
             }

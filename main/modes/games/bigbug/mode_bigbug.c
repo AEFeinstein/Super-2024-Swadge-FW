@@ -21,10 +21,14 @@
 #include "esp_heap_caps.h"
 #include "hdw-tft.h"
 #include <math.h>
+#include "mainMenu.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
+
+/** Switch to either start at the menu or on the dump's surface */
+// #define SKIP_INTRO
 
 //==============================================================================
 // Enums
@@ -37,7 +41,6 @@
 struct bb_t
 {
     menu_t* menu; ///< The menu structure
-    font_t font;  ///< The font used in the menu and game
     // bb_screen_t screen; ///< The screen being displayed
 
     bb_gameData_t gameData;
@@ -48,8 +51,11 @@ struct bb_t
 //==============================================================================
 
 // required by adam
+#ifndef SKIP_INTRO
 static void bb_EnterMode(void);
+#else
 static void bb_EnterModeSkipIntro(void);
+#endif
 static void bb_ExitMode(void);
 static void bb_MainLoop(int64_t elapsedUs);
 static void bb_BackgroundDrawCallbackBlack(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -88,14 +94,18 @@ const char BB_TAG[] = "BB";
 // Variables
 //==============================================================================
 
-swadgeMode_t bigbugMode = {.modeName                 = bigbugName,
-                           .wifiMode                 = NO_WIFI,
-                           .overrideUsb              = false,
-                           .usesAccelerometer        = true,
-                           .usesThermometer          = true,
-                           .overrideSelectBtn        = false,
-                           .fnAudioCallback          = NULL,
-                           .fnEnterMode              = bb_EnterModeSkipIntro,
+swadgeMode_t bigbugMode = {.modeName          = bigbugName,
+                           .wifiMode          = NO_WIFI,
+                           .overrideUsb       = false,
+                           .usesAccelerometer = true,
+                           .usesThermometer   = true,
+                           .overrideSelectBtn = false,
+                           .fnAudioCallback   = NULL,
+#ifndef SKIP_INTRO
+                           .fnEnterMode = bb_EnterMode,
+#else
+                           .fnEnterMode = bb_EnterModeSkipIntro,
+#endif
                            .fnExitMode               = bb_ExitMode,
                            .fnMainLoop               = bb_MainLoop,
                            .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
@@ -116,6 +126,8 @@ uint8_t* bb_decodeSpace;
 // Required Functions
 //==============================================================================
 
+#ifndef SKIP_INTRO
+
 static void bb_EnterMode(void)
 {
     setFrameRateUs(16667); // 60 FPS
@@ -124,33 +136,39 @@ static void bb_EnterMode(void)
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
     // Allocate memory for the game state
-    bigbug = heap_caps_calloc(1, sizeof(bb_t), MALLOC_CAP_SPIRAM);
+    bigbug = heap_caps_calloc_tag(1, sizeof(bb_t), MALLOC_CAP_SPIRAM, "bigbug");
 
     // calloc the columns in layers separately to avoid a big alloc
     for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
     {
         bigbug->gameData.tilemap.fgTiles[w]
-            = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM);
+            = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(bb_foregroundTileInfo_t), MALLOC_CAP_SPIRAM, "fgTile");
         bigbug->gameData.tilemap.mgTiles[w]
-            = heap_caps_calloc(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM);
+            = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(bb_midgroundTileInfo_t), MALLOC_CAP_SPIRAM, "mgTiles");
     }
 
     // Allocate WSG loading helpers
-    bb_hsd         = heatshrink_decoder_alloc(256, 8, 4);
-    bb_decodeSpace = heap_caps_malloc(102404, MALLOC_CAP_SPIRAM);
+    bb_hsd = heatshrink_decoder_alloc(256, 8, 4);
+    // The largest image is bb_menu2.png, decodes to 99124 bytes
+    // 99328 is 1024 * 97
+    bb_decodeSpace = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace");
 
     bb_SetLeds();
 
     // Load font
-    loadFont("ibm_vga8.font", &bigbug->font, false);
+    loadFont("ibm_vga8.font", &bigbug->gameData.font, false);
 
     const char loadingStr[] = "Loading...";
-    int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
-    drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
+    int32_t tWidth          = textWidth(&bigbug->gameData.font, loadingStr);
+    drawText(&bigbug->gameData.font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2,
+             (TFT_HEIGHT - bigbug->gameData.font.height) / 2);
     drawDisplayTft(NULL);
 
     bb_initializeGameData(&bigbug->gameData);
     bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
+    // Shrink after loading initial sprites. The next largest image is ovo_talk0.png, decodes to 67200 bytes
+    // 67584 is 1024 * 66
+    bb_decodeSpace = heap_caps_realloc(bb_decodeSpace, 67584, MALLOC_CAP_SPIRAM);
 
     // bb_createEntity(&(bigbug->gameData.entityManager), LOOPING_ANIMATION, true, ROCKET_ANIM, 3,
     //                 (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE + 1, -1000, true);
@@ -188,6 +206,8 @@ static void bb_EnterMode(void)
     bb_Reset();
 }
 
+#else
+
 static void bb_EnterModeSkipIntro(void)
 {
     setFrameRateUs(16667); // 60 FPS
@@ -208,34 +228,37 @@ static void bb_EnterModeSkipIntro(void)
     }
 
     // Allocate WSG loading helpers
-    bb_hsd         = heatshrink_decoder_alloc(256, 8, 4);
-    bb_decodeSpace = heap_caps_malloc(102404, MALLOC_CAP_SPIRAM);
+    bb_hsd = heatshrink_decoder_alloc(256, 8, 4);
+    // The largest image is bb_menu2.png, decodes to 99124 bytes
+    // 99328 is 1024 * 97
+    bb_decodeSpace = heap_caps_malloc(99328, MALLOC_CAP_SPIRAM);
 
     bb_SetLeds();
 
     // Load font
-    loadFont("ibm_vga8.font", &bigbug->font, false);
+    loadFont("ibm_vga8.font", &bigbug->gameData.font, false);
 
     const char loadingStr[] = "Loading...";
-    int32_t tWidth          = textWidth(&bigbug->font, loadingStr);
-    drawText(&bigbug->font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - bigbug->font.height) / 2);
+    int32_t tWidth          = textWidth(&bigbug->gameData.font, loadingStr);
+    drawText(&bigbug->gameData.font, c542, loadingStr, (TFT_WIDTH - tWidth) / 2,
+             (TFT_HEIGHT - bigbug->gameData.font.height) / 2);
     drawDisplayTft(NULL);
 
     bb_initializeGameData(&bigbug->gameData);
     bb_initializeEntityManager(&bigbug->gameData.entityManager, &bigbug->gameData);
+    // Shrink after loading initial sprites. The next largest image is ovo_talk0.png, decodes to 67200 bytes
+    // 67584 is 1024 * 66
+    bb_decodeSpace = heap_caps_realloc(bb_decodeSpace, 67584, MALLOC_CAP_SPIRAM);
 
-    // create the death dumpster
-    bigbug->gameData.entityManager.deathDumpster
-        = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
-                          (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1, -2173, true, false);
+    uint32_t deathDumpsterX = (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1;
+    uint32_t deathDumpsterY = -2173;
 
     // create 3 rockets
     for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
     {
-        bigbug->gameData.entityManager.boosterEntities[rocketIdx] = bb_createEntity(
-            &bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
-            (bigbug->gameData.entityManager.deathDumpster->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
-            (bigbug->gameData.entityManager.deathDumpster->pos.y >> DECIMAL_BITS), true, false);
+        bigbug->gameData.entityManager.boosterEntities[rocketIdx]
+            = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
+                              deathDumpsterX - 96 + 96 * rocketIdx, deathDumpsterY, false, true);
 
         // bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
 
@@ -253,7 +276,7 @@ static void bb_EnterModeSkipIntro(void)
         else // rocketIdx == 0
         {
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
-            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 0;
+            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 3;
             bigbug->gameData.entityManager.activeBooster->currentAnimationFrame               = 40;
             bigbug->gameData.entityManager.activeBooster->pos.y                               = 50;
             bigbug->gameData.entityManager.activeBooster->updateFunction                      = bb_updateHeavyFalling;
@@ -270,6 +293,11 @@ static void bb_EnterModeSkipIntro(void)
             ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = bigbug->gameData.entityManager.activeBooster;
         }
     }
+
+    // create the death dumpster
+    bigbug->gameData.entityManager.deathDumpster
+        = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1, deathDumpsterX,
+                          deathDumpsterY, false, true);
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
@@ -292,6 +320,8 @@ static void bb_EnterModeSkipIntro(void)
 
     bb_Reset();
 }
+
+#endif
 
 void bb_setupMidi(void)
 {
@@ -339,6 +369,7 @@ void bb_FreeTilemapData(void)
 
 static void bb_ExitMode(void)
 {
+    soundStop(true);
     heatshrink_decoder_free(bb_hsd);
     heap_caps_free(bb_decodeSpace);
 
@@ -350,10 +381,12 @@ static void bb_ExitMode(void)
     // Free entity manager
     bb_freeEntityManager(&bigbug->gameData.entityManager);
     // Free font
-    freeFont(&bigbug->font);
+    freeFont(&bigbug->gameData.font);
 
-    soundStop(true);
-    unloadMidiFile(&bigbug->gameData.bgm);
+    if (bigbug->gameData.bgm.data)
+    {
+        unloadMidiFile(&bigbug->gameData.bgm);
+    }
 
     deinitGlobalMidiPlayer();
 
@@ -362,6 +395,8 @@ static void bb_ExitMode(void)
     bb_FreeTilemapData();
 
     heap_caps_free(bigbug);
+
+    // heap_caps_free(bb_decodeSpace);
 }
 
 static void bb_MainLoop(int64_t elapsedUs)
@@ -442,11 +477,6 @@ static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     {
         // Deep underground is black
         bgColor = c000;
-    }
-    else if (cameraPos->y > -220)
-    {
-        // Shallow underground is dark red
-        bgColor = c100;
     }
     else
     {
@@ -554,11 +584,12 @@ static void bb_DrawScene(void)
     }
 
     bb_drawEntities(&bigbug->gameData.entityManager, &bigbug->gameData.camera.camera);
-    DRAW_FPS_COUNTER(bigbug->font);
+    // DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar(void)
 {
+    // Draw the tilemap squares
     for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
     {
         int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
@@ -590,6 +621,16 @@ static void bb_DrawScene_Radar(void)
             }
             drawRectFilled(xIdx * 4 - 4, yIdx * 4 - bigbug->gameData.radar.cam.y, xIdx * 4,
                            yIdx * 4 + 4 - bigbug->gameData.radar.cam.y, radarTileColor);
+        }
+    }
+    // draw eggs (enemies), skeletons (fuel), donuts, hotdogs
+    // iterate tilemap embeds
+    for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
+    {
+        int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
+        int16_t yMax = CLAMP(yMin + FIELD_HEIGHT / 4, 0, TILE_FIELD_HEIGHT);
+        for (int yIdx = yMin; yIdx < yMax; yIdx++)
+        {
             if ((bigbug->gameData.radar.upgrades >> BIGBUG_ENEMIES) & 1)
             {
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == EGG_EMBED)
@@ -604,15 +645,6 @@ static void bb_DrawScene_Radar(void)
                     drawCircleFilled(xIdx * 4 - 2, yIdx * 4 - bigbug->gameData.radar.cam.y, 2, c050);
                 }
             }
-        }
-    }
-
-    for (int xIdx = 1; xIdx < TILE_FIELD_WIDTH - 3; xIdx++)
-    {
-        int16_t yMin = CLAMP(bigbug->gameData.radar.cam.y / 4, 0, TILE_FIELD_HEIGHT - 1);
-        int16_t yMax = CLAMP(yMin + FIELD_HEIGHT / 4, 0, TILE_FIELD_HEIGHT);
-        for (int yIdx = yMin; yIdx < yMax; yIdx++)
-        {
             if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
             {
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_DONUT_EMBED
@@ -624,14 +656,14 @@ static void bb_DrawScene_Radar(void)
                 if (bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_CAR_WITH_SWADGE_EMBED
                     || bigbug->gameData.tilemap.fgTiles[xIdx][yIdx].embed == BB_FOOD_CART_WITH_SWADGE_EMBED)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1], xIdx * 4 - 15,
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0], xIdx * 4 - 15,
                                   yIdx * 4 - bigbug->gameData.radar.cam.y - 6);
                 }
             }
         }
     }
 
-    // fuel & enemies
+    // draw fuel, enemies, POIs
     // iterate all cached entities
     node_t* current = bigbug->gameData.entityManager.cachedEntities->first;
     while (current != NULL)
@@ -671,7 +703,7 @@ static void bb_DrawScene_Radar(void)
                 }
                 else if (POIData->reward == BB_SWADGE)
                 {
-                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1],
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
                                   (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                                   (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
@@ -681,7 +713,7 @@ static void bb_DrawScene_Radar(void)
         current = current->next;
     }
 
-    // iterate all entities
+    // iterate all active entities
     for (int i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t* entity = &bigbug->gameData.entityManager.entities[i];
@@ -721,7 +753,7 @@ static void bb_DrawScene_Radar(void)
                     }
                     else if (POIData->reward == BB_SWADGE)
                     {
-                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[1],
+                        drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
                                       (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                                       (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
@@ -730,27 +762,31 @@ static void bb_DrawScene_Radar(void)
         }
     }
 
-    // garbotnik
+    // draw garbotnik
     vec_t garbotnikPos = (vec_t){0};
     if (bigbug->gameData.entityManager.playerEntity != NULL)
     {
-        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS) / 8 - 3,
-                               (bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 3};
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.playerEntity->pos.x >> (DECIMAL_BITS + 3)) - 3,
+                               (bigbug->gameData.entityManager.playerEntity->pos.y >> (DECIMAL_BITS + 3)) - 3};
     }
     else
     {
-        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 3,
-                               (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 3};
+        garbotnikPos = (vec_t){(bigbug->gameData.entityManager.activeBooster->pos.x >> (DECIMAL_BITS + 3)) - 3,
+                               (bigbug->gameData.entityManager.activeBooster->pos.y >> (DECIMAL_BITS + 3)) - 3};
     }
 
     drawCircleFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, 3, c515);
-    // garbotnik pings
+    // garbotnik's pings
     for (int i = 0; i < 254; i += 51)
     {
         bigbug->gameData.radar.playerPingRadius += i;
         drawCircle(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y,
                    bigbug->gameData.radar.playerPingRadius, c404);
     }
+
+    // draw camera perimeter
+    drawRect(garbotnikPos.x - 17, garbotnikPos.y - 15 - bigbug->gameData.radar.cam.y, garbotnikPos.x + 17,
+             garbotnikPos.y + 15 - bigbug->gameData.radar.cam.y, c424);
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_OLD_BOOSTERS) & 1)
     {
@@ -765,7 +801,7 @@ static void bb_DrawScene_Radar(void)
                 garbotnikPos.y
                     = (bigbug->gameData.entityManager.boosterEntities[boosterIdx]->pos.y >> DECIMAL_BITS) / 8 - 4;
                 drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2,
-                               garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c124);
+                               garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c452);
             }
         }
     }
@@ -776,7 +812,7 @@ static void bb_DrawScene_Radar(void)
         garbotnikPos.x = (bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS) / 8 - 4;
         garbotnikPos.y = (bigbug->gameData.entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 4;
         drawRectFilled(garbotnikPos.x, garbotnikPos.y - bigbug->gameData.radar.cam.y, garbotnikPos.x + 2,
-                       garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c250);
+                       garbotnikPos.y + 8 - bigbug->gameData.radar.cam.y, c124);
     }
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_INFINITE_RANGE) & 1)
@@ -788,7 +824,7 @@ static void bb_DrawScene_Radar(void)
         }
     }
 
-    DRAW_FPS_COUNTER(bigbug->font);
+    // DRAW_FPS_COUNTER(bigbug->gameData.font);
 }
 
 static void bb_DrawScene_Radar_Upgrade(void)
@@ -997,14 +1033,14 @@ static void bb_DrawScene_Garbotnik_Upgrade(void)
             {
                 strcpy(upgradeText, "more tow cables");
                 snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_maxTowCables,
-                         bigbug->gameData.GarbotnikStat_maxTowCables + 2);
+                         bigbug->gameData.GarbotnikStat_maxTowCables + 3);
                 break;
             }
             case GARBOTNIK_INCREASE_MAX_AMMO:
             {
                 strcpy(upgradeText, "increase max ammo");
                 snprintf(detailText, sizeof(detailText), "%d -> %d", bigbug->gameData.GarbotnikStat_maxHarpoons,
-                         bigbug->gameData.GarbotnikStat_maxHarpoons + 50);
+                         bigbug->gameData.GarbotnikStat_maxHarpoons + 25);
                 break;
             }
             case GARBOTNIK_MORE_CHOICES:
@@ -1276,8 +1312,6 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
                         break;
                     }
                 }
-                bigbug->gameData.garbotnikUpgrade.upgrades
-                    += 1 << bigbug->gameData.garbotnikUpgrade.choices[bigbug->gameData.radar.playerPingRadius];
                 bigbugMode.fnBackgroundDrawCallback = bb_BackgroundDrawCallback;
                 bigbug->gameData.screen             = BIGBUG_GAME;
             }
@@ -1540,7 +1574,8 @@ static void bb_GameLoop(int64_t elapsedUs)
 {
     if (bigbug->gameData.exit)
     {
-        bb_ExitMode();
+        switchToSwadgeMode(&mainMenuMode);
+        return;
     }
     bigbug->gameData.btnDownState = 0b0;
     // Always process button events, regardless of control scheme, so the main menu button can be captured
@@ -1683,7 +1718,7 @@ static void bb_UpdateTileSupport(void)
                 if (bigbug->gameData.entityManager.activeEntities < MAX_ENTITIES)
                 {
                     // create a crumble animation
-                    bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0], shiftedVal[1], true);
+                    bb_crumbleDirt(&bigbug->gameData, bb_randomInt(2, 5), shiftedVal[0], shiftedVal[1], true, false);
                 }
 
                 // queue neighbors for crumbling

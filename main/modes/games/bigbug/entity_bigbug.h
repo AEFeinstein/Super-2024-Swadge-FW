@@ -365,7 +365,6 @@ struct bb_entity_t
 {
     bool active;
     bool cacheable;
-    bool forceToFront;
 
     void* data;
     bb_data_type_t dataType;
@@ -434,6 +433,7 @@ void bb_updateGrabbyHand(bb_entity_t* self);
 void bb_updateDoor(bb_entity_t* self);
 void bb_updateCarActive(bb_entity_t* self);
 void bb_updateCarOpen(bb_entity_t* self);
+void bb_updateFarCar(bb_entity_t* self);
 void bb_updateSpit(bb_entity_t* self);
 void bb_updatePangoAndFriends(bb_entity_t* self);
 void bb_updateDiveSummary(bb_entity_t* self);
@@ -516,7 +516,7 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs);
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
-                    bool zeroHealth);
+                    bool zeroHealth, bool flagNeighborsForPathfinding);
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter);
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* character, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);

@@ -106,7 +106,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         }
         case BB_SWADGE:
         {
-            for (int frame = 0; frame < 12; frame++)
+            for (int frame = 0; frame < MAX_FRONT_ENTITIES; frame++)
             {
                 freeWsg(&self->gameData->entityManager.sprites[BB_SWADGE].frames[frame]);
             }
@@ -155,10 +155,22 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     self->active    = false;
     self->cacheable = false;
 
+    // some particular frees for entities that had data with more allocated data.
     if (self->data != NULL && caching == false)
     {
         switch (self->dataType)
         {
+            case GARBOTNIK_DATA:
+            {
+                bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
+                // destroy all cached entities
+                bb_entity_t* curEntity = pop(&gData->towedEntities);
+                while (NULL != curEntity)
+                {
+                    curEntity = pop(&gData->towedEntities);
+                }
+                break;
+            }
             case DIALOGUE_DATA:
             {
                 bb_dialogueData_t* dData = (bb_dialogueData_t*)self->data;
@@ -339,9 +351,9 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     }
     rData->flame->pos.y = self->pos.y;
 
-    if (self->pos.y < -36008) // reached the death dumpster
+    if (self->pos.y < -34760) // reached the death dumpster
     {
-        self->pos.y = -36008;
+        self->pos.y = -34760;
         rData->yVel = 0;
 
         freeFont(&self->gameData->cgFont);
@@ -364,39 +376,20 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-        if (self->gameData->day == 0)
-        {
-            bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
-            bb_setCharacterLine(dData, 0, "Ovo", "Gaaaash dangit.");
-            bb_setCharacterLine(dData, 1, "Ovo", "DARN IT! DARN IT! DARN IT! DARN IT!");
-            bb_setCharacterLine(dData, 2, "Ovo", "GLITCH MY CIRCUITS!");
-            bb_setCharacterLine(dData, 3, "Ovo", "I'll have to patch this up before all the air gets out.");
-            bb_setCharacterLine(dData, 4, "Ovo", "And the hardware store closes so early.");
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterGarbotnikIntro;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
-        }
-        else
-        {
-            bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
-            bb_setCharacterLine(dData, 0, "Ovo", "Time to check the loadout!");
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterGarbotnikIntro;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
-        }
+        bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
+        bb_setCharacterLine(dData, 0, "Ovo", "Time to check the loadout!");
+        dData->curString     = -1;
+        dData->endDialogueCB = &bb_afterGarbotnikIntro;
+        bb_setData(ovo, dData, DIALOGUE_DATA);
 
         self->gameData->entityManager.viewEntity = bb_createEntity(
             &(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
-            self->gameData->camera.camera.pos.x + 140, self->gameData->camera.camera.pos.y + 120, true, false);
-
-        // Create a crumble animation
-        bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, CRUMBLE_ANIM, 3,
-                        self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 30, true, false);
+            self->gameData->camera.camera.pos.x + 140, self->gameData->camera.camera.pos.y + 120, false, false);
 
         self->updateFunction = NULL;
         return;
     }
-    else if (self->pos.y < -31000 && !(self->gameData->endDayChecks & (1 << 0))
+    else if (self->pos.y < -30700 && !(self->gameData->endDayChecks & (1 << 0))
              && !(self->gameData->endDayChecks & (1 << 2))) // if not pause illusion and dive summary hasn't shown yet.
     {
         self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0); // set the pause illusion bit.
@@ -448,7 +441,7 @@ void bb_updateHeavyFallingInit(bb_entity_t* self)
         hfData->yVel -= 50;
         // Update the dirt to air.
         // Create a crumble
-        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true);
+        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true, true);
     }
     return;
 }
@@ -479,7 +472,7 @@ void bb_updateHeavyFalling(bb_entity_t* self)
         hfData->yVel -= 45;
         // Update the dirt to air.
         // Create a crumble
-        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true);
+        bb_crumbleDirt(self->gameData, 3, hitInfo.tile_i, hitInfo.tile_j, true, true);
     }
     return;
 }
@@ -529,6 +522,12 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
 {
     if (self->currentAnimationFrame == self->gameData->entityManager.sprites[self->spriteIndex].numFrames - 2)
     {
+        // unload rocket frames 1 through 39 now that the animation is done.
+        for (int frame = 1; frame < 40; frame++)
+        {
+            freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[frame]);
+        }
+
         bb_entity_t* arm
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
@@ -565,13 +564,13 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
     // The outer half of the circle launches the same velocity so you don't have to touch at the very edge.
-    if (gData->r > 561)
-    {
-        gData->r = 561;
-    }
+    // if (gData->r > 561)
+    // {
+    //     gData->r = 561;
+    // }
 
     gData->fire = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
-    if (gData->fire && gData->activeWile != 255)
+    if (gData->r > 374 && gData->fire && gData->activeWile != 255)
     {
         // Throw a wile!
         bb_entity_t* wile = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, BB_WILE, 1,
@@ -608,10 +607,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
 
             int32_t x;
             int32_t y;
-            getTouchCartesian(gData->phi, gData->r, &x, &y);
+            getTouchCartesian(gData->phi, 512, &x, &y);
             // Set wile's velocity
-            wData->vel.x = (x - 512) >> 2;
-            wData->vel.y = (-y + 512) >> 2;
+            wData->vel.x = ((x - 512) * 7) >> 6;
+            wData->vel.y = ((-y + 512) * 7) >> 6;
         }
     }
 
@@ -621,7 +620,8 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         gData->harpoonCooldown = -250;
     }
 
-    if (gData->touching && gData->harpoonCooldown < 0 && gData->numHarpoons > 0 && gData->activeWile == 255)
+    if (gData->touching && gData->r > 374 && gData->harpoonCooldown < 0 && gData->numHarpoons > 0
+        && gData->activeWile == 255)
     {
         gData->harpoonCooldown = self->gameData->GarbotnikStat_fireTime;
         // Create a harpoon
@@ -636,10 +636,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             bb_projectileData_t* pData = (bb_projectileData_t*)harpoon->data;
             int32_t x;
             int32_t y;
-            getTouchCartesian(gData->phi, gData->r, &x, &y);
+            getTouchCartesian(gData->phi, 512, &x, &y);
             // Set harpoon's velocity
-            pData->vel.x = (x - 512) >> 3;
-            pData->vel.y = (-y + 512) >> 3;
+            pData->vel.x = ((x - 512) * 7) >> 6;
+            pData->vel.y = ((-y + 512) * 7) >> 6;
         }
     }
 
@@ -1146,16 +1146,16 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         self->drawFunction   = NULL;
         return;
     }
-    else if (gData->fuel < 38000 && self->gameData->bgm.length == 7217)
+    else if (gData->fuel < 38000 && self->gameData->bgm.length == 5537)
     {
-        // exploration song length 7217
-        // hurry up song length 6480
+        // exploration song length 5537
+        // hurry up song length 4833
         bb_setupMidi();
         unloadMidiFile(&self->gameData->bgm);
         loadMidiFile("Big Bug Hurry up.mid", &self->gameData->bgm, true);
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
     }
-    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 6480)
+    else if (gData->fuel >= 38000 && self->gameData->bgm.length == 4833)
     {
         bb_setupMidi();
         unloadMidiFile(&self->gameData->bgm);
@@ -1195,7 +1195,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             || (tile->health < 5 && tile->health + self->gameData->GarbotnikStat_diggingStrength >= 5))
         {
             // Create a crumble
-            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health);
+            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, !tile->health, !tile->health);
         }
         else
         {
@@ -1318,11 +1318,16 @@ void bb_updateEggLeaves(bb_entity_t* self)
 
         lookup = divVec2d(lookup, 2);
 
-        if (GARBOTNIK_DATA == self->gameData->entityManager.playerEntity->dataType)
+        if (self->gameData->entityManager.playerEntity != NULL
+            && self->gameData->entityManager.playerEntity->updateFunction == bb_updateGarbotnikFlying)
         {
             elData->brightness = bb_foregroundLighting(
                 &(self->gameData->tilemap.headlampWsg), &lookup,
                 &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x));
+        }
+        else
+        {
+            elData->brightness = 0;
         }
 
         bb_eggData_t* eData = (bb_eggData_t*)elData->egg->data;
@@ -1360,7 +1365,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].embed  = NOTHING_EMBED;
                     self->gameData->tilemap.fgTiles[hitInfo.tile_i][hitInfo.tile_j].entity = NULL;
                     // Create a crumble
-                    bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true);
+                    bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true, true);
                     midiPlayer_t* sfx = soundGetPlayerSfx();
                     midiPlayerReset(sfx);
                     soundPlaySfx(&self->gameData->sfxEgg, 0);
@@ -1746,28 +1751,13 @@ void bb_updateMenu(bb_entity_t* self)
             bb_destroyEntity(mData->cursor, false);
             mData->cursor = NULL;
 
-            // create the death dumpster
-            bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
-            self->gameData->entityManager.deathDumpster
-                = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
-                                  self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) + 400, true, false);
-            tData->tracking = self->gameData->entityManager.deathDumpster;
-            tData->midPointSqDist
-                = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
-                                                  - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
-                                              (tData->tracking->pos.y >> DECIMAL_BITS)
-                                                  - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
-                                      2));
-
-            self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
-
             // create 3 rockets
             for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
             {
                 self->gameData->entityManager.boosterEntities[rocketIdx]
                     = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
                                       (self->pos.x >> DECIMAL_BITS) - 96 + 96 * rocketIdx,
-                                      (self->pos.y >> DECIMAL_BITS) + 375, true, false);
+                                      (self->pos.y >> DECIMAL_BITS) + 400, false, true);
 
                 bb_rocketData_t* rData
                     = (bb_rocketData_t*)self->gameData->entityManager.boosterEntities[rocketIdx]->data;
@@ -1779,6 +1769,21 @@ void bb_updateMenu(bb_entity_t* self)
 
                 rData->flame->updateFunction = &bb_updateFlame;
             }
+            bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
+
+            // create the death dumpster
+            self->gameData->entityManager.deathDumpster
+                = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
+                                  self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) + 400, false, true);
+            tData->tracking = self->gameData->entityManager.deathDumpster;
+            tData->midPointSqDist
+                = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
+                                                  - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
+                                              (tData->tracking->pos.y >> DECIMAL_BITS)
+                                                  - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
+                                      2));
+
+            self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
 
             self->updateFunction = NULL;
             return;
@@ -2051,7 +2056,7 @@ void bb_updateGameOver(bb_entity_t* self)
             {
                 freeWsg(&goData->fullscreenGraphic);
             }
-            if (boosterIdx <= 2)
+            if (boosterIdx < 2)
             {
                 self->currentAnimationFrame = 1;
                 loadWsgInplace("GameOver1.wsg", &goData->fullscreenGraphic, true, bb_decodeSpace, bb_hsd);
@@ -2082,7 +2087,10 @@ void bb_updateGameOver(bb_entity_t* self)
                 }
                 boosterIdx++;
             }
-            self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
+            if (boosterIdx < 3)
+            {
+                self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
+            }
 
             bb_destroyEntity(self, false);
             bb_startGarbotnikCloningTalk(self->gameData->entityManager.deathDumpster);
@@ -2277,6 +2285,38 @@ void bb_updateCarOpen(bb_entity_t* self)
     }
 }
 
+void bb_updateFarCar(bb_entity_t* self)
+{
+    vec_t shiftedCameraPos = self->gameData->camera.camera.pos;
+    shiftedCameraPos.x     = (shiftedCameraPos.x + 140) << DECIMAL_BITS;
+    shiftedCameraPos.y     = (shiftedCameraPos.y + 240) << DECIMAL_BITS;
+    // 2752 = (140+32) << 4; 2432 = (120+32) << 4
+    if (bb_boxesCollide(&(bb_entity_t){.pos = shiftedCameraPos, .halfWidth = 5504, .halfHeight = 4864}, self, NULL,
+                        NULL)
+        == false)
+    {
+        // This car gets cached
+        bb_entity_t* cachedEntity = heap_caps_calloc(1, sizeof(bb_entity_t), MALLOC_CAP_SPIRAM);
+        // It's like a memcopy
+        *cachedEntity = *self;
+
+        // push to the tail
+        push(self->gameData->entityManager.cachedEntities, (void*)cachedEntity);
+
+        // free sprites
+        for (int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
+        {
+            if (self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].w
+                || self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].h)
+            {
+                freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
+            }
+        }
+
+        bb_destroyEntity(self, true);
+    }
+}
+
 void bb_updateSpit(bb_entity_t* self)
 {
     // increment the frame counter
@@ -2321,7 +2361,7 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
     {
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                              self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+                              self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
 
         if (self->gameData->day == 0)
         {
@@ -2370,6 +2410,44 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
             bb_setCharacterLine(dData, 7, "Ovo", "Don't you have anything better to do?");
             bb_setCharacterLine(dData, 8, "Ovo", "Lousy ingrates.");
             bb_setCharacterLine(dData, 9, "Pixel", "That man doesn't know the meaning of friendship.");
+
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterLiftoffInteraction;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        else if (self->gameData->day == 2)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(8, "Pango");
+
+            bb_setCharacterLine(dData, 0, "Pango", "Why do you have better shading than us?");
+            bb_setCharacterLine(dData, 1, "Ovo", "Because I'm the main character.");
+            bb_setCharacterLine(dData, 2, "Pango", "But MAGFast is literally named after me!");
+            bb_setCharacterLine(dData, 3, "Ovo", "You fool! It's called mag FEST because of PEST like you.");
+            bb_setCharacterLine(dData, 4, "Po", "That's so metal.");
+            bb_setCharacterLine(dData, 5, "Ovo",
+                                "POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+                                "OOOOOOOOOOOOOOOOOOOO");
+            bb_setCharacterLine(dData, 6, "Ovo",
+                                "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+                                "OOOOOOOOOOOOOOOOOOOOOOO!");
+            bb_setCharacterLine(dData, 7, "Pixel", "Hey, don't yell at my friend like that!");
+
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterLiftoffInteraction;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+        else if (self->gameData->day == 3)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(8, "Pango");
+
+            bb_setCharacterLine(dData, 0, "Pango", "GARBOTNIK! Are you feeling well?");
+            bb_setCharacterLine(dData, 1, "Ovo", "Huh?");
+            bb_setCharacterLine(dData, 2, "Pango", "Looks like you've got a case of the T-rash!");
+            bb_setCharacterLine(dData, 3, "Ovo", "Aaaaaargh! Darn it! Darn it! DARN IT! DARN IT!");
+            bb_setCharacterLine(dData, 4, "Ovo", "GLITCH MY CIRCUITS!");
+            bb_setCharacterLine(dData, 5, "Pixel", "Freaking got him, Pango!");
+            bb_setCharacterLine(dData, 6, "Ovo", "T-raaaaash goes in the T-raaaaaash can.");
+            bb_setCharacterLine(dData, 7, "Po", "Huh?");
 
             dData->curString     = -1;
             dData->endDialogueCB = &bb_afterLiftoffInteraction;
@@ -2482,7 +2560,7 @@ void bb_update501kg(bb_entity_t* self)
             && hitInfo.tile_j < TILE_FIELD_HEIGHT - 4)
         {
             // Update the dirt to air.
-            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true);
+            bb_crumbleDirt(self->gameData, 2, hitInfo.tile_i, hitInfo.tile_j, true, true);
         }
     }
     else
@@ -2558,7 +2636,7 @@ void bb_updateExplosion(bb_entity_t* self)
                     if (self->gameData->tilemap.fgTiles[checkI][checkJ].health > 0)
                     {
                         // Update the dirt to air.
-                        bb_crumbleDirt(self->gameData, bb_randomInt(2, 3), checkI, checkJ, true);
+                        bb_crumbleDirt(self->gameData, bb_randomInt(2, 3), checkI, checkJ, true, true);
                     }
                 }
             }
@@ -2730,13 +2808,13 @@ void bb_updateDrillBot(bb_entity_t* self)
                 // destroy the tile below the drill bot
                 if (self->pos.y < 0)
                 {
-                    bb_crumbleDirt(self->gameData, 2, drillX1, 0, true);
-                    bb_crumbleDirt(self->gameData, 2, drillX2, 0, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX1, 0, true, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX2, 0, true, true);
                 }
                 else
                 {
-                    bb_crumbleDirt(self->gameData, 2, drillX1, (self->pos.y >> 9) + 1, true);
-                    bb_crumbleDirt(self->gameData, 2, drillX2, (self->pos.y >> 9) + 1, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX1, (self->pos.y >> 9) + 1, true, true);
+                    bb_crumbleDirt(self->gameData, 2, drillX2, (self->pos.y >> 9) + 1, true, true);
                 }
             }
         }
@@ -2748,7 +2826,8 @@ void bb_updateDrillBot(bb_entity_t* self)
             {
                 if (bb_randomInt(0, 110) == 1)
                 {
-                    bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144) >> 9, self->pos.y >> 9, true);
+                    bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144) >> 9, self->pos.y >> 9, true,
+                                   true);
                 }
             }
         }
@@ -2826,15 +2905,18 @@ void bb_updateSpaceLaser(bb_entity_t* self)
     if (bb_randomInt(0, 50) == 0)
     {
         // decrement the health of the tile below the laser by one
-        self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health--;
+        if (self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health)
+        {
+            self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health--;
+        }
         int8_t health = self->gameData->tilemap.fgTiles[self->pos.x >> 9][slData->highestGarbage].health;
         if (health == 1 || health == 4 || health == 10)
         {
-            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, false);
+            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, false, false);
         }
         else if (health == 0)
         {
-            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, true);
+            bb_crumbleDirt(self->gameData, 2, self->pos.x >> 9, slData->highestGarbage, true, true);
             // recalculate the highest garbage
             for (int i = 0; i < TILE_FIELD_HEIGHT; i++)
             {
@@ -2922,7 +3004,21 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         int32_t x;
         int32_t y;
         getTouchCartesian(gData->phi, gData->r, &x, &y);
-        drawLineFast(xOff, yOff, xOff + (x - 511) / 5, yOff - (y - 511) / 5, c305);
+        x -= 511;
+        y -= 511;
+        drawCircle(xOff, yOff, 37, c103);
+        int16_t otherX = x / 5;
+        int16_t otherY = y / 5;
+        drawLineFast(xOff, yOff - 1, xOff + otherX, yOff - otherY - 1, c555);
+        if (gData->r > 374)
+        {
+            drawCircleQuadrants(xOff, yOff, 37, x > 0 && y < 0, x < 0 && y < 0, x < 0 && y > 0, x > 0 && y > 0, c315);
+            drawLineFast(xOff, yOff, xOff + otherX, yOff - otherY, c315);
+        }
+        else
+        {
+            drawLineFast(xOff, yOff, xOff + otherX, yOff - otherY, c103);
+        }
     }
 
     char harpoonText[13]; // 13 characters makes room for up to a 3 digit number + " harpooons" + null
@@ -3622,6 +3718,15 @@ void bb_drawFoodCart(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
                 (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                 (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y);
         }
+        if (self->currentAnimationFrame > 1)
+        {
+            // draw the healthbar
+            drawLineScaled(0, 0, (self->currentAnimationFrame - 1) * 2, 0, c500, 0,
+                           (self->pos.x >> DECIMAL_BITS) - camera->pos.x - (self->currentAnimationFrame + 1) * 2,
+                           (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
+                               - camera->pos.y - 10,
+                           2, 3);
+        }
     }
 }
 
@@ -3633,18 +3738,19 @@ void bb_drawWile(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
     bb_wileData_t* wData = (bb_wileData_t*)self->data;
     if (wData->lifetime > 0)
     {
+        int32_t startY = MIN((self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285, 0);
         // sample some arbitrary data to draw binary 1's and 0's out of the BGM straight above the wile
         for (int i = 0; i < 17; i++)
         {
             if (self->gameData->bgm.data[i + (wData->lifetime >> 2)] & 1)
             {
                 drawText(&self->gameData->font, c511, "1", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
-                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285 + i * 15);
+                         startY + i * 15);
             }
             else
             {
                 drawText(&self->gameData->font, c511, "0", (self->pos.x >> DECIMAL_BITS) - camera->pos.x - 3,
-                         (self->pos.y >> DECIMAL_BITS) - camera->pos.y - 285 + i * 15);
+                         startY + i * 15);
             }
         }
 
@@ -3786,7 +3892,7 @@ void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, b
             // create a bump anim at the bottom of the laser
             bb_entity_t* bump = bb_createEntity(entityManager, ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
                                                 (self->pos.x >> DECIMAL_BITS) - 12 + foo % 25,
-                                                (self->pos.y + self->halfHeight) >> DECIMAL_BITS, false, false);
+                                                (self->pos.y + self->halfHeight) >> DECIMAL_BITS, true, false);
             if (foo >= 25)
             {
                 bump->drawFunction = bb_drawHitEffect;
@@ -3812,7 +3918,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         int32_t tile_i = other->pos.x >> 9; // 4 decimal bits and 5 bitshifts is divide by 32.
         int32_t tile_j = other->pos.y >> 9; // 4 decimal bits and 5 bitshifts is divide by 32.
         self->gameData->tilemap.fgTiles[tile_i][tile_j].health = 0;
-        bb_crumbleDirt(other->gameData, 2, tile_i, tile_j, true);
+        bb_crumbleDirt(other->gameData, 2, tile_i, tile_j, true, true);
         // destroy this harpoon
         bb_destroyEntity(self, false);
     }
@@ -3984,7 +4090,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
     self->cacheable = false;
 
     // number of bugs to fight. More risk at greater depths.
-    self->gameData->carFightState = (3 * (self->pos.y >> 9) / 20) + 4;
+    self->gameData->carFightState = (2 * (self->pos.y >> 9) / 20) + 4;
 
     // one extra bug than required for easier completion and to match the same feel as in testing.
     bb_spawnHorde(self, self->gameData->carFightState + 1);
@@ -4082,7 +4188,7 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
     if (self->gameData->tilemap.fgTiles[tilePos.x][tilePos.y].health > 0)
     {
         self->gameData->tilemap.fgTiles[tilePos.x][tilePos.y].health = 0;
-        bb_crumbleDirt(self->gameData, 2, tilePos.x, tilePos.y, true);
+        bb_crumbleDirt(self->gameData, 2, tilePos.x, tilePos.y, true, true);
     }
     self->pos.x = (tilePos.x << 9) + (16 << DECIMAL_BITS);
     self->pos.y = (tilePos.y << 9) + (16 << DECIMAL_BITS);
@@ -4266,7 +4372,7 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
 {
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
 
     bb_dialogueData_t* dData = bb_createDialogueData(24, "Ovo");
 
@@ -4320,7 +4426,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
 
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
 
     bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
 
@@ -4519,7 +4625,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
 void bb_startGarbotnikCloningTalk(bb_entity_t* self)
 {
     bb_entity_t* ovo
-        = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, 0, 0, true, true);
+        = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, 0, 0, false, true);
 
     bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo"); // 29
 
@@ -4538,7 +4644,7 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
 {
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
 
     bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo");
 
@@ -4560,7 +4666,7 @@ void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
 
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
 
     bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
 
@@ -4641,12 +4747,13 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 
     self->gameData->isPaused = false;
 
-    if (self->gameData->day)
+    if (self->gameData->day
+        || self->gameData->entityManager.activeBooster != self->gameData->entityManager.boosterEntities[0])
     {
         return;
     }
 
-    self->gameData->isPaused = false;
+    self->gameData->isPaused = true;
     // find the tutorial egg on screen
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -4656,7 +4763,7 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
             self->gameData->entityManager.viewEntity
                 = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                                   (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS),
-                                  (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS), true, false);
+                                  (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS), false, false);
             bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
             tData->tracking    = curEntity;
 
@@ -4765,7 +4872,7 @@ void bb_upgradeRadar(bb_entity_t* self)
 void bb_triggerGameOver(bb_entity_t* self)
 {
     // music is home 2, this function was already triggered. early return.
-    if (self->gameData->bgm.length == 9715)
+    if (self->gameData->bgm.length == 7437)
     {
         return;
     }
@@ -4779,14 +4886,14 @@ void bb_triggerGameOver(bb_entity_t* self)
     globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
     bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GAME_OVER, 1,
-                    self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
+                    self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
 
     self->gameData->camera.camera.pos = (vec_t){(self->gameData->entityManager.deathDumpster->pos.x >> DECIMAL_BITS),
                                                 (self->gameData->entityManager.deathDumpster->pos.y >> DECIMAL_BITS)};
 
     self->gameData->entityManager.viewEntity
         = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
-                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, false);
+                          self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, false);
 }
 
 void bb_upgradeGarbotnik(bb_entity_t* self)
@@ -5096,7 +5203,7 @@ void bb_trigger501kg(bb_entity_t* self)
     bb_loadSprite("501kg", 1, 1, &self->gameData->entityManager.sprites[BB_501KG]);
 
     bb_entity_t* missile   = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_501KG, 1,
-                                             self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, true);
+                                             self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, false);
     bb_501kgData_t* kgData = ((bb_501kgData_t*)missile->data);
 
     kgData->vel = (vec_t){bb_randomInt(-60, 60), 60};
@@ -5170,7 +5277,7 @@ void bb_triggerSpaceLaserWile(bb_entity_t* self)
 }
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
-                    bool zeroHealth)
+                    bool zeroHealth, bool flagNeighborsForPathfinding)
 {
     if (tile_i >= TILE_FIELD_WIDTH - 2 || tile_j >= TILE_FIELD_HEIGHT - 3)
     {
@@ -5194,7 +5301,10 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
     if (zeroHealth)
     {
         gameData->tilemap.fgTiles[tile_i][tile_j].health = 0;
-        flagNeighbors((bb_midgroundTileInfo_t*)&gameData->tilemap.fgTiles[tile_i][tile_j], gameData);
+        if (flagNeighborsForPathfinding)
+        {
+            flagNeighbors((bb_midgroundTileInfo_t*)&gameData->tilemap.fgTiles[tile_i][tile_j], gameData);
+        }
         switch (gameData->tilemap.fgTiles[tile_i][tile_j].embed)
         {
             case EGG_EMBED:
@@ -5246,7 +5356,7 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
 
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter)
 {
-    bb_dialogueData_t* dData = heap_caps_calloc(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM);
+    bb_dialogueData_t* dData = heap_caps_calloc_tag(1, sizeof(bb_dialogueData_t), MALLOC_CAP_SPIRAM, firstCharacter);
     dData->numStrings        = numStrings;
     dData->offsetY           = -240;
     int8_t characterSprite   = 0;

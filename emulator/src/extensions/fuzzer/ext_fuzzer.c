@@ -29,6 +29,8 @@ typedef struct
     bool touch;
     bool motion;
     bool time;
+
+    buttonBit_t buttonMask;
 } fuzzer_t;
 
 //==============================================================================
@@ -60,6 +62,8 @@ static bool fuzzerInitCb(emuArgs_t* emuArgs)
     fuzzer.motion  = emuArgs->fuzzMotion;
     fuzzer.time    = emuArgs->fuzzTime;
 
+    fuzzer.buttonMask = (PB_A | PB_B | PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_START);
+
     if (emuArgs->fuzz)
     {
         printf("\nFuzzing:\n - [%c] Buttons\n - [%c] Touch\n - [%c] Motion\n - [%c] Time\n", fuzzer.buttons ? 'X' : ' ',
@@ -84,8 +88,11 @@ static void fuzzerPreFrameCb(uint64_t frame)
         uint8_t i              = rand() % 8;
         buttonBit_t fuzzButton = (1 << i);
 
-        // Inject the button event to flip that button's state
-        emulatorInjectButton(fuzzButton, (buttonState & fuzzButton) == 0);
+        if (fuzzButton & fuzzer.buttonMask)
+        {
+            // Inject the button event to flip that button's state
+            emulatorInjectButton(fuzzButton, (buttonState & fuzzButton) == 0);
+        }
     }
 
     if (fuzzer.touch)
@@ -128,4 +135,54 @@ static void fuzzerPreFrameCb(uint64_t frame)
         fakeTime += (rand() % 128) * 1000 << (rand() % (4));
         emuSetEspTimerTime(fakeTime);
     }
+}
+
+void emuSetFuzzButtonsEnabled(bool enabled)
+{
+    fuzzer.buttons = enabled;
+}
+
+bool emuGetFuzzButtonsEnabled(void)
+{
+    return fuzzer.buttons;
+}
+
+void emuSetFuzzTouchEnabled(bool enabled)
+{
+    fuzzer.touch = enabled;
+}
+
+bool emuGetFuzzTouchEnabled(void)
+{
+    return fuzzer.touch;
+}
+
+void emuSetFuzzMotionEnabled(bool enabled)
+{
+    fuzzer.motion = enabled;
+}
+
+bool emuGetFuzzMotionEnabled(void)
+{
+    return fuzzer.motion;
+}
+
+void emuSetFuzzTimeEnabled(bool enabled)
+{
+    fuzzer.time = enabled;
+}
+
+bool emuGetFuzzTimeEnabled(void)
+{
+    return fuzzer.time;
+}
+
+void emuSetFuzzButtonsMask(buttonBit_t mask)
+{
+    fuzzer.buttonMask = mask;
+}
+
+buttonBit_t emuGetFuzzButtonsMask(void)
+{
+    return fuzzer.buttonMask;
 }

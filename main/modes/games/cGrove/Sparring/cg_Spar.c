@@ -90,7 +90,6 @@ void cg_initSpar(cGrove_t* grove)
     globalMidiPlayerPlaySong(&cg->spar.sparBGM, MIDI_BGM);
 
     // Load the splash screen
-    // TODO: Load tutorial the first time mode is loaded
     cg->spar.state = CG_SPAR_SPLASH;
 }
 
@@ -132,6 +131,12 @@ void cg_runSpar(int64_t elapsedUs)
     {
         case CG_SPAR_SPLASH:
         {
+            led_t leds[CONFIG_NUM_LEDS];
+            for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+            {
+                leds[idx] = LedEHSVtoHEXhelper(0, 0, 0, true);
+            }
+            setLeds(leds, CONFIG_NUM_LEDS);
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down)
@@ -164,6 +169,12 @@ void cg_runSpar(int64_t elapsedUs)
         case CG_MATCH_PREP:
         {
             // Handle input
+            led_t leds[CONFIG_NUM_LEDS];
+            for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+            {
+                leds[idx] = LedEHSVtoHEXhelper(0, 0, 0, true);
+            }
+            setLeds(leds, CONFIG_NUM_LEDS);
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down && cg->spar.numActiveChowa > 0)

@@ -134,8 +134,8 @@ static bool tud_hid_n_gamepad_report_ns(uint8_t instance, uint8_t report_id, int
 // Variables
 //==============================================================================
 
-static fnAdvancedUsbHandler advancedUsbHandler;
-static fnSetSwadgeMode setSwadgeMode;
+fnAdvancedUsbHandler advancedUsbHandler;
+fnSetSwadgeMode setSwadgeMode;
 static const uint8_t* c_descriptor;
 
 //==============================================================================
@@ -180,6 +180,9 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
     {
         // Set the log to print with advanced_usb_write_log_printf()
         esp_log_set_vprintf(advanced_usb_write_log_printf);
+
+        // For emission of uprintf symbol.
+        uprintf( "printf overridden" );
     }
 
     ESP_LOGI(TAG, "USB initialization DONE");

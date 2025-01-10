@@ -66,6 +66,7 @@ typedef enum
     BB_DRILL_BOT,   // A driller that comes down then drills horizontally.
     BB_AMMO_SUPPLY, // A barrel of harpoons
     BB_PACIFIER,    // Calms down the bugs in range.
+    BB_HOTDOG,      // icon for use in the radar screen.
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.

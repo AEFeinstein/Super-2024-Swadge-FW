@@ -428,6 +428,12 @@ void cg_runGrove(cGrove_t* cg, int64_t elapsedUS)
         case CG_GROVE_FIELD:
         {
             // Input
+            led_t leds[CONFIG_NUM_LEDS];
+            for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+            {
+                leds[idx] = LedEHSVtoHEXhelper(0, 0, 0, true);
+            }
+            setLeds(leds, CONFIG_NUM_LEDS);
             cg_handleInputGarden(cg);
             if (cg->grove.isPetting)
             {

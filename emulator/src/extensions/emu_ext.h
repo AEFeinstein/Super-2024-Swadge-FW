@@ -181,6 +181,13 @@ typedef struct
     bool (*fnInitCb)(emuArgs_t* emuArgs);
 
     /**
+     * @brief Function to be called just before the emulator exits
+     *
+     * This callback should be used to free any memory or resources the extension has allocated.
+     */
+    void (*fnDeinitCb)(void);
+
+    /**
      * @brief Function to be called before an emulator frame is rendered
      *
      * This is the ideal location to inject button presses and other events into the emulator,
