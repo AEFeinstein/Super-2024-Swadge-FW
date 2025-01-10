@@ -2140,7 +2140,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
         midiPlayer_t* sfx = soundGetPlayerSfx();
         midiPlayerReset(sfx);
         soundPlaySfx(&self->gameData->sfxCollection, 0);
-        if (rData->numBugs % 10 == 0) // set to % 1 for quick testing the entire radar tech tree
+        if (rData->numBugs % 1 == 0) // set to % 1 for quick testing the entire radar tech tree
         {
             bb_entity_t* radarPing
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,

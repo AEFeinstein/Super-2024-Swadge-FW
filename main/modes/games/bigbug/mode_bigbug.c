@@ -276,7 +276,7 @@ static void bb_EnterModeSkipIntro(void)
         else // rocketIdx == 0
         {
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
-            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 3;
+            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 2;
             bigbug->gameData.entityManager.activeBooster->currentAnimationFrame               = 40;
             bigbug->gameData.entityManager.activeBooster->pos.y                               = 50;
             bigbug->gameData.entityManager.activeBooster->updateFunction                      = bb_updateHeavyFalling;
@@ -785,8 +785,8 @@ static void bb_DrawScene_Radar(void)
     }
 
     // draw camera perimeter
-    drawRect(garbotnikPos.x - 17, garbotnikPos.y - 15 - bigbug->gameData.radar.cam.y, garbotnikPos.x + 17,
-             garbotnikPos.y + 15 - bigbug->gameData.radar.cam.y, c424);
+    drawRect((bigbug->gameData.camera.camera.pos.x >> 3), (bigbug->gameData.camera.camera.pos.y >> 3) - bigbug->gameData.radar.cam.y, (bigbug->gameData.camera.camera.pos.x >> 3) + 34,
+             (bigbug->gameData.camera.camera.pos.y >> 3) + 30 - bigbug->gameData.radar.cam.y, c424);
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_OLD_BOOSTERS) & 1)
     {
@@ -1332,7 +1332,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
     bigbug->gameData.loadoutScreenData->blinkTimer += elapsedUs >> 12;
     if (bigbug->gameData.radar.playerPingRadius == 2)
     {
-        bigbug->gameData.loadoutScreenData->marqueeTimer += elapsedUs;
+        bigbug->gameData.loadoutScreenData->marqueeTimer += elapsedUs<<1;
     }
     bigbug->gameData.btnDownState = 0b0;
     // Always process button events, regardless of control scheme, so the main menu button can be captured
