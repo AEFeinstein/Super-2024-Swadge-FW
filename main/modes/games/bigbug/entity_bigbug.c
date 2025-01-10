@@ -70,84 +70,35 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
         return;
     }
 
-    // some particular entities get sprites freed.
-    switch (self->spriteIndex)
+    if(self->spriteIndex == BB_CAR||
+       self->spriteIndex == BB_GRABBY_HAND||
+       self->spriteIndex == BB_DOOR||
+       self->spriteIndex == BB_SWADGE||
+       self->spriteIndex == BB_DRILL_BOT||
+       self->spriteIndex == BB_AMMO_SUPPLY||
+       self->spriteIndex == BB_PACIFIER)
     {
-        case BB_CAR:
+        for (int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
         {
-            if (self->currentAnimationFrame == 59)
+            if(self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].w ||
+               self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].h)
             {
-                freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[59]);
+                freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
             }
-            else
+        }
+    }
+    else if(self->spriteIndex == BB_FOOD_CART)
+    {
+        bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
+        // The food cart needs to track its own caching status to communicate just-in-time loading between both
+        // pieces.
+        fcData->isCached = caching;
+        if (fcData->partner->active == false || ((bb_foodCartData_t*)fcData->partner->data)->isCached)
+        {
+            for (int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
             {
-                for (int frame = 0; frame < 60; frame++)
-                {
-                    freeWsg(&self->gameData->entityManager.sprites[BB_CAR].frames[frame]);
-                }
+                freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
             }
-            break;
-        }
-        case BB_GRABBY_HAND:
-        {
-            for (int frame = 0; frame < 3; frame++)
-            {
-                freeWsg(&self->gameData->entityManager.sprites[BB_GRABBY_HAND].frames[frame]);
-            }
-            break;
-        }
-        case BB_DOOR:
-        {
-            for (int frame = 0; frame < 2; frame++)
-            {
-                freeWsg(&self->gameData->entityManager.sprites[BB_DOOR].frames[frame]);
-            }
-            break;
-        }
-        case BB_SWADGE:
-        {
-            for (int frame = 0; frame < MAX_FRONT_ENTITIES; frame++)
-            {
-                freeWsg(&self->gameData->entityManager.sprites[BB_SWADGE].frames[frame]);
-            }
-            break;
-        }
-        case BB_FOOD_CART:
-        {
-            bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
-            // The food cart needs to track its own caching status to communicate just-in-time loading between both
-            // pieces.
-            fcData->isCached = caching;
-            if (fcData->partner->active == false || ((bb_foodCartData_t*)fcData->partner->data)->isCached)
-            {
-                for (int frame = 0; frame < 2; frame++)
-                {
-                    freeWsg(&self->gameData->entityManager.sprites[BB_FOOD_CART].frames[frame]);
-                }
-            }
-            break;
-        }
-        case BB_DRILL_BOT:
-        {
-            for (int frame = 0; frame < 7; frame++)
-            {
-                freeWsg(&self->gameData->entityManager.sprites[BB_DRILL_BOT].frames[frame]);
-            }
-            break;
-        }
-        case BB_AMMO_SUPPLY:
-        {
-            freeWsg(&self->gameData->entityManager.sprites[BB_AMMO_SUPPLY].frames[0]);
-            break;
-        }
-        case BB_PACIFIER:
-        {
-            freeWsg(&self->gameData->entityManager.sprites[BB_PACIFIER].frames[0]);
-            break;
-        }
-        default:
-        {
-            break;
         }
     }
 
