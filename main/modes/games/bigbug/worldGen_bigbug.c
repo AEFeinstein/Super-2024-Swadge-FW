@@ -88,7 +88,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                         }
                         case 153:
                         {
-                            if (i != 34 && i != 37 && i != 39)
+                            if (i != 34 && i != 37 && i != 40)
                             {
                                 for (int lookupIdx = 0; lookupIdx < 35; lookupIdx++)
                                 {
