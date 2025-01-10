@@ -528,7 +528,7 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     // Blink LEDs based on tempo
     if (songUs >= sh->nextBlinkUs)
     {
-        sh->nextBlinkUs += sh->tempo;
+        sh->nextBlinkUs += (sh->tempo * 2);
         sh->ledBaseVal = 0xFF;
 
         // Change icons on the beat & start a timer to revert
