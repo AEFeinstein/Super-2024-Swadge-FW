@@ -47,7 +47,7 @@ int main()
 	while(1)
 	{
 
-		glyphdraw_invert = 0;
+		glyphdraw_invert = -1;
 		glyphdraw_nomask = 1;
 
 		swadgeDraw( SSD1306_W/2, 2, 1, swadgeGlyphHalf, "A GRAND" );
@@ -57,7 +57,7 @@ int main()
 		swapBuffer();
 
 
-		background(7);
+		background(8);
 
 		frameno++;
 	}

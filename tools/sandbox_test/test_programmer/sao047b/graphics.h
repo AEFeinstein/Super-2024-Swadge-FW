@@ -275,7 +275,7 @@ void background( int mode )
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = _rand_lfsr_update(); 
 		break;
 	case 3: // Noise
-		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = _rand_gen_32b(); 
+		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = _rand_gen_nb(8); 
 		break;
 	case 4: // Checker
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = (i&1)?0xaa:0x55;
@@ -292,8 +292,11 @@ void background( int mode )
 			ssd1306_buffer[i++] = ((((x-(frameno>>4))>>3)+y)&1)?even:odd;
 		break;
 	}
-	case 7: // Grey
+	case 7: // Dark noise
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = 1<<(_rand_gen_nb(10));
+		break;
+	case 8: // Bright noise
+		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = ~(1<<(_rand_gen_nb(8)));
 		break;
 	case 0:
 	default: // Black
