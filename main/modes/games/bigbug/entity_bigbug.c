@@ -3612,7 +3612,67 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
     }
 
-    if (self->gameData->day % 7 == 1 || self->gameData->day % 7 == 4 || self->gameData->day % 7 == 6)
+    if(self->gameData->day == 3)//january 25
+    {
+        drawText(&self->gameData->cgThinFont, c022, "Left the orchestra behind,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 27,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c022, "Turning cogs of time",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c022, "may find,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        drawText(&self->gameData->cgThinFont, c022, "Lost melodies' glow.",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
+    }
+    else if(self->gameData->day == 5)//january 27
+    {
+        drawText(&self->gameData->cgThinFont, c022, "Controllers still hum,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c022, "Endless tunes",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c022, "and laughter bloom,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        drawText(&self->gameData->cgThinFont, c022, "MAGFest never ends.",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
+    }
+    else if(self->gameData->day == 10)//january 32
+    {
+        drawText(&self->gameData->cgThinFont, c022, "Time slips, misaligned,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c022, "Days leap past",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c022, "or lag behind,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        drawText(&self->gameData->cgThinFont, c022, "Calendars defy.",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
+    }
+    else if(self->gameData->day == 78)//january 100
+    {
+        drawText(&self->gameData->cgThinFont, c022, "Endless dawns repeat,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
+        drawText(&self->gameData->cgThinFont, c022, "Immortal,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
+        drawText(&self->gameData->cgThinFont, c022, "yet bound by time,",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
+        drawText(&self->gameData->cgThinFont, c022, "Chaos waits unseen.",
+                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+                 (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
+    }
+    else if (self->gameData->day % 7 == 1 || self->gameData->day % 7 == 4 || self->gameData->day % 7 == 6)
     {
         drawText(&self->gameData->cgThinFont, c500, "Tomorrow is trash day!",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
