@@ -4758,7 +4758,14 @@ void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in
 
 void bb_openMap(bb_entity_t* self)
 {
-    self->gameData->radar.cam.y = (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
+    if(self->gameData->entityManager.playerEntity)
+    {
+        self->gameData->radar.cam.y = (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
+    }
+    else
+    {
+        self->gameData->radar.cam.y = (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 120;
+    }
     self->gameData->screen      = BIGBUG_RADAR_SCREEN;
 }
 

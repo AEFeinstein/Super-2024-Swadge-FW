@@ -959,11 +959,11 @@ static void bb_GameLoop_Radar(int64_t elapsedUs)
     {
         if (bigbug->gameData.btnState & 1) // up
         {
-            bigbug->gameData.radar.cam.y--;
+            bigbug->gameData.radar.cam.y -= 2;
         }
         if ((bigbug->gameData.btnState >> 1) & 1) // down
         {
-            bigbug->gameData.radar.cam.y++;
+            bigbug->gameData.radar.cam.y += 2;
         }
     }
 
