@@ -799,7 +799,11 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
 
     // TODO maybe don't hardcode this
-    if (next == (buttonsSteps + 14))
+    if (next == (buttonsSteps + 12))
+    {
+        setDacShutdown(true);
+    }
+    else if (next == (buttonsSteps + 14))
     {
         ESP_LOGI("Intro", "Oh it's the one we want: %s", next->title);
         iv->quickSettingsOpened = true;

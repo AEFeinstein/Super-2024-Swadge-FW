@@ -47,6 +47,9 @@ soko_abs_t* soko = NULL;
 
 static void sokoEnterMode(void)
 {
+    // No speaker output for these puzzles! Concentrate!
+    setDacShutdown(true);
+
     soko = heap_caps_calloc(1, sizeof(soko_abs_t), MALLOC_CAP_SPIRAM);
     // Load a font
     loadFont("ibm_vga8.font", &soko->ibm, true);
