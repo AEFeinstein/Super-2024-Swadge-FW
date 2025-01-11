@@ -141,6 +141,7 @@ typedef struct
     buttonBit_t btnState;
     int32_t numFrets;
     const char* hitText;
+    paletteColor_t hitTextColor;
     const char* timingText;
     int32_t textTimerUs;
     wsg_t icons[NUM_NOTES][NUM_NOTE_FRAMES];
