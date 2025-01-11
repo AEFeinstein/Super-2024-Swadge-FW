@@ -399,7 +399,7 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
 void bb_setData(bb_entity_t* self, void* data, bb_data_type_t dataType);
 void bb_clearCollisions(bb_entity_t* self, bool keepCached);
 
-void bb_destroyEntity(bb_entity_t* self, bool caching);
+void bb_destroyEntity(bb_entity_t* self, bool caching, bool wasInTheMainArray);
 
 void bb_updateRocketLanding(bb_entity_t* self);
 void bb_updateRocketLiftoff(bb_entity_t* self);

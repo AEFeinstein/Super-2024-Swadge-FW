@@ -87,8 +87,8 @@ void bb_freeSprite(bb_sprite_t* sprite)
         {
             for (uint8_t frame = 0; frame < sprite->numFrames; frame++)
             {
-                if (sprite->frames[brightness * sprite->numFrames + frame].w != 0
-                    || sprite->frames[brightness * sprite->numFrames + frame].h != 0)
+                if (sprite->frames[brightness * sprite->numFrames + frame].w ||
+                    sprite->frames[brightness * sprite->numFrames + frame].h)
                 {
                     freeWsg(&sprite->frames[brightness * sprite->numFrames + frame]);
                 }
@@ -384,7 +384,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
 
                     // push to the tail
                     push(entityManager->cachedEntities, (void*)cachedEntity);
-                    bb_destroyEntity(curEntity, true);
+                    bb_destroyEntity(curEntity, true, true);
                     continue;
                 }
             }
@@ -526,7 +526,7 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
         {
             continue;
         }
-        bb_destroyEntity(currentEntity, false);
+        bb_destroyEntity(currentEntity, false, true);
     }
 
     if (!excludePersistentEntities)
@@ -538,7 +538,7 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
             {
                 continue;
             }
-            bb_destroyEntity(currentEntity, false);
+            bb_destroyEntity(currentEntity, false, false);
         }
     }
 
@@ -546,7 +546,7 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(entityManager->cachedEntities)))
     {
-        bb_destroyEntity(curEntity, false);
+        bb_destroyEntity(curEntity, false, false);
         heap_caps_free(curEntity);
     }
 }
@@ -620,7 +620,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
                 case ONESHOT_ANIMATION:
                 {
                     // destroy the entity
-                    bb_destroyEntity(currentEntity, false);
+                    bb_destroyEntity(currentEntity, false, true);
                     break;
                 }
                 case LOOPING_ANIMATION:
@@ -735,7 +735,7 @@ void bb_ensureEntitySpace(bb_entityManager_t* entityManager, uint8_t numEntities
                 || entityManager->entities[i].spriteIndex == BUMP_ANIM
                 || entityManager->entities[i].spriteIndex == BB_SPIT))
         {
-            bb_destroyEntity(&entityManager->entities[i], false);
+            bb_destroyEntity(&entityManager->entities[i], false, true);
             if (entityManager->activeEntities <= MAX_ENTITIES - numEntities)
             {
                 return;
@@ -750,7 +750,7 @@ void bb_ensureEntitySpace(bb_entityManager_t* entityManager, uint8_t numEntities
              && entityManager->entities[i].spriteIndex <= 13) // bugs are 8 through 13
         )
         {
-            bb_destroyEntity(&entityManager->entities[i], false);
+            bb_destroyEntity(&entityManager->entities[i], false, true);
             if (entityManager->activeEntities <= MAX_ENTITIES - numEntities)
             {
                 return;
@@ -1528,7 +1528,7 @@ void bb_freeEntityManager(bb_entityManager_t* self)
     bb_entity_t* curEntity;
     while (NULL != (curEntity = pop(self->cachedEntities)))
     {
-        bb_destroyEntity(curEntity, false);
+        bb_destroyEntity(curEntity, false, false);
         heap_caps_free(curEntity);
     }
 

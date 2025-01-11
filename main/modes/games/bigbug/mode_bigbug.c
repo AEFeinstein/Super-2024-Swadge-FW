@@ -179,7 +179,7 @@ static void bb_EnterMode(void)
 
     foreground->updateFunction = NULL;
     foreground->drawFunction   = &bb_drawMenuForeground;
-    bb_destroyEntity(((bb_menuData_t*)foreground->data)->cursor, false);
+    bb_destroyEntity(((bb_menuData_t*)foreground->data)->cursor, false, false);
 
     bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
                     (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS), false, false);
@@ -188,10 +188,10 @@ static void bb_EnterMode(void)
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                           (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS) - 234, true, false);
 
-    ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
-
     bigbug->gameData.camera.camera.pos.x = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
     bigbug->gameData.camera.camera.pos.y = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
+
+    ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
 
     bb_generateWorld(&(bigbug->gameData.tilemap));
 
@@ -374,7 +374,7 @@ static void bb_ExitMode(void)
     heap_caps_free(bb_decodeSpace);
 
     // Destroy menu bug, just in case
-    bb_destroyEntity(bigbug->gameData.menuBug, false);
+    bb_destroyEntity(bigbug->gameData.menuBug, false, false);
 
     bb_freeGameData(&bigbug->gameData);
     bb_deactivateAllEntities(&bigbug->gameData.entityManager, false);

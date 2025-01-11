@@ -63,7 +63,7 @@ void bb_clearCollisions(bb_entity_t* self, bool keepCollisionsCached)
     self->collisions = NULL;
 }
 
-void bb_destroyEntity(bb_entity_t* self, bool caching)
+void bb_destroyEntity(bb_entity_t* self, bool caching, bool wasInTheMainArray)
 {
     if (NULL == self)
     {
@@ -76,16 +76,10 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
        self->spriteIndex == BB_SWADGE||
        self->spriteIndex == BB_DRILL_BOT||
        self->spriteIndex == BB_AMMO_SUPPLY||
-       self->spriteIndex == BB_PACIFIER)
+       self->spriteIndex == BB_PACIFIER||
+       self->spriteIndex == BB_PANGO_AND_FRIENDS)
     {
-        for (int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
-        {
-            if(self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].w ||
-               self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].h)
-            {
-                freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
-            }
-        }
+        bb_freeSprite(&self->gameData->entityManager.sprites[self->spriteIndex]);
     }
     else if(self->spriteIndex == BB_FOOD_CART)
     {
@@ -176,7 +170,10 @@ void bb_destroyEntity(bb_entity_t* self, bool caching)
     self->halfHeight                  = 0;
     self->cSquared                    = 0;
 
-    self->gameData->entityManager.activeEntities--;
+    if(wasInTheMainArray && self->gameData->entityManager.activeEntities)
+    {
+        self->gameData->entityManager.activeEntities--;
+    }
     // ESP_LOGD(BB_TAG,"%d/%d entities v\n", self->gameData->entityManager.activeEntities, MAX_ENTITIES);
 }
 
@@ -215,7 +212,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
             {
                 // animation has played through back to 0
                 rData->yVel = rData->yVel >> 4;
-                bb_destroyEntity(rData->flame, false);
+                bb_destroyEntity(rData->flame, false, true);
                 rData->flame         = NULL;
                 self->updateFunction = bb_updateHeavyFallingInit;
                 return;
@@ -321,6 +318,12 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         {
             bb_deactivateAllEntities(&self->gameData->entityManager, true);
             bb_generateWorld(&(self->gameData->tilemap));
+            //brute force recalculate activeEntities count to clean up any inaccuracies.
+            self->gameData->entityManager.activeEntities = 0;
+            for (int i = 0; i < MAX_ENTITIES; i++)
+            {
+                self->gameData->entityManager.activeEntities += self->gameData->entityManager.entities[i].active;
+            }
         }
 
         bb_entity_t* ovo
@@ -1208,7 +1211,7 @@ void bb_updateHarpoon(bb_entity_t* self)
     pData->lifetime++;
     if (pData->lifetime > 140)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
 
@@ -1242,7 +1245,7 @@ void bb_updateStuckHarpoon(bb_entity_t* self)
     shData->lifetime++;
     if (shData->lifetime > 140)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
 
@@ -1252,7 +1255,7 @@ void bb_updateStuckHarpoon(bb_entity_t* self)
     }
     else
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
     }
 }
 
@@ -1307,7 +1310,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
             if (bug != NULL)
             {
                 // destroy the egg
-                bb_destroyEntity(elData->egg, false);
+                bb_destroyEntity(elData->egg, false, true);
                 bb_hitInfo_t hitInfo = {0};
                 bb_collisionCheck(&self->gameData->tilemap, bug, NULL, &hitInfo);
                 if (hitInfo.hit == true)
@@ -1322,7 +1325,7 @@ void bb_updateEggLeaves(bb_entity_t* self)
                     soundPlaySfx(&self->gameData->sfxEgg, 0);
                 }
                 // destroy this
-                bb_destroyEntity(self, false);
+                bb_destroyEntity(self, false, true);
             }
         }
     }
@@ -1342,27 +1345,22 @@ void bb_updateFarEggleaves(bb_entity_t* self)
     }
 
     // destroy the egg
-    bb_destroyEntity(((bb_eggLeavesData_t*)(self->data))->egg, false);
+    bb_destroyEntity(((bb_eggLeavesData_t*)(self->data))->egg, false, true);
 
     // destroy this
-    bb_destroyEntity(self, false);
+    bb_destroyEntity(self, false, true);
 }
 
 void bb_updateFarDestroy(bb_entity_t* self)
 {
-    if (self->spriteIndex == BB_PANGO_AND_FRIENDS)
-    {
-        freeWsg(&self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].frames[0]);
-        freeWsg(&self->gameData->entityManager.sprites[BB_PANGO_AND_FRIENDS].frames[1]);
-    }
-    bb_destroyEntity(self, false);
+    bb_destroyEntity(self, false, self->spriteIndex != BB_PANGO_AND_FRIENDS);
 }
 
 void bb_updateFarMenu(bb_entity_t* self)
 {
     if ((self->pos.y >> DECIMAL_BITS) < self->gameData->camera.camera.pos.y)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, false);
     }
 }
 
@@ -1372,8 +1370,7 @@ void bb_updateFarMenuAndUnload(bb_entity_t* self)
     {
         // unload the menu sprites, because I don't foresee ever coming back to the main menu from gameplay.
         bb_freeSprite(&self->gameData->entityManager.sprites[BB_MENU]);
-
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, false);
     }
 }
 
@@ -1699,7 +1696,7 @@ void bb_updateMenu(bb_entity_t* self)
             // start game
 
             // destroy the cursor
-            bb_destroyEntity(mData->cursor, false);
+            bb_destroyEntity(mData->cursor, false, false);
             mData->cursor = NULL;
 
             // create 3 rockets
@@ -1886,7 +1883,7 @@ void bb_updateCharacterTalk(bb_entity_t* self)
         if (dData->offsetY <= -240)
         {
             dData->endDialogueCB(self);
-            bb_destroyEntity(self, false);
+            bb_destroyEntity(self, false, false);
             return;
         }
     }
@@ -1950,7 +1947,7 @@ void bb_updateAttachmentArm(bb_entity_t* self)
     if (self->gameData->entityManager.playerEntity == NULL)
     {
         // this is for when garbotnik dies.
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
 
@@ -1969,7 +1966,7 @@ void bb_updateAttachmentArm(bb_entity_t* self)
         loadMidiFile("BigBug_Space Travel.mid", &self->gameData->bgm, true);
         globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
-        bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
+        bb_destroyEntity(self->gameData->entityManager.playerEntity, false, true);
         self->gameData->entityManager.playerEntity = NULL;
         self->gameData->entityManager.viewEntity   = aData->rocket;
         aData->rocket->currentAnimationFrame       = 0;
@@ -1981,7 +1978,7 @@ void bb_updateAttachmentArm(bb_entity_t* self)
         rData->flame->updateFunction  = &bb_updateFlame;
         aData->rocket->updateFunction = &bb_updateRocketLiftoff;
 
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
     }
 }
 
@@ -2040,7 +2037,7 @@ void bb_updateGameOver(bb_entity_t* self)
                 self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[boosterIdx];
             }
 
-            bb_destroyEntity(self, false);
+            bb_destroyEntity(self, false, false);
             bb_startGarbotnikCloningTalk(self->gameData->entityManager.deathDumpster);
         }
         else
@@ -2075,7 +2072,7 @@ void bb_updateRadarPing(bb_entity_t* self)
     if (rpData->radius > 1300)
     {
         rpData->executeAfterPing(self);
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
     }
 }
 
@@ -2085,7 +2082,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     // destroy grabby hand if the booster is broken.
     if (ghData->rocket->currentAnimationFrame == 41 || ghData->rocket->updateFunction == bb_updateRocketLiftoff)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
 
@@ -2130,7 +2127,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
         {
             rData->numDonuts++;
         }
-        bb_destroyEntity(ghData->grabbed, false);
+        bb_destroyEntity(ghData->grabbed, false, true);
         ghData->grabbed = NULL;
 
         rData->numBugs++;
@@ -2261,7 +2258,7 @@ void bb_updateFarCar(bb_entity_t* self)
             }
         }
 
-        bb_destroyEntity(self, true);
+        bb_destroyEntity(self, true, true);
     }
 }
 
@@ -2284,7 +2281,7 @@ void bb_updateSpit(bb_entity_t* self)
     sData->lifetime++;
     if (sData->lifetime > 1000)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
 
@@ -2295,7 +2292,7 @@ void bb_updateSpit(bb_entity_t* self)
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
     if (hitInfo.hit)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
     }
 }
 
@@ -2471,7 +2468,7 @@ void bb_updateWile(bb_entity_t* self)
                 self->gameData->loadout.allWiles[wData->wileIdx].wileFunction(self);
             }
             // and destroy the wile
-            bb_destroyEntity(self, false);
+            bb_destroyEntity(self, false, true);
             return;
         }
         wData->lifetime = 1;
@@ -2489,7 +2486,7 @@ void bb_updateWile(bb_entity_t* self)
             self->gameData->loadout.allWiles[wData->wileIdx].wileFunction(self);
         }
         // and destroy the wile
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
 }
@@ -2543,7 +2540,7 @@ void bb_update501kg(bb_entity_t* self)
                 bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
                 eData->radius             = 180;
 
-                bb_destroyEntity(self, false);
+                bb_destroyEntity(self, false, true);
             }
         }
     }
@@ -2687,7 +2684,7 @@ void bb_updateExplosion(bb_entity_t* self)
     eData->lifetime += self->gameData->elapsedUs >> 10;
     if (eData->lifetime > 1000)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
     }
 }
 
@@ -2699,7 +2696,7 @@ void bb_updateAtmosphericAtomizer(bb_entity_t* self)
     {
         bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data;
         gData->dragShift          = 17; // This greatly reduces the drag on the garbotnik
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
     }
 }
 
@@ -2714,7 +2711,7 @@ void bb_updateDrillBot(bb_entity_t* self)
     dData->lifetime++;
     if (dData->lifetime > 1900)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
     if (dData->tileTime > 0)
@@ -2789,7 +2786,7 @@ void bb_updateTimedPhysicsObject(bb_entity_t* self)
     tData->lifetime++;
     if (tData->lifetime > 1900)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
 }
@@ -2801,7 +2798,7 @@ void bb_updatePacifier(bb_entity_t* self)
     tData->lifetime++;
     if (tData->lifetime > 1900)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
 
@@ -2823,7 +2820,7 @@ void bb_updatePacifier(bb_entity_t* self)
             int16_t sqDist = sqMagVec2d(toFrom);
             if (sqDist < sqRadiusOuter && sqDist > sqRadiusInner)
             {
-                bb_destroyEntity(curEntity, false);
+                bb_destroyEntity(curEntity, false, true);
             }
         }
     }
@@ -2847,7 +2844,7 @@ void bb_updateSpaceLaser(bb_entity_t* self)
     slData->lifetime++;
     if (slData->lifetime > 1900)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
         return;
     }
     if (bb_randomInt(0, 50) == 0)
@@ -3928,7 +3925,7 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
         self->gameData->tilemap.fgTiles[tile_i][tile_j].health = 0;
         bb_crumbleDirt(other->gameData, 2, tile_i, tile_j, true, true);
         // destroy this harpoon
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
     }
     else
     {
@@ -4157,7 +4154,7 @@ void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
     {
         gData->fuel = 180000;
     }
-    bb_destroyEntity(self, false);
+    bb_destroyEntity(self, false, true);
 }
 
 void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
@@ -4248,7 +4245,7 @@ void bb_onCollisionJankyBugDig(bb_entity_t* self, bb_entity_t* other, bb_hitInfo
     jData->numberOfDigs++;
     if (jData->numberOfDigs == 2)
     {
-        bb_destroyEntity(self, false);
+        bb_destroyEntity(self, false, true);
     }
 }
 
@@ -4270,12 +4267,12 @@ void bb_onCollisionSpit(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hit
                 = 1; // It'll decrement soon anyways. Keeps more of the game over code on Garbotnik's side of the fence.
         }
     }
-    else // PHYSICS_DATAwdw
+    else // PHYSICS_DATA
     {
         bb_physicsData_t* pData = (bb_physicsData_t*)other->data;
         pData->vel              = addVec2d(pData->vel, (vec_t){sData->vel.x << 3, sData->vel.y << 3});
     }
-    bb_destroyEntity(self, false);
+    bb_destroyEntity(self, false, true);
 }
 
 void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
@@ -4283,7 +4280,7 @@ void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     midiPlayer_t* sfx = soundGetPlayerSfx();
     midiPlayerReset(sfx);
     soundPlaySfx(&self->gameData->sfxCollection, 0);
-    bb_destroyEntity(self, false);
+    bb_destroyEntity(self, false, true);
     // give a choice of upgrades
     bb_upgradeGarbotnik(self);
     self->gameData->screen = BIGBUG_GARBOTNIK_UPGRADE_SCREEN;
@@ -4394,7 +4391,7 @@ void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
     midiPlayer_t* sfx         = soundGetPlayerSfx();
     midiPlayerReset(sfx);
     soundPlaySfx(&self->gameData->sfxHealth, 0);
-    bb_destroyEntity(self, false);
+    bb_destroyEntity(self, false, true);
 }
 
 void bb_startGarbotnikIntro(bb_entity_t* self)
@@ -4489,7 +4486,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
         case 0:
         {
             // Max dialogue string roughly: here----V
-            bb_setCharacterLine(dData, 0, "Ovo", "Ah, sweet stench! How I've longed for your orlfactory embrace.");
+            bb_setCharacterLine(dData, 0, "Ovo", "Ah, sweet stench! How I've longed for your olfactory embrace.");
             break;
         }
         case 1:
@@ -4690,7 +4687,7 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
 
 void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
 {
-    bb_destroyEntity(self->gameData->entityManager.viewEntity, false);
+    bb_destroyEntity(self->gameData->entityManager.viewEntity, false, true);
     self->gameData->entityManager.viewEntity = self->gameData->entityManager.playerEntity;
 
     bb_entity_t* ovo
@@ -4824,11 +4821,11 @@ void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in
     self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 5);
     self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 6);
     self->gameData->endDayChecks += bb_randomInt(0, 1) * (1 << 7);
-    bb_destroyEntity(self->gameData->entityManager.viewEntity, false);
+    bb_destroyEntity(self->gameData->entityManager.viewEntity, false, true);
     self->gameData->entityManager.viewEntity = self->gameData->entityManager.activeBooster;
 
     bb_rocketData_t* rData = (bb_rocketData_t*)self->gameData->entityManager.activeBooster->data;
-    bb_destroyEntity(rData->flame, false);
+    bb_destroyEntity(rData->flame, false, true);
     rData->flame = NULL;
 
     self->gameData->entityManager.activeBooster->updateFunction = &bb_updateRocketLanding;
@@ -4913,7 +4910,7 @@ void bb_triggerGameOver(bb_entity_t* self)
         return;
     }
     bb_freeWsgs(&self->gameData->tilemap);
-    bb_destroyEntity(self->gameData->entityManager.playerEntity, false);
+    bb_destroyEntity(self->gameData->entityManager.playerEntity, false, true);
     self->gameData->entityManager.playerEntity = NULL;
 
     bb_setupMidi();
@@ -5061,7 +5058,7 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
 {
     // Destroy the food cart and spawn a reward.
     bb_foodCartData_t* mcData = (bb_foodCartData_t*)self->data;
-    bb_destroyEntity(mcData->partner, false);
+    bb_destroyEntity(mcData->partner, false, true);
 
     switch (mcData->reward)
     {
@@ -5080,7 +5077,7 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
             break;
         }
     }
-    bb_destroyEntity(self, false);
+    bb_destroyEntity(self, false, true);
     // use a bump animation but tweak its graphics
     bb_entity_t* hitEffect
         = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
@@ -5217,7 +5214,7 @@ void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs)
                         }
                         else
                         {
-                            bb_destroyEntity(jankyBugDig, false);
+                            bb_destroyEntity(jankyBugDig, false, true);
                         }
                     }
                     break;
@@ -5365,10 +5362,10 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
                         if (egg != NULL)
                         {
                             // destroy the egg
-                            bb_destroyEntity(egg, false);
+                            bb_destroyEntity(egg, false, true);
                         }
                         // destroy this (eggLeaves)
-                        bb_destroyEntity(gameData->tilemap.fgTiles[tile_i][tile_j].entity, false);
+                        bb_destroyEntity(gameData->tilemap.fgTiles[tile_i][tile_j].entity, false, true);
                     }
                     gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
                 }
@@ -5377,7 +5374,7 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
             case SKELETON_EMBED:
             {
                 vec_t tilePos = {.x = tile_i * TILE_SIZE + HALF_TILE, .y = tile_j * TILE_SIZE + HALF_TILE};
-                bb_destroyEntity(gameData->tilemap.fgTiles[tile_i][tile_j].entity, false);
+                bb_destroyEntity(gameData->tilemap.fgTiles[tile_i][tile_j].entity, false, true);
                 gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
 
                 // create fuel
