@@ -43,10 +43,10 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
 // #define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
 
 static const char startTitle[]        = "Welcome!";
-static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one second to exit.";
+static const char holdLongerMessage[] = "Almost! Keep holding MENU for one second to exit.";
 static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
-                                        "responsibility. Hold SELECT to exit the tutorial and get started!";
+                                        "responsibility. Hold MENU to exit the tutorial and get started!";
 
 static const char dpadTitle[]     = "The D-Pad";
 static const char aBtnTitle[]     = "A Button";
@@ -113,7 +113,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .intData = 1,
         },
         .title = touchpadTitle,
-        .detail = "OK, now your finger spin around it counter-clockwise. Always remember to unwind the touchpad after use!"
+        .detail = "OK, now spin your finger around it counter-clockwise. Always remember to unwind the touchpad after use!"
     },
     {
         .trigger = {
@@ -318,6 +318,7 @@ typedef struct
 
         wsg_t speaker;
         wsg_t touchGem;
+        wsg_t swadge;
     } icon;
 
     buttonBit_t buttons;
@@ -378,6 +379,7 @@ static void introEnterMode(void)
 
     loadWsg("spk.wsg", &iv->icon.speaker, true);
     loadWsg("touch-gem.wsg", &iv->icon.touchGem, true);
+    loadWsg("intro_swadge.wsg", &iv->icon.swadge, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
     iv->renderer = initMenuManiaRenderer(&iv->bigFont, NULL, &iv->smallFont);
@@ -385,56 +387,56 @@ static void introEnterMode(void)
     // up
     iv->buttonIcons[0].icon    = &iv->icon.button.up;
     iv->buttonIcons[0].visible = true;
-    iv->buttonIcons[0].x       = 15;
-    iv->buttonIcons[0].y       = 5;
+    iv->buttonIcons[0].x       = 31;
+    iv->buttonIcons[0].y       = 41;
 
     // down
     iv->buttonIcons[1].icon    = &iv->icon.button.up;
     iv->buttonIcons[1].flipUD  = true;
     iv->buttonIcons[1].visible = true;
-    iv->buttonIcons[1].x       = 15;
-    iv->buttonIcons[1].y       = 25;
+    iv->buttonIcons[1].x       = 31;
+    iv->buttonIcons[1].y       = 61;
 
     // left
     iv->buttonIcons[2].icon    = &iv->icon.button.up;
     iv->buttonIcons[2].rot     = 270;
     iv->buttonIcons[2].visible = true;
-    iv->buttonIcons[2].x       = 5;
-    iv->buttonIcons[2].y       = 15;
+    iv->buttonIcons[2].x       = 21;
+    iv->buttonIcons[2].y       = 51;
 
     // right
     iv->buttonIcons[3].icon    = &iv->icon.button.up;
     iv->buttonIcons[3].rot     = 90;
     iv->buttonIcons[3].visible = true;
-    iv->buttonIcons[3].x       = 25;
-    iv->buttonIcons[3].y       = 15;
+    iv->buttonIcons[3].x       = 41;
+    iv->buttonIcons[3].y       = 51;
 
     // a
     iv->buttonIcons[4].icon    = &iv->icon.button.a;
     iv->buttonIcons[4].visible = true;
-    iv->buttonIcons[4].x       = 105;
-    iv->buttonIcons[4].y       = 10;
+    iv->buttonIcons[4].x       = 174;
+    iv->buttonIcons[4].y       = 34;
 
     // b
     iv->buttonIcons[5].icon    = &iv->icon.button.b;
     iv->buttonIcons[5].visible = true;
-    iv->buttonIcons[5].x       = 95;
-    iv->buttonIcons[5].y       = 20;
+    iv->buttonIcons[5].x       = 156;
+    iv->buttonIcons[5].y       = 42;
 
-    // start
+    // start (pause)
     iv->buttonIcons[6].icon    = &iv->icon.button.pause;
     iv->buttonIcons[6].visible = true;
-    iv->buttonIcons[6].x       = 70;
-    iv->buttonIcons[6].y       = 15;
+    iv->buttonIcons[6].x       = 60;
+    iv->buttonIcons[6].y       = 56;
 
-    // select
+    // select (menu)
     iv->buttonIcons[7].icon    = &iv->icon.button.menu;
     iv->buttonIcons[7].visible = true;
-    iv->buttonIcons[7].x       = 50;
-    iv->buttonIcons[7].y       = 15;
+    iv->buttonIcons[7].x       = 62;
+    iv->buttonIcons[7].y       = 69;
 
-    iv->swadgeViewWidth  = iv->buttonIcons[5].x + iv->buttonIcons[5].icon->w + 5;
-    iv->swadgeViewHeight = iv->buttonIcons[1].y + iv->buttonIcons[1].icon->h + 5;
+    iv->swadgeViewWidth  = iv->icon.swadge.w * 2;
+    iv->swadgeViewHeight = iv->icon.swadge.w * 2;
 
     tutorialSetup(&iv->tut, introTutorialCb, buttonsSteps, ARRAY_SIZE(buttonsSteps), iv);
 
@@ -474,6 +476,7 @@ static void introExitMode(void)
     freeWsg(&iv->icon.button.up);
     freeWsg(&iv->icon.speaker);
     freeWsg(&iv->icon.touchGem);
+    freeWsg(&iv->icon.swadge);
 
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->sound != NULL)
@@ -634,13 +637,14 @@ static void introMainLoop(int64_t elapsedUs)
     uint16_t detailH   = textWordWrapHeight(&iv->smallFont, detail, TFT_WIDTH - 20, detailYmax - detailYmin);
     int16_t detailY    = detailYmax - detailH;
 
-    int16_t viewX = (TFT_WIDTH - iv->swadgeViewWidth) / 2;
     switch (iv->drawMode)
     {
         default:
         case DRAW_BUTTONS:
         {
-            introDrawSwadgeButtons(elapsedUs, viewX, titleY + iv->bigFont.height + 1 + 25, iv->buttons);
+            int16_t viewX = (TFT_WIDTH - iv->swadgeViewWidth) / 2;
+            int16_t viewY = titleY + iv->logoFont.height + 10;
+            introDrawSwadgeButtons(elapsedUs, viewX, viewY, iv->buttons);
             break;
         }
         case DRAW_TOUCHPAD:
@@ -838,28 +842,12 @@ static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, butt
     time += elapsedUs;
     bool blink = true;
 
-    // Draw the background of the swadge
-    int16_t leftCircleX  = x + iv->buttonIcons[2].x + iv->buttonIcons[2].icon->w / 2;
-    int16_t rightCircleX = x + iv->buttonIcons[5].x + iv->buttonIcons[5].icon->w / 2;
-    int16_t bgCircleY    = y + iv->buttonIcons[2].y + iv->buttonIcons[2].icon->h / 2;
-    int16_t bgCircleR    = 30;
-
-    paletteColor_t bgColor     = c234;
-    paletteColor_t borderColor = c000;
-
-    drawCircleFilled(leftCircleX, bgCircleY, bgCircleR, bgColor);
-    drawCircleFilled(rightCircleX, bgCircleY, bgCircleR, bgColor);
-    fillDisplayArea(leftCircleX, bgCircleY - bgCircleR, rightCircleX, bgCircleY + bgCircleR, bgColor);
-
-    drawLineFast(leftCircleX, bgCircleY - bgCircleR, rightCircleX, bgCircleY - bgCircleR, borderColor);
-    drawLineFast(leftCircleX, bgCircleY + bgCircleR, rightCircleX, bgCircleY + bgCircleR, borderColor);
-
-    drawCircleQuadrants(leftCircleX, bgCircleY, bgCircleR, false, true, true, false, borderColor);
-    drawCircleQuadrants(rightCircleX, bgCircleY, bgCircleR, true, false, false, true, borderColor);
-
     paletteColor_t notPressedColor = c531;
     paletteColor_t pressedColor    = c243;
     paletteColor_t notNeededColor  = c111;
+
+    // Draw the background of the swadge
+    drawWsgSimpleScaled(&iv->icon.swadge, x, y, 2, 2);
 
     for (int stage = 0; stage < 2; stage++)
     {

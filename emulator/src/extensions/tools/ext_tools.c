@@ -53,7 +53,6 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
 static void toolsPreFrame(uint64_t frame);
 static void toolsPostFrame(uint64_t frame);
 static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes);
-static void handleConsoleCommand(const char* command);
 static void makeTransparent(uint8_t* framebuffer);
 
 static const char* getScreenshotName(char* buffer, size_t maxlen);
@@ -98,7 +97,7 @@ static int consolePaneId        = -1;
 static char consoleBuffer[1024] = {0};
 static char* consolePtr         = consoleBuffer;
 
-static char consoleOutput[1024] = {0};
+static char consoleOutput[2048] = {0};
 
 //==============================================================================
 // Functions
@@ -152,6 +151,7 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
             else if (keycode == CNFG_KEY_ENTER)
             {
                 // Handle console command
+                emulatorRecordCommand(consoleBuffer);
                 handleConsoleCommand(consoleBuffer);
 
                 consolePtr  = consoleBuffer;
@@ -559,7 +559,7 @@ static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, 
     }
 }
 
-static void handleConsoleCommand(const char* command)
+void handleConsoleCommand(const char* command)
 {
     char tmpBuffer[sizeof(consoleBuffer)];
     const char* cur = command;

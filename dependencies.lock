@@ -17,7 +17,6 @@ dependencies:
     component_hash: 214989d502fc168241a4a4f83b097d8ac44a93cd6f1787b4ac10069a8b3bebd3
     dependencies:
     - name: idf
-      registry_url: https://components.espressif.com
       require: private
       version: '>=5.0'
     source:
@@ -36,6 +35,6 @@ direct_dependencies:
 - espressif/esp_tinyusb
 - espressif/tinyusb
 - idf
-manifest_hash: e1591afebb66f886a9698923c8ef6570553eacae4e485e615af131120a68f109
+manifest_hash: 7696e7af907385ec796443508adf4bf119b5c9d82e3d23681098a3d7b9732648
 target: esp32s2
 version: 2.0.0

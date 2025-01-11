@@ -15,6 +15,8 @@
 
 extern emuExtension_t toolsEmuExtension;
 
+void handleConsoleCommand(const char* command);
+
 bool takeScreenshot(const char* name);
 void startScreenRecording(const char* name);
 void stopScreenRecording(void);

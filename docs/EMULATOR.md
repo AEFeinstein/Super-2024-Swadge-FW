@@ -138,6 +138,7 @@ and touchpad inputs will be written to the recording file, in addition to:
 * The original random number generator seed (on playback, this is equivalent to passing `--seed`).
 * A screenshot event, whenever a screenshot is taken. Note that the filename is not included, so that the original
   screenshot is not overwritten on playback.
+* Any console commands issued
 
 `--playback`: Play back inputs from a recording file, the name of which must be given as an argument. While
 inputs are being played back, the emulator will still also accept input directly.
@@ -163,11 +164,11 @@ A recording file is a CSV (comma-separated value) file with three columns: Time,
 | Screenshot     | Screenshot filename   | Take a screenshot, using a default filename if none is given |
 | SetMode        | Mode name             | Switch swadge modes to the named mode                        |
 | Seed           | Seed value            | Set the PRNG seed. This should be the first entry in a file  |
-| RecordingStart | Recording filename    | Start recording the screen to a GIF, using a default filename if none is given |
-| RecordingStop  | -                     | Stop recording the screen                                    |
+| Command        | Console command       | Execute an arbitrary console command                         |
 
 Note that the `Fuzz`, `Quit`, and `SetMode` entries are never created during recording, and are instead
-intended to be inserted manually if desired.
+intended to be inserted manually if desired. The `Command` entry can contain any valid
+[console command](#console-commands).
 
 **Button Values**
 
@@ -185,7 +186,8 @@ intended to be inserted manually if desired.
 ### Fuzzing
 
 These options are for the "fuzzing" functionality, which can help find bugs in modes by generating random
-inputs. This includes random
+inputs. This includes random button presses, touchpad inputs, accelerometer motion, and even random frame
+timing changes.
 
 `--fuzz`: Enables fuzzing mode. The default fuzzing behavior is to fuzz button presses, touchpad inputs, and
 accelerometer motion, but these can individually be enabled with `--fuzz-*` arguments. Fuzzing the length
@@ -243,6 +245,31 @@ from one system will not necessarily produce the same output if it is used on a 
 
 `--keymap`: Specify an alternative keyboard layout to use for mapping emulator inputs. Possible options
 are `azerty`, `dvorak`, or `colemak`.
+
+## Console Commands
+
+The emulator supports a small number of commands in the console, which can be opened by pressing `F4` or
+the `\`` / `~` key. These console commands can also be used from a [replay script](#recording-and-playing-inputs).
+To get a complete list of available commands, type `help` into the console. For the usage of a specific command,
+type `help <command>` into the console.
+
+| Command                  | Description
+|--------------------------|-------------------------------------------------------------------------------------------------------|
+| `help [command]`         | Prints a list of commands, or detailed help for a specific command                                    |
+| `screenshot [filename]`  | Saves a screenshot to `filename`, or to a timestamp-based file name if no filename is given           |
+| `mode <mode-name>`       | Immediately switches the Swadge to the mode named `mode-name`                                         |
+| `gif [filename]`         | Starts recording a GIF to `filename` (or a timestamp-based file name), or stops the current recording |
+| `replay <filename>`      | Starts playing back inputs from `filename`. Stops any current playing back or recording of inputs.    |
+| `record [filename]`      | Starts recording inputs to `filename`, or to a timestamp-based file name if no filename is given      |
+| `fuzz [on|off]`          | Toggles fuzzing on or off                                                                             |
+| `fuzz buttons [on|off]`  | Toggles fuzzing of button presses on or off                                                           |
+| `fuzz buttons mask <...>`| Sets the buttons that will be used when fuzzing, separated by spaces, e.g. `fuzz buttons mask up down left right` |
+| `fuzz buttons mask`      | Prints the buttons that will be used when fuzzing                                                     |
+| `fuzz touch [on|off]`    | Toggles fuzzing of touchpad inputs on or off                                                          |
+| `fuzz motion [on|off]`   | Toggles fuzzing of accelerometer motion on or off                                                     |
+| `fuzz time [on|off]`     | Toggles fuzzing of frame timings on or off                                                            |
+| `touchpad [on|off]`      | Toggles the emulator's virtual touchpad on or off                                                     |
+| `leds [on|off]`          | Toggles the emulator's virtual LEDs on or off                                                         |
 
 ## Troubleshooting
 
