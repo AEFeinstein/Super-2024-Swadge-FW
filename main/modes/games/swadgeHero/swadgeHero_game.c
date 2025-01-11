@@ -204,9 +204,10 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     memset(&sh->ledHitVal, 0, sizeof(sh->ledHitVal));
 
     // Set up
-    sh->textTimerUs = 0;
-    sh->hitText     = timings[ARRAY_SIZE(timings) - 1].label;
-    sh->timingText  = hit_early;
+    sh->textTimerUs  = 0;
+    sh->hitText      = timings[ARRAY_SIZE(timings) - 1].label;
+    sh->hitTextColor = c500;
+    sh->timingText   = hit_early;
 
     // Set up icon pulse variables
     sh->iconIdx     = 0;
@@ -765,7 +766,7 @@ void shDrawGame(shVars_t* sh)
     if (sh->textTimerUs > 0)
     {
         int16_t tWidth = textWidth(&sh->ibm, sh->hitText);
-        drawText(&sh->ibm, c555, sh->hitText, (TFT_WIDTH - tWidth) / 2, 100);
+        drawText(&sh->ibm, sh->hitTextColor, sh->hitText, (TFT_WIDTH - tWidth) / 2, 100);
 
         if ((timings[0].label != sh->hitText) && (timings[ARRAY_SIZE(timings) - 1].label != sh->hitText))
         {
@@ -941,7 +942,8 @@ void shGameInput(shVars_t* sh, buttonEvt_t* evt)
                     {
                         if (usOff <= timings[tIdx].timing)
                         {
-                            sh->hitText = timings[tIdx].label;
+                            sh->hitText      = timings[tIdx].label;
+                            sh->hitTextColor = c555;
                             // Set a timer to not show the text forever
                             sh->textTimerUs = SH_TEXT_TIME;
 
@@ -1101,7 +1103,8 @@ static void shHitNote(shVars_t* sh, int32_t baseScore)
 static void shMissNote(shVars_t* sh)
 {
     // Note that it was missed
-    sh->hitText = timings[ARRAY_SIZE(timings) - 1].label;
+    sh->hitText      = timings[ARRAY_SIZE(timings) - 1].label;
+    sh->hitTextColor = c500;
     // Set a timer to not show the text forever
     sh->textTimerUs = SH_TEXT_TIME;
 

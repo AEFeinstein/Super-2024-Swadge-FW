@@ -153,7 +153,7 @@ bool gamepadConnect(emuJoystick_t* joystick)
     return false;
 #elif defined(EMU_LINUX)
     const char* device = "/dev/input/js0";
-    int jsFd;
+    intptr_t jsFd;
 
     jsFd = open(device, O_RDONLY | O_NONBLOCK);
     if (jsFd == -1)
@@ -201,7 +201,7 @@ void gamepadDisconnect(emuJoystick_t* joystick)
         joystick->data = NULL;
     }
 #elif defined(EMU_LINUX)
-    close((int)joystick->data);
+    close((intptr_t)joystick->data);
     joystick->data = NULL;
 #endif
 
@@ -432,7 +432,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
         struct js_event linuxEvent;
 
         errno     = 0;
-        int count = read((int)joystick->data, &linuxEvent, sizeof(struct js_event));
+        int count = read((intptr_t)joystick->data, &linuxEvent, sizeof(struct js_event));
         if (count >= (int)sizeof(struct js_event))
         {
             switch (linuxEvent.type)
@@ -480,7 +480,7 @@ bool gamepadReadEvent(emuJoystick_t* joystick, emuJoystickEvent_t* event)
                 joystick->buttonData = NULL;
             }
 
-            close((int)joystick->data);
+            close((intptr_t)joystick->data);
             joystick->data = NULL;
             return false;
         }
