@@ -81,7 +81,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching, bool wasInTheMainArray)
     {
         bb_freeSprite(&self->gameData->entityManager.sprites[self->spriteIndex]);
     }
-    else if(self->spriteIndex == BB_FOOD_CART)
+    else if (self->spriteIndex == BB_FOOD_CART)
     {
         bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
         // The food cart needs to track its own caching status to communicate just-in-time loading between both
@@ -3606,7 +3606,7 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 110);
     }
 
-    if(self->gameData->day == 3)//january 25
+    if (self->gameData->day == 3) // january 25
     {
         drawText(&self->gameData->cgThinFont, c022, "Left the orchestra behind,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 27,
@@ -3614,20 +3614,18 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
         drawText(&self->gameData->cgThinFont, c022, "Turning cogs of time",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
-        drawText(&self->gameData->cgThinFont, c022, "may find,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        drawText(&self->gameData->cgThinFont, c022, "may find,", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 198);
         drawText(&self->gameData->cgThinFont, c022, "Lost melodies' glow.",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
     }
-    else if(self->gameData->day == 5)//january 27
+    else if (self->gameData->day == 5) // january 27
     {
         drawText(&self->gameData->cgThinFont, c022, "Controllers still hum,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
-        drawText(&self->gameData->cgThinFont, c022, "Endless tunes",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        drawText(&self->gameData->cgThinFont, c022, "Endless tunes", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
         drawText(&self->gameData->cgThinFont, c022, "and laughter bloom,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
@@ -3636,7 +3634,7 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
     }
-    else if(self->gameData->day == 10)//january 32
+    else if (self->gameData->day == 10) // january 32
     {
         drawText(&self->gameData->cgThinFont, c022, "Time slips, misaligned,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
@@ -3651,13 +3649,12 @@ void bb_drawDiveSummary(bb_entityManager_t* entityManager, rectangle_t* camera, 
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 210);
     }
-    else if(self->gameData->day == 78)//january 100
+    else if (self->gameData->day == 78) // january 100
     {
         drawText(&self->gameData->cgThinFont, c022, "Endless dawns repeat,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 176);
-        drawText(&self->gameData->cgThinFont, c022, "Immortal,",
-                 (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
+        drawText(&self->gameData->cgThinFont, c022, "Immortal,", (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
                  (self->pos.y >> DECIMAL_BITS) - camera->pos.y + 186);
         drawText(&self->gameData->cgThinFont, c022, "yet bound by time,",
                  (self->pos.x >> DECIMAL_BITS) - camera->pos.x + 30,
@@ -4028,22 +4025,23 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
         }
     }
 
-    if(self->spriteIndex == ROCKET_ANIM && self->currentAnimationFrame == 41)
+    if (self->spriteIndex == ROCKET_ANIM && self->currentAnimationFrame == 41)
     {
         bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
-        if(rData->numDonuts && bb_randomInt(0,60) == 60)
+        if (rData->numDonuts && bb_randomInt(0, 60) == 60)
         {
             rData->numDonuts--;
             // Get the donut back out of the busted booster
             bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
                             (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
         }
-        if((rData->numBugs % 10 != 0) && bb_randomInt(0,60) == 60)
+        if ((rData->numBugs % 10 != 0) && bb_randomInt(0, 60) == 60)
         {
             rData->numBugs--;
             // Get the bug back out of the busted booster
-            bb_entity_t* bug = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, bb_randomInt(8,13), 1,
-                            (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
+            bb_entity_t* bug
+                = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, bb_randomInt(8, 13), 1,
+                                  (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
             bb_bugDeath(bug, NULL);
             ((bb_physicsData_t*)bug->data)->vel = (vec_t){bb_randomInt(-100, 100), bb_randomInt(-100, 0)};
         }
@@ -4833,7 +4831,7 @@ void bb_deployBooster(bb_entity_t* self) // separates from the death dumpster in
 
 void bb_openMap(bb_entity_t* self)
 {
-    if(self->gameData->entityManager.playerEntity)
+    if (self->gameData->entityManager.playerEntity)
     {
         self->gameData->radar.cam.y = (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS) / 8 - 120;
     }
@@ -4841,7 +4839,7 @@ void bb_openMap(bb_entity_t* self)
     {
         self->gameData->radar.cam.y = (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) / 8 - 120;
     }
-    self->gameData->screen      = BIGBUG_RADAR_SCREEN;
+    self->gameData->screen = BIGBUG_RADAR_SCREEN;
 }
 
 void bb_upgradeRadar(bb_entity_t* self)
@@ -5012,11 +5010,11 @@ void bb_playCarAlarm(bb_entity_t* self)
 void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
 {
     // use a bump animation but tweak its graphics
-    if(hitInfo != NULL)
+    if (hitInfo != NULL)
     {
         bb_entity_t* hitEffect
             = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
-                            hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
+                              hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
         hitEffect->drawFunction = &bb_drawHitEffect;
     }
 

@@ -692,7 +692,8 @@ static void bb_DrawScene_Radar(void)
         }
         if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
         {
-            if ((entity->dataType == CAR_DATA  && entity->currentAnimationFrame != 59) || entity->dataType == FOOD_CART_DATA)
+            if ((entity->dataType == CAR_DATA && entity->currentAnimationFrame != 59)
+                || entity->dataType == FOOD_CART_DATA)
             {
                 bb_PointOfInterestParentData_t* POIData = (bb_PointOfInterestParentData_t*)entity->data;
                 if (POIData->reward == BB_DONUT)
@@ -708,13 +709,13 @@ static void bb_DrawScene_Radar(void)
                                   (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
             }
-            else if(entity->spriteIndex == BB_DONUT)
+            else if (entity->spriteIndex == BB_DONUT)
             {
                 drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0],
                               (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                               (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
             }
-            else if(entity->spriteIndex == BB_SWADGE)
+            else if (entity->spriteIndex == BB_SWADGE)
             {
                 drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
                               (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
@@ -754,7 +755,8 @@ static void bb_DrawScene_Radar(void)
             }
             if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
             {
-                if ((entity->dataType == CAR_DATA  && entity->currentAnimationFrame != 59) || entity->dataType == FOOD_CART_DATA)
+                if ((entity->dataType == CAR_DATA && entity->currentAnimationFrame != 59)
+                    || entity->dataType == FOOD_CART_DATA)
                 {
                     bb_PointOfInterestParentData_t* POIData = (bb_PointOfInterestParentData_t*)entity->data;
                     if (POIData->reward == BB_DONUT)
@@ -770,17 +772,17 @@ static void bb_DrawScene_Radar(void)
                                       (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
                 }
-                else if(entity->spriteIndex == BB_DONUT)
+                else if (entity->spriteIndex == BB_DONUT)
                 {
                     drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0],
-                                (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
-                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                                  (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                  (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
-                else if(entity->spriteIndex == BB_SWADGE)
+                else if (entity->spriteIndex == BB_SWADGE)
                 {
                     drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
-                                (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
-                                (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                                  (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                  (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
             }
         }
@@ -809,7 +811,9 @@ static void bb_DrawScene_Radar(void)
     }
 
     // draw camera perimeter
-    drawRect((bigbug->gameData.camera.camera.pos.x >> 3), (bigbug->gameData.camera.camera.pos.y >> 3) - bigbug->gameData.radar.cam.y, (bigbug->gameData.camera.camera.pos.x >> 3) + 34,
+    drawRect((bigbug->gameData.camera.camera.pos.x >> 3),
+             (bigbug->gameData.camera.camera.pos.y >> 3) - bigbug->gameData.radar.cam.y,
+             (bigbug->gameData.camera.camera.pos.x >> 3) + 34,
              (bigbug->gameData.camera.camera.pos.y >> 3) + 30 - bigbug->gameData.radar.cam.y, c424);
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_OLD_BOOSTERS) & 1)
@@ -1356,7 +1360,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
     bigbug->gameData.loadoutScreenData->blinkTimer += elapsedUs >> 12;
     if (bigbug->gameData.radar.playerPingRadius == 2)
     {
-        bigbug->gameData.loadoutScreenData->marqueeTimer += elapsedUs<<1;
+        bigbug->gameData.loadoutScreenData->marqueeTimer += elapsedUs << 1;
     }
     bigbug->gameData.btnDownState = 0b0;
     // Always process button events, regardless of control scheme, so the main menu button can be captured
