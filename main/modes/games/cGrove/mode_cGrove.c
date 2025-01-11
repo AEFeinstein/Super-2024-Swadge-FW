@@ -34,7 +34,7 @@
 //==============================================================================
 
 const char cGroveTitle[]             = "Chowa Grove"; // Game title
-static const char* cGroveMenuNames[] = {"Play with Chowa", "Spar", "Settings", "Main Menu"};
+static const char* cGroveMenuNames[] = {"Play with Chowa", "Spar", "Settings", "Exit"};
 static const char* cGroveSettingOpts[]
     = {"Grove Touch Scroll: ", "Touch Scroll Speed: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[]    = {"Enabled", "Disabled"};
