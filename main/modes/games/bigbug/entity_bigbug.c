@@ -1123,6 +1123,43 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     }
     else if (gData->fuel < 38000 && self->gameData->bgm.length == 5537)
     {
+        
+        if(!(self->gameData->tutorialFlags & 0b1000))
+        {
+            self->gameData->isPaused = true;
+            //set the tutorial flag
+            self->gameData->tutorialFlags |= 0b1000;
+            bb_entity_t* ovo
+            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                            self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+
+            bb_dialogueData_t* dData = bb_createDialogueData(10, "Ovo");
+
+            bb_setCharacterLine(dData, 0, "Ovo",
+                "Glitch my circuits!");
+            bb_setCharacterLine(dData, 1, "Ovo",
+                "Low fuel!");
+            bb_setCharacterLine(dData, 2, "Ovo",
+                "How could you do this to me?");
+            bb_setCharacterLine(dData, 3, "Ovo", 
+                "Here's my last tip, and then you're on your own, kiddo.");
+            bb_setCharacterLine(dData, 4, "Ovo",
+                "Extraction is one of the hardest parts of the job.");
+            bb_setCharacterLine(dData, 5, "Ovo",
+                "Plan ahead and clear out any threats around the booster for an uninterrupted extraction.");
+            bb_setCharacterLine(dData, 6, "Ovo",
+                "Keep in mind that my headlamps stimulate the bug eggs. So my facing direction is important.");
+            bb_setCharacterLine(dData, 7, "Ovo",
+                "Grid-locked bugs are pretty much a non-threat since they aren't mad enough to dig out.");
+            bb_setCharacterLine(dData, 8, "Ovo",
+                "And bugs far off-screen will stop moving and shooting.");
+            bb_setCharacterLine(dData, 9, "Ovo",
+                "Sometimes you just need to let them wander away to sit safely on the booster for 30 seconds.");
+            
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
         // exploration song length 5537
         // hurry up song length 4833
         bb_setupMidi();
@@ -2167,6 +2204,33 @@ void bb_updateGrabbyHand(bb_entity_t* self)
         }
         bb_destroyEntity(ghData->grabbed, false, true);
         ghData->grabbed = NULL;
+
+        if(!(self->gameData->tutorialFlags & 0b100))
+        {
+            self->gameData->isPaused = true;
+            //set the tutorial flag
+            self->gameData->tutorialFlags |= 0b100;
+            bb_entity_t* ovo
+            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                            self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+
+            bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
+
+            bb_setCharacterLine(dData, 0, "Ovo",
+                "One down, nine more to go!");
+            bb_setCharacterLine(dData, 1, "Ovo",
+                "For every 10 bugs collected, the booster will emit a mega ping!");
+            bb_setCharacterLine(dData, 2, "Ovo",
+                "When the mega ping is done, you can tune into some of the more important results.");
+            bb_setCharacterLine(dData, 3, "Ovo", 
+                "Oh, you can pulse your own radar anytime with the start button. It takes some time to interpret the pings.");
+            bb_setCharacterLine(dData, 4, "Ovo",
+                "So keep exploring while you wait.");
+            
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
 
         rData->numBugs++;
         midiPlayer_t* sfx = soundGetPlayerSfx();
@@ -4015,6 +4079,37 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                     self->gameData->carFightState--;
                 }
                 bb_bugDeath(other, hitInfo);
+
+                if(!(self->gameData->tutorialFlags & 0b10))
+                {
+                    self->gameData->isPaused = true;
+                    //set the tutorial flag
+                    self->gameData->tutorialFlags |= 0b10;
+                    bb_entity_t* ovo
+                    = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                                    self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+
+                    bb_dialogueData_t* dData = bb_createDialogueData(7, "Ovo");
+
+                    bb_setCharacterLine(dData, 0, "Ovo",
+                        "ARLIGHT! You got it!!!");
+                    bb_setCharacterLine(dData, 1, "Ovo",
+                        "Ahem... I mean, not bad.");
+                    bb_setCharacterLine(dData, 2, "Ovo", 
+                        "In fact, I'm the one who got it.");
+                    bb_setCharacterLine(dData, 3, "Ovo",
+                        "Press the 'A' button near a bug to attach a cable and tow it back to the booster to get credit.");
+                    bb_setCharacterLine(dData, 4, "Ovo",
+                        "Careful with that tow cable, because a right-side-up bug will drag me around.");
+                    bb_setCharacterLine(dData, 5, "Ovo",
+                        "Did you know bugs can carry over 100 times their body weight?");
+                    bb_setCharacterLine(dData, 6, "Ovo",
+                        "They're pretty strong, but I wonder if I could pry them off the ceiling.");
+                    
+                    dData->curString     = -1;
+                    dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+                    bb_setData(ovo, dData, DIALOGUE_DATA);
+                }
             }
             else
             {
@@ -4783,12 +4878,12 @@ void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
     bb_setCharacterLine(dData, 4, "Ovo", "Let a trashman go to space in peace.");
 
     dData->curString     = -1;
-    dData->endDialogueCB = &bb_afterGarbotnikFuelTutorialTalk;
+    dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
 
     bb_setData(ovo, dData, DIALOGUE_DATA);
 }
 
-void bb_afterGarbotnikFuelTutorialTalk(bb_entity_t* self)
+void bb_afterGarbotnikTutorialTalk(bb_entity_t* self)
 {
     self->gameData->isPaused = false;
 }

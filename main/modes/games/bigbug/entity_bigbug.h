@@ -500,7 +500,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self);
 void bb_startGarbotnikCloningTalk(bb_entity_t* self);
 void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self);
 void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self);
-void bb_afterGarbotnikFuelTutorialTalk(bb_entity_t* self);
+void bb_afterGarbotnikTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self);

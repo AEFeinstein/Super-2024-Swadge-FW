@@ -153,7 +153,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
         }
     }
 
-    tilemap->fgTiles[TILE_FIELD_WIDTH / 2 + 2][0].embed = EGG_EMBED; // tutorial egg
+    tilemap->fgTiles[TILE_FIELD_WIDTH / 2 - 7][0].embed = EGG_EMBED; // tutorial egg
 
     freeWsg(&levelWsg);
 }
