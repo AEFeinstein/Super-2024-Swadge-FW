@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include "ultimateTTTmarkerSelect.h"
+#include "ultimateTTTgame.h"
 
 //==============================================================================
 // Defines
@@ -12,6 +13,7 @@
 #define SELECT_MARGIN_Y 16
 #define SPACING_Y       4
 #define RECT_STROKE     4
+#define CHECKER_MARGIN  (SPACING_Y / 2)
 
 //==============================================================================
 // Functions
@@ -122,6 +124,21 @@ void tttDrawMarkerSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
     int16_t yOff   = MANIA_TITLE_HEIGHT + (MANIA_BODY_HEIGHT - (wsgDim * 2 + SPACING_Y)) / 2;
     int16_t xOff   = (TFT_WIDTH - wsgDim) / 2 + ttt->xSelectScrollOffset;
     int16_t pIdx   = ttt->selectMarkerIdx;
+
+    // Draw checker background in the middle
+    int16_t xOffBg = (TFT_WIDTH - wsgDim) / 2;
+    fillDisplayArea(                      //
+        xOffBg - CHECKER_MARGIN,          //
+        yOff - CHECKER_MARGIN,            //
+        xOffBg + wsgDim + CHECKER_MARGIN, //
+        yOff + wsgDim + CHECKER_MARGIN,   //
+        CHECKER_COLOR_2);
+    fillDisplayArea(                                      //
+        xOffBg - CHECKER_MARGIN,                          //
+        yOff + wsgDim + SPACING_Y - CHECKER_MARGIN,       //
+        xOffBg + wsgDim + CHECKER_MARGIN,                 //
+        yOff + (2 * wsgDim) + SPACING_Y + CHECKER_MARGIN, //
+        CHECKER_COLOR_1);
 
     // 'Rewind' markers until they're off screen
     while (xOff > 0)

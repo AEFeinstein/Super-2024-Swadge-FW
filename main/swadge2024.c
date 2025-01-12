@@ -498,8 +498,6 @@ void app_main(void)
             {
                 // Lower the flag
                 shouldShowQuickSettings = false;
-                // Pause the sound
-                soundPause();
 
                 // Save the current mode
                 modeBehindQuickSettings = cSwadgeMode;
@@ -515,8 +513,6 @@ void app_main(void)
                 quickSettingsMode.fnExitMode();
                 // Restore the mode
                 cSwadgeMode = modeBehindQuickSettings;
-                // Resume the sound
-                soundResume();
             }
 
             // Draw to the TFT
