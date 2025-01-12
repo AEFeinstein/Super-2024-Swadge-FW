@@ -28,7 +28,7 @@
 //==============================================================================
 
 /** Switch to either start at the menu or on the dump's surface */
-// #define SKIP_INTRO
+#define SKIP_INTRO
 
 //==============================================================================
 // Enums

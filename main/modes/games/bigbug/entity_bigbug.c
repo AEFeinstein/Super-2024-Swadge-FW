@@ -927,17 +927,38 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             soundPlaySfx(&self->gameData->sfxTether, 0);
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
             bb_entity_t* tetheredEntity = &self->gameData->entityManager.entities[best_i];
-            if (tetheredEntity->dataType == BUGGO_DATA || tetheredEntity->dataType == BU_DATA)
+            switch(tetheredEntity->dataType)
             {
-                // set the isTethered flag to true
-                bb_bugData_t* bData = (bb_bugData_t*)tetheredEntity->data;
-                bData->flags        = bData->flags | 0b10; // 0b10 is the bitpacked isTethered flag
-            }
-            else if (tetheredEntity->dataType == DRILL_BOT_DATA)
-            {
-                // tethering a drill bot will cause it to change direction
-                bb_drillBotData_t* dData = (bb_drillBotData_t*)tetheredEntity->data;
-                dData->facingRight       = !dData->facingRight;
+                case WALKING_BUG_DATA:
+                {
+                    // set the isTethered flag to true
+                    bb_walkingBugData_t* bData = (bb_walkingBugData_t*)tetheredEntity->data;
+                    bData->flags        = bData->flags | 0b10; // 0b10 is the bitpacked isTethered flag
+                    // if it is free falling then "kill" it.
+                    if(bData->fallSpeed > 19)
+                    {
+                        bb_bugDeath(tetheredEntity, NULL);
+                    }
+                    break;
+                }
+                case FLYING_BUG_DATA:
+                {
+                    // set the isTethered flag to true
+                    bb_bugData_t* bData = (bb_bugData_t*)tetheredEntity->data;
+                    bData->flags        = bData->flags | 0b10; // 0b10 is the bitpacked isTethered flag
+                    break;
+                }
+                case DRILL_BOT_DATA:
+                {
+                    // tethering a drill bot will cause it to change direction
+                    bb_drillBotData_t* dData = (bb_drillBotData_t*)tetheredEntity->data;
+                    dData->facingRight       = !dData->facingRight;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
         }
     }
@@ -1407,7 +1428,7 @@ void bb_rotateBug(bb_entity_t* self, int8_t orthogonalRotations)
         self->halfHeight = self->halfWidth;
         self->halfWidth  = temp;
     }
-    bb_buData_t* bData = (bb_buData_t*)self->data;
+    bb_walkingBugData_t* bData = (bb_walkingBugData_t*)self->data;
     // keep gravity in range 0 through 3 for down, left, up, right
     bData->gravity = ((bData->gravity + orthogonalRotations) % 4 + 4) % 4;
 }
@@ -1431,7 +1452,7 @@ void bb_updateBugShooting(bb_entity_t* self)
 
 void bb_updateWalkingBug(bb_entity_t* self)
 {
-    bb_buData_t* bData = (bb_buData_t*)self->data;
+    bb_walkingBugData_t* bData = (bb_walkingBugData_t*)self->data;
 
     bool faceLeft = bData->flags & 0b1;
 
@@ -1461,6 +1482,11 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 break;
         }
         bData->gravity = BB_DOWN;
+        if(bData->flags & 0b10)
+        {
+            bb_bugDeath(self, NULL);
+            return;
+        }
     }
     if (bData->fallSpeed < 30)
     {
@@ -1481,6 +1507,11 @@ void bb_updateWalkingBug(bb_entity_t* self)
         }
         case BB_UP:
         {
+            if(bData->flags & 0b10 && self->gameData->entityManager.playerEntity->pos.y > self->pos.y && bb_randomInt(0,240) == 0)
+            {
+                bb_bugDeath(self, NULL);
+                return;
+            }
             self->pos.y -= bData->fallSpeed;
             break;
         }
@@ -1494,133 +1525,140 @@ void bb_updateWalkingBug(bb_entity_t* self)
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
     if (hitInfo.hit == true)
     {
-        bData->fallSpeed = 0;
-        switch (bData->gravity)
+        if(bData->fallSpeed <= 19 || bb_randomInt(0,240) == 0)
         {
-            case BB_DOWN:
+            bData->fallSpeed = 0;
+            switch (bData->gravity)
             {
-                if (self->pos.y > ((hitInfo.tile_j * TILE_SIZE + 16) << DECIMAL_BITS))
+                case BB_DOWN:
                 {
-                    if (hitInfo.normal.x == 1)
+                    if (self->pos.y > ((hitInfo.tile_j * TILE_SIZE + 16) << DECIMAL_BITS))
                     {
-                        if (faceLeft)
+                        if (hitInfo.normal.x == 1)
                         {
-                            bb_rotateBug(self, 1);
+                            if (faceLeft)
+                            {
+                                bb_rotateBug(self, 1);
+                            }
+                            self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
+                                        + hitInfo.normal.x * self->halfWidth;
                         }
-                        self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
-                                      + hitInfo.normal.x * self->halfWidth;
+                        else if (hitInfo.normal.x == -1)
+                        {
+                            if (!faceLeft)
+                            {
+                                bb_rotateBug(self, -1);
+                            }
+                            self->pos.x
+                                = ((hitInfo.tile_i * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
+                        }
                     }
-                    else if (hitInfo.normal.x == -1)
+                    else
                     {
-                        if (!faceLeft)
-                        {
-                            bb_rotateBug(self, -1);
-                        }
-                        self->pos.x
-                            = ((hitInfo.tile_i * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
+                        self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
+                        self->pos.x += (faceLeft * -2 + 1) * bData->speed;
                     }
-                }
-                else
-                {
-                    self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
-                    self->pos.x += (faceLeft * -2 + 1) * bData->speed;
-                }
-                self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
-                break;
-            }
-            case BB_LEFT:
-            {
-                if (self->pos.x < ((hitInfo.tile_i * TILE_SIZE + 16) << DECIMAL_BITS))
-                {
-                    if (hitInfo.normal.y == 1)
-                    {
-                        if (faceLeft)
-                        {
-                            bb_rotateBug(self, 1);
-                        }
-                        self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
-                                      + hitInfo.normal.y * self->halfHeight;
-                    }
-                    else if (hitInfo.normal.y == -1)
-                    {
-                        if (!faceLeft)
-                        {
-                            bb_rotateBug(self, -1);
-                        }
-                        self->pos.y
-                            = ((hitInfo.tile_j * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
-                    }
-                }
-                else
-                {
                     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
-                    self->pos.y += (faceLeft * -2 + 1) * bData->speed;
+                    break;
                 }
-                self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
-                break;
-            }
-            case BB_UP:
-            {
-                if (self->pos.y < ((hitInfo.tile_j * TILE_SIZE + 16) << DECIMAL_BITS))
+                case BB_LEFT:
                 {
-                    if (hitInfo.normal.x == -1)
+                    if (self->pos.x < ((hitInfo.tile_i * TILE_SIZE + 16) << DECIMAL_BITS))
                     {
-                        if (faceLeft)
+                        if (hitInfo.normal.y == 1)
                         {
-                            bb_rotateBug(self, 1);
+                            if (faceLeft)
+                            {
+                                bb_rotateBug(self, 1);
+                            }
+                            self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
+                                        + hitInfo.normal.y * self->halfHeight;
                         }
-                        self->pos.x
-                            = ((hitInfo.tile_i * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
+                        else if (hitInfo.normal.y == -1)
+                        {
+                            if (!faceLeft)
+                            {
+                                bb_rotateBug(self, -1);
+                            }
+                            self->pos.y
+                                = ((hitInfo.tile_j * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
+                        }
                     }
-                    else if (hitInfo.normal.x == 1)
+                    else
                     {
-                        if (!faceLeft)
-                        {
-                            bb_rotateBug(self, -1);
-                        }
-                        self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
-                                      + hitInfo.normal.x * self->halfWidth;
+                        self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
+                        self->pos.y += (faceLeft * -2 + 1) * bData->speed;
                     }
-                }
-                else
-                {
                     self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
-                    self->pos.x -= (faceLeft * -2 + 1) * bData->speed;
+                    break;
                 }
-                self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
-                break;
-            }
-            default: // right
-            {
-                if (self->pos.x > ((hitInfo.tile_i * TILE_SIZE + 16) << DECIMAL_BITS))
+                case BB_UP:
                 {
-                    if (hitInfo.normal.y == -1)
+                    if (self->pos.y < ((hitInfo.tile_j * TILE_SIZE + 16) << DECIMAL_BITS))
                     {
-                        if (faceLeft)
+                        if (hitInfo.normal.x == -1)
                         {
-                            bb_rotateBug(self, 1);
+                            if (faceLeft)
+                            {
+                                bb_rotateBug(self, 1);
+                            }
+                            self->pos.x
+                                = ((hitInfo.tile_i * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.x * self->halfWidth;
                         }
-                        self->pos.y
-                            = ((hitInfo.tile_j * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
+                        else if (hitInfo.normal.x == 1)
+                        {
+                            if (!faceLeft)
+                            {
+                                bb_rotateBug(self, -1);
+                            }
+                            self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
+                                        + hitInfo.normal.x * self->halfWidth;
+                        }
                     }
-                    else if (hitInfo.normal.y == 1)
+                    else
                     {
-                        if (!faceLeft)
-                        {
-                            bb_rotateBug(self, -1);
-                        }
-                        self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
-                                      + hitInfo.normal.y * self->halfHeight;
+                        self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
+                        self->pos.x -= (faceLeft * -2 + 1) * bData->speed;
                     }
-                }
-                else
-                {
                     self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
-                    self->pos.y -= (faceLeft * -2 + 1) * bData->speed;
+                    break;
                 }
-                self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
-                break;
+                default: // right
+                {
+                    if (self->pos.x > ((hitInfo.tile_i * TILE_SIZE + 16) << DECIMAL_BITS))
+                    {
+                        if (hitInfo.normal.y == -1)
+                        {
+                            if (faceLeft)
+                            {
+                                bb_rotateBug(self, 1);
+                            }
+                            self->pos.y
+                                = ((hitInfo.tile_j * TILE_SIZE) << DECIMAL_BITS) + hitInfo.normal.y * self->halfHeight;
+                        }
+                        else if (hitInfo.normal.y == 1)
+                        {
+                            if (!faceLeft)
+                            {
+                                bb_rotateBug(self, -1);
+                            }
+                            self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
+                                        + hitInfo.normal.y * self->halfHeight;
+                        }
+                    }
+                    else
+                    {
+                        self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
+                        self->pos.y -= (faceLeft * -2 + 1) * bData->speed;
+                    }
+                    self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
+                    break;
+                }
             }
+        }
+        else
+        {
+            self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
         }
     }
     else if (bData->fallSpeed == 18)
@@ -1652,7 +1690,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
 
 void bb_updateFlyingBug(bb_entity_t* self)
 {
-    bb_buggoData_t* bData = (bb_buggoData_t*)self->data;
+    bb_flyingBugData_t* bData = (bb_flyingBugData_t*)self->data;
     if (bData->damageEffect > 0)
     {
         bData->damageEffect -= self->gameData->elapsedUs >> 11;
@@ -2602,7 +2640,7 @@ void bb_updateExplosion(bb_entity_t* self)
             {
                 if (curEntity->dataType == PHYSICS_DATA || curEntity->dataType == FOOD_CART_DATA
                     || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA
-                    || ((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(-1, 1)))
+                    || ((curEntity->dataType == FLYING_BUG_DATA || curEntity->dataType == WALKING_BUG_DATA) && bb_randomInt(-1, 1)))
                 {
                     bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
                     if (foundSpot != NULL)
@@ -2635,8 +2673,8 @@ void bb_updateExplosion(bb_entity_t* self)
         for (int i = 0; i < MAX_ENTITIES; i++)
         {
             bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
-            if (curEntity->dataType != PHYSICS_DATA && curEntity->dataType != BUGGO_DATA
-                && curEntity->dataType != BU_DATA && curEntity->dataType != FOOD_CART_DATA
+            if (curEntity->dataType != PHYSICS_DATA && curEntity->dataType != FLYING_BUG_DATA
+                && curEntity->dataType != WALKING_BUG_DATA && curEntity->dataType != FOOD_CART_DATA
                 && curEntity->dataType != GARBOTNIK_DATA && curEntity->dataType != DRILL_BOT_DATA
                 && curEntity->dataType != WILE_DATA)
             {
@@ -2654,7 +2692,7 @@ void bb_updateExplosion(bb_entity_t* self)
                     bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
                     pData->vel              = divVec2d(toFrom, 5);
                 }
-                else if ((curEntity->dataType == BUGGO_DATA || curEntity->dataType == BU_DATA) && bb_randomInt(0, 2))
+                else if ((curEntity->dataType == FLYING_BUG_DATA || curEntity->dataType == WALKING_BUG_DATA) && bb_randomInt(0, 2))
                 {
                     // 66% chance to kill the bug
                     bb_hitInfo_t hitInfo = {0};
@@ -3352,7 +3390,7 @@ void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    bb_buData_t* bData = (bb_buData_t*)self->data;
+    bb_walkingBugData_t* bData = (bb_walkingBugData_t*)self->data;
     bool faceLeft      = bData->flags & 0b1;
     uint8_t brightness = 5;
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
@@ -3387,13 +3425,13 @@ void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
     if (bData->damageEffect > 70 || (bData->damageEffect > 0 && bb_randomInt(0, 1)))
     {
         drawWsgPalette(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
-                       xOff, yOff, &self->gameData->damagePalette, faceLeft, false,
-                       (self->dataType == BU_DATA) * 90 * bData->gravity);
+                       xOff, yOff, &self->gameData->damagePalette, faceLeft, (self->dataType == WALKING_BUG_DATA) && (bData->fallSpeed > 19),
+                       (self->dataType == WALKING_BUG_DATA) * 90 * bData->gravity);
     }
     else
     {
         drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff,
-                yOff, faceLeft, false, (self->dataType == BU_DATA) * 90 * bData->gravity);
+                yOff, faceLeft, (self->dataType == WALKING_BUG_DATA) && (bData->fallSpeed > 19), (self->dataType == WALKING_BUG_DATA) * 90 * bData->gravity);
     }
 }
 
@@ -3903,6 +3941,43 @@ void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, b
     }
 }
 
+void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_bugData_t* bData = (bb_bugData_t*)self->data;
+    uint8_t brightness = 5;
+    int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
+    int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
+    if (entityManager->playerEntity != NULL)
+    {
+        vec_t lookup = {.x = (self->pos.x >> DECIMAL_BITS) - (entityManager->playerEntity->pos.x >> DECIMAL_BITS)
+                             + self->gameData->tilemap.headlampWsg.w,
+                        .y = (self->pos.y >> DECIMAL_BITS) - (entityManager->playerEntity->pos.y >> DECIMAL_BITS)
+                             + self->gameData->tilemap.headlampWsg.h};
+
+        lookup = divVec2d(lookup, 2);
+        if (self->pos.y > 5120)
+        {
+            if (self->pos.y > 30720)
+            {
+                brightness = 0;
+            }
+            else
+            {
+                brightness = (30720 - self->pos.y) / 5120;
+            }
+        }
+
+        if (GARBOTNIK_DATA == self->gameData->entityManager.playerEntity->dataType)
+        {
+            brightness = bb_midgroundLighting(
+                &(self->gameData->tilemap.headlampWsg), &lookup,
+                &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x), brightness);
+        }
+    }
+    drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff,
+            yOff, false, true, 0);
+}
+
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 // {
 //     drawRect (((self->pos.x - self->halfWidth) >>DECIMAL_BITS) - camera->pos.x,
@@ -4004,7 +4079,7 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
             pData->vel.x = 0;
         }
     }
-    else if (other->dataType == BU_DATA || other->dataType == BUGGO_DATA)
+    else if (other->dataType == WALKING_BUG_DATA || other->dataType == FLYING_BUG_DATA)
     {
         // flip the bug's walking direction bit flag.
         bb_bugData_t* bData = (bb_bugData_t*)other->data;
@@ -5018,9 +5093,9 @@ void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
         hitEffect->drawFunction = &bb_drawHitEffect;
     }
 
-    if (self->dataType == BU_DATA)
+    if (self->dataType == WALKING_BUG_DATA)
     {
-        bb_buData_t* buData = (bb_buData_t*)self->data;
+        bb_walkingBugData_t* buData = (bb_walkingBugData_t*)self->data;
         switch (buData->gravity)
         {
             case BB_LEFT:
@@ -5036,7 +5111,7 @@ void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
                 break;
         }
     }
-    self->drawFunction = NULL;
+    self->drawFunction = bb_drawDeadBug;
 
     midiPlayer_t* sfx = soundGetPlayerSfx();
     midiPlayerReset(sfx);

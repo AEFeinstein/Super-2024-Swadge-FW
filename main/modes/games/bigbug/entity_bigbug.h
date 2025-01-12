@@ -24,8 +24,8 @@ typedef enum
 {
     NULL_DATA,
     ATTACHMENT_ARM_DATA,
-    BU_DATA,
-    BUGGO_DATA,
+    WALKING_BUG_DATA,
+    FLYING_BUG_DATA,
     CAR_DATA,
     DEATH_DUMPSTER_DATA,
     DIALOGUE_DATA,
@@ -116,7 +116,7 @@ typedef struct // child class
     //-----------------------------------------------
     enum bb_direction_t gravity; // to walk on the walls & ceiling: local gravity switches
     uint8_t fallSpeed;           // increments in free fall
-} bb_buData_t;
+} bb_walkingBugData_t;
 
 typedef struct // child class
 {
@@ -127,9 +127,8 @@ typedef struct // child class
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
     //-----------------------------------------------
-    bool trackingPlayer; // toggles between moving toward the player and moving in a random direction.
     vec_t direction;     // buggo moves in the direction vector.
-} bb_buggoData_t;
+} bb_flyingBugData_t;
 
 typedef struct
 {
@@ -477,6 +476,7 @@ void bb_drawAtmosphericAtomizer(bb_entityManager_t* entityManager, rectangle_t* 
 void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawPacifier(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 

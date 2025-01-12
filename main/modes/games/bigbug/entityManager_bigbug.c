@@ -947,12 +947,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BU:
         {
-            bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
+            bb_walkingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_walkingBugData_t), MALLOC_CAP_SPIRAM);
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(3, 6);
             bData->flags       = bb_randomInt(0, 1);
-            bb_setData(entity, bData, BU_DATA);
+            bb_setData(entity, bData, WALKING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
@@ -967,12 +967,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUG:
         {
-            bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
+            bb_walkingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_walkingBugData_t), MALLOC_CAP_SPIRAM);
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(1, 5);
             bData->flags       = bb_randomInt(0, 1);
-            bb_setData(entity, bData, BU_DATA);
+            bb_setData(entity, bData, WALKING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
@@ -987,12 +987,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUGG:
         {
-            bb_buggoData_t* bData = heap_caps_calloc(1, sizeof(bb_buggoData_t), MALLOC_CAP_SPIRAM);
+            bb_flyingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_flyingBugData_t), MALLOC_CAP_SPIRAM);
             bData->health         = 100;
             bData->speed          = 4 * bb_randomInt(1, 5);
             bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
             bData->flags          = bData->direction.x < 0;
-            bb_setData(entity, bData, BUGGO_DATA);
+            bb_setData(entity, bData, FLYING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
@@ -1007,12 +1007,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUGGO:
         {
-            bb_buggoData_t* bData = heap_caps_calloc(1, sizeof(bb_buggoData_t), MALLOC_CAP_SPIRAM);
+            bb_flyingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_flyingBugData_t), MALLOC_CAP_SPIRAM);
             bData->health         = 100;
             bData->speed          = 4 * bb_randomInt(3, 4);
             bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
             bData->flags          = bData->direction.x < 0;
-            bb_setData(entity, bData, BUGGO_DATA);
+            bb_setData(entity, bData, FLYING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
@@ -1027,12 +1027,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUGGY:
         {
-            bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
+            bb_walkingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_walkingBugData_t), MALLOC_CAP_SPIRAM);
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(1, 5);
             bData->flags       = bb_randomInt(0, 1);
-            bb_setData(entity, bData, BU_DATA);
+            bb_setData(entity, bData, WALKING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
@@ -1047,12 +1047,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BUTT:
         {
-            bb_buData_t* bData = heap_caps_calloc(1, sizeof(bb_buData_t), MALLOC_CAP_SPIRAM);
+            bb_walkingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_walkingBugData_t), MALLOC_CAP_SPIRAM);
             bData->health      = 100;
             bData->gravity     = BB_DOWN;
             bData->speed       = 4 * bb_randomInt(1, 5);
             bData->flags       = bb_randomInt(0, 1);
-            bb_setData(entity, bData, BU_DATA);
+            bb_setData(entity, bData, WALKING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
 
