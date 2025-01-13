@@ -876,7 +876,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                             "will fire steadily.");
         bb_setCharacterLine(dData, 10, "Ovo", "Three hits will flip the bug upside down!");
         bb_setCharacterLine(dData, 11, "Ovo",
-                            "There's a nifty detail where harpoons with upward velocity tend to ignore terrain.");
+                            "There's a nifty detail where harpoons with upward velocity pass right through terrain.");
         bb_setCharacterLine(dData, 12, "Ovo", "Now, let's get that bug!");
 
         dData->curString     = -1;

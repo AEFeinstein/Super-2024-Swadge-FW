@@ -1167,7 +1167,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
                 "Keep in mind that my headlamps stimulate the bug eggs. So my facing direction is important.");
             bb_setCharacterLine(
                 dData, 6, "Ovo",
-                "Grid-locked bugs are pretty much a non-threat since they aren't mad enough to dig out.");
+                "Remember that bugs don't usually dig. So use the garbage to your advantage.");
             bb_setCharacterLine(dData, 7, "Ovo", "And bugs far off-screen will stop moving and shooting.");
             bb_setCharacterLine(
                 dData, 8, "Ovo",
