@@ -13,7 +13,7 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_generateWorld(bb_tilemap_t* tilemap)
+void bb_generateWorld(bb_tilemap_t* tilemap, int8_t* oldBoosterYs)
 {
     // There are 6 handcrafted levels that get chosen randomly.
     uint8_t level = bb_randomInt(0, 5);
@@ -162,6 +162,22 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
     else if(level == 4)
     {
         tilemap->fgTiles[20][8].embed = BRICK_TUTORIAL_EMBED;
+    }
+
+    //carve out three tiles where any old boosters are buried
+    for (int booster = 0; booster < 3; booster++)
+    {
+        if(oldBoosterYs[booster] > -1)
+        {
+            for (int carveY = oldBoosterYs[booster] - 1; carveY <= oldBoosterYs[booster] + 1; carveY++)
+            {
+                if(carveY >= 0)
+                {
+                    tilemap->fgTiles[34 + booster * 3][carveY].health = 0;
+                    tilemap->fgTiles[35 + booster * 3][carveY].embed = NOTHING_EMBED;
+                }
+            }
+        }
     }
 
     freeWsg(&levelWsg);

@@ -317,7 +317,20 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         if (self->gameData->day % 7 == 2 || self->gameData->day % 7 == 5 || self->gameData->day % 7 == 0)
         {
             bb_deactivateAllEntities(&self->gameData->entityManager, true);
-            bb_generateWorld(&(self->gameData->tilemap));
+            int8_t oldBoosterYs[3] = { -1, -1, -1 };
+            for (int boosterIdx = 0; boosterIdx < 3; boosterIdx++)
+            {
+                if (self->gameData->entityManager.activeBooster
+                    != self->gameData->entityManager.boosterEntities[boosterIdx])
+                {
+                    oldBoosterYs[boosterIdx] = self->gameData->entityManager.boosterEntities[boosterIdx]->pos.y >> 9;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            bb_generateWorld(&(self->gameData->tilemap), &oldBoosterYs);
             //brute force recalculate activeEntities count to clean up any inaccuracies.
             self->gameData->entityManager.activeEntities = 0;
             for (int i = 0; i < MAX_ENTITIES; i++)
@@ -5058,7 +5071,7 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
 
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 {
-    if(self->pos.x > (TILE_FIELD_WIDTH << 7) - 1)
+    if(self->pos.x > 16940)
     {
         if(!(self->gameData->tutorialFlags & 0b1000000))
         {

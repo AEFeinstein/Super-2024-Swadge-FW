@@ -193,7 +193,8 @@ static void bb_EnterMode(void)
 
     ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
 
-    bb_generateWorld(&(bigbug->gameData.tilemap));
+    int8_t oldBoosterYs[3] = { -1, -1, -1 };
+    bb_generateWorld(&(bigbug->gameData.tilemap), &oldBoosterYs);
 
     // Player
     //  bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
@@ -308,7 +309,8 @@ static void bb_EnterModeSkipIntro(void)
 
     bigbug->gameData.entityManager.playerEntity = bigbug->gameData.entityManager.viewEntity;
 
-    bb_generateWorld(&(bigbug->gameData.tilemap));
+    int8_t oldBoosterYs[3] = { -1, -1, -1 };
+    bb_generateWorld(&(bigbug->gameData.tilemap), &oldBoosterYs);
 
     // Set the mode to game mode
     bigbug->gameData.screen = BIGBUG_GAME;
