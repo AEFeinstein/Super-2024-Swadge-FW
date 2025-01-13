@@ -1727,6 +1727,19 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 break;
         }
     }
+    //out of bounds
+    if(self->pos.x < 96)
+    {
+        //turn the bug around
+        self->pos.x = 96;
+        bData->flags = bData->flags ^ 0b1;
+    }
+    else if(self->pos.x > 37888)
+    {
+        //turn the bug around
+        self->pos.x = 37888;
+        bData->flags = bData->flags ^ 0b1;
+    }
     // if NOT (garbotnik has the bug whisperer talent AND bug is tethered)
     if (!(((self->gameData->garbotnikUpgrade.upgrades & (1 << GARBOTNIK_BUG_WHISPERER)) >> GARBOTNIK_BUG_WHISPERER)
           && ((bData->flags & 0b10) >> 1)))
@@ -1747,7 +1760,7 @@ void bb_updateFlyingBug(bb_entity_t* self)
     self->pos            = addVec2d(self->pos, mulVec2d(bData->direction, self->gameData->elapsedUs >> 11));
     bb_hitInfo_t hitInfo = {0};
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
-    if (hitInfo.hit == true)
+    if (hitInfo.hit == true || self->pos.y < 96 || self->pos.y > 37888)
     {
         self->pos        = previousPos;
         bData->direction = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
