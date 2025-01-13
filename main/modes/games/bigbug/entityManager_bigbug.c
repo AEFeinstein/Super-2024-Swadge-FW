@@ -409,63 +409,74 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
             if (curEntity->collisions != NULL)
             {
                 node_t* currentCollisionCheck = curEntity->collisions->first;
-                bb_collision_t* collisionInfo = (bb_collision_t*)currentCollisionCheck->val;
-                if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType
-                    && ((bb_spriteDef_t)collisionInfo->checkOthers->first->val) == GARBOTNIK_FLYING
-                    && collisionInfo->checkOthers->first->next == NULL)
+                while(currentCollisionCheck != NULL)
                 {
-                    // no need to search all other entities if it's simply something to do with the player.
-                    // do a collision check here
-                    bb_hitInfo_t hitInfo = {0};
-                    if (bb_boxesCollide(curEntity, entityManager->playerEntity,
-                                        &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
-                                        &hitInfo))
+                    bb_collision_t* collisionInfo = (bb_collision_t*)currentCollisionCheck->val;
+                    if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType
+                        && ((bb_spriteDef_t)collisionInfo->checkOthers->first->val) == GARBOTNIK_FLYING
+                        && collisionInfo->checkOthers->first->next == NULL)
                     {
-                        ((bb_collision_t*)currentCollisionCheck->val)
-                            ->function(curEntity, entityManager->playerEntity, &hitInfo);
-                    }
-                }
-                else
-                {
-                    for (uint8_t j = 0; j < MAX_ENTITIES; j++)
-                    {
-                        bb_entity_t* collisionCandidate = &entityManager->entities[j];
-                        // Iterate over all nodes
-                        currentCollisionCheck = curEntity->collisions->first;
-                        while (currentCollisionCheck != NULL)
-                        {
-                            node_t* currentOtherType
-                                = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
-                            node_t* cccNext = currentCollisionCheck->next;
-                            while (currentOtherType != NULL)
+                            // no need to search all other entities if it's simply something to do with the player.
+                            // do a collision check here
+                            bb_hitInfo_t hitInfo = {0};
+                            if (bb_boxesCollide(curEntity, entityManager->playerEntity,
+                                                &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
+                                                &hitInfo))
                             {
-                                if (collisionCandidate->spriteIndex == (bb_spriteDef_t)currentOtherType->val)
+                                ((bb_collision_t*)currentCollisionCheck->val)
+                                    ->function(curEntity, entityManager->playerEntity, &hitInfo);
+                            }
+                            if(curEntity->collisions != NULL)
+                            {
+                                currentCollisionCheck = currentCollisionCheck->next;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                    }
+                    else
+                    {
+                        for (uint8_t j = 0; j < MAX_ENTITIES; j++)
+                        {
+                            bb_entity_t* collisionCandidate = &entityManager->entities[j];
+                            // Iterate over all nodes
+                            currentCollisionCheck = curEntity->collisions->first;
+                            while (currentCollisionCheck != NULL)
+                            {
+                                node_t* currentOtherType
+                                    = ((bb_collision_t*)currentCollisionCheck->val)->checkOthers->first;
+                                node_t* cccNext = currentCollisionCheck->next;
+                                while (currentOtherType != NULL)
                                 {
-                                    // do a collision check here
-                                    bb_hitInfo_t hitInfo = {0};
-                                    if (bb_boxesCollide(curEntity, collisionCandidate, &collisionCandidate->pos,
-                                                        &hitInfo))
+                                    if (collisionCandidate->spriteIndex == (bb_spriteDef_t)currentOtherType->val)
                                     {
-                                        ((bb_collision_t*)currentCollisionCheck->val)
-                                            ->function(curEntity, collisionCandidate, &hitInfo);
+                                        // do a collision check here
+                                        bb_hitInfo_t hitInfo = {0};
+                                        if (bb_boxesCollide(curEntity, collisionCandidate, &collisionCandidate->pos,
+                                                            &hitInfo))
+                                        {
+                                            ((bb_collision_t*)currentCollisionCheck->val)
+                                                ->function(curEntity, collisionCandidate, &hitInfo);
+                                        }
+                                        break;
                                     }
-                                    break;
+                                    currentOtherType = currentOtherType->next;
+                                    if (curEntity->collisions == NULL)
+                                    {
+                                        break;
+                                    }
                                 }
-                                currentOtherType = currentOtherType->next;
+                                currentCollisionCheck = cccNext;
                                 if (curEntity->collisions == NULL)
                                 {
                                     break;
                                 }
                             }
-                            currentCollisionCheck = cccNext;
                             if (curEntity->collisions == NULL)
                             {
                                 break;
                             }
-                        }
-                        if (curEntity->collisions == NULL)
-                        {
-                            break;
                         }
                     }
                 }
@@ -938,8 +949,23 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(others, (void*)GARBOTNIK_FLYING);
             bb_collision_t* collision
                 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
-            *collision = (bb_collision_t){others, bb_onCollisionHeavyFalling};
+            *collision = (bb_collision_t){others, bb_onCollisionRocketGarbotnik};
             push(entity->collisions, (void*)collision);
+            
+            list_t* others2     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+            // Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it
+            // instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any
+            // 32 bits of info you want there, as long as you know how to handle it on the other end
+            push(others2, (void*)BU);
+            push(others2, (void*)BUG);
+            push(others2, (void*)BUGG);
+            push(others2, (void*)BUGGO);
+            push(others2, (void*)BUGGY);
+            push(others2, (void*)BUTT);
+            push(others2, (void*)EGG);
+            bb_collision_t* collision2 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision2                = (bb_collision_t){others2, bb_onCollisionHeavyFallingBug};
+            push(entity->collisions, (void*)collision2);
 
             entity->halfWidth    = 192;
             entity->halfHeight   = 448;
@@ -1191,12 +1217,28 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->updateFunction = &bb_updateHeavyFalling;
             entity->cacheable      = true;
 
-            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            entity->collisions = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rCollisions");
+            list_t* others     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
             push(others, (void*)GARBOTNIK_FLYING);
-            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
-            *collision                = (bb_collision_t){others, bb_onCollisionHeavyFalling};
+            bb_collision_t* collision
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision = (bb_collision_t){others, bb_onCollisionHeavyFallingGarbotnik};
             push(entity->collisions, (void*)collision);
+            
+            list_t* others2     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+            // Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it
+            // instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any
+            // 32 bits of info you want there, as long as you know how to handle it on the other end
+            push(others2, (void*)BU);
+            push(others2, (void*)BUG);
+            push(others2, (void*)BUGG);
+            push(others2, (void*)BUGGO);
+            push(others2, (void*)BUGGY);
+            push(others2, (void*)BUTT);
+            push(others2, (void*)EGG);
+            bb_collision_t* collision2 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision2                = (bb_collision_t){others2, bb_onCollisionHeavyFallingBug};
+            push(entity->collisions, (void*)collision2);
 
             break;
         }

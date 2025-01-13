@@ -4185,7 +4185,7 @@ void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
     }
 }
 
-void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+bool bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
     bb_onCollisionSimple(self, other, hitInfo);
     if (hitInfo->normal.y == 1)
@@ -4194,11 +4194,38 @@ void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
         bb_collisionCheck(&self->gameData->tilemap, other, NULL, &localHitInfo);
         if (localHitInfo.hit == true && localHitInfo.normal.y == -1)
         {
-            bb_triggerGameOver(self);
+            //return true for crush
+            return true;
         }
     }
+    return false;
+}
 
-    if (self->spriteIndex == ROCKET_ANIM && self->currentAnimationFrame == 41)
+void bb_onCollisionHeavyFallingBug(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    if(bb_onCollisionHeavyFalling(self, other, hitInfo))
+    {
+        //create fuel and destroy other
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
+        bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_FUEL, 10,
+                        (other->pos.x >> DECIMAL_BITS), (other->pos.y >> DECIMAL_BITS), true, false);
+        bb_destroyEntity(other, false, true);
+    }
+}
+
+void bb_onCollisionHeavyFallingGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    if(bb_onCollisionHeavyFalling(self, other, hitInfo))
+    {
+        bb_triggerGameOver(self);
+    }
+}
+
+void bb_onCollisionRocketGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    bb_onCollisionHeavyFallingGarbotnik(self, other, hitInfo);
+
+    if (self->currentAnimationFrame == 41)
     {
         bb_rocketData_t* rData = (bb_rocketData_t*)self->data;
         if (rData->numDonuts && bb_randomInt(0, 60) == 60)
@@ -5595,7 +5622,7 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
 
                 // create fuel
                 bb_createEntity(&gameData->entityManager, LOOPING_ANIMATION, false, BB_FUEL, 10, tilePos.x, tilePos.y,
-                                false, false);
+                                true, false);
                 break;
             }
             default:
