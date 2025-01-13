@@ -564,18 +564,18 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
 
 void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager, rectangle_t* camera)
 {
-    // Don't draw unallocated sprites
-    if (NUM_SPRITES > currentEntity->spriteIndex && !entityManager->sprites[currentEntity->spriteIndex].allocated)
-    {
-        return;
-    }
-
     if (currentEntity->drawFunction != NULL)
     {
         currentEntity->drawFunction(entityManager, camera, currentEntity);
     }
     else if (entityManager->sprites[currentEntity->spriteIndex].brightnessLevels == 6)
     {
+        // Don't draw unallocated sprites
+        if (NUM_SPRITES > currentEntity->spriteIndex && !entityManager->sprites[currentEntity->spriteIndex].allocated)
+        {
+            return;
+        }
+
         uint8_t brightness = 5;
         int16_t xOff       = (currentEntity->pos.x >> DECIMAL_BITS)
                        - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
@@ -616,6 +616,12 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     }
     else
     {
+        // Don't draw unallocated sprites
+        if (NUM_SPRITES > currentEntity->spriteIndex && !entityManager->sprites[currentEntity->spriteIndex].allocated)
+        {
+            return;
+        }
+
         drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
                       (currentEntity->pos.x >> DECIMAL_BITS)
                           - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
