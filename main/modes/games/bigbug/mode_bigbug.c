@@ -74,6 +74,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
+static void bb_setPrimingLeds(uint8_t primingEffect);
 static void bb_UpdateTileSupport(void);
 static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
 
@@ -1532,6 +1533,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
     }
 
     bb_DrawScene_Loadout_Select();
+    bb_setPrimingLeds(bigbug->gameData.loadoutScreenData->primingEffect);
 }
 
 static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs)
@@ -1656,7 +1658,11 @@ static void bb_GameLoop(int64_t elapsedUs)
     {
         bb_UpdateTileSupport();
 
-        bb_UpdateLEDs(&(bigbug->gameData.entityManager));
+        if(bigbug->gameData.entityManager.playerEntity != NULL)
+        {
+            bb_UpdateLEDs(&(bigbug->gameData.entityManager));
+        }
+        
         // bigbugFadeLeds(elapsedUs);
         // bigbugControlCpuPaddle();
     }
@@ -1688,6 +1694,30 @@ static void bb_SetLeds(void)
         leds[i].r = 0;
         leds[i].g = 0;
         leds[i].b = 0;
+    }
+    // Set the LED output
+    setLeds(leds, CONFIG_NUM_LEDS);
+}
+
+static void bb_setPrimingLeds(uint8_t primingEffect)
+{
+    const uint8_t condimentLights[] = {5,4,6,7,0,8};
+    // Create an array for all LEDs
+    led_t leds[CONFIG_NUM_LEDS];
+    // Copy the LED colors for left and right to the whole array
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        leds[i].r = 0;
+        leds[i].g = 0;
+        leds[i].b = 0;
+    }
+
+    for (uint8_t i = 0; i < 6; i++)
+    {
+        if((primingEffect - 10) > i * 29)
+        {
+            leds[condimentLights[i]].g = 255;
+        }
     }
     // Set the LED output
     setLeds(leds, CONFIG_NUM_LEDS);
