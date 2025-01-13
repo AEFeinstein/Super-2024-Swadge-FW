@@ -2866,7 +2866,7 @@ void bb_updateDrillBot(bb_entity_t* self)
         if (self->pos.y < dData->targetY)
         {
             dData->tileTime = 0;
-            if (bb_randomInt(-100, 1))
+            if (bb_randomInt(-95, 1))
             {
                 // destroy the tile below the drill bot
                 if (self->pos.y < 0)
@@ -2887,7 +2887,7 @@ void bb_updateDrillBot(bb_entity_t* self)
             self->pos.x += direction * 8 * self->gameData->elapsedUs >> 13;
             if (self->gameData->tilemap.fgTiles[(self->pos.x + direction * 144) >> 9][self->pos.y >> 9].health > 0)
             {
-                if (bb_randomInt(0, 110) == 1)
+                if (bb_randomInt(0, 95) == 1)
                 {
                     bb_crumbleDirt(self->gameData, 2, (self->pos.x + direction * 144) >> 9, self->pos.y >> 9, true,
                                    true);
