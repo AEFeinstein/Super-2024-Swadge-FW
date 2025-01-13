@@ -4074,10 +4074,6 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             // Bug got stabbed
             if (bData->health - 34 <= 0) // bug just died
             {
-                if (self->gameData->carFightState > 0)
-                {
-                    self->gameData->carFightState--;
-                }
                 bb_bugDeath(other, hitInfo);
 
                 if(!(self->gameData->tutorialFlags & 0b10))
@@ -4538,10 +4534,6 @@ void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
         bb_bugData_t* bData = (bb_bugData_t*)other->data;
         if (bData->health - 34 <= 0) // bug just died
         {
-            if (self->gameData->carFightState > 0)
-            {
-                self->gameData->carFightState--;
-            }
             bb_bugDeath(other, hitInfo);
         }
         else
@@ -5179,6 +5171,10 @@ void bb_playCarAlarm(bb_entity_t* self)
 
 void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
 {
+    if (self->gameData->carFightState > 0)
+    {
+        self->gameData->carFightState--;
+    }
     // use a bump animation but tweak its graphics
     if (hitInfo != NULL)
     {
