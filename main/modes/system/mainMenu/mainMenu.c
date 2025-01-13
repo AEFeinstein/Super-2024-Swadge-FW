@@ -65,6 +65,7 @@ static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void addSecretsMenu(void);
+static void fanfareFinishedCb(void);
 
 //==============================================================================
 // Variables
@@ -148,6 +149,9 @@ static const char* const showSecretsMenuSettingOptions[] = {
  */
 static void mainMenuEnterMode(void)
 {
+    // Turn off DAC, for now...
+    setDacShutdown(true);
+
     // Allocate memory for the mode
     mainMenu = heap_caps_calloc(1, sizeof(mainMenu_t), MALLOC_CAP_8BIT);
 
@@ -291,7 +295,8 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                 if (mainMenu->cheatCodeIdx >= ARRAY_SIZE(cheatCode))
                 {
                     mainMenu->cheatCodeIdx = 0;
-                    globalMidiPlayerPlaySong(&mainMenu->fanfare, MIDI_BGM);
+                    setDacShutdown(false);
+                    globalMidiPlayerPlaySongCb(&mainMenu->fanfare, MIDI_BGM, fanfareFinishedCb);
 #ifdef SW_VOL_CONTROL
                     mainMenu->fanfarePlaying = true;
 #endif
@@ -329,6 +334,14 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     int16_t yOff         = (TFT_HEIGHT / 2) - mainMenu->font_rodin.height;
     drawTextWordWrap(&mainMenu->font_rodin, c000, warning, &xOff, &yOff, TFT_WIDTH - 12, TFT_HEIGHT);
 #endif
+}
+
+/**
+ * @brief Callback after the fanfare is done playing to disable the DAC again
+ */
+static void fanfareFinishedCb(void)
+{
+    setDacShutdown(true);
 }
 
 /**
