@@ -1348,7 +1348,7 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
 
     // keep the selection wrapped in range of available choices.
     uint8_t numChoices
-        = 1 + (uint8_t)(bigbug->gameData.radar.choices[1] > -1) + (uint8_t)(bigbug->gameData.radar.choices[2] > -1);
+        = 1 + (uint8_t)(bigbug->gameData.garbotnikUpgrade.choices[1] > -1) + (uint8_t)(bigbug->gameData.garbotnikUpgrade.choices[2] > -1);
     bigbug->gameData.radar.playerPingRadius
         = (bigbug->gameData.radar.playerPingRadius % numChoices + numChoices) % numChoices;
 
