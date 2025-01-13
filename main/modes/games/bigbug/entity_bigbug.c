@@ -330,7 +330,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
                     break;
                 }
             }
-            bb_generateWorld(&(self->gameData->tilemap), &oldBoosterYs);
+            bb_generateWorld(&(self->gameData->tilemap), oldBoosterYs);
             //brute force recalculate activeEntities count to clean up any inaccuracies.
             self->gameData->entityManager.activeEntities = 0;
             for (int i = 0; i < MAX_ENTITIES; i++)
@@ -1828,6 +1828,11 @@ void bb_updateMenu(bb_entity_t* self)
 
                 rData->flame->updateFunction = &bb_updateFlame;
             }
+
+            //create garbotnik's UI
+            bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GARBOTNIK_UI, 1,
+                          0, 0, false, true);
+
             bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
 
             // create the death dumpster
@@ -3099,7 +3104,20 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
             drawLineFast(xOff, yOff, xOff + otherX, yOff - otherY, c103);
         }
     }
+}
 
+void bb_drawGarbotnikUI(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    if (entityManager->playerEntity == NULL)
+    {
+        return;
+    }
+    else if(GARBOTNIK_DATA != entityManager->playerEntity->dataType)
+    {
+        return;
+    }
+
+    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)entityManager->playerEntity->data;
     char harpoonText[13]; // 13 characters makes room for up to a 3 digit number + " harpooons" + null
                           // terminator ('\0')
     snprintf(harpoonText, sizeof(harpoonText), "%d harpoons", gData->numHarpoons);

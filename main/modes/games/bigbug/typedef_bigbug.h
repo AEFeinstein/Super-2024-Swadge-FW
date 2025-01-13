@@ -82,6 +82,7 @@ typedef enum
     BB_ATMOSPHERIC_ATOMIZER, // A particle effect that increases garbotnik's dragShift.
     BB_SPACE_LASER,          // A beam of pure damage straight down from the sky.
     BB_BRICK_TUTORIAL,       // A particular spot on levels 3 & 4 that makes garbotnik talk about breaking bricks.
+    BB_GARBOTNIK_UI,         // The UI that shows the harpooon count and wile calldowns & cooldowns.
 } bb_spriteDef_t;
 
 typedef enum

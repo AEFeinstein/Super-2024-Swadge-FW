@@ -1651,6 +1651,11 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             
             break;
         }
+        case BB_GARBOTNIK_UI:
+        {
+            entity->drawFunction = &bb_drawGarbotnikUI;
+            break;
+        }
         default: // FLAME_ANIM and others need nothing set
         {
             break;
