@@ -86,6 +86,14 @@ void fastNormVec(q24_8* xp, q24_8* yp)
         y      = -y;
     }
 
+    // Fixed point division bitshifts up, so make sure the inputs are small enough to not disturb the sign bit
+    while (x > 0x007FFFFF || y > 0x007FFFFF)
+    {
+        // Dividing both components by two won't change the direction
+        x /= 2;
+        y /= 2;
+    }
+
     // Check special cases
     if (x == 0)
     {

@@ -564,6 +564,12 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePer
 
 void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager, rectangle_t* camera)
 {
+    // Don't draw unallocated sprites
+    if (NUM_SPRITES > currentEntity->spriteIndex && !entityManager->sprites[currentEntity->spriteIndex].allocated)
+    {
+        return;
+    }
+
     if (currentEntity->drawFunction != NULL)
     {
         currentEntity->drawFunction(entityManager, camera, currentEntity);
