@@ -155,26 +155,26 @@ void bb_generateWorld(bb_tilemap_t* tilemap, int8_t* oldBoosterYs)
 
     tilemap->fgTiles[TILE_FIELD_WIDTH / 2 - 7][0].embed = EGG_EMBED; // tutorial egg
 
-    if(level == 3)
+    if (level == 3)
     {
         tilemap->fgTiles[53][27].embed = BRICK_TUTORIAL_EMBED;
     }
-    else if(level == 4)
+    else if (level == 4)
     {
         tilemap->fgTiles[20][8].embed = BRICK_TUTORIAL_EMBED;
     }
 
-    //carve out three tiles where any old boosters are buried
+    // carve out three tiles where any old boosters are buried
     for (int booster = 0; booster < 3; booster++)
     {
-        if(oldBoosterYs[booster] > -1)
+        if (oldBoosterYs[booster] > -1)
         {
             for (int carveY = oldBoosterYs[booster] - 1; carveY <= oldBoosterYs[booster] + 1; carveY++)
             {
-                if(carveY >= 0)
+                if (carveY >= 0)
                 {
                     tilemap->fgTiles[34 + booster * 3][carveY].health = 0;
-                    tilemap->fgTiles[35 + booster * 3][carveY].embed = NOTHING_EMBED;
+                    tilemap->fgTiles[35 + booster * 3][carveY].embed  = NOTHING_EMBED;
                 }
             }
         }

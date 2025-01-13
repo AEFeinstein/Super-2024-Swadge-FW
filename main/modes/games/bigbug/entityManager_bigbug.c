@@ -87,8 +87,8 @@ void bb_freeSprite(bb_sprite_t* sprite)
         {
             for (uint8_t frame = 0; frame < sprite->numFrames; frame++)
             {
-                if (sprite->frames[brightness * sprite->numFrames + frame].w ||
-                    sprite->frames[brightness * sprite->numFrames + frame].h)
+                if (sprite->frames[brightness * sprite->numFrames + frame].w
+                    || sprite->frames[brightness * sprite->numFrames + frame].h)
                 {
                     freeWsg(&sprite->frames[brightness * sprite->numFrames + frame]);
                 }
@@ -409,31 +409,31 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
             if (curEntity->collisions != NULL)
             {
                 node_t* currentCollisionCheck = curEntity->collisions->first;
-                while(currentCollisionCheck != NULL)
+                while (currentCollisionCheck != NULL)
                 {
                     bb_collision_t* collisionInfo = (bb_collision_t*)currentCollisionCheck->val;
                     if (entityManager->playerEntity != NULL && GARBOTNIK_DATA == entityManager->playerEntity->dataType
                         && ((bb_spriteDef_t)collisionInfo->checkOthers->first->val) == GARBOTNIK_FLYING
                         && collisionInfo->checkOthers->first->next == NULL)
                     {
-                            // no need to search all other entities if it's simply something to do with the player.
-                            // do a collision check here
-                            bb_hitInfo_t hitInfo = {0};
-                            if (bb_boxesCollide(curEntity, entityManager->playerEntity,
-                                                &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
-                                                &hitInfo))
-                            {
-                                ((bb_collision_t*)currentCollisionCheck->val)
-                                    ->function(curEntity, entityManager->playerEntity, &hitInfo);
-                            }
-                            if(curEntity->collisions != NULL)
-                            {
-                                currentCollisionCheck = currentCollisionCheck->next;
-                            }
-                            else
-                            {
-                                break;
-                            }
+                        // no need to search all other entities if it's simply something to do with the player.
+                        // do a collision check here
+                        bb_hitInfo_t hitInfo = {0};
+                        if (bb_boxesCollide(curEntity, entityManager->playerEntity,
+                                            &(((bb_garbotnikData_t*)entityManager->playerEntity->data)->previousPos),
+                                            &hitInfo))
+                        {
+                            ((bb_collision_t*)currentCollisionCheck->val)
+                                ->function(curEntity, entityManager->playerEntity, &hitInfo);
+                        }
+                        if (curEntity->collisions != NULL)
+                        {
+                            currentCollisionCheck = currentCollisionCheck->next;
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                     else
                     {
@@ -839,51 +839,46 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
     entity->pos.x  = x << DECIMAL_BITS;
     entity->pos.y  = y << DECIMAL_BITS;
 
-    entity->type        = type;
-    entity->paused      = paused;
-    if(!(entity->gameData->tutorialFlags & 0b1) && spriteIndex > 7 && spriteIndex < 14 && entity->gameData->entityManager.playerEntity != NULL)
+    entity->type   = type;
+    entity->paused = paused;
+    if (!(entity->gameData->tutorialFlags & 0b1) && spriteIndex > 7 && spriteIndex < 14
+        && entity->gameData->entityManager.playerEntity != NULL)
     {
-        if(entity->pos.y < 512 && (spriteIndex == BUGG || spriteIndex == BUGGO))
+        if (entity->pos.y < 512 && (spriteIndex == BUGG || spriteIndex == BUGGO))
         {
-            //don't let the tutorial bug be a flying type.
+            // don't let the tutorial bug be a flying type.
             spriteIndex += 2;
         }
         entity->gameData->isPaused = true;
-        //set the tutorial flag
+        // set the tutorial flag
         entity->gameData->tutorialFlags |= 0b1;
-        bb_entity_t* ovo
-        = bb_createEntity(&entity->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                        entity->gameData->camera.camera.pos.x, entity->gameData->camera.camera.pos.y, false, true);
+        bb_entity_t* ovo = bb_createEntity(&entity->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                                           entity->gameData->camera.camera.pos.x, entity->gameData->camera.camera.pos.y,
+                                           false, true);
 
         bb_dialogueData_t* dData = bb_createDialogueData(13, "Ovo");
 
-        bb_setCharacterLine(dData, 0, "Ovo",
-            "Wow, look at that juicy bug!");
-        bb_setCharacterLine(dData, 1, "Ovo",
-            "Ah, who am I kidding?"); 
-        bb_setCharacterLine(dData, 2, "Ovo",
-            "My time in this landfill is limited.");
+        bb_setCharacterLine(dData, 0, "Ovo", "Wow, look at that juicy bug!");
+        bb_setCharacterLine(dData, 1, "Ovo", "Ah, who am I kidding?");
+        bb_setCharacterLine(dData, 2, "Ovo", "My time in this landfill is limited.");
         bb_setCharacterLine(dData, 3, "Ovo",
-            "So I'm going to break the fourth wall and tell you how to play the freaking game!");
-        bb_setCharacterLine(dData, 4, "Ovo",
-            "There are a bunch of ways to incapacitate that bug. But let's learn how to use harpoons first."); 
-        bb_setCharacterLine(dData, 5, "Ovo",
-            "Hold your right thumb on the  C-Touchpad to aim.");
-        bb_setCharacterLine(dData, 6, "Ovo",
-            "Hey! Wait until I'm done talking, you doofus.");
-        bb_setCharacterLine(dData, 7, "Ovo",
-            "MAGFest attendees are the actual worst.");
+                            "So I'm going to break the fourth wall and tell you how to play the freaking game!");
+        bb_setCharacterLine(
+            dData, 4, "Ovo",
+            "There are a bunch of ways to incapacitate that bug. But let's learn how to use harpoons first.");
+        bb_setCharacterLine(dData, 5, "Ovo", "Hold your right thumb on the  C-Touchpad to aim.");
+        bb_setCharacterLine(dData, 6, "Ovo", "Hey! Wait until I'm done talking, you doofus.");
+        bb_setCharacterLine(dData, 7, "Ovo", "MAGFest attendees are the actual worst.");
         bb_setCharacterLine(dData, 8, "Ovo",
-            "Don't take it personally, but I can detect your stench through the swadge's smelliphone.");
+                            "Don't take it personally, but I can detect your stench through the swadge's smelliphone.");
         bb_setCharacterLine(dData, 9, "Ovo",
-            "If your touch vector is outside of the purple circle that appears on-screen, harpoons will fire steadily.");
-        bb_setCharacterLine(dData, 10, "Ovo",
-            "Three hits will flip the bug upside down!");
+                            "If your touch vector is outside of the purple circle that appears on-screen, harpoons "
+                            "will fire steadily.");
+        bb_setCharacterLine(dData, 10, "Ovo", "Three hits will flip the bug upside down!");
         bb_setCharacterLine(dData, 11, "Ovo",
-            "There's a nifty detail where harpoons with upward velocity tend to ignore terrain.");
-        bb_setCharacterLine(dData, 12, "Ovo",
-            "Now, let's get that bug!");
-        
+                            "There's a nifty detail where harpoons with upward velocity tend to ignore terrain.");
+        bb_setCharacterLine(dData, 12, "Ovo", "Now, let's get that bug!");
+
         dData->curString     = -1;
         dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
         bb_setData(ovo, dData, DIALOGUE_DATA);
@@ -951,8 +946,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
             *collision = (bb_collision_t){others, bb_onCollisionRocketGarbotnik};
             push(entity->collisions, (void*)collision);
-            
-            list_t* others2     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+
+            list_t* others2 = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
             // Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it
             // instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any
             // 32 bits of info you want there, as long as you know how to handle it on the other end
@@ -963,8 +958,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(others2, (void*)BUGGY);
             push(others2, (void*)BUTT);
             push(others2, (void*)EGG);
-            bb_collision_t* collision2 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
-            *collision2                = (bb_collision_t){others2, bb_onCollisionHeavyFallingBug};
+            bb_collision_t* collision2
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision2 = (bb_collision_t){others2, bb_onCollisionHeavyFallingBug};
             push(entity->collisions, (void*)collision2);
 
             entity->halfWidth    = 192;
@@ -1022,10 +1018,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BU:
         {
             bb_walkingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_walkingBugData_t), MALLOC_CAP_SPIRAM);
-            bData->health      = 100;
-            bData->gravity     = BB_DOWN;
-            bData->speed       = 4 * bb_randomInt(3, 6);
-            bData->flags       = bb_randomInt(0, 1);
+            bData->health              = 100;
+            bData->gravity             = BB_DOWN;
+            bData->speed               = 4 * bb_randomInt(3, 6);
+            bData->flags               = bb_randomInt(0, 1);
             bb_setData(entity, bData, WALKING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -1042,10 +1038,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BUG:
         {
             bb_walkingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_walkingBugData_t), MALLOC_CAP_SPIRAM);
-            bData->health      = 100;
-            bData->gravity     = BB_DOWN;
-            bData->speed       = 4 * bb_randomInt(1, 5);
-            bData->flags       = bb_randomInt(0, 1);
+            bData->health              = 100;
+            bData->gravity             = BB_DOWN;
+            bData->speed               = 4 * bb_randomInt(1, 5);
+            bData->flags               = bb_randomInt(0, 1);
             bb_setData(entity, bData, WALKING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -1062,10 +1058,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BUGG:
         {
             bb_flyingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_flyingBugData_t), MALLOC_CAP_SPIRAM);
-            bData->health         = 100;
-            bData->speed          = 4 * bb_randomInt(1, 5);
-            bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
-            bData->flags          = bData->direction.x < 0;
+            bData->health             = 100;
+            bData->speed              = 4 * bb_randomInt(1, 5);
+            bData->direction = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
+            bData->flags     = bData->direction.x < 0;
             bb_setData(entity, bData, FLYING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -1082,10 +1078,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BUGGO:
         {
             bb_flyingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_flyingBugData_t), MALLOC_CAP_SPIRAM);
-            bData->health         = 100;
-            bData->speed          = 4 * bb_randomInt(3, 4);
-            bData->direction      = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
-            bData->flags          = bData->direction.x < 0;
+            bData->health             = 100;
+            bData->speed              = 4 * bb_randomInt(3, 4);
+            bData->direction = rotateVec2d(divVec2d((vec_t){0, bData->speed * 200}, 800), bb_randomInt(0, 359));
+            bData->flags     = bData->direction.x < 0;
             bb_setData(entity, bData, FLYING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -1102,10 +1098,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BUGGY:
         {
             bb_walkingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_walkingBugData_t), MALLOC_CAP_SPIRAM);
-            bData->health      = 100;
-            bData->gravity     = BB_DOWN;
-            bData->speed       = 4 * bb_randomInt(1, 5);
-            bData->flags       = bb_randomInt(0, 1);
+            bData->health              = 100;
+            bData->gravity             = BB_DOWN;
+            bData->speed               = 4 * bb_randomInt(1, 5);
+            bData->flags               = bb_randomInt(0, 1);
             bb_setData(entity, bData, WALKING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -1122,10 +1118,10 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BUTT:
         {
             bb_walkingBugData_t* bData = heap_caps_calloc(1, sizeof(bb_walkingBugData_t), MALLOC_CAP_SPIRAM);
-            bData->health      = 100;
-            bData->gravity     = BB_DOWN;
-            bData->speed       = 4 * bb_randomInt(1, 5);
-            bData->flags       = bb_randomInt(0, 1);
+            bData->health              = 100;
+            bData->gravity             = BB_DOWN;
+            bData->speed               = 4 * bb_randomInt(1, 5);
+            bData->flags               = bb_randomInt(0, 1);
             bb_setData(entity, bData, WALKING_BUG_DATA);
 
             entity->gameFramesPerAnimationFrame = (40 - bData->speed) / 5;
@@ -1224,8 +1220,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
             *collision = (bb_collision_t){others, bb_onCollisionHeavyFallingGarbotnik};
             push(entity->collisions, (void*)collision);
-            
-            list_t* others2     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+
+            list_t* others2 = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
             // Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it
             // instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any
             // 32 bits of info you want there, as long as you know how to handle it on the other end
@@ -1236,8 +1232,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(others2, (void*)BUGGY);
             push(others2, (void*)BUTT);
             push(others2, (void*)EGG);
-            bb_collision_t* collision2 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
-            *collision2                = (bb_collision_t){others2, bb_onCollisionHeavyFallingBug};
+            bb_collision_t* collision2
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision2 = (bb_collision_t){others2, bb_onCollisionHeavyFallingBug};
             push(entity->collisions, (void*)collision2);
 
             break;
@@ -1389,24 +1386,22 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_DONUT:
         {
-            if(!(entity->gameData->tutorialFlags & 0b10000))
+            if (!(entity->gameData->tutorialFlags & 0b10000))
             {
                 entity->gameData->isPaused = true;
-                //set the tutorial flag
+                // set the tutorial flag
                 entity->gameData->tutorialFlags |= 0b10000;
-                bb_entity_t* ovo
-                = bb_createEntity(&entity->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                                entity->gameData->camera.camera.pos.x, entity->gameData->camera.camera.pos.y, false, true);
+                bb_entity_t* ovo = bb_createEntity(&entity->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                                                   entity->gameData->camera.camera.pos.x,
+                                                   entity->gameData->camera.camera.pos.y, false, true);
 
                 bb_dialogueData_t* dData = bb_createDialogueData(3, "Ovo");
 
-                bb_setCharacterLine(dData, 0, "Ovo",
-                    "I want to eat that donut RIGHT NOW!");
-                bb_setCharacterLine(dData, 1, "Ovo",
-                    "No. I need to focus. I'll tow it back to the booster.");
+                bb_setCharacterLine(dData, 0, "Ovo", "I want to eat that donut RIGHT NOW!");
+                bb_setCharacterLine(dData, 1, "Ovo", "No. I need to focus. I'll tow it back to the booster.");
                 bb_setCharacterLine(dData, 2, "Ovo",
-                    "When I eat it at home, it will be the be the impulse for my next great wile.");
-                
+                                    "When I eat it at home, it will be the be the impulse for my next great wile.");
+
                 dData->curString     = -1;
                 dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
                 bb_setData(ovo, dData, DIALOGUE_DATA);
@@ -1616,8 +1611,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
             *collision = (bb_collision_t){others, bb_onCollisionSpaceLaserGarbotnik};
             push(entity->collisions, (void*)collision);
-            
-            list_t* others2     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+
+            list_t* others2 = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
             // Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it
             // instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any
             // 32 bits of info you want there, as long as you know how to handle it on the other end
@@ -1628,18 +1623,18 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(others2, (void*)BUGGY);
             push(others2, (void*)BUTT);
             push(others2, (void*)EGG);
-            bb_collision_t* collision2 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
-            *collision2                = (bb_collision_t){others2, bb_onCollisionSpaceLaserBug};
+            bb_collision_t* collision2
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision2 = (bb_collision_t){others2, bb_onCollisionSpaceLaserBug};
             push(entity->collisions, (void*)collision2);
-
 
             break;
         }
         case BB_BRICK_TUTORIAL:
         {
-            entity->cacheable = true;
-            entity->halfWidth = HALF_TILE << DECIMAL_BITS;
-            entity->halfHeight = HALF_TILE << DECIMAL_BITS;
+            entity->cacheable    = true;
+            entity->halfWidth    = HALF_TILE << DECIMAL_BITS;
+            entity->halfHeight   = HALF_TILE << DECIMAL_BITS;
             entity->drawFunction = &bb_drawNothing;
 
             entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
@@ -1648,7 +1643,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
             *collision                = (bb_collision_t){others, bb_onCollisionBrickTutorial};
             push(entity->collisions, (void*)collision);
-            
+
             break;
         }
         case BB_GARBOTNIK_UI:

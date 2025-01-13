@@ -129,7 +129,7 @@ typedef struct // child class
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
     //-----------------------------------------------
-    vec_t direction;     // buggo moves in the direction vector.
+    vec_t direction; // buggo moves in the direction vector.
 } bb_flyingBugData_t;
 
 typedef struct

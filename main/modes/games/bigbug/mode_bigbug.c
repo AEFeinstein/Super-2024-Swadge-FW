@@ -193,7 +193,7 @@ static void bb_EnterMode(void)
 
     ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
 
-    int8_t oldBoosterYs[3] = { -1, -1, -1 };
+    int8_t oldBoosterYs[3] = {-1, -1, -1};
     bb_generateWorld(&(bigbug->gameData.tilemap), oldBoosterYs);
 
     // Player
@@ -300,9 +300,8 @@ static void bb_EnterModeSkipIntro(void)
         = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1, deathDumpsterX,
                           deathDumpsterY, false, true);
 
-    //create garbotnik's UI
-    bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_GARBOTNIK_UI, 1,
-                          0, 0, false, true);
+    // create garbotnik's UI
+    bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_GARBOTNIK_UI, 1, 0, 0, false, true);
 
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
@@ -313,7 +312,7 @@ static void bb_EnterModeSkipIntro(void)
 
     bigbug->gameData.entityManager.playerEntity = bigbug->gameData.entityManager.viewEntity;
 
-    int8_t oldBoosterYs[3] = { -1, -1, -1 };
+    int8_t oldBoosterYs[3] = {-1, -1, -1};
     bb_generateWorld(&(bigbug->gameData.tilemap), oldBoosterYs);
 
     // Set the mode to game mode
@@ -1353,8 +1352,8 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
     }
 
     // keep the selection wrapped in range of available choices.
-    uint8_t numChoices
-        = 1 + (uint8_t)(bigbug->gameData.garbotnikUpgrade.choices[1] > -1) + (uint8_t)(bigbug->gameData.garbotnikUpgrade.choices[2] > -1);
+    uint8_t numChoices = 1 + (uint8_t)(bigbug->gameData.garbotnikUpgrade.choices[1] > -1)
+                         + (uint8_t)(bigbug->gameData.garbotnikUpgrade.choices[2] > -1);
     bigbug->gameData.radar.playerPingRadius
         = (bigbug->gameData.radar.playerPingRadius % numChoices + numChoices) % numChoices;
 

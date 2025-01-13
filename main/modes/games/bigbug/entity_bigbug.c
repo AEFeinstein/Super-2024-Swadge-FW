@@ -70,14 +70,9 @@ void bb_destroyEntity(bb_entity_t* self, bool caching, bool wasInTheMainArray)
         return;
     }
 
-    if(self->spriteIndex == BB_CAR||
-       self->spriteIndex == BB_GRABBY_HAND||
-       self->spriteIndex == BB_DOOR||
-       self->spriteIndex == BB_SWADGE||
-       self->spriteIndex == BB_DRILL_BOT||
-       self->spriteIndex == BB_AMMO_SUPPLY||
-       self->spriteIndex == BB_PACIFIER||
-       self->spriteIndex == BB_PANGO_AND_FRIENDS)
+    if (self->spriteIndex == BB_CAR || self->spriteIndex == BB_GRABBY_HAND || self->spriteIndex == BB_DOOR
+        || self->spriteIndex == BB_SWADGE || self->spriteIndex == BB_DRILL_BOT || self->spriteIndex == BB_AMMO_SUPPLY
+        || self->spriteIndex == BB_PACIFIER || self->spriteIndex == BB_PANGO_AND_FRIENDS)
     {
         bb_freeSprite(&self->gameData->entityManager.sprites[self->spriteIndex]);
     }
@@ -170,7 +165,7 @@ void bb_destroyEntity(bb_entity_t* self, bool caching, bool wasInTheMainArray)
     self->halfHeight                  = 0;
     self->cSquared                    = 0;
 
-    if(wasInTheMainArray && self->gameData->entityManager.activeEntities)
+    if (wasInTheMainArray && self->gameData->entityManager.activeEntities)
     {
         self->gameData->entityManager.activeEntities--;
     }
@@ -317,7 +312,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
         if (self->gameData->day % 7 == 2 || self->gameData->day % 7 == 5 || self->gameData->day % 7 == 0)
         {
             bb_deactivateAllEntities(&self->gameData->entityManager, true);
-            int8_t oldBoosterYs[3] = { -1, -1, -1 };
+            int8_t oldBoosterYs[3] = {-1, -1, -1};
             for (int boosterIdx = 0; boosterIdx < 3; boosterIdx++)
             {
                 if (self->gameData->entityManager.activeBooster
@@ -331,7 +326,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
                 }
             }
             bb_generateWorld(&(self->gameData->tilemap), oldBoosterYs);
-            //brute force recalculate activeEntities count to clean up any inaccuracies.
+            // brute force recalculate activeEntities count to clean up any inaccuracies.
             self->gameData->entityManager.activeEntities = 0;
             for (int i = 0; i < MAX_ENTITIES; i++)
             {
@@ -530,10 +525,10 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     // touchpad stuff
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
-    if(gData->touching)
+    if (gData->touching)
     {
         gData->activationRadius -= self->gameData->elapsedUs >> 10;
-        if(gData->activationRadius < 374)
+        if (gData->activationRadius < 374)
         {
             gData->activationRadius = 374;
         }
@@ -618,7 +613,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         }
     }
 
-    if(gData->fire)
+    if (gData->fire)
     {
         gData->activationRadius = 1102;
     }
@@ -953,15 +948,15 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             soundPlaySfx(&self->gameData->sfxTether, 0);
             push(&gData->towedEntities, (void*)&self->gameData->entityManager.entities[best_i]);
             bb_entity_t* tetheredEntity = &self->gameData->entityManager.entities[best_i];
-            switch(tetheredEntity->dataType)
+            switch (tetheredEntity->dataType)
             {
                 case WALKING_BUG_DATA:
                 {
                     // set the isTethered flag to true
                     bb_walkingBugData_t* bData = (bb_walkingBugData_t*)tetheredEntity->data;
-                    bData->flags        = bData->flags | 0b10; // 0b10 is the bitpacked isTethered flag
+                    bData->flags               = bData->flags | 0b10; // 0b10 is the bitpacked isTethered flag
                     // if it is free falling then "kill" it.
-                    if(bData->fallSpeed > 19)
+                    if (bData->fallSpeed > 19)
                     {
                         bb_bugDeath(tetheredEntity, NULL);
                     }
@@ -1149,36 +1144,35 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     }
     else if (gData->fuel < 38000 && self->gameData->bgm.length == 5537)
     {
-        if(!(self->gameData->tutorialFlags & 0b1000))
+        if (!(self->gameData->tutorialFlags & 0b1000))
         {
             self->gameData->isPaused = true;
-            //set the tutorial flag
+            // set the tutorial flag
             self->gameData->tutorialFlags |= 0b1000;
-            bb_entity_t* ovo
-            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                            self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+            bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y,
+                                               false, true);
 
             bb_dialogueData_t* dData = bb_createDialogueData(9, "Ovo");
 
-            bb_setCharacterLine(dData, 0, "Ovo",
-                "Glitch my circuits!");
-            bb_setCharacterLine(dData, 1, "Ovo",
-                "Low fuel!");
-            bb_setCharacterLine(dData, 2, "Ovo",
-                "How could you do this to me?!");
-            bb_setCharacterLine(dData, 3, "Ovo",
-                "Extraction is one of the hardest parts of the job.");
-            bb_setCharacterLine(dData, 4, "Ovo",
+            bb_setCharacterLine(dData, 0, "Ovo", "Glitch my circuits!");
+            bb_setCharacterLine(dData, 1, "Ovo", "Low fuel!");
+            bb_setCharacterLine(dData, 2, "Ovo", "How could you do this to me?!");
+            bb_setCharacterLine(dData, 3, "Ovo", "Extraction is one of the hardest parts of the job.");
+            bb_setCharacterLine(
+                dData, 4, "Ovo",
                 "Plan ahead and clear out any threats around the booster for an uninterrupted extraction.");
-            bb_setCharacterLine(dData, 5, "Ovo",
+            bb_setCharacterLine(
+                dData, 5, "Ovo",
                 "Keep in mind that my headlamps stimulate the bug eggs. So my facing direction is important.");
-            bb_setCharacterLine(dData, 6, "Ovo",
+            bb_setCharacterLine(
+                dData, 6, "Ovo",
                 "Grid-locked bugs are pretty much a non-threat since they aren't mad enough to dig out.");
-            bb_setCharacterLine(dData, 7, "Ovo",
-                "And bugs far off-screen will stop moving and shooting.");
-            bb_setCharacterLine(dData, 8, "Ovo",
+            bb_setCharacterLine(dData, 7, "Ovo", "And bugs far off-screen will stop moving and shooting.");
+            bb_setCharacterLine(
+                dData, 8, "Ovo",
                 "Sometimes you just need to let them wander away to sit safely on the booster for 30 seconds.");
-            
+
             dData->curString     = -1;
             dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
             bb_setData(ovo, dData, DIALOGUE_DATA);
@@ -1542,7 +1536,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 break;
         }
         bData->gravity = BB_DOWN;
-        if(bData->flags & 0b10)
+        if (bData->flags & 0b10)
         {
             bb_bugDeath(self, NULL);
             return;
@@ -1567,7 +1561,8 @@ void bb_updateWalkingBug(bb_entity_t* self)
         }
         case BB_UP:
         {
-            if(bData->flags & 0b10 && self->gameData->entityManager.playerEntity->pos.y > self->pos.y && bb_randomInt(0,240) == 0)
+            if (bData->flags & 0b10 && self->gameData->entityManager.playerEntity->pos.y > self->pos.y
+                && bb_randomInt(0, 240) == 0)
             {
                 bb_bugDeath(self, NULL);
                 return;
@@ -1585,7 +1580,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
     bb_collisionCheck(&self->gameData->tilemap, self, NULL, &hitInfo);
     if (hitInfo.hit == true)
     {
-        if(bData->fallSpeed <= 19 || bb_randomInt(0,240) == 0)
+        if (bData->fallSpeed <= 19 || bb_randomInt(0, 240) == 0)
         {
             bData->fallSpeed = 0;
             switch (bData->gravity)
@@ -1601,7 +1596,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                                 bb_rotateBug(self, 1);
                             }
                             self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
-                                        + hitInfo.normal.x * self->halfWidth;
+                                          + hitInfo.normal.x * self->halfWidth;
                         }
                         else if (hitInfo.normal.x == -1)
                         {
@@ -1632,7 +1627,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                                 bb_rotateBug(self, 1);
                             }
                             self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
-                                        + hitInfo.normal.y * self->halfHeight;
+                                          + hitInfo.normal.y * self->halfHeight;
                         }
                         else if (hitInfo.normal.y == -1)
                         {
@@ -1672,7 +1667,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                                 bb_rotateBug(self, -1);
                             }
                             self->pos.x = ((hitInfo.tile_i * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
-                                        + hitInfo.normal.x * self->halfWidth;
+                                          + hitInfo.normal.x * self->halfWidth;
                         }
                     }
                     else
@@ -1703,7 +1698,7 @@ void bb_updateWalkingBug(bb_entity_t* self)
                                 bb_rotateBug(self, -1);
                             }
                             self->pos.y = ((hitInfo.tile_j * TILE_SIZE + TILE_SIZE) << DECIMAL_BITS)
-                                        + hitInfo.normal.y * self->halfHeight;
+                                          + hitInfo.normal.y * self->halfHeight;
                         }
                     }
                     else
@@ -1740,17 +1735,17 @@ void bb_updateWalkingBug(bb_entity_t* self)
                 break;
         }
     }
-    //out of bounds
-    if(self->pos.x < 96)
+    // out of bounds
+    if (self->pos.x < 96)
     {
-        //turn the bug around
-        self->pos.x = 96;
+        // turn the bug around
+        self->pos.x  = 96;
         bData->flags = bData->flags ^ 0b1;
     }
-    else if(self->pos.x > 37888)
+    else if (self->pos.x > 37888)
     {
-        //turn the bug around
-        self->pos.x = 37888;
+        // turn the bug around
+        self->pos.x  = 37888;
         bData->flags = bData->flags ^ 0b1;
     }
     // if NOT (garbotnik has the bug whisperer talent AND bug is tethered)
@@ -1829,9 +1824,8 @@ void bb_updateMenu(bb_entity_t* self)
                 rData->flame->updateFunction = &bb_updateFlame;
             }
 
-            //create garbotnik's UI
-            bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GARBOTNIK_UI, 1,
-                          0, 0, false, true);
+            // create garbotnik's UI
+            bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GARBOTNIK_UI, 1, 0, 0, false, true);
 
             bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
 
@@ -2246,28 +2240,26 @@ void bb_updateGrabbyHand(bb_entity_t* self)
         bb_destroyEntity(ghData->grabbed, false, true);
         ghData->grabbed = NULL;
 
-        if(!(self->gameData->tutorialFlags & 0b100))
+        if (!(self->gameData->tutorialFlags & 0b100))
         {
             self->gameData->isPaused = true;
-            //set the tutorial flag
+            // set the tutorial flag
             self->gameData->tutorialFlags |= 0b100;
-            bb_entity_t* ovo
-            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                            self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+            bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y,
+                                               false, true);
 
             bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
 
-            bb_setCharacterLine(dData, 0, "Ovo",
-                "One down, nine more to go!");
-            bb_setCharacterLine(dData, 1, "Ovo",
-                "For every 10 bugs collected, the booster will emit a mega ping!");
+            bb_setCharacterLine(dData, 0, "Ovo", "One down, nine more to go!");
+            bb_setCharacterLine(dData, 1, "Ovo", "For every 10 bugs collected, the booster will emit a mega ping!");
             bb_setCharacterLine(dData, 2, "Ovo",
-                "When the mega ping is done, you can tune into some of the more important results.");
-            bb_setCharacterLine(dData, 3, "Ovo", 
-                "Oh, you can pulse your own radar anytime with the start button. It takes some time to interpret the pings.");
-            bb_setCharacterLine(dData, 4, "Ovo",
-                "So keep exploring while you wait.");
-            
+                                "When the mega ping is done, you can tune into some of the more important results.");
+            bb_setCharacterLine(dData, 3, "Ovo",
+                                "Oh, you can pulse your own radar anytime with the start button. It takes some time to "
+                                "interpret the pings.");
+            bb_setCharacterLine(dData, 4, "Ovo", "So keep exploring while you wait.");
+
             dData->curString     = -1;
             dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
             bb_setData(ovo, dData, DIALOGUE_DATA);
@@ -2738,7 +2730,8 @@ void bb_updateExplosion(bb_entity_t* self)
             {
                 if (curEntity->dataType == PHYSICS_DATA || curEntity->dataType == FOOD_CART_DATA
                     || curEntity->dataType == DRILL_BOT_DATA || curEntity->dataType == WILE_DATA
-                    || ((curEntity->dataType == FLYING_BUG_DATA || curEntity->dataType == WALKING_BUG_DATA) && bb_randomInt(-1, 1)))
+                    || ((curEntity->dataType == FLYING_BUG_DATA || curEntity->dataType == WALKING_BUG_DATA)
+                        && bb_randomInt(-1, 1)))
                 {
                     bb_entity_t* foundSpot = bb_findInactiveEntity(&self->gameData->entityManager);
                     if (foundSpot != NULL)
@@ -2790,7 +2783,8 @@ void bb_updateExplosion(bb_entity_t* self)
                     bb_physicsData_t* pData = (bb_physicsData_t*)curEntity->data;
                     pData->vel              = divVec2d(toFrom, 5);
                 }
-                else if ((curEntity->dataType == FLYING_BUG_DATA || curEntity->dataType == WALKING_BUG_DATA) && bb_randomInt(0, 2))
+                else if ((curEntity->dataType == FLYING_BUG_DATA || curEntity->dataType == WALKING_BUG_DATA)
+                         && bb_randomInt(0, 2))
                 {
                     // 66% chance to kill the bug
                     bb_hitInfo_t hitInfo = {0};
@@ -3087,7 +3081,7 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         getTouchCartesian(gData->phi, gData->r, &x, &y);
         x -= 511;
         y -= 511;
-        if(gData->r < gData->activationRadius)
+        if (gData->r < gData->activationRadius)
         {
             drawCircle(xOff, yOff, gData->activationRadius / 10, c103);
         }
@@ -3096,7 +3090,8 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         drawLineFast(xOff, yOff - 1, xOff + otherX, yOff - otherY - 1, c555);
         if (gData->r > gData->activationRadius)
         {
-            drawCircleQuadrants(xOff, yOff, gData->activationRadius / 10, x > 0 && y < 0, x < 0 && y < 0, x < 0 && y > 0, x > 0 && y > 0, c315);
+            drawCircleQuadrants(xOff, yOff, gData->activationRadius / 10, x > 0 && y < 0, x < 0 && y < 0,
+                                x < 0 && y > 0, x > 0 && y > 0, c315);
             drawLineFast(xOff, yOff, xOff + otherX, yOff - otherY, c315);
         }
         else
@@ -3112,7 +3107,7 @@ void bb_drawGarbotnikUI(bb_entityManager_t* entityManager, rectangle_t* camera, 
     {
         return;
     }
-    else if(GARBOTNIK_DATA != entityManager->playerEntity->dataType)
+    else if (GARBOTNIK_DATA != entityManager->playerEntity->dataType)
     {
         return;
     }
@@ -3506,8 +3501,8 @@ void bb_drawRadarPing(bb_entityManager_t* entityManager, rectangle_t* camera, bb
 void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     bb_walkingBugData_t* bData = (bb_walkingBugData_t*)self->data;
-    bool faceLeft      = bData->flags & 0b1;
-    uint8_t brightness = 5;
+    bool faceLeft              = bData->flags & 0b1;
+    uint8_t brightness         = 5;
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
     if (entityManager->playerEntity != NULL)
@@ -3540,13 +3535,15 @@ void bb_drawBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
     if (bData->damageEffect > 70 || (bData->damageEffect > 0 && bb_randomInt(0, 1)))
     {
         drawWsgPalette(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6],
-                       xOff, yOff, &self->gameData->damagePalette, faceLeft, (self->dataType == WALKING_BUG_DATA) && (bData->fallSpeed > 19),
+                       xOff, yOff, &self->gameData->damagePalette, faceLeft,
+                       (self->dataType == WALKING_BUG_DATA) && (bData->fallSpeed > 19),
                        (self->dataType == WALKING_BUG_DATA) * 90 * bData->gravity);
     }
     else
     {
         drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff,
-                yOff, faceLeft, (self->dataType == WALKING_BUG_DATA) && (bData->fallSpeed > 19), (self->dataType == WALKING_BUG_DATA) * 90 * bData->gravity);
+                yOff, faceLeft, (self->dataType == WALKING_BUG_DATA) && (bData->fallSpeed > 19),
+                (self->dataType == WALKING_BUG_DATA) * 90 * bData->gravity);
     }
 }
 
@@ -3572,14 +3569,11 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
             char screenText[30] = "Hang tight!";
             uint16_t tHalfWidth = textWidth(&self->gameData->font, screenText) >> 1;
             drawRectFilled(138 - tHalfWidth, 28, 142 + tHalfWidth, 43, c000);
-            drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth,
-                     30);
+            drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth, 30);
             snprintf(screenText, sizeof(screenText), "pre-flight check in progress");
             tHalfWidth = textWidth(&self->gameData->font, screenText) >> 1;
             drawRectFilled(138 - tHalfWidth, 183, 142 + tHalfWidth, 198, c000);
-            drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth,
-                     185);
-            
+            drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth, 185);
         }
     }
 
@@ -3611,18 +3605,15 @@ void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
     cData->textTimer -= self->gameData->elapsedUs >> 8;
     if ((cData->textTimer / 3000) % 2 == 0)
     {
-        
         char screenText[30] = "Car Alarm!";
         uint16_t tHalfWidth = textWidth(&self->gameData->font, screenText) >> 1;
         drawRectFilled(138 - tHalfWidth, 28, 142 + tHalfWidth, 43, c000);
-        drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth,
-                 30);
-        
+        drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth, 30);
+
         snprintf(screenText, sizeof(screenText), "Flip %d bugs!", self->gameData->carFightState);
         tHalfWidth = textWidth(&self->gameData->font, screenText) >> 1;
         drawRectFilled(138 - tHalfWidth, 183, 142 + tHalfWidth, 198, c000);
-        drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth,
-                 185);
+        drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth, 185);
     }
 }
 
@@ -4099,8 +4090,8 @@ void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
                 &(((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->yaw.x), brightness);
         }
     }
-    drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff,
-            yOff, false, true, 0);
+    drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff, yOff,
+            false, true, 0);
 }
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -4137,32 +4128,31 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
             {
                 bb_bugDeath(other, hitInfo);
 
-                if(!(self->gameData->tutorialFlags & 0b10))
+                if (!(self->gameData->tutorialFlags & 0b10))
                 {
                     self->gameData->isPaused = true;
-                    //set the tutorial flag
+                    // set the tutorial flag
                     self->gameData->tutorialFlags |= 0b10;
-                    bb_entity_t* ovo
-                    = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                                    self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+                    bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                                                       self->gameData->camera.camera.pos.x,
+                                                       self->gameData->camera.camera.pos.y, false, true);
 
                     bb_dialogueData_t* dData = bb_createDialogueData(7, "Ovo");
 
-                    bb_setCharacterLine(dData, 0, "Ovo",
-                        "ARLIGHT! You got it!!!");
-                    bb_setCharacterLine(dData, 1, "Ovo",
-                        "Ahem... I mean, not bad.");
-                    bb_setCharacterLine(dData, 2, "Ovo", 
-                        "In fact, I'm the one who got it.");
+                    bb_setCharacterLine(dData, 0, "Ovo", "ARLIGHT! You got it!!!");
+                    bb_setCharacterLine(dData, 1, "Ovo", "Ahem... I mean, not bad.");
+                    bb_setCharacterLine(dData, 2, "Ovo", "In fact, I'm the one who got it.");
                     bb_setCharacterLine(dData, 3, "Ovo",
-                        "Press the 'A' button near a bug to attach a cable and tow it back to the booster to get credit.");
-                    bb_setCharacterLine(dData, 4, "Ovo",
+                                        "Press the 'A' button near a bug to attach a cable and tow it back to the "
+                                        "booster to get credit.");
+                    bb_setCharacterLine(
+                        dData, 4, "Ovo",
                         "Careful with that tow cable, because a right-side-up bug will drag me around.");
                     bb_setCharacterLine(dData, 5, "Ovo",
-                        "Did you know bugs can carry over 100 times their body weight?");
+                                        "Did you know bugs can carry over 100 times their body weight?");
                     bb_setCharacterLine(dData, 6, "Ovo",
-                        "They're pretty strong, but I wonder if I could pry them off the ceiling.");
-                    
+                                        "They're pretty strong, but I wonder if I could pry them off the ceiling.");
+
                     dData->curString     = -1;
                     dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
                     bb_setData(ovo, dData, DIALOGUE_DATA);
@@ -4248,7 +4238,7 @@ bool bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
         bb_collisionCheck(&self->gameData->tilemap, other, NULL, &localHitInfo);
         if (localHitInfo.hit == true && localHitInfo.normal.y == -1)
         {
-            //return true for crush
+            // return true for crush
             return true;
         }
     }
@@ -4257,9 +4247,9 @@ bool bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInf
 
 void bb_onCollisionHeavyFallingBug(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    if(bb_onCollisionHeavyFalling(self, other, hitInfo))
+    if (bb_onCollisionHeavyFalling(self, other, hitInfo))
     {
-        //create fuel and destroy other
+        // create fuel and destroy other
         bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_FUEL, 10,
                         (other->pos.x >> DECIMAL_BITS), (other->pos.y >> DECIMAL_BITS), true, false);
@@ -4269,7 +4259,7 @@ void bb_onCollisionHeavyFallingBug(bb_entity_t* self, bb_entity_t* other, bb_hit
 
 void bb_onCollisionHeavyFallingGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    if(bb_onCollisionHeavyFalling(self, other, hitInfo))
+    if (bb_onCollisionHeavyFalling(self, other, hitInfo))
     {
         bb_triggerGameOver(self);
     }
@@ -4644,42 +4634,33 @@ void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
 
 void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    if(!(self->gameData->tutorialFlags & 0b100000))
+    if (!(self->gameData->tutorialFlags & 0b100000))
     {
         self->gameData->isPaused = true;
-        //set the tutorial flag
+        // set the tutorial flag
         self->gameData->tutorialFlags |= 0b100000;
         bb_entity_t* ovo
-        = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                        self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                              self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
 
         bb_dialogueData_t* dData = bb_createDialogueData(12, "Ovo");
 
-        bb_setCharacterLine(dData, 0, "Ovo",
-            "\"---Incoming Transmission from Mr. Dev---\"");
-        bb_setCharacterLine(dData, 1, "Ovo",
-            "What in the heck?");
-        bb_setCharacterLine(dData, 2, "Ovo",
-            "Dang radio's acting up again!");
-        bb_setCharacterLine(dData, 3, "Ovo",
-            "\"The bricks can be destroyed by dealing 100 damage.\"");
-        bb_setCharacterLine(dData, 4, "Ovo",
-            "\"Bring Ovo Garbotnik to a complete stop in a tight gap.\"");
+        bb_setCharacterLine(dData, 0, "Ovo", "\"---Incoming Transmission from Mr. Dev---\"");
+        bb_setCharacterLine(dData, 1, "Ovo", "What in the heck?");
+        bb_setCharacterLine(dData, 2, "Ovo", "Dang radio's acting up again!");
+        bb_setCharacterLine(dData, 3, "Ovo", "\"The bricks can be destroyed by dealing 100 damage.\"");
+        bb_setCharacterLine(dData, 4, "Ovo", "\"Bring Ovo Garbotnik to a complete stop in a tight gap.\"");
         bb_setCharacterLine(dData, 5, "Ovo",
-            "\"Then move briefly toward the brick to initiate a ping-ponging movement pattern.\"");
-        bb_setCharacterLine(dData, 6, "Ovo",
+                            "\"Then move briefly toward the brick to initiate a ping-ponging movement pattern.\"");
+        bb_setCharacterLine(
+            dData, 6, "Ovo",
             "\"Same as the other garbage densities, bricks will crumble if they are totally disconnected.\"");
-        bb_setCharacterLine(dData, 7, "Ovo",
-            "\"Or they can be smashed easily with heavy falling objects.\"");
-        bb_setCharacterLine(dData, 8, "Ovo",
-            "\"Big Bug's early-game design is all about trading fuel for upgrades.\"");
-        bb_setCharacterLine(dData, 9, "Ovo",
-            "\"So be sure to strategize how to use your time!\"");
-        bb_setCharacterLine(dData, 10, "Ovo",
-            "\"The late-game design has a shift in focus away from fuel.\"");
-        bb_setCharacterLine(dData, 11, "Ovo",
-            "\"You'll just have to see it for yourself!\"");
-        
+        bb_setCharacterLine(dData, 7, "Ovo", "\"Or they can be smashed easily with heavy falling objects.\"");
+        bb_setCharacterLine(dData, 8, "Ovo", "\"Big Bug's early-game design is all about trading fuel for upgrades.\"");
+        bb_setCharacterLine(dData, 9, "Ovo", "\"So be sure to strategize how to use your time!\"");
+        bb_setCharacterLine(dData, 10, "Ovo", "\"The late-game design has a shift in focus away from fuel.\"");
+        bb_setCharacterLine(dData, 11, "Ovo", "\"You'll just have to see it for yourself!\"");
+
         dData->curString     = -1;
         dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
         bb_setData(ovo, dData, DIALOGUE_DATA);
@@ -4689,7 +4670,7 @@ void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitIn
 
 void bb_onCollisionSpaceLaserGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    if(other->dataType != GARBOTNIK_DATA)
+    if (other->dataType != GARBOTNIK_DATA)
     {
         return;
     }
@@ -4700,7 +4681,7 @@ void bb_onCollisionSpaceLaserGarbotnik(bb_entity_t* self, bb_entity_t* other, bb
 
 void bb_onCollisionSpaceLaserBug(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
 {
-    if((other->dataType != FLYING_BUG_DATA && other->dataType != WALKING_BUG_DATA) || bb_randomInt(0,1))
+    if ((other->dataType != FLYING_BUG_DATA && other->dataType != WALKING_BUG_DATA) || bb_randomInt(0, 1))
     {
         return;
     }
@@ -5089,24 +5070,23 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
 
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 {
-    if(self->pos.x > 16940)
+    if (self->pos.x > 16940)
     {
-        if(!(self->gameData->tutorialFlags & 0b1000000))
+        if (!(self->gameData->tutorialFlags & 0b1000000))
         {
             self->gameData->isPaused = true;
-            //set the tutorial flag
+            // set the tutorial flag
             self->gameData->tutorialFlags |= 0b1000000;
-            bb_entity_t* ovo
-            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
-                            self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+            bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y,
+                                               false, true);
 
             bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo");
 
             bb_setCharacterLine(dData, 0, "Ovo",
-                "If I find my old booster, I can recover any unprocessed bugs and donuts.");
-            bb_setCharacterLine(dData, 1, "Ovo",
-                "Just push steadily into the derelict booster to coax them out.");
-            
+                                "If I find my old booster, I can recover any unprocessed bugs and donuts.");
+            bb_setCharacterLine(dData, 1, "Ovo", "Just push steadily into the derelict booster to coax them out.");
+
             dData->curString     = -1;
             dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
             bb_setData(ovo, dData, DIALOGUE_DATA);

@@ -28,7 +28,8 @@ typedef struct
 {
     bb_sprite_t sprites[NUM_SPRITES];
     bb_entity_t* entities;
-    bb_entity_t* frontEntities; // important entities that render on top. i.e. dialogue, pango & friends, boosters, death dumpster
+    bb_entity_t* frontEntities; // important entities that render on top. i.e. dialogue, pango & friends, boosters,
+                                // death dumpster
     list_t* cachedEntities;
     uint8_t activeEntities;
 

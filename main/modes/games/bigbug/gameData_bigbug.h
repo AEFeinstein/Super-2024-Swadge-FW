@@ -211,7 +211,6 @@ struct bb_gameData_t
                            // 0b100000 talk about breaking bricks
                            // 0b1000000 talk about getting things out of old boosters
 
-
     int16_t GarbotnikStat_fireTime;            // The time between harpoon shots.
     uint8_t GarbotnikStat_diggingStrength;     // Starts at 1. Can increment indefinetly by 1.
     uint8_t GarbotnikStat_fuelConsumptionRate; // Starts at 4. Can decrement to 0.
