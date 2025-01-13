@@ -377,6 +377,17 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             }
                             break;
                         }
+                        case BRICK_TUTORIAL_EMBED:
+                        {
+                            bb_ensureEntitySpace(entityManager, 1);
+                            if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_BRICK_TUTORIAL, 1,
+                                                  i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
+                                != NULL)
+                            {
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }
                         default:
                         {
                             break;

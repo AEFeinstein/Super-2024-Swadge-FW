@@ -517,6 +517,14 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     // touchpad stuff
     gData->fire     = gData->touching;
     gData->touching = getTouchJoystick(&gData->phi, &gData->r, &gData->intensity);
+    if(gData->touching)
+    {
+        gData->activationRadius -= self->gameData->elapsedUs >> 10;
+        if(gData->activationRadius < 374)
+        {
+            gData->activationRadius = 374;
+        }
+    }
     // The outer half of the circle launches the same velocity so you don't have to touch at the very edge.
     // if (gData->r > 561)
     // {
@@ -524,7 +532,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     // }
 
     gData->fire = gData->fire && !gData->touching; // is true for one frame upon touchpad release.
-    if (gData->r > 374 && gData->fire && gData->activeWile != 255)
+    if (gData->r > gData->activationRadius && gData->fire && gData->activeWile != 255)
     {
         // Throw a wile!
         bb_entity_t* wile = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, BB_WILE, 1,
@@ -574,7 +582,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
         gData->harpoonCooldown = -250;
     }
 
-    if (gData->touching && gData->r > 374 && gData->harpoonCooldown < 0 && gData->numHarpoons > 0
+    if (gData->touching && gData->r > gData->activationRadius && gData->harpoonCooldown < 0 && gData->numHarpoons > 0
         && gData->activeWile == 255)
     {
         gData->harpoonCooldown = self->gameData->GarbotnikStat_fireTime;
@@ -595,6 +603,11 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             pData->vel.x = ((x - 512) * 7) >> 6;
             pData->vel.y = ((-y + 512) * 7) >> 6;
         }
+    }
+
+    if(gData->fire)
+    {
+        gData->activationRadius = 1102;
     }
 
     // record the previous frame's position before any logic.
@@ -1123,7 +1136,6 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     }
     else if (gData->fuel < 38000 && self->gameData->bgm.length == 5537)
     {
-        
         if(!(self->gameData->tutorialFlags & 0b1000))
         {
             self->gameData->isPaused = true;
@@ -1133,27 +1145,25 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                             self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
 
-            bb_dialogueData_t* dData = bb_createDialogueData(10, "Ovo");
+            bb_dialogueData_t* dData = bb_createDialogueData(9, "Ovo");
 
             bb_setCharacterLine(dData, 0, "Ovo",
                 "Glitch my circuits!");
             bb_setCharacterLine(dData, 1, "Ovo",
                 "Low fuel!");
             bb_setCharacterLine(dData, 2, "Ovo",
-                "How could you do this to me?");
-            bb_setCharacterLine(dData, 3, "Ovo", 
-                "Here's my last tip, and then you're on your own, kiddo.");
-            bb_setCharacterLine(dData, 4, "Ovo",
+                "How could you do this to me?!");
+            bb_setCharacterLine(dData, 3, "Ovo",
                 "Extraction is one of the hardest parts of the job.");
-            bb_setCharacterLine(dData, 5, "Ovo",
+            bb_setCharacterLine(dData, 4, "Ovo",
                 "Plan ahead and clear out any threats around the booster for an uninterrupted extraction.");
-            bb_setCharacterLine(dData, 6, "Ovo",
+            bb_setCharacterLine(dData, 5, "Ovo",
                 "Keep in mind that my headlamps stimulate the bug eggs. So my facing direction is important.");
-            bb_setCharacterLine(dData, 7, "Ovo",
+            bb_setCharacterLine(dData, 6, "Ovo",
                 "Grid-locked bugs are pretty much a non-threat since they aren't mad enough to dig out.");
-            bb_setCharacterLine(dData, 8, "Ovo",
+            bb_setCharacterLine(dData, 7, "Ovo",
                 "And bugs far off-screen will stop moving and shooting.");
-            bb_setCharacterLine(dData, 9, "Ovo",
+            bb_setCharacterLine(dData, 8, "Ovo",
                 "Sometimes you just need to let them wander away to sit safely on the booster for 30 seconds.");
             
             dData->curString     = -1;
@@ -2238,6 +2248,7 @@ void bb_updateGrabbyHand(bb_entity_t* self)
         soundPlaySfx(&self->gameData->sfxCollection, 0);
         if (rData->numBugs % 10 == 0) // set to % 1 for quick testing the entire radar tech tree
         {
+            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             bb_entity_t* radarPing
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
                                   self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, false);
@@ -2350,15 +2361,7 @@ void bb_updateFarCar(bb_entity_t* self)
         // push to the tail
         push(self->gameData->entityManager.cachedEntities, (void*)cachedEntity);
 
-        // free sprites
-        for (int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
-        {
-            if (self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].w
-                || self->gameData->entityManager.sprites[self->spriteIndex].frames[frame].h)
-            {
-                freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
-            }
-        }
+        bb_freeSprite(&self->gameData->entityManager.sprites[self->spriteIndex]);
 
         bb_destroyEntity(self, true, true);
     }
@@ -3053,13 +3056,16 @@ void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* came
         getTouchCartesian(gData->phi, gData->r, &x, &y);
         x -= 511;
         y -= 511;
-        drawCircle(xOff, yOff, 37, c103);
+        if(gData->r < gData->activationRadius)
+        {
+            drawCircle(xOff, yOff, gData->activationRadius / 10, c103);
+        }
         int16_t otherX = x / 5;
         int16_t otherY = y / 5;
         drawLineFast(xOff, yOff - 1, xOff + otherX, yOff - otherY - 1, c555);
-        if (gData->r > 374)
+        if (gData->r > gData->activationRadius)
         {
-            drawCircleQuadrants(xOff, yOff, 37, x > 0 && y < 0, x < 0 && y < 0, x < 0 && y > 0, x > 0 && y > 0, c315);
+            drawCircleQuadrants(xOff, yOff, gData->activationRadius / 10, x > 0 && y < 0, x < 0 && y < 0, x < 0 && y > 0, x > 0 && y > 0, c315);
             drawLineFast(xOff, yOff, xOff + otherX, yOff - otherY, c315);
         }
         else
@@ -3333,6 +3339,7 @@ void bb_drawStar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_enti
 void bb_drawNothing(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     // Do nothing lol
+    return;
 }
 
 void bb_drawMenuBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -4551,6 +4558,51 @@ void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
     midiPlayer_t* sfx         = soundGetPlayerSfx();
     midiPlayerReset(sfx);
     soundPlaySfx(&self->gameData->sfxHealth, 0);
+    bb_destroyEntity(self, false, true);
+}
+
+void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    if(!(self->gameData->tutorialFlags & 0b100000))
+    {
+        self->gameData->isPaused = true;
+        //set the tutorial flag
+        self->gameData->tutorialFlags |= 0b100000;
+        bb_entity_t* ovo
+        = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                        self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+
+        bb_dialogueData_t* dData = bb_createDialogueData(12, "Ovo");
+
+        bb_setCharacterLine(dData, 0, "Ovo",
+            "\"---Incoming Transmission from Mr. Dev---\"");
+        bb_setCharacterLine(dData, 1, "Ovo",
+            "What in the heck?");
+        bb_setCharacterLine(dData, 2, "Ovo",
+            "Dang radio's acting up again!");
+        bb_setCharacterLine(dData, 3, "Ovo",
+            "\"The bricks can be destroyed by dealing 100 damage.\"");
+        bb_setCharacterLine(dData, 4, "Ovo",
+            "\"Bring Ovo Garbotnik to a complete stop in a tight gap.\"");
+        bb_setCharacterLine(dData, 5, "Ovo",
+            "\"Then move briefly toward the brick to initiate a ping-ponging movement pattern.\"");
+        bb_setCharacterLine(dData, 6, "Ovo",
+            "\"Same as the other garbage densities, bricks will crumble if they are totally disconnected.\"");
+        bb_setCharacterLine(dData, 7, "Ovo",
+            "\"Or they can be smashed easily with heavy falling objects.\"");
+        bb_setCharacterLine(dData, 8, "Ovo",
+            "\"Big Bug's early-game design is all about trading fuel for upgrades.\"");
+        bb_setCharacterLine(dData, 9, "Ovo",
+            "\"So be sure to strategize how to use your time!\"");
+        bb_setCharacterLine(dData, 10, "Ovo",
+            "\"The late-game design has a shift in focus away from fuel.\"");
+        bb_setCharacterLine(dData, 11, "Ovo",
+            "\"You'll just have to see it for yourself!\"");
+        
+        dData->curString     = -1;
+        dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+        bb_setData(ovo, dData, DIALOGUE_DATA);
+    }
     bb_destroyEntity(self, false, true);
 }
 

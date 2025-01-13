@@ -16,7 +16,7 @@
 void bb_generateWorld(bb_tilemap_t* tilemap)
 {
     // There are 6 handcrafted levels that get chosen randomly.
-    uint8_t level = bb_randomInt(0, 5);
+    uint8_t level = 4;//bb_randomInt(0, 5);
     wsg_t levelWsg; ///< A graphic representing the level data where tiles are pixels.
 
     char wsg_name[13];
@@ -154,6 +154,15 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
     }
 
     tilemap->fgTiles[TILE_FIELD_WIDTH / 2 - 7][0].embed = EGG_EMBED; // tutorial egg
+
+    if(level == 3)
+    {
+        tilemap->fgTiles[53][27].embed = BRICK_TUTORIAL_EMBED;
+    }
+    else if(level == 4)
+    {
+        tilemap->fgTiles[20][8].embed = BRICK_TUTORIAL_EMBED;
+    }
 
     freeWsg(&levelWsg);
 }

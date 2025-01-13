@@ -207,6 +207,8 @@ struct bb_gameData_t
                            // 0b10 talk about towing a bug
                            // 0b100 talk about the radar
                            // 0b1000 talk about extraction at low fuel
+                           // 0b10000 talk about collecting donuts
+                           // 0b100000 talk about breaking bricks
 
 
     int16_t GarbotnikStat_fireTime;            // The time between harpoon shots.

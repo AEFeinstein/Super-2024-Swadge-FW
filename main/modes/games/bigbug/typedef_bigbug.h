@@ -81,6 +81,7 @@ typedef enum
     BB_EXPLOSION,            // A particle effect that deletes dirt, kills bugs, hurts and pushes garbotnik.
     BB_ATMOSPHERIC_ATOMIZER, // A particle effect that increases garbotnik's dragShift.
     BB_SPACE_LASER,          // A beam of pure damage straight down from the sky.
+    BB_BRICK_TUTORIAL,       // A particular spot on levels 3 & 4 that makes garbotnik talk about breaking bricks.
 } bb_spriteDef_t;
 
 typedef enum
@@ -94,7 +95,8 @@ typedef enum
     SKELETON_EMBED,
     DOOR_EMBED,
     BB_FOOD_CART_WITH_DONUT_EMBED,
-    BB_FOOD_CART_WITH_SWADGE_EMBED
+    BB_FOOD_CART_WITH_SWADGE_EMBED,
+    BRICK_TUTORIAL_EMBED,
 } bb_embeddable_t;
 
 typedef enum

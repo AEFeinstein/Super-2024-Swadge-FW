@@ -268,7 +268,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                         // if it is on frame 59, unload frames 0 through 58
                         if (curEntity->currentAnimationFrame == 59)
                         {
-                            for (int frame = 0; frame < 59; frame++)
+                            for (int frame = 1; frame < 59; frame++)
                             {
                                 freeWsg(&entityManager->sprites[BB_CAR].frames[frame]);
                             }
@@ -606,7 +606,7 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
                           - entityManager->sprites[currentEntity->spriteIndex].originY - camera->pos.y);
     }
 
-    if (!currentEntity->paused)
+    if (!currentEntity->paused && !currentEntity->gameData->isPaused)
     {
         // increment the frame counter
         currentEntity->animationTimer++;
@@ -830,7 +830,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
 
     entity->type        = type;
     entity->paused      = paused;
-    if(spriteIndex > 7 && spriteIndex < 14 && !(entity->gameData->tutorialFlags & 0b1))
+    if(!(entity->gameData->tutorialFlags & 0b1) && spriteIndex > 7 && spriteIndex < 14 && entity->gameData->entityManager.playerEntity != NULL)
     {
         if(entity->pos.y < 512 && (spriteIndex == BUGG || spriteIndex == BUGGO))
         {
@@ -891,6 +891,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                                          // //also set in bb_onCollisionFuel()
             gData->activeWile = 255;     // 255 means no wile active.
             gData->dragShift  = 17;
+
+            gData->activationRadius = 1102;
 
             memset(&gData->towedEntities, 0, sizeof(list_t));
             int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
@@ -1345,6 +1347,29 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_DONUT:
         {
+            if(!(entity->gameData->tutorialFlags & 0b10000))
+            {
+                entity->gameData->isPaused = true;
+                //set the tutorial flag
+                entity->gameData->tutorialFlags |= 0b10000;
+                bb_entity_t* ovo
+                = bb_createEntity(&entity->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                                entity->gameData->camera.camera.pos.x, entity->gameData->camera.camera.pos.y, false, true);
+
+                bb_dialogueData_t* dData = bb_createDialogueData(3, "Ovo");
+
+                bb_setCharacterLine(dData, 0, "Ovo",
+                    "I want to eat that donut RIGHT NOW!");
+                bb_setCharacterLine(dData, 1, "Ovo",
+                    "No. I need to focus. I'll tow it back to the booster.");
+                bb_setCharacterLine(dData, 2, "Ovo",
+                    "When I eat it at home, it will be the be the impulse for my next great wile.");
+                
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
+
             entity->halfWidth  = 8 << DECIMAL_BITS;
             entity->halfHeight = 8 << DECIMAL_BITS;
             // Give the donut NJIMEIA PHYSX for when it is tethered.
@@ -1541,6 +1566,22 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight     = 2000 << DECIMAL_BITS;
             entity->updateFunction = &bb_updateSpaceLaser;
             entity->drawFunction   = &bb_drawSpaceLaser;
+            break;
+        }
+        case BB_BRICK_TUTORIAL:
+        {
+            entity->cacheable = true;
+            entity->halfWidth = HALF_TILE << DECIMAL_BITS;
+            entity->halfHeight = HALF_TILE << DECIMAL_BITS;
+            entity->drawFunction = &bb_drawNothing;
+
+            entity->collisions = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            list_t* others     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision = heap_caps_calloc(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM);
+            *collision                = (bb_collision_t){others, bb_onCollisionBrickTutorial};
+            push(entity->collisions, (void*)collision);
+            
             break;
         }
         default: // FLAME_ANIM and others need nothing set

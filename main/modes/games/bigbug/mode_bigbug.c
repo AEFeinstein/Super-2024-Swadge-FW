@@ -28,7 +28,7 @@
 //==============================================================================
 
 /** Switch to either start at the menu or on the dump's surface */
-#define SKIP_INTRO
+// #define SKIP_INTRO
 
 //==============================================================================
 // Enums
@@ -1631,6 +1631,7 @@ static void bb_GameLoop(int64_t elapsedUs)
             if (evt.button == PB_START && !bigbug->gameData.isPaused && bigbug->gameData.screen == BIGBUG_GAME
                 && bigbug->gameData.entityManager.playerEntity != NULL)
             {
+                bb_ensureEntitySpace(&bigbug->gameData.entityManager, 1);
                 bb_entity_t* radarPing
                     = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
                                       bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS,
