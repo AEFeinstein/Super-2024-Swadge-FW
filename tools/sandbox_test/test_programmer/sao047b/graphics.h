@@ -29,7 +29,8 @@
 
 #include "lib_rand.h"
 
-extern int frameno;
+int frameno;
+extern uint32_t gameTimeUs;
 int glyphdraw_invert;
 int glyphdraw_nomask;
 
@@ -272,7 +273,8 @@ void background( int mode )
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = 0xff; 
 		break;
 	case 2: // Drops
-		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = _rand_lfsr_update(); 
+		for(i=0;i<sizeof(ssd1306_buffer);i++)
+			ssd1306_buffer[i] = (_rand_lfsr_update(), _rand_lfsr);
 		break;
 	case 3: // Noise
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = _rand_gen_nb(8); 
@@ -284,20 +286,41 @@ void background( int mode )
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = ((i+frameno)&1)?0xaa:0x55;
 		break;
 	case 6: // Racing
+	case 7: // Racing left->right
+	case 8: // Blaaa
+	case 9: // Blaaa
 	{
-		uint8_t even = 0xff00>>(16-((frameno>>5)&15));
+		uint8_t rdv = (const uint8_t[]){15, 31, 14, 16}[mode - 6];
+		uint8_t rdw = (const uint8_t[]){14, 12, 15, 16}[mode - 6];
+		uint8_t even = 0xff00>>(16-((gameTimeUs>>rdv)&15));
 		uint8_t odd = ~even;
 		for( y = 0; y < SSD1306_H/8; y++ )
 		for( x = 0; x < SSD1306_W; x++ )
-			ssd1306_buffer[i++] = ((((x-(frameno>>4))>>3)+y)&1)?even:odd;
+			ssd1306_buffer[i++] =
+				((((x-(gameTimeUs>>rdw))>>3)+y)&1)
+				?even:odd;
 		break;
 	}
-	case 7: // Dark noise
+	case 10: // Dark noise
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = 1<<(_rand_gen_nb(10));
 		break;
-	case 8: // Bright noise
+	case 11: // Bright noise
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = ~(1<<(_rand_gen_nb(8)));
 		break;
+	case 12: // Rain down
+	{
+		_rand_lfsr = 0x5005;
+		uint8_t col[SSD1306_W];		
+		for(i=0;i<SSD1306_W;i++)
+			col[i] = _rand_gen_nb( 8 );
+
+		int i = 0;
+		for( y = 0; y < SSD1306_H/8; y++ )
+			for( x = 0; x < SSD1306_W; x++ )
+				ssd1306_buffer[i++] = 0x80 >> ((col[x]+y*8-(gameTimeUs>>13)) & 0x3f);
+
+		break;
+	}
 	case 0:
 	default: // Black
 		for(i=0;i<sizeof(ssd1306_buffer);i++) ssd1306_buffer[i] = 0;
@@ -308,6 +331,7 @@ void background( int mode )
 
 void swapBuffer()
 {
+
 	ssd1306_cmd(SSD1306_COLUMNADDR);
 	ssd1306_cmd(28);   // Column start address (0 = reset)
 	ssd1306_cmd(28+71); // Column end address (127 = reset)
@@ -319,7 +343,6 @@ void swapBuffer()
 	// flip dir (Rotate 180)
 	ssd1306_cmd( SSD1306_COMSCANINC );
 	ssd1306_cmd( 0xA0 ); // Also flip
-
 	ssd1306_cmd( 0x20 );
 	ssd1306_cmd( 0x00 );
 
