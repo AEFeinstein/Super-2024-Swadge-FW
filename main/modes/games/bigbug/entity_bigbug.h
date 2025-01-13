@@ -499,6 +499,8 @@ void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t*
 void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionSpaceLaserGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionSpaceLaserBug(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);

@@ -1608,6 +1608,31 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             entity->halfHeight     = 2000 << DECIMAL_BITS;
             entity->updateFunction = &bb_updateSpaceLaser;
             entity->drawFunction   = &bb_drawSpaceLaser;
+
+            entity->collisions = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rCollisions");
+            list_t* others     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision = (bb_collision_t){others, bb_onCollisionSpaceLaserGarbotnik};
+            push(entity->collisions, (void*)collision);
+            
+            list_t* others2     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+            // Neat trick  where you push the value of a bb_spriteDef_t as the pointer. Then when it pops, cast it
+            // instead of deferencing and you're good to go! lists store a pointer, but you can abuse that and store any
+            // 32 bits of info you want there, as long as you know how to handle it on the other end
+            push(others2, (void*)BU);
+            push(others2, (void*)BUG);
+            push(others2, (void*)BUGG);
+            push(others2, (void*)BUGGO);
+            push(others2, (void*)BUGGY);
+            push(others2, (void*)BUTT);
+            push(others2, (void*)EGG);
+            bb_collision_t* collision2 = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision2                = (bb_collision_t){others2, bb_onCollisionSpaceLaserBug};
+            push(entity->collisions, (void*)collision2);
+
+
             break;
         }
         case BB_BRICK_TUTORIAL:

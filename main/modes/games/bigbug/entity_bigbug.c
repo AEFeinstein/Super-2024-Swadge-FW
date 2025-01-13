@@ -4656,6 +4656,36 @@ void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitIn
     bb_destroyEntity(self, false, true);
 }
 
+void bb_onCollisionSpaceLaserGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    if(other->dataType != GARBOTNIK_DATA)
+    {
+        return;
+    }
+    bb_garbotnikData_t* gData = (bb_garbotnikData_t*)other->data;
+    gData->damageEffect       = 40;
+    gData->fuel -= self->gameData->elapsedUs >> 5;
+}
+
+void bb_onCollisionSpaceLaserBug(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo)
+{
+    if((other->dataType != FLYING_BUG_DATA && other->dataType != WALKING_BUG_DATA) || bb_randomInt(0,1))
+    {
+        return;
+    }
+    bb_bugData_t* bData = (bb_bugData_t*)other->data;
+
+    if (bData->health - (self->gameData->elapsedUs >> 14) <= 0) // bug just died
+    {
+        bb_bugDeath(other, hitInfo);
+    }
+    else
+    {
+        bData->damageEffect = 40;
+        bData->health -= self->gameData->elapsedUs >> 14;
+    }
+}
+
 void bb_startGarbotnikIntro(bb_entity_t* self)
 {
     bb_entity_t* ovo
