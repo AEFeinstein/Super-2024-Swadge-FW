@@ -3539,11 +3539,16 @@ void bb_drawRocket(bb_entityManager_t* entityManager, rectangle_t* camera, bb_en
         if ((rData->armAngle >> 6) % 2 == 0)
         {
             char screenText[30] = "Hang tight!";
-            drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1),
+            uint16_t tHalfWidth = textWidth(&self->gameData->font, screenText) >> 1;
+            drawRectFilled(138 - tHalfWidth, 28, 142 + tHalfWidth, 43, c000);
+            drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth,
                      30);
             snprintf(screenText, sizeof(screenText), "pre-flight check in progress");
-            drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1),
+            tHalfWidth = textWidth(&self->gameData->font, screenText) >> 1;
+            drawRectFilled(138 - tHalfWidth, 183, 142 + tHalfWidth, 198, c000);
+            drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth,
                      185);
+            
         }
     }
 
@@ -3575,11 +3580,17 @@ void bb_drawCar(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entit
     cData->textTimer -= self->gameData->elapsedUs >> 8;
     if ((cData->textTimer / 3000) % 2 == 0)
     {
+        
         char screenText[30] = "Car Alarm!";
-        drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1),
+        uint16_t tHalfWidth = textWidth(&self->gameData->font, screenText) >> 1;
+        drawRectFilled(138 - tHalfWidth, 28, 142 + tHalfWidth, 43, c000);
+        drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth,
                  30);
-        snprintf(screenText, sizeof(screenText), "Kill %d bugs!", self->gameData->carFightState);
-        drawText(&self->gameData->font, c500, screenText, 140 - (textWidth(&self->gameData->font, screenText) >> 1),
+        
+        snprintf(screenText, sizeof(screenText), "Flip %d bugs!", self->gameData->carFightState);
+        tHalfWidth = textWidth(&self->gameData->font, screenText) >> 1;
+        drawRectFilled(138 - tHalfWidth, 183, 142 + tHalfWidth, 198, c000);
+        drawText(&self->gameData->font, c500, screenText, 140 - tHalfWidth,
                  185);
     }
 }
@@ -4027,7 +4038,6 @@ void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, b
 
 void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    bb_bugData_t* bData = (bb_bugData_t*)self->data;
     uint8_t brightness = 5;
     int16_t xOff = (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x;
     int16_t yOff = (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY - camera->pos.y;
