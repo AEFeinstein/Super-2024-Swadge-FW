@@ -1658,11 +1658,11 @@ static void bb_GameLoop(int64_t elapsedUs)
     {
         bb_UpdateTileSupport();
 
-        if(bigbug->gameData.entityManager.playerEntity != NULL)
+        if (bigbug->gameData.entityManager.playerEntity != NULL)
         {
             bb_UpdateLEDs(&(bigbug->gameData.entityManager));
         }
-        
+
         // bigbugFadeLeds(elapsedUs);
         // bigbugControlCpuPaddle();
     }
@@ -1701,7 +1701,7 @@ static void bb_SetLeds(void)
 
 static void bb_setPrimingLeds(uint8_t primingEffect)
 {
-    const uint8_t condimentLights[] = {5,4,6,7,0,8};
+    const uint8_t condimentLights[] = {5, 4, 6, 7, 0, 8};
     // Create an array for all LEDs
     led_t leds[CONFIG_NUM_LEDS];
     // Copy the LED colors for left and right to the whole array
@@ -1714,7 +1714,7 @@ static void bb_setPrimingLeds(uint8_t primingEffect)
 
     for (uint8_t i = 0; i < 6; i++)
     {
-        if((primingEffect - 10) > i * 29)
+        if ((primingEffect - 10) > i * 29)
         {
             leds[condimentLights[i]].g = 255;
         }
