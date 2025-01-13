@@ -5028,6 +5028,30 @@ void bb_afterGarbotnikIntro(bb_entity_t* self)
 
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
 {
+    if(self->pos.x > (TILE_FIELD_WIDTH << 7) - 1)
+    {
+        if(!(self->gameData->tutorialFlags & 0b1000000))
+        {
+            self->gameData->isPaused = true;
+            //set the tutorial flag
+            self->gameData->tutorialFlags |= 0b1000000;
+            bb_entity_t* ovo
+            = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                            self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+
+            bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo");
+
+            bb_setCharacterLine(dData, 0, "Ovo",
+                "If I find my old booster, I can recover any unprocessed bugs and donuts.");
+            bb_setCharacterLine(dData, 1, "Ovo",
+                "Just push steadily into the derelict booster to coax them out.");
+            
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
+    }
+
     bb_setupMidi();
     unloadMidiFile(&self->gameData->bgm);
     loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
