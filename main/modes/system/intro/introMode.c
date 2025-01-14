@@ -25,7 +25,10 @@ static void introExitMode(void);
 static void introMainLoop(int64_t elapsedUs);
 static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void introAudioCallback(uint16_t* samples, uint32_t sampleCnt);
+
+#ifdef CUSTOM_INTRO_SOUND
 static void introDacCallback(uint8_t* samples, int16_t len);
+#endif
 
 // static void introMenuCb(const char*, bool selected, uint32_t settingVal);
 static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
