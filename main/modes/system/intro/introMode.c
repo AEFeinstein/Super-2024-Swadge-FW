@@ -266,6 +266,22 @@ swadgeMode_t introMode = {
     .fnDacCb                  = NULL,
 };
 
+#ifdef CUSTOM_INTRO_SOUND
+typedef struct
+{
+    uint8_t* sample;
+    size_t sampleCount;
+    
+    // Number of times each sample in the file needs to be played to match the audio sample rate
+    uint8_t factor;
+
+    // Number of audio samples played
+    size_t progress;
+} audioSamplePlayer_t;
+
+bool playSample(audioSamplePlayer_t* player, uint8_t* samples, int16_t len);
+#endif
+
 typedef struct
 {
     int16_t x;
@@ -335,10 +351,8 @@ typedef struct
 
 #ifdef CUSTOM_INTRO_SOUND
     bool playingSound;
-    uint8_t* sound;
-    size_t soundSize;
-    size_t soundProgress;
     bool introComplete;
+    audioSamplePlayer_t samplePlayer;
 #endif
 
     menu_t* bgMenu;
@@ -370,6 +384,11 @@ static void introEnterMode(void)
     loadFont("righteous_150.font", &iv->bigFont, true);
     loadFont("retro_logo.font", &iv->logoFont, true);
     makeOutlineFont(&iv->logoFont, &iv->logoFontOutline, true);
+
+#ifdef CUSTOM_INTRO_SOUND
+    iv->samplePlayer.sample = cnfsGetFile("magfest_x8.bin", &iv->samplePlayer.sampleCount);
+    iv->samplePlayer.factor = 8;
+#endif
 
     loadWsg("button_a.wsg", &iv->icon.button.a, true);
     loadWsg("button_b.wsg", &iv->icon.button.b, true);
@@ -479,9 +498,9 @@ static void introExitMode(void)
     freeWsg(&iv->icon.swadge);
 
 #ifdef CUSTOM_INTRO_SOUND
-    if (iv->sound != NULL)
+    if (iv->samplePlayer.sample != NULL)
     {
-        heap_caps_free(iv->sound);
+        heap_caps_free(iv->samplePlayer.sample);
     }
 #endif
     unloadMidiFile(&iv->song);
@@ -503,7 +522,7 @@ static void introMainLoop(int64_t elapsedUs)
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->playingSound || !iv->introComplete)
     {
-        int64_t songTime     = (iv->soundSize * 1000000 + DAC_SAMPLE_RATE_HZ - 1) / DAC_SAMPLE_RATE_HZ;
+        int64_t songTime     = (iv->samplePlayer.sampleCount * iv->samplePlayer.factor * 1000000 + DAC_SAMPLE_RATE_HZ - 1) / DAC_SAMPLE_RATE_HZ;
         int64_t animTime     = (songTime * 2 / 3);
         static int64_t timer = 0;
 
@@ -525,17 +544,21 @@ static void introMainLoop(int64_t elapsedUs)
         int16_t subX     = (TFT_WIDTH - subWidth) / 2;
         int16_t subY     = titleY + iv->bigFont.height + 5;
 
-        int titleLen = MIN(strlen(title), timer / titleTicksPerChar);
-        int subLen   = MIN(strlen(sub), timer / subTicksPerChar);
+        //int titleLen = MIN(strlen(title), timer / titleTicksPerChar);
+        //int subLen   = MIN(strlen(sub), timer / subTicksPerChar);
         // Trim the string
-        title[titleLen] = '\0';
-        sub[subLen]     = '\0';
+        //title[titleLen] = '\0';
+        //sub[subLen]     = '\0';
+        int16_t boundsXmin = TFT_WIDTH / 2 - (timer * (TFT_WIDTH / 2) / animTime);
+        int16_t boundsYmin = TFT_HEIGHT / 2 - (timer * (TFT_HEIGHT / 2) / animTime);
+        int16_t boundsXmax = TFT_WIDTH / 2 + (timer * (TFT_WIDTH / 2) / animTime);
+        int16_t boundsYmax = TFT_HEIGHT / 2 + (timer * (TFT_HEIGHT / 2) / animTime);
 
-        drawText(&iv->logoFont, c555, title, titleX, titleY);
-        drawText(&iv->logoFont, c000, title, titleX - 1, titleY + 1);
+        drawTextBounds(&iv->logoFont, c003, title, titleX, titleY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
+        drawTextBounds(&iv->logoFontOutline, c555, title, titleX, titleY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
 
-        drawText(&iv->logoFont, c555, sub, subX, subY);
-        drawText(&iv->logoFont, c000, sub, subX - 1, subY + 1);
+        drawTextBounds(&iv->logoFont, c003, sub, subX, subY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
+        drawTextBounds(&iv->logoFontOutline, c555, sub, subX, subY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
 
         timer += elapsedUs;
 
@@ -719,23 +742,30 @@ static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
 }
 
 #ifdef CUSTOM_INTRO_SOUND
-static void introDacCallback(uint8_t* samples, int16_t len)
+bool playSample(audioSamplePlayer_t* player, uint8_t* samples, int16_t len)
 {
-    #define SPK_SILENCE (INT8_MIN)
-    if (iv->playingSound)
     {
-        if (iv->soundProgress + len >= iv->soundSize)
+        if (player->progress >= player->sampleCount * player->factor)
         {
-            size_t send = (iv->soundSize - iv->soundProgress);
-            memcpy(samples, iv->sound + iv->soundProgress, send);
-            memset(samples + send, SPK_SILENCE, len - send);
-            iv->playingSound = false;
+            // Set all to silence
+            memset(&samples[i], INT8_MIN, len - i);
+            return false;
         }
         else
         {
-            memcpy(samples, iv->sound + iv->soundProgress, len);
-            iv->soundProgress += len;
+            samples[i] = player->sample[player->progress / player->factor];
+            player->progress++;
         }
+    }
+    return player->progress < player->sampleCount * player->factor;
+}
+
+static void introDacCallback(uint8_t* samples, int16_t len)
+{
+#define SPK_SILENCE (INT8_MIN)
+    if (iv->playingSound && iv->samplePlayer.sample)
+    {
+        iv->playingSound = playSample(&iv->samplePlayer, samples, len);
     }
     else
     {

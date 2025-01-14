@@ -45,7 +45,7 @@ typedef struct
 {
     // Assets
     wsg_t bg;
-    font_t fnt[4];
+    font_t fnt[5];
 
     // Vars
     State_t currState;
