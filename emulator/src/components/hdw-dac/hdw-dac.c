@@ -6,6 +6,7 @@
 #include <string.h>
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
+#include "circular_buffer.h"
 
 //==============================================================================
 // Defines
@@ -17,6 +18,12 @@
 
 fnDacCallback_t dacCb = NULL;
 static bool shdn      = false;
+
+static int playChannels = 0;
+static int recChannels = 0;
+
+// Circular buffer for data
+circularBuffer_t circBuf = {0};
 
 //==============================================================================
 // Functions
@@ -68,6 +75,40 @@ void dacPoll(void)
 {
     // In actual firmware, this function will fill sample buffers received in interrupts.
     // In the emulator, that's handled in dacHandleSoundOutput() instead
+
+    // Check whether we have any space in the buffer
+    // If we do, call the dacCb to fill it
+    if (NULL != dacCb && playChannels > 0 && !shdn)
+    {
+        size_t avail = circularBufferAvailable(&circBuf);
+        // Go one dac buffer size at a time
+        uint8_t tempSamps[DAC_BUF_SIZE];
+
+        if (avail < (4 * DAC_BUF_SIZE))
+        {
+            // Circular buffer is less than 50% full, call the Dac until it's full
+            while (circularBufferCapacity(&circBuf) > DAC_BUF_SIZE)
+            {
+                dacCb(tempSamps, DAC_BUF_SIZE);
+                circularBufferWrite(&circBuf, tempSamps, DAC_BUF_SIZE);
+            }
+        }
+    }
+}
+
+/**
+ * @brief Initialize the emulator DAC interface
+ *
+ * @param numChannelsRec The number of channels for recording
+ * @param numChannelsPlay The number of channels for playback
+ */
+void dacInitSoundOutput(int numChannelsRec, int numChannelsPlay)
+{
+    recChannels  = numChannelsRec;
+    playChannels = numChannelsPlay;
+
+    // Store 8 DAC-buffer-sizes worth of data
+    circularBufferInit(&circBuf, 1, DAC_BUF_SIZE * 8);
 }
 
 /**
@@ -80,38 +121,38 @@ void dacPoll(void)
 void dacHandleSoundOutput(short* out, int framesp, short numChannels)
 {
     // Make sure there is a buffer to fill
-    if (NULL != out)
+    if (NULL != out && circBuf.buffer)
     {
-        // Make sure there is a callback function to call
-        if (NULL != dacCb)
-        {
-            // Get samples from the Swadge mode
-            uint8_t tempSamps[framesp];
-            dacCb(tempSamps, framesp);
+        uint8_t tempSamps[framesp];
+        size_t read = circularBufferRead(&circBuf, tempSamps, framesp);
 
-            // Write the samples to the emulator output, in signed short format
-            for (int i = 0; i < framesp; i++)
+        // Write the samples to the emulator output, in signed short format
+        int i;
+        for (i = 0; i < read; i++)
+        {
+            short samp = (tempSamps[i] - 127) * 256;
+            // Copy the same sample to each channel
+            for (int j = 0; j < numChannels; j++)
             {
-                short samp = (tempSamps[i] - 127) * 256;
-                // Copy the same sample to each channel
-                for (int j = 0; j < numChannels; j++)
+                if (shdn)
                 {
-                    if (shdn)
-                    {
-                        out[i * numChannels + j] = 0;
-                    }
-                    else
-                    {
-                        out[i * numChannels + j] = samp;
-                    }
+                    out[i * numChannels + j] = 0;
+                }
+                else
+                {
+                    out[i * numChannels + j] = samp;
                 }
             }
         }
-        else
+
+        if (i < framesp)
         {
-            // No callback function, write zeros
-            memset(out, 0, sizeof(short) * 2 * framesp);
+            memset(out + read * numChannels, 0, (framesp - read) * sizeof(short) * numChannels);
         }
+        // for (; i < framesp; i++)
+        //{
+        // out[i * numChannels * i] = 0;
+        //}
     }
 }
 

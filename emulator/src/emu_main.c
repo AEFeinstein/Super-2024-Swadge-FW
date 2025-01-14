@@ -241,6 +241,7 @@ int main(int argc, char** argv)
                                NULL,               // const char* inputSelect
                                NULL                // void* opaque
         );
+        dacInitSoundOutput(soundDriver->channelsRec, soundDriver->channelsPlay);
     }
 
     // We won't call the pre-frame callback for the very first frame
