@@ -247,7 +247,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     j * TILE_SIZE + HALF_TILE, false, false);
                                 if (((bb_eggLeavesData_t*)eggLeaves->data)->egg == NULL)
                                 {
-                                    bb_destroyEntity(eggLeaves, false);
+                                    bb_destroyEntity(eggLeaves, false, true);
                                 }
                                 else
                                 {
@@ -332,7 +332,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 }
                                 else
                                 {
-                                    bb_destroyEntity(foodCartBG, false);
+                                    bb_destroyEntity(foodCartBG, false, true);
                                 }
                             }
                             break;
@@ -361,7 +361,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 }
                                 else
                                 {
-                                    bb_destroyEntity(foodCartBG, false);
+                                    bb_destroyEntity(foodCartBG, false, true);
                                 }
                             }
                             break;
@@ -370,6 +370,17 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         {
                             bb_ensureEntitySpace(entityManager, 1);
                             if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_DOOR, 1,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
+                                != NULL)
+                            {
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }
+                        case BRICK_TUTORIAL_EMBED:
+                        {
+                            bb_ensureEntitySpace(entityManager, 1);
+                            if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_BRICK_TUTORIAL, 1,
                                                 i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
                                 != NULL)
                             {
