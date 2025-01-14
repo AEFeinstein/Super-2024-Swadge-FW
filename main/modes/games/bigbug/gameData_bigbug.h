@@ -202,6 +202,15 @@ struct bb_gameData_t
                           // killed flavor text        1 << 4 0b100000   places visited flavor text     1 << 5 0b1000000
                           // donuts collected flavor text   1 << 6 0b10000000 time spent flavor text         1 << 7
 
+    uint8_t tutorialFlags; // Bits set to 1 when tutorial text has been shown.
+                           // 0b1 Talk about shooting a bug
+                           // 0b10 talk about towing a bug
+                           // 0b100 talk about the radar
+                           // 0b1000 talk about extraction at low fuel
+                           // 0b10000 talk about collecting donuts
+                           // 0b100000 talk about breaking bricks
+                           // 0b1000000 talk about getting things out of old boosters
+
     int16_t GarbotnikStat_fireTime;            // The time between harpoon shots.
     uint8_t GarbotnikStat_diggingStrength;     // Starts at 1. Can increment indefinetly by 1.
     uint8_t GarbotnikStat_fuelConsumptionRate; // Starts at 4. Can decrement to 0.

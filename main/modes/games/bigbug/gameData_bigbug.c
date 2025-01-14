@@ -143,7 +143,7 @@ void bb_initializeGameData(bb_gameData_t* gameData)
     gameData->loadout.allWiles[3].wileFunction    = bb_triggerSpaceLaserWile;
 
     strcpy(gameData->loadout.allWiles[4].name, "501Kg Bomb");
-    strcpy(gameData->loadout.allWiles[4].description, "Calls down ordinance from the Death Dumpster's stockpile.");
+    strcpy(gameData->loadout.allWiles[4].description, "Calls down ordnance from the Death Dumpster's stockpile.");
     gameData->loadout.allWiles[4].callSequence[0] = BB_UP;
     gameData->loadout.allWiles[4].callSequence[1] = BB_LEFT;
     gameData->loadout.allWiles[4].callSequence[2] = BB_RIGHT;

@@ -182,7 +182,7 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
         esp_log_set_vprintf(advanced_usb_write_log_printf);
 
         // For emission of uprintf symbol.
-        uprintf( "printf overridden" );
+        uprintf("printf overridden");
     }
 
     ESP_LOGI(TAG, "USB initialization DONE");

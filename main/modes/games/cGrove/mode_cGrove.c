@@ -18,6 +18,7 @@
 #include "cg_Grove.h"
 #include "cg_Spar.h"
 #include "textEntry.h"
+#include "mainMenu.h"
 #include <esp_random.h>
 #include <esp_heap_caps.h>
 
@@ -33,7 +34,7 @@
 //==============================================================================
 
 const char cGroveTitle[]             = "Chowa Grove"; // Game title
-static const char* cGroveMenuNames[] = {"Play with Chowa", "Spar", "Settings"};
+static const char* cGroveMenuNames[] = {"Play with Chowa", "Spar", "Settings", "Exit"};
 static const char* cGroveSettingOpts[]
     = {"Grove Touch Scroll: ", "Touch Scroll Speed: ", "Show Item Text: ", "Show Chowa Names: "};
 static const char* const cGroveEnabledOptions[]    = {"Enabled", "Disabled"};
@@ -180,6 +181,7 @@ static void cGroveEnterMode(void)
                                  cg->settings.chowaNames); // Enable/disable Chowa names
     addSingleItemToMenu(cg->menu, cGroveResetData[0]);
     cg->menu = endSubMenu(cg->menu);
+    addSingleItemToMenu(cg->menu, cGroveMenuNames[3]);
 
     // Initialize Text Entry
     textEntryInit(&cg->menuFont, CG_MAX_STR_LEN, cg->buffer);
@@ -459,10 +461,10 @@ static void cg_menuCB(const char* label, bool selected, uint32_t settingVal)
             // Erase data
             cg->state = CG_ERASE;
         }
-        else if (label == cGroveResetData[0])
+        else if (label == cGroveMenuNames[3])
         {
-            // Erase data
-            cg->state = CG_ERASE;
+            // Quit
+            switchToSwadgeMode(&mainMenuMode);
         }
         else
         {

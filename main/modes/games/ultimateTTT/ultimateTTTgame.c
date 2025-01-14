@@ -18,8 +18,6 @@
 #define MAIN_GRIDLINE_COLOR  c444
 #define SUB_GRIDLINE_COLOR   c222
 #define WAITING_PLAYER_COLOR c333
-#define CHECKER_COLOR_1      c110
-#define CHECKER_COLOR_2      c011
 
 #define CURSOR_STROKE 4
 

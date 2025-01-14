@@ -192,6 +192,9 @@ static void quickSettingsEnterMode(void)
     // Save the buzzer state and pause it
     quickSettings->buzzerState = soundSave();
 
+    // Pause the sound
+    soundPause();
+
     // Save the LED state
     getLedState(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
 
@@ -288,7 +291,7 @@ static void quickSettingsExitMode(void)
 
     soundStop(true);
 
-    // Restore the buzzer state and resume it
+    // Restore the buzzer state, which may be actively playing
     soundRestore(quickSettings->buzzerState);
 
     // Restore the LED state
