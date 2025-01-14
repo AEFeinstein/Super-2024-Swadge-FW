@@ -4,6 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Initialize a circular buffer with the given capacity
+ *
+ * @param buffer A pointer to a circularBuffer_t struct to be initialized
+ * @param memberSize The size of each member in the buffer. For raw data (uint8_t*) this is 1.
+ * @param capacity The maximum number of members the buffer will hold
+ */
 void circularBufferInit(circularBuffer_t* buffer, size_t memberSize, size_t capacity)
 {
     buffer->buffer     = malloc(memberSize * capacity);
@@ -13,6 +20,11 @@ void circularBufferInit(circularBuffer_t* buffer, size_t memberSize, size_t capa
     buffer->writePos   = 0;
 }
 
+/**
+ * @brief Deinitialize a circular buffer and free any allocated memory
+ *
+ * @param buffer A pointer to the circular buffer to be deinitialized
+ */
 void circularBufferDeinit(circularBuffer_t* buffer)
 {
     uint8_t* tmp   = buffer->buffer;
@@ -21,6 +33,12 @@ void circularBufferDeinit(circularBuffer_t* buffer)
     free(tmp);
 }
 
+/**
+ * @brief Return the number of items available to be read from the circular buffer
+ *
+ * @param buffer A pointer to the circular buffer
+ * @return size_t The number of items available for reading in the buffer
+ */
 size_t circularBufferAvailable(const circularBuffer_t* buffer)
 {
     if (!buffer || !buffer->buffer)
@@ -38,6 +56,12 @@ size_t circularBufferAvailable(const circularBuffer_t* buffer)
     }
 }
 
+/**
+ * @brief Return the maximum number of items that can be written to the circular buffer
+ *
+ * @param buffer A pointer to the circular buffer
+ * @return size_t The number of items that can be written to the buffer
+ */
 size_t circularBufferCapacity(const circularBuffer_t* buffer)
 {
     if (!buffer || !buffer->buffer)
@@ -47,6 +71,15 @@ size_t circularBufferCapacity(const circularBuffer_t* buffer)
     return buffer->count - circularBufferAvailable(buffer);
 }
 
+/**
+ * @brief Append data to the tail of the circular buffer
+ *
+ * @warning If the number of items written exceeds the buffer's capacity, older data will be overwritten
+ *
+ * @param buffer A pointer to the circular buffer to write to
+ * @param src A pointer to the data to be written
+ * @param count The number of items in the src array
+ */
 void circularBufferWrite(circularBuffer_t* buffer, void* src, size_t count)
 {
     bool wasFlipped = (buffer->writePos < buffer->readPos);
@@ -72,6 +105,14 @@ void circularBufferWrite(circularBuffer_t* buffer, void* src, size_t count)
     }
 }
 
+/**
+ * @brief Reads data from the head of the circular buffer
+ *
+ * @param buffer A pointer to the circular buffer to read from
+ * @param[out] dest The array to read the data into
+ * @param maxCount The maximum number of items to read into dest
+ * @return size_t The number of items actually read into the array
+ */
 size_t circularBufferRead(circularBuffer_t* buffer, void* dest, size_t maxCount)
 {
     size_t count = circularBufferAvailable(buffer);

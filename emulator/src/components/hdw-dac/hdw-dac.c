@@ -12,6 +12,12 @@
 // Defines
 //==============================================================================
 
+/// The number of DAC-buffer-fuls (DAC_BUF_SIZE) to keep in the buffer
+#define CIRCULAR_BUF_SIZE_MULT 8
+
+// The threshold of DAC-buffer-fuls at which the circular buffer refills all the way
+#define CIRCULAR_BUF_MIN_AVAIL (CIRCULAR_BUF_SIZE_MULT / 2)
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -20,9 +26,9 @@ fnDacCallback_t dacCb = NULL;
 static bool shdn      = false;
 
 static int playChannels = 0;
-static int recChannels = 0;
+static int recChannels  = 0;
 
-// Circular buffer for data
+// Circular buffer for audio data
 circularBuffer_t circBuf = {0};
 
 //==============================================================================
@@ -84,7 +90,7 @@ void dacPoll(void)
         // Go one dac buffer size at a time
         uint8_t tempSamps[DAC_BUF_SIZE];
 
-        if (avail < (4 * DAC_BUF_SIZE))
+        if (avail < (CIRCULAR_BUF_MIN_AVAIL * DAC_BUF_SIZE))
         {
             // Circular buffer is less than 50% full, call the Dac until it's full
             while (circularBufferCapacity(&circBuf) > DAC_BUF_SIZE)
@@ -107,8 +113,8 @@ void dacInitSoundOutput(int numChannelsRec, int numChannelsPlay)
     recChannels  = numChannelsRec;
     playChannels = numChannelsPlay;
 
-    // Store 8 DAC-buffer-sizes worth of data
-    circularBufferInit(&circBuf, 1, DAC_BUF_SIZE * 8);
+    // Store several DAC-buffer-sizes worth of data
+    circularBufferInit(&circBuf, 1, DAC_BUF_SIZE * CIRCULAR_BUF_SIZE_MULT);
 }
 
 /**
