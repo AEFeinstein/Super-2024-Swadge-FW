@@ -153,7 +153,7 @@ static void mainMenuEnterMode(void)
 
     // Load a font
     loadFont("rodin_eb.font", &mainMenu->font_rodin, false);
-    loadFont("retro_logo.font", &mainMenu->font_righteous, false);
+    loadFont("righteous_150.font", &mainMenu->font_righteous, false);
 
     // Load a song for when the volume changes
 #ifdef SW_VOL_CONTROL
