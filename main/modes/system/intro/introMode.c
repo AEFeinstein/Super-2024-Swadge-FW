@@ -266,13 +266,17 @@ swadgeMode_t introMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
+#ifdef CUSTOM_INTRO_SOUND
     .fnDacCb                  = introDacCallback,
+#else
+    .fnDacCb                  = NULL,
+#endif
 };
 
 #ifdef CUSTOM_INTRO_SOUND
 typedef struct
 {
-    uint8_t* sample;
+    const uint8_t* sample;
     size_t sampleCount;
     
     // Number of times each sample in the file needs to be played to match the audio sample rate
@@ -389,8 +393,8 @@ static void introEnterMode(void)
     makeOutlineFont(&iv->logoFont, &iv->logoFontOutline, true);
 
 #ifdef CUSTOM_INTRO_SOUND
-    iv->samplePlayer.sample = cnfsGetFile("magfest_x8.bin", &iv->samplePlayer.sampleCount);
-    iv->samplePlayer.factor = 4;
+    iv->samplePlayer.sample = cnfsGetFile("magfest.bin", &iv->samplePlayer.sampleCount);
+    iv->samplePlayer.factor = 1;
 #endif
 
     loadWsg("button_a.wsg", &iv->icon.button.a, true);
@@ -465,6 +469,7 @@ static void introEnterMode(void)
 #ifdef CUSTOM_INTRO_SOUND
     iv->playingSound  = true;
     iv->introComplete = false;
+    switchToSpeaker();
 #endif
 
     // Load the MIDI file
@@ -499,12 +504,6 @@ static void introExitMode(void)
     freeWsg(&iv->icon.touchGem);
     freeWsg(&iv->icon.swadge);
 
-#ifdef CUSTOM_INTRO_SOUND
-    if (iv->samplePlayer.sample != NULL)
-    {
-        heap_caps_free(iv->samplePlayer.sample);
-    }
-#endif
     unloadMidiFile(&iv->song);
 
     heap_caps_free(iv);
@@ -524,19 +523,13 @@ static void introMainLoop(int64_t elapsedUs)
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->playingSound || !iv->introComplete)
     {
-        int64_t songTime     = (iv->samplePlayer.sampleCount * iv->samplePlayer.factor * 1000000 + DAC_SAMPLE_RATE_HZ - 1) / DAC_SAMPLE_RATE_HZ;
-        int64_t animTime     = (songTime * 2 / 3);
-        static int64_t timer = 0;
+        drawMenuMania(iv->bgMenu, iv->renderer, elapsedUs);
 
-        shadeDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, 3, c234);
+        static int32_t timer = 0;
 
-        char title[64] = {0};
-        char sub[64]   = {0};
+        const char title[] = "MAGFest";
 
-        strcat(title, "MAGFest");
-        strcat(sub, "Swadge 2025");
-        int64_t titleTicksPerChar = ((animTime) / strlen(title));
-        int64_t subTicksPerChar   = ((animTime) / strlen(sub));
+        const char sub[]   = "Swadge";
 
         int16_t titleWidth = textWidth(&iv->logoFont, title);
         int16_t titleX     = (TFT_WIDTH - titleWidth) / 2;
@@ -551,7 +544,7 @@ static void introMainLoop(int64_t elapsedUs)
         // Trim the string
         //title[titleLen] = '\0';
         //sub[subLen]     = '\0';
-        int16_t boundsXmin = TFT_WIDTH / 2 - (timer * (TFT_WIDTH / 2) / animTime);
+        /*int16_t boundsXmin = TFT_WIDTH / 2 - (timer * (TFT_WIDTH / 2) / animTime);
         int16_t boundsYmin = TFT_HEIGHT / 2 - (timer * (TFT_HEIGHT / 2) / animTime);
         int16_t boundsXmax = TFT_WIDTH / 2 + (timer * (TFT_WIDTH / 2) / animTime);
         int16_t boundsYmax = TFT_HEIGHT / 2 + (timer * (TFT_HEIGHT / 2) / animTime);
@@ -560,7 +553,14 @@ static void introMainLoop(int64_t elapsedUs)
         drawTextBounds(&iv->logoFontOutline, c555, title, titleX, titleY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
 
         drawTextBounds(&iv->logoFont, c003, sub, subX, subY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
-        drawTextBounds(&iv->logoFontOutline, c555, sub, subX, subY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
+        drawTextBounds(&iv->logoFontOutline, c555, sub, subX, subY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);*/
+
+        paletteColor_t colors[] = {c003, c035, c555, c001, c003, c035, c555, c001};
+        drawTextMulticolored(&iv->logoFont, title, titleX, titleY, colors + ((timer % 400000) / 100000), 4, titleWidth);
+        drawText(&iv->logoFontOutline, c555, title, titleX, titleY);
+
+        drawTextMulticolored(&iv->logoFont, sub, subX, subY, colors + 3 - ((timer % 600000) / 150000), 4, titleWidth);
+        drawText(&iv->logoFontOutline, c555, sub, subX, subY);
 
         timer += elapsedUs;
 
@@ -765,10 +765,13 @@ bool playSample(audioSamplePlayer_t* player, uint8_t* samples, int16_t len)
 
 static void introDacCallback(uint8_t* samples, int16_t len)
 {
-#define SPK_SILENCE (INT8_MIN)
     if (iv->playingSound && iv->samplePlayer.sample)
     {
         iv->playingSound = playSample(&iv->samplePlayer, samples, len);
+        if (!iv->playingSound)
+        {
+            ESP_LOGI("Intro", "Finished playing sample");
+        }
     }
     else
     {
