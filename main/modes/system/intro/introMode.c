@@ -523,44 +523,54 @@ static void introMainLoop(int64_t elapsedUs)
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->playingSound || !iv->introComplete)
     {
-        drawMenuMania(iv->bgMenu, iv->renderer, elapsedUs);
+        //drawMenuMania(iv->bgMenu, iv->renderer, elapsedUs);
+        for (int i = 0; i < TFT_HEIGHT; i++)
+        {
+            drawLineFast(0, i, TFT_WIDTH, i, (i % 2) ? c555 : c444);
+        }
 
         static int32_t timer = 0;
 
-        const char title[] = "MAGFest";
+        const char mag[] = "MA";
+        const char fest[] = "GFest";
 
-        const char sub[]   = "Swadge";
+        const char sub[]   = "Sw";
+        const char sub2[]  = "adge";
 
-        int16_t titleWidth = textWidth(&iv->logoFont, title);
+        int16_t magW = textWidth(&iv->logoFont, mag);
+        int16_t festW = textWidth(&iv->logoFont, fest);
+        int16_t kernAG = -3;
+
+        int16_t titleWidth = magW + 1 + festW + kernAG;
         int16_t titleX     = (TFT_WIDTH - titleWidth) / 2;
         int16_t titleY     = (TFT_HEIGHT - iv->bigFont.height - iv->smallFont.height - 6) / 2;
 
-        int16_t subWidth = textWidth(&iv->logoFont, sub);
+        int16_t magX = titleX;
+        int16_t festX = magX + magW + 1 + kernAG;
+
+        int16_t subOneWidth = textWidth(&iv->logoFont, sub);
+        int16_t subTwoWidth = textWidth(&iv->logoFont, sub2);
+        int16_t kernWA = -8;
+        int16_t subWidth = textWidth(&iv->logoFont, sub) + textWidth(&iv->logoFont, sub2) + kernWA + 1;
         int16_t subX     = (TFT_WIDTH - subWidth) / 2;
         int16_t subY     = titleY + iv->bigFont.height + 5;
 
-        //int titleLen = MIN(strlen(title), timer / titleTicksPerChar);
-        //int subLen   = MIN(strlen(sub), timer / subTicksPerChar);
-        // Trim the string
-        //title[titleLen] = '\0';
-        //sub[subLen]     = '\0';
-        /*int16_t boundsXmin = TFT_WIDTH / 2 - (timer * (TFT_WIDTH / 2) / animTime);
-        int16_t boundsYmin = TFT_HEIGHT / 2 - (timer * (TFT_HEIGHT / 2) / animTime);
-        int16_t boundsXmax = TFT_WIDTH / 2 + (timer * (TFT_WIDTH / 2) / animTime);
-        int16_t boundsYmax = TFT_HEIGHT / 2 + (timer * (TFT_HEIGHT / 2) / animTime);
-
-        drawTextBounds(&iv->logoFont, c003, title, titleX, titleY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
-        drawTextBounds(&iv->logoFontOutline, c555, title, titleX, titleY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
-
-        drawTextBounds(&iv->logoFont, c003, sub, subX, subY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);
-        drawTextBounds(&iv->logoFontOutline, c555, sub, subX, subY, boundsXmin, boundsYmin, boundsXmax, boundsYmax);*/
+        paletteColor_t outlineCol = c005;
 
         paletteColor_t colors[] = {c003, c035, c555, c001, c003, c035, c555, c001};
-        drawTextMulticolored(&iv->logoFont, title, titleX, titleY, colors + ((timer % 400000) / 100000), 4, titleWidth);
-        drawText(&iv->logoFontOutline, c555, title, titleX, titleY);
+        int magColOffset = ((timer % 400000) / 100000);
+        int festColOffset = (magColOffset + (3 - magW % 4)) % 4;
+        drawTextMulticolored(&iv->logoFont, mag, magX, titleY, colors + magColOffset, 4, magW);
+        drawTextMulticolored(&iv->logoFont, fest, festX, titleY, colors + festColOffset, 4, festW);
+        drawText(&iv->logoFontOutline, outlineCol, mag, magX, titleY);
+        drawText(&iv->logoFontOutline, outlineCol, fest, festX, titleY);
 
-        drawTextMulticolored(&iv->logoFont, sub, subX, subY, colors + 3 - ((timer % 600000) / 150000), 4, titleWidth);
-        drawText(&iv->logoFontOutline, c555, sub, subX, subY);
+        int swColOffset = 3 - ((timer % 600000) / 150000);
+        int adgeColOffset = (swColOffset + (3 - (subOneWidth + kernWA) % 4)) % 4;
+        drawTextMulticolored(&iv->logoFont, sub, subX, subY, colors + swColOffset, 4, subOneWidth);
+        drawTextMulticolored(&iv->logoFont, sub2, subX + subOneWidth + kernWA, subY, colors + adgeColOffset, 4, subTwoWidth);
+        drawText(&iv->logoFontOutline, outlineCol, sub, subX, subY);
+        drawText(&iv->logoFontOutline, outlineCol, sub2, subX + subOneWidth + kernWA, subY);
 
         timer += elapsedUs;
 
@@ -568,6 +578,10 @@ static void introMainLoop(int64_t elapsedUs)
         if (iv->playingSound)
         {
             return;
+        }
+        else
+        {
+            iv->introComplete = true;
         }
     }
 #endif
