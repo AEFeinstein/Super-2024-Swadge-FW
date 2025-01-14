@@ -295,6 +295,7 @@ void gamepadEnterMode(void)
 
     // Initialize menu renderer
     gamepad->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    gamepad->renderer->ledsOn = false;
 
     // Set up the IMU
     accelSetRegistersAndReset();
