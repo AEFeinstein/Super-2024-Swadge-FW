@@ -1,7 +1,12 @@
+#!/usr/bin/python
+
 import serial.tools.list_ports
 import serial.tools.list_ports_common
 import threading
 import esptool
+import time
+import semver
+
 try:
     # for Python2
     import Tkinter as tk
@@ -35,6 +40,10 @@ class LabelThread(threading.Thread):
 
         # Try to flash the firmware
         try:
+            # Wait two seconds
+            time.sleep(2)
+
+            # Flash it
             esptool.main([
                 "--chip", "esp32s2",
                 "-p", str(self.serialPort.device),
@@ -53,16 +62,36 @@ class LabelThread(threading.Thread):
             self.labelText = "Flash succeeded on " + str(self.serialPort.device)
             self.labelColor = "green"
             updateUI = True
+
         except Exception as e:
             # It failed. Display a bad red message
             self.labelText = "Flash failed on " + str(self.serialPort.device) + " because: " + str(e)
             self.labelColor = "red"
             updateUI = True
 
+        # Wait two seconds
+        time.sleep(2)
+
+        try:
+            # Reboot out of the bootloader
+            esptool.main([
+                "-p", str(self.serialPort.device),
+                "--after", "hard_reset",
+                "chip_id"
+            ])
+        except:
+            pass
 
 class ProgrammerApplication:
 
     def init(self):
+        minEspToolVer = '4.9.0-dev.3'
+        esptoolVer = semver.Version.parse(esptool.__version__.replace('.dev', '.0-dev.'))
+        if semver.compare(str(esptoolVer), minEspToolVer) < 0:
+            print('Please update esptool to at least 4.9.dev3 and run again. Try:')
+            print('  python -m pip install -r requirements.txt')
+            exit()
+
         global updateUI
 
         # Keep track of all the threads
