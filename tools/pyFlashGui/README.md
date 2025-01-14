@@ -11,6 +11,18 @@ The UI will be green when a Swadge is successfully flashed. It will be red if th
 > [!NOTE]  
 > As of January 2025 the program may erroneously flash red, falsely indicating a failure, when rebooting after a successful flash. If the Swadge reboots to a valid screen, the flash was successful.
 
+This script may also be run in headless mode when a GUI is not required or desired.
+
+```
+usage: pyFlashGui.py [-h] [--headless]
+
+Optional app description
+
+options:
+  -h, --help  show this help message and exit
+  --headless  Run in headless mode without a GUI
+```
+
 # Driver Dependencies
 
 ## Windows
