@@ -18,11 +18,14 @@
 #include "embeddedOut.h"
 #include "bunny.h"
 
+#define CUSTOM_INTRO_SOUND
+
 static void introEnterMode(void);
 static void introExitMode(void);
 static void introMainLoop(int64_t elapsedUs);
 static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void introAudioCallback(uint16_t* samples, uint32_t sampleCnt);
+static void introDacCallback(uint8_t* samples, int16_t len);
 
 // static void introMenuCb(const char*, bool selected, uint32_t settingVal);
 static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
@@ -263,7 +266,7 @@ swadgeMode_t introMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
-    .fnDacCb                  = NULL,
+    .fnDacCb                  = introDacCallback,
 };
 
 #ifdef CUSTOM_INTRO_SOUND
@@ -387,7 +390,7 @@ static void introEnterMode(void)
 
 #ifdef CUSTOM_INTRO_SOUND
     iv->samplePlayer.sample = cnfsGetFile("magfest_x8.bin", &iv->samplePlayer.sampleCount);
-    iv->samplePlayer.factor = 8;
+    iv->samplePlayer.factor = 4;
 #endif
 
     loadWsg("button_a.wsg", &iv->icon.button.a, true);
@@ -460,8 +463,7 @@ static void introEnterMode(void)
     tutorialSetup(&iv->tut, introTutorialCb, buttonsSteps, ARRAY_SIZE(buttonsSteps), iv);
 
 #ifdef CUSTOM_INTRO_SOUND
-    iv->sound         = NULL;
-    iv->playingSound  = false;
+    iv->playingSound  = true;
     iv->introComplete = false;
 #endif
 
@@ -744,6 +746,7 @@ static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
 #ifdef CUSTOM_INTRO_SOUND
 bool playSample(audioSamplePlayer_t* player, uint8_t* samples, int16_t len)
 {
+    for (int i = 0; i < len; i++)
     {
         if (player->progress >= player->sampleCount * player->factor)
         {
@@ -769,7 +772,7 @@ static void introDacCallback(uint8_t* samples, int16_t len)
     }
     else
     {
-        memset(samples, SPK_SILENCE, len);
+        globalMidiPlayerFillBuffer(samples, len);
     }
 }
 #endif
