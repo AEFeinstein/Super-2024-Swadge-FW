@@ -524,9 +524,14 @@ static void introMainLoop(int64_t elapsedUs)
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->playingSound || !iv->introComplete)
     {
+        const paletteColor_t bgLineColors[] = {c444, c555};
+        const paletteColor_t outlineCol     = c025;
+        const paletteColor_t textCol        = c025;
+
+        paletteColor_t* screen = getPxTftFramebuffer();
         for (int i = 0; i < TFT_HEIGHT; i++)
         {
-            drawLineFast(0, i, TFT_WIDTH, i, (i % 2) ? c555 : c444);
+            memset(screen + (TFT_WIDTH * i), bgLineColors[i % sizeof(bgLineColors)], TFT_WIDTH);
         }
 
         static int32_t timer = 0;
@@ -555,21 +560,31 @@ static void introMainLoop(int64_t elapsedUs)
         int16_t subX        = (TFT_WIDTH - subWidth) / 2;
         int16_t subY        = titleY + iv->bigFont.height + 5;
 
-        paletteColor_t outlineCol = c005;
+        // #define STRIPE_TEXT
 
-        paletteColor_t colors[] = {c003, c035, c555, c001, c003, c035, c555, c001};
+    #ifdef STRIPE_TEXT
+        paletteColor_t colors[] = {c003, c003, c034, c003, c003, c003, c034, c003};
         int magColOffset        = ((timer % 400000) / 100000);
         int festColOffset       = (magColOffset + (3 - magW % 4)) % 4;
         drawTextMulticolored(&iv->logoFont, mag, magX, titleY, colors + magColOffset, 4, magW);
         drawTextMulticolored(&iv->logoFont, fest, festX, titleY, colors + festColOffset, 4, festW);
+    #else
+        drawText(&iv->logoFont, textCol, mag, magX, titleY);
+        drawText(&iv->logoFont, textCol, fest, festX, titleY);
+    #endif
         drawText(&iv->logoFontOutline, outlineCol, mag, magX, titleY);
         drawText(&iv->logoFontOutline, outlineCol, fest, festX, titleY);
 
+    #ifdef STRIPE_TEXT
         int swColOffset   = 3 - ((timer % 600000) / 150000);
         int adgeColOffset = (swColOffset + (3 - (subOneWidth + kernWA) % 4)) % 4;
         drawTextMulticolored(&iv->logoFont, sub, subX, subY, colors + swColOffset, 4, subOneWidth);
         drawTextMulticolored(&iv->logoFont, sub2, subX + subOneWidth + kernWA, subY, colors + adgeColOffset, 4,
                              subTwoWidth);
+    #else
+        drawText(&iv->logoFont, textCol, sub, subX, subY);
+        drawText(&iv->logoFont, textCol, sub2, subX + subOneWidth + kernWA, subY);
+    #endif
         drawText(&iv->logoFontOutline, outlineCol, sub, subX, subY);
         drawText(&iv->logoFontOutline, outlineCol, sub2, subX + subOneWidth + kernWA, subY);
 
