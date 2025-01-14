@@ -394,7 +394,7 @@ static void introEnterMode(void)
 
 #ifdef CUSTOM_INTRO_SOUND
     iv->samplePlayer.sample = cnfsGetFile("magfest.bin", &iv->samplePlayer.sampleCount);
-    iv->samplePlayer.factor = 1;
+    iv->samplePlayer.factor = 2;
 #endif
 
     loadWsg("button_a.wsg", &iv->icon.button.a, true);
@@ -518,12 +518,9 @@ static void introExitMode(void)
  */
 static void introMainLoop(int64_t elapsedUs)
 {
-    // clearPxTft();
-
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->playingSound || !iv->introComplete)
     {
-        //drawMenuMania(iv->bgMenu, iv->renderer, elapsedUs);
         for (int i = 0; i < TFT_HEIGHT; i++)
         {
             drawLineFast(0, i, TFT_WIDTH, i, (i % 2) ? c555 : c444);
