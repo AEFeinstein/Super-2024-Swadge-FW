@@ -47,6 +47,9 @@ soko_abs_t* soko = NULL;
 
 static void sokoEnterMode(void)
 {
+    // No speaker output for these puzzles! Concentrate!
+    setDacShutdown(true);
+
     soko = heap_caps_calloc(1, sizeof(soko_abs_t), MALLOC_CAP_SPIRAM);
     // Load a font
     loadFont("ibm_vga8.font", &soko->ibm, true);
@@ -124,9 +127,9 @@ static void sokoEnterMode(void)
 
     // Color the menu
     led_t menuColor = {
-        .r = 0xFF,
-        .g = 0xCC,
-        .b = 0x00,
+        .r = 0xAA,
+        .g = 0x99,
+        .b = 0x99,
     };
     static const paletteColor_t shadowColors[] = {c103, c213, c224, c334, c445, c555, c445, c334, c224, c213};
     recolorMenuManiaRenderer(soko->menuManiaRenderer, //

@@ -4,8 +4,9 @@
 
 #include "graphics.h"
 
+#include "games.h"
 
-int frameno;
+void test() { }
 
 int main()
 {
@@ -21,12 +22,10 @@ int main()
 	funDigitalWrite( PA1, FUN_HIGH );
 	funDigitalWrite( PA2, FUN_HIGH );
 
-	printf( "Setup Start\n" );
-
 	ssd1306_rst();
 	if(ssd1306_spi_init())
 	{
-		printf( "Could not connect to OLED\n" );
+		// Could not init OLED.  Cry?
 	}
 	ssd1306_init();
 
@@ -40,27 +39,56 @@ int main()
 	ssd1306_cmd( SSD1306_SETVCOMDETECT ); ssd1306_cmd( 0x40 );
 	ssd1306_cmd( 0xad ); ssd1306_cmd( 0x90 ); // Set Charge pump (set to 0x90 for extra bright)
 
-	int i;
+	gameTimeUs = 0;
+	gameMode = GameModeMainMenu;
 
+	uint32_t modeStartTime = SysTick->CNT;
+	int gameNumber = 0;
 
-	printf( "Setup Complete\n" );
 	while(1)
 	{
+		int ret = gameMode();
+		uint32_t now = SysTick->CNT;
 
-		glyphdraw_invert = -1;
-		glyphdraw_nomask = 1;
+		int thisMask = (( GPIOA->INDR >> 1 ) & 3) ^ 3;
+		buttonEventDown = thisMask & ~buttonMask;
+		buttonEventUp = ~thisMask & buttonMask;
+		buttonMask = thisMask;
 
-		swadgeDraw( SSD1306_W/2, 2, 1, swadgeGlyphHalf, "A GRAND" );
-
-		swadgeDraw( SSD1306_W/2, 16, 1, swadgeGlyph, "%d", (frameno>>2) );
-
+		gameTimeUs = (now - modeStartTime) / 6; // 6 as a constant can div fast.
+		int gameTimeUsFlip = (now - modeStartTime) < 0;
+		if( gameTimeUsFlip ) gameTimeUs += 715827883;
 		swapBuffer();
 
-
-		background(8);
-
 		frameno++;
+
+		if( ret != 0 )
+		{
+			glyphdraw_invert = 0;
+			glyphdraw_nomask = 0;
+			gameTimeUs = 0;
+			modeStartTime = now;
+			frameno = 0;
+			memset( gameData, 0, sizeof( gameData ) );
+
+			gameNumber++;
+
+			if( gameNumber == 10 )
+			{
+				gameMode = GameModeEnding;
+			}
+			else if( gameNumber == 11 )
+			{
+				gameNumber = 0;
+				gameMode = GameModeMainMenu;
+			}
+			else
+			{
+				gameMode = gameModes[ SysTick->CNT % (sizeof(gameModes)/sizeof(gameModes[0])) ];
+			}
+		}
 	}
+	return 0;
 }
 
 

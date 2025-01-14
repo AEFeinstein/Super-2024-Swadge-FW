@@ -74,6 +74,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
+static void bb_setPrimingLeds(uint8_t primingEffect);
 static void bb_UpdateTileSupport(void);
 static void bb_UpdateLEDs(bb_entityManager_t* entityManager);
 
@@ -179,7 +180,7 @@ static void bb_EnterMode(void)
 
     foreground->updateFunction = NULL;
     foreground->drawFunction   = &bb_drawMenuForeground;
-    bb_destroyEntity(((bb_menuData_t*)foreground->data)->cursor, false);
+    bb_destroyEntity(((bb_menuData_t*)foreground->data)->cursor, false, false);
 
     bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, BB_MENU, 1,
                     (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS), false, false);
@@ -188,12 +189,13 @@ static void bb_EnterMode(void)
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                           (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS) - 234, true, false);
 
-    ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
-
     bigbug->gameData.camera.camera.pos.x = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
     bigbug->gameData.camera.camera.pos.y = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
 
-    bb_generateWorld(&(bigbug->gameData.tilemap));
+    ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
+
+    int8_t oldBoosterYs[3] = {-1, -1, -1};
+    bb_generateWorld(&(bigbug->gameData.tilemap), oldBoosterYs);
 
     // Player
     //  bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
@@ -276,7 +278,7 @@ static void bb_EnterModeSkipIntro(void)
         else // rocketIdx == 0
         {
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
-            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 3;
+            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 20;
             bigbug->gameData.entityManager.activeBooster->currentAnimationFrame               = 40;
             bigbug->gameData.entityManager.activeBooster->pos.y                               = 50;
             bigbug->gameData.entityManager.activeBooster->updateFunction                      = bb_updateHeavyFalling;
@@ -299,6 +301,9 @@ static void bb_EnterModeSkipIntro(void)
         = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1, deathDumpsterX,
                           deathDumpsterY, false, true);
 
+    // create garbotnik's UI
+    bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_GARBOTNIK_UI, 1, 0, 0, false, true);
+
     bigbug->gameData.entityManager.viewEntity
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
                           bigbug->gameData.entityManager.activeBooster->pos.x >> DECIMAL_BITS,
@@ -308,7 +313,8 @@ static void bb_EnterModeSkipIntro(void)
 
     bigbug->gameData.entityManager.playerEntity = bigbug->gameData.entityManager.viewEntity;
 
-    bb_generateWorld(&(bigbug->gameData.tilemap));
+    int8_t oldBoosterYs[3] = {-1, -1, -1};
+    bb_generateWorld(&(bigbug->gameData.tilemap), oldBoosterYs);
 
     // Set the mode to game mode
     bigbug->gameData.screen = BIGBUG_GAME;
@@ -374,7 +380,7 @@ static void bb_ExitMode(void)
     heap_caps_free(bb_decodeSpace);
 
     // Destroy menu bug, just in case
-    bb_destroyEntity(bigbug->gameData.menuBug, false);
+    bb_destroyEntity(bigbug->gameData.menuBug, false, false);
 
     bb_freeGameData(&bigbug->gameData);
     bb_deactivateAllEntities(&bigbug->gameData.entityManager, false);
@@ -692,7 +698,8 @@ static void bb_DrawScene_Radar(void)
         }
         if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
         {
-            if (entity->dataType == CAR_DATA || entity->dataType == FOOD_CART_DATA)
+            if ((entity->dataType == CAR_DATA && entity->currentAnimationFrame != 59)
+                || entity->dataType == FOOD_CART_DATA)
             {
                 bb_PointOfInterestParentData_t* POIData = (bb_PointOfInterestParentData_t*)entity->data;
                 if (POIData->reward == BB_DONUT)
@@ -707,6 +714,18 @@ static void bb_DrawScene_Radar(void)
                                   (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                                   (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
+            }
+            else if (entity->spriteIndex == BB_DONUT)
+            {
+                drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0],
+                              (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                              (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+            }
+            else if (entity->spriteIndex == BB_SWADGE)
+            {
+                drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
+                              (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                              (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
             }
         }
 
@@ -742,7 +761,8 @@ static void bb_DrawScene_Radar(void)
             }
             if ((bigbug->gameData.radar.upgrades >> BIGBUG_POINTS_OF_INTEREST) & 1)
             {
-                if (entity->dataType == CAR_DATA || entity->dataType == FOOD_CART_DATA)
+                if ((entity->dataType == CAR_DATA && entity->currentAnimationFrame != 59)
+                    || entity->dataType == FOOD_CART_DATA)
                 {
                     bb_PointOfInterestParentData_t* POIData = (bb_PointOfInterestParentData_t*)entity->data;
                     if (POIData->reward == BB_DONUT)
@@ -757,6 +777,18 @@ static void bb_DrawScene_Radar(void)
                                       (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
                                       (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                     }
+                }
+                else if (entity->spriteIndex == BB_DONUT)
+                {
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_DONUT].frames[0],
+                                  (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                  (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
+                }
+                else if (entity->spriteIndex == BB_SWADGE)
+                {
+                    drawWsgSimple(&bigbug->gameData.entityManager.sprites[BB_HOTDOG].frames[0],
+                                  (entity->pos.x >> DECIMAL_BITS) / 8 - 15,
+                                  (entity->pos.y >> DECIMAL_BITS) / 8 - bigbug->gameData.radar.cam.y - 6);
                 }
             }
         }
@@ -785,8 +817,10 @@ static void bb_DrawScene_Radar(void)
     }
 
     // draw camera perimeter
-    drawRect(garbotnikPos.x - 17, garbotnikPos.y - 15 - bigbug->gameData.radar.cam.y, garbotnikPos.x + 17,
-             garbotnikPos.y + 15 - bigbug->gameData.radar.cam.y, c424);
+    drawRect((bigbug->gameData.camera.camera.pos.x >> 3),
+             (bigbug->gameData.camera.camera.pos.y >> 3) - bigbug->gameData.radar.cam.y,
+             (bigbug->gameData.camera.camera.pos.x >> 3) + 34,
+             (bigbug->gameData.camera.camera.pos.y >> 3) + 30 - bigbug->gameData.radar.cam.y, c424);
 
     if ((bigbug->gameData.radar.upgrades >> BIGBUG_OLD_BOOSTERS) & 1)
     {
@@ -959,11 +993,11 @@ static void bb_GameLoop_Radar(int64_t elapsedUs)
     {
         if (bigbug->gameData.btnState & 1) // up
         {
-            bigbug->gameData.radar.cam.y--;
+            bigbug->gameData.radar.cam.y -= 2;
         }
         if ((bigbug->gameData.btnState >> 1) & 1) // down
         {
-            bigbug->gameData.radar.cam.y++;
+            bigbug->gameData.radar.cam.y += 2;
         }
     }
 
@@ -1319,8 +1353,8 @@ static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs)
     }
 
     // keep the selection wrapped in range of available choices.
-    uint8_t numChoices
-        = 1 + (uint8_t)(bigbug->gameData.radar.choices[1] > -1) + (uint8_t)(bigbug->gameData.radar.choices[2] > -1);
+    uint8_t numChoices = 1 + (uint8_t)(bigbug->gameData.garbotnikUpgrade.choices[1] > -1)
+                         + (uint8_t)(bigbug->gameData.garbotnikUpgrade.choices[2] > -1);
     bigbug->gameData.radar.playerPingRadius
         = (bigbug->gameData.radar.playerPingRadius % numChoices + numChoices) % numChoices;
 
@@ -1332,7 +1366,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
     bigbug->gameData.loadoutScreenData->blinkTimer += elapsedUs >> 12;
     if (bigbug->gameData.radar.playerPingRadius == 2)
     {
-        bigbug->gameData.loadoutScreenData->marqueeTimer += elapsedUs;
+        bigbug->gameData.loadoutScreenData->marqueeTimer += elapsedUs << 1;
     }
     bigbug->gameData.btnDownState = 0b0;
     // Always process button events, regardless of control scheme, so the main menu button can be captured
@@ -1499,6 +1533,7 @@ static void bb_GameLoop_Loadout_Select(int64_t elapsedUs)
     }
 
     bb_DrawScene_Loadout_Select();
+    bb_setPrimingLeds(bigbug->gameData.loadoutScreenData->primingEffect);
 }
 
 static void bb_GameLoop_Radar_Upgrade(int64_t elapsedUs)
@@ -1603,6 +1638,7 @@ static void bb_GameLoop(int64_t elapsedUs)
             if (evt.button == PB_START && !bigbug->gameData.isPaused && bigbug->gameData.screen == BIGBUG_GAME
                 && bigbug->gameData.entityManager.playerEntity != NULL)
             {
+                bb_ensureEntitySpace(&bigbug->gameData.entityManager, 1);
                 bb_entity_t* radarPing
                     = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
                                       bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS,
@@ -1622,7 +1658,11 @@ static void bb_GameLoop(int64_t elapsedUs)
     {
         bb_UpdateTileSupport();
 
-        bb_UpdateLEDs(&(bigbug->gameData.entityManager));
+        if (bigbug->gameData.entityManager.playerEntity != NULL)
+        {
+            bb_UpdateLEDs(&(bigbug->gameData.entityManager));
+        }
+
         // bigbugFadeLeds(elapsedUs);
         // bigbugControlCpuPaddle();
     }
@@ -1654,6 +1694,30 @@ static void bb_SetLeds(void)
         leds[i].r = 0;
         leds[i].g = 0;
         leds[i].b = 0;
+    }
+    // Set the LED output
+    setLeds(leds, CONFIG_NUM_LEDS);
+}
+
+static void bb_setPrimingLeds(uint8_t primingEffect)
+{
+    const uint8_t condimentLights[] = {5, 4, 6, 7, 0, 8};
+    // Create an array for all LEDs
+    led_t leds[CONFIG_NUM_LEDS];
+    // Copy the LED colors for left and right to the whole array
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        leds[i].r = 0;
+        leds[i].g = 0;
+        leds[i].b = 0;
+    }
+
+    for (uint8_t i = 0; i < 6; i++)
+    {
+        if ((primingEffect - 10) > i * 29)
+        {
+            leds[condimentLights[i]].g = 255;
+        }
     }
     // Set the LED output
     setLeds(leds, CONFIG_NUM_LEDS);
