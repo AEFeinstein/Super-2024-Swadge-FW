@@ -133,7 +133,7 @@ void dacHandleSoundOutput(short* out, int framesp, short numChannels)
         size_t read = circularBufferRead(&circBuf, tempSamps, framesp);
 
         // Write the samples to the emulator output, in signed short format
-        int i;
+        uint32_t i;
         for (i = 0; i < read; i++)
         {
             short samp = (tempSamps[i] - 127) * 256;
@@ -155,10 +155,6 @@ void dacHandleSoundOutput(short* out, int framesp, short numChannels)
         {
             memset(out + read * numChannels, 0, (framesp - read) * sizeof(short) * numChannels);
         }
-        // for (; i < framesp; i++)
-        //{
-        // out[i * numChannels * i] = 0;
-        //}
     }
 }
 
