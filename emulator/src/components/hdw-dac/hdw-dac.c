@@ -13,10 +13,10 @@
 //==============================================================================
 
 /// The number of DAC-buffer-fuls (DAC_BUF_SIZE) to keep in the buffer
-#define CIRCULAR_BUF_SIZE_MULT 8
+#define CIRCULAR_BUF_SIZE_MULT 4
 
 // The threshold of DAC-buffer-fuls at which the circular buffer refills all the way
-#define CIRCULAR_BUF_MIN_AVAIL (CIRCULAR_BUF_SIZE_MULT / 2)
+#define CIRCULAR_BUF_MIN_AVAIL 3
 
 //==============================================================================
 // Variables
