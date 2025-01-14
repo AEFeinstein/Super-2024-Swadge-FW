@@ -6,6 +6,8 @@ import threading
 import esptool
 import time
 import semver
+import argparse
+import os
 
 try:
     # for Python2
@@ -17,13 +19,16 @@ except ImportError:
 global updateUI
 updateUI: bool = True
 
+global headless
+headless: bool = True
+
 class LabelThread(threading.Thread):
 
     def __init__(self, _serialPort: serial.tools.list_ports_common.ListPortInfo):
         super(LabelThread, self).__init__()
         self.serialPort = _serialPort
-        self.labelText = str(self.serialPort.device)
-        self.labelColor = "gray"
+        self.labelText: str = str(self.serialPort.device)
+        self.labelColor: str = "gray"
 
     def getLabelText(self) -> str:
         return self.labelText
@@ -33,6 +38,7 @@ class LabelThread(threading.Thread):
 
     def run(self):
         global updateUI
+        global headless
 
         # Draw the label
         self.labelText = "Attempting flash on " + str(self.serialPort.device)
@@ -84,6 +90,10 @@ class LabelThread(threading.Thread):
 
 class ProgrammerApplication:
 
+    def __init__(self, isHeadless: bool):
+        global headless
+        headless = isHeadless
+
     def init(self):
         minEspToolVer = '4.9.0-dev.3'
         esptoolVer = semver.Version.parse(esptool.__version__.replace('.dev', '.0-dev.'))
@@ -93,6 +103,7 @@ class ProgrammerApplication:
             exit()
 
         global updateUI
+        global headless
 
         # Keep track of all the threads
         self.threads: list[LabelThread] = []
@@ -105,23 +116,26 @@ class ProgrammerApplication:
         self.numCols: int = 1
 
         # Create the UI root
-        self.root = tk.Tk()
+        if not headless:
+            self.root = tk.Tk()
 
-        # Set up a menu, just to quit
-        menubar = tk.Menu(self.root)
-        filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Exit", command=exit_function)
-        menubar.add_cascade(label="File", menu=filemenu)
-        self.root.config(menu=menubar)
+            # Set up a menu, just to quit
+            menubar = tk.Menu(self.root)
+            filemenu = tk.Menu(menubar, tearoff=0)
+            filemenu.add_command(label="Exit", command=exit_function)
+            menubar.add_cascade(label="File", menu=filemenu)
+            self.root.config(menu=menubar)
 
-        # Override the close button
-        self.root.protocol("WM_DELETE_WINDOW", exit_function)
+            # Override the close button
+            self.root.protocol("WM_DELETE_WINDOW", exit_function)
 
-        # Start the main UI loop
-        self.root.winfo_toplevel().title("ESP32-S2 Swadge Programmer")
+            # Start the main UI loop
+            self.root.winfo_toplevel().title("ESP32-S2 Swadge Programmer")
 
-        # Set the initial window size
-        self.root.geometry("500x200")
+            # Set the initial window size
+            self.root.geometry("500x200")
+        else:
+            print(os.path.basename(__file__) + 'Running in headless mode')
 
         # Run this loop until it should quit
         self.shouldQuit: bool = False
@@ -157,26 +171,31 @@ class ProgrammerApplication:
                             self.threads.remove(thread)
                             updateUI = True
 
-            # Update UI
-            self.adjustRows()
-            self.root.update_idletasks()
-            self.root.update()
+            if not headless:
+                # Update UI
+                self.adjustRows()
+                self.root.update_idletasks()
+                self.root.update()
 
     def exit(self):
         global updateUI
+        global headless
         self.shouldQuit = True
         if len(self.threads) > 0:
-            self.root.update()
+            if not headless:
+                self.root.update()
             # Wait for all threads to actually stop
             for thread in self.threads:
                 thread.join()
                 self.threads.remove(thread)
                 updateUI = True
-        # Destroy the UI
-        self.root.destroy()
+        if not headless:
+            # Destroy the UI
+            self.root.destroy()
 
     def adjustRows(self):
         global updateUI
+        global headless
 
         if updateUI:
             updateUI = False
@@ -222,5 +241,10 @@ def exit_function():
 
 
 if __name__ == "__main__":
-    app = ProgrammerApplication()
+    # Instantiate the parser
+    parser = argparse.ArgumentParser(description='Optional app description')
+    parser.add_argument('--headless', action='store_true', help='Run in headless mode without a GUI')
+    args = parser.parse_args()
+
+    app = ProgrammerApplication(args.headless)
     app.init()
