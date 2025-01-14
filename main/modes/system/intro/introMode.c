@@ -597,7 +597,21 @@ static void introMainLoop(int64_t elapsedUs)
         }
         else
         {
-            iv->introComplete = true;
+            static int postTimerStart = 0;
+            if (postTimerStart == 0)
+            {
+                postTimerStart = timer;
+            }
+
+            // Wait 2 seconds after sound ending before continuing
+            if ((timer - postTimerStart) >= 2000000)
+            {
+                iv->introComplete = true;
+            }
+            else
+            {
+                return;
+            }
         }
     }
 #endif
