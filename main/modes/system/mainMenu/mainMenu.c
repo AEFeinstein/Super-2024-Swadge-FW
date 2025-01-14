@@ -40,7 +40,6 @@ typedef struct
 {
     menu_t* menu;
     menuManiaRenderer_t* renderer;
-    font_t font_righteous;
     font_t font_rodin;
     midiFile_t fanfare;
 #ifdef SW_VOL_CONTROL
@@ -153,7 +152,6 @@ static void mainMenuEnterMode(void)
 
     // Load a font
     loadFont("rodin_eb.font", &mainMenu->font_rodin, false);
-    loadFont("righteous_150.font", &mainMenu->font_righteous, false);
 
     // Load a song for when the volume changes
 #ifdef SW_VOL_CONTROL
@@ -246,7 +244,6 @@ static void mainMenuExitMode(void)
 
     // Free the font
     freeFont(&mainMenu->font_rodin);
-    freeFont(&mainMenu->font_righteous);
 
     // Free the song
 #ifdef SW_VOL_CONTROL
