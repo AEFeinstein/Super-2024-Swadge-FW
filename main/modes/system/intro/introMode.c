@@ -529,9 +529,9 @@ static void introMainLoop(int64_t elapsedUs)
         const paletteColor_t textCol        = c025;
 
         paletteColor_t* screen = getPxTftFramebuffer();
-        for (int i = 0; i < TFT_HEIGHT; i++)
+        for (int i = 0; i < TFT_WIDTH; i++)
         {
-            memset(screen + (TFT_WIDTH * i), bgLineColors[i % sizeof(bgLineColors)], TFT_WIDTH);
+            drawLineFast(i, 0, i, TFT_HEIGHT, bgLineColors[i % 2]);
         }
 
         static int32_t timer = 0;
