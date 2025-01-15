@@ -10,9 +10,9 @@
 
 #include "games.h"
 
+#ifndef EMU
 void WriteHighScore( int32_t hs )
 {
-#ifndef EMU
 	// Unkock flash - be aware you need extra stuff for the bootloader.
 	FLASH->KEYR = 0x45670123;
 	FLASH->KEYR = 0xCDEF89AB;
@@ -42,10 +42,19 @@ void WriteHighScore( int32_t hs )
 	FLASH->CTLR = CR_PAGE_PG|CR_STRT_Set;
 
 	while( FLASH->STATR & FLASH_STATR_BSY );
-#endif
 }
+#endif
 
+uint32_t modeStartTime;;
+int interstitial = 0;
+int freebieID = 0;
+
+
+#ifdef WASM
+int __attribute__((export_name("main"))) main()
+#else
 int main()
+#endif
 {
 	SystemInit();
 
@@ -79,12 +88,7 @@ int main()
 	gameTimeUs = 0;
 	gameMode = GameModeMainMenu;
 
-
-	uint32_t modeStartTime = SysTick->CNT;
-	int interstitial = 0;
-
-	int freebieID = 0;
-
+	modeStartTime = SysTick->CNT;
 	while(1)
 	{
 		if( gameModeForce )

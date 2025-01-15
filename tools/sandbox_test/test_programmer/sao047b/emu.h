@@ -3,13 +3,30 @@
 
 #define CNFG_IMPLEMENTATION
 
+#ifndef WASM
 #define mini_vsnprintf vsnprintf
+uint32_t GetTimeUS()
+{
+	struct timeval tv;
+	gettimeofday( &tv, 0 );
+	return (tv.tv_usec) + 1000000*(tv.tv_sec); 
+}
+#else
+#include <stdint.h>
+double OGGetAbsoluteTime();
+uint32_t GetTimeUS()
+{
+	return (uint32_t)OGGetAbsoluteTime();
+}
+void exit( int i ) { while(1); }
+#include <stdio.h>
+#endif
 
 #define rand sys_rand
 #include "ch32v003fun/examples_v30x/turbo_adc_with_usb/testtop/rawdraw_sf.h"
 #undef rand
 
-void ssd1306_pkt_send( char * a, int b, int c ) { }
+void ssd1306_pkt_send( unsigned char * a, int b, int c ) { }
 void ssd1306_rst() { }
 
 uint32_t CLOCK_TICKS;
@@ -30,6 +47,15 @@ uint32_t highscore = 4269;
 int32_t * const highScorePtr = (int32_t*)&highscore;
 
 #include "graphics.h"
+
+#ifdef WASM
+void HandleKey( int keycode, int bDown ) __attribute__((export_name("HandleKey")));
+int32_t getHighScore( );
+void saveHighScore( int hs );
+void WriteHighScore( int32_t hs ) { highscore = hs; saveHighScore( hs ); }
+#else
+void WriteHighScore( int32_t hs ) { }
+#endif
 
 
 void HandleKey( int keycode, int bDown )
@@ -52,18 +78,19 @@ void HandleButton( int x, int y, int button, int bDown )
 }
 
 void HandleMotion( int x, int y, int mask ) { }
-int HandleDestroy() { }
+int HandleDestroy() { return 0; }
 
 #define SCALEUP 8
 void SystemInit(void)
 {
 	CNFGSetup( "Example App", 72*SCALEUP, 40*SCALEUP );
-	struct timeval tv;
-	gettimeofday( &tv, 0 );
-	uint32_t now = (tv.tv_usec) + 1000000*(tv.tv_sec); 
-	CLOCK_TICKS = now*6;
+	CLOCK_TICKS = GetTimeUS()*6;
+	highscore = getHighScore();
 
 }
+
+// When running in webpage, can't be on stack
+uint32_t framedata[40*SCALEUP][72*SCALEUP];
 
 void EmuUpdate(void)
 {
@@ -73,8 +100,6 @@ void EmuUpdate(void)
 	CNFGClearFrame();
 	CNFGGetDimensions( &w, &h );
 	CNFGColor( 0xffffffff ); 
-
-	uint32_t framedata[40*SCALEUP][72*SCALEUP];
 
 	int x, y;
 	for( y = 0; y < 40; y++ )
@@ -86,7 +111,11 @@ void EmuUpdate(void)
 			for( ay = 0; ay < SCALEUP; ay++ )
 			for( ax = 0; ax < SCALEUP; ax++ )
 			{
+#ifdef WASM
+				framedata[(y*SCALEUP+ay)][x*SCALEUP+ax] = p ? 0xffffffff : 0x000000ff;
+#else
 				framedata[(y*SCALEUP+ay)][x*SCALEUP+ax] = p ? 0xffffffff : 0x00000000;
+#endif
 			}
 		}
 	}
@@ -96,9 +125,7 @@ void EmuUpdate(void)
 	CNFGSwapBuffers();
 
 
-	struct timeval tv;
-	gettimeofday( &tv, 0 );
-	uint32_t now = (tv.tv_usec) + 1000000*(tv.tv_sec); 
+	uint32_t now = GetTimeUS();
 	CLOCK_TICKS = now*6+(now%6);
 }
 

@@ -547,7 +547,7 @@ int GameModeSnek()
 
 int GameBeatTop()
 {
-	const int beats = 25;
+	#define beats 25
 	const int scorebar = SSD1306_H - 3;
 	struct
 	{

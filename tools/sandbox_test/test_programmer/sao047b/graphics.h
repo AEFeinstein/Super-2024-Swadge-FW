@@ -201,14 +201,13 @@ int swadgeGlyphHalf( int x, int y, int c )
 	return len + SWADGEGLYPH_MARGIN;
 }
 
-
-
 int swadgeDraw( int x, int y, int alignmode, int(*cfn)(int x, int y, int c), const char * format, ... )
 {
 	int tpl = 0;
 	char buffer[32];
 	va_list args;
 	va_start( args, format );
+
 #ifndef EMU
 	int mini_vsnprintf();
 #endif
