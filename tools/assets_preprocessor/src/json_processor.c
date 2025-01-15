@@ -25,11 +25,14 @@ void process_json(const char* infile, const char* outdir)
     snprintf(&dotptr[1], strlen(dotptr), "hjs");
 #endif
 
-    // if(doesFileExist(outFilePath))
-    // {
-    //     printf("Output for %s already exists\n", infile);
-    //     return;
-    // }
+    if (!isSourceFileNewer(infile, outFilePath))
+    {
+        return;
+    }
+    else if (doesFileExist(outFilePath))
+    {
+        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
+    }
 
     /* Read input file */
     FILE* fp = fopen(infile, "rb");

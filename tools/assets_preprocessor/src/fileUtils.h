@@ -11,5 +11,6 @@
 long getFileSize(const char* fname);
 bool doesFileExist(const char* fname);
 const char* get_filename(const char* filename);
+bool isSourceFileNewer(const char* sourceFile, const char* destFile);
 
 #endif

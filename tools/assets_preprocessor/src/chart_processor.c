@@ -25,10 +25,14 @@ void process_chart(const char* infile, const char* outdir)
     char* dotptr = strrchr(outFilePath, '.');
     snprintf(&dotptr[1], strlen(dotptr), "cch");
 
-    if (doesFileExist(outFilePath))
+    if (!isSourceFileNewer(infile, outFilePath))
     {
-        // printf("Output for %s already exists\n", infile);
-        // return;
+        //printf("Output for %s already exists and is up-to-date\n", infile);
+        return;
+    }
+    else if (doesFileExist(outFilePath))
+    {
+        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
     }
 
     charSection_t section = CS_NONE;
