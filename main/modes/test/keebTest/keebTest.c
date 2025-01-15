@@ -117,9 +117,9 @@ static const char* const colorSettingsOptions[]
     = {"Black", "Red",      "Green",    "Blue",     "Yellow", "Magenta", "Cyan",
        "White", "Dk. gray", "Md. Gray", "Lt. Gray", "Pink",   "Purple"};
 
-static const int32_t fontSettingsValues[] = {0, 1, 2, 3};
+static const int32_t fontSettingsValues[] = {0, 1, 2, 3, 4};
 
-static const char* const fontSettingsOptions[] = {"vga_ibm8", "radiostars", "rodin", "righteous"};
+static const char* const fontSettingsOptions[] = {"vga_ibm8", "radiostars", "rodin", "righteous", "retro_logo"};
 
 static const int32_t typingModeSettingsValues[] = {0, 1, 2, 3};
 
@@ -163,6 +163,7 @@ static void keebEnterMode(void)
     loadFont("radiostars.font", &kbTest->fnt[1], false);
     loadFont("rodin_eb.font", &kbTest->fnt[2], false);
     loadFont("righteous_150.font", &kbTest->fnt[3], false);
+    loadFont("retro_logo.font", &kbTest->fnt[4], false);
 
     // Init Menu
     kbTest->menu = initMenu(keebTestName, kbMenuCb);
