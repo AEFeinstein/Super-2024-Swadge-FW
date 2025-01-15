@@ -797,6 +797,24 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
 
             return cur - out;
         }
+        else if (!strncmp("preset", args[0], strlen(args[0])))
+        {
+            if (argCount > 1)
+            {
+                if (emuSetGamepadPreset(args[1]))
+                {
+                    return snprintf(out, 1024, "Joystick preset %s loaded\n", args[1]);
+                }
+                else
+                {
+                    return snprintf(out, 1024, "ERR: No joystick preset '%s' found\n", args[1]);
+                }
+            }
+            else
+            {
+                return snprintf(out, 1024, "Preset name is required\n");
+            }
+        }
         else
         {
             return snprintf(out, 1024, "Unrecognized command 'joystick %s'\n", args[0]);

@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <math.h>
 #include <stdint.h>
+#include <string.h>
 
 #if defined(EMU_WINDOWS)
     #include <Windows.h>
@@ -50,7 +51,7 @@ typedef struct
     buttonBit_t buttonMap[32];
 } emuJoystickConf_t;
 
-emuJoystickConf_t joystickConfig = {
+const emuJoystickConf_t joyPresetSwadge = {
     .name = "Swadge",
     .touchpad = {
         .xAxis = 0,
@@ -75,6 +76,36 @@ emuJoystickConf_t joystickConfig = {
         PB_SELECT, // 10
         PB_START, // 11
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    },
+};
+
+const emuJoystickConf_t joyPresetSwitch = {
+    .name = "Switch",
+    .touchpad = {
+        .xAxis = 2,
+        .yAxis = 3,
+    },
+
+    .accel = {
+        .xAxis = -1,
+        .yAxis = -1,
+        .zAxis = -1,
+    },
+
+    .dpad = {
+        .xAxis = 4,
+        .yAxis = 5,
+    },
+
+    .buttonMap = {
+        PB_B, // 0 (B)
+        PB_A, // 1 (A)
+        PB_B, // 2 (X)
+        PB_A, // 3 (Y)
+        0, 0, 0, 0, 0,
+        PB_SELECT, // 9 (-)
+        PB_START, // 10 (+)
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     },
 };
 
@@ -137,6 +168,7 @@ emuExtension_t gamepadEmuExtension = {
 };
 
 static emuJoystick_t joystickExt = {0};
+static emuJoystickConf_t joystickConfig = {0};
 
 bool gamepadConnect(emuJoystick_t* joystick, const char* name)
 {
@@ -583,6 +615,32 @@ bool emuGamepadConnected(void)
 }
 
 /**
+ * @brief Applies a preset joystick configuration
+ *
+ * Valid preset options are:
+ * - "Swadge"
+ * - "Switch"
+ *
+ * @param presetName The name of the joystick preset to use
+ * @return true
+ * @return false
+ */
+bool emuSetGamepadPreset(const char* presetName)
+{
+    if (!strcasecmp(presetName, joyPresetSwadge.name))
+    {
+        memcpy(&joystickConfig, &joyPresetSwadge, sizeof(emuJoystickConf_t));
+    }
+    else if (!strcasecmp(presetName, joyPresetSwitch.name))
+    {
+        memcpy(&joystickConfig, &joyPresetSwitch, sizeof(emuJoystickConf_t));
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * @brief Maps a joystick button to an emulator button
  *
  * Using a value of 0 for button will un-map the joystick button
@@ -729,6 +787,7 @@ void emuGetDpadAxisMapping(int* xAxis, int* yAxis)
 
 bool gamepadInitCb(emuArgs_t* args)
 {
+    memcpy(&joystickConfig, &joyPresetSwadge, sizeof(emuJoystickConf_t));
     if (gamepadConnect(&joystickExt, args->joystick))
     {
         ESP_LOGI("GamepadExt", "Connected to joystick with %d axes and %d buttons\n", joystickExt.numAxes,

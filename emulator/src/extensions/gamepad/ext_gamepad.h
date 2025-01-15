@@ -8,6 +8,8 @@ extern emuExtension_t gamepadEmuExtension;
 
 bool emuGamepadConnected(void);
 
+bool emuSetGamepadPreset(const char* presetName);
+
 void emuSetGamepadButtonMapping(uint8_t buttonIdx, buttonBit_t button);
 void emuSetTouchpadAxisMapping(int xAxis, int yAxis);
 void emuSetAccelAxisMapping(int xAxis, int yAxis, int zAxis);
