@@ -198,6 +198,7 @@ static const char str_pause[]        = "-Pause-";
 
 static const char pangoMenuNewGame[]       = "New Game";
 static const char pangoMenuContinue[]      = "Continue - Rd";
+static const char pangoMenuCaravan[]       = "Caravan Mode";
 static const char pangoMenuCharacter[]     = "Character: ";
 static const char pangoMenuHighScores[]    = "High Scores";
 static const char pangoMenuResetScores[]   = "Reset Scores";
@@ -309,6 +310,7 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             pango->gameData.level              = 1;
             pango->entityManager.activeEnemies = 0;
+            pango->gameData.caravanMode        = false;
             pa_initializeGameDataFromTitleScreen(&(pango->gameData));
             pango->gameData.gameState = PA_ST_READY_SCREEN;
             changeStateDemoControls(pango);
@@ -317,6 +319,7 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pangoMenuContinue)
         {
             pango->gameData.level = settingVal;
+            pango->gameData.caravanMode = false;
             pa_initializeGameDataFromTitleScreen(&(pango->gameData));
             pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), settingVal);
             pango->entityManager.activeEnemies = 0;
@@ -325,6 +328,17 @@ static void pangoMenuCb(const char* label, bool selected, uint32_t settingVal)
             pa_placeEnemySpawns(&(pango->tilemap));
 
             changeStateReadyScreen(pango);
+            deinitMenu(pango->menu);
+        }
+        else if (label == pangoMenuCaravan)
+        {
+            pango->gameData.level              = 1;
+            pango->entityManager.activeEnemies = 0;
+            pa_initializeGameDataFromTitleScreen(&(pango->gameData));
+            pango->gameData.gameState = PA_ST_READY_SCREEN;
+            pango->gameData.caravanMode        = true;
+            pango->gameData.caravanTimer       = 300;
+            changeStateDemoControls(pango);
             deinitMenu(pango->menu);
         }
         else if (label == pangoMenuCharacter)
@@ -437,7 +451,7 @@ void pangoBuildMainMenu(pango_t* self)
 
         push(pango->menu->items, pango->levelSelectMenuItem);
     }
-
+    
     settingParam_t characterSettingBounds = {
         .def = 0,
         .min = 0,
@@ -446,7 +460,7 @@ void pangoBuildMainMenu(pango_t* self)
     };
     addSettingsOptionsItemToMenu(pango->menu, pangoMenuCharacter, characterSelectOptions, characterSelectOptionValues,
                                  NUM_CHARACTERS, &characterSettingBounds, pango->gameData.playerCharacter);
-
+    addSingleItemToMenu(pango->menu, pangoMenuCaravan);
     addSingleItemToMenu(pango->menu, pangoMenuHighScores);
 
     if (pango->gameData.debugMode)
@@ -489,6 +503,13 @@ void updateGame(pango_t* self, int64_t elapsedUs)
     {
         self->gameData.frameCount = 0;
         self->gameData.levelTime++;
+
+        if(self->gameData.caravanMode){
+            self->gameData.caravanTimer--;
+            if(self->gameData.caravanTimer < 0){
+                changeStateGameOver(self);
+            }
+        }
 
         if (self->gameData.remainingBlocks <= 0)
         {
@@ -533,7 +554,6 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
 
     char timeStr[10];
-    snprintf(timeStr, sizeof(timeStr) - 1, "T:%02d", gameData->levelTime);
 
     if (gameData->frameCount > 29)
     {
@@ -541,8 +561,17 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     }
 
     drawText(font, c553, scoreStr, 57, 2);
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "HI%7.6" PRIu32, pango->highScores.scores[0]);
-    drawText(font, c553, scoreStr, 157, 2);
+    
+    if(!gameData->caravanMode)
+    {
+        snprintf(scoreStr, sizeof(scoreStr) - 1, "HI%7.6" PRIu32, pango->highScores.scores[0]);
+        drawText(font, c553, scoreStr, 157, 2);
+    } 
+    else 
+    {
+         snprintf(timeStr, sizeof(timeStr) - 1, "Left:%03d", gameData->caravanTimer);
+         drawText(font, (gameData->caravanTimer > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 157, 2);
+    }
 
     for (uint8_t i = 0; i < gameData->lives; i++)
     {
@@ -550,7 +579,10 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     }
 
     drawText(font, c553, levelStr, 145, 226);
+
+    snprintf(timeStr, sizeof(timeStr) - 1, "T:%02d", gameData->levelTime);
     drawText(font, c553, timeStr, 200, 226);
+
 }
 
 void updateTitleScreen(pango_t* self, int64_t elapsedUs)
@@ -868,6 +900,14 @@ void updateDead(pango_t* self, int64_t elapsedUs)
     {
         // Keep counting time as a penalty
         self->gameData.levelTime++;
+
+        if(self->gameData.caravanMode){
+            self->gameData.caravanTimer--;
+            if(self->gameData.caravanTimer < 0){
+                changeStateGameOver(self);
+                return;
+            }
+        }
     }
 
     if (self->gameData.frameCount > 179)
