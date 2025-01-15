@@ -176,8 +176,6 @@ if( !RAWDRAW_USE_LOOP_FUNCTION )
 	imports.bynsyncify = {
 		//Any javascript functions which may unwind the stack should be placed here.
 		CNFGSwapBuffersInternal: () => {
-			console.log(  );
-
 			if (!rendering) {
 				// We are called in order to start a sleep/unwind.
 				// Fill in the data structure. The first value has the stack location,
@@ -252,11 +250,20 @@ if( RAWDRAW_NEED_BLITTER )
 		};
 }
 
-{
+
+startup = async () => {
 	// Actually load the WASM blob.
-	let blob = atob('${BLOB}');
-	let array = new Uint8Array(new ArrayBuffer(blob.length));
-	for(let i = 0; i < blob.length; i++) array[i] = blob.charCodeAt(i);
+	let str = atob('${BLOB}');
+	const byteNumbers = new Array(str.length);
+	for (let i = 0; i < str.length; i++)
+		byteNumbers[i] = str.charCodeAt(i);
+	let blob = new Blob([new Uint8Array(byteNumbers)]);
+	const ds = new DecompressionStream("gzip");
+	const st = blob.stream().pipeThrough(ds);
+	response = await new Response(st);
+	blob2 = await response.blob();
+	let array = new Uint8Array(await blob2.arrayBuffer());
+
 
 	WebAssembly.instantiate(array, imports).then(
 		(wa) => { 
@@ -307,6 +314,8 @@ if( RAWDRAW_NEED_BLITTER )
 		 } );
 
 	//Code here would continue executing, but this code is executed *before* main.
+
 }
 
+startup();
 

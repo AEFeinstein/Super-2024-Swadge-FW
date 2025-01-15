@@ -13,7 +13,7 @@ CFLAGS:=-I.. -DEMU -I../ch32v003fun/extralibs -Iweblibc_headers -DWASM -DASYNCIF
 CLANG?=clang
 WASMOPT?=wasm-opt
 TERSER?=terser
-TERSERFLAGS?= --ecma 2017 -d RAWDRAW_USE_LOOP_FUNCTION=false -d RAWDRAW_NEED_BLITTER=true
+TERSERFLAGS?=--module --ecma 2017 -d RAWDRAW_USE_LOOP_FUNCTION=false -d RAWDRAW_NEED_BLITTER=true
 
 CFLAGS+=-DWASM -nostdlib --target=wasm32 \
 		-flto -Oz \
@@ -26,12 +26,14 @@ CFLAGS+=-DWASM -nostdlib --target=wasm32 \
 WOFLAGS:=--asyncify #  --pass-arg=asyncify-ignore-indirect
 #--pass-arg=asyncify-imports@bynsyncify.* 
 
+# | dd bs=1 skip=10 | head -c -8 
+
 opt.js : template.js main.wasm
-	cat main.wasm | base64 | sed -e "$$ ! {/./s/$$/ \\\\/}" > blob_b64;
+	cat main.wasm | gzip -nc | base64 | sed -e "$$ ! {/./s/$$/ \\\\/}" > blob_b64;
 	./subst template.js -s -f BLOB blob_b64 -o mid.js
 	#Comment the below line out if you don't want to uglify the javascript.
 	$(TERSER) $(TERSERFLAGS) mid.js -o opt.js
-	rm mid.js blob_b64
+	#rm mid.js blob_b64
 
 index.html : template.ht opt.js
 	./subst template.ht -s -f JAVASCRIPT_DATA opt.js -o $@
