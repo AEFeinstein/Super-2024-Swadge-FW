@@ -7,9 +7,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#ifdef SAPP_WINDOWS
-#include <fileapi.h>
-#endif
 
 /**
  * TODO
@@ -35,21 +32,7 @@ long getFileSize(const char* fname)
  */
 bool doesFileExist(const char* fname)
 {
-    int fd = open(fname, O_CREAT | O_WRONLY | O_EXCL, S_IRUSR | S_IWUSR);
-    if (fd < 0)
-    {
-        /* failure */
-        if (errno == EEXIST)
-        {
-            /* the file already existed */
-            close(fd);
-            return true;
-        }
-    }
-
-    /* File does not exist */
-    close(fd);
-    return false;
+    return 0 == access(fname, F_OK);
 }
 
 /**
@@ -79,17 +62,10 @@ const char* get_filename(const char* filename)
  */
 bool isSourceFileNewer(const char* sourceFile, const char* destFile)
 {
-    if (!doesFileExist(destFile))
-    {
-        // If the destination doesn't exist, consider that being as old as possible.
-        // It definitely needs to be created!
-        return true;
-    }
 
     long long srcMtime = 0;
     long long destMtime = 0;
 
-#if defined(SAPP_LINUX) || defined(SAPP_MACOS)
     // Just use stat()
     struct stat statVal = {0};
     errno = 0;
@@ -98,7 +74,7 @@ bool isSourceFileNewer(const char* sourceFile, const char* destFile)
     {
         srcMtime = statVal.st_mtime;
     }
-    else
+    else if (errno != ENOENT)
     {
         fprintf(stderr, "Cannot stat() file %s: %s (%d)\n", sourceFile, strerror(errno), errno);
     }
@@ -110,40 +86,10 @@ bool isSourceFileNewer(const char* sourceFile, const char* destFile)
     {
         destMtime = statVal.st_mtime;
     }
-    else
+    else if (errno != ENOENT)
     {
         fprintf(stderr, "Cannot stat() file %s: %s (%d)\n", destFile, strerror(errno), errno);
     }
-#else
-    WIN32_FILE_ATTRIBUTE_DATA attrData = {0};
-    bool attrResult = GetFileAttributesExA(sourceFile, GetFileExInfoStandard, &attrData);
-    if (attrResult)
-    {
-        srcMtime = attrData.ftLastWriteTime.dwHighDateTime;
-        srcMtime <<= 32;
-        srcMtime |= (attrData.ftLastWriteTime.dwLowDateTime);
-    }
-    else
-    {
-        fprintf(stderr, "Cannot stat() file %s: %s (%d)\n", sourceFile, strerror(errno), errno);
-    }
 
-    memset(&attrData, 0, sizeof(WIN32_FILE_ATTRIBUTE_DATA));
-    attrResult = GetFileAttributesExA(destFile, GetFileExInfoStandard, &attrData);
-    if (attrResult)
-    {
-        destMtime = attrData.ftLastWriteTime.dwHighDateTime;
-        destMtime <<= 32;
-        destMtime |= attrData.ftLastWriteTime.dwLowDateTime;
-    }
-    else
-    {
-        fprintf(stderr, "Cannot stat() file %s: %s (%d)\n", destFile, strerror(errno), errno);
-    }
-#endif
-
-    // Get mtime of source file
-    // Get mtime of dest file
-    // Compare!
-    return false;
+    return srcMtime > destMtime;
 }
