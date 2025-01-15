@@ -258,7 +258,7 @@ startup = async () => {
 	for (let i = 0; i < str.length; i++)
 		byteNumbers[i] = str.charCodeAt(i);
 	let blob = new Blob([new Uint8Array(byteNumbers)]);
-	const ds = new DecompressionStream("gzip");
+	const ds = new DecompressionStream("deflate-raw");
 	const st = blob.stream().pipeThrough(ds);
 	response = await new Response(st);
 	blob2 = await response.blob();
