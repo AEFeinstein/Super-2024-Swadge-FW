@@ -19,6 +19,9 @@ swadge2025font.h : tools/microgenfont
 tools/microgenfont : tools/microgenfont.c
 	gcc -o $@ $^ -lm
 
+emu : sao.c
+	gcc -g -Og -o $@ $^ -DEMU -Ich32v003fun/extralibs -lX11
+
 option_flash :
 	$(MINICHLINK)/minichlink -w option.bin option
 
@@ -26,5 +29,5 @@ include $(CH32V003FUN)/ch32v003fun.mk
 
 flash : cv_flash
 clean : cv_clean
-	rm -rf tools/microgenfont 
+	rm -rf tools/microgenfont emu
 

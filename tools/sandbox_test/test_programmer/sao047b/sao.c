@@ -1,4 +1,8 @@
+#ifndef EMU
 #include "ch32v003fun.h"
+#else
+#include "emu.h"
+#endif
 #include <stdio.h>
 #include <string.h>
 
@@ -6,7 +10,40 @@
 
 #include "games.h"
 
-void test() { }
+void WriteHighScore( int32_t hs )
+{
+#ifndef EMU
+	// Unkock flash - be aware you need extra stuff for the bootloader.
+	FLASH->KEYR = 0x45670123;
+	FLASH->KEYR = 0xCDEF89AB;
+
+	// For unlocking programming, in general.
+	FLASH->MODEKEYR = 0x45670123;
+	FLASH->MODEKEYR = 0xCDEF89AB;
+
+	//Erase Page
+	FLASH->CTLR = CR_PAGE_ER;
+	FLASH->ADDR = (intptr_t)highScorePtr & 0xffffffc0;
+	FLASH->CTLR = CR_STRT_Set | CR_PAGE_ER;
+	while( FLASH->STATR & FLASH_STATR_BSY );  // Takes about 3ms.
+
+	// Clear buffer and prep for flashing.
+	FLASH->CTLR = CR_PAGE_PG;  // synonym of FTPG.
+	FLASH->CTLR = CR_BUF_RST | CR_PAGE_PG;
+	FLASH->ADDR = (intptr_t)highScorePtr;  // This can actually happen about anywhere toward the end here.
+
+	while( FLASH->STATR & FLASH_STATR_BSY );  // No real need for this.
+
+	*highScorePtr = hs; //Write to the memory
+	FLASH->CTLR = CR_PAGE_PG | FLASH_CTLR_BUF_LOAD; // Load the buffer.
+	while( FLASH->STATR & FLASH_STATR_BSY );  // Only needed if running from RAM.
+
+	// Actually write the flash out. (Takes about 3ms)
+	FLASH->CTLR = CR_PAGE_PG|CR_STRT_Set;
+
+	while( FLASH->STATR & FLASH_STATR_BSY );
+#endif
+}
 
 int main()
 {
@@ -42,11 +79,20 @@ int main()
 	gameTimeUs = 0;
 	gameMode = GameModeMainMenu;
 
+
 	uint32_t modeStartTime = SysTick->CNT;
-	int gameNumber = 0;
+	int interstitial = 0;
+
+	int freebieID = 0;
 
 	while(1)
 	{
+		if( gameModeForce )
+		{
+			gameMode = gameModeForce;
+			gameModeID = gameModeForceID;
+		}
+
 		int ret = gameMode();
 		uint32_t now = SysTick->CNT;
 
@@ -60,6 +106,10 @@ int main()
 		if( gameTimeUsFlip ) gameTimeUs += 715827883;
 		swapBuffer();
 
+#ifdef EMU
+		EmuUpdate();
+#endif
+
 		frameno++;
 
 		if( ret != 0 )
@@ -71,20 +121,47 @@ int main()
 			frameno = 0;
 			memset( gameData, 0, sizeof( gameData ) );
 
-			gameNumber++;
+			if( !interstitial )
+				gameNumber++;
 
-			if( gameNumber == 10 )
+			if( gameNumber == maxGames+1 )
 			{
 				gameMode = GameModeEnding;
 			}
-			else if( gameNumber == 11 )
+			else if( gameNumber == maxGames+2 )
 			{
 				gameNumber = 0;
 				gameMode = GameModeMainMenu;
 			}
 			else
 			{
-				gameMode = gameModes[ SysTick->CNT % (sizeof(gameModes)/sizeof(gameModes[0])) ];
+				if( gameNumber == 1 )
+				{
+					// Decide how the set of games will go.
+					freebieID = ( SysTick->CNT % (maxGames-1) ) + 2;
+					totalScore = 0;
+				}
+				if( interstitial || gameNumber == 1 )
+				{
+					if( gameNumber == freebieID )
+					{
+						int index = SysTick->CNT % (sizeof(gameModesFree)/sizeof(gameModesFree[0]));
+						gameMode = gameModesFree[ index ];
+						gameModeID = gameModeFreeIDs[ index ];
+					}
+					else
+					{
+						int index = SysTick->CNT % (sizeof(gameModes)/sizeof(gameModes[0]));
+						gameMode = gameModes[ index ];
+						gameModeID = gameModeIDs[ index ];
+					}
+					interstitial = 0;
+				}
+				else
+				{
+					gameMode = GameModeInterstitial;
+					interstitial = 1;
+				}
 			}
 		}
 	}

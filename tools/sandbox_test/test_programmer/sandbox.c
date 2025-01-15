@@ -299,8 +299,8 @@ void sandbox_tick()
 	char cts[32];
 	snprintf( cts, sizeof(cts)-1, "F: %d %x", frameno, GPIO_VAR_IN );
     int16_t tWidth            = textWidth(&logbook, cts);
-//	drawText(&logbook, c000, cts, (TFT_WIDTH - tWidth) / 2-2, (TFT_HEIGHT - logbook.height) / 2+2);
-//	drawText(&logbook, c555, cts, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - logbook.height) / 2);
+	drawText(&logbook, c000, cts, (TFT_WIDTH - tWidth) / 2-2, (TFT_HEIGHT - logbook.height) / 2+2);
+	drawText(&logbook, c555, cts, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - logbook.height) / 2);
 	frameno++;
 //	GPIO_VAR_W1TS = state.pinmaskD;
 }
@@ -694,7 +694,7 @@ short int ch32v003_usb_feature_report( uint8_t * buffer, short unsigned int reql
 
 void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum )
 {
-#if 0
+#if 1
     int i;
 
     fillDisplayArea(x, y, x+w, y+h, 0 );

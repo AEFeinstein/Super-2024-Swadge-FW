@@ -15,15 +15,20 @@
 #define SSD1306_SCK_PIN  PC5
 #define SSD1306_BAUD_RATE_PRESCALER SPI_BaudRatePrescaler_2
 
+#ifndef EMU
 #include "ssd1306_spi.h"
+#endif
+
 #include "ssd1306.h"
 #include <stdarg.h>
 #include <limits.h>
 #include "font8x8_basic_trunrot.h"
+
+#ifndef EMU
 #include "ch32v003fun.h"
+#endif
 
 #include "swadge2025font.h"
-
 
 #define RANDOM_STRENGTH 1
 
@@ -46,7 +51,6 @@ int glyphdraw_nomask;
 //   B72
 
 extern uint8_t ssd1306_buffer[SSD1306_W*SSD1306_H/8];
-
 
 int draw8Glyph( int x, int y, int c )
 {
@@ -205,13 +209,16 @@ int swadgeDraw( int x, int y, int alignmode, int(*cfn)(int x, int y, int c), con
 	char buffer[32];
 	va_list args;
 	va_start( args, format );
+#ifndef EMU
+	int mini_vsnprintf();
+#endif
 	int tlen = mini_vsnprintf( buffer, sizeof( buffer ), format, args );
 	va_end( args );
 
 	int n;
 	if( alignmode )
 	{
-		if( alignmode == 1 )
+		if( alignmode == 1 || alignmode == 2 )
 		{
 			int oy = y;
 			int maxx = 0;
@@ -222,7 +229,10 @@ int swadgeDraw( int x, int y, int alignmode, int(*cfn)(int x, int y, int c), con
 				tpl += cfn( x + tpl, INT_MAX, b );
 			}
 			if( tpl > maxx ) maxx = tpl;
-			x -= maxx/2;
+			if( alignmode == 1 )
+				x -= maxx/2;
+			else
+				x -= maxx;
 			y = oy;
 		}
 	}
@@ -263,6 +273,7 @@ static uint16_t blit16font[95] = {
 void drawBlit16( int x, int y, 
 */
 
+int backgroundAttrib;
 
 void background( int mode )
 {
@@ -319,6 +330,18 @@ void background( int mode )
 			for( x = 0; x < SSD1306_W; x++ )
 				ssd1306_buffer[i++] = 0x80 >> ((col[x]+y*8-(gameTimeUs>>13)) & 0x3f);
 
+		break;
+	}
+	case 13: // Dark scrolley, static
+	{
+		_rand_lfsr = 0x5005;
+		int j = backgroundAttrib;
+		for(i=0;i<sizeof(ssd1306_buffer) ;i++)
+		{
+			while( j >= sizeof(ssd1306_buffer) ) j-= sizeof(ssd1306_buffer);
+			ssd1306_buffer[j] = 1<<(_rand_gen_nb(13));
+			j++;
+		}
 		break;
 	}
 	case 0:
