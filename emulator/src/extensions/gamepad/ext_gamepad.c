@@ -33,6 +33,7 @@ typedef struct
     {
         int xAxis;
         int yAxis;
+        int deadzone;
     } touchpad;
 
     struct
@@ -56,6 +57,7 @@ const emuJoystickConf_t joyPresetSwadge = {
     .touchpad = {
         .xAxis = 0,
         .yAxis = 1,
+        .deadzone = 0,
     },
 
     .accel = {
@@ -84,6 +86,7 @@ const emuJoystickConf_t joyPresetSwitch = {
     .touchpad = {
         .xAxis = 2,
         .yAxis = 3,
+        .deadzone = 1024,
     },
 
     .accel = {
@@ -167,7 +170,7 @@ emuExtension_t gamepadEmuExtension = {
     .fnPreFrameCb = gamepadPreFrameCb,
 };
 
-static emuJoystick_t joystickExt = {0};
+static emuJoystick_t joystickExt        = {0};
 static emuJoystickConf_t joystickConfig = {0};
 
 bool gamepadConnect(emuJoystick_t* joystick, const char* name)
@@ -641,6 +644,17 @@ bool emuSetGamepadPreset(const char* presetName)
 }
 
 /**
+ * @brief Sets the deadzone of the touchpad axes, with 0 being no deadzone and 32767 being all deadzone
+ */
+void emuSetTouchpadDeadzone(int deadzone)
+{
+    if (deadzone >= 0 && deadzone < 32768)
+    {
+        joystickConfig.touchpad.deadzone = deadzone;
+    }
+}
+
+/**
  * @brief Maps a joystick button to an emulator button
  *
  * Using a value of 0 for button will un-map the joystick button
@@ -697,6 +711,16 @@ void emuSetDpadAxisMapping(int xAxis, int yAxis)
     printf("Mapping D-pad to axes %d and %d\n", xAxis, yAxis);
     joystickConfig.dpad.xAxis = xAxis;
     joystickConfig.dpad.yAxis = yAxis;
+}
+
+/**
+ * Returns the current deadzone used for the touchpad axes.
+ *
+ * @return A number from 0 to 32767, with 0 being no deadzone.
+ */
+int emuGetTouchpadDeadzone(void)
+{
+    return joystickConfig.touchpad.deadzone;
 }
 
 /**
@@ -829,9 +853,13 @@ void gamepadPreFrameCb(uint64_t frame)
                     double x = (double)getAxisData(joystickConfig.touchpad.xAxis);
                     double y = (double)getAxisData(joystickConfig.touchpad.yAxis);
 
-                    if (x == 0 && y == 0)
+                    // printf("I|GamepadExt| %03.1f, %03.1f --> ", x, y);
+
+                    if ((x >= -joystickConfig.touchpad.deadzone && x <= joystickConfig.touchpad.deadzone)
+                        && (y >= -joystickConfig.touchpad.deadzone && y <= joystickConfig.touchpad.deadzone))
                     {
                         emulatorSetTouchJoystick(0, 0, 0);
+                        // printf("0, 0\n");
                     }
                     else
                     {
@@ -840,6 +868,8 @@ void gamepadPreFrameCb(uint64_t frame)
                         double angle        = atan2(-y, x);
                         double angleDegrees = (angle * 180) / M_PI;
                         int radius          = CLAMP(sqrt(x * x + y * y) * maxRadius / 32768, 0, maxRadius);
+
+                        // printf("r=%d, phi=%03.2f\n", radius, angleDegrees);
 
                         int angleDegreesRounded = (int)(angleDegrees + 360) % 360;
                         emulatorSetTouchJoystick(CLAMP(angleDegreesRounded, 0, 359), radius, 1024);

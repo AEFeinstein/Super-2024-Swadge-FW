@@ -52,6 +52,8 @@ static const char* commandDocs[][3] = {
     {"joystick map motion", "joystick map motion <x-axis> <y-axis> <z-axis>",
      "maps three joystick axes to the accelerometer axes"},
     {"joystick map dpad", "joystick map dpad <x-axis> <y-axis>", "maps two joystick axes to the D-pad buttons"},
+    {"joystick deadzone touchpad", "joystick deadzone touchpad <0-16383>",
+     "sets the deadzone for the touchpad joystick axes"},
     {"inject", "inject <nvs|asset> <...>", "injects data into NVS or assets"},
     {"inject nvs", "inject nvs [namespace] <key> <int|str|file> <value>",
      "injects data into an NVS key. Value can be either an integer, a string, or a file path"},
@@ -151,7 +153,7 @@ static int replayCommandCb(const char** args, int argCount, char* out)
 {
     if (argCount > 0)
     {
-        startPlayback(args[1]);
+        startPlayback(args[0]);
         return sprintf(out, "Playback started\n");
     }
     else
@@ -796,6 +798,37 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
             cur += snprintf(cur, 1024 - (cur - out), "Joystick Mapping");
 
             return cur - out;
+        }
+        else if (!strncmp("deadzone", args[0], strlen(args[0])))
+        {
+            if (argCount > 1)
+            {
+                if (!strncmp("touchpad", args[1], strlen(args[1])))
+                {
+                    int deadzone = emuGetTouchpadDeadzone();
+                    if (argCount > 2)
+                    {
+                        char* end = NULL;
+                        deadzone  = strtol(args[2], &end, 10);
+                        if (deadzone == 0 && end == args[2])
+                        {
+                            deadzone = 0;
+                        }
+
+                        emuSetTouchpadDeadzone(deadzone);
+                    }
+
+                    return snprintf(out, 1024, "Touchpad deadzone: %d\n", deadzone);
+                }
+                else
+                {
+                    return snprintf(out, 1024, "Unrecognized command 'joystick %s %s'\n", args[0], args[1]);
+                }
+            }
+            else
+            {
+                return snprintf(out, 1024, "Touchpad deadzone: %d\n", emuGetTouchpadDeadzone());
+            }
         }
         else if (!strncmp("preset", args[0], strlen(args[0])))
         {
