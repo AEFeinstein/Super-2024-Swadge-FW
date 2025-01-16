@@ -100,8 +100,10 @@ void tttBeginGame(ultimateTTT_t* ttt)
     memset(ttt->game.cellTimers, 0, sizeof(ttt->game.cellTimers));
     memset(ttt->game.gameTimers, 0, sizeof(ttt->game.gameTimers));
 
-    /// Clear any CPU data
+    /// Clear any CPU data, preserving difficulty
+    tttCpuDifficulty_t origDiff = ttt->game.cpu.difficulty;
     memset(&ttt->game.cpu, 0, sizeof(ttt->game.cpu));
+    ttt->game.cpu.difficulty = origDiff;
 
     // Show the game UI
     tttShowUi(TUI_GAME);
