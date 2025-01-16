@@ -171,8 +171,16 @@
 #include <string.h>
 
 // Useful ESP things
+#include <esp_attr.h>
+#include <esp_err.h>
 #include <esp_heap_caps.h>
 #include <esp_log.h>
+#include <esp_now.h>
+#include <esp_random.h>
+#include <esp_sleep.h>
+#include <esp_system.h>
+#include <esp_timer.h>
+#include <esp_wifi.h>
 
 // Hardware interfaces
 #include "crashwrap.h"

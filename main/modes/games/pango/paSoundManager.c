@@ -60,7 +60,7 @@ bool pa_setBgm(paSoundManager_t* self, uint16_t newBgmIndex)
     // All BGM's are intended to loop!
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
-    
+
     if (self->currentBgmIndex == newBgmIndex)
     {
         return false;

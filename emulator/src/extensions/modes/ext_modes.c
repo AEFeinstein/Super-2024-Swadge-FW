@@ -30,6 +30,7 @@
 #include "mode_bigbug.h"
 #include "mode_cGrove.h"
 #include "mode_credits.h"
+#include "mode_sand.h"
 #include "mode_swadgeHero.h"
 #include "mode_synth.h"
 #include "modeTimer.h"
@@ -79,6 +80,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &mainMenuMode,
     &modeCredits,
     &pangoMode,
+    &sandMode,
     &sequencerMode,
     &sokoMode,
     &swadgeHeroMode,

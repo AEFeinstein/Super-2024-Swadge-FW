@@ -29,6 +29,7 @@
 #include "tunernome.h"
 #include "keebTest.h"
 #include "mode_2048.h"
+#include "mode_sand.h"
 
 #include "settingsManager.h"
 
@@ -171,6 +172,7 @@ static void mainMenuEnterMode(void)
 #ifdef CONFIG_FACTORY_TEST_NORMAL
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, sandMode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
     addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
@@ -427,6 +429,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pangoMode.modeName)
         {
             switchToSwadgeMode(&pangoMode);
+        }
+        else if (label == sandMode.modeName)
+        {
+            switchToSwadgeMode(&sandMode);
         }
         else if (label == cGroveMode.modeName)
         {
