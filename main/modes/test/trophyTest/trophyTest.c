@@ -24,9 +24,9 @@
 static const char trophyModeName[] = "TrophyTest";
 
 static const char* const trophyNames[]
-    = {"No! He's just a kid!", "Test1", "Test2", "Test3", "Test4", "Test5", "Test6", "Test7", "Test8", "Test9"};
+    = {"Locked Trophy", "Unlocked Trophy", "Test2", "Test3", "Test4", "Test5", "Test6", "Test7", "Test8", "Test9"};
 static const char* const trophyDescs[]
-    = {"Eat ten doughnutbois. You freaking monster.", "Test1 Description", "Test2 Description", "Test3 Description", "Test4 Description",
+    = {"This one shows a locked trophy.", "This one is unlocked!", "Test2 Description", "Test3 Description", "Test4 Description",
        "Test5 Description", "Test6 Description", "Test7 Description", "Test8 Description", "Test9 Description"};
 static const char* const trophyWSGs[] = {"kid0.wsg", "Test1.wsg", "Test2.wsg", "Test3.wsg", "Test4.wsg",
                                          "Test5.wsg", "Test6.wsg", "Test7.wsg", "Test8.wsg", "Test9.wsg"};
@@ -37,7 +37,7 @@ static const char* const trophyWSGs[] = {"kid0.wsg", "Test1.wsg", "Test2.wsg", "
 
 typedef struct
 {
-    trophy_t t; //< Example trophy
+    trophy_t t[2]; //< Example trophy
 } trophyTest_t;
 
 //==============================================================================
@@ -104,15 +104,23 @@ static void enterTrophy()
     //trophyInit(trophyModeName, trophyNames[0], trophyWSGs[0], trophyDescs[0], TROPHY_TYPE_ADDITIVE, 10, 20);
 
     // Load a specific set of values to check if it works.
-    strcpy(tt->t.title, trophyNames[0]);
-    strcpy(tt->t.imageString, trophyWSGs[0]);
-    strcpy(tt->t.description, trophyDescs[0]);
-    tt->t.currentValue = 10;
-    tt->t.maxValue = 25;
-    tt->t.points = 69;
-    tt->t.type = TROPHY_TYPE_ADDITIVE;
-    loadImage(0, tt->t.imageString);
-    loadImage(1, tt->t.imageString);
+    strcpy(tt->t[0].title, trophyNames[0]);
+    strcpy(tt->t[0].imageString, trophyWSGs[0]);
+    strcpy(tt->t[0].description, trophyDescs[0]);
+    tt->t[0].currentValue = 10;
+    tt->t[0].maxValue = 25;
+    tt->t[0].points = 69;
+    tt->t[0].type = TROPHY_TYPE_ADDITIVE;
+    loadImage(0, tt->t[0].imageString);
+
+    strcpy(tt->t[1].title, trophyNames[1]);
+    strcpy(tt->t[1].imageString, trophyWSGs[1]);
+    strcpy(tt->t[1].description, trophyDescs[1]);
+    tt->t[1].currentValue = 25;
+    tt->t[1].maxValue = 25;
+    tt->t[1].points = 69;
+    tt->t[1].type = TROPHY_TYPE_ADDITIVE;
+    loadImage(1, tt->t[1].imageString);
 }
 
 static void exitTrophy()
@@ -129,5 +137,6 @@ static void exitTrophy()
 
 static void runTrophy(int64_t elapsedUs)
 {
-    trophyDrawDataDirectly(tt->t, 0);
+    trophyDrawDataDirectly(tt->t[0], 0);
+    trophyDrawDataDirectly(tt->t[1], 50);
 }

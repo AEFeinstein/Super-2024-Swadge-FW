@@ -24,6 +24,7 @@
 #include "fs_wsg.h"
 #include "fill.h"
 #include "shapes.h"
+#include "wsgPalette.h"
 
 //==============================================================================
 // Defines
@@ -53,7 +54,7 @@ static const char* const systemPointsNVS[] = {"trophy", "TotalPoints"};
 typedef struct
 {
     // Assets
-    font_t font;                    //< Font in use. Should not be set by user.
+    font_t font;                   //< Font in use. Should not be set by user.
     wsg_t imageArray[MAX_BANNERS]; //< WSGs loaded for next five trophies.
 
     // Drawing
@@ -63,6 +64,8 @@ typedef struct
     bool drawFromBottom;               //< If banner should be drawn from the bottom of the screen
     int32_t drawMaxDuration;           //< How long the banner will be drawn fully extended
     int32_t drawTimer;                 //< Accumulates until more than Max duration
+    wsgPalette_t grayPalette;          //< Grayscale palette for locked trophies
+    wsgPalette_t normalPalette;        //< Normal colors
 
     // Animation
     bool animated;            //< If being animated
@@ -149,6 +152,95 @@ void trophySystemInit(bool bottom, int displayDuration, bool animate, int slideD
 
     // Set the scroll speed
     tSystem.slideMaxDuration = slideDuration;
+
+    // Init palette
+    wsgPaletteReset(&tSystem.normalPalette);
+    for (int idx = 0; idx < 217; idx++)
+    {
+        if (idx == cTransparent) // Transparent
+        {
+            wsgPaletteSet(&tSystem.grayPalette, idx, cTransparent);
+        }
+        else
+        {
+            switch (idx)
+            {
+                case c000:
+                case c001:
+                case c002:
+                case c003:
+                case c010:
+                case c011:
+                case c012:
+                case c013:
+                case c020:
+                case c021:
+                case c022:
+                case c023:
+                case c030:
+                case c031:
+                case c032:
+                case c033:
+                case c100:
+                case c101:
+                case c102:
+                case c103:
+                case c110:
+                case c111:
+                case c112:
+                case c113:
+                case c120:
+                case c121:
+                case c122:
+                case c123:
+                case c130:
+                case c131:
+                case c132:
+                case c133:
+                case c200:
+                case c201:
+                case c202:
+                case c203:
+                case c210:
+                case c211:
+                case c212:
+                case c213:
+                case c220:
+                case c221:
+                case c222:
+                case c223:
+                case c230:
+                case c231:
+                case c232:
+                case c233:
+                case c300:
+                case c301:
+                case c302:
+                case c303:
+                case c310:
+                case c311:
+                case c312:
+                case c313:
+                case c320:
+                case c321:
+                case c322:
+                case c323:
+                case c330:
+                case c331:
+                case c332:
+                case c333:
+                {
+                    wsgPaletteSet(&tSystem.grayPalette, idx, c333);
+                    break;
+                }
+                default:
+                {
+                    wsgPaletteSet(&tSystem.grayPalette, idx, c444);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 void trophySystemSetFont(char* font)
@@ -383,8 +475,8 @@ static void _draw(trophy_t t, int frame)
 static void _drawAtYCoord(trophy_t t, int yOffset)
 {
     // Draw box (Gray box, black border)
-    fillDisplayArea(0, yOffset, TFT_WIDTH, TROPHY_BANNER_HEIGHT, c111);
-    drawRect(0, yOffset, TFT_WIDTH, TROPHY_BANNER_HEIGHT, c000);
+    fillDisplayArea(0, yOffset, TFT_WIDTH, yOffset + TROPHY_BANNER_HEIGHT, c111);
+    drawRect(0, yOffset, TFT_WIDTH, yOffset + TROPHY_BANNER_HEIGHT, c000);
     // Draw image if not NULL
     int xOffset;
     if (t.imageString == NULL)
@@ -394,8 +486,6 @@ static void _drawAtYCoord(trophy_t t, int yOffset)
     }
     else
     {
-        // Draw icon
-        // TODO: If in progress, draw grayscale? Outline?
         // Set xOffset to be 2* H_BUFFER + ICON_WIDTH
         xOffset = TROPHY_BANNER_MAX_ICON_DIM + TROPHY_SCREEN_CORNER_CLEARANCE + TROPHY_IMAGE_BUFFER;
     }
@@ -404,15 +494,21 @@ static void _drawAtYCoord(trophy_t t, int yOffset)
     int16_t startY = yOffset + ((TROPHY_BANNER_HEIGHT - TROPHY_BANNER_MAX_ICON_DIM) >> 1);
     drawRectFilled(startX, startY, startX + TROPHY_BANNER_MAX_ICON_DIM, startY + TROPHY_BANNER_MAX_ICON_DIM, c222);
 
-    // TODO: Load WSG properly
-    drawWsgSimple(&tSystem.imageArray[0], startX + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].w) >> 1), startY + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].h) >> 1));
+    // Draw WSG
+    wsgPalette_t* wp = &tSystem.grayPalette;
+    if (t.currentValue >= t.maxValue)
+    {
+        wp = &tSystem.normalPalette;
+    }
+    drawWsgPaletteSimple(&tSystem.imageArray[0], startX + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].w) >> 1),
+                         startY + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].h) >> 1), wp);
 
     // Draw text, starting after image if present
     drawText(&tSystem.font, c555, t.title, xOffset, yOffset + 4); // Title
     startX = xOffset;
     startY = yOffset + 20;
     drawTextWordWrap(&tSystem.font, c444, t.description, &startX, &startY, TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE,
-                     TROPHY_BANNER_HEIGHT); // Description
+                     yOffset + TROPHY_BANNER_HEIGHT); // Description
 
     if (!t.type == TROPHY_TYPE_TRIGGER)
     {
