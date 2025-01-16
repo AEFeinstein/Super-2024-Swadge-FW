@@ -1490,6 +1490,7 @@ void bb_updateBugShooting(bb_entity_t* self)
 {
     if (bb_randomInt(0, 100) < 1)
     {
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1)
         // call it paused and update frames in it's own update function because this one uses another spriteIdx.
         bb_entity_t* spit = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_SPIT, 10,
                                             self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, false);
