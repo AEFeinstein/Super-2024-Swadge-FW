@@ -4295,7 +4295,7 @@ void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
 {
     bb_setupMidi();
     unloadMidiFile(&self->gameData->bgm);
-    loadMidiFile("sh_revenge.mid", &self->gameData->bgm, true);
+    loadMidiFile("BigBug_Boss.mid", &self->gameData->bgm, true);
     globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
 
     // close the door and make it not cacheable so bugs don't walk out offscreen.
