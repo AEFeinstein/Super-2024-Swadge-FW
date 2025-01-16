@@ -18,11 +18,17 @@
 #include "embeddedOut.h"
 #include "bunny.h"
 
+#define CUSTOM_INTRO_SOUND
+
 static void introEnterMode(void);
 static void introExitMode(void);
 static void introMainLoop(int64_t elapsedUs);
 static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void introAudioCallback(uint16_t* samples, uint32_t sampleCnt);
+
+#ifdef CUSTOM_INTRO_SOUND
+static void introDacCallback(uint8_t* samples, int16_t len);
+#endif
 
 // static void introMenuCb(const char*, bool selected, uint32_t settingVal);
 static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
@@ -43,10 +49,10 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
 // #define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
 
 static const char startTitle[]        = "Welcome!";
-static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one second to exit.";
+static const char holdLongerMessage[] = "Almost! Keep holding MENU for one second to exit.";
 static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
-                                        "responsibility. Hold SELECT to exit the tutorial and get started!";
+                                        "responsibility. Hold MENU to exit the tutorial and get started!";
 
 static const char dpadTitle[]     = "The D-Pad";
 static const char aBtnTitle[]     = "A Button";
@@ -113,7 +119,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .intData = 1,
         },
         .title = touchpadTitle,
-        .detail = "OK, now your finger spin around it counter-clockwise. Always remember to unwind the touchpad after use!"
+        .detail = "OK, now spin your finger around it counter-clockwise. Always remember to unwind the touchpad after use!"
     },
     {
         .trigger = {
@@ -263,8 +269,28 @@ swadgeMode_t introMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
-    .fnDacCb                  = NULL,
+#ifdef CUSTOM_INTRO_SOUND
+    .fnDacCb = introDacCallback,
+#else
+    .fnDacCb = NULL,
+#endif
 };
+
+#ifdef CUSTOM_INTRO_SOUND
+typedef struct
+{
+    const uint8_t* sample;
+    size_t sampleCount;
+
+    // Number of times each sample in the file needs to be played to match the audio sample rate
+    uint8_t factor;
+
+    // Number of audio samples played
+    size_t progress;
+} audioSamplePlayer_t;
+
+bool playSample(audioSamplePlayer_t* player, uint8_t* samples, int16_t len);
+#endif
 
 typedef struct
 {
@@ -318,6 +344,7 @@ typedef struct
 
         wsg_t speaker;
         wsg_t touchGem;
+        wsg_t swadge;
     } icon;
 
     buttonBit_t buttons;
@@ -334,10 +361,8 @@ typedef struct
 
 #ifdef CUSTOM_INTRO_SOUND
     bool playingSound;
-    uint8_t* sound;
-    size_t soundSize;
-    size_t soundProgress;
     bool introComplete;
+    audioSamplePlayer_t samplePlayer;
 #endif
 
     menu_t* bgMenu;
@@ -370,6 +395,11 @@ static void introEnterMode(void)
     loadFont("retro_logo.font", &iv->logoFont, true);
     makeOutlineFont(&iv->logoFont, &iv->logoFontOutline, true);
 
+#ifdef CUSTOM_INTRO_SOUND
+    iv->samplePlayer.sample = cnfsGetFile("magfest.bin", &iv->samplePlayer.sampleCount);
+    iv->samplePlayer.factor = 2;
+#endif
+
     loadWsg("button_a.wsg", &iv->icon.button.a, true);
     loadWsg("button_b.wsg", &iv->icon.button.b, true);
     loadWsg("button_menu.wsg", &iv->icon.button.menu, true);
@@ -378,6 +408,7 @@ static void introEnterMode(void)
 
     loadWsg("spk.wsg", &iv->icon.speaker, true);
     loadWsg("touch-gem.wsg", &iv->icon.touchGem, true);
+    loadWsg("intro_swadge.wsg", &iv->icon.swadge, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
     iv->renderer = initMenuManiaRenderer(&iv->bigFont, NULL, &iv->smallFont);
@@ -385,63 +416,63 @@ static void introEnterMode(void)
     // up
     iv->buttonIcons[0].icon    = &iv->icon.button.up;
     iv->buttonIcons[0].visible = true;
-    iv->buttonIcons[0].x       = 15;
-    iv->buttonIcons[0].y       = 5;
+    iv->buttonIcons[0].x       = 31;
+    iv->buttonIcons[0].y       = 41;
 
     // down
     iv->buttonIcons[1].icon    = &iv->icon.button.up;
     iv->buttonIcons[1].flipUD  = true;
     iv->buttonIcons[1].visible = true;
-    iv->buttonIcons[1].x       = 15;
-    iv->buttonIcons[1].y       = 25;
+    iv->buttonIcons[1].x       = 31;
+    iv->buttonIcons[1].y       = 61;
 
     // left
     iv->buttonIcons[2].icon    = &iv->icon.button.up;
     iv->buttonIcons[2].rot     = 270;
     iv->buttonIcons[2].visible = true;
-    iv->buttonIcons[2].x       = 5;
-    iv->buttonIcons[2].y       = 15;
+    iv->buttonIcons[2].x       = 21;
+    iv->buttonIcons[2].y       = 51;
 
     // right
     iv->buttonIcons[3].icon    = &iv->icon.button.up;
     iv->buttonIcons[3].rot     = 90;
     iv->buttonIcons[3].visible = true;
-    iv->buttonIcons[3].x       = 25;
-    iv->buttonIcons[3].y       = 15;
+    iv->buttonIcons[3].x       = 41;
+    iv->buttonIcons[3].y       = 51;
 
     // a
     iv->buttonIcons[4].icon    = &iv->icon.button.a;
     iv->buttonIcons[4].visible = true;
-    iv->buttonIcons[4].x       = 105;
-    iv->buttonIcons[4].y       = 10;
+    iv->buttonIcons[4].x       = 174;
+    iv->buttonIcons[4].y       = 34;
 
     // b
     iv->buttonIcons[5].icon    = &iv->icon.button.b;
     iv->buttonIcons[5].visible = true;
-    iv->buttonIcons[5].x       = 95;
-    iv->buttonIcons[5].y       = 20;
+    iv->buttonIcons[5].x       = 156;
+    iv->buttonIcons[5].y       = 42;
 
-    // start
+    // start (pause)
     iv->buttonIcons[6].icon    = &iv->icon.button.pause;
     iv->buttonIcons[6].visible = true;
-    iv->buttonIcons[6].x       = 70;
-    iv->buttonIcons[6].y       = 15;
+    iv->buttonIcons[6].x       = 60;
+    iv->buttonIcons[6].y       = 56;
 
-    // select
+    // select (menu)
     iv->buttonIcons[7].icon    = &iv->icon.button.menu;
     iv->buttonIcons[7].visible = true;
-    iv->buttonIcons[7].x       = 50;
-    iv->buttonIcons[7].y       = 15;
+    iv->buttonIcons[7].x       = 62;
+    iv->buttonIcons[7].y       = 69;
 
-    iv->swadgeViewWidth  = iv->buttonIcons[5].x + iv->buttonIcons[5].icon->w + 5;
-    iv->swadgeViewHeight = iv->buttonIcons[1].y + iv->buttonIcons[1].icon->h + 5;
+    iv->swadgeViewWidth  = iv->icon.swadge.w * 2;
+    iv->swadgeViewHeight = iv->icon.swadge.w * 2;
 
     tutorialSetup(&iv->tut, introTutorialCb, buttonsSteps, ARRAY_SIZE(buttonsSteps), iv);
 
 #ifdef CUSTOM_INTRO_SOUND
-    iv->sound         = NULL;
-    iv->playingSound  = false;
+    iv->playingSound  = true;
     iv->introComplete = false;
+    switchToSpeaker();
 #endif
 
     // Load the MIDI file
@@ -474,13 +505,8 @@ static void introExitMode(void)
     freeWsg(&iv->icon.button.up);
     freeWsg(&iv->icon.speaker);
     freeWsg(&iv->icon.touchGem);
+    freeWsg(&iv->icon.swadge);
 
-#ifdef CUSTOM_INTRO_SOUND
-    if (iv->sound != NULL)
-    {
-        heap_caps_free(iv->sound);
-    }
-#endif
     unloadMidiFile(&iv->song);
 
     heap_caps_free(iv);
@@ -495,44 +521,72 @@ static void introExitMode(void)
  */
 static void introMainLoop(int64_t elapsedUs)
 {
-    // clearPxTft();
-
 #ifdef CUSTOM_INTRO_SOUND
     if (iv->playingSound || !iv->introComplete)
     {
-        int64_t songTime     = (iv->soundSize * 1000000 + DAC_SAMPLE_RATE_HZ - 1) / DAC_SAMPLE_RATE_HZ;
-        int64_t animTime     = (songTime * 2 / 3);
-        static int64_t timer = 0;
+        const paletteColor_t bgLineColors[] = {c444, c555};
+        const paletteColor_t outlineCol     = c025;
+        const paletteColor_t textCol        = c025;
 
-        shadeDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, 3, c234);
+        paletteColor_t* screen = getPxTftFramebuffer();
+        for (int i = 0; i < TFT_WIDTH; i++)
+        {
+            drawLineFast(i, 0, i, TFT_HEIGHT, bgLineColors[i % 2]);
+        }
 
-        char title[64] = {0};
-        char sub[64]   = {0};
+        static int32_t timer = 0;
 
-        strcat(title, "MAGFest");
-        strcat(sub, "Swadge 2025");
-        int64_t titleTicksPerChar = ((animTime) / strlen(title));
-        int64_t subTicksPerChar   = ((animTime) / strlen(sub));
+        const char mag[]  = "MA";
+        const char fest[] = "GFest";
 
-        int16_t titleWidth = textWidth(&iv->logoFont, title);
+        const char sub[]  = "Sw";
+        const char sub2[] = "adge";
+
+        int16_t magW   = textWidth(&iv->logoFont, mag);
+        int16_t festW  = textWidth(&iv->logoFont, fest);
+        int16_t kernAG = -3;
+
+        int16_t titleWidth = magW + 1 + festW + kernAG;
         int16_t titleX     = (TFT_WIDTH - titleWidth) / 2;
         int16_t titleY     = (TFT_HEIGHT - iv->bigFont.height - iv->smallFont.height - 6) / 2;
 
-        int16_t subWidth = textWidth(&iv->logoFont, sub);
-        int16_t subX     = (TFT_WIDTH - subWidth) / 2;
-        int16_t subY     = titleY + iv->bigFont.height + 5;
+        int16_t magX  = titleX;
+        int16_t festX = magX + magW + 1 + kernAG;
 
-        int titleLen = MIN(strlen(title), timer / titleTicksPerChar);
-        int subLen   = MIN(strlen(sub), timer / subTicksPerChar);
-        // Trim the string
-        title[titleLen] = '\0';
-        sub[subLen]     = '\0';
+        int16_t subOneWidth = textWidth(&iv->logoFont, sub);
+        int16_t subTwoWidth = textWidth(&iv->logoFont, sub2);
+        int16_t kernWA      = -8;
+        int16_t subWidth    = textWidth(&iv->logoFont, sub) + textWidth(&iv->logoFont, sub2) + kernWA + 1;
+        int16_t subX        = (TFT_WIDTH - subWidth) / 2;
+        int16_t subY        = titleY + iv->bigFont.height + 5;
 
-        drawText(&iv->logoFont, c555, title, titleX, titleY);
-        drawText(&iv->logoFont, c000, title, titleX - 1, titleY + 1);
+        // #define STRIPE_TEXT
 
-        drawText(&iv->logoFont, c555, sub, subX, subY);
-        drawText(&iv->logoFont, c000, sub, subX - 1, subY + 1);
+    #ifdef STRIPE_TEXT
+        paletteColor_t colors[] = {c003, c003, c034, c003, c003, c003, c034, c003};
+        int magColOffset        = ((timer % 400000) / 100000);
+        int festColOffset       = (magColOffset + (3 - magW % 4)) % 4;
+        drawTextMulticolored(&iv->logoFont, mag, magX, titleY, colors + magColOffset, 4, magW);
+        drawTextMulticolored(&iv->logoFont, fest, festX, titleY, colors + festColOffset, 4, festW);
+    #else
+        drawText(&iv->logoFont, textCol, mag, magX, titleY);
+        drawText(&iv->logoFont, textCol, fest, festX, titleY);
+    #endif
+        drawText(&iv->logoFontOutline, outlineCol, mag, magX, titleY);
+        drawText(&iv->logoFontOutline, outlineCol, fest, festX, titleY);
+
+    #ifdef STRIPE_TEXT
+        int swColOffset   = 3 - ((timer % 600000) / 150000);
+        int adgeColOffset = (swColOffset + (3 - (subOneWidth + kernWA) % 4)) % 4;
+        drawTextMulticolored(&iv->logoFont, sub, subX, subY, colors + swColOffset, 4, subOneWidth);
+        drawTextMulticolored(&iv->logoFont, sub2, subX + subOneWidth + kernWA, subY, colors + adgeColOffset, 4,
+                             subTwoWidth);
+    #else
+        drawText(&iv->logoFont, textCol, sub, subX, subY);
+        drawText(&iv->logoFont, textCol, sub2, subX + subOneWidth + kernWA, subY);
+    #endif
+        drawText(&iv->logoFontOutline, outlineCol, sub, subX, subY);
+        drawText(&iv->logoFontOutline, outlineCol, sub2, subX + subOneWidth + kernWA, subY);
 
         timer += elapsedUs;
 
@@ -540,6 +594,24 @@ static void introMainLoop(int64_t elapsedUs)
         if (iv->playingSound)
         {
             return;
+        }
+        else
+        {
+            static int postTimerStart = 0;
+            if (postTimerStart == 0)
+            {
+                postTimerStart = timer;
+            }
+
+            // Wait 2 seconds after sound ending before continuing
+            if ((timer - postTimerStart) >= 2000000)
+            {
+                iv->introComplete = true;
+            }
+            else
+            {
+                return;
+            }
         }
     }
 #endif
@@ -634,13 +706,14 @@ static void introMainLoop(int64_t elapsedUs)
     uint16_t detailH   = textWordWrapHeight(&iv->smallFont, detail, TFT_WIDTH - 20, detailYmax - detailYmin);
     int16_t detailY    = detailYmax - detailH;
 
-    int16_t viewX = (TFT_WIDTH - iv->swadgeViewWidth) / 2;
     switch (iv->drawMode)
     {
         default:
         case DRAW_BUTTONS:
         {
-            introDrawSwadgeButtons(elapsedUs, viewX, titleY + iv->bigFont.height + 1 + 25, iv->buttons);
+            int16_t viewX = (TFT_WIDTH - iv->swadgeViewWidth) / 2;
+            int16_t viewY = titleY + iv->logoFont.height + 10;
+            introDrawSwadgeButtons(elapsedUs, viewX, viewY, iv->buttons);
             break;
         }
         case DRAW_TOUCHPAD:
@@ -715,27 +788,38 @@ static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
 }
 
 #ifdef CUSTOM_INTRO_SOUND
-static void introDacCallback(uint8_t* samples, int16_t len)
+bool playSample(audioSamplePlayer_t* player, uint8_t* samples, int16_t len)
 {
-    #define SPK_SILENCE (INT8_MIN)
-    if (iv->playingSound)
+    for (int i = 0; i < len; i++)
     {
-        if (iv->soundProgress + len >= iv->soundSize)
+        if (player->progress >= player->sampleCount * player->factor)
         {
-            size_t send = (iv->soundSize - iv->soundProgress);
-            memcpy(samples, iv->sound + iv->soundProgress, send);
-            memset(samples + send, SPK_SILENCE, len - send);
-            iv->playingSound = false;
+            // Set all to silence
+            memset(&samples[i], INT8_MIN, len - i);
+            return false;
         }
         else
         {
-            memcpy(samples, iv->sound + iv->soundProgress, len);
-            iv->soundProgress += len;
+            samples[i] = player->sample[player->progress / player->factor];
+            player->progress++;
+        }
+    }
+    return player->progress < player->sampleCount * player->factor;
+}
+
+static void introDacCallback(uint8_t* samples, int16_t len)
+{
+    if (iv->playingSound && iv->samplePlayer.sample)
+    {
+        iv->playingSound = playSample(&iv->samplePlayer, samples, len);
+        if (!iv->playingSound)
+        {
+            ESP_LOGI("Intro", "Finished playing sample");
         }
     }
     else
     {
-        memset(samples, SPK_SILENCE, len);
+        globalMidiPlayerFillBuffer(samples, len);
     }
 }
 #endif
@@ -795,7 +879,11 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
 
     // TODO maybe don't hardcode this
-    if (next == (buttonsSteps + 14))
+    if (next == (buttonsSteps + 12))
+    {
+        setDacShutdown(true);
+    }
+    else if (next == (buttonsSteps + 14))
     {
         ESP_LOGI("Intro", "Oh it's the one we want: %s", next->title);
         iv->quickSettingsOpened = true;
@@ -838,28 +926,12 @@ static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, butt
     time += elapsedUs;
     bool blink = true;
 
-    // Draw the background of the swadge
-    int16_t leftCircleX  = x + iv->buttonIcons[2].x + iv->buttonIcons[2].icon->w / 2;
-    int16_t rightCircleX = x + iv->buttonIcons[5].x + iv->buttonIcons[5].icon->w / 2;
-    int16_t bgCircleY    = y + iv->buttonIcons[2].y + iv->buttonIcons[2].icon->h / 2;
-    int16_t bgCircleR    = 30;
-
-    paletteColor_t bgColor     = c234;
-    paletteColor_t borderColor = c000;
-
-    drawCircleFilled(leftCircleX, bgCircleY, bgCircleR, bgColor);
-    drawCircleFilled(rightCircleX, bgCircleY, bgCircleR, bgColor);
-    fillDisplayArea(leftCircleX, bgCircleY - bgCircleR, rightCircleX, bgCircleY + bgCircleR, bgColor);
-
-    drawLineFast(leftCircleX, bgCircleY - bgCircleR, rightCircleX, bgCircleY - bgCircleR, borderColor);
-    drawLineFast(leftCircleX, bgCircleY + bgCircleR, rightCircleX, bgCircleY + bgCircleR, borderColor);
-
-    drawCircleQuadrants(leftCircleX, bgCircleY, bgCircleR, false, true, true, false, borderColor);
-    drawCircleQuadrants(rightCircleX, bgCircleY, bgCircleR, true, false, false, true, borderColor);
-
     paletteColor_t notPressedColor = c531;
     paletteColor_t pressedColor    = c243;
     paletteColor_t notNeededColor  = c111;
+
+    // Draw the background of the swadge
+    drawWsgSimpleScaled(&iv->icon.swadge, x, y, 2, 2);
 
     for (int stage = 0; stage < 2; stage++)
     {

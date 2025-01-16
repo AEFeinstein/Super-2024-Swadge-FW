@@ -50,7 +50,8 @@ static const char* tutorialText[]
        "When the cursor is over a Chowa or an item, press A to pick it up. Press B over a Chowa or an Egg to pet it. "
        "When using the C Stick, the down and right arrow keys mimic the A and B keys respectively.",
        "Donuts",
-       "The golden donuts are the main currency for Chowa. They appear randomly, snag them with A when you see them.",
+       "The golden donuts are the main currency for Chowa. They appear slowly and randomly, snag them with A when you "
+       "see them. You can win matches in sparring to get more faster.",
        "Grove Menu",
        "Press start to access the menu. Here you can buy and sell items, take items from the inventory and put them in "
        "the garden, and manage who's in the Grove.",

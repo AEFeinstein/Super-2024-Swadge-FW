@@ -154,7 +154,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
  * Datasheet</a>
@@ -498,8 +498,6 @@ void app_main(void)
             {
                 // Lower the flag
                 shouldShowQuickSettings = false;
-                // Pause the sound
-                soundPause();
 
                 // Save the current mode
                 modeBehindQuickSettings = cSwadgeMode;
@@ -515,8 +513,6 @@ void app_main(void)
                 quickSettingsMode.fnExitMode();
                 // Restore the mode
                 cSwadgeMode = modeBehindQuickSettings;
-                // Resume the sound
-                soundResume();
             }
 
             // Draw to the TFT

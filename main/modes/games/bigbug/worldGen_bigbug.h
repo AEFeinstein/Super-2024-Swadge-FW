@@ -9,6 +9,6 @@
 //==============================================================================
 // Prototypes
 //==============================================================================
-void bb_generateWorld(bb_tilemap_t* tilemap);
+void bb_generateWorld(bb_tilemap_t* tilemap, int8_t* oldBoosterYs);
 
 #endif

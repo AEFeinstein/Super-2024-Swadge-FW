@@ -24,8 +24,8 @@ typedef enum
 {
     NULL_DATA,
     ATTACHMENT_ARM_DATA,
-    BU_DATA,
-    BUGGO_DATA,
+    WALKING_BUG_DATA,
+    FLYING_BUG_DATA,
     CAR_DATA,
     DEATH_DUMPSTER_DATA,
     DIALOGUE_DATA,
@@ -76,6 +76,8 @@ typedef struct
     int32_t r;
     int32_t intensity;
 
+    int16_t activationRadius; // the radius at which touchpad input fires. Decrements while touchpad is held.
+
     // dialogue stuff
     int16_t landingPhrases[29];
 
@@ -116,7 +118,7 @@ typedef struct // child class
     //-----------------------------------------------
     enum bb_direction_t gravity; // to walk on the walls & ceiling: local gravity switches
     uint8_t fallSpeed;           // increments in free fall
-} bb_buData_t;
+} bb_walkingBugData_t;
 
 typedef struct // child class
 {
@@ -127,9 +129,8 @@ typedef struct // child class
     int8_t health;       // bug dies at negative numbers
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0.
     //-----------------------------------------------
-    bool trackingPlayer; // toggles between moving toward the player and moving in a random direction.
-    vec_t direction;     // buggo moves in the direction vector.
-} bb_buggoData_t;
+    vec_t direction; // buggo moves in the direction vector.
+} bb_flyingBugData_t;
 
 typedef struct
 {
@@ -365,7 +366,6 @@ struct bb_entity_t
 {
     bool active;
     bool cacheable;
-    bool forceToFront;
 
     void* data;
     bb_data_type_t dataType;
@@ -400,7 +400,7 @@ void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, b
 void bb_setData(bb_entity_t* self, void* data, bb_data_type_t dataType);
 void bb_clearCollisions(bb_entity_t* self, bool keepCached);
 
-void bb_destroyEntity(bb_entity_t* self, bool caching);
+void bb_destroyEntity(bb_entity_t* self, bool caching, bool wasInTheMainArray);
 
 void bb_updateRocketLanding(bb_entity_t* self);
 void bb_updateRocketLiftoff(bb_entity_t* self);
@@ -434,6 +434,7 @@ void bb_updateGrabbyHand(bb_entity_t* self);
 void bb_updateDoor(bb_entity_t* self);
 void bb_updateCarActive(bb_entity_t* self);
 void bb_updateCarOpen(bb_entity_t* self);
+void bb_updateFarCar(bb_entity_t* self);
 void bb_updateSpit(bb_entity_t* self);
 void bb_updatePangoAndFriends(bb_entity_t* self);
 void bb_updateDiveSummary(bb_entity_t* self);
@@ -477,12 +478,17 @@ void bb_drawAtmosphericAtomizer(bb_entityManager_t* entityManager, rectangle_t* 
 void bb_drawDrillBot(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawPacifier(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawGarbotnikUI(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSimple(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
-void bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+bool bb_onCollisionHeavyFalling(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionHeavyFallingBug(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionHeavyFallingGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionRocketGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionCarIdle(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionAttachmentArm(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionFuel(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
@@ -493,6 +499,9 @@ void bb_onCollisionSwadge(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* h
 void bb_onCollisionFoodCart(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionDrillBot(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionSpaceLaserGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionSpaceLaserBug(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
@@ -500,7 +509,7 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self);
 void bb_startGarbotnikCloningTalk(bb_entity_t* self);
 void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self);
 void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self);
-void bb_afterGarbotnikFuelTutorialTalk(bb_entity_t* self);
+void bb_afterGarbotnikTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikEggTutorialTalk(bb_entity_t* self);
 void bb_afterGarbotnikIntro(bb_entity_t* self);
 void bb_afterGarbotnikLandingTalk(bb_entity_t* self);
@@ -516,7 +525,7 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs);
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
-                    bool zeroHealth);
+                    bool zeroHealth, bool flagNeighborsForPathfinding);
 bb_dialogueData_t* bb_createDialogueData(uint8_t numStrings, const char* firstCharacter);
 void bb_setCharacterLine(bb_dialogueData_t* dData, uint8_t index, const char* character, const char* str);
 void bb_freeDialogueData(bb_dialogueData_t* dData);

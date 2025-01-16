@@ -16,8 +16,9 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define MAX_ENTITIES 200
-#define NUM_SPRITES  33 // The number of bb_sprite_t last accounted for BB_AMMO_SUPPLY and BB_PACIFIER
+#define MAX_ENTITIES       200
+#define MAX_FRONT_ENTITIES 10
+#define NUM_SPRITES        34 // The number of bb_sprite_t last accounted for BB_HOTDOG
 
 //==============================================================================
 // Structs
@@ -27,6 +28,8 @@ typedef struct
 {
     bb_sprite_t sprites[NUM_SPRITES];
     bb_entity_t* entities;
+    bb_entity_t* frontEntities; // important entities that render on top. i.e. dialogue, pango & friends, boosters,
+                                // death dumpster
     list_t* cachedEntities;
     uint8_t activeEntities;
 
@@ -50,7 +53,9 @@ void bb_deactivateNonPersistentEntities(bb_entityManager_t* entityManager);
 void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer);
 void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager, rectangle_t* camera);
 void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera);
+bb_entity_t* bb_findInactiveFrontEntity(bb_entityManager_t* entityManager);
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager);
+bb_entity_t* bb_findInactiveFrontEntityBackwards(bb_entityManager_t* entityManager);
 bb_entity_t* bb_findInactiveEntityBackwards(bb_entityManager_t* entityManager);
 void bb_ensureEntitySpace(bb_entityManager_t* entityManager, uint8_t numEntities);
 

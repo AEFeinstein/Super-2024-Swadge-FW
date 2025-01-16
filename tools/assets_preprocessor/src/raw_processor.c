@@ -20,10 +20,13 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
     char* dotPtr = strrchr(outFilePath, '.');
     strncpy(&dotPtr[1], outExt, sizeof(outFilePath) - (dotPtr - outFilePath) - 1);
 
-    if (doesFileExist(outFilePath))
+    if (!isSourceFileNewer(inFile, outFilePath))
     {
-        // printf("Output for %s already exists\n", inFile);
         return;
+    }
+    else if (doesFileExist(outFilePath))
+    {
+        printf("[assets-preprocessor] %s modified! Regenerating %s\n", inFile, get_filename(outFilePath));
     }
 
     // Read input file

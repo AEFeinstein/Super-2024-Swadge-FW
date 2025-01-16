@@ -15,9 +15,9 @@
 
 #define P1_COLOR             c500
 #define P2_COLOR             c005
-#define MAIN_GRID_COLOR      c444
-#define SUB_GRID_COLOR       c222
-#define WAITING_PLAYER_COLOR c111
+#define MAIN_GRIDLINE_COLOR  c444
+#define SUB_GRIDLINE_COLOR   c222
+#define WAITING_PLAYER_COLOR c333
 
 #define CURSOR_STROKE 4
 
@@ -1020,7 +1020,7 @@ void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
 
     // Draw the main grid lines
     tttDrawGrid(ttt->gameOffset.x, ttt->gameOffset.y, ttt->gameOffset.x + ttt->gameSize - 1,
-                ttt->gameOffset.y + ttt->gameSize - 1, 0, MAIN_GRID_COLOR);
+                ttt->gameOffset.y + ttt->gameSize - 1, 0, MAIN_GRIDLINE_COLOR);
 
     // Draw the background for each subgame
     for (int subY = 0; subY < 3; subY++)
@@ -1034,15 +1034,11 @@ void tttDrawGame(ultimateTTT_t* ttt, uint32_t elapsedUs)
             int16_t sY1 = sY0 + ttt->subgameSize - 1;
 
             // Checkerboard the background
-            paletteColor_t fillColor = c110;
-            if (subX % 2 == subY % 2)
-            {
-                fillColor = c011;
-            }
+            paletteColor_t fillColor = (subX % 2 == subY % 2) ? CHECKER_COLOR_1 : CHECKER_COLOR_2;
             fillDisplayArea(sX0, sY0, sX1, sY1, fillColor);
 
             // Draw the subgame grid lines
-            tttDrawGrid(sX0, sY0, sX1, sY1, 4, SUB_GRID_COLOR);
+            tttDrawGrid(sX0, sY0, sX1, sY1, 4, SUB_GRIDLINE_COLOR);
         }
     }
 

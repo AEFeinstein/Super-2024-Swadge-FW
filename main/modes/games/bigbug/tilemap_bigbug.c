@@ -236,7 +236,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     {
                         case EGG_EMBED:
                         {
-                            bb_ensureEntitySpace(entityManager, 1);
+                            bb_ensureEntitySpace(entityManager, 2);
                             bb_entity_t* eggLeaves
                                 = bb_createEntity(entityManager, NO_ANIMATION, true, EGG_LEAVES, 1,
                                                   i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false);
@@ -247,12 +247,24 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     j * TILE_SIZE + HALF_TILE, false, false);
                                 if (((bb_eggLeavesData_t*)eggLeaves->data)->egg == NULL)
                                 {
-                                    bb_destroyEntity(eggLeaves, false);
+                                    bb_destroyEntity(eggLeaves, false, true);
                                 }
                                 else
                                 {
                                     tilemap->fgTiles[i][j].entity = eggLeaves;
                                 }
+                            }
+                            break;
+                        }
+                        case SKELETON_EMBED:
+                        {
+                            bb_ensureEntitySpace(entityManager, 1);
+                            bb_entity_t* skeleton
+                                = bb_createEntity(entityManager, NO_ANIMATION, true, BB_SKELETON, 1,
+                                                  i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false);
+                            if (skeleton != NULL)
+                            {
+                                tilemap->fgTiles[i][j].entity = skeleton;
                             }
                             break;
                         }
@@ -320,7 +332,7 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 }
                                 else
                                 {
-                                    bb_destroyEntity(foodCartBG, false);
+                                    bb_destroyEntity(foodCartBG, false, true);
                                 }
                             }
                             break;
@@ -349,20 +361,8 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 }
                                 else
                                 {
-                                    bb_destroyEntity(foodCartBG, false);
+                                    bb_destroyEntity(foodCartBG, false, true);
                                 }
-                            }
-                            break;
-                        }
-                        case SKELETON_EMBED:
-                        {
-                            bb_ensureEntitySpace(entityManager, 1);
-                            bb_entity_t* skeleton
-                                = bb_createEntity(entityManager, NO_ANIMATION, true, BB_SKELETON, 1,
-                                                  i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false);
-                            if (skeleton != NULL)
-                            {
-                                tilemap->fgTiles[i][j].entity = skeleton;
                             }
                             break;
                         }
@@ -370,6 +370,17 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                         {
                             bb_ensureEntitySpace(entityManager, 1);
                             if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_DOOR, 1,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
+                                != NULL)
+                            {
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }
+                        case BRICK_TUTORIAL_EMBED:
+                        {
+                            bb_ensureEntitySpace(entityManager, 1);
+                            if (bb_createEntity(entityManager, NO_ANIMATION, true, BB_BRICK_TUTORIAL, 1,
                                                 i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
                                 != NULL)
                             {
@@ -518,9 +529,13 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             // vec_t lookup = {tilePos.x + 8 - garbotnikDrawPos->x + 16 + tilemap->headlampWsg.w / 2,
                             //                 tilePos.y + 8 - garbotnikDrawPos->y + 17 + tilemap->headlampWsg.h / 2};
                             // ESP_LOGD(BB_TAG,"lookup: %d\n",lookup.x);
-
-                            brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                              5 - (j > 25 ? 25 : j) / 5);
+                            brightness = 5 - (j > 25 ? 25 : j) / 5;
+                            if (entityManager->playerEntity != NULL
+                                && entityManager->playerEntity->updateFunction == bb_updateGarbotnikFlying)
+                            {
+                                brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup,
+                                                                  &(garbotnikRotation->x), brightness);
+                            }
 
                             switch (sprite_idx & 0b1100)
                             {
@@ -567,8 +582,13 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             // 9 x10x xxxx
                             // 13 x00x xxxx
                             // 17 x11x x0xx
-                            brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                              5 - (j > 25 ? 25 : j) / 5);
+                            brightness = 5 - (j > 25 ? 25 : j) / 5;
+                            if (entityManager->playerEntity != NULL
+                                && entityManager->playerEntity->updateFunction == bb_updateGarbotnikFlying)
+                            {
+                                brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup,
+                                                                  &(garbotnikRotation->x), brightness);
+                            }
 
                             switch (sprite_idx & 0b110)
                             {
@@ -623,8 +643,14 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             // 10 0xx1 xxxx
                             // 14 0xx0 xxxx
                             // 18 1xx1 xx0x
-                            brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                              5 - (j > 25 ? 25 : j) / 5);
+
+                            brightness = 5 - (j > 25 ? 25 : j) / 5;
+                            if (entityManager->playerEntity != NULL
+                                && entityManager->playerEntity->updateFunction == bb_updateGarbotnikFlying)
+                            {
+                                brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup,
+                                                                  &(garbotnikRotation->x), brightness);
+                            }
 
                             switch (sprite_idx & 0b1001)
                             {
@@ -677,8 +703,13 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             // 11 xx01 xxxx
                             // 15 xx00 xxxx
                             // 19 xx11 xxx0
-                            brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x),
-                                                              5 - (j > 25 ? 25 : j) / 5);
+                            brightness = 5 - (j > 25 ? 25 : j) / 5;
+                            if (entityManager->playerEntity != NULL
+                                && entityManager->playerEntity->updateFunction == bb_updateGarbotnikFlying)
+                            {
+                                brightness = bb_midgroundLighting(&(tilemap->headlampWsg), &lookup,
+                                                                  &(garbotnikRotation->x), brightness);
+                            }
 
                             switch (sprite_idx & 0b0011)
                             {
@@ -721,10 +752,6 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                 }
                             }
                         }
-
-                        // char snum[4];
-                        // sprintf(snum, "%d", 20*brightness);
-                        // drawText(&ibm, c555, snum, tilePos.x, tilePos.y);
                     }
                 }
 
@@ -763,7 +790,15 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                                     tilePos.y + 8 - (garbotnikDrawPos->y + 17) + tilemap->headlampWsg.h};
                     lookup       = divVec2d(lookup, 2);
 
-                    brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
+                    if (entityManager->playerEntity != NULL
+                        && entityManager->playerEntity->updateFunction == bb_updateGarbotnikFlying)
+                    {
+                        brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
+                    }
+                    else
+                    {
+                        brightness = 0;
+                    }
 
                     // Top Left      V
                     // 00RD ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
@@ -834,7 +869,16 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
 
                     lookup.x += 8;
-                    brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
+                    if (entityManager->playerEntity != NULL
+                        && entityManager->playerEntity->updateFunction == bb_updateGarbotnikFlying)
+                    {
+                        brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
+                    }
+                    else
+                    {
+                        brightness = 0;
+                    }
+
                     // Top Right             V
                     // L00D ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
                     // 0110 .1..   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
@@ -915,7 +959,15 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
 
                     lookup.x -= 8;
                     lookup.y += 8;
-                    brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
+                    if (entityManager->playerEntity != NULL
+                        && entityManager->playerEntity->updateFunction == bb_updateGarbotnikFlying)
+                    {
+                        brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
+                    }
+                    else
+                    {
+                        brightness = 0;
+                    }
                     // Bottom Left                   V
                     // 0UR0 ....   (0,0),  (2,1),  (0,2),  (2,3), #convex corners
                     // 0110 ..1.   (14,0), (12,1), (6,2),  (4,3), #opposite convex corners
@@ -996,7 +1048,15 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                     }
 
                     lookup.x += 8;
-                    brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
+                    if (entityManager->playerEntity != NULL
+                        && entityManager->playerEntity->updateFunction == bb_updateGarbotnikFlying)
+                    {
+                        brightness = bb_foregroundLighting(&(tilemap->headlampWsg), &lookup, &(garbotnikRotation->x));
+                    }
+                    else
+                    {
+                        brightness = 0;
+                    }
                     // Bottom Right                          V
                     if ((num & 0b00110000) == 0b00000000)
                     {

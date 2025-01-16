@@ -40,7 +40,6 @@ typedef struct
 {
     menu_t* menu;
     menuManiaRenderer_t* renderer;
-    font_t font_righteous;
     font_t font_rodin;
     midiFile_t fanfare;
 #ifdef SW_VOL_CONTROL
@@ -65,6 +64,7 @@ static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void addSecretsMenu(void);
+static void fanfareFinishedCb(void);
 
 //==============================================================================
 // Variables
@@ -148,12 +148,14 @@ static const char* const showSecretsMenuSettingOptions[] = {
  */
 static void mainMenuEnterMode(void)
 {
+    // Turn off DAC, for now...
+    setDacShutdown(true);
+
     // Allocate memory for the mode
     mainMenu = heap_caps_calloc(1, sizeof(mainMenu_t), MALLOC_CAP_8BIT);
 
     // Load a font
     loadFont("rodin_eb.font", &mainMenu->font_rodin, false);
-    loadFont("righteous_150.font", &mainMenu->font_righteous, false);
 
     // Load a song for when the volume changes
 #ifdef SW_VOL_CONTROL
@@ -246,7 +248,6 @@ static void mainMenuExitMode(void)
 
     // Free the font
     freeFont(&mainMenu->font_rodin);
-    freeFont(&mainMenu->font_righteous);
 
     // Free the song
 #ifdef SW_VOL_CONTROL
@@ -291,7 +292,8 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                 if (mainMenu->cheatCodeIdx >= ARRAY_SIZE(cheatCode))
                 {
                     mainMenu->cheatCodeIdx = 0;
-                    globalMidiPlayerPlaySong(&mainMenu->fanfare, MIDI_BGM);
+                    setDacShutdown(false);
+                    globalMidiPlayerPlaySongCb(&mainMenu->fanfare, MIDI_BGM, fanfareFinishedCb);
 #ifdef SW_VOL_CONTROL
                     mainMenu->fanfarePlaying = true;
 #endif
@@ -329,6 +331,14 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     int16_t yOff         = (TFT_HEIGHT / 2) - mainMenu->font_rodin.height;
     drawTextWordWrap(&mainMenu->font_rodin, c000, warning, &xOff, &yOff, TFT_WIDTH - 12, TFT_HEIGHT);
 #endif
+}
+
+/**
+ * @brief Callback after the fanfare is done playing to disable the DAC again
+ */
+static void fanfareFinishedCb(void)
+{
+    setDacShutdown(true);
 }
 
 /**

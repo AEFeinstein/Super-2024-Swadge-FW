@@ -13,7 +13,7 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void bb_generateWorld(bb_tilemap_t* tilemap)
+void bb_generateWorld(bb_tilemap_t* tilemap, int8_t* oldBoosterYs)
 {
     // There are 6 handcrafted levels that get chosen randomly.
     uint8_t level = bb_randomInt(0, 5);
@@ -38,6 +38,10 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
             tilemap->fgTiles[i][j].pos = i | (j << 7) | (1 << 15);
 
             tilemap->mgTiles[i][j].pos = i | (j << 7); // z is implicitly zero
+
+            tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+
+            tilemap->fgTiles[i][j].entity = NULL;
 
             uint32_t rgbCol = paletteToRGB(levelWsg.px[(j * levelWsg.w) + i]);
 
@@ -66,6 +70,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                 }
                 default: // case 0
                 {
+                    tilemap->fgTiles[i][j].health = 0;
                     // blue value used for washing machines, cars, swadges/donuts
                     switch (rgbCol & 255)
                     {
@@ -83,7 +88,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                         }
                         case 153:
                         {
-                            if (i != 34 && i != 37 && i != 39)
+                            if (i != 34 && i != 37 && i != 40)
                             {
                                 for (int lookupIdx = 0; lookupIdx < 35; lookupIdx++)
                                 {
@@ -103,7 +108,6 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                         }
                         default:
                         {
-                            tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
                             break;
                         }
                     }
@@ -123,11 +127,13 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
                 }
                 case 102:
                 {
-                    tilemap->fgTiles[i][j].embed = DOOR_EMBED;
+                    tilemap->mgTiles[i][j].health = 0;
+                    tilemap->fgTiles[i][j].embed  = DOOR_EMBED;
                     break;
                 }
                 default:
                 {
+                    tilemap->mgTiles[i][j].health = 0;
                     break;
                 }
             }
@@ -147,7 +153,32 @@ void bb_generateWorld(bb_tilemap_t* tilemap)
         }
     }
 
-    tilemap->fgTiles[TILE_FIELD_WIDTH / 2 + 2][0].embed = EGG_EMBED; // tutorial egg
+    tilemap->fgTiles[TILE_FIELD_WIDTH / 2 - 7][0].embed = EGG_EMBED; // tutorial egg
+
+    if (level == 3)
+    {
+        tilemap->fgTiles[53][27].embed = BRICK_TUTORIAL_EMBED;
+    }
+    else if (level == 4)
+    {
+        tilemap->fgTiles[20][8].embed = BRICK_TUTORIAL_EMBED;
+    }
+
+    // carve out three tiles where any old boosters are buried
+    for (int booster = 0; booster < 3; booster++)
+    {
+        if (oldBoosterYs[booster] > -1)
+        {
+            for (int carveY = oldBoosterYs[booster] - 1; carveY <= oldBoosterYs[booster] + 1; carveY++)
+            {
+                if (carveY >= 0)
+                {
+                    tilemap->fgTiles[34 + booster * 3][carveY].health = 0;
+                    tilemap->fgTiles[35 + booster * 3][carveY].embed  = NOTHING_EMBED;
+                }
+            }
+        }
+    }
 
     freeWsg(&levelWsg);
 }

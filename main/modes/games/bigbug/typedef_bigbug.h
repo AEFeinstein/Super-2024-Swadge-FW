@@ -66,6 +66,7 @@ typedef enum
     BB_DRILL_BOT,   // A driller that comes down then drills horizontally.
     BB_AMMO_SUPPLY, // A barrel of harpoons
     BB_PACIFIER,    // Calms down the bugs in range.
+    BB_HOTDOG,      // icon for use in the radar screen.
 
     // These things do not have sprites in the sprites array. But we need the enum for the sake of the entity.
     // Some may have wsgs, but they cleverly load and unload their own WSGs.
@@ -80,6 +81,8 @@ typedef enum
     BB_EXPLOSION,            // A particle effect that deletes dirt, kills bugs, hurts and pushes garbotnik.
     BB_ATMOSPHERIC_ATOMIZER, // A particle effect that increases garbotnik's dragShift.
     BB_SPACE_LASER,          // A beam of pure damage straight down from the sky.
+    BB_BRICK_TUTORIAL,       // A particular spot on levels 3 & 4 that makes garbotnik talk about breaking bricks.
+    BB_GARBOTNIK_UI,         // The UI that shows the harpooon count and wile calldowns & cooldowns.
 } bb_spriteDef_t;
 
 typedef enum
@@ -93,7 +96,8 @@ typedef enum
     SKELETON_EMBED,
     DOOR_EMBED,
     BB_FOOD_CART_WITH_DONUT_EMBED,
-    BB_FOOD_CART_WITH_SWADGE_EMBED
+    BB_FOOD_CART_WITH_SWADGE_EMBED,
+    BRICK_TUTORIAL_EMBED,
 } bb_embeddable_t;
 
 typedef enum
