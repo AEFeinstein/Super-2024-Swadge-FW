@@ -26,6 +26,7 @@
 #include "soko.h"
 #include "mode_cGrove.h"
 #include "touchTest.h"
+#include "trophyTest.h"
 #include "tunernome.h"
 #include "keebTest.h"
 #include "mode_2048.h"
@@ -459,6 +460,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&bongoTest);
         }
+        else if (label == trophyTestMode.modeName)
+        {
+            switchToSwadgeMode(&trophyTestMode);
+        }
         else if (label == confirmResetName)
         {
             if (eraseNvs())
@@ -541,6 +546,7 @@ void addSecretsMenu(void)
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, trophyTestMode.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);

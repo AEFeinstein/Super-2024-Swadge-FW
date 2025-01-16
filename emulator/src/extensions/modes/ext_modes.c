@@ -39,6 +39,7 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "ultimateTTT.h"
+#include "trophyTest.h"
 
 //==============================================================================
 // Defines
@@ -86,6 +87,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &t48Mode,
     &timerMode,
     &touchTestMode,
+    &trophyTestMode,
     &tttMode,
     &tunernomeMode,
 };

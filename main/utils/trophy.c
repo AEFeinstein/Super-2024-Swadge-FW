@@ -29,9 +29,16 @@
 // Defines
 //==============================================================================
 
+// Standard defines
 #define MAX_BANNERS     5
 #define TENTH_SECOND    100000
 #define STATIC_POSITION -1
+
+// Visuals
+#define TROPHY_BANNER_HEIGHT           48
+#define TROPHY_BANNER_MAX_ICON_DIM     36
+#define TROPHY_SCREEN_CORNER_CLEARANCE 19
+#define TROPHY_IMAGE_BUFFER            8
 
 //==============================================================================
 // Consts
@@ -46,8 +53,8 @@ static const char* const systemPointsNVS[] = {"trophy", "TotalPoints"};
 typedef struct
 {
     // Assets
-    font_t* font;      //< Font in use. Should not be set by user.
-    wsg_t* imageArray; //< WSGs loaded for next five trophies.
+    font_t font;                    //< Font in use. Should not be set by user.
+    wsg_t imageArray[MAX_BANNERS]; //< WSGs loaded for next five trophies.
 
     // Drawing
     trophy_t tBannerList[MAX_BANNERS]; //< List of banners to display.
@@ -69,7 +76,7 @@ typedef struct
 // Variables
 //==============================================================================
 
-static trophySystem_t tSystem; //< Should be one instance per swadge, should always be in memory
+static trophySystem_t tSystem = {}; //< Should be one instance per swadge, should always be in memory
 
 //==============================================================================
 // Static function declarations
@@ -110,6 +117,14 @@ static void _getTrophyData(char* modeName, trophy_t* tList, int tLen, int offset
  */
 static void _draw(trophy_t t, int frame);
 
+/**
+ * @brief Sub function of _draw() so code can be reused in list draw command
+ *
+ * @param t Trophy to draw
+ * @param yOffset y coordinate to start at
+ */
+static void _drawAtYCoord(trophy_t t, int yOffset);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -140,14 +155,14 @@ void trophySystemSetFont(char* font)
 {
     // Sets the system font
     // NOTE: Should load automatically on Swadge boot/loading a mode
-    loadFont(font, tSystem.font, true);
+    loadFont(font, &tSystem.font, true);
 }
 
 void trophySystemClearFont()
 {
     // Unloads the system font
     // NOTE: Should only be used if the trophy system isn't being used and the font is taking up too much space
-    freeFont(tSystem.font);
+    freeFont(&tSystem.font);
 }
 
 int trophySystemGetPoints(char* modeName)
@@ -161,7 +176,11 @@ int trophySystemGetPoints(char* modeName)
     }
     if (readNamespaceNvs32(systemPointsNVS[0], modeName, &points))
     {
-        return points;
+        if (points > 1000)
+        {
+            return points;
+        }
+        return 1000;
     }
     else
     {
@@ -358,8 +377,11 @@ static void _draw(trophy_t t, int frame)
             }
         }
     }
-    // TODO: Move to secondary sub function so the draw code can be referenced in the list draw
+    _drawAtYCoord(t, yOffset);
+}
 
+static void _drawAtYCoord(trophy_t t, int yOffset)
+{
     // Draw box (Gray box, black border)
     fillDisplayArea(0, yOffset, TFT_WIDTH, TROPHY_BANNER_HEIGHT, c111);
     drawRect(0, yOffset, TFT_WIDTH, TROPHY_BANNER_HEIGHT, c000);
@@ -368,20 +390,61 @@ static void _draw(trophy_t t, int frame)
     if (t.imageString == NULL)
     {
         // Draw text at start of buffer area
-        xOffset = TROPHY_BANNER_ICON_H_BUFFER;
+        xOffset = TROPHY_SCREEN_CORNER_CLEARANCE;
     }
     else
     {
         // Draw icon
         // TODO: If in progress, draw grayscale? Outline?
         // Set xOffset to be 2* H_BUFFER + ICON_WIDTH
-        xOffset = TROPHY_BANNER_MAX_ICON_DIM + 2 * TROPHY_BANNER_ICON_H_BUFFER;
+        xOffset = TROPHY_BANNER_MAX_ICON_DIM + TROPHY_SCREEN_CORNER_CLEARANCE + TROPHY_IMAGE_BUFFER;
     }
-    // Draw text, starting after image if present
-    // TODO: Fill out text draw commands
-    // drawText(); // Title
-    // drawText(); // Description
+    // Draw Image + shadowbox
+    int16_t startX = TROPHY_SCREEN_CORNER_CLEARANCE;
+    int16_t startY = yOffset + ((TROPHY_BANNER_HEIGHT - TROPHY_BANNER_MAX_ICON_DIM) >> 1);
+    drawRectFilled(startX, startY, startX + TROPHY_BANNER_MAX_ICON_DIM, startY + TROPHY_BANNER_MAX_ICON_DIM, c222);
 
-    // If not TYPE_TRIGGER
-    // drawText(); // Curr Val / Max Val
+    // TODO: Load WSG properly
+    drawWsgSimple(&tSystem.imageArray[0], startX + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].w) >> 1), startY + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].h) >> 1));
+
+    // Draw text, starting after image if present
+    drawText(&tSystem.font, c555, t.title, xOffset, yOffset + 4); // Title
+    startX = xOffset;
+    startY = yOffset + 20;
+    drawTextWordWrap(&tSystem.font, c444, t.description, &startX, &startY, TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE,
+                     TROPHY_BANNER_HEIGHT); // Description
+
+    if (!t.type == TROPHY_TYPE_TRIGGER)
+    {
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer) - 1, "%d/%d", t.currentValue, t.maxValue);
+        int16_t xOff         = TFT_WIDTH - (textWidth(&tSystem.font, buffer) + TROPHY_SCREEN_CORNER_CLEARANCE + 8);
+        paletteColor_t color = c500;
+        if (t.currentValue >= t.maxValue)
+        {
+            color = c050;
+        }
+        drawText(&tSystem.font, color, buffer, xOff, yOffset + 4);
+    }
+}
+
+//==============================================================================
+// Test funcs
+//==============================================================================
+
+// FIXME: Delete when done using
+
+void trophyDrawDataDirectly(trophy_t t, int y)
+{
+    _drawAtYCoord(t, y);
+}
+
+void loadImage(int idx, char* string)
+{
+    loadWsg(string, &tSystem.imageArray[idx], true);
+}
+
+void unloadImage(int idx)
+{
+    freeWsg(&tSystem.imageArray[idx]);
 }

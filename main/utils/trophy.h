@@ -63,7 +63,7 @@
  * A special "All trophies gotten" trophy is automatically generated when the first standard trophy is generated.
  *
  * It is encouraged for developers to equate all trophies values to add up to 1000. The default trophy has a value of
- * 100, leaving 900 to be divide by all other trophies. This isn't a hard requirement.
+ * 100, leaving 900 to be divide by all other trophies. Any points over 1000 earned by a mode will result in 
  *
  * \section trophy_update Updating the Trophy
  *
@@ -164,11 +164,6 @@
 #define TROPHY_MAX_TITLE_LEN 24
 #define TROPHY_MAX_DESC_LEN  96
 #define TROPHY_MAX_WSG_LEN   24
-
-// Visuals
-#define TROPHY_BANNER_HEIGHT        48
-#define TROPHY_BANNER_MAX_ICON_DIM  36
-#define TROPHY_BANNER_ICON_H_BUFFER 4
 
 //==============================================================================
 // Enum
@@ -340,3 +335,8 @@ void trophyDrawListInit(void);
  * update index as they see fit.
  */
 void trophyDrawList(char* modeName, int idx);
+
+// TEST ONLY
+void trophyDrawDataDirectly(trophy_t t, int y);
+void loadImage(int idx, char* string);
+void unloadImage(int idx);
