@@ -336,8 +336,9 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
     // Who are we?
     tttPlayer_t cpuPlayer = (ttt->game.singlePlayerPlayOrder == GOING_FIRST) ? TTT_P2 : TTT_P1;
 
-    // The score of each possible movee
-    int32_t score[3][3][3][3] = {0};
+    // To avoid a second pass
+    int32_t maxScore = INT32_MIN;
+    move_t maxMove = {0};
 
     // The whole game turned into a subgame
     tttPlayer_t subgame[3][3];
@@ -347,62 +348,51 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
         {
             subgame[gx][gy] = ttt->game.subgames[gx][gy].winner;
 
-            for (int cx = 0; cx < 3; cx++)
+            if (subgame[gx][gy] == TTT_NONE)
             {
-                for (int cy = 0; cy < 3; cy++)
+                for (int cx = 0; cx < 3; cx++)
                 {
-                    move_t move = {
-                        .subX = gx,
-                        .subY = gy,
-                        .cellX = cx,
-                        .cellY = cy,
-                    };
-                    moveAnalysis_t analysis = {0};
-
-                    if (analyzeMove(ttt->game.subgames, &move, cpuPlayer, &analysis))
+                    for (int cy = 0; cy < 3; cy++)
                     {
-                        if (analysis.winsGame)
+                        int score = INT32_MIN;
+
+                        move_t move = {
+                            .subX = gx,
+                            .subY = gy,
+                            .cellX = cx,
+                            .cellY = cy,
+                        };
+                        moveAnalysis_t analysis = {0};
+
+                        if (analyzeMove(ttt->game.subgames, &move, cpuPlayer, &analysis))
                         {
-                            printf("Move %d, %d, %d, %d wins the game, cool!\n", gx, gy, cx, cy);
-                            score[gx][gy][cx][cy] = INT32_MAX;
-                        }
-                        else if (analysis.losesGame)
-                        {
-                            score[gx][gy][cx][cy] = INT32_MIN + 1;
+                            if (analysis.winsGame)
+                            {
+                                score = INT32_MAX;
+                            }
+                            else if (analysis.losesGame)
+                            {
+                                score = INT32_MIN + 1;
+                            }
+                            else
+                            {
+                                score = 1;
+                            }
                         }
                         else
                         {
-                            // TODO actually score
-                            score[gx][gy][cx][cy] = 1;
+                            // Impossible move, give it minimum score possible
+                            score = INT32_MIN;
                         }
-                    }
-                    else
-                    {
-                        // Impossible move, give it minimum score possible
-                        score[gx][gy][cx][cy] = INT32_MIN;
-                    }
-                }
-            }
-        }
-    }
 
-    int32_t maxScore = INT32_MIN;
-    move_t maxMove = {0};
-    for (int gx = 0; gx < 3; gx++)
-    {
-        for (int gy = 0; gy < 3; gy++)
-        {
-            for (int cx = 0; cx < 3; cx++)
-            {
-                for (int cy = 0; cy < 3; cy++)
-                {
-                    if (score[gx][gy][cx][cy] > maxScore)
-                    {
-                        maxScore = score[gx][gy][cx][cy];
-                        maxMove.subX = gx;
-                        maxMove.subY = gy;
-                        maxMove.cellX = cx;
-                        maxMove.cellY = cy;
+                        if (score > maxScore)
+                        {
+                            maxScore = score;
+                            maxMove.subX = gx;
+                            maxMove.subY = gy;
+                            maxMove.cellX = cx;
+                            maxMove.cellY = cy;
+                        }
                     }
                 }
             }
@@ -414,14 +404,12 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
     int mainX             = DECODE_LOC_X(mainResult);
     int mainY             = DECODE_LOC_Y(mainResult);
 
+    // Override the best subgame if there's a winning move
     if (maxScore == INT32_MAX)
     {
-        printf("Overriding move %d, %d with winning one\n", mainX, mainY);
         mainX = maxMove.subX;
         mainY = maxMove.subY;
     }
-
-    printf("%d, %d is the best overall move with a score of %" PRId32 ". Old logic says %d, %d\n", maxMove.subX, maxMove.subY, maxScore, mainX, mainY);
 
     if (WON != mainMove && mainMove)
     {
