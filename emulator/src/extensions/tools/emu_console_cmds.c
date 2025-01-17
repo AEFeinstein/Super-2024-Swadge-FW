@@ -52,7 +52,7 @@ static const char* commandDocs[][3] = {
     {"joystick map motion", "joystick map motion <x-axis> <y-axis> <z-axis>",
      "maps three joystick axes to the accelerometer axes"},
     {"joystick map dpad", "joystick map dpad <x-axis> <y-axis>", "maps two joystick axes to the D-pad buttons"},
-    {"joystick deadzone touchpad", "joystick deadzone touchpad <0-16383>",
+    {"joystick deadzone touchpad", "joystick deadzone touchpad <0-32767>",
      "sets the deadzone for the touchpad joystick axes"},
     {"inject", "inject <nvs|asset> <...>", "injects data into NVS or assets"},
     {"inject nvs", "inject nvs [namespace] <key> <int|str|file> <value>",

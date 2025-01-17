@@ -308,16 +308,22 @@ type `help <command>` into the console.
 | `gif [filename]`         | Starts recording a GIF to `filename` (or a timestamp-based file name), or stops the current recording |
 | `replay <filename>`      | Starts playing back inputs from `filename`. Stops any current playing back or recording of inputs.    |
 | `record [filename]`      | Starts recording inputs to `filename`, or to a timestamp-based file name if no filename is given      |
-| `fuzz [on|off]`          | Toggles fuzzing on or off                                                                             |
-| `fuzz buttons [on|off]`  | Toggles fuzzing of button presses on or off                                                           |
+| <code>fuzz [on\|off]</code> | Toggles fuzzing on or off                                                                          |
+| <code>fuzz buttons [on\|off]</code> | Toggles fuzzing of button presses on or off                                                |
 | `fuzz buttons mask <...>`| Sets the buttons that will be used when fuzzing, separated by spaces, e.g. `fuzz buttons mask up down left right` |
 | `fuzz buttons mask`      | Prints the buttons that will be used when fuzzing                                                     |
-| `fuzz touch [on|off]`    | Toggles fuzzing of touchpad inputs on or off                                                          |
-| `fuzz motion [on|off]`   | Toggles fuzzing of accelerometer motion on or off                                                     |
-| `fuzz time [on|off]`     | Toggles fuzzing of frame timings on or off                                                            |
-| `joystick [device-name]` | Toggles the joystick on or off, or connects to a specific joystick device                             |
-| `touchpad [on|off]`      | Toggles the emulator's virtual touchpad on or off                                                     |
-| `leds [on|off]`          | Toggles the emulator's virtual LEDs on or off                                                         |
+| <code>fuzz touch [on\|off]</code> | Toggles fuzzing of touchpad inputs on or off                                                 |
+| <code>fuzz motion [on\|off]</code>  | Toggles fuzzing of accelerometer motion on or off                                          |
+| <code>fuzz time [on\|off]</code>    | Toggles fuzzing of frame timings on or off                                                 |
+| <code>joystick [on\|off]</code>     | Toggles the joystick on or off                                                             |
+| `joystick device <device-name>` | Connects to a specific joystick device                                                         |
+| `joystick map button <btn-num> <btn-name> [<btn-num> <btn-name> ...]` | Maps joystick button numbers to emulator buttons         |
+| `joystick map touchpad <x-axis> <y-axis>` | Maps two joystick axes onto the emulator touchpad                                    |
+| `joystick map motion <x-axis> <y-axis> <z-axis>` | Maps three joystick axes onto the emulator accelerometer input                |
+| `joystick map dpad <x-axis> <y-axis>` | Maps two joystick axes onto the D-pad.                                                   |
+| `joystick deadzone touchpad <number>` | Sets the deadzone for the touchpad axes. Valid range for number is 0-32767, inclusive.   |
+| <code>touchpad [on\|off]</code>     | Toggles the emulator's virtual touchpad on or off                                          |
+| <code>leds [on\|off]</code>         | Toggles the emulator's virtual LEDs on or off                                              |
 
 ## Troubleshooting
 
