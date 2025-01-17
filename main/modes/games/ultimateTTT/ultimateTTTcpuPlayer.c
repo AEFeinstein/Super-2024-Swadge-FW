@@ -67,6 +67,19 @@ static const char strMoveEmptySide[]      = "Empty Side";
 #define DECODE_LOC_Y(r)  (((r) >> 5) / 3)
 #define DECODE_MOVE(r)   ((r) & 0x1F)
 
+typedef struct
+{
+    int subX, subY, cellX, cellY;
+} move_t;
+
+typedef struct
+{
+    bool winsGame;
+    bool losesGame;
+    move_t bestOpponentMove;
+    int movesToEnd;
+} moveAnalysis_t;
+
 static bool selectSubgame_easy(ultimateTTT_t* ttt, int* x, int* y);
 static bool selectSubgame_medium(ultimateTTT_t* ttt, int* x, int* y);
 static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y);
@@ -85,6 +98,8 @@ static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t pla
 
 static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player);
 static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player, uint16_t filter);
+static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, tttPlayer_t player, moveAnalysis_t* result);
+
 const char* getMoveName(uint16_t move);
 void printGame(const tttPlayer_t subgame[3][3]);
 
@@ -316,21 +331,97 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
     // handle a tie??? Just use the TIE player? Yeah probably)
     // - We calculate the next possible move on that board, and then take a look at the board we'd need to win to get
     // our marker there
-    // - So... I guess we should take all the possible moves in that board, and then what...
+    // - So... I guess we should take all the possiblebest overal moves in that board, and then what...
+
+    // Who are we?
+    tttPlayer_t cpuPlayer = (ttt->game.singlePlayerPlayOrder == GOING_FIRST) ? TTT_P2 : TTT_P1;
+
+    // The score of each possible movee
+    int32_t score[3][3][3][3] = {0};
+
+    // The whole game turned into a subgame
     tttPlayer_t subgame[3][3];
     for (int gx = 0; gx < 3; gx++)
     {
         for (int gy = 0; gy < 3; gy++)
         {
             subgame[gx][gy] = ttt->game.subgames[gx][gy].winner;
+
+            for (int cx = 0; cx < 3; cx++)
+            {
+                for (int cy = 0; cy < 3; cy++)
+                {
+                    move_t move = {
+                        .subX = gx,
+                        .subY = gy,
+                        .cellX = cx,
+                        .cellY = cy,
+                    };
+                    moveAnalysis_t analysis = {0};
+
+                    if (analyzeMove(ttt->game.subgames, &move, cpuPlayer, &analysis))
+                    {
+                        if (analysis.winsGame)
+                        {
+                            printf("Move %d, %d, %d, %d wins the game, cool!\n", gx, gy, cx, cy);
+                            score[gx][gy][cx][cy] = INT32_MAX;
+                        }
+                        else if (analysis.losesGame)
+                        {
+                            score[gx][gy][cx][cy] = INT32_MIN + 1;
+                        }
+                        else
+                        {
+                            // TODO actually score
+                            score[gx][gy][cx][cy] = 1;
+                        }
+                    }
+                    else
+                    {
+                        // Impossible move, give it minimum score possible
+                        score[gx][gy][cx][cy] = INT32_MIN;
+                    }
+                }
+            }
         }
     }
 
-    tttPlayer_t cpuPlayer = (ttt->game.singlePlayerPlayOrder == GOING_FIRST) ? TTT_P2 : TTT_P1;
+    int32_t maxScore = INT32_MIN;
+    move_t maxMove = {0};
+    for (int gx = 0; gx < 3; gx++)
+    {
+        for (int gy = 0; gy < 3; gy++)
+        {
+            for (int cx = 0; cx < 3; cx++)
+            {
+                for (int cy = 0; cy < 3; cy++)
+                {
+                    if (score[gx][gy][cx][cy] > maxScore)
+                    {
+                        maxScore = score[gx][gy][cx][cy];
+                        maxMove.subX = gx;
+                        maxMove.subY = gy;
+                        maxMove.cellX = cx;
+                        maxMove.cellY = cy;
+                    }
+                }
+            }
+        }
+    }
+
     uint16_t mainResult   = analyzeSubgame(subgame, cpuPlayer, 0);
     uint16_t mainMove     = DECODE_MOVE(mainResult);
     int mainX             = DECODE_LOC_X(mainResult);
     int mainY             = DECODE_LOC_Y(mainResult);
+
+    if (maxScore == INT32_MAX)
+    {
+        printf("Overriding move %d, %d with winning one\n", mainX, mainY);
+        mainX = maxMove.subX;
+        mainY = maxMove.subY;
+    }
+
+    printf("%d, %d is the best overall move with a score of %" PRId32 ". Old logic says %d, %d\n", maxMove.subX, maxMove.subY, maxScore, mainX, mainY);
 
     if (WON != mainMove && mainMove)
     {
@@ -1100,6 +1191,75 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
 
     TCPU_LOG("We should have picked a move already? Not sure this is possible");
     return 0;
+}
+
+static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, tttPlayer_t player, moveAnalysis_t* result)
+{
+    tttSubgame_t board[3][3];
+    if (subgames[move->subX][move->subY].winner != TTT_NONE || subgames[move->subX][move->subY].game[move->cellX][move->cellY] != TTT_NONE)
+    {
+        // Impossible move!
+        return false;
+    }
+
+    memcpy(board, subgames, sizeof(board));
+
+    const tttPlayer_t opponent = (player == TTT_P1) ? TTT_P2 : TTT_P1;
+    tttPlayer_t turn = player;
+    move_t lastMove = {0};
+    memcpy(&lastMove, move, sizeof(move_t));
+    int moveNum = 0;
+
+    {
+        board[lastMove.subX][lastMove.subY].game[lastMove.cellX][lastMove.cellY] = player;
+
+        // Check if that wins the cell and update it accordingly
+        tttPlayer_t subgameWinner = tttCheckWinner(board[lastMove.subX][lastMove.subY].game);
+        if (subgameWinner != TTT_NONE)
+        {
+            board[lastMove.subX][lastMove.subY].winner = subgameWinner;
+        }
+
+        // Get the overall board to check the game's status
+        tttPlayer_t bigBoard[3][3];
+        for (int gx = 0; gx < 3; gx++)
+        {
+            for (int gy = 0; gy < 3; gy++)
+            {
+                bigBoard[gx][gy] = board[gx][gy].winner;
+            }
+        }
+
+        tttPlayer_t winner = tttCheckWinner(bigBoard);
+        if (winner == player)
+        {
+            result->winsGame = true;
+            result->losesGame = false;
+            result->movesToEnd = moveNum;
+            memset(&result->bestOpponentMove, 0, sizeof(move_t));
+            return true;
+        }
+        else if (winner == opponent)
+        {
+            result->winsGame = false;
+            result->losesGame = true;
+            result->movesToEnd = moveNum;
+            memcpy(&result->bestOpponentMove, &lastMove, sizeof(move_t));
+            return true;
+        }
+        else
+        {
+            // TTT_NONE
+            result->winsGame = false;
+            result->losesGame = false;
+            return true;
+        }
+
+        turn = (turn == TTT_P1) ? TTT_P2 : TTT_P1;
+        moveNum++;
+    }
+
+    return false;
 }
 
 const char* getMoveName(uint16_t move)
