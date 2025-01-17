@@ -36,9 +36,9 @@ ifeq ($(HOST_OS),Windows)
 endif
 
 # clang-format may actually be clang-format-17
-CLANG_FORMAT:=clang-format
+CLANG_FORMAT:=clang-format-17
 ifeq (, $(shell which $(CLANG_FORMAT)))
-	CLANG_FORMAT:=clang-format-17
+	CLANG_FORMAT:=clang-format
 endif
 
 ifeq ($(HOST_OS),Linux)
