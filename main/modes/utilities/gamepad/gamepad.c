@@ -294,7 +294,7 @@ void gamepadEnterMode(void)
     addSingleItemToMenu(gamepad->menu, str_exit);
 
     // Initialize menu renderer
-    gamepad->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    gamepad->renderer         = initMenuManiaRenderer(NULL, NULL, NULL);
     gamepad->renderer->ledsOn = false;
 
     // Set up the IMU

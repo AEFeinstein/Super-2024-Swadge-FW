@@ -98,7 +98,8 @@ static rowCount_t checkDiag(const tttPlayer_t game[3][3], int n, tttPlayer_t pla
 
 static uint16_t movesToWin(const tttPlayer_t subgame[3][3], tttPlayer_t player);
 static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t player, uint16_t filter);
-static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, tttPlayer_t player, moveAnalysis_t* result);
+static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, tttPlayer_t player,
+                        moveAnalysis_t* result);
 
 const char* getMoveName(uint16_t move);
 void printGame(const tttPlayer_t subgame[3][3]);
@@ -338,7 +339,7 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
 
     // To avoid a second pass
     int32_t maxScore = INT32_MIN;
-    move_t maxMove = {0};
+    move_t maxMove   = {0};
 
     // The whole game turned into a subgame
     tttPlayer_t subgame[3][3];
@@ -357,8 +358,8 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
                         int score = INT32_MIN;
 
                         move_t move = {
-                            .subX = gx,
-                            .subY = gy,
+                            .subX  = gx,
+                            .subY  = gy,
                             .cellX = cx,
                             .cellY = cy,
                         };
@@ -387,9 +388,9 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
 
                         if (score > maxScore)
                         {
-                            maxScore = score;
-                            maxMove.subX = gx;
-                            maxMove.subY = gy;
+                            maxScore      = score;
+                            maxMove.subX  = gx;
+                            maxMove.subY  = gy;
                             maxMove.cellX = cx;
                             maxMove.cellY = cy;
                         }
@@ -399,10 +400,10 @@ static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
         }
     }
 
-    uint16_t mainResult   = analyzeSubgame(subgame, cpuPlayer, 0);
-    uint16_t mainMove     = DECODE_MOVE(mainResult);
-    int mainX             = DECODE_LOC_X(mainResult);
-    int mainY             = DECODE_LOC_Y(mainResult);
+    uint16_t mainResult = analyzeSubgame(subgame, cpuPlayer, 0);
+    uint16_t mainMove   = DECODE_MOVE(mainResult);
+    int mainX           = DECODE_LOC_X(mainResult);
+    int mainY           = DECODE_LOC_Y(mainResult);
 
     // Override the best subgame if there's a winning move
     if (maxScore == INT32_MAX)
@@ -1181,10 +1182,12 @@ static uint16_t analyzeSubgame(const tttPlayer_t subgame[3][3], tttPlayer_t play
     return 0;
 }
 
-static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, tttPlayer_t player, moveAnalysis_t* result)
+static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, tttPlayer_t player,
+                        moveAnalysis_t* result)
 {
     tttSubgame_t board[3][3];
-    if (subgames[move->subX][move->subY].winner != TTT_NONE || subgames[move->subX][move->subY].game[move->cellX][move->cellY] != TTT_NONE)
+    if (subgames[move->subX][move->subY].winner != TTT_NONE
+        || subgames[move->subX][move->subY].game[move->cellX][move->cellY] != TTT_NONE)
     {
         // Impossible move!
         return false;
@@ -1193,8 +1196,8 @@ static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, t
     memcpy(board, subgames, sizeof(board));
 
     const tttPlayer_t opponent = (player == TTT_P1) ? TTT_P2 : TTT_P1;
-    tttPlayer_t turn = player;
-    move_t lastMove = {0};
+    tttPlayer_t turn           = player;
+    move_t lastMove            = {0};
     memcpy(&lastMove, move, sizeof(move_t));
     int moveNum = 0;
 
@@ -1221,16 +1224,16 @@ static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, t
         tttPlayer_t winner = tttCheckWinner(bigBoard);
         if (winner == player)
         {
-            result->winsGame = true;
-            result->losesGame = false;
+            result->winsGame   = true;
+            result->losesGame  = false;
             result->movesToEnd = moveNum;
             memset(&result->bestOpponentMove, 0, sizeof(move_t));
             return true;
         }
         else if (winner == opponent)
         {
-            result->winsGame = false;
-            result->losesGame = true;
+            result->winsGame   = false;
+            result->losesGame  = true;
             result->movesToEnd = moveNum;
             memcpy(&result->bestOpponentMove, &lastMove, sizeof(move_t));
             return true;
@@ -1238,7 +1241,7 @@ static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, t
         else
         {
             // TTT_NONE
-            result->winsGame = false;
+            result->winsGame  = false;
             result->losesGame = false;
             return true;
         }
