@@ -812,6 +812,14 @@ void emuGetDpadAxisMapping(int* xAxis, int* yAxis)
 bool gamepadInitCb(emuArgs_t* args)
 {
     memcpy(&joystickConfig, &joyPresetSwadge, sizeof(emuJoystickConf_t));
+    if (args->jsPreset)
+    {
+        if (!emuSetGamepadPreset(args->jsPreset))
+        {
+            ESP_LOGW("GamepadExt", "Unknown joystick preset '%s'", args->jsPreset);
+        }
+    }
+
     if (gamepadConnect(&joystickExt, args->joystick))
     {
         ESP_LOGI("GamepadExt", "Connected to joystick with %d axes and %d buttons\n", joystickExt.numAxes,

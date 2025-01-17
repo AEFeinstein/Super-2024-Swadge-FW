@@ -80,6 +80,9 @@ typedef struct
 
     // Joystick
     const char* joystick;
+
+    // Joystick config preset name
+    const char* jsPreset;
 } emuArgs_t;
 
 //==============================================================================

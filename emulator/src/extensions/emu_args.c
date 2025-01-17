@@ -139,6 +139,7 @@ static const char argFuzzMotion[]  = "fuzz-motion";
 static const char argHeadless[]    = "headless";
 static const char argHideLeds[]    = "hide-leds";
 static const char argJoystick[]    = "joystick";
+static const char argJsPreset[]    = "preset";
 static const char argKeymap[]      = "keymap";
 static const char argLock[]        = "lock";
 static const char argMidiFile[]    = "midi-file";
@@ -171,6 +172,7 @@ static const struct option options[] =
     { argHeadless,    no_argument,       (int*)&emulatorArgs.headless,     true },
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
     { argJoystick,    required_argument, (int*)&emulatorArgs.joystick,     'j'  },
+    { argJsPreset,    required_argument, (int*)&emulatorArgs.jsPreset,     0    },
     { argKeymap,      required_argument, NULL,                             'k'  },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
     { argMidiFile,    required_argument, NULL,                             0    },
@@ -202,7 +204,8 @@ static const optDoc_t argDocs[] =
     { 0,  argFuzzTime,    "y|n",   "Set whether frame durations are fuzzed" },
     { 0,  argFuzzMotion,  "y|n",   "Set whether motion inputs are fuzzed" },
     { 0,  argHeadless,    NULL,    "Runs the emulator without a window." },
-    { 0,  argJoystick,   "JOYDEV", "Sets the joystick device to use." },
+    {'j', argJoystick,   "JOYDEV", "Sets the joystick device to use." },
+    { 0,  argJsPreset,   "PRESET", "Sets the joystick config preset to use. PRESET can be swadge or switch"},
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
     {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak"},
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
@@ -420,6 +423,18 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
         else
         {
             printf("ERR: Joystick value is required\n");
+            return false;
+        }
+    }
+    else if (argJsPreset == optName)
+    {
+        if (arg)
+        {
+            emulatorArgs.jsPreset = arg;
+        }
+        else
+        {
+            printf("ERR: Joystick preset name is required\n");
             return false;
         }
     }

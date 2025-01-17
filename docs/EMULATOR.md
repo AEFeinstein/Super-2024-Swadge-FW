@@ -127,6 +127,7 @@ Emulates a swadge
      --headless              Runs the emulator without a window.
      --hide-leds             Don't draw simulated LEDs next to the display
  -j, --joystick=JOYDEV       Sets the joystick device to use.
+     --js-preset=PRESET      Sets the joystick config preset to use. PRESET can be swadge or switch
  -k, --keymap=LAYOUT         Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak
  -l, --lock                  Lock the emulator in the start mode
      --midi-file=FILE        Open and immediately play a MIDI file
@@ -288,6 +289,9 @@ are `azerty`, `dvorak`, or `colemak`.
 the platform; on Windows the value should be a number from 0 to 15, with 0 being the first connected joystick
 and so on; on Linux the value should be the path to a Joystick device, such as `/dev/input/js0`. Joystick
 input is not yet supported on Mac.
+
+`--js-preset`: Specifies the Joystick configuration preset to use. Possible values are `swadge` (the default),
+and `switch`.
 
 ## Console Commands
 
