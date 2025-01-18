@@ -99,6 +99,8 @@ void tttBeginGame(ultimateTTT_t* ttt)
     ttt->game.moveAnimTimer = MOVE_ANIM_TIME;
     memset(ttt->game.cellTimers, 0, sizeof(ttt->game.cellTimers));
     memset(ttt->game.gameTimers, 0, sizeof(ttt->game.gameTimers));
+    memset(ttt->game.priorCellAnim, 0, sizeof(ttt->game.priorCellAnim));
+    memset(ttt->game.nextSubgameAnim, 0, sizeof(ttt->game.nextSubgameAnim));
 
     /// Clear any CPU data, preserving difficulty
     tttCpuDifficulty_t origDiff = ttt->game.cpu.difficulty;
