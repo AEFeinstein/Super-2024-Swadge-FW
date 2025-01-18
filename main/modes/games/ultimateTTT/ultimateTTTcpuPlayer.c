@@ -324,15 +324,13 @@ static bool selectSubgame_medium(ultimateTTT_t* ttt, int* x, int* y)
 
 static bool selectSubgame_hard(ultimateTTT_t* ttt, int* x, int* y)
 {
-    // Eventually this will become the medium difficulty once I get the actual difficult AI working
-    // Here's what to do:
     // - Construct a 'subgame' to match the main board (which we can modify if needed to simulate stuff) and also to
     // avoid rewriting the algorithm
     // - Its board will have all the completed subgames marked with the winner, and the rest as NONE (TODO: how to
     // handle a tie??? Just use the TIE player? Yeah probably)
     // - We calculate the next possible move on that board, and then take a look at the board we'd need to win to get
     // our marker there
-    // - So... I guess we should take all the possiblebest overal moves in that board, and then what...
+    // But also check every valid move for a game-winning move, and try that first
 
     // Who are we?
     tttPlayer_t cpuPlayer = (ttt->game.singlePlayerPlayOrder == GOING_FIRST) ? TTT_P2 : TTT_P1;
