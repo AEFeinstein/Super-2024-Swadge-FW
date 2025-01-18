@@ -14,10 +14,14 @@
 
 #include <stdint.h>
 
-extern const uint16_t paletteColors[];
+// Converts RGB values (0-31, 5 bits per color) to combined 16-bit palette colors
+// Technically green is 6 bits per color but idk
+#define RGB_TO_16BIT_PALETTE(r,g,b) ((((g) & 0b111) << 13) | (((b) & 0b11111) << 8) | (((r) & 0b11111) << 3) | (((g) >> 3) & 0b111))
+
+extern uint16_t paletteColors[];
 
 /**
- * @brief All 216 possible colors, named like cRGB
+ * @brief All 216 possible colors, named like cRGB, plus transparent, plus 39 extended colors
  */
 typedef enum __attribute__((packed))
 {
@@ -238,6 +242,29 @@ typedef enum __attribute__((packed))
     c554,         ///< r = 5, g = 5, b = 4
     c555,         ///< r = 5, g = 5, b = 5
     cTransparent, ///< Transparent, will not draw over other pixels
+    cx00,
+    cx01,
+    cx02,
+    cx03,
+    cx04,
+    cx05,
+    cx06,
+    cx07,
+    cx08,
+    cx09,
+    cx10,
+    cx11,
+    cx12,
+    cx13,
+    cx14,
+    cx15,
+    cx16,
+    cx17,
+    cx18,
+    cx19,
+    cx20,
 } paletteColor_t;
+
+void extendPalette(const uint16_t palette[39]);
 
 #endif
