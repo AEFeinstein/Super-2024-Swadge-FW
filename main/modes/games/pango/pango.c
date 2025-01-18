@@ -947,19 +947,32 @@ void updateDead(pango_t* self, int64_t elapsedUs)
 void updateGameOver(pango_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
-    if (self->gameData.frameCount > 179)
-    {
-        // Handle unlockables
-        if (!self->gameData.debugMode)
+    
+    if (!self->gameData.caravanMode){
+        if (self->gameData.frameCount > 179)
         {
-            pangoSaveUnlockables(self);
-        }
+            // Handle unlockables
+            if (!self->gameData.debugMode)
+            {
+                pangoSaveUnlockables(self);
+            }
 
-        changeStateNameEntry(self);
+            changeStateNameEntry(self);
+        }
+        pa_updateLedsGameOver(&(self->gameData));
+    } else {
+        if (self->gameData.frameCount > 480)
+        {
+            if (self->gameData.btnState & PB_START && !(self->gameData.prevBtnState & PB_START))
+            {
+                changeStateTitleScreen(self);
+                return;
+            }
+        }
+        pa_updateLedsGameClear(&(self->gameData));
     }
 
     drawGameOver(&(self->font), &(self->gameData));
-    pa_updateLedsGameOver(&(self->gameData));
 }
 
 void changeStateGameOver(pango_t* self)
@@ -967,16 +980,45 @@ void changeStateGameOver(pango_t* self)
     self->gameData.frameCount = 0;
     pa_resetGameDataLeds(&(self->gameData));
 
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop         = false;
-    soundPlayBgm(&(self->soundManager.bgmGameOver), BZR_STEREO);
+    if(!self->gameData.caravanMode)
+    {
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        player->loop         = false;
+        soundPlayBgm(&(self->soundManager.bgmGameOver), BZR_STEREO);
+    } 
+    else 
+    {
+        pa_setBgm(&(self->soundManager), PA_BGM_HIGH_SCORE);
+        soundPlayBgm(&(self->soundManager.currentBgm), MIDI_BGM);
+    }
     self->update = &updateGameOver;
 }
 
 void drawGameOver(font_t* font, paGameData_t* gameData)
 {
-    drawPangoHud(font, gameData);
-    drawText(font, c555, str_game_over, (TFT_WIDTH - textWidth(font, str_game_over)) / 2, 128);
+    if(!gameData->caravanMode){
+        drawPangoHud(font, gameData);
+        drawText(font, c555, str_game_over, (TFT_WIDTH - textWidth(font, str_game_over)) / 2, 128);
+    } else {
+        if (gameData->frameCount < 180){
+            drawPangoHud(font, gameData);
+            drawText(font, c555, "Time up!!", (TFT_WIDTH - textWidth(font, str_game_over)) / 2, 128);
+        } else {
+            char scoreStr[32];
+            snprintf(scoreStr, sizeof(scoreStr) - 1, "%7.6" PRIu32, gameData->score);
+
+            drawWsgSimpleScaled(pango->wsgManager.sprites[PA_SP_PLAYER_WIN].wsg, 120, 32, 2, 2);
+
+            drawText(font, c555, "Caravan Score:", 64, 104);
+            drawText(font, c555, scoreStr, 92, 116);
+
+            drawText(font, yellowColors[(gameData->frameCount >> 3) % 4], "Thanks for playing!", 36, 144);
+
+            if (gameData->frameCount > 480){
+                drawText(font, c555, "Press Pause to exit.", 30, 200);
+            }
+        }
+    }
 }
 
 void changeStateTitleScreen(pango_t* self)
