@@ -446,6 +446,7 @@ void bb_updateDrillBot(bb_entity_t* self);
 void bb_updateTimedPhysicsObject(bb_entity_t* self);
 void bb_updatePacifier(bb_entity_t* self);
 void bb_updateSpaceLaser(bb_entity_t* self);
+void bb_updateQuickplay(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -480,6 +481,7 @@ void bb_drawPacifier(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
 void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawGarbotnikUI(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawQuickplay(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 

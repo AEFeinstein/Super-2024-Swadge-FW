@@ -1155,6 +1155,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 entityManager, LOOPING_ANIMATION, false, HARPOON, 3, (entity->pos.x >> DECIMAL_BITS) - 22, 0, false,
                 false); // y position doesn't matter here. It will be handled in the update loop.
 
+            bb_clearCollisions(mData->cursor, false);
+
             // This will make it draw pointed right
             ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};
 
@@ -1661,6 +1663,12 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_GARBOTNIK_UI:
         {
             entity->drawFunction = &bb_drawGarbotnikUI;
+            break;
+        }
+        case BB_QUICKPLAY_CONFIRM:
+        {
+            entity->updateFunction = &bb_updateQuickplay;
+            entity->drawFunction = &bb_drawQuickplay;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

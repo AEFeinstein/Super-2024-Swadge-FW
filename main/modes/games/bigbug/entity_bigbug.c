@@ -1490,7 +1490,7 @@ void bb_updateBugShooting(bb_entity_t* self)
 {
     if (bb_randomInt(0, 100) < 1)
     {
-        bb_ensureEntitySpace(&self->gameData->entityManager, 1)
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         // call it paused and update frames in it's own update function because this one uses another spriteIdx.
         bb_entity_t* spit = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_SPIT, 10,
                                             self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, false);
@@ -1785,17 +1785,17 @@ void bb_updateFlyingBug(bb_entity_t* self)
 void bb_updateMenu(bb_entity_t* self)
 {
     bb_menuData_t* mData = (bb_menuData_t*)self->data;
-    if (self->gameData->btnDownState & PB_UP)
+    if (self->gameData->btnDownState & PB_UP && mData->selectionIdx < 2)
     {
         mData->selectionIdx--;
         mData->selectionIdx = mData->selectionIdx < 0 ? 1 : mData->selectionIdx;
     }
-    if (self->gameData->btnDownState & PB_DOWN)
+    if (self->gameData->btnDownState & PB_DOWN && mData->selectionIdx < 2)
     {
         mData->selectionIdx++;
         mData->selectionIdx = mData->selectionIdx > 1 ? 0 : mData->selectionIdx;
     }
-    if (self->gameData->btnDownState & PB_A)
+    if (self->gameData->btnDownState & PB_A && mData->selectionIdx < 2)
     {
         if (mData->selectionIdx == 0)
         {
@@ -1848,9 +1848,14 @@ void bb_updateMenu(bb_entity_t* self)
         }
         else if (mData->selectionIdx == 1)
         {
-            // exit the game
-            self->gameData->exit = true;
+            // quik play
+            mData->selectionIdx = 2;
+            bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_QUICKPLAY_CONFIRM, 1,
+                            self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, true);
         }
+
+        self->gameData->btnState = 0;
+        self->gameData->btnDownState = 0;
     }
 
     mData->cursor->pos.y = self->pos.y - (209 << DECIMAL_BITS) + mData->selectionIdx * (22 << DECIMAL_BITS);
@@ -3007,6 +3012,121 @@ void bb_updateSpaceLaser(bb_entity_t* self)
     self->pos.y = (slData->highestGarbage << 9) - self->halfHeight;
 }
 
+void bb_updateQuickplay(bb_entity_t* self)
+{
+    bb_menuData_t* mData;
+    for(int eIdx = 0; eIdx < MAX_ENTITIES; eIdx++)
+    {
+        bb_entity_t* menu = &self->gameData->entityManager.entities[eIdx];
+        if (menu != NULL && menu->spriteIndex == BB_MENU && menu->updateFunction != NULL)
+        {
+            mData = (bb_menuData_t*)menu->data;
+            break;
+        }
+    }
+
+    if (self->gameData->btnDownState & PB_LEFT && mData->selectionIdx >= 2)
+    {
+        mData->selectionIdx--;
+        mData->selectionIdx = mData->selectionIdx < 2 ? 3 : mData->selectionIdx;
+    }
+    if (self->gameData->btnDownState & PB_RIGHT && mData->selectionIdx >= 2)
+    {
+        mData->selectionIdx++;
+        mData->selectionIdx = mData->selectionIdx > 3 ? 2 : mData->selectionIdx;
+    }
+    if (self->gameData->btnDownState & PB_A && mData->selectionIdx >= 2)
+    {
+        if (mData->selectionIdx == 2)
+        {
+            //no
+            //set selectionIdx to 1
+            mData->selectionIdx = 1;
+        }
+        else if(mData->selectionIdx == 3)
+        {
+            //yes
+            //quick start the game
+            self->gameData->tutorialFlags = 255;
+
+            uint32_t deathDumpsterX = (TILE_FIELD_WIDTH / 2) * TILE_SIZE + HALF_TILE - 1;
+            uint32_t deathDumpsterY = -2173;
+
+            // create 3 rockets
+            for (int rocketIdx = 0; rocketIdx < 3; rocketIdx++)
+            {
+                self->gameData->entityManager.boosterEntities[rocketIdx]
+                    = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ROCKET_ANIM, 16,
+                                    deathDumpsterX - 96 + 96 * rocketIdx, deathDumpsterY, false, true);
+
+                // bigbug->gameData.entityManager.boosterEntities[rocketIdx]->updateFunction = NULL;
+
+                if (rocketIdx >= 1)
+                {
+                    bb_rocketData_t* rData = (bb_rocketData_t*)self->gameData->entityManager.boosterEntities[rocketIdx]->data;
+
+                    rData->flame = bb_createEntity(
+                        &(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
+                        self->gameData->entityManager.boosterEntities[rocketIdx]->pos.x >> DECIMAL_BITS,
+                        self->gameData->entityManager.boosterEntities[rocketIdx]->pos.y >> DECIMAL_BITS, true, false);
+
+                    rData->flame->updateFunction = &bb_updateFlame;
+                }
+                else // rocketIdx == 0
+                {
+                    self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[rocketIdx];
+                    ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->numDonuts = 20;
+                    self->gameData->entityManager.activeBooster->currentAnimationFrame               = 40;
+                    self->gameData->entityManager.activeBooster->pos.y                               = 50;
+                    self->gameData->entityManager.activeBooster->updateFunction                      = bb_updateHeavyFalling;
+                    bb_entity_t* arm                                                                  = bb_createEntity(
+                        &self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
+                        self->gameData->entityManager.activeBooster->pos.x >> DECIMAL_BITS,
+                        (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, true, false);
+                    ((bb_attachmentArmData_t*)arm->data)->rocket = self->gameData->entityManager.activeBooster;
+
+                    bb_entity_t* grabbyHand = bb_createEntity(
+                        &self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 6,
+                        self->gameData->entityManager.activeBooster->pos.x >> DECIMAL_BITS,
+                        (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 53, true, false);
+                    ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self->gameData->entityManager.activeBooster;
+                }
+            }
+
+            // create the death dumpster
+            self->gameData->entityManager.deathDumpster
+                = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1, deathDumpsterX,
+                                deathDumpsterY, false, true);
+
+            // create garbotnik's UI
+            bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GARBOTNIK_UI, 1, 0, 0, false, true);
+
+            self->gameData->entityManager.viewEntity
+                = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
+                                self->gameData->entityManager.activeBooster->pos.x >> DECIMAL_BITS,
+                                (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 90, true, false);
+
+            bb_loadWsgs(&self->gameData->tilemap);
+
+            self->gameData->entityManager.playerEntity = self->gameData->entityManager.viewEntity;
+
+            int8_t oldBoosterYs[3] = {-1, -1, -1};
+            bb_generateWorld(&(self->gameData->tilemap), oldBoosterYs);
+
+            // Set the mode to game mode
+            self->gameData->screen = BIGBUG_GAME;
+
+            bb_setupMidi();
+            unloadMidiFile(&self->gameData->bgm);
+            loadMidiFile("BigBugExploration.mid", &self->gameData->bgm, true);
+            globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
+            self->gameData->camera.camera.pos = (vec_t){0, 0};
+        }
+        // destroy self
+        bb_destroyEntity(self, false, false);
+    }
+}
+
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
     if (GARBOTNIK_DATA != self->dataType)
@@ -4092,6 +4212,34 @@ void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
     }
     drawWsg(&entityManager->sprites[self->spriteIndex].frames[brightness + self->currentAnimationFrame * 6], xOff, yOff,
             false, true, 0);
+}
+
+void bb_drawQuickplay(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
+{
+    bb_menuData_t* mData;
+    for(int eIdx = 0; eIdx < MAX_ENTITIES; eIdx++)
+    {
+        bb_entity_t* menu = &entityManager->entities[eIdx];
+        if (menu != NULL && menu->spriteIndex == BB_MENU && menu->updateFunction != NULL)
+        {
+            mData = (bb_menuData_t*)menu->data;
+            break;
+        }
+    }
+
+    drawRectFilled(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    int16_t xOffBecauseTheApiIsDumb = 20;
+    int16_t yOffBecauseTheApiIsDumb = 5;
+
+    drawTextWordWrapCentered(&self->gameData->font, c444, "Quick Play mode skips the intro sequence and all tutorial dialogue. It might also harvest the soul of one volunteer developer. Are you sure you want to continue?", &xOffBecauseTheApiIsDumb, &yOffBecauseTheApiIsDumb, TFT_WIDTH - 5, TFT_HEIGHT - 5);
+    drawRect((TFT_WIDTH >> 2) - 40, TFT_HEIGHT >> 1, (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 40, mData->selectionIdx == 2 ? c550 : c444);
+    xOffBecauseTheApiIsDumb = (TFT_WIDTH >> 2) - 40;
+    yOffBecauseTheApiIsDumb = (TFT_HEIGHT >> 1) + 15;
+    drawTextWordWrapCentered(&self->gameData->font, mData->selectionIdx == 2 ? c550 : c444, "NO", &xOffBecauseTheApiIsDumb, &yOffBecauseTheApiIsDumb, (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 60);
+    drawRect((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - 40, TFT_HEIGHT >> 1, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 40, mData->selectionIdx == 3 ? c550 : c444);
+    xOffBecauseTheApiIsDumb = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - 40;
+    yOffBecauseTheApiIsDumb = (TFT_HEIGHT >> 1) + 15;
+    drawTextWordWrapCentered(&self->gameData->font, mData->selectionIdx == 3 ? c550 : c444, "YES", &xOffBecauseTheApiIsDumb, &yOffBecauseTheApiIsDumb, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 60);
 }
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
