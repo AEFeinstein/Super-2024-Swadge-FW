@@ -1199,7 +1199,6 @@ static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, t
     memcpy(&lastMove, move, sizeof(move_t));
     int moveNum = 0;
 
-    
     board[lastMove.subX][lastMove.subY].game[lastMove.cellX][lastMove.cellY] = player;
 
     // Check if that wins the cell and update it accordingly
