@@ -69,6 +69,43 @@ the `install.sh` script:
 | F12    | Screeshot      | Saves a screenshot to a PNG file                           |
 
 
+## Joystick Input
+
+The Windows and Linux versions of the emulator support Joystick input. If a Joystick device is available,
+the emulator will automatically connect to it on startup. The `--joystick` command-line argument can be
+used to connect to a specific device, or the `joystick` console command can be used to disconnect from
+the current joystick device, reconnect to the previous joystick device, or to connect to a different
+joystick device at any time.
+
+The joystick input uses the same configuration as the Swadge's Computer Gamepad mode. Other joysticks
+may require configuration.
+
+### Joystick Mapping
+
+Axis Mapping
+
+| Axis           | Description                           |
+|----------------|---------------------------------------|
+| 0 (X axis)     | The horizontal axis of the touchpad   |
+| 1 (Y axis)     | The vertical axis of the touchpad     |
+| 2 (Z axis)     | Not used                              |
+| 3 (X rotation) | The Y component of the accelerometer  |
+| 4 (Y rotation) | The X component of the accelerometer  |
+| 5 (Z rotation) | The Z component of the accelerometer  |
+| 6 (POV Hat X)  | The horizontal component of the D-pad |
+| 7 (POV Hat Y)  | The vertical component of the D-pad   |
+
+Button Mapping
+
+| Button | Description          |
+|--------|----------------------|
+| 1      | A Button             |
+| 2      | B Button             |
+| 3-10   | Not used             |
+| 11     | Menu Button (Select) |
+| 12     | Pause Button (Start) |
+| 13-32  | Not used             |
+
 ## Command-line Arguments
 
 The emulator supports a variety of command-line arguments that can enable extra functionality or
@@ -89,6 +126,8 @@ Emulates a swadge
      --fuzz-motion[=y|n]     Set whether motion inputs are fuzzed
      --headless              Runs the emulator without a window.
      --hide-leds             Don't draw simulated LEDs next to the display
+ -j, --joystick=JOYDEV       Sets the joystick device to use.
+     --js-preset=PRESET      Sets the joystick config preset to use. PRESET can be swadge or switch
  -k, --keymap=LAYOUT         Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak
  -l, --lock                  Lock the emulator in the start mode
      --midi-file=FILE        Open and immediately play a MIDI file
@@ -246,6 +285,14 @@ from one system will not necessarily produce the same output if it is used on a 
 `--keymap`: Specify an alternative keyboard layout to use for mapping emulator inputs. Possible options
 are `azerty`, `dvorak`, or `colemak`.
 
+`--joystick`: Specifies the Joystick device to connect to. The value passed to this argument will depend on
+the platform; on Windows the value should be a number from 0 to 15, with 0 being the first connected joystick
+and so on; on Linux the value should be the path to a Joystick device, such as `/dev/input/js0`. Joystick
+input is not yet supported on Mac.
+
+`--js-preset`: Specifies the Joystick configuration preset to use. Possible values are `swadge` (the default),
+and `switch`.
+
 ## Console Commands
 
 The emulator supports a small number of commands in the console, which can be opened by pressing `F4` or
@@ -261,15 +308,22 @@ type `help <command>` into the console.
 | `gif [filename]`         | Starts recording a GIF to `filename` (or a timestamp-based file name), or stops the current recording |
 | `replay <filename>`      | Starts playing back inputs from `filename`. Stops any current playing back or recording of inputs.    |
 | `record [filename]`      | Starts recording inputs to `filename`, or to a timestamp-based file name if no filename is given      |
-| `fuzz [on|off]`          | Toggles fuzzing on or off                                                                             |
-| `fuzz buttons [on|off]`  | Toggles fuzzing of button presses on or off                                                           |
+| <code>fuzz [on\|off]</code> | Toggles fuzzing on or off                                                                          |
+| <code>fuzz buttons [on\|off]</code> | Toggles fuzzing of button presses on or off                                                |
 | `fuzz buttons mask <...>`| Sets the buttons that will be used when fuzzing, separated by spaces, e.g. `fuzz buttons mask up down left right` |
 | `fuzz buttons mask`      | Prints the buttons that will be used when fuzzing                                                     |
-| `fuzz touch [on|off]`    | Toggles fuzzing of touchpad inputs on or off                                                          |
-| `fuzz motion [on|off]`   | Toggles fuzzing of accelerometer motion on or off                                                     |
-| `fuzz time [on|off]`     | Toggles fuzzing of frame timings on or off                                                            |
-| `touchpad [on|off]`      | Toggles the emulator's virtual touchpad on or off                                                     |
-| `leds [on|off]`          | Toggles the emulator's virtual LEDs on or off                                                         |
+| <code>fuzz touch [on\|off]</code> | Toggles fuzzing of touchpad inputs on or off                                                 |
+| <code>fuzz motion [on\|off]</code>  | Toggles fuzzing of accelerometer motion on or off                                          |
+| <code>fuzz time [on\|off]</code>    | Toggles fuzzing of frame timings on or off                                                 |
+| <code>joystick [on\|off]</code>     | Toggles the joystick on or off                                                             |
+| `joystick device <device-name>` | Connects to a specific joystick device                                                         |
+| `joystick map button <btn-num> <btn-name> [<btn-num> <btn-name> ...]` | Maps joystick button numbers to emulator buttons         |
+| `joystick map touchpad <x-axis> <y-axis>` | Maps two joystick axes onto the emulator touchpad                                    |
+| `joystick map motion <x-axis> <y-axis> <z-axis>` | Maps three joystick axes onto the emulator accelerometer input                |
+| `joystick map dpad <x-axis> <y-axis>` | Maps two joystick axes onto the D-pad.                                                   |
+| `joystick deadzone touchpad <number>` | Sets the deadzone for the touchpad axes. Valid range for number is 0-32767, inclusive.   |
+| <code>touchpad [on\|off]</code>     | Toggles the emulator's virtual touchpad on or off                                          |
+| <code>leds [on\|off]</code>         | Toggles the emulator's virtual LEDs on or off                                              |
 
 ## Troubleshooting
 
