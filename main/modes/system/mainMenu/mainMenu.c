@@ -29,6 +29,7 @@
 #include "tunernome.h"
 #include "keebTest.h"
 #include "mode_2048.h"
+#include "colorTest.h"
 
 #include "settingsManager.h"
 
@@ -444,6 +445,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&keebTestMode);
         }
+        else if (label == colorTestMode.modeName)
+        {
+            switchToSwadgeMode(&colorTestMode);
+        }
         else if (label == tunernomeMode.modeName)
         {
             switchToSwadgeMode(&tunernomeMode);
@@ -536,6 +541,7 @@ void addSecretsMenu(void)
 
     addSingleItemToMenu(mainMenu->menu, keebTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, colorTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
 

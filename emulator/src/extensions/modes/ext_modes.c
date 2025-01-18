@@ -39,6 +39,7 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "ultimateTTT.h"
+#include "colorTest.h"
 
 //==============================================================================
 // Defines
@@ -88,6 +89,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &touchTestMode,
     &tttMode,
     &tunernomeMode,
+    &colorTestMode,
 };
 // clang-format on
 
