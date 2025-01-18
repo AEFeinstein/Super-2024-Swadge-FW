@@ -8,6 +8,7 @@
 #include "emu_utils.h"
 #include "ext_replay.h"
 #include "ext_fuzzer.h"
+#include "ext_gamepad.h"
 #include "hdw-nvs_emu.h"
 #include "emu_cnfs.h"
 
@@ -21,11 +22,8 @@ static int fuzzCommandCb(const char** args, int argCount, char* out);
 static int touchCommandCb(const char** args, int argCount, char* out);
 static int ledsCommandCb(const char** args, int argCount, char* out);
 static int injectCommandCb(const char** args, int argCount, char* out);
+static int joystickCommandCb(const char** args, int argCount, char* out);
 static int helpCommandCb(const char** args, int argCount, char* out);
-
-static const char* buttonNames[] = {
-    "Up", "Down", "Left", "Right", "A", "B", "Start", "Select",
-};
 
 // command, usage, description
 // just a simple way to document sub-commands, etc.
@@ -40,12 +38,22 @@ static const char* commandDocs[][3] = {
      "begin recording inputs into replay file [filename], or an auto-generated file name if not specified"},
     {"fuzz", "fuzz [on|off]", "toggles the fuzzer"},
     {"fuzz buttons", "fuzz buttons [on|off]", "toggles fuzzing of button inputs"},
-    {"fuzz buttons mask", "fuzz buttons mask [<button>[ <button>  ...]]",
+    {"fuzz buttons mask", "fuzz buttons mask [<button> [<button>  ...]]",
      "sets or prints which buttons will be fuzzed\n    Valid options: Up, Down, Left, Right, A, B, Start, or Select"},
     {"fuzz touch", "fuzz touch [on|off]", "toggles fuzzing of touchpad inputs"},
     {"fuzz motion", "fuzz motion [on|off]", "toggles fuzzing of accelerometer motion inputs"},
     {"fuzz time", "fuzz time [on|off]", "toggles fuzzing of frame times"},
     {"touchpad", "touchpad [on|off]", "toggles the virtual touchpad"},
+    {"joystick", "joystick [on|off]", "toggles the joystick"},
+    {"joystick device", "joystick device <devname>", "connects to a specific joystick device"},
+    {"joystick map button", "joystick map button <btn-num> <btn-name> [<btn-num> <btn-name> ...]",
+     "maps one or more joystick button numbers to button names"},
+    {"joystick map touchpad", "joystick map touchpad <x-axis> <y-axis>", "maps two joystick axes to the touchpad"},
+    {"joystick map motion", "joystick map motion <x-axis> <y-axis> <z-axis>",
+     "maps three joystick axes to the accelerometer axes"},
+    {"joystick map dpad", "joystick map dpad <x-axis> <y-axis>", "maps two joystick axes to the D-pad buttons"},
+    {"joystick deadzone touchpad", "joystick deadzone touchpad <0-32767>",
+     "sets the deadzone for the touchpad joystick axes"},
     {"inject", "inject <nvs|asset> <...>", "injects data into NVS or assets"},
     {"inject nvs", "inject nvs [namespace] <key> <int|str|file> <value>",
      "injects data into an NVS key. Value can be either an integer, a string, or a file path"},
@@ -59,6 +67,7 @@ static const consoleCommand_t consoleCommands[] = {
     {.name = "record", .cb = recordCommandCb},         {.name = "fuzz", .cb = fuzzCommandCb},
     {.name = "touchpad", .cb = touchCommandCb},        {.name = "leds", .cb = ledsCommandCb},
     {.name = "inject", .cb = injectCommandCb},         {.name = "help", .cb = helpCommandCb},
+    {.name = "joystick", .cb = joystickCommandCb},
 };
 
 const consoleCommand_t* getConsoleCommands(void)
@@ -144,7 +153,7 @@ static int replayCommandCb(const char** args, int argCount, char* out)
 {
     if (argCount > 0)
     {
-        startPlayback(args[1]);
+        startPlayback(args[0]);
         return sprintf(out, "Playback started\n");
     }
     else
@@ -239,17 +248,8 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
                         buttonBit_t mask = 0;
                         for (int argNum = 2; argNum < argCount; argNum++)
                         {
-                            for (int i = 0; i < 8; i++)
-                            {
-                                buttonBit_t btn        = (buttonBit_t)(1 << i);
-                                const char* buttonName = buttonNames[i];
-
-                                if (!strcasecmp(buttonName, args[argNum]))
-                                {
-                                    mask |= btn;
-                                    break;
-                                }
-                            }
+                            // parseButtonName() returns 0 for invalid values which is fine here
+                            mask |= parseButtonName(args[argNum]);
                         }
                         emuSetFuzzButtonsMask(mask);
                     }
@@ -269,7 +269,7 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
 
                         if (mask & btn)
                         {
-                            written += sprintf(out + written, "- %s\n", buttonNames[i]);
+                            written += sprintf(out + written, "- %s\n", getButtonName(btn));
                         }
                     }
 
@@ -617,6 +617,265 @@ static int injectCommandCb(const char** args, int argCount, char* out)
     else
     {
         return 0;
+    }
+}
+
+static char joyDevName[128];
+static int joystickCommandCb(const char** args, int argCount, char* out)
+{
+    if (argCount > 0)
+    {
+        if (!strncmp("on", args[0], strlen(args[0])))
+        {
+            disableExtension("gamepad");
+            enableExtension("gamepad");
+
+            if (emuGamepadConnected())
+            {
+                return snprintf(out, 1024, "Connected to joystick!\n");
+            }
+            else
+            {
+                return snprintf(out, 1024, "Failed to connect to joystick\n");
+            }
+        }
+        else if (!strncmp("off", args[0], strlen(args[0])))
+        {
+            disableExtension("gamepad");
+
+            return snprintf(out, 1024, "Joystick disconnected\n");
+        }
+        else if (!strncmp("device", args[0], strlen(args[0])))
+        {
+            const char* deviceName  = NULL;
+            const char* originalArg = emulatorArgs.joystick;
+            if (argCount > 1)
+            {
+                deviceName = args[1];
+            }
+
+            // Enable and connect to named device
+            disableExtension("gamepad");
+
+            if (deviceName == NULL)
+            {
+                strncpy(joyDevName, deviceName, sizeof(joyDevName));
+                emulatorArgs.joystick = joyDevName;
+            }
+            else
+            {
+                emulatorArgs.joystick = joyDevName;
+            }
+
+            enableExtension("gamepad");
+
+            if (emuGamepadConnected())
+            {
+                return snprintf(out, 1024, "Connected to joystick %s!\n", emulatorArgs.joystick);
+            }
+            else
+            {
+                emulatorArgs.joystick = originalArg;
+                return snprintf(out, 1024, "Failed to connect to joystick %s\n", joyDevName);
+            }
+        }
+        else if (!strncmp("map", args[0], strlen(args[0])))
+        {
+            if (argCount > 1)
+            {
+                if (!strncmp("button", args[1], strlen(args[1])))
+                {
+                    // joystick map button <button-idx> <button-name>
+                    if (0 != (argCount % 2))
+                    {
+                        return snprintf(out, 1024,
+                                        "ERR: Arguments must be in pairs of button number and button name\n");
+                    }
+
+                    // Get the button numbers and names in pairs
+                    for (int argNum = 2; argNum < argCount; argNum += 2)
+                    {
+                        const char* buttonNumStr = args[argNum];
+                        const char* buttonName   = args[argNum + 1];
+                        char* end                = NULL;
+                        int buttonNum            = strtol(buttonNumStr, &end, 10);
+                        if ((buttonNum == 0 && end == buttonNumStr) || buttonNum < 0 || buttonNum > 31)
+                        {
+                            return snprintf(out, 1024, "ERR: Invalid button number '%s'\n", buttonNumStr);
+                        }
+
+                        buttonBit_t button = parseButtonName(buttonName);
+                        emuSetGamepadButtonMapping(buttonNum, button);
+                    }
+                }
+                else if (!strncmp("touchpad", args[1], strlen(args[1])))
+                {
+                    // joystick map touchpad <x-axis> <y-axis>
+                    if (argCount < 4)
+                    {
+                        return snprintf(out, 1024, "ERR: x-axis and y-axis are required");
+                    }
+
+                    char* end = NULL;
+                    int xAxis = strtol(args[2], &end, 10);
+                    if (xAxis == 0 && end == args[2])
+                    {
+                        // negative axis to map nothing
+                        xAxis = -1;
+                    }
+
+                    int yAxis = strtol(args[3], &end, 10);
+                    if (yAxis == 0 && end == args[3])
+                    {
+                        // negative axis to map nothing
+                        yAxis = -1;
+                    }
+
+                    emuSetTouchpadAxisMapping(xAxis, yAxis);
+                }
+                else if (!strncmp("motion", args[1], strlen(args[1])))
+                {
+                    // joystick map motion <x-axis> <y-axis> <z-axis>
+                    if (argCount < 5)
+                    {
+                        return snprintf(out, 1024, "ERR: x-axis, y-axis, and z-axis are required");
+                    }
+
+                    char* end = NULL;
+                    int xAxis = strtol(args[2], &end, 10);
+                    if (xAxis == 0 && end == args[2])
+                    {
+                        // negative axis to map nothing
+                        xAxis = -1;
+                    }
+
+                    int yAxis = strtol(args[3], &end, 10);
+                    if (yAxis == 0 && end == args[3])
+                    {
+                        // negative axis to map nothing
+                        yAxis = -1;
+                    }
+
+                    int zAxis = strtol(args[4], &end, 10);
+                    if (zAxis == 0 && end == args[4])
+                    {
+                        // negative axis to map nothing
+                        zAxis = -1;
+                    }
+
+                    emuSetAccelAxisMapping(xAxis, yAxis, zAxis);
+                }
+                else if (!strncmp("dpad", args[1], strlen(args[1])))
+                {
+                    // joystick map dpad <x-axis> <y-axis>
+                    if (argCount < 4)
+                    {
+                        return snprintf(out, 1024, "ERR: x-axis and y-axis are required");
+                    }
+
+                    char* end = NULL;
+                    int xAxis = strtol(args[2], &end, 10);
+                    if (xAxis == 0 && end == args[2])
+                    {
+                        // negative axis to map nothing
+                        xAxis = -1;
+                    }
+
+                    int yAxis = strtol(args[3], &end, 10);
+                    if (yAxis == 0 && end == args[3])
+                    {
+                        // negative axis to map nothing
+                        yAxis = -1;
+                    }
+
+                    emuSetDpadAxisMapping(xAxis, yAxis);
+                }
+            }
+
+            // Print mapping
+            char* cur = out;
+
+            cur += snprintf(cur, 1024 - (cur - out), "Joystick Mapping");
+
+            return cur - out;
+        }
+        else if (!strncmp("deadzone", args[0], strlen(args[0])))
+        {
+            if (argCount > 1)
+            {
+                if (!strncmp("touchpad", args[1], strlen(args[1])))
+                {
+                    int deadzone = emuGetTouchpadDeadzone();
+                    if (argCount > 2)
+                    {
+                        char* end = NULL;
+                        deadzone  = strtol(args[2], &end, 10);
+                        if (deadzone == 0 && end == args[2])
+                        {
+                            deadzone = 0;
+                        }
+
+                        emuSetTouchpadDeadzone(deadzone);
+                    }
+
+                    return snprintf(out, 1024, "Touchpad deadzone: %d\n", deadzone);
+                }
+                else
+                {
+                    return snprintf(out, 1024, "Unrecognized command 'joystick %s %s'\n", args[0], args[1]);
+                }
+            }
+            else
+            {
+                return snprintf(out, 1024, "Touchpad deadzone: %d\n", emuGetTouchpadDeadzone());
+            }
+        }
+        else if (!strncmp("preset", args[0], strlen(args[0])))
+        {
+            if (argCount > 1)
+            {
+                if (emuSetGamepadPreset(args[1]))
+                {
+                    return snprintf(out, 1024, "Joystick preset %s loaded\n", args[1]);
+                }
+                else
+                {
+                    return snprintf(out, 1024, "ERR: No joystick preset '%s' found\n", args[1]);
+                }
+            }
+            else
+            {
+                return snprintf(out, 1024, "Preset name is required\n");
+            }
+        }
+        else
+        {
+            return snprintf(out, 1024, "Unrecognized command 'joystick %s'\n", args[0]);
+        }
+    }
+    else
+    {
+        // Toggle, don't touch the joystick name
+        if (emuGamepadConnected())
+        {
+            disableExtension("gamepad");
+
+            return snprintf(out, 1024, "Joystick disconnected\n");
+        }
+        else
+        {
+            disableExtension("gamepad");
+            enableExtension("gamepad");
+
+            if (emuGamepadConnected())
+            {
+                return snprintf(out, 1024, "Connected to joystick!\n");
+            }
+            else
+            {
+                return snprintf(out, 1024, "Failed to connect to joystick\n");
+            }
+        }
     }
 }
 
