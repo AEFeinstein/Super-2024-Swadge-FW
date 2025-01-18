@@ -1201,53 +1201,49 @@ static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, t
     memcpy(&lastMove, move, sizeof(move_t));
     int moveNum = 0;
 
+    
+    board[lastMove.subX][lastMove.subY].game[lastMove.cellX][lastMove.cellY] = player;
+
+    // Check if that wins the cell and update it accordingly
+    tttPlayer_t subgameWinner = tttCheckWinner(board[lastMove.subX][lastMove.subY].game);
+    if (subgameWinner != TTT_NONE)
     {
-        board[lastMove.subX][lastMove.subY].game[lastMove.cellX][lastMove.cellY] = player;
+        board[lastMove.subX][lastMove.subY].winner = subgameWinner;
+    }
 
-        // Check if that wins the cell and update it accordingly
-        tttPlayer_t subgameWinner = tttCheckWinner(board[lastMove.subX][lastMove.subY].game);
-        if (subgameWinner != TTT_NONE)
+    // Get the overall board to check the game's status
+    tttPlayer_t bigBoard[3][3];
+    for (int gx = 0; gx < 3; gx++)
+    {
+        for (int gy = 0; gy < 3; gy++)
         {
-            board[lastMove.subX][lastMove.subY].winner = subgameWinner;
+            bigBoard[gx][gy] = board[gx][gy].winner;
         }
+    }
 
-        // Get the overall board to check the game's status
-        tttPlayer_t bigBoard[3][3];
-        for (int gx = 0; gx < 3; gx++)
-        {
-            for (int gy = 0; gy < 3; gy++)
-            {
-                bigBoard[gx][gy] = board[gx][gy].winner;
-            }
-        }
-
-        tttPlayer_t winner = tttCheckWinner(bigBoard);
-        if (winner == player)
-        {
-            result->winsGame   = true;
-            result->losesGame  = false;
-            result->movesToEnd = moveNum;
-            memset(&result->bestOpponentMove, 0, sizeof(move_t));
-            return true;
-        }
-        else if (winner == opponent)
-        {
-            result->winsGame   = false;
-            result->losesGame  = true;
-            result->movesToEnd = moveNum;
-            memcpy(&result->bestOpponentMove, &lastMove, sizeof(move_t));
-            return true;
-        }
-        else
-        {
-            // TTT_NONE
-            result->winsGame  = false;
-            result->losesGame = false;
-            return true;
-        }
-
-        turn = (turn == TTT_P1) ? TTT_P2 : TTT_P1;
-        moveNum++;
+    tttPlayer_t winner = tttCheckWinner(bigBoard);
+    if (winner == player)
+    {
+        result->winsGame   = true;
+        result->losesGame  = false;
+        result->movesToEnd = moveNum;
+        memset(&result->bestOpponentMove, 0, sizeof(move_t));
+        return true;
+    }
+    else if (winner == opponent)
+    {
+        result->winsGame   = false;
+        result->losesGame  = true;
+        result->movesToEnd = moveNum;
+        memcpy(&result->bestOpponentMove, &lastMove, sizeof(move_t));
+        return true;
+    }
+    else
+    {
+        // TTT_NONE
+        result->winsGame  = false;
+        result->losesGame = false;
+        return true;
     }
 
     return false;
