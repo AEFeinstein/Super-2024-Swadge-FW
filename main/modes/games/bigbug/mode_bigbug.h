@@ -14,7 +14,6 @@
 #ifndef _MODE_BIGBUG_H_
     #define _MODE_BIGBUG_H_
 
-void bb_quickPlay(void);
 void bb_setupMidi(void);
 void bb_FreeTilemapData(void);
 

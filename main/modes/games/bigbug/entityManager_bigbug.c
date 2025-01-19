@@ -863,30 +863,32 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         bb_entity_t* ovo = bb_createEntity(&entity->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                                            entity->gameData->camera.camera.pos.x, entity->gameData->camera.camera.pos.y,
                                            false, true);
+        if(ovo != NULL)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(11, "Ovo");
 
-        bb_dialogueData_t* dData = bb_createDialogueData(11, "Ovo");
+            bb_setCharacterLine(dData, 0, "Ovo", "Wow, look at that juicy bug!");
+            bb_setCharacterLine(dData, 1, "Ovo", "Ah, who am I kidding?");
+            bb_setCharacterLine(dData, 2, "Ovo", "My time in this landfill is limited.");
+            bb_setCharacterLine(dData, 3, "Ovo",
+                                "So I'm going to break the fourth wall and tell you how to play the freaking game!");
+            bb_setCharacterLine(
+                dData, 4, "Ovo",
+                "There are a bunch of ways to incapacitate that bug. But let's learn how to use harpoons first.");
+            bb_setCharacterLine(dData, 5, "Ovo", "Hold your right thumb on the  C-Touchpad to aim.");
+            bb_setCharacterLine(dData, 6, "Ovo", "Hey! Wait until I'm done talking, you doofus.");
+            bb_setCharacterLine(dData, 7, "Ovo",
+                                "If your touch vector is outside of the purple circle that appears on-screen, harpoons "
+                                "will fire steadily.");
+            bb_setCharacterLine(dData, 8, "Ovo", "Three hits will flip the bug upside down!");
+            bb_setCharacterLine(dData, 9, "Ovo",
+                                "There's a nifty detail where harpoons with upward velocity pass right through terrain.");
+            bb_setCharacterLine(dData, 10, "Ovo", "Now, let's get that bug!");
 
-        bb_setCharacterLine(dData, 0, "Ovo", "Wow, look at that juicy bug!");
-        bb_setCharacterLine(dData, 1, "Ovo", "Ah, who am I kidding?");
-        bb_setCharacterLine(dData, 2, "Ovo", "My time in this landfill is limited.");
-        bb_setCharacterLine(dData, 3, "Ovo",
-                            "So I'm going to break the fourth wall and tell you how to play the freaking game!");
-        bb_setCharacterLine(
-            dData, 4, "Ovo",
-            "There are a bunch of ways to incapacitate that bug. But let's learn how to use harpoons first.");
-        bb_setCharacterLine(dData, 5, "Ovo", "Hold your right thumb on the  C-Touchpad to aim.");
-        bb_setCharacterLine(dData, 6, "Ovo", "Hey! Wait until I'm done talking, you doofus.");
-        bb_setCharacterLine(dData, 7, "Ovo",
-                            "If your touch vector is outside of the purple circle that appears on-screen, harpoons "
-                            "will fire steadily.");
-        bb_setCharacterLine(dData, 8, "Ovo", "Three hits will flip the bug upside down!");
-        bb_setCharacterLine(dData, 9, "Ovo",
-                            "There's a nifty detail where harpoons with upward velocity pass right through terrain.");
-        bb_setCharacterLine(dData, 10, "Ovo", "Now, let's get that bug!");
-
-        dData->curString     = -1;
-        dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-        bb_setData(ovo, dData, DIALOGUE_DATA);
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
     }
     entity->spriteIndex = spriteIndex;
 
@@ -1144,16 +1146,20 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_menuData_t* mData = heap_caps_calloc(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
 
+            bb_ensureEntitySpace(entityManager, 1);
             mData->cursor = bb_createEntity(
                 entityManager, LOOPING_ANIMATION, false, HARPOON, 3, (entity->pos.x >> DECIMAL_BITS) - 22, 0, false,
                 false); // y position doesn't matter here. It will be handled in the update loop.
 
-            bb_clearCollisions(mData->cursor, false);
+            if(mData->cursor != NULL)
+            {
+                bb_clearCollisions(mData->cursor, false);
 
-            // This will make it draw pointed right
-            ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};
+                // This will make it draw pointed right
+                ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};
 
-            mData->cursor->updateFunction = NULL;
+                mData->cursor->updateFunction = NULL;
+            }
 
             bb_setData(entity, mData, MENU_DATA);
 
@@ -1399,20 +1405,23 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 entity->gameData->isPaused = true;
                 // set the tutorial flag
                 entity->gameData->tutorialFlags |= 0b10000;
-                bb_entity_t* ovo = bb_createEntity(&entity->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                bb_entity_t* ovo = bb_createEntity(entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                                                    entity->gameData->camera.camera.pos.x,
                                                    entity->gameData->camera.camera.pos.y, false, true);
 
-                bb_dialogueData_t* dData = bb_createDialogueData(3, "Ovo");
+                if(ovo != NULL)
+                {
+                    bb_dialogueData_t* dData = bb_createDialogueData(3, "Ovo");
 
-                bb_setCharacterLine(dData, 0, "Ovo", "I want to eat that donut RIGHT NOW!");
-                bb_setCharacterLine(dData, 1, "Ovo", "No. I need to focus. I'll tow it back to the booster.");
-                bb_setCharacterLine(dData, 2, "Ovo",
-                                    "When I eat it at home, it will be the be the impulse for my next great wile.");
+                    bb_setCharacterLine(dData, 0, "Ovo", "I want to eat that donut RIGHT NOW!");
+                    bb_setCharacterLine(dData, 1, "Ovo", "No. I need to focus. I'll tow it back to the booster.");
+                    bb_setCharacterLine(dData, 2, "Ovo",
+                                        "When I eat it at home, it will be the be the impulse for my next great wile.");
 
-                dData->curString     = -1;
-                dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-                bb_setData(ovo, dData, DIALOGUE_DATA);
+                    dData->curString     = -1;
+                    dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+                    bb_setData(ovo, dData, DIALOGUE_DATA);
+                }
             }
 
             entity->halfWidth  = 8 << DECIMAL_BITS;
@@ -1494,6 +1503,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_501KG:
         {
+            //just in time loading
+            bb_loadSprite("501kg", 1, 1, &entityManager->sprites[BB_501KG]);
             bb_setData(entity, heap_caps_calloc(1, sizeof(bb_501kgData_t), MALLOC_CAP_SPIRAM), BB_501KG_DATA);
             entity->updateFunction = &bb_update501kg;
             entity->drawFunction   = &bb_draw501kg;

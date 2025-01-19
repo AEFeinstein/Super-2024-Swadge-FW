@@ -185,7 +185,8 @@ void bb_updateRocketLanding(bb_entity_t* self)
     }
     if (self->pos.y > terrainY - 3000 && rData->flame == NULL)
     {
-        rData->flame = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 16,
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
+        rData->flame = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, FLAME_ANIM, 16,
                                        self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
     }
 
@@ -336,12 +337,16 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, true, true);
 
-        bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
-        bb_setCharacterLine(dData, 0, "Ovo", "Time to check the loadout!");
-        dData->curString     = -1;
-        dData->endDialogueCB = &bb_afterGarbotnikIntro;
-        bb_setData(ovo, dData, DIALOGUE_DATA);
+        if(ovo != NULL)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
+            bb_setCharacterLine(dData, 0, "Ovo", "Time to check the loadout!");
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterGarbotnikIntro;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
 
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         self->gameData->entityManager.viewEntity = bb_createEntity(
             &(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
             self->gameData->camera.camera.pos.x + 140, self->gameData->camera.camera.pos.y + 120, false, false);
@@ -364,6 +369,7 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
     {
         self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 0); // set the pause illusion bit.
         self->gameData->endDayChecks = self->gameData->endDayChecks | (1 << 1); // set the pango has spoken bit.
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, BB_PANGO_AND_FRIENDS, 3,
                         (self->pos.x >> DECIMAL_BITS) - 77, (self->pos.y >> DECIMAL_BITS) - 100, true, false);
     }
@@ -488,26 +494,38 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
             freeWsg(&self->gameData->entityManager.sprites[ROCKET_ANIM].frames[frame]);
         }
 
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         bb_entity_t* arm
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 33, false, false);
-        ((bb_rocketData_t*)self->data)->armAngle     = 2880; // That is 180 down position.
-        ((bb_attachmentArmData_t*)arm->data)->rocket = self;
+        if(arm != NULL)
+        {
+            ((bb_rocketData_t*)self->data)->armAngle     = 2880; // That is 180 down position.
+            ((bb_attachmentArmData_t*)arm->data)->rocket = self;
+        }
 
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         bb_entity_t* grabbyHand
             = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 6,
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, true, false);
-        ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
+        if(grabbyHand != NULL)
+        {
+            ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
+        }
 
         self->paused             = true;
         self->gameData->isPaused = true;
         // deploy garbotnik!!!
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         bb_entity_t* garbotnik
             = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
                               self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 50, true, false);
-        self->gameData->entityManager.viewEntity = garbotnik;
-        self->updateFunction                     = bb_updateHeavyFalling;
-        bb_startGarbotnikLandingTalk(garbotnik);
+        if(garbotnik != NULL)
+        {
+            self->gameData->entityManager.viewEntity = garbotnik;
+            self->updateFunction                     = bb_updateHeavyFalling;
+            bb_startGarbotnikLandingTalk(garbotnik);
+        }
     }
 }
 
@@ -541,9 +559,9 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     if (gData->r > gData->activationRadius && gData->fire && gData->activeWile != 255)
     {
         // Throw a wile!
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         bb_entity_t* wile = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, BB_WILE, 1,
                                             self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
-
         if (wile != NULL)
         {
             midiPlayer_t* sfx = soundGetPlayerSfx();
@@ -593,6 +611,7 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
     {
         gData->harpoonCooldown = self->gameData->GarbotnikStat_fireTime;
         // Create a harpoon
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         bb_entity_t* harpoon = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, HARPOON, 1,
                                                self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
         if (harpoon != NULL)
@@ -1150,29 +1169,31 @@ void bb_updateGarbotnikFlying(bb_entity_t* self)
             bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                                                self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y,
                                                false, true);
+            if(ovo != NULL)
+            {
+                bb_dialogueData_t* dData = bb_createDialogueData(9, "Ovo");
 
-            bb_dialogueData_t* dData = bb_createDialogueData(9, "Ovo");
+                bb_setCharacterLine(dData, 0, "Ovo", "Glitch my circuits!");
+                bb_setCharacterLine(dData, 1, "Ovo", "Low fuel!");
+                bb_setCharacterLine(dData, 2, "Ovo", "How could you do this to me?!");
+                bb_setCharacterLine(dData, 3, "Ovo", "Extraction is one of the hardest parts of the job.");
+                bb_setCharacterLine(
+                    dData, 4, "Ovo",
+                    "Plan ahead and clear out any threats around the booster for an uninterrupted extraction.");
+                bb_setCharacterLine(
+                    dData, 5, "Ovo",
+                    "Keep in mind that my headlamps stimulate the bug eggs. So my facing direction is important.");
+                bb_setCharacterLine(dData, 6, "Ovo",
+                                    "Remember that bugs don't usually dig. So use the garbage to your advantage.");
+                bb_setCharacterLine(dData, 7, "Ovo", "And bugs far off-screen will stop moving and shooting.");
+                bb_setCharacterLine(
+                    dData, 8, "Ovo",
+                    "Sometimes you just need to let them wander away to sit safely on the booster for 30 seconds.");
 
-            bb_setCharacterLine(dData, 0, "Ovo", "Glitch my circuits!");
-            bb_setCharacterLine(dData, 1, "Ovo", "Low fuel!");
-            bb_setCharacterLine(dData, 2, "Ovo", "How could you do this to me?!");
-            bb_setCharacterLine(dData, 3, "Ovo", "Extraction is one of the hardest parts of the job.");
-            bb_setCharacterLine(
-                dData, 4, "Ovo",
-                "Plan ahead and clear out any threats around the booster for an uninterrupted extraction.");
-            bb_setCharacterLine(
-                dData, 5, "Ovo",
-                "Keep in mind that my headlamps stimulate the bug eggs. So my facing direction is important.");
-            bb_setCharacterLine(dData, 6, "Ovo",
-                                "Remember that bugs don't usually dig. So use the garbage to your advantage.");
-            bb_setCharacterLine(dData, 7, "Ovo", "And bugs far off-screen will stop moving and shooting.");
-            bb_setCharacterLine(
-                dData, 8, "Ovo",
-                "Sometimes you just need to let them wander away to sit safely on the booster for 30 seconds.");
-
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
         }
         // exploration song length 5537
         // hurry up song length 4833
@@ -1375,10 +1396,10 @@ void bb_updateEggLeaves(bb_entity_t* self)
                                           // about before hatching.
 
             // create a bug
+            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             bb_entity_t* bug
                 = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13), 1,
                                   elData->egg->pos.x >> DECIMAL_BITS, elData->egg->pos.y >> DECIMAL_BITS, false, false);
-
             if (bug != NULL)
             {
                 // destroy the egg
@@ -1813,13 +1834,15 @@ void bb_updateMenu(bb_entity_t* self)
 
                 bb_rocketData_t* rData
                     = (bb_rocketData_t*)self->gameData->entityManager.boosterEntities[rocketIdx]->data;
-
+                bb_ensureEntitySpace(&self->gameData->entityManager, 1);
                 rData->flame = bb_createEntity(
                     &(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
                     self->gameData->entityManager.boosterEntities[rocketIdx]->pos.x >> DECIMAL_BITS,
                     self->gameData->entityManager.boosterEntities[rocketIdx]->pos.y >> DECIMAL_BITS, true, false);
-
-                rData->flame->updateFunction = &bb_updateFlame;
+                if(rData->flame != NULL)
+                {
+                    rData->flame->updateFunction = &bb_updateFlame;
+                }
             }
 
             // create garbotnik's UI
@@ -1831,13 +1854,16 @@ void bb_updateMenu(bb_entity_t* self)
             self->gameData->entityManager.deathDumpster
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DEATH_DUMPSTER, 1,
                                   self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) + 400, false, true);
-            tData->tracking = self->gameData->entityManager.deathDumpster;
-            tData->midPointSqDist
-                = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
-                                                  - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
-                                              (tData->tracking->pos.y >> DECIMAL_BITS)
-                                                  - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
-                                      2));
+            if(self->gameData->entityManager.deathDumpster != NULL)
+            {
+                tData->tracking = self->gameData->entityManager.deathDumpster;
+                tData->midPointSqDist
+                    = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
+                                                    - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
+                                                (tData->tracking->pos.y >> DECIMAL_BITS)
+                                                    - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
+                                        2));
+            }
 
             self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
 
@@ -1886,7 +1912,10 @@ void bb_updateMenu(bb_entity_t* self)
         bb_entity_t* treadmillDust = bb_createEntity(
             &self->gameData->entityManager, NO_ANIMATION, true, NO_SPRITE_STAR, 1, (self->pos.x >> DECIMAL_BITS) + 140,
             (self->pos.y >> DECIMAL_BITS) - 165 + bb_randomInt(-10, 10), false, false);
-        treadmillDust->updateFunction = &bb_updateMoveLeft;
+        if(treadmillDust != NULL)
+        {
+            treadmillDust->updateFunction = &bb_updateMoveLeft;
+        }
     }
 }
 
@@ -2084,12 +2113,15 @@ void bb_updateAttachmentArm(bb_entity_t* self)
         self->gameData->entityManager.viewEntity   = aData->rocket;
         aData->rocket->currentAnimationFrame       = 0;
 
+        bb_ensureEntitySpace(&self->gameData->entityManager, 1);
         rData->flame
             = bb_createEntity(&(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
                               aData->rocket->pos.x >> DECIMAL_BITS, aData->rocket->pos.y >> DECIMAL_BITS, true, false);
-
-        rData->flame->updateFunction  = &bb_updateFlame;
-        aData->rocket->updateFunction = &bb_updateRocketLiftoff;
+        if(rData->flame != NULL)
+        {
+            rData->flame->updateFunction  = &bb_updateFlame;
+            aData->rocket->updateFunction = &bb_updateRocketLiftoff;
+        }
 
         bb_destroyEntity(self, false, true);
     }
@@ -2254,21 +2286,23 @@ void bb_updateGrabbyHand(bb_entity_t* self)
             bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                                                self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y,
                                                false, true);
+            if(ovo!=NULL)
+            {
+                bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
 
-            bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
+                bb_setCharacterLine(dData, 0, "Ovo", "One down, nine more to go!");
+                bb_setCharacterLine(dData, 1, "Ovo", "For every 10 bugs collected, the booster will emit a mega ping!");
+                bb_setCharacterLine(dData, 2, "Ovo",
+                                    "When the mega ping is done, you can tune into some of the more important results.");
+                bb_setCharacterLine(dData, 3, "Ovo",
+                                    "Oh, you can pulse your own radar anytime with the start button. It takes some time to "
+                                    "interpret the pings.");
+                bb_setCharacterLine(dData, 4, "Ovo", "So keep exploring while you wait.");
 
-            bb_setCharacterLine(dData, 0, "Ovo", "One down, nine more to go!");
-            bb_setCharacterLine(dData, 1, "Ovo", "For every 10 bugs collected, the booster will emit a mega ping!");
-            bb_setCharacterLine(dData, 2, "Ovo",
-                                "When the mega ping is done, you can tune into some of the more important results.");
-            bb_setCharacterLine(dData, 3, "Ovo",
-                                "Oh, you can pulse your own radar anytime with the start button. It takes some time to "
-                                "interpret the pings.");
-            bb_setCharacterLine(dData, 4, "Ovo", "So keep exploring while you wait.");
-
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
         }
 
         rData->numBugs++;
@@ -2281,9 +2315,12 @@ void bb_updateGrabbyHand(bb_entity_t* self)
             bb_entity_t* radarPing
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
                                   self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, false);
-            bb_radarPingData_t* rpData = (bb_radarPingData_t*)radarPing->data;
-            rpData->color              = c541;
-            rpData->executeAfterPing   = &bb_upgradeRadar;
+            if(radarPing != NULL)
+            {
+                bb_radarPingData_t* rpData = (bb_radarPingData_t*)radarPing->data;
+                rpData->color              = c541;
+                rpData->executeAfterPing   = &bb_upgradeRadar;
+            }
         }
 
         self->currentAnimationFrame = 0;
@@ -2361,6 +2398,7 @@ void bb_updateCarOpen(bb_entity_t* self)
             case BB_DONUT:
             {
                 // spawn a donut as a reward for completing the fight
+                bb_ensureEntitySpace(&self->gameData->entityManager, 1);
                 bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
                                 (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
                 break;
@@ -2368,6 +2406,7 @@ void bb_updateCarOpen(bb_entity_t* self)
             default: // BB_SWADGE
             {
                 // spawn a swadge as a reward for completing the fight
+                bb_ensureEntitySpace(&self->gameData->entityManager, 1);
                 bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
                                 (self->pos.x >> DECIMAL_BITS) + 40, (self->pos.y >> DECIMAL_BITS) - 32, true, false);
                 break;
@@ -2450,125 +2489,127 @@ void bb_updatePangoAndFriends(bb_entity_t* self)
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
-
-        if (self->gameData->day == 0)
+        if(ovo != NULL)
         {
-            bb_dialogueData_t* dData = bb_createDialogueData(18, "Pixel");
+            if (self->gameData->day == 0)
+            {
+                bb_dialogueData_t* dData = bb_createDialogueData(18, "Pixel");
 
-            // longest possible string     " "
-            //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
-            //  A A A A A A A A A A A A A A A A A A A A A A A");
-            bb_setCharacterLine(dData, 0, "Pixel", "huff... huff... we actually caught up to it!");
-            bb_setCharacterLine(dData, 1, "Pixel",
-                                "ugfhh, my hair is starting to hurt. Can you make this quick, Pango?");
-            bb_setCharacterLine(dData, 2, "Pixel", "Hey, it looks like it's Garbotnik after all!");
-            bb_setCharacterLine(dData, 3, "Po", "That's a cool ride, bro.");
-            bb_setCharacterLine(dData, 4, "Ovo", "What could you idiots possibly want?");
-            bb_setCharacterLine(dData, 5, "Pango",
-                                "We were fascinated with your shiny metal tube falling from space this morning.");
-            bb_setCharacterLine(dData, 6, "Po", "Yeah, we were wondering if you could give us a ride.");
-            bb_setCharacterLine(dData, 7, "Ovo", "I'm not a taxi service.");
-            bb_setCharacterLine(dData, 8, "Pixel", "We'll pay you in swadges.");
-            bb_setCharacterLine(dData, 9, "Po", "What are you doing at the landfill, anyway?");
-            bb_setCharacterLine(dData, 10, "Ovo", "None of your business!");
-            bb_setCharacterLine(dData, 11, "Ovo", "Get off my freaking back!");
-            bb_setCharacterLine(dData, 12, "Ovo", "I have a dive summary to review.");
-            bb_setCharacterLine(dData, 13, "Pixel", "What's a dive summary?");
-            bb_setCharacterLine(dData, 14, "Ovo", "It tells me how many bugs I annihilated.");
-            bb_setCharacterLine(dData, 15, "Pixel", "Hmm... That sounds like he's up to no good.");
-            bb_setCharacterLine(dData, 16, "Ovo", "Bug off!");
-            bb_setCharacterLine(dData, 17, "Ovo", "Filthy peasants.");
+                // longest possible string     " "
+                //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
+                //  A A A A A A A A A A A A A A A A A A A A A A A");
+                bb_setCharacterLine(dData, 0, "Pixel", "huff... huff... we actually caught up to it!");
+                bb_setCharacterLine(dData, 1, "Pixel",
+                                    "ugfhh, my hair is starting to hurt. Can you make this quick, Pango?");
+                bb_setCharacterLine(dData, 2, "Pixel", "Hey, it looks like it's Garbotnik after all!");
+                bb_setCharacterLine(dData, 3, "Po", "That's a cool ride, bro.");
+                bb_setCharacterLine(dData, 4, "Ovo", "What could you idiots possibly want?");
+                bb_setCharacterLine(dData, 5, "Pango",
+                                    "We were fascinated with your shiny metal tube falling from space this morning.");
+                bb_setCharacterLine(dData, 6, "Po", "Yeah, we were wondering if you could give us a ride.");
+                bb_setCharacterLine(dData, 7, "Ovo", "I'm not a taxi service.");
+                bb_setCharacterLine(dData, 8, "Pixel", "We'll pay you in swadges.");
+                bb_setCharacterLine(dData, 9, "Po", "What are you doing at the landfill, anyway?");
+                bb_setCharacterLine(dData, 10, "Ovo", "None of your business!");
+                bb_setCharacterLine(dData, 11, "Ovo", "Get off my freaking back!");
+                bb_setCharacterLine(dData, 12, "Ovo", "I have a dive summary to review.");
+                bb_setCharacterLine(dData, 13, "Pixel", "What's a dive summary?");
+                bb_setCharacterLine(dData, 14, "Ovo", "It tells me how many bugs I annihilated.");
+                bb_setCharacterLine(dData, 15, "Pixel", "Hmm... That sounds like he's up to no good.");
+                bb_setCharacterLine(dData, 16, "Ovo", "Bug off!");
+                bb_setCharacterLine(dData, 17, "Ovo", "Filthy peasants.");
 
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterLiftoffInteraction;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
-        }
-        else if (self->gameData->day == 1)
-        {
-            bb_dialogueData_t* dData = bb_createDialogueData(10, "Pixel");
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterLiftoffInteraction;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
+            else if (self->gameData->day == 1)
+            {
+                bb_dialogueData_t* dData = bb_createDialogueData(10, "Pixel");
 
-            bb_setCharacterLine(dData, 0, "Pixel",
-                                "Hey, Mr. Garbotnik! I really love the color of your umbrella so much!");
-            bb_setCharacterLine(dData, 1, "Ovo", "Glitch my circuits!");
-            bb_setCharacterLine(dData, 2, "Ovo", "Now I have to find a new one!");
-            bb_setCharacterLine(dData, 3, "Po", "What's your problem, dude? Pink is a great color!");
-            bb_setCharacterLine(dData, 4, "Pango", "Nobody spends their Thursdays at the dump for leisure.");
-            bb_setCharacterLine(dData, 5, "Pango", "We're going to find out what you're up to here.");
-            bb_setCharacterLine(dData, 6, "Ovo", "Oh, bug off!");
-            bb_setCharacterLine(dData, 7, "Ovo", "Don't you have anything better to do?");
-            bb_setCharacterLine(dData, 8, "Ovo", "Lousy ingrates.");
-            bb_setCharacterLine(dData, 9, "Pixel", "That man doesn't know the meaning of friendship.");
+                bb_setCharacterLine(dData, 0, "Pixel",
+                                    "Hey, Mr. Garbotnik! I really love the color of your umbrella so much!");
+                bb_setCharacterLine(dData, 1, "Ovo", "Glitch my circuits!");
+                bb_setCharacterLine(dData, 2, "Ovo", "Now I have to find a new one!");
+                bb_setCharacterLine(dData, 3, "Po", "What's your problem, dude? Pink is a great color!");
+                bb_setCharacterLine(dData, 4, "Pango", "Nobody spends their Thursdays at the dump for leisure.");
+                bb_setCharacterLine(dData, 5, "Pango", "We're going to find out what you're up to here.");
+                bb_setCharacterLine(dData, 6, "Ovo", "Oh, bug off!");
+                bb_setCharacterLine(dData, 7, "Ovo", "Don't you have anything better to do?");
+                bb_setCharacterLine(dData, 8, "Ovo", "Lousy ingrates.");
+                bb_setCharacterLine(dData, 9, "Pixel", "That man doesn't know the meaning of friendship.");
 
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterLiftoffInteraction;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
-        }
-        else if (self->gameData->day == 2)
-        {
-            bb_dialogueData_t* dData = bb_createDialogueData(8, "Pango");
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterLiftoffInteraction;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
+            else if (self->gameData->day == 2)
+            {
+                bb_dialogueData_t* dData = bb_createDialogueData(8, "Pango");
 
-            bb_setCharacterLine(dData, 0, "Pango", "Why do you have better shading than us?");
-            bb_setCharacterLine(dData, 1, "Ovo", "Because I'm the main character.");
-            bb_setCharacterLine(dData, 2, "Pango", "But MAGFast is literally named after me!");
-            bb_setCharacterLine(dData, 3, "Ovo", "You fool! It's called mag FEST because of PEST like you.");
-            bb_setCharacterLine(dData, 4, "Po", "That's so metal.");
-            bb_setCharacterLine(dData, 5, "Ovo",
-                                "POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
-                                "OOOOOOOOOOOOOOOOOOOO");
-            bb_setCharacterLine(dData, 6, "Ovo",
-                                "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
-                                "OOOOOOOOOOOOOOOOOOOOOOO!");
-            bb_setCharacterLine(dData, 7, "Pixel", "Hey, don't yell at my friend like that!");
+                bb_setCharacterLine(dData, 0, "Pango", "Why do you have better shading than us?");
+                bb_setCharacterLine(dData, 1, "Ovo", "Because I'm the main character.");
+                bb_setCharacterLine(dData, 2, "Pango", "But MAGFast is literally named after me!");
+                bb_setCharacterLine(dData, 3, "Ovo", "You fool! It's called mag FEST because of PEST like you.");
+                bb_setCharacterLine(dData, 4, "Po", "That's so metal.");
+                bb_setCharacterLine(dData, 5, "Ovo",
+                                    "POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+                                    "OOOOOOOOOOOOOOOOOOOO");
+                bb_setCharacterLine(dData, 6, "Ovo",
+                                    "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+                                    "OOOOOOOOOOOOOOOOOOOOOOO!");
+                bb_setCharacterLine(dData, 7, "Pixel", "Hey, don't yell at my friend like that!");
 
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterLiftoffInteraction;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
-        }
-        else if (self->gameData->day == 3)
-        {
-            bb_dialogueData_t* dData = bb_createDialogueData(8, "Pango");
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterLiftoffInteraction;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
+            else if (self->gameData->day == 3)
+            {
+                bb_dialogueData_t* dData = bb_createDialogueData(8, "Pango");
 
-            bb_setCharacterLine(dData, 0, "Pango", "GARBOTNIK! Are you feeling well?");
-            bb_setCharacterLine(dData, 1, "Ovo", "Huh?");
-            bb_setCharacterLine(dData, 2, "Pango", "Looks like you've got a case of the T-rash!");
-            bb_setCharacterLine(dData, 3, "Ovo", "Aaaaaargh! Darn it! Darn it! DARN IT! DARN IT!");
-            bb_setCharacterLine(dData, 4, "Ovo", "GLITCH MY CIRCUITS!");
-            bb_setCharacterLine(dData, 5, "Pixel", "Freaking got him, Pango!");
-            bb_setCharacterLine(dData, 6, "Ovo", "T-raaaaash goes in the T-raaaaaash can.");
-            bb_setCharacterLine(dData, 7, "Po", "Huh?");
+                bb_setCharacterLine(dData, 0, "Pango", "GARBOTNIK! Are you feeling well?");
+                bb_setCharacterLine(dData, 1, "Ovo", "Huh?");
+                bb_setCharacterLine(dData, 2, "Pango", "Looks like you've got a case of the T-rash!");
+                bb_setCharacterLine(dData, 3, "Ovo", "Aaaaaargh! Darn it! Darn it! DARN IT! DARN IT!");
+                bb_setCharacterLine(dData, 4, "Ovo", "GLITCH MY CIRCUITS!");
+                bb_setCharacterLine(dData, 5, "Pixel", "Freaking got him, Pango!");
+                bb_setCharacterLine(dData, 6, "Ovo", "T-raaaaash goes in the T-raaaaaash can.");
+                bb_setCharacterLine(dData, 7, "Po", "Huh?");
 
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterLiftoffInteraction;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
-        }
-        else if (self->gameData->day == 99)
-        {
-            bb_dialogueData_t* dData = bb_createDialogueData(3, "Pango");
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterLiftoffInteraction;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
+            else if (self->gameData->day == 99)
+            {
+                bb_dialogueData_t* dData = bb_createDialogueData(3, "Pango");
 
-            bb_setCharacterLine(dData, 0, "Pango", "You're completely unhinged.");
-            bb_setCharacterLine(dData, 1, "Ovo", "Aaaaaaaand...");
-            bb_setCharacterLine(dData, 2, "Ovo", "You're not?");
+                bb_setCharacterLine(dData, 0, "Pango", "You're completely unhinged.");
+                bb_setCharacterLine(dData, 1, "Ovo", "Aaaaaaaand...");
+                bb_setCharacterLine(dData, 2, "Ovo", "You're not?");
 
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterLiftoffInteraction;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
-        }
-        else
-        {
-            bb_dialogueData_t* dData = bb_createDialogueData(3, "Po");
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterLiftoffInteraction;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
+            else
+            {
+                bb_dialogueData_t* dData = bb_createDialogueData(3, "Po");
 
-            bb_setCharacterLine(dData, 0, "Po", "Still looking?");
-            char pangosLine[34];
-            snprintf(pangosLine, sizeof(pangosLine), "It's been %d days at the dump.", self->gameData->day + 1);
-            bb_setCharacterLine(dData, 1, "Pango", pangosLine);
-            bb_setCharacterLine(dData, 2, "Pixel", "I guess that means you're having no luck.");
-            bb_setCharacterLine(dData, 2, "Ovo", "Glitch my circuits!");
-            bb_setCharacterLine(dData, 2, "Ovo", "I. know.");
-            bb_setCharacterLine(dData, 2, "Ovo", "Bug off!");
+                bb_setCharacterLine(dData, 0, "Po", "Still looking?");
+                char pangosLine[34];
+                snprintf(pangosLine, sizeof(pangosLine), "It's been %d days at the dump.", self->gameData->day + 1);
+                bb_setCharacterLine(dData, 1, "Pango", pangosLine);
+                bb_setCharacterLine(dData, 2, "Pixel", "I guess that means you're having no luck.");
+                bb_setCharacterLine(dData, 2, "Ovo", "Glitch my circuits!");
+                bb_setCharacterLine(dData, 2, "Ovo", "I. know.");
+                bb_setCharacterLine(dData, 2, "Ovo", "Bug off!");
 
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterLiftoffInteraction;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterLiftoffInteraction;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
         }
         self->updateFunction = NULL;
     }
@@ -2676,12 +2717,15 @@ void bb_update501kg(bb_entity_t* self)
             if (fData->vel.y <= 0)
             {
                 // detonate
-                freeWsg(&self->gameData->entityManager.sprites[BB_501KG].frames[0]);
+                bb_freeSprite(&self->gameData->entityManager.sprites[BB_501KG]);
                 bb_entity_t* explosion
                     = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1,
                                       self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
-                bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
-                eData->radius             = 180;
+                if(explosion != NULL)
+                {
+                    bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
+                    eData->radius             = 180;
+                }
 
                 bb_destroyEntity(self, false, true);
             }
@@ -3073,32 +3117,42 @@ void bb_updateQuickplay(bb_entity_t* self)
                 if (rocketIdx >= 1)
                 {
                     bb_rocketData_t* rData = (bb_rocketData_t*)self->gameData->entityManager.boosterEntities[rocketIdx]->data;
-
+                    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
                     rData->flame = bb_createEntity(
                         &(self->gameData->entityManager), LOOPING_ANIMATION, false, FLAME_ANIM, 6,
                         self->gameData->entityManager.boosterEntities[rocketIdx]->pos.x >> DECIMAL_BITS,
                         self->gameData->entityManager.boosterEntities[rocketIdx]->pos.y >> DECIMAL_BITS, true, false);
-
-                    rData->flame->updateFunction = &bb_updateFlame;
+                    if(rData->flame != NULL)
+                    {
+                        rData->flame->updateFunction = &bb_updateFlame;
+                    }
                 }
                 else // rocketIdx == 0
                 {
                     self->gameData->entityManager.activeBooster = self->gameData->entityManager.boosterEntities[rocketIdx];
-                    ((bb_rocketData_t*)self->gameData->entityManager.activeBooster->data)->numDonuts = 20;
                     self->gameData->entityManager.activeBooster->currentAnimationFrame               = 40;
                     self->gameData->entityManager.activeBooster->pos.y                               = 50;
                     self->gameData->entityManager.activeBooster->updateFunction                      = bb_updateHeavyFalling;
+                    
+                    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
                     bb_entity_t* arm                                                                  = bb_createEntity(
                         &self->gameData->entityManager, NO_ANIMATION, true, ATTACHMENT_ARM, 1,
                         self->gameData->entityManager.activeBooster->pos.x >> DECIMAL_BITS,
                         (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 33, true, false);
-                    ((bb_attachmentArmData_t*)arm->data)->rocket = self->gameData->entityManager.activeBooster;
+                    if(arm != NULL)
+                    {
+                        ((bb_attachmentArmData_t*)arm->data)->rocket = self->gameData->entityManager.activeBooster;
+                    }
 
+                    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
                     bb_entity_t* grabbyHand = bb_createEntity(
                         &self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 6,
                         self->gameData->entityManager.activeBooster->pos.x >> DECIMAL_BITS,
                         (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 53, true, false);
-                    ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self->gameData->entityManager.activeBooster;
+                    if(grabbyHand != NULL)
+                    {
+                        ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self->gameData->entityManager.activeBooster;
+                    }
                 }
             }
 
@@ -3110,14 +3164,17 @@ void bb_updateQuickplay(bb_entity_t* self)
             // create garbotnik's UI
             bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_GARBOTNIK_UI, 1, 0, 0, false, true);
 
+            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             self->gameData->entityManager.viewEntity
                 = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, GARBOTNIK_FLYING, 1,
                                 self->gameData->entityManager.activeBooster->pos.x >> DECIMAL_BITS,
                                 (self->gameData->entityManager.activeBooster->pos.y >> DECIMAL_BITS) - 90, true, false);
+            if(self->gameData->entityManager.viewEntity != NULL)
+            {
+                self->gameData->entityManager.playerEntity = self->gameData->entityManager.viewEntity;
+            }
 
             bb_loadWsgs(&self->gameData->tilemap);
-
-            self->gameData->entityManager.playerEntity = self->gameData->entityManager.viewEntity;
 
             int8_t oldBoosterYs[3] = {-1, -1, -1};
             bb_generateWorld(&(self->gameData->tilemap), oldBoosterYs);
@@ -4181,7 +4238,7 @@ void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, b
             bb_entity_t* bump = bb_createEntity(entityManager, ONESHOT_ANIMATION, false, BUMP_ANIM, 1,
                                                 (self->pos.x >> DECIMAL_BITS) - 12 + foo % 25,
                                                 (self->pos.y + self->halfHeight) >> DECIMAL_BITS, true, false);
-            if (foo >= 25)
+            if (foo >= 45 && bump != NULL)
             {
                 bump->drawFunction = bb_drawHitEffect;
             }
@@ -4295,26 +4352,28 @@ void bb_onCollisionHarpoon(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* 
                     bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                                                        self->gameData->camera.camera.pos.x,
                                                        self->gameData->camera.camera.pos.y, false, true);
+                    if(ovo != NULL)
+                    {
+                        bb_dialogueData_t* dData = bb_createDialogueData(7, "Ovo");
 
-                    bb_dialogueData_t* dData = bb_createDialogueData(7, "Ovo");
+                        bb_setCharacterLine(dData, 0, "Ovo", "ARLIGHT! You got it!!!");
+                        bb_setCharacterLine(dData, 1, "Ovo", "Ahem... I mean, not bad.");
+                        bb_setCharacterLine(dData, 2, "Ovo", "In fact, I'm the one who got it.");
+                        bb_setCharacterLine(dData, 3, "Ovo",
+                                            "Press the 'A' button near a bug to attach a cable and tow it back to the "
+                                            "booster to get credit.");
+                        bb_setCharacterLine(
+                            dData, 4, "Ovo",
+                            "Careful with that tow cable, because a right-side-up bug will drag me around.");
+                        bb_setCharacterLine(dData, 5, "Ovo",
+                                            "Did you know bugs can carry over 100 times their body weight?");
+                        bb_setCharacterLine(dData, 6, "Ovo",
+                                            "They're pretty strong, but I wonder if I could pry them off the ceiling.");
 
-                    bb_setCharacterLine(dData, 0, "Ovo", "ARLIGHT! You got it!!!");
-                    bb_setCharacterLine(dData, 1, "Ovo", "Ahem... I mean, not bad.");
-                    bb_setCharacterLine(dData, 2, "Ovo", "In fact, I'm the one who got it.");
-                    bb_setCharacterLine(dData, 3, "Ovo",
-                                        "Press the 'A' button near a bug to attach a cable and tow it back to the "
-                                        "booster to get credit.");
-                    bb_setCharacterLine(
-                        dData, 4, "Ovo",
-                        "Careful with that tow cable, because a right-side-up bug will drag me around.");
-                    bb_setCharacterLine(dData, 5, "Ovo",
-                                        "Did you know bugs can carry over 100 times their body weight?");
-                    bb_setCharacterLine(dData, 6, "Ovo",
-                                        "They're pretty strong, but I wonder if I could pry them off the ceiling.");
-
-                    dData->curString     = -1;
-                    dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-                    bb_setData(ovo, dData, DIALOGUE_DATA);
+                        dData->curString     = -1;
+                        dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+                        bb_setData(ovo, dData, DIALOGUE_DATA);   
+                    }
                 }
             }
             else
@@ -4435,16 +4494,18 @@ void bb_onCollisionRocketGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hit
         {
             rData->numDonuts--;
             // Get the donut back out of the busted booster
+            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
-                            (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
+                            (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS) - 40, true, false);
         }
         if ((rData->numBugs % 10 != 0) && bb_randomInt(0, 60) == 60)
         {
             rData->numBugs--;
             // Get the bug back out of the busted booster
+            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             bb_entity_t* bug
                 = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, bb_randomInt(8, 13), 1,
-                                  (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS), true, false);
+                                  (self->pos.x >> DECIMAL_BITS) + 5, (self->pos.y >> DECIMAL_BITS) - 40, true, false);
             bb_bugDeath(bug, NULL);
             ((bb_physicsData_t*)bug->data)->vel = (vec_t){bb_randomInt(-100, 100), bb_randomInt(-100, 0)};
         }
@@ -4802,28 +4863,30 @@ void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitIn
         bb_entity_t* ovo
             = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                               self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+        if(ovo != NULL)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(12, "Ovo");
 
-        bb_dialogueData_t* dData = bb_createDialogueData(12, "Ovo");
+            bb_setCharacterLine(dData, 0, "Ovo", "\"---Incoming Transmission from Mr. Dev---\"");
+            bb_setCharacterLine(dData, 1, "Ovo", "What in the heck?");
+            bb_setCharacterLine(dData, 2, "Ovo", "Dang radio's acting up again!");
+            bb_setCharacterLine(dData, 3, "Ovo", "\"The bricks can be destroyed by dealing 100 damage.\"");
+            bb_setCharacterLine(dData, 4, "Ovo", "\"Bring Ovo Garbotnik to a complete stop in a tight gap.\"");
+            bb_setCharacterLine(dData, 5, "Ovo",
+                                "\"Then move briefly toward the brick to initiate a ping-ponging movement pattern.\"");
+            bb_setCharacterLine(
+                dData, 6, "Ovo",
+                "\"Same as the other garbage densities, bricks will crumble if they are totally disconnected.\"");
+            bb_setCharacterLine(dData, 7, "Ovo", "\"Or they can be smashed easily with heavy falling objects.\"");
+            bb_setCharacterLine(dData, 8, "Ovo", "\"Big Bug's early-game design is all about using your fuel to get upgrades.\"");
+            bb_setCharacterLine(dData, 9, "Ovo", "\"So be sure to strategize how to use your time!\"");
+            bb_setCharacterLine(dData, 10, "Ovo", "\"The late-game design has a shift in focus away from fuel.\"");
+            bb_setCharacterLine(dData, 11, "Ovo", "\"You'll just have to see it for yourself!\"");
 
-        bb_setCharacterLine(dData, 0, "Ovo", "\"---Incoming Transmission from Mr. Dev---\"");
-        bb_setCharacterLine(dData, 1, "Ovo", "What in the heck?");
-        bb_setCharacterLine(dData, 2, "Ovo", "Dang radio's acting up again!");
-        bb_setCharacterLine(dData, 3, "Ovo", "\"The bricks can be destroyed by dealing 100 damage.\"");
-        bb_setCharacterLine(dData, 4, "Ovo", "\"Bring Ovo Garbotnik to a complete stop in a tight gap.\"");
-        bb_setCharacterLine(dData, 5, "Ovo",
-                            "\"Then move briefly toward the brick to initiate a ping-ponging movement pattern.\"");
-        bb_setCharacterLine(
-            dData, 6, "Ovo",
-            "\"Same as the other garbage densities, bricks will crumble if they are totally disconnected.\"");
-        bb_setCharacterLine(dData, 7, "Ovo", "\"Or they can be smashed easily with heavy falling objects.\"");
-        bb_setCharacterLine(dData, 8, "Ovo", "\"Big Bug's early-game design is all about using your fuel to get upgrades.\"");
-        bb_setCharacterLine(dData, 9, "Ovo", "\"So be sure to strategize how to use your time!\"");
-        bb_setCharacterLine(dData, 10, "Ovo", "\"The late-game design has a shift in focus away from fuel.\"");
-        bb_setCharacterLine(dData, 11, "Ovo", "\"You'll just have to see it for yourself!\"");
-
-        dData->curString     = -1;
-        dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-        bb_setData(ovo, dData, DIALOGUE_DATA);
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
     }
     bb_destroyEntity(self, false, true);
 }
@@ -4863,51 +4926,53 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+    if(ovo != NULL)
+    {
+        bb_dialogueData_t* dData = bb_createDialogueData(24, "Ovo");
 
-    bb_dialogueData_t* dData = bb_createDialogueData(24, "Ovo");
+        // longest possible string     " "
+        //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
+        //  A A A A A A A A A A A A A A A A A A A");
+        bb_setCharacterLine(dData, 0, "Ovo", "Holy bug farts!"); //
+        bb_setCharacterLine(
+            dData, 1, "Ovo",
+            "After I sold the chilidog car fresheners to MAGFest, Garbotnik Industries' stock went up by 6,969%!");
+        bb_setCharacterLine(dData, 2, "Ovo",
+                            "I'm going to use my time machine to steal the next big-selling trinket from the future now.");
+        bb_setCharacterLine(dData, 3, "Ovo", "That will floor all my stakeholders and make me UNDEFINED money!");
+        bb_setCharacterLine(
+            dData, 4, "Ovo",
+            "With that kind of cash, I can recruit 200 professional bassoon players to the MAGFest Community Orchestra.");
+        bb_setCharacterLine(dData, 5, "Ovo", "I'm so hyped to turn on my time machine for the first time!");
+        bb_setCharacterLine(dData, 6, "Ovo", "Everything's in order.");
+        bb_setCharacterLine(dData, 7, "Ovo", "Even Pango can't stop me!");
+        bb_setCharacterLine(dData, 8, "Ovo", "I just have to attach the chaos orb right here.");
+        bb_setCharacterLine(dData, 9, "Ovo", "Where did I put that orb?");
+        bb_setCharacterLine(dData, 10, "Ovo", "hmmm...");
+        bb_setCharacterLine(dData, 11, "Ovo", "What about in the freezer?");
+        bb_setCharacterLine(dData, 12, "Ovo", "I've checked every inch of the death dumpster.");
+        bb_setCharacterLine(dData, 13, "Ovo", "Glitch my circuits!");
+        bb_setCharacterLine(dData, 14, "Ovo", "It must have gone out with the trash last Wednesday.");
+        bb_setCharacterLine(dData, 15, "Ovo", "Can I get an F in the chat?");
+        bb_setCharacterLine(dData, 16, "Ovo", "...");
+        bb_setCharacterLine(dData, 17, "Ovo", "The chaos orb is three times denser than a black hole.");
+        bb_setCharacterLine(dData, 18, "Ovo",
+                            "Well if Garbotnik Sanitation Industries took it to the landfill, then it is definitely at the "
+                            "VERY BOTTOM of the dump.");
+        bb_setCharacterLine(dData, 19, "Ovo", "Not a problem.");
+        bb_setCharacterLine(dData, 20, "Ovo", "We have the technology to retrieve it.");
+        bb_setCharacterLine(
+            dData, 21, "Ovo",
+            "Safety first. Activate the cloning machine in case I should perish on that nuclear wasteland.");
+        bb_setCharacterLine(dData, 22, "Ovo", "fine.");
+        bb_setCharacterLine(dData, 23, "Ovo", "Stupid safety rules. YOLO!");
 
-    // longest possible string     " "
-    //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
-    //  A A A A A A A A A A A A A A A A A A A");
-    bb_setCharacterLine(dData, 0, "Ovo", "Holy bug farts!"); //
-    bb_setCharacterLine(
-        dData, 1, "Ovo",
-        "After I sold the chilidog car fresheners to MAGFest, Garbotnik Industries' stock went up by 6,969%!");
-    bb_setCharacterLine(dData, 2, "Ovo",
-                        "I'm going to use my time machine to steal the next big-selling trinket from the future now.");
-    bb_setCharacterLine(dData, 3, "Ovo", "That will floor all my stakeholders and make me UNDEFINED money!");
-    bb_setCharacterLine(
-        dData, 4, "Ovo",
-        "With that kind of cash, I can recruit 200 professional bassoon players to the MAGFest Community Orchestra.");
-    bb_setCharacterLine(dData, 5, "Ovo", "I'm so hyped to turn on my time machine for the first time!");
-    bb_setCharacterLine(dData, 6, "Ovo", "Everything's in order.");
-    bb_setCharacterLine(dData, 7, "Ovo", "Even Pango can't stop me!");
-    bb_setCharacterLine(dData, 8, "Ovo", "I just have to attach the chaos orb right here.");
-    bb_setCharacterLine(dData, 9, "Ovo", "Where did I put that orb?");
-    bb_setCharacterLine(dData, 10, "Ovo", "hmmm...");
-    bb_setCharacterLine(dData, 11, "Ovo", "What about in the freezer?");
-    bb_setCharacterLine(dData, 12, "Ovo", "I've checked every inch of the death dumpster.");
-    bb_setCharacterLine(dData, 13, "Ovo", "Glitch my circuits!");
-    bb_setCharacterLine(dData, 14, "Ovo", "It must have gone out with the trash last Wednesday.");
-    bb_setCharacterLine(dData, 15, "Ovo", "Can I get an F in the chat?");
-    bb_setCharacterLine(dData, 16, "Ovo", "...");
-    bb_setCharacterLine(dData, 17, "Ovo", "The chaos orb is three times denser than a black hole.");
-    bb_setCharacterLine(dData, 18, "Ovo",
-                        "Well if Garbotnik Sanitation Industries took it to the landfill, then it is definitely at the "
-                        "VERY BOTTOM of the dump.");
-    bb_setCharacterLine(dData, 19, "Ovo", "Not a problem.");
-    bb_setCharacterLine(dData, 20, "Ovo", "We have the technology to retrieve it.");
-    bb_setCharacterLine(
-        dData, 21, "Ovo",
-        "Safety first. Activate the cloning machine in case I should perish on that nuclear wasteland.");
-    bb_setCharacterLine(dData, 22, "Ovo", "fine.");
-    bb_setCharacterLine(dData, 23, "Ovo", "Stupid safety rules. YOLO!");
+        dData->curString = -1;
 
-    dData->curString = -1;
+        dData->endDialogueCB = &bb_afterGarbotnikIntro;
 
-    dData->endDialogueCB = &bb_afterGarbotnikIntro;
-
-    bb_setData(ovo, dData, DIALOGUE_DATA);
+        bb_setData(ovo, dData, DIALOGUE_DATA);   
+    }
 }
 
 void bb_startGarbotnikLandingTalk(bb_entity_t* self)
@@ -4917,217 +4982,221 @@ void bb_startGarbotnikLandingTalk(bb_entity_t* self)
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
-
-    bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
-
-    int16_t phraseIdx = 0;
-    int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
-    while (gData->landingPhrases[phraseIdx] == -1)
+    if(ovo != NULL)
     {
-        if (phraseIdx == arraySize - 1)
+        bb_dialogueData_t* dData = bb_createDialogueData(1, "Ovo");
+
+        int16_t phraseIdx = 0;
+        int16_t arraySize = sizeof(gData->landingPhrases) / sizeof(gData->landingPhrases[0]);
+        while (gData->landingPhrases[phraseIdx] == -1)
         {
-            // We've reached the end of saying everything.
-            // create sequential numbers of all phrase indices
-            for (int16_t i = 0; i < arraySize; i++)
-                gData->landingPhrases[i] = i;
-            // shuffle the array
-            for (int16_t i = arraySize - 1; i > 0; i--)
+            if (phraseIdx == arraySize - 1)
             {
-                int16_t j                = (int16_t)(bb_randomInt(0, INT_MAX) % (i + 1));
-                int16_t temp             = gData->landingPhrases[i];
-                gData->landingPhrases[i] = gData->landingPhrases[j];
-                gData->landingPhrases[j] = temp;
+                // We've reached the end of saying everything.
+                // create sequential numbers of all phrase indices
+                for (int16_t i = 0; i < arraySize; i++)
+                    gData->landingPhrases[i] = i;
+                // shuffle the array
+                for (int16_t i = arraySize - 1; i > 0; i--)
+                {
+                    int16_t j                = (int16_t)(bb_randomInt(0, INT_MAX) % (i + 1));
+                    int16_t temp             = gData->landingPhrases[i];
+                    gData->landingPhrases[i] = gData->landingPhrases[j];
+                    gData->landingPhrases[j] = temp;
+                }
+                phraseIdx = 0;
             }
-            phraseIdx = 0;
+            else
+            {
+                phraseIdx++;
+            }
         }
-        else
+        switch (gData->landingPhrases[phraseIdx])
         {
-            phraseIdx++;
+            case 0:
+            {
+                // Max dialogue string roughly: here----V
+                bb_setCharacterLine(dData, 0, "Ovo", "Ah, sweet stench! How I've longed for your olfactory embrace.");
+                break;
+            }
+            case 1:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo",
+                                    "Tonight's special: Beetle Bruschetta with a side of centipede salad!");
+                break;
+            }
+            case 2:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Another day, another dump full of delectable delights!");
+                break;
+            }
+            case 3:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Step aside, garbage! The doctor is in!");
+                break;
+            }
+            case 4:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "I must find that chaos orb at all costs!");
+                break;
+            }
+            case 5:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "The Pango pest must be stopped!");
+                break;
+            }
+            case 6:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "I'll get you next time Pango! NEXT TIME!");
+                break;
+            }
+            case 7:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Would you look at the time... It's GARBAGE TIME!");
+                break;
+            }
+            case 8:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Did I remember to wax my moustache today?");
+                break;
+            }
+            case 9:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Is it spelled \"moustache\" or \"mustache?\" Better look it up...");
+                break;
+            }
+            case 10:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "I wonder how my buddy Hank Waddle is holding up...");
+                break;
+            }
+            case 11:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Man, I sure hope I see some cool bugs today!");
+                break;
+            }
+            case 12:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "I'm here to take in the trash.");
+                break;
+            }
+            case 13:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo",
+                                    "I must remember to research what dastardly technology this dump used to ensure new "
+                                    "arrivals wind up at the bottom...");
+                break;
+            }
+            case 14:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo",
+                                    "I promise, this is perfectly sanitary, the Chaos Orb has antimicrobial properties.");
+                break;
+            }
+            case 15:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Of course you can trust me; I'm a doctor.");
+                break;
+            }
+            case 16:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Come on and jump and welcome to the dump!");
+                break;
+            }
+            case 17:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Oh, I'd been looking for that garbage ray!");
+                break;
+            }
+            case 18:
+            {
+                bb_setCharacterLine(
+                    dData, 0, "Ovo",
+                    "If you ask me what I have a degree in one more time, I'm asking the Internet to draw fanart of you.");
+                break;
+            }
+            case 19:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Oh, I'd been looking for that garbage ray!");
+                break;
+            }
+            case 20:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Did I remember to turn off the disintegrator before I left the lab?");
+                break;
+            }
+            case 21:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Oooh piece of candy!");
+                break;
+            }
+            case 22:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo",
+                                    "If they beat this game fast enough, does that mean I too have to strip?");
+                break;
+            }
+            case 23:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Sluuurrrrrrrrrrp");
+                break;
+            }
+            case 24:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "A chili dog? No no, I've already had my... FILL.");
+                break;
+            }
+            case 25:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "CHAOS... CONT.... oh, I appear to have been sent a C&D.");
+                break;
+            }
+            case 26:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "I didn't like Clone #61 much anyway.");
+                break;
+            }
+            case 27:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "Remember, Ovo is pronounced like 'oooh-voo' with a wink at the end.");
+                break;
+            }
+            case 28:
+            {
+                bb_setCharacterLine(dData, 0, "Ovo", "You don't have enough badge ribbons to train me.");
+                break;
+            }
+            default:
+            {
+                break;
+            }
         }
-    }
-    switch (gData->landingPhrases[phraseIdx])
-    {
-        case 0:
-        {
-            // Max dialogue string roughly: here----V
-            bb_setCharacterLine(dData, 0, "Ovo", "Ah, sweet stench! How I've longed for your olfactory embrace.");
-            break;
-        }
-        case 1:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo",
-                                "Tonight's special: Beetle Bruschetta with a side of centipede salad!");
-            break;
-        }
-        case 2:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Another day, another dump full of delectable delights!");
-            break;
-        }
-        case 3:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Step aside, garbage! The doctor is in!");
-            break;
-        }
-        case 4:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "I must find that chaos orb at all costs!");
-            break;
-        }
-        case 5:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "The Pango pest must be stopped!");
-            break;
-        }
-        case 6:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "I'll get you next time Pango! NEXT TIME!");
-            break;
-        }
-        case 7:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Would you look at the time... It's GARBAGE TIME!");
-            break;
-        }
-        case 8:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Did I remember to wax my moustache today?");
-            break;
-        }
-        case 9:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Is it spelled \"moustache\" or \"mustache?\" Better look it up...");
-            break;
-        }
-        case 10:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "I wonder how my buddy Hank Waddle is holding up...");
-            break;
-        }
-        case 11:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Man, I sure hope I see some cool bugs today!");
-            break;
-        }
-        case 12:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "I'm here to take in the trash.");
-            break;
-        }
-        case 13:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo",
-                                "I must remember to research what dastardly technology this dump used to ensure new "
-                                "arrivals wind up at the bottom...");
-            break;
-        }
-        case 14:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo",
-                                "I promise, this is perfectly sanitary, the Chaos Orb has antimicrobial properties.");
-            break;
-        }
-        case 15:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Of course you can trust me; I'm a doctor.");
-            break;
-        }
-        case 16:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Come on and jump and welcome to the dump!");
-            break;
-        }
-        case 17:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Oh, I'd been looking for that garbage ray!");
-            break;
-        }
-        case 18:
-        {
-            bb_setCharacterLine(
-                dData, 0, "Ovo",
-                "If you ask me what I have a degree in one more time, I'm asking the Internet to draw fanart of you.");
-            break;
-        }
-        case 19:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Oh, I'd been looking for that garbage ray!");
-            break;
-        }
-        case 20:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Did I remember to turn off the disintegrator before I left the lab?");
-            break;
-        }
-        case 21:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Oooh piece of candy!");
-            break;
-        }
-        case 22:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo",
-                                "If they beat this game fast enough, does that mean I too have to strip?");
-            break;
-        }
-        case 23:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Sluuurrrrrrrrrrp");
-            break;
-        }
-        case 24:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "A chili dog? No no, I've already had my... FILL.");
-            break;
-        }
-        case 25:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "CHAOS... CONT.... oh, I appear to have been sent a C&D.");
-            break;
-        }
-        case 26:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "I didn't like Clone #61 much anyway.");
-            break;
-        }
-        case 27:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "Remember, Ovo is pronounced like 'oooh-voo' with a wink at the end.");
-            break;
-        }
-        case 28:
-        {
-            bb_setCharacterLine(dData, 0, "Ovo", "You don't have enough badge ribbons to train me.");
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
 
-    dData->curString     = -1;
-    dData->endDialogueCB = &bb_afterGarbotnikLandingTalk;
+        dData->curString     = -1;
+        dData->endDialogueCB = &bb_afterGarbotnikLandingTalk;
 
-    bb_setData(ovo, dData, DIALOGUE_DATA);
+        bb_setData(ovo, dData, DIALOGUE_DATA);
+    }
 }
 
 void bb_startGarbotnikCloningTalk(bb_entity_t* self)
 {
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1, 0, 0, false, true);
+    if(ovo != NULL)
+    {
+        bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo"); // 29
 
-    bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo"); // 29
+        bb_setCharacterLine(dData, 0, "Ovo", "I'm feeling fresh, baby!"); // V longest possible string here
+        bb_setCharacterLine(dData, 1, "Ovo",
+                            "It was a good move taking those omega3 fish oils before backing up my brain.");
 
-    bb_setCharacterLine(dData, 0, "Ovo", "I'm feeling fresh, baby!"); // V longest possible string here
-    bb_setCharacterLine(dData, 1, "Ovo",
-                        "It was a good move taking those omega3 fish oils before backing up my brain.");
+        dData->curString = -1;
 
-    dData->curString = -1;
+        dData->endDialogueCB = &bb_afterGarbotnikIntro;
 
-    dData->endDialogueCB = &bb_afterGarbotnikIntro;
-
-    bb_setData(ovo, dData, DIALOGUE_DATA);
+        bb_setData(ovo, dData, DIALOGUE_DATA);
+    }
 }
 
 void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
@@ -5135,18 +5204,20 @@ void bb_startGarbotnikEggTutorialTalk(bb_entity_t* self)
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+    if(ovo != NULL)
+    {
+        bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo");
 
-    bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo");
+        // Max dialogue string roughly:                                                                         here----V
+        bb_setCharacterLine(dData, 0, "Ovo", "Oooey Gooey! Look at that egg sack!");
+        bb_setCharacterLine(dData, 1, "Ovo",
+                            "I can use the directional buttons on my swadge to fly over there and check it out.");
 
-    // Max dialogue string roughly:                                                                         here----V
-    bb_setCharacterLine(dData, 0, "Ovo", "Oooey Gooey! Look at that egg sack!");
-    bb_setCharacterLine(dData, 1, "Ovo",
-                        "I can use the directional buttons on my swadge to fly over there and check it out.");
+        dData->curString     = -1;
+        dData->endDialogueCB = &bb_afterGarbotnikEggTutorialTalk;
 
-    dData->curString     = -1;
-    dData->endDialogueCB = &bb_afterGarbotnikEggTutorialTalk;
-
-    bb_setData(ovo, dData, DIALOGUE_DATA);
+        bb_setData(ovo, dData, DIALOGUE_DATA);
+    }
 }
 
 void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
@@ -5157,26 +5228,28 @@ void bb_startGarbotnikFuelTutorialTalk(bb_entity_t* self)
     bb_entity_t* ovo
         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, true);
+    if(ovo != NULL)
+    {
+        bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
 
-    bb_dialogueData_t* dData = bb_createDialogueData(5, "Ovo");
+        // longest possible string     " "
+        //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
+        //  A A A A A A A A A A A A A A A A A A A");
+        bb_setCharacterLine(dData, 0, "Ovo",
+                            "When I travel away from the booster, I've got to keep an eye on my fuel level at all times.");
+        bb_setCharacterLine(dData, 1, "Ovo",
+                            "Sit back atop the booster before all the lights around the outside of the swadge turn off.");
+        bb_setCharacterLine(dData, 2, "Ovo",
+                            "safety first. Once back on the rocket, it takes a stupid long time for the "
+                            "launch sequence to initiate.");
+        bb_setCharacterLine(dData, 3, "Ovo", "Too many regulations on equipment these days.");
+        bb_setCharacterLine(dData, 4, "Ovo", "Let a trashman go to space in peace.");
 
-    // longest possible string     " "
-    //  bb_setCharacterLine(dData, 0, "A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A A
-    //  A A A A A A A A A A A A A A A A A A A");
-    bb_setCharacterLine(dData, 0, "Ovo",
-                        "When I travel away from the booster, I've got to keep an eye on my fuel level at all times.");
-    bb_setCharacterLine(dData, 1, "Ovo",
-                        "Sit back atop the booster before all the lights around the outside of the swadge turn off.");
-    bb_setCharacterLine(dData, 2, "Ovo",
-                        "safety first. Once back on the rocket, it takes a stupid long time for the "
-                        "launch sequence to initiate.");
-    bb_setCharacterLine(dData, 3, "Ovo", "Too many regulations on equipment these days.");
-    bb_setCharacterLine(dData, 4, "Ovo", "Let a trashman go to space in peace.");
+        dData->curString     = -1;
+        dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
 
-    dData->curString     = -1;
-    dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-
-    bb_setData(ovo, dData, DIALOGUE_DATA);
+        bb_setData(ovo, dData, DIALOGUE_DATA);
+    }
 }
 
 void bb_afterGarbotnikTutorialTalk(bb_entity_t* self)
@@ -5240,16 +5313,18 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
             bb_entity_t* ovo = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                                                self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y,
                                                false, true);
+            if(ovo != NULL)
+            {
+                bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo");
 
-            bb_dialogueData_t* dData = bb_createDialogueData(2, "Ovo");
+                bb_setCharacterLine(dData, 0, "Ovo",
+                                    "If I find my old booster, I can recover any unprocessed bugs and donuts.");
+                bb_setCharacterLine(dData, 1, "Ovo", "Just push steadily into the derelict booster to coax them out.");
 
-            bb_setCharacterLine(dData, 0, "Ovo",
-                                "If I find my old booster, I can recover any unprocessed bugs and donuts.");
-            bb_setCharacterLine(dData, 1, "Ovo", "Just push steadily into the derelict booster to coax them out.");
-
-            dData->curString     = -1;
-            dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-            bb_setData(ovo, dData, DIALOGUE_DATA);
+                dData->curString     = -1;
+                dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+                bb_setData(ovo, dData, DIALOGUE_DATA);
+            }
         }
     }
 
@@ -5273,21 +5348,25 @@ void bb_afterGarbotnikLandingTalk(bb_entity_t* self)
         bb_entity_t* curEntity = &self->gameData->entityManager.entities[i];
         if (curEntity->spriteIndex == EGG_LEAVES)
         {
+            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             self->gameData->entityManager.viewEntity
                 = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                                   (self->gameData->entityManager.playerEntity->pos.x >> DECIMAL_BITS),
                                   (self->gameData->entityManager.playerEntity->pos.y >> DECIMAL_BITS), false, false);
-            bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
-            tData->tracking    = curEntity;
+            if(self->gameData->entityManager.viewEntity != NULL)
+            {
+                bb_goToData* tData = (bb_goToData*)self->gameData->entityManager.viewEntity->data;
+                tData->tracking    = curEntity;
 
-            tData->midPointSqDist
-                = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
-                                                  - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
-                                              (tData->tracking->pos.y >> DECIMAL_BITS)
-                                                  - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
-                                      2));
-            tData->executeOnArrival                                  = &bb_startGarbotnikEggTutorialTalk;
-            self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
+                tData->midPointSqDist
+                    = sqMagVec2d(divVec2d((vec_t){(tData->tracking->pos.x >> DECIMAL_BITS)
+                                                    - (self->gameData->entityManager.viewEntity->pos.x >> DECIMAL_BITS),
+                                                (tData->tracking->pos.y >> DECIMAL_BITS)
+                                                    - (self->gameData->entityManager.viewEntity->pos.y >> DECIMAL_BITS)},
+                                        2));
+                tData->executeOnArrival                                  = &bb_startGarbotnikEggTutorialTalk;
+                self->gameData->entityManager.viewEntity->updateFunction = &bb_updatePOI;
+            }
             break;
         }
     }
@@ -5411,6 +5490,7 @@ void bb_triggerGameOver(bb_entity_t* self)
     self->gameData->camera.camera.pos = (vec_t){(self->gameData->entityManager.deathDumpster->pos.x >> DECIMAL_BITS),
                                                 (self->gameData->entityManager.deathDumpster->pos.y >> DECIMAL_BITS)};
 
+    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
     self->gameData->entityManager.viewEntity
         = bb_createEntity(&(self->gameData->entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                           self->gameData->camera.camera.pos.x, self->gameData->camera.camera.pos.y, false, false);
@@ -5508,7 +5588,10 @@ void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
         bb_entity_t* hitEffect
             = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
                               hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
-        hitEffect->drawFunction = &bb_drawHitEffect;
+        if(hitEffect != NULL)
+        {
+            hitEffect->drawFunction = &bb_drawHitEffect;
+        }
     }
 
     if (self->dataType == WALKING_BUG_DATA)
@@ -5556,6 +5639,7 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
         case BB_DONUT:
         {
             // spawn a donut as a reward for completing the fight
+            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DONUT, 1,
                             (self->pos.x >> DECIMAL_BITS), (self->pos.y >> DECIMAL_BITS), true, false);
             break;
@@ -5563,6 +5647,7 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
         default: // BB_SWADGE
         {
             // spawn a swadge as a reward for completing the fight
+            bb_ensureEntitySpace(&self->gameData->entityManager, 1);
             bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, BB_SWADGE, 9,
                             (self->pos.x >> DECIMAL_BITS), (self->pos.y >> DECIMAL_BITS), true, false);
             break;
@@ -5573,7 +5658,10 @@ void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo)
     bb_entity_t* hitEffect
         = bb_createEntity(&(self->gameData->entityManager), ONESHOT_ANIMATION, false, BUMP_ANIM, 6,
                           hitInfo->pos.x >> DECIMAL_BITS, hitInfo->pos.y >> DECIMAL_BITS, true, false);
-    hitEffect->drawFunction = &bb_drawHitEffect;
+    if(hitEffect != NULL)
+    {
+        hitEffect->drawFunction = &bb_drawHitEffect;
+    }
 }
 
 void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs)
@@ -5643,6 +5731,7 @@ void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs)
                 }
                 if (consecutiveGarbage == 2)
                 {
+                    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
                     bb_entity_t* jankyBugDig
                         = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_JANKY_BUG_DIG, 1,
                                           (spawnPos.x << 5) + 16, (spawnPos.y << 5) + 16, false, false);
@@ -5652,6 +5741,7 @@ void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs)
                         return;
                     }
 
+                    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
                     bb_entity_t* bug
                         = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, false, bb_randomInt(8, 13),
                                           1, (spawnPos.x << 5) + 16, (spawnPos.y << 5) + 16, false, false);
@@ -5727,54 +5817,65 @@ void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs)
 
 void bb_trigger501kg(bb_entity_t* self)
 {
-    bb_loadSprite("501kg", 1, 1, &self->gameData->entityManager.sprites[BB_501KG]);
-
+    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
     bb_entity_t* missile   = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_501KG, 1,
                                              self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, false);
-    bb_501kgData_t* kgData = ((bb_501kgData_t*)missile->data);
-
-    kgData->vel = (vec_t){bb_randomInt(-60, 60), 60};
-
-    while (missile->pos.y > -2173)
+    if(missile != NULL)
     {
-        missile->pos.x -= (self->gameData->elapsedUs >> 12) * kgData->vel.x;
-        missile->pos.y -= (self->gameData->elapsedUs >> 12) * kgData->vel.y;
-    }
+        bb_501kgData_t* kgData = ((bb_501kgData_t*)missile->data);
 
-    vecFl_t floatVel = {(float)kgData->vel.x, (float)kgData->vel.y};
+        kgData->vel = (vec_t){bb_randomInt(-60, 60), 60};
 
-    kgData->angle = (int16_t)(atan2f(floatVel.y, floatVel.x) * (180.0 / M_PI));
-    kgData->angle += 270;
-    while (kgData->angle < 0)
-    {
-        kgData->angle += 360;
-    }
-    while (kgData->angle > 359)
-    {
-        kgData->angle -= 360;
-    }
+        while (missile->pos.y > -2173)
+        {
+            missile->pos.x -= (self->gameData->elapsedUs >> 12) * kgData->vel.x;
+            missile->pos.y -= (self->gameData->elapsedUs >> 12) * kgData->vel.y;
+        }
 
-    kgData->targetY = self->pos.y;
+        vecFl_t floatVel = {(float)kgData->vel.x, (float)kgData->vel.y};
+
+        kgData->angle = (int16_t)(atan2f(floatVel.y, floatVel.x) * (180.0 / M_PI));
+        kgData->angle += 270;
+        while (kgData->angle < 0)
+        {
+            kgData->angle += 360;
+        }
+        while (kgData->angle > 359)
+        {
+            kgData->angle -= 360;
+        }
+
+        kgData->targetY = self->pos.y;
+    }
 }
 
 void bb_triggerFaultyWile(bb_entity_t* self)
 {
+    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
     bb_entity_t* explosion    = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_EXPLOSION, 1,
                                                 self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
-    bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
-    eData->radius             = 60;
+    if(explosion != NULL)
+    {
+        bb_explosionData_t* eData = (bb_explosionData_t*)explosion->data;
+        eData->radius             = 60;
+    }
 }
 
 void bb_triggerDrillBotWile(bb_entity_t* self)
 {
+    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
     bb_entity_t* drillBot     = bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_DRILL_BOT, 1,
                                                 self->pos.x >> DECIMAL_BITS, -800, false, false);
-    bb_drillBotData_t* dbData = (bb_drillBotData_t*)drillBot->data;
-    dbData->targetY           = self->pos.y - 256;
+    if(drillBot != NULL)
+    {
+        bb_drillBotData_t* dbData = (bb_drillBotData_t*)drillBot->data;
+        dbData->targetY           = self->pos.y - 256;
+    }
 }
 
 void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self)
 {
+    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
     bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_ATMOSPHERIC_ATOMIZER, 1,
                     self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, false);
     if (self->gameData->entityManager.playerEntity != NULL
@@ -5787,18 +5888,21 @@ void bb_triggerAtmosphericAtomizerWile(bb_entity_t* self)
 
 void bb_triggerAmmoSupplyWile(bb_entity_t* self)
 {
+    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
     bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_AMMO_SUPPLY, 1, self->pos.x >> DECIMAL_BITS,
                     -800, false, false);
 }
 
 void bb_triggerPacifierWile(bb_entity_t* self)
 {
+    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
     bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_PACIFIER, 1, self->pos.x >> DECIMAL_BITS,
                     -800, false, false);
 }
 
 void bb_triggerSpaceLaserWile(bb_entity_t* self)
 {
+    bb_ensureEntitySpace(&self->gameData->entityManager, 1);
     bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_SPACE_LASER, 1, self->pos.x >> DECIMAL_BITS,
                     self->pos.y >> DECIMAL_BITS, false, false);
 }
@@ -5838,6 +5942,7 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
             {
                 vec_t tilePos = {.x = tile_i * TILE_SIZE + HALF_TILE, .y = tile_j * TILE_SIZE + HALF_TILE};
                 // create a bug
+                bb_ensureEntitySpace(&gameData->entityManager, 1);
                 bb_entity_t* bug = bb_createEntity(&gameData->entityManager, LOOPING_ANIMATION, false,
                                                    bb_randomInt(8, 13), 1, tilePos.x, tilePos.y, false, false);
 
@@ -5869,6 +5974,7 @@ void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame
                 gameData->tilemap.fgTiles[tile_i][tile_j].embed = NOTHING_EMBED;
 
                 // create fuel
+                bb_ensureEntitySpace(&gameData->entityManager, 1);
                 bb_createEntity(&gameData->entityManager, LOOPING_ANIMATION, false, BB_FUEL, 10, tilePos.x, tilePos.y,
                                 true, false);
                 break;
