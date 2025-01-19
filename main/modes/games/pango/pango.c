@@ -980,7 +980,7 @@ void changeStateGameOver(pango_t* self)
     self->gameData.frameCount = 0;
     pa_resetGameDataLeds(&(self->gameData));
 
-    if(!self->gameData.caravanMode)
+    if(self->gameData.lives == 0)
     {
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
         player->loop         = false;
@@ -996,18 +996,36 @@ void changeStateGameOver(pango_t* self)
 
 void drawGameOver(font_t* font, paGameData_t* gameData)
 {
-    if(!gameData->caravanMode){
+    if(!gameData->caravanMode)
+    {
         drawPangoHud(font, gameData);
         drawText(font, c555, str_game_over, (TFT_WIDTH - textWidth(font, str_game_over)) / 2, 128);
-    } else {
+    } 
+    else 
+    {
         if (gameData->frameCount < 180){
             drawPangoHud(font, gameData);
-            drawText(font, c555, "Time up!!", (TFT_WIDTH - textWidth(font, str_game_over)) / 2, 128);
+
+            if(gameData->lives > 0) 
+            {
+                drawText(font, c555, "Time up!!", (TFT_WIDTH - textWidth(font, str_game_over)) / 2, 128);
+            } 
+            else 
+            {
+                drawText(font, c555, str_game_over, (TFT_WIDTH - textWidth(font, str_game_over)) / 2, 128);
+            }
         } else {
             char scoreStr[32];
             snprintf(scoreStr, sizeof(scoreStr) - 1, "%7.6" PRIu32, gameData->score);
 
-            drawWsgSimpleScaled(pango->wsgManager.sprites[PA_SP_PLAYER_WIN].wsg, 120, 32, 2, 2);
+            if(gameData->lives > 0) 
+            {
+                drawWsgSimpleScaled(pango->wsgManager.sprites[PA_SP_PLAYER_WIN].wsg, 120, 32, 2, 2);
+            } 
+            else 
+            {
+                drawWsgSimpleScaled(pango->wsgManager.sprites[PA_SP_PLAYER_HURT].wsg, 120, 32, 2, 2);
+            }
 
             drawText(font, c555, "Caravan Score:", 64, 104);
             drawText(font, c555, scoreStr, 92, 116);
