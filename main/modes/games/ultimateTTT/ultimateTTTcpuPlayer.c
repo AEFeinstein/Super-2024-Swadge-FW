@@ -1194,7 +1194,6 @@ static bool analyzeMove(const tttSubgame_t subgames[3][3], const move_t* move, t
     memcpy(board, subgames, sizeof(board));
 
     const tttPlayer_t opponent = (player == TTT_P1) ? TTT_P2 : TTT_P1;
-    tttPlayer_t turn           = player;
     move_t lastMove            = {0};
     memcpy(&lastMove, move, sizeof(move_t));
     int moveNum = 0;

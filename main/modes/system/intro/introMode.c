@@ -528,7 +528,6 @@ static void introMainLoop(int64_t elapsedUs)
         const paletteColor_t outlineCol     = c025;
         const paletteColor_t textCol        = c025;
 
-        paletteColor_t* screen = getPxTftFramebuffer();
         for (int i = 0; i < TFT_WIDTH; i++)
         {
             drawLineFast(i, 0, i, TFT_HEIGHT, bgLineColors[i % 2]);
@@ -554,7 +553,6 @@ static void introMainLoop(int64_t elapsedUs)
         int16_t festX = magX + magW + 1 + kernAG;
 
         int16_t subOneWidth = textWidth(&iv->logoFont, sub);
-        int16_t subTwoWidth = textWidth(&iv->logoFont, sub2);
         int16_t kernWA      = -8;
         int16_t subWidth    = textWidth(&iv->logoFont, sub) + textWidth(&iv->logoFont, sub2) + kernWA + 1;
         int16_t subX        = (TFT_WIDTH - subWidth) / 2;
