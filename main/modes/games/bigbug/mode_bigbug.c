@@ -394,7 +394,6 @@ void bb_quickPlay(void)
         else // rocketIdx == 0
         {
             bigbug->gameData.entityManager.activeBooster = bigbug->gameData.entityManager.boosterEntities[rocketIdx];
-            ((bb_rocketData_t*)bigbug->gameData.entityManager.activeBooster->data)->numDonuts = 20;
             bigbug->gameData.entityManager.activeBooster->currentAnimationFrame               = 40;
             bigbug->gameData.entityManager.activeBooster->pos.y                               = 50;
             bigbug->gameData.entityManager.activeBooster->updateFunction                      = bb_updateHeavyFalling;

@@ -295,11 +295,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                         bb_foodCartData_t* fcData = (bb_foodCartData_t*)curEntity->data;
                         // tell this partner of the change in address
                         ((bb_foodCartData_t*)fcData->partner->data)->partner = foundSpot;
-                        if (((bb_foodCartData_t*)fcData->partner->data)->isCached)
-                        {
-                            bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
-                        }
-                        fcData->isCached = false;
+                        bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
                         break;
                     }
                     default:

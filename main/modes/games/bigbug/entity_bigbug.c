@@ -78,16 +78,14 @@ void bb_destroyEntity(bb_entity_t* self, bool caching, bool wasInTheMainArray)
     }
     else if (self->spriteIndex == BB_FOOD_CART)
     {
-        bb_foodCartData_t* fcData = (bb_foodCartData_t*)self->data;
-        // The food cart needs to track its own caching status to communicate just-in-time loading between both
-        // pieces.
-        fcData->isCached = caching;
-        if (fcData->partner->active == false || ((bb_foodCartData_t*)fcData->partner->data)->isCached)
+        uint8_t thisFrame = self->currentAnimationFrame;
+        if(self->currentAnimationFrame > 1)
         {
-            for (int frame = 0; frame < self->gameData->entityManager.sprites[self->spriteIndex].numFrames; frame++)
-            {
-                freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[frame]);
-            }
+            thisFrame = 1;
+        }
+        if(caching && (self->gameData->entityManager.sprites[self->spriteIndex].frames[thisFrame].w || self->gameData->entityManager.sprites[self->spriteIndex].frames[thisFrame].h))
+        {
+            freeWsg(&self->gameData->entityManager.sprites[self->spriteIndex].frames[thisFrame]);
         }
     }
 
@@ -2756,7 +2754,6 @@ void bb_updateExplosion(bb_entity_t* self)
                             // tell this partner of the change in address
                             ((bb_foodCartData_t*)fcData->partner->data)->partner = foundSpot;
                             bb_loadSprite("foodCart", 2, 1, &self->gameData->entityManager.sprites[BB_FOOD_CART]);
-                            fcData->isCached = false;
                         }
                         continue;
                     }
