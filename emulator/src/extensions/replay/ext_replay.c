@@ -584,6 +584,7 @@ static bool readEntry(replayEntry_t* entry)
                 printf("ERR: Can't find button matching '%s'\n", buffer);
                 return false;
             }
+            entry->buttonVal = button;
 
             break;
         }
