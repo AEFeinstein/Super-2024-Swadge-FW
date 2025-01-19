@@ -1513,7 +1513,7 @@ void bb_updateBugShooting(bb_entity_t* self)
         // call it paused and update frames in it's own update function because this one uses another spriteIdx.
         bb_entity_t* spit = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_SPIT, 10,
                                             self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, false);
-        if (self->gameData->entityManager.playerEntity != NULL)
+        if (self->gameData->entityManager.playerEntity != NULL && spit != NULL)
         {
             bb_spitData_t* sData = (bb_spitData_t*)spit->data;
             sData->vel           = subVec2d(self->gameData->entityManager.playerEntity->pos, spit->pos);
@@ -4977,6 +4977,10 @@ void bb_startGarbotnikIntro(bb_entity_t* self)
 
 void bb_startGarbotnikLandingTalk(bb_entity_t* self)
 {
+    if(self == NULL)
+    {
+        return;
+    }
     bb_garbotnikData_t* gData = (bb_garbotnikData_t*)self->data;
 
     bb_entity_t* ovo
