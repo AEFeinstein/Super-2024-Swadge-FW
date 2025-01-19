@@ -495,8 +495,8 @@ void bb_updateGarbotnikDeploy(bb_entity_t* self)
         ((bb_attachmentArmData_t*)arm->data)->rocket = self;
 
         bb_entity_t* grabbyHand
-            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 5,
-                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, false, false);
+            = bb_createEntity(&self->gameData->entityManager, LOOPING_ANIMATION, true, BB_GRABBY_HAND, 6,
+                              self->pos.x >> DECIMAL_BITS, (self->pos.y >> DECIMAL_BITS) - 53, true, false);
         ((bb_grabbyHandData_t*)grabbyHand->data)->rocket = self;
 
         self->paused             = true;
@@ -3119,6 +3119,8 @@ void bb_updateQuickplay(bb_entity_t* self)
             globalMidiPlayerPlaySong(&self->gameData->bgm, MIDI_BGM);
             self->gameData->camera.camera.pos = (vec_t){0, 0};
         }
+        self->gameData->btnDownState = 0;
+        self->gameData->btnState     = 0;
         // destroy self
         bb_destroyEntity(self, false, false);
     }
@@ -3772,7 +3774,7 @@ void bb_drawGrabbyHand(bb_entityManager_t* entityManager, rectangle_t* camera, b
     // don't draw the hand if it is fully retracted. Cuts down on overdraw a lot of the time.
     if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
     {
-        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[0],
+        drawWsgSimple(&entityManager->sprites[self->spriteIndex].frames[self->currentAnimationFrame],
                       (self->pos.x >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originX - camera->pos.x,
                       (self->pos.y >> DECIMAL_BITS) - entityManager->sprites[self->spriteIndex].originY
                           - camera->pos.y);
@@ -4556,10 +4558,11 @@ void bb_onCollisionGrabbyHand(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
     // if nothing grabbed yet and there is something in hand to grab
     if (self->currentAnimationFrame == 0
         && self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS)
-               < other->pos.y - 128)
+               < other->pos.y - 95)
     {
         self->paused    = false;
         ghData->grabbed = other;
+        bb_clearCollisions(other, false);
     }
 }
 
