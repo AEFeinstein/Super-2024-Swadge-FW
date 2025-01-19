@@ -127,7 +127,7 @@ Emulates a swadge
      --headless              Runs the emulator without a window.
      --hide-leds             Don't draw simulated LEDs next to the display
  -j, --joystick=JOYDEV       Sets the joystick device to use.
-     --js-preset=PRESET      Sets the joystick config preset to use. PRESET can be swadge or switch
+     --preset=PRESET         Sets the joystick config preset to use. PRESET can be swadge or switch
  -k, --keymap=LAYOUT         Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak
  -l, --lock                  Lock the emulator in the start mode
      --midi-file=FILE        Open and immediately play a MIDI file
@@ -290,13 +290,13 @@ the platform; on Windows the value should be a number from 0 to 15, with 0 being
 and so on; on Linux the value should be the path to a Joystick device, such as `/dev/input/js0`. Joystick
 input is not yet supported on Mac.
 
-`--js-preset`: Specifies the Joystick configuration preset to use. Possible values are `swadge` (the default),
+`--preset`: Specifies the Joystick configuration preset to use. Possible values are `swadge` (the default),
 and `switch`.
 
 ## Console Commands
 
 The emulator supports a small number of commands in the console, which can be opened by pressing `F4` or
-the `\`` / `~` key. These console commands can also be used from a [replay script](#recording-and-playing-inputs).
+the <code>\`</code> / `~` key. These console commands can also be used from a [replay script](#recording-and-playing-inputs).
 To get a complete list of available commands, type `help` into the console. For the usage of a specific command,
 type `help <command>` into the console.
 
@@ -322,6 +322,7 @@ type `help <command>` into the console.
 | `joystick map motion <x-axis> <y-axis> <z-axis>` | Maps three joystick axes onto the emulator accelerometer input                |
 | `joystick map dpad <x-axis> <y-axis>` | Maps two joystick axes onto the D-pad.                                                   |
 | `joystick deadzone touchpad <number>` | Sets the deadzone for the touchpad axes. Valid range for number is 0-32767, inclusive.   |
+| `joystick preset <preset-name>`     | Loads a predefined joystick mapping preset. Valid options are `swadge` or `switch`.        |
 | <code>touchpad [on\|off]</code>     | Toggles the emulator's virtual touchpad on or off                                          |
 | <code>leds [on\|off]</code>         | Toggles the emulator's virtual LEDs on or off                                              |
 
