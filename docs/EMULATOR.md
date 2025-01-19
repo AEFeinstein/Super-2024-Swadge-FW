@@ -296,7 +296,7 @@ and `switch`.
 ## Console Commands
 
 The emulator supports a small number of commands in the console, which can be opened by pressing `F4` or
-the `\`` / `~` key. These console commands can also be used from a [replay script](#recording-and-playing-inputs).
+the <code>\`</code> / `~` key. These console commands can also be used from a [replay script](#recording-and-playing-inputs).
 To get a complete list of available commands, type `help` into the console. For the usage of a specific command,
 type `help <command>` into the console.
 
