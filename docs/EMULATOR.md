@@ -322,6 +322,7 @@ type `help <command>` into the console.
 | `joystick map motion <x-axis> <y-axis> <z-axis>` | Maps three joystick axes onto the emulator accelerometer input                |
 | `joystick map dpad <x-axis> <y-axis>` | Maps two joystick axes onto the D-pad.                                                   |
 | `joystick deadzone touchpad <number>` | Sets the deadzone for the touchpad axes. Valid range for number is 0-32767, inclusive.   |
+| `joystick preset <preset-name>`     | Loads a predefined joystick mapping preset. Valid options are `swadge` or `switch`.        |
 | <code>touchpad [on\|off]</code>     | Toggles the emulator's virtual touchpad on or off                                          |
 | <code>leds [on\|off]</code>         | Toggles the emulator's virtual LEDs on or off                                              |
 
