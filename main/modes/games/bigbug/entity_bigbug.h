@@ -430,6 +430,7 @@ void bb_updateAttachmentArm(bb_entity_t* self);
 void bb_updateGameOver(bb_entity_t* self);
 void bb_updateRadarPing(bb_entity_t* self);
 void bb_updateGrabbyHand(bb_entity_t* self);
+void bb_updateFarGrabbyHand(bb_entity_t* self);
 void bb_updateDoor(bb_entity_t* self);
 void bb_updateCarActive(bb_entity_t* self);
 void bb_updateCarOpen(bb_entity_t* self);

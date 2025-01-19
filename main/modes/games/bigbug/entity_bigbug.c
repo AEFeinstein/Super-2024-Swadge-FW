@@ -2202,8 +2202,9 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     self->pos.y = ghData->rocket->pos.y - 848; // that is 53 << 4
 
     // retreat into the booster
-    if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26)
+    if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY > -26 && (ghData->grabbed == NULL || self->currentAnimationFrame == 2))
     {
+        self->paused = true;
         self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY -= 2;
         if (ghData->grabbed != NULL)
         {
@@ -2212,8 +2213,10 @@ void bb_updateGrabbyHand(bb_entity_t* self)
                 = self->pos.y - (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY << DECIMAL_BITS);
         }
     }
-    else if (ghData->grabbed != NULL)
+    else if (self->gameData->entityManager.sprites[BB_GRABBY_HAND].originY <= -26 && ghData->grabbed != NULL && self->currentAnimationFrame == 2)
     {
+        self->currentAnimationFrame = 0;
+        self->animationTimer        = 0;
         if (self->gameData->entityManager.playerEntity != NULL
             && self->gameData->entityManager.playerEntity->dataType == GARBOTNIK_DATA)
         {
@@ -2289,6 +2292,15 @@ void bb_updateGrabbyHand(bb_entity_t* self)
     if (self->currentAnimationFrame == 2)
     {
         self->paused = true;
+    }
+}
+
+void bb_updateFarGrabbyHand(bb_entity_t* self)
+{
+    if(self->gameData->entityManager.sprites[BB_GRABBY_HAND].allocated)
+    {
+        bb_freeSprite(&self->gameData->entityManager.sprites[BB_GRABBY_HAND]);
+        self->drawFunction = bb_drawNothing;
     }
 }
 

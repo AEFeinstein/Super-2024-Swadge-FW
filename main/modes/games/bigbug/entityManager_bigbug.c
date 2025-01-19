@@ -275,11 +275,6 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                         }
                         break;
                     }
-                    case BB_GRABBY_HAND:
-                    {
-                        bb_loadSprite("grab", 3, 1, &entityManager->sprites[BB_GRABBY_HAND]);
-                        break;
-                    }
                     case BB_DOOR:
                     {
                         bb_loadSprite("door", 2, 1, &entityManager->sprites[BB_DOOR]);
@@ -399,6 +394,11 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     == false)
                 {
                     curEntity->updateFarFunction(curEntity);
+                }
+                else if(curEntity->spriteIndex == BB_GRABBY_HAND && !entityManager->sprites[BB_GRABBY_HAND].allocated)
+                {
+                    bb_loadSprite("grab", 3, 1, &entityManager->sprites[BB_GRABBY_HAND]);
+                    curEntity->drawFunction = bb_drawGrabbyHand;
                 }
             }
 
@@ -1301,7 +1301,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 = (bb_grabbyHandData_t*)heap_caps_calloc(1, sizeof(bb_grabbyHandData_t), MALLOC_CAP_SPIRAM);
             bb_setData(entity, ghData, GRABBY_HAND_DATA);
 
-            entity->cacheable  = true;
+            entity->cacheable  = false;
             entity->halfWidth  = 7 << DECIMAL_BITS;
             entity->halfHeight = 26 << DECIMAL_BITS;
 
@@ -1319,6 +1319,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             push(entity->collisions, (void*)collision);
 
             entity->updateFunction = &bb_updateGrabbyHand;
+            entity->updateFarFunction = &bb_updateFarGrabbyHand;
             entity->drawFunction   = &bb_drawGrabbyHand;
 
             // sprites loaded just-in-time
