@@ -35,14 +35,14 @@ void bb_generateWorld(bb_tilemap_t* tilemap, int8_t* oldBoosterYs)
     {
         for (int j = 0; j < TILE_FIELD_HEIGHT; j++)
         {
-            tilemap->fgTiles[i][j].pos = i | (j << 7) | (1 << 15);
-            tilemap->mgTiles[i][j].pos = i | (j << 7); // z is implicitly zero
-            tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+            tilemap->fgTiles[i][j].pos    = i | (j << 7) | (1 << 15);
+            tilemap->mgTiles[i][j].pos    = i | (j << 7); // z is implicitly zero
+            tilemap->fgTiles[i][j].embed  = NOTHING_EMBED;
             tilemap->fgTiles[i][j].entity = NULL;
-            tilemap->fgTiles[i][j].gCost = 0;
-            tilemap->mgTiles[i][j].gCost = 0;
-            tilemap->fgTiles[i][j].hCost = 0;
-            tilemap->mgTiles[i][j].hCost = 0;
+            tilemap->fgTiles[i][j].gCost  = 0;
+            tilemap->mgTiles[i][j].gCost  = 0;
+            tilemap->fgTiles[i][j].hCost  = 0;
+            tilemap->mgTiles[i][j].hCost  = 0;
 
             uint32_t rgbCol = paletteToRGB(levelWsg.px[(j * levelWsg.w) + i]);
 
@@ -135,7 +135,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap, int8_t* oldBoosterYs)
                 case 153:
                 {
                     tilemap->mgTiles[i][j].health = 0;
-                    tilemap->fgTiles[i][j].embed = FINAL_BOSS_EMBED;
+                    tilemap->fgTiles[i][j].embed  = FINAL_BOSS_EMBED;
                     break;
                 }
                 default:

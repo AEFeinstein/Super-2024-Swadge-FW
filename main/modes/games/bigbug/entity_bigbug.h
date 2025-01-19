@@ -227,12 +227,10 @@ typedef struct
     bb_entity_t* egg;   // tracks the egg to stimulate it.
 } bb_eggLeavesData_t;
 
-
 typedef struct
 {
     uint16_t stimulation; // once it reaches 600, it turns into a bug.
 } bb_eggData_t;
-
 
 typedef struct
 {
@@ -363,7 +361,6 @@ typedef struct
     bool firstDialogeDone;
     bool secondDialogeDone;
 } bb_finalBossData_t;
-
 
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
