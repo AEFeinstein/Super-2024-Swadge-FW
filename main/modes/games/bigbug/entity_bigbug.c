@@ -3193,9 +3193,10 @@ void bb_updateQuickplay(bb_entity_t* self)
         self->gameData->btnDownState = 0;
         self->gameData->btnState     = 0;
 
-        self->gameData->entityManager.playerEntity->pos.y = 181 << 9;
-        ((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->numHarpoons = 250;
-        self->gameData->GarbotnikStat_fireTime = 50;
+        // for testing final boss
+        // self->gameData->entityManager.playerEntity->pos.y = 181 << 9;
+        // ((bb_garbotnikData_t*)self->gameData->entityManager.playerEntity->data)->numHarpoons = 250;
+        // self->gameData->GarbotnikStat_fireTime = 50;
 
 
         // destroy self
@@ -3303,7 +3304,9 @@ void bb_updateFinalBoss(bb_entity_t* self)
             bb_setCharacterLine(dData, 9, "DOCTOR OVO", "There are no fancy titles in death, fool.");
             bb_setCharacterLine(dData, 10, "Ovo", "You watch your mouth! Because I'm the real O.G.!");
             bb_setCharacterLine(dData, 11, "Ovo", "WHERE'S MY CHAOS ORB?");
-            bb_setCharacterLine(dData, 12, "DOCTOR OVO", "You're x days too late.");
+            char voiceLine[30];
+            snprintf(voiceLine, sizeof(voiceLine), "You're %d day%s too late.", self->gameData->day, self->gameData->day == 1 ? "" : "s");
+            bb_setCharacterLine(dData, 12, "DOCTOR OVO", voiceLine);
             bb_setCharacterLine(dData, 13, "DOCTOR OVO", "Now there's just one loose end I have to tie up.");
             bb_setCharacterLine(dData, 14, "DOCTOR OVO", "AND IT'S YOU!");
             bb_setCharacterLine(dData, 15, "Ovo", "You think you can defeat me? I egg to differ.");
