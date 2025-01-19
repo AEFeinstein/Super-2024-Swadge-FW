@@ -190,6 +190,8 @@ static void bb_EnterMode(void)
 
     bigbug->gameData.camera.camera.pos.x = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
     bigbug->gameData.camera.camera.pos.y = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
+    bigbug->gameData.camera.camera.width  = FIELD_WIDTH;
+    bigbug->gameData.camera.camera.height = FIELD_HEIGHT;
 
     ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
 

@@ -868,7 +868,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                                            entity->gameData->camera.camera.pos.x, entity->gameData->camera.camera.pos.y,
                                            false, true);
 
-        bb_dialogueData_t* dData = bb_createDialogueData(13, "Ovo");
+        bb_dialogueData_t* dData = bb_createDialogueData(11, "Ovo");
 
         bb_setCharacterLine(dData, 0, "Ovo", "Wow, look at that juicy bug!");
         bb_setCharacterLine(dData, 1, "Ovo", "Ah, who am I kidding?");
@@ -880,16 +880,13 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             "There are a bunch of ways to incapacitate that bug. But let's learn how to use harpoons first.");
         bb_setCharacterLine(dData, 5, "Ovo", "Hold your right thumb on the  C-Touchpad to aim.");
         bb_setCharacterLine(dData, 6, "Ovo", "Hey! Wait until I'm done talking, you doofus.");
-        bb_setCharacterLine(dData, 7, "Ovo", "MAGFest attendees are the actual worst.");
-        bb_setCharacterLine(dData, 8, "Ovo",
-                            "Don't take it personally, but I can detect your stench through the swadge's smelliphone.");
-        bb_setCharacterLine(dData, 9, "Ovo",
+        bb_setCharacterLine(dData, 7, "Ovo",
                             "If your touch vector is outside of the purple circle that appears on-screen, harpoons "
                             "will fire steadily.");
-        bb_setCharacterLine(dData, 10, "Ovo", "Three hits will flip the bug upside down!");
-        bb_setCharacterLine(dData, 11, "Ovo",
+        bb_setCharacterLine(dData, 8, "Ovo", "Three hits will flip the bug upside down!");
+        bb_setCharacterLine(dData, 9, "Ovo",
                             "There's a nifty detail where harpoons with upward velocity pass right through terrain.");
-        bb_setCharacterLine(dData, 12, "Ovo", "Now, let's get that bug!");
+        bb_setCharacterLine(dData, 10, "Ovo", "Now, let's get that bug!");
 
         dData->curString     = -1;
         dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;

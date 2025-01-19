@@ -1848,10 +1848,10 @@ void bb_updateMenu(bb_entity_t* self)
         }
         else if (mData->selectionIdx == 1)
         {
-            // quik play
+            // quick play
             mData->selectionIdx = 2;
             bb_createEntity(&self->gameData->entityManager, NO_ANIMATION, true, BB_QUICKPLAY_CONFIRM, 1,
-                            self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, false, true);
+                            self->pos.x >> DECIMAL_BITS, self->pos.y >> DECIMAL_BITS, true, true);
         }
 
         self->gameData->btnState = 0;
@@ -4228,18 +4228,18 @@ void bb_drawQuickplay(bb_entityManager_t* entityManager, rectangle_t* camera, bb
     }
 
     drawRectFilled(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-    int16_t xOffBecauseTheApiIsDumb = 20;
-    int16_t yOffBecauseTheApiIsDumb = 5;
+    int16_t xOff = 20;
+    int16_t yOff = 30;
 
-    drawTextWordWrapCentered(&self->gameData->font, c444, "Quick Play mode skips the intro sequence and all tutorial dialogue. It might also harvest the soul of one volunteer developer. Are you sure you want to continue?", &xOffBecauseTheApiIsDumb, &yOffBecauseTheApiIsDumb, TFT_WIDTH - 5, TFT_HEIGHT - 5);
+    drawTextWordWrapCentered(&self->gameData->font, c444, "Quick Play mode skips the intro sequence and all tutorial dialogue. Are you sure you want to continue?", &xOff, &yOff, TFT_WIDTH - 5, TFT_HEIGHT - 5);
     drawRect((TFT_WIDTH >> 2) - 40, TFT_HEIGHT >> 1, (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 40, mData->selectionIdx == 2 ? c550 : c444);
-    xOffBecauseTheApiIsDumb = (TFT_WIDTH >> 2) - 40;
-    yOffBecauseTheApiIsDumb = (TFT_HEIGHT >> 1) + 15;
-    drawTextWordWrapCentered(&self->gameData->font, mData->selectionIdx == 2 ? c550 : c444, "NO", &xOffBecauseTheApiIsDumb, &yOffBecauseTheApiIsDumb, (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 60);
+    xOff = (TFT_WIDTH >> 2) - 40;
+    yOff = (TFT_HEIGHT >> 1) + 15;
+    drawTextWordWrapCentered(&self->gameData->font, mData->selectionIdx == 2 ? c550 : c444, "NO", &xOff, &yOff, (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 60);
     drawRect((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - 40, TFT_HEIGHT >> 1, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 40, mData->selectionIdx == 3 ? c550 : c444);
-    xOffBecauseTheApiIsDumb = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - 40;
-    yOffBecauseTheApiIsDumb = (TFT_HEIGHT >> 1) + 15;
-    drawTextWordWrapCentered(&self->gameData->font, mData->selectionIdx == 3 ? c550 : c444, "YES", &xOffBecauseTheApiIsDumb, &yOffBecauseTheApiIsDumb, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 60);
+    xOff = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - 40;
+    yOff = (TFT_HEIGHT >> 1) + 15;
+    drawTextWordWrapCentered(&self->gameData->font, mData->selectionIdx == 3 ? c550 : c444, "YES", &xOff, &yOff, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) + 40, (TFT_HEIGHT >> 1) + 60);
 }
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
@@ -4804,7 +4804,7 @@ void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitIn
             dData, 6, "Ovo",
             "\"Same as the other garbage densities, bricks will crumble if they are totally disconnected.\"");
         bb_setCharacterLine(dData, 7, "Ovo", "\"Or they can be smashed easily with heavy falling objects.\"");
-        bb_setCharacterLine(dData, 8, "Ovo", "\"Big Bug's early-game design is all about trading fuel for upgrades.\"");
+        bb_setCharacterLine(dData, 8, "Ovo", "\"Big Bug's early-game design is all about using your fuel to get upgrades.\"");
         bb_setCharacterLine(dData, 9, "Ovo", "\"So be sure to strategize how to use your time!\"");
         bb_setCharacterLine(dData, 10, "Ovo", "\"The late-game design has a shift in focus away from fuel.\"");
         bb_setCharacterLine(dData, 11, "Ovo", "\"You'll just have to see it for yourself!\"");
