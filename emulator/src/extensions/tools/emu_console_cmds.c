@@ -657,15 +657,12 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
             // Enable and connect to named device
             disableExtension("gamepad");
 
-            if (deviceName == NULL)
+            if (deviceName != NULL)
             {
                 strncpy(joyDevName, deviceName, sizeof(joyDevName));
-                emulatorArgs.joystick = joyDevName;
             }
-            else
-            {
-                emulatorArgs.joystick = joyDevName;
-            }
+
+            emulatorArgs.joystick = joyDevName;
 
             enableExtension("gamepad");
 
