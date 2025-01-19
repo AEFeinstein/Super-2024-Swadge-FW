@@ -326,12 +326,12 @@ void bb_updateRocketLiftoff(bb_entity_t* self)
                 }
             }
             bb_generateWorld(&(self->gameData->tilemap), oldBoosterYs);
-            // brute force recalculate activeEntities count to clean up any inaccuracies.
-            self->gameData->entityManager.activeEntities = 0;
-            for (int i = 0; i < MAX_ENTITIES; i++)
-            {
-                self->gameData->entityManager.activeEntities += self->gameData->entityManager.entities[i].active;
-            }
+        }
+        // brute force recalculate activeEntities count to clean up any inaccuracies.
+        self->gameData->entityManager.activeEntities = 0;
+        for (int i = 0; i < MAX_ENTITIES; i++)
+        {
+            self->gameData->entityManager.activeEntities += self->gameData->entityManager.entities[i].active;
         }
 
         bb_entity_t* ovo
