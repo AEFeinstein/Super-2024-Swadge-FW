@@ -236,6 +236,10 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
         entityManager->sprites[BB_HOTDOG].allocated        = true;
         entityManager->sprites[BB_HOTDOG].brightnessLevels = 1;
     }
+
+    //final boss is unloaded until needed.
+    entityManager->sprites[BB_FINAL_BOSS].originX = 30;
+    entityManager->sprites[BB_FINAL_BOSS].originY = 40;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -1674,6 +1678,36 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             entity->updateFunction = &bb_updateQuickplay;
             entity->drawFunction = &bb_drawQuickplay;
+            break;
+        }
+        case BB_FINAL_BOSS:
+        {
+            bb_finalBossData_t* fbData = heap_caps_calloc(1, sizeof(bb_finalBossData_t), MALLOC_CAP_SPIRAM);
+            fbData->health = 5500;
+            bb_setData(entity, fbData, FINAL_BOSS_DATA);
+            
+            entity->halfWidth    = 15 << DECIMAL_BITS;
+            entity->halfHeight   = 15 << DECIMAL_BITS;
+
+            entity->collisions = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rCollisions");
+            list_t* others     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision = (bb_collision_t){others, bb_onCollisionSpaceLaserGarbotnik};
+            push(entity->collisions, (void*)collision);
+
+            list_t* others2 = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+            push(others2, (void*)HARPOON);
+            bb_collision_t* collision2
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision2 = (bb_collision_t){others2, bb_onCollisionBoss};
+            push(entity->collisions, (void*)collision2);
+
+            //just in time loading
+            bb_loadSprite("ovovoBoss", 8, 1, &entityManager->sprites[BB_FINAL_BOSS]);
+            entity->updateFunction = &bb_updateFinalBoss;
+            entity->drawFunction   = &bb_drawFinalBoss;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

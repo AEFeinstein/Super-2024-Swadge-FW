@@ -116,7 +116,7 @@ void bb_generateWorld(bb_tilemap_t* tilemap, int8_t* oldBoosterYs)
                 }
             }
 
-            // green value used for midground tiles and doors
+            // green value used for midground tiles and doors and final boss
             switch ((rgbCol >> 8) & 255)
             {
                 case 51:
@@ -130,6 +130,12 @@ void bb_generateWorld(bb_tilemap_t* tilemap, int8_t* oldBoosterYs)
                 {
                     tilemap->mgTiles[i][j].health = 0;
                     tilemap->fgTiles[i][j].embed  = DOOR_EMBED;
+                    break;
+                }
+                case 153:
+                {
+                    tilemap->mgTiles[i][j].health = 0;
+                    tilemap->fgTiles[i][j].embed = FINAL_BOSS_EMBED;
                     break;
                 }
                 default:

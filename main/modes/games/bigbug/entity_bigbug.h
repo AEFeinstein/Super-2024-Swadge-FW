@@ -52,6 +52,7 @@ typedef enum
     ATMOSPHERIC_ATOMIZER_DATA,
     DRILL_BOT_DATA,
     SPACE_LASER_DATA,
+    FINAL_BOSS_DATA,
 } bb_data_type_t;
 
 //==============================================================================
@@ -226,10 +227,12 @@ typedef struct
     bb_entity_t* egg;   // tracks the egg to stimulate it.
 } bb_eggLeavesData_t;
 
+
 typedef struct
 {
     uint16_t stimulation; // once it reaches 600, it turns into a bug.
 } bb_eggData_t;
+
 
 typedef struct
 {
@@ -350,6 +353,18 @@ typedef struct
     uint8_t highestGarbage;
 } bb_spaceLaserData_t;
 
+typedef struct
+{
+    vec_t vel;
+    int8_t damageEffect; // decrements over time.
+    int16_t health;
+    bb_entity_t* bossEggs[10];
+    int16_t stateTimer; // increments over time. Doing some attacks when positive. Overflows intentionally.
+    bool firstDialogeDone;
+    bool secondDialogeDone;
+} bb_finalBossData_t;
+
+
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
 typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -447,6 +462,7 @@ void bb_updateTimedPhysicsObject(bb_entity_t* self);
 void bb_updatePacifier(bb_entity_t* self);
 void bb_updateSpaceLaser(bb_entity_t* self);
 void bb_updateQuickplay(bb_entity_t* self);
+void bb_updateFinalBoss(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -482,6 +498,7 @@ void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, b
 void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawGarbotnikUI(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawQuickplay(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawFinalBoss(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
@@ -504,6 +521,8 @@ void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
 void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSpaceLaserGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSpaceLaserBug(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionBossEgg(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionBoss(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
@@ -525,6 +544,7 @@ void bb_playCarAlarm(bb_entity_t* self);
 void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs);
+void bb_afterEnding(bb_entity_t* self);
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth, bool flagNeighborsForPathfinding);
