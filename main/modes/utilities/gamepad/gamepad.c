@@ -697,7 +697,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
  */
 void gamepadButtonCb(buttonEvt_t* evt)
 {
-    if (evt->button == PB_START || evt->button == PB_SELECT)
+    if (evt->button == PB_START || evt->button == PB_SELECT || evt->button == (PB_START | PB_SELECT))
     {
         if ((evt->state & PB_START) && (evt->state & PB_SELECT))
         {
