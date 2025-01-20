@@ -91,7 +91,7 @@ static void screensaverRender(uint32_t winW, uint32_t winH, const emuPane_t* pan
 {
     if (active && ((esp_timer_get_time() % blinkTime) <= blinkOnTime))
     {
-        const char* str = "FREE PLAY";
+        const char* str = "FREE DEMO PLAY";
         int w, h;
         CNFGGetTextExtents(str, &w, &h, 10);
         CNFGPenX = (winW - w) / 2;
