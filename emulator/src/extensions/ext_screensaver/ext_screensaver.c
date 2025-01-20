@@ -37,8 +37,10 @@ static int64_t activationTime = 0;
 static int screensaverIndex   = 0;
 static int screensaverCount   = 0;
 // 1 minute
-static int64_t timeout           = 6000000; // 0;
+static int64_t timeout           = 60000000;
+// 30 seconds
 static int64_t switchTime        = 30000000;
+// 1.5 seconds
 static int64_t blinkTime         = 1500000;
 static const int64_t blinkOnTime = 750000;
 
