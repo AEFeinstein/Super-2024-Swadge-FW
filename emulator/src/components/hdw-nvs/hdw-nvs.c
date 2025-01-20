@@ -52,9 +52,7 @@ typedef struct
 // Function Prototypes
 //==============================================================================
 
-static char* blobToStr(const void* value, size_t length);
 static int hexCharToInt(char c);
-static void strToBlob(char* str, void* outBlob, size_t blobLen);
 static FILE* openNvsFile(const char* mode);
 static size_t emuGetInjectedBlobLength(const char* namespace, const char* key);
 static void* emuGetInjectedBlob(const char* namespace, const char* key);
@@ -436,8 +434,7 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
         }
         else
         {
-            size_t injectedLength = emuGetInjectedBlobLength(namespace, key);
-            *length               = injectedLength;
+            *length = emuGetInjectedBlobLength(namespace, key);
         }
         return true;
     }
@@ -1020,7 +1017,7 @@ bool nvsNamespaceInUse(const char* namespace)
  * @param length The length of the blob
  * @return char* An allocated hex string, must be free()'d when done
  */
-static char* blobToStr(const void* value, size_t length)
+char* blobToStr(const void* value, size_t length)
 {
     const uint8_t* value8 = (const uint8_t*)value;
     char* blobStr         = heap_caps_malloc((length * 2) + 1, MALLOC_CAP_8BIT);
@@ -1061,7 +1058,7 @@ static int hexCharToInt(char c)
  * @param outBlob The blob will be written here, must already be allocated
  * @param blobLen The length of the blob to write
  */
-static void strToBlob(char* str, void* outBlob, size_t blobLen)
+void strToBlob(char* str, void* outBlob, size_t blobLen)
 {
     uint8_t* outBlob8 = (uint8_t*)outBlob;
     for (size_t i = 0; i < blobLen; i++)

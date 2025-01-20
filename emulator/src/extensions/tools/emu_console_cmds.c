@@ -475,7 +475,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
 
         const char* namespace = "storage";
 
-        if (!strcmp(typeArg, "int") || !strcmp(typeArg, "str") || !strcmp(typeArg, "file"))
+        if (!strcmp(typeArg, "int") || !strcmp(typeArg, "str") || !strcmp(typeArg, "file") || !strcmp(typeArg, "blob"))
         {
             namespace = args[1];
             if (argCount > 4)
@@ -541,6 +541,23 @@ static int injectCommandCb(const char** args, int argCount, char* out)
             emuInjectNvsBlob(namespace, keyArg, (bufOut - valueBuf), valueBuf);
 
             return snprintf(out, 1024, "Set NVS %s:%s to %s\n", namespace, keyArg, valueBuf);
+        }
+        else if (!strcmp(typeArg, "blob"))
+        {
+            if (!valueArg)
+            {
+                return snprintf(out, 1024, "Hex blob value is required\n");
+            }
+
+            size_t blobLen = (strlen(*valueArg) + 1) / 2;
+            uint8_t blob[blobLen];
+            strToBlob(*valueArg, blob, blobLen);
+
+            printf("Length of blob %s is %zu (strlen=%zu)\n", *valueArg, blobLen, strlen(*valueArg));
+
+            emuInjectNvsBlob(namespace, keyArg, blobLen, blob);
+
+            return snprintf(out, 1024, "Set NVS %s to blob with length %zu\n", keyArg, blobLen);
         }
         else if (!strcmp(typeArg, "file"))
         {
