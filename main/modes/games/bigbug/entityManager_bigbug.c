@@ -236,6 +236,10 @@ void bb_loadSprites(bb_entityManager_t* entityManager)
         entityManager->sprites[BB_HOTDOG].allocated        = true;
         entityManager->sprites[BB_HOTDOG].brightnessLevels = 1;
     }
+
+    // final boss is unloaded until needed.
+    entityManager->sprites[BB_FINAL_BOSS].originX = 30;
+    entityManager->sprites[BB_FINAL_BOSS].originY = 40;
 }
 
 void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
@@ -275,11 +279,6 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                         }
                         break;
                     }
-                    case BB_GRABBY_HAND:
-                    {
-                        bb_loadSprite("grab", 3, 1, &entityManager->sprites[BB_GRABBY_HAND]);
-                        break;
-                    }
                     case BB_DOOR:
                     {
                         bb_loadSprite("door", 2, 1, &entityManager->sprites[BB_DOOR]);
@@ -295,11 +294,7 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                         bb_foodCartData_t* fcData = (bb_foodCartData_t*)curEntity->data;
                         // tell this partner of the change in address
                         ((bb_foodCartData_t*)fcData->partner->data)->partner = foundSpot;
-                        if (((bb_foodCartData_t*)fcData->partner->data)->isCached)
-                        {
-                            bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
-                        }
-                        fcData->isCached = false;
+                        bb_loadSprite("foodCart", 2, 1, &entityManager->sprites[BB_FOOD_CART]);
                         break;
                     }
                     default:
@@ -403,6 +398,11 @@ void bb_updateEntities(bb_entityManager_t* entityManager, bb_camera_t* camera)
                     == false)
                 {
                     curEntity->updateFarFunction(curEntity);
+                }
+                else if (curEntity->spriteIndex == BB_GRABBY_HAND && !entityManager->sprites[BB_GRABBY_HAND].allocated)
+                {
+                    bb_loadSprite("grab", 3, 1, &entityManager->sprites[BB_GRABBY_HAND]);
+                    curEntity->drawFunction = bb_drawGrabbyHand;
                 }
             }
 
@@ -568,14 +568,16 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     {
         currentEntity->drawFunction(entityManager, camera, currentEntity);
     }
+    // If the sprite is out-of-bounds
+    else if (currentEntity->spriteIndex >= NUM_SPRITES
+             // Or the sprite is in-bounds, but not allocated
+             || !entityManager->sprites[currentEntity->spriteIndex].allocated)
+    {
+        // Immediately return
+        return;
+    }
     else if (entityManager->sprites[currentEntity->spriteIndex].brightnessLevels == 6)
     {
-        // Don't draw unallocated sprites
-        if (NUM_SPRITES > currentEntity->spriteIndex && !entityManager->sprites[currentEntity->spriteIndex].allocated)
-        {
-            return;
-        }
-
         uint8_t brightness = 5;
         int16_t xOff       = (currentEntity->pos.x >> DECIMAL_BITS)
                        - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
@@ -616,12 +618,6 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     }
     else
     {
-        // Don't draw unallocated sprites
-        if (NUM_SPRITES > currentEntity->spriteIndex && !entityManager->sprites[currentEntity->spriteIndex].allocated)
-        {
-            return;
-        }
-
         drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
                       (currentEntity->pos.x >> DECIMAL_BITS)
                           - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
@@ -636,7 +632,8 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
         currentEntity->currentAnimationFrame
             = currentEntity->animationTimer / currentEntity->gameFramesPerAnimationFrame;
         // if frame reached the end of the animation
-        if (currentEntity->currentAnimationFrame >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
+        if (currentEntity->spriteIndex < NUM_SPRITES
+            && currentEntity->currentAnimationFrame >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
         {
             switch (currentEntity->type)
             {
@@ -867,33 +864,33 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         bb_entity_t* ovo = bb_createEntity(&entity->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                                            entity->gameData->camera.camera.pos.x, entity->gameData->camera.camera.pos.y,
                                            false, true);
+        if (ovo != NULL)
+        {
+            bb_dialogueData_t* dData = bb_createDialogueData(11, "Ovo");
 
-        bb_dialogueData_t* dData = bb_createDialogueData(13, "Ovo");
+            bb_setCharacterLine(dData, 0, "Ovo", "Wow, look at that juicy bug!");
+            bb_setCharacterLine(dData, 1, "Ovo", "Ah, who am I kidding?");
+            bb_setCharacterLine(dData, 2, "Ovo", "My time in this landfill is limited.");
+            bb_setCharacterLine(dData, 3, "Ovo",
+                                "So I'm going to break the fourth wall and tell you how to play the freaking game!");
+            bb_setCharacterLine(
+                dData, 4, "Ovo",
+                "There are a bunch of ways to incapacitate that bug. But let's learn how to use harpoons first.");
+            bb_setCharacterLine(dData, 5, "Ovo", "Hold your right thumb on the  C-Touchpad to aim.");
+            bb_setCharacterLine(dData, 6, "Ovo", "Hey! Wait until I'm done talking, you doofus.");
+            bb_setCharacterLine(dData, 7, "Ovo",
+                                "If your touch vector is outside of the purple circle that appears on-screen, harpoons "
+                                "will fire steadily.");
+            bb_setCharacterLine(dData, 8, "Ovo", "Three hits will flip the bug upside down!");
+            bb_setCharacterLine(
+                dData, 9, "Ovo",
+                "There's a nifty detail where harpoons with upward velocity pass right through terrain.");
+            bb_setCharacterLine(dData, 10, "Ovo", "Now, let's get that bug!");
 
-        bb_setCharacterLine(dData, 0, "Ovo", "Wow, look at that juicy bug!");
-        bb_setCharacterLine(dData, 1, "Ovo", "Ah, who am I kidding?");
-        bb_setCharacterLine(dData, 2, "Ovo", "My time in this landfill is limited.");
-        bb_setCharacterLine(dData, 3, "Ovo",
-                            "So I'm going to break the fourth wall and tell you how to play the freaking game!");
-        bb_setCharacterLine(
-            dData, 4, "Ovo",
-            "There are a bunch of ways to incapacitate that bug. But let's learn how to use harpoons first.");
-        bb_setCharacterLine(dData, 5, "Ovo", "Hold your right thumb on the  C-Touchpad to aim.");
-        bb_setCharacterLine(dData, 6, "Ovo", "Hey! Wait until I'm done talking, you doofus.");
-        bb_setCharacterLine(dData, 7, "Ovo", "MAGFest attendees are the actual worst.");
-        bb_setCharacterLine(dData, 8, "Ovo",
-                            "Don't take it personally, but I can detect your stench through the swadge's smelliphone.");
-        bb_setCharacterLine(dData, 9, "Ovo",
-                            "If your touch vector is outside of the purple circle that appears on-screen, harpoons "
-                            "will fire steadily.");
-        bb_setCharacterLine(dData, 10, "Ovo", "Three hits will flip the bug upside down!");
-        bb_setCharacterLine(dData, 11, "Ovo",
-                            "There's a nifty detail where harpoons with upward velocity pass right through terrain.");
-        bb_setCharacterLine(dData, 12, "Ovo", "Now, let's get that bug!");
-
-        dData->curString     = -1;
-        dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-        bb_setData(ovo, dData, DIALOGUE_DATA);
+            dData->curString     = -1;
+            dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+            bb_setData(ovo, dData, DIALOGUE_DATA);
+        }
     }
     entity->spriteIndex = spriteIndex;
 
@@ -1151,14 +1148,20 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         {
             bb_menuData_t* mData = heap_caps_calloc(1, sizeof(bb_menuData_t), MALLOC_CAP_SPIRAM);
 
+            bb_ensureEntitySpace(entityManager, 1);
             mData->cursor = bb_createEntity(
                 entityManager, LOOPING_ANIMATION, false, HARPOON, 3, (entity->pos.x >> DECIMAL_BITS) - 22, 0, false,
                 false); // y position doesn't matter here. It will be handled in the update loop.
 
-            // This will make it draw pointed right
-            ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};
+            if (mData->cursor != NULL)
+            {
+                bb_clearCollisions(mData->cursor, false);
 
-            mData->cursor->updateFunction = NULL;
+                // This will make it draw pointed right
+                ((bb_projectileData_t*)mData->cursor->data)->vel = (vec_t){10, 0};
+
+                mData->cursor->updateFunction = NULL;
+            }
 
             bb_setData(entity, mData, MENU_DATA);
 
@@ -1306,7 +1309,7 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 = (bb_grabbyHandData_t*)heap_caps_calloc(1, sizeof(bb_grabbyHandData_t), MALLOC_CAP_SPIRAM);
             bb_setData(entity, ghData, GRABBY_HAND_DATA);
 
-            entity->cacheable  = true;
+            entity->cacheable  = false;
             entity->halfWidth  = 7 << DECIMAL_BITS;
             entity->halfHeight = 26 << DECIMAL_BITS;
 
@@ -1323,8 +1326,9 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
             *collision                = (bb_collision_t){others, bb_onCollisionGrabbyHand};
             push(entity->collisions, (void*)collision);
 
-            entity->updateFunction = &bb_updateGrabbyHand;
-            entity->drawFunction   = &bb_drawGrabbyHand;
+            entity->updateFunction    = &bb_updateGrabbyHand;
+            entity->updateFarFunction = &bb_updateFarGrabbyHand;
+            entity->drawFunction      = &bb_drawGrabbyHand;
 
             // sprites loaded just-in-time
             bb_loadSprite("grab", 3, 1, &entityManager->sprites[BB_GRABBY_HAND]);
@@ -1403,20 +1407,23 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
                 entity->gameData->isPaused = true;
                 // set the tutorial flag
                 entity->gameData->tutorialFlags |= 0b10000;
-                bb_entity_t* ovo = bb_createEntity(&entity->gameData->entityManager, NO_ANIMATION, true, OVO_TALK, 1,
+                bb_entity_t* ovo = bb_createEntity(entityManager, NO_ANIMATION, true, OVO_TALK, 1,
                                                    entity->gameData->camera.camera.pos.x,
                                                    entity->gameData->camera.camera.pos.y, false, true);
 
-                bb_dialogueData_t* dData = bb_createDialogueData(3, "Ovo");
+                if (ovo != NULL)
+                {
+                    bb_dialogueData_t* dData = bb_createDialogueData(3, "Ovo");
 
-                bb_setCharacterLine(dData, 0, "Ovo", "I want to eat that donut RIGHT NOW!");
-                bb_setCharacterLine(dData, 1, "Ovo", "No. I need to focus. I'll tow it back to the booster.");
-                bb_setCharacterLine(dData, 2, "Ovo",
-                                    "When I eat it at home, it will be the be the impulse for my next great wile.");
+                    bb_setCharacterLine(dData, 0, "Ovo", "I want to eat that donut RIGHT NOW!");
+                    bb_setCharacterLine(dData, 1, "Ovo", "No. I need to focus. I'll tow it back to the booster.");
+                    bb_setCharacterLine(dData, 2, "Ovo",
+                                        "When I eat it at home, it will be the be the impulse for my next great wile.");
 
-                dData->curString     = -1;
-                dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
-                bb_setData(ovo, dData, DIALOGUE_DATA);
+                    dData->curString     = -1;
+                    dData->endDialogueCB = &bb_afterGarbotnikTutorialTalk;
+                    bb_setData(ovo, dData, DIALOGUE_DATA);
+                }
             }
 
             entity->halfWidth  = 8 << DECIMAL_BITS;
@@ -1498,6 +1505,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         }
         case BB_501KG:
         {
+            // just in time loading
+            bb_loadSprite("501kg", 1, 1, &entityManager->sprites[BB_501KG]);
             bb_setData(entity, heap_caps_calloc(1, sizeof(bb_501kgData_t), MALLOC_CAP_SPIRAM), BB_501KG_DATA);
             entity->updateFunction = &bb_update501kg;
             entity->drawFunction   = &bb_draw501kg;
@@ -1661,6 +1670,42 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, bb_animationType
         case BB_GARBOTNIK_UI:
         {
             entity->drawFunction = &bb_drawGarbotnikUI;
+            break;
+        }
+        case BB_QUICKPLAY_CONFIRM:
+        {
+            entity->updateFunction = &bb_updateQuickplay;
+            entity->drawFunction   = &bb_drawQuickplay;
+            break;
+        }
+        case BB_FINAL_BOSS:
+        {
+            bb_finalBossData_t* fbData = heap_caps_calloc(1, sizeof(bb_finalBossData_t), MALLOC_CAP_SPIRAM);
+            fbData->health             = 5500;
+            bb_setData(entity, fbData, FINAL_BOSS_DATA);
+
+            entity->halfWidth  = 15 << DECIMAL_BITS;
+            entity->halfHeight = 15 << DECIMAL_BITS;
+
+            entity->collisions = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rCollisions");
+            list_t* others     = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+            push(others, (void*)GARBOTNIK_FLYING);
+            bb_collision_t* collision
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision = (bb_collision_t){others, bb_onCollisionSpaceLaserGarbotnik};
+            push(entity->collisions, (void*)collision);
+
+            list_t* others2 = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "rOthers");
+            push(others2, (void*)HARPOON);
+            bb_collision_t* collision2
+                = heap_caps_calloc_tag(1, sizeof(bb_collision_t), MALLOC_CAP_SPIRAM, "rCollision");
+            *collision2 = (bb_collision_t){others2, bb_onCollisionBoss};
+            push(entity->collisions, (void*)collision2);
+
+            // just in time loading
+            bb_loadSprite("ovovoBoss", 8, 1, &entityManager->sprites[BB_FINAL_BOSS]);
+            entity->updateFunction = &bb_updateFinalBoss;
+            entity->drawFunction   = &bb_drawFinalBoss;
             break;
         }
         default: // FLAME_ANIM and others need nothing set

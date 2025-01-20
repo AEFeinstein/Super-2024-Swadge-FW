@@ -69,7 +69,6 @@ static void bb_DrawScene_Garbotnik_Upgrade(void);
 static void bb_GameLoop_Garbotnik_Upgrade(int64_t elapsedUs);
 static void bb_GameLoop_Loadout_Select(int64_t elapsedUs);
 static void bb_GameLoop(int64_t elapsedUs);
-static void bb_Reset(void);
 static void bb_SetLeds(void);
 static void bb_setPrimingLeds(uint8_t primingEffect);
 static void bb_UpdateTileSupport(void);
@@ -193,8 +192,10 @@ static void bb_EnterMode(void)
         = bb_createEntity(&(bigbug->gameData.entityManager), NO_ANIMATION, true, NO_SPRITE_POI, 1,
                           (foreground->pos.x >> DECIMAL_BITS), (foreground->pos.y >> DECIMAL_BITS) - 234, true, false);
 
-    bigbug->gameData.camera.camera.pos.x = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
-    bigbug->gameData.camera.camera.pos.y = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
+    bigbug->gameData.camera.camera.pos.x  = (bigbug->gameData.entityManager.viewEntity->pos.x >> DECIMAL_BITS) - 140;
+    bigbug->gameData.camera.camera.pos.y  = (bigbug->gameData.entityManager.viewEntity->pos.y >> DECIMAL_BITS) - 120;
+    bigbug->gameData.camera.camera.width  = FIELD_WIDTH;
+    bigbug->gameData.camera.camera.height = FIELD_HEIGHT;
 
     ((bb_goToData*)bigbug->gameData.entityManager.viewEntity->data)->executeOnArrival = &bb_startGarbotnikIntro;
 
@@ -208,8 +209,6 @@ static void bb_EnterMode(void)
 
     bb_setupMidi();
     soundPlayBgm(&bigbug->gameData.bgm, MIDI_BGM);
-
-    bb_Reset();
 }
 
 //#else
@@ -327,8 +326,6 @@ static void bb_EnterModeSkipIntro(void)
     unloadMidiFile(&bigbug->gameData.bgm);
     loadMidiFile("BigBugExploration.mid", &bigbug->gameData.bgm, true);
     globalMidiPlayerPlaySong(&bigbug->gameData.bgm, MIDI_BGM);
-
-    bb_Reset();
 }
 
 //#endif
@@ -1647,10 +1644,13 @@ static void bb_GameLoop(int64_t elapsedUs)
                     = bb_createEntity(&bigbug->gameData.entityManager, NO_ANIMATION, true, BB_RADAR_PING, 1,
                                       bigbug->gameData.entityManager.playerEntity->pos.x >> DECIMAL_BITS,
                                       bigbug->gameData.entityManager.playerEntity->pos.y >> DECIMAL_BITS, true, false);
-                bigbug->gameData.screen    = BIGBUG_GAME_PINGING;
-                bb_radarPingData_t* rpData = (bb_radarPingData_t*)radarPing->data;
-                rpData->color              = c415;
-                rpData->executeAfterPing   = &bb_openMap;
+                if (radarPing != NULL)
+                {
+                    bigbug->gameData.screen    = BIGBUG_GAME_PINGING;
+                    bb_radarPingData_t* rpData = (bb_radarPingData_t*)radarPing->data;
+                    rpData->color              = c415;
+                    rpData->executeAfterPing   = &bb_openMap;
+                }
             }
         }
     }
@@ -1674,15 +1674,6 @@ static void bb_GameLoop(int64_t elapsedUs)
     bb_DrawScene();
 
     // ESP_LOGD(BB_TAG,"FPS: %ld\n", 1000000 / elapsedUs);
-}
-
-static void bb_Reset(void)
-{
-    ESP_LOGD(BB_TAG, "The width is: %d\n", FIELD_WIDTH);
-    ESP_LOGD(BB_TAG, "The height is: %d\n", FIELD_HEIGHT);
-
-    bigbug->gameData.camera.camera.width  = FIELD_WIDTH;
-    bigbug->gameData.camera.camera.height = FIELD_HEIGHT;
 }
 
 /**

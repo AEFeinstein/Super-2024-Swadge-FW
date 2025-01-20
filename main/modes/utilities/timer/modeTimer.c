@@ -134,6 +134,10 @@ static void timerEnterMode(void)
     // Default to 30s
     timerData->countdownTime = 30 * 1000000;
     timerData->timerState    = STOPPED;
+
+    // Turn off LEDs
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 static void timerExitMode(void)
