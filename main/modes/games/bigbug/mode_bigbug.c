@@ -322,6 +322,12 @@ static void bb_EnterModeSkipIntro(void)
     // Set the mode to game mode
     bigbug->gameData.screen = BIGBUG_GAME;
 
+    int32_t attract;
+    if (readNvs32("_attract", &attract) && attract == 1)
+    {
+        bigbug->gameData.tutorialFlags = 255;
+    }
+
     bb_setupMidi();
     unloadMidiFile(&bigbug->gameData.bgm);
     loadMidiFile("BigBugExploration.mid", &bigbug->gameData.bgm, true);
