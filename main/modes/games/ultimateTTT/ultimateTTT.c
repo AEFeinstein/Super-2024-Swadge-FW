@@ -144,7 +144,7 @@ static void tttEnterMode(void)
 
     // Initialize the main menu
     ttt->menu = initMenu(tttName, tttMenuCb);
-    addSingleItemToMenu(ttt->menu, tttMultiStr);
+    //addSingleItemToMenu(ttt->menu, tttMultiStr);
     addSingleItemToMenu(ttt->menu, tttPassAndPlayStr);
 
     ttt->menu = startSubMenu(ttt->menu, tttSingleStr);

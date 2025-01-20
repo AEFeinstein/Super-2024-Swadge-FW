@@ -72,7 +72,7 @@ static void fanfareFinishedCb(void);
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
-const char mainMenuTitle[]                      = "Swadge";
+const char mainMenuTitle[]                      = "Demo Swadge";
 static const char mainMenuShowSecretsMenuName[] = "Secrets In Menu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";
@@ -111,16 +111,16 @@ static const char settingsLabel[] = "Settings";
 
 static const int32_t screenSaverSettingsValues[] = {
     0,   // Off
-    10,  // 10sec
+/*     10,  // 10sec
     20,  // 20sec
     30,  // 30sec
     60,  // 60sec
     120, // 2min
-    300, // 5min
+    300, // 5min */
 };
 
 static const char* const screenSaverSettingsOptions[] = {
-    "Off", "10s", "20s", "30s", "1m", "2m", "5m",
+    "Off", /* "10s", "20s", "30s", "1m", "2m", "5m", */
 };
 
 #endif
@@ -171,43 +171,44 @@ static void mainMenuEnterMode(void)
 #ifdef CONFIG_FACTORY_TEST_NORMAL
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
-    addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
+    //addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
+   //addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, cGroveMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
+    //addSingleItemToMenu(mainMenu->menu, cGroveMode.modeName);
+    //addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
     addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
-    mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
-    addSingleItemToMenu(mainMenu->menu, sequencerMode.modeName);
+mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
+  //  addSingleItemToMenu(mainMenu->menu, sequencerMode.modeName);
     addSingleItemToMenu(mainMenu->menu, bongoTest.modeName);
-    addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+  //  addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+  //  addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
-    mainMenu->menu = endSubMenu(mainMenu->menu);
+  //  addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
+    mainMenu->menu = endSubMenu(mainMenu->menu); 
 
-    mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
+/*  mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, timerMode.modeName); 
     addSingleItemToMenu(mainMenu->menu, introMode.modeName);
-    mainMenu->menu = endSubMenu(mainMenu->menu);
+    mainMenu->menu = endSubMenu(mainMenu->menu);*/
 
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
+    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
     // Get the bounds and current settings to build this menu
-    addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
-    addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
+    //addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
+    //addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
     #ifdef SW_VOL_CONTROL
     addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
     #endif
-    addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
+    //addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
 
     #ifdef SW_VOL_CONTROL
     // These are just used for playing the sound only when the setting changes
@@ -229,7 +230,7 @@ static void mainMenuEnterMode(void)
 #endif
 
     // Show the battery on the main menu
-    setShowBattery(mainMenu->menu, true);
+    setShowBattery(mainMenu->menu, false);
 
     // Initialize menu renderer
     mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
