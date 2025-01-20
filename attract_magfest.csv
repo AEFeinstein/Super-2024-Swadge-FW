@@ -1,0 +1,3 @@
+Time,Type,Value
+0,SetMode,Tutorial
+3000000,Command,attract end

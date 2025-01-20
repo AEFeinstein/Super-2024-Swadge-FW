@@ -15,10 +15,15 @@
 #include "rawdraw_sf.h"
 
 const char* screensaverScripts[] = {
-    "attract_bigbug1.csv",
+    "attract_magfest.csv",
     "attract_song1.csv",
+    "attract_sh2.csv",
+    "attract_bigbug1.csv",
     "attract_bigbug2.csv",
     "attract_uttt1.csv",
+    "attract_pango.csv",
+    "attract_2048_3.csv",
+    "attract_chowa.csv",
 };
 
 static bool screensaverInit(emuArgs_t* args);
