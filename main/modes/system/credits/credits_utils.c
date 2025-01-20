@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <string.h>
+#include "hdw-led.h"
 #include "soundFuncs.h"
 #include "hdw-tft.h"
 #include "fs_font.h"
@@ -46,6 +47,10 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
     // Play the song
     player->loop = true;
     midiPause(player, false);
+
+    // Turn off LEDs
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 /**
