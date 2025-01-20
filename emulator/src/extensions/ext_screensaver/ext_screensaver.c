@@ -15,15 +15,8 @@
 #include "rawdraw_sf.h"
 
 const char* screensaverScripts[] = {
-    "attract_magfest.csv",
-    "attract_song1.csv",
-    "attract_sh2.csv",
-    "attract_bigbug1.csv",
-    "attract_bigbug2.csv",
-    "attract_uttt1.csv",
-    "attract_pango.csv",
-    "attract_2048_3.csv",
-    "attract_chowa.csv",
+    "attract_magfest.csv", "attract_song1.csv", "attract_sh2.csv",    "attract_bigbug1.csv", "attract_bigbug2.csv",
+    "attract_uttt1.csv",   "attract_pango.csv", "attract_2048_3.csv", "attract_chowa.csv",
 };
 
 static bool screensaverInit(emuArgs_t* args);
@@ -37,9 +30,9 @@ static int64_t activationTime = 0;
 static int screensaverIndex   = 0;
 static int screensaverCount   = 0;
 // 1 minute
-static int64_t timeout           = 60000000;
+static int64_t timeout = 60000000;
 // 30 seconds
-static int64_t switchTime        = 30000000;
+static int64_t switchTime = 30000000;
 // 1.5 seconds
 static int64_t blinkTime         = 1500000;
 static const int64_t blinkOnTime = 750000;
