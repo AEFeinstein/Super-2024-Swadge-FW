@@ -5,6 +5,7 @@
 #include <esp_timer.h>
 #include <hdw-nvs.h>
 #include <stdio.h>
+#include <hdw-nvs_emu.h>
 
 #include "macros.h"
 #include "emu_args.h"
@@ -50,7 +51,7 @@ const emuExtension_t screensaverEmuExtension = {
 
 static bool screensaverInit(emuArgs_t* args)
 {
-    if (/*args->screensaver ==*/true)
+    if (args->screensaver)
     {
         // Don't immediately start the screensaver next frame
         lastWake = esp_timer_get_time();
@@ -128,6 +129,7 @@ void emuScreensaverDeactivate(void)
         startPlayback(NULL);
         active = false;
 
+        emuInjectNvsClearAll();
         emulatorSetSwadgeModeByName("Main Menu");
     }
 }

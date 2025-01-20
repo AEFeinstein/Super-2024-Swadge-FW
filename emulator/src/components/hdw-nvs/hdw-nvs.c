@@ -1132,6 +1132,35 @@ void emuInjectNvs32(const char* namespace, const char* key, int32_t value)
     }
 }
 
+void emuInjectNvsDelete(const char* namespace, const char* key)
+{
+    if (nvsInjectedDataInit)
+    {
+        char fullkey[36];
+        snprintf(fullkey, sizeof(fullkey), "%s:%s", namespace, key);
+        void* removed = hashRemove(&nvsInjectedData, fullkey);
+
+        if (removed)
+        {
+            free(removed);
+        }
+    }
+}
+
+void emuInjectNvsClearAll(void)
+{
+    if (nvsInjectedDataInit)
+    {
+        hashIterator_t iter = {0};
+        while (hashIterate(&nvsInjectedData, &iter))
+        {
+            free(iter.value);
+
+            hashIterRemove(&nvsInjectedData, &iter);
+        }
+    }
+}
+
 static size_t emuGetInjectedBlobLength(const char* namespace, const char* key)
 {
     if (!nvsInjectedDataInit)

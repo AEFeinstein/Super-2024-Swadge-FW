@@ -114,6 +114,8 @@ emuArgs_t emulatorArgs = {
     .recordFile = NULL,
     .replayFile = NULL,
 
+    .screensaver = false,
+
     .seed = UINT32_MAX,
 
     .showFps = false,
@@ -148,6 +150,7 @@ static const char argModeSwitch[]  = "mode-switch";
 static const char argModeList[]    = "modes-list";
 static const char argPlayback[]    = "playback";
 static const char argRecord[]      = "record";
+static const char argScreensaver[] = "screensaver";
 static const char argSeed[]        = "seed";
 static const char argShowFps[]     = "show-fps";
 static const char argTouch[]       = "touch";
@@ -179,6 +182,7 @@ static const struct option options[] =
     { argMode,        required_argument, NULL,                             'm'  },
     { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
     { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
+    { argScreensaver, no_argument,       (int*)&emulatorArgs.screensaver,  true },
     { argSeed,        required_argument, (int*)&emulatorArgs.seed,         0    },
     { argShowFps,     optional_argument, (int*)&emulatorArgs.showFps,      'c'  },
     { argModeSwitch,  optional_argument, NULL,                             10   },
@@ -216,6 +220,7 @@ static const optDoc_t argDocs[] =
     {'p', argPlayback,    "FILE",  "Play back recorded emulator inputs from a file" },
     {'r', argRecord,      "FILE",  "Record emulator inputs to a file" },
     {'s', argSeed,        "SEED",  "Seed the random number generator with a specific value" },
+    { 0,  argScreensaver, NULL,    "Enable the 'attract-mode' screensaver" },
     {'c', argShowFps,     NULL,    "Display an FPS counter" },
     {'t', argTouch,       NULL,    "Simulate touch sensor readings with a virtual touchpad" },
     { 0,  argVsync,       "y|n",   "Set whether VSync is enabled" },
