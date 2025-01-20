@@ -12,6 +12,7 @@
 
 #include "emu_ext.h"
 #include "emu_args.h"
+#include "ext_screensaver.h"
 #include "rawdraw_sf.h"
 
 #include "hdw-btn.h"
@@ -219,6 +220,8 @@ static bool updateTouch(int32_t x, int32_t y, bool clicked)
             // ... and reset the touch centroid to 0, since we're not touching the touchpad
             emulatorSetTouchJoystick(0, 0, 0);
         }
+
+        emuScreensaverWake();
 
         // Consume this mouse event, since did something with it
         return true;

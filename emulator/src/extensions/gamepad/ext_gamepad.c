@@ -5,6 +5,7 @@
 #include "hdw-imu_emu.h"
 #include "macros.h"
 #include "trigonometry.h"
+#include "ext_screensaver.h"
 
 #include <esp_log.h>
 
@@ -840,6 +841,7 @@ void gamepadPreFrameCb(uint64_t frame)
     emuJoystickEvent_t event;
     while (gamepadReadEvent(&joystickExt, &event))
     {
+        emuScreensaverWake();
         switch (event.type)
         {
             case BUTTON:

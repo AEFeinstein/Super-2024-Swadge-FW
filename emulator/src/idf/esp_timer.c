@@ -22,6 +22,7 @@ static unsigned long pause_start_micros  = 0;
 static unsigned long total_pause_micros  = 0;
 static bool useRealTime                  = true;
 static int64_t fakeTime                  = 0;
+static bool timerInit                    = false;
 
 //==============================================================================
 // Functions
@@ -34,6 +35,11 @@ static int64_t fakeTime                  = 0;
  */
 esp_err_t esp_timer_init(void)
 {
+    if (timerInit)
+    {
+        return ESP_OK;
+    }
+
     // Log when the program starts
     struct timespec ts;
     if (0 != clock_gettime(CLOCK_MONOTONIC, &ts))
@@ -45,6 +51,8 @@ esp_err_t esp_timer_init(void)
 
     // Create an empty list of timers
     timerList = calloc(1, sizeof(list_t));
+
+    timerInit = true;
 
     return ESP_OK;
 }
@@ -70,6 +78,7 @@ esp_err_t esp_timer_deinit(void)
 
         clear(timerList);
         free(timerList);
+        timerInit = false;
         return ESP_OK;
     }
     return ESP_ERR_INVALID_STATE;
@@ -82,6 +91,11 @@ esp_err_t esp_timer_deinit(void)
  */
 int64_t esp_timer_get_time(void)
 {
+    if (!timerInit)
+    {
+        esp_timer_init();
+    }
+
     if (useRealTime)
     {
         if (pause_start_micros > 0)

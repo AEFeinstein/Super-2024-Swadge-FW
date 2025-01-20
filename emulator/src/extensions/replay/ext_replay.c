@@ -105,6 +105,8 @@ typedef struct
     uint32_t newSeed;
 
     replayEntry_t nextEntry;
+
+    int64_t timeOffset;
 } replay_t;
 
 //==============================================================================
@@ -156,6 +158,7 @@ replay_t replay        = {0};
 static bool replayInit(emuArgs_t* emuArgs)
 {
     replay.lastAccelZ = 256;
+    replay.lastButtons = (buttonBit_t)0;
 
     if (emuArgs->record)
     {
@@ -325,7 +328,7 @@ static void replayPlaybackFrame(uint64_t frame)
     // Unless we've finished reading the file completely
     if (!replay.readCompleted)
     {
-        int64_t time           = esp_timer_get_time();
+        int64_t time           = esp_timer_get_time() - replay.timeOffset;
         int32_t touchPhi       = replay.lastTouchPhi;
         int32_t touchR         = replay.lastTouchR;
         int32_t touchIntensity = replay.lastTouchIntensity;
@@ -438,7 +441,7 @@ static void replayPlaybackFrame(uint64_t frame)
                             printf("ERR: Replay: Can't find mode '%s'!", replay.nextEntry.modeName);
                         }
 
-                        // This string is dynamically alloated, so delete it
+                        // This string is dynamically allocated, so delete it
                         free(replay.nextEntry.modeName);
                         replay.nextEntry.modeName = NULL;
                     }
@@ -584,6 +587,7 @@ static bool readEntry(replayEntry_t* entry)
                 printf("ERR: Can't find button matching '%s'\n", buffer);
                 return false;
             }
+            entry->buttonVal = button;
 
             break;
         }
@@ -856,18 +860,36 @@ bool isRecordingInput(void)
  */
 void startPlayback(const char* recordingName)
 {
+    if (!emulatorArgs.playback)
+    {
+        emulatorArgs.playback = true;
+        emulatorArgs.replayFile = recordingName;
+        enableExtension("replay");
+    }
+
     if (replay.file != NULL)
     {
         fclose(replay.file);
         replay.file = NULL;
     }
 
+    if (recordingName == NULL)
+    {
+        printf("\nReplay: Replaying stopped\n");
+        return;
+    }
+
     printf("\nReplay: Replaying inputs from file %s\n", recordingName);
     replay.file = fopen(recordingName, "r");
     replay.mode = REPLAY;
+    replay.timeOffset = esp_timer_get_time();
+    replay.headerHandled = false;
 
     // Return true if the file was opened OK and has a valid header and first entry
-    readEntry(&replay.nextEntry);
+    if (!readEntry(&replay.nextEntry))
+    {
+        printf("\nReplay: Error reading first event from %s!\n", recordingName);
+    }
 }
 
 /**

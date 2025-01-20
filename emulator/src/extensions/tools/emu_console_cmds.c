@@ -23,6 +23,7 @@ static int touchCommandCb(const char** args, int argCount, char* out);
 static int ledsCommandCb(const char** args, int argCount, char* out);
 static int injectCommandCb(const char** args, int argCount, char* out);
 static int joystickCommandCb(const char** args, int argCount, char* out);
+static int attractCommandCb(const char** args, int argCount, char* out);
 static int helpCommandCb(const char** args, int argCount, char* out);
 
 // command, usage, description
@@ -67,7 +68,7 @@ static const consoleCommand_t consoleCommands[] = {
     {.name = "record", .cb = recordCommandCb},         {.name = "fuzz", .cb = fuzzCommandCb},
     {.name = "touchpad", .cb = touchCommandCb},        {.name = "leds", .cb = ledsCommandCb},
     {.name = "inject", .cb = injectCommandCb},         {.name = "help", .cb = helpCommandCb},
-    {.name = "joystick", .cb = joystickCommandCb},
+    {.name = "joystick", .cb = joystickCommandCb},     {.name = "attract", .cb = attractCommandCb},
 };
 
 const consoleCommand_t* getConsoleCommands(void)
@@ -877,6 +878,15 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
             }
         }
     }
+}
+
+static int attractCommandCb(const char** args, int argCount, char* out)
+{
+    if (argCount > 0 && !strncmp(args[0], "end", strlen(args[0])))
+    {
+        // emuAttractModeNext()
+    }
+    return 0;
 }
 
 static int helpCommandCb(const char** args, int argCount, char* out)

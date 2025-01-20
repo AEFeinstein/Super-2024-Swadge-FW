@@ -13,6 +13,7 @@
 #include "linked_list.h"
 #include "touchUtils.h"
 #include "esp_timer.h"
+#include "ext_screensaver.h"
 
 //==============================================================================
 // Variables
@@ -44,6 +45,8 @@ static int32_t lastTouchRadius = 0;
 
 /// The touchpad analog intensity
 static int32_t lastTouchIntensity = 0;
+
+static int32_t keyState = 0;
 
 //==============================================================================
 // Functions
@@ -225,13 +228,28 @@ void emulatorHandleKeys(int keycode, int bDown)
         // If this matches one of the keycodes in the input key map
         if (keycode == inputKeys[idx])
         {
+            if (bDown)
+            {
+                keyState |= (1 << idx);
+            }
+            else
+            {
+                keyState &= ~(1 << idx);
+            }
             emulatorInjectButton((buttonBit_t)(1 << idx), bDown);
             break;
         }
     }
+
+    emuScreensaverWake();
 }
 
 buttonBit_t emulatorGetButtonState(void)
 {
     return buttonState;
+}
+
+int emulatorGetKeyState(void)
+{
+    return keyState;
 }
