@@ -3077,7 +3077,7 @@ void bb_updateSpaceLaser(bb_entity_t* self)
 
 void bb_updateQuickplay(bb_entity_t* self)
 {
-    bb_menuData_t* mData;
+    bb_menuData_t* mData = NULL;
     for (int eIdx = 0; eIdx < MAX_ENTITIES; eIdx++)
     {
         bb_entity_t* menu = &self->gameData->entityManager.entities[eIdx];
@@ -3086,6 +3086,10 @@ void bb_updateQuickplay(bb_entity_t* self)
             mData = (bb_menuData_t*)menu->data;
             break;
         }
+    }
+    if(mData == NULL)
+    {
+        return;
     }
 
     if (self->gameData->btnDownState & PB_LEFT && mData->selectionIdx >= 2)
@@ -4490,7 +4494,7 @@ void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_e
 
 void bb_drawQuickplay(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self)
 {
-    bb_menuData_t* mData;
+    bb_menuData_t* mData = NULL;
     for (int eIdx = 0; eIdx < MAX_ENTITIES; eIdx++)
     {
         bb_entity_t* menu = &entityManager->entities[eIdx];
@@ -4499,6 +4503,10 @@ void bb_drawQuickplay(bb_entityManager_t* entityManager, rectangle_t* camera, bb
             mData = (bb_menuData_t*)menu->data;
             break;
         }
+    }
+    if(mData == NULL)
+    {
+        return;
     }
 
     drawRectFilled(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
