@@ -3087,7 +3087,7 @@ void bb_updateQuickplay(bb_entity_t* self)
             break;
         }
     }
-    if(mData == NULL)
+    if (mData == NULL)
     {
         return;
     }
@@ -4504,7 +4504,7 @@ void bb_drawQuickplay(bb_entityManager_t* entityManager, rectangle_t* camera, bb
             break;
         }
     }
-    if(mData == NULL)
+    if (mData == NULL)
     {
         return;
     }
