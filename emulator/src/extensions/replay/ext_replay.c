@@ -40,6 +40,7 @@ typedef enum
 {
     RECORD,
     REPLAY,
+    NO_FILE,
 } replayMode_t;
 
 typedef enum
@@ -159,6 +160,8 @@ static bool replayInit(emuArgs_t* emuArgs)
 {
     replay.lastAccelZ = 256;
     replay.lastButtons = (buttonBit_t)0;
+    replay.mode = NO_FILE;
+    replay.file = NULL;
 
     if (emuArgs->record)
     {
@@ -172,7 +175,7 @@ static bool replayInit(emuArgs_t* emuArgs)
         return (replayInitialized = true);
     }
 
-    return false;
+    return true;
 }
 
 static void replayRecordFrame(uint64_t frame)
@@ -509,6 +512,11 @@ static void replayPreFrame(uint64_t frame)
             replayPlaybackFrame(frame);
             break;
         }
+
+        case NO_FILE:
+        {
+            break;
+        }
     }
 }
 
@@ -782,6 +790,8 @@ void startRecording(const char* filename)
     {
         fclose(replay.file);
         replay.file = NULL;
+        replay.headerHandled = false;
+        replay.readCompleted = false;
     }
 
     char buf[128];
@@ -842,6 +852,7 @@ void stopRecording(void)
 {
     if (replay.file != NULL && replay.mode == RECORD)
     {
+        replay.mode = NO_FILE;
         fclose(replay.file);
         replay.file = NULL;
         printf("\nStopped recording inputs\n");
@@ -860,17 +871,13 @@ bool isRecordingInput(void)
  */
 void startPlayback(const char* recordingName)
 {
-    if (!emulatorArgs.playback)
-    {
-        emulatorArgs.playback = true;
-        emulatorArgs.replayFile = recordingName;
-        enableExtension("replay");
-    }
-
     if (replay.file != NULL)
     {
         fclose(replay.file);
         replay.file = NULL;
+        replay.mode = NO_FILE;
+        replay.headerHandled = false;
+        replay.readCompleted = false;
     }
 
     if (recordingName == NULL)
@@ -883,7 +890,6 @@ void startPlayback(const char* recordingName)
     replay.file = fopen(recordingName, "r");
     replay.mode = REPLAY;
     replay.timeOffset = esp_timer_get_time();
-    replay.headerHandled = false;
 
     // Return true if the file was opened OK and has a valid header and first entry
     if (!readEntry(&replay.nextEntry))
