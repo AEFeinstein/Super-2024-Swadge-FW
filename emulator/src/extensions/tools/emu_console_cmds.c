@@ -9,6 +9,7 @@
 #include "ext_replay.h"
 #include "ext_fuzzer.h"
 #include "ext_gamepad.h"
+#include "ext_screensaver.h"
 #include "hdw-nvs_emu.h"
 #include "emu_cnfs.h"
 
@@ -884,7 +885,7 @@ static int attractCommandCb(const char** args, int argCount, char* out)
 {
     if (argCount > 0 && !strncmp(args[0], "end", strlen(args[0])))
     {
-        // emuAttractModeNext()
+        emuScreensaverNext();
     }
     return 0;
 }
