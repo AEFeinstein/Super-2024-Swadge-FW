@@ -43,6 +43,7 @@ void emulatorSetEspRandomSeed(uint32_t seed_)
 
     if (seedValueSet)
     {
+        seeded = true;
         srand(seed);
     }
 
