@@ -503,7 +503,7 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
     offset += midiWriteHeader(fileData + offset, totalFileLength - offset, result);
     fprintf(stderr, "offset=%d after writing header\n", offset);
     
-    for (int trackNum = 0; trackNum < validTrackCount; trackNum++)
+    for (int trackNum = 0, outTrackNum = 0; trackNum < midiFile->trackCount && outTrackNum < validTrackCount; trackNum++)
     {
         uint8_t runningStatus = 0;
         uint32_t nextDeltaTime = 0;
@@ -527,8 +527,8 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
 
         int trackStartOffset = offset;
 
-        result->tracks[trackNum].data = fileData + offset;
-        result->tracks[trackNum].length = trackEventLengths[trackNum];
+        result->tracks[outTrackNum].data = fileData + offset;
+        result->tracks[outTrackNum].length = trackEventLengths[outTrackNum];
 
 
         // Write actual events
@@ -582,10 +582,12 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
             offset += midiWriteEventWithRunningStatus(fileData + offset, totalFileLength - offset, &eot, &runningStatus);
         }
 
-        if (offset - trackStartOffset != result->tracks[trackNum].length)
+        if (offset - trackStartOffset != result->tracks[outTrackNum].length)
         {
-            fprintf(stderr, "ERR: Output track does not have correc length!?? We said it would be %u, but now it's actually %d\n", result->tracks[trackNum].length, offset - trackStartOffset);
+            fprintf(stderr, "ERR: Output track does not have correct length!?? We said it would be %u, but now it's actually %d\n", result->tracks[outTrackNum].length, offset - trackStartOffset);
         }
+
+        outTrackNum++;
     }
 
     return result;
