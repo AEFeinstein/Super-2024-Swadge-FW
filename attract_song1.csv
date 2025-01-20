@@ -1,0 +1,7 @@
+Time,Type,Value
+0,Seed,1736899490
+0,Command,inject nvs _attract int 1
+0,Command,inject nvs synth_playmode int 1
+0,Command,inject nvs synth_viewmode int 8
+0,Command,inject nvs synth_lastsong str sh_credits.mid
+0,Command,mode MIDI
