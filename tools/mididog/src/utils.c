@@ -503,7 +503,7 @@ midiFile_t* mididogUnTokenizeMidi(const midiFile_t* midiFile)
     offset += midiWriteHeader(fileData + offset, totalFileLength - offset, result);
     fprintf(stderr, "offset=%d after writing header\n", offset);
     
-    for (int trackNum = 0; trackNum < midiFile->trackCount; trackNum++)
+    for (int trackNum = 0; trackNum < validTrackCount; trackNum++)
     {
         uint8_t runningStatus = 0;
         uint32_t nextDeltaTime = 0;
