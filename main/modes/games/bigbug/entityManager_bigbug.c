@@ -568,17 +568,16 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     {
         currentEntity->drawFunction(entityManager, camera, currentEntity);
     }
+    // If the sprite is out-of-bounds
+    else if (currentEntity->spriteIndex >= NUM_SPRITES
+             // Or the sprite is in-bounds, but not allocated
+             || !entityManager->sprites[currentEntity->spriteIndex].allocated)
+    {
+        // Immediately return
+        return;
+    }
     else if (entityManager->sprites[currentEntity->spriteIndex].brightnessLevels == 6)
     {
-        // If the sprite is out-of-bounds
-        if (currentEntity->spriteIndex >= NUM_SPRITES
-            // Or the sprite is in-bounds, but not allocated
-            || !entityManager->sprites[currentEntity->spriteIndex].allocated)
-        {
-            // Immediately return
-            return;
-        }
-
         uint8_t brightness = 5;
         int16_t xOff       = (currentEntity->pos.x >> DECIMAL_BITS)
                        - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x;
@@ -619,15 +618,6 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
     }
     else
     {
-        // If the sprite is out-of-bounds
-        if (currentEntity->spriteIndex >= NUM_SPRITES
-            // Or the sprite is in-bounds, but not allocated
-            || !entityManager->sprites[currentEntity->spriteIndex].allocated)
-        {
-            // Immediately return
-            return;
-        }
-
         drawWsgSimple(&entityManager->sprites[currentEntity->spriteIndex].frames[currentEntity->currentAnimationFrame],
                       (currentEntity->pos.x >> DECIMAL_BITS)
                           - entityManager->sprites[currentEntity->spriteIndex].originX - camera->pos.x,
@@ -642,7 +632,8 @@ void bb_drawEntity(bb_entity_t* currentEntity, bb_entityManager_t* entityManager
         currentEntity->currentAnimationFrame
             = currentEntity->animationTimer / currentEntity->gameFramesPerAnimationFrame;
         // if frame reached the end of the animation
-        if (currentEntity->currentAnimationFrame >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
+        if (currentEntity->spriteIndex < NUM_SPRITES
+            && currentEntity->currentAnimationFrame >= entityManager->sprites[currentEntity->spriteIndex].numFrames)
         {
             switch (currentEntity->type)
             {
