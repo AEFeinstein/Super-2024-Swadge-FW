@@ -11,14 +11,17 @@
 #include "ext_replay.h"
 #include "ext_modes.h"
 #include "hdw-btn_emu.h"
+#include "rawdraw_sf.h"
 
 const char* screensaverScripts[] = {
+    "attract_song1.csv",
     "attract_bigbug1.csv",
     "attract_bigbug2.csv",
 };
 
 static bool screensaverInit(emuArgs_t* args);
 static void screensaverPreFrame(uint64_t frame);
+static void screensaverRender(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes);
 
 static bool enable            = false;
 static bool active            = false;
@@ -27,8 +30,10 @@ static int64_t activationTime = 0;
 static int screensaverIndex   = 0;
 static int screensaverCount   = 0;
 // 1 minute
-static int64_t timeout    = 6000000; // 0;
-static int64_t switchTime = 30000000;
+static int64_t timeout           = 6000000; // 0;
+static int64_t switchTime        = 30000000;
+static int64_t blinkTime         = 1500000;
+static const int64_t blinkOnTime = 750000;
 
 const emuExtension_t screensaverEmuExtension = {
     .name            = "screensaver",
@@ -39,7 +44,7 @@ const emuExtension_t screensaverEmuExtension = {
     .fnKeyCb         = NULL,
     .fnMouseMoveCb   = NULL,
     .fnMouseButtonCb = NULL,
-    .fnRenderCb      = NULL,
+    .fnRenderCb      = screensaverRender,
 };
 
 static bool screensaverInit(emuArgs_t* args)
@@ -77,6 +82,26 @@ static void screensaverPreFrame(uint64_t frame)
     {
         // Move to the next screensaver in the list
         emuScreensaverNext();
+    }
+}
+
+static void screensaverRender(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes)
+{
+    if (active && ((esp_timer_get_time() % blinkTime) <= blinkOnTime))
+    {
+        const char* str = "FREE PLAY";
+        int w, h;
+        CNFGGetTextExtents(str, &w, &h, 10);
+        CNFGPenX = (winW - w) / 2;
+        CNFGPenY = (winH - h) / 4;
+
+        CNFGColor(0xFFFFFFFF);
+        CNFGSetLineWidth(8);
+        CNFGDrawText(str, 10);
+
+        CNFGColor(0xFF0000FF);
+        CNFGSetLineWidth(6);
+        CNFGDrawText(str, 10);
     }
 }
 
