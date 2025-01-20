@@ -28,6 +28,9 @@ typedef struct
     /// @brief If true, strip all text events when shrinking a file
     bool stripText;
 
+    /// @brief If true, strip any empty text events when shrinking a file
+    bool stripEmptyText;
+
     // MIDI
     const char* midiIn;
     const char* midiOut;

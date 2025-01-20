@@ -90,10 +90,14 @@ static bool action_shrink(void)
                 event->midi.status = 0x90 | (event->midi.status & 0x0F);
                 event->midi.data[1] = 0;
             }
-            else if (event->type == META_EVENT && (((uint8_t)event->meta.type) <= 0x0F) && mdArgs.stripText)
+            else if (event->type == META_EVENT && (((uint8_t)event->meta.type) <= 0x0F))
             {
-                printf("Stripping text\n");
-                event->type = NO_EVENT;
+                // Text event
+                if (mdArgs.stripText || (mdArgs.stripEmptyText && (!event->meta.text || !*event->meta.text)))
+                {
+                    printf("Stripping text\n");
+                    event->type = NO_EVENT;
+                }
             }
         }
     }

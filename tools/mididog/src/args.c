@@ -97,6 +97,7 @@ static const char argMidiIn[]    = "input";
 static const char argMidiOut[]   = "output";
 static const char argMultiLine[] = "verbose";
 static const char argStripText[] = "strip-text";
+static const char argStripEmptyText[] = "strip-empty-text";
 static const char argHelp[]        = "help";
 static const char argUsage[]       = "usage";
 
@@ -110,6 +111,7 @@ static const struct option options[] =
     { argMidiOut,     required_argument, NULL,                             0    },
     { argMultiLine,   no_argument,       (int*)&mdArgs.multiLine,          true },
     { argStripText,   no_argument,       (int*)&mdArgs.stripText,          true },
+    { argStripEmptyText, no_argument,    (int*)&mdArgs.stripEmptyText,     true },
     { argHelp,        no_argument,       NULL,                             'h'  },
     { argUsage,       no_argument,       NULL,                             0    },
     {0},
@@ -124,6 +126,7 @@ static const optDoc_t argDocs[] =
     {'o',  argMidiOut,    "FILE",  "Specify the output MIDI file" },
     {'v',  argMultiLine,  NULL,    "Print detailed multi-line data" },
     {'t',  argStripText,  NULL,    "Strip all text events from the file (shrink)" },
+    { 0,   argStripEmptyText,  NULL,    "Strip any empty text events from the file (shrink)" },
     {'h', argHelp,        NULL,    "Give this help list" },
     { 0,  argUsage,       NULL,    "Give a short usage message" },
 };
