@@ -3255,7 +3255,7 @@ void bb_updateFinalBoss(bb_entity_t* self)
             bb_setCharacterLine(dData, 8, "Ovo", "But that's a future problem.");
             bb_setCharacterLine(dData, 9, "Ovo", "It's all very confusing, I know.");
             bb_setCharacterLine(dData, 10, "Ovo", "Anyways, thanks for playing the game!");
-            bb_setCharacterLine(dData, 11, "Ovo", "This uiverse's timeline cannot process your awesomeness!");
+            bb_setCharacterLine(dData, 11, "Ovo", "This universe's timeline cannot process your awesomeness!");
 
             dData->curString     = -1;
             dData->endDialogueCB = &bb_afterEnding;
