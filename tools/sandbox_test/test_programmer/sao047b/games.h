@@ -165,7 +165,7 @@ int GameModeTunnel()
 		if( i == 0 )
 		{
 			int sx = g->shipx;
-			if( sx < c || sx > n ) hit = 1;
+			if( sx < c || sx > n ) hit = 2;
 		}
 	}
 
@@ -202,13 +202,14 @@ int GameModeTunnel()
 			if( buttonMask & 1 ) g->shipx--;
 			if( buttonMask & 2 ) g->shipx++;
 		}
-		if( nextt >= tun_end ) { nextt = tun_end; hit = 2; }
+		if( nextt >= tun_end ) { nextt = tun_end; hit = 3; }
 		g->t = nextt;
-		if( hit ) { g->stage = 2; g->switchTime = gameTimeUs; }
+		if( hit ) { g->stage = hit; g->switchTime = gameTimeUs; }
 		break;
 	case 2:
+	case 3:
 		if( st > 400 ) { totalScore += g->t*2; return 1; }
-		swadgeDraw( SSD1306_W/2, 0, 1, swadgeGlyph, "TUPP" );
+		swadgeDraw( SSD1306_W/2, 0, 1, swadgeGlyph, (g->stage == 3)?"WIN":"TUPP" );
 		swadgeDraw( SSD1306_W/2, 20, 1, swadgeGlyph, "%d", g->t*2 );
 		break;	
 	}
@@ -664,6 +665,46 @@ int GameBeatTop()
 	return 0;
 }
 
+int RadialGame()
+{
+	#define RADIIS 6
+	struct
+	{
+		int subMode;
+		int switchTime;
+
+		int rotation;
+		int rotdir;
+
+		uint8_t panels[20];
+	} * g = (void*)gameData;
+	int i;
+	int nextSubMode = g->subMode;
+
+	if( gameTimeUs == 0 )
+	{
+		_rand_lfsr = SysTick->CNT;
+		for( i = 0; i < sizeof(g->panels); i++ )
+		{
+			g->panels[i] = _rand_gen_nb(8)%RADIIS;
+		}
+		g->rotation = 0;
+	}
+
+	background(0);
+
+	drawArc( 36, 20, 10, 0, 200, 1 );
+
+
+	if( nextSubMode != g->subMode )
+	{
+		g->subMode = nextSubMode;
+		g->switchTime = gameTimeUs;
+	}
+
+	return 0;
+}
+
 int GameMode1up()
 {
 	background(9+gameModeID);
@@ -685,7 +726,6 @@ int GameMode1up()
 	}	
 	return 0;
 }
-
 
 int GameModeMainMenu()
 {
@@ -837,7 +877,7 @@ int GameModeInterstitial()
 
 
 
-gamemode_t gameModeForce = 0;
+gamemode_t gameModeForce = RadialGame;
 int        gameModeForceID = 0;
 
 

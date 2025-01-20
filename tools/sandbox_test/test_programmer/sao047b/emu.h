@@ -3,6 +3,9 @@
 
 #define CNFG_IMPLEMENTATION
 
+#include <stdint.h>
+#include <sys/time.h>
+
 #ifndef WASM
 #define mini_vsnprintf vsnprintf
 uint32_t GetTimeUS()
@@ -55,6 +58,7 @@ void saveHighScore( int hs );
 void WriteHighScore( int32_t hs ) { highscore = hs; saveHighScore( hs ); }
 #else
 void WriteHighScore( int32_t hs ) { }
+int32_t getHighScore( ) { return 0; }
 #endif
 
 

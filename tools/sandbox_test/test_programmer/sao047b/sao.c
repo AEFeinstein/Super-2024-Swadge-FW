@@ -105,7 +105,7 @@ int main()
 		buttonEventUp = ~thisMask & buttonMask;
 		buttonMask = thisMask;
 
-		gameTimeUs = (now - modeStartTime) / 6; // 6 as a constant can div fast.
+		gameTimeUs = (now - modeStartTime) / 6; // This actually invokes software divide even though it's not needed.
 		int gameTimeUsFlip = (now - modeStartTime) < 0;
 		if( gameTimeUsFlip ) gameTimeUs += 715827883;
 		swapBuffer();
