@@ -108,6 +108,8 @@ typedef struct
     replayEntry_t nextEntry;
 
     int64_t timeOffset;
+    bool entryValid;
+    bool wasReset;
 } replay_t;
 
 //==============================================================================
@@ -119,6 +121,7 @@ static void replayRecordFrame(uint64_t frame);
 static void replayPlaybackFrame(uint64_t frame);
 static void replayPreFrame(uint64_t frame);
 
+static void replayReset(void);
 static bool readEntry(replayEntry_t* out);
 static void writeEntry(const replayEntry_t* entry);
 
@@ -158,10 +161,10 @@ replay_t replay        = {0};
  */
 static bool replayInit(emuArgs_t* emuArgs)
 {
-    replay.lastAccelZ = 256;
+    replay.lastAccelZ  = 256;
     replay.lastButtons = (buttonBit_t)0;
-    replay.mode = NO_FILE;
-    replay.file = NULL;
+    replay.mode        = NO_FILE;
+    replay.file        = NULL;
 
     if (emuArgs->record)
     {
@@ -336,9 +339,10 @@ static void replayPlaybackFrame(uint64_t frame)
         int32_t touchR         = replay.lastTouchR;
         int32_t touchIntensity = replay.lastTouchIntensity;
 
-        int16_t accelX = replay.lastAccelX;
-        int16_t accelY = replay.lastAccelY;
-        int16_t accelZ = replay.lastAccelZ;
+        int16_t accelX  = replay.lastAccelX;
+        int16_t accelY  = replay.lastAccelY;
+        int16_t accelZ  = replay.lastAccelZ;
+        replay.wasReset = false;
 
         while (time >= replay.nextEntry.time)
         {
@@ -459,16 +463,25 @@ static void replayPlaybackFrame(uint64_t frame)
 
                 case COMMAND:
                 {
-                    handleConsoleCommand(replay.nextEntry.commandStr);
-
+                    printf("Replay event: %s\n", replay.nextEntry.commandStr);
+                    char commandStr[1024];
+                    strncpy(commandStr, replay.nextEntry.commandStr, sizeof(commandStr));
                     free(replay.nextEntry.commandStr);
                     replay.nextEntry.commandStr = NULL;
+
+                    handleConsoleCommand(commandStr);
                     break;
                 }
             }
 
+            if (replay.wasReset)
+            {
+                replay.wasReset = false;
+                return;
+            }
+
             // Get the next entry
-            if (!readEntry(&replay.nextEntry))
+            if (!(replay.entryValid = readEntry(&replay.nextEntry)))
             {
                 printf("Replay: Reached end of recording\n");
                 replay.readCompleted = true;
@@ -518,6 +531,42 @@ static void replayPreFrame(uint64_t frame)
             break;
         }
     }
+}
+
+static void replayReset(void)
+{
+    replay.wasReset = true;
+    if (replay.file != NULL)
+    {
+        fclose(replay.file);
+        replay.file = NULL;
+    }
+
+    if (replay.entryValid)
+    {
+        if (replay.nextEntry.type == SET_MODE && replay.nextEntry.modeName != NULL)
+        {
+            free(replay.nextEntry.modeName);
+            replay.nextEntry.modeName = NULL;
+        }
+        else if (replay.nextEntry.type == COMMAND && replay.nextEntry.commandStr != NULL)
+        {
+            free(replay.nextEntry.commandStr);
+            replay.nextEntry.commandStr = NULL;
+        }
+        else if (replay.nextEntry.type == SCREENSHOT && replay.nextEntry.filename != NULL)
+        {
+            free(replay.nextEntry.filename);
+            replay.nextEntry.filename = NULL;
+        }
+
+        replay.entryValid = false;
+    }
+
+    replay.mode          = NO_FILE;
+    replay.readCompleted = false;
+    replay.headerHandled = false;
+    replay.entryValid    = false;
 }
 
 static bool readEntry(replayEntry_t* entry)
@@ -788,10 +837,7 @@ void startRecording(const char* filename)
 {
     if (replay.file != NULL)
     {
-        fclose(replay.file);
-        replay.file = NULL;
-        replay.headerHandled = false;
-        replay.readCompleted = false;
+        replayReset();
     }
 
     char buf[128];
@@ -803,9 +849,9 @@ void startRecording(const char* filename)
     // If specified, use custom filename, otherwise use timestamp one
     printf("\nReplay: Recording inputs to file %s\n", filename);
     replay.file = fopen(filename, "w");
-    replay.mode = RECORD;
     if (replay.file != NULL)
     {
+        replay.mode = RECORD;
         if (emulatorArgs.startMode)
         {
             if (!replay.headerHandled)
@@ -852,9 +898,7 @@ void stopRecording(void)
 {
     if (replay.file != NULL && replay.mode == RECORD)
     {
-        replay.mode = NO_FILE;
-        fclose(replay.file);
-        replay.file = NULL;
+        replayReset();
         printf("\nStopped recording inputs\n");
     }
 }
@@ -871,14 +915,7 @@ bool isRecordingInput(void)
  */
 void startPlayback(const char* recordingName)
 {
-    if (replay.file != NULL)
-    {
-        fclose(replay.file);
-        replay.file = NULL;
-        replay.mode = NO_FILE;
-        replay.headerHandled = false;
-        replay.readCompleted = false;
-    }
+    replayReset();
 
     if (recordingName == NULL)
     {
@@ -886,15 +923,19 @@ void startPlayback(const char* recordingName)
         return;
     }
 
-    printf("\nReplay: Replaying inputs from file %s\n", recordingName);
+    printf("\nReplay: Replaying inputs from file '%s'\n", recordingName);
     replay.file = fopen(recordingName, "r");
-    replay.mode = REPLAY;
-    replay.timeOffset = esp_timer_get_time();
 
-    // Return true if the file was opened OK and has a valid header and first entry
-    if (!readEntry(&replay.nextEntry))
+    if (replay.file != NULL)
     {
-        printf("\nReplay: Error reading first event from %s!\n", recordingName);
+        replay.mode       = REPLAY;
+        replay.timeOffset = esp_timer_get_time();
+
+        // Return true if the file was opened OK and has a valid header and first entry
+        if (!(replay.entryValid = readEntry(&replay.nextEntry)))
+        {
+            printf("\nReplay: Error reading first event from %s!\n", recordingName);
+        }
     }
 }
 
