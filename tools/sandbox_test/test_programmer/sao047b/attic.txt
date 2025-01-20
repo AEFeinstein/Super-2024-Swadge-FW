@@ -33,3 +33,28 @@ const float omegaPerSample = 3.1415926535/71;
 		// sin( omegaPerSample ) * 2048 + 1???
 	}
 }
+
+// Maybe switch to https://amycoders.org/tutorials/sintables.html (at the end)
+
+	int a = 0;
+	int b = 100000;
+	int64_t i;
+	// If >> 5, 201.5 steps.
+	// If >> 4, 101.5 steps.
+	// If >> 3, 51.25 steps.
+	// Similar to // https://amycoders.org/tutorials/sintables.html  (The last part of the last section)
+	for( i = 0; i < 5100000000; i++ )
+	{
+		int lasta = a;
+		int lastb = b;
+		a = a + (b>>1);
+		b = b - (a>>1);
+		//if( !(i & 0xffff) )
+		{
+			int s = a*.96795; // Why .9925? if >>2
+			int c = (b+lastb)/2;
+			//int s = (a-b)*0.7746*0.790326405;
+			//int c = (a+b)*0.790326405;
+			printf( "%d %d %d\n", s, c, (int)(sqrt((float)s*(float)s+(float)c*(float)c)) );
+		}
+	}

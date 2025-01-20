@@ -272,30 +272,30 @@ static uint16_t blit16font[95] = {
 void drawBlit16( int x, int y, 
 */
 
-void drawArc(int32_t x, int32_t y, int32_t radius, int32_t rstart, int32_t rstop, int8_t color)
+void drawArc(int32_t x, int32_t y, int32_t radius_x65536, int32_t rstart, int32_t rstop, int8_t color)
 {
-	int32_t omegasPerSample = 6433;  // pi/32*65536 -> 6433.981754552
-	//int32_t coeff = 131072; // cos( pi/32 ) * 2 -> 16 bit mantissa
-	int32_t coeff_s = 225; // sin(pi/32)*2*65536 -> 224.588221362
-	int32_t sprev = omegasPerSample;
-	int32_t sprev2 = 0;
+
+	int a = 0;
+	int b = radius_x65536;
 	int i;
-	for( i = 0; i < 64; i++ )
+	// Similar to // https://amycoders.org/tutorials/sintables.html  (The last part of the last section)
+	for( i = 0; i < rstop; i++ )
 	{
-		int32_t SAMPLE = 16384;
+		int lastb = b;
 
-		// Here is where the magic happens.
-		int32_t s = SAMPLE + ( /*coeff * */ ( sprev ) << 1 ) - sprev2;
-		sprev2 = sprev;
-		sprev = s;
-
-		//printf( "%ld %ld %ld\n", s, sprev, sprev2 );
-
-		int rR = ( ( /*coeff * */ sprev ) ) - sprev2;
-		int rI =   ( coeff_s * (sprev>>2) ) >> 15;
-		printf ("%ld %ld %ld\n", rR, rI, sprev );
-        ssd1306_drawPixel( (rR>>13)+x, (rI>>13) + y, color);
+		// 1>>5 = 0.031250 -> 3.1415926*2.0 / 0.031250 = 201.06176
+		// Instead I want to target 6*32 or 96*2 edges... well 95*2. -> (b>>5)+(b>>9)-(b>>13)
+		// What about 10*32?
+		a = a + ((b>>6)+(b>>8)+(b>>13));
+		b = b - ((a>>6)+(a>>8)+(a>>13));
+		if( i >= rstart && i < rstop )
+		{
+			int s = (a)>>16;
+			int c = (b+lastb)>>17;
+			ssd1306_drawPixel(x + s, y + c, color);
+		}
 	}
+
 }
 
 int backgroundAttrib;

@@ -667,16 +667,22 @@ int GameBeatTop()
 
 int RadialGame()
 {
-	#define RADIIS 6
+	#define RADIIS 10
 	struct
 	{
 		int subMode;
 		int switchTime;
+		int lastStg;
 
 		int rotation;
 		int rotdir;
+		int8_t panels[20];
 
-		uint8_t panels[20];
+		int8_t consumed[RADIIS];
+
+		const char * alertValue;
+		int alertTime;
+		int score;
 	} * g = (void*)gameData;
 	int i;
 	int nextSubMode = g->subMode;
@@ -691,9 +697,116 @@ int RadialGame()
 		g->rotation = 0;
 	}
 
+	glyphdraw_invert = 0;
+	glyphdraw_nomask = 1;
+
 	background(0);
 
-	drawArc( 36, 20, 10, 0, 200, 1 );
+	int st = (gameTimeUs - g->switchTime)>>12;
+	int stg = st;
+	int dstg = stg - g->lastStg;
+	g->lastStg = stg;
+	if( g->subMode == 0 ) stg = 0;
+
+
+	int oring = stg>>8;
+	int oringdtime = (stg&0xff);
+	for( i = 0; i < oring+8; i++ )
+	{
+		if( i >= sizeof( g->panels ) ) break;
+		int8_t p = g->panels[i];
+		if( p < 0 ) continue;
+		int size = (((oring - i + 2)<<8) + (oringdtime<<0))<<11;
+		if( size < 0 ) { ssd1306_drawPixel( 36, 20, 1 ); continue; }
+		int arcp = ((p)<<5) + (g->rotation>>1) + 14;
+		drawArc( 36, 20, size, arcp, arcp+32, 1 );
+
+		if( size > 65536*19 )
+		{
+			int applyto = (arcp)/32;
+			if( applyto < 0 ) applyto += RADIIS;
+			if( applyto >= RADIIS ) applyto -= RADIIS;
+			g->alertTime = gameTimeUs;
+			if( g->consumed[applyto] < 2 )
+			{
+				g->score ++;
+				g->alertValue = "GOOD";
+				g->consumed[applyto]++;
+			}
+			else
+			{
+				g->alertValue = "FULL";
+			}
+			g->panels[i] = -1;
+			if( i == sizeof(g->panels)-1 )
+			{
+				nextSubMode = 2;
+			}
+		}
+	}
+
+	for( i = 0; i < RADIIS; i++ )
+	{
+		//drawArc( 36, 20, 65536*20, 0, 32*6, 1 );
+		int arcp = ((i)<<5) + 14;
+		int r = g->consumed[i];
+		if( r > 0 )
+			drawArc( 36, 20, 65536*20-100, arcp, arcp+32, 1 );
+		if( r > 1 )
+			drawArc( 36, 20, 65536*20-100100, arcp, arcp+32, 1 );
+	}
+
+	if( g->rotdir )
+	{
+		g->rotation += ((g->rotdir>0)?1:-1) * dstg;
+		if( g->rotdir > 0 )
+		{
+			g->rotdir -= dstg;
+			if( g->rotdir < 0 ) g->rotdir = 0;
+		}
+		if( g->rotdir < 0 )
+		{
+			g->rotdir += dstg;
+			if( g->rotdir > 0 ) g->rotdir = 0;
+		}
+		if( g->rotation < 0 ) g->rotation += 64*RADIIS;
+		if( g->rotation >= 64*RADIIS ) g->rotation -= 64*RADIIS;
+	}
+
+	if( buttonMask && g->rotdir == 0 )
+	{
+		if( buttonMask & 1 ) g->rotdir = -64;
+		if( buttonMask & 2 ) g->rotdir = 64;
+	}
+
+	if( gameTimeUs - g->alertTime < (100<<12) && g->alertValue )
+	{
+		swadgeDraw( 0, 2, 0, swadgeGlyphHalf, g->alertValue );
+	}
+
+//	drawArc( 36, 20, 20, 0, 50, 1 );
+//	drawArc( 36, 20, 18, 0, 94, 1 );
+
+	if( g->subMode > 0 )
+	{
+		swadgeDraw( 1, SSD1306_H-10, 0, swadgeGlyphHalf, "%d", g->score );
+	}
+
+	switch( g->subMode )
+	{
+	case 0:
+		if( st > 200 ) nextSubMode = 1;
+		break;
+	case 1:
+		break;
+	case 2:
+		glyphdraw_invert = 0;
+		glyphdraw_nomask = 0;
+		swadgeDraw( SSD1306_W/2, 3, 1, swadgeGlyphHalf, "CAUGHT" );
+		swadgeDraw( SSD1306_W/2, 20, 1, swadgeGlyphHalf, "%d", g->score*50 );
+		if( st > 400 ) { totalScore += g->score*50; return 1; }
+		break;
+	}
 
 
 	if( nextSubMode != g->subMode )
@@ -877,12 +990,12 @@ int GameModeInterstitial()
 
 
 
-gamemode_t gameModeForce = RadialGame;
+gamemode_t gameModeForce = 0;
 int        gameModeForceID = 0;
 
 
 gamemode_t gameModes[] = {
-	GameModeGrand, GameModeTunnel, GameModeTunnel, GameModeFlap, GameModeSnek, GameBeatTop
+	GameModeGrand, GameModeTunnel, GameModeTunnel, GameModeFlap, GameModeSnek, GameBeatTop, RadialGame
 };
 
 int gameModeIDs[] = {
