@@ -9,11 +9,6 @@
 		</style>
 	</head>
 	<body>
-<!--		<div STYLE="position:absolute;width:640;z-index:10;color:white;a:red">
-			This is a demonstration of rawdrawwasm, a minimal technique to use C with rawdraw with WASM and without Emscripten.
-			This file is a single-file HTML file. Thanks to @zNoctum and @redline2466.  Check out the info surrounding this project <A HREF=https://github.com/cnlohr/rawdrawwasm/ style="color:red">here</a>.  This is now part of <a href=https://github.com/cntools/rawdraw  style="color:red">rawdraw</a>.
-		</div>
--->
 		<table BORDER=0 WIDTH=100%><tr><td WIDTH=100% style="text-align:center">
 			<canvas STYLE="align:center" width=100% height=100% id=canvas></canvas>
 		</td></tr></table>
