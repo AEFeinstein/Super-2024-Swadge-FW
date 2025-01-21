@@ -382,6 +382,16 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         }
     }
 
+    // Run a timer to blink up and down page arrows
+    if (renderer->pageArrowTimer <= 0)
+    {
+        renderer->pageArrowTimer += 1000000;
+    }
+    else
+    {
+        renderer->pageArrowTimer -= elapsedUs;
+    }
+
     if (renderer->ledsOn)
     {
         // Run timer for LED excitation
@@ -539,7 +549,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     // Move to drawing the rows
     y = titleBgY1 + Y_SECTION_MARGIN;
 
-    if (menu->items->length > ITEMS_PER_PAGE)
+    if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > 500000)
     {
         // Draw UP page indicator
         y -= (UP_ARROW_HEIGHT);
@@ -600,7 +610,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         y += PARALLELOGRAM_HEIGHT + ROW_MARGIN;
     }
 
-    if (menu->items->length > ITEMS_PER_PAGE)
+    if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > 500000)
     {
         y += UP_ARROW_MARGIN;
         // Draw DOWN page indicator

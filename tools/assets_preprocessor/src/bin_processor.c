@@ -14,10 +14,13 @@ void process_bin(const char* infile, const char* outdir)
     strcat(outFilePath, "/");
     strcat(outFilePath, get_filename(infile));
 
-    if (doesFileExist(outFilePath))
+    if (!isSourceFileNewer(infile, outFilePath))
     {
-        // printf("Output for %s already exists\n", infile);
         return;
+    }
+    else if (doesFileExist(outFilePath))
+    {
+        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
     }
 
     /* Read input file */

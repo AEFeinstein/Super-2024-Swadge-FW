@@ -388,6 +388,17 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera, vec_t* garbotnik
                             }
                             break;
                         }
+                        case FINAL_BOSS_EMBED:
+                        {
+                            bb_ensureEntitySpace(entityManager, 1);
+                            if (bb_createEntity(entityManager, LOOPING_ANIMATION, false, BB_FINAL_BOSS, 4,
+                                                i * TILE_SIZE + HALF_TILE, j * TILE_SIZE + HALF_TILE, false, false)
+                                != NULL)
+                            {
+                                tilemap->fgTiles[i][j].embed = NOTHING_EMBED;
+                            }
+                            break;
+                        }
                         default:
                         {
                             break;

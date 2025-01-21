@@ -128,10 +128,6 @@ static const char* replayLogTypeStrs[] = {
     "AccelZ",  "Fuzz",  "Quit",     "Screenshot", "SetMode", "Seed",   "Command",
 };
 
-static const char* replayButtonNames[] = {
-    "Up", "Down", "Left", "Right", "A", "B", "Start", "Select",
-};
-
 emuExtension_t replayEmuExtension = {
     .name            = "replay",
     .fnInitCb        = replayInit,
@@ -581,22 +577,14 @@ static bool readEntry(replayEntry_t* entry)
                 return false;
             }
 
-            for (uint8_t i = 0; i < 8; i++)
+            buttonBit_t button = parseButtonName(buffer);
+            if (button == (buttonBit_t)0)
             {
-                buttonBit_t button = (1 << i);
-                if (!strncmp(replayButtonNames[i], buffer, sizeof(buffer) - 1))
-                {
-                    entry->buttonVal = button;
-                    break;
-                }
-
-                if (i == 7)
-                {
-                    // Should have broken by now, throw error
-                    printf("ERR: Can't find button matching '%s'\n", buffer);
-                    return false;
-                }
+                // No button matched, throw error
+                printf("ERR: Can't find button matching '%s'\n", buffer);
+                return false;
             }
+            entry->buttonVal = button;
 
             break;
         }
@@ -726,15 +714,7 @@ static void writeEntry(const replayEntry_t* entry)
         case BUTTON_PRESS:
         case BUTTON_RELEASE:
         {
-            // Find button index
-            int i = 0;
-            while ((1 << i) != entry->buttonVal && i < 7)
-            {
-                i++;
-            }
-
-            // TODO: Check for invalid button index?
-            snprintf(ptr, BUFSIZE, "%s\n", replayButtonNames[i]);
+            snprintf(ptr, BUFSIZE, "%s\n", getButtonName(entry->buttonVal));
             break;
         }
 

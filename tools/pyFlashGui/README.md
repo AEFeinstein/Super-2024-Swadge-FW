@@ -8,11 +8,26 @@ This Python script polls for USB serial ports which match the VID & PID of an ES
 
 The UI will be green when a Swadge is successfully flashed. It will be red if the flash failed.
 
+> [!NOTE]  
+> As of January 2025 the program may erroneously flash red, falsely indicating a failure, when rebooting after a successful flash. If the Swadge reboots to a valid screen, the flash was successful.
+
+This script may also be run in headless mode when a GUI is not required or desired.
+
+```
+usage: pyFlashGui.py [-h] [--headless]
+
+Optional app description
+
+options:
+  -h, --help  show this help message and exit
+  --headless  Run in headless mode without a GUI
+```
+
 # Driver Dependencies
 
 ## Windows
 
-Flashing an ESP32-S2 over USB on Windows requires a specific driver to be installed. This driver only needs to be installed once. Instructions can be found in the [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/v4.4.3/esp32s2/api-guides/dfu.html#usb-drivers-windows-only) and are copied below:
+Flashing an ESP32-S2 over USB on Windows requires a specific driver to be installed. This driver only needs to be installed once. Instructions can be found in the [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-guides/dfu.html#usb-drivers-windows-only) and are copied below:
 
 > `dfu-util` uses _libusb_ to access the device. You have to register on Windows the device with the WinUSB driver. Please see the [libusb wiki](https://github.com/libusb/libusb/wiki/Windows#How_to_use_libusb_on_Windows) for more details.
 >
@@ -23,7 +38,7 @@ Flashing an ESP32-S2 over USB on Windows requires a specific driver to be instal
 
 ## Linux
 
-The ESP-IDF Programming Guide also [specifies a udev rule for Linux](https://docs.espressif.com/projects/esp-idf/en/v4.4.3/esp32s2/api-guides/dfu.html#udev-rule-linux-only):
+The ESP-IDF Programming Guide also [specifies a udev rule for Linux](https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-guides/dfu.html#udev-rule-linux-only):
 
 > udev is a device manager for the Linux kernel. It allows us to run `dfu-util` (and `idf.py dfu-flash`) without `sudo` for gaining access to the chip.
 > 
@@ -47,6 +62,7 @@ The following Python modules must be installed:
 | ``tkinter`` | https://tkdocs.com/tutorial/install.html | Tkinter (and, since Python 3.1, ttk, the interface to the newer themed widgets) is included in the Python standard library. | 
 | ``pyserial`` | https://pyserial.readthedocs.io/en/latest/pyserial.html | ```pip install pyserial```| 
 | ``esptool`` | https://docs.espressif.com/projects/esptool/en/latest/esp32s2/installation.html | ```pip install esptool``` |
+| ``semver`` | https://python-semver.readthedocs.io/en/latest/index.html | ```pip install semver``` |
 
 For the script to actually flash firmware, the following files must be in the same directory as ``pyFlashGui.py``:
 
@@ -68,12 +84,12 @@ cp ./build/bootloader/bootloader.bin ./build/swadge2024.bin ./build/partition_ta
 1. Download and install the dependencies
     * [Python](https://www.python.org/downloads/)
     * ```bash
-      python -m pip install -r requirements.txt
+      python3 -m pip install -r requirements.txt
       ```
     * [Tkinter Installation](https://tkdocs.com/tutorial/install.html) (may not be necessary)
 1. Download the final Swadge firmware from the Releases tab: https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases/
 1. Run the programmer script (``python3 pyFlashGui.py`` from a terminal)
-1. Switch the Swadge's power to USB (right position)
+1. Switch the Swadge's power to USB
 1. Hold the PGM button down (Up on the directional pad)
     * Note, for the first Hot Dog Prototype revision, the PGM button is Left, not Up
 1. Plug the Swadge into the computer with a USB-C cable
