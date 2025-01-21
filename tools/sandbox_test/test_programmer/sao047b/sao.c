@@ -143,21 +143,47 @@ int main()
 				{
 					// Decide how the set of games will go.
 					freebieID = ( SysTick->CNT % (maxGames-1) ) + 2;
+					memset( gamePlayedCount, 0, sizeof( gamePlayedCount ) );
 					totalScore = 0;
 				}
 				if( interstitial || gameNumber == 1 )
 				{
 					if( gameNumber == freebieID )
 					{
-						int index = SysTick->CNT % (sizeof(gameModesFree)/sizeof(gameModesFree[0]));
+						int index = (SysTick->CNT>>4) % (sizeof(gameModesFree)/sizeof(gameModesFree[0]));
 						gameMode = gameModesFree[ index ];
 						gameModeID = gameModeFreeIDs[ index ];
 					}
 					else
 					{
-						int index = SysTick->CNT % (sizeof(gameModes)/sizeof(gameModes[0]));
+
+						int zeroleft = 0;
+						int i;
+						for( i = 0; i < sizeof( gamePlayedCount ) / sizeof( gamePlayedCount[0] ); i++ )
+						{
+							if( gamePlayedCount[i] == 0 )
+								zeroleft++;
+						}
+
+						int index;
+						do
+						{
+							index = (SysTick->CNT>>4) % (sizeof(gameModes)/sizeof(gameModes[0]));
+
+							// If a category has zero left, then make sure we select one of those.
+							if( zeroleft )
+							{
+								if( gamePlayedCount[index] == 0 ) break;
+							}
+							else
+							{
+								break;
+							}
+						} while( 1 );
+
 						gameMode = gameModes[ index ];
 						gameModeID = gameModeIDs[ index ];
+						gamePlayedCount[ index ]++;
 					}
 					interstitial = 0;
 				}

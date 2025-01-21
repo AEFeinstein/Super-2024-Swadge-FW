@@ -278,6 +278,12 @@ void drawArc(int32_t x, int32_t y, int32_t radius_x65536, int32_t rstart, int32_
 	int a = 0;
 	int b = radius_x65536;
 	int i;
+	if( rstop > 640 ) 
+	{
+		int rdif = (rstop / 320)-1;
+		rstop -= rdif * 320;
+		rstart -= rdif * 320;
+	}
 	// Similar to // https://amycoders.org/tutorials/sintables.html  (The last part of the last section)
 	for( i = 0; i < rstop; i++ )
 	{

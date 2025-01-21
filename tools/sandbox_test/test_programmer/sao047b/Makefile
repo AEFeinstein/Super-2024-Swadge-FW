@@ -2,6 +2,8 @@ all : flash
 
 SWADGE:=../../../..
 
+.PHONY : emu
+
 TARGET:=sao
 CH32V003FUN:=ch32v003fun/ch32v003fun
 MINICHLINK?=$(CH32V003FUN)/../minichlink
@@ -19,8 +21,8 @@ swadge2025font.h : tools/microgenfont
 tools/microgenfont : tools/microgenfont.c
 	gcc -o $@ $^ -lm
 
-emu : sao.c
-	gcc -g -Og -o $@ $^ -DEMU -Ich32v003fun/extralibs -lX11
+emu :
+	gcc sao.c -g -O3 -o $@ $^ -DEMU -Ich32v003fun/extralibs -lX11
 
 option_flash :
 	$(MINICHLINK)/minichlink -w option.bin option

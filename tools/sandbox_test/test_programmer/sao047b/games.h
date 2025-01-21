@@ -209,7 +209,7 @@ int GameModeTunnel()
 	case 2:
 	case 3:
 		if( st > 400 ) { totalScore += g->t*2; return 1; }
-		swadgeDraw( SSD1306_W/2, 0, 1, swadgeGlyph, (g->stage == 3)?"WIN":"TUPP" );
+		swadgeDraw( SSD1306_W/2, 0, 1, swadgeGlyph, (g->stage == 3)?"RAN":"TUPP" );
 		swadgeDraw( SSD1306_W/2, 20, 1, swadgeGlyph, "%d", g->t*2 );
 		break;	
 	}
@@ -393,8 +393,9 @@ int GameModeSnek()
 	if( gameTimeUs == 0 )
 	{
 		g->sx = SSD1306_W/2/SS;
-		g->sy = SSD1306_H/2/SS;
+		g->sy = SSD1306_H/SS-1;
 		g->sneklen = 4;
+		g->nextgd = g->gd = 1;
 	}
 
 	if( g->ax == 0 )
@@ -509,9 +510,9 @@ int GameModeSnek()
 			}
 		}
 
-		if( buttonEventDown & 1 )
-			g->nextgd = (g->gd + 1)&3;
 		if( buttonEventDown & 2 )
+			g->nextgd = (g->gd + 1)&3;
+		if( buttonEventDown & 1 )
 			g->nextgd = (g->gd - 1)&3;
 		break;
 	case 3:
@@ -720,7 +721,6 @@ int RadialGame()
 		if( size < 0 ) { ssd1306_drawPixel( 36, 20, 1 ); continue; }
 		int arcp = ((p)<<5) + (g->rotation>>1) + 14;
 		drawArc( 36, 20, size, arcp, arcp+32, 1 );
-
 		if( size > 65536*19 )
 		{
 			int applyto = (arcp)/32;
@@ -753,7 +753,7 @@ int RadialGame()
 		if( r > 0 )
 			drawArc( 36, 20, 65536*20-100, arcp, arcp+32, 1 );
 		if( r > 1 )
-			drawArc( 36, 20, 65536*20-100100, arcp, arcp+32, 1 );
+			drawArc( 36, 20, 65536*20-140100, arcp, arcp+32, 1 );
 	}
 
 	if( g->rotdir )
@@ -795,7 +795,10 @@ int RadialGame()
 	switch( g->subMode )
 	{
 	case 0:
-		if( st > 200 ) nextSubMode = 1;
+		if( st > 250 ) nextSubMode = 1;
+		if( st > 10 ) swadgeDraw( SSD1306_W/2, 4, 1, swadgeGlyphHalf, "ROTATE" );
+		if( st > 60 ) swadgeDraw( SSD1306_W/2, 15, 1, swadgeGlyphHalf, "YOUR" );
+		if( st > 110 ) swadgeDraw( SSD1306_W/2, 25, 1, swadgeGlyphHalf, "OWL" );
 		break;
 	case 1:
 		break;
@@ -813,6 +816,116 @@ int RadialGame()
 	{
 		g->subMode = nextSubMode;
 		g->switchTime = gameTimeUs;
+	}
+
+	return 0;
+}
+
+int GameTrackAndField()
+{
+	#define RADIIS 10
+	struct
+	{
+		int subMode;
+		int switchTime;
+		int lastTime;
+		int lastStg;
+
+		int rotation;
+		int rotspeed;
+		int lastbtn;
+		int timeleft;
+		int score;
+	} * g = (void*)gameData;
+	int nextSubMode = g->subMode;
+
+	if( gameTimeUs == 0 )
+	{
+		g->rotation = 0;
+	}
+
+	int st = (gameTimeUs - g->switchTime)>>12;
+	int dt = st - g->lastTime;
+	g->lastTime = st;
+	background(((g->subMode == 1) && st < 200 ) ? 7 : 0);
+
+	int drawRotation = 1000-((g->rotation >> 8)%640);
+	drawArc( 20, 20, 5*65536, drawRotation,       drawRotation + 64, 1 );
+	drawArc( 20, 20, 7*65536, drawRotation + 117, drawRotation + 64 + 117, 1 );
+	drawArc( 20, 20, 9*65536, drawRotation + 143, drawRotation + 64 + 143, 1 );
+	drawArc( 20, 20, 11*65536, 0, 320, 1 );
+
+	int rg10 = (g->rotation >> 10) - 12;
+
+	switch( g->subMode )
+	{
+	case 0:
+		if( st > 250 ) nextSubMode = 1;
+		if( st > 10 ) swadgeDraw( SSD1306_W/2, 4, 1, swadgeGlyphHalf, "TRACK" );
+		if( st > 60 ) swadgeDraw( SSD1306_W/2, 15, 1, swadgeGlyphHalf, "AND" );
+		if( st > 110 ) swadgeDraw( SSD1306_W/2, 25, 1, swadgeGlyphHalf, "FIELD" );
+		break;
+	case 1:
+	{
+		if( buttonEventDown && ( buttonEventDown != g->lastbtn ) )
+		{
+			g->lastbtn = buttonEventDown;
+			g->rotspeed += 120;
+		}
+
+		if( rg10 >= 8000 )
+		{
+			rg10 = 8000;
+			nextSubMode = 2;
+		}
+
+		g->timeleft =  72-(st>>5);
+
+		if( g->timeleft <= 0 )
+		{
+			nextSubMode = 2;
+		}
+	}
+	case 2:
+	{
+		g->rotspeed -= dt;
+		if( g->rotspeed < 0 ) g->rotspeed = 0;
+		g->rotation += g->rotspeed * dt;
+
+		ssd1306_drawFastHLine( 0, 31, SSD1306_W, 1 );
+		for( int i = 0; i < 10; i++ )
+		{
+			int xofs = (7-(rg10%8)) + i * 8;
+			int deep = (((rg10)/8 + i) % 10) == 0;
+			ssd1306_drawFastVLine( xofs, 31, 3 + deep * 3, 1 );
+		}
+		glyphdraw_nomask = 1;
+
+		if( g->subMode == 1 && rg10 > 0 )
+		{
+			g->score = (rg10/8);
+		}
+		swadgeDraw( SSD1306_W-1, 4, 2, swadgeGlyphHalf, "%d", g->score );
+		ssd1306_drawFastHLine( 0, 0, g->timeleft, 1 );
+		break;
+	}
+	}
+
+	if( g->subMode == 2 )
+	{
+		swadgeDraw( SSD1306_W/2, 14, 1, swadgeGlyph, (g->score == 1000)?"JOMP":"QWOP" );
+		if( st > 350 )
+		{
+			totalScore += g->score;
+			return 1;
+		}
+	}
+
+	if( nextSubMode != g->subMode )
+	{
+		g->subMode = nextSubMode;
+		g->switchTime = gameTimeUs;
+		g->lastTime = 0;
 	}
 
 	return 0;
@@ -856,7 +969,7 @@ int GameModeMainMenu()
 	switch( nextSubMode )
 	{
 	case 0:
-		swadgeDraw( SSD1306_W/2, 2, 1, swadgeGlyphHalf, "RINGBOX" );
+		swadgeDraw( SSD1306_W/2, 2, 1, swadgeGlyphHalf, "BINGBOX" );
 		swadgeDraw( SSD1306_W/2, 15, 1, swadgeGlyphHalf, "V1.0" );
 		swadgeDraw( 16, 28, 1, swadgeGlyphHalf, "GO" );
 		swadgeDraw( 56, 28, 1, swadgeGlyphHalf, "SHO" );
@@ -975,7 +1088,8 @@ int GameModeInterstitial()
 	backgroundAttrib = gameTimeUs>>13;
 	background(13);
 	swadgeDraw( 0, 2, 0, swadgeGlyphHalf, "GAME" );
-	swadgeDraw( SSD1306_W, 2, 2, swadgeGlyphHalf, "%d/%d", gameNumber, maxGames );
+	
+	swadgeDraw( SSD1306_W, 2, 2, swadgeGlyphHalf, ( gameNumber == maxGames )?"LAST":"%d/%d", gameNumber, maxGames );
 
 	swadgeDraw( SSD1306_W/2, 16, 1, swadgeGlyph, "%d", totalScore );
 
@@ -994,13 +1108,15 @@ gamemode_t gameModeForce = 0;
 int        gameModeForceID = 0;
 
 
-gamemode_t gameModes[] = {
-	GameModeGrand, GameModeTunnel, GameModeTunnel, GameModeFlap, GameModeSnek, GameBeatTop, RadialGame
+gamemode_t gameModes[8] = {
+	GameModeGrand, GameModeTunnel, GameModeTunnel, GameModeFlap, GameModeSnek, GameBeatTop, RadialGame, GameTrackAndField
 };
 
-int gameModeIDs[] = {
-	0, 0, 1, 0, 0, 0,
+int gameModeIDs[8] = {
+	0, 0, 1, 0, 0, 0, 0, 0,
 };
+
+uint8_t gamePlayedCount[8];
 
 gamemode_t gameModesFree[] = {
 	GameMode1up, GameMode1up, GameMode1up, GameMode1up,
