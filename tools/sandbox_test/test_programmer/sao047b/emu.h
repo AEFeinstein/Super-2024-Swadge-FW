@@ -4,9 +4,9 @@
 #define CNFG_IMPLEMENTATION
 
 #include <stdint.h>
-#include <sys/time.h>
 
 #ifndef WASM
+#include <sys/time.h>
 #define mini_vsnprintf vsnprintf
 uint32_t GetTimeUS()
 {
@@ -66,11 +66,11 @@ void HandleKey( int keycode, int bDown )
 {
 	switch( keycode )
 	{
-	case 'j': case 'J':
+	case 'j': case 'J': case 65361: case 37:
 		if(!bDown ) GPIOA_INDR |= 2;
 		if( bDown ) GPIOA_INDR &=~2;
 		break;
-	case 'k': case 'K':
+	case 'k': case 'K': case 65363: case 39:
 		if(!bDown ) GPIOA_INDR |= 4;
 		if( bDown ) GPIOA_INDR &=~4;
 		break;

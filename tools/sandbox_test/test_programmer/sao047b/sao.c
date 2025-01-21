@@ -139,10 +139,11 @@ int main()
 			}
 			else
 			{
+				_rand_lfsr = SysTick->CNT;
 				if( gameNumber == 1 )
 				{
 					// Decide how the set of games will go.
-					freebieID = ( SysTick->CNT % (maxGames-1) ) + 2;
+					freebieID = ( _rand_gen_32b() % (maxGames-1) ) + 2;
 					memset( gamePlayedCount, 0, sizeof( gamePlayedCount ) );
 					totalScore = 0;
 				}
@@ -150,7 +151,7 @@ int main()
 				{
 					if( gameNumber == freebieID )
 					{
-						int index = (SysTick->CNT>>4) % (sizeof(gameModesFree)/sizeof(gameModesFree[0]));
+						int index = (_rand_gen_32b()) % (sizeof(gameModesFree)/sizeof(gameModesFree[0]));
 						gameMode = gameModesFree[ index ];
 						gameModeID = gameModeFreeIDs[ index ];
 					}
@@ -168,7 +169,7 @@ int main()
 						int index;
 						do
 						{
-							index = (SysTick->CNT>>4) % (sizeof(gameModes)/sizeof(gameModes[0]));
+							index = (_rand_gen_32b()) % (sizeof(gameModes)/sizeof(gameModes[0]));
 
 							// If a category has zero left, then make sure we select one of those.
 							if( zeroleft )
