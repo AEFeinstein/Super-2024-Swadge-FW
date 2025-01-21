@@ -870,7 +870,7 @@ int GameTrackAndField()
 		if( buttonEventDown && ( buttonEventDown != g->lastbtn ) )
 		{
 			g->lastbtn = buttonEventDown;
-			g->rotspeed += 120;
+			g->rotspeed += 125;
 		}
 
 		if( rg10 >= 8000 )
