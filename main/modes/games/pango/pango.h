@@ -31,6 +31,7 @@ typedef struct
     uint8_t maxLevelIndexUnlocked;
     bool gameCleared;
     bool oneCreditCleared;
+    uint32_t caravanHighScore;
 } pangoUnlockables_t;
 
 //==============================================================================
