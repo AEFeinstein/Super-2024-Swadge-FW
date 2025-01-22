@@ -553,7 +553,7 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
 
-    char timeStr[10];
+    char timeStr[15];
 
     if (gameData->frameCount > 29)
     {
