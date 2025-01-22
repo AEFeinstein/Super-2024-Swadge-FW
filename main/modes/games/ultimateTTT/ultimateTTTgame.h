@@ -10,8 +10,8 @@
 // Defines
 //==============================================================================
 
-#define CHECKER_COLOR_1 c110
-#define CHECKER_COLOR_2 c011
+#define CHECKER_COLOR_1 c000
+#define CHECKER_COLOR_2 c111
 
 //==============================================================================
 // Function Declarations
