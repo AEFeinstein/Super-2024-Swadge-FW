@@ -174,10 +174,10 @@ static inline int ReadBitSWIO( struct SWIOState * state )
 	GPIO_VAR_W1TS = pinmaskD;
 #ifdef R_GLITCH_HIGH
 	int halfwait = t1coeff / 2;
-	PrecDelay( halfwait + 1 );
+	PrecDelay( halfwait - 3);
 	GPIO_VAR_ENABLE_W1TS = pinmaskD;
 	GPIO_VAR_ENABLE_W1TC = pinmaskD;
-	PrecDelay( halfwait + 1 );
+	PrecDelay( halfwait +1 );
 #else
 	PrecDelay( medwait );
 #endif
