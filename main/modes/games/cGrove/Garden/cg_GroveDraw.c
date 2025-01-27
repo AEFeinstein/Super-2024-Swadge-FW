@@ -44,11 +44,11 @@ static const char* tutorialText[]
     = {"Welcome",
        "Welcome to the Grove! Here you can raise, play with, and feed your Chowa.",
        "Navigation",
-       "There are two control schemes, using the C stick (default) or the arrow keys. For both, move cursor to edge of "
+       "There are two control schemes, using the C Touchpad (default) or the D-Pad. For both, move cursor to edge of "
        "the screen to scroll.",
        "Grabbing/Petting",
        "When the cursor is over a Chowa or an item, press A to pick it up. Press B over a Chowa or an Egg to pet it. "
-       "When using the C Stick, the down and right arrow keys mimic the A and B keys respectively.",
+       "When using the C Touchpad, the down and right D-Pad mimic the A and B keys respectively.",
        "Donuts",
        "The golden donuts are the main currency for Chowa. They appear slowly and randomly, snag them with A when you "
        "see them. You can win matches in sparring to get more faster.",

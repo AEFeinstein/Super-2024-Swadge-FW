@@ -206,7 +206,7 @@ void bb_freeGameData(bb_gameData_t* gameData)
     }
     while (gameData->pleaseCheck.first)
     {
-        heap_caps_free(shift(&gameData->unsupported));
+        heap_caps_free(shift(&gameData->pleaseCheck));
     }
     if (gameData->loadoutScreenData != NULL)
     {
