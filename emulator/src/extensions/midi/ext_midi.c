@@ -41,6 +41,10 @@ static bool midiInitCb(emuArgs_t* emuArgs);
 static void midiPreFrameCb(uint64_t frame);
 static bool midiInjectFile(const char* path);
 
+// WAV writing functions
+static void renderDoneCallback(void);
+static bool renderMidiToWav(const char* midiPath, const char* wavPath);
+
 #ifdef EMU_MACOS
 // Exists but isn't declared in the headers
 extern Boolean ConvertEventRefToEventRecord(EventRef, EventRecord*);
@@ -129,11 +133,290 @@ void midiPreFrameCb(uint64_t frame)
 
 static bool midiInjectFile(const char* path)
 {
-    if (emuCnfsInjectFile(midiFile, midiFile))
+    if (emuCnfsInjectFile(path, path))
     {
         emuInjectNvs32("storage", "synth_playmode", 1);
-        emuInjectNvsBlob("storage", "synth_lastsong", strlen(midiFile), midiFile);
+        emuInjectNvsBlob("storage", "synth_lastsong", strlen(path), path);
         emulatorSetSwadgeModeByName(synthMode.modeName);
+
+        // Write <filename>.mid's recording to <filename>.wav
+        char outFilePath[128] = {0};
+        strcat(outFilePath, path);
+
+        char* dotptr = strrchr(outFilePath, '.');
+        snprintf(&dotptr[1], strlen(dotptr), "wav");
+
+        if (renderMidiToWav(path, outFilePath))
+        {
+            printf("Success! Rendered MIDI to %s\n", outFilePath);
+            //emulatorQuit();
+        }
+        else
+        {
+            printf("ERROR: Could not render MIDI to %s\n", outFilePath);
+        }
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+static bool renderComplete = false;
+static void renderDoneCallback(void)
+{
+    renderComplete = true;
+}
+
+static bool renderMidiToWav(const char* midiPath, const char* wavPath)
+{
+    renderComplete = false;
+
+    // Inject the MIDI file so we can lazily just use the existing stuff for it
+    if (emuCnfsInjectFile("__wav_in.mid", midiPath))
+    {
+        // The parser is just for getting metadata
+        midiFile_t tmpMidi = {0};
+        midiFileReader_t parser = {0};
+        if (!loadMidiFile("__wav_in.mid", &tmpMidi, false) || !initMidiParser(&parser, &tmpMidi))
+        {
+            printf("Error: invalid MIDI file %s!\n", midiPath);
+            return false;
+        }
+
+        // We want meta event specifically, for text
+        parser.handleMetaEvents = true;
+
+        const char* artistName = NULL;
+        const char* trackName = NULL;
+        uint32_t songTicks = 0;
+
+        // -1. Get the metadata for artist info, etc.
+        midiEvent_t event = {0};
+        while (midiNextEvent(&parser, &event))
+        {
+            if (event.type == META_EVENT && event.meta.type == COPYRIGHT)
+            {
+                // Artist name?
+                printf("Artist name: '%s'\n", event.meta.text);
+                if (artistName)
+                {
+                    free(artistName);
+                    artistName = NULL;
+                }
+                artistName = strdup(event.meta.text);
+            }
+            else if (event.type == META_EVENT && event.meta.type == SEQUENCE_OR_TRACK_NAME)
+            {
+                // Track name?
+                printf("Track name: '%s'\n", event.meta.text);
+                if (trackName)
+                {
+                    free(trackName);
+                    trackName = NULL;
+                }
+                trackName = strdup(event.meta.text);
+            }
+            else if (event.meta.type == END_OF_TRACK)
+            {
+                // Not technically correct, need to take variable tempo into account
+                songTicks = event.absTime;
+            }
+        }
+        deinitMidiParser(&parser);
+
+        printf("Song length: %" PRIu32 "\n", songTicks);
+
+        // 0. Open the file in read/write mode, truncating or creating the file
+        FILE* outFile = fopen(wavPath, "wb+");
+
+        if (outFile == NULL)
+        {
+            printf("Error: Cannot open WAV file %s for writing!\n", wavPath);
+            unloadMidiFile(&tmpMidi);
+
+            if (artistName)
+            {
+                free(artistName);
+            }
+
+            if (trackName)
+            {
+                free(trackName);
+            }
+            return false;
+        }
+
+        // 1. Write the RIFF header
+        //    a. Magic bytes ('RIFF')
+        fputs("RIFF", outFile);
+
+        //    b. File size (We do not know what it will be yet, so write all zeroes)
+        fputc(0, outFile);
+        fputc(0, outFile);
+        fputc(0, outFile);
+        fputc(0, outFile);
+
+        //    c. Format ID
+        fputs("WAVE", outFile);
+
+        // 2. Write format block
+        //    a. Format Block ID
+        fputs("fmt ", outFile);
+
+        //    b. Format chunk size minus 8 - 4 bytes
+        fputc(16, outFile);
+        fputc(0, outFile);
+        fputc(0, outFile);
+        fputc(0, outFile);
+
+        //    b. Audio format (1 for PCM, 3 for float) - 2 bytes
+        fputc(1, outFile);
+        fputc(0, outFile);
+
+        //    c. Channel count - 2 bytes
+        int16_t channelCount = 1;
+        fputc((channelCount & 0xFF), outFile);
+        fputc((channelCount >> 8) & 0xFF, outFile);
+
+        //    d. Sample rate - 4 bytes
+        fputc((DAC_SAMPLE_RATE_HZ) & 0xFF, outFile);
+        fputc((DAC_SAMPLE_RATE_HZ >> 8) & 0xFF, outFile);
+        fputc((DAC_SAMPLE_RATE_HZ >> 16) &  0xFF, outFile);
+        fputc((DAC_SAMPLE_RATE_HZ >> 24) & 0xFF, outFile);
+
+        int16_t bitsPerSample = 8;
+        int16_t bytesPerBlock = channelCount * bitsPerSample / 8;
+        int32_t bytesPerSecond = DAC_SAMPLE_RATE_HZ * bytesPerBlock;
+
+        //    e. Bytes per second - 4 bytes
+        fputc((bytesPerSecond) & 0xFF, outFile);
+        fputc((bytesPerSecond >> 8) & 0xFF, outFile);
+        fputc((bytesPerSecond >> 16) &  0xFF, outFile);
+        fputc((bytesPerSecond >> 24) & 0xFF, outFile);
+
+        //    f. Bytes per block - 2 bytes
+        fputc((bytesPerBlock & 0xFF), outFile);
+        fputc((bytesPerBlock >> 8) & 0xFF, outFile);
+
+        //    g. Bits per sample - 2 bytes
+        fputc((bitsPerSample & 0xFF), outFile);
+        fputc((bitsPerSample >> 8) & 0xFF, outFile);
+
+        // 3. Write data chunk
+        //    a. Data chunk ID - 4 bytes
+        fputs("data", outFile);
+
+        //    b. Size (also 0 for now) - 4 bytes
+        // Save the position so it's easy to come back and overwrite this
+        int dataSizeOffset = ftell(outFile);
+        fputc(0, outFile);
+        fputc(0, outFile);
+        fputc(0, outFile);
+        fputc(0, outFile);
+
+        // Now, use the player to actually play and record the song
+        midiPlayer_t player = {0};
+        midiPlayerInit(&player);
+        midiSetFile(&player, &tmpMidi);
+        midiGmOn(&player);
+        player.loop = false;
+        player.songFinishedCallback = renderDoneCallback;
+
+        midiPause(&player, false);
+
+        int32_t sample;
+
+        int32_t dataBytes = 0;
+
+        int anyClip = 0;
+
+        uint8_t buffer[4096];
+        while (!renderComplete)
+        {
+            int i;
+            for (i = 0; i < sizeof(buffer) && !renderComplete; i++)
+            {
+                sample = midiPlayerStep(&player);
+
+                if (sample < -128)
+                {
+                    if (!anyClip)
+                    {
+                        printf("Clipped!!!\n");
+                        anyClip++;
+                    }
+                    buffer[i] = 0;
+                }
+                else if (sample > 127)
+                {
+                    if (!anyClip)
+                    {
+                        printf("Clipped!!!\n");
+                        anyClip++;
+                    }
+                    buffer[i] = 255;
+                }
+                else
+                {
+                    buffer[i] = sample + 128;
+                }
+            }
+
+            fwrite(buffer, 1, i, outFile);
+
+            dataBytes += i;
+        }
+
+        if (anyClip)
+        {
+            printf("Clipped %d samples at volume %d\n", anyClip, player.headroom);
+        }
+
+        if ((dataBytes % 2) != 0)
+        {
+            // Odd number of data bytes, write one to pad
+            fputc(0, outFile);
+            dataBytes++;
+        }
+
+        // Get the total file size, minus the header bytes
+        int32_t waveSize = ftell(outFile) - 8;
+        printf("waveSize: %" PRId32 ", dataBytes: %" PRId32 "\n", waveSize, dataBytes);
+
+        // Seek to the header file size field
+        fseek(outFile, 4, SEEK_SET);
+
+        fputc((waveSize & 0xFF), outFile);
+        fputc((waveSize >> 8) & 0xFF, outFile);
+        fputc((waveSize >> 16) & 0xFF, outFile);
+        fputc((waveSize >> 24) & 0xFF, outFile);
+
+        // Seek to the data chunk size field offset
+        printf("Seeking to %d\n", dataSizeOffset);
+        fseek(outFile, dataSizeOffset, SEEK_SET);
+
+        fputc((dataBytes & 0xFF), outFile);
+        fputc((dataBytes >> 8) & 0xFF, outFile);
+        fputc((dataBytes >> 16) & 0xFF, outFile);
+        fputc((dataBytes >> 24) & 0xFF, outFile);
+
+        fclose(outFile);
+
+        midiPlayerReset(&player);
+        unloadMidiFile(&tmpMidi);
+
+        if (artistName)
+        {
+            free(artistName);
+        }
+
+        if (trackName)
+        {
+            free(trackName);
+        }
 
         return true;
     }
