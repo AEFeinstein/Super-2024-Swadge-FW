@@ -32,8 +32,8 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &touchEmuCallback,  &ledEmuExtension,    &fuzzerEmuExtension, &toolsEmuExtension,   &keymapEmuCallback,
-    &modesEmuExtension, &replayEmuExtension, &midiEmuExtension,   &gamepadEmuExtension,
+    &touchEmuCallback,  &ledEmuExtension,     &fuzzerEmuExtension, &toolsEmuExtension, &keymapEmuCallback,
+    &modesEmuExtension, &gamepadEmuExtension, &replayEmuExtension, &midiEmuExtension,
 };
 
 //==============================================================================
@@ -317,6 +317,14 @@ bool disableExtension(const char* name)
         while ((paneInfo = (emuPaneInfo_t*)pop(&extInfo->panes)))
         {
             free(paneInfo);
+        }
+
+        if (extInfo->initialized)
+        {
+            if (extInfo->extension->fnDeinitCb)
+            {
+                extInfo->extension->fnDeinitCb();
+            }
         }
 
         // If the extension had panes, we will need to recalculate
