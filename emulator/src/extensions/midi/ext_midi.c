@@ -170,6 +170,8 @@ static void renderDoneCallback(void)
     renderComplete = true;
 }
 
+#define NOCLIP 0
+
 static bool renderMidiToWav(const char* midiPath, const char* wavPath)
 {
     renderComplete = false;
@@ -317,62 +319,93 @@ static bool renderMidiToWav(const char* midiPath, const char* wavPath)
         fputc(0, outFile);
         fputc(0, outFile);
 
-        // Now, use the player to actually play and record the song
+        int dataOffset = ftell(outFile);
+        int32_t dataBytes;
+
         midiPlayer_t player = {0};
         midiPlayerInit(&player);
-        midiSetFile(&player, &tmpMidi);
-        midiGmOn(&player);
-        player.loop = false;
-        player.songFinishedCallback = renderDoneCallback;
+        int32_t headroom = player.headroom;
+        int tries = 1;
 
-        midiPause(&player, false);
-
-        int32_t sample;
-
-        int32_t dataBytes = 0;
-
-        int anyClip = 0;
-
-        uint8_t buffer[4096];
-        while (!renderComplete)
+        while (true)
         {
-            int i;
-            for (i = 0; i < sizeof(buffer) && !renderComplete; i++)
-            {
-                sample = midiPlayerStep(&player);
+            // Now, use the player to actually play and record the song
+            midiPlayerReset(&player);
+            midiSetFile(&player, &tmpMidi);
+            midiGmOn(&player);
+            player.loop = false;
+            player.songFinishedCallback = renderDoneCallback;
 
-                if (sample < -128)
+            midiPause(&player, false);
+
+            int32_t maxSample = 0;
+            int32_t sample;
+
+            renderComplete = false;
+            dataBytes = 0;
+
+            int clipped = 0;
+
+            uint8_t buffer[4096];
+            while (!renderComplete)
+            {
+                int i;
+                for (i = 0; i < sizeof(buffer) && !renderComplete; i++)
                 {
-                    if (!anyClip)
+                    sample = midiPlayerStep(&player);
+                    if (-sample > maxSample)
                     {
-                        printf("Clipped!!!\n");
-                        anyClip++;
+                        maxSample = -sample;
                     }
-                    buffer[i] = 0;
-                }
-                else if (sample > 127)
-                {
-                    if (!anyClip)
+                    else if (sample > maxSample)
                     {
-                        printf("Clipped!!!\n");
-                        anyClip++;
+                        maxSample = sample;
                     }
-                    buffer[i] = 255;
+
+                    sample *= headroom;
+                    sample >>= 16;
+
+                    if (sample < -128)
+                    {
+                        clipped++;
+                        buffer[i] = 0;
+                    }
+                    else if (sample > 127)
+                    {
+                        clipped++;
+                        buffer[i] = 255;
+                    }
+                    else
+                    {
+                        buffer[i] = sample + 128;
+                    }
                 }
-                else
+
+                fwrite(buffer, 1, i, outFile);
+
+                dataBytes += i;
+            }
+
+            if (clipped)
+            {
+                printf("Clipped %d samples at volume %d\n", clipped, headroom);
+
+                // This is what noclip is, right?
+                if (clipped > 10 && NOCLIP)
                 {
-                    buffer[i] = sample + 128;
+                    headroom = UINT16_MAX * 128 / maxSample;
+                    tries++;
+                    fseek(outFile, dataOffset, SEEK_SET);
+                    continue;
                 }
             }
 
-            fwrite(buffer, 1, i, outFile);
-
-            dataBytes += i;
+            break;
         }
 
-        if (anyClip)
+        if (tries > 1)
         {
-            printf("Clipped %d samples at volume %d\n", anyClip, player.headroom);
+            printf("Took %d tries to get a reasonable number of clips, mix volume was %d%%\n", tries, headroom * 100 / UINT16_MAX);
         }
 
         if ((dataBytes % 2) != 0)
@@ -384,20 +417,20 @@ static bool renderMidiToWav(const char* midiPath, const char* wavPath)
 
         // Get the total file size, minus the header bytes
         int32_t waveSize = ftell(outFile) - 8;
-        printf("waveSize: %" PRId32 ", dataBytes: %" PRId32 "\n", waveSize, dataBytes);
 
         // Seek to the header file size field
         fseek(outFile, 4, SEEK_SET);
 
+        // Overwrite the placeholder with the actual file size
         fputc((waveSize & 0xFF), outFile);
         fputc((waveSize >> 8) & 0xFF, outFile);
         fputc((waveSize >> 16) & 0xFF, outFile);
         fputc((waveSize >> 24) & 0xFF, outFile);
 
         // Seek to the data chunk size field offset
-        printf("Seeking to %d\n", dataSizeOffset);
         fseek(outFile, dataSizeOffset, SEEK_SET);
 
+        // Overwrite the placeholder with the actual data size
         fputc((dataBytes & 0xFF), outFile);
         fputc((dataBytes >> 8) & 0xFF, outFile);
         fputc((dataBytes >> 16) & 0xFF, outFile);
