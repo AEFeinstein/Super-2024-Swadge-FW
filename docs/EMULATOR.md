@@ -276,6 +276,14 @@ command when replaying recorded inputs.
 
 `--midi-file`: Loads and plays a local MIDI or KAR file using the MIDI Player mode.
 
+`--export-wav`: When opening a local MIDI file, instead of playing in real-time, the audio will be exported
+immediately to a WAV file, and the emulator will exit. A MIDI filename must be provided, either as an argument
+to `--midi-file` or implied by passing in an argument ending in `.mid`. By default, the name of the output WAV
+file is the same as the MIDI file's name (e.g. `music.mid` will be exported to `music.wav`), but an alternate
+name can be specified by passing in an argument ending in `.wav`. The order of the `.mid` and `.wav` files does
+not matter. For example: `swadge_emulator --export-wav allstar.mid allstar.wav`,
+`swadge_emulator -x allstar.wav allstar.mid`, and `swadge_emulator -x allstar.mid` are all equivalent.
+
 `--seed`: Sets a specific seed to the pseudorandom number generator. This is useful when trying to reproduce
 behavior that relies on `esp_random()`. If the seed is not set, a time-based one will be used. Note that a seed
 from one system will not necessarily produce the same output if it is used on a different system.
@@ -300,7 +308,7 @@ the <code>\`</code> / `~` key. These console commands can also be used from a [r
 To get a complete list of available commands, type `help` into the console. For the usage of a specific command,
 type `help <command>` into the console.
 
-| Command                  | Description
+| Command                  | Description                                                                                           |
 |--------------------------|-------------------------------------------------------------------------------------------------------|
 | `help [command]`         | Prints a list of commands, or detailed help for a specific command                                    |
 | `screenshot [filename]`  | Saves a screenshot to `filename`, or to a timestamp-based file name if no filename is given           |
@@ -308,6 +316,7 @@ type `help <command>` into the console.
 | `gif [filename]`         | Starts recording a GIF to `filename` (or a timestamp-based file name), or stops the current recording |
 | `replay <filename>`      | Starts playing back inputs from `filename`. Stops any current playing back or recording of inputs.    |
 | `record [filename]`      | Starts recording inputs to `filename`, or to a timestamp-based file name if no filename is given      |
+| `export [filename]`      | Exports the opened MIDI file to a WAV file                                                            |
 | <code>fuzz [on\|off]</code> | Toggles fuzzing on or off                                                                          |
 | <code>fuzz buttons [on\|off]</code> | Toggles fuzzing of button presses on or off                                                |
 | `fuzz buttons mask <...>`| Sets the buttons that will be used when fuzzing, separated by spaces, e.g. `fuzz buttons mask up down left right` |

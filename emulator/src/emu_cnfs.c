@@ -80,6 +80,17 @@ bool emuCnfsInjectFile(const char* name, const char* filePath)
 
 void emuCnfsInjectFileData(const char* name, size_t length, void* data)
 {
+    if (cnfsInjectedFilename != NULL)
+    {
+        free(cnfsInjectedFilename);
+        cnfsInjectedFilename = NULL;
+    }
+    if (cnfsInjectedFileData != NULL)
+    {
+        free(cnfsInjectedFileData);
+        cnfsInjectedFileData = NULL;
+        cnfsInjectedFileSize = 0;
+    }
     cnfsInjectedFilename = strdup(name);
     cnfsInjectedFileSize = length;
     cnfsInjectedFileData = data;

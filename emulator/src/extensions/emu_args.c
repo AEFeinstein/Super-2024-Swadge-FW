@@ -121,6 +121,9 @@ emuArgs_t emulatorArgs = {
     .vsync = true,
 
     .joystick = NULL,
+
+    .exportWav = false,
+    .wavFile   = NULL,
 };
 
 static const char mainDoc[] = "Emulates a swadge";
@@ -128,6 +131,7 @@ static const char mainDoc[] = "Emulates a swadge";
 // Long argument name definitions
 // These MUST be defined here, so that they are
 // the same in both options and argDocs
+static const char argExportWav[]   = "export-wav";
 static const char argFakeFps[]     = "fake-fps";
 static const char argFakeTime[]    = "fake-time";
 static const char argFullscreen[]  = "fullscreen";
@@ -161,6 +165,7 @@ static const char argUsage[]       = "usage";
  */
 static const struct option options[] =
 {
+    { argExportWav,   no_argument,       (int*)&emulatorArgs.exportWav,    true },
     { argFakeFps,     required_argument, NULL,                             0    },
     { argFakeTime,    no_argument,       (int*)&emulatorArgs.fakeTime,     true },
     { argFullscreen,  no_argument,       (int*)&emulatorArgs.fullscreen,   true },
@@ -195,8 +200,9 @@ static const struct option options[] =
  */
 static const optDoc_t argDocs[] =
 {
+    {'x', argExportWav,   NULL,    "Export the MIDI file being opened"},
     { 0,  argFakeFps,     "RATE",  "Set a fake framerate. RATE can be a decimal number"},
-    { 0,  argFakeTime,    NULL,    "Use a fake timer that ticks at a constant "},
+    { 0,  argFakeTime,    NULL,    "Use a fake timer that ticks at a constant rate"},
     {'f', argFullscreen,  NULL,    "Open in fullscreen mode" },
     { 0,  argFuzz,        NULL,    "Enable fuzzing mode, which injects random input in order to test modes" },
     { 0,  argFuzzButtons, "y|n",   "Set whether buttons are fuzzed" },
@@ -447,10 +453,15 @@ static bool handlePositionalArgument(const char* val)
 {
     if (val)
     {
-        if ((strlen(val) > 4 && (!strcmp(&val[strlen(val) - 4], ".mid") || !strcmp(&val[strlen(val) - 4], ".kar")))
-            || (strlen(val) > 5 && !strcmp(&val[strlen(val) - 5], ".midi")))
+        if ((strlen(val) > 4 && (!strcasecmp(&val[strlen(val) - 4], ".mid") || !strcasecmp(&val[strlen(val) - 4], ".kar")))
+            || (strlen(val) > 5 && !strcasecmp(&val[strlen(val) - 5], ".midi")))
         {
             emulatorArgs.midiFile = val;
+            return true;
+        }
+        else if (strlen(val) > 4 && !strcasecmp(&val[strlen(val) - 4], ".wav"))
+        {
+            emulatorArgs.wavFile = val;
             return true;
         }
     }
@@ -950,8 +961,11 @@ bool emuParseArgs(int argc, char** argv)
 
         if (!optArg && NULL != argv[optind] && '-' != *(argv[optind]))
         {
-            // This makes optional arguments work even if you don't connect them with the '='
-            optArg = argv[optind++];
+            if (!option || option->has_arg != no_argument)
+            {
+                // This makes optional arguments work even if you don't connect them with the '='
+                optArg = argv[optind++];
+            }
         }
 
         // Ok, now for the case of an option which has no short-opt in the getopt options struct,
