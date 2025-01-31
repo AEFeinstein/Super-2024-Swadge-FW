@@ -8,3 +8,5 @@
 #include "emu_ext.h"
 
 extern emuExtension_t midiEmuExtension;
+
+bool emuExportMidiToWav(const char* filename);

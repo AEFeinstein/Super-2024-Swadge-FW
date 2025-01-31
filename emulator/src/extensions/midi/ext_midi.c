@@ -114,7 +114,19 @@ static bool midiInitCb(emuArgs_t* emuArgs)
             return false;
         }
 
+        if (emulatorArgs.exportWav)
+        {
+            emuExportMidiToWav(emulatorArgs.wavFile);
+            emulatorQuit();
+        }
+
         return true;
+    }
+    else if (emulatorArgs.exportWav)
+    {
+        printf("No MIDI file given! Cannot export WAV.\n");
+        emulatorQuit();
+        return false;
     }
 
     return false;
@@ -131,6 +143,43 @@ void midiPreFrameCb(uint64_t frame)
 #endif
 }
 
+bool emuExportMidiToWav(const char* filename)
+{
+    if (!midiFile)
+    {
+        printf("ERROR: No MIDI to export!\n");
+        return false;
+    }
+
+    char outFilePath[1024] = {0};
+    if (filename != NULL)
+    {
+        // Use the given filename
+        strcat(outFilePath, filename);
+    }
+    else
+    {
+        // Write <filename>.mid's recording to <filename>.wav
+        strcat(outFilePath, midiFile);
+
+        char* dotptr = strrchr(outFilePath, '.');
+        snprintf(&dotptr[1], strlen(dotptr), "wav");
+    }
+
+    initCnfs();
+
+    if (renderMidiToWav(midiFile, outFilePath))
+    {
+        printf("Success! Exported MIDI to %s\n", outFilePath);
+        return true;
+    }
+    else
+    {
+        printf("ERROR: Could not export MIDI to %s\n", outFilePath);
+        return false;
+    }
+}
+
 static bool midiInjectFile(const char* path)
 {
     if (emuCnfsInjectFile(path, path))
@@ -138,23 +187,6 @@ static bool midiInjectFile(const char* path)
         emuInjectNvs32("storage", "synth_playmode", 2);
         emuNvsInjectBlobFile("storage", "synth_usersong", midiFile);
         emulatorSetSwadgeModeByName(synthMode.modeName);
-
-        // Write <filename>.mid's recording to <filename>.wav
-        char outFilePath[128] = {0};
-        strcat(outFilePath, path);
-
-        char* dotptr = strrchr(outFilePath, '.');
-        snprintf(&dotptr[1], strlen(dotptr), "wav");
-
-        if (renderMidiToWav(path, outFilePath))
-        {
-            printf("Success! Rendered MIDI to %s\n", outFilePath);
-            //emulatorQuit();
-        }
-        else
-        {
-            printf("ERROR: Could not render MIDI to %s\n", outFilePath);
-        }
 
         return true;
     }
@@ -171,6 +203,7 @@ static void renderDoneCallback(void)
 }
 
 #define NOCLIP 0
+#define WRITE_INFO 1
 
 static bool renderMidiToWav(const char* midiPath, const char* wavPath)
 {
@@ -182,7 +215,7 @@ static bool renderMidiToWav(const char* midiPath, const char* wavPath)
         // The parser is just for getting metadata
         midiFile_t tmpMidi = {0};
         midiFileReader_t parser = {0};
-        if (!loadMidiFile("__wav_in.mid", &tmpMidi, false) || !initMidiParser(&parser, &tmpMidi))
+        if (!loadMidiFile(CNFS_NUM_FILES, &tmpMidi, false) || !initMidiParser(&parser, &tmpMidi))
         {
             printf("Error: invalid MIDI file %s!\n", midiPath);
             return false;
@@ -199,27 +232,58 @@ static bool renderMidiToWav(const char* midiPath, const char* wavPath)
         midiEvent_t event = {0};
         while (midiNextEvent(&parser, &event))
         {
-            if (event.type == META_EVENT && event.meta.type == COPYRIGHT)
+            if (event.type == META_EVENT && event.meta.type == TEXT)
+            {
+                if (event.absTime == 0)
+                {
+                    char tmp[event.meta.length + 1];
+                    strncpy(tmp, event.meta.text, event.meta.length);
+                    tmp[event.meta.length] = '\0';
+                    printf("Text @ %" PRIu32 ": %s\n", event.absTime, tmp);
+                }
+
+                if ('@' == *event.meta.text)
+                {
+                    switch (event.meta.text[1])
+                    {
+                        case 'T':
+                        {
+                            static bool karTrackSet = false;
+
+                            if (!karTrackSet)
+                            {
+                                if (trackName)
+                                {
+                                    karTrackSet = true;
+                                    free(trackName);
+                                    trackName = NULL;
+                                }
+                                trackName = calloc(1, event.meta.length - 1);
+                                strncpy(trackName, &event.meta.text[2], event.meta.length - 2);
+                                printf("First text: %s\n", trackName);
+                            }
+                            break;
+                        }
+                        case 'I':
+                        case 'L':
+                        case 'K':
+                        break;
+                    }
+                }
+            }
+            else if (event.type == META_EVENT && event.meta.type == COPYRIGHT && !artistName)
             {
                 // Artist name?
                 printf("Artist name: '%s'\n", event.meta.text);
-                if (artistName)
-                {
-                    free(artistName);
-                    artistName = NULL;
-                }
-                artistName = strdup(event.meta.text);
+                artistName = calloc(1, event.meta.length + 1);
+                strncpy(artistName, event.meta.text, event.meta.length);
             }
-            else if (event.type == META_EVENT && event.meta.type == SEQUENCE_OR_TRACK_NAME)
+            else if (event.type == META_EVENT && event.meta.type == SEQUENCE_OR_TRACK_NAME && !trackName)
             {
                 // Track name?
-                printf("Track name: '%s'\n", event.meta.text);
-                if (trackName)
-                {
-                    free(trackName);
-                    trackName = NULL;
-                }
-                trackName = strdup(event.meta.text);
+                printf("Track name: '%s' on #%" PRIu8 "\n", event.meta.text, event.track);
+                trackName = calloc(1, event.meta.length + 1);
+                strncpy(trackName, event.meta.text, event.meta.length);
             }
             else if (event.meta.type == END_OF_TRACK)
             {
@@ -306,6 +370,84 @@ static bool renderMidiToWav(const char* midiPath, const char* wavPath)
         //    g. Bits per sample - 2 bytes
         fputc((bitsPerSample & 0xFF), outFile);
         fputc((bitsPerSample >> 8) & 0xFF, outFile);
+
+        if (!artistName)
+        {
+            artistName = strdup("Artist Name");
+        }
+
+        if (!trackName)
+        {
+            trackName = strdup("Track Name");
+        }
+
+        if (WRITE_INFO && (artistName || trackName))
+        {
+            // 2.5 ID3?
+            fputs("LIST", outFile);
+
+            bool padded = false;
+
+            // It's pretty easy to calculate the total chunk size ahead-of-time here, so just do that
+            // Size starts at 4 to include 'INFO' header
+            int infoSize = 4;
+            if (trackName)
+            {
+                infoSize += 8 + strlen(trackName) + 1;
+            }
+
+            if (artistName)
+            {
+                infoSize += 8 + strlen(artistName) + 1;
+            }
+
+            if (infoSize % 2)
+            {
+                padded = true;
+                infoSize++;
+            }
+
+            fputc((infoSize) & 0xFF, outFile);
+            fputc((infoSize >> 8) & 0xFF, outFile);
+            fputc((infoSize >> 16) &  0xFF, outFile);
+            fputc((infoSize >> 24) & 0xFF, outFile);
+
+            fputs("INFO", outFile);
+
+            if (trackName)
+            {
+                fputs("INAM", outFile);
+
+                int nameSize = strlen(trackName) + 1;
+                fputc((nameSize) & 0xFF, outFile);
+                fputc((nameSize >> 8) & 0xFF, outFile);
+                fputc((nameSize >> 16) &  0xFF, outFile);
+                fputc((nameSize >> 24) & 0xFF, outFile);
+
+                fputs(trackName, outFile);
+                fputc(0, outFile);
+            }
+
+            if (artistName)
+            {
+                // Artist name
+                fputs("IART", outFile);
+
+                int nameSize = strlen(artistName) + 1;
+                fputc((nameSize) & 0xFF, outFile);
+                fputc((nameSize >> 8) & 0xFF, outFile);
+                fputc((nameSize >> 16) &  0xFF, outFile);
+                fputc((nameSize >> 24) & 0xFF, outFile);
+
+                fputs(artistName, outFile);
+                fputc(0, outFile);
+            }
+
+            if (padded)
+            {
+                fputc(0, outFile);
+            }
+        }
 
         // 3. Write data chunk
         //    a. Data chunk ID - 4 bytes
@@ -453,10 +595,8 @@ static bool renderMidiToWav(const char* midiPath, const char* wavPath)
 
         return true;
     }
-    else
-    {
-        return false;
-    }
+
+    return false;
 }
 
 #ifdef EMU_MACOS

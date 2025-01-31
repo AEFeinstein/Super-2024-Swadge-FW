@@ -9,6 +9,7 @@
 #include "ext_replay.h"
 #include "ext_fuzzer.h"
 #include "ext_gamepad.h"
+#include "ext_midi.h"
 #include "hdw-nvs_emu.h"
 #include "emu_cnfs.h"
 
@@ -18,6 +19,7 @@ static int screenRecordCommandCb(const char** args, int argCount, char* out);
 static int setModeCommandCb(const char** args, int argCount, char* out);
 static int recordCommandCb(const char** args, int argCount, char* out);
 static int replayCommandCb(const char** args, int argCount, char* out);
+static int exportCommandCb(const char** args, int argCount, char* out);
 static int fuzzCommandCb(const char** args, int argCount, char* out);
 static int touchCommandCb(const char** args, int argCount, char* out);
 static int ledsCommandCb(const char** args, int argCount, char* out);
@@ -36,6 +38,7 @@ static const char* commandDocs[][3] = {
     {"replay", "replay [filename]", "open and replay recorded inputs from replay file [filename]"},
     {"record", "record [name]",
      "begin recording inputs into replay file [filename], or an auto-generated file name if not specified"},
+    {"export", "export [filename]", "export the opened MIDI file to a WAV"},
     {"fuzz", "fuzz [on|off]", "toggles the fuzzer"},
     {"fuzz buttons", "fuzz buttons [on|off]", "toggles fuzzing of button inputs"},
     {"fuzz buttons mask", "fuzz buttons mask [<button> [<button>  ...]]",
@@ -69,7 +72,7 @@ static const consoleCommand_t consoleCommands[] = {
     {.name = "record", .cb = recordCommandCb},         {.name = "fuzz", .cb = fuzzCommandCb},
     {.name = "touchpad", .cb = touchCommandCb},        {.name = "leds", .cb = ledsCommandCb},
     {.name = "inject", .cb = injectCommandCb},         {.name = "help", .cb = helpCommandCb},
-    {.name = "joystick", .cb = joystickCommandCb},
+    {.name = "joystick", .cb = joystickCommandCb},     {.name = "export", .cb = exportCommandCb},
 };
 
 const consoleCommand_t* getConsoleCommands(void)
@@ -183,6 +186,31 @@ static int recordCommandCb(const char** args, int argCount, char* out)
             startRecording(NULL);
             return sprintf(out, "Input recording started\n");
         }
+    }
+}
+
+static int exportCommandCb(const char** args, int argCount, char* out)
+{
+    const char* outFile = NULL;
+    if (argCount > 0)
+    {
+        outFile = args[0];
+    }
+
+    if (emuExportMidiToWav(outFile))
+    {
+        if (outFile)
+        {
+            return sprintf(out, "Exported MIDI to %s!\n", outFile);
+        }
+        else
+        {
+            return sprintf(out, "Exported MIDI!\n");
+        }
+    }
+    else
+    {
+        return sprintf(out, "Failed to export\n");
     }
 }
 

@@ -86,6 +86,12 @@ typedef struct
 
     // Mega Pulse EX level file
     const char* megaPulseFile;
+
+    /// @brief Whether or not to export a WAV of the MIDI file
+    bool exportWav;
+
+    /// @brief The name of the .wav file to save the export to
+    const char* wavFile;
 } emuArgs_t;
 
 //==============================================================================
