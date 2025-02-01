@@ -34,6 +34,7 @@ void ssd1306_rst() { }
 
 uint32_t CLOCK_TICKS;
 uint32_t GPIOA_INDR = 6;
+short w, h;
 
 struct 
 {
@@ -53,6 +54,7 @@ int32_t * const highScorePtr = (int32_t*)&highscore;
 
 #ifdef WASM
 void HandleKey( int keycode, int bDown ) __attribute__((export_name("HandleKey")));
+void HandleButton( int x, int y, int button, int bDown ) __attribute__((export_name("HandleButton")));
 int32_t getHighScore( );
 void saveHighScore( int hs );
 void WriteHighScore( int32_t hs ) { highscore = hs; saveHighScore( hs ); }
@@ -79,6 +81,16 @@ void HandleKey( int keycode, int bDown )
 
 void HandleButton( int x, int y, int button, int bDown )
 {
+	if( w/2 > x )
+	{
+		if(!bDown ) GPIOA_INDR |= 2;
+		if( bDown ) GPIOA_INDR &=~2;
+	}
+	else
+	{
+		if(!bDown ) GPIOA_INDR |= 4;
+		if( bDown ) GPIOA_INDR &=~4;
+	}		
 }
 
 void HandleMotion( int x, int y, int mask ) { }
@@ -100,7 +112,6 @@ void EmuUpdate(void)
 {
 	if( !CNFGHandleInput() ) exit( 0 );
 	CNFGBGColor = 0x000000ff; //Dark Blue Background
-	short w, h;
 	CNFGClearFrame();
 	CNFGGetDimensions( &w, &h );
 	CNFGColor( 0xffffffff ); 
