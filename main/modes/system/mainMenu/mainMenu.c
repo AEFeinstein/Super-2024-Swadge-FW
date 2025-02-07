@@ -29,6 +29,7 @@
 #include "tunernome.h"
 #include "keebTest.h"
 #include "mode_2048.h"
+#include "swadgesona.h"
 
 #include "settingsManager.h"
 
@@ -194,6 +195,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
     addSingleItemToMenu(mainMenu->menu, introMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, swadgesonaMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
@@ -455,6 +457,9 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == bongoTest.modeName)
         {
             switchToSwadgeMode(&bongoTest);
+        }else if (label == swadgesonaMode.modeName)
+        {
+            switchToSwadgeMode(&swadgesonaMode);
         }
         else if (label == confirmResetName)
         {

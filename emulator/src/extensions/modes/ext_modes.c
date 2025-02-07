@@ -36,6 +36,7 @@
 #include "pango.h"
 #include "sequencerMode.h"
 #include "soko.h"
+#include "swadgesona.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "ultimateTTT.h"
@@ -82,6 +83,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &sequencerMode,
     &sokoMode,
     &swadgeHeroMode,
+    &swadgesonaMode,
     &synthMode,
     &t48Mode,
     &timerMode,
