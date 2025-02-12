@@ -13,27 +13,32 @@
 // Mode Includes
 /*
  Quickly regenerate with:
-   grep -lirE '^extern swadgeMode_t (.*);' | grep -oE '([^/]+\.h)'
+   grep -lirE '^extern swadgeMode_t (.*);' main | grep -oE '([^/]+\.h)' \
     | grep -v quickSettings | awk '{printf "#include \"%s\"\n",$1 }' | sort
 */
 #include "accelTest.h"
-#include "breakout.h"
+#include "bongoTest.h"
 #include "colorchord.h"
 #include "dance.h"
-#include "demoMode.h"
+#include "factoryTest.h"
 #include "gamepad.h"
+#include "introMode.h"
 #include "jukebox.h"
-#include "lumberjack.h"
+#include "keebTest.h"
 #include "mainMenu.h"
-#include "mode_paint.h"
-#include "mode_ray.h"
-#include "paint_share.h"
-#include "pushy.h"
+#include "mode_2048.h"
+#include "mode_bigbug.h"
+#include "mode_cGrove.h"
+#include "mode_credits.h"
+#include "mode_swadgeHero.h"
+#include "mode_synth.h"
+#include "modeTimer.h"
+#include "pango.h"
+#include "sequencerMode.h"
+#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
-#include "mode_credits.h"
-#include "modeTimer.h"
-#include "mode_pinball.h"
+#include "ultimateTTT.h"
 
 //==============================================================================
 // Defines
@@ -55,28 +60,34 @@ static swadgeMode_t* getRandomSwadgeMode(void);
 
 /*
  Quickly regenerate with:
-   grep -hirE '^extern swadgeMode_t (.*);' main/modes/ | awk '{print $3}'
+   grep -hirE '^extern swadgeMode_t (.*);' main/modes/ | awk '{print $3}' \
      | sed -E 's/(.*);/\&\1,/g' | grep -v quickSettings | sort
 */
 // clang-format off
 static swadgeMode_t* allSwadgeModes[] = {
     &accelTestMode,
-    &breakoutMode,
+    &bigbugMode,
+    &bongoTest,
+    &cGroveMode,
     &colorchordMode,
     &danceMode,
-    &demoMode,
+    &factoryTestMode,
     &gamepadMode,
+    &introMode,
     &jukeboxMode,
-    &lumberjackMode,
+    &keebTestMode,
     &mainMenuMode,
-    &modePaint,
-    &pushyMode,
-    &rayMode,
+    &modeCredits,
+    &pangoMode,
+    &sequencerMode,
+    &sokoMode,
+    &swadgeHeroMode,
+    &synthMode,
+    &t48Mode,
     &timerMode,
     &touchTestMode,
+    &tttMode,
     &tunernomeMode,
-    &modeCredits,
-    &pinballMode,
 };
 // clang-format on
 

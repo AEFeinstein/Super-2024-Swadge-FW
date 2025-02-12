@@ -14,8 +14,8 @@
  * which may be described in each callback function's documentation, these functions are free
  * to make use of any exposed emulator state and functionality to enhance the swadge emulation.
  * These extension may even render to the screen using ::emuExtension_t::fnRenderCb and the drawing
- * functionality in \c "rawdraw_sf.h". If \c paneLocation, \c minPaneW, and \c minPaneH are all
- * non-zero, the extension will be assigned a dedicated pane where it can draw anything.
+ * functionality in \c "rawdraw_sf.h". The extension can call requestPane(), usually from \c fnInitCb,
+ * and a dedicated pane will be assigned where the extension can draw anything.
  *
  * In order for the callback to be loaded by the emulator, the callback must be added to the list
  * in \c emu_ext.c and any command-line arguments required must be added to \c emu_args.c.
@@ -38,9 +38,6 @@
  *
  * const emuExtension_t exampleExt = {
  *     .name            = "Example",
- *     .paneLocation    = PANE_BOTTOM,
- *     .minPaneW        = 50,
- *     .minPaneH        = 50,
  *     .fnInitCb        = exampleExtInit,
  *     .fnPreFrameCb    = exampleExtPreFrame,
  *     .fnPostFrameCb   = exampleExtPostFrame,
@@ -74,6 +71,23 @@
 #include <stdbool.h>
 #include "emu_args.h"
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+    #pragma GCC diagnostic ignored "-Wjump-misses-init"
+    #pragma GCC diagnostic ignored "-Wundef"
+    #pragma GCC diagnostic ignored "-Wredundant-decls"
+#endif
+
+#include "CNFG.h"
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -93,6 +107,15 @@ typedef enum
     EMU_SCROLL_LEFT  = 0x20,
     EMU_SCROLL_RIGHT = 0x40,
 } mouseButton_t;
+
+typedef enum
+{
+    EMU_MOD_NONE  = 0x00,
+    EMU_MOD_ALT   = 0x01,
+    EMU_MOD_CTRL  = 0x02,
+    EMU_MOD_SHIFT = 0x04,
+    EMU_MOD_SUPER = 0x08,
+} modKey_t;
 
 /**
  * @brief The location of a pane within the window.
@@ -116,6 +139,8 @@ typedef struct
     uint32_t paneH; ///< Height of the pane
     uint32_t paneX; ///< X offset of the pane
     uint32_t paneY; ///< Y offset of the pane
+    bool visible;   ///< Whether or not the pane is visible
+    int id;
 } emuPane_t;
 
 /**
@@ -143,24 +168,6 @@ typedef struct
     const char* name;
 
     /**
-     * @brief The location for this callback's pane, or 0 for none
-     *
-     */
-    paneLocation_t paneLocation;
-
-    /**
-     * @brief The minimum wuidth in pixels for this extension's pane, or 0 for none
-     *
-     */
-    uint32_t minPaneW;
-
-    /**
-     * @brief The minimum height in pixels for this extension's pane, or 0 for none
-     *
-     */
-    uint32_t minPaneH;
-
-    /**
      * @brief Function to be called once upon startup with the parsed command-line args
      *
      * This callback should only be used to initialize the callback's internal data, and
@@ -172,6 +179,13 @@ typedef struct
      * @return false if this callback was not initialized or is disabled
      */
     bool (*fnInitCb)(emuArgs_t* emuArgs);
+
+    /**
+     * @brief Function to be called just before the emulator exits
+     *
+     * This callback should be used to free any memory or resources the extension has allocated.
+     */
+    void (*fnDeinitCb)(void);
 
     /**
      * @brief Function to be called before an emulator frame is rendered
@@ -195,13 +209,12 @@ typedef struct
      * To consume the key press and stop it from being sent to the emulator, return a negative value.
      * To replace the key press with a new one, return the new key code.
      *
-     * TODO document the modifier keys, for all our sake
-     *
-     * @param keycode The key code. This is an ASCII character ORed with constants for modifier keys.
+     * @param keycode The key code. This is either a lowercase ASCII value or a \c CNFG_KEY_x code defined in CNFG.h
      * @param down true if the key was pressed, or false if the key was released
+     * @param modifiers A bitfield representing all the modifier keys currently held down
      * @return A new keycode to replace the event with, or -1 to cancel it, or 0 to do nothing.
      */
-    int32_t (*fnKeyCb)(uint32_t keycode, bool down);
+    int32_t (*fnKeyCb)(uint32_t keycode, bool down, modKey_t modifiers);
 
     /**
      * @brief Function to be called whenever the mouse moves.
@@ -247,14 +260,15 @@ void initExtensions(emuArgs_t* args);
 void deinitExtensions(void);
 bool enableExtension(const char* name);
 bool disableExtension(const char* name);
-void calculatePaneMinimums(emuPaneMinimum_t* paneInfos);
+bool calculatePaneMinimums(emuPaneMinimum_t* paneInfos);
 void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, emuPane_t* screenPane,
                  uint8_t* screenMult);
-void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH);
+int requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH);
+void setPaneVisibility(const emuExtension_t* ext, int paneId, bool visible);
 
 void doExtPreFrameCb(uint64_t frame);
 void doExtPostFrameCb(uint64_t frame);
-int32_t doExtKeyCb(uint32_t keycode, bool down);
+int32_t doExtKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
 void doExtMouseMoveCb(int32_t x, int32_t y, mouseButton_t buttonMask);
 void doExtMouseButtonCb(int32_t x, int32_t y, mouseButton_t button, bool down);
 void doExtRenderCb(uint32_t winW, uint32_t winH);

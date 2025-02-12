@@ -37,6 +37,11 @@ typedef int32_t q24_8;  ///< 24 bits integer, 8 bits fraction
 typedef int32_t q16_16; ///< 16 bits integer, 16 bits fraction
 typedef int32_t q8_24;  ///< 8 bits integer, 24 bits fraction
 
+typedef uint16_t uq8_8;   ///< unsigned 8 bits integer, 8 bits fraction
+typedef uint32_t uq24_8;  ///< unsigned 24 bits integer, 8 bits fraction
+typedef uint32_t uq16_16; ///< unsigned 16 bits integer, 16 bits fraction
+typedef uint32_t uq8_24;  ///< unsigned 8 bits integer, 24 bits fraction
+
 #define FRAC_BITS        8                      ///< 8 fractional bits for q24_8
 #define Q24_8_DECI_MASK  ((1 << FRAC_BITS) - 1) ///< A mask for the fractional part of a q24_8
 #define Q24_8_WHOLE_MASK (~Q24_8_DECI_MASK)     ///< A mask for the integer part of a q24_8
@@ -83,7 +88,7 @@ float fixToFloat(q24_8 fx);
      * @param in The integer to convert to q24_8
      * @return A q24_8
      */
-    #define TO_FX(in) ((in) << FRAC_BITS)
+    #define TO_FX(in) ((in) * (1 << FRAC_BITS))
 
     /**
      * @brief Convert a q24_8 to an integer

@@ -2,7 +2,7 @@
 
 ## General Notes
 
-It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
+It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
 
 It is recommended to use native tools (i.e. Windows programs on Windows), not Windows Subsystem for Linux (WSL) or a virtual machine.
 
@@ -33,21 +33,22 @@ The continuous integration for this project runs on a Windows instance. This mea
 3. [Install `msys2`](https://www.msys2.org/). This is the environment in which the emulator will be built.
 4. Start an `msys2` shell and run the following command to install all required packages for building the emulator:
     ```bash
-    pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gdb mingw-w64-x86_64-clang zip mingw-w64-x86_64-graphviz mingw-w64-x86_64-cppcheck mingw-w64-x86_64-doxygen
+    pacman --noconfirm -S base-devel gcc gdb zip mingw-w64-x86_64-graphviz mingw-w64-x86_64-cppcheck doxygen
     ```
-5. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
+5. [Install `LLVM-17.0.6-win64.exe`](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.6). This is for the `clang-format-17` tool. During the install, when it asks to add LLVM to the system PATH, add it to the path for all users.
+6. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
     * `C:\msys64\usr\bin`
     
     You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. When it's all set up, it should look something like this:
     
-    ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
+    <img src="./win_path.png">
 
-6. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
+6. Clone the ESP-IDF v5.2.3 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
 Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe
     ```powershell
     & Set-ExecutionPolicy -Scope CurrentUser Unrestricted
-    & git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
+    & git clone -b v5.2.3 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
     & $HOME\esp\esp-idf\install.ps1
     ```
     > **Warning**
@@ -59,12 +60,13 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 1. Run the following commands, depending on your package manager, to install all necessary packages:
     * `apt`:
         ```bash
-        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
+        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
         ```
     * `dnf`:
         ```bash
         sudo dnf group install "C Development Tools and Libraries" "Development Tools"
-        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
+        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan cppcheck python3 python3-pip python3-virtualenv cmake libusb1-devel lcov gdb graphviz git doxygen clang clang-tools-extra libasan-static libubsan-static
+        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz git
         ```
 2. Install `doxygen` separately from their website (https://www.doxygen.nl/download.html). Note that the version used in this project is currently 1.10.0 and the version in many package managers is less than that. You will need to extract the binary somewhere and add it to your `PATH` variable. For example, GitHub Actions installs `doxygen` like this:
     ```bash
@@ -86,9 +88,9 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     sudo ./llvm.sh 17
     sudo apt install clang-format-17
     ```
-4. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+4. Clone the ESP-IDF v5.2.3 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
-    git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    git clone -b v5.2.3 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
 
@@ -99,29 +101,31 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 > This section is still under development, and as a result, may have unexpected errors in its process.
 
 1. Install [Homebrew](https://brew.sh/)
-2. Run the following command to install all necessary dependencies:
+2. Install [XQuartz](https://www.xquartz.org/)
+3. Install the [CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb) extension in VS Code
+4. Run the following command to install all necessary dependencies:
     ```bash
-    brew install xquartz libxinerama pulseaudio clang-format cppcheck wget doxygen cmake graphviz
+    brew install libxinerama pulseaudio clang-format cppcheck wget doxygen cmake graphviz
     ```
-3. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+5. Clone the ESP-IDF v5.2.3 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
-    git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    git clone -b v5.2.3 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
-4. Before running the simulator on your machine, you need to start pulseaudio like so:
+6. Before running the simulator on your machine, you need to start pulseaudio like so:
     ```bash
     brew services start pulseaudio
     ```
     You can stop it by running `brew services stop pulseaudio` when you are done.
-    
-When running on MacOS, you will need to run the emulator and all build tasks through the xQuartz terminal instead of zsh.
 
+When launching from VS Code, make sure the `(lldb) Launch` configuration is selected.
+    
 ## Building and Flashing Firmware
 
 1. Clone this repository.
     ```powershell
     cd ~/esp/
-    git clone https://github.com/AEFeinstein/Super-2024-Swadge-FW.git
+    git clone --recurse-submodules https://github.com/AEFeinstein/Super-2024-Swadge-FW.git
     cd Super-2024-Swadge-FW
     ```
 2. Make sure the ESP-IDF symbols are exported. This example is for Windows, so the actual command may be different for your OS. Note that `export.ps1` does not make any permanent changes and it must be run each time you open a new terminal for a build.
@@ -181,3 +185,22 @@ code ~/esp/Super-2024-Swadge-FW
 ## Updating ESP-IDF
 
 On occasion the ESP-IDF version used to build this project will increment. The easiest way to update ESP-IDF is to delete the existing one, by default installed at `~/esp/esp-idf/`, and the tools, by default installed at `~/.espressif/`, and follow the guide above to clone the new ESP-IDF and run the install script.
+
+Alternatively, you can update the IDF in-place with the following commands. This example updates the IDF to 5.2.3, and you can change that version as is necessary. These are Linux commands, so they may need to be tweaked slightly for Windows.
+
+```bash
+# Change directory to where the IDF is installed
+cd ~/esp/esp-idf/
+
+# Update the IDF with git
+git fetch --prune
+git checkout tags/v5.2.3
+git submodule update --init --recursive
+
+# Install updated tools and python environment
+./install.sh
+. ./export.sh
+
+# Clean up
+./tools/idf_tools.py uninstall --remove-archives
+```

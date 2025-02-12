@@ -61,8 +61,17 @@
  * \endcode
  */
 
+#pragma once
+
 #include "emu_ext.h"
+#include <stdint.h>
 
 extern emuExtension_t replayEmuExtension;
 
-bool takeScreenshot(const char* name);
+void startRecording(const char* recordingName);
+void stopRecording(void);
+bool isRecordingInput(void);
+void startPlayback(const char* recordingName);
+void recordScreenshotTaken(const char* name);
+void emulatorRecordRandomSeed(uint32_t seed);
+void emulatorRecordCommand(const char* command);

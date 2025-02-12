@@ -3,7 +3,6 @@
 //==============================================================================
 
 #include "esp_log.h"
-#include "esp_adc/adc_continuous.h"
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
@@ -52,7 +51,7 @@ void initBattmon(gpio_num_t gpio)
 {
     adc_unit_t unit;
     adc_channel_t channel;
-    if (ESP_OK == adc_continuous_io_to_channel(gpio, &unit, &channel))
+    if (ESP_OK == adc_oneshot_io_to_channel(gpio, &unit, &channel))
     {
         // Save channel to read later
         battMonChannel = channel;

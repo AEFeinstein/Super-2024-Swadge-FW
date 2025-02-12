@@ -262,12 +262,12 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
 #endif
 
     // Enable the backlight
-    setTFTBacklightBrightness(brightness);
     enableTFTBacklight();
+    setTFTBacklightBrightness(brightness);
 
     if (NULL == pixels)
     {
-        pixels = (paletteColor_t*)malloc(sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
+        pixels = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH, MALLOC_CAP_8BIT);
     }
     pFrameBuffer = pixels;
 }
@@ -285,9 +285,9 @@ void deinitTFT(void)
 
     for (int i = 0; i < NUM_S_LINES; i++)
     {
-        free(s_lines[i]);
+        heap_caps_free(s_lines[i]);
     }
-    free(pixels);
+    heap_caps_free(pixels);
 }
 
 /**

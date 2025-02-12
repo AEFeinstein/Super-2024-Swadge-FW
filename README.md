@@ -40,6 +40,7 @@ This project uses Github Actions to automatically build the firmware, emulator, 
 - [`.github`](./.github): Issue templates and CI workflows for GitHub
 - [`.vscode`](./.vscode): Configurations for [Visual Studio Code](https://code.visualstudio.com/)
 - [`docs`](./docs): Documentation 
+- [`attic`](./attic): Where old Swdage modes go when they're not being compiled into firmware
 
 ## Troubleshooting
 

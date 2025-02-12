@@ -10,7 +10,7 @@
 //==============================================================================
 
 static bool keymapInit(emuArgs_t* emuArgs);
-static int32_t keymapKeyCb(uint32_t keycode, bool down);
+static int32_t keymapKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
 
 //==============================================================================
 // Structs
@@ -100,7 +100,7 @@ static bool keymapInit(emuArgs_t* emuArgs)
     return false;
 }
 
-static int32_t keymapKeyCb(uint32_t keycode, bool down)
+static int32_t keymapKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
 {
     // Convert lowercase characters to their uppercase equivalents
     if ('a' <= keycode && keycode <= 'z')

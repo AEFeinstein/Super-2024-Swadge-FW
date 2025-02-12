@@ -8,6 +8,7 @@
 
 #include "hdw-tft.h"
 #include "shapes.h"
+#include "fill.h"
 
 //==============================================================================
 // Defines
@@ -478,6 +479,79 @@ void drawRect(int x0, int y0, int x1, int y1, paletteColor_t col)
 }
 
 /**
+ * @brief Draw a filled rectangle, with bounds checking and arbitrary orders
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ */
+void drawRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col)
+{
+    if (col == cTransparent)
+    {
+        return;
+    }
+
+    if (x0 > x1)
+    {
+        int tmp = x0;
+        x0      = x1;
+        x1      = tmp;
+    }
+
+    if (y0 > y1)
+    {
+        int tmp = y0;
+        y0      = y1;
+        y1      = tmp;
+    }
+
+    if (x0 < 0)
+    {
+        x0 = 0;
+    }
+
+    if (y0 < 0)
+    {
+        y0 = 0;
+    }
+
+    if (x1 < 0)
+    {
+        x1 = 0;
+    }
+
+    if (y1 < 0)
+    {
+        y1 = 0;
+    }
+
+    if (x0 > TFT_WIDTH - 1)
+    {
+        x0 = TFT_WIDTH - 1;
+    }
+
+    if (y0 > TFT_HEIGHT - 1)
+    {
+        y0 = TFT_HEIGHT - 1;
+    }
+
+    if (x1 > TFT_WIDTH - 1)
+    {
+        x1 = TFT_WIDTH;
+    }
+
+    if (y1 > TFT_HEIGHT - 1)
+    {
+        y1 = TFT_HEIGHT;
+    }
+
+    fillDisplayArea(x0, y0, x1, y1, col);
+}
+
+/**
  * @brief Draw the outline of a rectangle that is translated and scaled. Scaling may make it wider than one pixel.
  *
  * @param x0 The X coordinate of the top left corner
@@ -496,6 +570,77 @@ void drawRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xOri
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
         drawRectInner(x0, y0, x1, y1, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
+    }
+}
+
+/**
+ * @brief Draw an outlined and filled rectangle with rounded corners
+ *
+ * @param x0 The left edge of the rectangle
+ * @param y0 The top edge of the rectangle
+ * @param x1 The right edge of the rectangle
+ * @param y1 The bottom edge of the rectangle
+ * @param r The radius of the rectangle corners
+ * @param fillColor The color to fill the body, or cTransparent to skip
+ * @param outlineColor The color to outline the rectangle, or cTransparent to skip
+ */
+void drawRoundedRect(int x0, int y0, int x1, int y1, int r, paletteColor_t fillColor, paletteColor_t outlineColor)
+{
+    if (x0 > x1)
+    {
+        int tmp = x0;
+        x0      = x1;
+        x1      = tmp;
+    }
+
+    if (y0 > y1)
+    {
+        int tmp = y0;
+        y0      = y1;
+        y1      = tmp;
+    }
+
+    if (fillColor != cTransparent)
+    {
+        // Top-left circle
+        drawCircleFilledQuadrants(x0 + r, y0 + r, r, false, true, false, false, fillColor);
+        // Top-right
+        drawCircleFilledQuadrants(x1 - r, y0 + r, r, true, false, false, false, fillColor);
+        // Bottom-left
+        drawCircleFilledQuadrants(x0 + r, y1 - r, r, false, false, true, false, fillColor);
+        // Bottom-right
+        drawCircleFilledQuadrants(x1 - r, y1 - r, r, false, false, false, true, fillColor);
+
+        // Boxes
+        // Top portion (between two circles)
+        drawRectFilled(x0 + r, y0, x1 - r, y0 + r, fillColor);
+
+        // Middle
+        drawRectFilled(x0, y0 + r, x1, y1 - r, fillColor);
+
+        // Bottom (between circles)
+        drawRectFilled(x0 + r, y1 - r, x1 - r, y1, fillColor);
+    }
+
+    if (outlineColor != cTransparent)
+    {
+        // Top-left circle
+        drawCircleQuadrants(x0 + r, y0 + r, r, false, false, true, false, outlineColor);
+        // Top-right
+        drawCircleQuadrants(x1 - r, y0 + r, r, false, false, false, true, outlineColor);
+        // Bottom-left
+        drawCircleQuadrants(x0 + r, y1 - r, r, false, true, false, false, outlineColor);
+        // Bottom-right
+        drawCircleQuadrants(x1 - r, y1 - r, r, true, false, false, false, outlineColor);
+
+        // Top
+        drawLineFast(x0 + r, y0, x1 - r, y0, outlineColor);
+        // Left
+        drawLineFast(x0, y0 + r, x0, y1 - r, outlineColor);
+        // Right
+        drawLineFast(x1, y0 + r, x1, y1 - r, outlineColor);
+        // Bottom
+        drawLineFast(x0 + r, y1, x1 - r, y1, outlineColor);
     }
 }
 
@@ -1031,10 +1176,10 @@ void drawCircleScaled(int xm, int ym, int r, paletteColor_t col, int xOrigin, in
  * @param xm The X coordinate of the center of the circle
  * @param ym The Y coordinate of the center of the circle
  * @param r The radius of the circle
- * @param q1 True to draw the top left quadrant
- * @param q2 True to draw the top right quadrant
- * @param q3 True to draw the bottom right quadrant
- * @param q4 True to draw the bottom left quadrant
+ * @param q1 True to draw the top right quadrant
+ * @param q2 True to draw the top left quadrant
+ * @param q3 True to draw the bottom left quadrant
+ * @param q4 True to draw the bottom right quadrant
  * @param col The color to draw
  */
 void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool q4, paletteColor_t col)
@@ -1060,6 +1205,75 @@ void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool 
         {
             TURBO_SET_PIXEL_BOUNDS(xm + y, ym + x, col); /*  IV. Quadrant +x -y */
         }
+        r = err;
+        if (r <= y)
+        {
+            err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+        }
+        if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+        {
+            err += ++x * 2 + 1; /* -> x-step now */
+        }
+    } while (x < 0);
+}
+
+/**
+ * @brief Draw filled-in quadrants of a circle
+ *
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param q1 True to draw the top right quadrant
+ * @param q2 True to draw the top left quadrant
+ * @param q3 True to draw the bottom left quadrant
+ * @param q4 True to draw the bottom right quadrant
+ * @param col The color to fill the shape in
+ */
+void drawCircleFilledQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool q4, paletteColor_t col)
+{
+    SETUP_FOR_TURBO();
+
+    int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+    do
+    {
+        /// Left half
+        if (q2 || q3)
+        {
+            for (int lineX = xm + x; lineX <= xm; lineX++)
+            {
+                // Top
+                if (q2)
+                {
+                    TURBO_SET_PIXEL_BOUNDS(lineX, ym - y, col);
+                }
+
+                // Bottom
+                if (q3)
+                {
+                    TURBO_SET_PIXEL_BOUNDS(lineX, ym + y, col);
+                }
+            }
+        }
+
+        // Right half
+        if (q1 || q4)
+        {
+            for (int lineX = xm; lineX <= xm - x; lineX++)
+            {
+                // Top
+                if (q1)
+                {
+                    TURBO_SET_PIXEL_BOUNDS(lineX, ym - y, col);
+                }
+
+                // Bottom
+                if (q4)
+                {
+                    TURBO_SET_PIXEL_BOUNDS(lineX, ym + y, col);
+                }
+            }
+        }
+
         r = err;
         if (r <= y)
         {
@@ -1106,6 +1320,67 @@ static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int
         if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
         {
             err += ++x * 2 + 1; /* -> x-step now */
+        }
+    } while (x < 0);
+}
+
+/**
+ * @brief Draw the outline of a circle with the given stroke width
+ *
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param stroke The stroke width (pixels inside the radius)
+ * @param col The color to draw
+ */
+void drawCircleOutline(int xm, int ym, int r, int stroke, paletteColor_t col)
+{
+    SETUP_FOR_TURBO();
+
+    // Outer circle
+    int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+
+    // Inner circle
+    int r_inner = r - stroke;
+    int x_inner = -r_inner, y_inner = 0, err_inner = 2 - 2 * r_inner; /* bottom left to top right */
+
+    // Iterates over Y
+    do
+    {
+        // Iterates over X
+        for (int lineX = xm + x; lineX <= xm - x; lineX++)
+        {
+            // Only draw the outline
+            if (lineX < (xm + x_inner) || lineX > (xm - x_inner))
+            {
+                TURBO_SET_PIXEL_BOUNDS(lineX, (ym - y), col);
+                TURBO_SET_PIXEL_BOUNDS(lineX, (ym + y), col);
+            }
+        }
+
+        // Iterate the outer circle
+        r = err;
+        if (r <= y)
+        {
+            err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+        }
+        if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+        {
+            err += ++x * 2 + 1; /* -> x-step now */
+        }
+
+        // Iterate the inner circle to match
+        while (y_inner != y)
+        {
+            r_inner = err_inner;
+            if (r_inner <= y_inner)
+            {
+                err_inner += ++y_inner * 2 + 1; /* e_xy+e_y < 0 */
+            }
+            if (r_inner > x_inner || err_inner > y_inner) /* e_xy+e_x > 0 or no 2nd y-step */
+            {
+                err_inner += ++x_inner * 2 + 1; /* -> x-step now */
+            }
         }
     } while (x < 0);
 }

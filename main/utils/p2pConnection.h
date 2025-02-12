@@ -96,7 +96,7 @@
  * -# It's preferred to use #ESP_NOW rather than #ESP_NOW_IMMEDIATE when setting up your Swadge mode. This is because
  * #ESP_NOW uses a queue to pass ESP-NOW packets to the Swadge Mode while #ESP_NOW_IMMEDIATE passes them directly from
  * the system callback function. As the <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/network/esp_now.html#receiving-esp-now-data">IDF
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/network/esp_now.html#receiving-esp-now-data">IDF
  * documentation states</a>:
  * > The receiving callback function also runs from the Wi-Fi task. So, do not do lengthy operations in the callback
  * > function. Instead, post the necessary data to a queue and handle it from a lower priority task.

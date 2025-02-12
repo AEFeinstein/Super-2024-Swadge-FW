@@ -5,7 +5,7 @@
  * \section esp-now_design Design Philosophy
  *
  * <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/network/esp_now.html">ESP-NOW</a>
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/network/esp_now.html">ESP-NOW</a>
  * is a kind of connection-less Wi-Fi communication protocol that is defined by Espressif. This component manages
  * ESP-NOW so that you don't have to. It provides a simple wrapper to broadcast a packet, espNowSend(), and passes all
  * received packets through a callback given to initEspNow().
@@ -16,7 +16,7 @@
  * This pairing can be done using p2pConnection.c.
  *
  * This component can also facilitate communication between to Swadges using a <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/peripherals/uart.html">Universal
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/peripherals/uart.html">Universal
  * Asynchronous Receiver/Transmitter (UART)</a> wired connection. The wired UART is significantly faster and
  * significantly more reliable than the wireless one, but it does require a physical wire.
  *
@@ -85,7 +85,7 @@
 
 #include <esp_now.h>
 #include <esp_err.h>
-#include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 #include <driver/uart.h>
 
 //==============================================================================

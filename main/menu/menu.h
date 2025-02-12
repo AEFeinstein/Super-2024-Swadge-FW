@@ -12,8 +12,8 @@
  * entered, or multi-item selections are scrolled, the callback is called.
  *
  * The menu data structure is created and managed in menu.h, but graphical rendering is handled in
- * menuLogbookRenderer.h. The separation of data structure and renderer is intentional and makes it easier to render the
- * data structure in a number of styles. As of now, only menuLogbookRenderer.h is supplied.
+ * menuManiaRenderer.h. The separation of data structure and renderer is intentional and makes it easier to render the
+ * data structure in a number of styles. As of now, only menuManiaRenderer.h is supplied.
  *
  * \section menu_usage Usage
  *
@@ -32,7 +32,7 @@
  * Button events must be passed to the menu with menuButton().
  * These button presses should not be handled elsewhere simultaneously.
  *
- * Menus are drawn with a renderer, such as menuLogbookRenderer.h.
+ * Menus are drawn with a renderer, such as menuManiaRenderer.h.
  *
  * \section menu_example Example
  *
@@ -95,11 +95,8 @@
  * addSettingsOptionsItemToMenu(menu, optionSettingLabel, optionSettingLabels, optionSettingValues,
  *                              ARRAY_SIZE(optionSettingValues), getScreensaverTimeSettingBounds(), 0);
  *
- * // Load a font
- * font_t logbook;
- * loadFont("logbook.font", &logbook, false);
  * // Initialize a renderer
- * menuLogbookRenderer_t* renderer = initMenuLogbookRenderer(&logbook);
+ * menuManiaRenderer_t* renderer = initMenuManiaRenderer(NULL, NULL, NULL);
  * \endcode
  *
  * Process button events:
@@ -113,7 +110,7 @@
  *
  * Draw the menu from swadgeMode_t.fnMainLoop:
  * \code{.c}
- * drawMenuLogbook(mainMenu->menu, mainMenu->renderer, elapsedUs);
+ * drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
  * \endcode
  *
  * Receive menu callbacks:
@@ -129,7 +126,7 @@
  * // Free the menu
  * deinitMenu(menu);
  * // Free the renderer
- * deinitMenuLogbookRenderer(renderer);
+ * deinitMenuManiaRenderer(renderer);
  * \endcode
  */
 
@@ -162,9 +159,9 @@ typedef struct
     const char* const* options; ///< The labels displayed if multi-select
     menu_t* subMenu;            ///< A pointer to a submenu, maybe NULL for single-select and multi-select
     uint8_t numOptions;         ///< The number of options for multi-select
-    uint8_t currentOpt;         ///< The current selected option for multi-select
-    uint8_t minSetting;         ///< The minimum value for settings items
-    uint8_t maxSetting;         ///< The maximum value for settings items
+    int32_t currentOpt;         ///< The current selected option for multi-select
+    int32_t minSetting;         ///< The minimum value for settings items
+    int32_t maxSetting;         ///< The maximum value for settings items
     const int32_t* settingVals; ///< The setting value options for settings-options items
     int32_t currentSetting;     ///< The current value for settings items
 } menuItem_t;

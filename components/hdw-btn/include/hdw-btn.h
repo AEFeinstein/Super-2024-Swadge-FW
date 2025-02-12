@@ -23,7 +23,7 @@
  * to be received by the Swadge mode.
  *
  * The push-button GPIOs are all read at the same time using <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
  * GPIO</a>.
  *
  * Originally the push-buttons would trigger an interrupt, but we found that to have less reliable results with more
@@ -43,7 +43,7 @@
  * well as the intensity of the touch.
  *
  * Touch-pad areas are set up and read with <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/peripherals/touch_pad.html">Touch
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/peripherals/touch_pad.html">Touch
  * Sensor</a>.
  *
  * \section btn_usage Usage
@@ -118,6 +118,7 @@ typedef struct
     uint16_t state;     //!< A bitmask for the state of all buttons
     buttonBit_t button; //!< The button that caused this event
     bool down;          //!< True if the button was pressed, false if it was released
+    uint32_t time;      ///!< The time of this event, in us since boot
 } buttonEvt_t;
 
 void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads);

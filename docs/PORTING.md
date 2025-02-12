@@ -32,14 +32,19 @@ This is a non-exhaustive list of changes I've found to be needed when porting Tu
 
 ## Things that need to be added to enterMode() and exitMode() functions
 
-- `tunernome->menuRenderer = initMenuLogbookRenderer(&tunernome->logbookFont);`
-- `deinitMenuLogbookRenderer(tunernome->renderer);`
+- `tunernome->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);`
+- `deinitMenuManiaRenderer(tunernome->renderer);`
 
 ## Things that need to be intelligently deleted
 
 - `tunernome->disp`
 
 ## Things that need to be intelligently changed or replaced
+
+The buzzer and song player have been replaced by a speaker and MIDI file player. The songs will remain as `.midi` or `.mid` files in `assets/`, but will
+now be accessible from the swadge as `.mid` files, rather than `.sng` files. The main changes modes will need to make due to this are replacing `song_t`
+with `midiFile_t`, and changing the name used to load the file from `file.sng` to `file.mid`. The other major change is that the `shouldLoop` property of
+`song_t` has no equivalent in MIDI songs. Instead, looping is enabled or disabled through the boolean `midiPlayer_t::loop` field.
 
 | Old                                                                             | New                                                                 |
 |---------------------------------------------------------------------------------|---------------------------------------------------------------------|
@@ -64,7 +69,9 @@ This is a non-exhaustive list of changes I've found to be needed when porting Tu
 | `menu->rows`                                                                    | `menu->items`                                                       |
 | `initMeleeMenu(modeTunernome.modeName, &(tunernome->mm), tunernomeMainMenuCb);` | `initMenu(tunernomeMode.modeName, tunernomeMainMenuCb);`            |
 | `tunernomeMenuCb(const char* opt)`                                              | `mainMenuCb(const char* label, bool selected, uint32_t settingVal)` |
-| `drawMeleeMenu(tunernome->menu);`                                               | `drawMenuLogbook(tunernome->menu, tunernome->renderer, elapsedUs);` |
+| `drawMeleeMenu(tunernome->menu);`                                               | `drawMenuMania(tunernome->menu, tunernome->renderer, elapsedUs);`   |
+| `loadSong(const char* name, song_t* song)`                                      | `loadMidiFile(const char* name, midiFile_t* midi, bool useSpiRam)`  |
+| `freeSong(song_t* song)`                                                        | `unloadMidiFile(midiFile_t* midi)`                                  |
 
 ## Things that can be find/replaced
 
@@ -87,8 +94,8 @@ This is a non-exhaustive list of changes I've found to be needed when porting Tu
 | `START`                    | `PB_START`                 |
 | `SELECT`                   | `PB_SELECT`                |
 | `buzzer_play_sfx(`         | `bzrPlaySfx(`              |
-| `buzzer_play_bgm(`         | `bzrPlayBgm(`              |
-| `buzzer_stop(`             | `bzrStop(`                 |
+| `buzzer_play_bgm(`         | `soundPlayBgm(`            |
+| `buzzer_stop(`             | `soundStop(`               |
 | `incMicGain()`             | `incMicGainSetting()`      |
 | `decMicGain()`             | `decMicGainSetting()`      |
 | `getMicGain()`             | `getMicGainSetting()`      |

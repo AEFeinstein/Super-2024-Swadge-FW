@@ -27,7 +27,7 @@ This method allows you to test your level without modifying the code.
 You can even use this with a precompiled Swadge emulator executable to test without setting up a full development environment!
 
 1. Make a copy of your level file 
-2. Name the copy with the same name as an existing level in the spiffs_image directory.
-3. Place your copy of the level file into the spiffs_image directory. Overwrite any existing file with the same name.
+2. Name the copy with the same name as an existing level in the assets_image directory.
+3. Place your copy of the level file into the assets_image directory. Overwrite any existing file with the same name.
 4. (Skip this step if you want to test using a precompiled Swadge emulator executable): Reflash the firmware to your device (no need to compile!)
 5. Use Level Select to navigate to the corresponsing level

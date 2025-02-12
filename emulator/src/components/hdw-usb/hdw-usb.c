@@ -4,6 +4,7 @@
 
 #include "hdw-usb.h"
 #include "emu_main.h"
+#include "midi_device.h"
 
 //==============================================================================
 // Functions
@@ -14,8 +15,9 @@
  *
  * @param _setSwadgeMode A function that can be called from this component to set the Swadge mode
  * @param _advancedUsbHandler A function that can be called from this component to handle USB commands
+ * @param redirectPrintf true to redirect printf() to USB, false to leave it over UART
  */
-void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHandler)
+void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHandler, bool redirectPrintf)
 {
     WARN_UNIMPLEMENTED();
 }
@@ -26,7 +28,7 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
  */
 void deinitUsb(void)
 {
-    WARN_UNIMPLEMENTED();
+    midid_reset(0);
 }
 
 /**

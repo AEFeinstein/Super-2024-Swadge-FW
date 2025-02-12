@@ -24,6 +24,12 @@
  *
  * \section start Where to Start
  *
+ * If you just want to run the Swadge emulator without setting up a development environment, see the \ref emulator
+ * for an installation guide and usage instructions.
+ *
+ * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
+ * \ref emulator which you can use to listen to MIDI files.
+ *
  * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
  * pages to read from here.
  *
@@ -34,6 +40,7 @@
  * action.
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
  * the Swadge firmware.
+ * -# If you have any crashes on real hardware, read and use \ref serial_out to help debug the issue.
  * -# When you're ready to make a contribution, read the \ref contribution_guide first to see how to do it in the most
  * productive way.
  * -# If you want to bring a mode forward from last year's Swadge, take a look at \ref porting.
@@ -51,8 +58,8 @@
  * - How immutable strings are declared <tt>static const</tt>
  * - How a \ref menu.h "menu" is initialized in \c pongEnterMode(), updated and drawn in \c pongMainLoop(), and
  * deinitialized in \c pongExitMode()
- * - How \ref font.h "fonts", \ref wsg.h "WSG", and \ref hdw-bzr.h "song" assets are loaded in \c pongEnterMode() and
- * freed in \c pongExitMode()
+ * - How \ref font.h "fonts", \ref wsg.h "WSG", and \ref midiFileParser.h "MIDI" assets are loaded in \c pongEnterMode()
+ * and freed in \c pongExitMode()
  *     - How fonts and WSGs are drawn in \c pongDrawField()
  *     - How background music is used in \c pongResetGame() and sound effects are used in \c pongUpdatePhysics()
  * - How a background is drawn in \c pongBackgroundDrawCallback()
@@ -71,35 +78,33 @@
  *
  * - swadge2024.h: Write a mode. This is a good starting place
  *
- * \subsection hw_api Hardware APIs
+ * \subsection input_api Input APIs
  *
  * - hdw-battmon.h: Learn how to check the battery voltage
  * - hdw-btn.h: Learn how to use both push and touch button input
- * - hdw-bzr.h: Learn how to use the buzzer
+ *     - touchUtils.h: Utilities to interpret touch button input as a virtual joystick, spin wheel, or cartesian plane
  * - hdw-imu.h: Learn how to use the inertial measurement unit
- * - hdw-led.h: Learn how to use the LEDs
- * - hdw-mic.h: Learn how to use the microphone
  * - hdw-temperature.h: Learn how to use the temperature sensor
- * - hdw-usb.h: Learn how to be a USB HID Gamepad
- *     - advanced_usb_control.h: Use USB for application development
  *
  * \subsection nwk_api Network APIs
  *
  * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
  * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
  *
- * \subsection sw_api Persistent Memory APIs
+ * \subsection pm_api Persistent Memory APIs
  *
  * - hdw-nvs.h: Learn how to save and load persistent runtime data
- * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
- *     - spiffs_font.h: Load font bitmaps
- *     - spiffs_wsg.h: Load WSG images
- *     - spiffs_song.h: Load SNG songs
- *     - spiffs_json.h: Load JSON
- *     - spiffs_txt.h: Load plaintext
+ * - cnfs.h: Learn how to load and use assets from the CNFS blob! These file types have their own loaders:
+ *     - fs_font.h: Load font bitmaps
+ *     - fs_wsg.h: Load WSG images
+ *     - fs_json.h: Load JSON
+ *     - fs_txt.h: Load plaintext
+ *     - midiFileParser.h: Load MIDI files
+ * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
  * \subsection gr_api Graphics APIs
  *
+ * - hdw-led.h: Learn how to use the LEDs
  * - hdw-tft.h: Learn how to use the TFT
  * - palette.h: Learn about available colors
  * - color_utils.h: Learn about color manipulation
@@ -110,19 +115,38 @@
  *
  * \subsection gui_api Graphical UI APIs
  *
- * - menu.h and menuLogbookRenderer.h: Make and render a menu within a mode
+ * - menu.h and menuManiaRenderer.h: Make and render a menu within a mode
  * - dialogBox.h: Show messages and prompt users for a response
- * - touchTextEntry.h: Edit a single line of text
+ * - touchTextEntry.h: Edit an arbitrary single line of text by selecting each letter at a time with up & down keys
+ * - textEntry.h: Edit an arbitrary single line of text with a virtual QWERTY keyboard
+ * - wheel_menu.h: Show a menu wheel which is navigable with a circular touch-pad
+ *
+ * \subsection audio_api Audio APIs
+ *
+ * - hdw-dac.h: Learn how to use the DAC (speaker)
+ * - hdw-mic.h: Learn how to use the microphone
+ * - soundFuncs.h: Helper functions to use either the buzzers or DAC speaker, depending on build configuration. These
+ * macros should be used instead of calling buzzer or DAC functions directly!
+ * - swSynth.h: Learn how to generate oscillating output for the DAC speaker
+ * - midiPlayer.h: Learn how to play MIDI files on the DAC speaker
+ *
+ * \subsection math_api Math APIs
+ *
+ * - trigonometry.h: Fast math based on look up tables
+ * - vector2d.h: Basic math for 2D vectors
+ *     - vectorFl2d.h: Floating 2D vector math functions
+ * - geometry.h: Basic math for 2D shapes, like collision checks
+ *     - geometryFl.h: Floating point geometric functions
+ * - fp_math.h: Fixed point decimal math. This is faster an less precise than using floating point
  *
  * \subsection oth_api Other Useful APIs
  *
  * - linked_list.h: A basic data structure
- * - trigonometry.h: Fast math based on look up tables
- * - vector2d.h: Basic math for 2D vectors
- * - geometry.h: Basic math for 2D shapes, like collision checks
+ * - hashMap.h: A data structure for storing data in key-value pairs
  * - macros.h: Convenient macros like MIN() and MAX()
- * - settingsManager.h: Set and get persistent settings for things like screen brightness
- * - fp_math.h: Fixed point decimal math. This is faster an less precise than using floating point
+ * - coreutil.h: General utilities for system profiling
+ * - hdw-usb.h: Learn how to be a USB HID Gamepad
+ *     - advanced_usb_control.h: Use USB for application development
  *
  * \section espressif_doc Espressif Documentation
  *
@@ -130,7 +154,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
  * Datasheet</a>
@@ -150,15 +174,17 @@
 #include <rom/usb/usb_persist.h>
 #include <rom/usb/chip_usb_dw_wrapper.h>
 #include <soc/rtc_cntl_reg.h>
+#include <soc/gpio_num.h>
 
 #include "advanced_usb_control.h"
 #include "shapes.h"
 #include "swadge2024.h"
 
 #include "factoryTest.h"
-#include "lumberjack.h"
 #include "mainMenu.h"
 #include "quickSettings.h"
+#include "midiPlayer.h"
+#include "introMode.h"
 
 //==============================================================================
 // Defines
@@ -167,6 +193,37 @@
 // Define RTC_DATA_ATTR if it doesn't exist
 #ifndef RTC_DATA_ATTR
     #define RTC_DATA_ATTR
+#endif
+
+// Define hardware-specific GPIOs
+#if defined(CONFIG_HARDWARE_WAVEBIRD) || defined(CONFIG_HARDWARE_GUNSHIP)
+    #define GPIO_SAO_1 GPIO_NUM_17
+    #define GPIO_SAO_2 GPIO_NUM_18
+
+    #define GPIO_BTN_UP    GPIO_NUM_0
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_2
+    #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+#elif defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION)
+    #define GPIO_SAO_1 GPIO_NUM_40
+    #define GPIO_SAO_2 GPIO_NUM_42
+
+    #define GPIO_BTN_UP    GPIO_NUM_0
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_2
+    #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+#elif defined(CONFIG_HARDWARE_HOTDOG_PROTO)
+    #define GPIO_SAO_1 GPIO_NUM_40
+    #define GPIO_SAO_2 GPIO_NUM_42
+
+    #define GPIO_BTN_UP    GPIO_NUM_1
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_0
+    #define GPIO_BTN_RIGHT GPIO_NUM_2
+#else
+    #error "Define what hardware is being built for"
 #endif
 
 //==============================================================================
@@ -201,6 +258,7 @@ static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, cons
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 static void setSwadgeMode(void* swadgeMode);
 static void initOptionalPeripherals(void);
+static void dacCallback(uint8_t* samples, int16_t len);
 
 //==============================================================================
 // Functions
@@ -211,18 +269,41 @@ static void initOptionalPeripherals(void);
  */
 void app_main(void)
 {
+    // Make sure there isn't a pin conflict
+    if (GPIO_SAO_1 != GPIO_NUM_17)
+    {
+#ifdef CONFIG_DEBUG_OUTPUT_UART_SAO
+        // Redirect UART if configured and able
+        uart_set_pin(UART_NUM_0, GPIO_SAO_1, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+#endif
+    }
+
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
 
     // Read settings from NVS
     readAllSettings();
 
+#ifdef CONFIG_FACTORY_TEST_NORMAL
+    // If test mode was passed
+    if (getTutorialCompletedSetting())
+    {
+        // Show the main menu
+        cSwadgeMode = &mainMenuMode;
+    }
+    else if (getTestModePassedSetting())
+    {
+        // Start the out-of-box experience / tutorial
+        cSwadgeMode = &introMode;
+    }
+#else
     // If test mode was passed
     if (getTestModePassedSetting())
     {
         // Show the main menu
         cSwadgeMode = &mainMenuMode;
     }
+#endif
     else
     {
         // Otherwise enter test mode
@@ -240,7 +321,13 @@ void app_main(void)
     // Init USB if not overridden by the mode. This also sets up USB printf
     if (false == cSwadgeMode->overrideUsb)
     {
-        initUsb(setSwadgeMode, cSwadgeMode->fnAdvancedUSB);
+        initUsb(setSwadgeMode, cSwadgeMode->fnAdvancedUSB,
+#ifdef CONFIG_DEBUG_OUTPUT_USB
+                true
+#else
+                false
+#endif
+        );
     }
 
     // Check for prior crash info and install crash wrapper
@@ -249,19 +336,19 @@ void app_main(void)
     // Init timers
     esp_timer_init();
 
-    // Init SPIFFS file system
-    initSpiffs();
+    // Init file system
+    initCnfs();
 
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
-        GPIO_NUM_0,  // Up
-        GPIO_NUM_4,  // Down
-        GPIO_NUM_2,  // Left
-        GPIO_NUM_1,  // Right
-        GPIO_NUM_16, // A
-        GPIO_NUM_15, // B
-        GPIO_NUM_8,  // Start
-        GPIO_NUM_5   // Select
+        GPIO_BTN_UP,    // Up
+        GPIO_BTN_DOWN,  // Down
+        GPIO_BTN_LEFT,  // Left
+        GPIO_BTN_RIGHT, // Right
+        GPIO_NUM_16,    // A
+        GPIO_NUM_15,    // B
+        GPIO_NUM_8,     // Start
+        GPIO_NUM_5      // Select
     };
     touch_pad_t touchPads[] = {
         TOUCH_PAD_NUM9,  // GPIO_NUM_9
@@ -273,10 +360,6 @@ void app_main(void)
     };
     initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
                 sizeof(touchPads) / sizeof(touchPads[0]));
-
-    // Init buzzer. This must be called before initMic()
-    initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
-               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
@@ -294,7 +377,15 @@ void app_main(void)
     initShapes();
 
     // Initialize the RGB LEDs
-    initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());
+    gpio_num_t ledMirrorGpio = GPIO_NUM_NC;
+#ifndef CONFIG_DEBUG_OUTPUT_UART_SAO
+    if (GPIO_SAO_2 != GPIO_NUM_18)
+    {
+        ledMirrorGpio = GPIO_SAO_2;
+    }
+#endif
+
+    initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
@@ -346,8 +437,13 @@ void app_main(void)
             }
         }
 
+#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+        // Check if a DAC buffer needs to be filled
+        dacPoll();
+#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
         // Check for buzzer callback flags from the ISR
         bzrCheckSongDone();
+#endif
 
         if (NO_WIFI != cSwadgeMode->wifiMode)
         {
@@ -402,8 +498,7 @@ void app_main(void)
             {
                 // Lower the flag
                 shouldShowQuickSettings = false;
-                // Pause the buzzer
-                bzrPause();
+
                 // Save the current mode
                 modeBehindQuickSettings = cSwadgeMode;
                 cSwadgeMode             = &quickSettingsMode;
@@ -418,8 +513,6 @@ void app_main(void)
                 quickSettingsMode.fnExitMode();
                 // Restore the mode
                 cSwadgeMode = modeBehindQuickSettings;
-                // Resume the buzzer
-                bzrResume();
             }
 
             // Draw to the TFT
@@ -466,12 +559,30 @@ static void initOptionalPeripherals(void)
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
     {
+        setDacShutdown(true);
+
+        // Initialize and start the mic as a continuous ADC
         initMic(GPIO_NUM_7);
         startMic();
     }
     else
     {
+        setDacShutdown(false);
+
+        // Otherwise initialize the battery monitor as a oneshot ADC
         initBattmon(GPIO_NUM_6);
+
+        // Initialize sound output if there is no input
+#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+        // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
+        // so it can't be initialized at the same time as the microphone
+        initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+                GPIO_NUM_18, dacCallback);
+        dacStart();
+        initGlobalMidiPlayer();
+#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
+    #error "Buzzer is no longer supported, get with the times!"
+#endif
     }
 
     // Init esp-now if requested by the mode
@@ -510,12 +621,17 @@ void deinitSystem(void)
 
     // Deinitialize everything
     deinitButtons();
+#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+    deinitGlobalMidiPlayer();
+    deinitDac();
+#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
     deinitBuzzer();
+#endif
     deinitEspNow();
     deinitLeds();
     deinitMic();
     deinitNvs();
-    deinitSpiffs();
+    deinitCnfs();
     deinitTemperatureSensor();
     deinitTFT();
     deinitUsb();
@@ -608,8 +724,8 @@ void softSwitchToPendingSwadge(void)
             cSwadgeMode->fnExitMode();
         }
 
-        // Stop the buzzer
-        bzrStop(true);
+        // Stop the music
+        soundStop(true);
 
         // Switch the mode pointer
         cSwadgeMode       = pendingSwadgeMode;
@@ -678,6 +794,14 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
     return retval;
 }
 
+void openQuickSettings(void)
+{
+    if (cSwadgeMode != &quickSettingsMode && !shouldHideQuickSettings)
+    {
+        shouldShowQuickSettings = true;
+    }
+}
+
 /**
  * @brief Set the framerate, in microseconds
  *
@@ -686,4 +810,73 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
 void setFrameRateUs(uint32_t newFrameRateUs)
 {
     frameRateUs = newFrameRateUs;
+}
+
+/**
+ * @brief Get the current framerate, in microseconds
+ *
+ * @return uint32_t The time between frame draws, in microseconds
+ */
+uint32_t getFrameRateUs(void)
+{
+    return frameRateUs;
+}
+
+/**
+ * @brief
+ *
+ * @param samples
+ * @param len
+ */
+void dacCallback(uint8_t* samples, int16_t len)
+{
+    // If there is a DAC callback for the current mode
+    if (cSwadgeMode->fnDacCb)
+    {
+        // Call that
+        cSwadgeMode->fnDacCb(samples, len);
+    }
+    else
+    {
+        // Otherwise use the song player
+        globalMidiPlayerFillBuffer(samples, len);
+    }
+}
+
+/**
+ * @brief Enable the speaker (and battery monitor) and disable the microphone
+ */
+void switchToSpeaker(void)
+{
+    // Stop the microphone
+    stopMic();
+    deinitMic();
+
+    // Start the speaker
+    initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+            GPIO_NUM_18, dacCallback);
+    setDacShutdown(false);
+    initGlobalMidiPlayer();
+
+    // Start battery monitoring
+    initBattmon(GPIO_NUM_6);
+}
+
+/**
+ * @brief Enable the microphone and disable the speaker (and battery monitor)
+ */
+void switchToMicrophone(void)
+{
+    // Stop battery monitoring
+    deinitBattmon();
+
+    // Stop the speaker
+    globalMidiPlayerStop(true);
+    deinitGlobalMidiPlayer();
+    setDacShutdown(true);
+    deinitDac();
+
+    // Initialize and start the mic as a continuous ADC
+    initMic(GPIO_NUM_7);
+    startMic();
 }
