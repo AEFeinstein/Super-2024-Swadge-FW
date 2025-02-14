@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
+#ifndef WASM
 #include <sys/stat.h>
+#endif
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
@@ -26,7 +28,9 @@
  */
 int makeDir(const char* path)
 {
-#if defined(EMU_WINDOWS)
+#if defined(EMU_WASM)
+    return -1;
+#elif defined(EMU_WINDOWS)
     return CreateDirectory(path, NULL);
 #else
     return mkdir(path, 0777);
@@ -42,6 +46,9 @@ int makeDir(const char* path)
  */
 bool makeDirs(const char* path)
 {
+#if defined(EMU_WASM)
+    return true;
+#else
     char buffer[1024];
     const char* cur = path;
 
@@ -149,6 +156,7 @@ bool makeDirs(const char* path)
     } while (true);
 
     return true;
+#endif
 }
 
 void expandPath(char* buffer, size_t length, const char* path)
@@ -160,7 +168,11 @@ void expandPath(char* buffer, size_t length, const char* path)
 
     if (*cur == '~')
     {
+#ifdef EMU_WASM
+        char* home = NULL;
+#else
         char* home = getenv("HOME");
+#endif
         if (home)
         {
             while (*home && out < (buffer + length))
@@ -214,7 +226,11 @@ const char* getTimestampFilename(char* dst, size_t n, const char* prefix, const 
         }
 
         // If the file exists, keep trying, up to 5 times, then just give up and overwrite it?
+#ifndef WASM
     } while (0 == access(dst, R_OK) && ++tries < 5);
+#else
+    } while (0);
+#endif
 
     return dst;
 }

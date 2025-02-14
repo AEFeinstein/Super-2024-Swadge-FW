@@ -22,7 +22,7 @@ uint32_t esp_random(void)
         printf("rand() seeding...\n");
         if (!seedValueSet)
         {
-#ifdef __wasm__
+#ifdef WASM
             int pid = 0x1337;
 #else
             pid_t pid = getpid();

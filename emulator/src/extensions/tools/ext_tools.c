@@ -30,7 +30,10 @@
     #pragma GCC diagnostic pop
 #endif
 
+#ifndef WASM
 #include "gifenc.h"
+#include <sys/stat.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +41,6 @@
 #include <inttypes.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/stat.h>
 
 #include "hdw-tft_emu.h"
 #include "esp_timer_emu.h"
@@ -368,6 +370,7 @@ static void toolsPreFrame(uint64_t frame)
 
 static void toolsPostFrame(uint64_t frame)
 {
+#ifndef WASM
     static uint64_t index = 0;
     static bool setup     = false;
     static ge_GIF* gif    = NULL;
@@ -490,6 +493,7 @@ static void toolsPostFrame(uint64_t frame)
                recordingFilename, skippedFrames, longFrames);
         setup = false;
     }
+#endif
 }
 
 static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes)

@@ -2,28 +2,11 @@
 // Includes
 //==============================================================================
 
-// clang-format off
-#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
-                     || defined(WIN32)       || defined(WIN64) \
-                     || defined(_WIN32)      || defined(_WIN64) \
-                     || defined(__WIN32__)   || defined(__CYGWIN__) \
-                     || defined(__MINGW32__) || defined(__MINGW64__) \
-                     || defined(__TOS_WIN__) || defined(_MSC_VER)
-    #define USING_WINDOWS 1
-#elif defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
-    #define USING_LINUX 1
-#elif __APPLE__
-    #define USING_MAC 1
-#elif defined(__wasm__)
-    #define USING_WASM 1
-#else
-    #error "OS Not Detected"
-#endif
-// clang-format on
+#include "emu_utils.h"
 
-#if defined(USING_WINDOWS)
+#if defined(EMU_WINDOWS)
     #include <WinSock2.h>
-#elif defined(USING_LINUX) || defined(USING_MAC)
+#elif defined(EMU_LINUX) || defined(EMU_MAC)
     #include <sys/socket.h> // for socket(), connect(), sendto(), and recvfrom()
     #include <arpa/inet.h>  // for sockaddr_in and inet_addr()
     #include <fcntl.h>
@@ -78,11 +61,11 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
     hostEspNowRecvCb = recvCb;
     hostEspNowSendCb = sendCb;
 
-#if defined(__wasm__)
+#if defined(EMU_WASM)
     return ESP_ERR_WIFI_IF;
 #else
 
-#if defined(USING_WINDOWS)
+#if defined(EMU_WINDOWS)
     // Initialize Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
@@ -115,7 +98,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return ESP_ERR_WIFI_IF;
     }
 
-#if defined(USING_WINDOWS)
+#if defined(EMU_WINDOWS)
     //-------------------------
     // Set the socket I/O mode: In this case FIONBIO
     // enables or disables the blocking mode for the
@@ -182,7 +165,7 @@ void espNowUseSerial(bool crossoverPins)
  */
 void checkEspNowRxQueue(void)
 {
-#ifndef __wasm__
+#ifndef EMU_WASM
     char recvString[MAXRECVSTRING + 1]; // Buffer for received string
     int recvStringLen;                  // Length of received string
 
@@ -226,7 +209,7 @@ void checkEspNowRxQueue(void)
  */
 void espNowSend(const char* data, uint8_t dataLen)
 {
-#ifndef __wasm__
+#ifndef EMU_WASM
     struct sockaddr_in broadcastAddr; // Broadcast address
 
     // Construct local address structure
@@ -273,10 +256,10 @@ void espNowSend(const char* data, uint8_t dataLen)
  */
 void deinitEspNow(void)
 {
-#ifndef __wasm__
+#ifndef EMU_WASM
     close(socketFd);
 #endif
-#if defined(USING_WINDOWS)
+#if defined(EMU_WINDOWS)
     WSACleanup();
 #endif
 }

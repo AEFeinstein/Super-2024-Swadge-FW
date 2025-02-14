@@ -4,7 +4,9 @@
 #include <stddef.h>
 #include <hdw-btn.h>
 
-#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) || defined(WIN32) || defined(WIN64)          \
+#if defined(WASM) || defined(__wasm__)
+    #define EMU_WASM 1
+#elif defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) || defined(WIN32) || defined(WIN64)          \
     || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__CYGWIN__) || defined(__MINGW32__) \
     || defined(__MINGW64__) || defined(__TOS_WIN__) || defined(_MSC_VER)
     #define EMU_WINDOWS 1

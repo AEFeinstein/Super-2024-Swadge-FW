@@ -422,7 +422,7 @@ fullclean: clean
 ################################################################################
 
 $(EXECUTABLE).wasm: wasm/shim.c $(SOURCES)
-	$(CC_WASM) $(CFLAGS_WASM) $(DEFINES) $(INC) $^ -o $@
+	$(CC_WASM) $(CFLAGS_WASM) $(DEFINES) $(INC) -Iwasm/include $^ -o $@
 	$(WASMOPT) $(WOFLAGS) -Oz $@ -o $@
 
 ################################################################################
