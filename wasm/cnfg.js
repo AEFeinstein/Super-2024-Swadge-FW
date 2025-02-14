@@ -1,1 +1,1 @@
-/home/dylwhich/dev/wasm-js-cstdlib/example/cnfg.js
+wasm-js-cstdlib/example/cnfg.js

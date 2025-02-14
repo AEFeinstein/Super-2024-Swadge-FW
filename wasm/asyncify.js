@@ -1,1 +1,1 @@
-/home/dylwhich/dev/wasm-js-cstdlib/example/asyncify.js
+wasm-js-cstdlib/example/asyncify.js

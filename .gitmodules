@@ -7,3 +7,6 @@
 [submodule "emulator/src-lib/platform-midi"]
 	path = emulator/src-lib/platform-midi
 	url = https://github.com/dylwhich/platform-midi.git
+[submodule "wasm/wasm-js-cstdlib"]
+	path = wasm/wasm-js-cstdlib
+	url = https://github.com/dylwhich/wasm-js-cstdlib.git
