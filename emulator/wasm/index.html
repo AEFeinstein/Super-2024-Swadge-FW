@@ -49,75 +49,121 @@
             <pre id="stdout"></pre>
         </div>
 		<script type="text/javascript">
-            import("./js/main.js")
-            .then((stdlib) => {
+            import("./weblibc.js")
+            .then((weblibc) => {
                 import("./cnfg.js").then((cnfg) => {
-                    import("./asyncify.js").then((Asyncify) => {
-                        // Create memory with 200 pages initial (12.5MiB)
-                        const imports = {
-                            env: {
-                                memory: new WebAssembly.Memory({initial:200}),
-                            },
-                            bynsyncify: {},
-                        };
+                    import("./pointers.js").then((pointers) => {
+                        import("./shims.js").then((shims) => {
+                            import("./asyncify.js").then((Asyncify) => {
+                                // Create memory with 200 pages initial (12.5MiB)
+                                const imports = {
+                                    env: {
+                                        memory: new WebAssembly.Memory({initial:200}),
+                                    },
+                                    bynsyncify: {},
+                                };
 
-                        stdlib.default(imports, {
-                            filesystem: {
-                                "/screenshot.*\\.png": [ {
-                                    type: "download",
-                                    flags: ["wo"],
-                                } ],
-                                "/spiffs_image/": [ {
-                                        type: "http",
-                                        base: "/spiffs_image/",
-                                        flags: ["ro"],
-                                } ],
-                                // ""
-                                "/nvs.json": [ {
-                                    type: "localstorage",
-                                    flags: ["rw"],
-                                } ],
-                                // "/" has the defaults
-                                "/": [ {
-                                    type: "localstorage",
-                                    flags: ["rw"],
-                                } ],
-                            },
-                            stdout: function(str) {
-                                let stdout = document.getElementById("stdout");
-                                const scrollDown = (stdout.scrollTop === stdout.scrollHeight);
-                                const span = document.createElement("span");
-                                span.innerText = str;
-                                stdout.appendChild(span);
-                                if (scrollDown) {
-                                    stdout.scrollTop = stdout.scrollHeight;
-                                }
-                            },
-                            stderr: function(str) {
-                                let stdout = document.getElementById("stdout");
-                                const scrollDown = (stdout.scrollTop === stdout.scrollHeight);
-                                const span = document.createElement("span");
-                                span.innerText = str;
-                                span.className = "errmsg";
-                                stdout.appendChild(span);
-                                if (scrollDown) {
-                                    stdout.scrollTop = stdout.scrollHeight;
-                                }
-                            },
-                            canvas: document.getElementById("canvas")
-                        }, [
-                            // extra modules to set up
-                            cnfg
-                        ]);
+                                const utfDecoder = new TextDecoder("utf-8");
+                                const HEAPU8 = new Uint8Array(imports.env.memory.buffer);
 
-                        // Here, Asyncify is a drop-in replacement for WebAssembly
-                        // it
-                        Asyncify.instantiateStreaming(fetch("../swadge_emulator.wasm"), imports).then(({instance, module}) => {
-                            stdlib.postInstantiate(instance);
-                            instance.exports.main(0|0, 0|0).then(() => {
-                                console.error("main done?");
-                            }).catch((err) => {
-       	       	       	       	console.error("err!", err);
+                                const settings = {
+                                    argv: ["swadge_emulator", "-m", "Main"],
+                                    overrides: {    
+                                        _wlc_stdoutWrite: function(file, buf, n) {
+                                            let str = utfDecoder.decode(HEAPU8.subarray(buf, buf + n));
+                                            let stdout = document.getElementById("stdout");
+                                            const scrollDown = (stdout.scrollTop === stdout.scrollHeight);
+                                            const span = document.createElement("span");
+                                            span.innerText = str;
+                                            stdout.appendChild(span);
+                                            if (scrollDown) {
+                                                stdout.scrollTop = stdout.scrollHeight;
+                                            }
+                                            return n;
+                                        },
+                                        _wlc_stderrWrite: function(file, buf, n) {
+                                            let str = utfDecoder.decode(HEAPU8.subarray(buf, buf + n));
+                                            let stdout = document.getElementById("stdout");
+                                            const scrollDown = (stdout.scrollTop === stdout.scrollHeight);
+                                            const span = document.createElement("span");
+                                            span.innerText = str;
+                                            span.className = "errmsg";
+                                            stdout.appendChild(span);
+                                            if (scrollDown) {
+                                                stdout.scrollTop = stdout.scrollHeight;
+                                            }
+                                            return n;
+                                        },
+                                    }
+                                };
+
+                                weblibc.default(imports, settings);
+                                pointers.default(imports, settings);
+                                shims.default(imports, settings);
+                                cnfg.default(imports, settings);
+
+                                /*stdlib.default(imports, {
+                                    filesystem: {
+                                        "/screenshot.*\\.png": [ {
+                                            type: "download",
+                                            flags: ["wo"],
+                                        } ],
+                                        "/spiffs_image/": [ {
+                                                type: "http",
+                                                base: "/spiffs_image/",
+                                                flags: ["ro"],
+                                        } ],
+                                        // ""
+                                        "/nvs.json": [ {
+                                            type: "localstorage",
+                                            flags: ["rw"],
+                                        } ],
+                                        // "/" has the defaults
+                                        "/": [ {
+                                            type: "localstorage",
+                                            flags: ["rw"],
+                                        } ],
+                                    },
+                                    stdout: function(str) {
+                                        let stdout = document.getElementById("stdout");
+                                        const scrollDown = (stdout.scrollTop === stdout.scrollHeight);
+                                        const span = document.createElement("span");
+                                        span.innerText = str;
+                                        stdout.appendChild(span);
+                                        if (scrollDown) {
+                                            stdout.scrollTop = stdout.scrollHeight;
+                                        }
+                                    },
+                                    stderr: function(str) {
+                                        let stdout = document.getElementById("stdout");
+                                        const scrollDown = (stdout.scrollTop === stdout.scrollHeight);
+                                        const span = document.createElement("span");
+                                        span.innerText = str;
+                                        span.className = "errmsg";
+                                        stdout.appendChild(span);
+                                        if (scrollDown) {
+                                            stdout.scrollTop = stdout.scrollHeight;
+                                        }
+                                    },
+                                    canvas: document.getElementById("canvas")
+                                }, [
+                                    // extra modules to set up
+                                    cnfg
+                                ]);*/
+
+                                // Here, Asyncify is a drop-in replacement for WebAssembly
+                                // it
+                                Asyncify.instantiateStreaming(fetch("../swadge_emulator.wasm"), imports).then(({instance, module}) => {
+                                    //stdlib.postInstantiate(instance);
+                                    let argInfo = weblibc.postInstantiate(instance);
+                                    pointers.postInstantiate(instance);
+                                    cnfg.postInstantiate(instance);
+                                    instance.exports.main(0|0, 0|0).then(() => {
+                                        console.error("main done?");
+                                    }).catch((err) => {
+                                        console.error("err!", err);
+                                    });
+                                });
                             });
                         });
                     });

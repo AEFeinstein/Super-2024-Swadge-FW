@@ -8,12 +8,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
 #include <math.h>
 #include <errno.h>
 
 #ifdef WASM
-#include "wasm_shims.h"
+#include "shims.h"
 #else
 #include <sys/stat.h>
 #endif
@@ -211,6 +210,7 @@ bool eraseNvs(void)
 {
 #ifdef WASM
     deleteNvsCookie();
+    return true;
 #else
     // Check if the json file exists
     if (access(NVS_JSON_FILE, F_OK) != 0)

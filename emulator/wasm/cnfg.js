@@ -33,7 +33,7 @@ SOFTWARE.
  */
 
 
-import { getArrFloat, getArrUint8, getStr, getPtr, endian } from "./js/util/pointers.js";
+import { getArrFloat, getArrUint8, getStr, getPtr, endian } from "./pointers.js";
 
 let fullscreen = false;
 let useLoopFunction = false;

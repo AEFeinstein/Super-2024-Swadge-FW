@@ -81,9 +81,12 @@ SUBMODULES = $(shell git config --file .gitmodules --name-only --get-regexp path
 INC_DIRS_RECURSIVE = emulator main
 # Look for folders named "include" in these directories, recursively
 INC_DIRS_INCLUDE = components
+# Dirs that are explicitly excluded from the include dirs
+INC_DIRS_EXCLUDE = emulator/src-lib/rawdraw/wasm
 # Treat every source directory as one to search for headers in, also add a few more
 INC_DIRS  = $(shell $(FIND) $(INC_DIRS_RECURSIVE) -type d)
 INC_DIRS += $(shell $(FIND) $(INC_DIRS_INCLUDE) -type d -iname "include")
+INC_DIRS := $(filter-out $(INC_DIRS_EXCLUDE), $(INC_DIRS))
 # Prefix the directories for gcc
 INC = $(patsubst %, -I%, $(INC_DIRS) )
 
@@ -184,7 +187,6 @@ WEBLIBC = ./emulator/src-lib/rawdraw/wasm/weblibc
 WASM_DIR = ./emulator/wasm
 
 WASM_SOURCES = \
-	$(WASM_DIR)/shims.c \
 	$(WEBLIBC)/weblibc.c
 
 CC_WASM = clang

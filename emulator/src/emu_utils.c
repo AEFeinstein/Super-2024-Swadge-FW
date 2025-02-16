@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <dirent.h>
 #ifndef WASM
+#include <dirent.h>
 #include <sys/stat.h>
 #endif
 #include <errno.h>
