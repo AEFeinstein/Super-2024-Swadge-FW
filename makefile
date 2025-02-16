@@ -179,6 +179,14 @@ CFLAGS_WARNINGS_EXTRA = \
 WASMOPT ?= wasm-opt
 WOFLAGS += --asyncify --pass-arg=asyncify-import@bynsyncify.* --pass-arg=asyncify-ignore-indirect
 
+WEBLIBC = ./emulator/src-lib/rawdraw/wasm/weblibc
+
+WASM_DIR = ./emulator/wasm
+
+WASM_SOURCES = \
+	$(WASM_DIR)/shims.c \
+	$(WEBLIBC)/weblibc.c
+
 CC_WASM = clang
 CFLAGS_WASM = \
 	-DWASM=1 \
@@ -194,7 +202,8 @@ CFLAGS_WASM = \
 	-Wl,--export=__heap_base \
 	-Wl,--export-table \
 	-Wl,--warn-unresolved-symbols \
-	-isystem./wasm/include
+	-isystem$(WEBLIBC)/include \
+	-I$(WASM_DIR)/include
 
 ifneq ($(HOST_OS),Darwin)
 # Incompatible warnings for clang on MacOS
@@ -421,8 +430,8 @@ fullclean: clean
 # WebAssembly targets
 ################################################################################
 
-$(EXECUTABLE).wasm: wasm/shim.c $(SOURCES)
-	$(CC_WASM) $(CFLAGS_WASM) $(DEFINES) $(INC) -Iwasm/include $^ -o $@
+$(EXECUTABLE).wasm: $(WASM_SOURCES) $(SOURCES)
+	$(CC_WASM) $(CFLAGS_WASM) $(DEFINES) $(INC) $^ -o $@
 	$(WASMOPT) $(WOFLAGS) -Oz $@ -o $@
 
 ################################################################################

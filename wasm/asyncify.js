@@ -1,1 +1,0 @@
-wasm-js-cstdlib/example/asyncify.js
