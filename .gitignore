@@ -6,6 +6,7 @@
 *.ko
 *.obj
 *.elf
+*.wasm
 
 # Coverage files
 *.gcda
