@@ -17,6 +17,7 @@
     | grep -v quickSettings | awk '{printf "#include \"%s\"\n",$1 }' | sort
 */
 #include "accelTest.h"
+#include "beacon.h"
 #include "bongoTest.h"
 #include "colorchord.h"
 #include "dance.h"
@@ -66,6 +67,7 @@ static swadgeMode_t* getRandomSwadgeMode(void);
 // clang-format off
 static swadgeMode_t* allSwadgeModes[] = {
     &accelTestMode,
+    &beaconMode,
     &bigbugMode,
     &bongoTest,
     &cGroveMode,

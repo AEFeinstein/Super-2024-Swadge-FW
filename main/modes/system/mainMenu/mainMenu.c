@@ -7,6 +7,7 @@
 #include "mainMenu.h"
 
 #include "accelTest.h"
+#include "beacon.h"
 #include "bongoTest.h"
 #include "colorchord.h"
 #include "dance.h"
@@ -190,6 +191,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
+    addSingleItemToMenu(mainMenu->menu, beaconMode.modeName);
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
@@ -387,6 +389,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == factoryTestMode.modeName)
         {
             switchToSwadgeMode(&factoryTestMode);
+        }
+        else if (label == beaconMode.modeName)
+        {
+            switchToSwadgeMode(&beaconMode);
         }
         else if (label == gamepadMode.modeName)
         {
