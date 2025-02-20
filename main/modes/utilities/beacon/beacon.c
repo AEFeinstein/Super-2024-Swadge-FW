@@ -6,10 +6,14 @@ void beaconMainLoop(int64_t elapsedUs);
 void beaconEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 void beaconEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 void beaconMenuCb(const char* label, bool selected, uint32_t value);
+static esp_now_recv_info_t* copyEspNowRecvInfo(const esp_now_recv_info_t* info);
 
-const char beaconName[] = "Beacon";
-const char rxLabel[]    = "Receive";
-const char txLabel[]    = "Transmit";
+const char beaconName[]  = "Beacon";
+const char rxLabel[]     = "Receive";
+const char txLabel[]     = "Transmit";
+const char* broadcasts[] = {
+    "BCST0", "BCST1", "BCST2", "BCST3", "BCST4",
+};
 
 swadgeMode_t beaconMode = {
     .modeName                 = beaconName,
@@ -38,12 +42,22 @@ typedef enum
 
 typedef struct
 {
+    uint8_t* data;
+    int16_t len;
+    int8_t rssi;
+    esp_now_recv_info_t* rxInfo;
+} beaconRxData_t;
+
+typedef struct
+{
     menu_t* menu;
     menuManiaRenderer_t* renderer;
     beaconState_t state;
     int32_t txTimer;
     list_t receivedData;
     font_t ibm;
+    const char* txData;
+    int16_t txLen;
 } beacon_t;
 
 static beacon_t* b;
@@ -60,7 +74,13 @@ void beaconEnterMode(void)
     // Load fonts
     loadFont("ibm_vga8.font", &b->ibm, true);
 
-    addSingleItemToMenu(b->menu, txLabel);
+    b->menu = startSubMenu(b->menu, txLabel);
+    for (int32_t i = 0; i < ARRAY_SIZE(broadcasts); i++)
+    {
+        addSingleItemToMenu(b->menu, broadcasts[i]);
+    }
+    b->menu = endSubMenu(b->menu);
+
     addSingleItemToMenu(b->menu, rxLabel);
     return;
 }
@@ -75,9 +95,14 @@ void beaconExitMode(void)
 
     freeFont(&b->ibm);
 
-    void* val;
+    beaconRxData_t* val;
     while (NULL != (val = pop(&b->receivedData)))
     {
+        heap_caps_free(val->rxInfo->des_addr);
+        heap_caps_free(val->rxInfo->src_addr);
+        heap_caps_free(val->rxInfo->rx_ctrl);
+        heap_caps_free(val->rxInfo);
+        heap_caps_free(val->data);
         heap_caps_free(val);
     }
     heap_caps_free(b);
@@ -128,21 +153,31 @@ void beaconMainLoop(int64_t elapsedUs)
             drawText(&b->ibm, c555, "Transmit", 40, 40);
             if (BEACON_TRANSMIT == b->state)
             {
-                RUN_TIMER_EVERY(b->txTimer, 1000000, elapsedUs, { espNowSend(beaconName, sizeof(beaconName)); });
+                RUN_TIMER_EVERY(b->txTimer, 1000000, elapsedUs, { espNowSend(b->txData, b->txLen); });
             }
             break;
         }
         case BEACON_RECEIVE:
         {
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
-            void* rxStr;
-            node_t* node = b->receivedData.first;
-            int32_t yIdx = 0;
+
+            node_t* node = b->receivedData.last;
+            int32_t yIdx = 4;
             while (node && yIdx < TFT_HEIGHT)
             {
-                drawText(&b->ibm, c555, node->val, 40, yIdx);
+                beaconRxData_t* rxData = node->val;
+
+                char str[128] = {0};
+                int32_t sIdx  = 0;
+                sIdx = snprintf(str, sizeof(str) - 1, "[%3d,%3d] ", rxData->rxInfo->rx_ctrl->rssi, rxData->rssi);
+
+                for (int16_t dIdx = 0; dIdx < rxData->len; dIdx++)
+                {
+                    sIdx += snprintf(&str[sIdx], sizeof(str) - sIdx - 1, "%02X ", rxData->data[dIdx]);
+                }
+                drawText(&b->ibm, c555, str, 40, yIdx);
                 yIdx += 4 + b->ibm.height;
-                node = node->next;
+                node = node->prev;
             }
             break;
         }
@@ -159,10 +194,45 @@ void beaconMainLoop(int64_t elapsedUs)
  */
 void beaconEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
-    uint8_t* savedCopy = heap_caps_calloc(1, len, MALLOC_CAP_8BIT);
-    memcpy(savedCopy, data, len);
-    push(&b->receivedData, savedCopy);
-    return;
+    // Allocate object for list
+    beaconRxData_t* rxData = heap_caps_calloc(1, sizeof(beaconRxData_t), MALLOC_CAP_8BIT);
+
+    // Save payload in list object
+    rxData->len  = len;
+    rxData->data = heap_caps_calloc(1, len, MALLOC_CAP_8BIT);
+    memcpy(rxData->data, data, len);
+
+    // Save metadata
+    rxData->rxInfo = copyEspNowRecvInfo(esp_now_info);
+
+    // Save RSSI
+    rxData->rssi = rssi;
+
+    // Push into list
+    push(&b->receivedData, rxData);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param info
+ * @return esp_now_recv_info_t*
+ */
+static esp_now_recv_info_t* copyEspNowRecvInfo(const esp_now_recv_info_t* info)
+{
+#define MAC_LEN 6
+    esp_now_recv_info_t* copy = heap_caps_calloc(1, sizeof(esp_now_recv_info_t), MALLOC_CAP_8BIT);
+
+    copy->des_addr = heap_caps_calloc(MAC_LEN, sizeof(uint8_t), MALLOC_CAP_8BIT);
+    memcpy(copy->des_addr, info->des_addr, MAC_LEN * sizeof(uint8_t));
+
+    copy->src_addr = heap_caps_calloc(MAC_LEN, sizeof(uint8_t), MALLOC_CAP_8BIT);
+    memcpy(copy->src_addr, info->src_addr, MAC_LEN * sizeof(uint8_t));
+
+    copy->rx_ctrl = heap_caps_calloc(1, sizeof(wifi_pkt_rx_ctrl_t), MALLOC_CAP_8BIT);
+    memcpy(copy->rx_ctrl, info->rx_ctrl, sizeof(wifi_pkt_rx_ctrl_t));
+
+    return copy;
 }
 
 /**
@@ -181,11 +251,18 @@ void beaconMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
-        if (txLabel == label)
+        for (int32_t i = 0; i < ARRAY_SIZE(broadcasts); i++)
         {
-            b->state = BEACON_TRANSMIT;
+            if (broadcasts[i] == label)
+            {
+                b->state  = BEACON_TRANSMIT;
+                b->txData = label;
+                b->txLen  = strlen(label);
+                return;
+            }
         }
-        else if (rxLabel == label)
+
+        if (rxLabel == label)
         {
             b->state = BEACON_RECEIVE;
         }
