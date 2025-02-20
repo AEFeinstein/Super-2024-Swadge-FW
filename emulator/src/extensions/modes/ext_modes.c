@@ -36,7 +36,6 @@ static swadgeMode_t* getRandomSwadgeMode(void);
      | sed -E 's/(.*);/\&\1,/g' | grep -v quickSettings | sort
 */
 // clang-format off
-
 // clang-format on
 
 emuExtension_t modesEmuExtension = {
