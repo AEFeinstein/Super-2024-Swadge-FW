@@ -30,6 +30,7 @@
 */
 
 #include "accelTest.h"
+#include "beacon.h"
 #include "bongoTest.h"
 #include "colorchord.h"
 #include "dance.h"
