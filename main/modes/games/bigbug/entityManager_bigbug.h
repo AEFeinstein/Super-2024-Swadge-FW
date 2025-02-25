@@ -18,7 +18,7 @@
 //==============================================================================
 #define MAX_ENTITIES       200
 #define MAX_FRONT_ENTITIES 10
-#define NUM_SPRITES        34 // The number of bb_sprite_t last accounted for BB_HOTDOG
+#define NUM_SPRITES        35 // The number of bb_sprite_t last accounted for BB_FINAL_BOSS
 
 //==============================================================================
 // Structs

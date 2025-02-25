@@ -52,6 +52,7 @@ typedef enum
     ATMOSPHERIC_ATOMIZER_DATA,
     DRILL_BOT_DATA,
     SPACE_LASER_DATA,
+    FINAL_BOSS_DATA,
 } bb_data_type_t;
 
 //==============================================================================
@@ -262,7 +263,6 @@ typedef struct
     bb_entity_t* jankyBugDig[6]; // When a bug collides with this, the dirt "digs" toward the car fight arena
     bb_spriteDef_t reward;       // The sprite to spawn when the food cart is destroyed.
     bb_entity_t* partner;        // the other piece of the food cart
-    bool isCached;               // tracking this to only unload sprites when both pieces are cached.
     int8_t damageEffect; // decrements over time. Render damagePalette color swap if > 0, and if this cart is not the
                          // zero animation frame because the cart background gets not graphical effect.
 } bb_foodCartData_t;
@@ -351,6 +351,17 @@ typedef struct
     uint8_t highestGarbage;
 } bb_spaceLaserData_t;
 
+typedef struct
+{
+    vec_t vel;
+    int8_t damageEffect; // decrements over time.
+    int16_t health;
+    bb_entity_t* bossEggs[10];
+    int16_t stateTimer; // increments over time. Doing some attacks when positive. Overflows intentionally.
+    bool firstDialogeDone;
+    bool secondDialogeDone;
+} bb_finalBossData_t;
+
 typedef void (*bb_updateFunction_t)(bb_entity_t* self);
 typedef void (*bb_updateFarFunction_t)(bb_entity_t* self);
 typedef void (*bb_drawFunction_t)(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -431,6 +442,7 @@ void bb_updateAttachmentArm(bb_entity_t* self);
 void bb_updateGameOver(bb_entity_t* self);
 void bb_updateRadarPing(bb_entity_t* self);
 void bb_updateGrabbyHand(bb_entity_t* self);
+void bb_updateFarGrabbyHand(bb_entity_t* self);
 void bb_updateDoor(bb_entity_t* self);
 void bb_updateCarActive(bb_entity_t* self);
 void bb_updateCarOpen(bb_entity_t* self);
@@ -446,6 +458,8 @@ void bb_updateDrillBot(bb_entity_t* self);
 void bb_updateTimedPhysicsObject(bb_entity_t* self);
 void bb_updatePacifier(bb_entity_t* self);
 void bb_updateSpaceLaser(bb_entity_t* self);
+void bb_updateQuickplay(bb_entity_t* self);
+void bb_updateFinalBoss(bb_entity_t* self);
 
 void bb_drawGarbotnikFlying(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawHarpoon(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
@@ -480,6 +494,8 @@ void bb_drawPacifier(bb_entityManager_t* entityManager, rectangle_t* camera, bb_
 void bb_drawSpaceLaser(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawDeadBug(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 void bb_drawGarbotnikUI(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawQuickplay(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
+void bb_drawFinalBoss(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
 // void bb_drawRect(bb_entityManager_t* entityManager, rectangle_t* camera, bb_entity_t* self);
 
@@ -502,6 +518,8 @@ void bb_onCollisionAmmoSupply(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_
 void bb_onCollisionBrickTutorial(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSpaceLaserGarbotnik(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 void bb_onCollisionSpaceLaserBug(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionBossEgg(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
+void bb_onCollisionBoss(bb_entity_t* self, bb_entity_t* other, bb_hitInfo_t* hitInfo);
 
 // callbacks
 void bb_startGarbotnikIntro(bb_entity_t* self);
@@ -523,6 +541,7 @@ void bb_playCarAlarm(bb_entity_t* self);
 void bb_bugDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 void bb_cartDeath(bb_entity_t* self, bb_hitInfo_t* hitInfo);
 void bb_spawnHorde(bb_entity_t* self, uint8_t numBugs);
+void bb_afterEnding(bb_entity_t* self);
 
 void bb_crumbleDirt(bb_gameData_t* gameData, uint8_t gameFramesPerAnimationFrame, uint8_t tile_i, uint8_t tile_j,
                     bool zeroHealth, bool flagNeighborsForPathfinding);

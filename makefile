@@ -36,9 +36,9 @@ ifeq ($(HOST_OS),Windows)
 endif
 
 # clang-format may actually be clang-format-17
-CLANG_FORMAT:=clang-format
+CLANG_FORMAT:=clang-format-17
 ifeq (, $(shell which $(CLANG_FORMAT)))
-	CLANG_FORMAT:=clang-format-17
+	CLANG_FORMAT:=clang-format
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -397,8 +397,10 @@ fullclean: clean
 # Utility targets
 ################################################################################
 
-docs:
+plantuml.jar:
 	-wget -nc -O plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2023.4/plantuml-1.2023.4.jar
+
+docs: plantuml.jar
 	doxygen ./Doxyfile
 
 format:

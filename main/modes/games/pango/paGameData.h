@@ -43,6 +43,8 @@ typedef struct
     char initials[3];
     uint8_t rank;
     bool debugMode;
+    bool caravanMode;
+    int16_t caravanTimer;
 
     bool continuesUsed;
 

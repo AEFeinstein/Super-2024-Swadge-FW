@@ -1,11 +1,12 @@
+#include "fileUtils.h"
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
-
-#include "fileUtils.h"
+#include <time.h>
 
 /**
  * TODO
@@ -31,21 +32,7 @@ long getFileSize(const char* fname)
  */
 bool doesFileExist(const char* fname)
 {
-    int fd = open(fname, O_CREAT | O_WRONLY | O_EXCL, S_IRUSR | S_IWUSR);
-    if (fd < 0)
-    {
-        /* failure */
-        if (errno == EEXIST)
-        {
-            /* the file already existed */
-            close(fd);
-            return true;
-        }
-    }
-
-    /* File does not exist */
-    close(fd);
-    return false;
+    return 0 == access(fname, F_OK);
 }
 
 /**
@@ -62,4 +49,47 @@ const char* get_filename(const char* filename)
         return "";
     }
     return slash + 1;
+}
+
+
+/**
+ * @brief Returns true if the file `sourceFile` has a last-modified time after that of `destFile`, or if `destFile` does not exist.
+ * 
+ * @param sourceFile The path to the "source" file, from which `destFile` is generated
+ * @param destFile The path to the "destination" file path, which should be regenerated if older than `sourceFile`.
+ * @return true sourceFile was modified after destFile, so destFile should be updated
+ * @return false destFile was modified after sourceFile, so destFile does not need to be updated
+ */
+bool isSourceFileNewer(const char* sourceFile, const char* destFile)
+{
+
+    long long srcMtime = 0;
+    long long destMtime = 0;
+
+    // Just use stat()
+    struct stat statVal = {0};
+    errno = 0;
+    int statResult = stat(sourceFile, &statVal);
+    if (statResult == 0)
+    {
+        srcMtime = statVal.st_mtime;
+    }
+    else if (errno != ENOENT)
+    {
+        fprintf(stderr, "Cannot stat() file %s: %s (%d)\n", sourceFile, strerror(errno), errno);
+    }
+
+    memset(&statVal, 0, sizeof(struct stat));
+    errno = 0;
+    statResult = stat(destFile, &statVal);
+    if (statResult == 0)
+    {
+        destMtime = statVal.st_mtime;
+    }
+    else if (errno != ENOENT)
+    {
+        fprintf(stderr, "Cannot stat() file %s: %s (%d)\n", destFile, strerror(errno), errno);
+    }
+
+    return srcMtime > destMtime;
 }

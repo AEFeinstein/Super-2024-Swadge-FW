@@ -970,71 +970,74 @@ static void cg_handleInputGarden(cGrove_t* cg)
         {
             while (checkButtonQueueWrapper(&evt))
             {
-                if (evt.button & PB_RIGHT)
+                if (evt.down)
                 {
-                    cg->grove.cursor.pos.x += CG_CURSOR_SPEED;
-                }
-                else if (evt.button & PB_LEFT)
-                {
-                    cg->grove.cursor.pos.x -= CG_CURSOR_SPEED;
-                }
-                if (evt.button & PB_UP)
-                {
-                    cg->grove.cursor.pos.y -= CG_CURSOR_SPEED;
-                }
-                else if (evt.button & PB_DOWN)
-                {
-                    cg->grove.cursor.pos.y += CG_CURSOR_SPEED;
-                }
-                if (evt.button & PB_A && evt.down)
-                {
-                    if (cg->grove.holdingItem)
+                    if (evt.button & PB_RIGHT)
                     {
-                        cg->grove.holdingItem = false;
-                        cg->grove.heldItem    = NULL;
+                        cg->grove.cursor.pos.x += CG_CURSOR_SPEED;
                     }
-                    else if (cg->grove.holdingChowa)
+                    else if (evt.button & PB_LEFT)
                     {
-                        cg->grove.holdingChowa      = false;
-                        cg->grove.heldChowa->gState = CHOWA_IDLE;
+                        cg->grove.cursor.pos.x -= CG_CURSOR_SPEED;
                     }
-                    else if (cg->grove.ring.active && rectRectIntersection(rect, cg->grove.ring.aabb, &temp))
+                    if (evt.button & PB_UP)
                     {
-                        cg->grove.ring.active = false;
-                        cg->grove.inv.money += 1;
+                        cg->grove.cursor.pos.y -= CG_CURSOR_SPEED;
                     }
-                    else
+                    else if (evt.button & PB_DOWN)
                     {
-                        cg_attemptGrab(cg);
+                        cg->grove.cursor.pos.y += CG_CURSOR_SPEED;
                     }
-                }
-                if (evt.button & PB_B && evt.down)
-                {
-                    for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
+                    if (evt.button & PB_A)
                     {
-                        // Chowa
-                        if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
+                        if (cg->grove.holdingItem)
                         {
-                            cg->grove.chowa[idx].gState   = CHOWA_PET;
-                            cg->grove.chowa[idx].timeLeft = 1000000;
-                            cg->grove.isPetting           = true;
-                            cg->grove.pettingTimer        = 0;
+                            cg->grove.holdingItem = false;
+                            cg->grove.heldItem    = NULL;
+                        }
+                        else if (cg->grove.holdingChowa)
+                        {
+                            cg->grove.holdingChowa      = false;
+                            cg->grove.heldChowa->gState = CHOWA_IDLE;
+                        }
+                        else if (cg->grove.ring.active && rectRectIntersection(rect, cg->grove.ring.aabb, &temp))
+                        {
+                            cg->grove.ring.active = false;
+                            cg->grove.inv.money += 1;
+                        }
+                        else
+                        {
+                            cg_attemptGrab(cg);
                         }
                     }
-                    // Eggs
-                    for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+                    if (evt.button & PB_B)
                     {
-                        if (rectRectIntersection(rect, cg->grove.unhatchedEggs[idx].aabb, &temp))
+                        for (int idx = 0; idx < CG_MAX_CHOWA + CG_GROVE_MAX_GUEST_CHOWA; idx++)
                         {
-                            cg->grove.unhatchedEggs[idx].stage++;
-                            cg->grove.isPetting    = true;
-                            cg->grove.pettingTimer = 0;
+                            // Chowa
+                            if (rectRectIntersection(rect, cg->grove.chowa[idx].aabb, &temp))
+                            {
+                                cg->grove.chowa[idx].gState   = CHOWA_PET;
+                                cg->grove.chowa[idx].timeLeft = 1000000;
+                                cg->grove.isPetting           = true;
+                                cg->grove.pettingTimer        = 0;
+                            }
+                        }
+                        // Eggs
+                        for (int idx = 0; idx < CG_MAX_CHOWA; idx++)
+                        {
+                            if (rectRectIntersection(rect, cg->grove.unhatchedEggs[idx].aabb, &temp))
+                            {
+                                cg->grove.unhatchedEggs[idx].stage++;
+                                cg->grove.isPetting    = true;
+                                cg->grove.pettingTimer = 0;
+                            }
                         }
                     }
-                }
-                if (evt.button & PB_START && evt.down)
-                {
-                    cg->grove.state = CG_GROVE_MENU;
+                    if (evt.button & PB_START)
+                    {
+                        cg->grove.state = CG_GROVE_MENU;
+                    }
                 }
             }
         }

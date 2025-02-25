@@ -84,6 +84,7 @@ typedef struct
     int32_t selectedBounceTimer;  ///< The timer to bounce the offset for the selected item
     int32_t selectedValue;        ///< The option index or setting value to tell when it changes
     int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
+    int32_t pageArrowTimer;       ///< The timer for blinking page up/down arrows
 
     paletteColor_t titleBgColor;        ///< The color of the title background
     paletteColor_t titleTextColor;      ///< The color of the title text

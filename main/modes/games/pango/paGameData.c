@@ -28,6 +28,7 @@ void pa_initializeGameData(paGameData_t* gameData, paSoundManager_t* soundManage
     gameData->initials[1]     = 'A';
     gameData->initials[2]     = 'A';
     gameData->rank            = 5;
+    gameData->caravanMode     = false;
     gameData->debugMode       = false;
     gameData->continuesUsed   = false;
     gameData->soundManager    = soundManager;
