@@ -227,6 +227,32 @@
 #endif
 
 //==============================================================================
+// Constant Variables
+//==============================================================================
+
+/** A list of GPIOs for the pushbuttons */
+static const gpio_num_t pushButtons[] = {
+    GPIO_BTN_UP,    // Up
+    GPIO_BTN_DOWN,  // Down
+    GPIO_BTN_LEFT,  // Left
+    GPIO_BTN_RIGHT, // Right
+    GPIO_NUM_16,    // A
+    GPIO_NUM_15,    // B
+    GPIO_NUM_8,     // Start
+    GPIO_NUM_5      // Select
+};
+
+/** A list of GPIOs for the touchpads */
+static const touch_pad_t touchPads[] = {
+    TOUCH_PAD_NUM9,  // GPIO_NUM_9
+    TOUCH_PAD_NUM10, // GPIO_NUM_10
+    TOUCH_PAD_NUM11, // GPIO_NUM_11
+    TOUCH_PAD_NUM12, // GPIO_NUM_12
+    TOUCH_PAD_NUM13, // GPIO_NUM_13
+    TOUCH_PAD_NUM14, // GPIO_NUM_14
+};
+
+//==============================================================================
 // Variables
 //==============================================================================
 
@@ -340,26 +366,7 @@ void app_main(void)
     initCnfs();
 
     // Init buttons and touch pads
-    gpio_num_t pushButtons[] = {
-        GPIO_BTN_UP,    // Up
-        GPIO_BTN_DOWN,  // Down
-        GPIO_BTN_LEFT,  // Left
-        GPIO_BTN_RIGHT, // Right
-        GPIO_NUM_16,    // A
-        GPIO_NUM_15,    // B
-        GPIO_NUM_8,     // Start
-        GPIO_NUM_5      // Select
-    };
-    touch_pad_t touchPads[] = {
-        TOUCH_PAD_NUM9,  // GPIO_NUM_9
-        TOUCH_PAD_NUM10, // GPIO_NUM_10
-        TOUCH_PAD_NUM11, // GPIO_NUM_11
-        TOUCH_PAD_NUM12, // GPIO_NUM_12
-        TOUCH_PAD_NUM13, // GPIO_NUM_13
-        TOUCH_PAD_NUM14, // GPIO_NUM_14
-    };
-    initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
-                sizeof(touchPads) / sizeof(touchPads[0]));
+    initButtons(pushButtons, ARRAY_SIZE(pushButtons), touchPads, ARRAY_SIZE(touchPads));
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,

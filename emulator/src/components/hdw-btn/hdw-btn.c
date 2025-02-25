@@ -60,14 +60,37 @@ static int32_t lastTouchIntensity = 0;
  */
 void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads)
 {
-    buttonState = 0;
-    buttonQueue = calloc(1, sizeof(list_t));
+    initPushButtons(pushButtons, numPushButtons);
+    initTouchSensor(touchPads, numTouchPads, 0.2f, true);
 }
 
 /**
  * @brief Free memory used by the buttons
  */
 void deinitButtons(void)
+{
+    deinitPushButtons();
+    deinitTouchSensor();
+}
+
+/**
+ * @brief Initialize pushbuttons
+ *
+ * @param pushButtons A list of GPIOs with pushbuttons to initialize. The list should be in the same order as
+ * ::buttonBit_t, starting at ::PB_UP
+ * @param numPushButtons The number of pushbuttons to initialize
+ */
+void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons)
+{
+    buttonState = 0;
+    buttonQueue = calloc(1, sizeof(list_t));
+}
+
+/**
+ * @brief Deinitialize push buttons
+ *
+ */
+void deinitPushButtons(void)
 {
     // Check the queue
     void* val;
@@ -80,6 +103,27 @@ void deinitButtons(void)
     }
     clear(buttonQueue);
     free(buttonQueue);
+}
+
+/**
+ * @brief Initialize touchpads
+ *
+ * @param _touchPads A list of touch areas that make up a touchpad to initialize.
+ * @param _numTouchPads The number of touch buttons to initialize
+ * @param touchPadSensitivity The sensitivity to set for these touchpads
+ * @param denoiseEnable true to denoise the input, false to use it raw
+ */
+void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity, bool denoiseEnable)
+{
+    // Do nothing
+}
+
+/**
+ * @brief Deinitialize touchpads
+ */
+void deinitTouchSensor(void)
+{
+    // Do nothing
 }
 
 /**

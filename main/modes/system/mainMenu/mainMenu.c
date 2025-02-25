@@ -23,6 +23,7 @@
 #include "mode_synth.h"
 #include "ultimateTTT.h"
 #include "pango.h"
+#include "powerMeasure.h"
 #include "sequencerMode.h"
 #include "soko.h"
 #include "mode_cGrove.h"
@@ -170,6 +171,9 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
 #ifdef CONFIG_FACTORY_TEST_NORMAL
+
+    addSingleItemToMenu(mainMenu->menu, powerMeasureMode.modeName);
+
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
@@ -393,6 +397,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == beaconMode.modeName)
         {
             switchToSwadgeMode(&beaconMode);
+        }
+        else if (label == powerMeasureMode.modeName)
+        {
+            switchToSwadgeMode(&powerMeasureMode);
         }
         else if (label == gamepadMode.modeName)
         {

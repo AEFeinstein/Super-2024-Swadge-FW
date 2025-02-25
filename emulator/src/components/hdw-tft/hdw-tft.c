@@ -193,6 +193,20 @@ void enableTFTBacklight(void)
 }
 
 /**
+ * @brief Enter or exit the TFT's sleep mode
+ *
+ * @param mode True to enter sleep mode, false to exit
+ */
+void tftEnterSleepMode(bool mode)
+{
+    tftDisabled = mode;
+    if (tftDisabled)
+    {
+        clearPxTft();
+    }
+}
+
+/**
  * @brief Set a single pixel in the display, with bounds check
  *
  * @param x The x coordinate of the pixel to set

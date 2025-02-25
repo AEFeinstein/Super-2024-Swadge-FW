@@ -94,5 +94,6 @@ esp_err_t accelPerformCal(void);
 esp_err_t accelGetSteeringAngleDegrees(int16_t* xcomp, int16_t* ycomp);
 float accelGetStdDevInCal(void);
 void accelSetRegistersAndReset(void);
+void accelPowerDown(void);
 
 #endif

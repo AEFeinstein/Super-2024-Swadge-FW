@@ -208,3 +208,8 @@ float accelGetStdDevInCal()
 {
     return 0.0f;
 }
+
+// stub
+void accelPowerDown(void)
+{
+}

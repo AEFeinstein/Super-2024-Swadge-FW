@@ -129,6 +129,7 @@ void deinitTFT(void);
 esp_err_t setTFTBacklightBrightness(uint8_t intensity);
 void disableTFTBacklight(void);
 void enableTFTBacklight(void);
+void tftEnterSleepMode(bool mode);
 
 void setPxTft(int16_t x, int16_t y, paletteColor_t px);
 paletteColor_t getPxTft(int16_t x, int16_t y);

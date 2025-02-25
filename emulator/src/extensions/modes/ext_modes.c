@@ -35,6 +35,7 @@
 #include "mode_synth.h"
 #include "modeTimer.h"
 #include "pango.h"
+#include "powerMeasure.h"
 #include "sequencerMode.h"
 #include "soko.h"
 #include "touchTest.h"
@@ -81,6 +82,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &mainMenuMode,
     &modeCredits,
     &pangoMode,
+    &powerMeasureMode,
     &sequencerMode,
     &sokoMode,
     &swadgeHeroMode,

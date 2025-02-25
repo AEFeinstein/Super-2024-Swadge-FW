@@ -346,12 +346,13 @@ do_retry:
 }
 
 /**
- * @brief Deinit the accelerometer (nothing to do)
+ * @brief Deinit the accelerometer
  *
  * @return ESP_OK
  */
 esp_err_t deInitAccelerometer(void)
 {
+    accelPowerDown();
     return ESP_OK;
 }
 
@@ -778,4 +779,14 @@ void accelSetRegistersAndReset(void)
         LSM6DSL.performCal = 1;
         LSM6DSL.fvBias[2]  = 0;
     }
+}
+
+/**
+ * @brief Power down the accelerometer and gyroscope. accelSetRegistersAndReset() must be called before using the IMU
+ * again.
+ */
+void accelPowerDown(void)
+{
+    LSM6DSLSet(LSM6DSL_CTRL1_XL, 0b00000000); // Power down Accelerometer
+    LSM6DSLSet(LSM6DSL_CTRL2_G, 0b00000000);  // Power down Gyro
 }

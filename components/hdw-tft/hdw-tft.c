@@ -291,6 +291,35 @@ void deinitTFT(void)
 }
 
 /**
+ * @brief Enter or exit the TFT's sleep mode
+ *
+ * @param mode True to enter sleep mode, false to exit
+ */
+void tftEnterSleepMode(bool mode)
+{
+    if (mode)
+    {
+        esp_lcd_panel_io_tx_param(tft_io_handle, 0x10, NULL, 0); // Enter Sleep Mode
+        // It will be necessary to wait 5msec before sending next to command, this is to allow time for the supply
+        // voltages and clock circuits to stabilize.
+        vTaskDelay(5 / portTICK_PERIOD_MS);
+
+        // Disable the backlight
+        disableTFTBacklight();
+    }
+    else
+    {
+        esp_lcd_panel_io_tx_param(tft_io_handle, 0x11, NULL, 0); // Exit Sleep Mode
+        // It will be necessary to wait 5msec before sending next to command, this is to allow time for the supply
+        // voltages and clock circuits to stabilize.
+        vTaskDelay(5 / portTICK_PERIOD_MS);
+
+        // Enable the backlight
+        enableTFTBacklight();
+    }
+}
+
+/**
  * @brief Return the pixel framebuffer, which is (TFT_WIDTH * TFT_HEIGHT) pixels
  * in row order, starting from the top left. This can be used t directly modify
  * individual pixels without calling ::setPxTft()
