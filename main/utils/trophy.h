@@ -59,11 +59,13 @@
  * - Progress: Each time the trophy is updated, it takes the highest value and uses that. This is best for trophies that
  * are expected to be completed in a single run, such as farthest distance climbed in a race or highest amount of coins
  * collected per life.
+ * - Task List: When a trophy is updated, it sets bits based on task ID. This allows unique tasks to be separated off,
+ * such as visiting all games or collecting all types of gems, not just a quantity of gems.
  *
  * A special "All trophies gotten" trophy is automatically generated when the first standard trophy is generated.
  *
  * It is encouraged for developers to equate all trophies values to add up to 1000. The default trophy has a value of
- * 100, leaving 900 to be divide by all other trophies. Any points over 1000 earned by a mode will result in 
+ * 100, leaving 900 to be divide by all other trophies. Any points over 1000 earned by a mode will result in
  *
  * \section trophy_update Updating the Trophy
  *
@@ -155,6 +157,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "wsgPalette.h"
+#include "fs_font.h"
 
 //==============================================================================
 // Defines
@@ -164,6 +168,7 @@
 #define TROPHY_MAX_TITLE_LEN 24
 #define TROPHY_MAX_DESC_LEN  96
 #define TROPHY_MAX_WSG_LEN   24
+#define TROPHY_MAX_BANNERS   5
 
 //==============================================================================
 // Enum
@@ -180,22 +185,27 @@ typedef enum
 // Structs
 //==============================================================================
 
-// TODO: Determine if there's a better way (read: not storing a string) to pull WSGs.
-// TODO: Find size of NVS to see how fast these will fill it up.
-// - 157 Bytes
-// - Usable NVS space is ~8kb
-// - If only using NVS for trophies, max num of trophies would be 50. Unacceptable.
-// TODO: See if SPIFFS can be used to save some of this data.
+// Individual Trophy data objects (Possibly unnecessary)
 typedef struct
 {
     char title[TROPHY_MAX_TITLE_LEN];      //< Name of the Trophy, used as ID
     char description[TROPHY_MAX_DESC_LEN]; //< Short description of task required
     char imageString[TROPHY_MAX_WSG_LEN];  //< String leading to the .wsg file.
     trophyTypes_t type;                    //< Type of trophy. See "trophy.h" for descriptions
-    int8_t points;                         //< How many points the trophy is worth
-    int currentValue;                      //< Current status of the trophy
-    int maxValue;                          //< The value that
+    // FIXME: Needs to be a difficult rating, for auto point assignment
+    int8_t points;    //< How many points the trophy is worth
+    int currentValue; //< Current status of the trophy
+    int maxValue;     //< The value that
 } trophy_t;
+
+typedef struct
+{
+    bool drawFromBottom;      //< If banner should be drawn from the bottom of the screen
+    int32_t drawMaxDuration;  //< How long the banner will be drawn fully extended
+    bool animated;            //< If being animated to slide in and out
+    int32_t slideMaxDuration; //< How long the banner will take to slide in and out
+    bool silent;
+} trophySettings_t;
 
 //==============================================================================
 // Functions
@@ -212,23 +222,7 @@ typedef struct
  * @param animate If the banner should scroll into view
  * @param scrollSpeed Time in tenths of a second for banner to appear. Default is half a second (5)
  */
-void trophySystemInit(bool bottom, int displayDuration, bool animate, int scrollSpeed);
-
-/**
- * @brief Loads the selected font into the struct
- *
- * @param font String name of the font to load
- *
- * @note Should only be used in Swadge initialization. Not for general use.
- */
-void trophySystemSetFont(char* font);
-
-/**
- * @brief Clears out the font from the struct. Possibly unnecessary.
- *
- * @note Should only be used in Swadge de-initialization. Not for general use.
- */
-void trophySystemClearFont(void);
+void trophySystemInit(trophySettings_t* settings);
 
 /**
  * @brief Loads the current number of points
@@ -315,10 +309,10 @@ trophy_t trophyGetData(char* modeName, char* title);
  * @brief Draws the banner if one is queued
  *
  * @param modeName Name of the mode being used
- * @param title Title of the trophy
+ * @param fnt Font to be used
  * @param elapsedUs TIme since last frame
  */
-void trophyDraw(char* modeName, char* title, int64_t elapsedUs);
+void trophyDraw(char* modeName, font_t* fnt, int64_t elapsedUs);
 
 /**
  * @brief Changes the colors of the default list of trophies.
@@ -337,6 +331,6 @@ void trophyDrawListInit(void);
 void trophyDrawList(char* modeName, int idx);
 
 // TEST ONLY
-void trophyDrawDataDirectly(trophy_t t, int y);
+void trophyDrawDataDirectly(trophy_t t, int y, font_t* fnt);
 void loadImage(int idx, char* string);
 void unloadImage(int idx);

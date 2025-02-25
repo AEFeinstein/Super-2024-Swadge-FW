@@ -249,6 +249,11 @@ static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
 
+/// @brief System font
+static font_t sysFont;
+/// @brief System notification sound
+static midiFile_t sysSound;
+
 //==============================================================================
 // Function declarations
 //==============================================================================
@@ -394,10 +399,18 @@ void app_main(void)
     static int64_t tLastLoopUs = 0;
     tLastLoopUs                = esp_timer_get_time();
 
+    // Initialize system font and trophy-get sound
+    loadFont("ibm_vga8.font", &sysFont, true);
+    loadMidiFile("block1.mid", &sysSound, true); // FIXME: Need new sound. Temp sound picked
+
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
     {
         cSwadgeMode->fnEnterMode();
+        if (NULL != cSwadgeMode->tSettings)
+        {
+            trophySystemInit(cSwadgeMode->tSettings);
+        }
     }
 
     // Run the main loop, forever
@@ -515,6 +528,12 @@ void app_main(void)
                 cSwadgeMode = modeBehindQuickSettings;
             }
 
+            // If trophies are not null, draw
+            if (NULL != cSwadgeMode->tSettings)
+            {
+                trophyDraw(cSwadgeMode->modeName, &sysFont, tElapsedUs);
+            }
+
             // Draw to the TFT
             drawDisplayTft(cSwadgeMode->fnBackgroundDrawCallback);
         }
@@ -613,6 +632,10 @@ static void initOptionalPeripherals(void)
  */
 void deinitSystem(void)
 {
+    // Deinit font and sfx
+    freeFont(&sysFont);
+    unloadMidiFile(&sysSound);
+
     // Deinit the swadge mode
     if (NULL != cSwadgeMode->fnExitMode)
     {
@@ -738,6 +761,10 @@ void softSwitchToPendingSwadge(void)
         if (NULL != cSwadgeMode->fnEnterMode)
         {
             cSwadgeMode->fnEnterMode();
+            if (NULL != cSwadgeMode->tSettings)
+            {
+                trophySystemInit(cSwadgeMode->tSettings);
+            }
         }
 
         // Reenable the TFT backlight
@@ -879,4 +906,22 @@ void switchToMicrophone(void)
     // Initialize and start the mic as a continuous ADC
     initMic(GPIO_NUM_7);
     startMic();
+}
+
+/**
+ * @brief Get the Sys Ibm Font. Font is pre-loaded fto ensure a font is always available for devs to use.
+ *
+ */
+font_t* getSysFont(void)
+{
+    return &sysFont;
+}
+
+/**
+ * @brief Returns the system sound to be used
+ *
+ */
+midiFile_t* getSysSound(void)
+{
+    return &sysSound;
 }

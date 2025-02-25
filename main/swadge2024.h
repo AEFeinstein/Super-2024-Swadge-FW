@@ -218,6 +218,7 @@
 #include "touchUtils.h"
 #include "vectorFl2d.h"
 #include "geometryFl.h"
+#include "trophy.h"
 
 // Sound utilities
 #include "soundFuncs.h"
@@ -347,6 +348,11 @@ typedef struct
      * globalMidiPlayerFillBuffer() will be used instead to fill sample buffers
      */
     fnDacCallback_t fnDacCb;
+
+    /**
+     * @brief A struct with the settings for trophy behavior. Set to NULL for no trophies
+     */
+    trophySettings_t* tSettings;
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);
@@ -362,5 +368,9 @@ uint32_t getFrameRateUs(void);
 
 void switchToSpeaker(void);
 void switchToMicrophone(void);
+
+// Getters
+font_t* getSysFont(void);
+midiFile_t* playSysSound(void);
 
 #endif
