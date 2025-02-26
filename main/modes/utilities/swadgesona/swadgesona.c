@@ -43,6 +43,8 @@ static void exitMode (void) {
 }
 
 static void runMode (int64_t elapsedUs){
-    //This is where things go
+    //This is where things go state machine/vending machine
+
     
 }
+
