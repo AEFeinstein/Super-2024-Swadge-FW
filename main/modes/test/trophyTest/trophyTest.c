@@ -22,20 +22,16 @@
 
 static const char trophyModeName[] = "TrophyTest";
 
-static const char* const trophyNames[]
-    = {"Locked Trophy", "Unlocked Trophy", "Test2", "Test3", "Test4", "Test5", "Test6", "Test7", "Test8", "Test9"};
-static const char* const trophyDescs[] = {"This one shows a locked trophy.",
-                                          "This one is unlocked!",
-                                          "Test2 Description",
-                                          "Test3 Description",
-                                          "Test4 Description",
-                                          "Test5 Description",
-                                          "Test6 Description",
-                                          "Test7 Description",
-                                          "Test8 Description",
-                                          "Test9 Description"};
-static const char* const trophyWSGs[]  = {"kid0.wsg",  "Test1.wsg", "Test2.wsg", "Test3.wsg", "Test4.wsg",
-                                          "Test5.wsg", "Test6.wsg", "Test7.wsg", "Test8.wsg", "Test9.wsg"};
+// Trophy Data example
+static const char* const trophyNames[] = {"Locked Trophy", "Unlocked Trophy"};
+static const char* const trophyDescs[] = {
+    "This one shows a locked trophy.",
+    "This one is unlocked!",
+};
+static const char* const trophyWSGs[]        = {"kid0.wsg", "Test1.wsg"};
+static const trophyTypes_t trophyTypes[]     = {TROPHY_TYPE_TRIGGER, TROPHY_TYPE_ADDITIVE};
+static const trophyDifficulty_t trophyDiff[] = {TROPHY_DIFF_EASY, TROPHY_DIFF_HARD};
+static const int32_t trophyMaxVals[]         = {1, 32};
 
 //==============================================================================
 // Structs
@@ -78,6 +74,10 @@ static void initTrophy(void);
 trophySettings_t tSettings
     = {.animated = true, .drawFromBottom = true, .silent = false, .drawMaxDuration = 500, .slideMaxDuration = 200};
 
+trophyData_t trophyTestData
+    = {.length = 2, .names = trophyNames, .descriptions = trophyDescs, .wsgs = trophyWSGs, 
+        .types = trophyTypes, .difficulty = trophyDiff, .maxVals = trophyMaxVals};
+
 swadgeMode_t trophyTestMode = {.modeName                 = trophyModeName,
                                .wifiMode                 = NO_WIFI,
                                .overrideUsb              = false,
@@ -92,8 +92,7 @@ swadgeMode_t trophyTestMode = {.modeName                 = trophyModeName,
                                .fnEspNowRecvCb           = NULL,
                                .fnEspNowSendCb           = NULL,
                                .fnAdvancedUSB            = NULL,
-                               .tSettings                = &tSettings
-};
+                               .tSettings                = &tSettings};
 
 static trophyTest_t* tt;
 
@@ -104,8 +103,6 @@ static trophyTest_t* tt;
 static void enterTrophy()
 {
     tt = (trophyTest_t*)heap_caps_calloc(1, sizeof(trophyTest_t), MALLOC_CAP_8BIT);
-
-    // trophyInit(trophyModeName, trophyNames[0], trophyWSGs[0], trophyDescs[0], TROPHY_TYPE_ADDITIVE, 10, 20);
 
     // Load a specific set of values to check if it works.
     strcpy(tt->t[0].title, trophyNames[0]);

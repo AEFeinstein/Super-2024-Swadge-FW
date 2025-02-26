@@ -174,18 +174,30 @@
 // Enum
 //==============================================================================
 
+/// @brief Types of trophies the devs can instantiate
 typedef enum
 {
-    TROPHY_TYPE_TRIGGER,  //< Only needs to be triggered once (Did a handstand, found a hidden message)
-    TROPHY_TYPE_ADDITIVE, //< Each update adds to teh previous (Lifetime distance, number of cakes eaten)
-    TROPHY_TYPE_PROGRESS, //< Tracks how far a user got per update (How long player survived, how far player ran)
+    TROPHY_TYPE_TRIGGER,   //< Only needs to be triggered once (Did a handstand, found a hidden message)
+    TROPHY_TYPE_ADDITIVE,  //< Each update adds to teh previous (Lifetime distance, number of cakes eaten)
+    TROPHY_TYPE_PROGRESS,  //< Tracks how far a user got per update (How long player survived, how far player ran)
+    TROPHY_TYPE_CHECKLIST, //< Each bit is a flag for a specific action. Repeating actions does not increment.
+                           //< (Used for collecting different objects, like chaos emeralds)
 } trophyTypes_t;
+
+/// @brief Dev inferred difficulty of achieving, used to distribute points.
+typedef enum
+{
+    TROPHY_DIFF_EASY,
+    TROPHY_DIFF_MEDIUM,
+    TROPHY_DIFF_HARD,
+    TROPHY_DIFF_EXTREME,
+} trophyDifficulty_t;
 
 //==============================================================================
 // Structs
 //==============================================================================
 
-// Individual Trophy data objects (Possibly unnecessary)
+/// @brief Individual Trophy data objects (Possibly unnecessary)
 typedef struct
 {
     char title[TROPHY_MAX_TITLE_LEN];      //< Name of the Trophy, used as ID
@@ -198,6 +210,7 @@ typedef struct
     int maxValue;     //< The value that
 } trophy_t;
 
+/// @brief Settings for the trophy system
 typedef struct
 {
     bool drawFromBottom;      //< If banner should be drawn from the bottom of the screen
@@ -206,6 +219,18 @@ typedef struct
     int32_t slideMaxDuration; //< How long the banner will take to slide in and out
     bool silent;
 } trophySettings_t;
+
+/// @brief The data object dev hands to the trophy showcase that contains all the const data.
+typedef struct
+{
+    int32_t length; //< Length of the trophy arrays
+    char* names;
+    char* descriptions;
+    char* wsgs;
+    trophyTypes_t* types;
+    trophyDifficulty_t* difficulty;
+    int32_t* maxVals;
+} trophyData_t;
 
 //==============================================================================
 // Functions

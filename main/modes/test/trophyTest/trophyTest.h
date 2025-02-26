@@ -21,4 +21,5 @@
 // Externs
 //==============================================================================
 
+extern trophyData_t trophyTestData;
 extern swadgeMode_t trophyTestMode;

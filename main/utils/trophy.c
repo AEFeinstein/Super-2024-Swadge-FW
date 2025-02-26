@@ -229,6 +229,10 @@ void trophySystemInit(trophySettings_t* settings)
             }
         }
     }
+
+    // Draw defaults unless re-called by dev
+    // FIXME: Add default values
+    trophyDrawListInit();
 }
 
 int trophySystemGetPoints(char* modeName)
