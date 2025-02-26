@@ -4,6 +4,10 @@
 
 #include "powerMeasure.h"
 
+#define PM_IMPLEMENTATION
+#include "pm_led.h"
+#undef PM_IMPLEMENTATION
+
 //==============================================================================
 // Defines
 //==============================================================================
@@ -16,14 +20,6 @@
 // Structs
 //==============================================================================
 
-typedef struct
-{
-    menu_t* menu;
-    menuManiaRenderer_t* renderer;
-    font_t ibm;
-    bool isMeasuring;
-} powerMeasure_t;
-
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -35,10 +31,6 @@ void powerMeasureEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uin
 void powerMeasureEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 void powerMeasureMenuCb(const char* label, bool selected, uint32_t value);
 void powerMeasureAudioCallback(uint16_t* samples, uint32_t sampleCnt);
-
-void startLedMeasurement(void);
-void turnPeripheralsOff(void);
-void turnPeripheralsOn(void);
 
 //==============================================================================
 // Constant Variables
@@ -111,6 +103,10 @@ void powerMeasureEnterMode(void)
     addSingleItemToMenu(pm->menu, pmMenuEspNow);
     addSingleItemToMenu(pm->menu, pmMenuLSleep);
     addSingleItemToMenu(pm->menu, pmMenuDSleep);
+
+    // Max brightness!
+    setLedBrightnessSetting(MAX_LED_BRIGHTNESS);
+    setTftBrightnessSetting(MAX_TFT_BRIGHTNESS);
 }
 
 /**
@@ -141,10 +137,24 @@ void powerMeasureMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        pm->menu = menuButton(pm->menu, evt);
+        if (pm->cMode)
+        {
+            pm->cMode->fnBtnCb(&evt, pm);
+        }
+        else
+        {
+            pm->menu = menuButton(pm->menu, evt);
+        }
     }
 
-    drawMenuMania(pm->menu, pm->renderer, elapsedUs);
+    if (pm->cMode)
+    {
+        pm->cMode->fnMainLoop(elapsedUs, pm);
+    }
+    else
+    {
+        drawMenuMania(pm->menu, pm->renderer, elapsedUs);
+    }
 }
 
 /**
@@ -185,14 +195,12 @@ void powerMeasureMenuCb(const char* label, bool selected, uint32_t value)
     // If the menu item was selected
     if (selected)
     {
-        if (pm->isMeasuring)
+        // Save old mode
+        pmMode_t* oldMode = pm->cMode;
+
+        if (label == pmMenuLeds)
         {
-            turnPeripheralsOn();
-            pm->isMeasuring = false;
-        }
-        else if (label == pmMenuLeds)
-        {
-            startLedMeasurement();
+            pm->cMode = &pmLed_mode;
         }
         else if (label == pmMenuTft)
         {
@@ -215,7 +223,13 @@ void powerMeasureMenuCb(const char* label, bool selected, uint32_t value)
         else if (label == pmMenuDSleep)
         {
         }
-        return;
+
+        // If the mode changed
+        if (oldMode != pm->cMode)
+        {
+            // Enter the new mode
+            pm->cMode->fnEnterMode(pm);
+        }
     }
 }
 
@@ -286,14 +300,4 @@ void turnPeripheralsOn(void)
 
     // TODO Touchpad
     // initTouchSensor();
-}
-
-/**
- * @brief Start a sequence to measure power while different LEDs are on
- *
- */
-void startLedMeasurement(void)
-{
-    pm->isMeasuring = true;
-    turnPeripheralsOff();
 }
