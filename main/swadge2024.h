@@ -349,6 +349,9 @@ typedef struct
     fnDacCallback_t fnDacCb;
 } swadgeMode_t;
 
+extern const gpio_num_t pushButtons[8];
+extern const touch_pad_t touchPads[6];
+
 bool checkButtonQueueWrapper(buttonEvt_t* evt);
 
 void switchToSwadgeMode(swadgeMode_t* mode);

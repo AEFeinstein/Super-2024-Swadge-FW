@@ -121,13 +121,13 @@ typedef struct
     uint32_t time;      ///!< The time of this event, in us since boot
 } buttonEvt_t;
 
-void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads);
+void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons, const touch_pad_t* touchPads, uint8_t numTouchPads);
 void deinitButtons(void);
 
-void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons);
+void initPushButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons);
 void deinitPushButtons(void);
 
-void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity, bool denoiseEnable);
+void initTouchSensor(const touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity, bool denoiseEnable);
 void deinitTouchSensor(void);
 
 bool checkButtonQueue(buttonEvt_t*);

@@ -231,7 +231,7 @@
 //==============================================================================
 
 /** A list of GPIOs for the pushbuttons */
-static const gpio_num_t pushButtons[] = {
+const gpio_num_t pushButtons[8] = {
     GPIO_BTN_UP,    // Up
     GPIO_BTN_DOWN,  // Down
     GPIO_BTN_LEFT,  // Left
@@ -243,7 +243,7 @@ static const gpio_num_t pushButtons[] = {
 };
 
 /** A list of GPIOs for the touchpads */
-static const touch_pad_t touchPads[] = {
+const touch_pad_t touchPads[6] = {
     TOUCH_PAD_NUM9,  // GPIO_NUM_9
     TOUCH_PAD_NUM10, // GPIO_NUM_10
     TOUCH_PAD_NUM11, // GPIO_NUM_11

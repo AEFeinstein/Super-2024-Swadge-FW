@@ -6,6 +6,7 @@
 
 #define PM_IMPLEMENTATION
 #include "pm_led.h"
+#include "pm_deep_sleep.h"
 #undef PM_IMPLEMENTATION
 
 //==============================================================================
@@ -222,6 +223,7 @@ void powerMeasureMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (label == pmMenuDSleep)
         {
+            pm->cMode = &pmDeepSleep_mode;
         }
 
         // If the mode changed
