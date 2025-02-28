@@ -36,31 +36,7 @@ static swadgeMode_t* getRandomSwadgeMode(void);
      | sed -E 's/(.*);/\&\1,/g' | grep -v quickSettings | sort
 */
 // clang-format off
-static swadgeMode_t* allSwadgeModes[] = {
-    &accelTestMode,
-    &bigbugMode,
-    &bongoTest,
-    &cGroveMode,
-    &colorchordMode,
-    &danceMode,
-    &factoryTestMode,
-    &gamepadMode,
-    &introMode,
-    &jukeboxMode,
-    &keebTestMode,
-    &mainMenuMode,
-    &modeCredits,
-    &pangoMode,
-    &sequencerMode,
-    &sokoMode,
-    &swadgeHeroMode,
-    &synthMode,
-    &t48Mode,
-    &timerMode,
-    &touchTestMode,
-    &tttMode,
-    &tunernomeMode,
-};
+
 // clang-format on
 
 emuExtension_t modesEmuExtension = {
@@ -140,13 +116,13 @@ void modesPreFrameCb(uint64_t frame)
 
 swadgeMode_t** emulatorGetSwadgeModes(int* count)
 {
-    *count = ARRAY_SIZE(allSwadgeModes);
+    *count = swadgeModeCount();
     return allSwadgeModes;
 }
 
 swadgeMode_t* emulatorFindSwadgeMode(const char* name)
 {
-    for (uint8_t i = 0; i < ARRAY_SIZE(allSwadgeModes); i++)
+    for (uint8_t i = 0; i < swadgeModeCount(); i++)
     {
         if (!strncmp(allSwadgeModes[i]->modeName, name, strlen(name)))
         {
@@ -159,7 +135,7 @@ swadgeMode_t* emulatorFindSwadgeMode(const char* name)
 
 swadgeMode_t* getRandomSwadgeMode(void)
 {
-    return allSwadgeModes[rand() % ARRAY_SIZE(allSwadgeModes)];
+    return allSwadgeModes[rand() % swadgeModeCount()];
 }
 
 bool emulatorSetSwadgeModeByName(const char* name)

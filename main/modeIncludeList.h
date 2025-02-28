@@ -1,3 +1,5 @@
+/*!*/
+
 // Mode Includes
 /*
  Quickly regenerate with:
@@ -28,3 +30,7 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "ultimateTTT.h"
+
+int swadgeModeCount(void);
+
+extern swadgeMode_t* allSwadgeModes[];
