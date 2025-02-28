@@ -20,7 +20,7 @@ swadgeMode_t* allSwadgeModes[] = {
 // Functions
 //==============================================================================
 
-int swadgeModeCount()
+int modeLiseGetCount()
 {
     return ARRAY_SIZE(allSwadgeModes);
 }

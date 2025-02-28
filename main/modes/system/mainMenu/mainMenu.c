@@ -316,7 +316,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     if (selected)
     {
         // These items enter other modes, so they must be selected
-        for (int i = 0; i < swadgeModeCount(); i++)
+        for (int i = 0; i < modeLiseGetCount(); i++)
         {
             swadgeMode_t* current = allSwadgeModes[i];
             if (label == current->modeName)
