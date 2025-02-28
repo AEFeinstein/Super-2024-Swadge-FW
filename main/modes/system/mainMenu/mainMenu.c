@@ -147,34 +147,8 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
 #ifdef CONFIG_FACTORY_TEST_NORMAL
-    // Add single items
-    mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
-    addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, swadgeHeroMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, pangoMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, cGroveMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
-    addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
-    mainMenu->menu = endSubMenu(mainMenu->menu);
-
-    mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
-    addSingleItemToMenu(mainMenu->menu, sequencerMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, bongoTest.modeName);
-    addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
-    mainMenu->menu = endSubMenu(mainMenu->menu);
-
-    mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
-    addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
-    mainMenu->menu = endSubMenu(mainMenu->menu);
-
-    addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
+    // Iniitalize all the modes in modeList
+    modeListSetMenu(mainMenu->menu);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -342,99 +316,15 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     if (selected)
     {
         // These items enter other modes, so they must be selected
-        if (label == accelTestMode.modeName)
+        for (int i = 0; i < swadgeModeCount(); i++)
         {
-            switchToSwadgeMode(&accelTestMode);
+            swadgeMode_t* current = allSwadgeModes[i];
+            if (label == current->modeName)
+            {
+                switchToSwadgeMode(current);
+            }
         }
-        else if (label == colorchordMode.modeName)
-        {
-            switchToSwadgeMode(&colorchordMode);
-        }
-        else if (label == sequencerMode.modeName)
-        {
-            switchToSwadgeMode(&sequencerMode);
-        }
-        else if (label == synthMode.modeName)
-        {
-            switchToSwadgeMode(&synthMode);
-        }
-        else if (label == danceMode.modeName)
-        {
-            switchToSwadgeMode(&danceMode);
-        }
-        else if (label == factoryTestMode.modeName)
-        {
-            switchToSwadgeMode(&factoryTestMode);
-        }
-        else if (label == gamepadMode.modeName)
-        {
-            switchToSwadgeMode(&gamepadMode);
-        }
-        else if (label == introMode.modeName)
-        {
-            switchToSwadgeMode(&introMode);
-        }
-        else if (label == jukeboxMode.modeName)
-        {
-            switchToSwadgeMode(&jukeboxMode);
-        }
-        else if (label == mainMenuMode.modeName)
-        {
-            switchToSwadgeMode(&mainMenuMode);
-        }
-        else if (label == modeCredits.modeName)
-        {
-            switchToSwadgeMode(&modeCredits);
-        }
-        else if (label == bigbugMode.modeName)
-        {
-            switchToSwadgeMode(&bigbugMode);
-        }
-        else if (label == sokoMode.modeName)
-        {
-            switchToSwadgeMode(&sokoMode);
-        }
-        else if (label == tttMode.modeName)
-        {
-            switchToSwadgeMode(&tttMode);
-        }
-        else if (label == swadgeHeroMode.modeName)
-        {
-            switchToSwadgeMode(&swadgeHeroMode);
-        }
-        else if (label == pangoMode.modeName)
-        {
-            switchToSwadgeMode(&pangoMode);
-        }
-        else if (label == cGroveMode.modeName)
-        {
-            switchToSwadgeMode(&cGroveMode);
-        }
-        else if (label == timerMode.modeName)
-        {
-            switchToSwadgeMode(&timerMode);
-        }
-        else if (label == touchTestMode.modeName)
-        {
-            switchToSwadgeMode(&touchTestMode);
-        }
-        else if (label == keebTestMode.modeName)
-        {
-            switchToSwadgeMode(&keebTestMode);
-        }
-        else if (label == tunernomeMode.modeName)
-        {
-            switchToSwadgeMode(&tunernomeMode);
-        }
-        else if (label == t48Mode.modeName)
-        {
-            switchToSwadgeMode(&t48Mode);
-        }
-        else if (label == bongoTest.modeName)
-        {
-            switchToSwadgeMode(&bongoTest);
-        }
-        else if (label == confirmResetName)
+        if (label == confirmResetName)
         {
             if (eraseNvs())
             {

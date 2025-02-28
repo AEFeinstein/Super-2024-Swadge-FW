@@ -33,4 +33,6 @@
 
 int swadgeModeCount(void);
 
+void modeListSetMenu(menu_t* menu);
+
 extern swadgeMode_t* allSwadgeModes[];
