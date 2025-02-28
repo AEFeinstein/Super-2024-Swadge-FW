@@ -131,7 +131,7 @@
  * }
  * \endcode
  *
- * The ::swadgeMode_t should be declared as \c extern in a header file so that it can be referenced in the main menu
+ * The ::swadgeMode_t should be declared as \c extern in a header file so that it can be referenced in other modes.
  * \code{.c}
  * #ifndef _DEMO_MODE_H_
  * #define _DEMO_MODE_H_
@@ -143,19 +143,18 @@
  * #endif
  * \endcode
  *
- * Add the mode to the menu initializer in mainMenuEnterMode():
+ * Add the   modeIncludeList.h:
  * \code{.c}
  * #include "demoMode.h"
- *
- * addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
  * \endcode
  *
- * Add the mode to the selector logic in mainMenuCb():
+ * Add the mode to the menu initializer and mode list in modeIncludeList.c:
  * \code{.c}
- * else if (label == demoMode.modeName)
- * {
- *     switchToSwadgeMode(&demoMode);
- * }
+ * // add the following to the allSwadgeModes array, make sure to seperate by a comma
+ * &demoMode
+ *
+ * // In modeListSetMenu(). Add to the appropriate section.
+ * addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
  * \endcode
  */
 
