@@ -366,4 +366,6 @@ uint32_t getFrameRateUs(void);
 void switchToSpeaker(void);
 void switchToMicrophone(void);
 
+void enterSwadgepassSleep(void);
+
 #endif

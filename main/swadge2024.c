@@ -154,7 +154,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.4/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
  * Datasheet</a>
@@ -171,6 +171,7 @@
 #include <esp_timer.h>
 #include <esp_log.h>
 #include <esp_sleep.h>
+#include <driver/rtc_io.h>
 #include <rom/usb/usb_persist.h>
 #include <rom/usb/chip_usb_dw_wrapper.h>
 #include <soc/rtc_cntl_reg.h>
@@ -257,10 +258,13 @@ const touch_pad_t touchPads[6] = {
 //==============================================================================
 
 /// @brief The current Swadge mode
-static swadgeMode_t* cSwadgeMode = &mainMenuMode;
+static swadgeMode_t* cSwadgeMode = NULL;
 
 /// @brief A pending Swadge mode to use after a deep sleep
 static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
+
+/// @brief TODO
+static RTC_DATA_ATTR bool swadgepassSleep = false;
 
 /// @brief Flag set if the quick settings should be shown synchronously
 static bool shouldShowQuickSettings = false;
@@ -285,6 +289,7 @@ static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_
 static void setSwadgeMode(void* swadgeMode);
 static void initOptionalPeripherals(void);
 static void dacCallback(uint8_t* samples, int16_t len);
+static void wakeFromDeepSleep(void);
 
 //==============================================================================
 // Functions
@@ -295,6 +300,57 @@ static void dacCallback(uint8_t* samples, int16_t len);
  */
 void app_main(void)
 {
+    // TODO why isnt swadgepassSleep sticking?
+    // if (swadgepassSleep)
+    // {
+    //     enterSwadgepassSleep();
+    // }
+    enterSwadgepassSleep();
+
+    switch (esp_sleep_get_wakeup_cause())
+    {
+        case ESP_SLEEP_WAKEUP_TIMER: // Wakeup caused by timer
+        {
+            // If the ESP woke from sleep, and there is a pending Swadge Mode
+            if (NULL != pendingSwadgeMode)
+            {
+                // Use the pending mode
+                cSwadgeMode       = pendingSwadgeMode;
+                pendingSwadgeMode = NULL;
+            }
+            else if (swadgepassSleep)
+            {
+                // TODO skip init, go back to sleep
+                swadgepassSleep = false;
+
+                enterSwadgepassSleep();
+            }
+            break;
+        }
+        case ESP_SLEEP_WAKEUP_EXT1: // Wakeup caused by external signal using RTC_CNTL
+        {
+            // TODO pushbutton from deep sleep
+            break;
+        }
+        default:
+        case ESP_SLEEP_WAKEUP_UNDEFINED:       // In case of deep sleep: reset was not caused by exit from deep sleep
+        case ESP_SLEEP_WAKEUP_ALL:             // Not a wakeup cause: used to disable all wakeup sources with
+                                               // esp_sleep_disable_wakeup_source
+        case ESP_SLEEP_WAKEUP_EXT0:            // Wakeup caused by external signal using RTC_IO
+        case ESP_SLEEP_WAKEUP_TOUCHPAD:        // Wakeup caused by touchpad
+        case ESP_SLEEP_WAKEUP_ULP:             // Wakeup caused by ULP program
+        case ESP_SLEEP_WAKEUP_GPIO:            // Wakeup caused by GPIO (light sleep only on ESP32: S2 and S3)
+        case ESP_SLEEP_WAKEUP_UART:            // Wakeup caused by UART (light sleep only)
+        case ESP_SLEEP_WAKEUP_WIFI:            // Wakeup caused by WIFI (light sleep only)
+        case ESP_SLEEP_WAKEUP_COCPU:           // Wakeup caused by COCPU int
+        case ESP_SLEEP_WAKEUP_COCPU_TRAP_TRIG: // Wakeup caused by COCPU crash
+        case ESP_SLEEP_WAKEUP_BT:              // Wakeup caused by BT (light sleep only)
+        {
+            // Invalid?
+            break;
+        }
+    }
+
     // Make sure there isn't a pin conflict
     if (GPIO_SAO_1 != GPIO_NUM_17)
     {
@@ -310,38 +366,33 @@ void app_main(void)
     // Read settings from NVS
     readAllSettings();
 
+    if (NULL == cSwadgeMode)
+    {
 #ifdef CONFIG_FACTORY_TEST_NORMAL
-    // If test mode was passed
-    if (getTutorialCompletedSetting())
-    {
-        // Show the main menu
-        cSwadgeMode = &mainMenuMode;
-    }
-    else if (getTestModePassedSetting())
-    {
-        // Start the out-of-box experience / tutorial
-        cSwadgeMode = &introMode;
-    }
+        // If test mode was passed
+        if (getTutorialCompletedSetting())
+        {
+            // Show the main menu
+            cSwadgeMode = &mainMenuMode;
+        }
+        else if (getTestModePassedSetting())
+        {
+            // Start the out-of-box experience / tutorial
+            cSwadgeMode = &introMode;
+        }
 #else
-    // If test mode was passed
-    if (getTestModePassedSetting())
-    {
-        // Show the main menu
-        cSwadgeMode = &mainMenuMode;
-    }
+        // If test mode was passed
+        if (getTestModePassedSetting())
+        {
+            // Show the main menu
+            cSwadgeMode = &mainMenuMode;
+        }
 #endif
-    else
-    {
-        // Otherwise enter test mode
-        cSwadgeMode = &factoryTestMode;
-    }
-
-    // If the ESP woke from sleep, and there is a pending Swadge Mode
-    if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
-    {
-        // Use the pending mode
-        cSwadgeMode       = pendingSwadgeMode;
-        pendingSwadgeMode = NULL;
+        else
+        {
+            // Otherwise enter test mode
+            cSwadgeMode = &factoryTestMode;
+        }
     }
 
     // Init USB if not overridden by the mode. This also sets up USB printf
@@ -886,4 +937,51 @@ void switchToMicrophone(void)
     // Initialize and start the mic as a continuous ADC
     initMic(GPIO_NUM_7);
     startMic();
+}
+
+/**
+ * @brief TODO
+ * 
+ */
+void enterSwadgepassSleep(void)
+{
+    // Set RTC boolean to be read after waking
+    swadgepassSleep = true;
+
+    // Wake when a button is pressed
+    uint64_t ioMask = 0;
+    for (int32_t pbIdx = 0; pbIdx < ARRAY_SIZE(pushButtons); pbIdx++)
+    {
+        ioMask |= (1 << pushButtons[pbIdx]);
+        rtc_gpio_pullup_en(pushButtons[pbIdx]);
+        rtc_gpio_pulldown_dis(pushButtons[pbIdx]);
+    }
+    esp_sleep_enable_ext1_wakeup_io(ioMask, ESP_EXT1_WAKEUP_ANY_LOW);
+
+    // TODO worth isolating any GPIO?
+    // rtc_gpio_isolate(gpio);
+
+    // Wake in five seconds
+    esp_sleep_enable_timer_wakeup(1000 * 1000 * 5);
+
+    // Disable some logging
+    esp_deep_sleep_disable_rom_logging();
+
+    // Set function to fix GPIO after waking
+    esp_set_deep_sleep_wake_stub(wakeFromDeepSleep);
+
+    // Sleep
+    esp_deep_sleep_start();
+}
+
+/**
+ * @brief TODO
+ * 
+ */
+static void wakeFromDeepSleep(void)
+{
+    for (int32_t pbIdx = 0; pbIdx < ARRAY_SIZE(pushButtons) / 2; pbIdx++)
+    {
+        rtc_gpio_deinit(pushButtons[pbIdx]);
+    }
 }
