@@ -15,7 +15,7 @@
  * Currently, there's three categories: Games, Music, and Utilities. Add a new mode to the correct section of the
  * modeListSetMenu() to avoid causing confusion.
  *
- * Devs can also get the count of mode via the modeLiseGetCount() function, which just returns the count of items in the
+ * Devs can also get the count of mode via the modeListGetCount() function, which just returns the count of items in the
  * allSwadgeModes array.
  */
 
