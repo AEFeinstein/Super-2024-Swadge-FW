@@ -62,7 +62,7 @@
  *
  * @return int num of modes
  */
-int modeLiseGetCount(void);
+int modeListGetCount(void);
 
 /**
  * @brief Iniitalizes a menu with all the current swadge modes
@@ -75,4 +75,4 @@ void modeListSetMenu(menu_t* menu);
 // Externs
 //==============================================================================
 
-extern swadgeMode_t* allSwadgeModes[];
+extern const swadgeMode_t* allSwadgeModes[];

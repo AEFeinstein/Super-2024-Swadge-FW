@@ -116,13 +116,13 @@ void modesPreFrameCb(uint64_t frame)
 
 swadgeMode_t** emulatorGetSwadgeModes(int* count)
 {
-    *count = modeLiseGetCount();
+    *count = modeListGetCount();
     return allSwadgeModes;
 }
 
 swadgeMode_t* emulatorFindSwadgeMode(const char* name)
 {
-    for (uint8_t i = 0; i < modeLiseGetCount(); i++)
+    for (uint8_t i = 0; i < modeListGetCount(); i++)
     {
         if (!strncmp(allSwadgeModes[i]->modeName, name, strlen(name)))
         {
@@ -135,7 +135,7 @@ swadgeMode_t* emulatorFindSwadgeMode(const char* name)
 
 swadgeMode_t* getRandomSwadgeMode(void)
 {
-    return allSwadgeModes[rand() % modeLiseGetCount()];
+    return allSwadgeModes[rand() % modeListGetCount()];
 }
 
 bool emulatorSetSwadgeModeByName(const char* name)
