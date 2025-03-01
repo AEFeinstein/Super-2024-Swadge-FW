@@ -80,7 +80,8 @@ static int getBaseTouchVals(int32_t* data, int count);
  * @param touchPads A list of touch areas that make up a touchpad to initialize.
  * @param numTouchPads The number of touch buttons to initialize
  */
-void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons, const touch_pad_t* touchPads, uint8_t numTouchPads)
+void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons, const touch_pad_t* touchPads,
+                 uint8_t numTouchPads)
 {
     // create a queue to handle polling GPIO from ISR
     btn_evt_queue = xQueueCreate(3 * (numPushButtons + numTouchPads), sizeof(timedEvt_t));
@@ -294,7 +295,8 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
  * @param touchPadSensitivity The sensitivity to set for these touchpads
  * @param denoiseEnable true to denoise the input, false to use it raw
  */
-void initTouchSensor(const touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity, bool denoiseEnable)
+void initTouchSensor(const touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity,
+                     bool denoiseEnable)
 {
     ESP_LOGD("TOUCH", "Initializing touch pad");
 
