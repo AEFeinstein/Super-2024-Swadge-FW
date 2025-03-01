@@ -126,6 +126,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "utils/trigonometry.c"
                             "utils/vector2d.c"
                             "utils/wheel_menu.c"
+                            "modeIncludeList.c"
                     PRIV_REQUIRES hdw-imu
                                   hdw-battmon
                                   hdw-btn
