@@ -50,6 +50,7 @@
 #include "sequencerMode.h"
 #include "soko.h"
 #include "touchTest.h"
+#include "trophyTest.h"
 #include "tunernome.h"
 #include "ultimateTTT.h"
 
