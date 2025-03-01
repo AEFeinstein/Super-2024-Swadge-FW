@@ -75,4 +75,4 @@ void modeListSetMenu(menu_t* menu);
 // Externs
 //==============================================================================
 
-extern const swadgeMode_t* allSwadgeModes[];
+extern swadgeMode_t* const allSwadgeModes[];
