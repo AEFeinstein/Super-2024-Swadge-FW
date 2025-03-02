@@ -718,6 +718,10 @@ static void setSwadgeMode(void* swadgeMode)
     if (cSwadgeMode->fnEnterMode)
     {
         cSwadgeMode->fnEnterMode();
+        if (NULL != cSwadgeMode->tSettings)
+        {
+            trophySystemInit(cSwadgeMode->tSettings);
+        }
     }
 }
 
