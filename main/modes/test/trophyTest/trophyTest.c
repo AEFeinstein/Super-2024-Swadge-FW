@@ -65,8 +65,6 @@ static void exitTrophy(void);
  */
 static void runTrophy(int64_t elapsedUs);
 
-static void initTrophy(void);
-
 //==============================================================================
 // Variables
 //==============================================================================
@@ -74,9 +72,13 @@ static void initTrophy(void);
 trophySettings_t tSettings
     = {.animated = true, .drawFromBottom = true, .silent = false, .drawMaxDuration = 500, .slideMaxDuration = 200};
 
-trophyData_t trophyTestData
-    = {.length = 2, .names = trophyNames, .descriptions = trophyDescs, .wsgs = trophyWSGs, 
-        .types = trophyTypes, .difficulty = trophyDiff, .maxVals = trophyMaxVals};
+trophyData_t trophyTestData = {.length       = ARRAY_SIZE(trophyNames),
+                               .titles       = trophyNames,
+                               .descriptions = trophyDescs,
+                               .imageStrings = trophyWSGs,
+                               .types        = trophyTypes,
+                               .difficulty   = trophyDiff,
+                               .maxVals      = trophyMaxVals};
 
 swadgeMode_t trophyTestMode = {.modeName                 = trophyModeName,
                                .wifiMode                 = NO_WIFI,
@@ -104,8 +106,9 @@ static void enterTrophy()
 {
     tt = (trophyTest_t*)heap_caps_calloc(1, sizeof(trophyTest_t), MALLOC_CAP_8BIT);
 
+    
     // Load a specific set of values to check if it works.
-    strcpy(tt->t[0].title, trophyNames[0]);
+    /* strcpy(tt->t[0].title, trophyNames[0]);
     strcpy(tt->t[0].imageString, trophyWSGs[0]);
     strcpy(tt->t[0].description, trophyDescs[0]);
     tt->t[0].currentValue = 10;
@@ -115,13 +118,16 @@ static void enterTrophy()
     loadImage(0, tt->t[0].imageString);
 
     strcpy(tt->t[1].title, trophyNames[1]);
-    strcpy(tt->t[1].imageString, trophyWSGs[1]);
+    strcpy(tt->t[1].imageString, "");
     strcpy(tt->t[1].description, trophyDescs[1]);
     tt->t[1].currentValue = 25;
     tt->t[1].maxValue     = 25;
     tt->t[1].points       = 69;
     tt->t[1].type         = TROPHY_TYPE_ADDITIVE;
-    loadImage(1, tt->t[1].imageString);
+    loadImage(1, tt->t[1].imageString); */
+
+    trophySetValues(&tt->t[0], &trophyTestData, 0);
+    trophySetValues(&tt->t[1], &trophyTestData, 1);
 }
 
 static void exitTrophy()

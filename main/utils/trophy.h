@@ -204,10 +204,9 @@ typedef struct
     char description[TROPHY_MAX_DESC_LEN]; //< Short description of task required
     char imageString[TROPHY_MAX_WSG_LEN];  //< String leading to the .wsg file.
     trophyTypes_t type;                    //< Type of trophy. See "trophy.h" for descriptions
-    // FIXME: Needs to be a difficult rating, for auto point assignment
-    int8_t points;    //< How many points the trophy is worth
-    int currentValue; //< Current status of the trophy
-    int maxValue;     //< The value that
+    trophyDifficulty_t difficulty;         //< How many points the trophy is worth
+    int currentValue;                      //< Current status of the trophy
+    int maxValue;                          //< The value that
 } trophy_t;
 
 /// @brief Settings for the trophy system
@@ -224,9 +223,9 @@ typedef struct
 typedef struct
 {
     int32_t length; //< Length of the trophy arrays
-    char* names;
+    char* titles;
     char* descriptions;
-    char* wsgs;
+    char* imageStrings;
     trophyTypes_t* types;
     trophyDifficulty_t* difficulty;
     int32_t* maxVals;
@@ -259,18 +258,7 @@ int trophySystemGetPoints(char* modeName);
 
 // Utilize trophies
 
-/**
- * @brief Initializes a new Trophy
- *
- * @param modeName Mode to attach trophy to
- * @param title Name of the Trophy
- * @param imgStr String leading to WSG
- * @param desc String containing description of trophy
- * @param type Type of trophy. See Initialization section above
- * @param points Number of poi9nts gained by winning trophy
- * @param maxVal Value required to trigger win in non-single trigger mode
- */
-void trophyInit(char* modeName, char* title, char* imgStr, char* desc, trophyTypes_t type, int8_t points, int maxVal);
+void trophySetValues(trophy_t* trophy, trophyData_t* data, int idx);
 
 /**
  * @brief Updates specifed trophy if required

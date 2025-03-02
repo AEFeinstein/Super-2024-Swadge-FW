@@ -15,6 +15,9 @@
 
 #include "trophy.h"
 
+// C
+#include <string.h>
+
 // Hardware
 #include "hdw-nvs.h"
 #include "hdw-tft.h"
@@ -54,18 +57,18 @@ typedef struct
 {
     // Assets
     wsg_t imageArray[TROPHY_MAX_BANNERS]; //< WSGs loaded for next five trophies.
-    trophySettings_t* tSettings; //< The settings of how the trophies behave
+    trophySettings_t* tSettings;          //< The settings of how the trophies behave
 
     // Drawing
     bool active;                              //< If the mode should be drawing a banner
     trophy_t tBannerList[TROPHY_MAX_BANNERS]; //< List of banners to display.
     bool beingDrawn;                          //< If banner is currently being drawn statically
-    int32_t drawTimer;          //< Accumulates until more than Max duration
-    wsgPalette_t grayPalette;   //< Grayscale palette for locked trophies
-    wsgPalette_t normalPalette; //< Normal colors
+    int32_t drawTimer;                        //< Accumulates until more than Max duration
+    wsgPalette_t grayPalette;                 //< Grayscale palette for locked trophies
+    wsgPalette_t normalPalette;               //< Normal colors
 
     // Animation
-    bool sliding; //< If currently sliding
+    bool sliding;          //< If currently sliding
     int32_t slideTimer;    //< Accumulates until more than Max duration
     int16_t animationTick; //< What tick of the animation is active based on timer
 } trophySystem_t;
@@ -261,11 +264,15 @@ int trophySystemGetPoints(char* modeName)
 
 // Trophies
 
-void trophyInit(char* modeName, char* title, char* imgStr, char* desc, trophyTypes_t type, int8_t points, int maxVal)
+void trophySetValues(trophy_t* trophy, trophyData_t* data, int idx)
 {
-    // Check if the trophy has already been initialized to avoid overwriting
-    // Save data to NVS
-    // If first trophy (namespace doesn't exist) spawn completionist trophy
+    /* strcpy(trophy->title, data->titles[idx]);
+    strcpy(trophy->description, data->descriptions[idx]);
+    strcpy(trophy->imageString, data->imageStrings[idx]); */
+    // FIXME: Can't strcpy data, crashes. Likely has to do with the stupid const stuff.
+    trophy->type = data->types[idx];
+    trophy->difficulty = data->difficulty[idx];
+    trophy->maxValue = data->maxVals[idx];
 }
 
 void trophyUpdate(char* modeName, char* title, int value, bool drawUpdate)
@@ -455,10 +462,10 @@ static void _drawAtYCoord(trophy_t t, int yOffset, font_t* fnt)
     // Draw box (Gray box, black border)
     fillDisplayArea(0, yOffset, TFT_WIDTH, yOffset + TROPHY_BANNER_HEIGHT, c111);
     drawRect(0, yOffset, TFT_WIDTH, yOffset + TROPHY_BANNER_HEIGHT, c000);
-    // Draw image if not NULL
     int xOffset;
-    // FIXME: Limit length of title text based on if there's space and there's no numbers
-    if (t.imageString == NULL)
+    int16_t startX = TROPHY_SCREEN_CORNER_CLEARANCE;
+    int16_t startY = yOffset + ((TROPHY_BANNER_HEIGHT - TROPHY_BANNER_MAX_ICON_DIM) >> 1);
+    if (strcmp(t.imageString, ""))
     {
         // Draw text at start of buffer area
         xOffset = TROPHY_SCREEN_CORNER_CLEARANCE;
@@ -467,22 +474,23 @@ static void _drawAtYCoord(trophy_t t, int yOffset, font_t* fnt)
     {
         // Set xOffset to be 2* H_BUFFER + ICON_WIDTH
         xOffset = TROPHY_BANNER_MAX_ICON_DIM + TROPHY_SCREEN_CORNER_CLEARANCE + TROPHY_IMAGE_BUFFER;
-    }
-    // Draw Image + shadowbox
-    int16_t startX = TROPHY_SCREEN_CORNER_CLEARANCE;
-    int16_t startY = yOffset + ((TROPHY_BANNER_HEIGHT - TROPHY_BANNER_MAX_ICON_DIM) >> 1);
-    drawRectFilled(startX, startY, startX + TROPHY_BANNER_MAX_ICON_DIM, startY + TROPHY_BANNER_MAX_ICON_DIM, c222);
+        
+        // Draw shadowbox
+        drawRectFilled(startX, startY, startX + TROPHY_BANNER_MAX_ICON_DIM, startY + TROPHY_BANNER_MAX_ICON_DIM, c222);
 
-    // Draw WSG
-    wsgPalette_t* wp = &tSystem.grayPalette;
-    if (t.currentValue >= t.maxValue)
-    {
-        wp = &tSystem.normalPalette;
+        // Draw WSG
+        wsgPalette_t* wp = &tSystem.grayPalette;
+        if (t.currentValue >= t.maxValue)
+        {
+            wp = &tSystem.normalPalette;
+        }
+        drawWsgPaletteSimple(&tSystem.imageArray[0],
+                             startX + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].w) >> 1),
+                             startY + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].h) >> 1), wp);
     }
-    drawWsgPaletteSimple(&tSystem.imageArray[0], startX + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].w) >> 1),
-                         startY + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].h) >> 1), wp);
 
     // Draw text, starting after image if present
+    // FIXME: Limit length of title text based on if there's space and there's no numbers
     drawText(fnt, c555, t.title, xOffset, yOffset + 4); // Title
     startX = xOffset;
     startY = yOffset + 20;
