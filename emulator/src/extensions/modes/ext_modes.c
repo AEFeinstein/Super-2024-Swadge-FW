@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 
+<<<<<<< HEAD
 // Mode Includes
 /*
  Quickly regenerate with:
@@ -40,6 +41,9 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "ultimateTTT.h"
+=======
+#include "modeIncludeList.h"
+>>>>>>> main
 
 //==============================================================================
 // Defines
@@ -65,6 +69,7 @@ static swadgeMode_t* getRandomSwadgeMode(void);
      | sed -E 's/(.*);/\&\1,/g' | grep -v quickSettings | sort
 */
 // clang-format off
+<<<<<<< HEAD
 static swadgeMode_t* allSwadgeModes[] = {
     &accelTestMode,
     &bigbugMode,
@@ -91,6 +96,9 @@ static swadgeMode_t* allSwadgeModes[] = {
     &tttMode,
     &tunernomeMode,
 };
+=======
+
+>>>>>>> main
 // clang-format on
 
 emuExtension_t modesEmuExtension = {
@@ -170,13 +178,13 @@ void modesPreFrameCb(uint64_t frame)
 
 swadgeMode_t** emulatorGetSwadgeModes(int* count)
 {
-    *count = ARRAY_SIZE(allSwadgeModes);
+    *count = modeListGetCount();
     return allSwadgeModes;
 }
 
 swadgeMode_t* emulatorFindSwadgeMode(const char* name)
 {
-    for (uint8_t i = 0; i < ARRAY_SIZE(allSwadgeModes); i++)
+    for (uint8_t i = 0; i < modeListGetCount(); i++)
     {
         if (!strncmp(allSwadgeModes[i]->modeName, name, strlen(name)))
         {
@@ -189,7 +197,7 @@ swadgeMode_t* emulatorFindSwadgeMode(const char* name)
 
 swadgeMode_t* getRandomSwadgeMode(void)
 {
-    return allSwadgeModes[rand() % ARRAY_SIZE(allSwadgeModes)];
+    return allSwadgeModes[rand() % modeListGetCount()];
 }
 
 bool emulatorSetSwadgeModeByName(const char* name)

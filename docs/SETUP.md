@@ -39,10 +39,14 @@ The continuous integration for this project runs on a Windows instance. This mea
 6. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
     * `C:\msys64\usr\bin`
-    
+
     You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. When it's all set up, it should look something like this:
     
     <img src="./win_path.png">
+
+    If the above doesn't work try adding `C:\msys64\mingw64\bin` and `C:\msys64\usr\bin` to the system path instead of the user path. The System path is highlighted in red, and the user path in purple. 
+
+    <img src="./Correct_path.jpg">
 
 6. Clone the ESP-IDF v5.2.3 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
 Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe

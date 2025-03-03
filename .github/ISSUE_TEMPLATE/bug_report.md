@@ -7,25 +7,25 @@ assignees: ''
 
 ---
 
-**Description**
-_A clear and concise description of what the bug is._
+## Description
+<!-- A clear and concise description of what the bug is. -->
 
-**Expected behavior**
-_A clear and concise description of what you expected to happen._
+## Expected behavior
+<!-- A clear and concise description of what you expected to happen. -->
 
-**Reproduction Steps**
-_Steps to reproduce the behavior and how often it occurs._
+## Reproduction Steps
+<!-- Steps to reproduce the behavior and how often it occurs. -->
 
-**Screenshots**
-_If applicable, add screenshots to help explain your problem._
+## Screenshots
+<!-- If applicable, add screenshots to help explain your problem. -->
 
-**Logs**
-_If applicable, add logs from when the problem occurred._
+## Logs
+<!-- If applicable, add logs from when the problem occurred. -->
 
-**Affected Version**
- - Platform: [Windows, Linux, and/or Firmware]
- - git branch: [e.g. `main`]
- - git hash: [e.g. a2a1a77 ]
+## Affected Version
+ - Platform: <!-- [Windows, Linux, and/or Firmware] -->
+ - git branch: <!-- [e.g. `main`] -->
+ - git hash: <!-- [e.g. a2a1a77 ] -->
 
-**Additional Notes**
-_Add any other notes about the problem_
+## Additional Notes
+<!-- Add any other notes about the problem -->
