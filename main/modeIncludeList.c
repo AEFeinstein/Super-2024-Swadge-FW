@@ -13,7 +13,7 @@ swadgeMode_t* const allSwadgeModes[] = {
     &accelTestMode,   &bigbugMode,  &bongoTest,     &cGroveMode,  &colorchordMode, &danceMode,
     &factoryTestMode, &gamepadMode, &introMode,     &jukeboxMode, &keebTestMode,   &mainMenuMode,
     &modeCredits,     &pangoMode,   &sequencerMode, &sokoMode,    &swadgeHeroMode, &synthMode,
-    &t48Mode,         &timerMode,   &touchTestMode, &tttMode,     &tunernomeMode,
+    &t48Mode,         &timerMode,   &touchTestMode, &tttMode,     &tunernomeMode,  &swadgesonaMode,
 };
 
 //==============================================================================
@@ -53,6 +53,7 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, gamepadMode.modeName);
     addSingleItemToMenu(menu, danceMode.modeName);
     addSingleItemToMenu(menu, timerMode.modeName);
+    addSingleItemToMenu(menu, swadgesonaMode.modeName);
     addSingleItemToMenu(menu, introMode.modeName);
     menu = endSubMenu(menu);
 

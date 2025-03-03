@@ -1,13 +1,14 @@
 #include "swadgesona.h"
 
 #define MAX_MARKINGS 2
-#define MAX_STR_LEN 17
+#define MAX_STR_LEN  17
 
 const char swadgesonaName[] = "Swadgesona";
 
 static void enterMode(void);
 static void exitMode(void);
 static void runMode(int64_t elapsedUs);
+static void draw(void);
 
 typedef enum
 {
@@ -43,6 +44,9 @@ typedef struct
 typedef struct
 {
     /* data */
+    wsg_t test; // file type for images is wsg
+    bool isDisplaying;
+
 } swadgesonaMode_t;
 
 swadgeMode_t swadgesonaMode = {
@@ -67,14 +71,34 @@ static swadgesonaMode_t* SS;
 static void enterMode(void)
 {
     SS = (swadgesonaMode_t*)heap_caps_calloc(1, sizeof(swadgesonaMode_t), MALLOC_CAP_8BIT);
+    loadWsg("midi.wsg", &SS->test, true);
 }
 
 static void exitMode(void)
 {
+    freeWsg(&SS->test);
     heap_caps_free(SS);
 }
 
-static void runMode(int64_t elapsedUs)
+static void runMode(int64_t elapsedUs) // microseconds since the last time it looped
 {
     // This is where things go state machine/vending machine
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if(evt.down && evt.button & PB_A){ // && means both ! means false
+            SS->isDisplaying = !SS->isDisplaying;
+        }
+    }
+
+    draw(); // does not require something in the paren
+}
+
+static void draw()
+{
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c222);
+    if(SS->isDisplaying){
+        drawWsgSimple(&SS->test, 120, 120);
+    }
+    
 }

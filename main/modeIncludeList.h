@@ -49,6 +49,7 @@
 #include "pango.h"
 #include "sequencerMode.h"
 #include "soko.h"
+#include "swadgesona.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "ultimateTTT.h"
