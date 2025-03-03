@@ -1,3 +1,7 @@
+// TODO menu visible on side with sub menus
+// TODO swadgesona display on background as we edit
+// TODO save swadgesona to nvs
+
 #include "swadgesona.h"
 
 #define MAX_MARKINGS 2
@@ -9,6 +13,13 @@ static void enterMode(void);
 static void exitMode(void);
 static void runMode(int64_t elapsedUs);
 static void draw(void);
+
+typedef enum
+{
+    MENU,
+    LUIGI,
+    DONKEY,
+} states_t;
 
 typedef enum
 {
@@ -46,6 +57,8 @@ typedef struct
     /* data */
     wsg_t test; // file type for images is wsg
     bool isDisplaying;
+    states_t state;
+    int8_t index; //number for position in menu
 
 } swadgesonaMode_t;
 
@@ -66,12 +79,13 @@ swadgeMode_t swadgesonaMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-static swadgesonaMode_t* SS;
+static swadgesonaMode_t* SS; // initializing
 
 static void enterMode(void)
 {
     SS = (swadgesonaMode_t*)heap_caps_calloc(1, sizeof(swadgesonaMode_t), MALLOC_CAP_8BIT);
     loadWsg("midi.wsg", &SS->test, true);
+    SS->state = MENU;
 }
 
 static void exitMode(void)
@@ -84,10 +98,46 @@ static void runMode(int64_t elapsedUs) // microseconds since the last time it lo
 {
     // This is where things go state machine/vending machine
     buttonEvt_t evt;
-    while (checkButtonQueueWrapper(&evt))
+    switch (SS->state)
     {
-        if(evt.down && evt.button & PB_A){ // && means both ! means false
-            SS->isDisplaying = !SS->isDisplaying;
+        case MENU: // what we do in the menu
+        {
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                { 
+                    if (evt.button == PB_A)
+                    {
+
+                    }
+                    else if (evt.button == PB_B)
+                    {
+
+                    } 
+                    else if (evt.button == PB_UP)
+                    {
+                        SS->index -= 1;
+                    } 
+                    else if (evt.button == PB_DOWN)
+                    {
+                        SS->index += 1;
+                    } 
+                    else if (evt.button == PB_LEFT)
+                    {
+
+                    } 
+                    else if (evt.button == PB_RIGHT)
+                    {
+
+                    } 
+                }
+            }
+            break;
+        }
+
+        default:
+        {
+            break;
         }
     }
 
@@ -97,8 +147,8 @@ static void runMode(int64_t elapsedUs) // microseconds since the last time it lo
 static void draw()
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c222);
-    if(SS->isDisplaying){
+    if (SS->isDisplaying)
+    {
         drawWsgSimple(&SS->test, 120, 120);
     }
-    
 }
