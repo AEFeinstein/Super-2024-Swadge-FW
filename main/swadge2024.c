@@ -880,3 +880,39 @@ void switchToMicrophone(void)
     initMic(GPIO_NUM_7);
     startMic();
 }
+
+/**
+ * @brief Power down all hardware peripherals
+ */
+void powerDownPeripherals(void)
+{
+    powerDownBattmon();
+    powerDownButtons();
+    powerDownDac();
+    powerDownEspNow();
+    powerDownAccel();
+    powerDownLed();
+    powerDownMic();
+    powerDownNvs();
+    powerDownTemperatureSensor();
+    powerDownTft();
+    powerDownUsb();
+}
+
+/**
+ * @brief Power up all hardware peripherals
+ */
+void powerUpPeripherals(void)
+{
+    powerUpBattmon();
+    powerUpButtons();
+    powerUpDac();
+    powerUpEspNow();
+    powerUpAccel();
+    powerUpLed();
+    powerUpMic();
+    powerUpNvs();
+    powerUpTemperatureSensor();
+    powerUpTft();
+    powerUpUsb();
+}

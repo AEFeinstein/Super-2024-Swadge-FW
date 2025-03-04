@@ -99,6 +99,8 @@ typedef void (*fnDacCallback_t)(uint8_t* samples, int16_t len);
 
 void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb);
 void deinitDac(void);
+void powerDownDac(void);
+void powerUpDac(void);
 void dacPoll(void);
 void dacStart(void);
 void dacStop(void);

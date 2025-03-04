@@ -113,6 +113,22 @@ void deinitButtons(void)
 }
 
 /**
+ * @brief Power down the battery monitor component
+ */
+void powerDownButtons(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpButtons(void)
+{
+    // TODO LPM
+}
+
+/**
  * @brief Service the queue of button events that caused interrupts
  * This only returns a single event, even if there are multiple in the queue
  * This function may be called multiple times in a row to completely empty the queue

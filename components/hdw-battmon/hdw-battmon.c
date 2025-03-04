@@ -95,6 +95,22 @@ void deinitBattmon(void)
 }
 
 /**
+ * @brief Power down the battery monitor component
+ */
+void powerDownBattmon(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpBattmon(void)
+{
+    // TODO LPM
+}
+
+/**
  * @brief Read and return the battery voltage
  *
  * @return The voltage if read, or -1 if there was an error

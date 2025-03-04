@@ -38,6 +38,22 @@ void deinitTemperatureSensor(void)
 }
 
 /**
+ * @brief Power down the battery monitor component
+ */
+void powerDownTemperatureSensor(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpTemperatureSensor(void)
+{
+    // TODO LPM
+}
+
+/**
  * @brief Get a temperature reading from the ESP's onboard temperature sensor, in Celsius
  *
  * @return A floating point temperature, or -274 if not read

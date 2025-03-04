@@ -252,6 +252,42 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
 }
 
 /**
+ * This function is called to de-initialize ESP-NOW
+ */
+void deinitEspNow(void)
+{
+    if (isSerial)
+    {
+        uart_driver_delete(uartNum);
+    }
+    else
+    {
+        esp_now_unregister_recv_cb();
+        esp_now_unregister_send_cb();
+        esp_now_del_peer(espNowBroadcastMac);
+        esp_now_deinit();
+        esp_wifi_stop();
+        esp_wifi_deinit();
+    }
+}
+
+/**
+ * @brief Power down the battery monitor component
+ */
+void powerDownEspNow(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpEspNow(void)
+{
+    // TODO LPM
+}
+
+/**
  * Start wifi and use it for communication
  * @return ESP_OK or an error that occurred
  */
@@ -625,24 +661,4 @@ static void espNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
     }
 
     hostEspNowSendCb(mac_addr, status);
-}
-
-/**
- * This function is called to de-initialize ESP-NOW
- */
-void deinitEspNow(void)
-{
-    if (isSerial)
-    {
-        uart_driver_delete(uartNum);
-    }
-    else
-    {
-        esp_now_unregister_recv_cb();
-        esp_now_unregister_send_cb();
-        esp_now_del_peer(espNowBroadcastMac);
-        esp_now_deinit();
-        esp_wifi_stop();
-        esp_wifi_deinit();
-    }
 }

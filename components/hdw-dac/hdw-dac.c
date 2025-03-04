@@ -134,6 +134,22 @@ void deinitDac(void)
 }
 
 /**
+ * @brief Power down the battery monitor component
+ */
+void powerDownDac(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpDac(void)
+{
+    // TODO LPM
+}
+
+/**
  * @brief Start the DAC. This will cause samples to be requested from the application.
  */
 void dacStart(void)

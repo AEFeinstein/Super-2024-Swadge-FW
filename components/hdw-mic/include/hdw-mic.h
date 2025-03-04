@@ -94,5 +94,7 @@ void startMic(void);
 uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax);
 void stopMic(void);
 void deinitMic(void);
+void powerDownMic(void);
+void powerUpMic(void);
 
 #endif
