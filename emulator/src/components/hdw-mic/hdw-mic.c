@@ -39,6 +39,22 @@ void initMic(gpio_num_t gpio)
 }
 
 /**
+ * @brief
+ */
+void powerDownMic(void)
+{
+    ; // TODO LPM
+}
+
+/**
+ * @brief
+ */
+void powerUpMic(void)
+{
+    ; // TODO LPM
+}
+
+/**
  * @brief Start sampling the microphone's ADC
  */
 void startMic(void)

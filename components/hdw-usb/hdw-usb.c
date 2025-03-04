@@ -210,6 +210,22 @@ void deinitUsb(void)
 }
 
 /**
+ * @brief Power down the battery monitor component
+ */
+void powerDownUsb(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpUsb(void)
+{
+    // TODO LPM
+}
+
+/**
  * @brief Send a USB gamepad report to the system
  *
  * @param report The report to send, the current state of all gamepad inputs

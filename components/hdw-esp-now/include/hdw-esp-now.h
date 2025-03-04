@@ -126,6 +126,9 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
                      uart_port_t uart, wifiMode_t wifiMode);
 void deinitEspNow(void);
 
+void powerDownEspNow(void);
+void powerUpEspNow(void);
+
 esp_err_t espNowUseWireless(void);
 void espNowUseSerial(bool crossoverPins);
 

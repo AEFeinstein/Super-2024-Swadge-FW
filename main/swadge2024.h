@@ -362,4 +362,7 @@ uint32_t getFrameRateUs(void);
 void switchToSpeaker(void);
 void switchToMicrophone(void);
 
+void powerDownPeripherals(void);
+void powerUpPeripherals(void);
+
 #endif

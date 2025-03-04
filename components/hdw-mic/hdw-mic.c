@@ -79,6 +79,35 @@ void initMic(gpio_num_t gpio)
 }
 
 /**
+ * @brief Deinitialize the ADC which continuously samples the microphone
+ */
+void deinitMic(void)
+{
+    if (adc_handle)
+    {
+        stopMic();
+        ESP_ERROR_CHECK(adc_continuous_deinit(adc_handle));
+        adc_handle = NULL;
+    }
+}
+
+/**
+ * @brief Power down the battery monitor component
+ */
+void powerDownMic(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpMic(void)
+{
+    // TODO LPM
+}
+
+/**
  * @brief Start sampling the microphone's ADC
  */
 void startMic(void)
@@ -132,18 +161,5 @@ void stopMic(void)
     if (adc_handle)
     {
         ESP_ERROR_CHECK(adc_continuous_stop(adc_handle));
-    }
-}
-
-/**
- * @brief Deinitialize the ADC which continuously samples the microphone
- */
-void deinitMic(void)
-{
-    if (adc_handle)
-    {
-        stopMic();
-        ESP_ERROR_CHECK(adc_continuous_deinit(adc_handle));
-        adc_handle = NULL;
     }
 }

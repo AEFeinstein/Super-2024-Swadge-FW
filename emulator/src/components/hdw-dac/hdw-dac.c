@@ -44,6 +44,22 @@ void deinitDac(void)
 }
 
 /**
+ * @brief
+ */
+void powerDownDac(void)
+{
+    ; // TODO LPM
+}
+
+/**
+ * @brief
+ */
+void powerUpDac(void)
+{
+    ; // TODO LPM
+}
+
+/**
  * @brief TODO
  *
  */

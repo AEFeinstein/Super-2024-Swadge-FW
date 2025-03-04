@@ -83,6 +83,22 @@ void deinitButtons(void)
 }
 
 /**
+ * @brief
+ */
+void powerDownButtons(void)
+{
+    ; // TODO LPM
+}
+
+/**
+ * @brief
+ */
+void powerUpButtons(void)
+{
+    ; // TODO LPM
+}
+
+/**
  * @brief Service the queue of button events that caused interrupts
  * This only reutrns a single event, even if there are multiple in the queue
  * This function may be called multiple times in a row to completely empty the queue

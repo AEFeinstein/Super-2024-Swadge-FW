@@ -123,6 +123,8 @@ typedef struct
 
 void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads);
 void deinitButtons(void);
+void powerDownButtons(void);
+void powerUpButtons(void);
 bool checkButtonQueue(buttonEvt_t*);
 
 int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity);

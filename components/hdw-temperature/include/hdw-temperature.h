@@ -25,6 +25,8 @@
 
 void initTemperatureSensor(void);
 void deinitTemperatureSensor(void);
+void powerDownTemperatureSensor(void);
+void powerUpTemperatureSensor(void);
 float readTemperatureSensor(void);
 
 #endif

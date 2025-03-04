@@ -126,6 +126,8 @@ typedef void (*fnSetSwadgeMode)(void* mode);
 
 void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHandler, bool redirectPrintf);
 void deinitUsb(void);
+void powerDownUsb(void);
+void powerUpUsb(void);
 void sendUsbGamepadReport(hid_gamepad_report_t* report);
 void usbSetSwadgeMode(void* newMode);
 void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor);

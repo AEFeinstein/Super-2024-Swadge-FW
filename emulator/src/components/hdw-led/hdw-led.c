@@ -43,6 +43,22 @@ esp_err_t deinitLeds(void)
 }
 
 /**
+ * @brief
+ */
+void powerDownLed(void)
+{
+    ; // TODO LPM
+}
+
+/**
+ * @brief
+ */
+void powerUpLed(void)
+{
+    ; // TODO LPM
+}
+
+/**
  * @brief Set the global LED brightness
  *
  * @param brightness 0 (off) to MAX_LED_BRIGHTNESS (max bright)

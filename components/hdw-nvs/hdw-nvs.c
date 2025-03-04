@@ -86,6 +86,22 @@ bool deinitNvs(void)
 }
 
 /**
+ * @brief Power down the battery monitor component
+ */
+void powerDownNvs(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpNvs(void)
+{
+    // TODO LPM
+}
+
+/**
  * @brief Erase and re-initialize the nonvolatile storage
  *
  * @return true if NVS was erased and re-initialized and can be used, false if it failed

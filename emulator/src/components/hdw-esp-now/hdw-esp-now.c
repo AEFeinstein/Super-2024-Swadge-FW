@@ -150,6 +150,22 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
 }
 
 /**
+ * @brief
+ */
+void powerDownEspNow(void)
+{
+    ; // TODO LPM
+}
+
+/**
+ * @brief
+ */
+void powerUpEspNow(void)
+{
+    ; // TODO LPM
+}
+
+/**
  * Start wifi and use it for communication
  */
 esp_err_t espNowUseWireless(void)

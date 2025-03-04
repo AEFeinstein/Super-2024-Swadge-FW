@@ -356,6 +356,22 @@ esp_err_t deInitAccelerometer(void)
 }
 
 /**
+ * @brief Power down the battery monitor component
+ */
+void powerDownAccel(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpAccel(void)
+{
+    // TODO LPM
+}
+
+/**
  * @brief Read all pending samples in IMU and perform a sensor fusion pass
  *
  * @return ESP_OK if successful, or nonzero if error.

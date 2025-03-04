@@ -26,6 +26,22 @@ void deinitTemperatureSensor(void)
 }
 
 /**
+ * @brief
+ */
+void powerDownTemperatureSensor(void)
+{
+    ; // TODO LPM
+}
+
+/**
+ * @brief
+ */
+void powerUpTemperatureSensor(void)
+{
+    ; // TODO LPM
+}
+
+/**
  * @brief Get a temperature reading from the ESP's onboard temperature sensor
  *
  * @return A floating point temperature, or -274 if not read

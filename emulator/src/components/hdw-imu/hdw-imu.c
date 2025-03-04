@@ -59,6 +59,22 @@ esp_err_t deInitAccelerometer(void)
 }
 
 /**
+ * @brief
+ */
+void powerDownAccel(void)
+{
+    ; // TODO LPM
+}
+
+/**
+ * @brief
+ */
+void powerUpAccel(void)
+{
+    ; // TODO LPM
+}
+
+/**
  * @brief Read and return the 16-bit step counter
  *
  * Note that this can be configured with ::QMA7981_REG_STEP_CONF_0 through ::QMA7981_REG_STEP_CONF_3

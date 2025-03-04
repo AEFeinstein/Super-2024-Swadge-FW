@@ -64,6 +64,8 @@
 
 bool initNvs(bool firstTry);
 bool deinitNvs(void);
+void powerDownNvs(void);
+void powerUpNvs(void);
 bool eraseNvs(void);
 bool readNvs32(const char* key, int32_t* outVal);
 bool writeNvs32(const char* key, int32_t val);

@@ -96,6 +96,22 @@ esp_err_t deinitLeds(void)
 }
 
 /**
+ * @brief Power down the battery monitor component
+ */
+void powerDownLed(void)
+{
+    // TODO LPM
+}
+
+/**
+ * @brief Power up the battery monitor component
+ */
+void powerUpLed(void)
+{
+    // TODO LPM
+}
+
+/**
  * @brief Set the global LED brightness. setLedBrightnessSetting() should be called instead if the new volume should be
  * persistent through a reboot.
  *
