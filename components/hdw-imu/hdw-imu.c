@@ -95,7 +95,9 @@ typedef enum __attribute__((packed))
 // Variables
 //==============================================================================
 
-LSM6DSLData LSM6DSL;
+static LSM6DSLData LSM6DSL;
+static gpio_num_t _sda;
+static gpio_num_t _scl;
 
 //==============================================================================
 // Static Function Prototypes
@@ -266,6 +268,11 @@ esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup
 {
     int i;
     int retry = 0;
+
+    // Save GPIOs for deinit
+    _sda = sda;
+    _scl = scl;
+
 do_retry:
 
     gpio_config_t gsetup = {
@@ -353,6 +360,17 @@ do_retry:
 esp_err_t deInitAccelerometer(void)
 {
     accelPowerDown();
+
+    gpio_config_t gsetup = {
+        .pin_bit_mask = (1ULL << _sda) | (1ULL << _scl),
+        .mode         = GPIO_MODE_DISABLE,
+        .pull_up_en   = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLUP_ENABLE,
+        .intr_type    = GPIO_INTR_DISABLE,
+    };
+
+    gpio_config(&gsetup);
+
     return ESP_OK;
 }
 

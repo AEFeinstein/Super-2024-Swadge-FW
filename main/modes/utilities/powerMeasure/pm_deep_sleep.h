@@ -21,9 +21,7 @@ void pmDeepSleepEnterMode(powerMeasure_t* pm)
 
 void pmDeepSleepMainLoop(int64_t elapsedUs, powerMeasure_t* pm)
 {
-    RUN_TIMER_EVERY(pm->stateTimer, 100000, elapsedUs, {
-        enterSwadgepassSleep();
-    });
+    RUN_TIMER_EVERY(pm->stateTimer, 100000, elapsedUs, { enterSwadgepassSleep(); });
 }
 
 void pmDeepSleepBtnCb(buttonEvt_t* evt, powerMeasure_t* pm)

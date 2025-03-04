@@ -294,7 +294,7 @@ void danceMainLoop(int64_t elapsedUs)
          * The longer the sleep, the choppier the LED animations.
          * Sleeping longer than the current framerate will look worse
          */
-        esp_sleep_enable_timer_wakeup(5000000/*DEFAULT_FRAME_RATE_US*/);
+        esp_sleep_enable_timer_wakeup(5000000 /*DEFAULT_FRAME_RATE_US*/);
         esp_light_sleep_start();
     }
 }

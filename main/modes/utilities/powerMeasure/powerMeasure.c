@@ -7,6 +7,7 @@
 #define PM_IMPLEMENTATION
 #include "pm_led.h"
 #include "pm_deep_sleep.h"
+#include "pm_light_sleep.h"
 #undef PM_IMPLEMENTATION
 
 //==============================================================================
@@ -220,6 +221,7 @@ void powerMeasureMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (label == pmMenuLSleep)
         {
+            pm->cMode = &pmLightSleep_mode;
         }
         else if (label == pmMenuDSleep)
         {
@@ -245,61 +247,4 @@ void powerMeasureMenuCb(const char* label, bool selected, uint32_t value)
 void powerMeasureAudioCallback(uint16_t* samples, uint32_t sampleCnt)
 {
     return;
-}
-
-/**
- * @brief Turn everything off
- *
- */
-void turnPeripheralsOff(void)
-{
-    // Turn off LEDs
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-    setLeds(leds, CONFIG_NUM_LEDS);
-
-    // Turn off TFT
-    tftEnterSleepMode(true);
-
-    // Stop the microphone
-    stopMic();
-    deinitMic();
-
-    // Stop battery monitoring
-    deinitBattmon();
-
-    // Stop the speaker
-    globalMidiPlayerStop(true);
-    deinitGlobalMidiPlayer();
-    setDacShutdown(true);
-    deinitDac();
-
-    // Power down the accelerometer
-    accelPowerDown();
-
-    // Touchpad
-    deinitTouchSensor();
-}
-
-/**
- * @brief Turn everything on
- *
- */
-void turnPeripheralsOn(void)
-{
-    // Turn on LEDs
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-    memset(leds, 0x10, sizeof(led_t) * CONFIG_NUM_LEDS);
-    setLeds(leds, CONFIG_NUM_LEDS);
-
-    // Turn on TFT
-    tftEnterSleepMode(false);
-
-    // Turn on speaker
-    switchToSpeaker();
-
-    // Power up the accelerometer
-    accelSetRegistersAndReset();
-
-    // TODO Touchpad
-    // initTouchSensor();
 }

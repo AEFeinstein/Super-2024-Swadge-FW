@@ -611,6 +611,7 @@ void app_main(void)
 
 /**
  * @brief Initialize optional hardware peripherals for this Swadge mode
+ * Handles DAC, microphone, battery monitor, ESP-NOW, accelerometer, and thermometer
  */
 static void initOptionalPeripherals(void)
 {
@@ -938,6 +939,73 @@ void switchToMicrophone(void)
     initMic(GPIO_NUM_7);
     startMic();
 }
+
+/**
+ * @brief Turn everything off
+ *
+ */
+void turnPeripheralsOff(void)
+{
+    // Turn off LEDs
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Turn off TFT
+    tftEnterSleepMode(true);
+
+    // Stop the microphone
+    stopMic();
+    deinitMic();
+
+    // Stop battery monitoring
+    deinitBattmon();
+
+    // Stop the speaker
+    globalMidiPlayerStop(true);
+    deinitGlobalMidiPlayer();
+    setDacShutdown(true);
+    deinitDac();
+
+    // Power down the accelerometer
+    accelPowerDown();
+
+    // Touchpad
+    deinitTouchSensor();
+
+    // Wifi
+    deinitEspNow();
+}
+
+/**
+ * @brief Turn everything on
+ *
+ */
+void turnPeripheralsOn(void)
+{
+    // Turn on LEDs
+    // led_t leds[CONFIG_NUM_LEDS] = {0};
+    // memset(leds, 0x10, sizeof(led_t) * CONFIG_NUM_LEDS);
+    // setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Turn on TFT
+    tftEnterSleepMode(false);
+
+    // Touchpad
+    initTouchSensor(touchPads, ARRAY_SIZE(touchPads), 0.2f, true);
+
+    // Pushbuttons aren't disabled so they can wake from sleep
+
+    // Turn on speaker
+    // switchToSpeaker();
+    // // Power up the accelerometer
+    // accelSetRegistersAndReset();
+    // // Wifi
+    // initEspNow();
+
+    // Handles DAC, microphone, battery monitor, ESP-NOW, accelerometer, and thermometer
+    initOptionalPeripherals();
+}
+
 
 /**
  * @brief TODO
