@@ -27,7 +27,7 @@ options:
 
 ## Windows
 
-Flashing an ESP32-S2 over USB on Windows requires a specific driver to be installed. This driver only needs to be installed once. Instructions can be found in the [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-guides/dfu.html#usb-drivers-windows-only) and are copied below:
+Flashing an ESP32-S2 over USB on Windows requires a specific driver to be installed. This driver only needs to be installed once. Instructions can be found in the [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-guides/dfu.html#usb-drivers-windows-only) and are copied below:
 
 > `dfu-util` uses _libusb_ to access the device. You have to register on Windows the device with the WinUSB driver. Please see the [libusb wiki](https://github.com/libusb/libusb/wiki/Windows#How_to_use_libusb_on_Windows) for more details.
 >
@@ -38,7 +38,7 @@ Flashing an ESP32-S2 over USB on Windows requires a specific driver to be instal
 
 ## Linux
 
-The ESP-IDF Programming Guide also [specifies a udev rule for Linux](https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-guides/dfu.html#udev-rule-linux-only):
+The ESP-IDF Programming Guide also [specifies a udev rule for Linux](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-guides/dfu.html#udev-rule-linux-only):
 
 > udev is a device manager for the Linux kernel. It allows us to run `dfu-util` (and `idf.py dfu-flash`) without `sudo` for gaining access to the chip.
 > 
