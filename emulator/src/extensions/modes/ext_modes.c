@@ -50,7 +50,7 @@ emuExtension_t modesEmuExtension = {
     .fnRenderCb      = NULL,
 };
 
-static swadgeMode_t* startMode = NULL;
+static const swadgeMode_t* startMode = NULL;
 
 //==============================================================================
 // Functions
@@ -114,13 +114,13 @@ void modesPreFrameCb(uint64_t frame)
     }
 }
 
-swadgeMode_t** emulatorGetSwadgeModes(int* count)
+swadgeMode_t* const* emulatorGetSwadgeModes(int* count)
 {
     *count = modeListGetCount();
     return allSwadgeModes;
 }
 
-swadgeMode_t* emulatorFindSwadgeMode(const char* name)
+const swadgeMode_t* emulatorFindSwadgeMode(const char* name)
 {
     for (uint8_t i = 0; i < modeListGetCount(); i++)
     {
@@ -140,7 +140,7 @@ swadgeMode_t* getRandomSwadgeMode(void)
 
 bool emulatorSetSwadgeModeByName(const char* name)
 {
-    swadgeMode_t* mode = emulatorFindSwadgeMode(name);
+    const swadgeMode_t* mode = emulatorFindSwadgeMode(name);
 
     if (NULL != mode)
     {
