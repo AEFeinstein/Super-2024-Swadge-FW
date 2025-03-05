@@ -22,10 +22,12 @@
 // Variables
 //==============================================================================
 
-static rmt_channel_handle_t led_chan    = NULL;
-static rmt_encoder_handle_t led_encoder = NULL;
-static uint8_t ledBrightness            = 0;
-static led_t localLeds[CONFIG_NUM_LEDS] = {0};
+static rmt_channel_handle_t led_chan           = NULL;
+static rmt_encoder_handle_t led_encoder        = NULL;
+static uint8_t ledBrightness                   = 0;
+static led_t currentLeds[CONFIG_NUM_LEDS]      = {0};
+static led_t prePowerDownLeds[CONFIG_NUM_LEDS] = {0};
+static led_t dimmedLeds[CONFIG_NUM_LEDS]       = {0};
 
 //==============================================================================
 // Functions
@@ -96,19 +98,34 @@ esp_err_t deinitLeds(void)
 }
 
 /**
- * @brief Power down the battery monitor component
+ * @brief Power down the LEDs
  */
 void powerDownLed(void)
 {
-    // TODO LPM
+    // Save LED state
+    memcpy(prePowerDownLeds, currentLeds, sizeof(currentLeds));
+
+    // Turn LEDs off
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Flush the transaction to not glitch
+    flushLeds();
+
+    // Disable RMT
+    ESP_ERROR_CHECK(rmt_disable(led_chan));
 }
 
 /**
- * @brief Power up the battery monitor component
+ * @brief Power up the LEDs
  */
 void powerUpLed(void)
 {
-    // TODO LPM
+    // Enable RMT
+    ESP_ERROR_CHECK(rmt_enable(led_chan));
+
+    // Restore LEDs
+    setLeds(prePowerDownLeds, CONFIG_NUM_LEDS);
 }
 
 /**
@@ -143,39 +160,29 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
         numLeds = CONFIG_NUM_LEDS;
     }
 
+    // Save LED values
+    memcpy(currentLeds, leds, sizeof(led_t) * numLeds);
+
     // Fill a local copy of LEDs with brightness applied
     for (uint8_t i = 0; i < numLeds; i++)
     {
-        localLeds[i].r = (leds[i].r >> ledBrightness);
-        localLeds[i].g = (leds[i].g >> ledBrightness);
-        localLeds[i].b = (leds[i].b >> ledBrightness);
+        dimmedLeds[i].r = (leds[i].r >> ledBrightness);
+        dimmedLeds[i].g = (leds[i].g >> ledBrightness);
+        dimmedLeds[i].b = (leds[i].b >> ledBrightness);
     }
 
     // Write RGB values to LEDs
-    return rmt_transmit(led_chan, led_encoder, (uint8_t*)localLeds, numLeds * sizeof(led_t), &tx_config);
+    return rmt_transmit(led_chan, led_encoder, (uint8_t*)dimmedLeds, numLeds * sizeof(led_t), &tx_config);
 }
 
 /**
- * @brief Write the current LED state into the given array
+ * @brief Return a pointer to the current LED state, always of length `CONFIG_NUM_LEDS`
  *
- * @param[out] leds The LED array to write the state into
- * @param numLeds The maximum number of LEDs to write
- * @return uint8_t The number of LEDs actually written to the array
+ * @return A pointer to the current LED state
  */
-uint8_t getLedState(led_t* leds, uint8_t numLeds)
+const led_t* getLedState(void)
 {
-    if (NULL != leds && numLeds > 0)
-    {
-        if (numLeds > CONFIG_NUM_LEDS)
-        {
-            numLeds = CONFIG_NUM_LEDS;
-        }
-
-        memcpy(leds, localLeds, sizeof(led_t) * numLeds);
-        return numLeds;
-    }
-
-    return 0;
+    return currentLeds;
 }
 
 /**

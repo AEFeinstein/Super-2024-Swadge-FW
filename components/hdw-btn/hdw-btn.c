@@ -45,14 +45,24 @@ static uint32_t buttonStates = 0;
 /// The current state of the push buttons, used in btn_timer_isr_cb()
 static volatile uint32_t pushIsrState = 0;
 
+/// The number of buttons
+static uint8_t _numPushButtons = 0;
+/// A pointer to an array of GPIOs used for buttons
+static const gpio_num_t* _pushButtons = NULL;
+
 /// A bundle of GPIOs to read as button input
 static dedic_gpio_bundle_handle_t bundle = NULL;
 
-/// The number of configured touchpads
-static int numTouchPads;
-/// A pointer to an array of configured touchpads
-static touch_pad_t* touchPads;
-// Used in getBaseTouchVals() to get zeroed touch sensor values
+/// The number of configured touchPads
+static int _numTouchPads = 0;
+/// A pointer to an array of configured touchPads
+static const touch_pad_t* _touchPads = NULL;
+/// Touch pad sensitivity
+static float _touchPadSensitivity = 0;
+/// Touch pad denoise enable
+static bool _denoiseEnable = false;
+
+/// Used in getBaseTouchVals() to get zeroed touch sensor values
 static int32_t* baseOffsets = NULL;
 
 /// Timer handle used to periodically poll buttons
@@ -62,10 +72,10 @@ static gptimer_handle_t btnTimer = NULL;
 // Prototypes
 //==============================================================================
 
-static void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons);
+static void initPushButtons(const gpio_num_t* pushButtons, const uint8_t numPushButtons);
 static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 
-static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity,
+static void initTouchSensor(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity,
                             bool denoiseEnable);
 
 static int getTouchRawValues(uint32_t* rawValues, int maxPads);
@@ -81,10 +91,11 @@ static int getBaseTouchVals(int32_t* data, int count);
  * @param pushButtons A list of GPIOs with pushbuttons to initialize. The list should be in the same order as
  * ::buttonBit_t, starting at ::PB_UP
  * @param numPushButtons The number of pushbuttons to initialize
- * @param touchPads A list of touch areas that make up a touchpad to initialize.
+ * @param touchPads A list of touch areas that make up a touchPad to initialize.
  * @param numTouchPads The number of touch buttons to initialize
  */
-void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads)
+void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons, const touch_pad_t* touchPads,
+                 uint8_t numTouchPads)
 {
     // create a queue to handle polling GPIO from ISR
     btn_evt_queue = xQueueCreate(3 * (numPushButtons + numTouchPads), sizeof(timedEvt_t));
@@ -98,34 +109,36 @@ void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* t
  */
 void deinitButtons(void)
 {
-    ESP_ERROR_CHECK(gptimer_stop(btnTimer));
-    ESP_ERROR_CHECK(gptimer_disable(btnTimer));
-
-    ESP_ERROR_CHECK(dedic_gpio_del_bundle(bundle));
-
-    ESP_ERROR_CHECK(touch_pad_fsm_stop());
-    ESP_ERROR_CHECK(touch_pad_reset());
-    ESP_ERROR_CHECK(touch_pad_deinit());
+    powerDownButtons();
 
     vQueueDelete(btn_evt_queue);
-    heap_caps_free(touchPads);
     heap_caps_free(baseOffsets);
 }
 
 /**
- * @brief Power down the battery monitor component
+ * @brief Power down the touchpad and buttons
  */
 void powerDownButtons(void)
 {
-    // TODO LPM
+    // Disable button timer and GPIO bundle
+    ESP_ERROR_CHECK(gptimer_stop(btnTimer));
+    ESP_ERROR_CHECK(gptimer_disable(btnTimer));
+    ESP_ERROR_CHECK(dedic_gpio_del_bundle(bundle));
+
+    // Disable touch pads
+    ESP_ERROR_CHECK(touch_pad_fsm_stop());
+    ESP_ERROR_CHECK(touch_pad_reset());
+    ESP_ERROR_CHECK(touch_pad_deinit());
 }
 
 /**
- * @brief Power up the battery monitor component
+ * @brief Power up the touchpad and buttons
  */
 void powerUpButtons(void)
 {
-    // TODO LPM
+    // Reinitialize push buttons and touch sensor
+    initPushButtons(_pushButtons, _numPushButtons);
+    initTouchSensor(_touchPads, _numTouchPads, _touchPadSensitivity, _denoiseEnable);
 }
 
 /**
@@ -179,7 +192,7 @@ bool checkButtonQueue(buttonEvt_t* evt)
  * @param pushButtons A list of GPIOs to initialize as buttons
  * @param numPushButtons The number of GPIOs to initialize as buttons
  */
-static void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons)
+static void initPushButtons(const gpio_num_t* pushButtons, const uint8_t numPushButtons)
 {
     ESP_LOGD("BTN", "initializing buttons");
 
@@ -190,23 +203,32 @@ static void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons)
         return;
     }
 
+    // Save for init & deinit later
+    if (NULL != pushButtons)
+    {
+        _pushButtons    = pushButtons;
+        _numPushButtons = numPushButtons;
+    }
+
+    // Configure each GPIO
     for (uint8_t i = 0; i < numPushButtons; i++)
     {
         // Configure the GPIO
         gpio_config_t io_conf = {
+            .pin_bit_mask = 1ULL << _pushButtons[i],
             .mode         = GPIO_MODE_INPUT,
             .pull_up_en   = true,
             .pull_down_en = false,
+            .intr_type    = GPIO_INTR_DISABLE,
         };
-        io_conf.pin_bit_mask = 1ULL << pushButtons[i];
         gpio_config(&io_conf);
     }
 
     // Create bundle, input only
     dedic_gpio_bundle_config_t bundle_config =
     {
-        .gpio_array = pushButtons,
-        .array_size = numPushButtons,
+        .gpio_array = _pushButtons,
+        .array_size = _numPushButtons,
         .flags = {
             .in_en = 1,
             .in_invert = 1,
@@ -303,37 +325,38 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
 //==============================================================================
 
 /**
- * @brief Initialize touchpad sensors
+ * @brief Initialize touchPad sensors
  *
- * @param _touchPads A list of touchpads to initialize
- * @param _numTouchPads The number of touchpads to initialize
- * @param touchPadSensitivity The sensitivity to set for these touchpads
+ * @param touchPads A list of touchPads to initialize
+ * @param numTouchPads The number of touchPads to initialize
+ * @param touchPadSensitivity The sensitivity to set for these touchPads
  * @param denoiseEnable true to denoise the input, false to use it raw
  */
-static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity,
+static void initTouchSensor(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity,
                             bool denoiseEnable)
 {
     ESP_LOGD("TOUCH", "Initializing touch pad");
 
-    /* Save the list of touchpads */
-    if (NULL == touchPads)
+    /* Save the list of touchPads */
+    if (NULL != touchPads)
     {
-        numTouchPads = _numTouchPads;
-        touchPads    = heap_caps_malloc(sizeof(touch_pad_t) * numTouchPads, MALLOC_CAP_8BIT);
-        memcpy(touchPads, _touchPads, (sizeof(touch_pad_t) * numTouchPads));
+        _numTouchPads        = numTouchPads;
+        _touchPads           = touchPads;
+        _touchPadSensitivity = touchPadSensitivity;
+        _denoiseEnable       = denoiseEnable;
     }
 
     /* Initialize touch pad peripheral. */
     ESP_ERROR_CHECK(touch_pad_init());
 
     /* Initialize each touch pad */
-    for (uint8_t i = 0; i < numTouchPads; i++)
+    for (uint8_t i = 0; i < _numTouchPads; i++)
     {
-        ESP_ERROR_CHECK(touch_pad_config(touchPads[i]));
+        ESP_ERROR_CHECK(touch_pad_config(_touchPads[i]));
     }
 
     /* Initialize denoise if requested */
-    if (denoiseEnable)
+    if (_denoiseEnable)
     {
         /* Denoise setting at TouchSensor 0. */
         touch_pad_denoise_t denoise = {
@@ -385,14 +408,14 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
 
     /* Set thresholds */
     uint32_t touch_value;
-    for (int i = 0; i < numTouchPads; i++)
+    for (int i = 0; i < _numTouchPads; i++)
     {
         /* read benchmark value */
-        ESP_ERROR_CHECK(touch_pad_read_benchmark(touchPads[i], &touch_value));
+        ESP_ERROR_CHECK(touch_pad_read_benchmark(_touchPads[i], &touch_value));
         /* set interrupt threshold */
-        ESP_ERROR_CHECK(touch_pad_set_thresh(touchPads[i], touch_value * touchPadSensitivity));
-        ESP_LOGD("TOUCH", "touch pad [%d] base %lu, thresh %lu", touchPads[i], touch_value,
-                 (uint32_t)(touch_value * touchPadSensitivity));
+        ESP_ERROR_CHECK(touch_pad_set_thresh(_touchPads[i], touch_value * _touchPadSensitivity));
+        ESP_LOGD("TOUCH", "touch pad [%d] base %lu, thresh %lu", _touchPads[i], touch_value,
+                 (uint32_t)(touch_value * _touchPadSensitivity));
     }
 
     getTouchJoystick(0, 0, 0);
@@ -408,14 +431,14 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
  */
 static int getTouchRawValues(uint32_t* rawValues, int maxPads)
 {
-    if (maxPads > numTouchPads)
+    if (maxPads > _numTouchPads)
     {
-        maxPads = numTouchPads;
+        maxPads = _numTouchPads;
     }
     for (int i = 0; i < maxPads; i++)
     {
         // If any errors, abort.
-        if (touch_pad_read_raw_data(touchPads[i], &rawValues[i]))
+        if (touch_pad_read_raw_data(_touchPads[i], &rawValues[i]))
         {
             return 0;
         }
@@ -433,12 +456,12 @@ static int getTouchRawValues(uint32_t* rawValues, int maxPads)
  */
 int getBaseTouchVals(int32_t* data, int count)
 {
-    uint32_t curVals[numTouchPads];
-    if (getTouchRawValues(curVals, numTouchPads) == 0)
+    uint32_t curVals[_numTouchPads];
+    if (getTouchRawValues(curVals, _numTouchPads) == 0)
     {
         return 0;
     }
-    for (int i = 0; i < numTouchPads; i++)
+    for (int i = 0; i < _numTouchPads; i++)
     {
         if (curVals[i] == 0)
         {
@@ -446,22 +469,22 @@ int getBaseTouchVals(int32_t* data, int count)
         }
     }
 
-    if (count > numTouchPads)
+    if (count > _numTouchPads)
     {
-        count = numTouchPads;
+        count = _numTouchPads;
     }
 
     // curVals is valid.
     if (NULL == baseOffsets)
     {
-        baseOffsets = heap_caps_malloc(sizeof(baseOffsets[0]) * numTouchPads, MALLOC_CAP_8BIT);
-        for (int i = 0; i < numTouchPads; i++)
-        {
-            baseOffsets[i] = curVals[i] << 8;
-        }
+        baseOffsets = heap_caps_malloc(sizeof(baseOffsets[0]) * _numTouchPads, MALLOC_CAP_8BIT);
+    }
+    for (int i = 0; i < _numTouchPads; i++)
+    {
+        baseOffsets[i] = curVals[i] << 8;
     }
 
-    for (int i = 0; i < numTouchPads; i++)
+    for (int i = 0; i < _numTouchPads; i++)
     {
         int32_t base     = baseOffsets[i];
         int32_t val      = curVals[i];
@@ -588,7 +611,7 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
     }
 
 #if defined(CONFIG_HARDWARE_HOTDOG_PROTO)
-    // The prototype had a rotated touchpad, so un-rotate it
+    // The prototype had a rotated touchPad, so un-rotate it
     *phi = (*phi + 225) % 360;
 #endif
 
