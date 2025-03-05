@@ -350,7 +350,7 @@ typedef struct
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);
 
-void switchToSwadgeMode(swadgeMode_t* mode);
+void switchToSwadgeMode(const swadgeMode_t* mode);
 void softSwitchToPendingSwadge(void);
 
 void deinitSystem(void);

@@ -231,17 +231,17 @@
 //==============================================================================
 
 /// @brief The current Swadge mode
-static swadgeMode_t* cSwadgeMode = &mainMenuMode;
+static const swadgeMode_t* cSwadgeMode = &mainMenuMode;
 
 /// @brief A pending Swadge mode to use after a deep sleep
-static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
+static RTC_DATA_ATTR const swadgeMode_t* pendingSwadgeMode = NULL;
 
 /// @brief Flag set if the quick settings should be shown synchronously
 static bool shouldShowQuickSettings = false;
 /// @brief Flag set if the quick settings should be hidden synchronously
 static bool shouldHideQuickSettings = false;
 /// @brief A pointer to the Swadge mode under the quick settings
-static swadgeMode_t* modeBehindQuickSettings = NULL;
+static const swadgeMode_t* modeBehindQuickSettings = NULL;
 
 /// 25 FPS by default
 static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
@@ -703,7 +703,7 @@ static void setSwadgeMode(void* swadgeMode)
  *
  * @param mode A pointer to the mode to switch to
  */
-void switchToSwadgeMode(swadgeMode_t* mode)
+void switchToSwadgeMode(const swadgeMode_t* mode)
 {
     // Set the framerate back to default
     setFrameRateUs(DEFAULT_FRAME_RATE_US);
