@@ -291,19 +291,21 @@ void deinitTFT(void)
 }
 
 /**
- * @brief Power down the battery monitor component
+ * @brief Turn off the backlight and put the TFT in sleep mode
  */
 void powerDownTft(void)
 {
-    // TODO LPM
+    // Disable the backlight. This also puts th TFT to sleep
+    disableTFTBacklight();
 }
 
 /**
- * @brief Power up the battery monitor component
+ * @brief Wake the TFT and turn on the backlight
  */
 void powerUpTft(void)
 {
-    // TODO LPM
+    // Enable the backlight. This also wakes the TFT
+    enableTFTBacklight();
 }
 
 /**
