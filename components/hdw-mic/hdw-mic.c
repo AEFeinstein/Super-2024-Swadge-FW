@@ -10,7 +10,7 @@
 //==============================================================================
 
 static adc_continuous_handle_t adc_handle = NULL;
-static bool adcRunning = false;
+static bool adcRunning                    = false;
 
 //==============================================================================
 // Functions

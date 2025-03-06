@@ -112,7 +112,6 @@ void deinitButtons(void)
     powerDownButtons();
 
     vQueueDelete(btn_evt_queue);
-    heap_caps_free(baseOffsets);
 }
 
 /**
@@ -129,6 +128,12 @@ void powerDownButtons(void)
     ESP_ERROR_CHECK(touch_pad_fsm_stop());
     ESP_ERROR_CHECK(touch_pad_reset());
     ESP_ERROR_CHECK(touch_pad_deinit());
+
+    if (baseOffsets)
+    {
+        heap_caps_free(baseOffsets);
+        baseOffsets = NULL;
+    }
 }
 
 /**
@@ -478,10 +483,10 @@ int getBaseTouchVals(int32_t* data, int count)
     if (NULL == baseOffsets)
     {
         baseOffsets = heap_caps_malloc(sizeof(baseOffsets[0]) * _numTouchPads, MALLOC_CAP_8BIT);
-    }
-    for (int i = 0; i < _numTouchPads; i++)
-    {
-        baseOffsets[i] = curVals[i] << 8;
+        for (int i = 0; i < _numTouchPads; i++)
+        {
+            baseOffsets[i] = curVals[i] << 8;
+        }
     }
 
     for (int i = 0; i < _numTouchPads; i++)
