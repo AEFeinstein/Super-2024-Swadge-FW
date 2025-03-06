@@ -272,7 +272,7 @@ void deinitEspNow(void)
 }
 
 /**
- * @brief Power down the battery monitor component
+ * @brief Power down the TODO
  */
 void powerDownEspNow(void)
 {
@@ -280,7 +280,7 @@ void powerDownEspNow(void)
 }
 
 /**
- * @brief Power up the battery monitor component
+ * @brief Power up the TODO
  */
 void powerUpEspNow(void)
 {

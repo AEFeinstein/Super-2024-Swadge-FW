@@ -38,7 +38,7 @@ void deinitTemperatureSensor(void)
 }
 
 /**
- * @brief Power down the battery monitor component
+ * @brief Power down the TODO
  */
 void powerDownTemperatureSensor(void)
 {
@@ -46,7 +46,7 @@ void powerDownTemperatureSensor(void)
 }
 
 /**
- * @brief Power up the battery monitor component
+ * @brief Power up the TODO
  */
 void powerUpTemperatureSensor(void)
 {

@@ -95,7 +95,7 @@ void deinitBattmon(void)
 }
 
 /**
- * @brief Power down the battery monitor component
+ * @brief Power down the TODO
  */
 void powerDownBattmon(void)
 {
@@ -103,7 +103,7 @@ void powerDownBattmon(void)
 }
 
 /**
- * @brief Power up the battery monitor component
+ * @brief Power up the TODO
  */
 void powerUpBattmon(void)
 {
