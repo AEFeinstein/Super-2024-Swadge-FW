@@ -333,8 +333,11 @@ void app_main(void)
     // Check for prior crash info and install crash wrapper
     checkAndInstallCrashwrap();
 
-    // Init timers
-    esp_timer_init();
+    /* This function is called from startup code. Applications do not need to
+     * call this function before using other esp_timer APIs. Before calling
+     * this function, esp_timer_early_init() must be called by the startup code.
+     */
+    // esp_timer_init();
 
     // Init file system
     initCnfs();
