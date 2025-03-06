@@ -93,19 +93,19 @@ void deinitMic(void)
 }
 
 /**
- * @brief Power down the TODO
+ * @brief Power down the ADC (microphone)
  */
 void powerDownMic(void)
 {
-    // TODO LPM
+    stopMic();
 }
 
 /**
- * @brief Power up the TODO
+ * @brief Power up the ADC (microphone)
  */
 void powerUpMic(void)
 {
-    // TODO LPM
+    startMic();
 }
 
 /**

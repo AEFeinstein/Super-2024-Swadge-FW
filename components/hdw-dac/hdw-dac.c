@@ -137,19 +137,19 @@ void deinitDac(void)
 }
 
 /**
- * @brief Power down the TODO
+ * @brief Power down the DAC (speaker)
  */
 void powerDownDac(void)
 {
-    // TODO LPM
+    setDacShutdown(true);
 }
 
 /**
- * @brief Power up the TODO
+ * @brief Power up the DAC (speaker)
  */
 void powerUpDac(void)
 {
-    // TODO LPM
+    setDacShutdown(false);
 }
 
 /**
@@ -212,8 +212,8 @@ void setDacShutdown(bool shutdown)
 {
     if (shutdown)
     {
-        ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 1));
         dacStop();
+        ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 1));
     }
     else
     {
