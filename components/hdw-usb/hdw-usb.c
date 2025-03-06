@@ -210,7 +210,7 @@ void deinitUsb(void)
 }
 
 /**
- * @brief Power down the battery monitor component
+ * @brief Power down the TODO
  */
 void powerDownUsb(void)
 {
@@ -218,7 +218,7 @@ void powerDownUsb(void)
 }
 
 /**
- * @brief Power up the battery monitor component
+ * @brief Power up the TODO
  */
 void powerUpUsb(void)
 {

@@ -10,6 +10,7 @@
 //==============================================================================
 
 static adc_continuous_handle_t adc_handle = NULL;
+static bool adcRunning = false;
 
 //==============================================================================
 // Functions
@@ -92,7 +93,7 @@ void deinitMic(void)
 }
 
 /**
- * @brief Power down the battery monitor component
+ * @brief Power down the TODO
  */
 void powerDownMic(void)
 {
@@ -100,7 +101,7 @@ void powerDownMic(void)
 }
 
 /**
- * @brief Power up the battery monitor component
+ * @brief Power up the TODO
  */
 void powerUpMic(void)
 {
@@ -112,9 +113,10 @@ void powerUpMic(void)
  */
 void startMic(void)
 {
-    if (adc_handle)
+    if (adc_handle && !adcRunning)
     {
         ESP_ERROR_CHECK(adc_continuous_start(adc_handle));
+        adcRunning = true;
     }
 }
 
@@ -128,7 +130,7 @@ void startMic(void)
  */
 uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax)
 {
-    if (adc_handle)
+    if (adc_handle && adcRunning)
     {
         // Read the continuous ADC to this memory
         uint8_t result[ADC_READ_LEN];
@@ -158,8 +160,9 @@ uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax)
  */
 void stopMic(void)
 {
-    if (adc_handle)
+    if (adc_handle && adcRunning)
     {
+        adcRunning = false;
         ESP_ERROR_CHECK(adc_continuous_stop(adc_handle));
     }
 }
