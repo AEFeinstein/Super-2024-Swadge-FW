@@ -519,6 +519,11 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
         leds[i].b = test->cLed.b;
     }
     setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Display core temperature
+    char temperatureStr[32] = {0};
+    snprintf(temperatureStr, sizeof(temperatureStr) - 1, "%.1fC", readTemperatureSensor());
+    drawText(&test->ibm_vga8, c555, temperatureStr, 221 - textWidth(&test->ibm_vga8, temperatureStr) / 2, 140);
 }
 
 /**
