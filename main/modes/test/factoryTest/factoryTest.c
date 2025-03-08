@@ -71,6 +71,9 @@ void testReadAndValidateAccelerometer(void);
 void plotButtonState(int16_t x, int16_t y, testButtonState_t state);
 static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t segs, bool center);
 
+static void testEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
+static void testEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -118,6 +121,8 @@ typedef struct
     bool touchPassed;
     bool accelPassed;
     bool micPassed;
+    // ESPNOW timer
+    int32_t broadcastTimer;
 } factoryTest_t;
 
 factoryTest_t* test;
@@ -126,7 +131,7 @@ const char factoryTestName[] = "Factory Test";
 
 swadgeMode_t factoryTestMode = {
     .modeName                 = factoryTestName,
-    .wifiMode                 = NO_WIFI,
+    .wifiMode                 = ESP_NOW,
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = true,
@@ -136,8 +141,8 @@ swadgeMode_t factoryTestMode = {
     .fnMainLoop               = testMainLoop,
     .fnAudioCallback          = testAudioCb,
     .fnBackgroundDrawCallback = NULL,
-    .fnEspNowRecvCb           = NULL,
-    .fnEspNowSendCb           = NULL,
+    .fnEspNowRecvCb           = testEspNowRecvCb,
+    .fnEspNowSendCb           = testEspNowSendCb,
     .fnAdvancedUSB            = NULL,
 };
 
@@ -150,6 +155,14 @@ swadgeMode_t factoryTestMode = {
  */
 void testEnterMode(void)
 {
+#if 0
+    // Test power down and up
+    powerDownPeripherals();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    powerUpPeripherals();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+#endif
+
     // Allocate memory for this mode
     test = (factoryTest_t*)heap_caps_calloc(1, sizeof(factoryTest_t), MALLOC_CAP_8BIT);
 
@@ -524,6 +537,12 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     char temperatureStr[32] = {0};
     snprintf(temperatureStr, sizeof(temperatureStr) - 1, "%.1fC", readTemperatureSensor());
     drawText(&test->ibm_vga8, c555, temperatureStr, 221 - textWidth(&test->ibm_vga8, temperatureStr) / 2, 140);
+
+    // Send an ESP NOW packet every 1s
+    RUN_TIMER_EVERY(test->broadcastTimer, 1000000, elapsedUs, {
+        const char bcastStr[] = "BROADCAST";
+        espNowSend(bcastStr, sizeof(bcastStr));
+    });
 }
 
 /**
@@ -922,4 +941,14 @@ static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t seg
                       y - r - 1, x + r + 1, y + r + 1);
         }
     }
+}
+
+static void testEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
+{
+    ESP_LOGI("NOW", "RX");
+}
+
+static void testEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
+{
+    ESP_LOGI("NOW", "TX %s", (ESP_NOW_SEND_SUCCESS == status) ? "Success" : "Fail");
 }

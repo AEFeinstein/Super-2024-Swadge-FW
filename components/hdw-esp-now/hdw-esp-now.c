@@ -276,7 +276,7 @@ void deinitEspNow(void)
  */
 void powerDownEspNow(void)
 {
-    // TODO LPM
+    deinitEspNow();
 }
 
 /**
@@ -284,7 +284,7 @@ void powerDownEspNow(void)
  */
 void powerUpEspNow(void)
 {
-    // TODO LPM
+    initEspNow(hostEspNowRecvCb, hostEspNowSendCb, rxGpio, txGpio, uartNum, mode);
 }
 
 /**
