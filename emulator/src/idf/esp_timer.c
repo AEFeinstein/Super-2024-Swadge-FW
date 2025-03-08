@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "linked_list.h"
 
@@ -332,4 +333,14 @@ void emuTimerUnpause(void)
 bool emuTimerIsPaused(void)
 {
     return (pause_start_micros > 0);
+}
+
+/**
+ * @brief
+ *
+ * @param xTicksToDelay Ticks to delay, need to convert to microseconds
+ */
+void vTaskDelay(const TickType_t xTicksToDelay)
+{
+    usleep(1000 * xTicksToDelay * portTICK_PERIOD_MS);
 }
