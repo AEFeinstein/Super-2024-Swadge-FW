@@ -137,6 +137,20 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
 
     esp_err_t err = ESP_OK;
 
+    // Initialize loopback interface
+    if (ESP_OK != (err = esp_netif_init()))
+    {
+        ESP_LOGW("ESPNOW", "Couldn't init netif %s", esp_err_to_name(err));
+        return err;
+    }
+
+    // Initialize event loop
+    if (ESP_OK != (err = esp_event_loop_create_default()))
+    {
+        ESP_LOGW("ESPNOW", "Couldn't create event loop %s", esp_err_to_name(err));
+        return err;
+    }
+
     // Initialize wifi
     wifi_init_config_t conf = WIFI_INIT_CONFIG_DEFAULT();
     conf.ampdu_rx_enable    = 0;
@@ -191,7 +205,9 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return err;
     }
 
-    if (ESP_OK != (err = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N)))
+    if (ESP_OK
+        != (err = esp_wifi_set_protocol(WIFI_IF_STA,
+                                        WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_LR)))
     {
         ESP_LOGW("ESPNOW", "Couldn't set protocol %s", esp_err_to_name(err));
         return err;
@@ -268,6 +284,8 @@ void deinitEspNow(void)
         esp_now_deinit();
         esp_wifi_stop();
         esp_wifi_deinit();
+        esp_event_loop_delete_default();
+        esp_netif_deinit();
     }
 }
 
