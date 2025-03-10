@@ -907,15 +907,37 @@ void powerDownPeripherals(void)
  */
 void powerUpPeripherals(void)
 {
-    powerUpBattmon();
-    powerUpButtons();
-    powerUpDac();
-    powerUpEspNow();
-    powerUpAccel();
-    powerUpLed();
-    powerUpMic();
+    // Always powered up
     powerUpNvs();
-    powerUpTemperatureSensor();
-    powerUpTft();
+    powerUpButtons();
+    powerUpLed();
     powerUpUsb();
+    powerUpTft();
+
+    // One or the other
+    if (NULL != cSwadgeMode->fnAudioCallback)
+    {
+        powerUpMic();
+    }
+    else
+    {
+        powerUpDac();
+        powerUpBattmon();
+    }
+
+    // Optional peripherals
+    if (NO_WIFI != cSwadgeMode->wifiMode)
+    {
+        powerUpEspNow();
+    }
+
+    if (cSwadgeMode->usesAccelerometer)
+    {
+        powerUpAccel();
+    }
+
+    if (cSwadgeMode->usesThermometer)
+    {
+        powerUpTemperatureSensor();
+    }
 }
