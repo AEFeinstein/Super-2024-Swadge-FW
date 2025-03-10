@@ -15,6 +15,9 @@
 /// @brief Tag for debugging
 const static char* TAG = "BMN";
 
+/// @brief GPIO used for battery monitoring
+static gpio_num_t battMonGpio;
+
 /// @brief The ADC channel to monitor the battery voltage on
 static adc_channel_t battMonChannel;
 /// @brief The handle to monitor the battery voltage
@@ -49,6 +52,9 @@ static void adc_calibration_deinit(adc_cali_handle_t handle);
  */
 void initBattmon(gpio_num_t gpio)
 {
+    // Save for later
+    battMonGpio = gpio;
+
     adc_unit_t unit;
     adc_channel_t channel;
     if (ESP_OK == adc_oneshot_io_to_channel(gpio, &unit, &channel))
@@ -95,19 +101,19 @@ void deinitBattmon(void)
 }
 
 /**
- * @brief Power down the TODO
+ * @brief Power down the battery monitor
  */
 void powerDownBattmon(void)
 {
-    // TODO LPM
+    deinitBattmon();
 }
 
 /**
- * @brief Power up the TODO
+ * @brief Power up the battery monitor
  */
 void powerUpBattmon(void)
 {
-    // TODO LPM
+    initBattmon(battMonGpio);
 }
 
 /**
