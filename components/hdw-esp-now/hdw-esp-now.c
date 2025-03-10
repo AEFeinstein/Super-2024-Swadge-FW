@@ -295,6 +295,7 @@ void deinitEspNow(void)
 void powerDownEspNow(void)
 {
     deinitEspNow();
+    esp_wifi_power_domain_off();
 }
 
 /**
@@ -302,6 +303,7 @@ void powerDownEspNow(void)
  */
 void powerUpEspNow(void)
 {
+    esp_wifi_power_domain_on();
     initEspNow(hostEspNowRecvCb, hostEspNowSendCb, rxGpio, txGpio, uartNum, mode);
 }
 
