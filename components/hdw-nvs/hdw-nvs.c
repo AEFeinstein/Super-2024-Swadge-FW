@@ -86,19 +86,19 @@ bool deinitNvs(void)
 }
 
 /**
- * @brief Power down the TODO
+ * @brief Power down the NVS. This doesn't do anything.
  */
 void powerDownNvs(void)
 {
-    // TODO LPM
+    ; // Nothing to power down
 }
 
 /**
- * @brief Power up the TODO
+ * @brief Power up the NVS. This doesn't do anything.
  */
 void powerUpNvs(void)
 {
-    // TODO LPM
+    ; // Nothing to power up
 }
 
 /**
