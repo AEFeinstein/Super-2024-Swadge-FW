@@ -76,7 +76,7 @@ static uint8_t myMac[6];
 static hostEspNowRecvCb_t hostEspNowRecvCb;
 static hostEspNowSendCb_t hostEspNowSendCb;
 
-static QueueHandle_t esp_now_queue;
+static QueueHandle_t esp_now_queue = NULL;
 
 static bool isSerial;
 static gpio_num_t rxGpio;
@@ -129,7 +129,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
     uartNum = uart;
     mode    = wifiMode;
 
-    if (ESP_NOW_IMMEDIATE != mode)
+    if (ESP_NOW_IMMEDIATE != mode && NULL == esp_now_queue)
     {
         // Create a queue to move packets from the receive callback to the main task
         esp_now_queue = xQueueCreate(10, sizeof(espNowPacket_t));
@@ -286,6 +286,8 @@ void deinitEspNow(void)
         esp_wifi_deinit();
         esp_event_loop_delete_default();
         esp_netif_deinit();
+        vQueueDelete(esp_now_queue);
+        esp_now_queue = NULL;
     }
 }
 
