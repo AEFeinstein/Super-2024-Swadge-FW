@@ -122,6 +122,7 @@ void powerDownButtons(void)
     // Disable button timer and GPIO bundle
     ESP_ERROR_CHECK(gptimer_stop(btnTimer));
     ESP_ERROR_CHECK(gptimer_disable(btnTimer));
+    ESP_ERROR_CHECK(gptimer_del_timer(btnTimer));
     ESP_ERROR_CHECK(dedic_gpio_del_bundle(bundle));
 
     // Disable touch pads
