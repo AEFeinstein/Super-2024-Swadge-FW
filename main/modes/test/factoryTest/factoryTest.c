@@ -15,6 +15,7 @@
 
 #include "factoryTest.h"
 #include "mainMenu.h"
+#include "esp_sleep.h"
 
 //==============================================================================
 // Defines
@@ -32,6 +33,9 @@
 #define TOUCHBAR_WIDTH  60
 #define TOUCHBAR_HEIGHT 60
 #define TOUCHBAR_Y_OFF  32
+
+#define ON_OFF_TEST 0
+#define SLEEP_TEST  1
 
 //==============================================================================
 // Enums
@@ -155,7 +159,7 @@ swadgeMode_t factoryTestMode = {
  */
 void testEnterMode(void)
 {
-#if 0
+#if ON_OFF_TEST
     // Test power down and up
     powerDownPeripherals();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -203,6 +207,14 @@ void testEnterMode(void)
 
     // Set NVM to indicate test not passed yet
     // setTestModePassedSetting(false);
+
+#if SLEEP_TEST
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c333);
+
+    // Turn everything off except for ESP NOW
+    powerDownPeripherals();
+    powerUpEspNow();
+#endif
 }
 
 /**
@@ -224,6 +236,33 @@ void testExitMode(void)
  */
 void testMainLoop(int64_t elapsedUs __attribute__((unused)))
 {
+#if SLEEP_TEST
+    // Send an ESP NOW packet every 1s
+    RUN_TIMER_EVERY(test->broadcastTimer, 5000000, elapsedUs, {
+
+        ESP_LOGI("SLP", "Go to sleep");
+
+        // Power down ESP NOW
+        powerDownEspNow();
+
+        // Sleep for 5s
+        esp_sleep_enable_timer_wakeup(5000000);
+        uint32_t tStart = esp_timer_get_time();
+        esp_light_sleep_start();
+        uint32_t tElapsed = esp_timer_get_time() - tStart;
+        ESP_LOGI("SLP", "Wake up %"PRIu32, tElapsed);
+
+        // Reset the timer because it counts while asleep
+        test->broadcastTimer -= tElapsed;
+
+        // Power up ESP NOW
+        powerUpEspNow();
+
+        // Broadcast a packet
+        const char bcastStr[] = "BROADCAST";
+        espNowSend(bcastStr, sizeof(bcastStr));
+    });
+#else
     // Process button events
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -543,6 +582,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
         const char bcastStr[] = "BROADCAST";
         espNowSend(bcastStr, sizeof(bcastStr));
     });
+#endif
 }
 
 /**
