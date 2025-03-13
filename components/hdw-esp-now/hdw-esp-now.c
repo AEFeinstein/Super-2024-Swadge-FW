@@ -49,6 +49,13 @@ typedef enum
     EU_PARSING_PAYLOAD,    ///< Parsing state for the payload bytes
 } decodeState_t;
 
+typedef enum
+{
+    CM_NOT_CONNECTED,
+    CM_WIRELESS,
+    CM_SERIAL,
+} connectionMode_t;
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -78,7 +85,7 @@ static hostEspNowSendCb_t hostEspNowSendCb;
 
 static QueueHandle_t esp_now_queue = NULL;
 
-static bool isSerial;
+static connectionMode_t connectionMode = CM_NOT_CONNECTED;
 static gpio_num_t rxGpio;
 static gpio_num_t txGpio;
 static uint32_t uartNum;
@@ -162,8 +169,13 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
     }
 
     // Save our MAC address for serial mode
-    esp_wifi_get_mac(WIFI_IF_STA, myMac);
+    if (ESP_OK != (err = esp_wifi_get_mac(WIFI_IF_STA, myMac)))
+    {
+        ESP_LOGE("ESPNOW", "Couldn't get MAC address %s", esp_err_to_name(err));
+        return err;
+    }
 
+    // Store data in RAM, not FLASH
     if (ESP_OK != (err = esp_wifi_set_storage(WIFI_STORAGE_RAM)))
     {
         ESP_LOGE("ESPNOW", "Couldn't set wifi storage %s", esp_err_to_name(err));
@@ -205,9 +217,8 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return err;
     }
 
-    if (ESP_OK
-        != (err = esp_wifi_set_protocol(WIFI_IF_STA,
-                                        WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_LR)))
+    uint8_t protocol_bitmap = (WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_LR);
+    if (ESP_OK != (err = esp_wifi_set_protocol(WIFI_IF_STA, protocol_bitmap)))
     {
         ESP_LOGE("ESPNOW", "Couldn't set protocol %s", esp_err_to_name(err));
         return err;
@@ -261,7 +272,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
     //}
 
     // This starts ESP-NOW
-    isSerial = true;
+    connectionMode = CM_NOT_CONNECTED;
     espNowUseWireless();
 
     return err;
@@ -272,11 +283,11 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
  */
 void deinitEspNow(void)
 {
-    if (isSerial)
+    if (CM_SERIAL == connectionMode)
     {
         uart_driver_delete(uartNum);
     }
-    else
+    else if (CM_WIRELESS == connectionMode)
     {
         esp_now_unregister_recv_cb();
         esp_now_unregister_send_cb();
@@ -315,76 +326,93 @@ void powerUpEspNow(void)
  */
 esp_err_t espNowUseWireless(void)
 {
-    if (true == isSerial)
+    switch (connectionMode)
     {
-        // First make sure the UART isn't being used
-        uart_driver_delete(uartNum);
-        isSerial = false;
-
-        // Then start ESP NOW
-        esp_err_t err;
-        if (ESP_OK == (err = esp_now_init()))
+        case CM_SERIAL:
         {
-            ESP_LOGD("ESPNOW", "ESP NOW init!");
-
-            if (ESP_OK != (err = esp_now_register_recv_cb(espNowRecvCb)))
-            {
-                ESP_LOGE("ESPNOW", "recvCb NOT registered");
-                return err;
-            }
-
-            if (ESP_OK != (err = esp_now_register_send_cb(espNowSendCb)))
-            {
-                ESP_LOGE("ESPNOW", "sendCb NOT registered");
-                return err;
-            }
-
-            esp_now_peer_info_t broadcastPeer = {
-                .peer_addr = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-                .lmk = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                .channel = ESPNOW_CHANNEL,
-                .ifidx   = WIFI_IF_STA,
-                .encrypt = 0,
-                .priv    = NULL};
-            if (ESP_OK != (err = esp_now_add_peer(&broadcastPeer)))
-            {
-                ESP_LOGE("ESPNOW", "peer NOT added");
-                return err;
-            }
-
-            esp_now_rate_config_t rateConfig = {
-                .phymode = WIFI_PHY,
-                .rate    = WIFI_RATE,
-                .ersu    = false,
-                .dcm     = false,
-            };
-            if (ESP_OK != (err = esp_now_set_peer_rate_config(espNowBroadcastMac, &rateConfig)))
-            {
-                ESP_LOGE("ESPNOW", "rate NOT set");
-                return err;
-            }
+            // First make sure the UART isn't being used
+            uart_driver_delete(uartNum);
+            // Fall through
         }
-        else
+        case CM_NOT_CONNECTED:
         {
-            ESP_LOGE("ESPNOW", "esp now fail (%s)", esp_err_to_name(err));
-            return err;
+            connectionMode = CM_WIRELESS;
+
+            // Then start ESP NOW
+            esp_err_t err;
+            if (ESP_OK == (err = esp_now_init()))
+            {
+                ESP_LOGD("ESPNOW", "ESP NOW init!");
+
+                if (ESP_OK != (err = esp_now_register_recv_cb(espNowRecvCb)))
+                {
+                    ESP_LOGE("ESPNOW", "recvCb NOT registered");
+                    return err;
+                }
+
+                if (ESP_OK != (err = esp_now_register_send_cb(espNowSendCb)))
+                {
+                    ESP_LOGE("ESPNOW", "sendCb NOT registered");
+                    return err;
+                }
+
+                esp_now_peer_info_t broadcastPeer = {.peer_addr = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+                                                     .lmk = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                                     .channel = ESPNOW_CHANNEL,
+                                                     .ifidx   = WIFI_IF_STA,
+                                                     .encrypt = 0,
+                                                     .priv    = NULL};
+                if (ESP_OK != (err = esp_now_add_peer(&broadcastPeer)))
+                {
+                    ESP_LOGE("ESPNOW", "peer NOT added");
+                    return err;
+                }
+
+                esp_now_rate_config_t rateConfig = {
+                    .phymode = WIFI_PHY,
+                    .rate    = WIFI_RATE,
+                    .ersu    = false,
+                    .dcm     = false,
+                };
+                if (ESP_OK != (err = esp_now_set_peer_rate_config(espNowBroadcastMac, &rateConfig)))
+                {
+                    ESP_LOGE("ESPNOW", "rate NOT set");
+                    return err;
+                }
+            }
+            else
+            {
+                ESP_LOGE("ESPNOW", "esp now fail (%s)", esp_err_to_name(err));
+                return err;
+            }
+
+            // Appears to set gain "offset" like what it reports as gain?  Does not actually impact real gain.
+            // But when paired with the second write command, it seems to have the intended impact.
+            // This number is in ~1/2dB.  So 20 accounts for a 10dB muting; 25, 12.5dB; 30, 15dB
+            const int igi_reduction = 20;
+            volatile uint32_t* test = (uint32_t*)0x6001c02c; // Should be the "RSSI Offset" but seems to do more.
+            *test                   = (*test & 0xffffff00) + igi_reduction;
+
+            // Make sure the first takes effect.
+            vTaskDelay(0);
+
+            // No idea  Somehow applies setting of 0x6001c02c  (Ok, actually I don't know what the right-most value
+            // should be but 0xff in the MSB seems to work?
+            test  = (uint32_t*)0x6001c0a0;
+            *test = (*test & 0xffffff) | 0xff00000000;
+
+            break;
         }
-
-        // Appears to set gain "offset" like what it reports as gain?  Does not actually impact real gain.
-        // But when paired with the second write command, it seems to have the intended impact.
-        // This number is in ~1/2dB.  So 20 accounts for a 10dB muting; 25, 12.5dB; 30, 15dB
-        const int igi_reduction = 20;
-        volatile uint32_t* test = (uint32_t*)0x6001c02c; // Should be the "RSSI Offset" but seems to do more.
-        *test                   = (*test & 0xffffff00) + igi_reduction;
-
-        // Make sure the first takes effect.
-        vTaskDelay(0);
-
-        // No idea  Somehow applies setting of 0x6001c02c  (Ok, actually I don't know what the right-most value should
-        // be but 0xff in the MSB seems to work?
-        test  = (uint32_t*)0x6001c0a0;
-        *test = (*test & 0xffffff) | 0xff00000000;
+        // fall through
+        case CM_WIRELESS:
+        default:
+        {
+            // Do nothing
+            break;
+        }
     }
+
     return ESP_OK;
 }
 
@@ -396,35 +424,50 @@ esp_err_t espNowUseWireless(void)
  */
 void espNowUseSerial(bool crossoverPins)
 {
-    if (false == isSerial)
+    switch (connectionMode)
     {
-        // First make sure wireless isn't being used
-        esp_now_unregister_recv_cb();
-        esp_now_unregister_send_cb();
-        esp_now_deinit();
+        case CM_WIRELESS:
+        {
+            // Disable wireless first
+            esp_now_unregister_recv_cb();
+            esp_now_unregister_send_cb();
+            esp_now_deinit();
+        }
+        // fall through
+        case CM_NOT_CONNECTED:
+        {
+            // Set up UART
+            connectionMode = CM_SERIAL;
 
-        isSerial = true;
+            // Initialize UART
+            uart_config_t uart_config = {
+                .baud_rate  = 8 * 115200,
+                .data_bits  = UART_DATA_8_BITS,
+                .parity     = UART_PARITY_DISABLE,
+                .stop_bits  = UART_STOP_BITS_1,
+                .flow_ctrl  = UART_HW_FLOWCTRL_DISABLE,
+                .source_clk = UART_SCLK_APB,
+            };
+            ESP_ERROR_CHECK(uart_driver_install(uartNum, ESP_NOW_SERIAL_RX_BUF_SIZE, 0, 0, NULL, 0));
+            ESP_ERROR_CHECK(uart_param_config(uartNum, &uart_config));
 
-        // Initialize UART
-        uart_config_t uart_config = {
-            .baud_rate  = 8 * 115200,
-            .data_bits  = UART_DATA_8_BITS,
-            .parity     = UART_PARITY_DISABLE,
-            .stop_bits  = UART_STOP_BITS_1,
-            .flow_ctrl  = UART_HW_FLOWCTRL_DISABLE,
-            .source_clk = UART_SCLK_APB,
-        };
-        ESP_ERROR_CHECK(uart_driver_install(uartNum, ESP_NOW_SERIAL_RX_BUF_SIZE, 0, 0, NULL, 0));
-        ESP_ERROR_CHECK(uart_param_config(uartNum, &uart_config));
-    }
+            if (crossoverPins)
+            {
+                ESP_ERROR_CHECK(uart_set_pin(uartNum, txGpio, rxGpio, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+            }
+            else
+            {
+                ESP_ERROR_CHECK(uart_set_pin(uartNum, rxGpio, txGpio, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+            }
 
-    if (crossoverPins)
-    {
-        ESP_ERROR_CHECK(uart_set_pin(uartNum, txGpio, rxGpio, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-    }
-    else
-    {
-        ESP_ERROR_CHECK(uart_set_pin(uartNum, rxGpio, txGpio, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+            break;
+        }
+        case CM_SERIAL:
+        default:
+        {
+            // Do nothing
+            break;
+        }
     }
 }
 
@@ -474,7 +517,7 @@ static void espNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t*
  */
 void checkEspNowRxQueue(void)
 {
-    if (isSerial)
+    if (CM_SERIAL == connectionMode)
     {
         // Read bytes from the UART
         char bytesRead[256];
@@ -573,7 +616,7 @@ void checkEspNowRxQueue(void)
             rBufTmpHead = (rBufTmpHead + 1) % sizeof(ringBuf);
         }
     }
-    else if (mode != ESP_NOW_IMMEDIATE)
+    else if ((CM_WIRELESS == connectionMode) && (mode != ESP_NOW_IMMEDIATE))
     {
         espNowPacket_t packet;
         if (xQueueReceive(esp_now_queue, &packet, 0))
@@ -616,7 +659,7 @@ void checkEspNowRxQueue(void)
  */
 void espNowSend(const char* data, uint8_t len)
 {
-    if (isSerial)
+    if (CM_SERIAL == connectionMode)
     {
         // Frame the packet and add our MAC address
         uint16_t framedPacketLen = len + 4 + sizeof(myMac);
@@ -645,7 +688,7 @@ void espNowSend(const char* data, uint8_t len)
             espNowSendCb(espNowBroadcastMac, ESP_NOW_SEND_FAIL);
         }
     }
-    else
+    else if (CM_WIRELESS == connectionMode)
     {
         // Send a packet
         esp_now_send((uint8_t*)espNowBroadcastMac, (uint8_t*)data, len);
