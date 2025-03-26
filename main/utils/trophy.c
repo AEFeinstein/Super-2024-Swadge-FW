@@ -52,20 +52,28 @@ static const char* const systemPointsNVS[] = {"trophy", "TotalPoints"};
 // Structs
 //==============================================================================
 
+typedef struct
+{
+    trophyData_t trophyData; //< Individual trophy data
+    wsg_t image;             //< Where the image is loaded
+    bool active;             //< If this slot is loaded and ready to animate
+} trophyDataWrapper_t;
+
 // System variables for display,
 typedef struct
 {
-    // Assets
-    wsg_t imageArray[TROPHY_MAX_BANNERS]; //< WSGs loaded for next five trophies.
-    trophySettings_t* tSettings;          //< The settings of how the trophies behave
+    // Settings
+    trophySettings_t* settings; //< The settings of how the trophies behave
+
+    // Data
+    trophyDataWrapper_t trophyQueue[TROPHY_MAX_BANNERS]; //< List of trophy updates to display
 
     // Drawing
-    bool active;                              //< If the mode should be drawing a banner
-    trophy_t tBannerList[TROPHY_MAX_BANNERS]; //< List of banners to display.
-    bool beingDrawn;                          //< If banner is currently being drawn statically
-    int32_t drawTimer;                        //< Accumulates until more than Max duration
-    wsgPalette_t grayPalette;                 //< Grayscale palette for locked trophies
-    wsgPalette_t normalPalette;               //< Normal colors
+    bool active;                //< If the mode should be drawing a banner
+    bool beingDrawn;            //< If banner is currently being drawn statically
+    int32_t drawTimer;          //< Accumulates until more than Max duration
+    wsgPalette_t grayPalette;   //< Grayscale palette for locked trophies
+    wsgPalette_t normalPalette; //< Normal colors
 
     // Animation
     bool sliding;          //< If currently sliding
@@ -77,7 +85,7 @@ typedef struct
 // Variables
 //==============================================================================
 
-static trophySystem_t tSystem = {}; //< Should be one instance per swadge, should always be in memory
+static trophySystem_t trophySystem = {}; //< Should be one instance per swadge, should always be in memory
 
 //==============================================================================
 // Static function declarations
@@ -89,7 +97,7 @@ static trophySystem_t tSystem = {}; //< Should be one instance per swadge, shoul
  * @param modeName Name of the mode for namespace
  * @param t Data to write
  */
-static void _save(char* modeName, trophy_t t);
+static void _save(char* modeName, trophyData_t t);
 
 /**
  * @brief Loads data from NVS given a string. Returns NULL if not found
@@ -98,7 +106,7 @@ static void _save(char* modeName, trophy_t t);
  * @param title Title of trophy to load
  * @return trophy_t Trophy data. NULL is not found
  */
-static trophy_t _load(char* modeName, char* title);
+static trophyData_t _load(char* modeName, char* title);
 
 /**
  * @brief Grabs all trophy data from NVS
@@ -108,7 +116,7 @@ static trophy_t _load(char* modeName, char* title);
  * @param tLen Number of trophies to grab
  * @param offset Where to start in list
  */
-static void _getTrophyData(char* modeName, trophy_t* tList, int tLen, int offset);
+static void _getTrophyData(char* modeName, trophyData_t* tList, int tLen, int offset);
 
 /**
  * @brief Draws the banner
@@ -117,7 +125,7 @@ static void _getTrophyData(char* modeName, trophy_t* tList, int tLen, int offset
  * @param frame Which frame is being drawn. STATIC_POSITION is fully visible, other values change the offset.
  * @param fnt Font used in draw call
  */
-static void _draw(trophy_t t, int frame, font_t* fnt);
+static void _draw(trophyData_t t, int frame, font_t* fnt);
 
 /**
  * @brief Sub function of _draw() so code can be reused in list draw command
@@ -126,7 +134,7 @@ static void _draw(trophy_t t, int frame, font_t* fnt);
  * @param yOffset y coordinate to start at
  * @param fnt Font used in draw call
  */
-static void _drawAtYCoord(trophy_t t, int yOffset, font_t* fnt);
+static void _drawAtYCoord(trophyData_t t, int yOffset, font_t* fnt);
 
 //==============================================================================
 // Functions
@@ -137,20 +145,20 @@ static void _drawAtYCoord(trophy_t t, int yOffset, font_t* fnt);
 void trophySystemInit(trophySettings_t* settings)
 {
     // Defaults
-    tSystem.beingDrawn = false;
-    tSystem.drawTimer  = 0;
-    tSystem.slideTimer = 0;
+    trophySystem.beingDrawn = false;
+    trophySystem.drawTimer  = 0;
+    trophySystem.slideTimer = 0;
 
     // Copy settings
-    tSystem.tSettings = settings;
+    trophySystem.settings = settings;
 
     // Init palette
-    wsgPaletteReset(&tSystem.normalPalette);
+    wsgPaletteReset(&trophySystem.normalPalette);
     for (int idx = 0; idx < 217; idx++)
     {
         if (idx == cTransparent) // Transparent
         {
-            wsgPaletteSet(&tSystem.grayPalette, idx, cTransparent);
+            wsgPaletteSet(&trophySystem.grayPalette, idx, cTransparent);
         }
         else
         {
@@ -221,21 +229,27 @@ void trophySystemInit(trophySettings_t* settings)
                 case c332:
                 case c333:
                 {
-                    wsgPaletteSet(&tSystem.grayPalette, idx, c333);
+                    wsgPaletteSet(&system.grayPalette, idx, c333);
                     break;
                 }
                 default:
                 {
-                    wsgPaletteSet(&tSystem.grayPalette, idx, c444);
+                    wsgPaletteSet(&system.grayPalette, idx, c444);
                     break;
                 }
             }
         }
     }
 
+    // Clear queue
+    for (int idx = 0; idx < TROPHY_MAX_BANNERS; idx++)
+    {
+        trophySystem.trophyQueue[idx].active = false;
+    }
+
     // Draw defaults unless re-called by dev
     // FIXME: Add default values
-    trophyDrawListInit();
+    // trophyDrawListInit();
 }
 
 int trophySystemGetPoints(char* modeName)
@@ -264,15 +278,14 @@ int trophySystemGetPoints(char* modeName)
 
 // Trophies
 
-void trophySetValues(trophy_t* trophy, trophyData_t* data, int idx)
+void trophySetValues(trophyData_t* trophy, trophyDataList_t* data, int idx)
 {
-    /* strcpy(trophy->title, data->titles[idx]);
-    strcpy(trophy->description, data->descriptions[idx]);
-    strcpy(trophy->imageString, data->imageStrings[idx]); */
-    // FIXME: Can't strcpy data, crashes. Likely has to do with the stupid const stuff.
-    trophy->type = data->types[idx];
-    trophy->difficulty = data->difficulty[idx];
-    trophy->maxValue = data->maxVals[idx];
+    strcpy(trophy->title, data->list[idx].title);
+    strcpy(trophy->description, data->list[idx].description);
+    strcpy(trophy->imageString, data->list[idx].imageString);
+    trophy->type       = data->list[idx].type;
+    trophy->difficulty = data->list[idx].difficulty;
+    trophy->maxVal     = data->list[idx].maxVal;
 }
 
 void trophyUpdate(char* modeName, char* title, int value, bool drawUpdate)
@@ -314,18 +327,18 @@ int trophyGetNumTrophies(char* modeName)
     return 0;
 }
 
-void trophyGetTrophyList(char* modeName, trophy_t* tList, int* tLen, int offset)
+void trophyGetTrophyList(char* modeName, trophyData_t* tList, int* tLen, int offset)
 {
     // If modeName is NULL, get all trophies. Order by game, but do not sorting.
     // Populate tList starting from offset up to tLen
 }
 
-trophy_t trophyGetData(char* modeName, char* title)
+trophyData_t trophyGetData(char* modeName, char* title)
 {
     // Check if trophy exists
     // If so, return trophy_t
     // Else, return null
-    trophy_t t = {};
+    trophyData_t t = {};
     return t;
 }
 
@@ -334,48 +347,48 @@ trophy_t trophyGetData(char* modeName, char* title)
 void trophyDraw(char* modeName, font_t* fnt, int64_t elapsedUs)
 {
     // Exit immediately if not being drawn
-    if (!tSystem.active)
+    if (!trophySystem.active)
     {
         return;
     }
     // Draws the trophy
-    if (tSystem.tSettings->animated && tSystem.sliding) // Sliding in or out
+    if (trophySystem.settings->animated && trophySystem.sliding) // Sliding in or out
     {
-        tSystem.slideTimer += elapsedUs;
-        int frameLen = (tSystem.tSettings->slideMaxDuration * TENTH_SECOND) / TROPHY_BANNER_HEIGHT;
-        while (tSystem.slideTimer >= frameLen)
+        trophySystem.slideTimer += elapsedUs;
+        int frameLen = (trophySystem.settings->slideMaxDuration * TENTH_SECOND) / TROPHY_BANNER_HEIGHT;
+        while (trophySystem.slideTimer >= frameLen)
         {
-            tSystem.animationTick++;
-            tSystem.slideTimer -= frameLen;
+            trophySystem.animationTick++;
+            trophySystem.slideTimer -= frameLen;
         }
-        if (tSystem.animationTick == TROPHY_BANNER_HEIGHT)
+        if (trophySystem.animationTick == TROPHY_BANNER_HEIGHT)
         {
-            tSystem.sliding    = false;
-            tSystem.beingDrawn = true;
+            trophySystem.sliding    = false;
+            trophySystem.beingDrawn = true;
         }
-        else if (tSystem.animationTick == TROPHY_BANNER_HEIGHT * 2)
+        else if (trophySystem.animationTick == TROPHY_BANNER_HEIGHT * 2)
         {
-            tSystem.sliding = false; // Disables drawing
-            tSystem.active  = false; // Stops rawing altogether
+            trophySystem.sliding = false; // Disables drawing
+            trophySystem.active  = false; // Stops rawing altogether
         }
-        _draw(tSystem.tBannerList[0], tSystem.animationTick, fnt);
+        _draw(trophySystem.trophyQueue[0], trophySystem.animationTick, fnt);
     }
-    else if (tSystem.beingDrawn) // Static on screen
+    else if (trophySystem.beingDrawn) // Static on screen
     {
         // Regular timer
-        tSystem.drawTimer += elapsedUs;
-        if (tSystem.drawTimer >= tSystem.tSettings->drawMaxDuration)
+        trophySystem.drawTimer += elapsedUs;
+        if (trophySystem.drawTimer >= trophySystem.trophyQueue->drawMaxDuration)
         {
             // Stop drawing
-            tSystem.beingDrawn = false;
-            tSystem.sliding    = tSystem.tSettings->animated; // Starts sliding again if set
+            trophySystem.beingDrawn = false;
+            trophySystem.sliding    = trophySystem.trophyQueue->animated; // Starts sliding again if set
         }
         // Draw
-        _draw(tSystem.tBannerList[0], STATIC_POSITION, fnt);
+        _draw(trophySystem.trophyQueue[0], STATIC_POSITION, fnt);
     }
     else // Has ended
     {
-        tSystem.active = false;
+        trophySystem.active = false;
     }
     // TODO: play sound (?)
 }
@@ -396,31 +409,31 @@ void trophyDrawList(char* modeName, int idx)
 // Static functions
 //==============================================================================
 
-static void _save(char* modeName, trophy_t t)
+static void _save(char* modeName, trophyData_t t)
 {
     // Check if the data in the trophy is identical to incoming data, and exit if so
     // Save the trophy
 }
 
-static trophy_t _load(char* modeName, char* title)
+static trophyData_t _load(char* modeName, char* title)
 {
     // Loads trophy from NVS
     trophy_t t = {};
     return t;
 }
 
-static void _getTrophyData(char* modeName, trophy_t* tList, int tLen, int offset)
+static void _getTrophyData(char* modeName, trophyData_t* tList, int tLen, int offset)
 {
     // Load all trophies associated with a mode
 }
 
-static void _draw(trophy_t t, int frame, font_t* fnt)
+static void _draw(trophyData_t t, int frame, font_t* fnt)
 {
     // Get offset
     int yOffset;
     if (frame == STATIC_POSITION)
     {
-        if (tSystem.tSettings->drawFromBottom)
+        if (system.tSettings->drawFromBottom)
         {
             yOffset = TFT_HEIGHT - TROPHY_BANNER_HEIGHT;
         }
@@ -433,7 +446,7 @@ static void _draw(trophy_t t, int frame, font_t* fnt)
     {
         if (frame < TROPHY_BANNER_HEIGHT)
         {
-            if (tSystem.tSettings->drawFromBottom)
+            if (system.tSettings->drawFromBottom)
             {
                 yOffset = TFT_HEIGHT - frame;
             }
@@ -444,7 +457,7 @@ static void _draw(trophy_t t, int frame, font_t* fnt)
         }
         else
         {
-            if (tSystem.tSettings->drawFromBottom)
+            if (system.tSettings->drawFromBottom)
             {
                 yOffset = TFT_HEIGHT - (TROPHY_BANNER_HEIGHT * 2 - frame);
             }
@@ -457,7 +470,7 @@ static void _draw(trophy_t t, int frame, font_t* fnt)
     _drawAtYCoord(t, yOffset, fnt);
 }
 
-static void _drawAtYCoord(trophy_t t, int yOffset, font_t* fnt)
+static void _drawAtYCoord(trophyData_t t, int yOffset, font_t* fnt)
 {
     // Draw box (Gray box, black border)
     fillDisplayArea(0, yOffset, TFT_WIDTH, yOffset + TROPHY_BANNER_HEIGHT, c111);
@@ -474,19 +487,19 @@ static void _drawAtYCoord(trophy_t t, int yOffset, font_t* fnt)
     {
         // Set xOffset to be 2* H_BUFFER + ICON_WIDTH
         xOffset = TROPHY_BANNER_MAX_ICON_DIM + TROPHY_SCREEN_CORNER_CLEARANCE + TROPHY_IMAGE_BUFFER;
-        
+
         // Draw shadowbox
         drawRectFilled(startX, startY, startX + TROPHY_BANNER_MAX_ICON_DIM, startY + TROPHY_BANNER_MAX_ICON_DIM, c222);
 
         // Draw WSG
-        wsgPalette_t* wp = &tSystem.grayPalette;
+        wsgPalette_t* wp = &system.grayPalette;
         if (t.currentValue >= t.maxValue)
         {
-            wp = &tSystem.normalPalette;
+            wp = &system.normalPalette;
         }
-        drawWsgPaletteSimple(&tSystem.imageArray[0],
-                             startX + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].w) >> 1),
-                             startY + ((TROPHY_BANNER_MAX_ICON_DIM - tSystem.imageArray[0].h) >> 1), wp);
+        drawWsgPaletteSimple(&system.imageArray[0],
+                             startX + ((TROPHY_BANNER_MAX_ICON_DIM - system.imageArray[0].w) >> 1),
+                             startY + ((TROPHY_BANNER_MAX_ICON_DIM - system.imageArray[0].h) >> 1), wp);
     }
 
     // Draw text, starting after image if present
@@ -517,17 +530,17 @@ static void _drawAtYCoord(trophy_t t, int yOffset, font_t* fnt)
 
 // FIXME: Delete when done using
 
-void trophyDrawDataDirectly(trophy_t t, int y, font_t* fnt)
+void trophyDrawDataDirectly(trophyData_t t, int y, font_t* fnt)
 {
     _drawAtYCoord(t, y, fnt);
 }
 
 void loadImage(int idx, char* string)
 {
-    loadWsg(string, &tSystem.imageArray[idx], true);
+    loadWsg(string, &system.imageArray[idx], true);
 }
 
 void unloadImage(int idx)
 {
-    freeWsg(&tSystem.imageArray[idx]);
+    freeWsg(&system.imageArray[idx]);
 }

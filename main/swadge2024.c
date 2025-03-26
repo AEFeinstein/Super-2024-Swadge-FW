@@ -407,9 +407,9 @@ void app_main(void)
     if (NULL != cSwadgeMode->fnEnterMode)
     {
         cSwadgeMode->fnEnterMode();
-        if (NULL != cSwadgeMode->tSettings)
+        if (NULL != cSwadgeMode->trophyData)
         {
-            trophySystemInit(cSwadgeMode->tSettings);
+            trophySystemInit(cSwadgeMode->trophyData->settings);
         }
     }
 
@@ -529,7 +529,7 @@ void app_main(void)
             }
 
             // If trophies are not null, draw
-            if (NULL != cSwadgeMode->tSettings)
+            if (NULL != cSwadgeMode->trophyData && !cSwadgeMode->trophyData->settings->silent)
             {
                 trophyDraw(cSwadgeMode->modeName, &sysFont, tElapsedUs);
             }
@@ -718,9 +718,9 @@ static void setSwadgeMode(void* swadgeMode)
     if (cSwadgeMode->fnEnterMode)
     {
         cSwadgeMode->fnEnterMode();
-        if (NULL != cSwadgeMode->tSettings)
+        if (NULL != cSwadgeMode->trophyData)
         {
-            trophySystemInit(cSwadgeMode->tSettings);
+            trophySystemInit(cSwadgeMode->trophyData->settings);
         }
     }
 }
@@ -765,9 +765,9 @@ void softSwitchToPendingSwadge(void)
         if (NULL != cSwadgeMode->fnEnterMode)
         {
             cSwadgeMode->fnEnterMode();
-            if (NULL != cSwadgeMode->tSettings)
+            if (NULL != cSwadgeMode->trophyData)
             {
-                trophySystemInit(cSwadgeMode->tSettings);
+                trophySystemInit(cSwadgeMode->trophyData->settings);
             }
         }
 

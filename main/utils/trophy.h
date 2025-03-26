@@ -9,6 +9,7 @@
  *
  */
 
+// FIXME: Documentaiton is out of date
 /*! \file trophy.h
  *
  * \section trophy_overview Overview
@@ -149,6 +150,10 @@
  * \endcode
  *
  */
+
+// TODO: Can grab data from index or name
+// TODO: Remove uneccessary functions
+
 #pragma once
 
 //==============================================================================
@@ -164,11 +169,7 @@
 // Defines
 //==============================================================================
 
-// String lengths
-#define TROPHY_MAX_TITLE_LEN 24
-#define TROPHY_MAX_DESC_LEN  96
-#define TROPHY_MAX_WSG_LEN   24
-#define TROPHY_MAX_BANNERS   5
+#define TROPHY_MAX_BANNERS 5
 
 //==============================================================================
 // Enum
@@ -197,39 +198,35 @@ typedef enum
 // Structs
 //==============================================================================
 
-/// @brief Individual Trophy data objects (Possibly unnecessary)
+/// @brief Individual Trophy data objects
 typedef struct
 {
-    char title[TROPHY_MAX_TITLE_LEN];      //< Name of the Trophy, used as ID
-    char description[TROPHY_MAX_DESC_LEN]; //< Short description of task required
-    char imageString[TROPHY_MAX_WSG_LEN];  //< String leading to the .wsg file.
-    trophyTypes_t type;                    //< Type of trophy. See "trophy.h" for descriptions
-    trophyDifficulty_t difficulty;         //< How many points the trophy is worth
-    int currentValue;                      //< Current status of the trophy
-    int maxValue;                          //< The value that
-} trophy_t;
+    char* title;                   //< Name of the Trophy, used as ID
+    char* description;             //< Short description of task required
+    char* imageString;             //< String leading to the .wsg file.
+    trophyTypes_t type;            //< Type of trophy. See "trophy.h" for descriptions
+    trophyDifficulty_t difficulty; //< How many points the trophy is worth
+    int32_t maxVal;                //< The value that
+} trophyData_t;
 
 /// @brief Settings for the trophy system
 typedef struct
 {
+    bool silent;              //< If the system should draw trophies or not
     bool drawFromBottom;      //< If banner should be drawn from the bottom of the screen
     int32_t drawMaxDuration;  //< How long the banner will be drawn fully extended
     bool animated;            //< If being animated to slide in and out
     int32_t slideMaxDuration; //< How long the banner will take to slide in and out
-    bool silent;
+    
 } trophySettings_t;
 
 /// @brief The data object dev hands to the trophy showcase that contains all the const data.
 typedef struct
 {
-    int32_t length; //< Length of the trophy arrays
-    char* titles;
-    char* descriptions;
-    char* imageStrings;
-    trophyTypes_t* types;
-    trophyDifficulty_t* difficulty;
-    int32_t* maxVals;
-} trophyData_t;
+    int32_t length;                 //< Length of the trophy arrays
+    const trophyData_t* const list; //< Array of trophies
+    trophySettings_t* settings;     //< Setting data
+} trophyDataList_t;
 
 //==============================================================================
 // Functions
@@ -258,7 +255,7 @@ int trophySystemGetPoints(char* modeName);
 
 // Utilize trophies
 
-void trophySetValues(trophy_t* trophy, trophyData_t* data, int idx);
+void trophySetValues(trophyData_t* trophy, trophyDataList_t* data, int idx);
 
 /**
  * @brief Updates specifed trophy if required
@@ -305,7 +302,7 @@ int trophyGetNumTrophies(char* modeName);
  * @param tLen Max number of trophies to grab. If actual total is less than provided tLen, value is set to total
  * @param offset Where to start grabbing from. Useful in batch mode
  */
-void trophyGetTrophyList(char* modeName, trophy_t* tList, int* tLen, int offset);
+void trophyGetTrophyList(char* modeName, trophyData_t* tList, int* tLen, int offset);
 
 /**
  * @brief Grabs data for specified Trophy.
@@ -314,7 +311,7 @@ void trophyGetTrophyList(char* modeName, trophy_t* tList, int* tLen, int offset)
  * @param title Title of the Trophy
  * @return trophy_t trophy data struct
  */
-trophy_t trophyGetData(char* modeName, char* title);
+trophyData_t trophyGetData(char* modeName, char* title);
 
 // Drawing functions
 
@@ -344,6 +341,6 @@ void trophyDrawListInit(void);
 void trophyDrawList(char* modeName, int idx);
 
 // TEST ONLY
-void trophyDrawDataDirectly(trophy_t t, int y, font_t* fnt);
+void trophyDrawDataDirectly(trophyData_t t, int y, font_t* fnt);
 void loadImage(int idx, char* string);
 void unloadImage(int idx);

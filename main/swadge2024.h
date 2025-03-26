@@ -349,9 +349,9 @@ typedef struct
     fnDacCallback_t fnDacCb;
 
     /**
-     * @brief A struct with the settings for trophy behavior. Set to NULL for no trophies
+     * @brief A struct with the settings and data required for trophy behavior. Set to NULL for no trophies
      */
-    trophySettings_t* tSettings;
+    trophyDataList_t* trophyData;
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);
