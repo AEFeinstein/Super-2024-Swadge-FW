@@ -17,7 +17,7 @@
 //==============================================================================
 
 /// The WiFi channel to operate on
-#define ESPNOW_CHANNEL 11
+#define ESPNOW_CHANNEL 1
 // The WiFi PHY mode, high throughput 20MHz
 #define WIFI_PHY WIFI_PHY_MODE_HT20
 /// The WiFi rate to run at, MCS6 with short GI, 65 Mbps for 20MHz, 135 Mbps for 40MHz
@@ -105,8 +105,16 @@ static int16_t rBufTail;
 static void espNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, int data_len);
 static void espNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 
+static esp_err_t espNowInitWifi(void);
+static esp_err_t espNowStartWifi(void);
+static esp_err_t espNowStartEspNow(void);
+
+static esp_err_t espNowStopEspNow(void);
+static esp_err_t espNowStopWifi(void);
+static esp_err_t espNowDeinitWifi(void);
+
 //==============================================================================
-// Functions
+// External Initializer Functions
 //==============================================================================
 
 /**
@@ -142,6 +150,160 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         esp_now_queue = xQueueCreate(10, sizeof(espNowPacket_t));
     }
 
+    connectionMode = CM_NOT_CONNECTED;
+
+    esp_err_t err;
+    if (ESP_OK != (err = espNowInitWifi()))
+    {
+        return err;
+    }
+
+    if (ESP_OK != (err = espNowStartWifi()))
+    {
+        return err;
+    }
+
+    if (ESP_OK != (err = espNowStartEspNow()))
+    {
+        return err;
+    }
+
+    return ESP_OK;
+}
+
+/**
+ * This function is called to de-initialize ESP-NOW
+ * TODO refactor this
+ */
+void deinitEspNow(void)
+{
+    if (CM_SERIAL == connectionMode)
+    {
+        uart_driver_delete(uartNum);
+    }
+    else if (CM_WIRELESS == connectionMode)
+    {
+        espNowStopEspNow();
+        espNowStopWifi();
+        espNowDeinitWifi();
+
+        vQueueDelete(esp_now_queue);
+        esp_now_queue = NULL;
+
+        ESP_LOGE("ESPNOW", "deinitEspNow()");
+    }
+}
+
+/**
+ * @brief Power up the WiFi circuitry
+ */
+void powerUpEspNow(void)
+{
+    esp_wifi_power_domain_on();
+    initEspNow(hostEspNowRecvCb, hostEspNowSendCb, rxGpio, txGpio, uartNum, mode);
+}
+
+/**
+ * @brief Power down the WiFi circuitry
+ */
+void powerDownEspNow(void)
+{
+    deinitEspNow();
+    esp_wifi_power_domain_off();
+}
+
+/**
+ * @brief Call this before entering light sleep. It de-init espnow and stops wifi, but does not de-init WiFi
+ */
+void espNowPreLightSleep(void)
+{
+    espNowStopEspNow();
+    espNowStopWifi();
+}
+
+/**
+ * @brief Call this after waking from light sleep. It starts WiFi and initializes ESP-NOW
+ */
+void espNowPostLightSleep(void)
+{
+    espNowStartWifi();
+    espNowStartEspNow();
+}
+
+/**
+ * @brief TODO reimplement
+ *
+ */
+esp_err_t espNowUseWireless(void)
+{
+    // TODO reimplement
+    return ESP_OK;
+}
+
+/**
+ * Start the UART and use it for communication
+ *
+ * @param crossoverPins true to crossover the rx and tx pins, false to use them
+ *                      as normal.
+ */
+void espNowUseSerial(bool crossoverPins)
+{
+    switch (connectionMode)
+    {
+        case CM_WIRELESS:
+        {
+            // Disable wireless first
+            espNowStopEspNow();
+        }
+        // fall through
+        case CM_NOT_CONNECTED:
+        {
+            // Set up UART
+            connectionMode = CM_SERIAL;
+
+            // Initialize UART
+            uart_config_t uart_config = {
+                .baud_rate  = 8 * 115200,
+                .data_bits  = UART_DATA_8_BITS,
+                .parity     = UART_PARITY_DISABLE,
+                .stop_bits  = UART_STOP_BITS_1,
+                .flow_ctrl  = UART_HW_FLOWCTRL_DISABLE,
+                .source_clk = UART_SCLK_APB,
+            };
+            ESP_ERROR_CHECK(uart_driver_install(uartNum, ESP_NOW_SERIAL_RX_BUF_SIZE, 0, 0, NULL, 0));
+            ESP_ERROR_CHECK(uart_param_config(uartNum, &uart_config));
+
+            if (crossoverPins)
+            {
+                ESP_ERROR_CHECK(uart_set_pin(uartNum, txGpio, rxGpio, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+            }
+            else
+            {
+                ESP_ERROR_CHECK(uart_set_pin(uartNum, rxGpio, txGpio, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+            }
+
+            break;
+        }
+        case CM_SERIAL:
+        default:
+        {
+            // Do nothing
+            break;
+        }
+    }
+}
+
+//==============================================================================
+// Internal Initializer Functions
+//==============================================================================
+
+/**
+ * @brief Initialize WiFi, but do not start it
+ *
+ * @return esp_err_t ESP_OK if WiFi initialized, or an error otherwise
+ */
+static esp_err_t espNowInitWifi(void)
+{
     esp_err_t err = ESP_OK;
 
     // Initialize loopback interface
@@ -237,6 +399,18 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return err;
     }
 
+    return ESP_OK;
+}
+
+/**
+ * @brief Start WiFi. This must be called after espNowInitWifi()
+ *
+ * @return esp_err_t ESP_OK if WiFi started, or an error otherwise
+ */
+static esp_err_t espNowStartWifi(void)
+{
+    esp_err_t err = ESP_OK;
+
     if (ESP_OK != (err = esp_wifi_start()))
     {
         ESP_LOGE("ESPNOW", "Couldn't start wifi %s", esp_err_to_name(err));
@@ -257,219 +431,154 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return err;
     }
 
-    // Don't scan in STA mode
-    if (ESP_OK != (err = esp_wifi_scan_stop()))
+    return ESP_OK;
+}
+
+/**
+ * Initialize and start ESP-NOW. This must be called after espNowStartWifi()
+ *
+ * @return esp_err_t ESP_OK if ESP-NOW stopped, or an error otherwise
+ */
+static esp_err_t espNowStartEspNow(void)
+{
+    // Then start ESP NOW
+    esp_err_t err;
+    if (ESP_OK != (err = esp_now_init()))
     {
-        ESP_LOGE("ESPNOW", "Couldn't stop scanning");
+        ESP_LOGD("ESPNOW", "ESP NOW init fail!");
         return err;
     }
 
-    // Commented out but for future consideration.
-    // if(ESP_OK != esp_wifi_set_max_tx_power(84)) //78 ~= 19.5dB
-    //{
-    //    ESP_LOGE("ESPNOW", "Couldn't set max power");
-    //    return err;
-    //}
-
-    // This starts ESP-NOW
-    connectionMode = CM_NOT_CONNECTED;
-    espNowUseWireless();
-
-    return err;
-}
-
-/**
- * This function is called to de-initialize ESP-NOW
- */
-void deinitEspNow(void)
-{
-    if (CM_SERIAL == connectionMode)
+    if (ESP_OK != (err = esp_now_register_recv_cb(espNowRecvCb)))
     {
-        uart_driver_delete(uartNum);
+        ESP_LOGE("ESPNOW", "recvCb NOT registered");
+        return err;
     }
-    else if (CM_WIRELESS == connectionMode)
+
+    if (ESP_OK != (err = esp_now_register_send_cb(espNowSendCb)))
     {
-        esp_now_unregister_recv_cb();
-        esp_now_unregister_send_cb();
-        esp_now_del_peer(espNowBroadcastMac);
-        esp_now_deinit();
-        esp_wifi_stop();
-        esp_wifi_deinit();
-        esp_event_loop_delete_default();
-        esp_netif_deinit();
-        vQueueDelete(esp_now_queue);
-        esp_now_queue = NULL;
+        ESP_LOGE("ESPNOW", "sendCb NOT registered");
+        return err;
     }
-}
 
-/**
- * @brief Power down the TODO
- */
-void powerDownEspNow(void)
-{
-    deinitEspNow();
-    esp_wifi_power_domain_off();
-}
-
-/**
- * @brief Power up the TODO
- */
-void powerUpEspNow(void)
-{
-    esp_wifi_power_domain_on();
-    initEspNow(hostEspNowRecvCb, hostEspNowSendCb, rxGpio, txGpio, uartNum, mode);
-}
-
-/**
- * Start wifi and use it for communication
- * @return ESP_OK or an error that occurred
- */
-esp_err_t espNowUseWireless(void)
-{
-    switch (connectionMode)
+    esp_now_peer_info_t broadcastPeer
+        = {.peer_addr = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+           .lmk     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+           .channel = ESPNOW_CHANNEL,
+           .ifidx   = WIFI_IF_STA,
+           .encrypt = 0,
+           .priv    = NULL};
+    if (ESP_OK != (err = esp_now_add_peer(&broadcastPeer)))
     {
-        case CM_SERIAL:
-        {
-            // First make sure the UART isn't being used
-            uart_driver_delete(uartNum);
-            // Fall through
-        }
-        case CM_NOT_CONNECTED:
-        {
-            connectionMode = CM_WIRELESS;
+        ESP_LOGE("ESPNOW", "peer NOT added");
+        return err;
+    }
 
-            // Then start ESP NOW
-            esp_err_t err;
-            if (ESP_OK == (err = esp_now_init()))
-            {
-                ESP_LOGD("ESPNOW", "ESP NOW init!");
+    esp_now_rate_config_t rateConfig = {
+        .phymode = WIFI_PHY,
+        .rate    = WIFI_RATE,
+        .ersu    = false,
+        .dcm     = false,
+    };
+    if (ESP_OK != (err = esp_now_set_peer_rate_config(espNowBroadcastMac, &rateConfig)))
+    {
+        ESP_LOGE("ESPNOW", "rate NOT set");
+        return err;
+    }
 
-                if (ESP_OK != (err = esp_now_register_recv_cb(espNowRecvCb)))
-                {
-                    ESP_LOGE("ESPNOW", "recvCb NOT registered");
-                    return err;
-                }
+    // Appears to set gain "offset" like what it reports as gain?  Does not actually impact real gain.
+    // But when paired with the second write command, it seems to have the intended impact.
+    // This number is in ~1/2dB.  So 20 accounts for a 10dB muting; 25, 12.5dB; 30, 15dB
+    const int igi_reduction = 20;
+    volatile uint32_t* test = (uint32_t*)0x6001c02c; // Should be the "RSSI Offset" but seems to do more.
+    *test                   = (*test & 0xffffff00) + igi_reduction;
 
-                if (ESP_OK != (err = esp_now_register_send_cb(espNowSendCb)))
-                {
-                    ESP_LOGE("ESPNOW", "sendCb NOT registered");
-                    return err;
-                }
+    // Make sure the first takes effect.
+    vTaskDelay(0);
 
-                esp_now_peer_info_t broadcastPeer = {.peer_addr = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-                                                     .lmk = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                                                     .channel = ESPNOW_CHANNEL,
-                                                     .ifidx   = WIFI_IF_STA,
-                                                     .encrypt = 0,
-                                                     .priv    = NULL};
-                if (ESP_OK != (err = esp_now_add_peer(&broadcastPeer)))
-                {
-                    ESP_LOGE("ESPNOW", "peer NOT added");
-                    return err;
-                }
+    // No idea  Somehow applies setting of 0x6001c02c  (Ok, actually I don't know what the right-most value
+    // should be but 0xff in the MSB seems to work?
+    test  = (uint32_t*)0x6001c0a0;
+    *test = (*test & 0xffffff) | 0xff00000000;
 
-                esp_now_rate_config_t rateConfig = {
-                    .phymode = WIFI_PHY,
-                    .rate    = WIFI_RATE,
-                    .ersu    = false,
-                    .dcm     = false,
-                };
-                if (ESP_OK != (err = esp_now_set_peer_rate_config(espNowBroadcastMac, &rateConfig)))
-                {
-                    ESP_LOGE("ESPNOW", "rate NOT set");
-                    return err;
-                }
-            }
-            else
-            {
-                ESP_LOGE("ESPNOW", "esp now fail (%s)", esp_err_to_name(err));
-                return err;
-            }
+    return ESP_OK;
+}
 
-            // Appears to set gain "offset" like what it reports as gain?  Does not actually impact real gain.
-            // But when paired with the second write command, it seems to have the intended impact.
-            // This number is in ~1/2dB.  So 20 accounts for a 10dB muting; 25, 12.5dB; 30, 15dB
-            const int igi_reduction = 20;
-            volatile uint32_t* test = (uint32_t*)0x6001c02c; // Should be the "RSSI Offset" but seems to do more.
-            *test                   = (*test & 0xffffff00) + igi_reduction;
+/**
+ * @brief Stop and deinitialize ESP-NOW
+ *
+ * @return esp_err_t ESP_OK if ESP-NOW stopped, or an error otherwise
+ */
+static esp_err_t espNowStopEspNow(void)
+{
+    esp_err_t err;
 
-            // Make sure the first takes effect.
-            vTaskDelay(0);
+    if (ESP_OK != (err = esp_now_del_peer(espNowBroadcastMac)))
+    {
+        ESP_LOGE("ESPNOW", "Couldn't delete peer %s", esp_err_to_name(err));
+    }
 
-            // No idea  Somehow applies setting of 0x6001c02c  (Ok, actually I don't know what the right-most value
-            // should be but 0xff in the MSB seems to work?
-            test  = (uint32_t*)0x6001c0a0;
-            *test = (*test & 0xffffff) | 0xff00000000;
+    if (ESP_OK != (err = esp_now_unregister_recv_cb()))
+    {
+        ESP_LOGE("ESPNOW", "Couldn't unregister recv %s", esp_err_to_name(err));
+    }
 
-            break;
-        }
-        // fall through
-        case CM_WIRELESS:
-        default:
-        {
-            // Do nothing
-            break;
-        }
+    if (ESP_OK != (err = esp_now_unregister_send_cb()))
+    {
+        ESP_LOGE("ESPNOW", "Couldn't unregister send %s", esp_err_to_name(err));
+    }
+
+    if (ESP_OK != (err = esp_now_deinit()))
+    {
+        ESP_LOGE("ESPNOW", "Couldn't de-init esp now %s", esp_err_to_name(err));
     }
 
     return ESP_OK;
 }
 
 /**
- * Start the UART and use it for communication
+ * @brief Stop WiFi but do not deinitialize it. This must be called after espNowStopEspNow()
  *
- * @param crossoverPins true to crossover the rx and tx pins, false to use them
- *                      as normal.
+ * @return esp_err_t ESP_OK if WiFi stopped, or an error otherwise
  */
-void espNowUseSerial(bool crossoverPins)
+static esp_err_t espNowStopWifi(void)
 {
-    switch (connectionMode)
+    esp_err_t err;
+    if (ESP_OK != (err = esp_wifi_stop()))
     {
-        case CM_WIRELESS:
-        {
-            // Disable wireless first
-            esp_now_unregister_recv_cb();
-            esp_now_unregister_send_cb();
-            esp_now_deinit();
-        }
-        // fall through
-        case CM_NOT_CONNECTED:
-        {
-            // Set up UART
-            connectionMode = CM_SERIAL;
-
-            // Initialize UART
-            uart_config_t uart_config = {
-                .baud_rate  = 8 * 115200,
-                .data_bits  = UART_DATA_8_BITS,
-                .parity     = UART_PARITY_DISABLE,
-                .stop_bits  = UART_STOP_BITS_1,
-                .flow_ctrl  = UART_HW_FLOWCTRL_DISABLE,
-                .source_clk = UART_SCLK_APB,
-            };
-            ESP_ERROR_CHECK(uart_driver_install(uartNum, ESP_NOW_SERIAL_RX_BUF_SIZE, 0, 0, NULL, 0));
-            ESP_ERROR_CHECK(uart_param_config(uartNum, &uart_config));
-
-            if (crossoverPins)
-            {
-                ESP_ERROR_CHECK(uart_set_pin(uartNum, txGpio, rxGpio, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-            }
-            else
-            {
-                ESP_ERROR_CHECK(uart_set_pin(uartNum, rxGpio, txGpio, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-            }
-
-            break;
-        }
-        case CM_SERIAL:
-        default:
-        {
-            // Do nothing
-            break;
-        }
+        ESP_LOGE("ESPNOW", "Couldn't stop wifi %s", esp_err_to_name(err));
     }
+    return ESP_OK;
 }
+
+/**
+ * @brief Deinitialize WiFi. This must be called after espNowStopWifi()
+ *
+ * @return esp_err_t ESP_OK if WiFi de-initialized, or an error otherwise
+ */
+static esp_err_t espNowDeinitWifi(void)
+{
+    esp_err_t err;
+    if (ESP_OK != (err = esp_wifi_deinit()))
+    {
+        ESP_LOGE("ESPNOW", "Couldn't deinit wifi %s", esp_err_to_name(err));
+    }
+
+    if (ESP_OK != (err = esp_event_loop_delete_default()))
+    {
+        ESP_LOGE("ESPNOW", "Couldn't delete event loop %s", esp_err_to_name(err));
+    }
+
+    if (ESP_OK != (err = esp_netif_deinit()))
+    {
+        ESP_LOGE("ESPNOW", "Couldn't deinit netif %s", esp_err_to_name(err));
+    }
+    return ESP_OK;
+}
+
+//==============================================================================
+// Transmissions Functions
+//==============================================================================
 
 /**
  * This callback function is called whenever an ESP-NOW packet is received
@@ -691,7 +800,11 @@ void espNowSend(const char* data, uint8_t len)
     else if (CM_WIRELESS == connectionMode)
     {
         // Send a packet
-        esp_now_send((uint8_t*)espNowBroadcastMac, (uint8_t*)data, len);
+        esp_err_t ret = esp_now_send((uint8_t*)espNowBroadcastMac, (uint8_t*)data, len);
+        if (ESP_OK != ret)
+        {
+            ESP_LOGE("ESPNOW", "esp_now_send() fail %s (0x%04X)", esp_err_to_name(ret), ret);
+        }
     }
 }
 

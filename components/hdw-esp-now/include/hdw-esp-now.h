@@ -129,6 +129,9 @@ void deinitEspNow(void);
 void powerDownEspNow(void);
 void powerUpEspNow(void);
 
+void espNowPreLightSleep(void);
+void espNowPostLightSleep(void);
+
 esp_err_t espNowUseWireless(void);
 void espNowUseSerial(bool crossoverPins);
 
