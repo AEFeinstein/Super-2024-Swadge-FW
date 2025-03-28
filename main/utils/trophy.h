@@ -324,7 +324,7 @@ trophyData_t trophyGetData(char* modeName, char* title);
  * @param fnt Font to be used
  * @param elapsedUs TIme since last frame
  */
-void trophyDraw(char* modeName, font_t* fnt, int64_t elapsedUs);
+void trophyDraw(font_t* fnt, int64_t elapsedUs);
 
 /**
  * @brief Changes the colors of the default list of trophies.

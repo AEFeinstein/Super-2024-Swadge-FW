@@ -532,7 +532,7 @@ void app_main(void)
             if (NULL != cSwadgeMode->trophyData && !cSwadgeMode->trophyData->settings->silent)
             {
                 char buffer();
-                trophyDraw(cSwadgeMode->trophyData->settings->namespaceKey, &sysFont, tElapsedUs);
+                trophyDraw(&sysFont, tElapsedUs);
             }
 
             // Draw to the TFT
@@ -634,8 +634,9 @@ static void initOptionalPeripherals(void)
 void deinitSystem(void)
 {
     // Deinit font and sfx
-    freeFont(&sysFont);
-    unloadMidiFile(&sysSound);
+    // FIXME: THeses are unloaded when the mode is unloaded, not the entire swadge.
+    /* freeFont(&sysFont);
+    unloadMidiFile(&sysSound); */
 
     // Deinit the swadge mode
     if (NULL != cSwadgeMode->fnExitMode)

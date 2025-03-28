@@ -35,6 +35,7 @@
 // Standard defines
 #define TENTH_SECOND    100000
 #define STATIC_POSITION -1
+#define MAX_NVS_KEY_LEN 16
 
 // Visuals
 #define TROPHY_BANNER_HEIGHT           48
@@ -68,7 +69,8 @@ typedef struct
 
     // Data
     trophyDataWrapper_t trophyQueue[TROPHY_MAX_BANNERS]; //< List of trophy updates to display
-    int8_t idx;                                          //< The current display index
+    int8_t idx;                                          //< Index of next queue slot to fill
+    int8_t currIdx;                                      //< The current display index
 
     // Drawing
     bool active;                //< If the mode should be drawing a banner
@@ -138,6 +140,15 @@ static void _draw(trophyDataWrapper_t t, int frame, font_t* fnt);
  */
 static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt);
 
+/**
+ * @brief Truncates a string down to a specified length
+ *
+ * @param to The string/buffer to copy the text into
+ * @param from The source string
+ * @param len Length to copy
+ */
+static void _truncateStr(char* to, char* from, int len);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -157,10 +168,11 @@ void trophySystemInit(trophySettings_t* settings, char* modeName)
     // If no namespace is provided, auto generate
     if (strcmp(settings->namespaceKey, "") == 0)
     {
-        // FIXME: Max key len is 15 chars. Need to cut down automatically
-        strcpy(trophySystem.settings->namespaceKey, modeName);
+        char buffer[MAX_NVS_KEY_LEN];
+        _truncateStr(buffer, modeName, MAX_NVS_KEY_LEN);
+        strcpy(trophySystem.settings->namespaceKey, buffer);
     }
-    
+
     // Init palette
     // TODO: Make its own function
     wsgPaletteReset(&trophySystem.normalPalette);
@@ -291,46 +303,60 @@ int trophySystemGetPoints(char* modeName)
 void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
 {
     // Load
-    trophyDataWrapper_t* tw = &trophySystem.trophyQueue[trophySystem.idx];
-    _load(tw, t);
+    trophyDataWrapper_t tw = {};
+    _load(&tw, t);
 
     // Check if trophy is already won and return if true
-    if (tw->trophyData.type == TROPHY_TYPE_CHECKLIST)
+    if (tw.trophyData.type == TROPHY_TYPE_CHECKLIST)
     {
         // TODO: check if all flags are set
     }
-    else if (tw->trophyData.type == TROPHY_TYPE_TRIGGER)
+    else if (tw.trophyData.type == TROPHY_TYPE_TRIGGER)
     {
-        if (tw->currentVal >= 1)
+        if (tw.currentVal >= 1)
         {
             return;
         }
     }
     else
     {
-        if (tw->currentVal >= tw->trophyData.maxVal)
+        if (tw.currentVal >= tw.trophyData.maxVal)
         {
             return;
         }
     }
 
     // If the new value is the same as the previously saved value, return
-    if (tw->currentVal >= newVal)
+    if (tw.currentVal >= newVal)
     {
         return;
     }
     else
     { // If the newValue has exceeded maxVal, Save value (should work for checklist)
-        _save(*tw, newVal);
+        _save(tw, newVal);
         // TODO: Check if won
         // TODO: Update trophyScore
     }
-    
-    // If drawUpdate, save trophy to list to display
-    // - Add to queue
-    // - Load WSG
-    // - reset all timers, etc if not already active
-    // - Set system to active if not set
+
+    // Load into draw queue is requested
+    if (drawUpdate)
+    {
+        trophySystem.trophyQueue[trophySystem.idx] = tw;
+        // Load sprite
+        loadWsg(trophySystem.trophyQueue[trophySystem.idx].trophyData.imageString,
+                &trophySystem.trophyQueue[trophySystem.idx].image, true);
+        
+        // Set system and this index to active
+        trophySystem.active = true;
+        trophySystem.trophyQueue[trophySystem.idx].active = true;
+
+        // Reset timers
+        trophySystem.animationTick = 0;
+        // TODO: the rest of this
+
+        // Increment idx
+        trophySystem.idx++;
+    }
 }
 
 void trophyUpdateMilestone(char* modeName, char* title, int value)
@@ -375,13 +401,20 @@ trophyData_t trophyGetData(char* modeName, char* title)
 
 // Draw
 
-void trophyDraw(char* modeName, font_t* fnt, int64_t elapsedUs)
+void trophyDraw(font_t* fnt, int64_t elapsedUs)
 {
     // Exit immediately if not being drawn
     if (!trophySystem.active)
     {
         return;
     }
+    _drawAtYCoord(trophySystem.trophyQueue[0], 0, fnt);
+    _drawAtYCoord(trophySystem.trophyQueue[1], TROPHY_BANNER_HEIGHT, fnt);
+    _drawAtYCoord(trophySystem.trophyQueue[2], TROPHY_BANNER_HEIGHT * 2, fnt);
+    _drawAtYCoord(trophySystem.trophyQueue[3], TROPHY_BANNER_HEIGHT * 3, fnt);
+    _drawAtYCoord(trophySystem.trophyQueue[4], TROPHY_BANNER_HEIGHT * 4, fnt);
+    // FIXME: Nothing past this executes during testing
+    return;
     // Draws the trophy
     if (trophySystem.settings->animated && trophySystem.sliding) // Sliding in or out
     {
@@ -442,8 +475,9 @@ void trophyDrawList(char* modeName, int idx)
 
 static void _save(trophyDataWrapper_t t, int newVal)
 {
-    // Check if the data in the trophy is identical to incoming data, and exit if so
-    // Save the trophy
+    char buffer[MAX_NVS_KEY_LEN];
+    _truncateStr(buffer, t.trophyData.title, MAX_NVS_KEY_LEN);
+    writeNamespaceNvs32(trophySystem.settings->namespaceKey, buffer, newVal);
 }
 
 static void _load(trophyDataWrapper_t* tw, trophyData_t t)
@@ -452,24 +486,23 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t)
     strcpy(tw->trophyData.title, t.title);
     strcpy(tw->trophyData.description, t.description);
     strcpy(tw->trophyData.imageString, t.imageString);
-    tw->trophyData.type = t.type;
+    tw->trophyData.type       = t.type;
     tw->trophyData.difficulty = t.difficulty;
-    tw->trophyData.maxVal = t.maxVal;
+    tw->trophyData.maxVal     = t.maxVal;
 
     // Pull Current Val from disk
     int32_t val;
-    if(readNamespaceNvs32(trophySystem.settings->namespaceKey, t.title, &val))
+    char buffer[MAX_NVS_KEY_LEN];
+    _truncateStr(buffer, t.title, MAX_NVS_KEY_LEN);
+    if (readNamespaceNvs32(trophySystem.settings->namespaceKey, buffer, &val))
     {
         tw->currentVal = val;
     }
-    else 
+    else
     {
         tw->currentVal = 0;
-        writeNamespaceNvs32(trophySystem.settings->namespaceKey, t.title, 0);
+        writeNamespaceNvs32(trophySystem.settings->namespaceKey, buffer, 0);
     }
-
-    // Load sprite
-    loadWsg(tw->trophyData.imageString, &tw->image, true);
 }
 
 static void _getTrophyData(char* modeName, trophyData_t* tList, int tLen, int offset)
@@ -528,7 +561,7 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
     int xOffset;
     int16_t startX = TROPHY_SCREEN_CORNER_CLEARANCE;
     int16_t startY = yOffset + ((TROPHY_BANNER_HEIGHT - TROPHY_BANNER_MAX_ICON_DIM) >> 1);
-    if (strcmp(t.trophyData.imageString, ""))
+    if (strcmp(t.trophyData.imageString, "") == 0)
     {
         // Draw text at start of buffer area
         xOffset = TROPHY_SCREEN_CORNER_CLEARANCE;
@@ -571,4 +604,10 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
         }
         drawText(fnt, color, buffer, xOff, yOffset + 4);
     }
+}
+
+static void _truncateStr(char* to, char* from, int len)
+{
+    strncpy(to, from, len);
+    to[len - 1] = '\0';
 }

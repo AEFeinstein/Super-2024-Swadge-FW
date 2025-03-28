@@ -20,12 +20,12 @@
 // Consts
 //==============================================================================
 
-static const char trophyModeName[] = "TrophyTest";
+static const char trophyModeName[] = "Trophy Test - Long name, short results!";
 
 // Trophy Data example
 const trophyData_t testTrophies[] = {
     {
-        .title       = "Title 1",
+        .title       = "Overlong Trophy Name",
         .description = "Description 1",
         .imageString = "kid0.wsg",
         .type        = TROPHY_TYPE_TRIGGER,
