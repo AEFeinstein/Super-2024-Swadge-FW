@@ -171,6 +171,7 @@ void danceEnterMode(void)
     danceState->buttonPressedTimer = 0;
 
     danceState->maySleep = true;
+    espNowPreLightSleep();
 
     danceState->menu         = initMenu(danceName, danceMenuCb);
     danceState->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
