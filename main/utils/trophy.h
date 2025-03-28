@@ -242,10 +242,8 @@ typedef struct
  * @brief Initializes the Trophy system settings. The system is a global setting and every mode needs to set this when
  * entered to avoid copying from other modes.
  *
- * @param bottom True if the banner should appear from the bottom, false if should appear from the top.
- * @param displayDuration Time in tenths of a second that the banner should display for. Default is 3 seconds (30)
- * @param animate If the banner should scroll into view
- * @param scrollSpeed Time in tenths of a second for banner to appear. Default is half a second (5)
+ * @param settings The settings data
+ * @param modeName Name of the mode
  */
 void trophySystemInit(trophySettings_t* settings, char* modeName);
 
@@ -262,9 +260,8 @@ int trophySystemGetPoints(char* modeName);
 /**
  * @brief Updates specifed trophy if required
  *
- * @param modeName Name of the mode
- * @param title Title fo the trophy to update
- * @param value New value to try to set. Behavior is set by trophy type
+ * @param t Trophy to update
+ * @param newVal New value to try to set. Behavior is set by trophy type
  * @param drawUpdate If this update should be drawn to the screen
  */
 void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
@@ -281,8 +278,7 @@ void trophyUpdateMilestone(char* modeName, char* title, int value);
 /**
  * @brief Erases completion data from swadge. Only use in extreme circumstances.
  *
- * @param modeName Name of the mode
- * @param title Title of trophy to clear.
+ * @param t Trophy to set to 0
  */
 void trophyClear(trophyData_t t);
 
@@ -320,7 +316,6 @@ trophyData_t trophyGetData(char* modeName, char* title);
 /**
  * @brief Draws the banner if one is queued
  *
- * @param modeName Name of the mode being used
  * @param fnt Font to be used
  * @param elapsedUs TIme since last frame
  */

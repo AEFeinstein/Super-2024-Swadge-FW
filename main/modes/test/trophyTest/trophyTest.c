@@ -40,6 +40,38 @@ const trophyData_t testTrophies[] = {
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1024,
     },
+    {
+        .title       = "Title 3",
+        .description = "Description 3",
+        .imageString = "kid1.wsg",
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1024,
+    },
+    {
+        .title       = "Title 4",
+        .description = "Description 4",
+        .imageString = "kid1.wsg",
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1024,
+    },
+    {
+        .title       = "Title 5",
+        .description = "Description 5",
+        .imageString = "kid1.wsg",
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1024,
+    },
+    {
+        .title       = "Title 6",
+        .description = "Description 6",
+        .imageString = "kid1.wsg",
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1024,
+    },
 };
 
 //==============================================================================
@@ -48,7 +80,7 @@ const trophyData_t testTrophies[] = {
 
 typedef struct
 {
-    trophyData_t t[2]; //< Example trophy
+    int idx;
 } trophyTest_t;
 
 //==============================================================================
@@ -79,7 +111,7 @@ static void runTrophy(int64_t elapsedUs);
 //==============================================================================
 
 trophySettings_t tSettings
-    = {.animated = true, .drawFromBottom = true, .silent = false, .drawMaxDuration = 500, .slideMaxDuration = 200};
+    = {.animated = true, .drawFromBottom = true, .silent = false, .drawMaxDuration = 10, .slideMaxDuration = 10};
 
 trophyDataList_t trophyTestData = {.settings = &tSettings, .list = testTrophies};
 
@@ -107,9 +139,8 @@ static trophyTest_t* tt;
 
 static void enterTrophy()
 {
-    tt = (trophyTest_t*)heap_caps_calloc(1, sizeof(trophyTest_t), MALLOC_CAP_8BIT);
-    // Test
-    bool gre = true;
+    tt = heap_caps_calloc(sizeof(trophyTest_t), 1, MALLOC_CAP_8BIT);
+    tt->idx = 0;
 }
 
 static void exitTrophy()
@@ -119,6 +150,7 @@ static void exitTrophy()
 
 static void runTrophy(int64_t elapsedUs)
 {
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
@@ -126,13 +158,21 @@ static void runTrophy(int64_t elapsedUs)
         {
             if (evt.button & PB_A)
             {  
-                trophyUpdate(testTrophies[0], 1, true);
+                trophyUpdate(testTrophies[tt->idx++], 1, true);
+                if (tt->idx >= ARRAY_SIZE(testTrophies))
+                {
+                    tt->idx = 0;
+                }
             }
             else if (evt.button & PB_B)
             {
-                trophyClear(testTrophies[0]);
+                for (int idx = 0; idx < ARRAY_SIZE(testTrophies); idx++)
+                {
+                    trophyClear(testTrophies[idx]);
+                }
             }
-        }
-        
+        }   
     }
+
+    drawText(getSysFont(), c555, "Press A to trigger", 32, 32);
 }

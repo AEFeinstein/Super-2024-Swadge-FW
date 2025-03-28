@@ -33,7 +33,7 @@
 //==============================================================================
 
 // Standard defines
-#define TENTH_SECOND    100000
+#define TENTH_SECOND    10000
 #define STATIC_POSITION -1
 #define MAX_NVS_KEY_LEN 16
 
@@ -96,21 +96,28 @@ static trophySystem_t trophySystem = {}; //< Should be one instance per swadge, 
 //==============================================================================
 
 /**
- * @brief Saves a trophy. Checks data is actually fresh before saving to avoid hammering NVS
+ * @brief Saves a trophy.
  *
- * @param modeName Name of the mode for namespace
  * @param t Data to write
+ * @param newVal Value to save
  */
 static void _save(trophyDataWrapper_t t, int newVal);
 
 /**
- * @brief Loads data from NVS given a string. Returns NULL if not found
+ * @brief Loads data into a wrapper
  *
- * @param modeName Name of the mode
- * @param title Title of trophy to load
- * @return trophy_t Trophy data. NULL is not found
+ * @param tw Trophy Wrapper pointer
+ * @param t Trophy Data
  */
 static void _load(trophyDataWrapper_t* tw, trophyData_t t);
+
+/**
+ * @brief Copies data from a trophyData to a wrapper
+ *
+ * @param tw Wrapper object to copy to
+ * @param t Trophy data to copy
+ */
+static void _copyTrophy(trophyDataWrapper_t* tw, trophyData_t t);
 
 /**
  * @brief Grabs all trophy data from NVS
@@ -333,6 +340,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
     }
     else
     { // If the newValue has exceeded maxVal, Save value (should work for checklist)
+        tw.currentVal = newVal;
         _save(tw, newVal);
         // TODO: Check if won
         // TODO: Update trophyScore
@@ -345,17 +353,25 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         // Load sprite
         loadWsg(trophySystem.trophyQueue[trophySystem.idx].trophyData.imageString,
                 &trophySystem.trophyQueue[trophySystem.idx].image, true);
-        
+
         // Set system and this index to active
-        trophySystem.active = true;
+        trophySystem.active                               = true;
+        trophySystem.beingDrawn                           = true;
         trophySystem.trophyQueue[trophySystem.idx].active = true;
 
         // Reset timers
         trophySystem.animationTick = 0;
+        trophySystem.drawTimer     = 0;
+        trophySystem.slideTimer    = 0;
+        trophySystem.sliding = trophySystem.settings->animated;
         // TODO: the rest of this
 
         // Increment idx
         trophySystem.idx++;
+        if (trophySystem.idx >= TROPHY_MAX_BANNERS)
+        {
+            trophySystem.idx = 0;
+        }
     }
 }
 
@@ -372,8 +388,9 @@ void trophyUpdateMilestone(char* modeName, char* title, int value)
 
 void trophyClear(trophyData_t t)
 {
-    // If Trophy exists, reset it to zero
-    // If was won, delete points
+    trophyDataWrapper_t tw = {};
+    _copyTrophy(&tw, t);
+    _save(tw, 0);
 }
 
 // Helpers
@@ -408,17 +425,10 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
     {
         return;
     }
-    _drawAtYCoord(trophySystem.trophyQueue[0], 0, fnt);
-    _drawAtYCoord(trophySystem.trophyQueue[1], TROPHY_BANNER_HEIGHT, fnt);
-    _drawAtYCoord(trophySystem.trophyQueue[2], TROPHY_BANNER_HEIGHT * 2, fnt);
-    _drawAtYCoord(trophySystem.trophyQueue[3], TROPHY_BANNER_HEIGHT * 3, fnt);
-    _drawAtYCoord(trophySystem.trophyQueue[4], TROPHY_BANNER_HEIGHT * 4, fnt);
-    // FIXME: Nothing past this executes during testing
-    return;
-    // Draws the trophy
     if (trophySystem.settings->animated && trophySystem.sliding) // Sliding in or out
     {
         trophySystem.slideTimer += elapsedUs;
+        // FIXME: Speed of slide isn't correct somehow
         int frameLen = (trophySystem.settings->slideMaxDuration * TENTH_SECOND) / TROPHY_BANNER_HEIGHT;
         while (trophySystem.slideTimer >= frameLen)
         {
@@ -435,24 +445,30 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
             trophySystem.sliding = false; // Disables drawing
             trophySystem.active  = false; // Stops drawing altogether
         }
-        _draw(trophySystem.trophyQueue[0], trophySystem.animationTick, fnt);
+        _draw(trophySystem.trophyQueue[trophySystem.currIdx], trophySystem.animationTick, fnt);
     }
     else if (trophySystem.beingDrawn) // Static on screen
     {
         // Regular timer
         trophySystem.drawTimer += elapsedUs;
-        if (trophySystem.drawTimer >= trophySystem.settings->drawMaxDuration)
+        // FIXME: Duration isn't correct
+        if (trophySystem.drawTimer >= trophySystem.settings->drawMaxDuration * TENTH_SECOND)
         {
             // Stop drawing
             trophySystem.beingDrawn = false;
-            // trophySystem.sliding    = trophySystem.trophyQueue->animated; // Starts sliding again if set
+            trophySystem.sliding    = trophySystem.settings->animated; // Starts sliding again if set
         }
         // Draw
-        _draw(trophySystem.trophyQueue[0], STATIC_POSITION, fnt);
+        _draw(trophySystem.trophyQueue[trophySystem.currIdx], STATIC_POSITION, fnt);
     }
     else // Has ended
     {
         trophySystem.active = false;
+        trophySystem.currIdx++;
+        if (trophySystem.currIdx >= TROPHY_MAX_BANNERS)
+        {
+            trophySystem.currIdx = 0;
+        }
     }
     // TODO: play sound (?)
 }
@@ -483,12 +499,7 @@ static void _save(trophyDataWrapper_t t, int newVal)
 static void _load(trophyDataWrapper_t* tw, trophyData_t t)
 {
     // Copy t into tw
-    strcpy(tw->trophyData.title, t.title);
-    strcpy(tw->trophyData.description, t.description);
-    strcpy(tw->trophyData.imageString, t.imageString);
-    tw->trophyData.type       = t.type;
-    tw->trophyData.difficulty = t.difficulty;
-    tw->trophyData.maxVal     = t.maxVal;
+    _copyTrophy(tw, t);
 
     // Pull Current Val from disk
     int32_t val;
@@ -503,6 +514,16 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t)
         tw->currentVal = 0;
         writeNamespaceNvs32(trophySystem.settings->namespaceKey, buffer, 0);
     }
+}
+
+static void _copyTrophy(trophyDataWrapper_t* tw, trophyData_t t)
+{
+    strcpy(tw->trophyData.title, t.title);
+    strcpy(tw->trophyData.description, t.description);
+    strcpy(tw->trophyData.imageString, t.imageString);
+    tw->trophyData.type       = t.type;
+    tw->trophyData.difficulty = t.difficulty;
+    tw->trophyData.maxVal     = t.maxVal;
 }
 
 static void _getTrophyData(char* modeName, trophyData_t* tList, int tLen, int offset)
