@@ -172,6 +172,7 @@
 // Useful ESP things
 #include <esp_heap_caps.h>
 #include <esp_log.h>
+#include <esp_random.h>
 
 // Hardware interfaces
 #include "crashwrap.h"

@@ -180,9 +180,32 @@ esp_err_t espNowUseWireless(void)
  * @param crossoverPins true to crossover the rx and tx pins, false to use them
  *                      as normal.
  */
-void espNowUseSerial(bool crossoverPins)
+esp_err_t espNowUseSerial(bool crossoverPins)
 {
     // Do nothing
+    return ESP_OK;
+}
+
+/**
+ * @brief
+ *
+ * @return esp_err_t
+ */
+esp_err_t espNowPreLightSleep(void)
+{
+    // Do nothing
+    return ESP_OK;
+}
+
+/**
+ * @brief
+ *
+ * @return esp_err_t
+ */
+esp_err_t espNowPostLightSleep(void)
+{
+    // Do nothing
+    return ESP_OK;
 }
 
 /**

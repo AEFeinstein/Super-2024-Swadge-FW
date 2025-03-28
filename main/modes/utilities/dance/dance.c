@@ -53,6 +53,8 @@ typedef struct
     int32_t bcastTimer;
     int32_t listenTimer;
     bool maySleep;
+
+    int32_t swadgePassCount;
 } danceMode_t;
 
 //==============================================================================
@@ -292,6 +294,11 @@ void danceMainLoop(int64_t elapsedUs)
         {
             // Screen is not blank, draw to it
             drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
+
+            font_t* f = danceState->menuRenderer->menuFont;
+            char str[16];
+            sprintf(str, "SP: %" PRId32, danceState->swadgePassCount);
+            drawText(f, c000, str, (TFT_WIDTH - textWidth(f, str)) / 2, TFT_HEIGHT - f->height);
         }
     }
 
@@ -322,15 +329,18 @@ void danceMainLoop(int64_t elapsedUs)
         }
     }
 
-    // Every five seconds, transmit a test packet
-    RUN_TIMER_EVERY(danceState->bcastTimer, 5000000, elapsedUs, {
+    danceState->bcastTimer -= elapsedUs;
+    if (danceState->bcastTimer <= 0)
+    {
+        // Broadcast every 7.5s, +/- 1.875s
+        danceState->bcastTimer = (5625000 + (esp_random() % 3750000));
         // Turn on WiFi before transmitting
         espNowPostLightSleep();
         const char bcastData[16] = "BROADCAST";
         espNowSend(bcastData, sizeof(bcastData));
         // Stay awake after packet transmission
         danceState->maySleep = false;
-    });
+    }
 }
 
 /**
@@ -1581,6 +1591,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
 static void danceEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
     // TODO something when receiving a SwadgePass packet
+    danceState->swadgePassCount++;
 }
 
 /**
@@ -1594,6 +1605,6 @@ static void danceEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t sta
     ESP_LOGI("ESPNOW", "danceEspNowSendCb %s (%d)",
              ESP_NOW_SEND_SUCCESS == status ? "ESP_NOW_SEND_SUCCESS" : "ESP_NOW_SEND_FAIL", status);
 
-    // Stay awake for 500ms after transmitting
-    danceState->listenTimer = 500000;
+    // Stay awake for 700ms after transmitting
+    danceState->listenTimer = 700000;
 }
