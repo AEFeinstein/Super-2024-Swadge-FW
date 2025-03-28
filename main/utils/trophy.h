@@ -169,7 +169,11 @@
 // Defines
 //==============================================================================
 
-#define TROPHY_MAX_BANNERS 5
+#define TROPHY_MAX_BANNERS   5
+// FIXME: Find actual good max values
+#define TROPHY_MAX_TITLE_LEN 32
+#define TROPHY_MAX_DESC_LEN  64
+#define TROPHY_IMAGE_STR_LEN 32
 
 //==============================================================================
 // Enum
@@ -201,12 +205,12 @@ typedef enum
 /// @brief Individual Trophy data objects
 typedef struct
 {
-    char* title;                   //< Name of the Trophy, used as ID
-    char* description;             //< Short description of task required
-    char* imageString;             //< String leading to the .wsg file.
-    trophyTypes_t type;            //< Type of trophy. See "trophy.h" for descriptions
-    trophyDifficulty_t difficulty; //< How many points the trophy is worth
-    int32_t maxVal;                //< The value that
+    char title[TROPHY_MAX_TITLE_LEN];       //< Name of the Trophy, used as ID
+    char description[TROPHY_MAX_DESC_LEN];  //< Short description of task required
+    char imageString[TROPHY_IMAGE_STR_LEN]; //< String leading to the .wsg file.
+    trophyTypes_t type;                     //< Type of trophy. See "trophy.h" for descriptions
+    trophyDifficulty_t difficulty;          //< How many points the trophy is worth
+    int32_t maxVal;                         //< The value that
 } trophyData_t;
 
 /// @brief Settings for the trophy system
@@ -217,7 +221,7 @@ typedef struct
     int32_t drawMaxDuration;  //< How long the banner will be drawn fully extended
     bool animated;            //< If being animated to slide in and out
     int32_t slideMaxDuration; //< How long the banner will take to slide in and out
-    
+    char namespaceKey[16];    //< key used for trophy namespace
 } trophySettings_t;
 
 /// @brief The data object dev hands to the trophy showcase that contains all the const data.
@@ -243,7 +247,7 @@ typedef struct
  * @param animate If the banner should scroll into view
  * @param scrollSpeed Time in tenths of a second for banner to appear. Default is half a second (5)
  */
-void trophySystemInit(trophySettings_t* settings);
+void trophySystemInit(trophySettings_t* settings, char* modeName);
 
 /**
  * @brief Loads the current number of points
@@ -255,8 +259,6 @@ int trophySystemGetPoints(char* modeName);
 
 // Utilize trophies
 
-void trophySetValues(trophyData_t* trophy, trophyDataList_t* data, int idx);
-
 /**
  * @brief Updates specifed trophy if required
  *
@@ -265,7 +267,7 @@ void trophySetValues(trophyData_t* trophy, trophyDataList_t* data, int idx);
  * @param value New value to try to set. Behavior is set by trophy type
  * @param drawUpdate If this update should be drawn to the screen
  */
-void trophyUpdate(char* modeName, char* title, int value, bool drawUpdate);
+void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
 
 /**
  * @brief Updates just like trophyUpdate(), but automatically mutes updates that aren't breaking
@@ -282,7 +284,7 @@ void trophyUpdateMilestone(char* modeName, char* title, int value);
  * @param modeName Name of the mode
  * @param title Title of trophy to clear.
  */
-void trophyClear(char* modeName, char* title);
+void trophyClear(trophyData_t t);
 
 // Helpers
 
@@ -339,8 +341,3 @@ void trophyDrawListInit(void);
  * update index as they see fit.
  */
 void trophyDrawList(char* modeName, int idx);
-
-// TEST ONLY
-void trophyDrawDataDirectly(trophyData_t t, int y, font_t* fnt);
-void loadImage(int idx, char* string);
-void unloadImage(int idx);

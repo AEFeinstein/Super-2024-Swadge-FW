@@ -409,7 +409,7 @@ void app_main(void)
         cSwadgeMode->fnEnterMode();
         if (NULL != cSwadgeMode->trophyData)
         {
-            trophySystemInit(cSwadgeMode->trophyData->settings);
+            trophySystemInit(cSwadgeMode->trophyData->settings, cSwadgeMode->modeName);
         }
     }
 
@@ -531,7 +531,8 @@ void app_main(void)
             // If trophies are not null, draw
             if (NULL != cSwadgeMode->trophyData && !cSwadgeMode->trophyData->settings->silent)
             {
-                trophyDraw(cSwadgeMode->modeName, &sysFont, tElapsedUs);
+                char buffer();
+                trophyDraw(cSwadgeMode->trophyData->settings->namespaceKey, &sysFont, tElapsedUs);
             }
 
             // Draw to the TFT
@@ -720,7 +721,7 @@ static void setSwadgeMode(void* swadgeMode)
         cSwadgeMode->fnEnterMode();
         if (NULL != cSwadgeMode->trophyData)
         {
-            trophySystemInit(cSwadgeMode->trophyData->settings);
+            trophySystemInit(cSwadgeMode->trophyData->settings, cSwadgeMode->modeName);
         }
     }
 }
@@ -767,7 +768,7 @@ void softSwitchToPendingSwadge(void)
             cSwadgeMode->fnEnterMode();
             if (NULL != cSwadgeMode->trophyData)
             {
-                trophySystemInit(cSwadgeMode->trophyData->settings);
+                trophySystemInit(cSwadgeMode->trophyData->settings, cSwadgeMode->modeName);
             }
         }
 

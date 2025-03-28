@@ -370,6 +370,6 @@ void switchToMicrophone(void);
 
 // Getters
 font_t* getSysFont(void);
-midiFile_t* playSysSound(void);
+midiFile_t* getSysSound(void);
 
 #endif

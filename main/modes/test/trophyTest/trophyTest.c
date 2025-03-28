@@ -30,7 +30,7 @@ const trophyData_t testTrophies[] = {
         .imageString = "kid0.wsg",
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
+        .maxVal      = 1, // For trigger type, no value is required
     },
     {
         .title       = "Title 2",
@@ -81,7 +81,7 @@ static void runTrophy(int64_t elapsedUs);
 trophySettings_t tSettings
     = {.animated = true, .drawFromBottom = true, .silent = false, .drawMaxDuration = 500, .slideMaxDuration = 200};
 
-trophyDataList_t trophyTestData = {.settings = &tSettings};
+trophyDataList_t trophyTestData = {.settings = &tSettings, .list = testTrophies};
 
 swadgeMode_t trophyTestMode = {.modeName                 = trophyModeName,
                                .wifiMode                 = NO_WIFI,
@@ -108,42 +108,31 @@ static trophyTest_t* tt;
 static void enterTrophy()
 {
     tt = (trophyTest_t*)heap_caps_calloc(1, sizeof(trophyTest_t), MALLOC_CAP_8BIT);
-
-    // Load a specific set of values to check if it works.
-    /* strcpy(tt->t[0].title, trophyNames[0]);
-    strcpy(tt->t[0].imageString, trophyWSGs[0]);
-    strcpy(tt->t[0].description, trophyDescs[0]);
-    tt->t[0].currentValue = 10;
-    tt->t[0].maxValue     = 25;
-    tt->t[0].points       = 69;
-    tt->t[0].type         = TROPHY_TYPE_ADDITIVE;
-    loadImage(0, tt->t[0].imageString);
-
-    strcpy(tt->t[1].title, trophyNames[1]);
-    strcpy(tt->t[1].imageString, "");
-    strcpy(tt->t[1].description, trophyDescs[1]);
-    tt->t[1].currentValue = 25;
-    tt->t[1].maxValue     = 25;
-    tt->t[1].points       = 69;
-    tt->t[1].type         = TROPHY_TYPE_ADDITIVE;
-    loadImage(1, tt->t[1].imageString); */
-
-    trophySetValues(&tt->t[0], &trophyTestData, 0);
-    trophySetValues(&tt->t[1], &trophyTestData, 1);
+    // Test
+    bool gre = true;
 }
 
 static void exitTrophy()
 {
-    // Test
-    unloadImage(0);
-    unloadImage(1);
-
     heap_caps_free(tt);
 }
 
 static void runTrophy(int64_t elapsedUs)
 {
-    // Test
-    trophyDrawDataDirectly(tt->t[0], 0, getSysFont());
-    trophyDrawDataDirectly(tt->t[1], 50, getSysFont());
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if (evt.button & PB_A)
+            {  
+                trophyUpdate(testTrophies[0], 1, true);
+            }
+            else if (evt.button & PB_B)
+            {
+                trophyClear(testTrophies[0]);
+            }
+        }
+        
+    }
 }
