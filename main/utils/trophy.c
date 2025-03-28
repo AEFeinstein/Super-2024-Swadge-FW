@@ -148,6 +148,12 @@ static void _draw(trophyDataWrapper_t t, int frame, font_t* fnt);
 static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt);
 
 /**
+ * @brief Loads the palette for the grescale conversion
+ *
+ */
+static void _loadPalette(void);
+
+/**
  * @brief Truncates a string down to a specified length
  *
  * @param to The string/buffer to copy the text into
@@ -181,94 +187,7 @@ void trophySystemInit(trophySettings_t* settings, char* modeName)
     }
 
     // Init palette
-    // TODO: Make its own function
-    wsgPaletteReset(&trophySystem.normalPalette);
-    for (int idx = 0; idx < 217; idx++)
-    {
-        if (idx == cTransparent) // Transparent
-        {
-            wsgPaletteSet(&trophySystem.grayPalette, idx, cTransparent);
-        }
-        else
-        {
-            switch (idx)
-            {
-                case c000:
-                case c001:
-                case c002:
-                case c003:
-                case c010:
-                case c011:
-                case c012:
-                case c013:
-                case c020:
-                case c021:
-                case c022:
-                case c023:
-                case c030:
-                case c031:
-                case c032:
-                case c033:
-                case c100:
-                case c101:
-                case c102:
-                case c103:
-                case c110:
-                case c111:
-                case c112:
-                case c113:
-                case c120:
-                case c121:
-                case c122:
-                case c123:
-                case c130:
-                case c131:
-                case c132:
-                case c133:
-                case c200:
-                case c201:
-                case c202:
-                case c203:
-                case c210:
-                case c211:
-                case c212:
-                case c213:
-                case c220:
-                case c221:
-                case c222:
-                case c223:
-                case c230:
-                case c231:
-                case c232:
-                case c233:
-                case c300:
-                case c301:
-                case c302:
-                case c303:
-                case c310:
-                case c311:
-                case c312:
-                case c313:
-                case c320:
-                case c321:
-                case c322:
-                case c323:
-                case c330:
-                case c331:
-                case c332:
-                case c333:
-                {
-                    wsgPaletteSet(&trophySystem.grayPalette, idx, c333);
-                    break;
-                }
-                default:
-                {
-                    wsgPaletteSet(&trophySystem.grayPalette, idx, c444);
-                    break;
-                }
-            }
-        }
-    }
+    _loadPalette();
 
     // Clear queue
     for (int idx = 0; idx < TROPHY_MAX_BANNERS; idx++)
@@ -363,7 +282,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         trophySystem.animationTick = 0;
         trophySystem.drawTimer     = 0;
         trophySystem.slideTimer    = 0;
-        trophySystem.sliding = trophySystem.settings->animated;
+        trophySystem.sliding       = trophySystem.settings->animated;
         // TODO: the rest of this
 
         // Increment idx
@@ -425,6 +344,8 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
     {
         return;
     }
+    // TODO: If system is active, check for next active slot. If all five slots are inactive, set entire system to
+    // inactive
     if (trophySystem.settings->animated && trophySystem.sliding) // Sliding in or out
     {
         trophySystem.slideTimer += elapsedUs;
@@ -444,6 +365,11 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
         {
             trophySystem.sliding = false; // Disables drawing
             trophySystem.active  = false; // Stops drawing altogether
+            trophySystem.currIdx++;
+            if (trophySystem.currIdx >= TROPHY_MAX_BANNERS)
+            {
+                trophySystem.currIdx = 0;
+            }
         }
         _draw(trophySystem.trophyQueue[trophySystem.currIdx], trophySystem.animationTick, fnt);
     }
@@ -612,7 +538,7 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
     startY = yOffset + 20;
     drawTextWordWrap(fnt, c444, t.trophyData.description, &startX, &startY, TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE,
                      yOffset + TROPHY_BANNER_HEIGHT); // Description
-
+    // FIXME: Need to display all types differently
     if (!t.trophyData.type == TROPHY_TYPE_TRIGGER)
     {
         char buffer[32];
@@ -631,4 +557,95 @@ static void _truncateStr(char* to, char* from, int len)
 {
     strncpy(to, from, len);
     to[len - 1] = '\0';
+}
+
+static void _loadPalette(void)
+{
+    wsgPaletteReset(&trophySystem.normalPalette);
+    for (int idx = 0; idx < 217; idx++)
+    {
+        if (idx == cTransparent) // Transparent
+        {
+            wsgPaletteSet(&trophySystem.grayPalette, idx, cTransparent);
+        }
+        else
+        {
+            switch (idx)
+            {
+                case c000:
+                case c001:
+                case c002:
+                case c003:
+                case c010:
+                case c011:
+                case c012:
+                case c013:
+                case c020:
+                case c021:
+                case c022:
+                case c023:
+                case c030:
+                case c031:
+                case c032:
+                case c033:
+                case c100:
+                case c101:
+                case c102:
+                case c103:
+                case c110:
+                case c111:
+                case c112:
+                case c113:
+                case c120:
+                case c121:
+                case c122:
+                case c123:
+                case c130:
+                case c131:
+                case c132:
+                case c133:
+                case c200:
+                case c201:
+                case c202:
+                case c203:
+                case c210:
+                case c211:
+                case c212:
+                case c213:
+                case c220:
+                case c221:
+                case c222:
+                case c223:
+                case c230:
+                case c231:
+                case c232:
+                case c233:
+                case c300:
+                case c301:
+                case c302:
+                case c303:
+                case c310:
+                case c311:
+                case c312:
+                case c313:
+                case c320:
+                case c321:
+                case c322:
+                case c323:
+                case c330:
+                case c331:
+                case c332:
+                case c333:
+                {
+                    wsgPaletteSet(&trophySystem.grayPalette, idx, c333);
+                    break;
+                }
+                default:
+                {
+                    wsgPaletteSet(&trophySystem.grayPalette, idx, c444);
+                    break;
+                }
+            }
+        }
+    }
 }
