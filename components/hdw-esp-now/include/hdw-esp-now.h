@@ -129,11 +129,11 @@ void deinitEspNow(void);
 void powerDownEspNow(void);
 void powerUpEspNow(void);
 
-void espNowPreLightSleep(void);
-void espNowPostLightSleep(void);
+esp_err_t espNowPreLightSleep(void);
+esp_err_t espNowPostLightSleep(void);
 
 esp_err_t espNowUseWireless(void);
-void espNowUseSerial(bool crossoverPins);
+esp_err_t espNowUseSerial(bool crossoverPins);
 
 void espNowSend(const char* data, uint8_t len);
 void checkEspNowRxQueue(void);

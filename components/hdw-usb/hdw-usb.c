@@ -197,7 +197,7 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
 /**
  * @brief Initialize TinyUSB
  *
- * @param tusb_cfg The TinyUSB configuration
+ * @param config The TinyUSB configuration
  * @param descriptor The descriptor to use for this configuration
  */
 void initTusb(const tinyusb_config_t* config, const uint8_t* descriptor)

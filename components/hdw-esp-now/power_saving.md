@@ -38,6 +38,7 @@ esp_wifi_connectionless_module_set_wake_interval(100);
     > 
     > If Power-saving is needed for ESP-NOW, call `esp_wifi_connectionless_module_set_wake_interval()` to configure Interval as well.
 
-#### Wi-Fi Specific, not relevant to ESP-NOW?
+### Wi-Fi Specific, not relevant to ESP-NOW?
+
 * [Wi-Fi Driver, ESP32-S2 Wi-Fi Power-saving Mode](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-guides/wifi.html#esp32-s2-wi-fi-power-saving-mode)
 * [Low Power Mode Usage Guide, Auto Light-sleep + Wi-Fi scenario](https://docs.espressif.com/projects/esp-idf/zh_CN/v5.2.5/esp32s2/api-guides/low-power-mode.html#auto-light-sleep-wi-fi)

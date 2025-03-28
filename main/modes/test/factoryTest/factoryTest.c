@@ -239,7 +239,6 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
 #if SLEEP_TEST
     // Send an ESP NOW packet every 1s
     RUN_TIMER_EVERY(test->broadcastTimer, 5000000, elapsedUs, {
-
         ESP_LOGI("SLP", "Go to sleep");
 
         // Power down ESP NOW
@@ -250,7 +249,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
         uint32_t tStart = esp_timer_get_time();
         esp_light_sleep_start();
         uint32_t tElapsed = esp_timer_get_time() - tStart;
-        ESP_LOGI("SLP", "Wake up %"PRIu32, tElapsed);
+        ESP_LOGI("SLP", "Wake up %" PRIu32, tElapsed);
 
         // Reset the timer because it counts while asleep
         test->broadcastTimer -= tElapsed;
