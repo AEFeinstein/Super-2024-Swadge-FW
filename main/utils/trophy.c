@@ -38,6 +38,7 @@
 #define MAX_NVS_KEY_LEN 16
 
 // Visuals
+#define TROPHY_MAX_BANNERS             5
 #define TROPHY_BANNER_HEIGHT           48
 #define TROPHY_BANNER_MAX_ICON_DIM     36
 #define TROPHY_SCREEN_CORNER_CLEARANCE 19
@@ -148,12 +149,6 @@ static void _draw(trophyDataWrapper_t t, int frame, font_t* fnt);
 static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt);
 
 /**
- * @brief Loads the palette for the grescale conversion
- *
- */
-static void _loadPalette(void);
-
-/**
  * @brief Truncates a string down to a specified length
  *
  * @param to The string/buffer to copy the text into
@@ -161,6 +156,21 @@ static void _loadPalette(void);
  * @param len Length to copy
  */
 static void _truncateStr(char* to, char* from, int len);
+
+/**
+ * @brief Automatically resets number to 0 after it gets up to max val
+ *
+ * @param val current value
+ * @param max Number to reset at, non-inclusive
+ * @return int number
+ */
+static int _incWithOverflow(int val, int max);
+
+/**
+ * @brief Loads the palette for the grescale conversion
+ *
+ */
+static void _loadPalette(void);
 
 //==============================================================================
 // Functions
@@ -285,12 +295,10 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         trophySystem.sliding       = trophySystem.settings->animated;
         // TODO: the rest of this
 
+        // TODO: Play sound
+
         // Increment idx
-        trophySystem.idx++;
-        if (trophySystem.idx >= TROPHY_MAX_BANNERS)
-        {
-            trophySystem.idx = 0;
-        }
+        trophySystem.idx = _incWithOverflow(trophySystem.idx, TROPHY_MAX_BANNERS);
     }
 }
 
@@ -344,59 +352,68 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
     {
         return;
     }
-    // TODO: If system is active, check for next active slot. If all five slots are inactive, set entire system to
-    // inactive
+
+    // Handle which part of the animation is happening (sliding, displaying, or ending)
     if (trophySystem.settings->animated && trophySystem.sliding) // Sliding in or out
     {
+        // Based on delta time, update current frame
         trophySystem.slideTimer += elapsedUs;
-        // FIXME: Speed of slide isn't correct somehow
         int frameLen = (trophySystem.settings->slideMaxDuration * TENTH_SECOND) / TROPHY_BANNER_HEIGHT;
         while (trophySystem.slideTimer >= frameLen)
         {
             trophySystem.animationTick++;
             trophySystem.slideTimer -= frameLen;
         }
+        // Change state if fully slid
         if (trophySystem.animationTick == TROPHY_BANNER_HEIGHT)
         {
+            // Halfway through
             trophySystem.sliding    = false;
             trophySystem.beingDrawn = true;
         }
         else if (trophySystem.animationTick == TROPHY_BANNER_HEIGHT * 2)
         {
+            // End of the animation
             trophySystem.sliding = false; // Disables drawing
             trophySystem.active  = false; // Stops drawing altogether
-            trophySystem.currIdx++;
-            if (trophySystem.currIdx >= TROPHY_MAX_BANNERS)
-            {
-                trophySystem.currIdx = 0;
-            }
+            trophySystem.currIdx = _incWithOverflow(trophySystem.currIdx, TROPHY_MAX_BANNERS);
         }
+        // Draw
         _draw(trophySystem.trophyQueue[trophySystem.currIdx], trophySystem.animationTick, fnt);
     }
     else if (trophySystem.beingDrawn) // Static on screen
     {
         // Regular timer
         trophySystem.drawTimer += elapsedUs;
-        // FIXME: Duration isn't correct
         if (trophySystem.drawTimer >= trophySystem.settings->drawMaxDuration * TENTH_SECOND)
         {
             // Stop drawing
-            trophySystem.beingDrawn = false;
-            trophySystem.sliding    = trophySystem.settings->animated; // Starts sliding again if set
+            trophySystem.beingDrawn                               = false;
+            trophySystem.trophyQueue[trophySystem.currIdx].active = false;
+            trophySystem.sliding = trophySystem.settings->animated; // Starts sliding again if set
         }
         // Draw
         _draw(trophySystem.trophyQueue[trophySystem.currIdx], STATIC_POSITION, fnt);
     }
     else // Has ended
     {
-        trophySystem.active = false;
-        trophySystem.currIdx++;
-        if (trophySystem.currIdx >= TROPHY_MAX_BANNERS)
+        // Seek next active queue slot
+        for (int idx = 0; idx < TROPHY_MAX_BANNERS; idx++)
         {
-            trophySystem.currIdx = 0;
+            trophySystem.currIdx = _incWithOverflow(trophySystem.currIdx, TROPHY_MAX_BANNERS);
+            if (trophySystem.trophyQueue[trophySystem.currIdx].active)
+            {
+                // Reset for new run
+                trophySystem.animationTick = 0;
+                trophySystem.drawTimer     = 0;
+                trophySystem.slideTimer    = 0;
+                trophySystem.beingDrawn    = true;
+                trophySystem.sliding       = trophySystem.settings->animated;
+                return;
+            }
         }
+        trophySystem.active = false;
     }
-    // TODO: play sound (?)
 }
 
 void trophyDrawListInit(void)
@@ -557,6 +574,16 @@ static void _truncateStr(char* to, char* from, int len)
 {
     strncpy(to, from, len);
     to[len - 1] = '\0';
+}
+
+static int _incWithOverflow(int val, int max)
+{
+    val++;
+    if (val >= max)
+    {
+        val = 0;
+    }
+    return val;
 }
 
 static void _loadPalette(void)

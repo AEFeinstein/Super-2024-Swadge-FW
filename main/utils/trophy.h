@@ -169,7 +169,6 @@
 // Defines
 //==============================================================================
 
-#define TROPHY_MAX_BANNERS   5
 // FIXME: Find actual good max values
 #define TROPHY_MAX_TITLE_LEN 32
 #define TROPHY_MAX_DESC_LEN  64

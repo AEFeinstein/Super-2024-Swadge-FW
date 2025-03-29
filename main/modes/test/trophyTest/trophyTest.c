@@ -111,7 +111,7 @@ static void runTrophy(int64_t elapsedUs);
 //==============================================================================
 
 trophySettings_t tSettings
-    = {.animated = true, .drawFromBottom = true, .silent = false, .drawMaxDuration = 5, .slideMaxDuration = 5};
+    = {.animated = false, .drawFromBottom = false, .silent = false, .drawMaxDuration = 20, .slideMaxDuration = 5};
 
 trophyDataList_t trophyTestData = {.settings = &tSettings, .list = testTrophies};
 
