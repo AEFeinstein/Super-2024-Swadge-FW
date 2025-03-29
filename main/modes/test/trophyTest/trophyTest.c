@@ -25,48 +25,48 @@ static const char trophyModeName[] = "Trophy Test - Long name, short results!";
 // Trophy Data example
 const trophyData_t testTrophies[] = {
     {
-        .title       = "Overlong Trophy Name",
-        .description = "Description 1",
+        .title       = "Trigger Trophy",
+        .description = "You pressed A!",
         .imageString = "kid0.wsg",
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1, // For trigger type, no value is required
+        .maxVal      = 1, // For trigger type, set to one
     },
     {
-        .title       = "Title 2",
-        .description = "Description 2",
+        .title       = "Additive Trophy - Testing",
+        .description = "Pressed B ten times!",
         .imageString = "kid1.wsg",
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1024,
+        .maxVal      = 10,
     },
     {
-        .title       = "Title 3",
-        .description = "Description 3",
+        .title       = "Progress Tropy",
+        .description = "Hold down the up button for eight seconds",
+        .imageString = "",
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 8,
+    },
+    {
+        .title       = "Checklist",
+        .description = "This is gonna need a bunch of verification",
         .imageString = "kid1.wsg",
+        .type        = TROPHY_TYPE_CHECKLIST,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 0x0007, // Three tasks, 0x01, 0x02, and 0x04
+    },
+    {
+        .title       = "Placeholder",
+        .description = "If our eyes aren't real, why can't bees fly?",
+        .imageString = "",
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1024,
+        .maxVal      = 12000000,
     },
     {
-        .title       = "Title 4",
-        .description = "Description 4",
-        .imageString = "kid1.wsg",
-        .type        = TROPHY_TYPE_ADDITIVE,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1024,
-    },
-    {
-        .title       = "Title 5",
-        .description = "Description 5",
-        .imageString = "kid1.wsg",
-        .type        = TROPHY_TYPE_ADDITIVE,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1024,
-    },
-    {
-        .title       = "Title 6",
-        .description = "Description 6",
+        .title       = "Placeholder 2",
+        .description = "",
         .imageString = "kid1.wsg",
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_HARD,
@@ -81,6 +81,7 @@ const trophyData_t testTrophies[] = {
 typedef struct
 {
     int idx;
+    int bPresses;
 } trophyTest_t;
 
 //==============================================================================
@@ -111,7 +112,7 @@ static void runTrophy(int64_t elapsedUs);
 //==============================================================================
 
 trophySettings_t tSettings
-    = {.animated = false, .drawFromBottom = false, .silent = false, .drawMaxDuration = 20, .slideMaxDuration = 5};
+    = {.animated = false, .drawFromBottom = false, .silent = false, .drawMaxDuration = 8, .slideMaxDuration = 3};
 
 trophyDataList_t trophyTestData = {.settings = &tSettings, .list = testTrophies};
 
@@ -139,8 +140,9 @@ static trophyTest_t* tt;
 
 static void enterTrophy()
 {
-    tt = heap_caps_calloc(sizeof(trophyTest_t), 1, MALLOC_CAP_8BIT);
-    tt->idx = 0;
+    tt           = heap_caps_calloc(sizeof(trophyTest_t), 1, MALLOC_CAP_8BIT);
+    tt->idx      = 0;
+    tt->bPresses = 0;
 }
 
 static void exitTrophy()
@@ -150,29 +152,54 @@ static void exitTrophy()
 
 static void runTrophy(int64_t elapsedUs)
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down)
         {
-            if (evt.button & PB_A)
-            {  
-                trophyUpdate(testTrophies[tt->idx++], 1, true);
-                if (tt->idx >= ARRAY_SIZE(testTrophies))
-                {
-                    tt->idx = 0;
-                }
+            if (evt.button == PB_A)
+            {
+                trophyUpdate(testTrophies[0], 1, true);
             }
-            else if (evt.button & PB_B)
+            else if (evt.button == PB_B)
+            {
+                tt->bPresses++;
+                trophyUpdate(testTrophies[1], tt->bPresses, true);
+            }
+            else if (evt.button == PB_UP)
+            {
+                // TODO: Check how long held down
+            }
+            else if (evt.button == PB_DOWN)
+            {
+                // TODO: Task 0x01
+            }
+            else if (evt.button == PB_RIGHT)
+            {
+                // TODO: Task 0x02
+            }
+            else if (evt.button == PB_LEFT)
+            {
+                // TODO: Task 0x04
+            }
+            else if (evt.button == PB_START)
             {
                 for (int idx = 0; idx < ARRAY_SIZE(testTrophies); idx++)
                 {
                     trophyClear(testTrophies[idx]);
                 }
+                tt->bPresses = 0;
             }
-        }   
+        }
     }
-
-    drawText(getSysFont(), c555, "Press A to trigger", 32, 32);
+    // Draw instructions
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
+    drawText(getSysFont(), c555, "Press A once", 32, 32);
+    drawText(getSysFont(), c555, "Press B ten times", 32, 64);
+    drawText(getSysFont(), c555, "Press up for eight seconds", 32, 96);
+    int startX = 32;
+    int startY = 128;
+    drawTextWordWrap(getSysFont(), c555, "Press left, right and down at least once each", &startX, &startY,
+                     TFT_WIDTH - 32, TFT_HEIGHT);
+    drawText(getSysFont(), c555, "Press pause to reset", 32, 168);
 }

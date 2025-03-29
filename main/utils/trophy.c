@@ -284,15 +284,18 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
                 &trophySystem.trophyQueue[trophySystem.idx].image, true);
 
         // Set system and this index to active
-        trophySystem.active                               = true;
-        trophySystem.beingDrawn                           = true;
+        if (!trophySystem.active)
+        {
+            trophySystem.active        = true;
+            trophySystem.animationTick = 0;
+            trophySystem.drawTimer     = 0;
+            trophySystem.slideTimer    = 0;
+            trophySystem.sliding       = trophySystem.settings->animated;
+            trophySystem.beingDrawn    = true;
+        }
+
         trophySystem.trophyQueue[trophySystem.idx].active = true;
 
-        // Reset timers
-        trophySystem.animationTick = 0;
-        trophySystem.drawTimer     = 0;
-        trophySystem.slideTimer    = 0;
-        trophySystem.sliding       = trophySystem.settings->animated;
         // TODO: the rest of this
 
         // TODO: Play sound
@@ -373,10 +376,20 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
         }
         else if (trophySystem.animationTick == TROPHY_BANNER_HEIGHT * 2)
         {
-            // End of the animation
-            trophySystem.sliding = false; // Disables drawing
-            trophySystem.active  = false; // Stops drawing altogether
+            // FIXME: Stops drawing, prolly not interating right
             trophySystem.currIdx = _incWithOverflow(trophySystem.currIdx, TROPHY_MAX_BANNERS);
+            if (trophySystem.trophyQueue[trophySystem.currIdx].active)
+            {
+                // Reset for new run
+                trophySystem.animationTick = 0;
+                trophySystem.drawTimer     = 0;
+                trophySystem.slideTimer    = 0;
+                trophySystem.sliding       = trophySystem.settings->animated;
+                trophySystem.beingDrawn    = true;
+                return;
+            }
+            trophySystem.currIdx = _incWithOverflow(trophySystem.currIdx, TROPHY_MAX_BANNERS);
+            trophySystem.active  = false;
         }
         // Draw
         _draw(trophySystem.trophyQueue[trophySystem.currIdx], trophySystem.animationTick, fnt);
@@ -407,12 +420,13 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
                 trophySystem.animationTick = 0;
                 trophySystem.drawTimer     = 0;
                 trophySystem.slideTimer    = 0;
-                trophySystem.beingDrawn    = true;
                 trophySystem.sliding       = trophySystem.settings->animated;
+                trophySystem.beingDrawn    = true;
                 return;
             }
         }
-        trophySystem.active = false;
+        trophySystem.currIdx = _incWithOverflow(trophySystem.currIdx, TROPHY_MAX_BANNERS);
+        trophySystem.active  = false;
     }
 }
 
@@ -522,6 +536,19 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
     // Draw box (Gray box, black border)
     fillDisplayArea(0, yOffset, TFT_WIDTH, yOffset + TROPHY_BANNER_HEIGHT, c111);
     drawRect(0, yOffset, TFT_WIDTH, yOffset + TROPHY_BANNER_HEIGHT, c000);
+
+    int endX = TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE;
+    // Draw numbers if required
+    if (t.trophyData.type == TROPHY_TYPE_ADDITIVE || t.trophyData.type == TROPHY_TYPE_PROGRESS)
+    {
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer) - 1, "%d/%d", t.currentVal, t.trophyData.maxVal);
+        int16_t xOff = TFT_WIDTH - (textWidth(fnt, buffer) + TROPHY_SCREEN_CORNER_CLEARANCE + 8);
+        endX         = xOff - 8;
+        drawText(fnt, c444, buffer, xOff, yOffset + 4);
+    }
+
+    // Calculate clearance
     int xOffset;
     int16_t startX = TROPHY_SCREEN_CORNER_CLEARANCE;
     int16_t startY = yOffset + ((TROPHY_BANNER_HEIGHT - TROPHY_BANNER_MAX_ICON_DIM) >> 1);
@@ -550,23 +577,22 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
 
     // Draw text, starting after image if present
     // FIXME: Limit length of title text based on if there's space and there's no numbers
-    drawText(fnt, c555, t.trophyData.title, xOffset, yOffset + 4); // Title
+    startX = xOffset;
+    startY = yOffset + 4;
+    drawTextWordWrap(fnt, c555, t.trophyData.title, &startX, &startY, endX, yOffset + 18); // Title
     startX = xOffset;
     startY = yOffset + 20;
     drawTextWordWrap(fnt, c444, t.trophyData.description, &startX, &startY, TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE,
                      yOffset + TROPHY_BANNER_HEIGHT); // Description
-    // FIXME: Need to display all types differently
-    if (!t.trophyData.type == TROPHY_TYPE_TRIGGER)
+
+    // Draw check box
+    fillDisplayArea(TFT_WIDTH - 16, yOffset + 20, TFT_WIDTH - 11, yOffset + 25, c222);
+
+    // Draw check if done
+    if (t.currentVal >= t.trophyData.maxVal)
     {
-        char buffer[32];
-        snprintf(buffer, sizeof(buffer) - 1, "%d/%d", t.currentVal, t.trophyData.maxVal);
-        int16_t xOff         = TFT_WIDTH - (textWidth(fnt, buffer) + TROPHY_SCREEN_CORNER_CLEARANCE + 8);
-        paletteColor_t color = c500;
-        if (t.currentVal >= t.trophyData.maxVal)
-        {
-            color = c050;
-        }
-        drawText(fnt, color, buffer, xOff, yOffset + 4);
+        drawLine(TFT_WIDTH - 14, yOffset + 23, TFT_WIDTH - 8, yOffset + 13, c050, 0);
+        drawLine(TFT_WIDTH - 14, yOffset + 23, TFT_WIDTH - 19, yOffset + 20, c050, 0);
     }
 }
 
