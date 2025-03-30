@@ -178,7 +178,7 @@ static bool checkBitFlag(int32_t flags, int8_t idx);
 //==============================================================================
 
 trophySettings_t tSettings
-    = {.animated = false, .drawFromBottom = false, .silent = false, .drawMaxDuration = 20, .slideMaxDuration = 20};
+    = {.animated = false, .drawFromBottom = false, .silent = false, .drawMaxDuration = 5, .slideMaxDuration = 20};
 
 trophyDataList_t trophyTestData = {.settings = &tSettings, .list = testTrophies};
 
@@ -307,7 +307,11 @@ static void runTrophy(int64_t elapsedUs)
                     // Stop count
                     tt->timing = false;
                     // Save to NVS
-                    trophyUpdate(testTrophies[2], (tt->heldTimer / SECOND_US), true);
+                    if (tt->upTime < (tt->heldTimer / SECOND_US))
+                    {
+                        tt->upTime = (tt->heldTimer / SECOND_US);
+                    }
+                    trophyUpdate(testTrophies[2], tt->upTime, true);
                 }
             }
             // Draw instructions
@@ -337,9 +341,9 @@ static void runTrophy(int64_t elapsedUs)
             int16_t startY = 146;
             drawTextWordWrap(getSysFont(), c555, textBlobs[3], &startX, &startY, TFT_WIDTH - 32, TFT_HEIGHT);
             paletteColor_t c = checkBitFlag(tt->checklistFlags, 0) ? c550 : c333;
-            drawText(getSysFont(), c, "Down", 32, 170);
+            drawText(getSysFont(), c, "Down", 70, 170);
             c = checkBitFlag(tt->checklistFlags, 1) ? c505 : c333;
-            drawText(getSysFont(), c, "Left", 70, 170);
+            drawText(getSysFont(), c, "Left", 32, 170);
             c = checkBitFlag(tt->checklistFlags, 2) ? c055 : c333;
             drawText(getSysFont(), c, "Right", 108, 170);
 
@@ -369,6 +373,7 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
             tt->aPresses = 0;
             tt->bPresses = 0;
             tt->upTime = 0;
+            tt->heldTimer = 0;
             tt->checklistFlags = 0;
         }
         else if (label == textBlobs[7])

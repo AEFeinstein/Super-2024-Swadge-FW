@@ -245,6 +245,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
     // Check if trophy is already won and return if true
     if (tw.trophyData.type == TROPHY_TYPE_CHECKLIST)
     {
+        // TODO: Handle just sending bit flags?
         if (tw.currentVal == tw.trophyData.maxVal)
         {
             return;
