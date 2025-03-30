@@ -406,11 +406,11 @@ void app_main(void)
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
     {
-        cSwadgeMode->fnEnterMode();
         if (NULL != cSwadgeMode->trophyData)
         {
             trophySystemInit(cSwadgeMode->trophyData->settings, cSwadgeMode->modeName);
         }
+        cSwadgeMode->fnEnterMode();
     }
 
     // Run the main loop, forever
@@ -634,9 +634,8 @@ static void initOptionalPeripherals(void)
 void deinitSystem(void)
 {
     // Deinit font and sfx
-    // FIXME: THeses are unloaded when the mode is unloaded, not the entire swadge.
-    /* freeFont(&sysFont);
-    unloadMidiFile(&sysSound); */
+    freeFont(&sysFont);
+    unloadMidiFile(&sysSound);
 
     // Deinit the swadge mode
     if (NULL != cSwadgeMode->fnExitMode)
@@ -719,11 +718,11 @@ static void setSwadgeMode(void* swadgeMode)
     cSwadgeMode = swadgeMode;
     if (cSwadgeMode->fnEnterMode)
     {
-        cSwadgeMode->fnEnterMode();
         if (NULL != cSwadgeMode->trophyData)
         {
             trophySystemInit(cSwadgeMode->trophyData->settings, cSwadgeMode->modeName);
         }
+        cSwadgeMode->fnEnterMode();
     }
 }
 
@@ -766,11 +765,11 @@ void softSwitchToPendingSwadge(void)
         // Enter the next mode
         if (NULL != cSwadgeMode->fnEnterMode)
         {
-            cSwadgeMode->fnEnterMode();
             if (NULL != cSwadgeMode->trophyData)
             {
                 trophySystemInit(cSwadgeMode->trophyData->settings, cSwadgeMode->modeName);
             }
+            cSwadgeMode->fnEnterMode();
         }
 
         // Reenable the TFT backlight

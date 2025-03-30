@@ -153,6 +153,14 @@
 
 // TODO: Can grab data from index or name
 // TODO: Remove uneccessary functions
+// TODO: Warnings:
+// - No overflow protection
+// - If the first fifteen characters of NVS Namespave or two or more trophy names inside the same mode there will be
+//   data clashes
+// - Does not save values once trophy is won. For example, if 10 key presses unlocks a trophy, even if a hundred presses
+//   are registered, the number 10 will be saved to NVS.
+// - When testing, renaming and reordering trophies (especially items inside a checklist) may cause hard to discover
+// errors. You may have to clear NVS on ESP32 / delete the nvs.json file to fix issues.
 
 #pragma once
 
@@ -273,6 +281,14 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
  * @param value New value to assign
  */
 void trophyUpdateMilestone(char* modeName, char* title, int value);
+
+/**
+ * @brief Returns the value saved to the NVS or 0 if the key isn't found.
+ *
+ * @param t
+ * @return int32_t
+ */
+int32_t trophyGetSavedValue(trophyData_t t);
 
 /**
  * @brief Erases completion data from swadge. Only use in extreme circumstances.

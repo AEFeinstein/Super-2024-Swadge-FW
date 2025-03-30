@@ -33,7 +33,7 @@
 //==============================================================================
 
 // Standard defines
-#define TENTH_SECOND    10000
+#define TENTH_SECOND_US 10000
 #define STATIC_POSITION -1
 #define MAX_NVS_KEY_LEN 16
 
@@ -316,6 +316,18 @@ void trophyUpdateMilestone(char* modeName, char* title, int value)
     // Else, just save data
 }
 
+int32_t trophyGetSavedValue(trophyData_t t)
+{
+    int32_t val;
+    char buffer[MAX_NVS_KEY_LEN];
+    _truncateStr(buffer, t.title, MAX_NVS_KEY_LEN);
+    if (readNamespaceNvs32(trophySystem.settings->namespaceKey, buffer, &val))
+    {
+        return val;
+    }
+    return 0;
+}
+
 void trophyClear(trophyData_t t)
 {
     trophyDataWrapper_t tw = {};
@@ -361,7 +373,7 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
     {
         // Based on delta time, update current frame
         trophySystem.slideTimer += elapsedUs;
-        int frameLen = (trophySystem.settings->slideMaxDuration * TENTH_SECOND) / TROPHY_BANNER_HEIGHT;
+        int frameLen = (trophySystem.settings->slideMaxDuration * TENTH_SECOND_US) / TROPHY_BANNER_HEIGHT;
         while (trophySystem.slideTimer >= frameLen)
         {
             trophySystem.animationTick++;
@@ -398,7 +410,7 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
     {
         // Regular timer
         trophySystem.drawTimer += elapsedUs;
-        if (trophySystem.drawTimer >= trophySystem.settings->drawMaxDuration * TENTH_SECOND)
+        if (trophySystem.drawTimer >= trophySystem.settings->drawMaxDuration * TENTH_SECOND_US)
         {
             // Stop drawing
             trophySystem.beingDrawn                               = false;
