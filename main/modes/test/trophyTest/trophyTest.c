@@ -285,17 +285,17 @@ static void runTrophy(int64_t elapsedUs)
                     else if (evt.button == PB_DOWN)
                     {
                         tt->checklistFlags |= 1 << 0;
-                        // TODO: Save to NVS
+                        trophyUpdate(testTrophies[3], tt->checklistFlags, true);
                     }
                     else if (evt.button == PB_LEFT)
                     {
                         tt->checklistFlags |= 1 << 1;
-                        // TODO: Save to NVS
+                        trophyUpdate(testTrophies[3], tt->checklistFlags, true);
                     }
                     else if (evt.button == PB_RIGHT)
                     {
                         tt->checklistFlags |= 1 << 2;
-                        // TODO: Save to NVS
+                        trophyUpdate(testTrophies[3], tt->checklistFlags, true);
                     }
                     else if (evt.button == PB_START)
                     {
@@ -311,7 +311,7 @@ static void runTrophy(int64_t elapsedUs)
                 }
             }
             // Draw instructions
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
             char buffer[64];
 
@@ -366,7 +366,10 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
             {
                 trophyClear(testTrophies[idx]);
             }
+            tt->aPresses = 0;
             tt->bPresses = 0;
+            tt->upTime = 0;
+            tt->checklistFlags = 0;
         }
         else if (label == textBlobs[7])
         {

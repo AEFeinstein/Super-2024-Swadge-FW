@@ -245,7 +245,10 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
     // Check if trophy is already won and return if true
     if (tw.trophyData.type == TROPHY_TYPE_CHECKLIST)
     {
-        // TODO: check if all flags are set
+        if (tw.currentVal == tw.trophyData.maxVal)
+        {
+            return;
+        }
     }
     else if (tw.trophyData.type == TROPHY_TYPE_TRIGGER)
     {
@@ -551,7 +554,7 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
 
     int endX = TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE;
     // Draw numbers if required
-    if (t.trophyData.type == TROPHY_TYPE_ADDITIVE || t.trophyData.type == TROPHY_TYPE_PROGRESS)
+    if ((t.trophyData.type == TROPHY_TYPE_ADDITIVE || t.trophyData.type == TROPHY_TYPE_PROGRESS) && t.currentVal < t.trophyData.maxVal)
     {
         char buffer[32];
         snprintf(buffer, sizeof(buffer) - 1, "%d/%d", t.currentVal, t.trophyData.maxVal);
