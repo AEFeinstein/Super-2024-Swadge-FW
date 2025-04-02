@@ -32,7 +32,7 @@ static const char EN_TAG[] = "ESPNOW";
     } while (0)
 
 /// The WiFi channel to operate on
-#define ESPNOW_CHANNEL 1
+#define ESPNOW_CHANNEL 11
 // The WiFi PHY mode, high throughput 20MHz
 #define WIFI_PHY WIFI_PHY_MODE_HT20
 /// The WiFi rate to run at, MCS6 with short GI, 65 Mbps for 20MHz, 135 Mbps for 40MHz
