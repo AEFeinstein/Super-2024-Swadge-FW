@@ -391,15 +391,13 @@ static void initTouchSensor(const touch_pad_t* touchPads, uint8_t numTouchPads, 
     ESP_ERROR_CHECK(touch_pad_filter_set_config(&filter_info));
     ESP_ERROR_CHECK(touch_pad_filter_enable());
     ESP_LOGD("TOUCH", "touch pad filter init");
-    ESP_ERROR_CHECK(touch_pad_timeout_set(true,
 #if defined(SOC_TOUCH_PAD_THRESHOLD_MAX)
-                                          SOC_TOUCH_PAD_THRESHOLD_MAX
+    ESP_ERROR_CHECK(touch_pad_timeout_set(true, SOC_TOUCH_PAD_THRESHOLD_MAX));
 #elif defined(TOUCH_PAD_THRESHOLD_MAX)
-                                          TOUCH_PAD_THRESHOLD_MAX
+    ESP_ERROR_CHECK(touch_pad_timeout_set(true, TOUCH_PAD_THRESHOLD_MAX));
 #else
     #error "Touch pad threshold max not defined"
 #endif
-                                          ));
 
     /* Enable interrupts, but not TOUCH_PAD_INTR_MASK_SCAN_DONE */
     ESP_ERROR_CHECK(
