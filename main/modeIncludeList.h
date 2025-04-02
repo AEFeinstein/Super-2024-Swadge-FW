@@ -30,7 +30,6 @@
 */
 
 #include "accelTest.h"
-#include "bongoTest.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"
@@ -41,7 +40,6 @@
 #include "mainMenu.h"
 #include "mode_credits.h"
 #include "mode_synth.h"
-#include "modeTimer.h"
 #include "sequencerMode.h"
 #include "touchTest.h"
 #include "tunernome.h"
