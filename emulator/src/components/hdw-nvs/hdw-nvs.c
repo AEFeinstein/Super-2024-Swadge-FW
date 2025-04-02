@@ -191,22 +191,6 @@ bool deinitNvs(void)
 }
 
 /**
- * @brief
- */
-void powerDownNvs(void)
-{
-    ; // TODO LPM
-}
-
-/**
- * @brief
- */
-void powerUpNvs(void)
-{
-    ; // TODO LPM
-}
-
-/**
  * @brief Erase and re-initialize the nonvolatile storage
  *
  * @return true if NVS was erased and re-initialized and can be used, false if it failed

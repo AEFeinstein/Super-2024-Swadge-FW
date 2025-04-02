@@ -896,7 +896,6 @@ void powerDownPeripherals(void)
     powerDownAccel();
     powerDownLed();
     powerDownMic();
-    powerDownNvs();
     powerDownTemperatureSensor();
     powerDownTft();
     powerDownUsb();
@@ -908,7 +907,6 @@ void powerDownPeripherals(void)
 void powerUpPeripherals(void)
 {
     // Always powered up
-    powerUpNvs();
     powerUpButtons();
     powerUpLed();
     powerUpUsb();
