@@ -23,12 +23,7 @@
 #include "midiPlayer.h"
 #include "esp_random.h"
 
-#include "mode_bigbug.h"
-#include "mode_swadgeHero.h"
-#include "pango.h"
-#include "ultimateTTT.h"
-#include "mode_cGrove.h"
-#include "mode_2048.h"
+#include "modeIncludeList.h"
 #include "jukebox.h"
 #include "tunernome.h"
 #ifdef SW_VOL_CONTROL
@@ -399,6 +394,7 @@ jukeboxSong_t music_unused[] = {
 };
 
 const jukeboxCategory_t musicCategories[] = {
+    /*
     {
         .categoryName = bigbugName,
         .songs        = music_bigbug,
@@ -429,6 +425,7 @@ const jukeboxCategory_t musicCategories[] = {
         .numSongs     = ARRAY_SIZE(music_2048),
         .generalMidi  = true,
     },
+    */
     {
         .categoryName = jukeboxName,
         .songs        = music_jukebox,
@@ -641,6 +638,7 @@ jukeboxSong_t sfx_unused[] = {
 };
 
 const jukeboxCategory_t sfxCategories[] = {
+    /*
     {
         .categoryName = bigbugName,
         .songs        = sfx_bigbug,
@@ -659,6 +657,7 @@ const jukeboxCategory_t sfxCategories[] = {
         .numSongs     = ARRAY_SIZE(sfx_ultimatettt),
         .generalMidi  = false,
     },
+    */
     {
         .categoryName = factoryTestName,
         .songs        = sfx_factoryTest,
