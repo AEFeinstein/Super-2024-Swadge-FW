@@ -49,12 +49,6 @@ typedef struct
 
     const char** danceNames;
     int32_t* danceVals;
-
-    int32_t bcastTimer;
-    int32_t listenTimer;
-    bool maySleep;
-
-    int32_t swadgePassCount;
 } danceMode_t;
 
 //==============================================================================
@@ -66,9 +60,6 @@ static void danceExitMode(void);
 static void danceMainLoop(int64_t elapsedUs);
 static uint32_t danceRand(uint32_t bound);
 static void danceMenuCb(const char* label, bool selected, uint32_t value);
-
-static void danceEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
-static void danceEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 
 //==============================================================================
 // Const Variables
@@ -141,9 +132,9 @@ swadgeMode_t danceMode = {
     .fnEnterMode     = danceEnterMode,
     .fnExitMode      = danceExitMode,
     .fnMainLoop      = danceMainLoop,
-    .wifiMode        = ESP_NOW,
-    .fnEspNowRecvCb  = danceEspNowRecvCb,
-    .fnEspNowSendCb  = danceEspNowSendCb,
+    .wifiMode        = NO_WIFI,
+    .fnEspNowRecvCb  = NULL,
+    .fnEspNowSendCb  = NULL,
     .fnAudioCallback = NULL,
     .overrideUsb     = false,
 };
@@ -171,9 +162,6 @@ void danceEnterMode(void)
     danceState->blankScreen = false;
 
     danceState->buttonPressedTimer = 0;
-
-    danceState->maySleep = true;
-    espNowPreLightSleep();
 
     danceState->menu         = initMenu(danceName, danceMenuCb);
     danceState->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
@@ -294,52 +282,20 @@ void danceMainLoop(int64_t elapsedUs)
         {
             // Screen is not blank, draw to it
             drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
-
-            font_t* f = danceState->menuRenderer->menuFont;
-            char str[16];
-            sprintf(str, "SP: %" PRId32, danceState->swadgePassCount);
-            drawText(f, c000, str, (TFT_WIDTH - textWidth(f, str)) / 2, TFT_HEIGHT - f->height);
         }
     }
 
     // Only sleep with a blank screen, otherwise the screen flickers
-    if (danceState->blankScreen && danceState->maySleep)
+    if (danceState->blankScreen)
     {
         // Wait for any LED transactions to finish, otherwise RMT will do weird things during CPU sleep
         flushLeds();
-        /* Light sleep for 100ms
-         * The longer the sleep, the choppier the LED animations, but more power saving.
+        /* Light sleep for 40ms (see DEFAULT_FRAME_RATE_US).
+         * The longer the sleep, the choppier the LED animations.
+         * Sleeping longer than the current framerate will look worse
          */
-        esp_sleep_enable_timer_wakeup(1000000 / 10);
+        esp_sleep_enable_timer_wakeup(DEFAULT_FRAME_RATE_US);
         esp_light_sleep_start();
-    }
-
-    // Count down the RX listening timer if it's active
-    if (danceState->listenTimer)
-    {
-        danceState->listenTimer -= elapsedUs;
-        // Check if it elapsed
-        if (0 >= danceState->listenTimer)
-        {
-            danceState->listenTimer = 0;
-            // Allow the mode to sleep again
-            danceState->maySleep = true;
-            // Turn off wifi before sleeping
-            espNowPreLightSleep();
-        }
-    }
-
-    danceState->bcastTimer -= elapsedUs;
-    if (danceState->bcastTimer <= 0)
-    {
-        // Broadcast every 7.5s, +/- 1.875s
-        danceState->bcastTimer = (5625000 + (esp_random() % 3750000));
-        // Turn on WiFi before transmitting
-        espNowPostLightSleep();
-        const char bcastData[16] = "BROADCAST";
-        espNowSend(bcastData, sizeof(bcastData));
-        // Stay awake after packet transmission
-        danceState->maySleep = false;
     }
 }
 
@@ -1578,33 +1534,4 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
     {
         setLeds(leds, CONFIG_NUM_LEDS);
     }
-}
-
-/**
- * @brief TODO
- *
- * @param esp_now_info Information about the transmission, including The MAC addresses
- * @param data The received packet
- * @param len The length of the received packet
- * @param rssi The signal strength of the received packet
- */
-static void danceEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
-{
-    // TODO something when receiving a SwadgePass packet
-    danceState->swadgePassCount++;
-}
-
-/**
- * @brief TODO
- *
- * @param mac_addr The MAC address which the data was sent to
- * @param status   The status of the transmission
- */
-static void danceEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
-{
-    ESP_LOGI("ESPNOW", "danceEspNowSendCb %s (%d)",
-             ESP_NOW_SEND_SUCCESS == status ? "ESP_NOW_SEND_SUCCESS" : "ESP_NOW_SEND_FAIL", status);
-
-    // Stay awake for 700ms after transmitting
-    danceState->listenTimer = 700000;
 }
