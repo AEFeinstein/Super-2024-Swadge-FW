@@ -30,7 +30,7 @@ void deinitTemperatureSensor(void)
  */
 void powerDownTemperatureSensor(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -38,7 +38,7 @@ void powerDownTemperatureSensor(void)
  */
 void powerUpTemperatureSensor(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**

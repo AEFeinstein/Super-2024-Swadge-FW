@@ -166,7 +166,7 @@ void deinitTFT(void)
  */
 void powerDownTft(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -174,7 +174,7 @@ void powerDownTft(void)
  */
 void powerUpTft(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**

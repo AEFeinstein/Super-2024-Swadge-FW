@@ -154,7 +154,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
  */
 void powerDownEspNow(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -162,7 +162,7 @@ void powerDownEspNow(void)
  */
 void powerUpEspNow(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**

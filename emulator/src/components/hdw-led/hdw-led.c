@@ -49,7 +49,7 @@ esp_err_t deinitLeds(void)
  */
 void powerDownLed(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -57,7 +57,7 @@ void powerDownLed(void)
  */
 void powerUpLed(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**

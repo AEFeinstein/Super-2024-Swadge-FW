@@ -6,6 +6,7 @@
 #include <string.h>
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
+#include "emu_main.h"
 
 //==============================================================================
 // Defines
@@ -48,7 +49,7 @@ void deinitDac(void)
  */
 void powerDownDac(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -56,7 +57,7 @@ void powerDownDac(void)
  */
 void powerUpDac(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**

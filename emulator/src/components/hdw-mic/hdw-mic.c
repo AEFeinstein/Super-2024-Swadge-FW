@@ -43,7 +43,7 @@ void initMic(gpio_num_t gpio)
  */
 void powerDownMic(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -51,7 +51,7 @@ void powerDownMic(void)
  */
 void powerUpMic(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**

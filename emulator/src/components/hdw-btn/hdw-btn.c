@@ -88,7 +88,7 @@ void deinitButtons(void)
  */
 void powerDownButtons(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -96,7 +96,7 @@ void powerDownButtons(void)
  */
 void powerUpButtons(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**

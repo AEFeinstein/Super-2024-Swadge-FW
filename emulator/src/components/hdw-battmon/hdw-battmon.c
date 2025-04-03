@@ -24,7 +24,7 @@ void deinitBattmon(void)
  */
 void powerDownBattmon(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -32,7 +32,7 @@ void powerDownBattmon(void)
  */
 void powerUpBattmon(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**

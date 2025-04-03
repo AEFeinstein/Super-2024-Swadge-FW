@@ -36,7 +36,7 @@ void deinitUsb(void)
  */
 void powerDownUsb(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -44,7 +44,7 @@ void powerDownUsb(void)
  */
 void powerUpUsb(void)
 {
-    ; // TODO LPM
+    WARN_UNIMPLEMENTED();
 }
 
 /**
