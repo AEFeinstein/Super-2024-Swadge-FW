@@ -30,7 +30,6 @@
 */
 
 #include "accelTest.h"
-#include "bongoTest.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"
@@ -39,19 +38,11 @@
 #include "jukebox.h"
 #include "keebTest.h"
 #include "mainMenu.h"
-#include "modeTimer.h"
-#include "mode_2048.h"
-#include "mode_bigbug.h"
-#include "mode_cGrove.h"
 #include "mode_credits.h"
-#include "mode_swadgeHero.h"
 #include "mode_synth.h"
-#include "pango.h"
 #include "sequencerMode.h"
-#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
-#include "ultimateTTT.h"
 
 //==============================================================================
 // Function Prototypes

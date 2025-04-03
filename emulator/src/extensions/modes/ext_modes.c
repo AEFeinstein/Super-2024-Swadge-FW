@@ -30,15 +30,6 @@ static swadgeMode_t* getRandomSwadgeMode(void);
 // Variables
 //==============================================================================
 
-/*
- Quickly regenerate with:
-   grep -hirE '^extern swadgeMode_t (.*);' main/modes/ | awk '{print $3}' \
-     | sed -E 's/(.*);/\&\1,/g' | grep -v quickSettings | sort
-*/
-// clang-format off
-
-// clang-format on
-
 emuExtension_t modesEmuExtension = {
     .name            = "modes",
     .fnInitCb        = modesInitCb,
