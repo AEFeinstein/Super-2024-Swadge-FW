@@ -68,9 +68,11 @@ typedef struct __attribute__((packed))
 
 esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness);
 esp_err_t deinitLeds(void);
+void powerDownLed(void);
+void powerUpLed(void);
 esp_err_t setLeds(led_t* leds, uint8_t numLeds);
 void setLedBrightness(uint8_t brightness);
-uint8_t getLedState(led_t* leds, uint8_t numLeds);
+const led_t* getLedState(void);
 void flushLeds(void);
 
 #endif

@@ -291,6 +291,24 @@ void deinitTFT(void)
 }
 
 /**
+ * @brief Turn off the backlight and put the TFT in sleep mode
+ */
+void powerDownTft(void)
+{
+    // Disable the backlight. This also puts th TFT to sleep
+    disableTFTBacklight();
+}
+
+/**
+ * @brief Wake the TFT and turn on the backlight
+ */
+void powerUpTft(void)
+{
+    // Enable the backlight. This also wakes the TFT
+    enableTFTBacklight();
+}
+
+/**
  * @brief Return the pixel framebuffer, which is (TFT_WIDTH * TFT_HEIGHT) pixels
  * in row order, starting from the top left. This can be used t directly modify
  * individual pixels without calling ::setPxTft()

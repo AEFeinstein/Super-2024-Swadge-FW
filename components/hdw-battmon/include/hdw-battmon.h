@@ -33,6 +33,8 @@
 
 void initBattmon(gpio_num_t gpio);
 void deinitBattmon(void);
+void powerDownBattmon(void);
+void powerUpBattmon(void);
 int readBattmon(void);
 
 #endif

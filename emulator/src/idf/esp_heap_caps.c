@@ -148,7 +148,7 @@ void dumpAllocTable(void)
         allocation_t* al = &aTable[idx];
         if (al->ptr)
         {
-            printf("%s,%s,%s,%d,%s,%p,%d,%d,%d,%d\n", "DUMP", al->file, al->func, al->line, al->tag, al->ptr,
+            printf("%s,%s,%s,%u,%s,%p,%d,%u,%d,%d\n", "DUMP", al->file, al->func, al->line, al->tag, al->ptr,
                    al->caps & MALLOC_CAP_SPIRAM ? 0 : (uint32_t)al->size,
                    al->caps & MALLOC_CAP_SPIRAM ? (uint32_t)al->size : 0, 0, 0);
         }
@@ -206,7 +206,7 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
             if (al->size > *usedMem)
             {
                 *usedMem = 0;
-                fprintf(stderr, "!! Freeing more than allocated at %s:%d\n", file, line);
+                fprintf(stderr, "!! Freeing more than allocated at %s:%u\n", file, line);
             }
             else
             {
@@ -223,7 +223,7 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
         {
             if (size >= SPIRAM_LARGEST_BLOCK)
             {
-                fprintf(stderr, "!! Too large alloc at %s:%d (%d)\n", file, line, size);
+                fprintf(stderr, "!! Too large alloc at %s:%u (%u)\n", file, line, size);
                 dumpAllocTable();
                 exit(-1);
             }
@@ -251,7 +251,7 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
             }
             else
             {
-                snprintf(al->tag, sizeof(al->tag) - 1, "%s:%d", al->func, al->line);
+                snprintf(al->tag, sizeof(al->tag) - 1, "%s:%u", al->func, al->line);
             }
 
             // Adjust space
@@ -264,7 +264,7 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
 
         if (usedMemory[1] >= SPIRAM_SIZE)
         {
-            fprintf(stderr, "!! Out of SPIRAM at %s:%d (%d)\n", file, line, (uint32_t)usedMemory[1]);
+            fprintf(stderr, "!! Out of SPIRAM at %s:%u (%u)\n", file, line, (uint32_t)usedMemory[1]);
             dumpAllocTable();
             exit(-1);
         }
@@ -272,7 +272,7 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
     else if (OP_FREE == op)
     {
         // Trying to free an entry not in the table
-        fprintf(stderr, "!! Probable double-free at %s:%d (%p)\n", file, line, ptr);
+        fprintf(stderr, "!! Probable double-free at %s:%u (%p)\n", file, line, ptr);
     }
     else
     {

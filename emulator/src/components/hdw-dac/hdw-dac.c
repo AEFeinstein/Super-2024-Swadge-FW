@@ -6,6 +6,7 @@
 #include <string.h>
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
+#include "emu_main.h"
 
 //==============================================================================
 // Defines
@@ -41,6 +42,22 @@ void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t c
  */
 void deinitDac(void)
 {
+}
+
+/**
+ * @brief
+ */
+void powerDownDac(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
+ * @brief
+ */
+void powerUpDac(void)
+{
+    WARN_UNIMPLEMENTED();
 }
 
 /**

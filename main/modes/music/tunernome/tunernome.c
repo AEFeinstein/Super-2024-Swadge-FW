@@ -573,7 +573,7 @@ void plotInstrumentNameAndNotesAndStrings(const char* instrumentName, const char
     // tunernome->logbookArrowWsg.h / 2;
 
     // Note names of strings, arranged to match LED positions
-    for (int i = 0; i < numNotes && i < CONFIG_NUM_LEDS && i < NUM_MAX_STRINGS; i++)
+    for (int8_t i = 0; i < numNotes && i < CONFIG_NUM_LEDS && i < NUM_MAX_STRINGS; i++)
     {
         int16_t stringXOffset = TUNER_STRING_X_PADDING + perStringXOffset * i;
 
@@ -602,8 +602,12 @@ void plotInstrumentNameAndNotesAndStrings(const char* instrumentName, const char
         }
 
         // Draw instrument note
-        int ledIdx = stringIdxToLedIdx == NULL ? i : stringIdxToLedIdx[i];
-        ledIdx     = ledIdx < CONFIG_NUM_LEDS ? ledIdx : i;
+        int8_t ledIdx = i;
+        if (stringIdxToLedIdx)
+        {
+            ledIdx = stringIdxToLedIdx[i];
+        }
+        ledIdx = CLAMP(ledIdx, 0, CONFIG_NUM_LEDS);
         drawText(&tunernome->logbook, c555, instrumentNotes[i],
                  stringXOffset + (TUNER_STRING_WIDTH - 1 - textWidth(&tunernome->logbook, instrumentNotes[i])) / 2,
                  ledIdxToPos[ledIdx] == LED_POS_UP ? yOffUp : yOffDown);

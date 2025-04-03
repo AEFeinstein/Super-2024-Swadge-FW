@@ -32,6 +32,22 @@ void deinitUsb(void)
 }
 
 /**
+ * @brief
+ */
+void powerDownUsb(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
+ * @brief
+ */
+void powerUpUsb(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
  * @brief Send a USB gamepad report to the system
  *
  * @param report The report to send, the current state of all gamepad inputs

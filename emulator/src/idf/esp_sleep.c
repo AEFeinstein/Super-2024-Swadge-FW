@@ -47,7 +47,7 @@ void esp_deep_sleep_start(void)
  *
  * @param mode The swadge mode to force-switch into
  */
-void emulatorForceSwitchToSwadgeMode(swadgeMode_t* mode)
+void emulatorForceSwitchToSwadgeMode(const swadgeMode_t* mode)
 {
     // Switch the swadge mode normally
     switchToSwadgeMode(mode);

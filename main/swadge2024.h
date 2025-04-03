@@ -172,6 +172,7 @@
 // Useful ESP things
 #include <esp_heap_caps.h>
 #include <esp_log.h>
+#include <esp_random.h>
 
 // Hardware interfaces
 #include "crashwrap.h"
@@ -350,7 +351,7 @@ typedef struct
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);
 
-void switchToSwadgeMode(swadgeMode_t* mode);
+void switchToSwadgeMode(const swadgeMode_t* mode);
 void softSwitchToPendingSwadge(void);
 
 void deinitSystem(void);
@@ -361,5 +362,8 @@ uint32_t getFrameRateUs(void);
 
 void switchToSpeaker(void);
 void switchToMicrophone(void);
+
+void powerDownPeripherals(void);
+void powerUpPeripherals(void);
 
 #endif
