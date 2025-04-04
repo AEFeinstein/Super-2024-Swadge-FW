@@ -272,11 +272,15 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         return;
     }
     else
-    { // If the newValue has exceeded maxVal, Save value (should work for checklist)
+    { // If the newValue has exceeded currentVal, Save value (should work for checklist)
         tw.currentVal = newVal;
         _save(tw, newVal);
-        // TODO: Check if won
-        // TODO: Update trophyScore
+
+        // Update score
+        if (tw.currentVal >= tw.trophyData.maxVal)
+        {
+            // TODO: Update score
+        }
     }
 
     // Load into draw queue is requested
@@ -299,10 +303,6 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         }
 
         trophySystem.trophyQueue[trophySystem.idx].active = true;
-
-        // TODO: the rest of this
-
-        // TODO: Play sound
 
         // Increment idx
         trophySystem.idx = _incWithOverflow(trophySystem.idx, TROPHY_MAX_BANNERS);
@@ -555,7 +555,8 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
 
     int endX = TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE;
     // Draw numbers if required
-    if ((t.trophyData.type == TROPHY_TYPE_ADDITIVE || t.trophyData.type == TROPHY_TYPE_PROGRESS) && t.currentVal < t.trophyData.maxVal)
+    if ((t.trophyData.type == TROPHY_TYPE_ADDITIVE || t.trophyData.type == TROPHY_TYPE_PROGRESS)
+        && t.currentVal < t.trophyData.maxVal)
     {
         char buffer[32];
         snprintf(buffer, sizeof(buffer) - 1, "%d/%d", t.currentVal, t.trophyData.maxVal);
@@ -592,14 +593,25 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
     }
 
     // Draw text, starting after image if present
-    // FIXME: Limit length of title text based on if there's space and there's no numbers
     startX = xOffset;
     startY = yOffset + 4;
-    drawTextWordWrap(fnt, c555, t.trophyData.title, &startX, &startY, endX, yOffset + 18); // Title
+    if (drawTextWordWrap(fnt, c555, t.trophyData.title, &startX, &startY, endX, yOffset + 18) != NULL) // Title
+    {
+        // Draw a gray box and elipses
+        fillDisplayArea(endX - (textWidth(fnt, "...") + 4), yOffset + 4, endX, yOffset + 16, c111);
+        drawText(fnt, c555, "...", endX - textWidth(fnt, "..."), yOffset + 4);
+    }
     startX = xOffset;
     startY = yOffset + 20;
-    drawTextWordWrap(fnt, c444, t.trophyData.description, &startX, &startY, TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE,
-                     yOffset + TROPHY_BANNER_HEIGHT); // Description
+    if (drawTextWordWrap(fnt, c444, t.trophyData.description, &startX, &startY,
+                         TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE, yOffset + TROPHY_BANNER_HEIGHT)
+        != NULL) // Description
+    {
+        fillDisplayArea(endX - textWidth(fnt, "..."), yOffset + TROPHY_BANNER_HEIGHT - fnt->height, endX,
+                        yOffset + TROPHY_BANNER_HEIGHT, c111);
+        drawText(fnt, c555, "...", endX - (textWidth(fnt, "...") + 4),
+                 yOffset + TROPHY_BANNER_HEIGHT - (fnt->height + 7));
+    }
 
     // Draw check box
     fillDisplayArea(TFT_WIDTH - 16, yOffset + 20, TFT_WIDTH - 11, yOffset + 25, c222);

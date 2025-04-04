@@ -155,12 +155,20 @@
 // TODO: Remove uneccessary functions
 // TODO: Warnings:
 // - No overflow protection
-// - If the first fifteen characters of NVS Namespave or two or more trophy names inside the same mode there will be
+// - If the first fifteen characters of NVS Namespace or two or more trophy names inside the same mode there will be
 //   data clashes
 // - Does not save values once trophy is won. For example, if 10 key presses unlocks a trophy, even if a hundred presses
 //   are registered, the number 10 will be saved to NVS.
 // - When testing, renaming and reordering trophies (especially items inside a checklist) may cause hard to discover
 // errors. You may have to clear NVS on ESP32 / delete the nvs.json file to fix issues.
+// - Every trophyUpdate() call has the potential to save to NVS. NVS has a limited amount of writes over it's lifetime
+//   which we're not likely to hit, but maybe don't hammer the NVS by incrementing by one every frame. Only update when
+//   reasonable. The code will cut out a lot of frivilous requests such as:
+//   - Trying to update trophy after it's been won
+//   - Trying to save the same value into NVS
+//   - Trying to save a lower value into NVS
+//   In the above cases, it's safe to keep the update code running without issue, but incrementing by one every frame
+//   may cause slowdowns.
 
 #pragma once
 

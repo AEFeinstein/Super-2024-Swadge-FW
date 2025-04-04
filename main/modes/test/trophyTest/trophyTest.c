@@ -69,7 +69,7 @@ const trophyData_t testTrophies[] = {
     },
     {
         .title       = "Checklist",
-        .description = "This is gonna need a bunch of verification",
+        .description = "This is gonna need a bunch of verification, but like has a very long description",
         .imageString = "kid1.wsg",
         .type        = TROPHY_TYPE_CHECKLIST,
         .difficulty  = TROPHY_DIFF_HARD,
