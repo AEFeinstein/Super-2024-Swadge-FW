@@ -3,7 +3,7 @@
  * \section led_design Design Philosophy
  *
  * LED code is based on <a
- * href="https://github.com/espressif/esp-idf/tree/v5.2.3/examples/peripherals/rmt/led_strip">Espressif's RMT
+ * href="https://github.com/espressif/esp-idf/tree/v5.2.5/examples/peripherals/rmt/led_strip">Espressif's RMT
  * Transmit Example - LED Strip</a>.
  *
  * Each LED has a red, green, and blue component. Each component ranges from 0 to 255.
@@ -68,9 +68,11 @@ typedef struct __attribute__((packed))
 
 esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness);
 esp_err_t deinitLeds(void);
+void powerDownLed(void);
+void powerUpLed(void);
 esp_err_t setLeds(led_t* leds, uint8_t numLeds);
 void setLedBrightness(uint8_t brightness);
-uint8_t getLedState(led_t* leds, uint8_t numLeds);
+const led_t* getLedState(void);
 void flushLeds(void);
 
 #endif

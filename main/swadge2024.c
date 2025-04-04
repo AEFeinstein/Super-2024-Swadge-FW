@@ -154,7 +154,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
  * Datasheet</a>
@@ -231,17 +231,17 @@
 //==============================================================================
 
 /// @brief The current Swadge mode
-static swadgeMode_t* cSwadgeMode = &mainMenuMode;
+static const swadgeMode_t* cSwadgeMode = &mainMenuMode;
 
 /// @brief A pending Swadge mode to use after a deep sleep
-static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
+static RTC_DATA_ATTR const swadgeMode_t* pendingSwadgeMode = NULL;
 
 /// @brief Flag set if the quick settings should be shown synchronously
 static bool shouldShowQuickSettings = false;
 /// @brief Flag set if the quick settings should be hidden synchronously
 static bool shouldHideQuickSettings = false;
 /// @brief A pointer to the Swadge mode under the quick settings
-static swadgeMode_t* modeBehindQuickSettings = NULL;
+static const swadgeMode_t* modeBehindQuickSettings = NULL;
 
 /// 25 FPS by default
 static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
@@ -338,8 +338,11 @@ void app_main(void)
     // Check for prior crash info and install crash wrapper
     checkAndInstallCrashwrap();
 
-    // Init timers
-    esp_timer_init();
+    /* This function is called from startup code. Applications do not need to
+     * call this function before using other esp_timer APIs. Before calling
+     * this function, esp_timer_early_init() must be called by the startup code.
+     */
+    // esp_timer_init();
 
     // Init file system
     initCnfs();
@@ -731,7 +734,7 @@ static void setSwadgeMode(void* swadgeMode)
  *
  * @param mode A pointer to the mode to switch to
  */
-void switchToSwadgeMode(swadgeMode_t* mode)
+void switchToSwadgeMode(const swadgeMode_t* mode)
 {
     // Set the framerate back to default
     setFrameRateUs(DEFAULT_FRAME_RATE_US);
@@ -911,6 +914,62 @@ void switchToMicrophone(void)
     // Initialize and start the mic as a continuous ADC
     initMic(GPIO_NUM_7);
     startMic();
+}
+
+/**
+ * @brief Power down all hardware peripherals
+ */
+void powerDownPeripherals(void)
+{
+    powerDownBattmon();
+    powerDownButtons();
+    powerDownDac();
+    powerDownEspNow();
+    powerDownAccel();
+    powerDownLed();
+    powerDownMic();
+    powerDownTemperatureSensor();
+    powerDownTft();
+    powerDownUsb();
+}
+
+/**
+ * @brief Power up all hardware peripherals
+ */
+void powerUpPeripherals(void)
+{
+    // Always powered up
+    powerUpButtons();
+    powerUpLed();
+    powerUpUsb();
+    powerUpTft();
+
+    // One or the other
+    if (NULL != cSwadgeMode->fnAudioCallback)
+    {
+        powerUpMic();
+    }
+    else
+    {
+        powerUpDac();
+        powerUpBattmon();
+    }
+
+    // Optional peripherals
+    if (NO_WIFI != cSwadgeMode->wifiMode)
+    {
+        powerUpEspNow();
+    }
+
+    if (cSwadgeMode->usesAccelerometer)
+    {
+        powerUpAccel();
+    }
+
+    if (cSwadgeMode->usesThermometer)
+    {
+        powerUpTemperatureSensor();
+    }
 }
 
 /**

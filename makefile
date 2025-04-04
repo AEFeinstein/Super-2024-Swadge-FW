@@ -217,12 +217,13 @@ DEFINES_LIST = \
 	CONFIG_NUM_LEDS=9 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
-	IDF_VER="v5.2.3" \
+	IDF_VER="v5.2.5" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
 	CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
 	CONFIG_SOUND_OUTPUT_SPEAKER=y \
-	CONFIG_FACTORY_TEST_NORMAL=y
+	CONFIG_FACTORY_TEST_NORMAL=y \
+	SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF
 
 # If this is not WSL, use OpenGL for rawdraw
 ifeq ($(IS_WSL),0)
@@ -336,9 +337,6 @@ $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 
 # To create the c file with assets, run these tools
 $(CNFS_FILE):
-# Sokoban .tmx to bin preprocessor
-	python ./tools/soko/soko_tmx_preprocessor.py ./assets/soko/ ./assets_image/
-	
 	$(MAKE) -C ./tools/assets_preprocessor/
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 	$(MAKE) -C ./tools/cnfs/

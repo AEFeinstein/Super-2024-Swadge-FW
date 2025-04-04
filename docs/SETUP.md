@@ -2,7 +2,7 @@
 
 ## General Notes
 
-It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
+It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
 
 It is recommended to use native tools (i.e. Windows programs on Windows), not Windows Subsystem for Linux (WSL) or a virtual machine.
 
@@ -39,16 +39,20 @@ The continuous integration for this project runs on a Windows instance. This mea
 6. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
     * `C:\msys64\usr\bin`
-    
+
     You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. When it's all set up, it should look something like this:
     
     <img src="./win_path.png">
 
-6. Clone the ESP-IDF v5.2.3 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
+    If the above doesn't work try adding `C:\msys64\mingw64\bin` and `C:\msys64\usr\bin` to the system path instead of the user path. The System path is highlighted in red, and the user path in purple. 
+
+    <img src="./Correct_path.jpg">
+
+6. Clone the ESP-IDF v5.2.5 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
 Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe
     ```powershell
     & Set-ExecutionPolicy -Scope CurrentUser Unrestricted
-    & git clone -b v5.2.3 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
+    & git clone -b v5.2.5 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
     & $HOME\esp\esp-idf\install.ps1
     ```
     > **Warning**
@@ -88,9 +92,9 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     sudo ./llvm.sh 17
     sudo apt install clang-format-17
     ```
-4. Clone the ESP-IDF v5.2.3 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+4. Clone the ESP-IDF v5.2.5 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
-    git clone -b v5.2.3 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    git clone -b v5.2.5 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
 
@@ -107,9 +111,9 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     ```bash
     brew install libxinerama pulseaudio clang-format cppcheck wget doxygen cmake graphviz
     ```
-5. Clone the ESP-IDF v5.2.3 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+5. Clone the ESP-IDF v5.2.5 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
-    git clone -b v5.2.3 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    git clone -b v5.2.5 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
 6. Before running the simulator on your machine, you need to start pulseaudio like so:
@@ -186,7 +190,7 @@ code ~/esp/Super-2024-Swadge-FW
 
 On occasion the ESP-IDF version used to build this project will increment. The easiest way to update ESP-IDF is to delete the existing one, by default installed at `~/esp/esp-idf/`, and the tools, by default installed at `~/.espressif/`, and follow the guide above to clone the new ESP-IDF and run the install script.
 
-Alternatively, you can update the IDF in-place with the following commands. This example updates the IDF to 5.2.3, and you can change that version as is necessary. These are Linux commands, so they may need to be tweaked slightly for Windows.
+Alternatively, you can update the IDF in-place with the following commands. This example updates the IDF to 5.2.5, and you can change that version as is necessary. These are Linux commands, so they may need to be tweaked slightly for Windows.
 
 ```bash
 # Change directory to where the IDF is installed
@@ -194,7 +198,7 @@ cd ~/esp/esp-idf/
 
 # Update the IDF with git
 git fetch --prune
-git checkout tags/v5.2.3
+git checkout tags/v5.2.5
 git submodule update --init --recursive
 
 # Install updated tools and python environment

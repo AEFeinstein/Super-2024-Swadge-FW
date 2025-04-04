@@ -336,3 +336,9 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+typedef uint32_t TickType_t;
+#define CONFIG_FREERTOS_HZ 100
+#define configTICK_RATE_HZ CONFIG_FREERTOS_HZ
+#define portTICK_PERIOD_MS ( ( TickType_t ) 1000 / configTICK_RATE_HZ )
+void vTaskDelay( const TickType_t xTicksToDelay );

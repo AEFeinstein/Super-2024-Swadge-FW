@@ -47,7 +47,7 @@ typedef struct
     midiFile_t jingle;
 #endif
     void* buzzerState;
-    led_t ledState[CONFIG_NUM_LEDS + 1];
+    led_t ledState[CONFIG_NUM_LEDS];
 
     wsg_t iconGeneric;
     wsg_t iconSfxOn;
@@ -196,7 +196,7 @@ static void quickSettingsEnterMode(void)
     soundPause();
 
     // Save the LED state
-    getLedState(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
+    memcpy(quickSettings->ledState, getLedState(), sizeof(led_t) * CONFIG_NUM_LEDS);
 
     // Clear the LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -295,7 +295,7 @@ static void quickSettingsExitMode(void)
     soundRestore(quickSettings->buzzerState);
 
     // Restore the LED state
-    setLeds(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
+    setLeds(quickSettings->ledState, CONFIG_NUM_LEDS);
 
     // Free the font
     freeFont(&quickSettings->font);

@@ -21,6 +21,9 @@
 /** The handle created for the DAC */
 static dac_continuous_handle_t dac_handle = NULL;
 
+/** Keep track of if the DAC is writing or not */
+static bool dacWriting = false;
+
 /** A queue to move dac_event_data_t from the interrupt to the main loop*/
 static QueueHandle_t dacIsrQueue = NULL;
 
@@ -134,15 +137,32 @@ void deinitDac(void)
 }
 
 /**
+ * @brief Power down the DAC (speaker)
+ */
+void powerDownDac(void)
+{
+    setDacShutdown(true);
+}
+
+/**
+ * @brief Power up the DAC (speaker)
+ */
+void powerUpDac(void)
+{
+    setDacShutdown(false);
+}
+
+/**
  * @brief Start the DAC. This will cause samples to be requested from the application.
  */
 void dacStart(void)
 {
-    if (dac_handle)
+    if (dac_handle && !dacWriting)
     {
         /* Enable and start the continuous channels */
         ESP_ERROR_CHECK(dac_continuous_enable(dac_handle));
         ESP_ERROR_CHECK(dac_continuous_start_async_writing(dac_handle));
+        dacWriting = true;
     }
 }
 
@@ -151,11 +171,12 @@ void dacStart(void)
  */
 void dacStop(void)
 {
-    if (dac_handle)
+    if (dac_handle && dacWriting)
     {
         /* Stop and disable the continuous channels */
         ESP_ERROR_CHECK(dac_continuous_stop_async_writing(dac_handle));
         ESP_ERROR_CHECK(dac_continuous_disable(dac_handle));
+        dacWriting = false;
     }
 }
 
@@ -164,7 +185,7 @@ void dacStop(void)
  */
 void dacPoll(void)
 {
-    if (dac_handle)
+    if (dac_handle && dacWriting)
     {
         /* If there is an event to receive, receive it */
         dac_event_data_t evt_data;
@@ -191,8 +212,8 @@ void setDacShutdown(bool shutdown)
 {
     if (shutdown)
     {
-        ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 1));
         dacStop();
+        ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 1));
     }
     else
     {

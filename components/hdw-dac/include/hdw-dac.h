@@ -3,7 +3,7 @@
  * \section dac_design Design Philosophy
  *
  * The Digital To Analog Converter (DAC) is used to drive a speaker or headphones. It uses the <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/peripherals/dac.html">DAC
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/peripherals/dac.html">DAC
  * peripheral</a>. The peripheral can be used a few different ways, but this project uses DMA to output a
  * continuous, arbitrary signal.
  *
@@ -99,6 +99,8 @@ typedef void (*fnDacCallback_t)(uint8_t* samples, int16_t len);
 
 void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb);
 void deinitDac(void);
+void powerDownDac(void);
+void powerUpDac(void);
 void dacPoll(void);
 void dacStart(void);
 void dacStop(void);
