@@ -17,7 +17,7 @@ If you're ever lost, feel free to message us on slack or discord. We'd love to h
 - A dev environment - There's a great tutorial to set it up for Windows, Linux or MacOS [here](./SETUP.md)
 - A swadge - Not strictly necessary, but sometimes things that work on the emulator don't work on the real hardware. It's best to be able to test on real hardware at the end of the day.
 - A USB-C cable with data - Some cheap USB-C cables are power only. If there's no data lines, you'll have to find a different cord.
-- An image editor - Presumably, you're going to want some images. MS Paint will work, but I recommend [Asperite](https://www.aseprite.org/). You can pick up a custom palette of colors so you use the Swadge colors specifically
+- An image editor - Presumably, you're going to want some images. MS Paint will work, but I recommend [Aseprite](https://www.aseprite.org/). You can pick up a custom palette of colors so you use the Swadge colors specifically
 
 ## Getting started
 
@@ -472,21 +472,62 @@ If you add "*" you will include all the files inside that folder. If the status 
 
 Now you can run `git status` again and verify all the files you want are added, and the ones you don't want aren't included. You can start over with `git reset` if you accidentally added the wrong files.
 
-Once you're satisfied with the file list, run the following command: `git commit -m "Initial Commit"` This will add the message to the commit so you don't have to memorize a hash to come back. THe message should be as descriptive as required, such as "misc bug fixes" or "Added blowing on microphone to jump". If you're writing paragraphs, you probably need ot commit more.
+Once you're satisfied with the file list, run the following command: `git commit -m "Initial Commit"` This will add the message to the commit so you don't have to memorize a hash to come back. THe message should be as descriptive as required, such as "misc bug fixes" or "Added blowing on microphone to jump". If you're writing paragraphs, you probably need to commit more.
 
+The last step can only be done if we have write access to the github repository. If oyu have access, you can push to the external repo, saving your code outside you computer so other devs can work on it and if your computer dies you'll be able to pull the files back down.
 
+Run `git push --set-upstream origin RoboRunner` to create the branch on the github server and send the files to it. You will have to log in.
+
+If successful, your code is now saved to the cloud and can be pulled to a different computer! 
+
+We've done a lot of work and all we've got to show for it is a blank black screen, so in the next section let's give ourselves something to look at, hmm?
 
 ## Loading resources
 
+In this section, we're going to draw something to the screen. 
+
+First, we need to make an image to display. I'm going to make the little robot that's gonna do the running. I prefer to use Aseprite to make images, and here's the result!
+
+<img src="./TutorialImages/roboExample.png">
+
+Did I mention I don't do art? I don't do art. Still, it's better to have this guy than nothing.
+
+Some notes:
+- The swadge color palette can be found [here](./SwadgePalette.gpl). The swadge will crunch down other colors to closest match, but for better control, you can use this subset of colors to ensure it looks the same as originally designed if using Aseprite
+- The Swadge's screen was 280 wide x 240 tall for at least '23 through '25. This isn't that large, so a super detailed 1000 pixel square character isn't going to fit.
+- The Swadge's screen is pretty small in reality. The emulator's screen will make them a lot larger which is good for debugging but can foll your brain into thinking that's the end size.
+- images that are too large will not load. It has to do with memory size, not just pixel size, so there's no specific limit. Just keep the files a reasonable size and it'll be alright.
+
+Now that I have some basic art, we can see about getting into the Swadge.
+
+All art and sounds go into the assets/ folder in the repository. Make a new folder and copy all the assets into it. During compilation, they will be converted automatically to a format the swadge can use.
 
 
-## Concepts to teach
 
-- Using US timers instead of frames
-- How to instantiate resources (WSGs, Fonts, etc)
-- Basic gameplay loops
-- Memory management
-- Inputs 
 - Users should refer back to the documentation
-- Frequent updates and proper git behavior
+- How to instantiate resources (WSGs, Fonts, etc)
+- Memory management
+- Drawing to the screen / refreshing
+
+## Input
+
+- Basic gameplay loops
+- Inputs 
+- Using US timers instead of frames
+
+## Obstacles
+
+- Randomness
+- Getting the background to move
+- Collisions
+
+## Score
+
+- Numbers and displaying text on screen
 - NVS and good NVS behavior
+
+## Polish
+
+- Splash screen
+- Death screen
+- SFX
