@@ -498,18 +498,100 @@ Some notes:
 - The Swadge's screen is pretty small in reality. The emulator's screen will make them a lot larger which is good for debugging but can foll your brain into thinking that's the end size.
 - images that are too large will not load. It has to do with memory size, not just pixel size, so there's no specific limit. Just keep the files a reasonable size and it'll be alright.
 
-Now that I have some basic art, we can see about getting into the Swadge.
+All art and sounds go into the `assets/` folder in the repository. Make a new folder and copy all the assets into it. During compilation, they will be converted automatically to a format the swadge can use.
 
-All art and sounds go into the assets/ folder in the repository. Make a new folder and copy all the assets into it. During compilation, they will be converted automatically to a format the swadge can use.
+### Memory 
 
+Now that I have some basic art, we can see about getting it into the Swadge. The Swadge has limited RAM, so each mode has to allocate and de-allocate RAM whenever the mode is entered or exited. We can't afford to have everything loaded all the time. If you recall use making the mode name up above, this is the reason we made it `const` so the bytes aren't taking up space in RAM.
 
+The easiest way to make sure the RAM is properly managed is to put all the variables into a "mode struct", or a simple data structure that will contain all the data as we can load and de-load it easily.
 
-- Users should refer back to the documentation
-- How to instantiate resources (WSGs, Fonts, etc)
-- Memory management
+```C
+typedef struct 
+{
+    wsg_t character;
+} runnerData_t;
+```
+
+The above code creates a struct called runnerData_t with one member, that of a wsg_t called character. Anytime we use typedef, we are defining a new type, so we add "_t" to the end so we know what it is later. You'll note that the member, "wsg_t", is also a type.
+
+Of course, we don't know what that is, so let's look that up, shall we? One of the most important skills in game development is being able to read the technical documentation. Right now, we have no idea what this wsg thing is but it's certainly valid code.
+
+If you navigate to [The documentation](https://adam.feinste.in/Super-2024-Swadge-FW/index.html) you'll find a lot of useful information. It's all generated directly from the code, so we can be sure it's up to date with the `main` branch. Here, we can go find the wsg.h file and figure out what it's used for.
+
+Turns out, it's our image handler. Pretty easy to get from context, but anytime there's something you want to know about, look it up in the documentation. In fact, maybe set aside some time to look through random bits of the library. See how other modes were built, look at the functions. This will help you figure out what the other devs have worked and how everything is organized. It's a good idea to bookmark it for easy browsing later.
+
+Well, now that we have our struct, we need allocate space and keep a reference to the memory space. We can accomplish this by first creating a pointer right after the swadgeMode_t struct:
+
+```C
+runnerData_t* rd;
+```
+
+And then by changing the enter mode function to the following:
+
+```C
+static void runnerEnterMode()
+{
+    rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
+}
+```
+
+That's a lot, but here's the breakdown:
+- heap_caps_calloc() allocates memory. This tells the swadge or emulator to make space for the data we're going to save.
+- The arguments:
+  - 1: The number blocks of memory to initialize. We only need one copy of runnerData_t, so 1.
+  - sizeof(runnerData_t): This automatically gets the size of runnerData_t. If we add thirty more "wsg_t"s, this will automatically ensure the memory picked up is the right size.
+  - MALLOC_CAP_8BIT: This is a mode thing. Unless it breaks, just use this.
+- (runnerData_t*): The memory that heap_caps_calloc() assigned to us isn't typed, it's just a bunch of holes to fill numbers into. This snippit of code tells the compiler that memory we just allocated fits into rd
+- rd: A pointer to the memory we've just allocated.
+
+So, pointers. It's not complicated, but when you're unfamiliar it does seem overwhelming. A pointer is an address to a value. Think of it like a mailbox. The mailbox contains the value, whether it's a single true/false or an entire swadgeMode_t struct. THe pointer is the number on the side of the mailbox. Sometimes it's a lot easier to say "grab whatever's in mailbox 20" instead of describing each part of the data inside the mailbox.
+
+In our case we're doing this because we don't actually know which mailbox out runnerData_t is assigned to. What we do know is that whatever that mailbox ends up being we've stored the number inside `rd`. 
+
+So, `rd` contains an address. We don't really care where, just that it exists. Great.
+
+There's one more thing we need to do to avoid breaking the program. Right now, we've allocated the data, but we haven't freed the space for other programs to use once we're done.
+
+We can accomplish this by changing the exit mode function like so:
+```C
+static void runnerExitMode()
+{
+    free(rd);
+}
+```
+
+This will de-allocate the memory.
+
+### Images, finally
+
+Now we're going to allocate memory for the WSG. All assets (images, fonts and sounds) need to be allocated and de-allocated just like individual blobs of memory.
+
+Remember, the order of allocating memory matters! If item X contains item Y, and we free item X before Y, the program doesn't know how to access Y anymore and we cause memory leaks. Also, we can't allocate for Y if X isn't already allocated.
+
+The two new functions we need are easy to find in the documentation, so if you checked it out you've probably already seen them.
+
+```C
+loadWSG("RoboStanding.wsg", &rd->character, true);
+freeWSG(&rd->character);
+```
+
+`rd->character` is how we point specifically to the character image inside the rd struct. We know rd is a pointer, so it points to the data. 
+
+The ampersand "&" symbol means "grab the data inside the mailbox, not the number on the side of the mailbox". Conversely, an asterisk "*" indicated that you want the number of the mailbox instead of the data you're looking at, a pointer.
+
+The "RoboStanding.wsg" is the name of the file, but with `.png` replaced by `.wsg`. This is done automatically by the program at compilation time, so you don't have ot do it by hand.
+
+Lastly, that last `true` at the end of the load function tells the swadge which RAM to put the image into. When in doubt, leave it on true, as this will load it into SPI RAM. SPI RAM is slower, but a lot more plentiful. As long as your mode isn't having trouble
+
+- Draw order
 - Drawing to the screen / refreshing
 
+FIXME: We're moving to a new way of loading assets. Update.
+
 ## Input
+
+
 
 - Basic gameplay loops
 - Inputs 
