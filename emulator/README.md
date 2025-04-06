@@ -7,3 +7,5 @@ The Emulator does not require the ESP-IDF, and instead the files required for co
 The [`./src/idf`](./src/idf/) folder reimplements a few parts of the IDF. For the most part the Emulator strives to reimplement components rather than parts of the IDF.
 
 The [`./src/components`](./src/components) folder reimplements this project's [`../components`](../components/) folder, which has the hardware interfaces for ESP32-S2. The Emulator is compiled with the header files from the main [`../components`](../components/) folder for consistency.
+
+Read [the documentation](./../docs/EMULATOR.md) for usage.
