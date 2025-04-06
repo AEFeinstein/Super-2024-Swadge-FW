@@ -59,6 +59,7 @@
 
 #include "swSynth.h"
 #include "midiFileParser.h"
+#include "cnfs_image.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -472,7 +473,7 @@ typedef struct
                 struct
                 {
                     /// @brief The name of the sample to load into data
-                    const char* sampleName;
+                    cnfsFileIdx_t fIdx;
                 } config;
             };
 

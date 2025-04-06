@@ -27,7 +27,9 @@
 #ifndef _FS_TXT_H_
 #define _FS_TXT_H_
 
-char* loadTxt(const char* name, bool spiRam);
+#include "cnfs_image.h"
+
+char* loadTxt(cnfsFileIdx_t fIdx, bool spiRam);
 void freeTxt(char* txtStr);
 
 #endif

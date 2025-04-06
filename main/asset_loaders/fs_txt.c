@@ -27,14 +27,14 @@
  * @return A pointer to a null terminated TXT string. May be NULL if the load
  *         fails. Must be freed after use
  */
-char* loadTxt(const char* name, bool spiRam)
+char* loadTxt(cnfsFileIdx_t fIdx, bool spiRam)
 {
     // Read TXT from file
     size_t sz;
-    uint8_t* buf = cnfsReadFile(name, &sz, spiRam);
+    uint8_t* buf = cnfsReadFile(fIdx, &sz, spiRam);
     if (NULL == buf)
     {
-        ESP_LOGE("TXT", "Failed to read %s", name);
+        ESP_LOGE("TXT", "Failed to read %d", fIdx);
         return NULL;
     }
 

@@ -32,7 +32,7 @@
  * \code{.c}
  * // Declare and load a font
  * font_t ibm;
- * loadFont("ibm_vga8.font", &ibm, false);
+ * loadFont(IBM_VGA_8_FONT, &ibm, false);
  * // Draw some white text
  * drawText(&ibm, c555, "Hello World", 0, 0);
  * // Free the font
@@ -55,9 +55,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "cnfs_image.h"
+
 bool initCnfs(void);
 bool deinitCnfs(void);
-const uint8_t* cnfsGetFile(const char* fname, size_t* flen);
-uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam);
+const uint8_t* cnfsGetFile(cnfsFileIdx_t fIdx, size_t* flen);
+uint8_t* cnfsReadFile(cnfsFileIdx_t fIdx, size_t* outsize, bool readToSpiRam);
 
 #endif
