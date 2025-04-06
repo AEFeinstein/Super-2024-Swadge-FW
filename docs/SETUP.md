@@ -176,8 +176,12 @@ When launching from VS Code, make sure the `(lldb) Launch` configuration is sele
 While not 100% required, these extensions are highly recommended:
 * [C/C++ Advanced Lint](https://marketplace.visualstudio.com/items?itemName=jbenden.c-cpp-flylint) - Integration with `cppcheck`
 * [Clang-Format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format) - Integration with `clang-format`
+* [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) - Helps minimize typos
 * [Doxygen Documentation Generator](https://marketplace.visualstudio.com/items?itemName=cschlosser.doxdocgen) - Integration with `doxygen`
+* [Github Actions](https://marketplace.visualstudio.com/items?itemName=github.vscode-github-actions) - GUI for git interactions
 * [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree) - Handy to track "to-do items"
+
+All of the extensions listed above are in the "recommended" tab of VS Code when this repository is active.
 
 The `.vscode` folder already has tasks for making and cleaning the emulator. It also has launch settings for launching the emulator with `gdb` attached. To build the firmware from VSCode, use the Espressif extension buttons on the bottom toolbar. The build icon looks like a cylinder. Hover over the other icons to see what they do.
 
