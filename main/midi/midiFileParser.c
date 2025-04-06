@@ -61,7 +61,7 @@ typedef struct
 static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* out);
 static int writeVariableLength(uint8_t* out, int max, uint32_t length);
 static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track);
-static bool parseMidiHeader(midiFile_t* file, const char* name);
+static bool parseMidiHeader(midiFile_t* file);
 static void readFirstEvents(midiFileReader_t* reader);
 
 //==============================================================================
@@ -599,7 +599,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
  * @return true if the MIDI file contains a valid header and was successfully parsed
  * @return false if the MIDI file header could not be parsed
  */
-static bool parseMidiHeader(midiFile_t* file, const char* name)
+static bool parseMidiHeader(midiFile_t* file)
 {
     uint32_t offset = 0;
 
@@ -637,7 +637,7 @@ static bool parseMidiHeader(midiFile_t* file, const char* name)
     uint16_t trackChunkCount = (file->data[offset] << 8) | file->data[offset + 1];
     offset += 2;
     file->trackCount = trackChunkCount;
-    file->tracks     = heap_caps_calloc_tag(trackChunkCount, sizeof(midiTrack_t), MALLOC_CAP_SPIRAM, name);
+    file->tracks     = heap_caps_calloc_tag(trackChunkCount, sizeof(midiTrack_t), MALLOC_CAP_SPIRAM, "tracks");
     if (NULL == file->tracks)
     {
         ESP_LOGE("MIDIParser", "Could not allocate data for MIDI file with %" PRIu16 " tracks", trackChunkCount);
@@ -792,11 +792,11 @@ static void readFirstEvents(midiFileReader_t* reader)
     }
 }
 
-bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
+bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam)
 {
     uint32_t size;
     size_t raw_size;
-    uint8_t* data = cnfsReadFile(name, &raw_size, spiRam);
+    uint8_t* data = cnfsReadFile(fIdx, &raw_size, spiRam);
 
     if (NULL != data)
     {
@@ -806,7 +806,7 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
             if (heatshrinkDecompress(NULL, &size, data, (uint32_t)raw_size))
             {
                 // Size was read successfully, allocate the non-compressed buffer
-                uint8_t* decompressed = heap_caps_malloc_tag(size, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, name);
+                uint8_t* decompressed = heap_caps_malloc(size, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
                 if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
                 {
                     // Success, free the raw data
@@ -822,24 +822,24 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
             }
             else
             {
-                ESP_LOGE("MIDIFileParser", "Song %s could not be decompressed!", name);
+                ESP_LOGE("MIDIFileParser", "Song %d could not be decompressed!", fIdx);
                 heap_caps_free(data);
                 return false;
             }
         }
         else
         {
-            ESP_LOGI("MIDIFileParser", "Song %s is loaded uncompressed", name);
+            ESP_LOGI("MIDIFileParser", "Song %d is loaded uncompressed", fIdx);
             size = (uint32_t)raw_size;
         }
     }
 
     if (data != NULL)
     {
-        ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", name, size);
+        ESP_LOGI("MIDIFileParser", "Song %d has %" PRIu32 " bytes", fIdx, size);
         file->data   = data;
         file->length = (uint32_t)size;
-        if (parseMidiHeader(file, name))
+        if (parseMidiHeader(file))
         {
             return true;
         }

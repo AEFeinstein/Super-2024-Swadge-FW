@@ -34,21 +34,21 @@
  * @return A pointer to a null terminated JSON string. May be NULL if the load
  *         fails. Must be freed after use
  */
-char* loadJson(const char* name, bool spiRam)
+char* loadJson(cnfsFileIdx_t fIdx, bool spiRam)
 {
 #ifndef JSON_COMPRESSION
     // Read JSON from file
     size_t sz;
-    uint8_t* buf = cnfsReadFile(name, &sz, spiRam);
+    uint8_t* buf = cnfsReadFile(fIdx, &sz, spiRam);
     if (NULL == buf)
     {
-        ESP_LOGE("JSON", "Failed to read %s", name);
+        ESP_LOGE("JSON", "Failed to read %d", fIdx);
         return NULL;
     }
     return (char*)buf;
 #else
     uint32_t decompressedSize = 0;
-    return (char*)readHeatshrinkFile(name, &decompressedSize, spiRam);
+    return (char*)readHeatshrinkFile(fIdx, &decompressedSize, spiRam);
 #endif
 }
 

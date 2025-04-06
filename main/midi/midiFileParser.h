@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "cnfs_image.h"
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -267,7 +269,7 @@ typedef struct
  * @return true If the load succeeded
  * @return false If the load failed
  */
-bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam);
+bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam);
 
 /**
  * @brief Free the data associated with the given MIDI file

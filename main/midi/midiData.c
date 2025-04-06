@@ -181,7 +181,7 @@ const midiTimbre_t colossusTimbre = {
     .sample = {
         // Config will be replaced by .data and .count at load time
         .config = {
-            .sampleName = "colossus.bin",
+            .fIdx = COLOSSUS_BIN,
         },
         // Loop only once
         .loop = 1,
@@ -198,7 +198,7 @@ const midiTimbre_t magTimbre = {
     .sample = {
         // Config will be replaced by .data and .count at load time
         .config = {
-            .sampleName = "donut_mag.bin",
+            .fIdx = DONUT_MAG_BIN,
         },
         // Loop only once
         .loop = 1,
@@ -215,7 +215,7 @@ const midiTimbre_t festTimbre = {
     .sample = {
         // Config will be replaced by .data and .count at load time
         .config = {
-            .sampleName = "donut_fest.bin",
+            .fIdx = DONUT_FEST_BIN,
         },
         // Loop only once
         .loop = 1,
@@ -232,7 +232,7 @@ const midiTimbre_t wilhelmTimbre = {
     .sample = {
         // Config will be replaced by .data and .count at load time
         .config = {
-            .sampleName = "wilhelm.bin",
+            .fIdx = WILHELM_BIN,
         },
         // Loop only once
         .loop = 0,
@@ -249,7 +249,7 @@ const midiTimbre_t noriTimbre = {
     .sample = {
         // Config will be replaced by .data and .count at load time
         .config = {
-            .sampleName = "nori2.bin",
+            .fIdx = NORI_2_BIN,
         },
         // Loop only once
         .loop = 0,

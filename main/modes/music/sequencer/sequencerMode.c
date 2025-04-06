@@ -88,15 +88,15 @@ static const int32_t instrumentPrograms[] = {2,  // Electric Grand Piano
                                              87, // Lead 8 (bass) [synth]
                                              38, // Synth Bass    [bass]
                                              0}; // Drum Kit, channel 10
-static const char* const instrumentWsgs[]
-    = {"seq_piano.wsg", "seq_trumpet.wsg", "seq_sax.wsg", "seq_synth.wsg", "seq_guitar.wsg", "seq_drums.wsg"};
+static const cnfsFileIdx_t instrumentWsgs[]
+    = {SEQ_PIANO_WSG, SEQ_TRUMPET_WSG, SEQ_SAX_WSG, SEQ_SYNTH_WSG, SEQ_GUITAR_WSG, SEQ_DRUMS_WSG};
 static const paletteColor_t instrumentColors[] = {c500, c330, c050, c033, c005, c303};
 
 static const char str_noteType[]    = "Note: ";
 static const char* noteTypeLabels[] = {"Whole", "Half", "Quarter", "Eighth", "Sixteenth"};
 static const int32_t noteTypeVals[] = {1, 2, 4, 8, 16};
-static const char* const noteWsgs[]
-    = {"whole_note.wsg", "half_note.wsg", "quarter_note.wsg", "eighth_note.wsg", "sixteenth_note.wsg"};
+static const cnfsFileIdx_t noteWsgs[]
+    = {SEQ_WHOLE_NOTE_WSG, SEQ_HALF_NOTE_WSG, SEQ_QUARTER_NOTE_WSG, SEQ_EIGHTH_NOTE_WSG, SEQ_SIXTEENTH_NOTE_WSG};
 
 swadgeMode_t sequencerMode = {
     .modeName                 = sequencerName,
@@ -135,10 +135,10 @@ static void sequencerEnterMode(void)
     sv = heap_caps_calloc(1, sizeof(sequencerVars_t), MALLOC_CAP_8BIT);
 
     // Load fonts
-    loadFont("ibm_vga8.font", &sv->font_ibm, true);
-    loadFont("rodin_eb.font", &sv->font_rodin, true);
+    loadFont(IBM_VGA_8_FONT, &sv->font_ibm, true);
+    loadFont(RODIN_EB_FONT, &sv->font_rodin, true);
     makeOutlineFont(&sv->font_rodin, &sv->font_rodin_outline, true);
-    loadFont("righteous_150.font", &sv->font_righteous, true);
+    loadFont(RIGHTEOUS_150_FONT, &sv->font_righteous, true);
     makeOutlineFont(&sv->font_righteous, &sv->font_righteous_outline, true);
 
     // Load WSGs
