@@ -307,7 +307,7 @@ typedef struct
      * @param w the width of the rectangle to be updated
      * @param h the height of the rectangle to be updated
      * @param up update number
-     * @param numUp update number denominator
+     * @param upNum update number denominator
      */
     void (*fnBackgroundDrawCallback)(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
