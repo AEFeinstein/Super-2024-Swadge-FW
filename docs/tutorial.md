@@ -918,6 +918,7 @@ static void runnerExitMode()
 
 static void runnerMainLoop(int64_t elapsedUs)
 {
+    // Check input
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
@@ -930,6 +931,8 @@ static void runnerMainLoop(int64_t elapsedUs)
             }
         }
     }
+
+    // Update player position
     rd->yPos += rd->ySpeed;
     rd->ySpeed += Y_ACCEL;
     if (rd->yPos > PLAYER_GROUND_OFFSET)
@@ -938,6 +941,8 @@ static void runnerMainLoop(int64_t elapsedUs)
         rd->yPos     = PLAYER_GROUND_OFFSET;
         rd->ySpeed   = 0;
     }
+
+    // Draw screen
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
     drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
     drawWsgSimple(&rd->character, PLAYER_X, rd->yPos);
@@ -945,13 +950,129 @@ static void runnerMainLoop(int64_t elapsedUs)
 ```
 If you want, try playing with the macro values to find something you like. 
 
+Now that we've started to get a handle on things, this tutorial will move a little faster. 
+
 ## Obstacles
 
-- Functions
-- Randomness
-- Getting the background to move
+Now that we can jump to avoid obstacles, let's add some obstacles to avoid.
+
+We're going to have two obstacles: One for the top of the screen to make sure you're not jumping and one on the bottom to force you to jump.
+
+First, let's make a new struct for the obstacle.
+
+#### Geometry.h
+
+```C
+typedef struct
+{
+    rectangle_t rect; // Contains the x, y, width and height
+    wsg_t img;        // Image to display
+    int speed;        // Speed of the obstacle
+} obstacle_t;
+```
+
+`rectangle_t` is from the geometry library, which we don't have included yet. It's easy, just add `#include "geometry.h"` near the top of the file. The errors should go away as soon as VS Code catches up. The geometry library has functions for checking collisions, so that's going to be useful going forward. If you want specifics, check out the file.
+
+#### Refactoring
+
+Next, let's refactor the player to allow for collisions. Refactoring is converting code from one format to another, theoretically without changing the functionality. Moving where code is for clarity, removing unnecessary code, stuff like that. The data saved in the runnerData_t struct can all be moved to a player struct. This will keep all the relevant data together. In addition, we're going to use rectangle_t to provide the yPos instead of the current variable, since it's otherwise a duplicate.
+
+The struct section should look a lot like this now.
+
+```C
+typedef struct 
+{
+    rectangle_t rect; // Contains the x, y, width and height
+    wsg_t img;        // The image
+    bool onGround;    // If the player is touching the ground
+    int ySpeed;       // The vertical speed. negative numbers are up.
+} player_t;
+
+typedef struct
+{
+    rectangle_t rect; // Contains the x, y, width and height
+    wsg_t img;        // Image to display
+    int speed;        // Speed of the obstacle
+} obstacle_t;
+
+typedef struct
+{
+    // Robot
+    player_t robot;
+
+    // Obstacles
+    obstacle_t obstacles[5];
+} runnerData_t;
+```
+
+In the runnerData_t, we're now storing one copy of the robot and five copies of the obstacle. This is another magic number we can change to a Macro. I'll leave that as an exercise for the reader.
+
+Now that we've refactored, there's a lot of red. Let's start converting them.
+- `&rd->character` becomes `&rd->robot.img`
+- `rd->onGround` becomes `rd->robot.onGround`
+- The most complicated on is yPos, which goes from `rd->yPos` to `rd->robot.rect.pos.y`
+The rest should be evident. Once you're done, hit F5 to make sure that the code still runs as expected.
+
+While we're refactoring, let's also break out some of the code into more functions. Keeping the draw calls in the same place will come in handy later, as well as handling the logic updates separately.
+
+Make new function declarations near the top like this:
+
+```C
+static void runnerLogic(int64_t elapsedUS);
+static void draw(void);
+```
+
+We're not using the elapsedUS right this moment, but we're probably going to need to soon. Cut the drawing functions and add them to the draw function, then add the draw function tot he end of the loop. Do the same with the plater logic as well.
+
+```C
+static void runnerMainLoop(int64_t elapsedUs)
+{
+    // Other code...
+
+    // Update player position
+    runnerLogic(elapsedUs);
+
+    // Draw screen
+    draw();
+}
+
+static void runnerLogic(int64_t elapsedUS)
+{
+    rd->robot.rect.pos.y += rd->robot.ySpeed;
+    rd->robot.ySpeed += Y_ACCEL;
+    if (rd->robot.rect.pos.y > PLAYER_GROUND_OFFSET)
+    {
+        rd->robot.onGround   = true;
+        rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
+        rd->robot.ySpeed     = 0;
+    }
+}
+
+static void draw()
+{
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
+    drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
+    drawWsgSimple(&rd->robot.img, PLAYER_X, rd->robot.rect.pos.y);
+}
+```
+
+Now we've added a lot of code and nothing has changed behavior-wise. That's what refactoring is like, but now we have our code split a bit more and can follow where everything goes easier.
+
+#### Spawning obstacles
+
+Now we can start spawning some obstacles. I've drawn the obstacles with my expert artistic skills.
+
+<img src="./TutorialImages/Obstacles.png">
+
+- Spawning objects
+  - Randomness
+  - Variable speeds using US timers instead of frames for consistency
+
+#### Collisions
+
 - Collisions
-- Using US timers instead of frames
+  - Visualizing the collisions by drawing a rectangle.
+  - Handling the collisions.
 
 ## Score
 
@@ -960,15 +1081,21 @@ If you want, try playing with the macro values to find something you like.
 
 ## Animations
 
+- Microsecond based vs frame based
 - Walk animation
 - Death animation
 - Jump animation
+- Getting the background to move
 
 ## Polish
 
-- Better controls (allow jump a frame early)
-- Splash screen
-- Death screen
-- SFX
+- Finishing up the game
+  - Commenting the code
+  - Better controls (allow jump a frame early) 
+  - Splash screen
+  - Death screen
+  - SFX
+  - Avoid spawning object immediately
+- Provide finished code (.c and .h)
 - Other functions, like LEDs. Encourage exploration.
 - Look at the pong mode for a complete, simple mode.
