@@ -13,6 +13,7 @@ If you're ever lost, feel free to message us on slack or discord. We'd love to h
 ## Prerequisites
 
 - Some coding knowledge - This document will not teach you C. It will teach you *why* certain things are done though, and if your familiar with another language you should be able to follow along.
+  - Bare minimum knowledge is what types are (bool, int, etc.) and 
   - If you want to learn how to program, [follow this link](https://www.geeksforgeeks.org/how-to-start-coding/). Coding isn't easy, but it's not very hard once you wrap your head around a few key concepts. 
 - A dev environment - There's a great tutorial to set it up for Windows, Linux or MacOS [here](./SETUP.md)
 - A swadge - Not strictly necessary, but sometimes things that work on the emulator don't work on the real hardware. It's best to be able to test on real hardware at the end of the day.
@@ -87,6 +88,8 @@ Also, did you notice the new requirement I made while writing it all out? I didn
 
 If you haven't already, set up your development environment, and we can move onto the next step. [Click here](./SETUP.md) to load the 'Configuring a development environment' page.
 
+I encourage you to make this game along with me, so I will tell you what you'd need to do to follow along and describing what I'm doing.
+
 ## The Dev environment
 
 If this is your first time using VS Code, you might be a little lost. There's a lot of cool features, but you don't need to know too much to be able to program successfully.
@@ -97,7 +100,7 @@ If you've used VS Code before, you can skip this section.
 
 If you've followed the configuration tutorial, you'll have the files you need on your computer. 
 
-CLick "File" in the top bar of VS Code, press "open folder" and navigate to the folder. By default it's under your username/esp/Super-2024-Swadge-FW/
+Click "File" in the top bar of VS Code, press "open folder" and navigate to the folder. By default it's under your username/esp/Super-2024-Swadge-FW/
 
 If you've found the correct folder, the files should be shown in the side pane.
 
@@ -137,7 +140,7 @@ If you're in the project directory, why not try running `make all`? See what com
 
 ### Useful tips
 
-- You can drag the file tabs around to view more than one at once. You can even open teh same tab multiple times 
+- You can drag the file tabs around to view more than one at once. You can even open the same tab multiple times 
 
 ### Useful Keybinds
 
@@ -181,7 +184,7 @@ We'll go over more commands as they become relevant, but below is an overview of
 
 <img src="./TutorialImages/githubGUI.png">
 
-If you'd rather use the GUI, you can press the above button in the VS Code editor and all teh same functions and more are provided. You'll have to do a little exploring, but there's a lot of cool data in there! It's also helpful when resolving merge conflicts.
+If you'd rather use the GUI, you can press the above button in the VS Code editor and all the same functions and more are provided. You'll have to do a little exploring, but there's a lot of cool data in there! It's also helpful when resolving merge conflicts.
 
 ## Can we code now? -  The bare minimum to compile
 
@@ -265,7 +268,7 @@ Some notes:
 - `runnerEnterMode()`: This is a function name and declaration. When we want to use this function later, this is what we need to type.
 - `int64_t elapsedUS`: This is an argument. If a function doesn't need arguments, you can put void in as well. The specific argument being passed is the number of microseconds since the last time the loop functions was called. It's very useful, and you're required to have it.
 
-Something to note: These aren't strictly necessary. C is read from teh top of the file down by the compiler, and as long as it finds each function before it's used, there won't be issues. However, forward declaring them means the compiler knows that the functions are around *somewhere* so it don't throw an error when it doesn't recognize it. Think of it like telling someone not to worry, everyone is fine before describing a car accident.
+Something to note: These aren't strictly necessary. C is read from the top of the file down by the compiler, and as long as it finds each function before it's used, there won't be issues. However, forward declaring them means the compiler knows that the functions are around *somewhere* so it don't throw an error when it doesn't recognize it. Think of it like telling someone not to worry, everyone is fine before describing a car accident.
 
 #### SwadgeMode_t
 
@@ -492,6 +495,8 @@ First, we need to make an image to display. I'm going to make the little robot t
 
 Did I mention I don't do art? I don't do art. Still, it's better to have this guy than nothing.
 
+If you're following along feel free to use any other small PNGs or make your own. They don't need to be perfect, just something to see what's going on.
+
 Some notes:
 - The swadge color palette can be found [here](./SwadgePalette.gpl). The swadge will crunch down other colors to closest match, but for better control, you can use this subset of colors to ensure it looks the same as originally designed if using Aseprite
 - The Swadge's screen was 280 wide x 240 tall for at least '23 through '25. This isn't that large, so a super detailed 1000 pixel square character isn't going to fit.
@@ -571,9 +576,11 @@ Remember, the order of allocating memory matters! If item X contains item Y, and
 
 The two new functions we need are easy to find in the documentation, so if you checked it out you've probably already seen them.
 
+FIXME: We're moving to a new way of loading assets. Update.
+
 ```C
-loadWSG("RoboStanding.wsg", &rd->character, true);
-freeWSG(&rd->character);
+loadWsg("RoboStanding.wsg", &rd->character, true);
+freeWsg(&rd->character);
 ```
 
 `rd->character` is how we point specifically to the character image inside the rd struct. We know rd is a pointer, so it points to the data. 
@@ -582,34 +589,386 @@ The ampersand "&" symbol means "grab the data inside the mailbox, not the number
 
 The "RoboStanding.wsg" is the name of the file, but with `.png` replaced by `.wsg`. This is done automatically by the program at compilation time, so you don't have ot do it by hand.
 
-Lastly, that last `true` at the end of the load function tells the swadge which RAM to put the image into. When in doubt, leave it on true, as this will load it into SPI RAM. SPI RAM is slower, but a lot more plentiful. As long as your mode isn't having trouble
+Lastly, that last `true` at the end of the load function tells the swadge which RAM to put the image into. When in doubt, leave it on true, as this will load it into SPI RAM. SPI RAM is slower, but a lot more plentiful.
 
-- Draw order
-- Drawing to the screen / refreshing
+Given we know that rd needs to be allocated, we need to put the `loadWsg()` function after the `heap_caps_calloc()` and the `freeWsg()` before the `free(rd)` functions. 
 
-FIXME: We're moving to a new way of loading assets. Update.
+```C
+static void runnerEnterMode()
+{
+    rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
+    loadWsg("RoboStanding.wsg", &rd->character, true);
+}
+
+static void runnerExitMode()
+{
+    freeWsg(&rd->character);
+    free(rd);
+}
+```
+
+Now, the wsg is loaded and we can actually start to use it!
+
+In the main loop function, add `drawWsgSimple(&rd->character, 32, 184);`
+
+We pass in three arguments:
+- &rd->character: The address of the wsg inside rd->character
+- x Offset: How many pixels across the screen from left to right the image is drawn at
+- y Offset: How many pixels from top to bottom the image is offset by
+
+The Swadge draws images assuming the top left corner is the start. For our example, the top left corner will be located at 32 pixels across, 32 pixels down resulting in the following once we press F5 and load up the new mode:
+
+<img src="./TutorialImages/drawingFirstImage.png">
+
+Some things you'll note if you start to play with the numbers is that the corners of the screen are obscured. This is because the real screen we're using has rounded corners. The shrouded portions are roughly equivalent to the real screen. Another thing to note is that the last time the pixel is updated is what's going to be drawn. SO if you want to draw text over a textbox, the box needs to be drawn first or the box will overwrite the text.
+
+Next, we'll add some ground to stand on
+
+Before the function drawing the sprite, add the following line: `drawLine(0, 184, TFT_WIDTH, 184, c555, 0);`
+- `drawline()`: Draws a line as defines by the first four numbers
+- `TFT_WIDTH`: This is a Macro. Macros will be explained later, but this one is just eh value 280, which is the width of the swadge screen in pixels.
+- `c555`: The swadge color palette uses this notation. c555 is white, c000 is black.
+- The last zero is dash width. We don't want our ground line to be dashed, so zero.
+
+If you look into the documentation for drawLine() (shapes.h) you can see that if you specify the start x and y and the end x and y you can draw the line. We set both Y values to 184 since that seems about right, but the X values are on opposite sides of the screen (0 and 280). This draws a white line directly across the screen.
+
+Play with the colors (try c500, c050, c005, and c123) and the x and y positions on either end and watch how the line moves. Make sure to save the file before reloading the emulator!
+
+If you place teh draw line function after the `drawWsg()` you'll notice the line draws on top of the robot, which definitely looks wrong. Remember, draw order matters. 
+
+Right now, we're drawing the robot standing in the same place every frame, which is boring. Let's get some actual movement on screen!
+
+### Final code for this section
+
+```C
+#include "roboRunner.h"
+
+const char runnerModeName[] = "Robo Runner";
+
+typedef struct 
+{
+    wsg_t character;
+} runnerData_t;
+
+static void runnerEnterMode(void);
+static void runnerExitMode(void);
+static void runnerMainLoop(int64_t elapsedUs);
+
+swadgeMode_t roboRunnerMode = {
+    .modeName                 = runnerModeName,
+    .wifiMode                 = NO_WIFI,
+    .overrideUsb              = false,
+    .usesAccelerometer        = false,
+    .usesThermometer          = false,
+    .overrideSelectBtn        = false,
+    .fnEnterMode              = runnerEnterMode,
+    .fnExitMode               = runnerExitMode,
+    .fnMainLoop               = runnerMainLoop,
+    .fnAudioCallback          = NULL,
+    .fnBackgroundDrawCallback = NULL,
+    .fnEspNowRecvCb           = NULL,
+    .fnEspNowSendCb           = NULL,
+    .fnAdvancedUSB            = NULL,
+};
+
+runnerData_t* rd;
+
+static void runnerEnterMode()
+{
+    rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
+    loadWsg("RoboStanding.wsg", &rd->character, true);
+}
+
+static void runnerExitMode()
+{
+    freeWsg(&rd->character);
+    free(rd);
+}
+
+static void runnerMainLoop(int64_t elapsedUs)
+{
+    drawLine(0, 184, TFT_WIDTH, 184, c555, 0);
+    drawWsgSimple(&rd->character, 32, 184);
+}
+```
 
 ## Input
 
+Let's get the jumping ability coded. Since the obstacles come to us, we just need to jump up and then fall down. The robot can only jump when on the ground. We'll allow the player to press either the A button or the up button to jump, and we want the robot to have a graceful arc. 
 
+An improvement to game feel might be to vary the height of the jump based on the length of the button press, but that's more than we described above. Maybe we'll fit it in later.
 
-- Basic gameplay loops
-- Inputs 
-- Using US timers instead of frames
+### Basic input
+
+We're going to start to accept inputs now. Update the main loop to look like the following:
+
+```C
+static void runnerMainLoop(int64_t elapsedUs)
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if (evt.button & PB_A || evt.button == PB_UP)
+            {
+                // We'll add code here in the next part
+            }
+        }
+    }
+    drawWsgSimple(&rd->character, 32, 32);
+}
+```
+
+Here's a breakdown of the parts of the input:
+- `buttonEvt_t evt;`: Creates a event struct. this contains a single button state at a time
+- `checkButtonQueueWrapper()`: The swadge has an internal buffer for buttons. This takes the next button and sets the event (passed as an argument) to the state the button is at.
+- `while(){}`: The while loop continues to execute until `checkButtonQueueWrapper()` returns false because there's no more buttons pressed.
+- `if(){}`: If the contained statement is true, execute the code inside the curly braces.
+- `evt.button & PB_A || evt.button == PB_UP`: This is an expression that evaluates to true or false.
+  - `evt.button & PB_A`: If the A button is pressed, value is set to true
+  - `evt.button == PB_UP`: If the up button is pressed, value is set to true
+  - `||`: Logical OR. Basically, if the left hand side is true OR the right hand side is true, the whole thing is true.
+- `rd->jumped`: This is the most important part, this is where we tell the rest of the mode that we just jumped in the air.
+
+You'll note that when checking if the button is A we used a single ampersand and for checking the up button we used "==". Both work, it's a matter of preference. I prefer the ampersand.
+
+### Jumping robots
+
+Now we know if the player has pressed buttons, but we need to define what it means to jump. Obviously, we're going to want to see the robot jump, and that involves moving on the Y-axis (up and down), so we're going to need to track the Y position. We're also going to need to know what speed the robot is going, and whether it's up or down. Lastly, we're going to need to know if the robot is on the floor.
+
+This is three variables: Y position, Y speed and on Ground. Y position is where the robot is in space, the Y speed is how fast he's moving, and on ground tells us if the robot can jump again. After all, he's using his little legs, not a jetpack.
+
+Modify the runnerData_t struct to look like this:
+```C
+typedef struct
+{
+    // Assets
+    wsg_t character;
+
+    // Robot
+    bool onGround;
+    int ySpeed;
+    int yPos;
+} runnerData_t;
+```
+
+This will allow us to save this data between frames. You access it the same way you did with the wsg, so I'm not going to point it out anymore. Now we need to decide what to do with these variables.
+
+First of all, change the `128` in `drawWsgSimple()` to `rd->yPos`. We want the image to follow the height we give to it. Right now `rd->yPos` starts at 0, so it'll draw the sprite at the top of the screen.
+
+Next, we want to change the speed. After the input while loop, add the following:
+
+```C
+rd->yPos += rd->ySpeed;
+rd->ySpeed += 1;
+```
+
+The first line adds the current speed to the robot. The second line increases that speed every frame. It's adding 1 because y increases in the downward direction, so this acts like gravity.
+
+`+=` is a shortcut. Expanded out, this looks like `rd->yPos = rd->yPos + rd->ySpeed;`. This is the convention since it matches how CPUs actually handle the data, but it's a lot less text to type out if we use `+=`. There's no difference to the computer at the end of the day, so don't stress out about it.
+
+Lastly, let's add something into the input loop. Add `rd->ySpeed = -12;`. It's negative because we want to go up, and -Y is up. You'll note we don't use `+=` here, and that's because we don't care what the value used to be, we want it to be -12 when we hit the key.
+
+Let's hit F5!
+
+<img src="./TutorialImages/RoboRainbow.png">
+
+Well, that's not right.
+
+If you restart the program and spam the jump key, you'll see that the robot can actually stay in frame if oyu jump fast enough. Congratulations, we've just made flappy robot. Seeing as that's not the goal, let's take an inventory of the issues:
+- The robot never stops falling
+- The robot can jump in the air
+- The swadge just draws over the previous frame, resulting in a series of images instead of what you'd expect.
+
+We'll tackle the visuals first.
+
+#### Sidebar - Get rid of overdraw
+
+The Swadge doesn't automatically refresh the screen, as it turns out. Any pixels not updated from the last frame will remain the same. This could be used to optimize things if the mode is very, *very* constrained, but in general we can just redraw everything each frame. 
+
+In our case, we're already drawing everything we want each frame, so all we need to do is clear the screen.
+
+Add a simple `fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);` before the line and wsg draw lines. If you want to, you can change the color to see which you like best. This function draws from the top left corner (0, 0) to the bottom right corner, (TFT_WIDTH, TFT_HEIGHT) in the color chosen. Since it'll write over every pixel, the only things we'll see on the next frame are whats drawn that frame.
+
+#### Back to fixing
+
+Really, we should have seen it coming. We didn't use onGround, so obviously it's not going to work!
+
+Change the `(evt.button & PB_A || evt.button & PB_UP)` to `((evt.button & PB_A || evt.button & PB_UP) && rd->onGround)`. The parenthesis are import for grouping here, so make sure you get it right. Whatever is inside the innermost set of parenthesis will evaluate first, and we want that to the button check. If either of the buttons are pressed, we can check if we're ont eh ground. `&&` is the logical AND operation, so what just told the program is: "If a or up is pressed, and the character is on the ground" you can add the negative speed.
+
+If we run the program now, all we've managed to accomplish is stopping the double jumps. This is because we've never set onGround to true, so we can't ever jump. Instead of doing an actual collision check, let's just use where the robot is on the screen to determine if it should be on the ground or not.
+
+We can add the following check after setting the ySpeed to += 1:
+```C
+if (rd->yPos > 128)
+{
+    rd->onGround = true;
+}
+```
+And after we set the ySpeed to -12, we can add a single line: `rd->onGround = false;`
+
+Now the robot will know it's hit the ground if it's low enough on the screen, but we still haven't stopped it entirely. Right now, the speed keeps accumulating and the robot keeps falling.
+
+Inside the new if loop, we can add two more lines to make the robot behave as we want:
+```C
+rd->yPos     = 128;
+rd->ySpeed   = 0;
+```
+Setting the position to 128 means that it doesn't matter exactly how far the robot fell below the ground, we'll snap it back to the level of the floor (which I have determined through trial and error is 128 pixels down the screen) and set the speed to 0.
+
+Technically, we don't need to set the speed to 0, but if we don't and we wait long enough the integer will overflow to a massive negative number and the robot will go shooting into the sky. We'd have to wait roughly nine minutes at 60FPS, and it would just look like the robot disappears since it'll be moving so fast. It's good practice though, so let's do it.
+
+An interesting experiment is to only set the speed to 0. The robot gets stuck below where we wanted him to on the floor. He overshot on the initial fall from the top of the screen and since we're not resetting him to the ground, he just stays down there. If we set yPos at the start of the program, we could avoid needing this line entirely! I'll leave it though, since it works fine.
+
+Now the robot should jump as expected!
+
+### Macros and Magic Numbers
+
+I promised to tell you about macros, and here's where I'm doing that. 
+
+Macros are a "preprocessor" step, which means the compiler moving things around before actually compiling your code. Sounds scary, and if used incorrectly it causes all sorts of problems. So then, why tempt fate and use them?
+
+Because they can be very useful in getting rid of magic numbers, that's why. Right now, we have plenty of magic numbers, or numbers that we just put in without saying how we got them.
+- Jump height: -12
+- ySpeed increase each frame: 1
+- height on screen before onGround is set to true: 128
+- Ground line draw height: 184
+- Player distance from the left of the screen: 32
+
+The code works the way we have it, but what if you want to raise the height of the ground line by one pixel? You have to change it in several places. Or, we could forget what -12 means. Or, what if we don't know how wide the screen is?
+
+Remember, we used TFT_WIDTH and TFT_HEIGHT before. We didn't make these, someone else did. Presumably, if the screen size is changed, we can assume that these Macros are being change appropriately, so we don't suddenly find our code doesn't work because the screen is 32 pixels wider or something. It also helps us as devs since we don't need to remember how wide the screen is, we can just grab the number.
+
+In the same way, we can define our own Macros to provide us with an easy way to tweak the program, and recall what the value is.
+
+At the top of the file, just under the `#import` statement, let's add the following lines:
+```C
+#define JUMP_HEIGHT          -12
+#define Y_ACCEL              1
+#define GROUND_HEIGHT        184
+#define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 56)
+#define PLAYER_X             32
+```
+This will allow us to use the tags we've written to replace the magic numbers. Go back through the file and replace the numbers with teh Macros.
+
+Note that you shouldn't be replacing every value. 0, for instance, isn't the same value in all instances. Sometimes it's the initial x or y coordinate, sometimes it's the length of the dashed line. If we had two numbers that were both 32, but only one of them relates to the player, we don't want to adjust the player and this other number when we're not expecting to.
+
+In addition, obvious numbers don't need to be included. We don't want dashed lines, but since the function requires it, we're just going to put a 0 in there. We don't care what it is, it works and we're never going to adjust it.
+
+### Completed section code
+
+Now that we've put int he Macros, the code should look similar to this:
+```C
+#include "roboRunner.h"
+
+#define JUMP_HEIGHT          -12
+#define Y_ACCEL              1
+#define GROUND_HEIGHT        184
+#define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 56)
+#define PLAYER_X             32
+
+const char runnerModeName[] = "Robo Runner";
+
+typedef struct
+{
+    // Assets
+    wsg_t character;
+
+    // Robot
+    bool onGround;
+    int ySpeed;
+    int yPos;
+} runnerData_t;
+
+static void runnerEnterMode(void);
+static void runnerExitMode(void);
+static void runnerMainLoop(int64_t elapsedUs);
+
+swadgeMode_t roboRunnerMode = {
+    .modeName                 = runnerModeName,
+    .wifiMode                 = NO_WIFI,
+    .overrideUsb              = false,
+    .usesAccelerometer        = false,
+    .usesThermometer          = false,
+    .overrideSelectBtn        = false,
+    .fnEnterMode              = runnerEnterMode,
+    .fnExitMode               = runnerExitMode,
+    .fnMainLoop               = runnerMainLoop,
+    .fnAudioCallback          = NULL,
+    .fnBackgroundDrawCallback = NULL,
+    .fnEspNowRecvCb           = NULL,
+    .fnEspNowSendCb           = NULL,
+    .fnAdvancedUSB            = NULL,
+};
+
+runnerData_t* rd;
+
+static void runnerEnterMode()
+{
+    rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
+    loadWsg("RoboStanding.wsg", &rd->character, true);
+}
+
+static void runnerExitMode()
+{
+    freeWsg(&rd->character);
+    free(rd);
+}
+
+static void runnerMainLoop(int64_t elapsedUs)
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if ((evt.button & PB_A || evt.button & PB_UP) && rd->onGround)
+            {
+                rd->ySpeed   = JUMP_HEIGHT;
+                rd->onGround = false;
+            }
+        }
+    }
+    rd->yPos += rd->ySpeed;
+    rd->ySpeed += Y_ACCEL;
+    if (rd->yPos > PLAYER_GROUND_OFFSET)
+    {
+        rd->onGround = true;
+        rd->yPos     = PLAYER_GROUND_OFFSET;
+        rd->ySpeed   = 0;
+    }
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
+    drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
+    drawWsgSimple(&rd->character, PLAYER_X, rd->yPos);
+}
+```
+If you want, try playing with the macro values to find something you like. 
 
 ## Obstacles
 
+- Functions
 - Randomness
 - Getting the background to move
 - Collisions
+- Using US timers instead of frames
 
 ## Score
 
 - Numbers and displaying text on screen
 - NVS and good NVS behavior
 
+## Animations
+
+- Walk animation
+- Death animation
+- Jump animation
+
 ## Polish
 
+- Better controls (allow jump a frame early)
 - Splash screen
 - Death screen
 - SFX
+- Other functions, like LEDs. Encourage exploration.
+- Look at the pong mode for a complete, simple mode.
