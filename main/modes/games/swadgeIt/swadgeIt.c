@@ -4,6 +4,7 @@
 
 #include "swadgeIt.h"
 #include "mainMenu.h"
+#include "heatshrink_helper.h"
 
 //==============================================================================
 // Enums
@@ -23,9 +24,19 @@ typedef enum
 
 typedef struct
 {
+    uint8_t* samples;
+    uint32_t len;
+} rawSample_t;
+
+typedef struct
+{
     menu_t* menu;
     menuManiaRenderer_t* menuRenderer;
     swadgeItScreen_t screen;
+
+    rawSample_t sfx[5];
+
+    uint32_t sampleIdx;
 } swadgeIt_t;
 
 //==============================================================================
@@ -93,6 +104,15 @@ static void swadgeItEnterMode(void)
     addSingleItemToMenu(si->menu, swadgeItStrHighScores);
     addSingleItemToMenu(si->menu, swadgeItStrExit);
     si->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+
+    const char* files[] = {
+        "bopit.raw", "flickit.raw", "pullit.raw", "spinit.raw", "twistit.raw",
+    };
+
+    for (uint8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
+    {
+        si->sfx[i].samples = readHeatshrinkFile(files[i], &si->sfx[i].len, true);
+    }
 }
 
 /**
@@ -103,6 +123,11 @@ static void swadgeItExitMode(void)
     // Free menu
     deinitMenuManiaRenderer(si->menuRenderer);
     deinitMenu(si->menu);
+
+    for (uint8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
+    {
+        heap_caps_free(si->sfx[i].samples);
+    }
 
     // Free mode memory
     heap_caps_free(si);
@@ -231,8 +256,31 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
  */
 static void swadgeItDacCallback(uint8_t* samples, int16_t len)
 {
-    // TODO make it speak!
-    memset(samples, 127, sizeof(uint8_t) * len);
+    rawSample_t* rs = &si->sfx[0];
+    if (rs->samples)
+    {
+        // Make sure we don't read out of bounds
+        int16_t cpLen = len;
+        if (si->sampleIdx + len > rs->len)
+        {
+            cpLen = (rs->len - si->sampleIdx);
+        }
+
+        // Copy samples out
+        memcpy(samples, &rs->samples[si->sampleIdx], cpLen);
+        si->sampleIdx += cpLen;
+
+        // Increment samples and decrement len
+        samples += cpLen;
+        len -= cpLen;
+    }
+
+    // If there's anything else to write
+    if (len)
+    {
+        // Write blanks
+        memset(samples, 127, len);
+    }
 }
 
 /**
