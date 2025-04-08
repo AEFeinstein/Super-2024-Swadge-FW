@@ -18,6 +18,16 @@ typedef enum
     SI_HIGH_SCORES,
 } swadgeItScreen_t;
 
+typedef enum
+{
+    EVT_BOP_IT,
+    EVT_FLICK_IT,
+    EVT_PULL_IT,
+    EVT_SPIN_IT,
+    EVT_TWIST_IT,
+    MAX_NUM_EVTs,
+} swadgeItEvt_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -34,9 +44,13 @@ typedef struct
     menuManiaRenderer_t* menuRenderer;
     swadgeItScreen_t screen;
 
-    rawSample_t sfx[5];
+    rawSample_t sfx[MAX_NUM_EVTs];
 
     uint32_t sampleIdx;
+
+    uint32_t timeToNextEvent;
+    uint32_t nextEvtTimer;
+    uint32_t currentEvt;
 } swadgeIt_t;
 
 //==============================================================================
@@ -60,6 +74,11 @@ static const char swadgeItStrReaction[]   = "Reaction";
 static const char swadgeItStrMemory[]     = "Memory";
 static const char swadgeItStrHighScores[] = "High Scores";
 static const char swadgeItStrExit[]       = "Exit";
+
+/** Must match order of swadgeItEvt_t */
+const char* swadgeItSfxFiles[MAX_NUM_EVTs] = {
+    "bopit.raw", "flickit.raw", "pullit.raw", "spinit.raw", "twistit.raw",
+};
 
 const swadgeMode_t swadgeItMode = {
     .modeName                 = swadgeItStrName,
@@ -105,14 +124,12 @@ static void swadgeItEnterMode(void)
     addSingleItemToMenu(si->menu, swadgeItStrExit);
     si->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
-    const char* files[] = {
-        "bopit.raw", "flickit.raw", "pullit.raw", "spinit.raw", "twistit.raw",
-    };
-
     for (uint8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
-        si->sfx[i].samples = readHeatshrinkFile(files[i], &si->sfx[i].len, true);
+        si->sfx[i].samples = readHeatshrinkFile(swadgeItSfxFiles[i], &si->sfx[i].len, true);
     }
+
+    si->currentEvt = MAX_NUM_EVTs;
 }
 
 /**
@@ -192,6 +209,17 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         case SI_REACTION:
         {
             // TODO gameplay logic
+            RUN_TIMER_EVERY(si->nextEvtTimer, si->timeToNextEvent, elapsedUs, {
+                // Pick a new event and reset the sample count
+                si->currentEvt = esp_random() % MAX_NUM_EVTs;
+                si->sampleIdx  = 0;
+
+                // Decrement the time between actions
+                if (si->timeToNextEvent > 500000)
+                {
+                    si->timeToNextEvent -= 100000;
+                }
+            });
             break;
         }
         case SI_MEMORY:
@@ -256,23 +284,26 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
  */
 static void swadgeItDacCallback(uint8_t* samples, int16_t len)
 {
-    rawSample_t* rs = &si->sfx[0];
-    if (rs->samples)
+    if (si->currentEvt < MAX_NUM_EVTs)
     {
-        // Make sure we don't read out of bounds
-        int16_t cpLen = len;
-        if (si->sampleIdx + len > rs->len)
+        rawSample_t* rs = &si->sfx[si->currentEvt];
+        if (rs->samples)
         {
-            cpLen = (rs->len - si->sampleIdx);
+            // Make sure we don't read out of bounds
+            int16_t cpLen = len;
+            if (si->sampleIdx + len > rs->len)
+            {
+                cpLen = (rs->len - si->sampleIdx);
+            }
+
+            // Copy samples out
+            memcpy(samples, &rs->samples[si->sampleIdx], cpLen);
+            si->sampleIdx += cpLen;
+
+            // Increment samples and decrement len
+            samples += cpLen;
+            len -= cpLen;
         }
-
-        // Copy samples out
-        memcpy(samples, &rs->samples[si->sampleIdx], cpLen);
-        si->sampleIdx += cpLen;
-
-        // Increment samples and decrement len
-        samples += cpLen;
-        len -= cpLen;
     }
 
     // If there's anything else to write
@@ -296,6 +327,10 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
         if (swadgeItStrReaction == label)
         {
             si->screen = SI_REACTION;
+
+            si->timeToNextEvent = 2000000;
+            si->nextEvtTimer    = 0;
+            si->currentEvt      = MAX_NUM_EVTs;
         }
         else if (swadgeItStrMemory == label)
         {
