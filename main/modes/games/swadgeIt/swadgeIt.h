@@ -2,4 +2,4 @@
 
 #include "swadge2024.h"
 
-extern const swadgeMode_t swadgeItMode;
+extern swadgeMode_t swadgeItMode;
