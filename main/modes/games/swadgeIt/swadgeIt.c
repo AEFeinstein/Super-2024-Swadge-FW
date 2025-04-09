@@ -7,6 +7,12 @@
 #include "heatshrink_helper.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define SWADGE_IT_FPS 40
+
+//==============================================================================
 // Enums
 //==============================================================================
 
@@ -34,6 +40,13 @@ typedef enum
 
 typedef struct
 {
+    int16_t x;
+    int16_t y;
+    int16_t z;
+} vec3d_t;
+
+typedef struct
+{
     uint8_t* samples;
     uint32_t len;
 } rawSample_t;
@@ -51,6 +64,8 @@ typedef struct
     uint32_t timeToNextEvent;
     uint32_t nextEvtTimer;
     uint32_t currentEvt;
+
+    vec3d_t lastOrientation;
 } swadgeIt_t;
 
 //==============================================================================
@@ -62,8 +77,11 @@ static void swadgeItExitMode(void);
 static void swadgeItMainLoop(int64_t elapsedUs);
 static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void swadgeItDacCallback(uint8_t* samples, int16_t len);
+static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 
 static void swadgeItMenuCb(const char* label, bool selected, uint32_t value);
+
+static bool swadgeItCheckForShake(void);
 
 //==============================================================================
 // Const data
@@ -80,7 +98,7 @@ const char* swadgeItSfxFiles[MAX_NUM_EVTs] = {
     "bopit.raw", "flickit.raw", "pullit.raw", "spinit.raw", "twistit.raw",
 };
 
-const swadgeMode_t swadgeItMode = {
+swadgeMode_t swadgeItMode = {
     .modeName                 = swadgeItStrName,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
@@ -90,7 +108,7 @@ const swadgeMode_t swadgeItMode = {
     .fnEnterMode              = swadgeItEnterMode,
     .fnExitMode               = swadgeItExitMode,
     .fnMainLoop               = swadgeItMainLoop,
-    .fnAudioCallback          = NULL,
+    .fnAudioCallback          = swadgeItAudioCallback,
     .fnBackgroundDrawCallback = swadgeItBackgroundDrawCallback,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
@@ -113,6 +131,9 @@ static swadgeIt_t* si;
  */
 static void swadgeItEnterMode(void)
 {
+    // Set to 40 fps (25ms per frame)
+    setFrameRateUs(1000000 / SWADGE_IT_FPS);
+
     // Allocate mode memory
     si = heap_caps_calloc(1, sizeof(swadgeIt_t), MALLOC_CAP_8BIT);
 
@@ -208,8 +229,18 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         }
         case SI_REACTION:
         {
+            if (swadgeItCheckForShake())
+            {
+                const char shakeStr[] = "Shake!";
+                font_t* font          = si->menuRenderer->menuFont;
+                int16_t tWidth        = textWidth(font, shakeStr);
+                drawText(font, c555, shakeStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - font->height) / 2);
+            }
+
             // TODO gameplay logic
             RUN_TIMER_EVERY(si->nextEvtTimer, si->timeToNextEvent, elapsedUs, {
+                // Enable speaker when there's a new verbal command
+                switchToSpeaker();
                 // Pick a new event and reset the sample count
                 si->currentEvt = esp_random() % MAX_NUM_EVTs;
                 si->sampleIdx  = 0;
@@ -257,19 +288,19 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
         case SI_REACTION:
         {
             // TODO gameplay rendering
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
+            fillDisplayArea(x, y, x + w, y + h, c123);
             break;
         }
         case SI_MEMORY:
         {
             // TODO gameplay rendering
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c321);
+            fillDisplayArea(x, y, x + w, y + h, c321);
             break;
         }
         case SI_HIGH_SCORES:
         {
             // TODO high score rendering
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c132);
+            fillDisplayArea(x, y, x + w, y + h, c132);
             break;
         }
     }
@@ -312,6 +343,46 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
         // Write blanks
         memset(samples, 127, len);
     }
+}
+
+/**
+ * @brief This function is called whenever audio samples are read from the microphone (ADC) and are ready for
+ * processing. Samples are read at 8KHz.
+ *
+ * @param samples A pointer to 12 bit audio samples
+ * @param sampleCnt The number of samples read
+ */
+static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
+{
+    // TODO
+}
+
+/**
+ * @brief Check if a shake was detected
+ *
+ * @return true if a shake was detected, false otherwise
+ */
+static bool swadgeItCheckForShake(void)
+{
+    if (ESP_OK == accelIntegrate())
+    {
+        vec3d_t orientation;
+        if (ESP_OK == accelGetAccelVecRaw(&orientation.x, &orientation.y, &orientation.z))
+        {
+            vec3d_t delta = {
+                .x = ABS(si->lastOrientation.x - orientation.x),
+                .y = ABS(si->lastOrientation.y - orientation.y),
+                .z = ABS(si->lastOrientation.z - orientation.z),
+            };
+            si->lastOrientation = orientation;
+            uint32_t tDelta     = delta.x + delta.y + delta.z;
+            if (tDelta > 300)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 /**
