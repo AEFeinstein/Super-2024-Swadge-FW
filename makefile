@@ -66,6 +66,7 @@ SRC_FILES = $(CNFS_FILE)
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 # This is all the source files combined and deduplicated
 SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES))
+# Remove firmware's cnfs.c because emu_cnfs.c duplicates those functions
 SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
 
 # The emulator doesn't build components, but there is a target for formatting them
@@ -317,7 +318,7 @@ EXECUTABLE = swadge_emulator
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets $(CNFS_FILE) bundle clean fullclean docs format gen-coverage update-submodules bigbug-memory clean-firmware firmware usbflash monitor installudev cppcheck print-%
+.PHONY: all assets bundle clean fullclean docs format gen-coverage update-submodules clean-firmware firmware usbflash monitor installudev cppcheck print-%
 
 # Build the executable
 all: $(EXECUTABLE)
@@ -331,11 +332,13 @@ $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBRARY_FLAGS) -o $@
 
 # This compiles each c file into an o file
-./$(OBJ_DIR)/%.o: ./%.c
+# $(CNFS_FILE) is a dependency of all objects because some C files include "cnfs_image.h"
+# $(CNFS_FILE) is not a phony target, so it should only be called if the file doesn't exist
+./$(OBJ_DIR)/%.o: ./%.c $(CNFS_FILE)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
-# To create the c file with assets, run these tools
+# To create CNFS_FILE, first the assets must be processed
 $(CNFS_FILE):
 	$(MAKE) -C ./tools/assets_preprocessor/
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
@@ -379,6 +382,7 @@ clean:
 
 # This cleans everything
 fullclean: clean
+	rm -rf build/ managed_components/
 	idf.py fullclean
 	git clean -dfX
 	git clean -df
@@ -415,9 +419,6 @@ update-submodules:
 		git -C $$submodule fetch --prune ; \
 		git -C $$submodule checkout origin/HEAD ; \
 	done
-
-bigbug-memory: all
-	./swadge_emulator -m "Big Bug" -t -r | grep -P "(Operation|alloc|free|DUMP)," > bigbug-mem.csv 2> /dev/null
 
 ################################################################################
 # Firmware targets

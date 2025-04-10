@@ -66,7 +66,7 @@
 
 typedef struct
 {
-    const char* filename;
+    cnfsFileIdx_t fIdx;
     const char* name;
     midiFile_t song;
     bool shouldLoop;
@@ -192,240 +192,56 @@ static const char str_play[]       = ": Play";
 
 // Arrays
 
-jukeboxSong_t music_bigbug[] = {
-    {
-        .filename = "BigBug_Dr.Garbotniks Home.mid",
-        .name     = "Dr. Garbotnik's Home",
-    },
-    {
-        .filename = "BigBug_Dr.Garbotniks Home2.mid",
-        .name     = "Dr. Garbotnik's Home 2",
-    },
-    {
-        .filename = "BigBugExploration.mid",
-        .name     = "Exploration",
-    },
-    {
-        .filename = "Big Bug Hurry up.mid",
-        .name     = "Hurry Up!",
-    },
-    {
-        .filename = "BigBug_Space Travel.mid",
-        .name     = "Space Travel",
-    },
-    {
-        .filename = "BigBug_Boss.mid",
-        .name     = "Revenge",
-    },
-};
-
-jukeboxSong_t music_swadgehero[] = {
-    {
-        .filename = "sh_bleed.mid",
-        .name     = "Let It Bleed",
-    },
-    {
-        .filename = "sh_cgrove.mid",
-        .name     = "Chowa Grove",
-    },
-    {
-        .filename = "sh_crace.mid",
-        .name     = "Chowa Race",
-    },
-    {
-        .filename = "sh_credits.mid",
-        .name     = "Hot Dog Credits",
-    },
-    {
-        .filename = "sh_cremulons.mid",
-        .name     = "Dance of the Cremulons",
-    },
-    {
-        .filename = "sh_devils.mid",
-        .name     = "The Devil's Lullaby",
-    },
-    {
-        .filename = "sh_gs_credits.mid",
-        .name     = "Gunship Credits",
-    },
-    {
-        .filename = "sh_ocean.mid",
-        .name     = "Swadge City Ocean 1989",
-    },
-    {
-        .filename = "sh_pain.mid",
-        .name     = "Pain",
-    },
-    {
-        .filename = "sh_pango.mid",
-        .name     = "Pango",
-    },
-    {
-        .filename = "sh_revenge.mid",
-        .name     = "Revenge",
-    },
-    {
-        .filename = "sh_starfest.mid",
-        .name     = "Starfest Magway",
-    },
-    {
-        .filename = "sh_wakeman.mid",
-        .name     = "Wake Man Stage",
-    },
-
-    {
-        .filename = "sh_sunrise.mid",
-        .name     = "San Pablo Sunrise",
-    },
-};
-
-jukeboxSong_t music_pango[] = {
-    {
-        .filename = "Pango_Jump Start.mid",
-        .name     = "Jump Start",
-    },
-    {
-        .filename = "Pango_Main.mid",
-        .name     = "Main",
-    },
-    {
-        .filename = "Pango_Faster.mid",
-        .name     = "Faster",
-    },
-    {
-        .filename = "Pango_Speed.mid",
-        .name     = "Speed",
-    },
-    {
-        .filename = "Pango_High Score.mid",
-        .name     = "High Score",
-    },
-    {
-        .filename = "Pango_Game Over.mid",
-        .name     = "Game Over",
-    },
-    {
-        .filename = "bgmGameStart.mid",
-        .name     = "Game Start (Unused)",
-    },
-    {
-        .filename = "bgmGameOver.mid",
-        .name     = "Game Over (Unused)",
-    },
-};
-
-jukeboxSong_t music_chowagrove[] = {
-    {
-        .filename = "Chowa_Menu.mid",
-        .name     = "Menu",
-    },
-    {
-        .filename = "Chowa_Battle.mid",
-        .name     = "Battle",
-    },
-    {
-        .filename = "Chowa_Dancing.mid",
-        .name     = "Dancing",
-    },
-    {
-        .filename = "Chowa_Meadow.mid",
-        .name     = "Meadow",
-    },
-    {
-        .filename = "Chowa_Race.mid",
-        .name     = "Race",
-    },
-};
-
-jukeboxSong_t music_2048[] = {
-    {
-        .filename = "lullaby_in_numbers.mid",
-        .name     = "Lullaby In Numbers",
-    },
-};
-
 jukeboxSong_t music_jukebox[] = {
     {
-        .filename = "Fauxrio_Kart.mid",
-        .name     = "Fauxrio Kart",
+        .fIdx = FAUXRIO_KART_MID,
+        .name = "Fauxrio Kart",
     },
     {
-        .filename = "hotrod.mid",
-        .name     = "Hot Rod",
+        .fIdx = HOTROD_MID,
+        .name = "Hot Rod",
     },
     {
-        .filename = "Fairy_Fountain.mid",
-        .name     = "The Lake",
+        .fIdx = FAIRY_FOUNTAIN_MID,
+        .name = "The Lake",
     },
     {
-        .filename = "yalikejazz.mid",
-        .name     = "Ya like jazz?",
+        .fIdx = YALIKEJAZZ_MID,
+        .name = "Ya like jazz?",
     },
     {
-        .filename = "banana.mid",
-        .name     = "Banana",
+        .fIdx = BANANA_MID,
+        .name = "Banana",
     },
 };
 
 jukeboxSong_t music_credits[] = {
     {
-        .filename = "hd_credits.mid",
-        .name     = creditsName,
+        .fIdx = HD_CREDITS_MID,
+        .name = creditsName,
     },
 };
 
 jukeboxSong_t music_unused[] = {
     {
-        .filename = "gmcc.mid",
-        .name     = "Pong BGM",
+        .fIdx = GMCC_MID,
+        .name = "Pong BGM",
     },
     {
-        .filename = "ode.mid",
-        .name     = "Ode to Joy",
+        .fIdx = ODE_MID,
+        .name = "Ode to Joy",
     },
     {
-        .filename = "stereo.mid",
-        .name     = "Stereo",
+        .fIdx = STEREO_MID,
+        .name = "Stereo",
     },
     {
-        .filename = "Follinesque.mid",
-        .name     = "Follinesque",
+        .fIdx = FOLLINESQUE_MID,
+        .name = "Follinesque",
     },
 };
 
 const jukeboxCategory_t musicCategories[] = {
-    /*
-    {
-        .categoryName = bigbugName,
-        .songs        = music_bigbug,
-        .numSongs     = ARRAY_SIZE(music_bigbug),
-        .generalMidi  = true,
-    },
-    {
-        .categoryName = shName,
-        .songs        = music_swadgehero,
-        .numSongs     = ARRAY_SIZE(music_swadgehero),
-        .generalMidi  = true,
-    },
-    {
-        .categoryName = pangoName,
-        .songs        = music_pango,
-        .numSongs     = ARRAY_SIZE(music_pango),
-        .generalMidi  = false,
-    },
-    {
-        .categoryName = cGroveTitle,
-        .songs        = music_chowagrove,
-        .numSongs     = ARRAY_SIZE(music_chowagrove),
-        .generalMidi  = true,
-    },
-    {
-        .categoryName = t48Name,
-        .songs        = music_2048,
-        .numSongs     = ARRAY_SIZE(music_2048),
-        .generalMidi  = true,
-    },
-    */
     {
         .categoryName = jukeboxName,
         .songs        = music_jukebox,
@@ -446,218 +262,38 @@ const jukeboxCategory_t musicCategories[] = {
     },
 };
 
-jukeboxSong_t sfx_bigbug[] = {
-    {
-        .filename = "sndBounce.mid",
-        .name     = "Bounce",
-    },
-    {
-        .filename = "sndBreak2.mid",
-        .name     = "Break 2",
-    },
-    {
-        .filename = "sndBreak3.mid",
-        .name     = "Break 3",
-    },
-    {
-        .filename = "sndBrk1up.mid",
-        .name     = "1-Up",
-    },
-    {
-        .filename = "sndDropBomb.mid",
-        .name     = "Drop Bomb",
-    },
-    {
-        .filename = "sndWaveBall.mid",
-        .name     = "Wave Ball",
-    },
-    {
-        .filename = "sndBrkTally.mid",
-        .name     = "Tally",
-    },
-    {
-        .filename = "BigBug - Car 1.mid",
-        .name     = "Car 1",
-    },
-    {
-        .filename = "BigBug - Car 2.mid",
-        .name     = "Car 2",
-    },
-    {
-        .filename = "BigBug - Car 3.mid",
-        .name     = "Car 3",
-    },
-    {
-        .filename = "BigBug - Collection.mid",
-        .name     = "Collection",
-    },
-    {
-        .filename = "BigBug - Egg 1.mid",
-        .name     = "Egg 1",
-    },
-    {
-        .filename = "BigBug - Egg 2.mid",
-        .name     = "Egg 2",
-    },
-    {
-        .filename = "Bump.mid",
-        .name     = "Bump",
-    },
-    {
-        .filename = "Dirt_Breaking.mid",
-        .name     = "Dirt Breaking",
-    },
-    {
-        .filename = "Harpoon.mid",
-        .name     = "Harpoon",
-    },
-    {
-        .filename = "r_health.mid",
-        .name     = "Health",
-    },
-    {
-        .filename = "r_item_get.mid",
-        .name     = "Item Get",
-    },
-    {
-        .filename = "r_p_ice.mid",
-        .name     = "Ice",
-    },
-};
-
-jukeboxSong_t sfx_pango[] = {
-    {
-        .filename = "sndMenuSelect.mid",
-        .name     = "Menu Select",
-    },
-    {
-        .filename = "sndMenuConfirm.mid",
-        .name     = "Menu Confirm",
-    },
-    {
-        .filename = "sndMenuDeny.mid",
-        .name     = "Menu Deny",
-    },
-    {
-        .filename = "sndSpawn.mid",
-        .name     = "Spawn",
-    },
-    {
-        .filename = "sndSlide.mid",
-        .name     = "Slide",
-    },
-    {
-        .filename = "sndBlockStop.mid",
-        .name     = "Block Stop",
-    },
-    {
-        .filename = "sndBlockCombo.mid",
-        .name     = "Block Combo",
-    },
-    {
-        .filename = "sndSquish.mid",
-        .name     = "Squish",
-    },
-    {
-        .filename = "sndPause.mid",
-        .name     = "Pause",
-    },
-    {
-        .filename = "snd1up.mid",
-        .name     = "1-Up",
-    },
-    {
-        .filename = "Pango_Level Clear.mid",
-        .name     = "Level Clear",
-    },
-    {
-        .filename = "sndTally.mid",
-        .name     = "Tally",
-    },
-    {
-        .filename = "sndDie.mid",
-        .name     = "Die",
-    },
-};
-
-jukeboxSong_t sfx_ultimatettt[] = {
-    {
-        .filename = "uttt_cursor.mid",
-        .name     = "Cursor",
-    },
-    {
-        .filename = "uttt_marker.mid",
-        .name     = "Marker",
-    },
-    {
-        .filename = "uttt_win_s.mid",
-        .name     = "Win Subgame",
-    },
-    {
-        .filename = "uttt_win_g.mid",
-        .name     = "Win Game",
-    },
-};
-
-jukeboxSong_t sfx_2048[] = {
-    {
-        .filename = "sndBounce.mid",
-        .name     = "Bounce",
-    },
-};
-
 #ifdef SW_VOL_CONTROL
 jukeboxSong_t sfx_mainMenu[] = {
     {
-        .filename = "jingle.mid",
-        .name     = "Jingle",
+        .fIdx = "jingle.mid",
+        .name = "Jingle",
     },
 };
 #endif
 
 jukeboxSong_t sfx_factoryTest[] = {
     {
-        .filename = "stereo_test.mid",
-        .name     = "Stereo Check",
+        .fIdx = STEREO_TEST_MID,
+        .name = "Stereo Check",
     },
 };
 
 jukeboxSong_t sfx_unused[] = {
     {
-        .filename = "block1.mid",
-        .name     = "Pong Block 1",
+        .fIdx = BLOCK_1_MID,
+        .name = "Pong Block 1",
     },
     {
-        .filename = "block2.mid",
-        .name     = "Pong Block 2",
+        .fIdx = BLOCK_2_MID,
+        .name = "Pong Block 2",
     },
     {
-        .filename = "gamecube.mid",
-        .name     = "GameCube",
+        .fIdx = GAMECUBE_MID,
+        .name = "GameCube",
     },
 };
 
 const jukeboxCategory_t sfxCategories[] = {
-    /*
-    {
-        .categoryName = bigbugName,
-        .songs        = sfx_bigbug,
-        .numSongs     = ARRAY_SIZE(sfx_bigbug),
-        .generalMidi  = true,
-    },
-    {
-        .categoryName = pangoName,
-        .songs        = sfx_pango,
-        .numSongs     = ARRAY_SIZE(sfx_pango),
-        .generalMidi  = false,
-    },
-    {
-        .categoryName = tttName,
-        .songs        = sfx_ultimatettt,
-        .numSongs     = ARRAY_SIZE(sfx_ultimatettt),
-        .generalMidi  = false,
-    },
-    */
     {
         .categoryName = factoryTestName,
         .songs        = sfx_factoryTest,
@@ -696,21 +332,21 @@ void jukeboxEnterMode()
     jukebox->inMusicSubmode = true;
 
     // Load fonts
-    loadFont("ibm_vga8.font", &jukebox->ibm_vga8, false);
-    loadFont("radiostars.font", &jukebox->radiostars, false);
+    loadFont(IBM_VGA_8_FONT, &jukebox->ibm_vga8, false);
+    loadFont(RADIOSTARS_FONT, &jukebox->radiostars, false);
 
     // Load images
-    loadWsg("arrow10.wsg", &jukebox->arrow, false);
-    loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
+    loadWsg(ARROW_10_WSG, &jukebox->arrow, false);
+    loadWsg(JUKEBOX_WSG, &jukebox->jukeboxSprite, false);
 
-    loadWsg("quaver.wsg", &jukebox->quaver, false);
-    loadWsg("doubleQuaver.wsg", &jukebox->doubleQuaver, false);
-    loadWsg("fClef.wsg", &jukebox->fClef, false);
-    loadWsg("halfNote.wsg", &jukebox->halfNote, false);
-    loadWsg("taillessQuaver.wsg", &jukebox->taillessQuaver, false);
-    loadWsg("trebleClef.wsg", &jukebox->trebleClef, false);
-    loadWsg("twoTailQuaver.wsg", &jukebox->twoTailQuaver, false);
-    loadWsg("wholeNote.wsg", &jukebox->wholeNote, false);
+    loadWsg(QUAVER_WSG, &jukebox->quaver, false);
+    loadWsg(DOUBLE_QUAVER_WSG, &jukebox->doubleQuaver, false);
+    loadWsg(F_CLEF_WSG, &jukebox->fClef, false);
+    loadWsg(HALF_NOTE_WSG, &jukebox->halfNote, false);
+    loadWsg(TAILLESS_QUAVER_WSG, &jukebox->taillessQuaver, false);
+    loadWsg(TREBLE_CLEF_WSG, &jukebox->trebleClef, false);
+    loadWsg(TWO_TAIL_QUAVER_WSG, &jukebox->twoTailQuaver, false);
+    loadWsg(WHOLE_NOTE_WSG, &jukebox->wholeNote, false);
 
     // Load midis
     jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories), true);
@@ -1223,7 +859,7 @@ void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCa
     {
         for (int songIdx = 0; songIdx < categoryArray[categoryIdx].numSongs; songIdx++)
         {
-            loadMidiFile(categoryArray[categoryIdx].songs[songIdx].filename,
+            loadMidiFile(categoryArray[categoryIdx].songs[songIdx].fIdx,
                          &categoryArray[categoryIdx].songs[songIdx].song, true);
             categoryArray[categoryIdx].songs[songIdx].shouldLoop = shouldLoop;
         }
