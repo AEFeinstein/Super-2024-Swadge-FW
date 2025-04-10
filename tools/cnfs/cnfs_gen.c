@@ -24,10 +24,11 @@ int stringcmp(const void* a, const void* b)
 }
 
 /**
- * @brief TODO
+ * @brief Convert a filename into an enum name, using only letters, numbers, and underscores.
+ * Enums cannot begin with numbers.
  * 
- * @param filename 
- * @return char* 
+ * @param filename The input filename
+ * @return The enum name. This is allocated and must be free()'d
  */
 char* filenameToEnumName(const char* filename)
 {
@@ -75,11 +76,11 @@ char* filenameToEnumName(const char* filename)
 }
 
 /**
- * @brief TODO
+ * @brief Main function for cnfs_gen. This converts a folder of files into a cnfs blob
  * 
- * @param argc 
- * @param argv 
- * @return int 
+ * @param argc Argument count
+ * @param argv Argument values: [program name, input folder, output C file, output H file]
+ * @return 0 for success, a negative number for error
  */
 int main(int argc, char** argv)
 {
@@ -128,7 +129,7 @@ int main(int argc, char** argv)
     int nr_file = 0;
 
     // The offset for the output file
-    int offset      = 0;
+    int offset = 0;
 
     // For each input file
     for (int fno = 0; fno < numfiles_in; fno++)
@@ -191,7 +192,6 @@ int main(int argc, char** argv)
     fprintf(f, "\n");
     fprintf(f, "typedef struct\n");
     fprintf(f, "{\n");
-    // fprintf(f, "    const char* name;\n");
     fprintf(f, "    uint32_t len;\n");
     fprintf(f, "    uint32_t offset;\n");
     fprintf(f, "} cnfsFileEntry;\n");
@@ -211,9 +211,9 @@ int main(int argc, char** argv)
     fprintf(f, "const uint8_t* getCnfsImage(void);\n");
     fprintf(f, "int32_t getCnfsSize(void);\n");
     fprintf(f, "const cnfsFileEntry* getCnfsFiles(void);\n");
-    fprintf(f, "int32_t getCnfsNumFiles(void);\n");
     fclose(f);
 
+    // Keep track of the output size, for debugging
     int directorySize = 0;
 
     // Get the name of the header without the path
@@ -241,13 +241,10 @@ int main(int argc, char** argv)
     fprintf(f, "#include <stdint.h>\n");
     fprintf(f, "#include \"%s\"\n", hdrNoPath);
     fprintf(f, "\n");
-    fprintf(f, "#define NR_FILES %d\n", nr_file);
-    fprintf(f, "\n");
-    fprintf(f, "const cnfsFileEntry cnfs_files[NR_FILES] = {\n");
+    fprintf(f, "const cnfsFileEntry cnfs_files[CNFS_NUM_FILES] = {\n");
     for (int i = 0; i < nr_file; i++)
     {
         struct fileEntry* fe = entries + i;
-        // fprintf(f, "    { \"%s\", %d, %d },\n", fe->filename, fe->len, fe->offset);
         fprintf(f, "    { .len = %d, .offset = %d },\n", fe->len, fe->offset);
         directorySize += (((strlen(fe->filename) + 1) + 3) & (~3)) + 12;
     }
@@ -284,11 +281,6 @@ int main(int argc, char** argv)
     fprintf(f, "const cnfsFileEntry* getCnfsFiles(void)\n");
     fprintf(f, "{\n");
     fprintf(f, "    return cnfs_files;\n");
-    fprintf(f, "}\n");
-    fprintf(f, "\n");
-    fprintf(f, "int32_t getCnfsNumFiles(void)\n");
-    fprintf(f, "{\n");
-    fprintf(f, "    return NR_FILES;\n");
     fprintf(f, "}\n");
     fclose(f);
 
