@@ -28,7 +28,7 @@
  * @brief Load a JSON from ROM to RAM. JSONs placed in the assets_image folder
  * before compilation will be automatically flashed to ROM
  *
- * @param name The filename of the JSON to load
+ * @param fIdx The cnfsFileIdx_t the JSON to load
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  * @return A pointer to a null terminated JSON string. May be NULL if the load
