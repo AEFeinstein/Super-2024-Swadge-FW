@@ -8,12 +8,12 @@
 int stringcmp(const void* a, const void* b);
 char* filenameToEnumName(const char* filename);
 
-#define MAX_FILES 8192
-#define CNFS_PATH_MAX  4096
+#define MAX_FILES     8192
+#define CNFS_PATH_MAX 4096
 
 /**
  * @brief Wrapper for strcmp() to be used by qsort()
- * 
+ *
  * @param a A string to compare
  * @param b Another string to compare
  * @return 0 if the strings are equal, non-zero otherwise
@@ -26,7 +26,7 @@ int stringcmp(const void* a, const void* b)
 /**
  * @brief Convert a filename into an enum name, using only letters, numbers, and underscores.
  * Enums cannot begin with numbers.
- * 
+ *
  * @param filename The input filename
  * @return The enum name. This is allocated and must be free()'d
  */
@@ -36,30 +36,30 @@ char* filenameToEnumName(const char* filename)
     strcpy(enumName, filename);
 
     int chIdx = 0;
-    while(enumName[chIdx])
+    while (enumName[chIdx])
     {
-        if( (0 == chIdx) && ('0' <= enumName[chIdx + 1] && enumName[chIdx + 1] <= '9'))
+        if ((0 == chIdx) && ('0' <= enumName[chIdx + 1] && enumName[chIdx + 1] <= '9'))
         {
             // Can't start with a number, Insert an underscore
             memmove(&enumName[chIdx + 1], &enumName[chIdx], strlen(enumName) - chIdx);
             enumName[chIdx] = '_';
         }
-        else if('a' <= enumName[chIdx] && enumName[chIdx] <= 'z')
+        else if ('a' <= enumName[chIdx] && enumName[chIdx] <= 'z')
         {
             // lowercase to uppercase
             enumName[chIdx] += ('A' - 'a');
 
             // If the next character is uppercase or a number
-            if (('A' <= enumName[chIdx + 1] && enumName[chIdx + 1] <= 'Z') ||
-                ('0' <= enumName[chIdx + 1] && enumName[chIdx + 1] <= '9'))
+            if (('A' <= enumName[chIdx + 1] && enumName[chIdx + 1] <= 'Z')
+                || ('0' <= enumName[chIdx + 1] && enumName[chIdx + 1] <= '9'))
             {
                 // Insert an underscore
                 memmove(&enumName[chIdx + 2], &enumName[chIdx + 1], strlen(enumName) - chIdx + 1);
                 enumName[chIdx + 1] = '_';
             }
         }
-        else if(('A' <= enumName[chIdx] && enumName[chIdx] <= 'Z') ||
-                ('0' <= enumName[chIdx] && enumName[chIdx] <= '9'))
+        else if (('A' <= enumName[chIdx] && enumName[chIdx] <= 'Z')
+                 || ('0' <= enumName[chIdx] && enumName[chIdx] <= '9'))
         {
             // No change to uppercase, numbers
         }
@@ -77,7 +77,7 @@ char* filenameToEnumName(const char* filename)
 
 /**
  * @brief Main function for cnfs_gen. This converts a folder of files into a cnfs blob
- * 
+ *
  * @param argc Argument count
  * @param argv Argument values: [program name, input folder, output C file, output H file]
  * @return 0 for success, a negative number for error
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 
     // Traverse the input directory and save the file names in an array
     char* filelist[MAX_FILES] = {0};
-    int numfiles_in = 0;
+    int numfiles_in           = 0;
     while ((dp = readdir(dir))) // if dp is null, there's no more content to read
     {
         if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
@@ -201,7 +201,7 @@ int main(int argc, char** argv)
     for (int i = 0; i < nr_file; i++)
     {
         struct fileEntry* fe = &entries[i];
-        char* enumName = filenameToEnumName(fe->filename);
+        char* enumName       = filenameToEnumName(fe->filename);
         fprintf(f, "    %s = %d,\n", enumName, i);
         free(enumName);
     }
