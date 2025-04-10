@@ -123,6 +123,7 @@ int main(int argc, char** argv)
         uint8_t* data;
         int offset;
         int len;
+        int padLen;
     } entries[MAX_FILES];
 
     // A count of input files
@@ -157,6 +158,7 @@ int main(int argc, char** argv)
         struct fileEntry* fe = &entries[nr_file];
         fe->data             = malloc(len);
         fe->len              = len;
+        fe->padLen           = ((len + 3) / 4) * 4;
         int readLen          = fread(fe->data, 1, len, f);
         fe->filename         = fname_in;
         if (readLen != fe->len)
@@ -168,7 +170,7 @@ int main(int argc, char** argv)
             // Save the offset for this file
             fe->offset = offset;
             // Move the global offset
-            offset += fe->len;
+            offset += fe->padLen;
             // Increment the file IDX
             nr_file++;
         }
@@ -192,8 +194,8 @@ int main(int argc, char** argv)
     fprintf(f, "\n");
     fprintf(f, "typedef struct\n");
     fprintf(f, "{\n");
-    fprintf(f, "    uint32_t len;\n");
-    fprintf(f, "    uint32_t offset;\n");
+    fprintf(f, "    uint32_t len;    ///< The length of the file\n");
+    fprintf(f, "    uint32_t offset; ///< The offset of the file in cnfs_data[]\n");
     fprintf(f, "} cnfsFileEntry;\n");
     fprintf(f, "\n");
     fprintf(f, "typedef enum\n");
@@ -202,7 +204,7 @@ int main(int argc, char** argv)
     {
         struct fileEntry* fe = &entries[i];
         char* enumName       = filenameToEnumName(fe->filename);
-        fprintf(f, "    %s = %d,\n", enumName, i);
+        fprintf(f, "    %s = %d, ///< %s\n", enumName, i, fe->filename);
         free(enumName);
     }
     fprintf(f, "    %s = %d,\n", "CNFS_NUM_FILES", nr_file);
@@ -241,6 +243,7 @@ int main(int argc, char** argv)
     fprintf(f, "#include <stdint.h>\n");
     fprintf(f, "#include \"%s\"\n", hdrNoPath);
     fprintf(f, "\n");
+    fprintf(f, "/** An array of file lengths and offsets in \\ref cnfs_data */\n");
     fprintf(f, "const cnfsFileEntry cnfs_files[CNFS_NUM_FILES] = {\n");
     for (int i = 0; i < nr_file; i++)
     {
@@ -252,15 +255,21 @@ int main(int argc, char** argv)
     fprintf(f, "\n");
 
     // Write the input file data to the output C file
+    fprintf(f, "/** A blob of all file data */\n");
     fprintf(f, "const uint8_t cnfs_data[%d] = {\n\t", offset);
     int ki = 0;
     for (int i = 0; i < nr_file; i++)
     {
         struct fileEntry* fe = entries + i;
-        // fprintf( f, "    // %s\n", fe->filename );
-        for (int k = 0; k < fe->len; k++)
+        int k;
+        for (k = 0; k < fe->padLen; k++)
         {
-            fprintf(f, "0x%02X%s", fe->data[k], (k == fe->len - 1 || ((ki & 0xf) == 0xf)) ? ",\n\t" : ", ");
+            uint8_t val = 0x00;
+            if (k < fe->len)
+            {
+                val = fe->data[k];
+            }
+            fprintf(f, "0x%02X%s", val, (k == fe->padLen - 1 || ((ki & 0xf) == 0xf)) ? ",\n\t" : ", ");
             ki++;
         }
     }
@@ -268,20 +277,36 @@ int main(int argc, char** argv)
     fprintf(f, "\n");
 
     // Write some helper functions
+    fprintf(f, "/**\n");
+    fprintf(f, " * @brief Return the entire CNFS image\n");
+    fprintf(f, " * \n");
+    fprintf(f, " * @return The cnfs_data[] array\n");
+    fprintf(f, " */\n");
     fprintf(f, "const uint8_t* getCnfsImage(void)\n");
     fprintf(f, "{\n");
     fprintf(f, "    return cnfs_data;\n");
     fprintf(f, "}\n");
     fprintf(f, "\n");
+    fprintf(f, "/**\n");
+    fprintf(f, " * @brief Get the size of the entire CNFS image\n");
+    fprintf(f, " * \n");
+    fprintf(f, " * @return The size of cnfs_data[]\n");
+    fprintf(f, " */\n");
     fprintf(f, "int32_t getCnfsSize(void)\n");
     fprintf(f, "{\n");
     fprintf(f, "    return sizeof(cnfs_data);\n");
     fprintf(f, "}\n");
     fprintf(f, "\n");
+    fprintf(f, "/**\n");
+    fprintf(f, " * @brief Get the CNFS file data (length & offset)\n");
+    fprintf(f, " * \n");
+    fprintf(f, " * @return The cnfs_files[] array with file lengths and offsets, indexed by \\ref cnfsFileIdx_t\n");
+    fprintf(f, " */\n");
     fprintf(f, "const cnfsFileEntry* getCnfsFiles(void)\n");
     fprintf(f, "{\n");
     fprintf(f, "    return cnfs_files;\n");
     fprintf(f, "}\n");
+
     fclose(f);
 
     // Debug print
