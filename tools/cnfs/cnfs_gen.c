@@ -37,7 +37,13 @@ char* filenameToEnumName(const char* filename)
     int chIdx = 0;
     while(enumName[chIdx])
     {
-        if('a' <= enumName[chIdx] && enumName[chIdx] <= 'z')
+        if( (0 == chIdx) && ('0' <= enumName[chIdx + 1] && enumName[chIdx + 1] <= '9'))
+        {
+            // Can't start with a number, Insert an underscore
+            memmove(&enumName[chIdx + 1], &enumName[chIdx], strlen(enumName) - chIdx);
+            enumName[chIdx] = '_';
+        }
+        else if('a' <= enumName[chIdx] && enumName[chIdx] <= 'z')
         {
             // lowercase to uppercase
             enumName[chIdx] += ('A' - 'a');
