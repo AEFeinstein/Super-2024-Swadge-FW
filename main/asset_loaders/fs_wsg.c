@@ -22,7 +22,7 @@
  * @brief Load a WSG from ROM to RAM. WSGs placed in the assets_image folder
  * before compilation will be automatically flashed to ROM
  *
- * @param name The filename of the WSG to load
+ * @param fIdx The cnfsFileIdx_t the WSG to load
  * @param wsg  A handle to load the WSG to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
@@ -65,7 +65,7 @@ bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
  * You must provide a decoder and decode space to this function. It's useful
  * when creating one decoder & space to decode many consecutive WSGs
  *
- * @param name The filename of the WSG to load
+ * @param fIdx The cnfsFileIdx_t the WSG to load
  * @param wsg  A handle to load the WSG to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM

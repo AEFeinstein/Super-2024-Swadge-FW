@@ -21,7 +21,7 @@
  * @brief Load a TXT from ROM to RAM. TXTs placed in the assets_image folder
  * before compilation will be automatically flashed to ROM
  *
- * @param name The filename of the TXT to load
+ * @param fIdx The cnfsFileIdx_t the TXT to load
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  * @return A pointer to a null terminated TXT string. May be NULL if the load

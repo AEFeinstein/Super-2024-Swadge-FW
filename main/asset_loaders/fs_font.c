@@ -22,7 +22,7 @@
  * PNGs placed in the assets folder before compilation will be automatically
  * flashed to ROM
  *
- * @param name The name of the font to load. The ::font_t is not allocated by this function
+ * @param fIdx The cnfsFileIdx_t of the font to load. The ::font_t is not allocated by this function
  * @param font A handle to load the font to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM

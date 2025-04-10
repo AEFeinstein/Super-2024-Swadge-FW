@@ -83,7 +83,7 @@ const uint8_t* cnfsGetFile(cnfsFileIdx_t fIdx, size_t* flen)
  * assets_image folder before compilation and flashing will automatically
  * be included in the firmware.
  *
- * @param fname   The name of the file to load
+ * @param fIdx The cnfsFileIdx_t of the file to load
  * @param outsize A pointer to a size_t to return how much data was read
  * @param readToSpiRam true to use SPI RAM, false to use normal RAM
  * @return A pointer to the read data if successful, or NULL if there is a failure

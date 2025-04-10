@@ -264,7 +264,7 @@ typedef struct
  * @brief Load a MIDI file from the filesystem
  *
  * @param file A pointer to a midiFile_t struct to load the file into
- * @param name The name of the MIDI file to load
+ * @param fIdx The cnfsFileIdx_t of the MIDI file to load
  * @param spiRam Whether to load the MIDI file into SPIRAM
  * @return true If the load succeeded
  * @return false If the load failed
