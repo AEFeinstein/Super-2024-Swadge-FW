@@ -18,7 +18,7 @@
  * \section fs_txt_example Example
  *
  * \code{.c}
- * char* txtStr = loadTxt("story.txt", true);
+ * char* txtStr = loadTxt(STORY_TXT, true);
  * // Free the txt
  * freeTxt(&txtStr);
  * \endcode

@@ -16,7 +16,7 @@
  * \code{.c}
  * // Load a MIDI file
  * midiFile_t ode_to_joy;
- * loadMidiFile("ode.mid", &ode_to_joy, true);
+ * loadMidiFile(ODE_MID, &ode_to_joy, true);
  *
  * // Play the song on the BGM channel
  * globalMidiPlayerPlaySong(&ode_to_joy, MIDI_BGM);

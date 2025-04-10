@@ -196,31 +196,31 @@
  *     wsgRot_t* wsg = wsgs;
  *
  *     // Load up a bunch of WSGs
- *     loadWsg("button_up.wsg", &wsg->wsg, false);
+ *     loadWsg(BUTTON_UP_WSG, &wsg->wsg, false);
  *     hashPutBin(&map, (const void*)PB_UP, (void*)wsg++);
  *
- *     loadWsg("button_up.wsg", &wsg->wsg, false);
+ *     loadWsg(BUTTON_UP_WSG, &wsg->wsg, false);
  *     wsg->rot = 180;
  *     hashPutBin(&map, (const void*)PB_DOWN, (void*)wsg++);
  *
- *     loadWsg("button_up.wsg", &wsg->wsg, false);
+ *     loadWsg(BUTTON_UP_WSG, &wsg->wsg, false);
  *     wsg->rot = 90;
  *     hashPutBin(&map, (const void*)PB_LEFT, (void*)wsg++);
  *
- *     loadWsg("button_up.wsg", &wsg->wsg, false);
+ *     loadWsg(BUTTON_UP_WSG, &wsg->wsg, false);
  *     wsg->rot = 270;
  *     hashPutBin(&map, (const void*)PB_RIGHT, (void*)wsg++);
  *
- *     loadWsg("button_a.wsg", &wsg->wsg, false);
+ *     loadWsg(BUTTON_A_WSG, &wsg->wsg, false);
  *     hashPutBin(&map, (const void*)PB_A, (void*)wsg++);
  *
- *     loadWsg("button_b.wsg", &wsg->wsg, false);
+ *     loadWsg(BUTTON_B_WSG, &wsg->wsg, false);
  *     hashPutBin(&map, (const void*)PB_B, (void*)wsg++);
  *
- *     loadWsg("button_menu.wsg", &wsg->wsg, false);
+ *     loadWsg(BUTTON_MENU_WSG, &wsg->wsg, false);
  *     hashPutBin(&map, (const void*)PB_MENU, (void*)wsg++);
  *
- *     loadWsg("button_pause.wsg", &wsg->wsg, false);
+ *     loadWsg(BUTTON_PAUSE_WSG, &wsg->wsg, false);
  *     hashPutBin(&map, (const void*)PB_PAUSE, (void*)wsg++);
  * }
  *

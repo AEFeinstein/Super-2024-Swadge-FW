@@ -18,7 +18,7 @@
  * \section fs_json_example Example
  *
  * \code{.c}
- * char* jsonStr = loadJson("level_data.json", true);
+ * char* jsonStr = loadJson(LEVEL_DATA_JSON, true);
  * // Free the json
  * freeJson(&jsonStr);
  * \endcode

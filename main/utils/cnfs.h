@@ -16,6 +16,9 @@
  *
  * cnfsGetFile() gets a reference to the file in flash, to obviate need to "load it into RAM"
  *
+ * cnfs doesn't use string filenames. Instead it assigns each file a \ref cnfsFileIdx_t for reference. Using an enum
+ * means cases like missing files or filename collisions will result in compilation errors.
+ *
  * Each asset type has it's own file loader which handles things like decompression if the asset type is compressed,
  * and writing values from the read file into a convenient struct. The loader functions are:
  *  - loadFont() & freeFont() - Load font assets from CNFS to draw text to the display
@@ -40,7 +43,7 @@
  *
  * // Declare and load an image
  * wsg_t king_donut;
- * loadWsg("kid0.wsg", &king_donut, true);
+ * loadWsg(KID_0_WSG, &king_donut, true);
  * // Draw the image to the display
  * drawWsg(&king_donut, 100, 100, false, false, 0);
  * // Free the image
