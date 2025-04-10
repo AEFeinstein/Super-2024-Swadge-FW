@@ -22,8 +22,8 @@
  * \code{.c}
  * // Declare and load a WSG
  * wsg_t king_donut;
- * loadWsg("kid0.wsg", &king_donut, true);
- * // Draw the WSGto the display
+ * loadWsg(KID_0_WSG, &king_donut, true);
+ * // Draw the WSG to the display
  * drawWsg(&king_donut, 100, 10, false, false, 0);
  * // Free the WSG
  * freeWsg(&king_donut);
