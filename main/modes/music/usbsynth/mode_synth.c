@@ -1534,65 +1534,62 @@ static void synthEnterMode(void)
         {
             sd->customFile = true;
             synthSetFile(fIdx);
-            /*
-            sd->filenameBuf = heap_caps_malloc(savedNameLen < 128 ? 128 : savedNameLen + 1, MALLOC_CAP_SPIRAM);
-
-            if (readNvsBlob(nvsKeyLastSong, sd->filenameBuf, &savedNameLen))
-            {
-                sd->filenameBuf[savedNameLen] = '\0';
-                sd->customFile                = true;
-                sd->filename                  = sd->filenameBuf;
-                synthSetFile(sd->filename);
-            }
-            else
-            {
-                ESP_LOGI("Synth", "Failed to load filename");
-                heap_caps_free(sd->filenameBuf);
-                sd->filenameBuf = NULL;
-            }
-            */
         }
         else
         {
             ESP_LOGI("Synth", "No filename saved");
         }
+
+        // sd->filenameBuf = heap_caps_malloc(savedNameLen < 128 ? 128 : savedNameLen + 1, MALLOC_CAP_SPIRAM);
+
+        // if (readNvsBlob(nvsKeyLastSong, sd->filenameBuf, &savedNameLen))
+        // {
+        //     sd->filenameBuf[savedNameLen] = '\0';
+        //     sd->customFile                = true;
+        //     sd->filename                  = sd->filenameBuf;
+        //     synthSetFile(sd->filename);
+        // }
+        // else
+        // {
+        //     ESP_LOGI("Synth", "Failed to load filename");
+        //     heap_caps_free(sd->filenameBuf);
+        //     sd->filenameBuf = NULL;
+        // }
     }
 
     sd->screen = SS_VIEW;
 
-    /*
-    const cnfsFileEntry* files = getCnfsFiles();
-    for (const cnfsFileEntry* file = files; file < files + getCnfsNumFiles(); file++)
-    {
-        if ((strlen(file->name) > 4
-             && (!strcmp(&file->name[strlen(file->name) - 4], ".mid")
-                 || !strcmp(&file->name[strlen(file->name) - 4], ".kar")))
-            || (strlen(file->name) > 5 && !strcmp(&file->name[strlen(file->name) - 5], ".midi")))
-        {
-            // No longer strictly necessary with CNFS, but let's keep it how it was
-            char* copyStr = strdup(file->name);
-            if (copyStr)
-            {
-                // Insert the file into the list in a sorted manner
-                node_t* last = NULL;
-                node_t* node = sd->customFiles.first;
+    // const cnfsFileEntry* files = getCnfsFiles();
+    // for (const cnfsFileEntry* file = files; file < files + CNFS_NUM_FILES; file++)
+    // {
+    //     if ((strlen(file->name) > 4
+    //          && (!strcmp(&file->name[strlen(file->name) - 4], ".mid")
+    //              || !strcmp(&file->name[strlen(file->name) - 4], ".kar")))
+    //         || (strlen(file->name) > 5 && !strcmp(&file->name[strlen(file->name) - 5], ".midi")))
+    //     {
+    //         // No longer strictly necessary with CNFS, but let's keep it how it was
+    //         char* copyStr = strdup(file->name);
+    //         if (copyStr)
+    //         {
+    //             // Insert the file into the list in a sorted manner
+    //             node_t* last = NULL;
+    //             node_t* node = sd->customFiles.first;
 
-                while (node != NULL)
-                {
-                    if (strcasecmp((char*)node->val, copyStr) >= 0)
-                    {
-                        break;
-                    }
+    //             while (node != NULL)
+    //             {
+    //                 if (strcasecmp((char*)node->val, copyStr) >= 0)
+    //                 {
+    //                     break;
+    //                 }
 
-                    last = node;
-                    node = node->next;
-                }
+    //                 last = node;
+    //                 node = node->next;
+    //             }
 
-                addAfter(&sd->customFiles, copyStr, last);
-            }
-        }
-    }
-    */
+    //             addAfter(&sd->customFiles, copyStr, last);
+    //         }
+    //     }
+    // }
 
     sd->wheelTextArea.pos.x  = 15;
     sd->wheelTextArea.pos.y  = TFT_HEIGHT - sd->betterFont.height - 2;

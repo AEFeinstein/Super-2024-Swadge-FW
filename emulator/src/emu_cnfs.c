@@ -20,7 +20,6 @@ static const uint8_t* cnfsData;
 static int32_t cnfsDataSz;
 
 static const cnfsFileEntry* cnfsFiles;
-static int32_t cnfsNumFiles;
 
 // Extended CNFS Variables
 
@@ -35,14 +34,13 @@ static void* cnfsInjectedFileData   = NULL;
 bool initCnfs(void)
 {
     /* Get local references from cnfs_data.c */
-    cnfsData     = getCnfsImage();
-    cnfsDataSz   = getCnfsSize();
-    cnfsFiles    = getCnfsFiles();
-    cnfsNumFiles = getCnfsNumFiles();
+    cnfsData   = getCnfsImage();
+    cnfsDataSz = getCnfsSize();
+    cnfsFiles  = getCnfsFiles();
 
     /* Debug print */
-    ESP_LOGI("CNFS", "Size: %" PRIu32 ", Files: %" PRIu32, cnfsDataSz, cnfsNumFiles);
-    return (0 != cnfsDataSz) && (0 != cnfsNumFiles);
+    ESP_LOGI("CNFS", "Size: %" PRIu32 ", Files: %" PRIu32, cnfsDataSz, CNFS_NUM_FILES);
+    return (0 != cnfsDataSz) && (0 != CNFS_NUM_FILES);
 }
 
 bool emuCnfsInjectFile(const char* name, const char* filePath)
