@@ -44,8 +44,8 @@ bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
     // The rest of the bytes are pixels
-    wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
+    wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
+                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg");
 
     if (NULL != wsg->px)
     {
@@ -89,8 +89,8 @@ bool loadWsgInplace(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam, uint8_t* decomp
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
     // The rest of the bytes are pixels
-    wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
+    wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
+                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg_inplace");
 
     if (NULL != wsg->px)
     {
