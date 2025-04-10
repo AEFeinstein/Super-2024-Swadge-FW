@@ -39,7 +39,7 @@ bool initCnfs(void)
     cnfsFiles  = getCnfsFiles();
 
     /* Debug print */
-    ESP_LOGI("CNFS", "Size: %" PRIu32 ", Files: %" PRIu32, cnfsDataSz, CNFS_NUM_FILES);
+    ESP_LOGI("CNFS", "Size: %" PRIu32 ", Files: %" PRId16, cnfsDataSz, CNFS_NUM_FILES);
     return (0 != cnfsDataSz) && (0 != CNFS_NUM_FILES);
 }
 
