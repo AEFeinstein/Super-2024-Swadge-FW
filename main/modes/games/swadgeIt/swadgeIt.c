@@ -66,6 +66,10 @@ typedef struct
     uint32_t currentEvt;
 
     vec3d_t lastOrientation;
+
+    uint32_t micSamplesProcessed;
+    uint32_t micEnergy;
+    uint32_t micFrameEnergy;
 } swadgeIt_t;
 
 //==============================================================================
@@ -82,6 +86,7 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void swadgeItMenuCb(const char* label, bool selected, uint32_t value);
 
 static bool swadgeItCheckForShake(void);
+static bool swadgeItCheckForScream(void);
 
 //==============================================================================
 // Const data
@@ -229,12 +234,20 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         }
         case SI_REACTION:
         {
+            font_t* font = si->menuRenderer->menuFont;
+
             if (swadgeItCheckForShake())
             {
                 const char shakeStr[] = "Shake!";
-                font_t* font          = si->menuRenderer->menuFont;
                 int16_t tWidth        = textWidth(font, shakeStr);
-                drawText(font, c555, shakeStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - font->height) / 2);
+                drawText(font, c555, shakeStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) - font->height);
+            }
+
+            if (swadgeItCheckForScream())
+            {
+                const char shakeStr[] = "Scream!";
+                int16_t tWidth        = textWidth(font, shakeStr);
+                drawText(font, c555, shakeStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2));
             }
 
             // TODO gameplay logic
@@ -246,10 +259,10 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 si->sampleIdx  = 0;
 
                 // Decrement the time between actions
-                if (si->timeToNextEvent > 500000)
-                {
-                    si->timeToNextEvent -= 100000;
-                }
+                // if (si->timeToNextEvent > 500000)
+                // {
+                //     si->timeToNextEvent -= 100000;
+                // }
             });
             break;
         }
@@ -317,7 +330,7 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
 {
     if (si->currentEvt < MAX_NUM_EVTs)
     {
-        rawSample_t* rs = &si->sfx[si->currentEvt];
+        const rawSample_t* rs = &si->sfx[si->currentEvt];
         if (rs->samples)
         {
             // Make sure we don't read out of bounds
@@ -342,6 +355,14 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
     {
         // Write blanks
         memset(samples, 127, len);
+
+        // Then switch back to the microphone
+        switchToMicrophone();
+
+        // Reset mic values
+        si->micSamplesProcessed = 0;
+        si->micFrameEnergy      = 0;
+        si->micEnergy           = 0;
     }
 }
 
@@ -354,7 +375,23 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
  */
 static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
 {
-    // TODO
+    while (sampleCnt--)
+    {
+        // Get and process the sample
+        int16_t samp = *(samples++);
+        samp /= 2048;
+        // Sum the absolute values
+        si->micEnergy += ABS(samp);
+        si->micSamplesProcessed++;
+        // If we've captured a visual frame's worth of samples
+        if ((ADC_SAMPLE_RATE_HZ / SWADGE_IT_FPS) == si->micSamplesProcessed)
+        {
+            // Save to micFrameEnergy and reset
+            si->micSamplesProcessed = 0;
+            si->micFrameEnergy      = si->micEnergy;
+            si->micEnergy           = 0;
+        }
+    }
 }
 
 /**
@@ -383,6 +420,17 @@ static bool swadgeItCheckForShake(void)
         }
     }
     return false;
+}
+
+/**
+ * @brief TODO
+ *
+ * @return true
+ * @return false
+ */
+static bool swadgeItCheckForScream(void)
+{
+    return si->micFrameEnergy > 500;
 }
 
 /**
