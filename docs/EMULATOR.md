@@ -24,7 +24,7 @@ The Linux version of the emulator does not require any other software to operate
 `.zip` file anywhere you like and run the `swadge_emulator` program, either by opening it from your
 file browser or by running `./swadge_emulator` from the command-line. The Linux emulator includes a
 script, `install.sh`, which can be run to install the Swadge Emulator as a desktop application, which
-will allow you to open the emulator directly from many desktop environments, and to asssociate the
+will allow you to open the emulator directly from many desktop environments, and to associate the
 emulator with MIDI files using the "Open with..." option in your file browser. If you do not want these
 features, there is no need to run the script. You will need to run this script again if you download a
 new version of the emulator. By default, the installation script will install to `~/.local`, but you
@@ -158,8 +158,8 @@ the Escape key can be used to exit the emulator.
 
 `--show-fps`: Displays an FPS counter below the emulator screen.
 
-`--touch`: Displays a simulated tocuhpad below the emulator screen. Clicking on this touchpad will generate
-touch events that will be read by any swadge mode that uses the touchpad.
+`--touch`: Displays a simulated touchpad below the emulator screen. Clicking on this touchpad will generate
+touch events that will be read by any Swadge mode that uses the touchpad.
 
 `--vsync`: Controls whether VSync is enabled. When VSync is enabled (the default behavior), the Swadge
 Emulator's frame rate will be capped at the monitor's refresh rate. If disabled with `--vsync no`, the
@@ -170,7 +170,7 @@ emulator will run as fast as possible. Note that this may not be supported by al
 These options allow inputs to the emulator to be recorded and played back later. This can be useful when
 repeatedly performing the same actions during debugging, for sharing with others, or just for convenience.
 
-`--record`: Record the inputs to the swadge emulator in a recording file. If no name is given, a default
+`--record`: Record the inputs to the Swadge emulator in a recording file. If no name is given, a default
 recording filename will be generated in the form `rec-<timestamp>.csv`. While recording, all button presses
 and touchpad inputs will be written to the recording file, in addition to:
 
@@ -201,7 +201,7 @@ A recording file is a CSV (comma-separated value) file with three columns: Time,
 | Fuzz           | -                     | Start fuzzing the emulator                                   |
 | Quit           | -                     | Exit the emulator immediately                                |
 | Screenshot     | Screenshot filename   | Take a screenshot, using a default filename if none is given |
-| SetMode        | Mode name             | Switch swadge modes to the named mode                        |
+| SetMode        | Mode name             | Switch Swadge modes to the named mode                        |
 | Seed           | Seed value            | Set the PRNG seed. This should be the first entry in a file  |
 | Command        | Console command       | Execute an arbitrary console command                         |
 
@@ -241,7 +241,7 @@ every frame.
 
 `--fuzz-motion`: Enable or disable fuzzing of accelometer motion only.
 
-`--mode-switch`: Automatically switch to a random swadge mode after the specified number of seconds has
+`--mode-switch`: Automatically switch to a random Swadge mode after the specified number of seconds has
 passed, repeatedly. For example, `swadge_emulator --mode-switch 5` would switch to a random mode every
 5 seconds. If no value is given, modes will be switched every 10 seconds.
 
@@ -256,21 +256,21 @@ mode's name, that mode will be used. For example, `swadge_emulator --mode Co` wi
 `swadge_emulator --mode Cr` will open `Credits`. If the name is ambiguous, the first matching mode in the
 list will be used; use `--modes` for the list and its order.
 
-`--modes`: Lists all known swadge modes that can be started using the `--mode` argument.
+`--modes`: Lists all known Swadge modes that can be started using the `--mode` argument.
 
 `--headless`: Starts this emulator without a visible window. The emulator will still run and render
 its graphics to an internal display, but there will be no way to directly interact with the emulator.
 
 `--fake-fps`: Simulate a lower framerate without actually changing the speed at which the emulator runs.
-For example, passing `--fake-fps 1` will cause each frame to have a duration of  second from the perspective
-of a swadge mode. Because the number of actual frames per second doesn't change, this means that 60 seconds
+For example, passing `--fake-fps 1` will cause each frame to have a duration of a second from the perspective
+of a Swadge mode. Because the number of actual frames per second doesn't change, this means that 60 seconds
 (one simulated second per actual frame) will appear to pass every second.
 
 `--fake-time`: Use a simulated timer that ticks at a constant rate every frame. If used with `--fake-fps`,
 the fake frame rate and fake time will be aligned. This argument can be useful when recording or replaying
 inputs to ensure that slight differences in frame timing do not cause inconsistencies.
 
-`--lock`: Locks the swadge mode to the starting mode. This prevents all normal means of changing swadge
+`--lock`: Locks the Swadge mode to the starting mode. This prevents all normal means of changing Swadge
 modes. The mode can still be changed automatically by `--mode-switch`, the console, and by a `SetMode'
 command when replaying recorded inputs.
 
@@ -332,18 +332,18 @@ type `help <command>` into the console.
 If the emulator opens to the factory test mode instead of either the main menu or the tutorial mode, this
 is because it is unable to write to the `nvs.json` file in the current directory.
 
+Try moving the swadge-emulator to a new folder where it will have permission to write.
 
 ## Simulated ESPNOW Networking
 
-The Swadge Emulator is capable of simulating the wireless ESPNOW connection between two swadges. This
-functionality is enabled automatically by simply running two swadge emulator programs at the same time.
+The Swadge Emulator is capable of simulating the wireless ESPNOW connection between two Swadges. This
+functionality is enabled automatically by simply running two Swadge emulator programs at the same time.
 For best results, you should start each Swadge Emulator from a different directory, to avoid potential
 corruption caused by two instances attempting to save data to the same `nvs.json` file at the same time.
 
 **Note**: This functionality only supports local connections between two Swadge Emulators running on the
 same machine. Networking between Swadge Emulators running on different machines is not supported at this
 time.
-
 
 ## MIDI Instructions
 

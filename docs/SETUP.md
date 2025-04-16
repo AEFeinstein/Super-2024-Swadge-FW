@@ -166,15 +166,22 @@ When launching from VS Code, make sure the `(lldb) Launch` configuration is sele
 
 ## Configuring VSCode
 
-[Visual Studio Code IDE](https://code.visualstudio.com/) is recommended for all OSes. The following plugins are recommended:
+[Visual Studio Code IDE](https://code.visualstudio.com/) is recommended for all OSes. The following plugins are **REQUIRED**:
 * [C/C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) - Basic support
+  - For MacOS, [LLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb) is used instead
 * [C/C++ Extension Pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack) - Basic support
 * [Makefile Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.makefile-tools) - Basic support
 * [Espressif IDF](https://marketplace.visualstudio.com/items?itemName=espressif.esp-idf-extension) - Integration with ESP-IDF. When setting this up for the first time, point it at ESP-IDF which was previously installed. Do not let it install a second copy. Remember that ESP-IDF should exist in `~/esp/esp-idf` and the tools should exist in `~/.espressif/`.
+
+While not 100% required, these extensions are highly recommended:
 * [C/C++ Advanced Lint](https://marketplace.visualstudio.com/items?itemName=jbenden.c-cpp-flylint) - Integration with `cppcheck`
 * [Clang-Format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format) - Integration with `clang-format`
+* [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) - Helps minimize typos
 * [Doxygen Documentation Generator](https://marketplace.visualstudio.com/items?itemName=cschlosser.doxdocgen) - Integration with `doxygen`
+* [Github Actions](https://marketplace.visualstudio.com/items?itemName=github.vscode-github-actions) - GUI for git interactions
 * [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree) - Handy to track "to-do items"
+
+All of the extensions listed above are in the "recommended" tab of VS Code when this repository is active.
 
 The `.vscode` folder already has tasks for making and cleaning the emulator. It also has launch settings for launching the emulator with `gdb` attached. To build the firmware from VSCode, use the Espressif extension buttons on the bottom toolbar. The build icon looks like a cylinder. Hover over the other icons to see what they do.
 
