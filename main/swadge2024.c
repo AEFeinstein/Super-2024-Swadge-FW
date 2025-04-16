@@ -4,7 +4,7 @@
  *
  * \section intro_sec Introduction
  *
- * Welcome to the Swadge 2024 API documentation! Here you will find information on how to use all hardware features of a
+ * Welcome to the Swadge API documentation! Here you will find information on how to use all hardware features of a
  * Swadge and write a Swadge mode. A Swadge is <a href="https://www.magfest.org/">Magfest's</a> electronic swag-badges.
  * They play games and make music and shine bright and do all sorts of cool things.
  *
@@ -20,7 +20,7 @@
  * contributing to this project, email circuitboards@magfest.org.
  *
  * General Swadge design principles <a
- * href="https://docs.google.com/document/d/1TzzatyRWp9t26YWF3qUlOg7NFgmsueL-0suqyDT98IE/edit">can be found here</a>.
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/main/docs/DESIGN_PRINCIPLES.md">can be found here</a>.
  *
  * \section start Where to Start
  *
