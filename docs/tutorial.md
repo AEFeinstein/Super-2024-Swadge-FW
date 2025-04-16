@@ -493,9 +493,9 @@ First, we need to make an image to display. I'm going to make the little robot t
 
 <img src="./TutorialImages/roboExample.png">
 
-Did I mention I don't do art? I don't do art. Still, it's better to have this guy than nothing.
+Did I mention I don't do art? I don't do art. Still, it's better to have this guy than nothing. 
 
-If you're following along feel free to use any other small PNGs or make your own. They don't need to be perfect, just something to see what's going on.
+If you're following along feel free to use any other small PNGs or make your own. They don't need to be perfect, just something to see what's going on. Don't worry about quality, making programmer art is a time honored tradition among game developers. Remember, if you make something fun and want better art, we have artists who love to help work on the games we make. You can ask for their help, or help from other people in your circle who like to make art. Swadeg games are collaborative, so don't be shy!
 
 Some notes:
 - The swadge color palette can be found [here](./SwadgePalette.gpl). The swadge will crunch down other colors to closest match, but for better control, you can use this subset of colors to ensure it looks the same as originally designed if using Aseprite
