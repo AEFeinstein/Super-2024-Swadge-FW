@@ -20,7 +20,7 @@
  * contributing to this project, email circuitboards@magfest.org.
  *
  * General Swadge design principles <a
- * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/main/docs/DESIGN_PRINCIPLES.md">can be found here</a>.
+ * href="/docs/DESIGN_PRINCIPLES.md">can be found here</a>.
  *
  * \section start Where to Start
  *
