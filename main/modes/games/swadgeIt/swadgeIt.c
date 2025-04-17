@@ -5,6 +5,7 @@
 #include "swadgeIt.h"
 #include "mainMenu.h"
 #include "heatshrink_helper.h"
+#include "touchUtils.h"
 
 //==============================================================================
 // Defines
@@ -26,11 +27,10 @@ typedef enum
 
 typedef enum
 {
-    EVT_BOP_IT,
-    EVT_FLICK_IT,
-    EVT_PULL_IT,
-    EVT_SPIN_IT,
-    EVT_TWIST_IT,
+    EVT_PRESS_IT,
+    EVT_SHAKE_IT,
+    EVT_YELL_IT,
+    EVT_SWIRL_IT,
     MAX_NUM_EVTs,
 } swadgeItEvt_t;
 
@@ -64,12 +64,16 @@ typedef struct
     uint32_t timeToNextEvent;
     uint32_t nextEvtTimer;
     uint32_t currentEvt;
+    bool evtSuccess;
+    int32_t score;
 
     vec3d_t lastOrientation;
 
     uint32_t micSamplesProcessed;
     uint32_t micEnergy;
     uint32_t micFrameEnergy;
+
+    touchSpinState_t touchSpinState;
 } swadgeIt_t;
 
 //==============================================================================
@@ -85,8 +89,9 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 
 static void swadgeItMenuCb(const char* label, bool selected, uint32_t value);
 
+static void swadgeItInput(swadgeItEvt_t evt);
 static bool swadgeItCheckForShake(void);
-static bool swadgeItCheckForScream(void);
+static void swadgeItGameOver(void);
 
 //==============================================================================
 // Const data
@@ -100,7 +105,10 @@ static const char swadgeItStrExit[]       = "Exit";
 
 /** Must match order of swadgeItEvt_t */
 const char* swadgeItSfxFiles[MAX_NUM_EVTs] = {
-    "bopit.raw", "flickit.raw", "pullit.raw", "spinit.raw", "twistit.raw",
+    "bopit.raw",
+    "flickit.raw",
+    "pullit.raw",
+    "spinit.raw",
 };
 
 swadgeMode_t swadgeItMode = {
@@ -196,20 +204,32 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 break;
             }
             case SI_REACTION:
-            {
-                // TODO gameplay logic
-                if (evt.down)
-                {
-                    si->screen = SI_MENU;
-                }
-                break;
-            }
             case SI_MEMORY:
             {
-                // TODO gameplay logic
+                // Check for pushbutton events
                 if (evt.down)
                 {
-                    si->screen = SI_MENU;
+                    switch (evt.button)
+                    {
+                        case PB_A:
+                        case PB_B:
+                        case PB_UP:
+                        case PB_DOWN:
+                        case PB_LEFT:
+                        case PB_RIGHT:
+                        {
+                            // These buttons are events
+                            swadgeItInput(EVT_PRESS_IT);
+                            break;
+                        }
+                        default:
+                        {
+                            // All other buttons quit
+                            si->screen = SI_MENU;
+                            break;
+                        }
+                    }
+                    break;
                 }
                 break;
             }
@@ -234,35 +254,63 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         }
         case SI_REACTION:
         {
+            // Draw current score
             font_t* font = si->menuRenderer->menuFont;
+            char scoreStr[32];
+            snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, si->score);
+            int16_t tWidth = textWidth(font, scoreStr);
+            drawText(font, c555, scoreStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - font->height) / 2);
 
+            // Check for motion events
             if (swadgeItCheckForShake())
             {
-                const char shakeStr[] = "Shake!";
-                int16_t tWidth        = textWidth(font, shakeStr);
-                drawText(font, c555, shakeStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) - font->height);
+                swadgeItInput(EVT_SHAKE_IT);
             }
 
-            if (swadgeItCheckForScream())
+            // Check for touchpad spin events
+            int32_t phi       = 0;
+            int32_t r         = 0;
+            int32_t intensity = 0;
+            if (getTouchJoystick(&phi, &r, &intensity))
             {
-                const char shakeStr[] = "Scream!";
-                int16_t tWidth        = textWidth(font, shakeStr);
-                drawText(font, c555, shakeStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2));
+                getTouchSpins(&si->touchSpinState, phi, intensity);
+                if (si->touchSpinState.spins)
+                {
+                    swadgeItInput(EVT_SWIRL_IT);
+                    si->touchSpinState.spins = 0;
+                }
+            }
+            else
+            {
+                si->touchSpinState.startSet = false;
             }
 
-            // TODO gameplay logic
+            // Check the gameplay timer
             RUN_TIMER_EVERY(si->nextEvtTimer, si->timeToNextEvent, elapsedUs, {
-                // Enable speaker when there's a new verbal command
-                switchToSpeaker();
-                // Pick a new event and reset the sample count
-                si->currentEvt = esp_random() % MAX_NUM_EVTs;
-                si->sampleIdx  = 0;
+                // If there was successful event input
+                if (si->evtSuccess)
+                {
+                    // Enable speaker for a new verbal command
+                    switchToSpeaker();
 
-                // Decrement the time between actions
-                // if (si->timeToNextEvent > 500000)
-                // {
-                //     si->timeToNextEvent -= 100000;
-                // }
+                    // Pick a new event and reset the sample count
+                    si->currentEvt = esp_random() % MAX_NUM_EVTs;
+                    si->sampleIdx  = 0;
+
+                    // Reset success flag
+                    si->evtSuccess = false;
+
+                    // Decrement the time between events
+                    // if (si->timeToNextEvent > 500000)
+                    // {
+                    //     si->timeToNextEvent -= 100000;
+                    // }
+                }
+                else
+                {
+                    // Input not received in time
+                    swadgeItGameOver();
+                }
             });
             break;
         }
@@ -367,6 +415,62 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
 }
 
 /**
+ * @brief Process Swadge It inputs (button, shake, touch spin, yells)
+ *
+ * @param evt The event that occurred
+ */
+static void swadgeItInput(swadgeItEvt_t evt)
+{
+    if (evt == si->currentEvt)
+    {
+        if (SI_REACTION == si->screen)
+        {
+            if (!si->evtSuccess)
+            {
+                // Correct input, raise flag for next event
+                si->evtSuccess = true;
+                si->score++;
+            }
+        }
+        else if (SI_MEMORY == si->screen)
+        {
+            // TODO correct input, move to next event
+        }
+    }
+    else if ((SI_REACTION == si->screen) || (SI_MEMORY == si->screen))
+    {
+        // Input event doesn't match
+        swadgeItGameOver();
+    }
+
+#if 0
+    switch (evt)
+    {
+        case EVT_PRESS_IT:
+        {
+            printf("PRESS IT\n");
+            break;
+        }
+        case EVT_SHAKE_IT:
+        {
+            printf("SHAKE IT\n");
+            break;
+        }
+        case EVT_SWIRL_IT:
+        {
+            printf("SWIRL IT\n");
+            break;
+        }
+        case EVT_YELL_IT:
+        {
+            printf("YELL IT\n");
+            break;
+        }
+    }
+#endif
+}
+
+/**
  * @brief This function is called whenever audio samples are read from the microphone (ADC) and are ready for
  * processing. Samples are read at 8KHz.
  *
@@ -390,6 +494,12 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
             si->micSamplesProcessed = 0;
             si->micFrameEnergy      = si->micEnergy;
             si->micEnergy           = 0;
+
+            // TODO hysteresis?
+            if (si->micFrameEnergy > 500)
+            {
+                swadgeItInput(EVT_YELL_IT);
+            }
         }
     }
 }
@@ -423,14 +533,12 @@ static bool swadgeItCheckForShake(void)
 }
 
 /**
- * @brief TODO
- *
- * @return true
- * @return false
+ * @brief Game over, called when there's incorrect input or no input
  */
-static bool swadgeItCheckForScream(void)
+static void swadgeItGameOver(void)
 {
-    return si->micFrameEnergy > 500;
+    // TODO
+    si->screen = SI_MENU;
 }
 
 /**
@@ -450,6 +558,11 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
             si->timeToNextEvent = 2000000;
             si->nextEvtTimer    = 0;
             si->currentEvt      = MAX_NUM_EVTs;
+
+            // Start with this raised for the first loop
+            si->evtSuccess = true;
+
+            si->score = 0;
         }
         else if (swadgeItStrMemory == label)
         {
