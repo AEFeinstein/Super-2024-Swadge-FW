@@ -6,7 +6,7 @@
 #define GROUND_HEIGHT        184
 #define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 56)
 #define PLAYER_X             32
-#define MAX_OBSTACLES        5
+#define MAX_OBSTACLES        2
 
 const char runnerModeName[] = "Robo Runner";
 
@@ -63,10 +63,14 @@ static void runnerEnterMode()
 {
     rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
     loadWsg("RoboStanding.wsg", &rd->robot.img, true);
+    loadWsg("Barrel-1.wsg", &rd->obstacles[0].img, true);
+    loadWsg("Lamp.wsg", &rd->obstacles[1].img, true);
 }
 
 static void runnerExitMode()
 {
+    freeWsg(&rd->obstacles[1].img);
+    freeWsg(&rd->obstacles[0].img);
     freeWsg(&rd->robot.img);
     free(rd);
 }
