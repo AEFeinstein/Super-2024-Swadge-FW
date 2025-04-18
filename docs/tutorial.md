@@ -1001,11 +1001,11 @@ typedef struct
     player_t robot;
 
     // Obstacles
-    obstacle_t obstacles[5];
+    obstacle_t obstacles[2];
 } runnerData_t;
 ```
 
-In the runnerData_t, we're now storing one copy of the robot and five copies of the obstacle. This is another magic number we can change to a Macro. I'll leave that as an exercise for the reader.
+In the runnerData_t, we're now storing one copy of the robot and two copies of the obstacle. This is another magic number we can change to a Macro. I'll leave that as an exercise for the reader.
 
 Now that we've refactored, there's a lot of red. Let's start converting them.
 - `&rd->character` becomes `&rd->robot.img`
@@ -1064,6 +1064,27 @@ Now we can start spawning some obstacles. I've drawn the obstacles with my exper
 
 <img src="./TutorialImages/Obstacles.png">
 
+As before, art is essential to get a general feel for a game so it's not all just code, but it doesn't need to be perfect, especially at this stage. If you want to go overboard with the art, that's fine too. I lean toward the former, obviously.
+
+First, let's load and unload these new files.
+
+```C
+// Inside the enter mode function
+loadWsg("Barrel-1.wsg", &rd->obstacles[0].img, true);loadWsg("Lamp.wsg", &rd->obstacles[1].img, true);
+
+// Inside the exit mode function
+// Remember, it's best to run unloading in the reverse order from loading
+freeWsg(&rd->obstacles[1].img);
+freeWsg(&rd->obstacles[0].img);
+
+// If you have &rd->obstacles->img, thats because 
+```
+
+Next, let's discuss how we want to spawn the objects.
+
+TODO: Change obstacles to store image index instead of an image
+TODO: move obstacle images to separate part of the data struct 
+
 - Spawning objects
   - Randomness
   - Variable speeds using US timers instead of frames for consistency
@@ -1078,6 +1099,8 @@ Now we can start spawning some obstacles. I've drawn the obstacles with my exper
 
 - Numbers and displaying text on screen
 - NVS and good NVS behavior
+- Making sounds
+  - MIDI tracks
 
 ## Animations
 
