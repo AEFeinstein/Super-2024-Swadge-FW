@@ -60,6 +60,7 @@ typedef struct
     rawSample_t sfx[MAX_NUM_EVTs];
 
     uint32_t sampleIdx;
+    bool pendingSwitchToMic;
 
     uint32_t timeToNextEvent;
     uint32_t nextEvtTimer;
@@ -192,6 +193,20 @@ static void swadgeItExitMode(void)
  */
 static void swadgeItMainLoop(int64_t elapsedUs)
 {
+    if (si->pendingSwitchToMic)
+    {
+        // Then switch back to the microphone
+        switchToMicrophone();
+
+        // Reset mic values
+        si->micSamplesProcessed = 0;
+        si->micFrameEnergy      = 0;
+        si->micEnergy           = 0;
+
+        // Lower flag
+        si->pendingSwitchToMic = false;
+    }
+
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
@@ -376,7 +391,7 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
  */
 static void swadgeItDacCallback(uint8_t* samples, int16_t len)
 {
-    if (si->currentEvt < MAX_NUM_EVTs)
+    if (!si->pendingSwitchToMic && si->currentEvt < MAX_NUM_EVTs)
     {
         const rawSample_t* rs = &si->sfx[si->currentEvt];
         if (rs->samples)
@@ -392,6 +407,13 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
             memcpy(samples, &rs->samples[si->sampleIdx], cpLen);
             si->sampleIdx += cpLen;
 
+            // If something was copied and the sample is now over
+            if (cpLen && si->sampleIdx >= rs->len)
+            {
+                // Raise flag to switch back to mic mode in the main loop
+                si->pendingSwitchToMic = true;
+            }
+
             // Increment samples and decrement len
             samples += cpLen;
             len -= cpLen;
@@ -403,14 +425,6 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
     {
         // Write blanks
         memset(samples, 127, len);
-
-        // Then switch back to the microphone
-        switchToMicrophone();
-
-        // Reset mic values
-        si->micSamplesProcessed = 0;
-        si->micFrameEnergy      = 0;
-        si->micEnergy           = 0;
     }
 }
 
