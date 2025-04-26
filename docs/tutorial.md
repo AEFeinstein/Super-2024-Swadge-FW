@@ -1066,24 +1066,46 @@ Now we can start spawning some obstacles. I've drawn the obstacles with my exper
 
 As before, art is essential to get a general feel for a game so it's not all just code, but it doesn't need to be perfect, especially at this stage. If you want to go overboard with the art, that's fine too. I lean toward the former, obviously.
 
-First, let's load and unload these new files.
+First, let's load and unload these new files. The following snippits of code are a really useful pattern, since you only have to add the file name once and it will be automagically loaded and unloaded.
+
+FIXME: Chenge if loading process is updated.
 
 ```C
-// Inside the enter mode function
-loadWsg("Barrel-1.wsg", &rd->obstacles[0].img, true);loadWsg("Lamp.wsg", &rd->obstacles[1].img, true);
+// Put this below the defines. If you use different filenames, make sure to change them accordingly.
+static const char* const obstacleImageNames[] =
+{
+    "Barrel-1.wsg",
+    "Lamp.wsg",
+};
 
-// Inside the exit mode function
-// Remember, it's best to run unloading in the reverse order from loading
-freeWsg(&rd->obstacles[1].img);
-freeWsg(&rd->obstacles[0].img);
+// Add this to the Data struct
+wsg_t* obstacleImgs;
 
-// If you have &rd->obstacles->img, thats because 
+// Useful for loading a lot of sprites into one place. Put in the enter function
+rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImageNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
+for (int32_t idx = 0; idx < ARRAY_SIZE(obstacleImageNames); idx++)
+{
+    loadWsg(obstacleImageNames[idx], &rd->obstacleImgs[idx], true);
+}
+
+// Remember to de-allocate whatever you use inside the exit function!
+for (uint8_t idx = 0; idx < ARRAY_SIZE(obstacleImageNames); idx++)
+{
+    freeWsg(&rd->obstacleImgs[idx]);
+}
+heap_caps_free(&rd->obstacleImgs); 
 ```
+
+Here's a breakdown of the process:
+- First, we make a list of the names. These are held in the plentiful ROM due to the CONST keywords. (Two consts are needed to ensure both the array pointer is const and cant be reassigned and that the data inside the array is constant)
+- We add a place to put a pointer for reference later into the data struct
+- We initialize the memory space with heap_caps_calloc() to the same size as the const array from before to automatically get th correct size
+- We loop through each item and assign them in order
+- Lastly, we di-allocate each image and then the containing memory in the exit function
 
 Next, let's discuss how we want to spawn the objects.
 
-TODO: Change obstacles to store image index instead of an image
-TODO: move obstacle images to separate part of the data struct 
+
 
 - Spawning objects
   - Randomness
