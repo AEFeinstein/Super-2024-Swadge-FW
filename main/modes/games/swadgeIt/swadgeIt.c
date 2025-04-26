@@ -31,7 +31,7 @@ typedef enum
     EVT_SHAKE_IT,
     EVT_YELL_IT,
     EVT_SWIRL_IT,
-    MAX_NUM_EVTs,
+    EVT_GOOD,
 } swadgeItEvt_t;
 
 //==============================================================================
@@ -57,7 +57,7 @@ typedef struct
     menuManiaRenderer_t* menuRenderer;
     swadgeItScreen_t screen;
 
-    rawSample_t sfx[MAX_NUM_EVTs];
+    rawSample_t sfx[EVT_GOOD];
 
     uint32_t sampleIdx;
     bool pendingSwitchToMic;
@@ -65,7 +65,6 @@ typedef struct
     uint32_t timeToNextEvent;
     uint32_t nextEvtTimer;
     uint32_t currentEvt;
-    bool evtSuccess;
     int32_t score;
 
     vec3d_t lastOrientation;
@@ -76,6 +75,15 @@ typedef struct
 
     touchSpinState_t touchSpinState;
 } swadgeIt_t;
+
+typedef struct
+{
+    const char* label;
+    const char* sfx_fname;
+    const paletteColor_t bgColor;
+    const paletteColor_t txColor;
+    const led_t ledColor;
+} swadgeItEvtData_t;
 
 //==============================================================================
 // Function Declarations
@@ -93,6 +101,7 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value);
 static void swadgeItInput(swadgeItEvt_t evt);
 static bool swadgeItCheckForShake(void);
 static void swadgeItGameOver(void);
+static void swadgeItSetLeds(void);
 
 //==============================================================================
 // Const data
@@ -105,12 +114,47 @@ static const char swadgeItStrHighScores[] = "High Scores";
 static const char swadgeItStrExit[]       = "Exit";
 
 /** Must match order of swadgeItEvt_t */
-const char* swadgeItSfxFiles[MAX_NUM_EVTs] = {
-    "bopit.raw",
-    "flickit.raw",
-    "pullit.raw",
-    "spinit.raw",
+const swadgeItEvtData_t sieData[] = {
+    {
+        .sfx_fname = "bopit.raw",
+        .label     = "Press it!",
+        .bgColor   = c531,
+        .txColor   = c555,
+        .ledColor  = {.r = 0xFF, .g = 0x99, .b = 0x33},
+    },
+    {
+        .sfx_fname = "flickit.raw",
+        .label     = "Shake it!",
+        .bgColor   = c325,
+        .txColor   = c555,
+        .ledColor  = {.r = 0x99, .g = 0x66, .b = 0xFF},
+    },
+    {
+        .sfx_fname = "pullit.raw",
+        .label     = "Yell it!",
+        .bgColor   = c222,
+        .txColor   = c555,
+        .ledColor  = {.r = 0x66, .g = 0x66, .b = 0x66},
+    },
+    {
+        .sfx_fname = "spinit.raw",
+        .label     = "Swirl it!",
+        .bgColor   = c412,
+        .txColor   = c555,
+        .ledColor  = {.r = 0xCC, .g = 0x33, .b = 0x66},
+    },
+    {
+        .sfx_fname = NULL,
+        .label     = "Good!",
+        .bgColor   = c453,
+        .txColor   = c000,
+        .ledColor  = {.r = 0xCC, .g = 0xFF, .b = 0x99},
+    },
 };
+
+//==============================================================================
+// Variables
+//==============================================================================
 
 swadgeMode_t swadgeItMode = {
     .modeName                 = swadgeItStrName,
@@ -129,10 +173,6 @@ swadgeMode_t swadgeItMode = {
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = swadgeItDacCallback,
 };
-
-//==============================================================================
-// Variables
-//==============================================================================
 
 static swadgeIt_t* si;
 
@@ -161,10 +201,10 @@ static void swadgeItEnterMode(void)
 
     for (uint8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
-        si->sfx[i].samples = readHeatshrinkFile(swadgeItSfxFiles[i], &si->sfx[i].len, true);
+        si->sfx[i].samples = readHeatshrinkFile(sieData[i].sfx_fname, &si->sfx[i].len, true);
     }
 
-    si->currentEvt = MAX_NUM_EVTs;
+    si->currentEvt = EVT_GOOD;
 }
 
 /**
@@ -269,12 +309,18 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         }
         case SI_REACTION:
         {
-            // Draw current score
             font_t* font = si->menuRenderer->menuFont;
+
+            // Draw command
+            int16_t tWidth = textWidth(font, sieData[si->currentEvt].label);
+            drawText(font, sieData[si->currentEvt].txColor, sieData[si->currentEvt].label, (TFT_WIDTH - tWidth) / 2,
+                     TFT_HEIGHT / 2 - font->height - 2);
+
+            // Draw current score
             char scoreStr[32];
             snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, si->score);
-            int16_t tWidth = textWidth(font, scoreStr);
-            drawText(font, c555, scoreStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - font->height) / 2);
+            tWidth = textWidth(font, scoreStr);
+            drawText(font, sieData[si->currentEvt].txColor, scoreStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 2);
 
             // Check for motion events
             if (swadgeItCheckForShake())
@@ -303,17 +349,16 @@ static void swadgeItMainLoop(int64_t elapsedUs)
             // Check the gameplay timer
             RUN_TIMER_EVERY(si->nextEvtTimer, si->timeToNextEvent, elapsedUs, {
                 // If there was successful event input
-                if (si->evtSuccess)
+                if (EVT_GOOD == si->currentEvt)
                 {
                     // Enable speaker for a new verbal command
                     switchToSpeaker();
 
                     // Pick a new event and reset the sample count
-                    si->currentEvt = esp_random() % MAX_NUM_EVTs;
+                    si->currentEvt = esp_random() % EVT_GOOD;
                     si->sampleIdx  = 0;
 
-                    // Reset success flag
-                    si->evtSuccess = false;
+                    swadgeItSetLeds();
 
                     // Decrement the time between events
                     // if (si->timeToNextEvent > 500000)
@@ -364,13 +409,13 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
         case SI_REACTION:
         {
             // TODO gameplay rendering
-            fillDisplayArea(x, y, x + w, y + h, c123);
+            fillDisplayArea(x, y, x + w, y + h, sieData[si->currentEvt].bgColor);
             break;
         }
         case SI_MEMORY:
         {
             // TODO gameplay rendering
-            fillDisplayArea(x, y, x + w, y + h, c321);
+            fillDisplayArea(x, y, x + w, y + h, sieData[si->currentEvt].bgColor);
             break;
         }
         case SI_HIGH_SCORES:
@@ -391,7 +436,7 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
  */
 static void swadgeItDacCallback(uint8_t* samples, int16_t len)
 {
-    if (!si->pendingSwitchToMic && si->currentEvt < MAX_NUM_EVTs)
+    if (!si->pendingSwitchToMic && si->currentEvt < EVT_GOOD)
     {
         const rawSample_t* rs = &si->sfx[si->currentEvt];
         if (rs->samples)
@@ -435,16 +480,22 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
  */
 static void swadgeItInput(swadgeItEvt_t evt)
 {
+    // Event already cleared, return
+    if (EVT_GOOD == si->currentEvt)
+    {
+        return;
+    }
+
+    // If the input matches the current event
     if (evt == si->currentEvt)
     {
+        // If this is the reaction screen
         if (SI_REACTION == si->screen)
         {
-            if (!si->evtSuccess)
-            {
-                // Correct input, raise flag for next event
-                si->evtSuccess = true;
-                si->score++;
-            }
+            // Increment the score
+            si->score++;
+            si->currentEvt = EVT_GOOD;
+            swadgeItSetLeds();
         }
         else if (SI_MEMORY == si->screen)
         {
@@ -571,10 +622,8 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
 
             si->timeToNextEvent = 2000000;
             si->nextEvtTimer    = 0;
-            si->currentEvt      = MAX_NUM_EVTs;
-
-            // Start with this raised for the first loop
-            si->evtSuccess = true;
+            si->currentEvt      = EVT_GOOD;
+            swadgeItSetLeds();
 
             si->score = 0;
         }
@@ -592,4 +641,17 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+}
+
+/**
+ * @brief Set the LEDs according to the current event
+ */
+static void swadgeItSetLeds(void)
+{
+    led_t leds[CONFIG_NUM_LEDS];
+    for (int i = 0; i < ARRAY_SIZE(leds); i++)
+    {
+        memcpy(&leds[i], &sieData[si->currentEvt].ledColor, sizeof(led_t));
+    }
+    setLeds(leds, ARRAY_SIZE(leds));
 }
