@@ -10,6 +10,12 @@
 
 const char runnerModeName[] = "Robo Runner";
 
+static const char* const obstacleImageNames[] =
+{
+    "Barrel-1.wsg",
+    "Lamp.wsg",
+};
+
 typedef struct
 {
     rectangle_t rect; // Contains the x, y, width and height
@@ -21,7 +27,7 @@ typedef struct
 typedef struct
 {
     rectangle_t rect; // Contains the x, y, width and height
-    wsg_t img;        // Image to display
+    int img;          // Image to display
     int speed;        // Speed of the obstacle
 } obstacle_t;
 
@@ -31,6 +37,7 @@ typedef struct
     player_t robot;
 
     // Obstacles
+    wsg_t* obstacleImgs;
     obstacle_t obstacles[MAX_OBSTACLES];
 } runnerData_t;
 
@@ -63,14 +70,24 @@ static void runnerEnterMode()
 {
     rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
     loadWsg("RoboStanding.wsg", &rd->robot.img, true);
-    loadWsg("Barrel-1.wsg", &rd->obstacles[0].img, true);
-    loadWsg("Lamp.wsg", &rd->obstacles[1].img, true);
+
+    // Useful for loading a lot of sprites into one place.
+    rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImageNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int32_t idx = 0; idx < ARRAY_SIZE(obstacleImageNames); idx++)
+    {
+        loadWsg(obstacleImageNames[idx], &rd->obstacleImgs[idx], true);
+    }
 }
 
 static void runnerExitMode()
 {
-    freeWsg(&rd->obstacles[1].img);
-    freeWsg(&rd->obstacles[0].img);
+    // Remember to de-allocate whatever you use!
+    for (uint8_t idx = 0; idx < ARRAY_SIZE(obstacleImageNames); idx++)
+    {
+        freeWsg(&rd->obstacleImgs[idx]);
+    }
+    heap_caps_free(&rd->obstacleImgs); 
+
     freeWsg(&rd->robot.img);
     free(rd);
 }
