@@ -11,44 +11,44 @@
 //==============================================================================
 void pl_initializeSoundManager(plSoundManager_t* self)
 {
-    loadMidiFile("bgmCastle.sng", &self->bgmCastle, false);
+    loadMidiFile("bgmCastle.mid", &self->bgmCastle, true);
 
-    loadMidiFile("bgmDeMAGio.sng", &self->bgmDemagio, false);
+    loadMidiFile("bgmDeMAGio.mid", &self->bgmDemagio, true);
 
-    loadMidiFile("bgmGameStart.sng", &self->bgmGameStart, false);
-    loadMidiFile("bgmIntro.sng", &self->bgmIntro, false);
-    loadMidiFile("bgmNameEntry.sng", &self->bgmNameEntry, false);
+    loadMidiFile("bgmGameStart.mid", &self->bgmGameStart, true);
+    loadMidiFile("bgmIntro.mid", &self->bgmIntro, true);
+    loadMidiFile("bgmNameEntry.mid", &self->bgmNameEntry, true);
 
-    loadMidiFile("bgmSmooth.sng", &self->bgmSmooth, false);
+    loadMidiFile("bgmSmooth.mid", &self->bgmSmooth, true);
 
-    loadMidiFile("bgmUnderground.sng", &self->bgmUnderground, false);
+    loadMidiFile("bgmUnderground.mid", &self->bgmUnderground, true);
 
-    loadMidiFile("snd1up.sng", &self->snd1up, false);
-    loadMidiFile("sndBreak.sng", &self->sndBreak, false);
-    loadMidiFile("sndCheckpoint.sng", &self->sndCheckpoint, false);
-    loadMidiFile("sndCoin.sng", &self->sndCoin, false);
-    loadMidiFile("sndDie.sng", &self->sndDie, false);
-    loadMidiFile("bgmGameOver.sng", &self->bgmGameOver, false);
-    loadMidiFile("sndHit.sng", &self->sndHit, false);
-    loadMidiFile("sndHurt.sng", &self->sndHurt, false);
-    loadMidiFile("sndJump1.sng", &self->sndJump1, false);
-    loadMidiFile("sndJump2.sng", &self->sndJump2, false);
-    loadMidiFile("sndJump3.sng", &self->sndJump3, false);
-    loadMidiFile("sndLevelClearA.sng", &self->sndLevelClearA, false);
-    loadMidiFile("sndLevelClearB.sng", &self->sndLevelClearB, false);
-    loadMidiFile("sndLevelClearC.sng", &self->sndLevelClearC, false);
-    loadMidiFile("sndLevelClearD.sng", &self->sndLevelClearD, false);
-    loadMidiFile("sndLevelClearS.sng", &self->sndLevelClearS, false);
-    loadMidiFile("sndMenuConfirm.sng", &self->sndMenuConfirm, false);
-    loadMidiFile("sndMenuDeny.sng", &self->sndMenuDeny, false);
-    loadMidiFile("sndMenuSelect.sng", &self->sndMenuSelect, false);
-    loadMidiFile("sndOutOfTime.sng", &self->sndOuttaTime, false);
-    loadMidiFile("sndPause.sng", &self->sndPause, false);
-    loadMidiFile("sndPowerUp.sng", &self->sndPowerUp, false);
-    loadMidiFile("sndSquish.sng", &self->sndSquish, false);
-    loadMidiFile("sndTally.sng", &self->sndTally, false);
-    loadMidiFile("sndWarp.sng", &self->sndWarp, false);
-    loadMidiFile("sndWaveBall.sng", &self->sndWaveBall, false);
+    loadMidiFile("snd1up.mid", &self->snd1up, true);
+    loadMidiFile("sndBreak.mid", &self->sndBreak, true);
+    loadMidiFile("sndCheckpoint.mid", &self->sndCheckpoint, true);
+    loadMidiFile("sndCoin.mid", &self->sndCoin, true);
+    loadMidiFile("sndDie.mid", &self->sndDie, true);
+    loadMidiFile("bgmGameOver.mid", &self->bgmGameOver, true);
+    loadMidiFile("sndHit.mid", &self->sndHit, true);
+    loadMidiFile("sndHurt.mid", &self->sndHurt, true);
+    loadMidiFile("sndJump1.mid", &self->sndJump1, true);
+    loadMidiFile("sndJump2.mid", &self->sndJump2, true);
+    loadMidiFile("sndJump3.mid", &self->sndJump3, true);
+    loadMidiFile("sndLevelClearA.mid", &self->sndLevelClearA, true);
+    loadMidiFile("sndLevelClearB.mid", &self->sndLevelClearB, true);
+    loadMidiFile("sndLevelClearC.mid", &self->sndLevelClearC, true);
+    loadMidiFile("sndLevelClearD.mid", &self->sndLevelClearD, true);
+    loadMidiFile("sndLevelClearS.mid", &self->sndLevelClearS, true);
+    loadMidiFile("sndMenuConfirm.mid", &self->sndMenuConfirm, true);
+    loadMidiFile("sndMenuDeny.mid", &self->sndMenuDeny, true);
+    loadMidiFile("sndMenuSelect.mid", &self->sndMenuSelect, true);
+    loadMidiFile("sndOutOfTime.mid", &self->sndOuttaTime, true);
+    loadMidiFile("sndPause.mid", &self->sndPause, true);
+    loadMidiFile("sndPowerUp.mid", &self->sndPowerUp, true);
+    loadMidiFile("sndSquish.mid", &self->sndSquish, true);
+    loadMidiFile("sndTally.mid", &self->sndTally, true);
+    loadMidiFile("sndWarp.mid", &self->sndWarp, true);
+    loadMidiFile("sndWaveBall.mid", &self->sndWaveBall, true);
 }
 
 void pl_freeSoundManager(plSoundManager_t* self)
