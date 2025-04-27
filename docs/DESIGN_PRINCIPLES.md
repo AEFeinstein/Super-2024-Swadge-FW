@@ -1,6 +1,6 @@
-# Swadge Global Design Document
+# Swadge Design Principles {#design_principles}
 
-The principles here should guide the development of a Swadge’s hardware and firmware. Most of the principles here are guidelines, not hard requirements. When in doubt, talk out ideas in our Slack channel, #super-circuitboards.
+The principles here should guide the development of a Swadge’s hardware and firmware. Most of the principles here are guidelines, not hard requirements. When in doubt, talk out ideas in our Slack channel, \#super-circuitboards.
 
 ## General Design Principles
 - Swadges should not largely rely on at-event infrastructure and should be fully usable after Magfest.

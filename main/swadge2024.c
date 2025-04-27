@@ -19,8 +19,7 @@
  * Most discussions happen in the Magfest Slack, in the \#circuitboards channel. If you are interested in joining and
  * contributing to this project, email circuitboards@magfest.org.
  *
- * General Swadge design principles <a
- * href="/docs/DESIGN_PRINCIPLES.md">can be found here</a>.
+ * General Swadge design principles can be found in the \ref design_principles.
  *
  * \section start Where to Start
  *
