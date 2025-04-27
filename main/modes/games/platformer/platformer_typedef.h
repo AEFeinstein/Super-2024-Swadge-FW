@@ -1,6 +1,25 @@
 #ifndef PLATFORMER_COMMON_TYPEDEF_INCLUDED
 #define PLATFORMER_COMMON_TYPEDEF_INCLUDED
 
+//==============================================================================
+// Constants
+//==============================================================================
+
+#define SUBPIXEL_RESOLUTION        4
+#define PL_TILESIZE_IN_POWERS_OF_2 4
+#define PL_TILESIZE                16
+#define PL_HALF_TILESIZE           8
+#define DESPAWN_THRESHOLD          64
+
+//==============================================================================
+// Macros
+//==============================================================================
+
+#define SIGNOF(x)           ((x > 0) - (x < 0))
+#define PL_TO_TILECOORDS(x) ((x) >> PL_TILESIZE_IN_POWERS_OF_2)
+#define TO_PIXEL_COORDS(x) ((x) >> SUBPIXEL_RESOLUTION)
+#define TO_SUBPIXEL_COORDS(x) ((x) << SUBPIXEL_RESOLUTION)
+
 typedef struct platformer_t platformer_t;
 typedef struct plEntityManager_t plEntityManager_t;
 typedef struct plTilemap_t plTilemap_t;
