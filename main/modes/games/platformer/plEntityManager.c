@@ -12,11 +12,11 @@
 
 #include "cnfs.h"
 #include "fs_wsg.h"
+#include "platformer_typedef.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
-#define SUBPIXEL_RESOLUTION 4
 
 //==============================================================================
 // Functions
@@ -143,8 +143,8 @@ void pl_drawEntities(plEntityManager_t* entityManager)
         if (currentEntity.active && currentEntity.visible)
         {
             drawWsg(&entityManager->sprites[currentEntity.spriteIndex],
-                    (currentEntity.x >> SUBPIXEL_RESOLUTION) - 8 - entityManager->tilemap->mapOffsetX,
-                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->tilemap->mapOffsetY - 8,
+                    TO_PIXEL_COORDS(currentEntity.x) - 8 - entityManager->tilemap->mapOffsetX,
+                    TO_PIXEL_COORDS(currentEntity.y) - entityManager->tilemap->mapOffsetY - 8,
                     currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical, 0);
         }
     }
@@ -175,8 +175,8 @@ plEntity_t* pl_findInactiveEntity(plEntityManager_t* entityManager)
 
 void pl_viewFollowEntity(plTilemap_t* tilemap, plEntity_t* entity)
 {
-    int16_t moveViewByX = (entity->x) >> SUBPIXEL_RESOLUTION;
-    int16_t moveViewByY = (entity->y > 63616) ? 0 : (entity->y) >> SUBPIXEL_RESOLUTION;
+    int16_t moveViewByX = TO_PIXEL_COORDS(entity->x);
+    int16_t moveViewByY = (entity->y > 63616) ? 0 : TO_PIXEL_COORDS(entity->y);
 
     int16_t centerOfViewX = tilemap->mapOffsetX + 140;
     int16_t centerOfViewY = tilemap->mapOffsetY + 120;
@@ -335,8 +335,8 @@ plEntity_t* pl_createPlayer(plEntityManager_t* entityManager, uint16_t x, uint16
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed             = 0;
     entity->yspeed             = 0;
@@ -373,8 +373,8 @@ plEntity_t* createTestObject(plEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
     entity->yspeed               = 0;
@@ -408,8 +408,8 @@ plEntity_t* createScrollLockLeft(plEntityManager_t* entityManager, uint16_t x, u
 
     entity->active  = true;
     entity->visible = false;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->type                 = ENTITY_SCROLL_LOCK_LEFT;
     entity->updateFunction       = &updateScrollLockLeft;
@@ -431,8 +431,8 @@ plEntity_t* createScrollLockRight(plEntityManager_t* entityManager, uint16_t x, 
 
     entity->active  = true;
     entity->visible = false;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->type                 = ENTITY_SCROLL_LOCK_RIGHT;
     entity->updateFunction       = &updateScrollLockRight;
@@ -454,8 +454,8 @@ plEntity_t* createScrollLockUp(plEntityManager_t* entityManager, uint16_t x, uin
 
     entity->active  = true;
     entity->visible = false;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->type                 = ENTITY_SCROLL_LOCK_UP;
     entity->updateFunction       = &updateScrollLockUp;
@@ -477,8 +477,8 @@ plEntity_t* createScrollLockDown(plEntityManager_t* entityManager, uint16_t x, u
 
     entity->active  = true;
     entity->visible = false;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->type                 = ENTITY_SCROLL_LOCK_DOWN;
     entity->updateFunction       = &updateScrollLockDown;
@@ -500,8 +500,8 @@ plEntity_t* createScrollUnlock(plEntityManager_t* entityManager, uint16_t x, uin
 
     entity->active  = true;
     entity->visible = false;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->type                 = ENTITY_SCROLL_UNLOCK;
     entity->updateFunction       = &updateScrollUnlock;
@@ -523,8 +523,8 @@ plEntity_t* createHitBlock(plEntityManager_t* entityManager, uint16_t x, uint16_
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed         = 0;
     entity->yspeed         = 0;
@@ -559,8 +559,8 @@ plEntity_t* createPowerUp(plEntityManager_t* entityManager, uint16_t x, uint16_t
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = (entityManager->playerEntity->x > entity->x) ? -16 : 16;
     entity->yspeed               = 0;
@@ -594,8 +594,8 @@ plEntity_t* createWarp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed         = 0;
     entity->yspeed         = 0;
@@ -628,8 +628,8 @@ plEntity_t* createDustBunny(plEntityManager_t* entityManager, uint16_t x, uint16
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = 0;
     entity->yspeed               = 0;
@@ -666,8 +666,8 @@ plEntity_t* createWasp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
@@ -704,8 +704,8 @@ plEntity_t* createEnemyBushL2(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 12 : -12;
     entity->yspeed               = 0;
@@ -739,8 +739,8 @@ plEntity_t* createEnemyBushL3(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 11 : -11;
     entity->yspeed               = 0;
@@ -776,8 +776,8 @@ plEntity_t* createDustBunnyL2(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = 0;
     entity->yspeed               = 0;
@@ -813,8 +813,8 @@ plEntity_t* createDustBunnyL3(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = 0;
     entity->yspeed               = 0;
@@ -850,8 +850,8 @@ plEntity_t* createWaspL2(plEntityManager_t* entityManager, uint16_t x, uint16_t 
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
@@ -890,8 +890,8 @@ plEntity_t* createWaspL3(plEntityManager_t* entityManager, uint16_t x, uint16_t 
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
@@ -929,8 +929,8 @@ plEntity_t* createBgColBlue(plEntityManager_t* entityManager, uint16_t x, uint16
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = c335;
 
     entity->type                 = ENTITY_BGCOL_BLUE;
@@ -953,8 +953,8 @@ plEntity_t* createBgColYellow(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = c542;
 
     entity->type                 = ENTITY_BGCOL_YELLOW;
@@ -977,8 +977,8 @@ plEntity_t* createBgColOrange(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = c532;
 
     entity->type                 = ENTITY_BGCOL_ORANGE;
@@ -1001,8 +1001,8 @@ plEntity_t* createBgColPurple(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = c214;
 
     entity->type                 = ENTITY_BGCOL_PURPLE;
@@ -1025,8 +1025,8 @@ plEntity_t* createBgColDarkPurple(plEntityManager_t* entityManager, uint16_t x, 
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = c103;
 
     entity->type                 = ENTITY_BGCOL_DARK_PURPLE;
@@ -1049,8 +1049,8 @@ plEntity_t* createBgColBlack(plEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = c000;
 
     entity->type                 = ENTITY_BGCOL_BLACK;
@@ -1073,8 +1073,8 @@ plEntity_t* createBgColNeutralGreen(plEntityManager_t* entityManager, uint16_t x
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = c133;
 
     entity->type                 = ENTITY_BGCOL_NEUTRAL_GREEN;
@@ -1097,8 +1097,8 @@ plEntity_t* createBgColNeutralDarkRed(plEntityManager_t* entityManager, uint16_t
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = c200;
 
     entity->type                 = ENTITY_BGCOL_DARK_RED;
@@ -1121,8 +1121,8 @@ plEntity_t* createBgColNeutralDarkGreen(plEntityManager_t* entityManager, uint16
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = c010;
 
     entity->type                 = ENTITY_BGCOL_DARK_GREEN;
@@ -1145,8 +1145,8 @@ plEntity_t* create1up(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = (entityManager->playerEntity->x > entity->x) ? -16 : 16;
     entity->yspeed               = 0;
@@ -1180,8 +1180,8 @@ plEntity_t* createWaveBall(plEntityManager_t* entityManager, uint16_t x, uint16_
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = 0;
     entity->yspeed               = 0;
@@ -1217,8 +1217,8 @@ plEntity_t* createCheckpoint(plEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->active  = true;
     entity->visible = true;
-    entity->x       = x << SUBPIXEL_RESOLUTION;
-    entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
 
     entity->xspeed               = 0;
     entity->yspeed               = 0;
@@ -1262,8 +1262,8 @@ plEntity_t* createBgmChange1(plEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = PL_BGM_MAIN;
 
     entity->type                 = ENTITY_BGM_CHANGE_1;
@@ -1286,8 +1286,8 @@ plEntity_t* createBgmChange2(plEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = PL_BGM_ATHLETIC;
 
     entity->type                 = ENTITY_BGM_CHANGE_2;
@@ -1310,8 +1310,8 @@ plEntity_t* createBgmChange3(plEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = PL_BGM_UNDERGROUND;
 
     entity->type                 = ENTITY_BGM_CHANGE_3;
@@ -1334,8 +1334,8 @@ plEntity_t* createBgmChange4(plEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = PL_BGM_FORTRESS;
 
     entity->type                 = ENTITY_BGM_CHANGE_4;
@@ -1358,8 +1358,8 @@ plEntity_t* createBgmChange5(plEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = PL_BGM_NULL;
 
     entity->type                 = ENTITY_BGM_CHANGE_5;
@@ -1382,8 +1382,8 @@ plEntity_t* createBgmStop(plEntityManager_t* entityManager, uint16_t x, uint16_t
 
     entity->active   = true;
     entity->visible  = false;
-    entity->x        = x << SUBPIXEL_RESOLUTION;
-    entity->y        = y << SUBPIXEL_RESOLUTION;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->xDamping = PL_BGM_NULL;
 
     entity->type                 = ENTITY_BGM_STOP;

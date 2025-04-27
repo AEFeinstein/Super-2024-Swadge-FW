@@ -14,20 +14,12 @@
 #include "trigonometry.h"
 #include <esp_log.h>
 #include "soundFuncs.h"
+#include "platformer_typedef.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
-#define SUBPIXEL_RESOLUTION        4
-#define PL_TILESIZE_IN_POWERS_OF_2 4
-#define PL_TILESIZE                16
-#define PL_HALF_TILESIZE           8
-#define DESPAWN_THRESHOLD          64
 
-#define SIGNOF(x)           ((x > 0) - (x < 0))
-#define PL_TO_TILECOORDS(x) ((x) >> PL_TILESIZE_IN_POWERS_OF_2)
-// #define TO_PIXEL_COORDS(x) ((x) >> SUBPIXEL_RESOLUTION)
-// #define TO_SUBPIXEL_COORDS(x) ((x) << SUBPIXEL_RESOLUTION)
 
 //==============================================================================
 // Functions
@@ -188,7 +180,7 @@ void pl_updatePlayer(plEntity_t* self)
         && self->animationTimer == 0)
     {
         plEntity_t* createdEntity = pl_createEntity(self->entityManager, ENTITY_WAVE_BALL,
-                                                    self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+                                                    TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         if (createdEntity != NULL)
         {
             createdEntity->xspeed    = (self->spriteFlipHorizontal) ? -(128 + abs(self->xspeed) + abs(self->yspeed))
@@ -340,8 +332,8 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
 {
     uint16_t newX = self->x;
     uint16_t newY = self->y;
-    uint8_t tx    = PL_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
-    uint8_t ty    = PL_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+    uint8_t tx    = PL_TO_TILECOORDS(TO_PIXEL_COORDS(self->x));
+    uint8_t ty    = PL_TO_TILECOORDS(TO_PIXEL_COORDS(self->y));
     // bool collision = false;
 
     // Are we inside a block? Push self out of block
@@ -370,7 +362,7 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
     {
         if (self->yspeed != 0)
         {
-            int16_t hcof = (((self->x >> SUBPIXEL_RESOLUTION) % PL_TILESIZE) - PL_HALF_TILESIZE);
+            int16_t hcof = (((TO_PIXEL_COORDS(self->x)) % PL_TILESIZE) - PL_HALF_TILESIZE);
 
             // Handle halfway though tile
             uint8_t at = pl_getTile(self->tilemap, tx + SIGNOF(hcof), ty);
@@ -378,10 +370,10 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
             if (pl_isSolid(at))
             {
                 // collision = true;
-                newX = ((tx + 1) * PL_TILESIZE - PL_HALF_TILESIZE) << SUBPIXEL_RESOLUTION;
+                newX = TO_SUBPIXEL_COORDS((tx + 1) * PL_TILESIZE - PL_HALF_TILESIZE);
             }
 
-            uint8_t newTy = PL_TO_TILECOORDS(((self->y + self->yspeed) >> SUBPIXEL_RESOLUTION)
+            uint8_t newTy = PL_TO_TILECOORDS( TO_PIXEL_COORDS((self->y + self->yspeed))
                                              + SIGNOF(self->yspeed) * PL_HALF_TILESIZE);
 
             if (newTy != ty)
@@ -392,8 +384,7 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
                 {
                     if (self->tileCollisionHandler(self, newVerticalTile, tx, newTy, 2 << (self->yspeed > 0)))
                     {
-                        newY = ((newTy + ((ty < newTy) ? -1 : 1)) * PL_TILESIZE + PL_HALF_TILESIZE)
-                               << SUBPIXEL_RESOLUTION;
+                        newY = TO_SUBPIXEL_COORDS((newTy + ((ty < newTy) ? -1 : 1)) * PL_TILESIZE + PL_HALF_TILESIZE);
                     }
                 }
             }
@@ -401,7 +392,7 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
 
         if (self->xspeed != 0)
         {
-            int16_t vcof = (((self->y >> SUBPIXEL_RESOLUTION) % PL_TILESIZE) - PL_HALF_TILESIZE);
+            int16_t vcof = ((TO_PIXEL_COORDS(self->y) % PL_TILESIZE) - PL_HALF_TILESIZE);
 
             // Handle halfway though tile
             uint8_t att = pl_getTile(self->tilemap, tx, ty + SIGNOF(vcof));
@@ -409,11 +400,11 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
             if (pl_isSolid(att))
             {
                 // collision = true;
-                newY = ((ty + 1) * PL_TILESIZE - PL_HALF_TILESIZE) << SUBPIXEL_RESOLUTION;
+                newY = TO_SUBPIXEL_COORDS((ty + 1) * PL_TILESIZE - PL_HALF_TILESIZE);
             }
 
             // Handle outside of tile
-            uint8_t newTx = PL_TO_TILECOORDS(((self->x + self->xspeed) >> SUBPIXEL_RESOLUTION)
+            uint8_t newTx = PL_TO_TILECOORDS(TO_PIXEL_COORDS((self->x + self->xspeed))
                                              + SIGNOF(self->xspeed) * PL_HALF_TILESIZE);
 
             if (newTx != tx)
@@ -424,8 +415,7 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
                 {
                     if (self->tileCollisionHandler(self, newHorizontalTile, newTx, ty, (self->xspeed > 0)))
                     {
-                        newX = ((newTx + ((tx < newTx) ? -1 : 1)) * PL_TILESIZE + PL_HALF_TILESIZE)
-                               << SUBPIXEL_RESOLUTION;
+                        newX = TO_SUBPIXEL_COORDS((newTx + ((tx < newTx) ? -1 : 1)) * PL_TILESIZE + PL_HALF_TILESIZE);
                     }
                 }
 
@@ -518,8 +508,8 @@ void applyGravity(plEntity_t* self)
 
 void despawnWhenOffscreen(plEntity_t* self)
 {
-    if ((self->x >> SUBPIXEL_RESOLUTION) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
-        || (self->x >> SUBPIXEL_RESOLUTION)
+    if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
+        || TO_PIXEL_COORDS(self->x)
                > (self->tilemap->mapOffsetX + PL_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
     {
         pl_destroyEntity(self, true);
@@ -530,8 +520,8 @@ void despawnWhenOffscreen(plEntity_t* self)
         return;
     }
 
-    if ((self->y >> SUBPIXEL_RESOLUTION) < (self->tilemap->mapOffsetY - (DESPAWN_THRESHOLD << 2))
-        || (self->y >> SUBPIXEL_RESOLUTION)
+    if (TO_PIXEL_COORDS(self->y) < (self->tilemap->mapOffsetY - (DESPAWN_THRESHOLD << 2))
+        || TO_PIXEL_COORDS(self->y)
                > (self->tilemap->mapOffsetY + PL_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
         pl_destroyEntity(self, true);
@@ -679,10 +669,8 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
         case ENTITY_WARP:
         {
             // Execute warp
-            self->x = (self->tilemap->warps[other->jumpPower].x * PL_TILESIZE + PL_HALF_TILESIZE)
-                      << SUBPIXEL_RESOLUTION;
-            self->y = (self->tilemap->warps[other->jumpPower].y * PL_TILESIZE + PL_HALF_TILESIZE)
-                      << SUBPIXEL_RESOLUTION;
+            self->x = TO_SUBPIXEL_COORDS(self->tilemap->warps[other->jumpPower].x * PL_TILESIZE + PL_HALF_TILESIZE);
+            self->y = TO_SUBPIXEL_COORDS(self->tilemap->warps[other->jumpPower].y * PL_TILESIZE + PL_HALF_TILESIZE);
             self->falling = true;
             pl_viewFollowEntity(self->tilemap, self->entityManager->playerEntity);
 
@@ -1055,8 +1043,8 @@ bool pl_dummyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, 
 void dieWhenFallingOffScreen(plEntity_t* self)
 {
     uint16_t deathBoundary = (self->tilemap->mapOffsetY + PL_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD);
-    if (((self->y >> SUBPIXEL_RESOLUTION) > deathBoundary)
-        && ((self->y >> SUBPIXEL_RESOLUTION) < deathBoundary + DESPAWN_THRESHOLD))
+    if ((TO_PIXEL_COORDS(self->y) > deathBoundary)
+        && (TO_PIXEL_COORDS(self->y) < deathBoundary + DESPAWN_THRESHOLD))
     {
         self->hp = 0;
         pl_updateLedsHpMeter(self->entityManager, self->gameData);
@@ -1072,28 +1060,28 @@ void pl_updateDummy(plEntity_t* self)
 
 void updateScrollLockLeft(plEntity_t* self)
 {
-    self->tilemap->minMapOffsetX = (self->x >> SUBPIXEL_RESOLUTION) - 8;
+    self->tilemap->minMapOffsetX = TO_PIXEL_COORDS(self->x) - 8;
     pl_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     pl_destroyEntity(self, true);
 }
 
 void updateScrollLockRight(plEntity_t* self)
 {
-    self->tilemap->maxMapOffsetX = (self->x >> SUBPIXEL_RESOLUTION) + 8 - PL_TILEMAP_DISPLAY_WIDTH_PIXELS;
+    self->tilemap->maxMapOffsetX = TO_PIXEL_COORDS(self->x) + 8 - PL_TILEMAP_DISPLAY_WIDTH_PIXELS;
     pl_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     pl_destroyEntity(self, true);
 }
 
 void updateScrollLockUp(plEntity_t* self)
 {
-    self->tilemap->minMapOffsetY = (self->y >> SUBPIXEL_RESOLUTION) - 8;
+    self->tilemap->minMapOffsetY = TO_PIXEL_COORDS(self->y) - 8;
     pl_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     pl_destroyEntity(self, true);
 }
 
 void updateScrollLockDown(plEntity_t* self)
 {
-    self->tilemap->maxMapOffsetY = (self->y >> SUBPIXEL_RESOLUTION) + 8 - PL_TILEMAP_DISPLAY_HEIGHT_PIXELS;
+    self->tilemap->maxMapOffsetY = TO_PIXEL_COORDS(self->y) + 8 - PL_TILEMAP_DISPLAY_HEIGHT_PIXELS;
     pl_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     pl_destroyEntity(self, true);
 }
@@ -1147,11 +1135,11 @@ void updateWarp(plEntity_t* self)
     }
 
     // Destroy self and respawn warp container block when offscreen
-    if ((self->x >> SUBPIXEL_RESOLUTION) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
-        || (self->x >> SUBPIXEL_RESOLUTION)
+    if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
+        || TO_PIXEL_COORDS(self->x)
                > (self->tilemap->mapOffsetX + PL_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD)
-        || (self->y >> SUBPIXEL_RESOLUTION) < (self->tilemap->mapOffsetY - DESPAWN_THRESHOLD)
-        || (self->y >> SUBPIXEL_RESOLUTION)
+        || TO_PIXEL_COORDS(self->y) < (self->tilemap->mapOffsetY - DESPAWN_THRESHOLD)
+        || TO_PIXEL_COORDS(self->y)
                > (self->tilemap->mapOffsetY + PL_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
         // In pl_destroyEntity, this will overflow to the correct value.
@@ -1571,7 +1559,7 @@ void updateWasp(plEntity_t* self)
             }
 
             self->yDamping--;
-            if (self->yDamping < 0 || self->y <= ((self->homeTileY * PL_TILESIZE + 8) << SUBPIXEL_RESOLUTION))
+            if (self->yDamping < 0 || self->y <= (TO_SUBPIXEL_COORDS(self->homeTileY * PL_TILESIZE + 8)))
             {
                 self->xDamping = 0;
                 self->xspeed   = (self->spriteFlipHorizontal) ? -16 : 16;
@@ -1639,7 +1627,7 @@ void updateWaspL2(plEntity_t* self)
             }
 
             self->yDamping--;
-            if (self->yDamping < 0 || self->y <= ((self->homeTileY * PL_TILESIZE + 8) << SUBPIXEL_RESOLUTION))
+            if (self->yDamping < 0 || self->y <= (TO_SUBPIXEL_COORDS(self->homeTileY * PL_TILESIZE + 8)))
             {
                 self->xDamping = 0;
                 self->xspeed   = (self->spriteFlipHorizontal) ? -24 : 24;
@@ -1708,7 +1696,7 @@ void updateWaspL3(plEntity_t* self)
             }
 
             self->yDamping--;
-            if (self->yDamping < 0 || self->y <= ((self->homeTileY * PL_TILESIZE + 8) << SUBPIXEL_RESOLUTION))
+            if (self->yDamping < 0 || self->y <= (TO_SUBPIXEL_COORDS(self->homeTileY * PL_TILESIZE + 8)))
             {
                 self->xDamping = 0;
                 self->xspeed   = (self->spriteFlipHorizontal) ? -32 : 32;
